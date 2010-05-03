@@ -5,12 +5,13 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.1 2009/03/09 19:43:35 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: DASSearch.py,v 1.2 2009/03/16 15:28:51 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
+import thread
 import traceback
 from cherrypy import expose
 
@@ -31,6 +32,14 @@ class DASSearch(TemplatedPage):
         TemplatedPage.__init__(self, config)
         self.dasmgr = DASCache(mode='html', debug=1)
         self.views  = ['xml', 'list', 'table', 'plain', 'json'] 
+        self.cleantime = 60 # in seconds
+        self.lastclean = time.time()
+
+#    def clean_couch(self):
+#        """
+#        Clean couch DB
+#        """
+#        self.dasmgr.clean_cache('couch')
 
     def top(self):
         """
@@ -115,6 +124,11 @@ class DASSearch(TemplatedPage):
         invoke DAS search call, parse results and return them to
         web methods
         """
+        # invoke cache cleaner if time since last clean exceed cleantime.
+        if  (time.time() - self.lastclean) > self.cleantime:
+            thread.start_new_thread(self.dasmgr.clean_cache, ('couch', ))
+            self.lastclean = time.time()
+
         uinput  = getarg(kwargs, 'input', '')
         res     = self.dasmgr.result(uinput)
         titles  = res[0].keys()

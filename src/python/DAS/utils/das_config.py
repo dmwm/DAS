@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.2 2009/03/09 20:09:00 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_config.py,v 1.3 2009/03/16 15:28:50 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -39,6 +39,7 @@ def das_readconfig(dasconfig=None):
     configdict['cache_lifetime'] = config.getint('cache', 'lifetime')
     configdict['couch_servers'] = config.get('couch', 'servers', '')
     configdict['couch_lifetime'] = config.getint('couch', 'lifetime')
+    configdict['couch_cleantime'] = config.getint('couch', 'cleantime')
 
     systems = config.get('das', 'systems', 'dbs,sitedb,phedex').split(',')
     verbose = config.getint('das', 'verbose')
@@ -77,6 +78,7 @@ def das_writeconfig():
     config.add_section('couch')
     config.set('couch', 'servers', 'http://localhost:5984' )
     config.set('couch', 'lifetime', 1*24*60*60) # in seconds
+    config.set('couch', 'cleantime', 2*60*60) # in seconds
 
     config.add_section('dbs')
     config.set('dbs', 'expire', 600) # in seconds
