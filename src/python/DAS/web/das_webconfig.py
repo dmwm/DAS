@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.1 2009/03/09 19:43:35 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_webconfig.py,v 1.2 2009/03/10 20:11:00 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -28,7 +28,7 @@ config.Webtools.application = 'DASWeb'
 # This is the config for the application
 config.component_('DASWeb')
 # Define the default location for templates for the app
-config.DASWeb.templates = environ['DASHOME'] + '/web/Templates'
+config.DASWeb.templates = environ['DAS_ROOT'] + '/src/templates'
 
 # Define the class that is the applications index
 config.DASWeb.index = 'dassearch'
@@ -47,7 +47,7 @@ active.documentation.object = 'WMCore.WebTools.Documentation'
 # active.documentation.foo = 'bar'
 
 active.section_('dassearch')
-active.dassearch.object = 'web.DASSearch'
+active.dassearch.object = 'DAS.web.DASSearch'
 
 # Controllers are standard way to return minified gzipped css and js
 active.section_('controllers')
@@ -62,12 +62,12 @@ active.controllers.object = 'WMCore.WebTools.Controllers'
 #}
 active.controllers.css = {
     'cms_reset': environ['WTBASE'] + '/css/WMCore/WebTools/cms_reset.css', 
-    'das': environ['DASHOME'] + '/web/css/das.css'
+    'das': environ['DAS_ROOT'] + '/src/css/das.css'
 }
 
 #active.controllers.js = {}
 active.controllers.js = {
-    'autopilot' : environ['DASHOME'] + '/web/js/autopopulate.js'
+    'autopilot' : environ['DAS_ROOT'] + '/src/js/autopopulate.js'
 }
 # These are pages in "maintenance mode" - to be completed
 maint = config.DASWeb.views.section_('maintenance')
