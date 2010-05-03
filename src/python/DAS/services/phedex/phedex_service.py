@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.3 2009/04/07 19:37:33 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: phedex_service.py,v 1.4 2009/04/21 22:11:59 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -20,7 +20,7 @@ class PhedexService(DASAbstractService):
         self.map = {
             'blockReplicas' : {
                 'keys': ['block', 'node', 'site', 
-                         'block.size', 'block.numfiles',
+                         'block.size', 'block.numfiles', 'block.replica',
                          'block.custodial', 'block.is_open',
                          'block.complete', 'block.createdate', 'block.moddate'],
                 'params' : {'se':'', 'block':'', 'node':''}
@@ -74,7 +74,8 @@ class PhedexService(DASAbstractService):
             results = self.worker(query, cond_dict)
         return results
 
-    def worker(self, query, cond_dict=None):
+    def worker_local(self, query, cond_dict=None):
+#    def worker(self, query, cond_dict=None):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.

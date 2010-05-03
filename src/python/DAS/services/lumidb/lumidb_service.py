@@ -2,8 +2,8 @@
 """
 LumiDB service
 """
-__revision__ = "$Id: lumidb_service.py,v 1.2 2009/04/08 20:54:03 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: lumidb_service.py,v 1.3 2009/04/21 22:11:59 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,53 +17,64 @@ class LumiDBService(DASAbstractService):
         DASAbstractService.__init__(self, 'lumidb', config)
         self.map = {
             'findTrgPathByRun' : {
+                'api' : {'api':'findTrgPathByRun'},
                 'keys': ['trigpath', 'run'],
                 'params' : {'run_number':''}
             },
             'findIntegratedLuminosity' : {
+                'api' : {'api':'findIntegratedLuminosity'},
                 'keys': ['intlumi', 'run'],
                 'params' : {'run_number':'', 'tag':'', 'hlt_path':''}
             },
             'findAvgIntegratedLuminosity' : {
+                'api' : {'api':'findAvgIntegratedLuminosity'},
                 'keys': ['avglumi', 'run'],
                 'params' : {'run_number':'', 'tag':'', 'hlt_path':''}
             },
             'findIntRawLumi' : {
+                'api' : {'api':'findIntRawLumi'},
                 'keys': ['intrawlumi', 'run'],
                 'params' : {'run_number':''}
             },
             'findL1Counts' : {
+                'api' : {'api':'findL1Counts'},
                 'keys': ['L1counts', 'run'],
                 'params' : {'run_number':'', 'cond_name':''}
             },
             'findHLTCounts' : {
+                'api' : {'api':'findHLTCounts'},
                 'keys': ['HLTcounts', 'run'],
                 'params' : {'run_number':'', 'path_name':'', 'count_type':''}
             },
             'findRawLumi' : {
+                'api' : {'api':'findRawLumi'},
                 'keys': ['rawlumi', 'run'],
                 'params' : {'run_number':'', 'tag':''}
             },
             'listLumiByBunch' : {
+                'api' : {'api':'listLumiByBunch'},
                 'keys': ['lumibybunch', 'run'],
                 'params' : {'run_number':'', 'lumi_section_number':'', 'option':''}
             },
             'listLumiSummary' : {
+                'api' : {'api':'listLumiSummary'},
                 'keys': ['lumisummary', 'run'],
                 'params' : {'run_number':'', 'lumi_section_number':'', 'version':''}
             },
-            'listLumiTrigger' : {
-                'keys': ['lumitrigger', 'run'],
-                'params' : {'run_number':'', 'lumi_section_number':''}
-            },
-            'listLumiDeadTime' : {
-                'keys': ['lumideadtime', 'run'],
-                'params' : {'run_number':'', 'lumi_section_number':''}
-            },
+#            'listLumiTrigger' : {
+#                'api' : {'api':'listLumiTrigger'},
+#                'keys': ['lumitrigger', 'run'],
+#                'params' : {'run_number':'', 'lumi_section_number':''}
+#            },
+#            'listLumiDeadTime' : {
+#                'api' : {'api':'listLumiDeadTime'},
+#                'keys': ['lumideadtime', 'run'],
+#                'params' : {'run_number':'', 'lumi_section_number':''}
+#            },
         }
         map_validator(self.map)
 
-    def api(self, query, cond_dict=None):
+    def api_v1(self, query, cond_dict=None):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
@@ -103,6 +114,7 @@ class LumiDBService(DASAbstractService):
                 jsondict = eval(res)
                 if  jsondict.has_key('error'):
                     continue
+                print "### lumidb:jsondict", jsondict
                 data = getattr(self, 'parser_%s' % apiname)(jsondict)
                 return data
 

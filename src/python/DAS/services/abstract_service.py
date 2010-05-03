@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.4 2009/04/16 17:48:31 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: abstract_service.py,v 1.5 2009/04/21 22:11:59 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -92,7 +92,8 @@ class DASAbstractService(object):
         self.logger.info('DAS::%s api(%s)' % (self.name, query))
         msg = 'DAS::%s api uses cond_dict\n%s' % (self.name, str(cond_dict))
         self.logger.debug(msg)
-        return
+        results = self.worker(query, cond_dict)
+        return results
 
     def product(self, resdict, rel_keys=None):
         """
@@ -169,14 +170,6 @@ class DASAbstractService(object):
         # translate selection keys into ones data-service APIs provides
         keylist = [das2result(self.name, key) for key in selkeys]
 
-#        print "### query", query
-#        print "### selkeys", selkeys
-#        print "### cond_dict", cond_dict
-#        print "### params", params
-#        print "### keylist", keylist
-#        import sys
-#        sys.exit(1)
-
         apiname = ""
         args = {}
         # check if all requested keys are covered by one API
@@ -186,16 +179,23 @@ class DASAbstractService(object):
                 for par in aparams['params']:
                     if  params.has_key(par):
                         args[par] = params[par]
-                url = self.url + '/' + apiname
+                if  aparams.has_key('api'):
+                    apidict = aparams['api']
+                    apikey  = apidict.keys()[0]
+                    apival  = apidict[apikey]
+                    args[apikey] = apival 
+                    url = self.url # JAVA, e.g. http://host/Servlet
+                else: # if we have http://host/apiname?...
+                    url = self.url + '/' + apiname
                 res = self.getdata(url, args)
                 res = res.replace('null', '\"null\"')
                 jsondict = eval(res)
-#                print "### jsondict", jsondict
+                if  self.verbose > 2:
+                    print "\n### %s::%s returns" % (self.name, api)
+                    print jsondict
                 if  jsondict.has_key('error'):
                     continue
                 data = jsonparser(self.name, jsondict, keylist)
-#                print "### keylist", keylist
-#                print "### data", data
                 return data
 
         # if one API doesn't cover sel keys, will call multiple APIs
@@ -215,6 +215,9 @@ class DASAbstractService(object):
             res = self.getdata(url, args)
             res = res.replace('null', '\"null\"')
             jsondict = eval(res)
+            if  self.verbose > 2:
+                print "\n### %s::%s returns" % (self.name, api)
+                print jsondict
             data = jsonparser(self.name, jsondict, keylist)
             resdict[api] = data
             first_row = data[0]
