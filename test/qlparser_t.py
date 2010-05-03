@@ -6,7 +6,7 @@ Unit test for DAS QL parser
 """
 
 import unittest
-from DAS.core.qlparser import dasqlparser, findbracketobj
+from DAS.core.qlparser import dasqlparser, findbracketobj, antrlparser
 
 class testQLParser(unittest.TestCase):
     """
@@ -20,6 +20,13 @@ class testQLParser(unittest.TestCase):
         self.i1 = "find dataset, run, bfield where site = T2 and admin=VK and storage=castor"
         self.i2 = "  find dataset, run where (run=1 or run=2) and storage=castor or site = T2"
 
+    def testantrlparser(self):
+        """test parser based on ANTRL"""
+        q = "find dataset, run where site = T2"
+        res = antrlparser(q)
+        r = {'ORDERING': [], 'FIND_KEYWORDS': ['dataset', 'run'], 'ORDER_BY_KEYWORDS': [], 'WHERE_CONSTRAINTS': [{'value': 'T2', 'key': 'site', 'op': '='}, {'bracket': 'T2'}]}
+        self.assertEqual(res, r)
+        
     def testSelectionList(self):                          
         """test user input queries"""
         q = "find dataset, run, bfield where site = T2 and admin=VK and storage=castor"
