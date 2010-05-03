@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.3 2009/04/14 15:26:30 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: dbs_service.py,v 1.4 2009/04/23 01:11:31 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -20,7 +20,7 @@ class DBSService(DASAbstractService):
     def __init__(self, config):
         DASAbstractService.__init__(self, 'dbs', config)
         self.results = []
-        self.params  = {'apiversion': 'DBS_2_0_4', 'api': 'executeQuery'}
+        self.params  = {'apiversion': 'DBS_2_0_6', 'api': 'executeQuery'}
         cachelist    = config['cache_servers'].split(',')
         self.cache   = memcache.Client(cachelist, debug=self.verbose)
         # DBS uses DBSServlet and API passed as parameter, so we don't
