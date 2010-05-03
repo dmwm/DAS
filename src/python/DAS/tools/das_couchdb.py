@@ -79,10 +79,14 @@ if __name__ == '__main__':
         sys.exit(0)
         
     if  opts.delete:
-        print 
-        print "Delete '%s' couch DB" % opts.delete
-        print
-        DAS.delete(opts.delete)
+        if  opts.system:
+            msg = "Delete '%s' docs in '%s' couch DB" % \
+                (opts.system, opts.delete)
+            DAS.delete(opts.delete, opts.system)
+        else:
+            msg = "Delete '%s' couch DB" % opts.delete
+            DAS.delete(opts.delete)
+        print msg,
         sys.exit(0)
         
     t1 = 0
