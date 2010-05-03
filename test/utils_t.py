@@ -6,7 +6,7 @@ Unit test for DAS QL parser
 """
 
 import unittest
-from utils.utils import cartesian_product
+from utils.utils import cartesian_product, query_params
 
 class testUtils(unittest.TestCase):
     """
@@ -115,6 +115,21 @@ class testUtils(unittest.TestCase):
 #        print "expectlist", expectlist
 #        print "resultlist", resultlist
         self.assertEqual(expectlist, resultlist)
+    def test_query_params(self):
+        """
+        Test query_params utility which split query into set of parameters and
+        selected keys.
+        """
+        queries = ['find a,b,c where d=2', 'find a,b,c where d not like 2',
+                   'find a,b,c']
+        selkeys = ['a', 'b', 'c']
+        elist   = [(selkeys, {'d':('=', '2')}), 
+                   (selkeys, {'d':('not like','2')}), (selkeys, {})]
+        for idx in range(0, len(queries)):
+            query  = queries[idx]
+            expect = elist[idx]
+            result = query_params(query)
+            self.assertEqual(expect, result)
 
 #
 # main
