@@ -1,0 +1,83 @@
+CODE GENERATION REQUIREMENTS
+1) Java 1.5 or higher
+2) antlr-3.1.2
+
+USING HE GENERATED CODE REQUIREMENTS
+1) Python 2.4.3 or higher
+2) antlr-3.1.2 (runtime python lib only)
+
+
+Antlr can be used to generate the lexer and parser one time only. Once the lexer and parser are generated , they can be used at runtime for  parsing the user input.
+To generate static lexer and parser
+1) download antlr-3.1.2
+	wget http://www.antlr.org/download/antlr-3.1.2.tar.gz
+2) unzip antlr in your tmp directory (say ANTLR_HOME)
+3) setup your CLASSPATH
+	export CLASSPATH=$ANTLR_HOME/lib/antlr-3.1.2.jar:.
+4) Feed antlr the schema file to generate the Lexer and Parser
+	java org.antlr.Tool SqlDAS.g
+	This will generate 3 files SqlDASLexer.py  SqlDASParser.py  SqlDAS.tokens
+	Now you can copy these files into you runtime directory
+
+
+
+To test the generated lexer/parser in your python code
+1) setup your python path
+	export PYTHONPATH=$ANTLR_HOME/runtime/Python/:$PYTHONPATH
+2) Run the provided Wrapper script in python and feed it a user query
+	python Wrapper.py "find dataset where file like abc* and run=123  and (lumi > 23 or file.status = *) order by dataset, run desc"
+	This should print on stdout the tokens that antlr has parsed for you
+	> FIND_KEYWORDS  ['dataset']
+	> WHERE_CONSTRAINTS  [{'value': 'abc*', 'key': 'file', 'op': 'like'}, 'and', {'value': '123', 'key': 'run', 'op': '='}, 'and', {'bracket': '('}, {'value': '23', 'key': 'lumi', 'op': '>'}, 'or', {'value': '*', 'key': 'file.status', 'op': '='}, {'bracket': ')'}]
+	> ORDER_BY_KEYWORDS  ['dataset', 'run']
+	> ORDERING ['desc']
+3) Now try an invalid user query
+	python Wrapper.py "find dataset where file liake abc* and run=123  and (lumi > 23 or file.status = *) order by dataset, run desc"
+	This will throw and exception with proper message specifying where the problem in your query is
+Traceback (most recent call last):
+  File "Wrapper.py", line 36, in ?
+    tokens = parserObj.parseQuery(query)
+  File "Wrapper.py", line 31, in parseQuery
+    raise msg
+Invalid Token liake on line 1 at column 24
+QUERY    find dataset where file liake abc* and run=123  and (lumi > 23 or file.status = *) order by dataset, run desc
+POSITION                         ^
+
+
+
+To use the Wrapper API in your code 
+1) Just make a Wrapper object
+	parserObj = Wrapper()
+2) Call a single method to parse the query
+	tokens = parserObj.parseQuery(query)
+	Here query is the user uqery in str format
+3) This returns a dictionary structure like below
+	print 'FIND_KEYWORDS ', tokens['FIND_KEYWORDS']
+	print 'WHERE_CONSTRAINTS ', tokens['WHERE_CONSTRAINTS']
+	print 'ORDER_BY_KEYWORDS ', tokens['ORDER_BY_KEYWORDS']
+	print 'ORDERING', tokens['ORDERING']
+
+
+Here is a complete snapshot of how to use the parser in 7 lines of code
+query = sys.argv[1]
+parserObj = Wrapper()
+tokens = parserObj.parseQuery(query)
+print 'FIND_KEYWORDS ', tokens['FIND_KEYWORDS']
+print 'WHERE_CONSTRAINTS ', tokens['WHERE_CONSTRAINTS']
+print 'ORDER_BY_KEYWORDS ', tokens['ORDER_BY_KEYWORDS']
+print 'ORDERING', tokens['ORDERING']
+
+
+
+To add new keywords in the grammar
+1) Edit the file SqlDAS.g
+2) Locate entity and attribute section and just add your new keyword
+	For example if you want to add keyword site.location then add site in entity and location in attribute. Below they are added to the bottom of the list
+	entity          : ('ads' | 'config' | 'dataset' | 'release' | 'tier' | 'block' | 'file' | 'primds' | 'procds' | 'run' | 'lumi' | 'dq' | 'ilumi' | 'phygrp' | 'group'| 'pset'| 'algo' | 'datatype' | 'mcdesc' | 'trigdesc' | 'branch' | 'site');
+attr            :('createdate' | 'moddate' | 'starttime' | 'endtime' | 'createby' | 'modby' | 'name' | 'dataset' | 'version' | 'number' | 'startevnum' | 'endevnum' | 'numevents' | 'numfiles' | 'numlss' | 'totlumi' | 'store' | 'size' | 'release' | 'count' | 'status' | 'type' | 'id' | 'parent' | 'child' | 'tier' | 'def' | 'evnum' | 'era' | 'tag' | 'xsection' | 'hash' | 'content' | 'family'| 'exe' | 'annotation' | 'checksum' | 'location' );
+	
+3) Regenerate your lexer/parser
+	java org.antlr.Tool SqlDAS.g
+	For more information refer to step 4 of  "To generate static lexer and parser" in this README file
+4) Thats all . Just test your new keyword
+	python Wrapper.py "find site.location where dataset = abc"
