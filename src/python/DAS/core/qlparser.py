@@ -4,12 +4,13 @@
 """
 Query parser for DAS
 """
-__revision__ = "$Id: qlparser.py,v 1.4 2009/05/07 00:58:23 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: qlparser.py,v 1.5 2009/05/08 14:52:31 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 from itertools import groupby
+from DAS.utils.utils import permutations, oneway_permutations
 
 def antrlparser(uinput):
     """
@@ -93,9 +94,7 @@ def getnextcond(uinput):
     """
     obj_and = 'and'
     obj_or  = 'or'
-    idx_and = uinput.find(obj_and)
-    idx_or  = uinput.find(obj_or)
-    qlist = [name.strip() for name, group in groupby(uinput.split())]
+    qlist   = [name.strip() for name, group in groupby(uinput.split())]
     idx_and = find_index(qlist, 'and')
     idx_or  = find_index(qlist, 'or')
     idx_between = find_index(qlist, 'between')
@@ -183,13 +182,21 @@ def findbracketobj(uinput):
         
 class QLParser(object):
     def __init__(self, imap):
-        self.prefix    = ['find', 'plot', 'view']
+        self.prefix    = ['find ', 'plot ', 'view ']
         self.operators = ['!=', '<=', '<', '>=', '>', '=', 
                           ' not like ', ' like ', 
                           ' between ', ' not in ', ' in ']
         self.qlmap = imap #{'dbs': [list of keys], ...}
         self.known_keys = [k for i in self.qlmap.values() for k in i]
 
+    def fix_reserved_keywords(self, query):
+        """
+        Lowering all reserved keywords in a query
+        """
+        for w in self.prefix + self.operators + [' and ', ' or ']:
+            query = query.replace(str(w).upper(), w)
+        return query
+        
     def make_cond_dict(self, exp):
         """Output of provided expression make a dict key op value"""
 
@@ -276,12 +283,13 @@ class QLParser(object):
             add_to_list(rest, olist)
         return olist
 
-    def params(self, query):
+    def check(self, query, rdict):
         """
         Check and analyze input query and return a bundle of
         selkeys, allkeys, conditions, orderby.
         """
-        rdict = {} # return dict
+        query = self.fix_reserved_keywords(query)
+#        rdict = self.params(query)
         query = query.strip()
         # check brackets
         lb = query.count('(')
@@ -292,7 +300,7 @@ class QLParser(object):
         # check presence of correct action
         first_word = query.split()[0]
         if  first_word not in self.prefix:
-            msg = "Unsupported keyword '%s'" % last_word
+            msg = "Unsupported keyword '%s'" % first_word
             raise Exception(msg)
         # check presence of where
         if  query.find(' where') != -1:
@@ -301,24 +309,10 @@ class QLParser(object):
                 msg = "Unsupported keyword '%s'" % last_word
                 Exception(msg)
         # check presence of order by
-        cond = self.conditions(query)
-        rdict['conditions'] = cond
+        cond = rdict['conditions']
         if  cond and (cond[-1] == 'and' or cond[-1] == 'or'):
             msg = "Unbounded boolean expression at the end of query"
             raise Exception(msg)
-#        if  cond:
-#            val  = cond[-1]['value']
-#            if  type(val) is types.StringType: 
-#                vlist = val.split(' ')
-#                if  len(vlist) > 1:
-#                    msg = "Unsupported keyword '%s'" % vlist[1]
-#                    raise Exception(msg)
-        # check order by value
-        order_by_list, order_by = self.order_by(query)
-        rdict['order_by_list'] = order_by_list
-        rdict['order_by_order'] = order_by
-        rdict['selkeys'] = self.selkeys(query)
-        rdict['allkeys'] = self.allkeys(query)
         # check if all keys are valid ones
         for k in rdict['allkeys']:
             if  k not in self.known_keys:
@@ -330,11 +324,36 @@ class QLParser(object):
                 else:
                     msg = "Unsupported key '%s'" % k
                     raise Exception(msg)
+
+    def params(self, query):
+        """
+        Parse input query and create output param dict with:
+        - selection keys
+        - order by keys
+        - conditions dict
+        - all keys = selection keys + condition keys + order by keys
+        - services
+        - unique set of keys and service necessary to run a query
+        """
+        query = self.fix_reserved_keywords(query)
+        rdict = {}
+        rdict['conditions']      = self.conditions(query)
+        order_by_list, order_by  = self.order_by(query)
+        rdict['order_by_list']   = order_by_list
+        rdict['order_by_order']  = order_by
+        rdict['selkeys']         = self.selkeys(query)
+        rdict['allkeys']         = self.allkeys(query)
+        rdict['services']        = self.services(query)
+        services, ulist          = self.uniq_services(query)
+        rdict['unique_services'] = services
+        rdict['unique_keys']     = ulist
+        self.check(query, rdict)
         return rdict
         
     def selkeys(self, query):
         """return list of selection keys in a query"""
-        uinput = query.strip().lower()
+        query = self.fix_reserved_keywords(query)
+        uinput = query.strip()
         if  uinput.find(' where ') != -1:
             uinput = uinput.split(' where')[0]
         elif uinput.find(' order by ') != -1:
@@ -345,7 +364,8 @@ class QLParser(object):
 
     def conditions(self, query):
         """return a list of conditions"""
-        query = query.strip().lower()
+        query = self.fix_reserved_keywords(query)
+        query = query.strip()
         cond  = self.condition_parser(query)
         lb = 0
         rb = 0
@@ -361,7 +381,8 @@ class QLParser(object):
 
     def allkeys(self, query):
         """return list of selection and conditions keys"""
-        query = query.strip().lower()
+        query = self.fix_reserved_keywords(query)
+        query = query.strip()
         olist = self.selkeys(query)
         for item in self.conditions(query):
             if  type(item) is types.DictType:
@@ -371,8 +392,62 @@ class QLParser(object):
         olist.sort()
         return [name.strip() for name, group in groupby(olist)]
 
+    def services(self, query):
+        """
+        Look-up all services whose keys match the query
+        """
+        query = self.fix_reserved_keywords(query)
+        sdict = {}
+        akeys = self.allkeys(query)
+        for key in akeys:
+            for service, keys in self.qlmap.items():
+                if  key in keys:
+                    if  sdict.has_key(service):
+                        vlist = sdict[service]
+                        sdict[service] = vlist +[key]
+                    else:
+                        sdict[service] = [key]
+        return sdict
+
+    def uniq_services(self, query):
+        """
+        Look-up unique data-service and keys required to perform the query.
+        For instance if user provide
+        find dataset, block
+        the 'block' is common key between DBS and phedex, but DBS
+        can answer this query without phedex
+        """
+        query = self.fix_reserved_keywords(query)
+        sdict = self.services(query)
+        if  len(sdict.keys()) == 1:
+            ulist = [k for i in sdict.values() for k in i]
+            services = sdict.keys()
+            return services, ulist
+        skeys = self.selkeys(query)
+        akeys = self.allkeys(query)
+        pairs = [i for i in oneway_permutations(list(sdict.keys()))]
+        rkeys = [] # relation keys
+        for pair in pairs:
+            list0 = self.qlmap[pair[0]]
+            list1 = self.qlmap[pair[1]]
+            rkeys = rkeys + list( set(list0) & set(list1) )
+        ulist     = [i for i, g in groupby(akeys + rkeys)]
+        services  = []
+        for service in sdict.keys():
+            if  not set(sdict[service]) & set(skeys):
+                continue
+            slist = self.qlmap[service]
+            if  set(ulist) & set(slist) == set(ulist):
+                return [service], ulist
+            services.append(service)
+        return services, ulist
+
     def order_by(self, query):
-        """return sort order"""
+        """
+        Check if query contains order by expression and return
+        order_by keys and ordering
+        """
+        query = self.fix_reserved_keywords(query)
         order_by_list = []
         order_by = None
         query = query.strip().lower()
