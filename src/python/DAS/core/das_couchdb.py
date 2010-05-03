@@ -5,8 +5,8 @@
 DAS couchdb wrapper. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchdb.py,v 1.4 2009/03/19 18:36:38 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_couchdb.py,v 1.5 2009/04/07 19:38:27 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -204,7 +204,11 @@ function(k,v,r) {
 #        options = {'key': '"%s"' % key}
 #        results = cdb.loadview(self.design, 'query', options)
 
-        res = [row['value'] for row in results['rows']]
+        try:
+            res = [row['value'] for row in results['rows']]
+        except:
+            traceback.print_exc()
+            return
         if  res:
             self.logger.info("DASCouchDB::get_from_cache for %s" % query)
         if  len(res) == 1:
