@@ -124,10 +124,13 @@ class testUtils(unittest.TestCase):
         selected keys.
         """
         queries = ['find a,b,c where d=2', 'find a,b,c where d not like 2',
-                   'find a,b,c']
+                   'find a,b,c', 'find a,b,c where d=2 and e=1']
         selkeys = ['a', 'b', 'c']
         elist   = [(selkeys, {'d':('=', '2')}), 
-                   (selkeys, {'d':('not like','2')}), (selkeys, {})]
+                   (selkeys, {'d':('not like', '2')}), 
+                   (selkeys, {}),
+                   (selkeys, {'d':('=', '2'), 'e':('=', '1')}),
+                  ]
         for idx in range(0, len(queries)):
             query  = queries[idx]
             expect = elist[idx]
