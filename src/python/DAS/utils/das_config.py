@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.1 2009/03/09 19:43:35 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_config.py,v 1.2 2009/03/09 20:09:00 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -14,13 +14,15 @@ import ConfigParser
 
 def das_configfile():
     """
-    Return DAS configuration file name $DASHOME/das.cfg
+    Return DAS configuration file name $DAS_ROOT/etc/das.cfg
     """
-    if  os.environ.has_key('DASHOME'):
-        dasconfig = os.path.join(os.environ['DASHOME'], 'das.cfg')
+    if  os.environ.has_key('DAS_ROOT'):
+        dasconfig = os.path.join(os.environ['DAS_ROOT'], 'etc/das.cfg')
+        if  not os.path.isfile(dasconfig):
+            raise EnvironmentError('No DAS config file %s found' % dasconfig)
         return dasconfig
     else:
-        raise EnvironmentError("DASHOME environment is not set up")
+        raise EnvironmentError('DASHOME environment is not set up')
 
 def das_readconfig(dasconfig=None):
     """
