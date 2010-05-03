@@ -2,12 +2,9 @@
 """
 LumiDB service
 """
-__revision__ = "$Id: lumidb_service.py,v 1.4 2009/04/23 01:11:31 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: lumidb_service.py,v 1.5 2009/04/29 19:51:20 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
-
-import re
-import types
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, query_params
@@ -54,12 +51,14 @@ class LumiDBService(DASAbstractService):
             'listLumiByBunch' : {
                 'api' : {'api':'listLumiByBunch'},
                 'keys': ['lumibybunch', 'run'],
-                'params' : {'run_number':'', 'lumi_section_number':'', 'option':''}
+                'params' : {'run_number':'', 'lumi_section_number':'', 
+                            'option':''}
             },
             'listLumiSummary' : {
                 'api' : {'api':'listLumiSummary'},
                 'keys': ['lumisummary', 'run'],
-                'params' : {'run_number':'', 'lumi_section_number':'', 'version':'current'}
+                'params' : {'run_number':'', 'lumi_section_number':'', 
+                            'version':'current'}
             },
 #            'listLumiTrigger' : {
 #                'api' : {'api':'listLumiTrigger'},
@@ -151,7 +150,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for findTrgPathByRun lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'trigpath':val}
             data.append(row)
         return data
@@ -161,7 +160,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for findIntegratedLuminosity lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'intlumi':val}
             data.append(row)
         return data
@@ -171,7 +170,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for findAvgIntegratedLuminosity lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'avglumi':val}
             data.append(row)
         return data
@@ -181,7 +180,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for findIntRawLumi lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'intrawlumi':val}
             data.append(row)
         return data
@@ -191,7 +190,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for findL1Counts lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'L1counts':val}
             data.append(row)
         return data
@@ -201,7 +200,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for findHLTCounts lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'HLTcounts':val}
             data.append(row)
         return data
@@ -211,7 +210,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for findRawLumi lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'rawlumi':val}
             data.append(row)
         return data
@@ -221,7 +220,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for listLumiByBunch lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'lumibybunch':val}
             data.append(row)
         return data
@@ -231,7 +230,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for listLumiSummary lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'lumisummary':val}
             data.append(row)
         return data
@@ -241,7 +240,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for listLumiTrigger lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'lumitrigger':val}
             data.append(row)
         return data
@@ -251,7 +250,7 @@ class LumiDBService(DASAbstractService):
         Parser of output for listLumiDeadTime lumidb API
         """
         data = []
-        for key, val in jsondict.items():
+        for val in jsondict.values():
             row = {'lumideadtime':val}
             data.append(row)
         return data
