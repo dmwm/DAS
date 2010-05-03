@@ -5,8 +5,8 @@
 Define core class for Data Aggregation Service (DAS)
 """
 
-__revision__ = "$Id: das_core.py,v 1.1 2009/03/13 21:10:04 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_core.py,v 1.2 2009/04/07 20:05:58 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -20,6 +20,7 @@ from DAS.services.sitedb.sitedb_service import SiteDBService
 #from DAS.services.runsum.runsum_service import RunSummaryService
 from DAS.services.phedex.phedex_service import PhedexService
 from DAS.services.monitor.monitor_service import MonitorService
+from DAS.services.lumidb.lumidb_service import LumiDBService
 
 class DASCore(object):
     """
@@ -61,6 +62,7 @@ class DASCore(object):
         self.sitedb  = SiteDBService(dasconfig)
         self.phedex  = PhedexService(dasconfig)
         self.monitor = MonitorService(dasconfig)
+        self.lumidb  = LumiDBService(dasconfig)
 
         self.service_maps = dasconfig['mapping']
         self.service_keys = {}
@@ -250,6 +252,7 @@ class DASCore(object):
         for key in sellist:
             services += [s for s in self.findmappedservices(key) \
                                     if not services.count(s)]
+
         # loop over all sub-queries and update a list of involved services
         qdict   = {}
         for key, query in qldict['queries'].items():
@@ -274,16 +277,37 @@ class DASCore(object):
         self.logger.info('DASCore::call, complete list of services %s' \
                         % services)
 
+        # IMPORTANT
+        # TODO: I need ANTRL parser to return me a list of keys
+        # list of conditions, then I need to combine those to make
+        # unique list of keys to retreive
+        ###########
+
         # form unique set to retrieve from all services, based on 
         # selection keys of the query and inter-service relationships
         ulist   = list(sellist)
+        
+        discard_services = []
         for service in services:
             if  service != self.dbs.name:
                 keys = self.relation_keys(self.dbs.name, service)
                 for key in keys:
-                    if  not ulist.count(key):
-                        ulist.append(key)
+                    # I added query.find(key) to avoid situation
+                    # find dataset,admin where site=T2_UK
+                    # when phedex service is found and block,site
+                    # keys were added, once ANTRL parser in place
+                    # I don't need it anymore, but I'll need to 
+                    # modify this part based on ANTRL output.
+
+                    if  query.find(key) == -1:
+                        self.logger.info('DASCore::call, will discard %s' % srv)
+                        discard_services.append(service)
+                    else:
+                        if  not ulist.count(key):
+                            ulist.append(key)
         self.logger.info('DASCore::call, unique set of keys %s' % ulist)
+        for srv in discard_services:
+            services.remove(srv)
 
         # call data-services to execute sub-queries
         # TODO: I need to cover the case when 
