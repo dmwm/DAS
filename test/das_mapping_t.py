@@ -16,7 +16,7 @@ class testDASMapping(unittest.TestCase):
     def test_mapconfig(self): 
         """test DAS translate routine"""
         result = das2api('phedex', 'site')
-        expect = 'se'
+        expect = ['se']
         self.assertEqual(expect, result)
 
     def test_jsonparser4key(self): 

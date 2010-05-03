@@ -15,6 +15,27 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_cartesian_product(self):
+        list1 = [{'ds':1, 'site':2, 'admin':None, 'block':1}, 
+                 {'ds':1, 'site':1, 'admin':None, 'block':1},
+                 {'ds':2, 'site':1, 'admin':None, 'block':1},
+                 {'ds':2, 'site':1, 'admin':None, 'block':1},
+                ]
+        list2 = [{'ds':None, 'site':2, 'admin':'vk', 'block':''}, 
+                 {'ds':None, 'site':2, 'admin':'simon', 'block':''}, 
+                 {'ds':None, 'site':1,'admin':'pet', 'block':''}]
+        res = cartesian_product(list1, list2)
+        result = [i for i in res]
+        result.sort()
+        expect = [{'ds':1, 'site':2, 'admin':'vk', 'block':1},
+                  {'ds':1, 'site':2, 'admin':'simon', 'block':1},
+                  {'ds':1, 'site':1, 'admin':'pet', 'block':1},
+                  {'ds':2, 'site':1, 'admin':'pet', 'block':1},
+                  {'ds':2, 'site':1, 'admin':'pet', 'block':1},
+                 ]
+        expect.sort()
+        self.assertEqual(expect, result)
+        
     def testCartesianProduct(self):
         """
         Test cartesian product utility
@@ -81,8 +102,10 @@ class testUtils(unittest.TestCase):
                 'site' : 'T2',
         }
         ]
-        result = cartesian_product(dbs_set, sitedb_set, ['site'])
-        result = cartesian_product(result, phedex_set, ['block','site'])
+#        result = cartesian_product(dbs_set, sitedb_set, ['site'])
+#        result = cartesian_product(result, phedex_set, ['block','site'])
+        result = cartesian_product(dbs_set, sitedb_set)
+        result = cartesian_product(result, phedex_set)
         resultlist = [res for res in result]
         resultlist.sort()
         expectlist = [
