@@ -6,8 +6,8 @@ unit test for cache module
 """
 
 import unittest
-from core.cache import Cache
-from core.das_core import DASCore
+from DAS.core.cache import Cache
+from DAS.core.das_core import DASCore
 
 class testCache(unittest.TestCase):
     """

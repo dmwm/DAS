@@ -6,8 +6,8 @@ Unit test for DAS core module
 """
 
 import unittest
-from core.das_core import DASCore
-from core.qlparser import dasqlparser
+from DAS.core.das_core import DASCore
+from DAS.core.qlparser import dasqlparser
 
 class testDAS(unittest.TestCase):
     """

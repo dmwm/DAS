@@ -6,9 +6,9 @@ Unit test for DAS couchdb cache module
 """
 
 import unittest
-from utils.utils import genkey
-from core.das_couchdb import DASCouchDB
-from core.das_core import DASCore
+from DAS.utils.utils import genkey
+from DAS.core.das_couchdb import DASCouchDB
+from DAS.core.das_core import DASCore
 
 class testDASCouchDB(unittest.TestCase):
     """

@@ -7,7 +7,8 @@ Unit test for DAS config module
 
 import os
 import unittest
-from utils.das_config import das_configfile, das_readconfig, das_writeconfig
+from DAS.utils.das_config import das_configfile, das_readconfig
+from DAS.utils.das_config import das_writeconfig
 
 class testDASConfig(unittest.TestCase):
     """
