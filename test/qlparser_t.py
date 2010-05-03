@@ -100,7 +100,9 @@ class testQLParser(unittest.TestCase):
         self.assertEqual(result, expect)
 
         result = ql.allkeys(q)
+        result.sort()
         expect = ['block', 'dataset', 'run', 'site']
+        expect.sort()
         self.assertEqual(result, expect)
 
         q = "find a,b,c where r=1)"
@@ -115,8 +117,8 @@ class testQLParser(unittest.TestCase):
         q = "find dataset,admin,replica where site=123 or site=345 order by site desc"
         result = ql.params(q)
         expect = {'order_by_list': ['site'], 
-                  'selkeys': ['dataset', 'admin', 'replica'], 
-                  'unique_services': ['sitedb', 'dbs', 'phedex'], 
+                  'selkeys': ['admin', 'dataset', 'replica'], 
+                  'unique_services': ['dbs', 'phedex', 'sitedb'], 
                   'order_by_order': 'desc', 
                   'services': {'sitedb': ['admin', 'site'], 
                                'dbs': ['dataset', 'site'], 
@@ -125,7 +127,7 @@ class testQLParser(unittest.TestCase):
                                  'or', 
                                  {'value': '345', 'key': 'site', 'op': '='}], 
                   'allkeys': ['admin', 'dataset', 'replica', 'site'], 
-                  'unique_keys': ['admin', 'dataset', 'replica', 'site', 'block']}
+                  'unique_keys': ['admin', 'block', 'dataset', 'replica', 'site']}
         self.assertEqual(result, expect)
 
 

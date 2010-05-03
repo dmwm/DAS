@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.11 2009/05/08 14:54:40 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: utils.py,v 1.12 2009/05/08 15:52:51 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -386,3 +386,12 @@ def oneway_permutations(ilist):
                 yield (key, i)
         except:
             pass
+def unique_list(ilist):
+    """
+    Return sorted unique list out of provided one.
+    """
+    ilist.sort()
+#    return [k for k, g in groupby(ilist)]
+    tmplist = [k for k, g in groupby(ilist)]
+    tmplist.sort()
+    return tmplist

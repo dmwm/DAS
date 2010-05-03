@@ -4,13 +4,13 @@
 """
 Query parser for DAS
 """
-__revision__ = "$Id: qlparser.py,v 1.6 2009/05/08 15:04:21 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: qlparser.py,v 1.7 2009/05/08 15:52:51 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 from itertools import groupby
-from DAS.utils.utils import permutations, oneway_permutations
+from DAS.utils.utils import oneway_permutations, unique_list
 
 def antrlparser(uinput):
     """
@@ -341,12 +341,12 @@ class QLParser(object):
         order_by_list, order_by  = self.order_by(query)
         rdict['order_by_list']   = order_by_list
         rdict['order_by_order']  = order_by
-        rdict['selkeys']         = self.selkeys(query)
-        rdict['allkeys']         = self.allkeys(query)
+        rdict['selkeys']         = unique_list(self.selkeys(query))
+        rdict['allkeys']         = unique_list(self.allkeys(query))
         rdict['services']        = self.services(query)
         services, ulist          = self.uniq_services(query)
-        rdict['unique_services'] = services
-        rdict['unique_keys']     = ulist
+        rdict['unique_services'] = unique_list(services)
+        rdict['unique_keys']     = unique_list(ulist)
         self.check(query, rdict)
         return rdict
         
@@ -386,11 +386,12 @@ class QLParser(object):
         olist = self.selkeys(query)
         for item in self.conditions(query):
             if  type(item) is types.DictType:
-                olist.append(item['key'])
+                key = item['key'].strip()
+                if  key not in olist:
+                    olist.append(key)
         order_by_list, order_by = self.order_by(query)
         olist = olist + order_by_list
-        olist.sort()
-        return [name.strip() for name, group in groupby(olist)]
+        return olist
 
     def services(self, query):
         """
@@ -398,7 +399,7 @@ class QLParser(object):
         """
         query = self.fix_reserved_keywords(query)
         sdict = {}
-        akeys = self.allkeys(query)
+        akeys = unique_list(self.allkeys(query))
         for key in akeys:
             for service, keys in self.qlmap.items():
                 if  key in keys:
@@ -431,7 +432,7 @@ class QLParser(object):
             list0 = self.qlmap[pair[0]]
             list1 = self.qlmap[pair[1]]
             rkeys = rkeys + list( set(list0) & set(list1) )
-        ulist     = [i for i, g in groupby(akeys + rkeys)]
+        ulist = akeys + rkeys
         services  = []
         for service in sdict.keys():
             if  not set(sdict[service]) & set(skeys):
@@ -456,10 +457,10 @@ class QLParser(object):
             qlist  = uinput.split()
             if  qlist[-1] == 'asc':
                 order_by = 'asc'
-                order_by_list = ' '.join(qlist[:-1]).split(',')
+                order_by_list = ''.join(qlist[:-1]).split(',')
             elif qlist[-1] == 'desc':
                 order_by = 'desc'
-                order_by_list = ' '.join(qlist[:-1]).split(',')
+                order_by_list = ''.join(qlist[:-1]).split(',')
             else:
-                order_by_list = ' '.join(qlist).split(',')
+                order_by_list = ''.join(qlist).split(',')
         return order_by_list, order_by
