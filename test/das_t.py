@@ -66,7 +66,7 @@ class testDAS(unittest.TestCase):
 #        query = "find dataset, admin where site = T2_UK"
 #        result = self.das.call(query)
 #        resultlist = [res for res in result]
-#        rd = {'storage': 1, '_system_': 'dbs+phedex', 'block': 1, 'dataset': 1}
+#        rd = {'storage': 1, 'system': 'dbs+phedex', 'block': 1, 'dataset': 1}
 #        expectlist = [rd]
 #        self.assertEqual(expectlist, resultlist)
 
