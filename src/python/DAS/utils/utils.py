@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.7 2009/04/29 15:46:55 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: utils.py,v 1.8 2009/04/29 16:07:07 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -40,12 +40,6 @@ def gen2list(results):
     """
     Convert generator to a list discarding duplicates
     """
-#    reslist = []
-#    for res in results:
-#        row = dict(res)
-#        if  not reslist.count(row):
-#            reslist.append(row)
-#    return reslist
     reslist = [name for name, group in groupby(results)]
     return reslist
 
@@ -141,62 +135,6 @@ def cartesian_product(list1, list2):
                         (row['system'], jdict['system'])
                     yield row
 
-def cartesian_product_new_lst(list1, list2):
-    """
-    Create cartesian product between two provided sets w/ provided relation
-    keys (rel_keys). Provided sets should be in a form of 
-    [{'system':system_name, 'key':value'}, ...]
-    """
-    # find which list is largest
-    if  len(list1) >= len(list2):
-        master_list = list1
-        slave_list  = list2
-    else:
-        master_list = list2
-        slave_list  = list1
-
-    # find relation keys between two dicts (rows) in lists
-    row1  = master_list[0]
-    keys1 = [k for k, v in row1.items() if v]
-    row2  = slave_list[0]
-    keys2 = [k for k, v in row2.items() if v]
-    rel_keys = list( set(keys1) & set(keys2) )
-    ins_keys = set(keys2) - set(rel_keys)
-    
-    # loop over largest list and insert
-    master_len = len(master_list)
-    for idx in range(0, master_len):
-        idict = master_list[idx]
-        update = 0
-        for jdx in range(0, len(slave_list)):
-            jdict = slave_list[jdx]
-            found = 0
-            for key in rel_keys:
-                if  idict[key] == jdict[key]:
-                    found += 1
-            if  found == len(rel_keys):
-                if  not jdx:
-                    update = 1
-                    for k in ins_keys:
-                        idict[k] = jdict[k]
-                else:
-                    row = dict(idict)
-                    for k in ins_keys:
-                        row[k] = jdict[k]
-                    master_list.append(row)
-    # remove rows who didn't pass
-    key = list(ins_keys)[0]
-    end = len(master_list)
-    while 1:
-        count = 0
-        for row in master_list:
-            if  not row[key]:
-                master_list.remove(row)
-                break
-            count += 1
-        if  count == len(master_list):
-            break
-
 def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
     """
     Create cartesian product between two provided sets w/ provided relation
@@ -233,35 +171,9 @@ def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
                 reslist.append(newrow)
     return reslist
 
-def cartesian_product_v1(master_set, slave_set):
-    """
-    Create cartesian product between two provided sets.
-    Set should be in a form of [{'system':system_name, 'key':value'}, ...]
-    """
-    # define non-null keys from result sets,
-    notnullkeys = []
-    for row in master_set:
-        for row_match in slave_set:
-            if  not notnullkeys:
-                notnullkeys = \
-                [key for key, val in row_match.items() if val]
-            for key in notnullkeys:
-                if  key == 'system':
-                    continue
-                if  row[key] == row_match[key]:
-                    for k, val in row_match.items():
-                        if  val:
-                            if  k == 'system':
-                                if  row[k].find(val) == -1:
-                                    row[k] = row[k] + "+" + val
-                            else:
-                                row[k] = val
-                    yield row
-
 def timestamp():
     return int(str(time.time()).split('.')[0])
         
-#def results2couch(query, results, processing, expire=600):
 def results2couch(query, results, expire=600):
     """
     Modify results and add to each row dict the query and timestamp
@@ -270,14 +182,11 @@ def results2couch(query, results, expire=600):
     resdict = {}
     resdict['query'] = query
     resdict['hash'] = genkey(query)
-#    resdict['processing'] = processing
     tstamp = timestamp()
     resdict['timestamp'] = tstamp
     resdict['expire'] = tstamp + expire
     resdict['results'] = results
     return resdict
-#    return [resdict]
-
 
 def genresults(system, results, collect_list):
     """
