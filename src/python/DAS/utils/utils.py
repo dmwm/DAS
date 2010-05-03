@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.1 2009/03/09 19:43:35 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: utils.py,v 1.2 2009/03/10 20:41:40 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -268,3 +268,26 @@ def add2dict(idict, key, value):
         idict[key] = value
 #    idict.setdefault(key, []).append(value)
 
+def map_validator(smap):
+    """
+    Validator for data-serivce maps. The data-service map should be
+    provided in a form
+    map = {
+            'api' : {
+                'keys' : ['key1', 'key2'],
+                'params' : {'param':1, 'param2':2}
+            }
+    }
+    """
+    msg = 'Fail to validate data-service map %s' % smap
+    if  type(smap.keys()) is not types.ListType:
+        raise Exception(msg)
+    for item in smap.values():
+        if  type(item) is not types.DictType:
+            raise Exception(msg)
+        if  item.keys() != ['keys', 'params']:
+            raise Exception(msg)
+        if  type(item['keys']) is not types.ListType:
+            raise Exception(msg)
+        if  type(item['params']) is not types.DictType:
+            raise Exception(msg)
