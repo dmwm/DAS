@@ -5,8 +5,8 @@
 Define core class for Data Aggregation Service (DAS)
 """
 
-__revision__ = "$Id: das_core.py,v 1.8 2009/04/30 21:00:21 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_core.py,v 1.9 2009/05/01 17:44:26 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -53,12 +53,6 @@ class DASCore(object):
 
         self.viewmgr = DASViewManager()
 
-        # TODO: this should be done externally, we can either
-        # define views in configuration or in couchdb
-        # so far I'll keep it for testing
-        query = 'find dataset, count(file), sum(file.size)'
-        self.viewmgr.create('dataset', query)
-
         self.cache_servers  = dasconfig['cache_servers']
         self.cache_lifetime = dasconfig['cache_lifetime']
         self.couch_servers  = dasconfig['couch_servers']
@@ -103,13 +97,27 @@ class DASCore(object):
             print item
         return
 
-    def views(self):
-        """return a registered dict of views in DAS"""
+    def get_view(self, name=None):
+        """return DAS view"""
+        if  name:
+            return self.viewmgr.get(name)
         return self.viewmgr.all()
+
+    def create_view(self, name, query):
+        """create DAS view"""
+        return self.viewmgr.create(name, query)
+
+    def update_view(self, name, query):
+        """update DAS view"""
+        return self.viewmgr.update(name, query)
+
+    def delete_view(self, name):
+        """delete DAS view"""
+        return self.viewmgr.delete(name)
 
     def viewanalyzer(self, input):
         """
-        Simply parser input and look-up if it's view or DAS query
+        Simple parser input and look-up if it's view or DAS query
         """
         pat = re.compile('^view')
         if  pat.match(input):
@@ -471,5 +479,3 @@ class DASCore(object):
             return keys
         return []
 
-    def create_view(self, iset):
-        """create a view for provided set"""

@@ -5,8 +5,8 @@
 View manager class.
 """
 
-__revision__ = "$Id: das_viewmanager.py,v 1.2 2009/04/30 20:54:11 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_viewmanager.py,v 1.3 2009/05/01 17:44:26 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 class DASViewManager(object):
@@ -22,6 +22,9 @@ class DASViewManager(object):
         create new view for given name and a query
         """
         # TODO: query validation via DAS QL parser
+        if  self.map.has_key(name):
+            msg = "View '%s' already exists" % name
+            raise Exception(msg)
         self.map[name] = query.strip().split(' where ')[0]
 
     def delete(self, name):
@@ -37,6 +40,7 @@ class DASViewManager(object):
         """
         if  self.map.has_key(name):
             # TODO: we can add logic to keep track of updates here
+            self.delete(name)
             self.create(name, query)
         else:
             raise Exception("View '%s', doesn't exists" % name)
