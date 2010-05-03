@@ -180,14 +180,21 @@ class testUtils(unittest.TestCase):
         indict = {'a':[1,2], 'b':[1,2]}
         result = transform_dict2list(indict)
         result.sort()
-        expect = [{'a':1, 'b':1}, {'a':1, 'b':2}, 
-                  {'a':2, 'b':1}, {'a':2, 'b':2}]
+        expect = [{'a':1, 'b':1}, {'a':2, 'b':2}] 
         expect.sort()
         self.assertEqual(expect, result)
 
         indict = {'a':1, 'b':1, 'c':[1]}
         result = transform_dict2list(indict)
         expect = [{'a':1, 'b':1, 'c':1}]
+        self.assertEqual(expect, result)
+
+        indict = {'c':1, 'a':[1,2,3], 'b':[1,2,3]}
+        result = transform_dict2list(indict)
+        result.sort()
+        expect = [{'a':1, 'b':1, 'c':1}, {'a':2, 'b':2, 'c':1}, 
+                  {'a':3, 'b':3, 'c':1}]
+        expect.sort()
         self.assertEqual(expect, result)
 
     def test_add2dict(self):

@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.4 2009/04/08 20:52:41 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: utils.py,v 1.5 2009/04/16 17:48:31 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -207,43 +207,26 @@ def transform_dict2list(indict):
     d=['a':1, 'b':[1,2]}
     output list = [{'a':1,'b':1}, {'a':1,'b':2}]
     """
-    if  str(indict).find('[') == -1: # no list found in input dict
-        return [indict]
-    row = {}
-    for key in indict.keys():
-        row[key] = ''
-    data = []
-    for key, val in indict.items():
-        if  type(val) is types.ListType:
-            for item in val:
-                newrow = dict(row)
-                newrow[key] = item
-                data.append(newrow)
-        else:
+    foundlist = 0
+    row  = {}
+    for k, v in indict.items():
+        row[k] = None
+        if  type(v) is types.ListType:
+            if  foundlist and foundlist != len(v):
+                raise Exception('Input dict contains multi-sized lists')
+            foundlist = len(v)
+
+    olist = []
+    if  foundlist:
+        for i in range(0, foundlist):
             newrow = dict(row)
-            newrow[key] = val
-            data.append(newrow)
-    newdata = []
-    for row in data:
-        newrow = dict(row)
-        for key, val in row.items():
-            if  val:
-                newrow[key] = val
-            else:
-                if  type(indict[key]) is types.ListType:
-                    for value in indict[key]:
-                        newrow = dict(row)
-                        newrow[key] = value
-                        values = [val for val in newrow.values() if val]
-                        if  not newdata.count(newrow) \
-                            and len(values) == len(newrow.keys()):
-                            newdata.append(newrow)
+            for k, v in indict.items():
+                if  type(v) is types.ListType:
+                    newrow[k] = v[i]
                 else:
-                    newrow[key] = indict[key]
-        values = [val for val in newrow.values() if val]
-        if  not newdata.count(newrow) and len(values) == len(newrow.keys()):
-            newdata.append(newrow)
-    return newdata
+                    newrow[k] = v
+            olist.append(newrow)
+    return olist
 
 def getarg(kwargs, key, default):
     """
