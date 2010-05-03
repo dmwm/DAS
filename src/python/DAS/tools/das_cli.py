@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.1 2009/03/09 19:43:34 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_cli.py,v 1.2 2009/03/18 19:18:58 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -16,7 +16,7 @@ from DAS.utils.utils import dump
 
 class DASOptionParser: 
     """
-     DAS cli option parser
+    DAS cli option parser
     """
     def __init__(self):
         self.parser = OptionParser()
@@ -24,6 +24,9 @@ class DASOptionParser:
                                           type="int", default=0, 
                                           dest="verbose",
              help="verbose output")
+        self.parser.add_option("--profile", action="store_true", 
+                                          dest="profile",
+             help="profile output")
         self.parser.add_option("--input", action="store", type="string", 
                                           default=False, dest="input",
              help="specify input for your request.")
@@ -78,23 +81,25 @@ if __name__ == '__main__':
         for key in keys:
             print key
     elif query:
-        results = DAS.result(query)
-#        print '\n+++++++++ DAS output ++++++++++\n'
-        dump(results, opts.limit)
+
+        if  opts.profile:
+            import hotshot                   # Python profiler
+            import hotshot.stats             # profiler statistics
+            print "Start DAS in profile mode"
+            profiler = hotshot.Profile("profile.dat")
+            profiler.run("DAS.result(query)")
+            profiler.close()
+            stats = hotshot.stats.load("profile.dat")
+            stats.sort_stats('time', 'calls')
+            stats.print_stats()
+        else:
+            results = DAS.result(query)
+            dump(results, opts.limit)
     else:
         print
         print "DAS CLI interface, no actions found,"
         print "please use --help for more options."
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
     print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)
-#    DAS = DASCache(
-#    if  opts.verbose:
-#        DAS.verbose = 1
-#    if  opts.json:
-#        json = DAS.json(query)
-#        print '\n+++++++++ DAS output ++++++++++\n'
-#        print json
-#    else:
-#        results = DAS.call(query)
-#        print '\n+++++++++ DAS output ++++++++++\n'
-#        dump(results, opts.limit)
+
+
