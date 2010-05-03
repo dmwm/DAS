@@ -5,8 +5,8 @@
 DAS mapping
 """
 
-__revision__ = "$Id: das_mapping.py,v 1.3 2009/04/16 17:48:30 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_mapping.py,v 1.4 2009/04/21 22:09:23 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -83,6 +83,11 @@ def jsonparser(system, jsondict, keylist):
     a list of rows. Each row is a dict whose values are single, 
     no lists.
     """
+    olist = []
+    for key in jsondict.keys():
+        if  key.lower() == 'exception' or key.lower() == 'error':
+            msg = jsondict[key]
+            raise Exception(msg)
     def yieldrows(system, jsondict, key):
         res = jsonparser4key(system, jsondict, key)
         if  type(res) is types.ListType:
@@ -93,7 +98,6 @@ def jsonparser(system, jsondict, keylist):
 
     tlist = ((item for item in yieldrows(system, jsondict, key)) \
                 for key in keylist)
-    olist = []
     for tup in zip(*tlist):
         newrow = {}
         for item in tup:
