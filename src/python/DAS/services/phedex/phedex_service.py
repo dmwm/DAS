@@ -4,12 +4,12 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.2 2009/03/10 20:57:23 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: phedex_service.py,v 1.3 2009/04/07 19:37:33 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import query_params, map_validator
+from DAS.utils.utils import query_params, map_validator, splitlist
 
 class PhedexService(DASAbstractService):
     """
@@ -54,6 +54,31 @@ class PhedexService(DASAbstractService):
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
+        results = []
+        if  cond_dict.has_key('block'):
+            blocklist = cond_dict['block']
+
+            msg = 'DAS::%s call api, len(blocks)=%s, will split' \
+                % (self.name, len(blocklist))
+            self.logger.info(msg)
+
+            for blist in splitlist(blocklist, 100):
+                msg = 'DAS::%s call api, send %s blocks' \
+                        % (self.name, len(blist))
+                self.logger.info(msg)
+                params = dict(cond_dict)
+                params['block'] = blist
+                data = self.worker(query, params)
+                results += data
+        else:
+            results = self.worker(query, cond_dict)
+        return results
+
+    def worker(self, query, cond_dict=None):
+        """
+        A service worker. It parses input query, invoke service API 
+        and return results in a list with provided row.
+        """
         selkeys, cond = query_params(query)
         params = {}
         for key in cond.keys():
@@ -87,6 +112,8 @@ class PhedexService(DASAbstractService):
                 res = self.getdata(url, args)
                 res = res.replace('null', '\"null\"')
                 jsondict = eval(res)
+                if  jsondict.has_key('error'):
+                    continue
                 data = getattr(self, 'parser_%s' % apiname)(jsondict)
                 return data
 
