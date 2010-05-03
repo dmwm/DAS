@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.2 2009/03/10 20:57:23 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: dbs_service.py,v 1.3 2009/04/14 15:26:30 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -48,8 +48,11 @@ class DBSService(DASAbstractService):
         res = self.cache.get(key)
         if  res:
             return res
-        res = parser_dbshelp(self.getdata(url, params))
-        self.cache.set(key, res, 24*60*60) # store results into memcache
+        try:
+            res = parser_dbshelp(self.getdata(url, params))
+            self.cache.set(key, res, 24*60*60) # store results into memcache
+        except:
+            return []
         return res
 
     def api(self, query, cond_dict=None):
