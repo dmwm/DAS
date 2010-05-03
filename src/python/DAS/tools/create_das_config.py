@@ -4,8 +4,8 @@
 """
 DAS config generator
 """
-__revision__ = "$Id: create_das_config.py,v 1.1 2009/03/09 19:45:24 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: create_das_config.py,v 1.2 2009/04/07 19:54:17 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -15,7 +15,7 @@ from DAS.utils.das_config import das_writeconfig
 # main
 #
 if __name__ == '__main__':
-    das_writeconfig()
-    file = os.path.join(os.getcwd(), 'das.cfg')
+    file = das_writeconfig()
+#    file = os.path.join(os.getcwd(), 'das.cfg')
     print "DAS configuration file has been created"
     print file
