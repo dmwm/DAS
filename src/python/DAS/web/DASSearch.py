@@ -5,12 +5,13 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.3 2009/04/29 16:09:52 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: DASSearch.py,v 1.4 2009/04/30 18:32:53 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
+import types
 import thread
 import traceback
 from cherrypy import expose
@@ -135,7 +136,35 @@ class DASSearch(TemplatedPage):
             self.lastclean = time.time()
 
         uinput  = getarg(kwargs, 'input', '')
-        res     = self.dasmgr.result(uinput)
+        format  = getarg(kwargs, 'format', '')
+        # NOTE: the current implementation of table UI, using YUI,
+        # is done in JavaScript, which by itself doesn't recognize
+        # a.c notations. So I replace a key in a dict from a.c form
+        # to a_dot_c one. If any value is a dict itself, for HTML
+        # format we take its string representation and replace 
+        # curle brackets with appropriate HTML symbols.
+        res     = []
+        id      = 0
+        for item in self.dasmgr.result(uinput):
+            item['id'] = id
+            if  format == 'html':
+                for k, v in item.items():
+                    if  type(v) is types.DictType:
+                        newval = str(v).replace('{','&#123;')
+                        newval = newval.replace('}','&#125;')
+                        item[k] = newval.replace("'",'')
+                    if  k.find('.') != -1:
+                        item[k.replace('.', '_dot_')] = item[k]
+                for k in item.keys():
+                    if  k.find('.') != -1:
+                        del(item[k])
+                    
+                res.append(item)
+            else:
+                res.append(item)
+            id += 1
+
+#        res     = self.dasmgr.result(uinput)
         titles  = res[0].keys()
         titles.sort()
         titles.remove('id')
@@ -193,6 +222,7 @@ class DASSearch(TemplatedPage):
         """
         provide DAS table view
         """
+        kwargs['format'] = 'html'
         t0 = time.time()
         titles, rows, form = self.result(kwargs)
         coldefs = ""
