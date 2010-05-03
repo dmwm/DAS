@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.4 2009/03/19 18:40:41 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_config.py,v 1.5 2009/04/07 20:10:04 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -41,7 +41,9 @@ def das_readconfig(dasconfig=None):
     configdict['couch_lifetime'] = config.getint('couch', 'lifetime')
     configdict['couch_cleantime'] = config.getint('couch', 'cleantime')
 
-    systems = config.get('das', 'systems', 'dbs,sitedb,phedex').split(',')
+#    systems = config.get('das', 'systems', 'dbs,sitedb,phedex').split(',')
+    systems = config.get('das', 'systems', 
+                'dbs,sitedb,phedex,monitor,lumidb').split(',')
     verbose = config.getint('das', 'verbose')
     configdict['systems'] = systems
     configdict['verbose'] = verbose
@@ -66,7 +68,7 @@ def das_writeconfig():
 
     config = ConfigParser.ConfigParser()
 
-    systems = 'dbs,sitedb,phedex,monitor'
+    systems = 'dbs,sitedb,phedex,monitor,lumidb'
     config.add_section('das')
     config.set('das', 'systems', '%s' % systems)
     config.set('das', 'verbose', 1)
@@ -104,6 +106,12 @@ def das_writeconfig():
     config.set('monitor', 'url', 
     'https://cmsweb.cern.ch/overview/')
 
+    config.add_section('lumidb')
+    config.set('lumidb', 'expire', 600)
+    config.set('lumidb', 'verbose', 1)
+    config.set('lumidb', 'url', 
+    'http://cmslumi.cern.ch/lumi/servlet/LumiServlet')
+
 #        config.add_section('runsum')
 #        config.set('runsum', 'verbose', 1)
 #        config.set('runsum', 'url', '')
@@ -111,10 +119,12 @@ def das_writeconfig():
 #        maps = {'dbs,sitedb':'site', 'dbs,phedex':'block,site', 
 #                'dbs,runsum':'run', 'phedex,sitedb':'site'}
     maps = {'dbs,sitedb':'site', 'dbs,phedex':'block,site', 
-            'phedex,sitedb':'site', 'monitor,sitedb':'site'}
+            'phedex,sitedb':'site', 'monitor,sitedb':'site',
+            'dbs,lumidb':'lumi,run'}
     config.add_section('mapping')
     for key, val in maps.items():
         config.set('mapping', '%s' % key, '%s' % val)
 
     dasconfig = das_configfile()
     config.write(open(dasconfig, 'wb'))
+    return dasconfig
