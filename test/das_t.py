@@ -17,7 +17,7 @@ class testDAS(unittest.TestCase):
         """
         set up DAS core module
         """
-        self.das = DASCore()
+        self.das = DASCore(debug=0)
 
     def test_queryanalyzer(self):                          
         """test DAS QL analyzer routine"""
@@ -49,8 +49,7 @@ class testDAS(unittest.TestCase):
         key = "block"
         result = [x for x in self.das.findmappedservices(key)]
         result.sort()
-#        expect = (x for x in ['dbs','phedex'])
-        expect = ['dbs','phedex']
+        expect = ['dbs', 'phedex']
         self.assertEqual(expect, result)
 
     def test_findservices(self):
@@ -58,7 +57,8 @@ class testDAS(unittest.TestCase):
         query = "find dataset, admin where site = T2_UK"
         result = self.das.findservices(query)
         result.sort()
-        expect = ['dbs','sitedb']
+        expect = ['dbs', 'sitedb', 'phedex']
+        expect.sort()
         self.assertEqual(expect, result)
 
 #    def test_call(self):                          
