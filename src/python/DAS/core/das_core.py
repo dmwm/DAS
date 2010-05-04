@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.16 2009/05/28 18:59:10 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: das_core.py,v 1.17 2009/06/05 14:05:11 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -125,9 +125,15 @@ class DASCore(object):
         # add mapping keys to final list
         for name in dasconfig['systems']: 
             skeys = getattr(self, name).keys()
-            for key, val in self.service_maps.items():
-                if  list(key).count(name):
-                    skeys += [s for s in val if not skeys.count(s)]
+# This code is commented out on purpose, but I should keep it around
+# The service_maps which is a dict of service:keys should keep only keys
+# which provided by service (the output of service), while mapping
+# between services should not be included (the code below). The mapping
+# keys are used in multiplex step, but should not be used when we place
+# service queries 
+#            for key, val in self.service_maps.items():
+#                if  name in list(key):
+#                    skeys += [s for s in val if s not in skeys]
             self.service_keys[getattr(self, name).name] = skeys
         self.qlparser = QLParser(self.service_keys)
         if  self.verbose:
@@ -298,6 +304,11 @@ class DASCore(object):
         # find run where dataset=/a/b/c/ and hlt=ok we end-up with 1 entry
         # find all runs in DBS and make cartesian product with those found
         # in run-summary.
+        #
+        # the results from service call API are generators, since we
+        # re-use them in condition dict passed from one service to
+        # another we must get a list out of generators, therefore
+        # we use rdict[service] = [i for i in res]
         for qdict in daslist:
             self.logger.info('DASCore::call, qdict = %s' % str(qdict))
             rdict = {}
@@ -311,12 +322,12 @@ class DASCore(object):
                     squery = qdict[service]
                     res = getattr(getattr(self, service), 'call')\
                                  (squery, ulist, cond_dict)
-                    rdict[service] = res
+                    rdict[service] = [i for i in res]
                 else:
                     qqq = "find " + ','.join(sellist)
                     res = getattr(getattr(self, service), 'call')\
                                     (qqq, ulist, cond_dict)
-                    rdict[service] = res
+                    rdict[service] = [i for i in res]
                 if  self.verbose:
                     self.timer.record(service)
             # if result dict contains only single result set just return it
@@ -330,15 +341,14 @@ class DASCore(object):
             # and make cartesian product out of them based on found relation keys
             list0 = rdict[systems[0]]
             list1 = rdict[systems[1]]
-            idx  = 2
+            idx   = 2
             while 1:
                 product = cartesian_product(list0, list1)
                 if  idx >= len(systems):
                     break
-#                list0 = [i for i in product] # may be I should do: list0 = product
                 list0 = product
                 list1 = rdict[systems[idx]]
-                idx += 1
+                idx  += 1
             for entry in product:
                 yield entry
 
