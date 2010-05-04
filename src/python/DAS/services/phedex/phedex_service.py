@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.20 2010/02/16 18:34:51 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: phedex_service.py,v 1.21 2010/02/25 14:53:48 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -23,23 +23,7 @@ class PhedexService(DASAbstractService):
         map_validator(self.map)
         self.notationmap = self.notations()
 
-    def clean_params(self, api, params):
-        """
-        Clean all parameters to get as much as possible information
-        from Phedex. Skip only those which marked as required.
-        """
-        if  api in ['nodes']:
-            args = {}
-            for key, val in self.map[api]['params'].items():
-                if  val != 'required':
-                    args[key] = val
-                else:
-                    args[key] = params[key]
-            return args
-        else:
-            return params
-
-    def parser(self, dformat, source, api, args):
+    def parser(self, dformat, source, api):
         """
         Phedex data-service parser.
         """

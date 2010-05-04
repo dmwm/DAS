@@ -4,8 +4,8 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.13 2010/02/03 16:49:31 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: monitor_service.py,v 1.14 2010/02/25 14:53:48 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -22,7 +22,7 @@ class MonitorService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def parser(self, source, args):
+    def parser(self, dformat, source, args):
         """
         Data parser for Monitor service.
         """
@@ -33,7 +33,6 @@ class MonitorService(DASAbstractService):
         monitor_data = row['data']
         items = ({'time':list(t), 'data':d} for t, d in \
                             zip(monitor_time, monitor_data))
-#        data = []
         for row in items:
             interval = row['time']
             dataval  = row['data']
@@ -42,8 +41,6 @@ class MonitorService(DASAbstractService):
                 newrow[args['grouping']] = key
                 newrow['rate'] = val
                 yield dict(monitor=newrow)
-#                data.append(dict(monitor=newrow))
-#        return data
 
     def api(self, query):
         """
@@ -56,6 +53,7 @@ class MonitorService(DASAbstractService):
         data = []
         keys = [key for key in self.map[api]['keys'] for api in self.map.keys()]
         cond = query['spec']
+        dformat = "JSON"
         for key, value in cond.items():
             if  key.find('.') != -1:
                 args['grouping'] = key.split('.')[-1]
@@ -67,7 +65,7 @@ class MonitorService(DASAbstractService):
             time0 = time.time()
             res = self.getdata(url, args)
             try:
-                genrows = self.parser(res, args)
+                genrows = self.parser(dformat, res, args)
             except:
                 traceback.print_exc()
             ctime = time.time() - time0
