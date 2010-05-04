@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.31 2009/12/20 15:38:07 valya Exp $"
-__version__ = "$Revision: 1.31 $"
+__revision__ = "$Id: qlparser.py,v 1.32 2009/12/22 15:11:34 valya Exp $"
+__version__ = "$Revision: 1.32 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -412,41 +412,4 @@ class MongoParser(object):
         """
         skeys, cond = self.decompose(query)
         return dict(selkeys=skeys, conditions=cond, services=self.services(query))
-
-    def lookupquery(self, system, query):
-        """
-        In order to look-up records in cache DB, we need to loose
-        our constraints on input query. We look-up spec part of the query
-        and loose all constrains over there,
-        see MongoDB API, http://api.mongodb.org/python/
-        """
-        spec    = getarg(query, 'spec', {})
-        fields  = getarg(query, 'fields', None)
-        # convert selection keys into das notataions, e.g.
-        # bfield => run.bfield
-        # TODO: I may need to change this to return entity rather 
-        # then entity.attribute
-        daskeys = []
-        for key in fields:
-            try:
-                for nkey in self.map.lookup_keys(system, key):
-                    if  nkey not in daskeys:
-                        daskeys.append(nkey)
-            except:
-                pass
-        newspec = {}
-        for key, val in spec.items():
-            ksplit = key.split('.') # split key into entity.attribute
-            if  ksplit[0] not in self.daskeys[system]:
-                continue
-            if  type(val) is types.StringType or type(val) is types.UnicodeType:
-                if  val.find('*') != -1:
-                    val = re.compile(val.replace('*', '.*'))
-#                val = re.compile('.*%s.*' % val)
-            newspec[key] = val
-        newspec['das.system'] = system
-        if  daskeys:
-#            return dict(spec=newspec, fields=daskeys + ['das'])
-            return dict(spec=newspec, fields=daskeys)
-        return dict(spec=newspec)
 
