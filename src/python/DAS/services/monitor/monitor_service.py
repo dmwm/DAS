@@ -4,8 +4,8 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.11 2010/01/25 20:23:03 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: monitor_service.py,v 1.12 2010/02/02 19:55:21 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -50,6 +50,8 @@ class MonitorService(DASAbstractService):
         An overview data-service worker.
         """
         api  = self.map.keys()[0] # we have only one key
+        url  = self.map[api]['url']
+        expire = self.map[api]['expire']
         args = dict(self.map[api]['params'])
         data = []
         keys = [key for key in self.map[api]['keys'] for api in self.map.keys()]
@@ -61,7 +63,7 @@ class MonitorService(DASAbstractService):
             if  key not in keys:
                 continue
             args['end'] = '%d' % time.time()
-            url = self.url + '/' + api
+            url = url + '/' + api
             time0 = time.time()
             res = self.getdata(url, args)
             try:
@@ -69,5 +71,5 @@ class MonitorService(DASAbstractService):
             except:
                 traceback.print_exc()
             ctime = time.time() - time0
-            self.write_to_cache(query, api, url, args, genrows, ctime)
+            self.write_to_cache(query, expire, url, api, args, genrows, ctime)
 

@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.17 2009/11/27 19:17:27 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: phedex_service.py,v 1.18 2010/02/02 19:55:21 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -46,7 +46,7 @@ class PhedexService(DASAbstractService):
         else:
             return params
 
-    def parser(self, source, api, args):
+    def parser(self, dformat, source, api, args):
         """
         Phedex data-service parser.
         """

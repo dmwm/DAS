@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.18 2009/11/27 19:17:28 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: dbs_service.py,v 1.19 2010/02/02 19:55:20 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -31,7 +31,7 @@ class DBSService(DASAbstractService):
             notations.update(self.notationmap[api])
         return notations
 
-    def parser(self, source, api, args=None):
+    def parser(self, dformat, source, api, args=None):
         """
         DBS data-service parser.
         """
