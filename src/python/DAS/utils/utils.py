@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.59 2010/02/05 21:20:23 valya Exp $"
-__version__ = "$Revision: 1.59 $"
+__revision__ = "$Id: utils.py,v 1.60 2010/02/06 02:03:21 valya Exp $"
+__version__ = "$Revision: 1.60 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -735,14 +735,21 @@ def xml_parser(notations, source, prim_key, tags=[]):
             root = elem # the first element is root
         row = {}
         if  tags and not sup:
+            # TODO I need to check tag for via notations(tag, tag)
             for tag in tags:
                 if  tag.find(".") != -1:
                     atag, attr = tag.split(".")
                     if  elem.tag == atag and elem.attrib.has_key(attr):
-                        sup[atag] = {attr:elem.attrib[attr]}
+#                        sup[atag] = {attr:elem.attrib[attr]}
+                        att_value = elem.attrib[attr]
+                        if  type(att_value) is types.DictType:
+                            att_value = dict_helper(elem.attrib[attr], notations)
+                        if  type(att_value) is types.StringType:
+                            att_value = adjust_value(att_value)
+                        sup[atag] = {attr:att_value}
                 else:
                     if  elem.tag == tag:
-                        sup[tag] = elem.attrib
+                        sup[tag] = dict_helper(elem.attrib, notations)
         key = notations.get(elem.tag, elem.tag)
         if  key != prim_key or event == 'end':
             elem.clear()
