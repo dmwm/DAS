@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.57 2010/02/02 20:08:57 valya Exp $"
-__version__ = "$Revision: 1.57 $"
+__revision__ = "$Id: utils.py,v 1.58 2010/02/04 21:21:50 valya Exp $"
+__version__ = "$Revision: 1.58 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -792,14 +792,37 @@ def json_parser(source):
             pass
     yield jsondict
 
+def convert_dot_notation(key, val):
+    """
+    In DAS key can be presented in dot notation, e.g. block.name.
+    Take provided key/value pair and convert it into dict if it
+    is required.
+    """
+    split_list = key.split('.')
+    if  len(split_list) == 1: # no dot notation found
+        return key, val
+    split_list.reverse()
+    newval = val
+    for item in split_list:
+        if  item == split_list[-1]:
+            return item, newval
+        newval = {item:newval}
+    return item, newval
+    
 def row2das(mapper, system, api, row):
-    """Transform keys of row into DAS notations, e.g. bytes to size"""
+    """
+    Transform keys of row into DAS notations, e.g. bytes to size
+    If compound key found, e.g. block.replica.name, it will
+    be converted into appropriate dict, e.g. {'block':{'replica':{'name':val}}
+    """
     if  type(row) is not types.DictType:
         return
     for key, val in row.items():
         newkey = mapper(system, key, api)
         if  newkey != key:
-            row[newkey] = row.pop(key)
+            row.pop(key)
+            nkey, nval = convert_dot_notation(newkey, val)
+            row.update({nkey:nval})
         if  type(val) is types.DictType:
             row2das(mapper, system, api, val)
         elif type(val) is types.ListType:
@@ -813,13 +836,13 @@ def aggregator(results, expire):
     perform aggregation of records on the primary_key of the record.
     """
     record = results.next()
-    prim_key = record['primary_key']
-    record.pop('primary_key')
+    prim_key = record['das_primary_key']
+    record.pop('das_primary_key')
     record.pop('das')
     record.pop('_id')
     update = 0
     for row in results:
-        row_prim_key = row.pop('primary_key')
+        row_prim_key = row.pop('das_primary_key')
         row.pop('das')
         row.pop('_id')
         if  row_prim_key != prim_key:
@@ -832,8 +855,8 @@ def aggregator(results, expire):
             merge_dict(record, row)
             update = 1
         else:
-            record.update({'das':{'expire':expire}})
-            yield record
+            row.update({'das':{'expire':expire}})
+            yield row
             record = dict(row)
             update = 0
     if  update: # check if we did update for last row

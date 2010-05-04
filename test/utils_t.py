@@ -12,6 +12,7 @@ from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
+from DAS.utils.utils import convert_dot_notation
 
 class testUtils(unittest.TestCase):
     """
@@ -400,6 +401,20 @@ class testUtils(unittest.TestCase):
                 {'run': 100, 'id': 1, 'dataset': 'bla1'}, 
         ]
         self.assertEqual(expect, sorted_data)
+
+    def test_convert_dot_notation(self):
+        """Test convert_dot_notation function"""
+        key = "block.replica.name"
+        val = "test"
+        result = convert_dot_notation(key, val)
+        expect = "block", {"replica": {"name":val}}
+        self.assertEqual(expect, result)
+
+        key = "block.name"
+        val = "test"
+        result = convert_dot_notation(key, val)
+        expect = "block", {"name":val}
+        self.assertEqual(expect, result)
 
     def test_xml_parser(self):
         """
