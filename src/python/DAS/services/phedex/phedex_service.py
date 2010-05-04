@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.6 2009/05/18 01:19:22 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: phedex_service.py,v 1.7 2009/06/12 14:41:35 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -74,3 +74,24 @@ class PhedexService(DASAbstractService):
         else:
             results = self.worker(query, cond_dict)
         return results
+
+    def update_args(self, api, args, intdict):
+        """
+        Update args dict from intermediate dict of results (intdict)
+        """
+        if  api == 'lfn2pfn':
+            # extrace lfn/node from fileReplicas
+            lfn_list = []
+            node_list = []
+            for item in intdict['fileReplicas']['phedex']['block']:
+                for files in item['file']:
+                    lfn   = files['name']
+                    if  lfn not in lfn_list:
+                        lfn_list.append(lfn)
+                    nodes = [i['node'] for i in files['replica']]
+                    for node in nodes:
+                        if  node not in node_list:
+                            node_list.append(node)
+            args['lfn'] = lfn_list
+            args['node'] = node_list
+        return args
