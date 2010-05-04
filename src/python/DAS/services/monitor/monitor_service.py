@@ -4,14 +4,14 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.14 2010/02/25 14:53:48 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: monitor_service.py,v 1.15 2010/03/05 18:08:08 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 import traceback
-from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, dasheader
+from DAS.services.abstract_service import DASAbstractService, dasheader
+from DAS.utils.utils import map_validator
 
 class MonitorService(DASAbstractService):
     """
