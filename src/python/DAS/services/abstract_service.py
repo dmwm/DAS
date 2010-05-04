@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.47 2009/11/10 20:02:39 valya Exp $"
-__version__ = "$Revision: 1.47 $"
+__revision__ = "$Id: abstract_service.py,v 1.48 2009/11/16 16:03:17 valya Exp $"
+__version__ = "$Revision: 1.48 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,7 +17,8 @@ import traceback
 import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
-from DAS.utils.utils import cartesian_product
+#from DAS.utils.utils import json_parser
+#from DAS.utils.utils import cartesian_product
 
 class DASAbstractService(object):
     """
@@ -92,7 +93,7 @@ class DASAbstractService(object):
     def getdata(self, url, params, headers=None):
         """
         Invoke URL call and retrieve data from data-service based
-        on provided URL and set of parameters. All data are parsed
+        on provided URL and set of parameters. All data will be parsed
         by data-service parsers to provide uniform JSON representation
         for further processing.
         """
@@ -119,29 +120,6 @@ class DASAbstractService(object):
         if  not encoded_data:
             encoded_data = None
         data = urllib2.urlopen(req, encoded_data)
-        return data.read()
-#        results = data.read()
-#        return self.parser(results, input_params)
-
-    def product(self, resdict):
-        """
-        Make cartesian product for all entries in provided result dict.
-        """
-        data = []
-        if  not resdict:
-            return data
-        keys = resdict.keys()
-        if  len(keys) == 1:
-            for rows in resdict.values():
-                data += rows
-        else: # need to make cartesian product of results
-            set0 = resdict[keys[0]]
-            set1 = resdict[keys[1]]
-            result = cartesian_product(set0, set1)
-            if  len(keys) > 2:
-                for rest in keys[2:]: 
-                    result = cartesian_product(result, resdict[rest])
-            data = result
         return data
 
     def call(self, query):
@@ -180,43 +158,13 @@ class DASAbstractService(object):
         """
         pass
 
-    def parser(self, api, data, params=None):
+    def data2das(self, gen, api):
         """
-        Output data parser, can be implemeted in derived classes.
-        By default we assume that data has string type (returned by
-        URL call to data-service api). We substitute
-        null (e.g. Phedex) into null string and evaluate the results.
+        Convert keys in resulted rows into DAS notations.
         """
-        # to prevent unicode/ascii errors like
-        # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
-        if  type(data) is types.StringType:
-            data = unicode(data, errors='ignore')
-
-        self.logger.debug('DASAbstractService::%s results=%s' \
-                % (self.name, data))
-
-        res = data.replace('null', '\"null\"')
-        try:
-            jsondict = json.loads(res)
-        except:
-            jsondict = eval(res)
-            pass
-        if  self.verbose > 2:
-            print "\n### %s returns" % self.name
-            print jsondict
-        for key in jsondict.keys():
-            newkey = self.dasmapping.notation2das(self.name, key, api)
-            if  newkey != key:
-                jsondict[newkey] = jsondict[key]
-                del jsondict[key]
-        # add which sub-system has been used parameters
-#        jsondict['system'] = self.name
-        if  params:
-            for key, val in params.items():
-                newkey = self.dasmapping.notation2das(self.name, key, api)
-                if  not jsondict.has_key(newkey):
-                    jsondict[newkey] = val
-        yield jsondict
+        for row in gen:
+            self.row2das(self.name, api, row)
+            yield row
 
     def lookup_keys(self, api):
         """
@@ -297,7 +245,8 @@ class DASAbstractService(object):
                 self.logger.info(msg)
                 time0   = time.time()
                 data    = self.getdata(url, args)
-                genrows = self.parser(api, data, args)
+                gen     = self.parser(data, api, args)
+                genrows = self.data2das(gen, api)
                 ctime   = time.time() - time0
                 self.analytics.add_api(self.name, query, api, args)
                 header  = dasheader(self.name, query, api, url, args, ctime,
