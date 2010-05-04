@@ -40,7 +40,7 @@ file : [
         {"das":"file.nevents", "ui":"Number of events"},
         ],
 run : [
-        {"das":"run.run_number", "ui":"Run number"}, 
+        {"das":"run.number", "ui":"Run number"}, 
         {"das":"run.bfield", "ui":"Magnetic Field"}, 
         {"das":"run.sequence", "ui":"Sequence"}, 
         {"das":"run.l1Rate", "ui":"Level 1 rate"}, 
