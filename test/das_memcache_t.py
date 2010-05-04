@@ -24,7 +24,8 @@ class testDASMemcache(unittest.TestCase):
 
     def test_key(self):                          
         """test DAS cache key generator"""
-        query  = "find dataset,admin,node where site=T2_UK_SGrid_Bristol"
+#        query  = "find dataset,admin,node where site=T2_UK_SGrid_Bristol"
+        query  = "find site where site=T2_UK"
         result = genkey(query)
         import md5
         hash = md5.new()
@@ -34,7 +35,8 @@ class testDASMemcache(unittest.TestCase):
 
     def test_result(self):                          
         """test DAS cache result method"""
-        query  = "find dataset,admin,node where site=T2_UK_SGrid_Bristol"
+#        query  = "find dataset,admin,node where site=T2_UK_SGrid_Bristol"
+        query  = "find site where site=T2_UK"
         result = self.dascache.result(query)
         result.sort()
         expect = self.das.result(query)

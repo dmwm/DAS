@@ -8,6 +8,7 @@ unit test for base manager module
 import unittest
 from DAS.utils.das_config import das_readconfig
 from DAS.core.basemanager import BaseManager
+from DAS.utils.logger import DASLogger
 
 class testBaseManager(unittest.TestCase):
     """
@@ -18,6 +19,8 @@ class testBaseManager(unittest.TestCase):
         set up das core module
         """
         dasconfig = das_readconfig()
+        logger = DASLogger()
+        dasconfig['logger'] = logger
         self.mgr = BaseManager(dasconfig)
 
     def test_result(self):                          
