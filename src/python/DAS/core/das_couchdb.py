@@ -5,8 +5,8 @@
 DAS couchdb wrapper. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchdb.py,v 1.7 2009/05/11 20:11:02 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_couchdb.py,v 1.8 2009/05/15 14:19:59 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -269,7 +269,8 @@ function(k,v,r) {
         skey = '%s' % 0
         ekey = '%s' % timestamp()
         options = {'startkey': skey, 'endkey': ekey}
-        results = cdb.loadview(self.design, 'cleaner', options)
+        results = cdb.loadview('dasviews', 'query', options)
+#        results = cdb.loadview(self.design, 'cleaner', options)
 
         ndocs = 0
         for doc in results['rows']:

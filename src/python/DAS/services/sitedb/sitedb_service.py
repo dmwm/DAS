@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.6 2009/05/13 15:19:33 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: sitedb_service.py,v 1.7 2009/05/15 14:19:59 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -41,7 +41,7 @@ class SiteDBService(DASAbstractService):
                 'params' : {'name':''}
             },
             'CMSNametoSE' : {
-                'keys': ['site.sename', 'site'],
+                'keys': ['site'],
                 'params' : {'name':''}
             },
             'CMSNametoPhEDExNode' : {
@@ -68,7 +68,8 @@ class SiteDBService(DASAbstractService):
                     if  val.find('.') != -1:
                         newval = self.se2cms(val)
                         nlist.append(newval)
-                params['name'] = nlist
+                if  nlist:
+                    params['name'] = nlist
 
     def adjust_result(self, api, idict):
         """
