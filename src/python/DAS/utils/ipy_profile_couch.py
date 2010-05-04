@@ -5,8 +5,8 @@
 Couch DB command line admin tool
 """
 
-__revision__   = "$Id: ipy_profile_couch.py,v 1.2 2009/06/18 18:15:30 valya Exp $"
-__version__    = "$Revision: 1.2 $"
+__revision__   = "$Id: ipy_profile_couch.py,v 1.3 2009/06/19 02:20:09 valya Exp $"
+__version__    = "$Revision: 1.3 $"
 __author__     = "Valentin Kuznetsov"
 __license__    = "GPL"
 __version__    = "1.0.1"
@@ -30,7 +30,8 @@ import __main__
 
 class PrintManager:
     def __init__(self):
-        self.term = TerminalController()
+        from IPython import ColorANSI
+        self.term = ColorANSI.TermColors
 
     def print_red(self, msg):
         """print message using red color"""
@@ -48,176 +49,19 @@ class PrintManager:
         """yield message using red color"""
         if  not msg:
             msg = ''
-        return self.term.RED + msg + self.term.NORMAL
+        return self.term.Red + msg + self.term.Black
 
     def msg_green(self, msg):
         """yield message using green color"""
         if  not msg:
             msg = ''
-        return self.term.GREEN + msg + self.term.NORMAL
+        return self.term.Green + msg + self.term.Black
 
     def msg_blue(self, msg):
         """yield message using blue color"""
         if  not msg:
             msg = ''
-        return self.term.BLUE + msg + self.term.NORMAL
-#
-# http://code.activestate.com/recipes/475116/
-#
-class TerminalController:
-    """
-    A class that can be used to portably generate formatted output to
-    a terminal.  
-    
-    `TerminalController` defines a set of instance variables whose
-    values are initialized to the control sequence necessary to
-    perform a given action.  These can be simply included in normal
-    output to the terminal:
-
-        >>> term = TerminalController()
-        >>> print 'This is '+term.GREEN+'green'+term.NORMAL
-
-    Alternatively, the `render()` method can used, which replaces
-    '${action}' with the string required to perform 'action':
-
-        >>> term = TerminalController()
-        >>> print term.render('This is ${GREEN}green${NORMAL}')
-
-    If the terminal doesn't support a given action, then the value of
-    the corresponding instance variable will be set to ''.  As a
-    result, the above code will still work on terminals that do not
-    support color, except that their output will not be colored.
-    Also, this means that you can test whether the terminal supports a
-    given action by simply testing the truth value of the
-    corresponding instance variable:
-
-        >>> term = TerminalController()
-        >>> if term.CLEAR_SCREEN:
-        ...     print 'This terminal supports clearning the screen.'
-
-    Finally, if the width and height of the terminal are known, then
-    they will be stored in the `COLS` and `LINES` attributes.
-    """
-    # Cursor movement:
-    BOL = ''             #: Move the cursor to the beginning of the line
-    UP = ''              #: Move the cursor up one line
-    DOWN = ''            #: Move the cursor down one line
-    LEFT = ''            #: Move the cursor left one char
-    RIGHT = ''           #: Move the cursor right one char
-
-    # Deletion:
-    CLEAR_SCREEN = ''    #: Clear the screen and move to home position
-    CLEAR_EOL = ''       #: Clear to the end of the line.
-    CLEAR_BOL = ''       #: Clear to the beginning of the line.
-    CLEAR_EOS = ''       #: Clear to the end of the screen
-
-    # Output modes:
-    BOLD = ''            #: Turn on bold mode
-    BLINK = ''           #: Turn on blink mode
-    DIM = ''             #: Turn on half-bright mode
-    REVERSE = ''         #: Turn on reverse-video mode
-    NORMAL = ''          #: Turn off all modes
-
-    # Cursor display:
-    HIDE_CURSOR = ''     #: Make the cursor invisible
-    SHOW_CURSOR = ''     #: Make the cursor visible
-
-    # Terminal size:
-    COLS = None          #: Width of the terminal (None for unknown)
-    LINES = None         #: Height of the terminal (None for unknown)
-
-    # Foreground colors:
-    BLACK = BLUE = GREEN = CYAN = RED = MAGENTA = YELLOW = WHITE = ''
-    
-    # Background colors:
-    BG_BLACK = BG_BLUE = BG_GREEN = BG_CYAN = ''
-    BG_RED = BG_MAGENTA = BG_YELLOW = BG_WHITE = ''
-    
-    _STRING_CAPABILITIES = """
-    BOL=cr UP=cuu1 DOWN=cud1 LEFT=cub1 RIGHT=cuf1
-    CLEAR_SCREEN=clear CLEAR_EOL=el CLEAR_BOL=el1 CLEAR_EOS=ed BOLD=bold
-    BLINK=blink DIM=dim REVERSE=rev UNDERLINE=smul NORMAL=sgr0
-    HIDE_CURSOR=cinvis SHOW_CURSOR=cnorm""".split()
-    _COLORS = """BLACK BLUE GREEN CYAN RED MAGENTA YELLOW WHITE""".split()
-    _ANSICOLORS = "BLACK RED GREEN YELLOW BLUE MAGENTA CYAN WHITE".split()
-
-    def __init__(self, term_stream=sys.stdout):
-        """
-        Create a `TerminalController` and initialize its attributes
-        with appropriate values for the current terminal.
-        `term_stream` is the stream that will be used for terminal
-        output; if this stream is not a tty, then the terminal is
-        assumed to be a dumb terminal (i.e., have no capabilities).
-        """
-        # Curses isn't available on all platforms
-        try: import curses
-        except: return
-
-        # If the stream isn't a tty, then assume it has no capabilities.
-        if not term_stream.isatty(): return
-
-        # Check the terminal type.  If we fail, then assume that the
-        # terminal has no capabilities.
-        try: curses.setupterm()
-        except: return
-
-        # Look up numeric capabilities.
-        self.COLS = curses.tigetnum('cols')
-        self.LINES = curses.tigetnum('lines')
-        
-        # Look up string capabilities.
-        for capability in self._STRING_CAPABILITIES:
-            (attrib, cap_name) = capability.split('=')
-            setattr(self, attrib, self._tigetstr(cap_name) or '')
-
-        # Colors
-        set_fg = self._tigetstr('setf')
-        if set_fg:
-            for i,color in zip(range(len(self._COLORS)), self._COLORS):
-                setattr(self, color, curses.tparm(set_fg, i) or '')
-        set_fg_ansi = self._tigetstr('setaf')
-        if set_fg_ansi:
-            for i,color in zip(range(len(self._ANSICOLORS)), self._ANSICOLORS):
-                setattr(self, color, curses.tparm(set_fg_ansi, i) or '')
-        set_bg = self._tigetstr('setb')
-        if set_bg:
-            for i,color in zip(range(len(self._COLORS)), self._COLORS):
-                setattr(self, 'BG_'+color, curses.tparm(set_bg, i) or '')
-        set_bg_ansi = self._tigetstr('setab')
-        if set_bg_ansi:
-            for i,color in zip(range(len(self._ANSICOLORS)), self._ANSICOLORS):
-                setattr(self, 'BG_'+color, curses.tparm(set_bg_ansi, i) or '')
-
-    def _tigetstr(self, cap_name):
-        # String capabilities can include "delays" of the form "$<2>".
-        # For any modern terminal, we should be able to just ignore
-        # these, so strip them out.
-        import curses
-        cap = curses.tigetstr(cap_name) or ''
-        return re.sub(r'\$<\d+>[/*]?', '', cap)
-
-    def render(self, template):
-        """
-        Replace each $-substitutions in the given template string with
-        the corresponding terminal control string (if it's defined) or
-        '' (if it's not).
-        """
-        return re.sub(r'\$\$|\${\w+}', self._render_sub, template)
-
-    def _render_sub(self, match):
-        s = match.group()
-        if s == '$$': return s
-        else: return getattr(self, s[2:-1])
-
-#######################################################################
-#
-# load managers
-#
-#######################################################################
-try:
-    PM = PrintManager()
-except:
-    traceback.print_exc()
+        return self.term.Blue + msg + self.term.Black
 
 def load_config(func_list=[]):
     """
@@ -251,7 +95,6 @@ DB="das"
 DESIGN="dasadmin"
 DEBUG=0
 """
-    msg += "\n%s\n" % inspect.getsource(TerminalController)
     msg += "\n%s\n" % inspect.getsource(PrintManager)
     msg += "PM = PrintManager()"
     for func in func_list:
@@ -324,13 +167,14 @@ def couch_help(self, arg):
     """
     Provide simple help about available commands
     """
+    pmgr = PrintManager()
     global magic_list
     msg  = "\nAvailable commands:\n"
     for name, func in magic_list:
-        msg += "%s\n%s\n" % (PM.msg_blue(name), PM.msg_green(func.__doc__))
+        msg += "%s\n%s\n" % (pmgr.msg_blue(name), pmgr.msg_green(func.__doc__))
     msg += "List of pre-defined variables to control your interactions "
     msg += "with CouchDB:\n"
-    msg += PM.msg_green("    URI, DB, DESIGN, DEBUG\n")
+    msg += pmgr.msg_green("    URI, DB, DESIGN, DEBUG\n")
     print msg
 
 ### MAGIC COMMANDS ###
@@ -521,6 +365,7 @@ def main():
     """
     Main function which defint ipython behavior
     """
+    pmgr = PrintManager()
 
     # global IP API
     ip = IPython.ipapi.get()
@@ -549,7 +394,7 @@ def main():
     msg    = "Welcome to couch-sh \n[python %s, ipython %s]\n%s\n" \
             % (pyver, ipyver ,os.uname()[3])
     msg   += "For couch-sh help use "
-    msg   += PM.msg_blue("couch_help")
+    msg   += pmgr.msg_blue("couch_help")
     msg   += ", for python help use help commands\n"
     o.banner = msg
     o.prompts_pad_left = "1"
