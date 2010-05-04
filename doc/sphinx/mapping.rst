@@ -1,3 +1,5 @@
+.. _das_mapping:
+
 DAS Mapping DB
 ==============
 DAS Mapping DB holds information about all data-service APIs 
@@ -39,3 +41,8 @@ examples of API metrics and API notations records in DAS Mapping DB:
      "_id": "4aafbfa5e2194e22e300000d", 
      "system": "phedex"
     }
+
+Please note, each data-service must provide its mapping records in 
+`YAML <http://en.wikipedia.org/wiki/Yaml>`_ data-format. The records shown
+above are the ones stored into DAS storage back-end, while concrete mapping
+can use any YAML representation, e.g. ascii.

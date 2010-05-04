@@ -6,9 +6,8 @@
 Data Aggregation System
 =======================
 
-* **Release**: |release|
 * **Version**: |version|
-* **Date**: |today|
+* **Release Date**: |today|
 
 Contents:
 ---------
@@ -26,6 +25,8 @@ Contents:
    das_logging
    code
    new_service
+   cms_operations
+   das_operations
 
 Indices and tables
 ------------------

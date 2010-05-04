@@ -1,12 +1,29 @@
 DAS raw cache
 =============
-DAS raw cache holds all *raw* data-service outputs converted into DAS notations.
+DAS raw cache holds all *raw* data-service outputs converted into DAS records.
 
 DAS cache records
 -----------------
 
+DAS cache keeps data-services meta-data in a form of DAS records.
+Each data-service output has been converted into DAS records according to
+:ref:`DAS mapping <das_mapping>`.
+
+.. _das_cache_data_record:
+
 data records
 ++++++++++++
+
+Each data record contains data-service meta-data. Its structure is unknown
+a-priory to DAS. Since DAS operates with JSON almost any data structure
+can be stored into DAS, e.g. dictionaries, lists, strings, numerals, etc.
+The only fields DAS appends to it are:
+
+- das, contains DAS expiration timestamp
+- das_id, refers to query2apis data record
+- primary_key, provide a primary key to the stored data
+
+For example, here is a data record from `SiteDB <https://cmsweb.cern.ch/sitedb/>`_
 
 .. doctest::
 
@@ -16,8 +33,30 @@ data records
      u'primary_key': u'site.name',
      u'site': {u'name': u'T1_CH_CERN', u'sitename': u'CERN'}}
 
-query2apis record
-+++++++++++++++++
+.. _das_cache_query2apis_record:
+
+query2apis records
+++++++++++++++++++
+
+This type of DAS records contain information about underlying API calls
+made by DAS upon provided user query. It contains the following keys
+
+- das, a dictionary of DAS operations
+
+  - api, a list of API calls made by DAS upon provided user query
+  - ctime, a call time spent for every API call
+  - expire, a shortest expiration time stamp among all API calls
+  - lookup_keys, a DAS look-up key for provided user query
+  - qhash, a md5 hash of input query (in MongoDB syntax)
+  - status, a status request field
+  - system, a corresponding list of data-service names
+  - timestamp, a timestamp of last API call
+  - url, a list of URLs for API calls
+  - version, reserved for future use
+
+- query, an input user query in a form of MongoDB syntax
+
+Here is an example query2apis record for the following user input *site=T1_CH_CERN* 
 
 .. doctest::
 
