@@ -6,8 +6,8 @@
 DAS admin service class.
 """
 
-__revision__ = "$Id: das_admin.py,v 1.4 2010/04/07 18:22:45 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_admin.py,v 1.5 2010/04/13 15:17:53 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -104,6 +104,14 @@ class DASAdminService(DASWebManager):
                     limit=limit, results=page, url=url)
         page  = self.templatepage('das_pagination', **idict)
         return self.page(page)
+
+    def mapping(self, **kwargs):
+        mappingdb = self.conn['mapping']['db']
+        return "mapping page"
+
+    @expose
+    def analytics(self, **kwargs):
+        return "analytics page"
 
 #    @expose
 #    @auth
