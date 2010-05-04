@@ -1,4 +1,4 @@
-# $ANTLR 3.1.3 Mar 17, 2009 19:23:44 SqlDAS.g 2009-05-12 09:11:00
+# $ANTLR 3.1.3 Mar 17, 2009 19:23:44 SqlDAS.g 2009-05-14 13:46:34
 
 import sys
 from antlr3 import *
@@ -492,7 +492,7 @@ class SqlDASParser(Parser):
                 if alt7 == 1:
                     # SqlDAS.g:52:7: KW
                     pass 
-                    self.match(self.input, KW, self.FOLLOW_KW_in_gkw296)
+                    self.match(self.input, KW, self.FOLLOW_KW_in_gkw324)
 
 
                 elif alt7 == 2:
@@ -510,9 +510,9 @@ class SqlDASParser(Parser):
                         raise mse
 
 
-                    self.match(self.input, 15, self.FOLLOW_15_in_gkw307)
-                    self.match(self.input, KW, self.FOLLOW_KW_in_gkw310)
-                    self.match(self.input, 16, self.FOLLOW_16_in_gkw313)
+                    self.match(self.input, 15, self.FOLLOW_15_in_gkw335)
+                    self.match(self.input, KW, self.FOLLOW_KW_in_gkw338)
+                    self.match(self.input, 16, self.FOLLOW_16_in_gkw341)
 
 
 
@@ -544,7 +544,7 @@ class SqlDASParser(Parser):
                 # SqlDAS.g:54:16: ( constraint1 (rel= logicalOp constraint1 )* )
                 # SqlDAS.g:54:18: constraint1 (rel= logicalOp constraint1 )*
                 pass 
-                self._state.following.append(self.FOLLOW_constraint1_in_constraintList325)
+                self._state.following.append(self.FOLLOW_constraint1_in_constraintList353)
                 self.constraint1()
 
                 self._state.following.pop()
@@ -560,14 +560,14 @@ class SqlDASParser(Parser):
                     if alt8 == 1:
                         # SqlDAS.g:55:2: rel= logicalOp constraint1
                         pass 
-                        self._state.following.append(self.FOLLOW_logicalOp_in_constraintList335)
+                        self._state.following.append(self.FOLLOW_logicalOp_in_constraintList363)
                         rel = self.logicalOp()
 
                         self._state.following.pop()
                         #action start
                         constraints.append(str(((rel is not None) and [self.input.toString(rel.start,rel.stop)] or [None])[0]));
                         #action end
-                        self._state.following.append(self.FOLLOW_constraint1_in_constraintList344)
+                        self._state.following.append(self.FOLLOW_constraint1_in_constraintList372)
                         self.constraint1()
 
                         self._state.following.pop()
@@ -609,7 +609,7 @@ class SqlDASParser(Parser):
                 # SqlDAS.g:58:8: ( lb ( lb )* )
                 # SqlDAS.g:58:10: lb ( lb )*
                 pass 
-                self._state.following.append(self.FOLLOW_lb_in_lopen355)
+                self._state.following.append(self.FOLLOW_lb_in_lopen383)
                 self.lb()
 
                 self._state.following.pop()
@@ -625,7 +625,7 @@ class SqlDASParser(Parser):
                     if alt9 == 1:
                         # SqlDAS.g:58:13: lb
                         pass 
-                        self._state.following.append(self.FOLLOW_lb_in_lopen357)
+                        self._state.following.append(self.FOLLOW_lb_in_lopen385)
                         self.lb()
 
                         self._state.following.pop()
@@ -669,7 +669,7 @@ class SqlDASParser(Parser):
                 # SqlDAS.g:59:8: ( rb ( rb )* )
                 # SqlDAS.g:59:10: rb ( rb )*
                 pass 
-                self._state.following.append(self.FOLLOW_rb_in_ropen367)
+                self._state.following.append(self.FOLLOW_rb_in_ropen395)
                 self.rb()
 
                 self._state.following.pop()
@@ -685,7 +685,7 @@ class SqlDASParser(Parser):
                     if alt10 == 1:
                         # SqlDAS.g:59:13: rb
                         pass 
-                        self._state.following.append(self.FOLLOW_rb_in_ropen369)
+                        self._state.following.append(self.FOLLOW_rb_in_ropen397)
                         self.rb()
 
                         self._state.following.pop()
@@ -739,7 +739,7 @@ class SqlDASParser(Parser):
                 if alt12 == 1:
                     # SqlDAS.g:60:19: kl= lopen constraint (rel= logicalOp constraint )* kr= ropen
                     pass 
-                    self._state.following.append(self.FOLLOW_lopen_in_constraint1387)
+                    self._state.following.append(self.FOLLOW_lopen_in_constraint1415)
                     kl = self.lopen()
 
                     self._state.following.pop()
@@ -752,7 +752,7 @@ class SqlDASParser(Parser):
                     #action start
                     if str(((kl is not None) and [self.input.toString(kl.start,kl.stop)] or [None])[0]) != '': constraints.append(c1)
                     #action end
-                    self._state.following.append(self.FOLLOW_constraint_in_constraint1413)
+                    self._state.following.append(self.FOLLOW_constraint_in_constraint1441)
                     self.constraint()
 
                     self._state.following.pop()
@@ -768,14 +768,14 @@ class SqlDASParser(Parser):
                         if alt11 == 1:
                             # SqlDAS.g:62:4: rel= logicalOp constraint
                             pass 
-                            self._state.following.append(self.FOLLOW_logicalOp_in_constraint1425)
+                            self._state.following.append(self.FOLLOW_logicalOp_in_constraint1453)
                             rel = self.logicalOp()
 
                             self._state.following.pop()
                             #action start
                             constraints.append(str(((rel is not None) and [self.input.toString(rel.start,rel.stop)] or [None])[0]));
                             #action end
-                            self._state.following.append(self.FOLLOW_constraint_in_constraint1445)
+                            self._state.following.append(self.FOLLOW_constraint_in_constraint1473)
                             self.constraint()
 
                             self._state.following.pop()
@@ -783,7 +783,7 @@ class SqlDASParser(Parser):
 
                         else:
                             break #loop11
-                    self._state.following.append(self.FOLLOW_ropen_in_constraint1472)
+                    self._state.following.append(self.FOLLOW_ropen_in_constraint1500)
                     kr = self.ropen()
 
                     self._state.following.pop()
@@ -801,7 +801,7 @@ class SqlDASParser(Parser):
                 elif alt12 == 2:
                     # SqlDAS.g:65:5: constraint
                     pass 
-                    self._state.following.append(self.FOLLOW_constraint_in_constraint1486)
+                    self._state.following.append(self.FOLLOW_constraint_in_constraint1514)
                     self.constraint()
 
                     self._state.following.pop()
@@ -869,7 +869,7 @@ class SqlDASParser(Parser):
                 if alt13 == 1:
                     # SqlDAS.g:67:14: kw= KW op= compOpt val= spaceValue
                     pass 
-                    kw=self.match(self.input, KW, self.FOLLOW_KW_in_constraint497)
+                    kw=self.match(self.input, KW, self.FOLLOW_KW_in_constraint525)
                     #action start
                     c = {}
                     #action end
@@ -879,14 +879,14 @@ class SqlDASParser(Parser):
                     #action start
                     validateKw(kw.text)
                     #action end
-                    self._state.following.append(self.FOLLOW_compOpt_in_constraint511)
+                    self._state.following.append(self.FOLLOW_compOpt_in_constraint539)
                     op = self.compOpt()
 
                     self._state.following.pop()
                     #action start
                     c['op'] = str(((op is not None) and [self.input.toString(op.start,op.stop)] or [None])[0])
                     #action end
-                    self._state.following.append(self.FOLLOW_spaceValue_in_constraint524)
+                    self._state.following.append(self.FOLLOW_spaceValue_in_constraint552)
                     val = self.spaceValue()
 
                     self._state.following.pop()
@@ -901,7 +901,7 @@ class SqlDASParser(Parser):
                 elif alt13 == 2:
                     # SqlDAS.g:71:2: kw= KW op1= inpython '(' val1= valueList ')'
                     pass 
-                    kw=self.match(self.input, KW, self.FOLLOW_KW_in_constraint539)
+                    kw=self.match(self.input, KW, self.FOLLOW_KW_in_constraint567)
                     #action start
                     c = {}
                     #action end
@@ -911,15 +911,15 @@ class SqlDASParser(Parser):
                     #action start
                     validateKw(kw.text)
                     #action end
-                    self._state.following.append(self.FOLLOW_inpython_in_constraint553)
+                    self._state.following.append(self.FOLLOW_inpython_in_constraint581)
                     op1 = self.inpython()
 
                     self._state.following.pop()
                     #action start
                     c['op'] = str(((op1 is not None) and [self.input.toString(op1.start,op1.stop)] or [None])[0])
                     #action end
-                    self.match(self.input, 15, self.FOLLOW_15_in_constraint564)
-                    self._state.following.append(self.FOLLOW_valueList_in_constraint570)
+                    self.match(self.input, 15, self.FOLLOW_15_in_constraint592)
+                    self._state.following.append(self.FOLLOW_valueList_in_constraint598)
                     val1 = self.valueList()
 
                     self._state.following.pop()
@@ -929,13 +929,13 @@ class SqlDASParser(Parser):
                     #action start
                     constraints.append(c);
                     #action end
-                    self.match(self.input, 16, self.FOLLOW_16_in_constraint580)
+                    self.match(self.input, 16, self.FOLLOW_16_in_constraint608)
 
 
                 elif alt13 == 3:
                     # SqlDAS.g:77:2: kw= KW op2= like val2= KW
                     pass 
-                    kw=self.match(self.input, KW, self.FOLLOW_KW_in_constraint606)
+                    kw=self.match(self.input, KW, self.FOLLOW_KW_in_constraint634)
                     #action start
                     c = {}
                     #action end
@@ -945,14 +945,14 @@ class SqlDASParser(Parser):
                     #action start
                     validateKw(kw.text)
                     #action end
-                    self._state.following.append(self.FOLLOW_like_in_constraint620)
+                    self._state.following.append(self.FOLLOW_like_in_constraint648)
                     op2 = self.like()
 
                     self._state.following.pop()
                     #action start
                     c['op'] = str(((op2 is not None) and [self.input.toString(op2.start,op2.stop)] or [None])[0])
                     #action end
-                    val2=self.match(self.input, KW, self.FOLLOW_KW_in_constraint631)
+                    val2=self.match(self.input, KW, self.FOLLOW_KW_in_constraint659)
                     #action start
                     c['value'] = str(val2.text)
                     #action end
@@ -964,7 +964,7 @@ class SqlDASParser(Parser):
                 elif alt13 == 4:
                     # SqlDAS.g:81:3: kw= KW op3= between val3= betValue
                     pass 
-                    kw=self.match(self.input, KW, self.FOLLOW_KW_in_constraint648)
+                    kw=self.match(self.input, KW, self.FOLLOW_KW_in_constraint676)
                     #action start
                     c = {}
                     #action end
@@ -974,14 +974,14 @@ class SqlDASParser(Parser):
                     #action start
                     validateKw(kw.text)
                     #action end
-                    self._state.following.append(self.FOLLOW_between_in_constraint662)
+                    self._state.following.append(self.FOLLOW_between_in_constraint690)
                     op3 = self.between()
 
                     self._state.following.pop()
                     #action start
                     c['op'] = str(((op3 is not None) and [self.input.toString(op3.start,op3.stop)] or [None])[0])
                     #action end
-                    self._state.following.append(self.FOLLOW_betValue_in_constraint672)
+                    self._state.following.append(self.FOLLOW_betValue_in_constraint700)
                     val3 = self.betValue()
 
                     self._state.following.pop()
@@ -1024,7 +1024,7 @@ class SqlDASParser(Parser):
                 # SqlDAS.g:85:12: ( KW ( KW )* )
                 # SqlDAS.g:85:14: KW ( KW )*
                 pass 
-                self.match(self.input, KW, self.FOLLOW_KW_in_spaceValue721)
+                self.match(self.input, KW, self.FOLLOW_KW_in_spaceValue749)
                 # SqlDAS.g:85:17: ( KW )*
                 while True: #loop14
                     alt14 = 2
@@ -1037,7 +1037,7 @@ class SqlDASParser(Parser):
                     if alt14 == 1:
                         # SqlDAS.g:85:18: KW
                         pass 
-                        self.match(self.input, KW, self.FOLLOW_KW_in_spaceValue724)
+                        self.match(self.input, KW, self.FOLLOW_KW_in_spaceValue752)
 
 
                     else:
@@ -1078,7 +1078,7 @@ class SqlDASParser(Parser):
                 # SqlDAS.g:86:11: ( KW ( COMMA KW )* )
                 # SqlDAS.g:86:13: KW ( COMMA KW )*
                 pass 
-                self.match(self.input, KW, self.FOLLOW_KW_in_valueList733)
+                self.match(self.input, KW, self.FOLLOW_KW_in_valueList761)
                 # SqlDAS.g:86:16: ( COMMA KW )*
                 while True: #loop15
                     alt15 = 2
@@ -1091,8 +1091,8 @@ class SqlDASParser(Parser):
                     if alt15 == 1:
                         # SqlDAS.g:86:18: COMMA KW
                         pass 
-                        self.match(self.input, COMMA, self.FOLLOW_COMMA_in_valueList737)
-                        self.match(self.input, KW, self.FOLLOW_KW_in_valueList739)
+                        self.match(self.input, COMMA, self.FOLLOW_COMMA_in_valueList765)
+                        self.match(self.input, KW, self.FOLLOW_KW_in_valueList767)
 
 
                     else:
@@ -1133,12 +1133,12 @@ class SqlDASParser(Parser):
                 # SqlDAS.g:87:10: ( KW andpython KW )
                 # SqlDAS.g:87:12: KW andpython KW
                 pass 
-                self.match(self.input, KW, self.FOLLOW_KW_in_betValue749)
-                self._state.following.append(self.FOLLOW_andpython_in_betValue751)
+                self.match(self.input, KW, self.FOLLOW_KW_in_betValue777)
+                self._state.following.append(self.FOLLOW_andpython_in_betValue779)
                 self.andpython()
 
                 self._state.following.pop()
-                self.match(self.input, KW, self.FOLLOW_KW_in_betValue753)
+                self.match(self.input, KW, self.FOLLOW_KW_in_betValue781)
 
 
 
@@ -1214,7 +1214,7 @@ class SqlDASParser(Parser):
                     # SqlDAS.g:89:11: ( EQ )
                     # SqlDAS.g:89:12: EQ
                     pass 
-                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt773)
+                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt801)
 
 
 
@@ -1226,7 +1226,7 @@ class SqlDASParser(Parser):
                     # SqlDAS.g:90:4: ( LT )
                     # SqlDAS.g:90:5: LT
                     pass 
-                    self.match(self.input, LT, self.FOLLOW_LT_in_compOpt780)
+                    self.match(self.input, LT, self.FOLLOW_LT_in_compOpt808)
 
 
 
@@ -1238,7 +1238,7 @@ class SqlDASParser(Parser):
                     # SqlDAS.g:91:4: ( GT )
                     # SqlDAS.g:91:5: GT
                     pass 
-                    self.match(self.input, GT, self.FOLLOW_GT_in_compOpt787)
+                    self.match(self.input, GT, self.FOLLOW_GT_in_compOpt815)
 
 
 
@@ -1250,14 +1250,14 @@ class SqlDASParser(Parser):
                     # SqlDAS.g:92:4: ( NOT )
                     # SqlDAS.g:92:5: NOT
                     pass 
-                    self.match(self.input, NOT, self.FOLLOW_NOT_in_compOpt794)
+                    self.match(self.input, NOT, self.FOLLOW_NOT_in_compOpt822)
 
 
 
                     # SqlDAS.g:92:9: ( EQ )
                     # SqlDAS.g:92:10: EQ
                     pass 
-                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt797)
+                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt825)
 
 
 
@@ -1269,14 +1269,14 @@ class SqlDASParser(Parser):
                     # SqlDAS.g:93:4: ( EQ )
                     # SqlDAS.g:93:5: EQ
                     pass 
-                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt804)
+                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt832)
 
 
 
                     # SqlDAS.g:93:8: ( GT )
                     # SqlDAS.g:93:9: GT
                     pass 
-                    self.match(self.input, GT, self.FOLLOW_GT_in_compOpt807)
+                    self.match(self.input, GT, self.FOLLOW_GT_in_compOpt835)
 
 
 
@@ -1288,14 +1288,14 @@ class SqlDASParser(Parser):
                     # SqlDAS.g:94:4: ( EQ )
                     # SqlDAS.g:94:5: EQ
                     pass 
-                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt814)
+                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt842)
 
 
 
                     # SqlDAS.g:94:8: ( LT )
                     # SqlDAS.g:94:9: LT
                     pass 
-                    self.match(self.input, LT, self.FOLLOW_LT_in_compOpt817)
+                    self.match(self.input, LT, self.FOLLOW_LT_in_compOpt845)
 
 
 
@@ -1307,14 +1307,14 @@ class SqlDASParser(Parser):
                     # SqlDAS.g:95:4: ( LT )
                     # SqlDAS.g:95:5: LT
                     pass 
-                    self.match(self.input, LT, self.FOLLOW_LT_in_compOpt824)
+                    self.match(self.input, LT, self.FOLLOW_LT_in_compOpt852)
 
 
 
                     # SqlDAS.g:95:8: ( EQ )
                     # SqlDAS.g:95:9: EQ
                     pass 
-                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt827)
+                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt855)
 
 
 
@@ -1326,14 +1326,14 @@ class SqlDASParser(Parser):
                     # SqlDAS.g:96:4: ( GT )
                     # SqlDAS.g:96:5: GT
                     pass 
-                    self.match(self.input, GT, self.FOLLOW_GT_in_compOpt834)
+                    self.match(self.input, GT, self.FOLLOW_GT_in_compOpt862)
 
 
 
                     # SqlDAS.g:96:8: ( EQ )
                     # SqlDAS.g:96:9: EQ
                     pass 
-                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt837)
+                    self.match(self.input, EQ, self.FOLLOW_EQ_in_compOpt865)
 
 
 
@@ -1345,14 +1345,14 @@ class SqlDASParser(Parser):
                     # SqlDAS.g:97:4: ( LT )
                     # SqlDAS.g:97:5: LT
                     pass 
-                    self.match(self.input, LT, self.FOLLOW_LT_in_compOpt844)
+                    self.match(self.input, LT, self.FOLLOW_LT_in_compOpt872)
 
 
 
                     # SqlDAS.g:97:8: ( GT )
                     # SqlDAS.g:97:9: GT
                     pass 
-                    self.match(self.input, GT, self.FOLLOW_GT_in_compOpt847)
+                    self.match(self.input, GT, self.FOLLOW_GT_in_compOpt875)
 
 
 
@@ -1407,7 +1407,7 @@ class SqlDASParser(Parser):
                 if alt17 == 1:
                     # SqlDAS.g:99:13: andpython
                     pass 
-                    self._state.following.append(self.FOLLOW_andpython_in_logicalOp856)
+                    self._state.following.append(self.FOLLOW_andpython_in_logicalOp884)
                     self.andpython()
 
                     self._state.following.pop()
@@ -1416,7 +1416,7 @@ class SqlDASParser(Parser):
                 elif alt17 == 2:
                     # SqlDAS.g:99:23: orpython
                     pass 
-                    self._state.following.append(self.FOLLOW_orpython_in_logicalOp858)
+                    self._state.following.append(self.FOLLOW_orpython_in_logicalOp886)
                     self.orpython()
 
                     self._state.following.pop()
@@ -1721,27 +1721,27 @@ class SqlDASParser(Parser):
                 if alt18 == 1:
                     # SqlDAS.g:107:9: 'like'
                     pass 
-                    self.match(self.input, 35, self.FOLLOW_35_in_like962)
+                    self.match(self.input, 35, self.FOLLOW_35_in_like990)
 
 
                 elif alt18 == 2:
                     # SqlDAS.g:107:18: 'LIKE'
                     pass 
-                    self.match(self.input, 36, self.FOLLOW_36_in_like966)
+                    self.match(self.input, 36, self.FOLLOW_36_in_like994)
 
 
                 elif alt18 == 3:
                     # SqlDAS.g:107:27: 'not' 'like'
                     pass 
-                    self.match(self.input, 33, self.FOLLOW_33_in_like970)
-                    self.match(self.input, 35, self.FOLLOW_35_in_like972)
+                    self.match(self.input, 33, self.FOLLOW_33_in_like998)
+                    self.match(self.input, 35, self.FOLLOW_35_in_like1000)
 
 
                 elif alt18 == 4:
                     # SqlDAS.g:107:42: 'NOT' 'LIKE'
                     pass 
-                    self.match(self.input, 34, self.FOLLOW_34_in_like976)
-                    self.match(self.input, 36, self.FOLLOW_36_in_like978)
+                    self.match(self.input, 34, self.FOLLOW_34_in_like1004)
+                    self.match(self.input, 36, self.FOLLOW_36_in_like1006)
 
 
 
@@ -1951,7 +1951,7 @@ class SqlDASParser(Parser):
                 # SqlDAS.g:113:7: ( '(' )
                 # SqlDAS.g:113:8: '('
                 pass 
-                self.match(self.input, 15, self.FOLLOW_15_in_lb1053)
+                self.match(self.input, 15, self.FOLLOW_15_in_lb1081)
 
 
 
@@ -1982,7 +1982,7 @@ class SqlDASParser(Parser):
                 # SqlDAS.g:114:7: ( ')' )
                 # SqlDAS.g:114:8: ')'
                 pass 
-                self.match(self.input, 16, self.FOLLOW_16_in_rb1063)
+                self.match(self.input, 16, self.FOLLOW_16_in_rb1091)
 
 
 
@@ -2116,84 +2116,84 @@ class SqlDASParser(Parser):
     FOLLOW_gkw_in_selectList159 = frozenset([1, 5])
     FOLLOW_COMMA_in_selectList174 = frozenset([4, 13, 14])
     FOLLOW_gkw_in_selectList181 = frozenset([1, 5])
-    FOLLOW_KW_in_gkw296 = frozenset([1])
-    FOLLOW_set_in_gkw301 = frozenset([15])
-    FOLLOW_15_in_gkw307 = frozenset([4])
-    FOLLOW_KW_in_gkw310 = frozenset([16])
-    FOLLOW_16_in_gkw313 = frozenset([1])
-    FOLLOW_constraint1_in_constraintList325 = frozenset([1, 23, 24, 29, 30])
-    FOLLOW_logicalOp_in_constraintList335 = frozenset([4, 15])
-    FOLLOW_constraint1_in_constraintList344 = frozenset([1, 23, 24, 29, 30])
-    FOLLOW_lb_in_lopen355 = frozenset([1, 15])
-    FOLLOW_lb_in_lopen357 = frozenset([1, 15])
-    FOLLOW_rb_in_ropen367 = frozenset([1, 16])
-    FOLLOW_rb_in_ropen369 = frozenset([1, 16])
-    FOLLOW_lopen_in_constraint1387 = frozenset([4, 15])
-    FOLLOW_constraint_in_constraint1413 = frozenset([16, 23, 24, 29, 30])
-    FOLLOW_logicalOp_in_constraint1425 = frozenset([4, 15])
-    FOLLOW_constraint_in_constraint1445 = frozenset([16, 23, 24, 29, 30])
-    FOLLOW_ropen_in_constraint1472 = frozenset([1])
-    FOLLOW_constraint_in_constraint1486 = frozenset([1])
-    FOLLOW_KW_in_constraint497 = frozenset([6, 7, 8, 9])
-    FOLLOW_compOpt_in_constraint511 = frozenset([4])
-    FOLLOW_spaceValue_in_constraint524 = frozenset([1])
-    FOLLOW_KW_in_constraint539 = frozenset([31, 32])
-    FOLLOW_inpython_in_constraint553 = frozenset([15])
-    FOLLOW_15_in_constraint564 = frozenset([4])
-    FOLLOW_valueList_in_constraint570 = frozenset([16])
-    FOLLOW_16_in_constraint580 = frozenset([1])
-    FOLLOW_KW_in_constraint606 = frozenset([33, 34, 35, 36])
-    FOLLOW_like_in_constraint620 = frozenset([4])
-    FOLLOW_KW_in_constraint631 = frozenset([1])
-    FOLLOW_KW_in_constraint648 = frozenset([43, 44])
-    FOLLOW_between_in_constraint662 = frozenset([4])
-    FOLLOW_betValue_in_constraint672 = frozenset([1])
-    FOLLOW_KW_in_spaceValue721 = frozenset([1, 4])
-    FOLLOW_KW_in_spaceValue724 = frozenset([1, 4])
-    FOLLOW_KW_in_valueList733 = frozenset([1, 5])
-    FOLLOW_COMMA_in_valueList737 = frozenset([4])
-    FOLLOW_KW_in_valueList739 = frozenset([1, 5])
-    FOLLOW_KW_in_betValue749 = frozenset([23, 24])
-    FOLLOW_andpython_in_betValue751 = frozenset([4])
-    FOLLOW_KW_in_betValue753 = frozenset([1])
-    FOLLOW_set_in_where759 = frozenset([1])
-    FOLLOW_EQ_in_compOpt773 = frozenset([1])
-    FOLLOW_LT_in_compOpt780 = frozenset([1])
-    FOLLOW_GT_in_compOpt787 = frozenset([1])
-    FOLLOW_NOT_in_compOpt794 = frozenset([6])
-    FOLLOW_EQ_in_compOpt797 = frozenset([1])
-    FOLLOW_EQ_in_compOpt804 = frozenset([8])
-    FOLLOW_GT_in_compOpt807 = frozenset([1])
-    FOLLOW_EQ_in_compOpt814 = frozenset([7])
-    FOLLOW_LT_in_compOpt817 = frozenset([1])
-    FOLLOW_LT_in_compOpt824 = frozenset([6])
-    FOLLOW_EQ_in_compOpt827 = frozenset([1])
-    FOLLOW_GT_in_compOpt834 = frozenset([6])
-    FOLLOW_EQ_in_compOpt837 = frozenset([1])
-    FOLLOW_LT_in_compOpt844 = frozenset([8])
-    FOLLOW_GT_in_compOpt847 = frozenset([1])
-    FOLLOW_andpython_in_logicalOp856 = frozenset([1])
-    FOLLOW_orpython_in_logicalOp858 = frozenset([1])
-    FOLLOW_set_in_select866 = frozenset([1])
-    FOLLOW_set_in_andpython886 = frozenset([1])
-    FOLLOW_set_in_order899 = frozenset([1])
-    FOLLOW_set_in_by912 = frozenset([1])
-    FOLLOW_set_in_orpython924 = frozenset([1])
-    FOLLOW_set_in_inpython936 = frozenset([1])
-    FOLLOW_set_in_notpython948 = frozenset([1])
-    FOLLOW_35_in_like962 = frozenset([1])
-    FOLLOW_36_in_like966 = frozenset([1])
-    FOLLOW_33_in_like970 = frozenset([35])
-    FOLLOW_35_in_like972 = frozenset([1])
-    FOLLOW_34_in_like976 = frozenset([36])
-    FOLLOW_36_in_like978 = frozenset([1])
-    FOLLOW_set_in_count986 = frozenset([1])
-    FOLLOW_set_in_sum999 = frozenset([1])
-    FOLLOW_set_in_asc1012 = frozenset([1])
-    FOLLOW_set_in_desc1025 = frozenset([1])
-    FOLLOW_set_in_between1038 = frozenset([1])
-    FOLLOW_15_in_lb1053 = frozenset([1])
-    FOLLOW_16_in_rb1063 = frozenset([1])
+    FOLLOW_KW_in_gkw324 = frozenset([1])
+    FOLLOW_set_in_gkw329 = frozenset([15])
+    FOLLOW_15_in_gkw335 = frozenset([4])
+    FOLLOW_KW_in_gkw338 = frozenset([16])
+    FOLLOW_16_in_gkw341 = frozenset([1])
+    FOLLOW_constraint1_in_constraintList353 = frozenset([1, 23, 24, 29, 30])
+    FOLLOW_logicalOp_in_constraintList363 = frozenset([4, 15])
+    FOLLOW_constraint1_in_constraintList372 = frozenset([1, 23, 24, 29, 30])
+    FOLLOW_lb_in_lopen383 = frozenset([1, 15])
+    FOLLOW_lb_in_lopen385 = frozenset([1, 15])
+    FOLLOW_rb_in_ropen395 = frozenset([1, 16])
+    FOLLOW_rb_in_ropen397 = frozenset([1, 16])
+    FOLLOW_lopen_in_constraint1415 = frozenset([4, 15])
+    FOLLOW_constraint_in_constraint1441 = frozenset([16, 23, 24, 29, 30])
+    FOLLOW_logicalOp_in_constraint1453 = frozenset([4, 15])
+    FOLLOW_constraint_in_constraint1473 = frozenset([16, 23, 24, 29, 30])
+    FOLLOW_ropen_in_constraint1500 = frozenset([1])
+    FOLLOW_constraint_in_constraint1514 = frozenset([1])
+    FOLLOW_KW_in_constraint525 = frozenset([6, 7, 8, 9])
+    FOLLOW_compOpt_in_constraint539 = frozenset([4])
+    FOLLOW_spaceValue_in_constraint552 = frozenset([1])
+    FOLLOW_KW_in_constraint567 = frozenset([31, 32])
+    FOLLOW_inpython_in_constraint581 = frozenset([15])
+    FOLLOW_15_in_constraint592 = frozenset([4])
+    FOLLOW_valueList_in_constraint598 = frozenset([16])
+    FOLLOW_16_in_constraint608 = frozenset([1])
+    FOLLOW_KW_in_constraint634 = frozenset([33, 34, 35, 36])
+    FOLLOW_like_in_constraint648 = frozenset([4])
+    FOLLOW_KW_in_constraint659 = frozenset([1])
+    FOLLOW_KW_in_constraint676 = frozenset([43, 44])
+    FOLLOW_between_in_constraint690 = frozenset([4])
+    FOLLOW_betValue_in_constraint700 = frozenset([1])
+    FOLLOW_KW_in_spaceValue749 = frozenset([1, 4])
+    FOLLOW_KW_in_spaceValue752 = frozenset([1, 4])
+    FOLLOW_KW_in_valueList761 = frozenset([1, 5])
+    FOLLOW_COMMA_in_valueList765 = frozenset([4])
+    FOLLOW_KW_in_valueList767 = frozenset([1, 5])
+    FOLLOW_KW_in_betValue777 = frozenset([23, 24])
+    FOLLOW_andpython_in_betValue779 = frozenset([4])
+    FOLLOW_KW_in_betValue781 = frozenset([1])
+    FOLLOW_set_in_where787 = frozenset([1])
+    FOLLOW_EQ_in_compOpt801 = frozenset([1])
+    FOLLOW_LT_in_compOpt808 = frozenset([1])
+    FOLLOW_GT_in_compOpt815 = frozenset([1])
+    FOLLOW_NOT_in_compOpt822 = frozenset([6])
+    FOLLOW_EQ_in_compOpt825 = frozenset([1])
+    FOLLOW_EQ_in_compOpt832 = frozenset([8])
+    FOLLOW_GT_in_compOpt835 = frozenset([1])
+    FOLLOW_EQ_in_compOpt842 = frozenset([7])
+    FOLLOW_LT_in_compOpt845 = frozenset([1])
+    FOLLOW_LT_in_compOpt852 = frozenset([6])
+    FOLLOW_EQ_in_compOpt855 = frozenset([1])
+    FOLLOW_GT_in_compOpt862 = frozenset([6])
+    FOLLOW_EQ_in_compOpt865 = frozenset([1])
+    FOLLOW_LT_in_compOpt872 = frozenset([8])
+    FOLLOW_GT_in_compOpt875 = frozenset([1])
+    FOLLOW_andpython_in_logicalOp884 = frozenset([1])
+    FOLLOW_orpython_in_logicalOp886 = frozenset([1])
+    FOLLOW_set_in_select894 = frozenset([1])
+    FOLLOW_set_in_andpython914 = frozenset([1])
+    FOLLOW_set_in_order927 = frozenset([1])
+    FOLLOW_set_in_by940 = frozenset([1])
+    FOLLOW_set_in_orpython952 = frozenset([1])
+    FOLLOW_set_in_inpython964 = frozenset([1])
+    FOLLOW_set_in_notpython976 = frozenset([1])
+    FOLLOW_35_in_like990 = frozenset([1])
+    FOLLOW_36_in_like994 = frozenset([1])
+    FOLLOW_33_in_like998 = frozenset([35])
+    FOLLOW_35_in_like1000 = frozenset([1])
+    FOLLOW_34_in_like1004 = frozenset([36])
+    FOLLOW_36_in_like1006 = frozenset([1])
+    FOLLOW_set_in_count1014 = frozenset([1])
+    FOLLOW_set_in_sum1027 = frozenset([1])
+    FOLLOW_set_in_asc1040 = frozenset([1])
+    FOLLOW_set_in_desc1053 = frozenset([1])
+    FOLLOW_set_in_between1066 = frozenset([1])
+    FOLLOW_15_in_lb1081 = frozenset([1])
+    FOLLOW_16_in_rb1091 = frozenset([1])
 
 
 
