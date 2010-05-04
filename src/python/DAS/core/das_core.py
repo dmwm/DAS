@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.18 2009/06/12 14:51:05 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: das_core.py,v 1.19 2009/06/19 18:00:38 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -81,6 +81,7 @@ class DASCore(object):
             klassobj = '%s(dasconfig)' % klass
             setattr(self, 'rawcache', eval(klassobj))
             dasconfig['rawcache'] = self.rawcache
+            self.logger.info('DASCore::__init__, rawcache=%s' % klass)
 
         # load from configuration what will be used as a hot cache
         if  dasconfig.has_key('hotcache') and dasconfig['hotcache']:
@@ -92,6 +93,7 @@ class DASCore(object):
             klassobj = '%s(dasconfig)' % klass
             setattr(self, 'hotcache', eval(klassobj))
             self.cache   = self.hotcache
+            self.logger.info('DASCore::__init__, hotcache=%s' % klass)
 
         # plug-in architecture: loop over registered data-services in
         # dasconfig; load appropriate module/class; register data
