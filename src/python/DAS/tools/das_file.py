@@ -4,8 +4,8 @@
 """
 DAS command line interface to read files in DAS cache
 """
-__revision__ = "$Id"
-__version__ = "$Revision"
+__revision__ = "$Id: das_file.py,v 1.2 2009/07/14 14:16:26 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
