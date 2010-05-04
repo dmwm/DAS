@@ -45,7 +45,7 @@ case "$1" in
  status)
         if [ ! -z ${pid} ]; then
           echo $"DAS is running, pid=${pid}"
-          ps -w -w -w -p ${pid}
+          ps -f -wwww -p ${pid}
           exit 0
         fi
         echo $"DAS is stopped"
