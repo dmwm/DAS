@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.50 2009/12/22 17:30:07 valya Exp $"
-__version__ = "$Revision: 1.50 $"
+__revision__ = "$Id: das_mongocache.py,v 1.51 2009/12/22 19:13:25 valya Exp $"
+__version__ = "$Revision: 1.51 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -428,10 +428,28 @@ class DASMongocache(Cache):
             else:
                 yield row
 
-    def map_reduce(self, mapreduce, spec=None):
+    def map_reduce(self, mrlist, spec=None):
+        """
+        Wrapper around _map_reduce to allow sequential map/reduce
+        operations, e.g. map/reduce out of map/reduce. Provided conditions
+        are only applied to first iteration.
+        """
+        if  type(mrlist) is not types.ListType:
+            mrlist = [mrlist]
+        coll = self.col # make pointer to original collection
+        for mapreduce in mrlist:
+            if  mapreduce == mrlist[0]:
+                cond = spec
+            else:
+                cond = None
+            coll = self._map_reduce(coll, mapreduce, cond)
+        for row in coll.find():
+            yield row
+
+    def _map_reduce(self, coll, mapreduce, spec=None):
         """
         Perform map/reduce operation over DAS cache using provided
-        mapreduce name and optional conditions.
+        collection, mapreduce name and optional conditions.
         """
         self.logger.info("DASMongocache::map_reduce(%s, %s)" \
                 % (mapreduce, spec))
@@ -441,15 +459,15 @@ class DASMongocache(Cache):
         fmap = record['map']
         freduce = record['reduce']
         if  spec:
-            result = self.col.map_reduce(Code(fmap), Code(freduce), 
-                        query=spec)
+            result = coll.map_reduce(Code(fmap), Code(freduce), query=spec)
         else:
-            result = self.col.map_reduce(Code(fmap), Code(freduce))
+            result = coll.map_reduce(Code(fmap), Code(freduce))
         msg = "DASMongocache::map_reduce found %s records in %s collection" \
                 % (result.count(), result.name)
         self.logger.info(msg)
-        for row in result.find():
-            yield row
+        self.logger.debug(fmap)
+        self.logger.debug(freduce)
+        return result
 
     def update_cache(self, query, results, header):
         """
