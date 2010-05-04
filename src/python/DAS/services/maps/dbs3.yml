@@ -111,8 +111,13 @@ notations : [
         {"notation": "logical_file_name", "map": "name", "api": "files2"},
         {"notation": "file.logical_file_name", "map": "file.name", "api": ""},
         {"notation": "file_type", "map": "type", "api": "files"},
+        {"notation": "file_type", "map": "type", "api": "files2"},
         {"notation": "file.file_type", "map": "file.type", "api": ""},
         {"notation": "file.block_name", "map": "file.block.name", "api": ""},
         {"notation": "file_size", "map": "size", "api": "files"},
+        {"notation": "file_size", "map": "size", "api": "files2"},
         {"notation": "file.file_size", "map": "file.size", "api": ""},
+        {"notation": "event_count", "map": "nevents", "api": "files"},
+        {"notation": "event_count", "map": "nevents", "api": "files2"},
+        {"notation": "file.event_count", "map": "file.nevents", "api": ""},
 ]
