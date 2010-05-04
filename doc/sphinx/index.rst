@@ -15,19 +15,20 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   introduction
-   architecture
-   workflow
-   mapping
-   analytics
-   das_cache
-   das_merge
-   das_logging
-   code
-   new_service
-   cms_operations
-   das_operations
-   changelog
+   introduction.rst
+   architecture.rst
+   workflow.rst
+   mapping.rst
+   analytics.rst
+   das_cache.rst
+   das_merge.rst
+   das_logging.rst
+   code.rst
+   new_service.rst
+   cms_operations.rst
+   das_operations.rst
+   benchmark.rst
+   changelog.rst
 
 Indices and tables
 ------------------
