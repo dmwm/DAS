@@ -6,12 +6,13 @@
 DAS admin service class.
 """
 
-__revision__ = "$Id: das_admin.py,v 1.1 2010/04/01 19:56:04 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_admin.py,v 1.2 2010/04/02 20:01:55 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
+import json
 
 # cherrypy modules
 from cherrypy import expose
@@ -31,6 +32,11 @@ def error(msg):
     """Return error message"""
     return msg
 
+def red(msg):
+    """Put message in red box"""
+    err = '<div class="box_red">%s</div>' % msg
+    return err
+
 class DASAdminService(DASWebManager):
     """
     DAS admin service class.
@@ -44,8 +50,9 @@ class DASAdminService(DASWebManager):
         self.conn = Connection(self.dbhost, self.dbport)
 
     @expose
-    def index(self, *args, **kwargs):
+    def index(self, **kwargs):
         """Serve default index.html web page"""
+        msg = kwargs.get('msg', '')
         databases = self.conn.database_names()
         server_info = dict(host=self.dbhost, port=self.dbport)
         server_info.update(self.conn.server_info())
@@ -60,15 +67,28 @@ class DASAdminService(DASWebManager):
                                     coll[cname].index_information())
             ddict[database] = info_dict
         info = self.templatepage('das_admin', mongo_info = server_info,
-                ddict=ddict, base=self.base)
+                ddict=ddict, base=self.base, msg=msg)
         return self.page(info)
 
     @expose
-    def records(self, database, collection, idx=0, limit=10):
+    def records(self, database, collection=None, query={}, idx=0, limit=10, **kwargs):
         """Return records in given collection"""
+        if  not collection:
+            try:
+                database, collection = database.split('.')
+            except:
+                msg = 'ERROR: no db collection is found in your request'
+                return self.index(msg=red(msg))
+        try:
+            query = json.loads(query)
+        except:
+            msg = 'ERROR: fail to validate input query="%s" as JSON document'\
+                % query
+            return self.index(msg=red(msg))
         idx   = int(idx)
         limit = int(limit)
-        recs  = self.conn[database][collection].find().skip(idx).limit(limit)
+        recs  = self.conn[database][collection].find(query).\
+                        skip(idx).limit(limit)
         pad   = ''
         page  = ''
         style = 'white'
@@ -82,7 +102,7 @@ class DASAdminService(DASWebManager):
             page += '</div>'
         url = '%s/admin/records?database=%s&collection=%s' \
                 % (self.base, database, collection)
-        nresults = self.conn[database][collection].count()
+        nresults = self.conn[database][collection].find(query).count()
         idict = dict(nrows=nresults, idx=idx, 
                     limit=limit, results=page, url=url)
         page  = self.templatepage('das_pagination', **idict)
