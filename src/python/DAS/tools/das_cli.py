@@ -4,15 +4,13 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.8 2009/05/13 14:56:01 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_cli.py,v 1.9 2009/05/19 12:43:11 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 from optparse import OptionParser
-#from DAS.core.das_core import DASCore
-#from DAS.core.qlparser import getselectkeys
-from DAS.core.das_cache import DASCache
+from DAS.core.das_core import DASCore
 from DAS.utils.utils import dump
 
 import sys
@@ -77,12 +75,11 @@ if __name__ == '__main__':
 
     t0 = time.time()
     query = opts.input
-#    debug = 1
     if  opts.verbose:
         debug = opts.verbose
     else:
         debug = 0
-    DAS = DASCache(debug=debug)
+    DAS = DASCore(debug=debug)
     sdict = DAS.keys()
     if  opts.services:
         msg = "DAS services:" 
@@ -150,7 +147,7 @@ if __name__ == '__main__':
         print "please use --help for more options."
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
     if  debug:
-        for key, val in DAS.timer().timer.items():
+        for key, val in DAS.timer.timer.items():
             if  len(val) > 1:
                 print "DAS execution time (%s) %s sec" % (key, val[-1] - val[0])
     print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)

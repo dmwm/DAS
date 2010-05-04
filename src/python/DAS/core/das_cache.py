@@ -5,15 +5,14 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.5 2009/05/18 01:17:16 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_cache.py,v 1.6 2009/05/19 12:43:10 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 # DAS modules
-from DAS.core.das_core import DASCore
 from DAS.core.cache import Cache
 from DAS.core.das_memcache import DASMemcache
-from DAS.core.das_couchdb import DASCouchDB
+from DAS.core.das_couchcache import DASCouchcache
 from DAS.core.das_filecache import DASFilecache
 
 class DASCache(Cache):
@@ -21,16 +20,12 @@ class DASCache(Cache):
     Base DAS cache class based on memcache and couchdb cache back-end
     servers. The class should be initialized with config dict.
     """
-    def __init__(self, mode=None, debug=None):
-        mgr = DASCore(mode, debug)
-        Cache.__init__(self, mgr)
-        self.servers = {'memcache': DASMemcache(mgr),
-                        'couch': DASCouchDB(mgr),
-                        'filecache': DASFilecache(mgr),
+    def __init__(self, config):
+        Cache.__init__(self, config)
+        self.servers = {'memcache': DASMemcache(config),
+                        'filecache': DASFilecache(config),
+                        'couchcache': DASCouchcache(config),
         }
-#        self.servers = { 'memcache' : DASMemcache(mgr) }
-#        couchdb = DASCouchDB(mgr)
-#        self.servers['couch'] = couchdb
         self.logger.info('DASCache using servers = %s' % self.servers)
 
     def get_from_cache(self, query):
