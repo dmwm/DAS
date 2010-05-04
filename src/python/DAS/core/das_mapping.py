@@ -5,8 +5,8 @@
 DAS mapping
 """
 
-__revision__ = "$Id: das_mapping.py,v 1.10 2009/07/10 19:26:10 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_mapping.py,v 1.11 2009/07/17 19:38:58 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -207,7 +207,7 @@ def jsonparser4key(jsondict, ikey):
                 if  v.has_key(attr):
                     return v[attr]
     else:
-        def helper(helper, ikey):
+        def helper(jsondict, ikey):
             for k in jsondict.keys():
                 val = jsonparser4key(jsondict[k], ikey)
                 if  val:
