@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.30 2009/12/23 15:18:45 valya Exp $"
-__version__ = "$Revision: 1.30 $"
+__revision__ = "$Id: DASSearch.py,v 1.31 2010/01/05 19:37:23 valya Exp $"
+__version__ = "$Revision: 1.31 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -17,21 +17,12 @@ import urllib
 from itertools import groupby
 from cherrypy import expose
 from cherrypy.lib.static import serve_file
-
 import cherrypy
-try:
-    # Python 2.6
-    import json
-    from json import JSONDecoder
-except:
-    # Prior to 2.6 requires simplejson
-    import simplejson as json
-    from simplejson import JSONDecoder
 
 # WMCore/WebTools modules
 from WMCore.WebTools.Page import TemplatedPage
-from WMCore.WebTools.Page import exposedasjson, exposedasxml, exposetext
-from WMCore.WebTools.Page import exposejson, exposexml, exposedasplist
+from WMCore.WebTools.Page import exposedasjson, exposetext
+from WMCore.WebTools.Page import exposejson, exposedasplist
 
 # DAS modules
 from DAS.core.das_core import DASCore
@@ -64,17 +55,13 @@ class DASSearch(TemplatedPage):
     """
     def __init__(self, config):
         TemplatedPage.__init__(self, config)
-        cdict          = self.config.dictionary_()
-        self.cachesrv  = getarg(cdict, 'cache_server_url', 'http://localhost:8011')
-        self.dasmgr = DASCore()
+        cdict           = self.config.dictionary_()
+        self.cachesrv   = getarg(cdict, 'cache_server_url', 
+                            'http://localhost:8011')
+        self.dasmgr     = DASCore()
         self.dasmapping = self.dasmgr.mapping
-        self.daslogger = self.dasmgr.logger
-#        self.pageviews = ['xml', 'list', 'table', 'plain', 'json', 'yuijson'] 
-        self.pageviews = ['xml', 'list', 'json', 'yuijson'] 
-        self.cleantime = 60 # in seconds
-        self.lastclean = time.time()
-        self.decoder   = JSONDecoder()
-        self.counter = 0 # TMP stuff, see request, TODO: remove
+        self.daslogger  = self.dasmgr.logger
+        self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 
 
     def top(self):
         """
@@ -129,46 +116,6 @@ class DASSearch(TemplatedPage):
                 'src/python/DAS/tools/das_cache_client.py')
         return serve_file(clifile, content_type='text/plain')
 
-#    @expose
-#    def create_view(self, *args, **kwargs):
-#        """
-#        create DAS view.
-#        """
-#        msg   = ''
-#        if  kwargs.has_key('name') and kwargs.has_key('query'):
-#            name  = kwargs['name']
-#            query = kwargs['query']
-#            try:
-#                self.dasmgr.create_view(name, query)
-#                msg = "View '%s' has been created" % name
-#            except Exception, exc:
-#                msg = "Fail to create view '%s' with query '%s'" \
-#                % (name, query)
-#                msg += '</br>Reason: <span class="box_blue">' 
-#                msg += exc.message + '</span>'
-#                pass
-#        views = self.dasmgr.get_view()
-#        page  = self.templatepage('das_views', views=views, msg=msg)
-#        return self.page(page, response_div=False)
-
-#    @expose
-#    def views(self, *args, **kwargs):
-#        """
-#        represent DAS views.
-#        """
-#        views = self.dasmgr.get_view()
-#        page  = self.templatepage('das_views', views=views, msg='')
-#        return self.page(page, response_div=False)
-
-    @expose
-    def services_v1(self, *args, **kwargs):
-        """
-        represent DAS services
-        """
-        keys = self.dasmgr.keys()
-        page = self.templatepage('das_services', service_keys=keys)
-        return self.page(page, response_div=False)
-
     @expose
     def services(self, *args, **kwargs):
         """
@@ -201,6 +148,13 @@ class DASSearch(TemplatedPage):
         return self.page(page, response_div=False)
 
     @expose
+    def default(self, *args, **kwargs):
+        """
+        Default method.
+        """
+        return self.index(args, kwargs)
+
+    @expose
     def index(self, *args, **kwargs):
         """
         represents DAS web interface. 
@@ -210,7 +164,6 @@ class DASSearch(TemplatedPage):
         if  not args and not kwargs:
             page = self.form()
             return self.page(page)
-#        view = getarg(kwargs, 'view', 'table')
         view = getarg(kwargs, 'view', 'list')
         if  args:
             return getattr(self, args[0][0])(args[1])
@@ -250,8 +203,6 @@ class DASSearch(TemplatedPage):
         """
         Retieve all records id's.
         """
-#        msg = "Call get, args="+str(args)+", kwargs="+str(kwargs)
-#        print "\n###", msg
         recordid = None
         format = ''
         if  args:
@@ -276,7 +227,7 @@ class DASSearch(TemplatedPage):
         params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit}
         path     = '/rest/request'
         headers  = {"Accept": "application/json"}
-        data     = self.decoder.decode(
+        data     = json.loads(
         urllib2_request('GET', url+path, params, headers=headers))
         if  type(data) is types.StringType:
             result = json.loads(data)
@@ -307,7 +258,8 @@ class DASSearch(TemplatedPage):
             page  = res
         else:
             url   = '/das/records?'
-            idict = dict(nrows=nresults, idx=idx, limit=limit, results=res, url=url)
+            idict = dict(nrows=nresults, idx=idx, 
+                        limit=limit, results=res, url=url)
             page  = self.templatepage('das_pagination', **idict)
 
         form    = self.form(uinput="")
@@ -325,7 +277,7 @@ class DASSearch(TemplatedPage):
         params  = {'query':uinput}
         path    = '/rest/nresults'
         headers = {"Accept": "application/json"}
-        result  = self.decoder.decode(
+        result  = json.loads(
         urllib2_request('GET', url+path, params, headers=headers))
         if  type(result) is types.StringType:
             data = json.loads(result)
@@ -334,10 +286,8 @@ class DASSearch(TemplatedPage):
         if  data['status'] == 'success':
             return data['nresults']
         else:
-            msg = "nresults returns status not success: %s" \
-                        % str(data)
+            msg = "nresults returns status: %s" % str(data)
             self.daslogger.info(msg)
-            print "\n###" + msg
         self.send_request('POST', kwargs)
         return 0
 
@@ -358,8 +308,9 @@ class DASSearch(TemplatedPage):
             path    = '/rest/request'
         else:
             raise Exception('Unsupported method %s' % method)
-        headers = {"Accept": "application/json", "Content-type":"application/json"} 
-        res     = self.decoder.decode(
+        headers = {'Accept': 'application/json', 
+                   'Content-type': 'application/json'} 
+        res     = json.loads(
         urllib2_request(method, url+path, params, headers=headers))
         return res
 
@@ -403,10 +354,13 @@ class DASSearch(TemplatedPage):
             if  key == 'das' or key == '_id' or key == 'das_id':
                 continue
             for item in self.dasmapping.presentation(key):
-                daskey = item['das']
-                uikey  = item['ui']
-                for value in access(idict, daskey):
-                    yield uikey, value
+                try:
+                    daskey = item['das']
+                    uikey  = item['ui']
+                    for value in access(idict, daskey):
+                        yield uikey, value
+                except:
+                    yield key, idict[key]
 
     @expose
     def listview(self, kwargs):
@@ -425,7 +379,8 @@ class DASSearch(TemplatedPage):
         total   = self.nresults(kwargs)
         if  not total:
             ctime   = (time.time()-time0)
-            page    = self.templatepage('not_ready')
+#            page    = self.templatepage('not_ready')
+            page    = self.status(input=uinput)
             page    = self.page(form + page, ctime=ctime)
             return page
 
@@ -445,7 +400,7 @@ class DASSearch(TemplatedPage):
         for row in rows:
             id    = row['_id']
             rec   = '<a href="/das/records/%s">%s</a>, ' % (id, id)
-            page += '<div class="%s"><hr class="line" /><b>Record</b> %s<br />' \
+            page += '<div class="%s"><hr class="line" /><b>Record</b> %s<br />'\
                 % (style, rec)
             gen   = self.convert2ui(row)
             for uikey, value in [k for k, g in groupby(gen)]:
@@ -474,7 +429,7 @@ class DASSearch(TemplatedPage):
     @exposejson
     def yuijson(self, **kwargs):
         """
-        provide JSON in YUI compatible format to be used in DynamicData table
+        Provide JSON in YUI compatible format to be used in DynamicData table
         widget, see
         http://developer.yahoo.com/yui/examples/datatable/dt_dynamicdata.html
         """
@@ -584,74 +539,42 @@ class DASSearch(TemplatedPage):
         return page
 
     @expose
-    def default(self, *args, **kwargs):
-        """
-        default method
-        """
-        return self.index(args, kwargs)
-
-    @expose
-    def request(self, **kwargs):
+    def status(self, **kwargs):
         """
         Place request to obtain status about given query
         """
         cherrypy.response.headers['Content-Type'] = 'text/xml'
-        img = """<img src="/dascontrollers/images/loading.gif" alt="loading" /> """
-        req = """<script type="application/javascript">setTimeout('ajaxRequest()', 3000)</script>"""
+        img = '<img src="/dascontrollers/images/loading.gif" alt="loading"/>'
+        req = """
+        <script type="application/javascript">
+        setTimeout('ajaxStatus()',3000)
+        </script>"""
 
-        def send_post(idict):
-            "Send POST request to server with provided parameters"
-            params = {'query':idict['query']}
-            url  = self.cachesrv
-            path = '/rest/create'
-            headers = {"Accept": "application/json", "Content-type":"application/json"} 
-            res  = self.decoder.decode(
-            urllib2_request('POST', url+path, params, headers=headers))
         def set_header():
             "Set HTTP header parameters"
-            timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-            cherrypy.response.headers['Expire'] = timestamp
+            tstamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+            cherrypy.response.headers['Expire'] = tstamp
             cherrypy.response.headers['Cache-control'] = 'no-cache'
 
         uinput  = getarg(kwargs, 'input', '')
         uinput  = urllib.unquote_plus(uinput)
-        view    = getarg(kwargs, 'view', 'table')
-        params  = {'query':uinput, 'idx':0, 'limit':1}
-        path    = '/rest/request'
+        view    = getarg(kwargs, 'view', 'list')
+        params  = {'query':uinput}
+        path    = '/rest/status'
         url     = self.cachesrv
-        headers = {"Accept": "application/json"}
-        result  = self.decoder.decode(
+        headers = {'Accept': 'application/json'}
+        result  = json.loads(
         urllib2_request('GET', url+path, params, headers=headers))
         if  type(result) is types.StringType:
             data  = json.loads(result)
         else:
             data  = result
-        if  data['status'] == 'success':
-            page  = """<script type="application/javascript">reload()</script>"""
-        elif data['status'] == 'in raw cache':
-            page  = img + 'data found in raw cache'
-            page += req
-            send_post(params)
-            set_header()
-        elif data['status'] == 'requested':
-            page  = img + 'data has been requested'
-            page += req
-            set_header()
-        elif data['status'] == 'waiting in queue':
-            page  = img + 'your request is waiting in queue'
-            page += req
-            set_header()
-        elif data['status'] == 'not found':
-            page  = 'data not in DAS yet, please retry'
-            send_post(params)
-            set_header()
-        elif data['status'] == 'no cache':
-            page  = 'DAS server has no hotcache'
-            send_post(params)
-            set_header()
+        if  data['status'] == 'ok':
+            page  = '<script type="application/javascript">reload()</script>'
         else:
-            page  = 'unknown status, %s' % urllib.urlencode(str(data))
+            page  = img + ' ' + data['status'] + ', please wait...'
+            page += req
+            set_header()
         page = ajax_response(page)
-        print "\n### AJAX response",page
         return page
 
