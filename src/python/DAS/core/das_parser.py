@@ -5,8 +5,8 @@
 DAS Query Language parser.
 """
 
-__revision__ = "$Id: das_parser.py,v 1.1 2010/03/09 02:22:40 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_parser.py,v 1.2 2010/03/09 15:05:43 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -24,13 +24,13 @@ def add_spaces(query):
         space    = URL_MAP[' ']
         enc_query = enc_query.replace(enc_oper, '%s%s%s' % (space, enc_oper, space)) 
     splitted_query = urllib.unquote(enc_query)
-    splitted_query = splitted_query.replace('! = ', '!=')
-    splitted_query = splitted_query.replace(' <  = ', '<=')
-    splitted_query = splitted_query.replace(' >  = ', '>=')
     while True:
         splitted_query = splitted_query.replace('  ', ' ')
         if  splitted_query.find('  ') == -1:
             break
+    splitted_query = splitted_query.replace('! =', '!=')
+    splitted_query = splitted_query.replace('< =', '<=')
+    splitted_query = splitted_query.replace('> =', '>=')
     return splitted_query
 
 def find_das_operator(query, pos=0):
@@ -236,7 +236,8 @@ class QLManager(object):
         for key in mongo_query['spec'].keys():
             for system in self.map.list_systems():
                 mapkey = self.map.find_mapkey(system, key)
-                if  mapkey and mongo_query['spec'].has_key(key):
+                if  mapkey and mapkey != key and \
+                    mongo_query['spec'].has_key(key):
                     mongo_query['spec'][mapkey] = mongo_query['spec'][key]
                     del mongo_query['spec'][key]
                     continue
