@@ -4,14 +4,14 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.1 2009/03/09 19:43:33 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: dbs_service.py,v 1.2 2009/03/10 20:57:23 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
 from DAS.services.abstract_service import DASAbstractService
 from DAS.services.dbs.dbs_parser import parser, parser_dbshelp
-from DAS.utils.utils import genkey
+from DAS.utils.utils import genkey, map_validator
 
 class DBSService(DASAbstractService):
     """
@@ -31,6 +31,7 @@ class DBSService(DASAbstractService):
                 'params' : self.params
             }
         }
+        map_validator(self.map)
         # apart from other service DBS provides API to retrive QL keys
         # overwrite parent class settings
 #        self.service_keys = self.dbs_keys()
