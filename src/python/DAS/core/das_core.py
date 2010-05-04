@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.51 2010/01/05 19:34:24 valya Exp $"
-__version__ = "$Revision: 1.51 $"
+__revision__ = "$Id: das_core.py,v 1.52 2010/01/06 19:44:50 valya Exp $"
+__version__ = "$Revision: 1.52 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -167,6 +167,16 @@ class DASCore(object):
         return map of data service keys
         """
         return self.service_keys
+
+    def das_keys(self):
+        """
+        return map of data service keys
+        """
+        _keys = []
+        for values in self.service_keys.values():
+            for key in values:
+                _keys.append(key)
+        return _keys
 
     def plot(self, query):
         """plot data for requested query"""
