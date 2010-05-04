@@ -23,7 +23,7 @@ class testDASCache(unittest.TestCase):
     def test_key(self):                          
         """test DAS cache key generator"""
         query  = "find dataset,admin,node where site=T2_UK_SGrid_Bristol"
-        result = self.dascache.key(query)
+        result = self.dascache.genkey(query)
         import md5
         hash = md5.new()
         hash.update(query)
@@ -34,7 +34,9 @@ class testDASCache(unittest.TestCase):
         """test DAS cache result method"""
         query  = "find dataset,admin,node where site=T2_UK_SGrid_Bristol"
         result = self.dascache.result(query)
+        result.sort()
         expect = self.das.result(query)
+        expect.sort()
         self.assertEqual(expect, result)
 #
 # main
