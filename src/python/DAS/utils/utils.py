@@ -5,14 +5,15 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.3 2009/04/07 19:28:40 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: utils.py,v 1.4 2009/04/08 20:52:41 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import md5
 import time
 import types
+import traceback
 
 def splitlist(ilist, nentries):
     """
@@ -52,7 +53,14 @@ def dump(reslist, limit=None):
     if  not reslist:
         print "No results found"
         return
-    keys = reslist[0].keys()
+    if  type(reslist) is not types.ListType:
+        reslist = [reslist]
+    try:
+        keys = reslist[0].keys()
+    except:
+        traceback.print_exc()
+        print "dump results fail, reslist", reslist
+        raise Exception('Fail to dump output result list')
     keys.sort()
     keys.remove('id')
     keys = ['id']+keys
