@@ -4,11 +4,11 @@
 #
 # chkconfig: 345 05 95
 
-if [ -z ${WMCORE_ROOT} ]; then
-   echo "The WMCORE_ROOT environment is not set"
+if [ -z ${WMCORE_WEBTOOLS_ROOT} ]; then
+   echo "The WMCORE_WEBTOOLS_ROOT environment is not set"
    exit 1
 fi
-export WTBASE=$WMCORE_ROOT/src
+export WTBASE=$WMCORE_WEBTOOLS_ROOT/src
 if [ -z $DAS_ROOT ]; then
    echo "The DAS_ROOT environment is not set"
    exit 1
@@ -16,7 +16,7 @@ fi
 
 RETVAL=$?
 
-cmd="$WMCORE_ROOT/src/python/WMCore/WebTools/Root.py --ini=$DAS_ROOT/src/python/DAS/web/das_cacheconfig.py"
+cmd="$WMCORE_WEBTOOLS_ROOT/src/python/WMCore/WebTools/Root.py --ini=$DAS_ROOT/src/python/DAS/web/das_cacheconfig.py"
 pid=`ps auxw | grep das_cacheconfig | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
 
 case "$1" in
