@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.26 2009/11/08 19:14:21 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: qlparser.py,v 1.27 2009/11/10 19:57:16 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -94,10 +94,15 @@ def mongo_exp(cond_list, lookup=False):
         if  mongo_dict.has_key(key):
             existing_value = mongo_dict[key]
             if  type(existing_value) is types.DictType:
-                val = existing_value['$all'] + [val]
+                if  existing_value.has_key('$all'):
+                    val = existing_value['$all'] + [val]
+                    mongo_dict[key] = {'$all' : val}
+                else:
+                    existing_value.update({MONGO_MAP[oper]:val})
+                    mongo_dict[key] = existing_value
             else:
                 val = [existing_value, val]
-            mongo_dict[key] = {'$all' : val}
+                mongo_dict[key] = {'$all' : val}
         else:
             if  MONGO_MAP.has_key(oper):
                 if  mongo_dict.has_key(key):
@@ -251,20 +256,33 @@ class MongoParser(object):
         query = query.replace(",", " ")
         def fix_operator(query, pos):
             """Add spaces around DAS operators in a query"""
+            idx_pos  = len(query)
+            oper_pos = ""
             for oper in self.operators:
                 idx = query[pos:len(query)].find(oper)
-                if  idx != -1:
-                    newpos = pos + idx + len(oper)
-                    rest = query[pos+idx+len(oper):len(query)]
-                    newquery = query[:pos+idx] + ' ' + oper + ' ' + rest
-                    return newquery, newpos+2
+                if  idx != -1 and idx < idx_pos and idx > pos:
+                    idx_pos = idx
+                    oper_pos = oper
+            if  idx_pos >= len(query):
+                return None, None
+            if  idx_pos != -1:
+                idx = idx_pos
+                oper = oper_pos
+                newpos = pos + idx + len(oper)
+                rest = query[pos+idx+len(oper):len(query)]
+                newquery = query[:pos+idx] + ' ' + oper + ' ' + rest
+                return newquery, newpos+2
             return None, None
         pos   = 0
+        ccc   = 0
         while True:
             copy = query
             query, pos = fix_operator(query, pos)
             if  not query:
                 query = copy
+                break
+            ccc += 1
+            if  ccc > 100: # just pre-caution to avoid infinitive loop
                 break
         slist = query.split()
         idx   = 0
