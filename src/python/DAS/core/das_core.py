@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.31 2009/09/11 18:43:13 valya Exp $"
-__version__ = "$Revision: 1.31 $"
+__revision__ = "$Id: das_core.py,v 1.32 2009/09/14 20:41:18 valya Exp $"
+__version__ = "$Revision: 1.32 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -24,7 +24,7 @@ import traceback
 
 from DAS.core.qlparser import QLParser
 from DAS.core.das_viewmanager import DASViewManager
-from DAS.core.das_mapping import DASMapping
+from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
