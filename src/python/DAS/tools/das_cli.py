@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.4 2009/04/30 19:36:15 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_cli.py,v 1.5 2009/04/30 21:00:22 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -40,6 +40,9 @@ class DASOptionParser:
         self.parser.add_option("--keys", action="store", 
                                           dest="service",
              help="return set of keys for given data service")
+        self.parser.add_option("--views", action="store_true", 
+                                          dest="views",
+             help="return a list of pre-defined views in DAS")
         self.parser.add_option("--no-format", action="store_true", 
                                           dest="plain",
              help="return unformatted output, useful for scripting")
@@ -84,6 +87,10 @@ if __name__ == '__main__':
         keys.sort()
         for key in keys:
             print key
+    elif  opts.views:
+        for name, query in DAS.views().items():
+            print 'view name: %s' % name
+            print 'DAS query: %s' % query
     elif query:
 
         if  opts.profile:

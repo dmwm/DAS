@@ -5,8 +5,8 @@
 Abstract cache class.
 """
 
-__revision__ = "$Id: cache.py,v 1.1 2009/03/13 21:10:04 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: cache.py,v 1.2 2009/04/30 21:00:21 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 #from DAS.utils.logger import DASLogger
@@ -28,6 +28,12 @@ class Cache(object):
         Mimic DAS core functionality, return service keys
         """
         return self.dasmgr.service_keys
+
+    def views(self):
+        """
+        Mimic DAS core functionality, return DAS views
+        """
+        return self.dasmgr.views()
 
     def result(self, query):
         """
