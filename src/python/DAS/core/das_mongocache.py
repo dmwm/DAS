@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.34 2009/11/16 18:54:57 valya Exp $"
-__version__ = "$Revision: 1.34 $"
+__revision__ = "$Id: das_mongocache.py,v 1.35 2009/11/16 20:49:05 valya Exp $"
+__version__ = "$Revision: 1.35 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -406,7 +406,6 @@ class DASMongocache(Cache):
 
         # insert DAS records
         lkeys       = header['lookup_keys']
-        index_list  = [(key, DESCENDING) for key in lkeys]
         prim_key    = lkeys[0] # TODO: what to do with multiple look-up keys
         counter     = 0
         merge_count = 0
