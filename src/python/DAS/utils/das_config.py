@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.12 2009/06/04 13:21:52 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_config.py,v 1.13 2009/06/24 14:03:05 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -80,13 +80,12 @@ def das_writeconfig():
     config.set('das', 'systems', '%s' % systems)
     config.set('das', 'verbose', 1)
     config.set('das', 'rawcache', 'DASFilecache')
-#    config.set('das', 'hotcache', 'DASMemcache')
-    config.set('das', 'hotcache', 'DASFilecache')
+    config.set('das', 'hotcache', 'DASMemcache')
     config.set('das', 'logdir', '/tmp')
 
     config.add_section('cache')
     config.set('cache', 'servers', '127.0.0.1:11211' )
-    config.set('cache', 'lifetime', 60) # in seconds
+    config.set('cache', 'lifetime', 5*60) # 5 minutes, in seconds
 
     config.add_section('couch')
     config.set('couch', 'servers', 'http://localhost:5984' )
@@ -98,37 +97,37 @@ def das_writeconfig():
     config.set('filecache', 'lifetime', 1*24*60*60) # in seconds
 
     config.add_section('dbs')
-    config.set('dbs', 'expire', 600) # in seconds
+    config.set('dbs', 'expire', 1*60*60) # 1 hour, in seconds
     config.set('dbs', 'verbose', 1)
     config.set('dbs', 'url', 
     'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet')
 
     config.add_section('sitedb')
-    config.set('sitedb', 'expire', 600)
+    config.set('sitedb', 'expire', 12*60*60) # 12 hours
     config.set('sitedb', 'verbose', 1)
     config.set('sitedb', 'url', 
     'https://cmsweb.cern.ch/sitedb/json/index')
 
     config.add_section('phedex')
-    config.set('phedex', 'expire', 600)
+    config.set('phedex', 'expire', 30*60) # 30 minutes
     config.set('phedex', 'verbose', 1)
     config.set('phedex', 'url', 
     'https://cmsweb.cern.ch/phedex/datasvc/json/prod')
 
     config.add_section('monitor')
-    config.set('monitor', 'expire', 600)
+    config.set('monitor', 'expire', 1*60*60) # 1 hour
     config.set('monitor', 'verbose', 1)
     config.set('monitor', 'url', 
     'https://cmsweb.cern.ch/overview/')
 
     config.add_section('lumidb')
-    config.set('lumidb', 'expire', 600)
+    config.set('lumidb', 'expire', 1*60*60) # 1 hour
     config.set('lumidb', 'verbose', 1)
     config.set('lumidb', 'url', 
     'http://cmslumi.cern.ch/lumi/servlet/LumiServlet')
 
     config.add_section('runsum')
-    config.set('runsum', 'expire', 600)
+    config.set('runsum', 'expire', 1*60*60) # 1 hour
     config.set('runsum', 'verbose', 1)
     config.set('runsum', 'url', '')
     config.set('runsum', 'url', 
