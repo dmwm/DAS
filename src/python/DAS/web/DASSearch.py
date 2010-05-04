@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.10 2009/05/30 19:06:41 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: DASSearch.py,v 1.11 2009/06/03 20:00:17 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -17,9 +17,11 @@ from cherrypy import expose
 try:
     # Python 2.6
     import json
+    from json import JSONDecoder
 except:
     # Prior to 2.6 requires simplejson
     import simplejson as json
+    from simplejson import JSONDecoder
 
 # WMCore/WebTools modules
 from WMCore.WebTools.Page import TemplatedPage
@@ -48,6 +50,7 @@ class DASSearch(TemplatedPage):
         self.pageviews = ['xml', 'list', 'table', 'plain', 'json'] 
         self.cleantime = 60 # in seconds
         self.lastclean = time.time()
+        self.decoder   = JSONDecoder()
 
         # TMP: I define a few useful views, this should be done
         # elswhere (may be here, may be in external configuration,
@@ -197,12 +200,15 @@ class DASSearch(TemplatedPage):
         limit  = getarg(kwargs, 'limit', 0)
         params = {'query':uinput, 'idx':idx, 'limit':limit}
         path   = '/rest/json/GET'
-        data   = json.loads(urllib2_request(url+path, params))
+#        data   = json.loads(urllib2_request(url+path, params))
+        result = self.decoder.decode(urllib2_request(url+path, params))
+        rdict  = json.loads(result)
+        data   = rdict['results']
         titles = []
         res    = []
         form   = self.form(uinput=uinput)
         if  data['status'] == 'success':
-            res    = data['result']
+            res    = data['data']
             titles = res[0].keys()
             titles.sort()
             if  'id' in titles:
@@ -212,7 +218,10 @@ class DASSearch(TemplatedPage):
         elif data['status'] == 'not found':
             # request data via POST
             path   = '/rest/json/POST'
-            data   = json.loads(urllib2_request(url+path, params))
+#            data   = json.loads(urllib2_request(url+path, params))
+            result = self.decoder.decode(urllib2_request(url+path, params))
+            rdict  = json.loads(result)
+            data   = rdict['results']
             # TODO: place AJAX message which will try to retrieve results again
             msg    = data['status']
             form   = self.form(uinput=uinput, msg=msg)
