@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.29 2009/09/09 18:40:36 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: das_core.py,v 1.30 2009/09/11 13:26:56 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -25,6 +25,7 @@ import traceback
 from DAS.core.qlparser import QLParser
 from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping import DASMapping
+from DAS.core.das_analytics_db import DASAnalytics
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 
@@ -71,6 +72,9 @@ class DASCore(object):
 
         dasmapping = DASMapping(dasconfig)
         dasconfig['dasmapping'] = dasmapping
+
+        dasanalytics = DASAnalytics(dasconfig)
+        dasconfig['dasanalytics'] = dasanalytics
 
         self.viewmgr = DASViewManager(dasconfig)
 
