@@ -1,0 +1,39 @@
+
+<!-- not_ready.tmpl -->
+DAS processing your request, please try in a few moments,
+<a href="javascript:ShowTag('why')">more</a>
+<br/>
+<div class="hide" id="why">
+<hr class="line" />
+<b>Why I don't see my data immeadiately?</b> 
+DAS doesn't hold any data, if data are not
+staged into DAS cache your request will 
+be requested to appropriate CMS data service.
+Upon data-retrieval and processing DAS cache
+will be updated and your data will become
+visible for everybody.
+
+Please note, we use pre-fetch strategy to
+get data for most popular queries.
+
+You may invoke the same query as many times
+as you want, but only one request will be processed.
+So it is safe to hit <em>Search button many times</em>
+or reload the page without adding load on DAS server.
+<br/>
+<br/>
+<b>Can I improve situation to get my data as fast as possible?</b>
+DAS records all user queries to internal DB. The pre-fetch robots
+are use this statistics to organize pre-fetching of data. So there is
+no need to do any special intervention.
+<br/>
+<br/>
+<b>My query does not show in reasonable amoung of time, what should I do?</b>
+Typically, DAS fetch data quite quickly. But, of course, the amount of
+data depends on provided query. For loose query conditions, the number of
+data fetched from data-service can be big. If you feel that DAS is not
+responding or does take too much time to process, please contact us
+and we can investigate this problem.
+</div>
+<!-- end of not_ready.tmpl -->
+

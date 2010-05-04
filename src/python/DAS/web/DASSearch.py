@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.19 2009/09/16 20:37:18 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: DASSearch.py,v 1.20 2009/09/17 18:51:39 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -278,7 +278,7 @@ class DASSearch(TemplatedPage):
         total   = self.nresults(kwargs)
         if  not total:
             ctime   = (time.time()-time0)
-            page    = 'DAS processing your request, please try in a few moments ...'
+            page    = self.templatepage('not_ready')
             page    = self.page(form + page, ctime=ctime)
             return page
 
@@ -303,7 +303,9 @@ class DASSearch(TemplatedPage):
                     api    = item['api'][idx]
                     system = item['system'][idx]
                     key    = item['selection_keys'][idx]
-                    data   = row[key][jdx]
+                    data   = row[key]
+                    if  type(data) is types.ListType:
+                        data = data[jdx]
                     if  type(data) is types.ListType:
                         data = data[idx]
                     pad = ""
@@ -347,7 +349,9 @@ class DASSearch(TemplatedPage):
                     api    = item['api'][idx]
                     system = item['system'][idx]
                     key    = item['selection_keys'][idx]
-                    data   = row[key][jdx]
+                    data   = row[key]
+                    if  type(data) is types.ListType:
+                        data = data[jdx]
                     if  type(data) is types.ListType:
                         data = data[idx]
                     pad = ""
@@ -381,7 +385,7 @@ class DASSearch(TemplatedPage):
         if  not total:
             ctime   = (time.time()-time0)
             form    = self.form(uinput)
-            page    = 'DAS processing your request, please try in a few moments ...'
+            page    = self.templatepage('not_ready')
             page    = self.page(form + page, ctime=ctime)
             return page
 
