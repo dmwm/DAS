@@ -150,7 +150,7 @@
 \address[metson]{Bristol University, Bristol, UK}
 \ead{s.metson@bristol.ac.uk}
 
-%\cortext[cor1]{Corresponding autho}
+%\cortext[cor1]{Corresponding author}
 
 \begin{abstract}
 Meta-data plays significant role in large modern enterprises, 
@@ -202,14 +202,14 @@ Physics (HEP), promising to deliver a few PB of data each year.
 At this scale the ``information discovery'' within heterogeneous, distributed 
 environment becomes a key ingredient of successful data analysis.
 The data and associated meta-data are produced in variety of forms and digital formats.
-They are stored and retrieved from relational and non-releational data-sources, such as 
+They are stored and retrieved from relational and non-relational data-sources, such as 
 RDMS systems, document oriented databases, blogs, twikies, file systems,
 customized applications, etc. 
 Working in such environment requires a lot of expertise and our users, physicists, 
 are always looking for simple, intuitive and flexible
 tool(s) to look-up their desired data. A well-known solutions, such as data-services
-and search engines are tighted to a specific data sources and end-users are left 
-with a manual task to bookkeep and relatate information from them.
+and search engines are tighten to a specific data sources and end-users are left 
+with a manual task to bookkeep and relate information from them.
 
 Here we present a work on Data Aggregation System (DAS) designed for
 CMS High-Energy Experiment at LHC which provides
@@ -251,7 +251,7 @@ such as row ids, and in order to be
 answered correctly requires additional keyword, clarifying its meaning, 
 which should be matched with particular
 entity (table.column) in the underlying database.
-Therefore to answer presicely the logical questions, such as  
+Therefore to answer precisely the logical questions, such as  
 {\it find me total number of files whose size more then 20 but less then 
 100} would be hard or almost impossible in \cite{DBXplorer, QueryAnswer}, 
 while it can be easily accomplished using SQL syntax. 
@@ -299,7 +299,7 @@ is one of the two large general-purpose particle physics detectors built on
 the proton-proton Large Hadron Collider (LHC) at CERN in Switzerland and France. 
 It is designed to explore the frontier of the HEP and provide physicists
 the ability to look at conditions presented at the early stage of our Universe.
-More then 3000 physicists from 183 institutions reprepresenting almost 
+More then 3000 physicists from 183 institutions representing almost 
 38 countries are involved in the design, construction and maintenance of the experiment.
 
 The CMS distributed computing and data model \cite{CMSDataModel} 
@@ -310,14 +310,14 @@ collaboration are geographically distributed,
 interconnected via high throughput networks and operated by means 
 of Grid software. The model allows to cover broad variety of
 hardware, mass and storage elements and configuration of the
-clusters. To accomodate efficient data processing CMS uses
+clusters. To accommodate efficient data processing CMS uses
 a multi-Tier distributed model, where specific tasks of data taking,
 processing, archival and distribution are assigned to each tier based
 on CMS data model. For example, the Tier-0 center at CERN is responsible
 for archiving the data coming out from the detector, prompt first pass reconstruction
 and data distribution to Tier-1 centers, located around the world.
 %The 7 Tier-1 centers
-%located in France, Germany, Ialy, Spain, Taiwan, United Kingdom and United States
+%located in France, Germany, Italy, Spain, Taiwan, United Kingdom and United States
 %keep a portion (copy) of the data delivered by Tier-0 for further processing.
 They provide storage and CPU power for high priority analysis jobs.
 The Tier-2 centers
@@ -347,7 +347,7 @@ Data Aggregation System.
 \section{Data Aggregation System\label{DAS}}
 The goal of the Data Aggregation System was to combine and
 aggregate meta-data from existing data-services
-under one umrella, utilizing their access rules, APIs, security policies, etc., and
+under one umbrella, utilizing their access rules, APIs, security policies, etc., and
 allowing users to perform queries against them. In contrast, the approaches
 discussed in \cite{DBXplorer, QueryAnswer, FedDB} are
 enforced a publication step of data into a dedicated database 
@@ -375,13 +375,13 @@ a syntax similar to SQL, without specific knowledge of underlying DB schema.
 %the DBS Query Language (DBS-QL) \cite{DBS-QL} with support of dynamic queries against
 %DBS back-ends. The DBS-QL \cite{DBS-QL} syntax was based on SQL query language, where 
 %we took away relations and details on underlying schema from end-users. 
-%This was achieved by using Dijkstras shortest path algorithm 
+%This was achieved by using Dijkstra's shortest path algorithm 
 %to establish necessary table joins based on provided information in user queries and
 %knowledge of foreign key relationships from auto-loaded database schema.
-%The DBS-QL keys exposed to end-users were choosen based on a jargon used by
-%physicists. They're internally mapped into database entitites and attributes, 
+%The DBS-QL keys exposed to end-users were chosen based on a jargon used by
+%physicists. They're internally mapped into database entities and attributes, 
 %e.g. the {\it run} DBS-QL key refers to run number attribute of run summary table.
-A quick adoption and wide usage of DBS-QL in CMS gave us confidence in choosen approach 
+A quick adoption and wide usage of DBS-QL in CMS gave us confidence in chosen approach 
 and provide a basis for building DAS system.
 
 As was pointed out in \cite{Arms} a mixed content and 
@@ -413,7 +413,7 @@ found in DAS cache, the appropriate results were delivered back to the users.
 Otherwise a data-service APIs were invoked, triggering DAS cache population. 
 Once data become available and aggregated in DAS cache, users were able 
 to see the results. This on demand system was supplemented by DAS robots 
-(unix daemons) who were consulting DAS analytics database to enable data 
+(Unix daemons) who were consulting DAS analytics database to enable data 
 population into DAS cache for most common query requests.
 }
 \label{DAS_cache}
@@ -424,7 +424,7 @@ Based on this set we rule out the choice of RDMS as DAS back-end(s)
 for several reasons. We agreed to support dynamic queries, data
 aggregation on demand and pluggable data-services. Therefore a choice 
 of concrete schema for data storage was problematic. Moreover we didn't impose
-any transactions and data persistency in DAS. This allows us to look 
+any transactions and data persistence in DAS. This allows us to look 
 for alternative IT solutions.
 Through the analysis of available options, such as a file-based and memory caches, 
 key-value databases, documented-oriented databases we made our choice in favor 
@@ -432,8 +432,8 @@ of the last technology. Among them we evaluated CouchDB \cite{CouchDB} and
 MongoDB \cite{MongoDB}. Both systems provide schema free document
 storage, replication and fail-over features, but our choice in favor of 
 MongoDB was obvious, due to its support of dynamic queries, 
-full indexies, including inner objects and embedded arrays,
-and auto-sharding. Our prelimiary benchmarks shown that it can sustain
+full indexes, including inner objects and embedded arrays,
+and auto-sharding. Our preliminary benchmarks shown that it can sustain
 the desired load and size of our meta-data information. We used 
 document-oriented database, MongoDB, as a back-end for the three 
 main DAS components: Mapping, Analytics and DAS cache databases, 
@@ -450,11 +450,11 @@ strategies.
 
 \subsection{DAS core}
 The DAS core communicated with different data-services and retrieved
-data on demand. This was done by invoking appropriate data-service plugin(s)
-upon the user request. Each plugin consists of DAS map, the
+data on demand. This was done by invoking appropriate data-service plug-in(s)
+upon the user request. Each plug-in consists of DAS map, the
 data parser(s) to convert data-service output into DAS records
 and it was responsible for data-service API calls.
-The data-service plugin contains a map about data-service APIs,
+The data-service plug-in contains a map about data-service APIs,
 input and output parameters and their mapping to DAS keys. For example
 \begin{verbatim}
 {"api":{"params":{"name":""}, "name":"CMSNametoSE"}, "system":"sitedb",
@@ -465,11 +465,11 @@ input and output parameters and their mapping to DAS keys. For example
 \end{verbatim}
 This information was stored into DAS Mapping DB which we discuss next.
 
-Although the majority of data-service plugins looks alike
+Although the majority of data-service plug-ins looks alike
 and their logic was abstracted, including parsers, there were a few
 cases where special care was required, e.g. access to data-services 
 accessible via private network. Therefore, a way to propagate 
-user credentials was required, leading to specific plugin implementation.
+user credentials was required, leading to specific plug-in implementation.
 
 %All user queries were written to Analytics DB for further analysis, while
 %mapping between data services were kept in Mapping DB. The data-service 
@@ -477,7 +477,7 @@ user credentials was required, leading to specific plugin implementation.
 %inside of the DAS cache.
 
 \subsection{DAS Mapping DB}
-The Mapping DB holded the mapping between data-service APIs and DAS keys exposed to
+The Mapping DB hold the mapping between data-service APIs and DAS keys exposed to
 the users. It created a necessary glue between data-services and identifies
 how their data can be related to each other. Basically Mapping DB was positioned 
 as a {\it registration} service with ability to translate notations among data-services.
@@ -545,7 +545,7 @@ Here \verb+superset_in_analytics+ verifies if provided \verb+api, args+
 are subset of already registered in Analytics DB api call(s). The 
 \verb+get_data+ and \verb+parser+ are define methods to fetch and parse
 data, respectively.
-\item Perform aggregation by iterating over records from the previos step
+\item Perform aggregation by iterating over records from the previous step
 \begin{verbatim}
 if cache_has(row.primary_key):
    existing_record = get_from_cache(row.primary_key)
@@ -596,7 +596,7 @@ entities of our data. For example, \verb+dataset+,
 \verb+file+, \verb+block+, \verb+run+, \verb+event+, etc. Their choice
 was based on analysis of daily work operations of our users, see \cite{DBS07}.
 Each key had a set of attributes with primary one assigned to the key itself.
-For intance, the \verb+block+ key had the following attributes
+For instance, the \verb+block+ key had the following attributes
 \verb+name+, \verb+size+, \verb+replica+ etc., 
 with primary attribute being \verb+name+.
 The choice of attributes were based on a set of meta-data information
@@ -605,7 +605,7 @@ a context in their queries by using appropriate attribute(s). For example,
 for query \verb+block+ we didn't perform a string matching to the
 ``block'' string, but rather look-up a block objects in a DAS, while query
 \verb+block.name=abc*+ instructs system to look-up appropriate blocks
-with matched names. At the same time, to complement the stregth of the 
+with matched names. At the same time, to complement the strength of the 
 DAS, we do plan to index dynamically retrieved meta-data and add a keyword-based 
 search later.
 
@@ -674,11 +674,11 @@ latency studies, etc.
 %as well as proper organize caching solution.
 %For instance, to access on-line Run Summary information we were forced to use
 %Grid certificates. Instead of propagating user certificate to data-service
-%the DAS cache server works as a proxy to this server and used host certficiate 
+%the DAS cache server works as a proxy to this server and used host certificate 
 %to serve such requests on behalf of the users.
 
 \section{Results\label{Results}}
-In this section we discuss preliminary restults achieved with DAS system
+In this section we discuss preliminary results achieved with DAS system
 using the following CMS data-services:
 \begin{itemize}
 \item Data Bookkeeping System, DBS \cite{DBS}, the CMS meta-data service;
@@ -720,7 +720,7 @@ operates on private network accessible at CMS online operation center.
 %Size of  & Dashboard & DBS & PhEDEx & SiteDB & RunSummary \\
 %\hline
 %tables (GB) & 40.8  & 28.0 & 5.5 & 0.006 & 0.9 \\
-%indexies (GB) & 135.9 & 57.2 & 12.6 & 0.004 & 2.7 \\
+%indexes (GB) & 135.9 & 57.2 & 12.6 & 0.004 & 2.7 \\
 %\hline
 %\hline
 %\end{tabular}
@@ -745,7 +745,7 @@ normal CMS operation at LHC.
 %Express FEVT: 105 million events, 24TB
 %Express ALCARECO: 153 million events, 0.99TB
 %HLTMON FEVTHLTALL: 31 million events, 7.4TB
-%Above event numbers have signicant overlap by design, 
+%Above event numbers have significant overlap by design, 
 %2.2 billion unique events, including 524 million cosmic muon
 %triggers
 % 0.3PB - 50GB meta-data in DBS
@@ -786,7 +786,7 @@ and all tests were performed on x64 Linux platform where
 %of DAS server was 67\% in average and RAM usage was below 35MB. 
 All tests were performed multiple times to avoid fluctuations. 
 The elapsed time measured during those tests consists of the 
-following componenets:
+following components:
 \begin{itemize}
 \item[]
 {\it
