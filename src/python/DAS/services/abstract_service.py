@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.40 2009/10/12 20:10:23 valya Exp $"
-__version__ = "$Revision: 1.40 $"
+__revision__ = "$Id: abstract_service.py,v 1.41 2009/10/13 15:44:43 valya Exp $"
+__version__ = "$Revision: 1.41 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -310,8 +310,9 @@ class DASAbstractService(object):
                 if  not found:
                     continue
             for key, val in cond.items():
+                if  not self.dasmapping.check_daskey(self.name, key):
+                    continue # skip if condition key is not valid for this system
                 entity = key.split('.')[0] # key either entity.attr or just entity
-                # TODO: I'm not sure if I need to supply value to das2api
                 for apiparam in self.dasmapping.das2api(self.name, entity):
                     if  args.has_key(apiparam):
                         args[apiparam] = val
