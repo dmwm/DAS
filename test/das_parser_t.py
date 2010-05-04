@@ -5,6 +5,7 @@
 Unit test for DAS QL parser
 """
 
+import time
 import unittest
 from DAS.core.das_parser import add_spaces, parser
 from DAS.core.das_parser import find_das_operator, find_das_word
@@ -16,7 +17,7 @@ class testQLParser(unittest.TestCase):
     """
     def setUp(self):
         """Initialization of unit test parameters"""
-        self.daskeys   = ['file', 'site', 'lat', 'lon']
+        self.daskeys   = ['file', 'site', 'lat', 'lon', 'date']
         self.operators = ['!=', '<=', '>=', '=']
 
     def test_add_spaces(self):
@@ -52,6 +53,22 @@ class testQLParser(unittest.TestCase):
                   'aggregators':[('sum', 'lon.name')]}
         result = parser(query, self.daskeys, self.operators)
         self.assertEqual(expect, result)
+
+    def test_parser3(self):
+        """Test parser function w/ time stamps"""
+        query  = "lon=1 date last 24h"
+        date1  = time.time() - 24*60*60
+        date2  = time.time()
+        expect = {'fields':None, 
+                  'spec':{'lon':1, 'date': [long(date1), long(date2)]}} 
+        result = parser(query, self.daskeys, self.operators)
+        self.assertEqual(expect, result)
+
+        query  = "lon=1 date=20100309"
+        expect = {'fields':None, 'spec':{'lon':1, 'date': 20100309}} 
+        result = parser(query, self.daskeys, self.operators)
+        self.assertEqual(expect, result)
+
 #
 # main
 #
