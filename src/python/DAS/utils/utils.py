@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.80 2010/03/05 18:06:31 valya Exp $"
-__version__ = "$Revision: 1.80 $"
+__revision__ = "$Id: utils.py,v 1.81 2010/03/09 15:04:09 valya Exp $"
+__version__ = "$Revision: 1.81 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -1003,6 +1003,7 @@ def aggregator(results, expire):
         row.pop('das')
         row.pop('_id')
         if  row_prim_key != prim_key:
+            record.update({'das':{'expire':expire}})
             yield record
             prim_key = row_prim_key
             record = row
@@ -1027,7 +1028,7 @@ def aggregator(results, expire):
             merge_dict(record, row)
             update = 1
         else:
-            row.update({'das':{'expire':expire}})
+            record.update({'das':{'expire':expire}})
             yield record
             record = dict(row)
             update = 0
