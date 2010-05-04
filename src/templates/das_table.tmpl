@@ -2,24 +2,14 @@
 <!-- das_table.tmpl -->
 #if $total and not $ajax
 
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/paginator/assets/skins/sam/paginator.css" />
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/datatable/assets/skins/sam/datatable.css" />
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/connection/connection-min.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/json/json-min.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/element/element-min.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/paginator/paginator-min.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/datasource/datasource-min.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/datatable/datatable-min.js"></script>
-
-
 <!--begin custom header content for this example-->
 <div class="yui-skin-sam">
 
 Found $total results
 <div id="$tag"></div>
 
-<script type="text/javascript">
+<script type="application/javascript">
+//<![CDATA[
 YAHOO.example.DynamicData = function() {
     // Column definitions
     var myColumnDefs = ${coldefs};
@@ -78,6 +68,7 @@ YAHOO.example.DynamicData = function() {
         dt: myDataTable
     };
 }();
+//]]>
 </script>
 
 

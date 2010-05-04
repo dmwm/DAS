@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.12 2009/06/29 19:19:11 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_webconfig.py,v 1.13 2009/07/02 20:19:16 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -63,19 +63,21 @@ active.section_('dascontrollers')
 active.dascontrollers.object = 'WMCore.WebTools.Controllers'
 # The configuration for this object - the location of css and js
 active.dascontrollers.css = {
-#    'reset': environ['YUI_ROOT'] + '/build/reset/reset.css', 
-    'cms_reset': environ['WMCORE_ROOT'] + '/src/css/WMCore/WebTools/cms_reset.css', 
-    'das': environ['DAS_ROOT'] + '/src/css/das.css'
+#    'reset.css': environ['YUI_ROOT'] + '/build/reset/reset.css', 
+    'cms_reset.css': environ['WMCORE_ROOT'] + '/src/css/WMCore/WebTools/cms_reset.css', 
+    'das.css': environ['DAS_ROOT'] + '/src/css/das.css'
 }
 
 active.dascontrollers.js = {
-    'prototype' : environ['DAS_ROOT'] + '/src/js/prototype.js',
-    'rico' : environ['DAS_ROOT'] + '/src/js/rico.js',
-    'utils' : environ['DAS_ROOT'] + '/src/js/utils.js',
-    'ajax_utils' : environ['DAS_ROOT'] + '/src/js/ajax_utils.js',
+    'prototype.js' : environ['DAS_ROOT'] + '/src/js/prototype.js',
+    'rico.js' : environ['DAS_ROOT'] + '/src/js/rico.js',
+    'utils.js' : environ['DAS_ROOT'] + '/src/js/utils.js',
+    'ajax_utils.js' : environ['DAS_ROOT'] + '/src/js/ajax_utils.js',
 }
 active.dascontrollers.images = {
-    'loading' : environ['DAS_ROOT'] + '/src/images/loading.gif',
+    'loading.gif' : environ['DAS_ROOT'] + '/src/images/loading.gif',
+    'cms_logo.jpg' : environ['DAS_ROOT'] + '/src/images/cms_logo.jpg',
+    'cms_logo.png' : environ['DAS_ROOT'] + '/src/images/cms_logo.png',
 }
 # These are pages in "maintenance mode" - to be completed
 maint = config.DASWeb.views.section_('maintenance')
