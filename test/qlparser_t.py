@@ -49,9 +49,19 @@ class testQLParser(unittest.TestCase):
         """test QLParser class"""
         imap = {'dbs':['dataset', 'run', 'site', 'block'],
                 'phedex':['block', 'replica', 'site'], 
-                'sitedb': ['admin', 'site']}
-        q = "find dataset where ((run=1 or run=2) or dataset=bla) and site=cern order by block"
+                'sitedb': ['admin', 'site'],
+                'dq': ['runs', 'DQFlagList']}
+
         ql = QLParser(imap)
+
+        q = "find runs where DQFlagList=Tracker_Global=GOOD&Tracker_Local1=1"
+        result = ql.params(q)
+        print "ql.params", result
+#        expect = ['']
+#        self.assertEqual(result, expect)
+
+        q = "find dataset where ((run=1 or run=2) or dataset=bla) and site=cern order by block"
+#        ql = QLParser(imap)
 
         result = ql.selkeys(q)
         expect = ['dataset']
