@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.49 2009/12/22 17:30:07 valya Exp $"
-__version__ = "$Revision: 1.49 $"
+__revision__ = "$Id: das_core.py,v 1.50 2010/01/05 16:40:22 valya Exp $"
+__version__ = "$Revision: 1.50 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -346,7 +346,9 @@ class DASCore(object):
                 if  self.verbose:
                     self.timer.record(srv)
         except:
+            traceback.print_exc()
             return 0
+        self.rawcache.update_das_record(query, 'ok')
         return 1
 
     def get_from_cache(self, query, idx=0, limit=None, skey=None, sorder='asc'):
