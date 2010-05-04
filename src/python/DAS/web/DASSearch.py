@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.28 2009/12/21 16:09:58 valya Exp $"
-__version__ = "$Revision: 1.28 $"
+__revision__ = "$Id: DASSearch.py,v 1.29 2009/12/21 18:09:13 valya Exp $"
+__version__ = "$Revision: 1.29 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -182,8 +182,20 @@ class DASSearch(TemplatedPage):
                 tmpdict[key] = self.dasmgr.mapping.lookup_keys(system, key) 
                 if  key not in daskeys:
                     daskeys.append(key)
-            dasdict[system] = dict(tmpdict)
+            dasdict[system] = dict(keys=dict(tmpdict), 
+                apis=self.dasmgr.mapping.list_apis(system))
         page = self.templatepage('das_services', dasdict=dasdict, daskeys=daskeys)
+        return self.page(page, response_div=False)
+
+    @expose
+    def api(self, name, **kwargs):
+        """
+        Return DAS mapping record about provided API.
+        """
+        record = self.dasmgr.mapping.api_info(name)
+        jsoncode = {'jsoncode': json2html(record, "")}
+        page  = "<b>DAS mapping record</b>"
+        page += self.templatepage('das_json', **jsoncode)
         return self.page(page, response_div=False)
 
     @expose
@@ -213,6 +225,25 @@ class DASSearch(TemplatedPage):
         return page
 
     @expose
+    def error(self, msg):
+        """
+        Show error message.
+        """
+        error = self.templatepage('das_error', msg=msg)
+        page  = self.page(self.form() + error)
+        return page
+
+    @exposedasjson
+    def wrap2dasjson(self, data):
+        """DAS JSON wrapper"""
+        return data
+
+    @exposedasplist
+    def wrap2dasxml(self, data):
+        """DAS XML wrapper"""
+        return data
+
+    @expose
     def records(self, *args, **kwargs):
         """
         Retieve all records id's.
@@ -220,11 +251,14 @@ class DASSearch(TemplatedPage):
 #        msg = "Call get, args="+str(args)+", kwargs="+str(kwargs)
 #        print "\n###", msg
         recordid = None
+        format = ''
         if  args:
             recordid = args[0]
             spec = {'_id':recordid}
             fields = None
             query = dict(fields=fields, spec=spec)
+            if  len(args) == 2:
+                format = args[1]
         elif  kwargs and kwargs.has_key('_id'):
             spec = {'_id': kwargs['_id']}
             fields = None
@@ -240,31 +274,38 @@ class DASSearch(TemplatedPage):
         params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit}
         path     = '/rest/request'
         headers  = {"Accept": "application/json"}
-        result   = self.decoder.decode(
+        data     = self.decoder.decode(
         urllib2_request('GET', url+path, params, headers=headers))
-        if  type(result) is types.StringType:
-            data = json.loads(result)
+        if  type(data) is types.StringType:
+            result = json.loads(data)
         else:
-            data = result
-        results = ""
-        if  data['status'] == 'success':
+            result = data
+        res = ""
+        if  result['status'] == 'success':
             if  recordid: # we got id
-                for row in data['data']:
+                for row in result['data']:
                     jsoncode = {'jsoncode': json2html(row, "")}
-                    results += self.templatepage('das_json', **jsoncode)
+                    res += self.templatepage('das_json', **jsoncode)
             else:
-                for row in data['data']:
+                for row in result['data']:
                     rid  = row['_id']
                     del row['_id']
                     record = dict(id=rid, daskeys=', '.join(row))
-                    results += self.templatepage('das_record', **record)
+                    res += self.templatepage('das_record', **record)
         else:
-            results = data['status']
+            res = result['status']
         if  recordid:
-            page  = results
+            if  format:
+                if  format == 'xml':
+                    return self.wrap2dasxml(result['data'])
+                elif  format == 'json':
+                    return self.wrap2dasjson(result['data'])
+                else:
+                    return self.error('Unsupported data format %s' % format)
+            page  = res
         else:
             url   = '/das/records?'
-            idict = dict(nrows=nresults, idx=idx, limit=limit, results=results, url=url)
+            idict = dict(nrows=nresults, idx=idx, limit=limit, results=res, url=url)
             page  = self.templatepage('das_pagination', **idict)
 
         form    = self.form(uinput="")
@@ -288,7 +329,6 @@ class DASSearch(TemplatedPage):
             data = json.loads(result)
         else:
             data = result
-        print "\n#### data", data
         if  data['status'] == 'success':
             return data['nresults']
         else:
@@ -345,7 +385,6 @@ class DASSearch(TemplatedPage):
         rows = self.result(kwargs)
         return rows
 
-#    @exposejson
     @exposedasjson
     def jsonview(self, kwargs):
         """
