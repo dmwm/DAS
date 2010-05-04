@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.24 2009/10/15 21:02:14 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: qlparser.py,v 1.25 2009/11/03 16:31:14 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -22,6 +22,8 @@ import traceback
 from itertools import groupby
 from DAS.utils.utils import oneway_permutations, unique_list, add2dict
 from DAS.utils.utils import getarg, genkey
+
+import DAS.utils.jsonwrapper as json
 
 DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
                  'between', 'nin', 'in', 'last']
@@ -235,6 +237,14 @@ class MongoParser(object):
         Query analyzer which form request query to DAS from a free text-based form.
         Return MongoDB request query.
         """
+        if  query and type(query) is types.StringType:
+            query = query.strip()
+            if  query[0] == "{" and query[-1] == "}":
+                mongo_query = json.loads(query)
+                if  mongo_query.keys() != ['fields', 'spec']:
+                    raise Exception("Invalid MongoDB query %s" % query)
+                self.analytics.add_query(query, mongo_query)
+                return mongo_query
         findbracketobj(query) # check brackets in a query
         skeys = []
         query = query.strip()
@@ -324,6 +334,8 @@ class MongoParser(object):
     def services(self, query):
         """Find out DAS services to use for provided query"""
         skeys, cond = self.decompose(query)
+        if  not skeys:
+            skeys = []
         if  type(skeys) is types.StringType:
             skeys = [skeys]
         sdict = {}
