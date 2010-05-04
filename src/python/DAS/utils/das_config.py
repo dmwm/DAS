@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.14 2009/06/24 19:47:45 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_config.py,v 1.15 2009/06/25 18:05:28 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -51,7 +51,7 @@ def das_readconfig(dasconfig=None):
     configdict['logdir'] = config.get('das', 'logdir', '/tmp')
 
     systems = config.get('das', 'systems', 
-                'dbs,sitedb,phedex,monitor,lumidb,runsum').split(',')
+              'dbs,sitedb,phedex,monitor,lumidb,runsum,dq').split(',')
     verbose = config.getint('das', 'verbose')
     configdict['systems'] = systems
     configdict['verbose'] = verbose
@@ -76,7 +76,7 @@ def das_writeconfig():
 
     config = ConfigParser.ConfigParser()
 
-    systems = 'dbs,sitedb,phedex,monitor,lumidb,runsum'
+    systems = 'dbs,sitedb,phedex,monitor,lumidb,runsum,dq'
     config.add_section('das')
     config.set('das', 'systems', '%s' % systems)
     config.set('das', 'verbose', 0)
@@ -131,9 +131,14 @@ def das_writeconfig():
     config.add_section('runsum')
     config.set('runsum', 'expire', 1*60*60) # 1 hour
     config.set('runsum', 'verbose', 0)
-    config.set('runsum', 'url', '')
     config.set('runsum', 'url', 
     'https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary')
+
+    config.add_section('dq')
+    config.set('dq', 'expire', 1*60*60) # 1 hour
+    config.set('dq', 'verbose', 0)
+    config.set('dq', 'url', 
+    'http://cmssrv49.fnal.gov:8989/DQSrvcTEST/DQSrvcServlet')
 
     maps = {'dbs,sitedb':'site', 'dbs,phedex':'block,site', 
             'phedex,sitedb':'site', 

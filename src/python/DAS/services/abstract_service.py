@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.22 2009/06/22 16:08:23 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: abstract_service.py,v 1.23 2009/06/25 18:05:28 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -284,11 +284,14 @@ class DASAbstractService(object):
                 for par in aparams['params']:
                     if  params.has_key(par):
                         args[par] = params[par]
-                if  aparams.has_key('api'):
-                    apidict = aparams['api']
-                    apikey  = apidict.keys()[0]
-                    apival  = apidict[apikey]
-                    args[apikey] = apival 
+                if  aparams.has_key('api') or aparams['params'].has_key('api'):
+                    try:
+                        apidict = aparams['api']
+                        apikey  = apidict.keys()[0]
+                        apival  = apidict[apikey]
+                        args[apikey] = apival 
+                    except:
+                        pass
                     url = self.url # JAVA, e.g. http://host/Servlet
                 else: # if we have http://host/apiname?...
                     url = self.url + '/' + apiname
