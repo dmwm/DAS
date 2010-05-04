@@ -4,12 +4,20 @@
 """
 DAS cache client tools 
 """
-__revision__ = "$Id: das_cache_client.py,v 1.6 2009/05/29 18:29:48 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_cache_client.py,v 1.7 2009/06/04 18:01:37 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.web.utils import urllib2_request, httplib_request
 from optparse import OptionParser
+try:
+    # Python 2.6
+    import json
+    from json import JSONDecoder
+except:
+    # Prior to 2.6 requires simplejson
+    import simplejson as json
+    from simplejson import JSONDecoder
 
 class DASOptionParser: 
     """
@@ -76,4 +84,5 @@ if __name__ == '__main__':
         data = httplib_request(host, path, params, request, debug)
     else:
         raise Exception('Unsupported lib %s' % opts.lib)
-    print data
+    decoder = JSONDecoder()
+    print decoder.decode(data)
