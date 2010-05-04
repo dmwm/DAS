@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.72 2010/02/16 18:42:30 valya Exp $"
-__version__ = "$Revision: 1.72 $"
+__revision__ = "$Id: abstract_service.py,v 1.73 2010/02/17 16:58:59 valya Exp $"
+__version__ = "$Revision: 1.73 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -151,6 +151,7 @@ class DASAbstractService(object):
                 err  = httperror.read()
                 data.update({'httperror':extract_http_error(err)})
             except:
+                data.update({'httperror': None})
                 pass
             data = str(data)
         return data
@@ -370,8 +371,11 @@ class DASAbstractService(object):
         """
         self.logger.info('DASAbstractService::%s::api(%s)' \
                 % (self.name, query))
-        result = False
-        for url, api, args, format, expire in self.apimap(query):
+        result  = False
+        genrows = self.apimap(query)
+        if  not genrows:
+            return
+        for url, api, args, format, expire in genrows:
             try:
                 mkey    = self.dasmapping.primary_mapkey(self.name, api)
                 args    = self.inspect_params(api, args)
@@ -405,6 +409,7 @@ class DASAbstractService(object):
             format = value['format']
             url    = value['url']
             args   = value['params']
+            wild   = value.get('wild_card', '*')
             found  = False
             for key, val in cond.items():
                 # check if keys from conditions are accepted by API.
@@ -421,11 +426,19 @@ class DASAbstractService(object):
             # since such api will not work
             if 'required' in args.values():
                 continue
+            # adjust pattern symbols in arguments
+            if  wild != '*':
+                for key, val in args.items():
+                    if  type(val) is types.StringType:
+                        val   = val.replace('*', wild)
+                    args[key] = val
             # check if analytics db has a similar API call
             if  not self.pass_apicall(url, api, args):
                 continue
             msg  = "DASAbstractService::apimap yield "
-            msg += "system %s, url=%s, api=%s, args=%s, format=%s, expire=%s" \
-                % (self.name, url, api, args, format, expire)
+            msg += "system %s, url=%s, api=%s, args=%s, format=%s, " \
+                % (self.name, url, api, args, format)
+            msg += "expire=%s, wild_card=%s" \
+                % (expire, wild)
             self.logger.info(msg)
             yield url, api, args, format, expire
