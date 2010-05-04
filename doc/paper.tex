@@ -37,7 +37,7 @@ role in fundamental studies of physics. But apart from scientific community
 it is known as a place where World Wide Web was born. At that time the 
 information look-up among hyperlinks represents a certain challenge for scientists.
 Today, the Large Hadron Collider (LHC) at CERN is marking a new era of High Energy
-Physics, promising to deliver a few PB of data each year. Scientists are
+Physics (HEP), promising to deliver a few PB of data each year. Scientists are
 facing another set of problems from distributed computing to multi-dimentional
 view on information retrieval. One of the aspect of such research is an efficient
 and at the same time precise look-up of produced meta-data, which comes in variety 
@@ -63,22 +63,21 @@ sceince domain. A few
 alternative solutions has been proposed to address this issue. On one
 side, the federated DB \cite{FedDB} unify data coming from different
 RDMS into another DB where SQL queries can be placed to search desired
-data. While on another approaches of querying relational
-DB using keyword search algorithms has been proposed \cite{DBXplorer, QueryAnswer}.
-In former case, you still face with understanding the underlying schema and
-imposing relation condition in your query, while in another an exact match
-of provided keywords is expected. Even though in last case you can 
-intuitively explore information presented in databases, in some cases
-it is not enough. For example, how to deal with numbers? What number is represent?
-The row ID, the value of the field?
-
-
-Our users can be classified as proficient
+data. While another approaches of querying relational
+DB(s) using keyword search algorithms has been proposed recently, see
+\cite{DBXplorer, QueryAnswer}.
+In former case, you still face with understanding of the underlying schema and
+imposing relational conditions in your query, while queries can be
+expressed via simple keyword based search, even though exact match
+of provided keywords is expected. Although keyword based search is
+intuitive and easy to use, with respect to HEP domain it is not sufficient. 
+For example, how to deal with numbers? What a single number means in a user input?
+The row ID, the value of the field, the sum of files or their size? In other
+words a further step is required to understand up-coming request without
+sacrifies the output results match. Our users can be classified as proficient
 users who understand semantics of the problem and want precise answers
-for their queries, at the same time do not need or should not be worried
-about underlying schema of underlying databases. Moreover, some information
-can be represented in multiple DBs and our users want to place 
-queries across those DBs.
+for their queries. They are more interesting in precise answers to their
+questions rather ranking output.
 
 In \cite{DBS-QL} a simple, intuitive and flexible query language was introduced 
 on top of the CMS data-bookkeeping system. It represented a power of SQL while
@@ -91,16 +90,175 @@ particular site} was represented as simple as
 find file where date 2009-01-02 11:59 CET and site = T2
 \end{verbatim}
 We wanted to expand this approach and apply such queries across multiple
-data services. Here we discuss a new system, the Data Aggregation System (DAS),
+data services and different DB back-ends. 
+
+Here we discuss a new system, the Data Aggregation System (DAS),
 developed in CMS collaboration to address this issue. We start with
-discussion of CMS data model and data-services. In section \ref{DAS}
+discussion of CMS data model and existing data-services, see \ref{DataModel}. 
+In section \ref{DAS}
 we provides a detailed description of underlying design and components
-used in this system. And represents results in section \ref{Results}.
+used in DAS system. Our results are summarized in section \ref{Results}.
+
 \section{CMS data model\label{DataModel}}
 \section{Data Aggregation System\label{DAS}}
+Data Aggregation System shown in Figure \ref{DAS_arch} and
+consists out of several components:
+\begin{figure}[htb]
+\centering
+\includegraphics[width=150mm]{DAS_architecture.pdf}
+\caption{
+DAS architecture.
+}
+\label{DAS_arch}
+\end{figure}
+
+\begin{itemize}
+\item DAS core system which is support pluggable modules to retrieve data from
+CMS data-services, e.g. Data Bookkeeping System (DBS), data location service (Phedex),
+etc.;
+\item DAS caching system which has dual purpose: to store ``raw'' results coming
+out from data-services, a raw-cache, and aggregated results produced by DAS core into
+hot-cache;
+\item DAS request service who collect and place into queue user requests
+\item DAS mapping DB to store mapping between data-services and DAS notations and
+data-representation;
+\item DAS analytics DB to collect query statistics and establish pre-fetching 
+strategies.
+\end{itemize}
+We will discuss each of those components in more details in up-coming sub-sections.
+The DAS supports a pluggable approach to add a new CMS sub-system into a game by
+identifying appropriate APIs, input and output parameters and keys, data-service
+format and mapping between data-service, DAS and other sub-system. For instance,
+the Data Bookkeeping System (DBS) and data location system (Phedex) store information about
+a file. In former case, a file name was stored as well as its relations to other physics 
+objects, such as run and luminosity, while in later case the Phedex store information 
+about file location. When user specify a file as their selection key, based on
+information store in DAS mapping DB we were able to identify appropriate set of
+data-service APIs, look-up data, re-format their output to DAS notations and
+store it into DAS raw-cache. Even though we support a data retrieval on demand
+basis we also store user queries into DAS analytics DB to identify
+a common patterns. Based on this information we organized a pre-fetching
+populators. Once data were coming to raw-cache an additional step of
+aggregation was applied. If other data with identical keys were presented in
+a raw-cache we merge it them together. For instance upon the following query
+$find file where ... $ a file information from DBS and Phedex systems were
+retrieved. Since both data-services output contained file name as a common
+key, their output where merged and final result was stored into raw-cache.
+This merged (aggregated) results were shipped back to client and stored into
+hot-cache (memcached) to speed up a DAS web client application. Each DAS data
+object contains a standard DAS header, which identify look-up time,
+request url, API, parameters and method as well as response version, expiration
+time and checksum of the output. 
+
+\subsection{DAS Query Language}
+Upon success of DBS-QL \ref{DBS-QL} we adopted its syntax to DAS with a few minor
+changes. Here we briefly recall its syntax:
+\begin{equation}
+action\,\,\,
+key_1,\, key_2,\, ...\,\,\, where\,\,\,
+\langle key\rangle\, 
+\langle op\rangle\, 
+\langle value\rangle \,\,\, and|or ...
+\label{QL_syntax}
+\end{equation}
+Each DAS QL expression starts with special keyword indicating an action such as 
+$find,\, plot,\, summary$, followed by a set of selection keys. The action identify
+the behavior of the query, find to look-up data, plot to plot found data, summary to
+apply a summary view over provided selection keys. An optional conditions can be 
+specified via $where$ keyword following by condition expression.
+Each condition expression represented via $key\,\,\, operator\,\,\, value$ triplet, where
+$key$ is DAS selection key, $operator$ is conditional operator, 
+$=,\, >=,\, <,\, in,\, between$ and $value$ is a value applied to selection key.
+We also support brackets as well as $and$ and $or$ logical operators.
+The DAS selection and condition keys were identified based on analysis 
+of terminology used by our users. For instance, $file$ was used to either
+select file name or used in condition to identify file name provided by user.
+Here is a simple example of DAS QL expression:
+$$
+find\,\,\, file,\, run\,\,\, where\,\,\, site=T1\_CH\_CERN
+$$
+which represents a natural language question: 
+{\it find files and runs located at T1\_CH\_CERN site}.
+
+\subsection{DAS Mapping DB}
+As been discussed above we used a DAS mapping DB to map data-service API into
+DAS as well as map provide a relations between different data-services.
+Upon identification of APIs which participate in DAS activity 
+we store a mapping between data-service notations
+into DAS mapping DB. This allows to map user input query parameters into
+data-service API metrics as well as map back data-service output into DAS names.
+For instance, the DBS system used $logical\_file\_name$ notation, while in Phedex
+the same entity was named as $lfn$. Since both of them were referred to
+logical file name, we map both notations into $file$ notation in DAS.\footnote{We
+also deal with physical file names, but still used $file$ to refer to them in
+DAS notation, since simple regular expressions were used to identify $file$
+meaning from the provided value.}
+For each service we provide a mapping from its own data-format (JSON, XML, etc.) into
+common data-format used in DAS.\footnote{We used JSON as a DAS data format}
+We also store a mapping between DAS keywords and data-service API names to
+establish appropriate calls to data-service upon provided DAS query. For example,
+when user specifies $file$ in their DAS query, we invoke DBS listFiles and Phedex
+fileReplicas APIs. Since all mapping kept in RDMS we were able to abstract the 
+DAS core library calls from hardcoded data-service API calls and make it
+transparent to any participating data-services. Here is a logic of DAS core
+library:
+\begin{itemize}
+\item parse input DAS query
+\item map provided selection and condition keys into data-service APIs and
+input parameters
+\item invoke data-service APIs
+\item parse output results by mapping output notation into DAS keys
+\item store and aggregate them into DAS raw-cache
+\end{itemize} 
+
+\subsection{DAS Analytics DB}
+
+\subsection{Caching system}
+The DAS caching system was divided into two different caches: raw-cache and hot-cache.
+The purpose of raw-cache was to store results coming from data services for
+as long as specified in data-service response header. While the purpose of hot-cache
+was to keep final DAS results corresponding to provided user query. We use a populator
+services (jobs) to feed raw-cache with highly requested queries. Here we will only
+discuss the raw-cache organization. 
+\begin{figure}[htb]
+\centering
+\includegraphics[width=150mm]{DAS_cache.pdf}
+\caption{
+DAS cache system.
+}
+\label{DAS_cache}
+\end{figure}
+As it shown in figure \ref{DAS_cache} we setup
+dedicated DAS cache request server to manage user requests. Each request placed into
+queue who was used by workers to spawn a data-service request. 
+This allows us to utilze a multi-core technology and place a workers at each 
+core.\footnote{A number of workers per core were adjustable to satisfy requests load.}
+Each worker talk to DAS raw-cache and either stored mapped results over there or merge
+them with existing data object in DAS cache. We evaluated several technologies
+as a choice for DAS cache back-end, including relational MySQL DB \cite{MySQL} 
+and object oriented CouchDB \cite{CouchDB} and MongoDB \cite{MongoDB}.
+Each of this technologies had its own pros and cons. For instance usage
+of MySQL provided a SQL queries (as in federated DBs, see \cite{FedDB}), but
+required auto-schema generation on a fly.\footnote{We did not apply any
+restriction to DAS QL and did not know in advance what our users will be
+querying.} While, using CouchDB and MongoDB, we were able to store
+data-service output naturally as data objects into DB. Finally we decided
+to use MongoDB due to its flexible and
+powerful querying syntax, which were easy to map into DAS QL expressions. 
+
+\subsection{REST interface}
+We designed DAS interface to be fully REST complaint \cite{REST}.
+All requests placed into DAS cache server were done via GET/PUT/POST/DELETE methods.
+DAS clients initiate their request via GET method. An appropriate message
+with either resulting data or their absense was send back to client.
+Clients were able to decided upon received message how to proceed, either
+request data via POST/PUT methods, DELETE data in cache or initiate another
+GET request. The REST complaince help us to treat our clients, user quyering
+DAS system via web browser, other CMS applications and command line tools
+in identical manner. Also, the implementation of pre-fetch populator
+tools become as easy and identical as any other clients.
+
 \section{Results\label{Results}}
-
-
 
 \section{Summary}
 
@@ -114,6 +272,8 @@ No. DE-AC02-07CH11359 with the United States Department of Energy.
 \bibitem{DBS} A. Afaq, et. al. ``The CMS Dataset Bookkeeping Service'', CHEP 2007 
 \bibitem{DBS07} A. Dolgert, V. Kuznetsov, C. Jones, D. Riley, 
 ``A multi-dimensional view on information retrieval of CMS data'', CHEP 2007
+\bibitem{DBS-QL} V. Kuznetsov, D. Riley, A. Afaq, V. Sekhri, Y. Guo, L. Lueking,
+``The CMS DBS Query Language'', CHEP 2009
 \bibitem{DD} https://cmsweb.cern.ch/dbs\_discovery
 
 \bibitem{Arms}
@@ -133,11 +293,19 @@ L. Haas, E. Lin,
 ``IBM Federated Database Technology'', \\
 http://www.ibm.com/developerworks/data/library/techarticle/0203haas/0203haas.html
 
+\bibitem{MySQL}
+http://www.mysql.com/
+
 \bibitem{CouchDB}
 http://couchdb.apache.org/
 
 \bibitem{MongoDB}
 http://www.mongodb.org/
+
+\bibitem{REST}
+Fielding, Roy Thomas ``Architectural Styles and the Design of 
+Network-based Software Architectures'', Doctoral dissertation, 2000,
+University of California, Irvine
 
 \end{thebibliography}
 
