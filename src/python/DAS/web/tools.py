@@ -6,8 +6,8 @@ Web tools.
 """
 
 __license__ = "GPL"
-__revision__ = "$Id: tools.py,v 1.3 2010/03/14 20:20:58 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: tools.py,v 1.4 2010/03/15 02:44:09 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 __email__ = "vkuznet@gmail.com"
 
@@ -24,17 +24,13 @@ from wsgiref.handlers import format_date_time
 # cherrypy modules
 import cherrypy
 from cherrypy import log as cplog
-from cherrypy import request
+from cherrypy import expose
 
 # cheetag modules
 from Cheetah.Template import Template
 from Cheetah import Version
 
-try:
-    from json import JSONEncoder
-except:
-    # Prior python 2.6 json comes from simplejson
-    from simplejson import JSONEncoder
+from json import JSONEncoder
 
 class Page(object):
     """
@@ -87,26 +83,28 @@ class TemplatedPage(Page):
         self.debug("Templates are located in: %s" % self.templatedir)
         self.debug("Using Cheetah version: %s" % Version)
 
-    def templatepage(self, file=None, *args, **kwargs):
+    def templatepage(self, ifile=None, *args, **kwargs):
         """
         Template page method.
         """
-        searchList = []
+        search_list = []
         if len(args) > 0:
-            searchList.append(args)
+            search_list.append(args)
         if len(kwargs) > 0:
-            searchList.append(kwargs)
-        templatefile = "%s/%s.tmpl" % (self.templatedir, file)
+            search_list.append(kwargs)
+        templatefile = "%s/%s.tmpl" % (self.templatedir, ifile)
         if os.path.exists(templatefile):
-            template = Template(file=templatefile, searchList=searchList)
+            template = Template(file=templatefile, searchList=search_list)
             return template.respond()
         else:
-            self.warning("%s not found at %s" % (file, self.templatedir))
-            return "Template %s not known" % file
+            self.warning("%s not found at %s" % (ifile, self.templatedir))
+            return "Template %s not known" % ifile
 
 def exposexml (func):
     """CherryPy expose XML decorator"""
+    @expose
     def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
         data = func (self, *args, **kwds)
         if  type(data) is types.ListType:
             results = data
@@ -114,9 +112,6 @@ def exposexml (func):
             results = [data]
         cherrypy.response.headers['Content-Type'] = "application/xml"
         return self.templatepage('das_xml', resultlist = results)
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
     return wrapper
 
 def exposeplist (func):
@@ -124,63 +119,59 @@ def exposeplist (func):
     Return data in XML plist format, 
     see http://docs.python.org/library/plistlib.html#module-plistlib
     """
+    @expose
     def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
         data_struct = func(self, *args, **kwds)
         plist_str = plistlib.writePlistToString(data_struct)
         cherrypy.response.headers['Content-Type'] = "application/xml+plist"
         return plist_str
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
     return wrapper
 
 def exposetext (func):
     """CherryPy expose Text decorator"""
+    @expose
     def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
         data = func (self, *args, **kwds)
         cherrypy.response.headers['Content-Type'] = "text/plain"
         return data
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
     return wrapper
 
 def exposejson (func):
     """CherryPy expose JSON decorator"""
+    @expose
     def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
         encoder = JSONEncoder()
         data = func (self, *args, **kwds)
-        cherrypy.response.headers['Content-Type'] = "application/json"
+        cherrypy.response.headers['Content-Type'] = "text/json"
         try:
             jsondata = encoder.encode(data)
             return jsondata
         except:
-            Exception("Fail to JSONtify obj '%s' type '%s'" % (data, type(data)))
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
+            Exception("Fail to JSONtify obj '%s' type '%s'" \
+                % (data, type(data)))
     return wrapper
 
 def exposejs (func):
     """CherryPy expose JavaScript decorator"""
+    @expose
     def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
         data = func (self, *args, **kwds)
         cherrypy.response.headers['Content-Type'] = "application/javascript"
         return data
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
     return wrapper
 
 def exposecss (func):
     """CherryPy expose CSS decorator"""
+    @expose
     def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
         data = func (self, *args, **kwds)
         cherrypy.response.headers['Content-Type'] = "text/css"
         return data
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
     return wrapper
 
 def make_timestamp(seconds=0):
@@ -196,25 +187,19 @@ def exposedasjson (func):
     """
     This will prepend the DAS header to the data and calculate the checksum of
     the data to set the etag correctly
-
-    TODO: pass in the call_time value, can we get this in a smart/neat way?
-    TODO: include the request_version in the data hash - a new version should
-    result in an update in a cache
-    TODO: "inherit" from the exposejson
     """
+    @expose
     def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
         encoder = JSONEncoder()
         data = func(self, *args, **kwds)
-        cherrypy.response.headers['Content-Type'] = "application/json"
+        cherrypy.response.headers['Content-Type'] = "text/json"
         try:
             jsondata = encoder.encode(data)
             return jsondata
         except:
-            Exception("Failed to JSONtify obj '%s' type '%s'" % (data, type(data)))
-
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
+            Exception("Failed to JSONtify obj '%s' type '%s'" \
+                % (data, type(data)))
     return wrapper
 
 def exposedasplist (func):
@@ -222,13 +207,12 @@ def exposedasplist (func):
     Return data in XML plist format, 
     see http://docs.python.org/library/plistlib.html#module-plistlib
     """
+    @expose
     def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
         data_struct = func(self, *args, **kwds)
         plist_str = plistlib.writePlistToString(data_struct)
         cherrypy.response.headers['Content-Type'] = "application/xml"
         return plist_str
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
     return wrapper
 

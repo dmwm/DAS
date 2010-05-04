@@ -1,25 +1,24 @@
 #!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0702,E1101
 """
 DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.
 """
 
-__revision__ = "$Id: das_server.py,v 1.3 2010/03/10 01:19:56 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_server.py,v 1.4 2010/03/15 02:44:09 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
 import sys
 import yaml
-import types
 import logging 
 from optparse import OptionParser
 
 # CherryPy modules
-import cherrypy
-from cherrypy import quickstart, expose, server, log
-from cherrypy import tree, engine, dispatch, tools
+from cherrypy import log, tree, engine
 from cherrypy import config as cpconfig
 
 # DAS modules
@@ -30,6 +29,9 @@ from DAS.web.DASCacheModel import DASCacheModel
 from DAS.web.das_doc import DocServer
 
 class Root(object):
+    """
+    DAS web server class.
+    """
     def __init__(self, model, config):
         self.model  = model
         self.config = config
@@ -50,19 +52,23 @@ class Root(object):
         except:
             cpconfig.update ({"server.socket_host": '0.0.0.0'})
         try:
-            cpconfig.update ({'tools.expires.secs': int(self.config['expires'])})
+            cpconfig.update ({'tools.expires.secs': 
+                                int(self.config['expires'])})
         except:
             cpconfig.update ({'tools.expires.secs': 300})
         try:
-            cpconfig.update ({'log.screen': bool(self.config['log_screen'])})
+            cpconfig.update ({'log.screen': 
+                                bool(self.config['log_screen'])})
         except:
             cpconfig.update ({'log.screen': True})
         try:
-            cpconfig.update ({'log.access_file': self.config['access_log_file']})
+            cpconfig.update ({'log.access_file': 
+                                self.config['access_log_file']})
         except:
             cpconfig.update ({'log.access_file': None})
         try:
-            cpconfig.update ({'log.error_file': self.config['error_log_file']})
+            cpconfig.update ({'log.error_file': 
+                                self.config['error_log_file']})
         except:
             cpconfig.update ({'log.error_file': None})
         try:
@@ -84,7 +90,8 @@ class Root(object):
         #cpconfig.update ({'request.show_tracebacks': False})
         #cpconfig.update ({'request.error_response': self.handle_error})
         #cpconfig.update ({'tools.proxy.on': True})
-        #cpconfig.update ({'proxy.tool.base': '%s:%s' % (socket.gethostname(), opts.port)})
+        #cpconfig.update ({'proxy.tool.base': '%s:%s' 
+#                                % (socket.gethostname(), opts.port)})
 
         log("loading config: %s" % cpconfig, 
                                    context=self.app, 
@@ -101,12 +108,12 @@ class Root(object):
         elif self.model == 'web_server':
             obj = DASSearch(config)
             tree.mount(obj, '/das') # mount web server
-            dir = os.environ['DAS_ROOT'] + '/doc/build/html'
+            sdir = os.environ['DAS_ROOT'] + '/doc/build/html'
             static_dict = { 
                             'tools.staticdir.on':True,
-                            'tools.staticdir.dir':dir,
+                            'tools.staticdir.dir':sdir,
             }
-            conf = {'/': {'tools.staticdir.root':dir},
+            conf = {'/': {'tools.staticdir.root':sdir},
                     '_static' : static_dict,
             }
             cpconfig.update(conf)
@@ -124,26 +131,23 @@ class Root(object):
         engine.exit()
         engine.stop()
         
-if __name__ == "__main__":
+def main():
+    """
+    Start-up web server.
+    """
     parser = OptionParser()
     parser.add_option("-c", "--config", dest="config", default=False,
         help="provide cherrypy configuration file")
-#    parser.add_option("--cache-server", action="store_true", dest="cache_server",
-#        help="start DAS cache server, default port 8211")
-#    parser.add_option("--web-server", action="store_true", dest="web_server",
-#        help="start DAS web server, default port 8212")
-#    parser.add_option("-p", "--port", dest="port", default=False,
-#        help="specify port number")
     parser.add_option("-s", "--server", dest="server", default=None,
         help="specify DAS server, e.g. web or cache")
-    opts, args = parser.parse_args()
+    opts, _ = parser.parse_args()
 
     # Read server configuration
     conf_file = opts.config
     config = {}
     if  conf_file:
-        fdesc  = open(config_file, 'r')
-        config = yaml.loads(fdesc.read())
+        fdesc  = open(conf_file, 'r')
+        config = yaml.load(fdesc.read())
         fdesc.close()
 
     dasconfig = das_readconfig()
@@ -161,3 +165,6 @@ if __name__ == "__main__":
     # Start DAS server
     root = Root(model, config)
     root.start()
+
+if __name__ == "__main__":
+    main()
