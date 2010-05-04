@@ -67,6 +67,19 @@ knowledge DAS merges their output into a single DAS record.
 <a href="javascript:HideTag('dasql')">hide</a> this section
 <div id="dasql" class="hide">
 <div class="navcontainer">
+
+<ul>
+<li>
+Which operators are supported in DAS
+</li>
+</ul>
+<p>
+DAS supports the following list of operators
+<div class="example">
+$operators
+</div>
+</p>
+
 <ul>
 <li>
 What should I type in DAS web interface?
@@ -111,6 +124,34 @@ or
 site=T1_CH_CERN, block=/a/b/c
 </div>
 are equivalent.
+</p>
+
+<ul>
+<li>
+Does DAS supports AND and OR operations?
+</li>
+</ul>
+<p>
+Right now DAS only support AND operations. We do plan to extend its syntax
+to support OR operator.
+</p>
+
+<ul>
+<li>
+DAS records are too large to read, can I filter some fields?
+</li>
+</ul>
+<p>
+Yes, DAS supports a simple grep operation. For example
+<div class="example">
+site=T1_CH_CERN | grep site.name
+</div>
+You can also specify multiple fields to filter, e.g.
+<div class="example">
+block=/a/b/c#123 | grep block.name, block.size
+</div>
+Please note, that multiple grep operators are not supported. The DAS grep function
+is not equivalent to UNIX grep, it serves mostly as a filter for given record.
 </p>
 
 <ul>
