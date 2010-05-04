@@ -64,6 +64,11 @@ class testDASMongocache(unittest.TestCase):
         """
         Test compare_specs funtion.
         """
+        input = {'spec': {u'node': u'*', u'block': '*', u'se': u'*'}}
+        exist = {'spec': {u'node': u'T1_CH_CERN', u'se': u'T1_CH_CERN', u'block': u'*'}}
+        result = compare_specs(input, exist)
+        self.assertEqual(False, result) # exist_query is a superset
+
         input_query = dict(fields=None, spec={'test':'T1_CH_CERN'})
         exist_query = dict(fields=['site'], spec={})
         result = compare_specs(input_query, exist_query)
