@@ -27,6 +27,7 @@ Contents:
    new_service
    cms_operations
    das_operations
+   changelog
 
 Indices and tables
 ------------------
