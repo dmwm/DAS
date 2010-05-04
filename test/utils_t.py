@@ -36,6 +36,17 @@ class testUtils(unittest.TestCase):
         result = dict_value(dict, 'd')
         expect = 2
         self.assertEqual(expect, result)
+
+        dict = {'a' : [{'b':1}, {'b':2}]}
+        result = dict_value(dict, 'a.b')
+        expect = 1
+        self.assertEqual(expect, result)
+        
+        dict1 = {'a' : [{'b':1, 'c':1}, {'b':2, 'c':2}]}
+        dict2 = {'a' : {'b':1, 'e':1}}
+        result = merge_dict(dict1, dict2)
+        expect = {'a': [{'c': 1, 'b': 1}, {'c': 2, 'b': 2}, {'b': 1, 'e': 1}]}
+        self.assertEqual(expect, result)
         
     def test_dasheader(self):
         """Test DAS header"""

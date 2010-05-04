@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.24 2009/09/01 01:42:47 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: utils.py,v 1.25 2009/09/01 18:21:31 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -31,13 +31,18 @@ class dict_of_none (dict):
 def dict_value(dict, prim_key):
     """
     Find value in given dictionary for given primary key. The primary
-    key can be composed one, e.g. a.b.
+    key can be composed one, e.g. a.b. If found value is a list type
+    take first element of the list and look-up over there the primary key.
     """
     try:
         if  prim_key.find('.') != -1:
             value = dict
             for key in prim_key.split('.'):
-                value = value[key]
+                if  type(value) is types.ListType:
+                    value = value[0][key]
+                    break
+                else:
+                    value = value[key]
         else:
             value = dict[prim_key]
         return value
@@ -45,14 +50,28 @@ def dict_value(dict, prim_key):
         msg  = 'Unable to look-up key=%s\n' % prim_key
         msg += 'dict=%s' % str(dict)
         raise Exception(msg)
+
 def merge_dict(dict1, dict2):
     """
     Merge content of two dictionaries w/ default list value for keys.
-    """
+    Original code was:
     merged_dict = {}
     for dictionary in [dict1, dict2]:
         for key, value in dictionary.items():
             merged_dict.setdefault(key,[]).append(value) 
+    return merged_dict
+    where I changed append(value) on merging lists or adding new
+    value into the list based on value type.
+    """
+    merged_dict = {}
+    for dictionary in [dict1, dict2]:
+        for key, value in dictionary.items():
+            dict_value = merged_dict.setdefault(key, [])
+            if  type(value) is types.ListType:
+                dict_value += value
+            else:
+                dict_value += [value]
+            merged_dict[key] = dict_value
     return merged_dict
 
 def splitlist(ilist, nentries):
