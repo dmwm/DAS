@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.8 2009/05/18 01:19:22 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: sitedb_service.py,v 1.9 2009/06/03 19:40:39 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -41,7 +41,7 @@ class SiteDBService(DASAbstractService):
                 'params' : {'name':'required'}
             },
             'CMSNametoSE' : {
-                'keys': ['site'],
+                'keys': ['site', 'site.sename'],
                 'params' : {'name':'required'}
             },
             'CMSNametoPhEDExNode' : {
