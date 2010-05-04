@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.64 2010/02/16 18:38:24 valya Exp $"
-__version__ = "$Revision: 1.64 $"
+__revision__ = "$Id: das_mongocache.py,v 1.65 2010/02/17 17:00:13 valya Exp $"
+__version__ = "$Revision: 1.65 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -457,7 +457,6 @@ class DASMongocache(object):
         except Exception as exp:
             row = {'exception': exp}
             yield row
-        counter = 0
         for row in res:
             # DAS info is stored via das_id, the records only contains
             # {'das':{'expire':123}} to consistently manage delete operation
@@ -471,15 +470,22 @@ class DASMongocache(object):
                     counter += 1
                     yield row # only when row has all fields
             else:
-                counter += 1
                 yield row
 
         # if no raw records were yield we look-up possible error records
-        if  not counter:
-            spec = {'das_id':recapi['_id']}
-            res = self.col.find(spec)
-            for row in res:
-                yield row
+        counter = 0
+        if  recapi and recapi.has_key('_id'):
+            for key in spec.keys():
+                qkey = '%s.error' % key.split(".")[0]
+                spec = {'das_id':recapi['_id'], qkey:{'$exists':True}}
+                res = self.col.find(spec)
+                for row in res:
+                    counter += 1
+                    yield row
+        if  counter:
+            msg = "DASMongocache::get_from_cache, found %s error record(s)"\
+                    % counter
+            self.logger.info(msg)
 
     def map_reduce(self, mr_input, spec=None, collection='merge'):
         """
