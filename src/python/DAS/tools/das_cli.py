@@ -4,14 +4,14 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.7 2009/05/07 00:49:54 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_cli.py,v 1.8 2009/05/13 14:56:01 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 from optparse import OptionParser
 #from DAS.core.das_core import DASCore
-from DAS.core.qlparser import getselectkeys
+#from DAS.core.qlparser import getselectkeys
 from DAS.core.das_cache import DASCache
 from DAS.utils.utils import dump
 
@@ -59,6 +59,9 @@ class DASOptionParser:
         self.parser.add_option("--limit", action="store", type="int", 
                                           default=0, dest="limit",
              help="limit number of returned results")
+        self.parser.add_option("--no-output", action="store_true", 
+                                          dest="nooutput",
+             help="run DAS but don't print results")
     def getOpt(self):
         """
         Returns parse list of options
@@ -134,18 +137,22 @@ if __name__ == '__main__':
             stats.sort_stats('time', 'calls')
             stats.print_stats()
         else:
-            selkeys = getselectkeys(query)
             results = DAS.result(query)
-            if  opts.plain:
-                for item in results:
-                    print item
-            else:
-                dump(results, limit=opts.limit, selkeys=selkeys)
+            if  not opts.nooutput:
+                if  opts.plain:
+                    for item in results:
+                        print item
+                else:
+                    dump(results, limit=opts.limit)
     else:
         print
         print "DAS CLI interface, no actions found,"
         print "please use --help for more options."
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
+    if  debug:
+        for key, val in DAS.timer().timer.items():
+            if  len(val) > 1:
+                print "DAS execution time (%s) %s sec" % (key, val[-1] - val[0])
     print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)
 
 
