@@ -40,7 +40,7 @@ format,
 <input type="reset" />
 </div>
 </form>
-<div align="right">
+<div class="right">
 <img src="/dascontrollers/images/mongodb_logo.png" alt="Powered by MongoDB" width="5%" />
 </div>
 <!--
@@ -49,27 +49,6 @@ format,
 
 <script type="application/javascript">
 //<![CDATA[
-function updateInput_orig(val) {
-   var id = document.getElementById('input');
-   id.value=val;
-}
-function updateInput() {
-   var uinput = gup('input');
-   if  (uinput) updateTag('input', uinput);
-   else updateTag('input', '');
-
-   var ulimit = gup('limit');
-   if  (ulimit) updateTag('limit', ulimit);
-   else updateTag('limit', '');
-
-   var uview = gup('view');
-   if  (uview) updateTag('view', uview);
-   else updateTag('view', '');
-
-   var ushow = gup('show');
-   if  (ushow) updateTag('show', ushow);
-   else updateTag('show', '');
-}
 updateInput();
 //]]>
 </script>

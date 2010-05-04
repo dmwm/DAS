@@ -1,4 +1,24 @@
+/*
+ * DAS specific utilities
+ * Author: Valentin Kuznetsov, 2009
+ */ 
+function updateInput() {
+   var uinput = gup('input');
+   if  (uinput) updateTag('input', uinput);
+   else updateTag('input', '');
 
+   var ulimit = gup('limit');
+   if  (ulimit) updateTag('limit', ulimit);
+   else updateTag('limit', '');
+
+   var uview = gup('view');
+   if  (uview) updateTag('view', uview);
+   else updateTag('view', '');
+
+   var ushow = gup('show');
+   if  (ushow) updateTag('show', ushow);
+   else updateTag('show', '');
+}
 /*
  * General set of utilities used in DAS web interface
  * Author: Valentin Kuznetsov, 2009
