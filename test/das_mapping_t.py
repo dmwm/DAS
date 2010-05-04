@@ -47,9 +47,9 @@ class testDASMapping(unittest.TestCase):
         api = 'listRuns'
         params = { 'apiversion':apiversion, 'path' : 'required', 'api':api}
         rec = {'system' : 'dbs', 'urn':api, 'format':format, 'url':url,
-            'params': params, 'expire':expire,
+            'params': params, 'expire':expire, "wild_card": "*",
             'daskeys' : [dict(key='run', map='run.run_number', pattern='')],
-            'api2das' : [
+            'das2api' : [
                     dict(api_param='path', das_key='dataset', pattern=""),
             ]
         }
@@ -59,7 +59,7 @@ class testDASMapping(unittest.TestCase):
         res = self.mgr.check_dasmap('dbs', api, 'run.run_number')
         self.assertEqual(True, res)
         smap = {api: {'url':url, 'expire':expire, 'keys': ['run'], 
-                'format': format,
+                'format': format, "wild_card":"*",
                 'params': {'path': 'required', 'api': api, 
                            'apiversion': 'DBS_2_0_8'}
                      }
@@ -73,7 +73,7 @@ class testDASMapping(unittest.TestCase):
           'daskeys': [
                  {'key':'block', 'map':'block.name', 'pattern':''},
                  ],
-          'api2das': [
+          'das2api': [
                  {'api_param':'storage_element_name', 
                   'das_key':'site', 
                   'pattern':"re.compile('([a-zA-Z0-9]+\.){2}')"},
@@ -133,7 +133,7 @@ class testDASMapping(unittest.TestCase):
 
         # build service map
         smap.update({api: {'url':url, 'expire':expire,
-                'keys': ['block'], 'format':format,
+                'keys': ['block'], 'format':format, "wild_card": "*",
                 'params': {'storage_element_name': '*', 'api':api, 
                            'block_name': '*', 'user_type': 'NORMAL', 
                            'apiversion': 'DBS_2_0_8'}
