@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.29 2009/11/18 17:06:16 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: qlparser.py,v 1.30 2009/12/01 15:15:26 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -361,9 +361,26 @@ class MongoParser(object):
                                     condlist.append(cdict)
                     except:
                         pass
+            else:
+                if  word not in skeys:
+                    skeys.append(word)
             idx += 1
         spec = mongo_exp(condlist)
-        mongo_query = dict(fields=skeys, spec=spec)
+        # loop over skeys and add '*' value for each key into spec
+        for key in skeys:
+            insert = 0
+            for system in self.map.list_systems():
+                try:
+                    lkeys = self.map.lookup_keys(system, key)
+                    for nkey in lkeys:
+                        if  not spec.has_key(nkey):
+                            spec[nkey] = '*'
+                            insert = 1
+                except:
+                    pass
+            if  not insert:
+                spec[key] = '*'
+        mongo_query = dict(fields=None, spec=spec)
         self.analytics.add_query(query, mongo_query)
         return mongo_query
 
