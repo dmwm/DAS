@@ -65,8 +65,8 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.16 2009/09/02 19:52:55 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: qlparser.py,v 1.17 2009/09/09 18:31:38 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -751,7 +751,7 @@ class QLParser(QLLexer):
         query = self.fix_reserved_keywords(query)
         query, namespace = self.find_namespaces(query)
         query, functions = self.das_functions(query)
-        rdict = {}
+        rdict = dict(query=query)
         rdict['functions']       = functions
         rdict['conditions']      = self.conditions(query)
         order_by_list, order_by  = self.order_by(query)
