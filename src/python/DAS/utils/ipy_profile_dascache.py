@@ -1,277 +1,334 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
 #pylint: disable-msg=E1101,C0103,R0902
+"""
+Couch DB command line admin tool
+"""
 
 # system modules
 import os
 import sys
-import time
 import types
+import inspect
 import traceback
 
 # ipython modules
 from   IPython import Release
 import IPython.ipapi
-try:
-    from   IPython.Extensions import ipipe
-except ImportError:
-    pass 
+#try:
+#    from   IPython.Extensions import ipipe
+#except ImportError:
+#    pass 
 # import DAS modules
 from DAS.utils.iprint import PrintManager
-from DAS.core.das_couchcache import DASCouchcache
+#from DAS.web.utils import httplib_request, urllib2_request
 
-#import __main__ 
-import ipy_defaults
+try:
+    # Python 2.6
+    import json
+except:
+    # Prior to 2.6 requires simplejson
+    import simplejson as json
+from json import JSONDecoder, JSONEncoder
 
-# global IP API
-ip = IPython.ipapi.get()
+import __main__
 
-class ShellName(object):
-  def __init__(self):
-      self.prompt   = "das-sh"
-      self.name     = 'das_help'
-      self.dict     = {}
-      self.funcList = []
+#
+# load managers
+#
+try:
+    PM = PrintManager()
+except:
+    traceback.print_exc()
 
-def unregister():
-    _id.prompt         = "das-sh"
-    _id.name           = "das-sh"
-    _id.dict[_id.name] = []
-    _id.funcList       = []
+def load():
+    msg = """
+import traceback
+try:
+    # Python 2.6
+    import json
+except:
+    # Prior to 2.6 requires simplejson
+    import simplejson as json
+from json import JSONDecoder, JSONEncoder
+from DAS.web.utils import httplib_request, urllib2_request
+from DAS.utils.utils import genkey, timestamp
+from DAS.utils.iprint import PrintManager
 
-def register(prompt, name, funcList=[]):
-    setPrompt(prompt)
-    _id.prompt = prompt
-    _id.name   = name
-    funcList.sort()
-    _id.dict[name] = funcList
-    if  funcList:
-        _pm.print_blue("Available commands within %s sub-shell:" % prompt)
-    if  funcList:
-        if  not funcList.count('_exit'):
-            funcList.append('_exit')
-        for func in funcList:
-            _pm.print_blue("%s %s" % (" "*10, func))
-            if  not _id.funcList.count(func):
-                _id.funcList.append(func)
-    else:
-        _id.funcList = funcList
+# global variables
+URI="http://localhost:5984"
+DB="das"
+DESIGN="dasadmin"
+DEBUG=0
+PM  = PrintManager()
 
-def setPrompt(in1):
-    if  in1=="das-sh":
-        unregister()
+def print_data(data, lookup="value"):
+    jsondict = json.loads(data)
+    #PM.print_blue("Total %s documents" % jsondict['total_rows'])
+    PM.print_blue("Total %s documents" % len(jsondict['rows']))
+    maxl = 0
+    padding = ""
+    for row in jsondict['rows']:
+        values = row[lookup]
+        if  type(values) is types.DictType:
+            if  not padding:
+                for key in values.keys():
+                    if  len(key) > maxl:
+                        maxl = len(key)
+            for key, val in values.items():
+                padding = " "*(maxl-len(key))
+                print "%s%s: %s" % (padding, PM.msg_blue(key), val)
+            print
+        else:
+            print values
+
+"""
+    return msg
+
+def set_prompt(in1):
+    """Define shell prompt"""
     if  in1.find('|\#>')!=-1:
         in1 = in1.replace('|\#>', '').strip()
-    IP = __main__.__dict__['__IP'] 
-    prompt = getattr(IP.outputcache, 'prompt1') 
+    ip = __main__.__dict__['__IP'] 
+    prompt = getattr(ip.outputcache, 'prompt1') 
     prompt.p_template = in1 + " |\#> "
     prompt.set_p_str() 
-
-def getPrompt():
-    IP = __main__.__dict__['__IP'] 
-    prompt = getattr(IP.outputcache, 'prompt1') 
-    return IP.outputcache.prompt1.p_template
-
-def cmsMonitor(self, arg):
-    name   = 'monitor'
-    prompt = 'monitor'
-    if  _id.name != name:
-        return register(prompt, name,['_ls'])
-    aList = arg.split()
-    arg = ' '.join(aList[1:])
-    if aList[0] == "_ls":
-        return _monitor.run(arg)
-    elif aList[0] == "_close" or aList[0]=="_exit":
-        setPrompt("das-sh")
-    else:
-        _pm.print_red("Not implemented yet")
-     
-def debug(self, arg):
-    if  arg:
-        _pm.print_blue("Set debug level to %s"%arg)
-        _debug.set(arg)
-    else:
-        _pm.print_blue("Debug level is %s"%_debug.level)
 
 def das_help(self, arg):
     """
     Provide simple help about available commands
     """
     global magic_list
-    msg  = "Available commands:\n"
+    msg  = "\nAvailable commands:\n"
     for name, func in magic_list:
-        msg += "%s\n%s\n" % (_pm.msg_blue(name), _pm.msg_green(func.__doc__))
+        msg += "%s\n%s\n" % (PM.msg_blue(name), PM.msg_green(func.__doc__))
+    msg += "List of pre-defined variables to control your interactions "
+    msg += "with CouchDB:\n"
+    msg += PM.msg_green("    URI, DB, DESIGN, DEBUG\n")
     print msg
 
-def plot(self, arg):
-    name   = 'matplot'
-    prompt = 'matplot'
-    if  _id.name != name:
-        return register(prompt, name, ['_plot'])
-    aList = arg.split()
-    arg = ' '.join(aList[1:])
-    if aList[0] == "_plot":
-        thread.start_new_thread(_plot.plot,(arg))
-    elif aList[0] == "_close" or aList[0]=="_exit":
-        setPrompt("das-sh")
-    else:
-        _pm.print_red("Not implemented yet")
 
-#
-# load managers
-#
-try:
-    _pm       = PrintManager()
-#    _plot     = PlotManager(_res, _pm)
-    _id       = ShellName()
-    config    = dict(couch_servers='http://localhost:5984', 
-                        logger=None, couch_lifetime=600)
-    _couchmgr = DASCouchcache(config)
-except:
-    traceback.print_exc()
+### MAGIC COMMANDS ###
+def db_info():
+    """
+    Provide information about Couch DB. Use DB parameter to setup
+    your couch DB name.
+    """
+    host  = URI
+    path  = '/%s' % DB
+    data  = httplib_request(host, path, {}, 'GET', DEBUG)
+    return data
 
-def das_info(self, arg):
+def couch_views():
     """
-    Provide db info
+    List registeted views in couch db.
     """
-    return _couchmgr.dbinfo()
+    qqq  = 'startkey=%22_design%2F%22&endkey=%22_design0%22'
+    host = URI
+    path = '/%s/_all_docs?%s' % (DB, qqq)
+    results = httplib_request(host, path, {}, 'GET', DEBUG)
+    designdocs = json.loads(results)
+    results    = {}
+    for item in designdocs['rows']:
+        doc   = item['key']
+        print PM.msg_blue("design: ") + doc
+        path  = '/%s/%s' % (DB, doc)
+        res   = httplib_request(host, path, {}, 'GET', DEBUG)
+        rdict = json.loads(res)
+        for view_name, view_dict in rdict['views'].items():
+            print PM.msg_blue("view name: ") + view_name
+            print PM.msg_blue("map:") 
+            print PM.msg_green(view_dict['map'])
+            if  view_dict.has_key('reduce'):
+                print PM.msg_blue("reduce:") 
+                print PM.msg_green(view_dict['reduce'])
 
-def das_incache(self, arg):
+def create_view(view_dict):
     """
-    Check if result for DAS query exists in couch db.
-    Parameters: <das query> 
+    Create couch db view. The db and design names are controlled via
+    DB and DESIGN shell parameters, respectively.
+    Parameters: <view_dict>
+    Example of the view:
+    {"view_name": {"map" : "function(doc) { if(doc.hash) {emit(1, doc.hash);}}" }}
     """
-    return _couchmgr.incache(arg)
+    # get existing views
+    host  = URI
+    path  = '/%s/_design/%s' % (DB, DESIGN)
+    data  = httplib_request(host, path, {}, 'GET', DEBUG)
+    jsondict = json.loads(data)
+    for view_name, view_def in view_dict.items():
+        jsondict['views'][view_name] = view_def
 
-def das_queries(self, arg):
-    """
-    Get queries which present currently in couch DB.
-    """
-    res = _couchmgr.get_all_queries()
-    return set(res)
+    # update views
+    encoder = JSONEncoder()
+    params  = encoder.encode(jsondict)
+    request = 'PUT'
+    debug   = DEBUG
+    data    = httplib_request(host, path, params, request, debug)
+    return data
 
-def das_get(self, arg):
+def delete_view(view_name):
     """
-    Get results from couch for provided DAS query
-    Parameters: <das query, find dataset where dataset=/a/b/c> 
+    Delete couch db view. The db and design names are controlled via
+    DB and DESIGN shell parameters, respectively.
+    Parameters: <view_name>
     """
+    # get existing views
+    host  = URI
+    path  = '/%s/_design/%s' % (DB, DESIGN)
+    data  = httplib_request(host, path, {}, 'GET', DEBUG)
+    jsondict = json.loads(data)
+
+    # delete requested view in view dict document
     try:
-        args = eval(arg)
+        del jsondict['views'][view_name]
+        # update view dict document in a couch
+        encoder = JSONEncoder()
+        params  = encoder.encode(jsondict)
+        request = 'PUT'
+        debug   = DEBUG
+        data    = httplib_request(host, path, params, request, debug)
     except:
-        args = arg
-    if  type(args) is types.DictType:
-        return _couchmgr.get_from_cache(**args)
-    elif type(args) is types.StringType:
-        return _couchmgr.get_from_cache(query=args)
+        traceback.print_exc()
 
-def das_system(self, arg):
+def delete_all_views(design):
     """
-    Retrieve results from cache for provided system, e.g. sitedb
-    Parameters: <das sub-system, e.g. sitedb> 
+    Delete all views in particular design document. 
+    The db and design names are controlled via
+    DB and DESIGN shell parameters, respectively.
+    Parameters: <design_name, e.g. dasadmin>
     """
-    return _couchmgr.list_queries_in(arg)
+    host  = URI
+    path  = '/%s/_design/%s' % (DB, design)
+    data  = httplib_request(host, path, {}, 'DELETE', DEBUG)
+    return data
 
-def das_between(self, arg):
+def create_db(db_name):
+    """
+    Create a new DB in couch.
+    Parameters: <db_name, e.g. das>
+    """
+    host  = URI
+    path  = '/%s' % db_name
+    data  = httplib_request(host, path, {}, 'PUT', DEBUG)
+    return data
+
+def delete_db(db_name):
+    """
+    Delete DB in couch. By default DAS database called das.
+    Parameters: <db_name, e.g. das>
+    """
+    host  = URI
+    path  = '/%s' % db_name
+    data  = httplib_request(host, path, {}, 'DELETE', DEBUG)
+    return data
+
+### DAS MAGIC commands
+def das_system(system, pretty_print=False):
+    """
+    Retrieve results from DAS cache for provided system, e.g. sitedb.
+    Parameters: <das sub-system, e.g. sitedb> <pretty_print=False> 
+    """
+    host  = URI
+    path  = '/das/_design/dasadmin/_view/system'
+    kwds  = {'starkey': system, 'endkey': system}
+    data  = httplib_request(host, path, kwds, 'GET', DEBUG)
+    if  pretty_print:
+        print_data(data)
+    else:
+        return data
+
+def das_between(min_time, max_time=9999999999, pretty_print=False):
     """
     Retrieve results from provided time stamp range
     Parameters: <min_time, max_time>
     Comments: times are seconds since epoch, max_time is optional. 
     """
-    alist = arg.split()
-    if  len(alist) == 1:
-        alist.append(9999999999)
-    if  not alist:
-        _pm.print_red("Usage: das_between <min_time> <max_time>")
+    host  = URI
+    path  = '/das/_design/dasadmin/_view/timer'
+    kwds  = {'starkey': min_time, 'endkey': max_time}
+    data  = httplib_request(host, path, kwds, 'GET', DEBUG)
+    if  pretty_print:
+        print_data(data)
     else:
-        return _couchmgr.list_between(long(alist[0]), long(alist[1]))
+        return data
 
-def couch_views(self, arg):
+def das_queries(pretty_print=False):
     """
-    List registeted views in couch db.
+    Get queries which present currently in couch DB.
     """
-    res = _couchmgr.get_all_views()
-    for design, definitions in res.items():
-        print _pm.msg_blue("design: ") + design
-        for row in definitions:
-            for name, defdict in row.items():
-                print _pm.msg_blue("view name: ") + name
-                for key, val in defdict.items():
-                    _pm.print_blue(key + ":")
-                    _pm.print_green(val)
-
-def create_view(self, arg):
-    """
-    Create couch db view
-    Parameters: <db> <design> <view_dict>
-    """
-    alist = arg.split()
-    if  len(alist) != 3:
-        _pm.print_red("Usage: create_view <db> <design> <view_dict>")
+    host  = URI
+    # pass group=true to the view to get the grouping done
+    # the parameter should be in URL, rather passed in a kwds
+    path  = '/das/_design/dasadmin/_view/all_queries?group=true'
+    kwds  = {}
+    data  = httplib_request(host, path, kwds, 'GET', DEBUG)
+    if  pretty_print:
+        print_data(data, lookup='key')
     else:
-        return _couchmgr.create_view(alist[0], alist[1], alist[2])
+        return data
 
-def delete_view(self, arg):
+def das_get(query):
     """
-    Delete couch db view
-    Parameters: <db> <design> <view_name>
+    Get results from couch for provided DAS query
+    Parameters: <das query, find dataset where dataset=/a/b/c> 
     """
-    alist = arg.split()
-    if  len(alist) != 3:
-        _pm.print_red("Usage: delete_view <db> <design> <view_name>")
-    else:
-        return _couchmgr.delete_view(alist[0], alist[1], alist[2])
+    host  = URI
+    path  = '/das/_design/dasviews/_view/query'
+    key   = genkey(query)
+    skey  = ["%s" % key, timestamp()]
+    ekey  = ["%s" % key, 9999999999]
+    kwds  = {'startkey': skey, 'endkey': ekey}
+    data  = httplib_request(host, path, kwds, 'GET', DEBUG)
+    return data
 
-def delete_db(self, arg):
+def das_incache(query):
     """
-    Delete DB in couch. By default DAS database called das
-    Parameters: <db_name, e.g. das>
+    Check if result for DAS query exists in couch db.
+    Parameters: <das query, find dataset where dataset=/a/b/c> 
     """
-    _couchmgr.delete_cache(arg)
+    host  = URI
+    path  = '/das/_design/dasviews/_view/query'
+    key   = genkey(query)
+    skey  = ["%s" % key, timestamp()]
+    ekey  = ["%s" % key, 9999999999]
+    kwds  = {'startkey': skey, 'endkey': ekey}
+    data  = httplib_request(host, path, kwds, 'GET', DEBUG)
+    jsondict = json.loads(data)
+    res = len(jsondict['rows'])
+    return res
 
-def delete_system(self, arg):
-    """
-    Delete docs for given DAS sub-system
-    Parameters: <db> <das sub-system, e.g. sitedb>
-    """
-    alist = arg.split()
-    if  len(alist) != 2:
-        _pm.print_red("Usage: delete_system <db> <system, e.g. sitedb>")
-    else:
-        dbname, system = alist
-        _couchmgr.delete_cache(dbname, system)
-
+# keep magic list as global since it's used in das_help
 magic_list = [
-        ('das_help', das_help), 
-        ('das_info', das_info),
-        ('das_incache', das_incache),
-        ('das_get', das_get),
-        ('das_system', das_system),
-        ('das_queries', das_queries),
-        ('das_between', das_between),
+        ('db_info', db_info),
         ('couch_views', couch_views),
         ('create_view', create_view),
         ('delete_view', delete_view),
+        ('delete_all_views', delete_all_views),
+        ('create_db', create_db),
         ('delete_db', delete_db),
+        ('das_system', das_system),
+        ('das_between', das_between),
+        ('das_queries', das_queries),
+        ('das_incache', das_incache),
+        ('das_get', das_get),
 ]
-#
-# matplotlib
-#
-try:
-    import pylab
-    magic_list += [('plot', plot)]
-except ImportError:
-    pass
-    
-
-#
-# Main function
-#
 def main():
+    """
+    Main function which defint ipython behavior
+    """
+
+    # global IP API
+    ip = IPython.ipapi.get()
+
     o = ip.options
     # load cms modules and expose them to the shell
+    ip.expose_magic('das_help', das_help)
     for m in magic_list:
-        ip.expose_magic(m[0], m[1])
-
+#        ip.expose_magic(m[0], m[1])
+        ip.ex(inspect.getsource(m[1]))
+    ip.ex(load())
+    
     # autocall to "full" mode (smart mode is default, I like full mode)
     o.autocall = 2
     
@@ -294,25 +351,23 @@ def main():
 #    ip.ex("import cmssh_logger")
 
     # Set dbsh prompt
-    o.prompt_in1= 'das-sh |\#> '
-    o.prompt_in2= 'das-sh> '
+    o.prompt_in1 = 'das-sh |\#> '
+    o.prompt_in2 = 'das-sh> '
     o.system_verbose = 0
     
     # define dbsh banner
-#    ver    = "%s.%s" % (cmssh.__version__, cmssh.__revision__)
-    ver    = "1.1"
     pyver  = sys.version.split('\n')[0]
     ipyver = Release.version
     msg    = "Welcome to das-sh \n[python %s, ipython %s]\n%s\n" \
             % (pyver, ipyver ,os.uname()[3])
     msg   += "For das-sh help use "
-    msg   += _pm.msg_blue("das_help")
+    msg   += PM.msg_blue("das_help")
     msg   += ", for python help use help commands\n"
     o.banner = msg
-    o.prompts_pad_left="1"
+    o.prompts_pad_left = "1"
     # Remove all blank lines in between prompts, like a normal shell.
-    o.separate_in="0"
-    o.separate_out="0"
-    o.separate_out2="0"
-    
+    o.separate_in = "0"
+    o.separate_out = "0"
+    o.separate_out2 = "0"
+
 main()
