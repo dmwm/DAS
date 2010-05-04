@@ -153,7 +153,7 @@
 %\cortext[cor1]{Corresponding author}
 
 \begin{abstract}
-Metadata plays a significant role in large modern enterprises, 
+Meta-data plays a significant role in large modern enterprises, 
 research experiments and digital libraries where it comes from many different 
 sources and is distributed in a variety of digital formats. 
 It is organized and managed by constantly evolving software using 
@@ -165,7 +165,7 @@ a pre-established set of data-services.
 Here we discuss a new data aggregation system which consumes, 
 indexes and delivers information from different relational and 
 non-relational data sources to answer cross data-service queries 
-and explore metadata associated with petabytes of experimental data. 
+and explore meta-data associated with petabytes of experimental data. 
 We combine the simplicity of keyword-based search with the precision of RDMS
 under the new system. The aggregated information is collected from various sources,
 allowing end-users to place dynamic queries, get precise answers and 
@@ -370,12 +370,12 @@ multiple data-services;
 \centering
 \includegraphics[width=100mm]{DAS_Cache_and_Analytics.pdf}
 \caption{
-The DAS architecture diagram. It conists of cache server,
+The DAS architecture diagram. It consists of cache server,
 analytics and mapping databases. The data in a cache can be shared
 across multiple queries. The information retrieval is triggered
 on demand basis by invoking appropriate data-service APIs. The
 optional DAS robots (Unix daemons) can be used to pre-fetch
-the most populary query requests.
+the most popular query requests.
 }
 \label{DAS_cache}
 \end{figure}
@@ -388,7 +388,7 @@ Those arguments forced us to look for alternative IT solutions.
 Through the careful analysis of available options, such as a file-based and in memory caches, 
 key-value databases, documented-oriented databases we made our choice in favor 
 of the last technology. Among them we evaluated CouchDB \cite{CouchDB} and 
-MongoDB \cite{MongoDB}. Both systems are ``schemaless'' databases providing
+MongoDB \cite{MongoDB}. Both systems are ``schema-less'' databases providing
 arbitrary document structure storage, replication and fail-over features. 
 We made our decision in favor of MongoDB, due to its support of dynamic queries, 
 full indexes, including inner objects and embedded arrays,
@@ -414,7 +414,7 @@ plug-ins. The communication between client (web server or CLI) and
 DAS cache server was done via the REST \cite{REST} interface. 
 Each input query was recorded into the Analytics DB for further 
 analysis, and was decomposed into a set of conditions and/or selection keys.
-First the results were looked up in a cache and delivered to the requestor
+First the results were looked up in a cache and delivered to the requester
 if superset of input conditions was found in analytics DB.\footnote{It is important
 to note here that we didn't look-up results in a cache and rather
 compared input query condition set to the records in analytics DB 
@@ -424,7 +424,7 @@ for the execution engine. It invoked the API calls via data-service
 plug-ins and stored results into the cache. At this step we also
 performed necessary data aggregation for records with similar key-value
 pairs. The data-service plug-in implementations are similar and their 
-logic is largely abstracted, apart from a few extentions such as specific
+logic is largely abstracted, apart from a few extensions such as specific
 security modules for data-services accessible via private network.
 Finally, the results were retrieved from the cache and delivered to the user. 
 
@@ -558,7 +558,7 @@ with matching names. Numerical values, conditions and grouping are
 also easy to express, for example, a query
 of the form \verb+run > 10 and run < 100+ can be used to
 retrieve all run records for the given range of run numbers. 
-As a complement to the queries, we will als be adding a dynamic index
+As a complement to the queries, we will also be adding a dynamic index
 of DAS records with a keyword-based search within record content later.
 
 All input queries are transformed into the MongoDB query syntax who is itself
@@ -769,7 +769,7 @@ The DAS system is currently being commissioned for production use by CMS.
 
 Data taking at CMS began in December 2009, and, alongside simulation 
 data, we expect to accumulate petabytes of data yearly. This will have 
-of the order of a terabyte of associated metadata that will need to be 
+of the order of a terabyte of associated meta-data that will need to be 
 easily queried by physicists. From the performance studies of DAS presented 
 in this paper we expect that the system will be able to sustain such load 
 and will provide generic “data-discovery” service for CMS experiment for 
