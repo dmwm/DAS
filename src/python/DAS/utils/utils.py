@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.21 2009/07/09 19:44:48 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: utils.py,v 1.22 2009/07/14 15:56:18 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -92,10 +92,11 @@ def dump(ilist, idx=0):
         if  len(key) > keysize:
             keysize = len(key)
 
-#    idx  = 0
+    idx  = 0
     for res in reslist:
         padding = " "*(keysize-len('id'))
-#        print "id%s : %s" % (padding, idx)
+        if  not res.has_key('id'):
+            print "id%s : %s" % (padding, idx)
         for key in keys:
             padding = " "*(keysize-len(key))
             print "%s%s : %s" % (key, padding, res[key])
