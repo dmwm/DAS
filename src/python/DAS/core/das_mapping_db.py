@@ -7,8 +7,8 @@ DAS mapping DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_mapping_db.py,v 1.1 2009/09/01 01:42:44 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.2 2009/09/01 20:20:30 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -229,6 +229,7 @@ class DASMappingMgr(object):
                 except:
                     kobj = DASKey(daskey)
                     session.add(kobj)
+                    session.commit()
                     pass
                 dasmap        = DASMap(primkey) 
                 dasmap.api    = aobj
