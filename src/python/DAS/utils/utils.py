@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.5 2009/04/16 17:48:31 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: utils.py,v 1.6 2009/04/21 22:06:15 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -188,17 +188,20 @@ def query_params(query):
     are in a form of
     find key1, key2, ... where param=val
     """
+    # TODO: should be replaced by ANTRL parser
+
     parts = query.split(' where ')
     selkeys = parts[0].replace('find ','').split(',')
     params = {}
     if  len(parts) > 1:
-        cond = parts[1]
-        for oper in \
-        ['!=', '=', 'not like', 'between', 'not in', ' in ', ' like ']:
-            if  cond.find(oper) != -1:
-                clist = cond.split(oper)
-                params[clist[0].strip()]=(oper.strip(), clist[1].strip())
-                break
+        cond_exp = parts[1]
+        for cond in cond_exp.split(' and '):
+            for oper in \
+            ['!=', '=', 'not like', 'between', 'not in', ' in ', ' like ']:
+                if  cond.find(oper) != -1:
+                    clist = cond.split(oper)
+                    params[clist[0].strip()]=(oper.strip(), clist[1].strip())
+                    break
     return selkeys, params
 
 def transform_dict2list(indict):
@@ -287,7 +290,15 @@ def map_validator(smap):
     for item in smap.values():
         if  type(item) is not types.DictType:
             raise Exception(msg)
-        if  item.keys() != ['keys', 'params']:
+        keys = item.keys()
+        keys.sort()
+        if  len(keys) == 3:
+            if  keys != ['api', 'keys', 'params']:
+                raise Exception(msg)
+        elif len(keys) == 2:
+            if  keys != ['keys', 'params']:
+                raise Exception(msg)
+        else:
             raise Exception(msg)
         if  type(item['keys']) is not types.ListType:
             raise Exception(msg)
