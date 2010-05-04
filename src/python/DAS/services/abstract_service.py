@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.52 2009/11/27 19:16:43 valya Exp $"
-__version__ = "$Revision: 1.52 $"
+__revision__ = "$Id: abstract_service.py,v 1.53 2009/12/02 14:40:15 valya Exp $"
+__version__ = "$Revision: 1.53 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -18,6 +18,9 @@ import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
 from DAS.utils.utils import row2das
+from DAS.core.das_mongocache import compare_specs
+
+from pymongo import DESCENDING, ASCENDING
 
 class DASAbstractService(object):
     """
@@ -155,9 +158,9 @@ class DASAbstractService(object):
             self.analytics.update(self.name, query)
             return
         # check the cache contains records with similar queries
-        if  self.localcache.similar_queries(self.name, query):
-            self.analytics.update(self.name, query)
-            return
+#        if  self.localcache.similar_queries(self.name, query):
+#            self.analytics.update(self.name, query)
+#            return
         # check the cache if there are records with given parameters
 #        if  self.localcache.incache(query=mongo_query):
 #            self.analytics.update(self.name, query)
@@ -181,6 +184,34 @@ class DASAbstractService(object):
         for row in gen:
             row2das(self.dasmapping.notation2das, self.name, api, row)
             yield row
+
+    def insert_apicall(self, url, api, api_params):
+        """
+        Remove obsolete apicall records and
+        insert into Analytics DB provided information about API call.
+        """
+        spec = {'apicall.expire':{'$lt' : int(time.time())}}
+        self.analytics.col.remove(spec)
+        doc  = dict(sytsem=self.name, url=url, api=api, api_params=api_params,
+                        expire=time.time()+self.expire)
+        self.analytics.col.insert(dict(apicall=doc))
+        index_list = [(key, DESCENDING) for key in (url, api)]
+        self.analytics.col.ensure_index(index_list)
+
+    def pass_apicall(self, url, api, api_params):
+        """
+        Filter provided apicall wrt existing apicall records in Analytics DB.
+        """
+        spec = {'apicall.url':url, 'apicall.api':api}
+        msg  = 'DBSAbstractService::pass_apicall, %s, API=%s, args=%s,'\
+        % (self.name, api, api_params)
+        for row in self.analytics.col.find(spec):
+            if  compare_specs(api_params, row['apicall']['api_params']):
+                msg += ' will re-use existing api call with args=%s'\
+                % row['apicall']['api_params']
+                self.logger.info(msg)
+                return True
+        return False
 
     def lookup_keys(self, api):
         """
@@ -274,6 +305,7 @@ class DASAbstractService(object):
                 msg  = 'DASAbstractService::%s cache has been updated,' \
                         % self.name
                 self.logger.info(msg)
+                self.insert_apicall(url, api, args)
                 result = True
             except:
                 msg  = 'Fail to process: url=%s, api=%s, args=%s' \
@@ -320,5 +352,8 @@ class DASAbstractService(object):
             # check that there is no "required" parameter left in args,
             # since such api will not work
             if 'required' in args.values():
+                continue
+            # check if analytics db has a similar API call
+            if  self.pass_apicall(url, api, args):
                 continue
             yield url, api, args
