@@ -7,8 +7,11 @@ das_func sink, which by itself hold ResultObject as a result
 holder.
 """
 
+__revision__ = "$Id: das_aggregators.py,v 1.2 2010/03/04 15:43:36 valya Exp $"
+__version__ = "$Revision: 1.2 $"
+__author__ = "Valentin Kuznetsov"
+
 import types
-import inspect
 from DAS.utils.utils import dict_type
 
 class ResultObject(object):
@@ -43,25 +46,13 @@ class ResultObject(object):
             self.result = 99999999999
         if  value < self.result:
             self.result = value
-    def avg(self, value):
-        """Average function for this object"""
-        pass
-    def median(self, value):
-        """Median function for this object"""
-        pass
+#    def avg(self, value):
+#        """Average function for this object"""
+#        pass
+#    def median(self, value):
+#        """Median function for this object"""
+#        pass
     
-def das_aggregators():
-    """
-    Inspect ResultObject class and return its member function,
-    which represents DAS aggregator functions
-    """
-    alist = []
-    for name, ftype in inspect.getmembers(ResultObject):
-        if  name.find("__") != -1:
-            continue
-        alist.append(name)
-    return alist
-
 def coroutine(func):
     """Coroutine helper, to be used as decorator"""
     def start(*args, **kwargs):
