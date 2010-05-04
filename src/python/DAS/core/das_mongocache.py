@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.79 2010/04/14 20:32:39 valya Exp $"
-__version__ = "$Revision: 1.79 $"
+__revision__ = "$Id: das_mongocache.py,v 1.80 2010/04/15 18:08:18 valya Exp $"
+__version__ = "$Revision: 1.80 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -414,6 +414,14 @@ class DASMongocache(object):
         spec = {'das.expire' : {'$lt' : int(time.time())}}
         col.remove(spec)
 
+    def find_spec(self, query):
+        """
+        Find if cache has query whose specs are identical to provided query.
+        """
+        enc_query = encode_mongo_query(query)
+        cond = {'das.qhash': {"$exists":True}, "query.spec": enc_query['spec']}
+        return self.col.find_one(cond)
+
     def das_record(self, query):
         """
         Retrieve DAS record for given query.
@@ -745,7 +753,10 @@ class DASMongocache(object):
             q_record = dict(das=dasheader, query=encode_mongo_query(query))
             q_record['das']['lookup_keys'] = lkeys
             objid  = self.col.insert(q_record)
-            index_list = [('das.qhash', DESCENDING), ('query', DESCENDING)]
+            index_list = [('das.qhash', DESCENDING), 
+                          ('query', DESCENDING),
+                          ('query.spec', DESCENDING),
+                         ]
             self.col.ensure_index(index_list)
 
         # insert DAS records
