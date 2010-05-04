@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.15 2009/05/22 21:04:41 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: utils.py,v 1.16 2009/06/03 19:37:21 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -15,6 +15,12 @@ import time
 import types
 import traceback
 from itertools import groupby
+
+class dict_of_none (dict):
+    """Define new dict type whose missing keys always assigned to None"""
+    def __missing__ (self, key):
+        """Assign missing key to None"""
+        return None
 
 def splitlist(ilist, nentries):
     """
