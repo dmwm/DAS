@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.36 2010/02/08 21:57:55 valya Exp $"
-__version__ = "$Revision: 1.36 $"
+__revision__ = "$Id: qlparser.py,v 1.37 2010/02/10 20:29:48 valya Exp $"
+__version__ = "$Revision: 1.37 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -358,16 +358,33 @@ class MongoParser(object):
                 key = prev_word
                 value = adjust_value(value)
                 for system in self.map.list_systems():
-                    try:
+                    for api, mapkey in self.map.find_mapkey(system, key):
+                        prim_key = self.map.primary_key(system, api)
                         lkeys = self.map.lookup_keys(system, key, 
-                                                     value=value)
-                        for nkey in lkeys:
-                            if  nkey != 'date':
-                                cdict = dict(key=nkey, op=oper, value=value)
-                                if  cdict not in condlist:
-                                    condlist.append(cdict)
-                    except:
-                        pass
+                                    api=api, value=value)
+                        add = False
+                        if  skeys:
+                            if  prim_key in skeys:
+                                add = True
+                        else:
+                            if  key == prim_key:
+                                add = True
+                        if  add:
+                            for nkey in lkeys:
+                                if  nkey != 'date':
+                                    cdict = dict(key=nkey, op=oper, value=value)
+                                    if  cdict not in condlist:
+                                        condlist.append(cdict)
+#                    try:
+#                        lkeys = self.map.lookup_keys(system, key, 
+#                                                     value=value)
+#                        for nkey in lkeys:
+#                            if  nkey != 'date':
+#                                cdict = dict(key=nkey, op=oper, value=value)
+#                                if  cdict not in condlist:
+#                                    condlist.append(cdict)
+#                    except:
+#                        pass
             else:
                 if  word not in skeys:
                     skeys.append(word)
@@ -378,11 +395,17 @@ class MongoParser(object):
             insert = 0
             for system in self.map.list_systems():
                 try:
-                    lkeys = self.map.lookup_keys(system, key)
-                    for nkey in lkeys:
-                        if  not spec.has_key(nkey):
-                            spec[nkey] = '*'
+                    mapkeys = self.map.find_mapkey(system, key)
+                    for urn, mapkey in mapkeys:
+                        entity = mapkey.split('.')[0]
+                        if  not spec.has_key(mapkey) and key == entity:
+                            spec[mapkey] = '*'
                             insert = 1
+#                    lkeys = self.map.lookup_keys(system, key)
+#                    for nkey in lkeys:
+#                        if  not spec.has_key(nkey):
+#                            spec[nkey] = '*'
+#                            insert = 1
                 except:
                     pass
             if  not insert:
@@ -407,7 +430,7 @@ class MongoParser(object):
         for key in skeys + [i for i in cond.keys()]:
             for service, keys in self.daskeys.items():
                 daskeys = self.map.find_daskey(service, key)
-                if  set(keys) & set(daskeys):
+                if  set(keys) & set(daskeys) and service not in slist:
                     slist.append(service)
         return slist
 
@@ -422,15 +445,28 @@ class MongoParser(object):
         if  type(skeys) is types.StringType:
             skeys = [skeys]
         adict = {}
+        mapkeys = [key for key in cond.keys()]
+        services = [srv for srv in self.map.list_systems()]
+        for srv in services:
+            alist = self.map.list_apis(srv)
+            for api in alist:
+                daskeys = self.map.api_info(api)['daskeys']
+                maps = [r['map'] for r in daskeys]
+                if  set(mapkeys) & set(maps) == set(mapkeys): 
+                    if  adict.has_key(srv):
+                        new_list = adict[service] + [api]
+                        adict[service] = list( set(new_list) )
+                    else:
+                        adict[srv] = [api]
         # look-up APIs from Mapping DB
-        for mapkey in skeys + [i for i in cond.keys()]:
-            for service, keys in self.daskeys.items():
-                alist = self.map.find_apis(service, mapkey)
-                if  adict.has_key(service):
-                    new_list = adict[service] + alist
-                    adict[service] = list( set(new_list) )
-                else:
-                    adict[service] = alist
+#        for mapkey in skeys + [i for i in cond.keys()]:
+#            for service, keys in self.daskeys.items():
+#                alist = self.map.find_apis(service, mapkey)
+#                if  adict.has_key(service):
+#                    new_list = adict[service] + alist
+#                    adict[service] = list( set(new_list) )
+#                else:
+#                    adict[service] = alist
         return adict
 
     def params(self, query):
@@ -439,5 +475,9 @@ class MongoParser(object):
         selection keys, conditions and services.
         """
         skeys, cond = self.decompose(query)
-        return dict(selkeys=skeys, conditions=cond, services=self.services(query))
+        services = []
+        for srv in self.services(query):
+            if  srv not in services:
+                services.append(srv)
+        return dict(selkeys=skeys, conditions=cond, services=services)
 
