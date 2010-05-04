@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.28 2009/10/14 15:19:05 valya Exp $"
-__version__ = "$Revision: 1.28 $"
+__revision__ = "$Id: das_config.py,v 1.29 2009/11/05 18:13:59 valya Exp $"
+__version__ = "$Revision: 1.29 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -48,6 +48,7 @@ def das_readconfig(dasconfig=None):
     configdict['mongocache_dbhost'] = config.get('mongocache', 'dbhost', 'localhost')
     configdict['mongocache_dbport'] = int(config.get('mongocache', 'dbport', '27017'))
     configdict['mongocache_dbname'] = config.get('mongocache', 'dbname', 'das')
+    configdict['mongocache_bulkupdate_size'] = config.getint('mongocache', 'bulkupdate_size')
     configdict['mongocache_lifetime'] = config.getint('mongocache', 'lifetime')
 
     configdict['filecache_dir'] = config.get('filecache', 'dir', '')
@@ -124,6 +125,7 @@ def das_writeconfig():
     config.set('mongocache', 'dbhost', 'localhost')
     config.set('mongocache', 'dbport', '27017')
     config.set('mongocache', 'dbname', 'das')
+    config.set('mongocache', 'bulkupdate_size', 5000)
 
     config.add_section('filecache')
     dbdir  = os.path.join(os.environ['DAS_ROOT'], 'cache')
