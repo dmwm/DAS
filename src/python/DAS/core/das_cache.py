@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.6 2009/05/19 12:43:10 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_cache.py,v 1.7 2009/05/19 17:24:12 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 # DAS modules
@@ -77,11 +77,11 @@ class DASCache(Cache):
             if  not self.servers.has_key(cache):
                 raise Exception("DASCache doesn't support cache='%s'" % cache)
             srv = self.servers[cache]
-            srv.delete(dbname)
+            srv.delete_cache(dbname)
             return
         servers = self.servers.keys()
         servers.sort()
         for name in servers:
             self.logger.info("DASCache::clean_cache, using %s" % name)
             srv = self.servers[name]
-            srv.delete(dbname)
+            srv.delete_cache(dbname)

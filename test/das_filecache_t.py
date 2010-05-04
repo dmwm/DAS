@@ -7,9 +7,9 @@ Unit test for DAS filecache class
 
 import os
 import unittest
-import tempfile
-from DAS.core.das_core import DASCore
-from DAS.core.das_filecache import DASFilecache, yyyymmdd
+from DAS.utils.das_config import das_readconfig
+from DAS.utils.logger import DASLogger
+from DAS.core.das_filecache import DASFilecache
 
 class testDASFilecache(unittest.TestCase):
     """
@@ -19,31 +19,27 @@ class testDASFilecache(unittest.TestCase):
         """
         set up DAS core module
         """
-        debug = 0
-        self.das = DASCore(debug=debug)
-        self.dir = tempfile.mkdtemp()
-        self.das.filecache_dir = self.dir
-        print "temp dir", self.dir
-        self.dasfilecache = DASFilecache(self.das, idir=self.dir)
+        debug    = 0
+        self.dir = os.path.join(os.getcwd(), 'testfilecache')
+        if  os.path.isdir(self.dir):
+            os.system('rm -rf %s' % self.dir)
+        config   = das_readconfig()
+        logger   = DASLogger(verbose=debug, stdout=debug)
+        config['logger']  = logger
+        config['verbose'] = debug
+        config['filecache_dir'] = self.dir
+        self.dasfilecache = DASFilecache(config)
 
     def test_result(self):                          
         """test DAS filecache result method"""
         query  = "find site where site=T2_UK"
-        result = self.dasfilecache.result(query)
+        expire = 60
+        expect = [1,2,3]
+        self.dasfilecache.update_cache(query, expect, expire)
+        result = self.dasfilecache.get_from_cache(query)
         result.sort()
-        expect = self.das.result(query)
-        expect.sort()
         self.assertEqual(expect, result)
-        # remove temp dir content
-        for root, dirs, files in os.walk(self.dir):
-            for filename in files:
-                os.remove(os.path.join(root, filename))
-            for dirname in dirs:
-                for r, d, f in os.walk(os.path.join(root, dirname)):
-                    for filename in f:
-                        os.remove(os.path.join(r, filename))
-                os.rmdir(os.path.join(root, dirname))
-        os.rmdir(self.dir)
+        os.system('rm -rf %s' % self.dir)
 #
 # main
 #
