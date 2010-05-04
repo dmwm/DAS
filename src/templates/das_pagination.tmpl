@@ -2,7 +2,7 @@
 #import types
 <div id="results">
 
-<div align="left">
+<div class="left">
 <table width="100%" class="normal">
 <tr>
 <td align="left">
@@ -26,7 +26,7 @@ $startidx-$total
 of $nrows rows
 </td>
 <td align="right">
-<div id='paginator' name='paginator'> </div>
+<div id="paginator"> </div>
 </td>
 </tr>
 #end if
@@ -39,6 +39,7 @@ $results
 </div> <!-- end of id="div_results" -->
 #if $limit
 <script type="application/javascript">
+//<![CDATA[
 function changeRange(page) {
     var newidx = (page-1)*$limit;
     var newurl = '$url' + '&idx=' + newidx  + '&limit=$limit';
@@ -100,6 +101,7 @@ function makePagination(startWith) {
 }
 #set loadpage=$idx/$limit+1
 makePagination($loadpage);
+//]]>
 </script>
 #end if
 <!-- end of das_pagination.tmpl -->
