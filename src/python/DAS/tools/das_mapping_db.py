@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.24 2010/02/05 21:21:21 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.25 2010/02/16 18:37:01 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -93,18 +93,16 @@ if __name__ == '__main__':
         for rec in read_service_map(opts.nmap, field='notations'):
             if  opts.debug:
                 print rec
-            spec = dict(rec)
-            spec.pop('created')
+            system = rec['system']
+            spec = {'notations':{'$exists':True}, 'system':system}
             mgr.remove(spec) # remove previous record
             mgr.add(rec)
 
     if  opts.pmap:
-        # clean first
         for rec in read_service_map(opts.pmap, field='presentation'):
             if  opts.debug:
                 print rec
-            spec = dict(rec)
-            spec.pop('created')
+            spec = {'presentation':{'$exists':True}}
             mgr.remove(spec) # remove previous record
             mgr.add(rec)
 
