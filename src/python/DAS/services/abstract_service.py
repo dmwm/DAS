@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.74 2010/02/19 22:28:56 valya Exp $"
-__version__ = "$Revision: 1.74 $"
+__revision__ = "$Id: abstract_service.py,v 1.75 2010/02/23 19:50:17 valya Exp $"
+__version__ = "$Revision: 1.75 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -16,9 +16,9 @@ import urllib2
 import traceback
 import DAS.utils.jsonwrapper as json
 
-from DAS.utils.utils import dasheader, getarg, genkey
-from DAS.utils.utils import row2das, extract_http_error
-from DAS.utils.utils import xml_parser, json_parser, make_headers
+from DAS.utils.utils import dasheader, getarg, genkey, dotdict
+from DAS.utils.utils import row2das, extract_http_error, make_headers
+from DAS.utils.utils import xml_parser, json_parser, plist_parser
 from DAS.core.das_mongocache import compare_specs
 
 from pymongo import DESCENDING, ASCENDING
@@ -345,7 +345,7 @@ class DASAbstractService(object):
 
     def translator(self, api, genrows):
         """
-        Convert raw results into DAS records.
+        Convert raw results into DAS records. 
         """
         prim_key  = self.dasmapping.primary_key(self.name, api)
         notations = self.dasmapping.notations(self.name)[self.name]
@@ -360,10 +360,53 @@ class DASAbstractService(object):
                 yield row
             else:
                 yield {prim_key:row}
-        msg = "DASAbstractService::%s::translator yield %s records" \
+        msg = "DASAbstractService::%s::translator yield %s rows" \
                 % (self.name, count)
         self.logger.info(msg)
 
+    def set_misses(self, query, genrows):
+        """
+        Check and adjust DAS records wrt input query. If some of the DAS
+        keys are missing, add it with its value to the DAS record.
+        """
+        spec  = query['spec']
+        skeys = spec.keys()
+        row   = genrows.next()
+        ddict = dotdict(row)
+        keys2adjust = []
+        for key, val in spec.items():
+            if  type(val) is types.StringType and \
+                val and val[0] == '*': # is a pattern
+                continue
+            if  not ddict._get(key) and key not in keys2adjust:
+                keys2adjust.append(key)
+        msg   = "DASAbstractService::%s::set_misses, adjust keys %s"\
+                % (self.name, keys2adjust)
+        self.logger.info(msg)
+        count = 1
+        if  keys2adjust:
+            # adjust first row
+            for key in keys2adjust:
+                value = spec[key]
+                ddict._set(key, value)
+                yield ddict
+            # adjust rest of the rows
+            for row in genrows:
+                ddict = dotdict(row)
+                for key in keys2adjust:
+                    value = spec[key]
+                    ddict._set(key, value)
+                yield ddict
+                count += 1
+        else:
+            yield row
+            for row in genrows:
+                yield row
+                count += 1
+        msg   = "DASAbstractService::%s::set_misses yield %s rows"\
+                % (self.name, count)
+        self.logger.info(msg)
+            
     def api(self, query):
         """
         Data service api method, can be defined by data-service class.
@@ -388,13 +431,14 @@ class DASAbstractService(object):
                 data    = self.getdata(url, args, headers)
                 rawrows = self.parser(dformat, data, api, args)
                 dasrows = self.translator(api, rawrows)
+                dasrows = self.set_misses(query, dasrows)
                 ctime   = time.time() - time0
                 self.write_to_cache(query, expire, url, api, args, 
                         dasrows, ctime)
             except:
                 msg  = 'Fail to process: url=%s, api=%s, args=%s' \
                         % (url, api, args)
-                msg += traceback.dformat_exc()
+                msg += traceback.format_exc()
                 self.logger.info(msg)
 
     def apimap(self, query):
