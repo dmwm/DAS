@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.35 2009/09/14 20:37:56 valya Exp $"
-__version__ = "$Revision: 1.35 $"
+__revision__ = "$Id: abstract_service.py,v 1.36 2009/09/21 15:28:12 valya Exp $"
+__version__ = "$Revision: 1.36 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -274,7 +274,7 @@ class DASAbstractService(object):
                 if  not nkey:
                     nkey = key
                 if  oper == '=' and type(value) is types.StringType:
-                    value = re.compile('%s.*' % value)
+                    value = re.compile('.*%s.*' % value)
                 if  key != 'date': # we skip date for Mongo to look-up,
                     # due to variety of return formats
                     cdict = dict(key=nkey, op=oper, value=value)
