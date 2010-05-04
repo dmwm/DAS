@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.62 2010/02/04 21:25:31 valya Exp $"
-__version__ = "$Revision: 1.62 $"
+__revision__ = "$Id: das_mongocache.py,v 1.63 2010/02/10 19:03:15 valya Exp $"
+__version__ = "$Revision: 1.63 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -455,11 +455,12 @@ class DASMongocache(object):
             # use this if there is no das_son_manipulator
 #            obj_id = row['_id']
 #            row['_id'] = str(obj_id)
-            # DAS info stored via das_id, the records only contains
+            # DAS info is stored via das_id, the records only contains
             # {'das':{'expire':123}} to consistently manage delete operation
-            das = row['das']
-            if  not (type(das) is types.DictType and das.has_key('api')):
-                del row['das']
+            if  row.has_key('das'):
+                das = row['das']
+                if  not (type(das) is types.DictType and das.has_key('api')):
+                    del row['das']
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
@@ -647,6 +648,7 @@ class DASMongocache(object):
         else:
             print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
+        self.logger.info("\n")
         msg = "DASMongocache::update_cache, %s yield %s rows" \
                 % (dasheader['system'], counter)
         self.logger.info(msg)
