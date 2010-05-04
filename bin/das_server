@@ -3,7 +3,7 @@
 # setup environment
 #. `dirname $0`/setup.sh
 
-usage="Usage: das_server <web|doc|cache> {start|stop|status|restart|stdout}"
+usage="Usage: das_server <web|cache> {start|stop|status|restart|stdout}"
 if [ $# != 2 ]; then
     echo $usage
     exit 1
