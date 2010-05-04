@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.6 2009/06/09 18:22:43 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_couchcache.py,v 1.7 2009/06/10 20:33:04 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -16,6 +16,7 @@ from WMCore.Database.CMSCouch import CouchServer
 # DAS modules
 from DAS.utils.utils import genkey, timestamp, results2couch
 from DAS.core.cache import Cache
+from DAS.utils.logger import DummyLogger
 
 def create_views(cdb, design, views):
     """
@@ -40,6 +41,8 @@ class DASCouchcache(Cache):
         Cache.__init__(self, config)
         uri = config['couch_servers'] # in a future I may have several
         self.logger = config['logger']
+        if  not self.logger:
+            self.logger = DummyLogger()
         self.limit  = config['couch_lifetime']
         self.uri    = uri.replace('http://', '')
         self.server = CouchServer(self.uri)
@@ -138,7 +141,7 @@ function(k,v,r) {
             }
         }
 
-    def dbinfo(self, dbname):
+    def dbinfo(self, dbname='das'):
         """
         Provide couch db info
         """
@@ -147,6 +150,9 @@ function(k,v,r) {
             self.logger.info(cdb.info())
         else:
             self.logger.warning("No '%s' found in couch db" % dbname)
+        if  not cdb:
+            return "Unable to connect to %s" % dbname
+        return cdb.info()
 
     def delete_cache(self, dbname=None, system=None):
         """
@@ -323,6 +329,50 @@ function(k,v,r) {
         cdb.commit()  # bulk delete
         cdb.compact() # remove them permanently
         
+    def list_between(self, time_begin, time_end):
+        """
+        Retreieve results from cache for time range
+        """
+        dbname = self.dbname
+        cdb = self.couchdb(dbname)
+        if  not cdb:
+            return
+        skey = time_begin
+        ekey = time_end
+        options = {'startkey': skey, 'endkey': ekey}
+        results = cdb.loadView('dasadmin', 'timer', options)
+        try:
+            res = [row['value'] for row in results['rows']]
+        except:
+            traceback.print_exc()
+            return
+        if  len(res) == 1:
+            return res[0]
+        return res
+
+    def list_queries_in(self, system, idx=0, limit=0):
+        """
+        Retreieve results from cache for provided system, e.g. sitedb
+        """
+        idx = int(idx)
+        limit = long(limit)
+        dbname = self.dbname
+        cdb = self.couchdb(dbname)
+        if  not cdb:
+            return
+        skey = system
+        ekey = system
+        options = {'startkey': skey, 'endkey': ekey}
+        results = cdb.loadView('dasadmin', 'system', options)
+        try:
+            res = [row['value'] for row in results['rows']]
+        except:
+            traceback.print_exc()
+            return
+        if  len(res) == 1:
+            return res[0]
+        return res
+
 #    def create_ft_index(self, db, name):
 #        view = client.PermanentView(self.uri, name)
 #        key = '_design/%s' % name
