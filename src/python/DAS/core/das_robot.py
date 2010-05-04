@@ -6,8 +6,8 @@ DAS robot base class. Code based on
 http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 """
 
-__revision__ = "$Id: das_robot.py,v 1.2 2009/09/18 14:35:33 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_robot.py,v 1.3 2009/09/18 14:50:11 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -25,7 +25,7 @@ class Robot(object):
     DAS Robot (daemon) class to fetch data from provided URL/API
     and store them into DAS cache.
     """
-    def __init__(self, config={}, query=None, sleep=600):
+    def __init__(self, config=None, query=None, sleep=600):
         self.dascore = DASCore(config)
         logdir       = getarg(config, 'logdir', '/tmp')
         self.pidfile = os.path.join(logdir, 'robot-%s.pid' % genkey(query))
@@ -52,8 +52,9 @@ class Robot(object):
             if  pid > 0:
                 # exit first parent
                 sys.exit(0) 
-        except OSError, e: 
-            sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
+        except OSError, err: 
+            sys.stderr.write("fork #1 failed: %d (%s)\n" \
+                % (err.errno, err.strerror))
             sys.exit(1)
 
         # decouple from parent environment
@@ -67,26 +68,28 @@ class Robot(object):
             if  pid > 0:
                 # exit from second parent
                 sys.exit(0) 
-        except OSError, e: 
-            sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
+        except OSError, err:
+            sys.stderr.write("fork #2 failed: %d (%s)\n" \
+                % (err.errno, err.strerror))
             sys.exit(1) 
 
         # redirect standard file descriptors
         sys.stdout.flush()
         sys.stderr.flush()
-        si = file(self.stdin, 'r')
-        so = file(self.stdout, 'a+')
-        se = file(self.stderr, 'a+', 0)
-        os.dup2(si.fileno(), sys.stdin.fileno())
-        os.dup2(so.fileno(), sys.stdout.fileno())
-        os.dup2(se.fileno(), sys.stderr.fileno())
+        stdi = file(self.stdin, 'r')
+        stdo = file(self.stdout, 'a+')
+        stde = file(self.stderr, 'a+', 0)
+        os.dup2(stdi.fileno(), sys.stdin.fileno())
+        os.dup2(stdo.fileno(), sys.stdout.fileno())
+        os.dup2(stde.fileno(), sys.stderr.fileno())
 
         # write pidfile
         atexit.register(self.delpid)
         pid = str(os.getpid())
-        file(self.pidfile,'w+').write("%s\n" % pid)
+        file(self.pidfile, 'w+').write("%s\n" % pid)
     
     def delpid(self):
+        """Delete PID file"""
         os.remove(self.pidfile)
 
     def start(self):
@@ -95,9 +98,9 @@ class Robot(object):
         """
         # Check for a pidfile to see if the daemon already runs
         try:
-            pf = file(self.pidfile,'r')
-            pid = int(pf.read().strip())
-            pf.close()
+            pidf = file(self.pidfile,'r')
+            pid  = int(pidf.read().strip())
+            pidf.close()
         except IOError:
             pid = None
 
@@ -116,9 +119,9 @@ class Robot(object):
         """
         # Get the pid from the pidfile
         try:
-            pf = file(self.pidfile, 'r')
-            pid = int(pf.read().strip())
-            pf.close()
+            pidf = file(self.pidfile, 'r')
+            pid = int(pidf.read().strip())
+            pidf.close()
         except IOError:
             pid = None
 
@@ -154,9 +157,9 @@ class Robot(object):
         """
         # Get the pid from the pidfile
         try:
-            pf  = file(self.pidfile, 'r')
-            pid = int(pf.read().strip())
-            pf.close()
+            pidf  = file(self.pidfile, 'r')
+            pid = int(pidf.read().strip())
+            pidf.close()
         except IOError:
             pid = None
 
