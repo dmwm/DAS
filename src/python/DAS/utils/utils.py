@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.29 2009/10/12 20:07:06 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: utils.py,v 1.30 2009/10/15 00:12:27 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -141,8 +141,19 @@ def dump(ilist, idx=0):
     """
     Print items in provided generator
     """
+#    if  type(ilist) is types.GeneratorType:
+#        reslist = [i for i in ilist]
+#    elif type(ilist) is not types.ListType:
+#        reslist = [ilist]
+#    else:
+#        reslist = ilist
+#    if  not reslist:
+#        print "No results found"
+#        return
+#    reslist.sort()
+#    reslist = [k for k, g in groupby(reslist)]
     if  type(ilist) is types.GeneratorType:
-        reslist = [i for i in ilist]
+        reslist = ilist
     elif type(ilist) is not types.ListType:
         reslist = [ilist]
     else:
@@ -150,10 +161,6 @@ def dump(ilist, idx=0):
     if  not reslist:
         print "No results found"
         return
-    # remove duplicates
-    reslist.sort()
-    reslist = [k for k, g in groupby(reslist)]
-#    uniqify(reslist)
     idx = 0
     for row in reslist:
         print "id : %s" % idx
