@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.18 2010/01/05 19:25:20 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.19 2010/01/07 16:58:16 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -15,6 +15,10 @@ from DAS.core.das_core import DASCore
 from DAS.utils.utils import dump
 from DAS.core.das_mapping_db import DASMapping
 from DAS.utils.logger import DASLogger
+from DAS.services.map_reader import read_api_map
+from DAS.services.map_reader import read_notation_map
+from DAS.services.map_reader import read_presentation_map
+from DAS.utils.das_config import ACTIVE_SYSTEMS
 
 import sys
 if sys.version_info < (2, 6):
@@ -89,6 +93,28 @@ if __name__ == '__main__':
     # clean-up existing Mapping DB
     mgr.delete_db()
     mgr.create_db()
+
+    # read API, notation maps for all known data-services
+    services = ACTIVE_SYSTEMS.split(',')
+    for srv in services:
+        print "\nAdding API map for %s system" % srv
+        for rec in read_api_map(srv):
+            if  opts.debug:
+                print rec
+            mgr.add(rec)
+        print "Adding notation map for %s system" % srv
+        rec = read_notation_map(srv)
+        if  opts.debug:
+            print rec
+        mgr.add(rec)
+    print "\nAdding presentation map for all systems"
+    rec = read_presentation_map()
+    if  opts.debug:
+        print rec
+    mgr.add(rec)
+ 
+    sys.exit(0)
+
 
     ##### DBS
     apiversion = 'DBS_2_0_8'
