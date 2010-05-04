@@ -535,15 +535,15 @@ are subset of already registered in Analytics DB api call(s). The
 data, respectively.
 \item Perform aggregation by iterating over records from the previous step
 \begin{verbatim}
-if cache_has(row.primary_key):
-   existing_record = get_from_cache(row.primary_key)
+if cache_has(daskey):
+   existing_record = get_from_cache(daskey)
    merge(row, existing_record)
    insert_into_cache(row)
    delete_from_cache(existing_record)
 else:
    insert_into_cache(row)
 \end{verbatim}
-The \verb+primary_key+
+The \verb+daskey+
 is a key which identifies the record defined in Mapping DB, e.g. \verb+file.name+
 for \verb+file+ record.
 We did use a bulk insert operations at this step to increase throughput. 
@@ -551,60 +551,69 @@ We did use a bulk insert operations at this step to increase throughput.
 \end{enumerate}
 We also had an option to run independent set of daemons, DAS robots, who
 monitor Analytics DB for most popular requests and pre-fetch the most
-common data into DAS cache. 
+common data into the cache. 
 
 \subsection{DAS queries}
-Apart from the previous DBS-QL syntax we decided to drop its syntax and allow users
-express their queries in a free text-based form. Although we must clarify its
-meaning. We used a pre-defined set of keys registered in DAS to describe common
-entities of our data. For example, \verb+dataset+, 
+All DAS queries were expressed in a free text-based form, either as a 
+set of keywords or key-value pairs, where a pair can represent
+condition, e.g. \verb+key > value+. We used a pre-defined set of keys registered 
+in DAS to describe common entities of our data. For example, \verb+dataset+, 
 \verb+file+, \verb+block+, \verb+run+, \verb+event+, etc. Their choice
-was based on analysis of daily work operations of our users, see \cite{DBS07}.
-Each key had a set of attributes with primary one assigned to the key itself.
-For instance, the \verb+block+ key had the following attributes
-\verb+name+, \verb+size+, \verb+replica+ etc., 
-with primary attribute being \verb+name+.
-The choice of attributes were based on a set of meta-data information
-associated with a given DAS key. Therefore end-users where able to specify
-a context in their queries by using appropriate attribute(s). For example,
-for query \verb+block+ we didn't perform a string matching to the
-``block'' string, but rather look-up a block objects in a DAS, while query
-\verb+block.name=abc*+ instructs system to look-up appropriate blocks
+was based on the analysis of daily work operations of our users, see \cite{DBS07}.
+Each key represents a DAS record. Every record was stored into the cache
+in JSON format. Due to the ``schemaless'' nature of underlying back-end (MongoDB)
+we were able to store arbitrary structure of DAS records, e.g.
+dictionary, lists, key-value pairs, etc. Therefore every DAS key had a 
+set of attributes representing JSON structure. For instance a document
+\begin{verbatim}
+{'block': {'name':'abc', 'size': 1, 'replica': [...]}}
+\end{verbatim}
+associated with a \verb+block+ key and therefore had the following attributes
+\verb+name+, \verb+size+, \verb+replica+. The set of attributes were based 
+on a set of meta-data information provided by data-services. Our users 
+where able to specify a context in their queries by using appropriate 
+attribute(s). For example, for query \verb+block+ we didn't perform a string 
+matching to the ``block'' string, but rather look-up a block records, while query
+\verb+block.name=abc*+ instructs the system to look-up appropriate blocks
 with matched names. The numerical values, conditions, groupping were
 easy to express too. For example, \verb+run > 10 and run < 100+ query 
 was used to get all run records for provided range of run numbers. 
-At the same time, to complement the strength of the 
-DAS, we do plan to index dynamically retrieved meta-data and add a keyword-based 
+At the same time, to complement the strength of the queries, we do plan 
+to index dynamically DAS records and add a keyword-based 
 search later.
 
-The free text-based queries were transformed into MongoDB query syntax, 
+All input queries were transformed into MongoDB query syntax, 
 who was used internally in DAS. It represents a set of selection 
 keys and conditions as a JSON document. For example, a query
-{\it dataset site=T1\_CH\_CERN}
+\verb+dataset file=abc run>10+
 was transformed into 
-{\it \{"fields" : ["dataset"], "spec" : \{"site" : "T1\_CH\_CERN"\}\}}.
-Such syntax was perfect fit for us, since it allows to store all queries
-as JSON documents into Analytics DB for further analysis. It is worthwhile to note that
-MongoDB query syntax is very reach. It supports advanced queries with 
-boolean expressions, conditional operators, regular expressions, etc. providing
-a real power for our end-users.
+\begin{verbatim}
+{"fields": {"dataset"], "spec": {"file": "abc", "run": {"$gt": 10}}}
+\end{verbatim}
+Therefore users queries were stored into Analytics DB similar to other DAS 
+records and used for further analysis.
+%Such syntax was perfect fit for us, since it allows to store all queries
+%as JSON documents into Analytics DB for further analysis. It is worthwhile to note that
+%MongoDB query syntax is very reach. It supports advanced queries with 
+%boolean expressions, conditional operators, regular expressions, etc. providing
+%a real power for our end-users.
 
 \subsection{Data-services and aggregation}
-As we outlined above the DAS Mapping DB becomes an authorative
+As we outlined above the DAS Mapping DB became an authorative
 source of information about all data-services participating in DAS.
-Based on information stored in Mapping DB we were able to 
+Based on the information stored in Mapping DB we were able to 
 retrieve appropriate data from different data-services, re-map them into 
 DAS notations and aggregate them on demand. For instance, the Data 
-Bookkeeping System (DBS) and data location system (PhEDEx)
+Bookkeeping System (DBS) \cite{DBS} and data location system (PhEDEx) \cite{PhEDEx}
 provided information about CMS block meta-data. In former case, DBS 
 stored information about blocks and their relationships to other 
 physics objects, such as dataset and files, while PhEDEx kept
 information about its location and replicas. Upon a user request to 
-find a block meta-data, we were able to identify appropriate set of DBS and PhEDEx APIs, 
-retrieve data from them, re-format their output to DAS notations 
-and store results into DAS cache performing aggregation of matched 
-objects using \verb+block.name+ key. The merged results were stored 
-as a set of data records. Here is an example of such aggregated record:
+find a block meta-data, we were able to identify appropriate set of 
+DBS and PhEDEx APIs, retrieve data from them, re-format their output 
+into DAS notations and store results into DAS cache. The records
+were merged (aggregated) based on identical key-value pairs, e.g.
+based on \verb+block.name+ key. Here is an example of such aggregated record:
 \begin{verbatim}
 {"das_id": ["4b195404e2194e21c4000030", "4b1953fee2194e21c4000002"], 
  "block": [{"name": "/a/b/c#123", "replica": [{"complete": "y", 
@@ -615,35 +624,12 @@ as a set of data records. Here is an example of such aggregated record:
             "created_by": "USER_DN", "path": "/a/b/c", ...}],
  "das": [{"expire": 1259952908}, {"expire": 1259954702}]}
 \end{verbatim}
-Here \verb+das_id+ refers to api call records stored in Analytics DB,
+The \verb+das_id+ refers to api call records stored in Analytics DB,
 \verb+block+ represents an aggregation block meta-data information from DBS
 and PhEDEx systems and \verb+das+ contains their expiration time stamps.
 Usage of this information was valuable contribution in debugging process of
-data-services themselves, e.g. identification of not-matched records, 
+data-services themselves, e.g. identification of data-service inconsistencies, 
 latency studies, etc.
-% Here is an example of DAS record representing
-%aggregation information between two SiteDB APIs, {\it CMStoSAMName} 
-%and {\it CMStoSiteName}, with API results merged under the {\it site} key.
-%\begin{verbatim}
-%{"site":[{"samname": "CERN-PROD", "name": "T1_CH_CERN"}, 
-%         {"sitename": "CERN", "name": "T1_CH_CERN"}], 
-% "das": [{"ctime": 0.9, "expire": 1256362175, "api": ["CMStoSAMName"],
-%          "url": "https://a.b.com/sitedb/json/index/CMStoSAMName", 
-%          "timestamp": 1256318975, "system": ["sitedb"]},
-%         {"ctime": 1.2, "api": ["CMStoSiteName"], "expire": 1256362174},
-%          "url": "https://a.b.com/sitedb/json/index/CMStoSiteName", 
-%          "timestamp": 1256318974, "system": ["sitedb"]]}
-%\end{verbatim}
-
-%We used RESTful model \cite{REST} for all DAS cache server APIs.
-%It allows us to share core library and other components during development of 
-%various DAS clients, e.g. CLI, web interface, robots, etc. and hides
-%complexity of access to individual data-services and their security policies
-%as well as proper organize caching solution.
-%For instance, to access on-line Run Summary information we were forced to use
-%Grid certificates. Instead of propagating user certificate to data-service
-%the DAS cache server works as a proxy to this server and used host certificate 
-%to serve such requests on behalf of the users.
 
 \section{Results\label{Results}}
 In this section we discuss preliminary results achieved with DAS system
@@ -933,6 +919,8 @@ Fielding, Roy Thomas ``Architectural Styles and the Design of
 Network-based Software Architectures'', Doctoral dissertation, 2000,
 University of California, Irvine
 
+\bibitem{Python} Python programming language, http://www.python.org
+
 \bibitem{PhEDEx}
 %Rehn et. al.,
 %``PhEDEx high-throughput data transfer management system'', CHEP 2006;
@@ -965,8 +953,6 @@ GMW’07, June 25, 2007, Monterey, California, USA.
 
 %\bibitem{CRAFT09}
 %https://twiki.cern.ch/twiki/bin/view/CMS/CRAFT09AnalysisInfo
-
-\bibitem{Python} Python programming language, http://www.python.org
 
 %\bibitem{DBSearch}
 %D. Konopnicki, O. Shmueli,
