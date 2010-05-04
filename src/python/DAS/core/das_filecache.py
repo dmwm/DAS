@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.15 2009/06/05 14:10:20 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: das_filecache.py,v 1.16 2009/06/30 19:35:42 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -201,8 +201,9 @@ class DASFilecache(Cache):
         """
         Retreieve results from cache, otherwise return null.
         """
+        id      = int(idx)
         idx     = int(idx)
-        limit   = long(limit)
+        stop    = idx + long(limit)
         key     = genkey(query)
         sysdir  = os.path.join(self.dir, self.get_system(query))
         session = self.session()
@@ -229,18 +230,22 @@ class DASFilecache(Cache):
                 if  os.path.isfile(filename):
                     fdr = open(filename, 'rb')
                     if  limit:
-                        for i in range(0, limit):
+                        for i in range(0, stop):
                             try:
                                 res = marshal.load(fdr)
                                 if  i >= idx:
+                                    res['id'] = id
                                     yield res
+                                    id += 1
                             except EOFError, err:
                                 break
                     else:
                         while 1:
                             try:
                                 res = marshal.load(fdr)
+                                res['id'] = id
                                 yield res
+                                id += 1
                             except EOFError, err:
                                 break
                     fdr.close()
