@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.12 2009/10/23 19:35:55 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.13 2009/11/10 16:08:28 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -230,24 +230,24 @@ if __name__ == '__main__':
 
     # insert DAS notations for DBS apis
     notations = [
-        dict(api_param='creation_date', das_name='creation_time'),
-        dict(api_param='last_modification_date', das_name='modification_time'),
-        dict(api_param='app_family_name', das_name='name'),
-        dict(api_param='app_executable_name', das_name='executable'),
-        dict(api_param='path', das_name='name'),
-        dict(api_param='storage_element', das_name='se'),
-        dict(api_param='storage_element_name', das_name='se'),
-        dict(api_param='number_of_files', das_name='nfiles'),
-        dict(api_param='number_of_events', das_name='nevents'),
-        dict(api_param='number_of_blocks', das_name='nblocks'),
-        dict(api_param='number_of_lumi_sections', das_name='nlumis'),
-        dict(api_param='lumi_section_number', das_name='lumi'),
-        dict(api_param='start_event_number', das_name='start_event'),
-        dict(api_param='end_event_number', das_name='end_event'),
-        dict(api_param='total_luminosity', das_name='totlumi'),
-        dict(api_param='total_size', das_name='size'),
-        dict(api_param='lfn', das_name='name'),
-        dict(api_param='processed_dataset', das_name='dataset'),
+        dict(api_param='creation_date', das_name='creation_time', api=''),
+        dict(api_param='last_modification_date', das_name='modification_time', api=''),
+        dict(api_param='app_family_name', das_name='name', api=''),
+        dict(api_param='app_executable_name', das_name='executable', api=''),
+#        dict(api_param='path', das_name='name', api=''),
+        dict(api_param='storage_element', das_name='se', api=''),
+        dict(api_param='storage_element_name', das_name='se', api=''),
+        dict(api_param='number_of_files', das_name='nfiles', api=''),
+        dict(api_param='number_of_events', das_name='nevents', api=''),
+        dict(api_param='number_of_blocks', das_name='nblocks', api=''),
+        dict(api_param='number_of_lumi_sections', das_name='nlumis', api=''),
+        dict(api_param='lumi_section_number', das_name='lumi', api=''),
+        dict(api_param='start_event_number', das_name='start_event', api=''),
+        dict(api_param='end_event_number', das_name='end_event', api=''),
+        dict(api_param='total_luminosity', das_name='totlumi', api=''),
+        dict(api_param='total_size', das_name='size', api=''),
+        dict(api_param='lfn', das_name='name', api=''),
+        dict(api_param='processed_dataset', das_name='dataset', api=''),
     ]
     mgr.add(dict(system=system, notations=notations))
 
@@ -321,14 +321,14 @@ if __name__ == '__main__':
     mgr.add(rec)
 
     notations = [
-        dict(api_param='time_create', das_name='creation_time'),
-        dict(api_param='time_update', das_name='modification_time'),
-        dict(api_param='bytes', das_name='size'),
-        dict(api_param='node', das_name='site'),
-        dict(api_param='files', das_name='nfiles'),
-        dict(api_param='events', das_name='nevents'),
-        dict(api_param='lfn', das_name='name'),
-        dict(api_param='node', das_name='site'),
+        dict(api_param='time_create', das_name='creation_time', api=''),
+        dict(api_param='time_update', das_name='modification_time', api=''),
+        dict(api_param='bytes', das_name='size', api=''),
+        dict(api_param='node', das_name='site', api=''),
+        dict(api_param='files', das_name='nfiles', api=''),
+        dict(api_param='events', das_name='nevents', api=''),
+        dict(api_param='lfn', das_name='name', api=''),
+        dict(api_param='node', das_name='site', api=''),
     ]
     mgr.add(dict(system=system, notations=notations))
     ##### END OF PHEDEX
@@ -407,7 +407,7 @@ if __name__ == '__main__':
 #    api2das = [('cms_name', 'site', "re.compile('^T[0-3]_')")]
 #    mgr.add_api(system, api, params, daskeys, api2das)
 
-    notations=[dict(api_param='cmsname', das_name='name')]
+    notations = [dict(api_param='cmsname', das_name='name', api='')]
     mgr.add(dict(system=system, notations=notations))
     ##### END OF SITEDB
 
@@ -453,9 +453,9 @@ if __name__ == '__main__':
     mgr.add(rec)
 
     notations = [
-        dict(api_param='bField', das_name='bfield'),
-        dict(api_param='hltKey', das_name='hlt'),
-        dict(api_param='runNumber', das_name='run_number'),
+        dict(api_param='bField', das_name='bfield', api=''),
+        dict(api_param='hltKey', das_name='hlt', api=''),
+        dict(api_param='runNumber', das_name='run_number', api=''),
     ]
     mgr.add(dict(system=system, notations=notations))
 
@@ -526,9 +526,9 @@ if __name__ == '__main__':
     mgr.add(rec)
 
     notations = [
-        dict(api_param='run_number', das_name='run'),
-        dict(api_param='int_lumi', das_name='intlumi'),
-        dict(api_param='hlt_path', das_name='trigpath'),
+        dict(api_param='run_number', das_name='run', api=''),
+        dict(api_param='int_lumi', das_name='intlumi', api=''),
+        dict(api_param='hlt_path', das_name='trigpath', api=''),
     ]
     mgr.add(dict(system=system, notations=notations))
 

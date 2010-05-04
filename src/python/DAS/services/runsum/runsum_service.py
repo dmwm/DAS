@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.11 2009/10/21 15:41:04 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: runsum_service.py,v 1.12 2009/11/10 16:08:28 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -118,12 +118,14 @@ class RunSummaryService(DASAbstractService):
                 row = {}
                 for j in i:
                     if  j.tag:
-                        newkey = self.dasmapping.notation2das(self.name, j.tag)
+                        newkey = self.dasmapping.notation2das\
+                                (self.name, j.tag, api)
                         row[newkey] = j.text
                     nrow = {}
                     for k in j.getchildren():
                         if  k.tag:
-                            nkey = self.dasmapping.notation2das(self.name, k.tag)
+                            nkey = self.dasmapping.notation2das\
+                                (self.name, k.tag, api)
                             nrow[nkey] = k.text
                     if  nrow:
                         row[newkey] = nrow

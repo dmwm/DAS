@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.45 2009/11/03 16:32:48 valya Exp $"
-__version__ = "$Revision: 1.45 $"
+__revision__ = "$Id: abstract_service.py,v 1.46 2009/11/10 16:08:27 valya Exp $"
+__version__ = "$Revision: 1.46 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -205,7 +205,7 @@ class DASAbstractService(object):
             print "\n### %s returns" % self.name
             print jsondict
         for key in jsondict.keys():
-            newkey = self.dasmapping.notation2das(self.name, key)
+            newkey = self.dasmapping.notation2das(self.name, key, api)
             if  newkey != key:
                 jsondict[newkey] = jsondict[key]
                 del jsondict[key]
@@ -213,7 +213,7 @@ class DASAbstractService(object):
 #        jsondict['system'] = self.name
         if  params:
             for key, val in params.items():
-                newkey = self.dasmapping.notation2das(self.name, key)
+                newkey = self.dasmapping.notation2das(self.name, key, api)
                 if  not jsondict.has_key(newkey):
                     jsondict[newkey] = val
         yield jsondict
@@ -327,19 +327,19 @@ class DASAbstractService(object):
                 continue
             yield url, api, args
         
-    def row2das(self, system, row):
+    def row2das(self, system, api, row):
         """Transform keys of row into DAS notations, e.g. bytes to size"""
         if  type(row) is not types.DictType:
             return
         for key, val in row.items():
-            newkey = self.dasmapping.notation2das(system, key)
+            newkey = self.dasmapping.notation2das(system, key, api)
             if  newkey != key:
                 row[newkey] = row[key]
                 del row[key]
             if  type(val) is types.DictType:
-                self.row2das(system, val)
+                self.row2das(system, api, val)
             elif type(val) is types.ListType:
                 for item in val:
                     if  type(item) is types.DictType:
-                        self.row2das(system, item)
+                        self.row2das(system, api, item)
  

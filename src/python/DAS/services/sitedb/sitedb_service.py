@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.13 2009/10/13 23:50:23 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: sitedb_service.py,v 1.14 2009/11/10 16:08:28 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -84,5 +84,5 @@ class SiteDBService(DASAbstractService):
                         if  val.find('.') != -1: # SE or CE
                             if  not row.has_key('se'):
                                 row['se'] = val
-            self.row2das(self.name, row)
+            self.row2das(self.name, "", row) # here we pass empty api=""
             yield {'site': row}
