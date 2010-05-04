@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.19 2009/06/12 14:37:55 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: utils.py,v 1.20 2009/07/08 16:25:58 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -495,4 +495,24 @@ def get_key_cert():
         raise Exception("Key PEM file %s not found" % key)
 
     return key, cert
+
+def gen_key_tuples(data, key):
+    """
+    Generator function to yield (value, id) pairs for provided key
+    """
+    for idx in range(0, len(data)):
+        row = data[idx]
+        tup = (row[key], idx)
+        yield tup
+
+def sort_data(data, key, direction='asc'):
+    """
+    Generator function to yield rows sorted by provided key in a row.
+    """
+    tup_list = [i for i in gen_key_tuples(data, key)]
+    tup_list.sort()
+    if  direction == 'desc':
+        tup_list.reverse()
+    for pair in tup_list:
+        yield data[pair[1]]
 
