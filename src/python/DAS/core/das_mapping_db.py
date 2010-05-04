@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.26 2010/02/05 21:29:56 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.27 2010/02/08 15:11:13 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -346,7 +346,7 @@ class DASMapping(object):
                 keys.append(entry['key'])
         return keys
 
-    def servicemap(self, system, implementation=None):
+    def servicemap(self, system):
         """
         Constructs data-service map, e.g.
 
