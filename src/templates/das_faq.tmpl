@@ -2,10 +2,10 @@
 <!-- das_faq.tmpl -->
 <div class="page">
 <div class="normal">
-<h3>General question about DAS</h3>
-This section discuss what DAS means and general question about DAS
+<h3>General questions about DAS</h3>
+In this section we discuss general questions about DAS,
 <a href="javascript:ShowTag('architecture')">show</a> |
-<a href="javascript:HideTag('architecture')">hide</a>
+<a href="javascript:HideTag('architecture')">hide</a> this section.
 <div id="architecture" class="">
 
 <div class="navcontainer">
@@ -15,41 +15,48 @@ What DAS stands for?
 </li>
 </ul>
 <p>
-Data Aggregation Service (DAS) is a CMS project which provide an access
+The Data Aggregation Service (DAS) is CMS project which provides access
 to CMS data-services, such as DBS, Phedex, SiteDB, etc., using free text-based
-search syntax (a la Google).
-It represents data in common JSON/XML-formats, provide Command Line Interface (CLI)
+keyword search syntax. It supersedes the 
+<a href="http://cmsweb.cern.ch/dbs_discovery">
+Data Discovery</a> service.
+It represents data from all data-services in common 
+JSON/XML-format, provides 
+<a href="/das/cli">
+Command Line Interface (CLI)
+</a>
 along with reach web-based interface.
 </p>
 
 <ul>
 <li>
-How DAS know data relationship between CMS data-services?
+How DAS knows data relationship between CMS data-services?
 </li>
 </ul>
 <p>
-The various CMS data-services describe a particular domain of data. If we
-consider all data-services togther they represent all data we collect in our
+The various CMS data-services collect information about particular domain of CMS
+data operations, e.g. Phedex holds information about data location. If we
+consider all data-services togther they represent a complete set of meta-data in our
 experiment. So, it's very common, that boundaries of one data-service are
 overlap with another. A typical example is DBS and Run Summary DB.
 In DBS we store processing information about our data, such as
 dataset, blocks, files, runs. In Run Summary DB we store run specific
 information. Obviously, a run, is a common entity between two data-services.
-In DAS, such comonalities are taken into account and one or more entities
+In DAS, such comonalities are taken into account and one or more entities are
 used to relate one service with another.
 </p>
 
 <ul>
 <li>
-How DAS merge data between different data-services?
+How DAS aggregates data between different data-services?
 </li>
 </ul>
 <p>
-Upon provided query, DAS interface invokes appropriate data-service APIs,
-change their output to DAS notations and merge on common keys. For example,
-when user ask about block, DBS and PhEDEx APIs are invoked. Both return block
+Upon provided query, DAS invokes appropriate data-service APIs,
+changing their output to DAS notations and merge data on common keys. For example,
+when user ask about a block, DBS and PhEDEx APIs are invoked. Both return block
 information, where block name is a common key between two outputs. Using this
-knowledge we merge their output into one DAS record.
+knowledge DAS merges their output into a single DAS record.
 </p>
 
 </div>
@@ -57,26 +64,28 @@ knowledge we merge their output into one DAS record.
 <hr class="line" />
 
 <h3>DAS queries</h3>
-This section discuss how to use DAS queries
+In this section we discuss usage of DAS queries,
 <a href="javascript:ShowTag('dasql')">show</a> |
-<a href="javascript:HideTag('dasql')">hide</a>
+<a href="javascript:HideTag('dasql')">hide</a> this section
 <div id="dasql" class="">
 <div class="navcontainer">
 <ul>
 <li>
-How can I know what to type in DAS web interface?
+What should I type in DAS web interface?
 </li>
 </ul>
 <p>
-DAS uses free text-based search queries, so use your common knowledge about
+DAS uses free text-based keyword search queries, so use your common knowledge about
 CMS data, e.g. dataset, block, run. Just type one of those in input field and
 you'll invoke DAS query. For complete list of DAS keys use 
 <a href="/services/">services</a> section of DAS web portal.
+<br />
+But, <b>it is wise</b> to use conditions to make your query and DAS run faster. 
 </p>
 
 <ul>
 <li>
-Can I type conditions?
+Can I use conditions?
 </li>
 </ul>
 <p>
@@ -88,7 +97,7 @@ site=T1_CH_CERN
 
 <ul>
 <li>
-What about multiple conditions?
+Can I combine conditions and/or specify multiple DAS keys?
 </li>
 </ul>
 <p>
@@ -96,33 +105,27 @@ Just type them, e.g.
 <div class="example">
 site=T1_CH_CERN block=/a/b/c
 </div>
-</p>
-
-<ul>
-<li>
-Can I specify multiple keys?
-</li>
-</ul>
-<p>
-Yes you can, e.g.
+or
 <div class="example">
-site block
+site=T1_CH_CERN, block=/a/b/c
 </div>
-This will cause to find out all DAS records with "site" and "block"
+are equivalent.
 </p>
 
 <ul>
 <li>
-Why my data appear instantaneously sometimes and sometime I see the following message:
+Why my data sometimes appears instantaneously and sometime I see the following message:
+<em>
 DAS processing your request, please try in a few moments, more?
+</em>
 </li>
 </ul>
 <p>
 DAS doesn't hold any data, instead it retrieves data from data-services and
-place them in cache. So, when you see such message it means data were not
-presented in DAS cache and DAS sent request to appropriate data-services.
-You just need to check again your request in a moment and your data will
-be fetched.
+place them into the cache. Therefore, when you see such message it means that 
+data were not present in DAS cache and DAS sent request to appropriate data-services.
+Wait a little bit and your data will appear shortly. It is OK to click multiple
+times on <em>Search</em> since DAS is smart enough to ignore multiple requests.
 </p>
 
 </div>
@@ -130,9 +133,9 @@ be fetched.
 <hr class="line" />
 
 <h3>DAS records</h3>
-This section discuss question abotu DAS records
+In this section we discuss DAS records,
 <a href="javascript:ShowTag('dasql')">show</a> |
-<a href="javascript:HideTag('dasql')">hide</a>
+<a href="javascript:HideTag('dasql')">hide</a> this section
 <div id="dasql" class="">
 <div class="navcontainer">
 
@@ -142,31 +145,29 @@ What is DAS record?
 </li>
 </ul>
 <p>
-DAS record represent aggregated information about particular entity, e.g. site,
-combined from results of different CMS data-services. For instance, the block
+DAS record represents aggregated information about particular entity, e.g. site,
+combined from the results of different CMS data-services. For instance, the block
 information is stored in both DBS and PhEDEx data-service. In DAS this information
 is aggregated and stored as a single record. For example, here is typical DAS record:
 <div class="example">
 <pre>
-{"site": [{"samname": "CERN-PROD", "name": "T1_CH_CERN"}, 
-          {"sitename": "CERN", "name": "T1_CH_CERN"}], 
-"das": [{"qhash": ["ed2b73067794d443ed56756d9b94f7bc"], 
-         "ctime": 1.0070757865905762, 
-         "expire": 1255575966.287806, 
-         "url": "https://cmsweb.cern.ch/sitedb/json/index/CMStoSAMName", 
-         "timestamp": 1255532766.287806, 
-         "system": ["sitedb"], 
-         "api": ["CMStoSAMName"], 
-         "version": "", "selection_keys": []}, 
-        {"qhash": ["ed2b73067794d443ed56756d9b94f7bc"], 
-         "ctime": 0.99179697036743164, 
-         "api": ["CMStoSiteName"], 
-         "url": "https://cmsweb.cern.ch/sitedb/json/index/CMStoSiteName", 
-         "timestamp": 1255532765.2356441, 
-         "system": ["sitedb"], 
-         "expire": 1255575965.2356441, 
-         "version": "", "selection_keys": []}
-       ]
+{
+ "das_id":  [4b2f8fc5e2194ee15500001f, 4b2f8fc2e2194ee155000009],
+ "_id": 4b2f8fc5e2194ee155000020,
+ "site": [
+   {
+    "name": "T1_CH_CERN",
+    "ce": "ce126.cern.ch"
+   },
+   {
+    "admin": {
+       "title": "Site Admin",
+       "surname": "Kreuzer",
+       "email": "Peter.Kreuzer@cern.ch",
+       "forename": "Peter"
+      },
+    "name": "T1_CH_CERN"
+   }]
 }
 </pre>
 </div>
@@ -174,12 +175,36 @@ is aggregated and stored as a single record. For example, here is typical DAS re
 
 <ul>
 <li>
-What "das" key represents in DAS record?
+What <b>das_id</b> and <b>id</b> keys represent in DAS record?
 </li>
 </ul>
 <p>
-It represents DAS meta-data, the query hash, call execution time, API names, URL of data-service,
-the underlying CMS system, expiration time of the record, its version, etc.
+The <b>id</b> represents unique identifier of DAS record, while
+<b>das_id</b> refers to the DAS records which contain information about
+URL, api and their parameters used to fetch this data.
+</p>
+
+<ul>
+<li>
+Do you support other data-formats?
+</li>
+</ul>
+<p>
+In DAS we support XML, JSON and HTML presentations of CMS meta-data.
+To use another data-format just use appropriate option from drop-down menu
+in your search field.
+</p>
+
+<ul>
+<li>
+Why DAS XML/JSON records contain additional header?
+</li>
+</ul>
+<p>
+All DAS records are represented accorging to DAS data-specification, see this 
+<a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService">link</a> 
+to read more about it. For simplicity and readability of DAS records in HTML view
+we simply drop this header from shown records.
 </p>
 
 </div>
