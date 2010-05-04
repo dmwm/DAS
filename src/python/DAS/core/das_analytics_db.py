@@ -7,118 +7,18 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.3 2009/09/11 13:26:56 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.4 2009/09/11 15:59:57 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import traceback
 
-from sqlalchemy import Column, Integer, String
-from sqlalchemy import create_engine, MetaData, ForeignKey
-from sqlalchemy.orm import relation, backref
-from sqlalchemy.schema import UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+# monogo db modules
+from pymongo.connection import Connection
 
-Base = declarative_base()
-class System(Base):
-    """System ORM"""
-    __tablename__ = 'systems'
-    __table_args__ = {'mysql_engine':'InnoDB'}
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(10), nullable=False, unique=True)
-
-    def __init__(self, name):
-        self.name = name
-
-    def __repr__(self):
-        """String representation of System ORM object"""
-        return "<System('%s')>" % self.name
-
-class Query(Base):
-    """Query ORM"""
-    __tablename__ = 'queries'
-    __table_args__ = {'mysql_engine':'InnoDB'}
-
-    id = Column(Integer, primary_key=True)
-    query = Column(String(10), nullable=False, unique=True)
-
-    def __init__(self, query):
-        self.query = query
-
-    def __repr__(self):
-        """String representation of Query ORM object"""
-        return "<Query('%s')>" % self.query
-
-class Api(Base):
-    """Api ORM"""
-    __tablename__ = 'apis'
-    __table_args__ = {'mysql_engine':'InnoDB'}
-
-    id        = Column(Integer, primary_key=True)
-    system_id = Column(Integer, ForeignKey('systems.id'))
-    name      = Column(String(30), nullable=False, unique=True)
-    system    = relation(System, backref=backref('systems', order_by=id))
-
-    def __init__(self, name):
-        self.name = name
-
-    def __repr__(self):
-        """String representation of Api ORM object"""
-        return "<Api('%s', '%s')>" % (self.system, self.name)
-
-class ApiParam(Base):
-    """APIParam ORM"""
-    __tablename__ = 'apiparams'
-    __table_args__ = (
-    UniqueConstraint('api_id', 'param', name='uix_1'),
-    {'mysql_engine':'InnoDB'})
-
-    id          = Column(Integer, primary_key=True)
-    system_id   = Column(Integer, ForeignKey('systems.id'))
-    api_id      = Column(Integer, ForeignKey('apis.id'))
-    param       = Column(String(30), nullable=False)
-    value       = Column(String(30), nullable=True)
-
-    system      = relation(System, order_by=System.id)
-    api         = relation(Api, order_by=Api.id)
-
-    def __init__(self, param, value):
-        self.param = param
-        self.value = value
-
-    def __repr__(self):
-        """String representation of ApiParam ORM object"""
-        return "<ApiParam('%s', '%s, '%s', '%s')>" \
-        % (self.system, self.api, self.param, self.value)
-
-class ApiCounter(Base):
-    """ApiCounter ORM"""
-    __tablename__ = 'apicounters'
-    __table_args__ = (
-    {'mysql_engine':'InnoDB'})
-
-    id          = Column(Integer, primary_key=True)
-    system_id   = Column(Integer, ForeignKey('systems.id'))
-    api_id      = Column(Integer, ForeignKey('apis.id'))
-    param_id    = Column(Integer, ForeignKey('apiparams.id'))
-    query_id    = Column(Integer, ForeignKey('queries.id'))
-    counter     = Column(Integer, nullable=False)
-
-    system      = relation(System, order_by=System.id)
-    api         = relation(Api, order_by=Api.id)
-    param       = relation(ApiParam, order_by=ApiParam.id)
-    query       = relation(Query, order_by=Query.id)
-
-    def __init__(self):
-        self.counter = 1
-
-    def __repr__(self):
-        """String representation of ApiParam ORM object"""
-        return "<ApiCounter('%s', '%s, '%s', '%s')>" \
-        % (self.system, self.api, self.param, self.counter)
+# DAS modules
+from DAS.utils.utils import getarg, gen2list
 
 class DASAnalytics(object):
     """
@@ -127,230 +27,102 @@ class DASAnalytics(object):
     def __init__(self, config):
         self.logger  = config['logger']
         self.verbose = config['verbose']
-        dbengine     = config['analytics_db_engine'] 
-        if  self.verbose:
-            self.logger.info("Init DAS Analytics DB %s" % dbengine)
-            echo = True
-        else:
-            echo = False
-        dbfile = None
-        if  dbengine.find('sqlite:///') != -1:
-            dbfile   = dbengine.replace('sqlite:///', '')
-        self.engine  = create_engine(dbengine, echo=echo)
-        self.session = sessionmaker(bind=self.engine)
-        if  not dbfile:
-            self.create_db()
-        else: # sqlite case
-            if  not os.path.isfile(dbfile):
-                self.create_db()
+        self.dbhost  = config['analytics_dbhost']
+        self.dbport  = config['analytics_dbport']
+        self.dbname  = getarg(config, 'analytics_dbname', 'analytics')
+        self.colname = 'db'
+
+        msg = "Init DAS analytics %s:%s@%s" \
+        % (self.dbhost, self.dbport, self.dbname)
+        self.logger.info(msg)
+        
+        self.create_db()
 
     def create_db(self):
-        """Create DB tables based on ORM objects"""
-        metadata = MetaData()
-        Base.metadata.create_all(self.engine)
+        """
+        Establish connection to MongoDB back-end and create DB if
+        necessary.
+        """
+        self.conn    = Connection(self.dbhost, self.dbport)
+        self.db      = self.conn[self.dbname]
+        self.col     = self.db[self.colname]
+
+    def delete_db(self):
+        """
+        Delete analytics DB in MongoDB back-end.
+        """
+        self.conn.drop_database(self.dbname)
 
     def add_api(self, query, system, api, args):
         """
         Add API info to analytics DB. 
         Here args is a dict of API parameters.
         """
-        session = self.session()
-        try:
-            try:
-                sobj = session.query(System).filter(System.name==system).one()
-            except:
-                sobj = System(system)
-                session.add(sobj)
-                session.commit()
-            try:
-                aobj = session.query(Api).filter(Api.name==api).one()
-            except:
-                aobj = Api(api)
-                aobj.system = sobj
-                session.add(aobj)
-                session.commit()
-            try:
-                qobj = session.query(Query).filter(Query.query==query).one()
-            except:
-                qobj = Query(query)
-                session.add(qobj)
-                session.commit()
-            # add API arguments
-            for key, val in args.items():
-                try:
-                    pobj = session.query(ApiParam).\
-                        filter(ApiParam.param==key).\
-                        filter(ApiParam.value==val).one()
-                except:
-                    pobj = ApiParam(key, val)
-                    pobj.api = aobj
-                    pobj.system = sobj
-                    session.add(pobj)
-                    session.commit()
-                try:
-                    res = session.query(System, Api, ApiParam, ApiCounter).\
-                    filter(System.name==system).\
-                    filter(Api.system_id==System.id).\
-                    filter(Api.name==api).\
-                    filter(ApiParam.api_id==Api.id).\
-                    filter(ApiParam.system_id==System.id).\
-                    filter(ApiCounter.system_id==System.id).\
-                    filter(ApiCounter.api_id==Api.id).\
-                    filter(ApiCounter.param_id==pobj.id).\
-                    filter(ApiCounter.query_id==qobj.id).\
-                    filter(ApiParam.param==key).\
-                    filter(ApiParam.value==val).\
-                    one()
-                    cobj = res[-1]
-                    cobj.counter = cobj.counter + 1
-                except:
-                    cobj = ApiCounter()
-                    cobj.system = sobj
-                    cobj.api    = aobj
-                    cobj.param  = pobj
-                    cobj.query  = qobj
-                session.add(cobj)
-                session.commit()
-            session.commit()
-        except: 
-            traceback.print_exc()
-            session.rollback()
+        msg = 'DASAnalytics::add_api(%s, %s, %s, %s)' \
+        % (query, system, api, args)
+        self.logger.info(msg)
+        apidict = dict(name=api, params=args)
+        record = dict(query=query, system=system, api=apidict, counter=1)
+        if  self.col.find({'query':query, 'system':system, 'api.name':api}).count():
+            return self.update(query)
+        self.col.insert(record)
 
-    def add_system(self, system):
+    def update(self, query):
         """
-        Add new sub-system into analytics DB
+        Update record with given query.
         """
-        obj = System(system)
-        session = self.session()
-        try:
-            session.add(obj)
-            session.commit()
-        except: 
-            session.rollback()
-
-    def delete_api(self, api):
-        """
-        Delete new api w/ parameters in analytics DB
-        """
-        session = self.session()
-        try: # transactions
-            aobj = session.query(Api).filter(Api.name==api).one()
-            session.delete(aobj)
-            res = session.query(ApiParam).filter(ApiParam.api_id==aobj.id)
-            for row in res:
-                session.delete(row)
-            res = session.query(ApiCounter).filter(ApiCounter.api_id==aobj.id)
-            for row in res:
-                session.delete(row)
-            session.commit()
-        except:
-            session.rollback()
-            return False
-        return True
-
-    def delete_system(self, system):
-        """
-        Delete new sub-system in analytics DB
-        """
-        session = self.session()
-        try: # transactions
-            res = session.query(System).filter(System.name==system).one()
-            session.delete(res)
-            session.commit()
-        except:
-            session.rollback()
-            return False
-        return True
+        cond = {'query':query}
+        for row in self.col.find(cond):
+            row['counter'] += 1
+            self.col.update(cond, row)
 
     def list_systems(self):
         """
         List all DAS systems.
         """
-        session = self.session()
-        try:
-            res = session.query(System)
-            session.commit()
-        except: 
-            session.rollback()
-            return []
-        return [obj.name for obj in res]
+        cond = { 'system' : { '$ne' : None } }
+        gen  = (row['system'] for row in self.col.find(cond, ['system']))
+        return gen2list(gen)
 
     def list_queries(self, system=None, api=None):
         """
         List all queries.
         """
-        session = self.session()
-        try:
-            res = session.query(Query)
-            session.commit()
-        except: 
-            session.rollback()
-            return []
-        return [obj.query for obj in res]
+        cond = { 'query' : { '$ne' : None } }
+        if  system:
+            cond['system'] = system
+        if  api:
+            cond['api.name'] = api
+        gen  = (row['query'] for row in self.col.find(cond, ['query']))
+        return gen2list(gen)
 
-    def list_apis(self, system):
+    def list_apis(self, system=None):
         """
         List all APIs.
         """
-        session = self.session()
-        try:
-            res = session.query(Api, System).filter(Api.system_id==System.id)
-            if  system:
-                res = res.filter(System.name==system)
-            session.commit()
-        except: 
-            session.rollback()
-            return []
-        return [aobj.name for aobj, sobj in res]
+        cond = { 'api.name' : { '$ne' : None } }
+        if  system:
+            cond['system'] = system
+        gen  = (row['api']['name'] for row in \
+                self.col.find(cond, ['api.name']))
+        return gen2list(gen)
 
     def api_params(self, api):
         """
         Retrieve API parameters from analytics DB
         """
-        params = {}
-        session = self.session()
-        try:
-            res = session.query(Api, ApiParam).filter(Api.id==ApiParam.api_id).\
-                filter(Api.name==api)
-            session.commit()
-        except: 
-            session.rollback()
-            return params
-        for aobj, mobj in res:
-            params[mobj.param] = mobj.value
-        return params
+        cond = {'api.name':api}
+        gen  = (row['api']['params'] for row in \
+                self.col.find(cond, ['api.params']))
+        return gen2list(gen)
 
     def api_counter(self, api, args={}):
         """
         Retrieve API counter from analytics DB. User must supply
         API name and optional dict of parameters.
         """
-        params = {}
-        session = self.session()
-        try:
-            query = session.query(Api, ApiParam, ApiCounter).\
-                filter(Api.id==ApiParam.api_id).\
-                filter(Api.name==api).\
-                filter(Api.id==ApiCounter.api_id).\
-                filter(ApiParam.id==ApiCounter.param_id)
+        cond = {'api.name': api}
+        if  args:
             for key, val in args.items():
-                query = query.filter(ApiParam.param==key).\
-                filter(ApiParam.value==val)
-            res = query.all()
-        except: 
-            return 0
-        counter = 0
-        for aobj, pobj, cobj in res:
-            param_count = cobj.counter
-            param_name  = pobj.param
-            param_value = pobj.value
-            if  args:
-                for key, val in args.items():
-                    if  param_name == key and param_value == val and \
-                        param_count > counter:
-                        counter = param_count
-            else:
-                if  param_count > counter:
-                    counter = param_count
-        return counter
-
+                cond[key] = val
+        return self.col.find_one(cond, ['counter'])['counter']
