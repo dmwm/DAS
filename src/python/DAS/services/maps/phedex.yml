@@ -8,7 +8,8 @@ expire : 3600
 params : {"se":"*", "block":"*", "node":"*"}
 daskeys : [
         {"key":"block", "map":"block.name", "pattern":""},
-#        {"key":"file", "map":"file.name", "pattern":""},
+        {"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]_')"},
+        {"key":"site", "map":"site.se", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
 ]
 api2das : [
         {"api_param":"block", "das_key":"block.name", "pattern":""},
@@ -22,9 +23,10 @@ expire : 3600
 params : {"se":"*", "block":"required", "node":"*"}
 daskeys : [
         {"key":"file", "map":"file.name", "pattern":""},
-        {"key":"block", "map":"block.name", "pattern":""},
+        {"key":"block", "map":"file.block.name", "pattern":""},
 ]
 api2das : [
+        {"api_param":"block", "das_key":"file.block.name", "pattern":""},
         {"api_param":"node", "das_key":"site", "pattern":"re.compile('^T[0-3]_')"},
         {"api_param":"node", "das_key":"site.name", "pattern":"re.compile('^T[0-3]_')"},
         {"api_param":"se", "das_key":"site", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
@@ -39,17 +41,6 @@ daskeys : [{"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]_')"}
 api2das : [
         {"api_param":"node", "das_key":"site", "pattern":"re.compile('^T[0-3]_')"},
         {"api_param":"node", "das_key":"site.name", "pattern":"re.compile('^T[0-3]_')"},
-]
----
-urn : lfn2pfn
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/lfn2pfn"
-expire : 3600
-params : {"node":"required", "lfn":"required", "destination":"", "protocol":"srmv2"}
-daskeys : [{"key":"pfn", "map":"file.name", "pattern":""}]
-api2das : [
-        {"api_param":"node", "das_key":"site", "pattern":"re.compile('^T[0-3]_')"},
-        {"api_param":"node", "das_key":"site.name", "pattern":"re.compile('^T[0-3]_')"},
-        {"api_param":"lfn", "das_key":"file", "pattern":""},
 ]
 ---
 notations : [
