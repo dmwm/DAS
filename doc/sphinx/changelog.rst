@@ -7,6 +7,19 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- V04.00.08
+
+  - found that multiprocess is unrealiable (crash on MacOSX w/ python
+    version from macports); some processes become zombies. Therefore
+    switch to ThreadPool for DAS cache POST requests
+  - added ThreadPool
+  - work on DBS2 maps
+  - make monitoring_worker function instead of have it inside of
+    DASCacheMgr
+  - re-factor DASCacheMgr, now it only contains a queue
+  - switch to use dot notation in versions, the setup.py/ez_tools.py
+    substitute underscore with dash while making a tar ball
+
 - V04_00_07
 
   - re-factor DAS configuration system
