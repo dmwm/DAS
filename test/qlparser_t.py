@@ -75,13 +75,13 @@ class testQLParser(unittest.TestCase):
 
     def test_qlparser(self):
         """test QLParser class"""
-        imap = {'dbs':['dataset', 'run', 'site', 'block'],
-                'phedex':['block', 'replica', 'site'], 
+        imap = {'dbs':['dataset', 'run', 'file', 'block'],
+                'phedex':['block', 'file', 'site'], 
                 'sitedb': ['admin', 'site'],
                 'dq': ['runs', 'DQFlagList'],
                 'dashboard': ['jobsummary']}
-        params = {'dbs':['dataset', 'run', 'site', 'block'], 
-                'phedex':['block', 'replica', 'site'], 
+        params = {'dbs':['dataset', 'run', 'file', 'block'], 
+                'phedex':['block', 'file', 'site'], 
                 'sitedb':['admin', 'site'], 
                 'dq':['run','dataset'],
                 'dashboard':['site']}
@@ -137,10 +137,11 @@ class testQLParser(unittest.TestCase):
                 'unique_services': ['dbs', 'phedex'], 'order_by_list': [], 
                 'order_by_order': None, 
                 'services': {'phedex': ['block'], 'dbs': ['block']}, 
+                'query' : 'find block where block=bla',
                 'dasqueries': {'phedex': ['find block where block = bla'],
                                'dbs': ['find block where block = bla']}, 
                 'conditions': [{'value': 'bla', 'key': 'block', 'op': '='}], 
-                'allkeys': ['block'], 'unique_keys': ['block', 'site']}
+                'allkeys': ['block'], 'unique_keys': ['block', 'file']}
         self.assertEqual(result, expect)
 
         q = "find dbs:block where block=bla"
@@ -150,9 +151,10 @@ class testQLParser(unittest.TestCase):
                 'dasqueries': {'dbs': ['find block where block = bla'], 
                                'phedex': ['find block where block = bla']}, 
                 'order_by_order': None, 
+                'query': 'find block where block=bla',
                 'services': {'dbs': ['block'], 'phedex': ['block']}, 
                 'conditions': [{'value': 'bla', 'key': 'block', 'op': '='}], 
-                'allkeys': ['block'], 'unique_keys': ['block', 'site']}
+                'allkeys': ['block'], 'unique_keys': ['block', 'file']}
         self.assertEqual(result, expect)
 
         q = "find jobsummary where date last 25h"
@@ -163,30 +165,6 @@ class testQLParser(unittest.TestCase):
 
         q = "find jobsummary where date last 61s"
         self.assertRaises(Exception, ql.params, q)
-
-        q = "find dataset,admin,replica where site=123 or site=345 order by site desc"
-        result = ql.params(q)
-        expect = {'functions': {}, 
-                  'selkeys': ['admin', 'dataset', 'replica'], 
-                  'unique_services': ['dbs', 'phedex', 'sitedb'], 
-                  'order_by_list': ['site'], 
-                  'dasqueries': {'sitedb': ['find admin,dataset,replica where site = 123', 
-                                 'find admin,dataset,replica where site = 345'], 
-                        'dbs': ['find admin,dataset,replica where site = 123', 
-                                'find admin,dataset,replica where site = 345'], 
-                        'phedex': ['find admin,dataset,replica where site = 123', 
-                                'find admin,dataset,replica where site = 345']}, 
-                  'order_by_order': 'desc', 
-                  'services': {'sitedb': ['admin', 'site'], 
-                  'dbs': ['dataset', 'site'], 
-                  'phedex': ['replica', 'site'], 
-                  'dashboard': ['site']}, 
-                  'conditions': [{'value': '123', 'key': 'site', 'op': '='}, 'or', 
-                        {'value': '345', 'key': 'site', 'op': '='}], 
-                  'allkeys': ['admin', 'dataset', 'replica', 'site'], 
-                  'unique_keys': ['admin', 'block', 'dataset', 'replica', 'site']}
-        self.assertEqual(result, expect)
-
 
 #
 # main
