@@ -6,8 +6,8 @@
 General purpose DAS logger class
 """
 
-__revision__ = "$Id: logger.py,v 1.6 2009/11/16 15:44:52 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: logger.py,v 1.7 2009/12/07 20:53:03 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -66,6 +66,7 @@ class DASLogger:
         self.logger   = logging.getLogger(self.name)
         self.loglevel = logging.INFO
         self.logname  = os.path.join(self.dir, '%s.log' % name) 
+        self.addr     = repr(self).split()[-1]
         try:
             if  not os.path.isdir(self.dir):
                 os.makedirs(self.dir)
@@ -108,6 +109,7 @@ class DASLogger:
         """
         Write given message to the logger at error logging level
         """
+        msg = self.addr + ' ' + msg
         self.logger.error(msg)
         if  self.stdout:
             print 'ERROR ', msg
@@ -116,6 +118,7 @@ class DASLogger:
         """
         Write given message to the logger at info logging level
         """
+        msg = self.addr + ' ' + msg
         self.logger.info(msg)
         if  self.stdout:
             print 'INFO  ', msg
@@ -124,6 +127,7 @@ class DASLogger:
         """
         Write given message to the logger at debug logging level
         """
+        msg = self.addr + ' ' + msg
         self.logger.debug(msg)
         if  self.stdout and self.verbose > 1:
             print 'DEBUG ', msg
@@ -132,12 +136,14 @@ class DASLogger:
         """
         Write given message to the logger at warning logging level
         """
+        msg = self.addr + ' ' + msg
         self.logger.warn(msg)
 
     def exception(self, msg):
         """
         Write given message to the logger at exception logging level
         """
+        msg = self.addr + ' ' + msg
         self.logger.error(msg)
         if  self.stdout:
             print 'EXCPT ', msg
@@ -146,6 +152,7 @@ class DASLogger:
         """
         Write given message to the logger at critical logging level
         """
+        msg = self.addr + ' ' + msg
         self.logger.critical(msg)
 
 def set_sqlalchemy_logger(hdlr, level):
