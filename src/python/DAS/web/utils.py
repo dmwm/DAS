@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.2 2009/06/02 00:48:24 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: utils.py,v 1.3 2009/06/04 14:10:18 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import httplib
@@ -47,9 +47,14 @@ def httplib_request(host, path, params, request='POST', debug=0):
     conn.close()
 
 class UrlProxy(object): 
+    """Proxy class to handle URLs"""
     def __init__(self, location): 
-        self._url = urlopen(location) 
-    def headers(self): 
+        self._url = urllib2.urlopen(location) 
+
+    def headers(self):
+        """Get URL headers""" 
         return dict(self._url.headers.items()) 
+
     def get(self): 
+        """Get URL data"""
         return self._url.read()

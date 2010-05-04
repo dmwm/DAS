@@ -4,8 +4,8 @@
 """
 RunSummary XML parser
 """
-__revision__ = "$Id: runsum_parser.py,v 1.1 2009/06/03 19:35:56 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: runsum_parser.py,v 1.2 2009/06/04 14:10:18 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 try:
@@ -35,8 +35,11 @@ def parser(data):
                     row[j.tag] = nrow
             yield row
 
+#
+# main
+#
 if __name__ == '__main__':
-    f = open('runsum.xml', 'r')
-    results = parser(f.read())
-    for item in results:
+    FDESC = open('runsum.xml', 'r')
+    RESULTS = parser(FDESC.read())
+    for item in RESULTS:
         print item
