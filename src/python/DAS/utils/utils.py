@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.66 2010/02/17 16:52:17 valya Exp $"
-__version__ = "$Revision: 1.66 $"
+__revision__ = "$Id: utils.py,v 1.67 2010/02/17 20:18:39 valya Exp $"
+__version__ = "$Revision: 1.67 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -1063,10 +1063,13 @@ def extract_http_error(err):
     try:
         err = json.loads(err)
         if  err.has_key('message'):
-            if  err['message'].has_key('Exception'): # DBS3
-                msg = err['message']['Exception']
-            if  err['message'].has_key('AssertionError'): # SiteDB
-                msg = err['message']['AssertionError']
+            value = err['message']
+            if  type(value) is types.DictType:
+                msg = ''
+                for key, val in value.items():
+                    msg += '%s: %s. ' % (key, val)
+            else:
+                msg = str(value)
     except:
         pass
     return msg
