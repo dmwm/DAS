@@ -5,20 +5,18 @@
 DAS MongoDB SON manipulator.
 """
 
-__revision__ = "$Id: das_son_manipulator.py,v 1.2 2009/12/14 15:40:15 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_son_manipulator.py,v 1.3 2010/01/04 15:42:35 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 
-from pymongo.connection import Connection
 from pymongo.son_manipulator import SONManipulator
 from pymongo.son import SON
 
 class DAS_SONManipulator(SONManipulator):
-    def __init__(self, notations):
+    def __init__(self):
         SONManipulator.__init__(self)
-        self.notations = notations
 
     def transform_incoming(self, son, collection):
         """Manipulate an incoming SON object.
@@ -29,17 +27,6 @@ class DAS_SONManipulator(SONManipulator):
         """
         if  self.will_copy():
             return SON(son)
-        if  type(son) is types.DictType and son.has_key('das'):
-            das = son['das']
-            if  type(das) is types.ListType:
-                for row in das:
-                    system = row['system']
-                    print "\nDAS_SONManipulator::transform_incoming, from list", system
-            else:
-                system = son['das']['system']
-                print "\nDAS_SONManipulator::transform_incoming", system
-        else:
-            print "\nDAS_SONManipulator::transform_incoming", son
         return son
 
     def transform_outgoing(self, son, collection):

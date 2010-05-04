@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.53 2009/12/23 15:18:45 valya Exp $"
-__version__ = "$Revision: 1.53 $"
+__revision__ = "$Id: das_mongocache.py,v 1.54 2010/01/04 15:42:35 valya Exp $"
+__version__ = "$Revision: 1.54 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -255,21 +255,14 @@ class DASMongocache(Cache):
         self.col     = self.db[self.colname]
         self.mrcol   = self.db['mapreduce']
 
-# Not ready yet
-#        self.add_manipulator()
+        self.add_manipulator()
         
     def add_manipulator(self):
         """
         Add DAS-specific MongoDB SON manipulator to perform
         conversion of inserted data into DAS cache.
         """
-        mapping_db  = self.conn['mapping']
-        collection  = mapping_db['db']
-        notationmap = {}
-        spec = {'notations':{'$ne':None}}
-        for item in collection.find(spec):
-            notationmap[item['system']] = item['notations']
-        das_son_manipulator = DAS_SONManipulator(notationmap)
+        das_son_manipulator = DAS_SONManipulator()
         self.db.add_son_manipulator(das_son_manipulator)
         msg = "DASMongocache::__init__, DAS_SONManipulator %s" \
         % das_son_manipulator
@@ -414,8 +407,8 @@ class DASMongocache(Cache):
             yield row
         for row in res:
             # use this if there is no das_son_manipulator
-            obj_id = row['_id']
-            row['_id'] = str(obj_id)
+#            obj_id = row['_id']
+#            row['_id'] = str(obj_id)
             # DAS info stored via das_id, the records only contains
             # {'das':{'expire':123}} to consistently manage delete operation
             das = row['das']
