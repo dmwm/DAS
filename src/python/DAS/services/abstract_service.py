@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.86 2010/04/01 19:57:22 valya Exp $"
-__version__ = "$Revision: 1.86 $"
+__revision__ = "$Id: abstract_service.py,v 1.87 2010/04/07 23:22:05 valya Exp $"
+__version__ = "$Revision: 1.87 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -171,6 +171,12 @@ class DASAbstractService(object):
             except:
                 data.update({'httperror': None})
                 pass
+            data = str(data)
+        except:
+            msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
+                        % (url, params, headers)
+            data = {'error': msg, 
+                    'reason': 'Unable to invoke HTTP call to data-service'}
             data = str(data)
         return data
 
