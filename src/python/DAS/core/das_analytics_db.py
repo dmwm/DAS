@@ -7,8 +7,8 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.11 2009/10/02 18:58:33 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.12 2009/10/10 14:47:15 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -65,7 +65,7 @@ class DASAnalytics(object):
         """
         if  type(mongoquery) is types.DictType:
             mongoquery = json.dumps(mongoquery)
-        msg = 'DASAnalytics::add_query(%s, %s)' % (dasquery, mongoquery)
+        msg = 'DASAnalytics::add_query("%s", %s)' % (dasquery, mongoquery)
         self.logger.info(msg)
         qhash   = genkey(mongoquery)
         record  = dict(dasquery=dasquery, mongoquery=mongoquery, qhash=qhash)
