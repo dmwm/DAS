@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.1 2009/07/23 19:53:46 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_mongocache.py,v 1.2 2009/07/23 19:57:35 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -157,6 +157,8 @@ class DASMongocache(Cache):
         """
         query   = mongo_query(query)
         for name in self.db.collection_names():
+            if  name.find('index') != -1:
+                continue
             col = self.collections[name]
             col.remove(query)
         return
@@ -168,6 +170,8 @@ class DASMongocache(Cache):
         current_time = time.time()
         query = {'expire': { '$lt':current_time} }
         for name in self.db.collection_names():
+            if  name.find('index') != -1:
+                continue
             col = self.collections[name]
             col.remove(query)
         return
@@ -177,5 +181,10 @@ class DASMongocache(Cache):
         Delete all results in cache
         dbname is unused parameter to match behavior of couchdb cache
         """
-        self.conn.drop_database(self.dbname)
-        self.create_db()
+#        self.conn.drop_database(self.dbname)
+#        self.create_db()
+        for name in self.db.collection_names():
+            if  name.find('index') != -1:
+                continue
+            col = self.collections[name]
+            col.remove({})
