@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.17 2010/02/13 02:25:14 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: utils.py,v 1.18 2010/03/09 02:41:35 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -102,7 +102,7 @@ def json2html(idict, pad=""):
     """
     width = 100
     newline = '\n'
-    pat=re.compile('^[0-9][0-9\.]*$')
+    pat=re.compile('^[-]?[0-9][0-9\.]*$')
     orig_pad = pad
     sss = pad + '{' + newline
     for key, val in idict.items():
