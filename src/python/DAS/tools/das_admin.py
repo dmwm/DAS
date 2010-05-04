@@ -10,6 +10,7 @@ __author__ = "Valentin Kuznetsov"
 
 import sys
 import time
+import types
 import traceback
 from optparse import OptionParser
 from DAS.utils.das_config import das_readconfig
@@ -17,20 +18,99 @@ from DAS.utils.das_config import das_readconfig
 # monogo db modules
 from pymongo.connection import Connection
 
+class PrintManager:
+    def __init__(self):
+        from IPython import ColorANSI
+        self.term = ColorANSI.TermColors
+
+    def red(self, msg):
+        """yield message using red color"""
+        if  not msg:
+            msg = ''
+        return self.term.Red + msg + self.term.Black
+
+    def purple(self, msg):
+        """yield message using purple color"""
+        if  not msg:
+            msg = ''
+        return self.term.Purple + msg + self.term.Black
+
+    def cyan(self, msg):
+        """yield message using cyan color"""
+        if  not msg:
+            msg = ''
+        return self.term.LightCyan + msg + self.term.Black
+
+    def green(self, msg):
+        """yield message using green color"""
+        if  not msg:
+            msg = ''
+        return self.term.Green + msg + self.term.Black
+
+    def blue(self, msg):
+        """yield message using blue color"""
+        if  not msg:
+            msg = ''
+        return self.term.Blue + msg + self.term.Black
+
+# Globals, to be use in magic functions
+PM = PrintManager()
+
+def print_dict(idict):
+    """
+    Pretty print of input dictionary
+    """
+    sys.stdout.write(PM.red("{"))
+    for key, val in idict.items():
+        if  type(val) is types.ListType:
+            sys.stdout.write( "'%s':" % PM.blue(key) )
+            sys.stdout.write( PM.purple('[') )
+            for item in val:
+                if  type(item) is types.DictType:
+                    print_dict(item)
+                else:
+                    sys.stdout.write( "'%s'" % item )
+                if  item != val[-1]:
+                    sys.stdout.write(", ")
+            sys.stdout.write(PM.purple(']'))
+        elif type(val) is types.DictType:
+            print_dict(val)
+        else:
+            sys.stdout.write( "'%s':'%s'" % (PM.blue(key), val) )
+        if  key != idict.keys()[-1]:
+            sys.stdout.write(", ")
+        else:
+            sys.stdout.write("")
+    sys.stdout.write(PM.red("}"))
+
 class DASOptionParser: 
     """
      DAS cli option parser
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("-v", "--verbose", action="store", 
-                              type="int", default=0, dest="verbose",
-             help="verbose output")
-        self.parser.add_option("--stats", action="store_true", dest="stats",
-             help="provide information about DAS records in MongoDB")
+        self.parser.add_option("--host", action="store", type="string", 
+             default="localhost", dest="host",
+             help="specify MongoDB hostname")
+        self.parser.add_option("--port", action="store", type="int", 
+             default="27017", dest="port",
+             help="specify MongoDB port")
+        self.parser.add_option("--db", action="store", dest="db",
+             default="das.cache", type="string",
+             help="specify db to use, supported: das.cache, mapping.db, analytics.db")
         self.parser.add_option("--system", action="store", dest="system",
              default="", type="string",
              help="provide information about specific DAS system, e.g. dbs")
+        self.parser.add_option("--stats", action="store_true", dest="stats",
+             help="provide information about DAS records in MongoDB")
+        self.parser.add_option("--records", action="store_true", dest="records",
+             help="fetch and print DAS records, can be applied together with --system")
+        self.parser.add_option("--spec", action="store", dest="spec",
+             default="{}", type="string",
+             help="specify conditions, using MongoDB syntax")
+        self.parser.add_option("--fields", action="store", dest="fields",
+             default="[]", type="string",
+             help="specify selection fields, using MongoDB syntax")
         self.parser.add_option("--delete-expired", action="store_true", dest="delete",
              help="delete expired records")
         self.parser.add_option("--renew-expired", action="store_true", dest="renew",
@@ -38,12 +118,9 @@ class DASOptionParser:
         self.parser.add_option("--interval", action="store", dest="interval",
              default="0", type="int",
              help="specify interval in seconds for renewal process")
-        self.parser.add_option("--host", action="store", type="string", 
-             default="localhost", dest="host",
-             help="specify MongoDB hostname")
-        self.parser.add_option("--port", action="store", type="int", 
-             default="27017", dest="port",
-             help="specify MongoDB port")
+        self.parser.add_option("--pretty-print", action="store_true", dest="pretty",
+             help="invoke pretty print function to colorize record output")
+
     def get_opt(self):
         """
         Returns parse list of options
@@ -61,6 +138,31 @@ class DASMongoDB(object):
         self.cache  = self.conn['das']['cache']
         self.line   = "-"*80
         self.config = das_readconfig()
+
+    def fetch(self, spec, fields, db=None, system=None, pretty=False):
+        """
+        Retrieve DAS records
+        """
+        spec = eval(spec)
+        fields = eval(fields)
+        if  not fields:
+            fields = None
+        if  not db:
+            db = 'das.cache'
+        if  system:
+            spec['das.system'] = system
+        dbname, collection = db.split('.')
+        print self.line
+        print "MongoDB query:", dict(spec=spec, fields=fields)
+        idx = 0
+        for row in self.conn[dbname][collection].find(spec, fields):
+            print "\nrow: %s" % idx
+            if  pretty:
+                print_dict(row)
+                print
+            else:
+                print row
+            idx += 1
 
     def delete(self, system=None):
         """
@@ -160,6 +262,10 @@ if __name__ == '__main__':
    
     if  opts.stats:
         DASMONGO.stats(opts.system)
+        sys.exit(0)
+
+    if  opts.records:
+        DASMONGO.fetch(opts.spec, opts.fields, opts.db, opts.system, opts.pretty)
         sys.exit(0)
 
     if  opts.delete:
