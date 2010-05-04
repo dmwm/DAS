@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.12 2009/05/30 19:04:16 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_cli.py,v 1.13 2009/06/05 14:14:03 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -24,7 +24,7 @@ class DASOptionParser:
     def __init__(self):
         self.parser = OptionParser()
         self.parser.add_option("-v", "--verbose", action="store", 
-                                          type="int", default=0, 
+                                          type="int", default=None, 
                                           dest="verbose",
              help="verbose output")
         self.parser.add_option("--profile", action="store_true", 
@@ -82,10 +82,7 @@ if __name__ == '__main__':
 
     t0 = time.time()
     query = opts.query
-    if  opts.verbose:
-        debug = opts.verbose
-    else:
-        debug = 0
+    debug = opts.verbose
     DAS = DASCore(debug=debug)
     sdict = DAS.keys()
     if  opts.services:
