@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.15 2009/11/18 21:41:05 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: runsum_service.py,v 1.16 2009/11/20 00:59:11 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -13,8 +13,7 @@ import time
 import types
 import ConfigParser
 import traceback
-#import xml.etree.cElementTree as ET
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, get_key_cert, dasheader
@@ -134,26 +133,30 @@ class RunSummaryService(DASAbstractService):
             self.logger.warning(msg)
         return True
 
-    def parser(self, data_ptr, api):
+    def parser(self, source, api):
         """
         RunSummary data-service parser.
         """
-        row  = {}
-        hold = None
-        for item in ET.iterparse(data_ptr, ["start", "end"]):
-            end, elem = item
+        row     = {}
+        hold    = None
+        context = ET.iterparse(source, events=("start", "end"))
+        root    = None
+        for item in context:
+            event, elem = item
+            if  event == "start" and root is None:
+                root = elem # the first element is root
             if  elem.tag == 'cmsdb':
                 continue
-            if  end == 'start' and elem.tag == 'runInfo':
+            if  event == 'start' and elem.tag == 'runInfo':
                 continue
-            if  end == 'end' and elem.tag == 'runInfo':
+            if  event == 'end' and elem.tag == 'runInfo':
                 yield dict(run=row)
                 row  = {}
                 elem.clear()
-            if  hold and end == 'end' and elem.tag == hold:
+            if  hold and event == 'end' and elem.tag == hold:
                 hold = None
                 continue
-            if  end == 'start':
+            if  event == 'start':
                 sub = {}
                 children = elem.getchildren()
                 # I don't apply notation conversion to all children
@@ -168,5 +171,5 @@ class RunSummaryService(DASAbstractService):
                         nkey = self.dasmapping.notation2das\
                             (self.name, elem.tag, api)
                         row[nkey] = adjust_value(elem.text)
-#                        row[elem.tag] = elem.text
-        data_ptr.close()
+        root.clear()
+        source.close()
