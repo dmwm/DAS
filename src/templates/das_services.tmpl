@@ -1,6 +1,7 @@
 
 <!-- das_services.tmpl -->
 <div class="page">
+<b>DAS mapping:</b>
 <div class="normal">
 #*
 #for service in $service_keys.keys()
@@ -37,10 +38,10 @@ keys
 <tr class="$style">
 <td>$daskey</td>
 #for system in $systems
-#set sysdict=$dasdict[$system]
+#set sysdict=$dasdict[$system]['keys']
 #if $sysdict.has_key($daskey)
 <td>
-#set uikeys=$dasdict[$system][$daskey]
+#set uikeys=$dasdict[$system]['keys'][$daskey]
 #for uikey in $uikeys
 #if  uikey!=$uikeys[-1]
 $uikey,
@@ -58,6 +59,33 @@ $uikey
 </table>
 
 </div>
+
+<p></p>
+
+<b>Data-services APIs</b>
+<div class="normal">
+<table class="daskeys">
+<tr>
+#for system in $systems
+<th>$system</th> 
+#end for
+</tr>
+
+<tr style="vertical-align:text-top">
+#for system in $systems
+#set apilist=$dasdict[$system]['apis']
+#silent $apilist.sort()
+<td>
+#for api in $apilist[:-1]
+<a href="/das/api?name=$api">$api</a>, <br /> 
+#end for
+<a href="/das/api?name=$apilist[-1]">$apilist[-1]</a>
+</td>
+#end for
+</tr>
+</table>
+</div>
+
 </div>
 <!-- end of das_services.tmpl -->
 
