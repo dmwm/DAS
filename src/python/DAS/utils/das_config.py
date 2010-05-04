@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.33 2010/03/10 01:19:56 valya Exp $"
-__version__ = "$Revision: 1.33 $"
+__revision__ = "$Id: das_config.py,v 1.34 2010/04/05 19:09:47 valya Exp $"
+__version__ = "$Revision: 1.34 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -35,25 +35,60 @@ def das_readconfig(dasconfig=None):
     config.read(dasconfig)
     configdict = {}
 
-    configdict['mongocache_dbhost'] = config.get('mongocache', 'dbhost', 'localhost')
-    configdict['mongocache_dbport'] = int(config.get('mongocache', 'dbport', '27017'))
-    configdict['mongocache_dbname'] = config.get('mongocache', 'dbname', 'das')
-    configdict['mongocache_bulkupdate_size'] = config.getint('mongocache', 'bulkupdate_size')
-    configdict['mongocache_capped_size'] = config.getint('mongocache', 'capped_size')
-    configdict['mongocache_lifetime'] = config.getint('mongocache', 'lifetime')
+    mongodb = {}
+    mongodb['dbhost'] = config.get('mongodb', 'dbhost', 'localhost')
+    mongodb['dbport'] = int(config.get('mongodb', 'dbport', '27017'))
+    mongodb['dbname'] = config.get('mongodb', 'dbname', 'das')
+    mongodb['bulkupdate_size'] = config.getint('mongodb', 'bulkupdate_size')
+    mongodb['capped_size'] = config.getint('mongodb', 'capped_size')
+    mongodb['lifetime'] = config.getint('mongodb', 'lifetime')
+    configdict['mongodb'] = mongodb
 
-    configdict['mapping_dbhost'] = config.get('mapping_db', 'dbhost', 'localhost')
-    configdict['mapping_dbport'] = int(config.get('mapping_db', 'dbport', '27017'))
-    configdict['mapping_dbname'] = config.get('mapping_db', 'dbname', 'mapping')
+    mapping = {}
+    mapping['dbhost'] = config.get('mapping_db', 'dbhost', 'localhost')
+    mapping['dbport'] = int(config.get('mapping_db', 'dbport', '27017'))
+    mapping['dbname'] = config.get('mapping_db', 'dbname', 'mapping')
+    configdict['mappingdb'] = mapping
 
-    configdict['analytics_dbhost'] = config.get('analytics_db', 'dbhost', 'localhost')
-    configdict['analytics_dbport'] = int(config.get('analytics_db', 'dbport', '27017'))
-    configdict['analytics_dbname'] = config.get('analytics_db', 'dbname', 'analytics')
+    analytics = {}
+    analytics['dbhost'] = config.get('analytics_db', 'dbhost', 'localhost')
+    analytics['dbport'] = int(config.get('analytics_db', 'dbport', '27017'))
+    analytics['dbname'] = config.get('analytics_db', 'dbname', 'analytics')
+    configdict['analyticsdb'] = analytics
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
     configdict['logdir'] = config.get('das', 'logdir', '/tmp')
-    configdict['web_server_port'] = config.get('das', 'web_server_port', 8212)
-    configdict['cache_server_port'] = config.get('das', 'cache_server_port', 8211)
+#    configdict['web_server_port'] = config.get('das', 'web_server_port', 8212)
+#    configdict['cache_server_port'] = config.get('das', 'cache_server_port', 8211)
+
+    cache_server = {}
+    cache_server['port'] = config.getint('cache_server', 'port')
+    cache_server['host'] = config.get('cache_server', 'host')
+    cache_server['thread_pool'] = config.get('cache_server', 'thread_pool')
+    cache_server['log_screen'] = config.get('cache_server', 'log_screen')
+    cache_server['socket_queue_size'] = \
+                config.get('cache_server', 'socket_queue_size')
+    configdict['cache_server'] = cache_server
+
+    web_server = {}
+    web_server['port'] = config.getint('web_server', 'port')
+    web_server['host'] = config.get('web_server', 'host')
+    web_server['thread_pool'] = config.get('web_server', 'thread_pool')
+    web_server['log_screen'] = config.get('web_server', 'log_screen')
+    web_server['socket_queue_size'] = \
+                config.get('web_server', 'socket_queue_size')
+    configdict['web_server'] = web_server
+
+    security = {}
+    security['role'] = config.get('security', 'role')
+    security['group'] = config.get('security', 'group')
+    security['site'] = config.get('security', 'site')
+    security['mount_point'] = config.get('security', 'mount_point')
+    security['enabled'] = config.get('security', 'enabled')
+    security['oid_server'] = config.get('security', 'oid_server')
+    security['session_name'] = config.get('security', 'session_name')
+    security['store_path'] = config.get('security', 'store_path')
+    configdict['security'] = security
 
     verbose = config.getint('das', 'verbose')
     configdict['verbose'] = verbose
@@ -73,13 +108,13 @@ def das_writeconfig():
     config.set('das', 'web_server_port', 8212)
     config.set('das', 'cache_server_port', 8211)
 
-    config.add_section('mongocache')
-    config.set('mongocache', 'lifetime', 1*24*60*60) # in seconds
-    config.set('mongocache', 'dbhost', 'localhost')
-    config.set('mongocache', 'dbport', '27017')
-    config.set('mongocache', 'dbname', 'das')
-    config.set('mongocache', 'bulkupdate_size', 5000)
-    config.set('mongocache', 'capped_size', 100*1024*1024) # 100MB
+    config.add_section('mongodb')
+    config.set('mongodb', 'lifetime', 1*24*60*60) # in seconds
+    config.set('mongodb', 'dbhost', 'localhost')
+    config.set('mongodb', 'dbport', '27017')
+    config.set('mongodb', 'dbname', 'das')
+    config.set('mongodb', 'bulkupdate_size', 5000)
+    config.set('mongodb', 'capped_size', 100*1024*1024) # 100MB
 
     config.add_section('mapping_db')
     config.set('mapping_db', 'dbhost', 'localhost')
@@ -90,6 +125,30 @@ def das_writeconfig():
     config.set('analytics_db', 'dbhost', 'localhost')
     config.set('analytics_db', 'dbport', '27017')
     config.set('analytics_db', 'dbname', 'analytics')
+
+    config.add_section('cache_server')
+    config.set('cache_server', 'port', 8211)
+    config.set('cache_server', 'host', '0.0.0.0')
+    config.set('cache_server', 'thread_pool', 30)
+    config.set('cache_server', 'log_screen', True)
+    config.set('cache_server', 'socket_queue_size', 15)
+
+    config.add_section('web_server')
+    config.set('web_server', 'port', 8212)
+    config.set('web_server', 'host', '0.0.0.0')
+    config.set('web_server', 'thread_pool', 30)
+    config.set('web_server', 'log_screen', True)
+    config.set('web_server', 'socket_queue_size', 15)
+
+    config.add_section('security')
+    config.set('security', 'role', '')
+    config.set('security', 'group', 'das')
+    config.set('security', 'site', '')
+    config.set('security', 'mount_point', '/das/auth')
+    config.set('security', 'enabled', True)
+    config.set('security', 'oid_server', 'http://localhost:8400')
+    config.set('security', 'session_name', 'DAS Security Module')
+    config.set('security', 'store_path', '/tmp')
 
     dasconfig = das_configfile()
     config.write(open(dasconfig, 'wb'))
