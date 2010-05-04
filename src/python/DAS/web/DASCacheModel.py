@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.22 2009/12/08 15:16:20 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.23 2009/12/08 15:18:15 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -164,7 +164,7 @@ class DASCacheModel(RESTModel):
         """
         query = cherrypy.request.params.get("query", None)
         qhash = genkey(query)
-        doc = dict(query=query, qhash=qhash, timestamp=time.time(),
+        doc = dict(qhash=qhash, timestamp=time.time(),
                 method=cherrypy.request.method,
                 path=cherrypy.request.path_info,
                 args=cherrypy.request.params,
