@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.84 2010/03/19 17:25:49 valya Exp $"
-__version__ = "$Revision: 1.84 $"
+__revision__ = "$Id: utils.py,v 1.85 2010/04/08 00:32:46 valya Exp $"
+__version__ = "$Revision: 1.85 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -129,7 +129,8 @@ class dotdict(dict):
                 nkey, nval = convert_dot_notation(ckey, value)
                 obj[nkey] = nval
                 return
-            obj  = obj[key]
+            if  key != keys[-1]:
+                obj  = obj[key]
         obj[key] = value
 
 def dict_type(obj):
