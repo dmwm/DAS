@@ -66,21 +66,21 @@ class testQLParser(unittest.TestCase):
         """
         Test das2l2mongo function.
         """
-        query = 'find block where site=T1_CH_CERN'
-        expect = {'fields': ['block', 'das'], 
+        query = 'block site=T1_CH_CERN'
+        expect = {'fields': ['block'], 
                   'spec': {'site.name': 'T1_CH_CERN'}}
-        result = self.parser.dasql2mongo(query)
+        result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
-        query = 'find block where site=a.b.c'
-        expect = {'fields': ['block', 'das'], 
+        query = 'block site=a.b.c'
+        expect = {'fields': ['block'], 
                   'spec': {'site.se': 'a.b.c'}}
-        result = self.parser.dasql2mongo(query)
+        result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
-        query = 'find file,site where block=bla'
-        expect = {'fields': ['file', 'site', 'das'], 'spec': {'block.name': 'bla'}}
-        result = self.parser.dasql2mongo(query)
+        query = 'file,site block=bla'
+        expect = {'fields': ['file', 'site'], 'spec': {'block.name': 'bla'}}
+        result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
     def testFalseBracketObj(self):                          
