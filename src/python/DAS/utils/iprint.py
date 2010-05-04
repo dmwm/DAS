@@ -5,8 +5,8 @@
 Print utilities
 """
 
-__revision__ = "$Id: iprint.py,v 1.3 2009/06/18 17:59:46 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: iprint.py,v 1.4 2009/07/17 19:40:11 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -55,69 +55,69 @@ class PrintManager:
         --------------
         val     value
         """
-        s = ""
+        sss = ""
         for item in llist:
-            s += "-"*(item+2) # add 2 char space for wrap
-        print s
+            sss += "-"*(item+2) # add 2 char space for wrap
+        print sss
         for idx in xrange(0, len(tlist)):
             title  = tlist[idx]
             length = llist[idx]
-            print "%s%s " %(title, " "*abs(length-len(title))),
+            print "%s%s " % (title, " "*abs(length-len(title))),
         print
-        print s
+        print sss
         for item in olist:
             for idx in xrange(0, len(item)):
                 elem = str(item[idx])
                 length = llist[idx]
                 print "%s%s " % (elem, " "*abs(length-len(elem))),
             print
-        print s
+        print sss
 
     def print_xml(self, tlist, olist, llist, msg=None):
         """Print in XML format"""
-        s  = """<?xml version="1.0" encoding="utf-8"?>\n"""
-        s += "<query>\n"
-        s += "  <sql>%s</sql>\n" % msg
-        s += "  <table>\n"
+        sss  = """<?xml version="1.0" encoding="utf-8"?>\n"""
+        sss += "<query>\n"
+        sss += "  <sql>%s</sql>\n" % msg
+        sss += "  <table>\n"
         for item in olist:
-            s += "    <row>\n"
-            for idx in xrange(0,len(item)):
-                t  = item[idx]
-                s +="      <%s>%s</%s>\n" %(tlist[idx], t, tlist[idx])
-            s += "    </row>\n"
-        s += "  </table>\n"
-        s += "</query>\n"
-        print s
+            sss += "    <row>\n"
+            for idx in xrange(0, len(item)):
+                ttt  = item[idx]
+                sss +="      <%s>%s</%s>\n" % (tlist[idx], ttt, tlist[idx])
+            sss += "    </row>\n"
+        sss += "  </table>\n"
+        sss += "</query>\n"
+        print sss
 
     def print_html(self, tlist, olist, llist, msg=None):
         """Print in HTML format"""
-        s  = "<table class=\"dbsh_table\">\n"
-        s += "<th>\n"
-        for t in tlist:
-            s += "<td>%s</td>\n" % t
-        s += "</th>\n"
+        sss  = "<table class=\"dbsh_table\">\n"
+        sss += "<th>\n"
+        for ttt in tlist:
+            sss += "<td>%s</td>\n" % ttt
+        sss += "</th>\n"
         for item in olist:
-            s += "<tr>\n"
-            for t in item:
-                s += "<td>%s</td>\n" % t
-            s += "</tr>\n"
-        s += "</table>\n"
-        print s
+            sss += "<tr>\n"
+            for ttt in item:
+                sss += "<td>%s</td>\n" % ttt
+            sss += "</tr>\n"
+        sss += "</table>\n"
+        print sss
 
     def print_cvs(self, tlist, olist, llist, msg=None):
         """Print in CVS format"""
-        for t in tlist:
-            if  t != tlist[:-1]:
-                print "%s," % t,
+        for ttt in tlist:
+            if  ttt != tlist[:-1]:
+                print "%s," % ttt,
             else:
-                print t
+                print ttt
         print
         for item in olist:
-            for o in item:
-                if  o != olist[:-1]:
-                    print "%s,"%o,
+            for ooo in item:
+                if  ooo != olist[:-1]:
+                    print "%s," % ooo,
                 else:
-                    print o
+                    print ooo
 
 #
 # http://code.activestate.com/recipes/475116/
@@ -314,11 +314,10 @@ class ProgressBar:
             self.cleared = 1
 
 if __name__ == "__main__":
+    term = TerminalController()
+    print 'This is '+ term.RED + 'green' +term.NORMAL
 
-	term = TerminalController()
-	print 'This is '+term.RED+'green'+term.NORMAL
-
-	mypb = ProgressBar(term, "Test progress")
-	#mypb.update(0.1, "doing...")
-	for i in range(1, 10):
-		mypb.update(i, "doing...")
+    mypb = ProgressBar(term, "Test progress")
+    #mypb.update(0.1, "doing...")
+    for i in range(1, 10):
+        mypb.update(i, "doing...")
