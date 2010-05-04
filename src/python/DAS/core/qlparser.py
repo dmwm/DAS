@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.30 2009/12/01 15:15:26 valya Exp $"
-__version__ = "$Revision: 1.30 $"
+__revision__ = "$Id: qlparser.py,v 1.31 2009/12/20 15:38:07 valya Exp $"
+__version__ = "$Revision: 1.31 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -21,7 +21,7 @@ import traceback
 
 from itertools import groupby
 from DAS.utils.utils import oneway_permutations, unique_list, add2dict
-from DAS.utils.utils import getarg, genkey
+from DAS.utils.utils import getarg, genkey, adjust_value
 
 import DAS.utils.jsonwrapper as json
 
@@ -350,6 +350,7 @@ class MongoParser(object):
                 if  not value:
                     continue
                 key = prev_word
+                value = adjust_value(value)
                 for system in self.map.list_systems():
                     try:
                         lkeys = self.map.lookup_keys(system, key, 
