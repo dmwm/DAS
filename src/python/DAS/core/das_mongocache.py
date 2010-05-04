@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.60 2010/01/25 20:23:03 valya Exp $"
-__version__ = "$Revision: 1.60 $"
+__revision__ = "$Id: das_mongocache.py,v 1.61 2010/02/02 20:14:56 valya Exp $"
+__version__ = "$Revision: 1.61 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -21,7 +21,7 @@ import types
 import itertools
 
 # DAS modules
-from DAS.utils.utils import getarg, dict_value, merge_dict, genkey
+from DAS.utils.utils import getarg, genkey
 from DAS.utils.utils import aggregator
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 import DAS.utils.jsonwrapper as json
@@ -348,13 +348,21 @@ class DASMongocache(object):
                 expire = header['das']['expire']
             else:
                 expire = record['das']['expire']
-            self.col.update({'_id':ObjectId(record['_id'])}, 
-                {'$pushAll':{'das.api':header['das']['api'], 
-                             'das.system':header['das']['system'], 
-                             'das.url':header['das']['url'],
-                             'das.ctime':header['das']['ctime'],
-                            }, 
-                 '$set': {'das.expire':expire, 'das.status':status}})
+            api = header['das']['api']
+            url = header['das']['url']
+            if  set(api) & set(record['das']['api']) == set(api) and \
+                set(url) & set(record['das']['url']) == set(url):
+                self.col.update({'_id':ObjectId(record['_id'])}, 
+                     {'$set': {'das.expire':expire, 'das.status':status}})
+            else:
+                self.col.update({'_id':ObjectId(record['_id'])}, 
+                    {'$pushAll':{'das.api':header['das']['api'], 
+                                 'das.system':header['das']['system'], 
+                                 'das.url':header['das']['url'],
+                                 'das.ctime':header['das']['ctime'],
+                                 'das.lookup_keys':header['lookup_keys'],
+                                }, 
+                     '$set': {'das.expire':expire, 'das.status':status}})
         else:
             self.col.update({'query': enc_query},
                     {'$set': {'das.status': status}})
@@ -542,27 +550,32 @@ class DASMongocache(object):
                 expire = row['das']['expire']
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
-        skey = [(lookup_keys[0], DESCENDING)]
-        # lookup all service records
-        spec    = {'das_id': {'$in': id_list}}
-        if  self.verbose:
-            nrec = self.col.find(spec).sort(skey).count()
-            self.logger.info("DASMongocache::merge_records, merging %s records"\
-                         % nrec)
-        records = self.col.find(spec).sort(skey)
-        # aggregate all records
-        gen = aggregator(records, expire)
-        # create index on all lookup keys
-        index_list = [(key, DESCENDING) for key in lookup_keys]
-        if  index_list:
+        for pkey in lookup_keys:
+            skey = [(pkey, DESCENDING)]
+            # lookup all service records
+            spec = {'das_id': {'$in': id_list}, 'primary_key': pkey}
+            if  self.verbose:
+                nrec = self.col.find(spec).sort(skey).count()
+                msg  = "DASMongocache::merge_records, merging %s records"\
+                        % nrec 
+                msg += ", for %s key" % pkey
+            else:
+                msg  = "DASMongocache::merge_records, merging records"
+                msg += ", for %s key" % pkey
+            self.logger.info(msg)
+            records = self.col.find(spec).sort(skey)
+            # aggregate all records
+            gen = aggregator(records, expire)
+            # create index on all lookup keys
             try:
-                self.merge.ensure_index(index_list)
+                self.merge.ensure_index(skey)
             except:
                 pass
-        # insert all records into das.merge using bulk insert
-        while True:
-            if  not self.merge.insert(itertools.islice(gen, self.cache_size)):
-                break
+            # insert all records into das.merge using bulk insert
+            size = self.cache_size
+            while True:
+                if  not self.merge.insert(itertools.islice(gen, size)):
+                    break
 
     def update_cache(self, query, results, header):
         """
@@ -648,6 +661,7 @@ class DASMongocache(object):
         and remove all data records from das.cache and das.merge
         """
         records = self.col.find({'query':encode_mongo_query(query)})
+        id_list = []
         for row in records:
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
@@ -665,11 +679,13 @@ class DASMongocache(object):
         self.merge.remove(query)
         self.col.remove(query)
 
-    def delete_cache(self, dbname=None, system=None):
+    def delete_cache(self):
         """
-        Delete all results in cache
-        dbname is unused parameter to match behavior of couchdb cache
+        Delete all results in DAS cache/merge collection, including
+        internal indexes.
         """
         self.col.remove({})
+        self.col.drop_indexes()
         self.merge.remove({})
+        self.merge.drop_indexes()
 
