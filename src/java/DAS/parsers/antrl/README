@@ -1,19 +1,19 @@
 CODE GENERATION REQUIREMENTS
 1) Java 1.5 or higher
-2) antlr-3.1.2
+2) antlr-3.1.3
 
 USING HE GENERATED CODE REQUIREMENTS
 1) Python 2.4.3 or higher
-2) antlr-3.1.2 (runtime python lib only)
+2) antlr-3.1.3 (runtime python lib only)
 
 
 Antlr can be used to generate the lexer and parser one time only. Once the lexer and parser are generated , they can be used at runtime for  parsing the user input.
 To generate static lexer and parser
-1) download antlr-3.1.2
-	wget http://www.antlr.org/download/antlr-3.1.2.tar.gz
+1) download antlr-3.1.3
+	wget http://www.antlr.org/download/antlr-3.1.3.tar.gz
 2) unzip antlr in your tmp directory (say ANTLR_HOME)
 3) setup your CLASSPATH
-	export CLASSPATH=$ANTLR_HOME/lib/antlr-3.1.2.jar:.
+	export CLASSPATH=$ANTLR_HOME/lib/antlr-3.1.3.jar:.
 4) Feed antlr the schema file to generate the Lexer and Parser
 	java org.antlr.Tool SqlDAS.g
 	This will generate 3 files SqlDASLexer.py  SqlDASParser.py  SqlDAS.tokens
