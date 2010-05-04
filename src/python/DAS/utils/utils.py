@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.55 2010/01/15 17:09:16 valya Exp $"
-__version__ = "$Revision: 1.55 $"
+__revision__ = "$Id: utils.py,v 1.56 2010/01/26 21:03:52 valya Exp $"
+__version__ = "$Revision: 1.56 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -91,11 +91,15 @@ def merge_dict(dict1, dict2):
     """
     Merge content of two dictionaries w/ default list value for keys.
     Original code was:
-    merged_dict = {}
-    for dictionary in [dict1, dict2]:
-        for key, value in dictionary.items():
-            merged_dict.setdefault(key,[]).append(value) 
-    return merged_dict
+
+    .. doctest::
+
+        merged_dict = {}
+        for dictionary in [dict1, dict2]:
+            for key, value in dictionary.items():
+                merged_dict.setdefault(key,[]).append(value) 
+        return merged_dict
+
     where I changed append(value) on merging lists or adding new
     value into the list based on value type.
     """
@@ -159,8 +163,7 @@ def splitlist(ilist, nentries):
 def dasheader(system, query, api, url, args, ctime, expire, ver):
     """
     Return DAS header (dict) wrt DAS specifications, see
-    https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService
-    #DAS_data_service_compliance
+    https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
     """
     timestamp = time.time()
     if  type(query) is types.DictType:
@@ -246,8 +249,9 @@ def dump(ilist, idx=0):
 def cartesian_product(ilist1, ilist2):
     """
     Create cartesian product between two provided lists/generators
-    whose elements are dicts with identical keys, e.g.
-    {'system':system_name, 'key':value'}
+    whose elements are dicts with identical keys, e.g.::
+
+        {'system':system_name, 'key':value'}
     """
     if  type(ilist1) is types.GeneratorType:
         list1 = [i for i in ilist1]
@@ -312,8 +316,9 @@ def cartesian_product(ilist1, ilist2):
 def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
     """
     Create cartesian product between two provided sets w/ provided relation
-    keys (rel_keys). Provided sets should be in a form of 
-    [{'system':system_name, 'key':value'}, ...]
+    keys (rel_keys). Provided sets should be in a form of ::
+
+        [{'system':system_name, 'key':value'}, ...]
     """
     reslist = []
     # define non-null keys from result sets,
@@ -374,7 +379,9 @@ def genresults_gen(system, results, collect_list):
     """
     Generator of results for given system based on provided dict 
     of 'results' and final set 'collect_list'.
-    The output rowdict in a form {'system':system_name, 'key':value}
+    The output rowdict in a form::
+
+        {'system':system_name, 'key':value}
     """
     rdict = {}
     rdict['system'] = system
@@ -393,7 +400,9 @@ def genresults(system, results, collect_list):
     """
     Generator of results for given system based on provided dict 
     of 'results' and final set 'collect_list'.
-    The output rowdict in a form {'system':system_name, 'key':value}
+    The output rowdict in a form::
+
+        {'system':system_name, 'key':value}
     """
     rdict = {}
     rdict['system'] = system
@@ -412,9 +421,10 @@ def genresults(system, results, collect_list):
 
 def transform_dict2list(indict):
     """
-    transform input dictionary into list of dictionaries, e.g.
-    d=['a':1, 'b':[1,2]}
-    output list = [{'a':1,'b':1}, {'a':1,'b':2}]
+    transform input dictionary into list of dictionaries, e.g.::
+
+        d=['a':1, 'b':[1,2]}
+        output list = [{'a':1,'b':1}, {'a':1,'b':2}]
     """
     foundlist = 0
     row  = {}
@@ -487,13 +497,14 @@ def add2dict(idict, key, value):
 def map_validator(smap):
     """
     Validator for data-serivce maps. The data-service map should be
-    provided in a form
-    map = {
-            'api' : {
-                'keys' : ['key1', 'key2'],
-                'params' : {'param':1, 'param2':2}
-            }
-    }
+    provided in a form::
+
+        map = {
+                'api' : {
+                    'keys' : ['key1', 'key2'],
+                    'params' : {'param':1, 'param2':2}
+                }
+        }
     """
     msg = 'Fail to validate data-service map %s' % smap
     if  type(smap.keys()) is not types.ListType:
@@ -662,7 +673,9 @@ def trace(source):
 def access(data, elem):
     """
     Access elements of the dict (data). The element can be supplied in dotted form, e.g.
-    site.admin.title and code will search for {'site':[{'admin':[{'title'...}]}]}
+    site.admin.title and code will search for::
+
+        {'site':[{'admin':[{'title'...}]}]}
     """
     if  elem.find('.') == -1:
         key = elem
