@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.4 2009/09/02 19:56:38 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.5 2009/09/14 20:39:08 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -13,7 +13,7 @@ import sys
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
 from DAS.utils.utils import dump
-from DAS.core.das_mapping import DASMapping
+from DAS.core.das_mapping_db import DASMapping
 from DAS.utils.logger import DASLogger
 
 import sys
@@ -30,9 +30,15 @@ class DASOptionParser:
                                           type="int", default=None, 
                                           dest="debug",
              help="verbose output")
-        self.parser.add_option("--db", action="store", type="string", 
-             default='das_mapping.db', dest="dbfile",
-             help="specify DB file to use.")
+#        self.parser.add_option("--db", action="store", type="string", 
+#             default='das_mapping.db', dest="dbfile",
+#             help="specify DB file to use.")
+        self.parser.add_option("--host", action="store", type="string",
+             default="localhost", dest="host", help="specify MongoDB hostname")
+        self.parser.add_option("--port", action="store", type="int",
+             default=27017 , dest="port", help="specify MongoDB port number")
+        self.parser.add_option("--db", action="store", type="string",
+             default="mapping" , dest="db", help="specify MongoDB db name")
         self.parser.add_option("--system", action="store", type="string",
              default=None , dest="system", help="specify DAS sub-system")
         self.parser.add_option("--list-apis", action="store_true", 
@@ -58,11 +64,7 @@ if __name__ == '__main__':
 
     logger = DASLogger(verbose=opts.debug, stdout=opts.debug)
     config = dict(logger=logger, verbose=opts.debug,
-        mapping_db_engine= 'sqlite:///%s' % opts.dbfile)
-
-    if  os.path.isfile(opts.dbfile) and not opts.listapis and not opts.listkeys:
-        print "remove", opts.dbfile
-        os.remove(opts.dbfile)
+        mapping_dbhost=opts.host, mapping_dbport=opts.port, mapping_dbname=opts.db)
 
     mgr = DASMapping(config)
 
@@ -76,59 +78,60 @@ if __name__ == '__main__':
         print keys
         sys.exit(0)
 
-    # add DAS systems
-    systems = ['dbs', 'phedex', 'sitedb', 'dq', 
-                'runsum', 'dashboard', 'lumidb', 'monitor']
-    for system in systems:
-        try:
-            mgr.add_system(system)
-        except:
-            pass
-
-    # add DAS keys which are not part of any API
-    mgr.add_daskey('date')
-    mgr.add_daskey('system')
-
-    # add APIs
     ##### DBS
     apiversion = 'DBS_2_0_8'
     system = 'dbs'
+
     # listDatasetPaths
     api = 'listDatasetPaths'
     params = {'apiversion':apiversion}
-    daskeys = dict(dataset='dataset.name')
-    api2das = []
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='dataset', map='dataset.name', pattern='')],
+        'api2das' : []
+    }
+    mgr.add(rec)
+
     # listAlgorithms
     api = 'listAlgorithms'
     params = {'apiversion':apiversion,
               'app_version': '*', 'app_family_name': '*', 
               'app_executable_name': '*', 'ps_hash':'*'}
-    daskeys = dict(algo='algo.name')
-    api2das = [('app_executable_name', 'exe', ''),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='algo', map='algo.name', pattern='')],
+        'api2das' : [dict(api_param='app_executable_name', das_key='exe', pattern='')]
+    }
+    mgr.add(rec)
 
     # listPrimaryDatasets API
     api = 'listPrimaryDatasets' 
     params = {'apiversion':apiversion, 'pattern':'*'}
-    daskeys = dict(primary_dataset='primary_dataset.name')
-    api2das = [('pattern', 'primary_dataset', ''),
-               ('pattern', 'primary_dataset.name', ''),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='primds', map='primary_dataset.name', pattern='')],
+        'api2das' : [
+                dict(api_param='pattern', das_key='primds', pattern=""),
+        ]
+    }
+    mgr.add(rec)
+
     # listBlocks API
     api = 'listBlocks'
     params = {'apiversion':apiversion,
               'block_name':'*', 'storage_element_name':'*',
               'user_type':'NORMAL'}
-    daskeys = dict(block='block.name')
-    api2das = [('block_name', 'block', ''),
-               ('block_name', 'block.name', ''),
-               ('storage_element_name', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')"),
-               ('storage_element_name', 'site.se', "re.compile('([a-zA-Z0-9]+\.){2}')"),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='block', map='block.name', pattern='')],
+        'api2das' : [
+                dict(api_param='block_name', das_key='block', pattern=''),
+                dict(api_param='storage_element_name', das_key='site', 
+                        pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+        ]
+    }
+    mgr.add(rec)
+
     # listFiles API
     api = 'listFiles'
     params = {'apiversion':apiversion,
@@ -143,14 +146,18 @@ if __name__ == '__main__':
               'pattern_lfn' : '',
               'detail' : 'True',
               'retrive_list' : ''}
-    daskeys = dict(file='file.name')
-    api2das = [('path', 'dataset', ''),
-               ('path', 'dataset.name', ''),
-               ('block_name', 'block.name', ''),
-               ('run_number', 'run', ''),
-               ('pattern_lfn', 'file', ''),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='file', map='file.name', pattern='')],
+        'api2das' : [
+                dict(api_param='path', das_key='dataset', pattern=''),
+                dict(api_param='block_name', das_key='block', pattern=""),
+                dict(api_param='run_number', das_key='run', pattern=""),
+                dict(api_param='pattern_lfn', das_key='file', pattern=""),
+        ]
+    }
+    mgr.add(rec)
+
     # listFileLumis
 #    api = 'listFileLumis'
 #    params = {'apiversion':apiversion, 'lfn': 'required'}
@@ -167,51 +174,62 @@ if __name__ == '__main__':
               'app_family_name' : '*',
               'app_executable_name' : '*',
               'ps_hash' : '*'}
-    daskeys = dict(processed_dataset='processed_dataset.name')
-    api2das = [('primary_datatset_name_pattern', 'primary_datatset', ''),
-               ('primary_datatset_name_pattern', 'primary_datatset.name', ''),
-               ('processed_datatset_name_pattern', 'processed_datatset', ''),
-               ('processed_datatset_name_pattern', 'processed_datatset.name', ''),
-               ('app_executable_name', 'exe', ''),
-               ('app_executable_name', 'exe.name', ''),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='procds', map='processed_dataset.name', pattern='')],
+        'api2das' : [
+                dict(api_param='primary_datatset_name_pattern', das_key='primds', pattern=""),
+                dict(api_param='processed_datatset_name_pattern', das_key='procds', pattern=""),
+                dict(api_param='app_executable_name', das_key='exe', pattern=""),
+        ]
+    }
+    mgr.add(rec)
+
     # listDatasetSummary API
     api = 'listDatasetSummary'
     params = {'apiversion':apiversion, 'path': 'required'}
-    daskeys = dict(dataset='dataset.summary')
-    api2das = [('path', 'dataset', ''),
-               ('path', 'dataset.name', ''),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='dataset', map='dataset.summary', pattern='')],
+        'api2das' : [
+                dict(api_param='path', das_key='dataset', pattern=""),
+        ]
+    }
+    mgr.add(rec)
+
 
     # listRuns API
     api = 'listRuns'
     params = { 'apiversion':apiversion, 'path' : 'required'}
-    daskeys = dict(run='run.run_number')
-    api2das = [('path', 'dataset', ''),
-               ('path', 'dataset.name', ''),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='run', map='run.run_number', pattern='')],
+        'api2das' : [
+                dict(api_param='path', das_key='dataset', pattern=""),
+        ]
+    }
+    mgr.add(rec)
 
     # insert DAS notations for DBS apis
-    mgr.add_notation(system, 'creation_date', 'creation_time')
-    mgr.add_notation(system, 'last_modification_date', 'modification_time')
-    mgr.add_notation(system, 'app_family_name', 'name')
-    mgr.add_notation(system, 'app_executable_name', 'executable')
-    mgr.add_notation(system, 'path', 'dataset')
-    mgr.add_notation(system, 'storage_element', 'se')
-    mgr.add_notation(system, 'storage_element_name', 'se')
-    mgr.add_notation(system, 'number_of_files', 'nfiles')
-    mgr.add_notation(system, 'number_of_events', 'nevents')
-    mgr.add_notation(system, 'number_of_lumi_sections', 'nlumis')
-    mgr.add_notation(system, 'total_luminosity', 'totlumi')
-#    mgr.add_notation(system, 'block_name', 'block.name')
-    mgr.add_notation(system, 'lfn', 'name')
+    notations = [
+        dict(api_param='creation_date', das_name='creation_time'),
+        dict(api_param='last_modification_date', das_name='modification_time'),
+        dict(api_param='app_family_name', das_name='name'),
+        dict(api_param='app_executable_name', das_name='executable'),
+        dict(api_param='path', das_name='dataset'),
+        dict(api_param='storage_element', das_name='se'),
+        dict(api_param='storage_element_name', das_name='se'),
+        dict(api_param='number_of_files', das_name='nfiles'),
+        dict(api_param='number_of_events', das_name='nevents'),
+        dict(api_param='number_of_lumi_sections', das_name='nlumis'),
+        dict(api_param='total_luminosity', das_name='totlumi'),
+        dict(api_param='lfn', das_name='name'),
+    ]
+    mgr.add(dict(system=system, notations=notations))
+
 #    print "DBS map"
 #    print mgr.servicemap(system, implementation='javaservlet')
 #    print "daskeys", mgr.list_daskeys(system)
-#    print "primary key for block", mgr.primary_key(system, 'block')
 #    print "api2das, block_name", mgr.api2das(system, 'block_name')
 #    print "das2api, block", mgr.das2api(system, 'block')
 #    print "notation2das", mgr.notation2das(system, 'last_modification_date')
@@ -222,82 +240,135 @@ if __name__ == '__main__':
     # blockReplicas API
     api = 'blockReplicas'
     params = {'se':'*', 'block':'*', 'node':'*'}
-    daskeys = dict(block='block.name')
-    api2das = [('se', 'site', "re.compile('^T[0-3]_')"),
-               ('node', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')"),
-               ('block', 'block', ''),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='block', map='block.name', pattern='')],
+        'api2das' : [
+                dict(api_param='se', das_key='site', pattern="re.compile('^T[0-3]_')"),
+                dict(api_param='node', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+                dict(api_param='block', das_key='block', pattern=""),
+        ]
+    }
+    mgr.add(rec)
+
     # fileReplicas API
     api = 'fileReplicas'
     params = {'se':'*', 'block':'required', 'node':'*'}
-    daskeys = dict(file='file.name')
-    api2das = [('se', 'site', "re.compile('^T[0-3]_')"),
-               ('node', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')"),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='file', map='file.name', pattern='')],
+        'api2das' : [
+                dict(api_param='se', das_key='site', pattern="re.compile('^T[0-3]_')"),
+                dict(api_param='node', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+        ]
+    }
+    mgr.add(rec)
+
     # nodes API
     api = 'nodes'
     params = {'node':'*', 'noempty':''}
-    daskeys = dict(site='site.name')
-    api2das = [('node', 'site', "re.compile('^T[0-3]_')")]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'api2das' : [
+                dict(api_param='node', das_key='site', pattern="re.compile('^T[0-3]_')"),
+        ]
+    }
+    mgr.add(rec)
+
     # lfn2pfn API
     api = 'lfn2pfn'
     params = {'node':'required', 'lfn':'required', 'destination':'', 'protocol':'srmv2'}
-    daskeys = dict(file='file.name')
-    api2das = [('node', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')"),
-               ('lfn', 'file', '')]
-    mgr.add_api(system, api, params, daskeys, api2das)
-    
-    mgr.add_notation(system, 'time_create', 'creation_time')
-    mgr.add_notation(system, 'time_update', 'modification_time')
-    mgr.add_notation(system, 'bytes', 'size')
-    mgr.add_notation(system, 'node', 'site')
-    mgr.add_notation(system, 'files', 'nfiles')
-    mgr.add_notation(system, 'events', 'nevents')
-    mgr.add_notation(system, 'lfn', 'name')
-    mgr.add_notation(system, 'node', 'site')
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='file', map='file.name', pattern='')],
+        'api2das' : [
+                dict(api_param='node', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+                dict(api_param='lfn', das_key='file', pattern=""),
+        ]
+    }
+    mgr.add(rec)
+
+    notations = [
+        dict(api_param='time_create', das_name='creation_time'),
+        dict(api_param='time_update', das_name='modification_time'),
+        dict(api_param='bytes', das_name='size'),
+        dict(api_param='node', das_name='site'),
+        dict(api_param='files', das_name='nfiles'),
+        dict(api_param='events', das_name='nevents'),
+        dict(api_param='lfn', das_name='name'),
+        dict(api_param='node', das_name='site'),
+    ]
+    mgr.add(dict(system=system, notations=notations))
     ##### END OF PHEDEX
 
     # SiteDB
     system = 'sitedb'
     api = 'CMSNametoAdmins'
     params = {'name':''}
-    daskeys = dict(admin='email')
-    api2das = [('name', 'admin', '')]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='admin', map='email', pattern='')],
+        'api2das' : [
+                dict(api_param='name', das_key='admin', pattern=""),
+        ]
+    }
+    mgr.add(rec)
 
     api = 'SEtoCMSName'
     params = {'name':''}
-    daskeys = dict(site='site.name')
-    api2das = [('name', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')")]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'api2das' : [
+                dict(api_param='name', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+        ]
+    }
+    mgr.add(rec)
 
     api = 'CMStoSAMName'
     params = {'name':''}
-    daskeys = dict(site='site.name')
-    api2das = [('name', 'site', "re.compile('^T[0-3]_')")]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'api2das' : [
+                dict(api_param='name', das_key='site', pattern="re.compile('^T[0-3]_')"),
+        ]
+    }
+    mgr.add(rec)
 
     api = 'CMStoSiteName'
     params = {'name':''}
-    daskeys = dict(site='site.name')
-    api2das = [('name', 'site', "re.compile('^T[0-3]_')")]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'api2das' : [
+                dict(api_param='name', das_key='site', pattern="re.compile('^T[0-3]_')"),
+        ]
+    }
+    mgr.add(rec)
 
     api = 'CMSNametoCE'
     params = {'name':'required'}
-    daskeys = dict(site='site.name')
-    api2das = [('name', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')")]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'api2das' : [
+                dict(api_param='name', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+        ]
+    }
+    mgr.add(rec)
 
     api = 'CMSNametoSE'
     params = {'name':''}
-#    daskeys = dict(site='site.se')
-    daskeys = dict(site='site.name')
-    api2das = [('name', 'site', "re.compile('^T[0-3]_')")]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'api2das' : [
+                dict(api_param='name', das_key='site', pattern="re.compile('^T[0-3]_')"),
+        ]
+    }
+    mgr.add(rec)
 
 #    api = 'SiteStatus'
 #    params = {'cms_name':'required'}
@@ -305,22 +376,31 @@ if __name__ == '__main__':
 #    api2das = [('cms_name', 'site', "re.compile('^T[0-3]_')")]
 #    mgr.add_api(system, api, params, daskeys, api2das)
 
-    mgr.add_notation(system, 'cmsname', 'name')
+    notations=[dict(api_param='cmsname', das_name='name')]
+    mgr.add(dict(system=system, notations=notations))
     ##### END OF SITEDB
 
     # DQ
     system = 'dq'
     api = 'listRuns4DQ'
     params = {'api': 'listRuns4DQ', 'DQFlagList': 'list', 'dataset': 'string'}
-    daskeys = dict(dq='dq')
-    api2das = [('DQFlagList', 'dq', '')]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='dq', map='dq', pattern='')],
+        'api2das' : [
+                dict(api_param='DQFlagList', das_key='dq', pattern=""),
+        ]
+    }
+    mgr.add(rec)
     
     api = 'listSubSystems'
     params = {'api': 'listSubSystems'}
-    daskeys = dict(dqsystems='dqsystems')
-    api2das = []
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='dqsystems', map='dqsystems', pattern='')],
+        'api2das' : []
+    }
+    mgr.add(rec)
 
     ##### END OF DQ
 
@@ -328,15 +408,21 @@ if __name__ == '__main__':
     system = 'runsum'
     api = 'runsum'
     params  = {'DB':'cms_omds_lb', 'FORMAT':'XML', 'RUN':'required'}
-    daskeys = dict(run='run.run_number')
-    api2das = [('RUN', 'run', "re.compile('[1-9][0-9]{4,5}')"),
-               ('RUN', 'run', "re.compile('[1-9][0-9]{4,5}')"),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='run', map='run.run_number', pattern='')],
+        'api2das' : [
+                dict(api_param='RUN', das_key='run', pattern="re.compile('[1-9][0-9]{4,5}')"),
+        ]
+    }
+    mgr.add(rec)
 
-    mgr.add_notation(system, 'bField', 'bfield')
-    mgr.add_notation(system, 'hltKey', 'hlt')
-    mgr.add_notation(system, 'runNumber', 'run_number')
+    notations = [
+        dict(api_param='bField', das_name='bfield'),
+        dict(api_param='hltKey', das_name='hlt'),
+        dict(api_param='runNumber', das_name='run_number'),
+    ]
+    mgr.add(dict(system=system, notations=notations))
 
     ##### END OF RunSummary
 
@@ -359,14 +445,23 @@ if __name__ == '__main__':
         'tier': '',
         'check': 'submitted',
     }
-    daskeys = dict(jobsummary='jobsummary')
-    api2das = [('date1', 'date', ''), ('date2', 'date', ''), 
-               ('ce', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')"),
-               ('ce', 'jobsummary.ce', "re.compile('([a-zA-Z0-9]+\.){2}')"),
-               ('site', 'site', "re.compile('^T[0-3]_')"),
-               ('site', 'jobsummary.site', "re.compile('^T[0-3]_')"),
-              ]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [
+            dict(key='jobsummary', map='jobsummary', pattern=''),
+            dict(key='site', map='jobsummary.ce', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+            dict(key='site', map='jobsummary.site', pattern="re.compile('^T[0-3]_')"),
+        ],
+        'api2das' : [
+            dict(api_param='date1', das_key='date', pattern=""),
+            dict(api_param='date2', das_key='date', pattern=""),
+            dict(api_param='ce', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+            dict(api_param='ce', das_key='jobsummary.ce', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+            dict(api_param='site', das_key='site', pattern="re.compile('^T[0-3]_')"),
+            dict(api_param='site', das_key='jobsummary.site', pattern="re.compile('^T[0-3]_')"),
+        ]
+    }
+    mgr.add(rec)
 
     ##### END OF Dashboard
 
@@ -374,49 +469,33 @@ if __name__ == '__main__':
     system = 'lumidb'
     api = 'findTrgPathByRun'
     params = {'run_number':''}
-    daskeys = dict(trigpath='trigpath')
-    api2das = [('run_number', 'run', '')]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='trgpath', map='trigpath', pattern='')],
+        'api2das' : [
+                dict(api_param='run_number', das_key='run', pattern=""),
+        ]
+    }
+    mgr.add(rec)
 
     api = 'findIntegratedLuminosity'
     params = {'run_number':'', 'tag':'', 'hlt_path':''}
-    daskeys = dict(intlumi='intlumi')
-    api2das = [('run_number', 'run', ''), ('hlt_path', 'trigpath', '')]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='intlumi', map='intlumi', pattern='')],
+        'api2das' : [
+                dict(api_param='run_number', das_key='run', pattern=""),
+                dict(api_param='hlt_path', das_key='trigpath', pattern=""),
+        ]
+    }
+    mgr.add(rec)
 
-#    api = 'findAvgIntegratedLuminosity' : {
-#        'keys': ['avglumi'],
-#        'params' : {'run_number':'', 'tag':'', 'hlt_path':''}
-#    },
-#    api = 'findIntRawLumi' : {
-#        'keys': ['intrawlumi'],
-#        'params' : {'run_number':''}
-#    },
-#    api = 'findL1Counts' : {
-#        'keys': ['L1counts'],
-#        'params' : {'run_number':'', 'cond_name':''}
-#    },
-#    api = 'findHLTCounts' : {
-#        'keys': ['HLTcounts'],
-#        'params' : {'run_number':'', 'path_name':'', 'count_type':''}
-#    },
-#    api = 'findRawLumi' : {
-#        'keys': ['rawlumi'],
-#        'params' : {'run_number':'', 'tag':''}
-#    },
-#    api = 'listLumiByBunch' : {
-#        'keys': ['lumibybunch'],
-#        'params' : {'run_number':'', 'lumi_section_number':'', 
-#                    'option':''}
-#    },
-#    api = 'listLumiSummary' : {
-#        'keys': ['lumisummary'],
-#        'params' : {'run_number':'', 'lumi_section_number':'', 
-#                    'version':'current'}
-#    },
-    mgr.add_notation(system, 'run_number', 'run')
-    mgr.add_notation(system, 'int_lumi', 'intlumi')
-    mgr.add_notation(system, 'hlt_path', 'trigpath')
+    notations = [
+        dict(api_param='run_number', das_name='run'),
+        dict(api_param='int_lumi', das_name='intlumi'),
+        dict(api_param='hlt_path', das_name='trigpath'),
+    ]
+    mgr.add(dict(system=system, notations=notations))
 
     ##### END OF lumidb
 
@@ -437,19 +516,21 @@ if __name__ == '__main__':
         'to': '',
         'type': 'json',
     }
-    daskeys = {'monitor':'monitor', 
-               'monitor.site':'monitor', 
-               'monitor.country':'monitor',
-               'monitor.node':'monitor', 
-               'monitor.region':'monitor',
-               'monitor.tier':'monitor'}
-#    daskeys = {'monitor':'monitor', 
-#               'monitor.site':'monitor.site', 
-#               'monitor.country':'monitor.country',
-#               'monitor.node':'monitor.node', 
-#               'monitor.region':'monitor.region',
-#               'monitor.tier':'monitor.tier'}
-    api2das = [('start', 'date', ''), ('end', 'date', '')]
-    mgr.add_api(system, api, params, daskeys, api2das)
+    rec = {'system' : system, 
+        'api' : dict(name=api, params=params),
+        'daskeys' : [
+                dict(key='monitor', map='monitor', pattern=''),
+                dict(key='monitor.key', map='monitor', pattern=''),
+                dict(key='monitor.country', map='monitor', pattern=''),
+                dict(key='monitor.node', map='monitor', pattern=''),
+                dict(key='monitor.region', map='monitor', pattern=''),
+                dict(key='monitor.tier', map='monitor', pattern=''),
+        ],
+        'api2das' : [
+                dict(api_param='start', das_key='date', pattern=""),
+                dict(api_param='end', das_key='date', pattern=""),
+        ]
+    }
+    mgr.add(rec)
     ##### END OF monitor
-    print "New DAS Mapping DB is created:", opts.dbfile
+    print "New DAS Mapping DB has been created"
