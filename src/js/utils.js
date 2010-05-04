@@ -43,6 +43,10 @@ function getTagValue(tag)
 {
     return document.getElementById(tag).value;
 }
+function updateTag(tag, val) {
+   var id = document.getElementById(tag);
+   id.value=val;
+}
 function ClearTag(tag) {
     var id=document.getElementById(tag);
     if (id) {
@@ -93,4 +97,16 @@ function UrlParams() {
         options[params[0]] = params[1];
     }
     return options;
+}
+function gup( name ) {
+    // Courtesy of http://www.netlobo.com/url_query_string_javascript.html
+    name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+    var regexS = "[\\?&]"+name+"=([^&#]*)";
+    var regex = new RegExp( regexS );
+    var results = regex.exec( window.location.href );
+    if( results == null )
+        return "";
+    else
+        // use unescape to properly show URL encoded input in search field form
+        return unescape(results[1]);
 }
