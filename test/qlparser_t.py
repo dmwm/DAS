@@ -56,7 +56,7 @@ class testQLParser(unittest.TestCase):
 
         q = "find runs where DQFlagList=Tracker_Global=GOOD&Tracker_Local1=1"
         result = ql.params(q)
-        print "ql.params", result
+#        print "ql.params", result
 #        expect = ['']
 #        self.assertEqual(result, expect)
 
