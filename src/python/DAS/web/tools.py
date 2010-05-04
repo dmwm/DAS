@@ -6,13 +6,14 @@ Web tools.
 """
 
 __license__ = "GPL"
-__revision__ = "$Id: tools.py,v 1.1 2010/02/15 18:30:47 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: tools.py,v 1.2 2010/02/18 15:08:14 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 __email__ = "vkuznet@gmail.com"
 
 # system modules
 import os
+import types
 import logging
 import plistlib
 
@@ -107,9 +108,12 @@ def exposexml (func):
     """CherryPy expose XML decorator"""
     def wrapper (self, *args, **kwds):
         data = func (self, *args, **kwds)
+        if  type(data) is types.ListType:
+            results = data
+        else:
+            results = [data]
         cherrypy.response.headers['Content-Type'] = "application/xml"
-        return self.templatepage('XML', data = data,
-                                 request = request)
+        return self.templatepage('das_xml', resultlist = results)
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
     wrapper.exposed = True
@@ -123,7 +127,7 @@ def exposeplist (func):
     def wrapper (self, *args, **kwds):
         data_struct = func(self, *args, **kwds)
         plist_str = plistlib.writePlistToString(data_struct)
-        cherrypy.response.headers['Content-Type'] = "application/xml"
+        cherrypy.response.headers['Content-Type'] = "application/xml+plist"
         return plist_str
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
