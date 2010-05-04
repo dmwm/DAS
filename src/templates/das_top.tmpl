@@ -48,12 +48,12 @@
 </td><td>
 <h3>Data Aggregation System (DAS):
 <a href="$base/">Home</a> |
-<a id="srv" href="$base/services">Services</a> |
-<a id="bug" href="https://savannah.cern.ch/bugs/?func=additem&amp;group=das&amp;assigned_to=2753&amp;severity=5&amp;priority=5&amp;resolution_id=3&amp;summary=Web+Error">Bug report</a> |
-<a id="faq" href="$base/faq">FAQ</a> |
-<a id="cli" href="$base/cli">CLI</a> |
-<a id="admin" href="$base/admin/">Admin</a> |
-<a id="doc" href="$base/doc/index.html">Documentation</a>
+<a id="das_top_srv" href="$base/services">Services</a> |
+<a id="das_top_bug" href="https://savannah.cern.ch/bugs/?func=additem&amp;group=das&amp;assigned_to=2753&amp;severity=5&amp;priority=5&amp;resolution_id=3&amp;summary=Web+Error">Bug report</a> |
+<a id="das_top_faq" href="$base/faq">FAQ</a> |
+<a id="das_top_cli" href="$base/cli">CLI</a> |
+<a id="das_top_admin" href="$base/admin/">Admin</a> |
+<a id="das_top_doc" href="$base/doc/index.html">Documentation</a>
 </h3>
 </td></tr>
 </table>
@@ -62,17 +62,17 @@
 <script type="application/javascript">
 //YAHOO.example.container.tt1 = new YAHOO.widget.Tooltip("tt1", 
 top_tt1 = new YAHOO.widget.Tooltip("top_tt1", 
-    { context:"srv", text:"DAS service description" });
+    { context:"das_top_srv", text:"DAS service description" });
 top_tt2 = new YAHOO.widget.Tooltip("top_tt2", 
-    { context:"bug", text:"Report DAS problem into CMS Savannah" });
+    { context:"das_top_bug", text:"Report DAS problem into CMS Savannah" });
 top_tt3 = new YAHOO.widget.Tooltip("top_tt3", 
-    { context:"faq", text:"Frequiently Asked Question or HELP" });
+    { context:"das_top_faq", text:"Frequiently Asked Question or HELP" });
 top_tt4 = new YAHOO.widget.Tooltip("top_tt4", 
-    { context:"cli", text:"DAS Command Line Tool" });
+    { context:"das_top_cli", text:"DAS Command Line Tool" });
 top_tt5 = new YAHOO.widget.Tooltip("top_tt5", 
-    { context:"admin", text:"DAS Admin interface" });
+    { context:"das_top_admin", text:"DAS Admin interface" });
 top_tt6 = new YAHOO.widget.Tooltip("top_tt6", 
-    { context:"doc", text:"DAS Online Documentation" });
+    { context:"das_top_doc", text:"DAS Online Documentation" });
 function wait() {
     var id=document.getElementById('_response');
     id.innerHTML='<div><img src="$base/images/loading.gif" alt="loading" /> please wait</div>';
