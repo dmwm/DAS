@@ -6,7 +6,8 @@ Unit test for DAS QL parser
 """
 
 import unittest
-from DAS.core.qlparser import dasqlparser, findbracketobj, antrlparser
+#from DAS.core.qlparser import antrlparser
+from DAS.core.qlparser import findbracketobj
 from DAS.core.qlparser import getconditions
 from DAS.core.qlparser import QLParser
 
@@ -22,23 +23,13 @@ class testQLParser(unittest.TestCase):
         self.i1 = "find dataset, run, bfield where site = T2 and admin=VK and storage=castor"
         self.i2 = "  find dataset, run where (run=1 or run=2) and storage=castor or site = T2"
 
-    def testantrlparser(self):
-        """test parser based on ANTRL"""
-        q = "find dataset, run where site = T2"
-        res = antrlparser(q)
-        r = {'ORDERING': [], 'FIND_KEYWORDS': ['dataset', 'run'], 'ORDER_BY_KEYWORDS': [], 'WHERE_CONSTRAINTS': [{'value': 'T2', 'key': 'site', 'op': '='}, {'bracket': 'T2'}]}
-        self.assertEqual(res, r)
+#    def testantrlparser(self):
+#        """test parser based on ANTRL"""
+#        q = "find dataset, run where site = T2"
+#        res = antrlparser(q)
+#        r = {'ORDERING': [], 'FIND_KEYWORDS': ['dataset', 'run'], 'ORDER_BY_KEYWORDS': [], 'WHERE_CONSTRAINTS': [{'value': 'T2', 'key': 'site', 'op': '='}, {'bracket': 'T2'}]}
+#        self.assertEqual(res, r)
         
-    def testSelectionList(self):                          
-        """test user input queries"""
-        q = "find dataset, run, bfield where site = T2 and admin=VK and storage=castor"
-        r = ['dataset', 'run', 'bfield']
-        res = dasqlparser(q)
-        self.assertEqual(res['sellist'], r)
-        q = "find dataset, run, bfield"
-        res = dasqlparser(q)
-        self.assertEqual(res['sellist'], r)
-
     def testBracketObj(self):                          
         """test search for bracket objects"""
         testlist = [
@@ -53,32 +44,6 @@ class testQLParser(unittest.TestCase):
         """false test for bracket objects"""
         q = "test (test1 (test2 or test3)"
         self.assertRaises(Exception, findbracketobj, q)
-
-    def testQueries(self):                          
-        """test user input queries"""
-        q = "find dataset,run,bfield where site = T2 and admin=VK and storage=castor"
-        querylist = [
-"find dataset,run,bfield where site = T2",
-"find dataset,run,bfield where admin=VK",
-"find dataset,run,bfield where storage=castor"
-]
-        querylist.sort()
-        res = dasqlparser(q)
-        res_queries = res['queries'].values()
-        res_queries.sort()
-        self.assertEqual(res_queries, querylist)
-
-    def testQueries2(self):                          
-        """test #2 user input queries"""
-        q = "find dataset,admin where site = T2"
-        querylist = [
-"find dataset,admin where site = T2"
-]
-        querylist.sort()
-        res = dasqlparser(q)
-        res_queries = res['queries'].values()
-        res_queries.sort()
-        self.assertEqual(res_queries, querylist)
 
     def test_qlparser(self):
         """test QLParser class"""

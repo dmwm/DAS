@@ -65,8 +65,8 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.8 2009/05/11 20:15:05 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: qlparser.py,v 1.9 2009/05/13 15:19:32 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -102,63 +102,6 @@ def mergecond(icond):
             cond += ' %s %s %s ' % (item['key'], item['op'], item['value'])
     return cond
 
-
-def dasqlparser(uinput):
-    """
-    Main routine which does the parsing of input user query
-    it creates an output dictionary with selection list, list of queries
-    for execution by DAS service and condition list. Here is an example 
-    {'condlist': {
-       'q1': 'admin=VK', 
-       'q0': 'site = T2', 
-       'q2': 'storage=castor'}, 
-     'input': 'find dataset, run, bfield where site = T2 and admin=VK and storage=castor', 
-     'queries': {
-       'q1': 'find dataset,run,bfield where admin=VK', 
-       'q0': 'find dataset,run,bfield where site = T2', 
-       'q2': 'find dataset,run,bfield where storage=castor'}, 
-     'sellist': ['dataset', 'run', 'bfield'], 
-     'query': 'find dataset, run, bfield where q0 and q1 and q2'}
-
-    """
-    uinput = uinput.strip()
-    rdict  = {}
-    rdict['input'] = uinput
-
-    bckdict  = {}
-    counter  = 0
-    while 1:
-        bckobj = findbracketobj(uinput)
-        if  not bckobj:
-            break
-        bidx = 'bobj_%s' % counter
-        bckdict[bidx] = bckobj
-        counter += 1
-        uinput = uinput.replace(bckobj, bidx)
-    
-    sellist  = getselectkeys(uinput)
-    condlist = getconditions(uinput) 
-    query    = uinput
-    queries  = {}
-    for key, val in condlist.items():
-        query   = query.replace(val, key)
-        if  val.find('bobj_') != -1:
-            val = bckdict[val]
-        queries[key] = 'find %s where %s' % (','.join(sellist), val) 
-#    rdict['bckobj'] = bckdict
-    rdict['query'] = query
-    rdict['sellist'] = sellist
-    rdict['condlist'] = condlist
-    rdict['queries'] = queries
-    return rdict
-    
-
-def getselectkeys(uinput):
-    "Extract selection keys from provided user input query"
-    uinput = uinput.split(' where')[0]
-    uinput = uinput.replace('find ', '').replace('plot ', '')
-    return [x.strip() for x in uinput.split(',')]
-        
 def find_index(qlist, tag):
     """Find index of tag in a list qlist"""
     try:
@@ -420,17 +363,6 @@ class QLLexer(object):
                 order_by_list = ''.join(qlist).split(',')
         return order_by_list, order_by
 
-class QLParser(QLLexer):
-    """
-    DAS QL parser class. It is responsible for
-    - check validity of the query and all keywords
-    - find selection, order_by, all keys
-    - construct unique set of services to be used for query
-    - construct unique set of keys to be retrieved for query
-    """
-    def __init__(self, imap):
-        QLLexer.__init__(self, imap)
-
     def condition_parser(self, uinput):
         """Parse condition in given query"""
         uinput  = uinput.split(' order by ')[0]
@@ -478,6 +410,17 @@ class QLParser(QLLexer):
                     break
             add_to_list(rest, olist)
         return olist
+
+class QLParser(QLLexer):
+    """
+    DAS QL parser class. It is responsible for
+    - check validity of the query and all keywords
+    - find selection, order_by, all keys
+    - construct unique set of services to be used for query
+    - construct unique set of keys to be retrieved for query
+    """
+    def __init__(self, imap):
+        QLLexer.__init__(self, imap)
 
     def check(self, query, rdict):
         """

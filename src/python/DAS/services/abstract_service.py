@@ -4,21 +4,20 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.9 2009/05/11 20:11:49 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: abstract_service.py,v 1.10 2009/05/13 15:19:32 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 import urllib
 import urllib2
 import traceback
-from DAS.utils.utils import query_params
-from DAS.utils.utils import genresults, results2couch
-#from DAS.utils.utils import cartesian_product_via_list, genkey
-from DAS.utils.utils import cartesian_product, genkey
+from DAS.utils.utils import genresults
+from DAS.utils.utils import cartesian_product
 from DAS.core.das_couchdb import DASCouchDB
 from DAS.core.basemanager import BaseManager
 from DAS.core.das_mapping import jsonparser, das2api, das2result
+from DAS.core.qlparser import QLLexer
 
 class DASAbstractService(object):
     """
@@ -40,7 +39,10 @@ class DASAbstractService(object):
             print config
             raise Exception('fail to parse DAS config')
 
-        self.map          = {} # to be defined by data-serice implementation
+        self.map          = {} # to be defined by data-service implementation
+        self.qllexer      = None # to be defined at run-time in self.worker
+        self._keys        = None # to be defined at run-time in self.keys
+
         # define internal couch DB manager to put 'raw' results into CouchDB
         mgr               = BaseManager(config)
         self._couch       = DASCouchDB(mgr)
@@ -49,11 +51,14 @@ class DASAbstractService(object):
         """
         Return service keys
         """
+        if  self._keys:
+            return self._keys
         srv_keys = []
         for api, params in self.map.items():
             for key in params['keys']:
                 if  not key in srv_keys:
                     srv_keys.append(key)
+        self._keys = srv_keys
         return srv_keys
 
     def getdata(self, url, params):
@@ -96,7 +101,7 @@ class DASAbstractService(object):
         results = self.worker(query, cond_dict)
         return results
 
-    def product(self, resdict, rel_keys=None):
+    def product(self, resdict):
         """
         Make cartesian product for all entries in provided result dict.
         """
@@ -110,11 +115,9 @@ class DASAbstractService(object):
         else: # need to make cartesian product of results
             set0 = resdict[keys[0]]
             set1 = resdict[keys[1]]
-#            result = cartesian_product_via_list(set0, set1, rel_keys)
             result = cartesian_product(set0, set1)
             if  len(keys) > 2:
                 for rest in keys[2:]: 
-#                    result = cartesian_product_via_list(result, resdict[rest], rel_keys)
                     result = cartesian_product(result, resdict[rest])
             data = result
         return data
@@ -158,36 +161,69 @@ class DASAbstractService(object):
 
         return results
 
-    def worker(self, query, cond_dict=None):
+    def adjust(self, apidict):
+        """
+        There are some special cases (based on DBS QL legacy) when we have
+        one to many sel.key mapping to API. For example, the "site" can be
+        used in SiteDB as cms name or as se name. To fix that we use
+        data-service specific adjust call to convert such sel. key value
+        from one format to another
+        """
+        return
+
+    def adjust_result(self, api, jsondict):
+        """
+        Some data-services return a single result as a dict with
+        non-meaningful keys, e.g. sitedb returns {0:{row}, 1:{row}}
+        Instead we expect results returned with lists:
+        {'key':[{row}, {row}]}
+        Use this adjustment call (implemented in data-service code)
+        to fix this problem
+        """
+        return jsondict
+
+    def worker(self, query, icond_dict=None):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
-        msg = 'DASAbstractService::worker(%s, %s)' % (query, cond_dict)
+        msg = 'DASAbstractService::worker(%s, %s)' % (query, icond_dict)
         self.logger.info(msg)
 
-        # TODO: This part should be replaced by ANTRL parser
-        selkeys, cond = query_params(query)
+        if  not self.qllexer:
+            self.qllexer = QLLexer({self.name:self.keys()})
+
+        selkeys = self.qllexer.selkeys(query)
+        conditions = self.qllexer.conditions(query)
+        msg = 'DASAbstractService::worker, selkeys %s' % selkeys
+        self.logger.debug(msg)
+        msg = 'DASAbstractService::worker, conditions %s' % conditions
+        self.logger.debug(msg)
+
+        # loop over conditions and create input params dict which will
+        # be passed to data-service, convert DAS condition keys into
+        # ones accepted by data-service
         params = {}
-        for key in cond.keys():
-            oper, val = cond[key]
-#            newkey = das2api(self.name, key)
+        for item in conditions:
+            if  type(item) is types.DictType: # cond dict
+                oper = item['op']
+                val  = item['value']
+                key  = item['key']
+            else:
+                continue # TODO: what should I do if I find brackets?
             keylist = das2api(self.name, key)
             if  type(keylist) is not types.ListType:
                 keylist = [keylist]
             for newkey in keylist:
-                if  oper == '=':
-                    params[newkey] = val
-                else:
-                    raise Exception("DAS::%s, not supported operator '%s'" \
-                    % (self.name, oper))
-        for key in cond_dict:
-#            newkey = das2api(self.name, key)
+                params[newkey] = val
+        # loop over input condition dict which can be provided by
+        # another data-service who found values for some keys used here
+        for key in icond_dict:
             keylist = das2api(self.name, key)
             if  type(keylist) is not types.ListType:
                 keylist = [keylist]
             for newkey in keylist:
-                params[newkey] = cond_dict[key]
+                params[newkey] = icond_dict[key]
 
         # translate selection keys into ones data-service APIs provides
         keylist = [das2result(self.name, key) for key in selkeys]
@@ -217,6 +253,7 @@ class DASAbstractService(object):
                 res = self.getdata(url, args)
                 res = res.replace('null', '\"null\"')
                 jsondict = eval(res)
+                jsondict = self.adjust_result(api, jsondict)
                 if  self.verbose > 2:
                     print "\n### %s::%s returns" % (self.name, api)
                     print jsondict
@@ -235,23 +272,20 @@ class DASAbstractService(object):
                         if  params.has_key(par):
                             args[par] = params[par]
                     apidict[api] = args
-        rel_keys = []
+        self.adjust(apidict)
         resdict  = {}
         for api, args in apidict.items():
             url = self.url + '/' + api
             res = self.getdata(url, args)
             res = res.replace('null', '\"null\"')
             jsondict = eval(res)
+            jsondict = self.adjust_result(api, jsondict)
             if  self.verbose > 2:
                 print "\n### %s::%s returns" % (self.name, api)
-                print jsondict
+                print jsondict, keylist
             data = jsonparser(self.name, jsondict, keylist)
             resdict[api] = data
             first_row = data[0]
             keys = first_row.keys()
-            if  not rel_keys:
-                rel_keys = set(list(keys))
-            else:
-                rel_keys = rel_keys & set(keys)
-        data = self.product(resdict, rel_keys)
+        data = self.product(resdict)
         return data
