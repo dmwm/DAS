@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.75 2010/02/23 19:50:17 valya Exp $"
-__version__ = "$Revision: 1.75 $"
+__revision__ = "$Id: abstract_service.py,v 1.76 2010/02/25 14:55:33 valya Exp $"
+__version__ = "$Revision: 1.76 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -277,24 +277,6 @@ class DASAbstractService(object):
                 args[key] = range(minval, maxval)
         return args
 
-    def clean_params(self, api, args):
-        """
-        For some data-services it's easier to call API with parameters
-        matching wild-card pattern. For instance, instead of passing 
-        site name into SiteDB API, we will call SiteDB API without
-        parameters (with wildcard). Must be implemented in sub-classes.
-        """
-        return args
-
-    def patterns(self, api, args):
-        """
-        Define how to deal with patterns at API level. Some API accept a 
-        star, '*', as pattern parameter, some use another schema, e.g.
-        SiteDB don't use '*', and instead it should be drop-off from parameter.
-        Must be implemented in sub-classes
-        """
-        return args
-
     def get_notations(self, api):
         """Return notations used for given API"""
         notationmap = self.notations()
@@ -305,25 +287,24 @@ class DASAbstractService(object):
             notations.update(notationmap[api])
         return notations
 
-    def parser(self, format, data, api, args=None):
+    def parser(self, dformat, data, api):
         """
         DAS data parser. It accepts:
 
-        - *format* is a data format, e.g. XML, JSON
+        - *dformat* is a data format, e.g. XML, JSON
         - *data* is a data source, either file-like object or
           actual data
         - *api* is API name
-        - *args* API input parameters 
         """
         prim_key  = self.dasmapping.primary_key(self.name, api)
         notations = self.get_notations(api)
         apitag    = self.dasmapping.apitag(self.name, api)
-        if  format.lower() == 'xml':
+        if  dformat.lower() == 'xml':
             tags = self.dasmapping.api2daskey(self.name, api)
             gen  = xml_parser(data, prim_key, tags)
             for row in gen:
                 yield row
-        elif format.lower() == 'json':
+        elif dformat.lower() == 'json':
             gen  = json_parser(data)
             for row in gen:
                 if  apitag and row.has_key(apitag):
@@ -340,7 +321,7 @@ class DASAbstractService(object):
                     else:
                         yield {prim_key:row}
         else:
-            msg = 'Unsupported data format="%s", API="%s"' % (format, api)
+            msg = 'Unsupported data format="%s", API="%s"' % (dformat, api)
             raise Exception(msg)
 
     def translator(self, api, genrows):
@@ -424,12 +405,10 @@ class DASAbstractService(object):
             try:
                 mkey    = self.dasmapping.primary_mapkey(self.name, api)
                 args    = self.inspect_params(api, args)
-                args    = self.clean_params(api, args)
-                args    = self.patterns(api, args)
                 time0   = time.time()
                 headers = make_headers(dformat)
                 data    = self.getdata(url, args, headers)
-                rawrows = self.parser(dformat, data, api, args)
+                rawrows = self.parser(dformat, data, api)
                 dasrows = self.translator(api, rawrows)
                 dasrows = self.set_misses(query, dasrows)
                 ctime   = time.time() - time0
