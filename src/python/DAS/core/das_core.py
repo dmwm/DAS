@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.23 2009/07/12 19:16:20 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: das_core.py,v 1.24 2009/07/13 15:24:15 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -206,10 +206,29 @@ class DASCore(object):
         is found.
         """
         if  self.das_aggregation:
-            print "will do aggregation", self.das_aggregation
+#            print "will do aggregation", self.das_aggregation
+            results  = [i for i in results]
+            agg_dict = {}
             for func, arg in self.das_aggregation.items():
-                results = getattr(das_functions, func)(arg, results)
-        return results
+                agg  = getattr(das_functions, func)(arg, results)
+                for key, val in agg.items():
+                    agg_dict[key] = val
+            first = results[0]
+            try:
+                del first['system'] # don't account as selection key
+            except:
+                pass
+            if  len(first.keys()) != len(agg_dict.keys()):
+                for row in results:
+                    for key, val in agg_dict.items():
+                        row[key] = val
+                    yield row
+            else:
+                yield agg_dict
+#            results  = [i for i in results]
+#            for func, arg in self.das_aggregation.items():
+#                results = getattr(das_functions, func)(arg, results)
+#        return results
 
     def result(self, query, idx=0, limit=None):
         """
