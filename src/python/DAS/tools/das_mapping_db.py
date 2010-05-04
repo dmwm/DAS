@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.7 2009/10/02 15:13:12 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.8 2009/10/10 14:54:17 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -428,9 +428,13 @@ if __name__ == '__main__':
     params  = {'DB':'cms_omds_lb', 'FORMAT':'XML', 'RUN':'required'}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='run', map='run.run_number', pattern='')],
+        'daskeys' : [
+                dict(key='run', map='run.run_number', pattern=''),
+                dict(key='bfield', map='run.bfield', pattern=''),
+                    ],
         'api2das' : [
                 dict(api_param='RUN', das_key='run', pattern="re.compile('[1-9][0-9]{4,5}')"),
+                dict(api_param='RUN', das_key='run.run_number', pattern="re.compile('[1-9][0-9]{4,5}')"),
         ]
     }
     mgr.add(rec)
