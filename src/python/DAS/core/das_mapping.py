@@ -5,8 +5,8 @@
 DAS mapping
 """
 
-__revision__ = "$Id: das_mapping.py,v 1.1 2009/04/13 19:03:40 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_mapping.py,v 1.2 2009/04/13 20:39:18 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -44,10 +44,41 @@ def translate(system, name):
     for srv, val in dasmap[name].items():
         if  srv == system:
             return val
+    return name
 
-def finddata(jsondict):
+def jsonparser(jsondict, ikey):
     """
     Find desired values in provided json dict.
-{"phedex":{"request_timestamp":1239641469.37755,"instance":"prod","request_url":"http://cmsweb.cern.ch:7001/phedex/datasvc/json/prod/blockReplicas","request_version":"1.3.1","block":[{"bytes":"291825111","files":"4","name":"/Cosmics/CRUZET4_v1_CRZT210_V1_SuperPointing_v1/RECO#96c1b23f-1d88-4aa5-96ed-966a73a38c2d","is_open":"n","id":"426474","replica":[{"bytes":"291825111","files":"4","node":"T1_US_FNAL_Buffer","time_create":"1219412876.0661","time_update":"1229179156.51997","group":null,"se":"cmssrm.fnal.gov","node_id":"9","custodial":"n","complete":"y"},{"bytes":"291825111","files":"4","node":"T1_US_FNAL_MSS","time_create":"1219413379.70068","time_update":"1229179156.51997","group":null,"se":"cmssrm.fnal.gov","node_id":"10","custodial":"y","complete":"y"},{"bytes":"291825111","files":"4","node":"T2_CH_CAF","time_create":"1219413630.40003","time_update":"1229179156.51997","group":null,"se":"caf.cern.ch","node_id":"501","custodial":"n","complete":"y"}]}],"request_call":"blockReplicas","call_time":"0.00833","request_date":"2009-04-13 16:51:09 UTC"}}
     """
+    if  type(jsondict) is not types.DictType:
+        return
+    if  ikey.count('.'): # composed key
+        key, attr = ikey.split('.')
+    else:
+        key  = ikey
+        attr = ''
+#    print "### ikey='%s' key='%s', attr='%s'" % (ikey, key, attr)
+#    print "### jsondict", jsondict
+    if  jsondict.has_key(key):
+        for k, v in jsondict.items():
+            if  k != key:
+                continue
+            if  not attr:
+                return v
+            if  type(v) is types.ListType:
+#                olist = []
+#                for i in v:
+#                    res = jsonparser(i, attr)
+#                    if  res:
+#                        olist.append(res)
+#                return olist
+                return [jsonparser(i, attr) for i in v]
+            elif  type(v) is types.DictType:
+                if  v.has_key(attr):
+                    return v[attr]
+    else:
+        for k in jsondict.keys():
+            val = jsonparser(jsondict[k], ikey)
+            if  val:
+                return val
     return
