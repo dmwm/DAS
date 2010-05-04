@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.19 2009/12/02 21:01:08 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.20 2009/12/21 18:04:35 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -174,6 +174,12 @@ class DASMapping(object):
         gen  = (row['api']['name'] for row in \
                 self.col.find(cond, ['api.name']))
         return gen2list(gen)
+
+    def api_info(self, api_name):
+        """
+        Return full API info record.
+        """
+        return self.col.find_one({'api.name':api_name})
 
     def lookup_keys(self, system, daskey, api=None, value=None):
         """
