@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.36 2009/10/02 15:07:22 valya Exp $"
-__version__ = "$Revision: 1.36 $"
+__revision__ = "$Id: das_core.py,v 1.37 2009/10/02 18:59:51 valya Exp $"
+__version__ = "$Revision: 1.37 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -52,9 +52,7 @@ class DASTimer(object):
 
 class DASCore(object):
     """
-    DAS core class:
-    service_keys = {'service':{list of keys]}
-    service_maps = {('service1', 'service2'):'key'}
+    DAS core class.
     """
     def __init__(self, config=None, debug=None):
         if  config:
@@ -78,12 +76,17 @@ class DASCore(object):
         self.logger = DASLogger(idir=logdir, verbose=self.verbose, stdout=debug)
         dasconfig['logger'] = self.logger
 
+        # define Mapping/Analytics/Parser in this order since Parser depends
+        # on first two
         dasmapping = DASMapping(dasconfig)
         dasconfig['dasmapping'] = dasmapping
         self.mapping = dasmapping
 
         self.analytics = DASAnalytics(dasconfig)
         dasconfig['dasanalytics'] = self.analytics
+
+        self.mongoparser = MongoParser(dasconfig)
+        dasconfig['mongoparser'] = self.mongoparser
 
         self.viewmgr = DASViewManager(dasconfig)
 
@@ -99,7 +102,7 @@ class DASCore(object):
             klassobj = '%s(dasconfig)' % klass
             setattr(self, 'rawcache', eval(klassobj))
             dasconfig['rawcache'] = self.rawcache
-            self.logger.info('DASCore::__init__, rawcache=%s' % klass)
+            self.logger.info('DASCore::__init__ rawcache=%s' % klass)
         else:
             msg = 'DAS configuration file does not provide rawcache'
             raise Exception(msg)
@@ -114,7 +117,7 @@ class DASCore(object):
             klassobj = '%s(dasconfig)' % klass
             setattr(self, 'hotcache', eval(klassobj))
             self.cache   = self.hotcache
-            self.logger.info('DASCore::__init__, hotcache=%s' % klass)
+            self.logger.info('DASCore::__init__ hotcache=%s' % klass)
 
         # plug-in architecture: loop over registered data-services in
         # dasconfig; load appropriate module/class; register data
@@ -141,28 +144,13 @@ class DASCore(object):
                 msg = "Unable to load %s plugin (%s_service.py)" \
                 % (name, name)
                 raise Exception(msg)
-        # load abstract service for all data-services
-#        conf4all = dict(dasconfig)
-#        conf4all['all'] = dict(url='', logger=self.logger, dasmapping=dasmapping, 
-#                                verbose=self.verbose, expire=0)
-#        self.all = DASAbstractService('all', conf4all)
 
-        self.service_maps = dasconfig['mapping']
         self.service_keys = {}
         self.service_parameters = {}
         # loop over systems and get system keys,
         # add mapping keys to final list
         for name in dasconfig['systems']: 
             skeys = getattr(self, name).keys()
-# This code is commented out on purpose, but I should keep it around
-# The service_maps which is a dict of service:keys should keep only keys
-# which provided by service (the output of service), while mapping
-# between services should not be included (the code below). The mapping
-# keys are used in multiplex step, but should not be used when we place
-# service queries 
-#            for key, val in self.service_maps.items():
-#                if  name in list(key):
-#                    skeys += [s for s in val if s not in skeys]
             self.service_keys[getattr(self, name).name] = skeys
             sparams = getattr(self, name).parameters()
             self.service_parameters[getattr(self, name).name] = sparams
@@ -171,7 +159,6 @@ class DASCore(object):
         self.das_functions = \
         [item for item in das_functions.__dict__.keys() if item.find('__') == -1]
 
-        self.mongoparser = MongoParser(dasconfig)
         self.das_aggregation = {} # determine at run-time
         if  self.verbose:
             self.timer.record('DASCore.__init__')
@@ -326,30 +313,14 @@ class DASCore(object):
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
         Step 1. identify data-sercices in questions, based on selection keys
-                and where clause conditions
-        Step 2. construct worksflow and execute data-service calls with found
-                sub-queries.
-        Step 3. Collect results into service sets, multiplex them together
-                using cartesian product, and return result set back to the user
+                and where clause conditions by parsing input query
+        Step 2. construct workflow and execute data-service calls with found
+                sub-queries. At this step individual data-services invoke
+                store results into DAS cache.
+        Step 3. Look-up results from the cache.
         Return a list of generators containing results for further processing.
-
-        Input is param dict returned by QLParser. We use a dict since call method
-        is generator. So the QLParser results can be used elsewhere outside of it.
         """
         self.logger.info('DASCore::call, mongo query = %s' % query)
-        # main loop, it goes over query dict in daslist. The daslist
-        # contains subqueries (in a form of dict={system:subquery}) to
-        # be executed by underlying systems. The number of entreis in daslist
-        # is determined by number of logical OR operators which separates
-        # conditions applied to data-services. For example, if we have
-        # find run where dataset=/a/b/c or hlt=ok we will have 2 entries:
-        # - list of runs from DBS
-        # - list of runs from run-summary
-        # while if we have
-        # find run where dataset=/a/b/c/ and hlt=ok we may have 1 or more
-        # data-services to be called, based on provided selection keys and
-        # conditions.
-        #
         params = self.mongoparser.params(query)
         services = params['services'].keys()
         for srv in services:
@@ -359,9 +330,7 @@ class DASCore(object):
             getattr(getattr(self, srv), 'call')(query)
             if  self.verbose:
                 self.timer.record(srv)
-            # Yield results for every sub-system, this leads to duplicates since
-            # mongo_query contains das.system, but I cannot avoid it since
-            # output of sub-system can differ for given das key.
+            # Yield results for every sub-system.
             res = self.rawcache.get_from_cache(\
                 self.mongoparser.lookupquery(srv, query))
             for row in res:
