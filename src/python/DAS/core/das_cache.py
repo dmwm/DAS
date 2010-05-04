@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.10 2009/05/28 18:59:10 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_cache.py,v 1.11 2009/05/30 19:02:23 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -129,7 +129,10 @@ class DASCacheMgr(object):
 
     def add(self, query, expire):
         """Add new query to the queue"""
+        if  (query, expire) in self.queue:
+            return "waiting in queue"
         self.queue.append((query, expire))
+        return "requested"
 
     def worker(self, func):
         """
