@@ -1,32 +1,30 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0613,W0622
+#pylint: disable-msg=W0613,W0622,W0702
 
 """
 DAS admin service class.
 """
 
-__revision__ = "$Id: das_admin.py,v 1.3 2010/04/05 20:13:04 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_admin.py,v 1.4 2010/04/07 18:22:45 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
-import os
 import json
 from pprint import pformat
 
 # cherrypy modules
-from cherrypy import expose, tools
+from cherrypy import expose
 
 # monogo db modules
 from pymongo.connection import Connection
-from pymongo.objectid import ObjectId
-from pymongo import DESCENDING, ASCENDING
 
 # DAS modules
 from DAS.utils.das_config import das_readconfig
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.utils import json2html
+#from DAS.web.tools import auth
 
 def error(msg):
     """Put message in red box"""
@@ -37,7 +35,7 @@ class DASAdminService(DASWebManager):
     """
     DAS admin service class.
     """
-    def __init__(self, config={}):
+    def __init__(self, config):
         DASWebManager.__init__(self, config)
         self.base   = '/das'
         das_config  = das_readconfig()
@@ -69,7 +67,7 @@ class DASAdminService(DASWebManager):
         return self.page(info)
 
     @expose
-    def records(self, database, collection=None, query={}, idx=0, limit=10, 
+    def records(self, database, collection=None, query=None, idx=0, limit=10, 
                 **kwargs):
         """Return records in given collection"""
         if  not collection:
@@ -92,11 +90,11 @@ class DASAdminService(DASWebManager):
         page  = ''
         style = 'white'
         for row in recs:
-            id    = row['_id']
-            page += '<div class="%s"><hr class="line" />' % style
+            rec_id   = row['_id']
+            page    += '<div class="%s"><hr class="line" />' % style
             jsoncode = {'jsoncode': json2html(row, pad)}
             jsonhtml = self.templatepage('das_json', **jsoncode)
-            jsondict = dict(data=jsonhtml, id=id, rec_id=id)
+            jsondict = dict(data=jsonhtml, id=rec_id, rec_id=rec_id)
             page += self.templatepage('das_row', **jsondict)
             page += '</div>'
         url = '%s/admin/records?database=%s&collection=%s' \
@@ -108,7 +106,7 @@ class DASAdminService(DASWebManager):
         return self.page(page)
 
 #    @expose
-#    @tools.oid()
+#    @auth
 #    def secure(self, *args, **kwargs):
 #        return "TEST secure page"
 
