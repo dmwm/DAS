@@ -4,8 +4,8 @@
 """
 DQ service
 """
-__revision__ = "$Id: dq_service.py,v 1.2 2009/06/26 19:07:53 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: dq_service.py,v 1.3 2009/07/22 20:40:10 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 try:
@@ -56,7 +56,23 @@ class DQService(DASAbstractService):
         params = {"api":"doc"}
         data = urllib2.urlopen(url, json.dumps(params))
         res  = data.read()
-        return json.loads(res)
+        jsondict = json.loads(res)
+        # TEMP fix, until Anzar will fix its map, it should not contain dataset
+        # and dqflaglist should be replaced with dqflags.
+        # {u'listRuns4DQ': {u'keys': [u'dataset', u'run', u'dqflaglist'], 
+        #  u'params': {u'api': u'listRuns4DQ', u'DQFlagList': u'list', u'dataset': u'string'}}, 
+        #  u'listSubSystems': {u'keys': [u'subsystems'], u'params': {u'api': u'listSubSystems'}}}
+        for key, val in jsondict.items():
+            if  val.has_key('keys'):
+                keys = val['keys']
+                if  'dataset' in keys:
+                    keys.remove('dataset')
+                if  'dqflaglist' in keys:
+                    keys.remove('dqflaglist')
+                    keys.append('dqflags')
+                val['keys'] = keys
+                jsondict[key] = val
+        return jsondict
 
     def adjust_params(self, args):
         """

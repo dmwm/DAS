@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.7 2009/06/12 14:41:35 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: phedex_service.py,v 1.8 2009/07/22 20:40:11 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -25,10 +25,15 @@ class PhedexService(DASAbstractService):
                          'block.complete', 'block.createdate', 'block.moddate'],
                 'params' : {'se':'', 'block':'', 'node':''}
             },
+#            'fileReplicas' : {
+#                'keys': ['block', 'node', 'site',
+#                         'block.size', 'block.numfiles',
+#                         'file', 'file.checksum',
+#                         'file.node', 'file.origin_node'],
+#                'params' : {'se':'', 'block':'required', 'node':''}
+#            },
             'fileReplicas' : {
-                'keys': ['block', 'node', 'site',
-                         'block.size', 'block.numfiles',
-                         'file', 'file.checksum',
+                'keys': ['file', 'file.checksum',
                          'file.node', 'file.origin_node'],
                 'params' : {'se':'', 'block':'required', 'node':''}
             },

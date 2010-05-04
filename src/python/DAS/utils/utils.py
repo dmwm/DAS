@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.22 2009/07/14 15:56:18 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: utils.py,v 1.23 2009/07/22 20:40:11 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -269,28 +269,6 @@ def genresults(system, results, collect_list):
                 rowdict[key] = res[key]
         olist.append(rowdict)
     return olist
-
-def query_params(query):
-    """
-    Divide input query in a set of select keys and set of parameters. All queries
-    are in a form of
-    find key1, key2, ... where param=val
-    """
-    # TODO: should be replaced by ANTRL parser
-
-    parts = query.split(' where ')
-    selkeys = parts[0].replace('find ','').split(',')
-    params = {}
-    if  len(parts) > 1:
-        cond_exp = parts[1]
-        for cond in cond_exp.split(' and '):
-            for oper in \
-            ['!=', '=', 'not like', 'between', 'not in', ' in ', ' like ']:
-                if  cond.find(oper) != -1:
-                    clist = cond.split(oper)
-                    params[clist[0].strip()]=(oper.strip(), clist[1].strip())
-                    break
-    return selkeys, params
 
 def transform_dict2list(indict):
     """

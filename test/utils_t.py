@@ -6,7 +6,7 @@ Unit test for DAS QL parser
 """
 
 import unittest
-from DAS.utils.utils import cartesian_product, query_params
+from DAS.utils.utils import cartesian_product
 from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
@@ -140,25 +140,6 @@ class testUtils(unittest.TestCase):
         ]
         expectlist.sort()
         self.assertEqual(expectlist, resultlist)
-
-    def test_query_params(self):
-        """
-        Test query_params utility which split query into set of parameters and
-        selected keys.
-        """
-        queries = ['find a,b,c where d=2', 'find a,b,c where d not like 2',
-                   'find a,b,c', 'find a,b,c where d=2 and e=1']
-        selkeys = ['a', 'b', 'c']
-        elist   = [(selkeys, {'d':('=', '2')}), 
-                   (selkeys, {'d':('not like', '2')}), 
-                   (selkeys, {}),
-                   (selkeys, {'d':('=', '2'), 'e':('=', '1')}),
-                  ]
-        for idx in range(0, len(queries)):
-            query  = queries[idx]
-            expect = elist[idx]
-            result = query_params(query)
-            self.assertEqual(expect, result)
 
     def test_genresults(self):
         """

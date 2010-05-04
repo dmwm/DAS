@@ -8,7 +8,7 @@ Unit test for DAS QL parser
 import unittest
 #from DAS.core.qlparser import antrlparser
 from DAS.core.qlparser import findbracketobj
-from DAS.core.qlparser import getconditions
+from DAS.core.qlparser import getconditions, query_params
 from DAS.core.qlparser import QLParser
 
 class testQLParser(unittest.TestCase):
@@ -54,16 +54,37 @@ class testQLParser(unittest.TestCase):
         params = {}
         self.assertRaises(Exception, QLParser, (imap, params))
 
+    def test_query_params(self):
+        """
+        Test query_params utility which split query into set of parameters and
+        selected keys.
+        """
+        queries = ['find a,b,c where d=2', 'find a,b,c where d not like 2',
+                   'find a,b,c', 'find a,b,c where d=2 and e=1']
+        selkeys = ['a', 'b', 'c']
+        elist   = [(selkeys, {'d':('=', '2')}), 
+                   (selkeys, {'d':('not like', '2')}), 
+                   (selkeys, {}),
+                   (selkeys, {'d':('=', '2'), 'e':('=', '1')}),
+                  ]
+        for idx in range(0, len(queries)):
+            query  = queries[idx]
+            expect = elist[idx]
+            result = query_params(query)
+            self.assertEqual(expect, result)
+
     def test_qlparser(self):
         """test QLParser class"""
         imap = {'dbs':['dataset', 'run', 'site', 'block'],
                 'phedex':['block', 'replica', 'site'], 
                 'sitedb': ['admin', 'site'],
-                'dq': ['runs', 'DQFlagList']}
+                'dq': ['runs', 'DQFlagList'],
+                'dashboard': ['jobsummary']}
         params = {'dbs':['dataset', 'run', 'site', 'block'], 
                 'phedex':['block', 'replica', 'site'], 
                 'sitedb':['admin', 'site'], 
-                'dq':['run','dataset']}
+                'dq':['run','dataset'],
+                'dashboard':['site']}
 
         ql = QLParser(imap, params)
 
@@ -97,6 +118,35 @@ class testQLParser(unittest.TestCase):
         q = "finds a,v"
         self.assertRaises(Exception, ql.params, q)
         
+        q = "find phedex:block where block=bla"
+        result = ql.params(q)
+        expect = {'functions': {}, 'selkeys': ['block'], 
+                'unique_services': ['phedex'], 'order_by_list': [], 
+                'order_by_order': None, 'services': {'phedex': ['block']}, 
+                'daslist': [{'phedex': 'find block where block=bla'}], 
+                'conditions': [{'value': 'bla', 'key': 'block', 'op': '='}], 
+                'allkeys': ['block'], 'unique_keys': ['block']}
+        self.assertEqual(result, expect)
+
+        q = "find dbs:block where block=bla"
+        result = ql.params(q)
+        expect = {'functions': {}, 'selkeys': ['block'], 
+                'unique_services': ['dbs'], 'order_by_list': [], 
+                'order_by_order': None, 'services': {'dbs': ['block']}, 
+                'daslist': [{'dbs': 'find block where block=bla'}], 
+                'conditions': [{'value': 'bla', 'key': 'block', 'op': '='}], 
+                'allkeys': ['block'], 'unique_keys': ['block']}
+        self.assertEqual(result, expect)
+
+        q = "find jobsummary where date last 25h"
+        self.assertRaises(Exception, ql.params, q)
+
+        q = "find jobsummary where date last 61m"
+        self.assertRaises(Exception, ql.params, q)
+
+        q = "find jobsummary where date last 61s"
+        self.assertRaises(Exception, ql.params, q)
+
         q = "find dataset,admin,replica where site=123 or site=345 order by site desc"
         result = ql.params(q)
         expect = {'order_by_list': ['site'], 

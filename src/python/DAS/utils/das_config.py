@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.19 2009/07/15 15:58:27 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: das_config.py,v 1.20 2009/07/22 20:40:11 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -77,6 +77,11 @@ def das_readconfig(dasconfig=None):
         keys = config.get('mapping', item).split(',')
         mapping[(services[0], services[1])] = keys
     configdict['mapping'] = mapping
+
+    srv_weights = {}
+    for item in config.options('service weights'):
+        srv_weights[item] = config.getint('service weights', item)
+    configdict['srv_weights'] = srv_weights
 
     sum_views = {}
     for item in config.options('summary views'):
@@ -199,6 +204,16 @@ def das_writeconfig():
     config.add_section('mapping')
     for key, val in maps.items():
         config.set('mapping', '%s' % key, '%s' % val)
+
+    config.add_section('service weights')
+    config.set('service weights', 'dbs', 5)
+    config.set('service weights', 'phedex', 10)
+    config.set('service weights', 'sitedb', 0)
+    config.set('service weights', 'runsum', 6)
+    config.set('service weights', 'lumidb', 7)
+    config.set('service weights', 'dq', 8)
+    config.set('service weights', 'dashboard', 5)
+    config.set('service weights', 'monitor', 2)
 
     dasconfig = das_configfile()
     config.write(open(dasconfig, 'wb'))
