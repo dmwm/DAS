@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.14 2009/11/10 16:08:28 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: sitedb_service.py,v 1.15 2009/11/16 16:08:24 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -47,10 +47,17 @@ class SiteDBService(DASAbstractService):
                     params[key] = val.replace('*', '')
         return params
 
-    def parser(self, api, data, params=None):
+    def parser(self, data_ptr, api, params=None):
         """
         Parser for SiteDB JSON data-services
         """
+        close = False
+        if  type(data_ptr) is types.InstanceType:
+            data = data_ptr.read()
+            close = True
+        else:
+            data = data_ptr
+
         cache = {}
         jsondict = eval(data)
         pat = re.compile('T[0-9]_')
@@ -84,5 +91,8 @@ class SiteDBService(DASAbstractService):
                         if  val.find('.') != -1: # SE or CE
                             if  not row.has_key('se'):
                                 row['se'] = val
-            self.row2das(self.name, "", row) # here we pass empty api=""
+#            self.row2das(self.name, "", row) # here we pass empty api=""
             yield {'site': row}
+
+            if  close:
+                data_ptr.close()

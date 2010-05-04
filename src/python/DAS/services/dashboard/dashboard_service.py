@@ -29,11 +29,17 @@ class DashboardService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def parser(self, api, data, params=None):
+    def parser(self, data_ptr, api, params=None):
         """
-        Dashboard XML parser, it returns a list of dict rows, e.g.
-        [{'file':value, 'run':value}, ...]
+        Dashboard data-service parser.
         """
+        close = False
+        if  type(data_ptr) is types.InstanceType:
+            data = data_ptr.read()
+            close = True
+        else:
+            data = data_ptr
+
         try:
             elem  = ET.fromstring(data)
         except:
@@ -52,6 +58,8 @@ class DashboardService(DASAbstractService):
                                 row[key] = val
                     rowkey = self.map[api]['keys'][0]
                     yield {rowkey : row}
+        if  close:
+            data_ptr.close()
 
     def api(self, query):
         """
