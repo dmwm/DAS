@@ -5,10 +5,11 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.17 2009/06/04 13:19:01 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: utils.py,v 1.18 2009/06/09 14:07:24 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
+import os
 import re
 try:
     # with python 2.5
@@ -454,4 +455,42 @@ def izip_longest(*args, **kwds):
             yield tup
     except IndexError:
         pass
+
+def get_key_cert():
+    """
+    Get user key/certificate
+    """
+    key  = None
+    cert = None
+    # First presendence to HOST Certificate, RARE
+    if  os.environ.has_key('X509_HOST_CERT'):
+        cert = os.environ['X509_HOST_CERT']
+        key  = os.environ['X509_HOST_KEY']
+
+    # Second preference to User Proxy, very common
+    elif os.environ.has_key('X509_USER_PROXY'):
+        cert = os.environ['X509_USER_PROXY']
+        key  = cert
+
+    # Third preference to User Cert/Proxy combinition
+    elif os.environ.has_key('X509_USER_CERT'):
+        cert = os.environ['X509_USER_CERT']
+        key  = os.environ['X509_USER_KEY']
+
+    # Worst case, look for cert at default location /tmp/x509up_u$uid
+    else :
+        uid  = os.getuid()
+        cert = '/tmp/x509up_u'+str(uid)
+        key  = cert
+
+    if  not key or not cert:
+        key  = os.path.join(os.environ['HOME'], '.globus/userkey.pem')
+        cert = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
+
+    if  not os.path.exists(cert):
+        raise Exception("Certificate PEM file %s not found" % key)
+    if  not os.path.exists(key):
+        raise Exception("Key PEM file %s not found" % key)
+
+    return key, cert
 
