@@ -759,23 +759,25 @@ PhEDEx CMS data-services.
 
 \begin{table*}[hbt]
 \centering
-\begin{tabular}{llllll}\hline
+\begin{tabular}{lllll}\hline
 \hline
-System & Format & Size & Records & Elapsed time & Elapsed time \\
-& & & & no cached data & w/ cached data \\
+System & Format & Records & Elapsed time & Elapsed time \\
+& & & no cached data & w/ cached data \\
 \hline
-DAS (DBS) & XML & 187MB & 368716 & 53 sec & 0.92 sec \\
-DAS (PhEDEx) & XML & 164MB & 175884/170131 & 160 sec & 0.94 sec \\
-DAS (aggregate) & JSON & 357MB & 374468 & 256 sec & 44.8 sec \\
+DAS (DBS) & XML & 382396 & 63 sec & 0.98 sec \\
+DAS (PhEDEx) & XML & 186145/180439 & 164 sec & 0.98 sec \\
+DAS (aggregate) & JSON & 388108 & 234 sec & 2.05/50.7 sec \\
 \hline
 \hline
 \end{tabular}
 \caption{Time required to fetch, parse and aggregate block information
 from DBS and PhEDEx systems. In the case of PhEDEx
-system we show total number of fetched records 175884 together with
-number of records merged in DAS 170131. The total number of DAS records 
+system we show total number of fetched records 186145 together with
+number of records merged in DAS 180439. The total number of DAS records 
 were calculated as number of aggregated records plus left overs,
-the non-matched records from both systems.}
+the non-matched records from both systems. The look-up time is presented in
+last column, where for DAS it shows as query look-up time (2.05 sec) 
+and time to get all records to disk (50.7 sec).}
 \label{DAS_benchmark}
 \end{table*}
 
@@ -821,14 +823,15 @@ due to longer retrieval and parsing time.
 The time of PhEDEx component shown in Table \ref{DAS_benchmark} is divided 
 among retrieval and parsing, $\sim$110 sec, and merging steps, $\sim$50 sec,
 respectively. As shown in Table \ref{DAS_benchmark},
-the time spent to access individual components (last column) was quite
+the look-up time spent to access individual components (last column) was quite
 reasonable, roughly 1 second for both systems. While final time to
-get DAS records on disk was about 45 seconds. This was mostly due to I/O and
+get DAS records on disk was about 50 seconds. This was mostly due to I/O and
 conversion operations between binary data format used by MongoDB, BSON, to DAS
 data format, JSON.
 
 Based on results of stress tests we measured that we can achieve throughput of
-7000 docs/sec for insertion, 3400 docs/sec for aggregation and 8500 docs/sec for 
+$\sim$6000 docs/sec for insertion, $\sim$1100 docs/sec for aggregation and 
+$\sim$7600 docs/sec for 
 reading operations in DAS, which are suitable for our needs. Since all 
 operations were performed on a single CPU a further improvements are expected. 
 Also, a necessary tuning can be done by using C++ driver instead of python one.
