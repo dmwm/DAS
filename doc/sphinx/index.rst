@@ -7,7 +7,7 @@ Data Aggregation System
 =======================
 
 * **Version**: |version|
-* **Release Date**: |today|
+* **Last modified**: |today|
 
 Contents:
 ---------
