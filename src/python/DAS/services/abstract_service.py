@@ -4,19 +4,20 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.3 2009/04/08 20:53:26 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: abstract_service.py,v 1.4 2009/04/16 17:48:31 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 import urllib
 import urllib2
 import traceback
-from DAS.utils.utils import query_params, transform_dict2list
+from DAS.utils.utils import query_params
 from DAS.utils.utils import genresults, results2couch
 from DAS.utils.utils import cartesian_product, genkey
 from DAS.core.das_couchdb import DASCouchDB
 from DAS.core.basemanager import BaseManager
+from DAS.core.das_mapping import jsonparser, das2api, das2result
 
 class DASAbstractService(object):
     """
@@ -141,3 +142,86 @@ class DASAbstractService(object):
         self._couch.update_cache(cquery, results, self.expire)
 
         return results
+
+    def worker(self, query, cond_dict=None):
+        """
+        A service worker. It parses input query, invoke service API 
+        and return results in a list with provided row.
+        """
+        msg = 'DASAbstractService::worker(%s, %s)' % (query, cond_dict)
+        self.logger.info(msg)
+
+        # TODO: This part should be replaced by ANTRL parser
+        selkeys, cond = query_params(query)
+        params = {}
+        for key in cond.keys():
+            oper, val = cond[key]
+            newkey = das2api(self.name, key)
+            if  oper == '=':
+                params[newkey] = val
+            else:
+                raise Exception("DAS::%s, not supported operator '%s'" \
+                % (self.name, oper))
+        for key in cond_dict:
+            newkey = das2api(self.name, key)
+            params[newkey] = cond_dict[key]
+
+        # translate selection keys into ones data-service APIs provides
+        keylist = [das2result(self.name, key) for key in selkeys]
+
+#        print "### query", query
+#        print "### selkeys", selkeys
+#        print "### cond_dict", cond_dict
+#        print "### params", params
+#        print "### keylist", keylist
+#        import sys
+#        sys.exit(1)
+
+        apiname = ""
+        args = {}
+        # check if all requested keys are covered by one API
+        for api, aparams in self.map.items():
+            if  set(selkeys) & set(aparams['keys']) == set(selkeys):
+                apiname = api
+                for par in aparams['params']:
+                    if  params.has_key(par):
+                        args[par] = params[par]
+                url = self.url + '/' + apiname
+                res = self.getdata(url, args)
+                res = res.replace('null', '\"null\"')
+                jsondict = eval(res)
+#                print "### jsondict", jsondict
+                if  jsondict.has_key('error'):
+                    continue
+                data = jsonparser(self.name, jsondict, keylist)
+#                print "### keylist", keylist
+#                print "### data", data
+                return data
+
+        # if one API doesn't cover sel keys, will call multiple APIs
+        apidict = {}
+        for key in selkeys:
+            for api, aparams in self.map.items():
+                if  aparams['keys'].count(key) and not apidict.has_key(api):
+                    args = {}
+                    for par in aparams['params']:
+                        if  params.has_key(par):
+                            args[par] = params[par]
+                    apidict[api] = args
+        rel_keys = []
+        resdict  = {}
+        for api, args in apidict.items():
+            url = self.url + '/' + api
+            res = self.getdata(url, args)
+            res = res.replace('null', '\"null\"')
+            jsondict = eval(res)
+            data = jsonparser(self.name, jsondict, keylist)
+            resdict[api] = data
+            first_row = data[0]
+            keys = first_row.keys()
+            if  not rel_keys:
+                rel_keys = set(list(keys))
+            else:
+                rel_keys = rel_keys & set(keys)
+        data = self.product(resdict, rel_keys)
+        return data
