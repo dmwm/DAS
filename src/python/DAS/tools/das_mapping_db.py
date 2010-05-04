@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.23 2010/02/04 21:23:24 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.24 2010/02/05 21:21:21 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -86,8 +86,6 @@ if __name__ == '__main__':
             if  opts.debug:
                 print rec
             spec = {'url':rec['url'], 'urn':rec['urn']}
-#            spec = dict(rec)
-#            spec.pop('created')
             mgr.remove(spec) # remove previous record
             mgr.add(rec)
 
