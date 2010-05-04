@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.6 2009/05/19 17:24:12 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_memcache.py,v 1.7 2009/05/19 17:44:10 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -34,6 +34,7 @@ class DASMemcache(Cache):
         self.memcache = memcache.Client(cachelist, debug=self.verbose)
         self.limit    = config['cache_lifetime']
         self.logger   = config['logger']
+        self.servers  = cachelist
 
         # default hashing is crc32, but we can change that by using
         #from zlib import adler32
