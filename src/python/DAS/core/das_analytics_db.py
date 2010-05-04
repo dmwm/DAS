@@ -7,8 +7,8 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.6 2009/09/11 19:00:57 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.7 2009/09/14 20:34:32 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -78,10 +78,7 @@ class DASAnalytics(object):
         msg = 'DASAnalytics::update(%s, %s)' % (system, query)
         self.logger.info(msg)
         cond = {'query':query, 'system':system}
-        for row in self.col.find(cond):
-            id = row['_id']
-            row['counter'] += 1
-            self.col.update({'_id':id}, row)
+        self.col.update(cond, {'$inc' : {'counter':1}})
 
     def list_systems(self):
         """
