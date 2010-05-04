@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.23 2010/02/25 14:53:49 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: dbs_service.py,v 1.24 2010/04/09 19:41:23 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -29,12 +29,38 @@ class DBSService(DASAbstractService):
         """
         if  api == 'listBlocks':
             prim_key = 'block'
+        elif api == 'listBlockProvenance':
+            prim_key = 'block'
         elif api == 'listFiles':
             prim_key = 'file'
+        elif api == 'listLFNs':
+            prim_key = 'file_lfn'
+        elif api == 'listFileLumis':
+            prim_key = 'file_lumi_section'
+        elif api == 'listFileProcQuality':
+            prim_key = 'file_proc_quality'
+        elif api == 'listFileParents':
+            prim_key = 'file_parent'
+        elif api == 'listTiers':
+            prim_key = 'data_tier'
+        elif api == 'listDatasetSummary':
+            prim_key = 'processed_dataset'
+        elif api == 'listDatasetParents':
+            prim_key = 'processed_dataset_parent'
+        elif api == 'listPrimaryDatasets':
+            prim_key = 'primary_dataset'
+        elif api == 'listProcessedDatasets':
+            prim_key = 'processed_dataset'
+        elif api == 'listAlgorithms':
+            prim_key = 'algorithm'
+        elif api == 'listRuns':
+            prim_key = 'run'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
             raise Exception(msg)
         gen = xml_parser(source, prim_key)
         for row in gen:
+            if  row.has_key('algorithm'):
+                del row['algorithm']['ps_content']
             yield row
