@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.10 2009/10/21 13:44:29 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.11 2009/10/21 19:14:23 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -171,11 +171,17 @@ if __name__ == '__main__':
     mgr.add(rec)
 
     # listFileLumis
-#    api = 'listFileLumis'
-#    params = {'apiversion':apiversion, 'lfn': 'required'}
-#    daskeys = dict(file='file.name')
-#    api2das = [('lfn', 'file', ''), ('lfn', 'file.name', '')]
-#    mgr.add_api(system, api, params, daskeys, api2das)
+    api = 'listFileLumis'
+    params = {'apiversion':apiversion, 'lfn': 'required'}
+    rec = {'system' : system,
+        'api' : dict(name=api, params=params),
+        'daskeys' : [dict(key='file', map='file.name', pattern='')],
+        'api2das': [
+                dict(api_param='lfn', das_key='file', pattern=''),
+        ]
+    }
+    mgr.add(rec)
+
     # listProcessedDatasets API
     api = 'listProcessedDatasets' 
     params = {'apiversion':apiversion,
@@ -235,6 +241,9 @@ if __name__ == '__main__':
         dict(api_param='number_of_events', das_name='nevents'),
         dict(api_param='number_of_blocks', das_name='nblocks'),
         dict(api_param='number_of_lumi_sections', das_name='nlumis'),
+        dict(api_param='lumi_section_number', das_name='lumi'),
+        dict(api_param='start_event_number', das_name='start_event'),
+        dict(api_param='end_event_number', das_name='end_event'),
         dict(api_param='total_luminosity', das_name='totlumi'),
         dict(api_param='total_size', das_name='size'),
         dict(api_param='lfn', das_name='name'),
