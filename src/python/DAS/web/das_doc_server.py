@@ -5,8 +5,8 @@
 DAS doc server.
 """
 
-__revision__ = "$Id: das_doc_server.py,v 1.1 2010/01/26 21:05:40 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_doc_server.py,v 1.2 2010/01/27 01:16:13 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -114,5 +114,5 @@ if __name__ == '__main__':
     conf = {'/': {'tools.staticdir.root':dir},
             '_static' : static_dict,
     }
-    cherrypy.quickstart(DocServer(dir), '/', config=conf)
+    cherrypy.quickstart(DocServer(dir), '/das/doc', config=conf)
 
