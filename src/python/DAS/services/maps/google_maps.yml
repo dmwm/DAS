@@ -1,0 +1,14 @@
+system : google_maps
+format : JSON
+---
+urn : google_geo_maps
+url : "http://maps.google.com/maps/geo"
+expire : 30
+params : { "q" : "required", "output": "json" }
+daskeys : [
+    {"key":"city","map":"city.name","pattern":""},
+]
+das2api : [
+    {"das_key":"city.name","api_param":"q","pattern":""},
+]
+

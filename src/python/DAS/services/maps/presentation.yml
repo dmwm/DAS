@@ -1,6 +1,14 @@
 # DAS presentation map, it applies to all systems and all urls
 # to create uniform representation of meta-data
 presentation: {
+city    : [
+        {"das":"city.name", "ui":"City"}, 
+        {"das":"city.Placemark.address", "ui":"Address"}, 
+        {"das":"city.Placemark.ExtendedData.LatLonBox.west", "ui":"Location west"}, 
+        {"das":"city.Placemark.ExtendedData.LatLonBox.east", "ui":"Location east"}, 
+        {"das":"city.Placemark.ExtendedData.LatLonBox.north", "ui":"Location north"}, 
+        {"das":"city.Placemark.ExtendedData.LatLonBox.south", "ui":"Location south"}, 
+        ],
 dataset : [
         {"das":"dataset.error", "ui":"Error"}, 
         {"das":"dataset.httperror", "ui":"Reason"}, 
