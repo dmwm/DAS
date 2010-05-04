@@ -3,5 +3,21 @@
 # setup environment
 #. `dirname $0`/setup.sh
 
+dir=$DAS_ROOT/src/python/DAS/services/maps
+cmd=$DAS_ROOT/src/python/DAS/tools/das_mapping_db.py
+chmod a+x $cmd
+
 # run actual script
-python $DAS_ROOT/src/python/DAS/tools/das_mapping_db.py
+echo "Clean DAS Mapping DB"
+$cmd --clean
+
+echo "Add API maps"
+for amap in `ls $dir/*.yml`
+do
+    echo "Read API maps from $amap"
+    $cmd --api-map=$amap
+    echo "Read notation map from $amap"
+    $cmd --notation-map=$amap
+    echo "Read presentation map from $amap"
+    $cmd --presentation-map=$amap
+done
