@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.43 2010/03/01 18:56:45 valya Exp $"
-__version__ = "$Revision: 1.43 $"
+__revision__ = "$Id: DASSearch.py,v 1.44 2010/03/04 15:45:11 valya Exp $"
+__version__ = "$Revision: 1.44 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -37,6 +37,7 @@ except:
 
 # DAS modules
 from DAS.core.das_core import DASCore
+from DAS.core.das_ql import das_aggregators, das_filters, das_operators
 from DAS.utils.utils import getarg, access
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.utils import urllib2_request, json2html, web_time
@@ -118,7 +119,9 @@ class DASSearch(DASWebManager):
         """
         represent DAS FAQ.
         """
-        page = self.templatepage('das_faq', operators=self.dasmgr.operators)
+        page = self.templatepage('das_faq', 
+                operators=', '.join(das_operators()), 
+                aggregators=', '.join(das_aggregators()))
         return self.page(page, response_div=False)
 
     @expose
@@ -215,6 +218,13 @@ class DASSearch(DASWebManager):
         """
         try:
             if  not args and not kwargs:
+#                msg  = self.templatepage('das_help', 
+#                        services    = ', '.join(self.dasmgr.keys()),
+#                        keywords    = ', '.join(self.dasmgr.das_keys()),
+#                        operators   = ', '.join(das_operators()),
+#                        aggregators = ', '.join(das_aggregators()),
+#                        filters     = ', '.join(das_filters()) 
+#                        )
                 page = self.form()
                 return self.page(page)
             uinput  = getarg(kwargs, 'input', '')
