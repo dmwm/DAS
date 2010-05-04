@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.66 2010/03/05 18:12:55 valya Exp $"
-__version__ = "$Revision: 1.66 $"
+__revision__ = "$Id: das_core.py,v 1.67 2010/03/09 02:31:19 valya Exp $"
+__version__ = "$Revision: 1.67 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -24,8 +24,9 @@ import types
 import traceback
 import DAS.utils.jsonwrapper as json
 
-from DAS.core.qlparser import MongoParser
+#from DAS.core.qlparser import MongoParser
 from DAS.core.das_ql import das_operators
+from DAS.core.das_parser import QLManager
 #from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
@@ -89,7 +90,8 @@ class DASCore(object):
         self.analytics = DASAnalytics(dasconfig)
         dasconfig['dasanalytics'] = self.analytics
 
-        self.mongoparser = MongoParser(dasconfig)
+#        self.mongoparser = MongoParser(dasconfig)
+        self.mongoparser = QLManager(dasconfig)
         dasconfig['mongoparser'] = self.mongoparser
 
 #        self.viewmgr = DASViewManager(dasconfig)
@@ -194,7 +196,8 @@ class DASCore(object):
         _keys = []
         for values in self.service_keys.values():
             for key in values:
-                _keys.append(key)
+                if  key not in _keys:
+                    _keys.append(key)
         return _keys
 
     def adjust_query(self, query, add_to_analytics=True):
@@ -205,7 +208,7 @@ class DASCore(object):
                 query = json.loads(query)
             except:
                 try:
-                    query = self.mongoparser.requestquery(query, 
+                    query = self.mongoparser.parse(query, 
                                 add_to_analytics)
                 except:
                     traceback.print_exc()
