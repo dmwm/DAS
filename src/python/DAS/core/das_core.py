@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.43 2009/10/16 18:02:48 valya Exp $"
-__version__ = "$Revision: 1.43 $"
+__revision__ = "$Id: das_core.py,v 1.44 2009/10/19 02:28:03 valya Exp $"
+__version__ = "$Revision: 1.44 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -27,6 +27,7 @@ from DAS.core.qlparser import MongoParser
 #from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
+from DAS.core.das_mongocache import loose
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg
@@ -343,7 +344,8 @@ class DASCore(object):
         if  not fields:
             fields = None
         query  = dict(spec=spec, fields=fields)
-        res    = self.rawcache.get_from_cache(query, idx, limit)
+#        res    = self.rawcache.get_from_cache(query, idx, limit)
+        res    = self.rawcache.get_from_cache(loose(query), idx, limit)
         for row in res:
             yield row
         # Yield results for query hash
