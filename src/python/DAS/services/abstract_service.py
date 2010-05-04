@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.33 2009/09/11 16:00:50 valya Exp $"
-__version__ = "$Revision: 1.33 $"
+__revision__ = "$Id: abstract_service.py,v 1.34 2009/09/11 18:44:56 valya Exp $"
+__version__ = "$Revision: 1.34 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -166,14 +166,14 @@ class DASAbstractService(object):
         spec.remove('das.system') # and check if conditions provided
         if  self.localcache.incache(query=mongo_query) and spec:
 #            return self.localcache.get_from_cache(query=mongo_query)
-            self.analytics.update(query)
+            self.analytics.update(self.name, query)
             return
         # check the cache if there are records with given input query
         dasquery = {'spec': {'das.query': query, 'das.system': self.name}, 
                     'fields': None}
         if  self.localcache.incache(query=dasquery):
 #            return self.localcache.get_from_cache(query=dasquery)
-            self.analytics.update(query)
+            self.analytics.update(self.name, query)
             return
 
         # ask data-service api to get results, they'll be store them in
@@ -335,7 +335,7 @@ class DASAbstractService(object):
                 data    = self.getdata(url, args)
                 genrows = self.parser(api, data, args)
                 ctime   = time.time() - time0
-                self.analytics.add_api(query, self.name, api, args)
+                self.analytics.add_api(self.name, query, api, args)
                 header  = dasheader(self.name, query, api, url, args, ctime,
                     self.expire, self.version())
                 header['lookup_keys'] = self.lookup_keys(api)
