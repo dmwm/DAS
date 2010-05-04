@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.93 2010/04/14 19:26:04 valya Exp $"
-__version__ = "$Revision: 1.93 $"
+__revision__ = "$Id: abstract_service.py,v 1.94 2010/04/30 16:39:50 valya Exp $"
+__version__ = "$Revision: 1.94 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -24,7 +24,7 @@ from pymongo import DESCENDING
 from DAS.utils.utils import getarg, genkey, dotdict
 from DAS.utils.utils import row2das, extract_http_error, make_headers
 from DAS.utils.utils import xml_parser, json_parser, plist_parser
-from DAS.utils.utils import yield_rows
+from DAS.utils.utils import yield_rows, expire_timestamp
 from DAS.core.das_aggregators import das_func
 from DAS.core.das_mongocache import compare_specs, encode_mongo_query
 
@@ -33,13 +33,11 @@ def dasheader(system, query, api, url, args, ctime, expire):
     Return DAS header (dict) wrt DAS specifications, see
     https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
     """
-    timestamp = time.time()
-#    if  type(query) is types.DictType:
-#        query = json.dumps(query)
-    query = encode_mongo_query(query)
-    dasdict = dict(system=[system], timestamp=timestamp,
+    query   = encode_mongo_query(query)
+    dasdict = dict(system=[system], timestamp=time.time(),
                 url=[url], ctime=[ctime], qhash=genkey(query), 
-                expire=timestamp+expire, api=[api], status="requested")
+                expire=expire_timestamp(expire), 
+                api=[api], status="requested")
     return dict(das=dasdict)
 
 class DASAbstractService(object):
@@ -209,10 +207,15 @@ class DASAbstractService(object):
         self.logger.info(msg)
 
         # check the cache for records with given query/system
-        qhash = genkey(query)
+        enc_query = encode_mongo_query(query)
+        qhash = genkey(enc_query)
         dasquery = {'spec': {'das.qhash': qhash, 'das.system': self.name}, 
                     'fields': None}
         if  self.localcache.incache(query=dasquery, collection='cache'):
+            msg  = "DASAbstractService::%s found records in local cache."\
+                  % self.name
+            msg += "Update analytics."
+            self.logger.info(msg)
             self.analytics.update(self.name, query)
             return
         # ask data-service api to get results, they'll be store them in
@@ -253,7 +256,7 @@ class DASAbstractService(object):
         msg  = 'DASAbstractService::%s cache has been updated,' \
                 % self.name
         self.logger.info(msg)
-        self.insert_apicall(expire, url, api, args)
+        self.insert_apicall(query, url, api, args, header['das']['expire'])
 
     def adjust_params(self, args):
         """
@@ -262,20 +265,25 @@ class DASAbstractService(object):
         """
         pass
 
-    def insert_apicall(self, expire, url, api, api_params):
+    def insert_apicall(self, query, url, api, api_params, expire):
         """
         Remove obsolete apicall records and
         insert into Analytics DB provided information about API call.
         """
+        expire = expire_timestamp(expire)
+        query = encode_mongo_query(query)
         spec = {'apicall.expire':{'$lt' : int(time.time())}}
         self.analytics.col.remove(spec)
         doc  = dict(sytsem=self.name, url=url, api=api, api_params=api_params,
-                        expire=time.time()+expire)
+                        qhash=genkey(query), expire=expire)
         self.analytics.col.insert(dict(apicall=doc))
-        index_list = [('apicall.url', DESCENDING), ('apicall.api', DESCENDING)]
+        index_list = [('apicall.url', DESCENDING), 
+                      ('apicall.api', DESCENDING),
+                      ('qhash', DESCENDING),
+                     ]
         self.analytics.col.ensure_index(index_list)
 
-    def pass_apicall(self, url, api, api_params):
+    def pass_apicall(self, query, url, api, api_params):
         """
         Filter provided apicall wrt existing apicall records in Analytics DB.
         """
@@ -288,9 +296,23 @@ class DASAbstractService(object):
             input_query = {'spec':api_params}
             exist_query = {'spec':row['apicall']['api_params']}
             if  compare_specs(input_query, exist_query):
-                msg += '\nwill re-use existing api call with args=%s'\
-                % row['apicall']['api_params']
+                msg += '\nwill re-use existing api call with args=%s, query=%s'\
+                % (row['apicall']['api_params'], exist_query)
                 self.logger.info(msg)
+                try:
+                    # update DAS cache with empty result set
+                    args = self.inspect_params(api, api_params)
+                    cond   = {'das.qhash': row['apicall']['qhash']}
+                    record = self.localcache.col.find_one(cond)
+                    expire = record['das']['expire']
+                    self.write_to_cache(query, expire, url, api, args, [], 0)
+                except:
+                    msg  = 'DASAbstractService::pass_apicall\n'
+                    msg += '   input query %s\n' % input_query
+                    msg += 'existing query %s\n' % exist_query
+                    msg += 'Unable to look-up existing query and extract '
+                    msg += 'expire timestamp'
+                    raise Exception(msg)
                 return False
         return True
 
@@ -320,13 +342,15 @@ class DASAbstractService(object):
                         maxval = int(val[-1])
                         args[key] = range(minval, maxval)
                     elif oper == '$lt':
-                        maxval = int(val) - 1
+#                        maxval = int(val) - 1
+                        maxval = int(val)
                         args[key] = maxval
                     elif oper == '$lte':
                         maxval = int(val)
                         args[key] = maxval
                     elif oper == '$gt':
-                        minval = int(val) + 1
+#                        minval = int(val) + 1
+                        minval = int(val)
                         args[key] = minval
                     elif oper == '$gte':
                         minval = int(val)
@@ -553,7 +577,7 @@ class DASAbstractService(object):
                         val   = val.replace('*', wild)
                     args[key] = val
             # check if analytics db has a similar API call
-            if  not self.pass_apicall(url, api, args):
+            if  not self.pass_apicall(query, url, api, args):
                 continue
             msg  = "DASAbstractService::apimap yield "
             msg += "system %s, url=%s, api=%s, args=%s, format=%s, " \
