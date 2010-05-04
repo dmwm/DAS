@@ -1,0 +1,121 @@
+
+<!-- das_nrecords.tmpl template -->
+
+<div id="results">
+
+<div align="left">
+<p>
+<table width="100%" class="normal">
+<tr>
+<td align="left">
+Found $nrows results, showing
+#if not $limit
+all results
+</td>
+</tr>
+#else
+results
+<span id="results" name="results">
+0-$limit
+</span>
+</td>
+<td align="right">
+<div id='paginator' name='paginator'> </div>
+</td>
+</tr>
+#end if
+</table>
+<!-- end of das_nrecords.tmpl template -->
+
+</div> <!-- end of id="results" -->
+#if $limit
+<script type="application/javascript">
+function changeRange(page) {
+    var limit = $limit
+    var id = document.getElementById('startIdx');
+    var startIdx = id.value;
+    id.value = (page-1);
+
+    id = document.getElementById('results');
+    id.innerHTML = '' + (page-1)*limit + '-' + ((page-1)*limit+limit);
+
+    hideRows();
+    showRows(page);
+    makePagination(page);
+}
+function showRows(page) {
+    var limit = $limit;
+    var start = (page-1)*limit;
+    var newlimit = start+limit;
+    for(i=start; i<newlimit; i++) {
+        var id = document.getElementById('row'+i);
+        if (id) {
+            id.className = "show";
+        }
+    }
+}
+function hideRows() {
+    var nrows = $nrows;
+    for(i=0;i<nrows;i++) {
+        var id = document.getElementById('row'+i);
+        id.className="hide";
+    }
+}
+#set npages = $nrows/$limit
+function makePagination(startWith) {
+    var str = '';
+    var nrows = $nrows;
+    var npages = $npages;
+    var pagination = 5;
+
+    if (npages*pagination < nrows) {
+        npages += 1;
+    }
+    if (npages < pagination) {
+        pagination = npages;
+    }
+
+    var start = startWith-2;
+    var end   = startWith+2;
+    if (start < 1) {
+        start = 1;
+        end   = pagination;
+    }
+    if (end  >= npages) {
+        end   = npages;
+    }
+    var prev  = startWith-1;
+    var next  = startWith+1;
+
+    if (start != 1) {
+        str += '<a href="javascript:changeRange(1)">first</a>&nbsp;';
+        str += '<a href="javascript:changeRange('+prev+')">prev</a>&nbsp;';
+    }
+    for(page=start; page<=end; page++) {
+        if(page==startWith) {
+            str += '<span id="page'+page+'" name="page'+page+'" class="gray_box">';
+        } else {
+            str += '<span id="page'+page+'" name="page'+page+'" class="box">';
+        }
+        var strpage = '';
+        if (page<10) {
+            strpage = '&nbsp;'+page
+        } else {
+            strpage = page;
+        }
+        str += '<a href="javascript:changeRange('+page+')">'+strpage+'</a>';
+        str += '</span> &nbsp';
+    }
+    if (end != npages) {
+        str += '<a href="javascript:changeRange('+next+')">next</a>&nbsp;';
+        str += '<a href="javascript:changeRange('+(npages-1)+')">last</a>';
+    } else {
+        str += '<a href="javascript:changeRange('+(npages-1)+')">last</a>';
+    }
+    id = document.getElementById('paginator');
+    id.innerHTML = str;
+}
+showRows(1);
+makePagination(1);
+</script>
+#end if
