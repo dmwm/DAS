@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.18 2009/05/28 18:59:11 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: abstract_service.py,v 1.19 2009/06/03 19:51:29 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -188,16 +188,26 @@ class DASAbstractService(object):
         """
         return
 
-    def adjust_result(self, api, jsondict):
+    def parser(self, data):
         """
-        Some data-services return a single result as a dict with
-        non-meaningful keys, e.g. sitedb returns {0:{row}, 1:{row}}
-        Instead we expect results returned with lists:
-        {'key':[{row}, {row}]}
-        Use this adjustment call (implemented in data-service code)
-        to fix this problem
+        Custom parser for output data, must be implemeted in derived classes
         """
-        return jsondict
+        return data
+
+    def query_parser(self, query):
+        """
+        Init QLLexer and parse input query.
+        """
+        if  not self.qllexer:
+            self.qllexer = QLLexer({self.name:self.keys()})
+
+        selkeys = self.qllexer.selkeys(query)
+        conditions = self.qllexer.conditions(query)
+        msg = 'DASAbstractService::query_parser, selkeys %s' % selkeys
+        self.logger.debug(msg)
+        msg = 'DASAbstractService::query_parser, conditions %s' % conditions
+        self.logger.debug(msg)
+        return selkeys, conditions
 
     def worker(self, query, icond_dict=None):
         """
@@ -206,16 +216,7 @@ class DASAbstractService(object):
         """
         msg = 'DASAbstractService::worker(%s, %s)' % (query, icond_dict)
         self.logger.info(msg)
-
-        if  not self.qllexer:
-            self.qllexer = QLLexer({self.name:self.keys()})
-
-        selkeys = self.qllexer.selkeys(query)
-        conditions = self.qllexer.conditions(query)
-        msg = 'DASAbstractService::worker, selkeys %s' % selkeys
-        self.logger.debug(msg)
-        msg = 'DASAbstractService::worker, conditions %s' % conditions
-        self.logger.debug(msg)
+        selkeys, conditions = self.query_parser(query)
 
         # loop over conditions and create input params dict which will
         # be passed to data-service, convert DAS condition keys into
@@ -243,7 +244,7 @@ class DASAbstractService(object):
                 params[newkey] = icond_dict[key]
 
         # translate selection keys into ones data-service APIs provides
-        keylist = [das2result(self.name, key) for key in selkeys]
+#        keylist = [das2result(self.name, key) for key in selkeys]
         keylist = []
         for key in selkeys:
             res = das2result(self.name, key)
@@ -285,6 +286,7 @@ class DASAbstractService(object):
                 res = self.getdata(url, args)
                 if  type(res) is types.GeneratorType:
                     res = [i for i in res][0]
+                res = self.parser(res)
                 res = res.replace('null', '\"null\"')
                 try:
                     jsondict = json.loads(res)
@@ -320,6 +322,7 @@ class DASAbstractService(object):
             res = self.getdata(url, args)
             if  type(res) is types.GeneratorType:
                 res = [i for i in res][0]
+            res = self.parser(res)
             res = res.replace('null', '\"null\"')
             try:
                 jsondict = json.loads(res)
