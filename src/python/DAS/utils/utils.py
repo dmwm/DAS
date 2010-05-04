@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.54 2010/01/05 16:38:18 valya Exp $"
-__version__ = "$Revision: 1.54 $"
+__revision__ = "$Id: utils.py,v 1.55 2010/01/15 17:09:16 valya Exp $"
+__version__ = "$Revision: 1.55 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -795,29 +795,31 @@ def row2das(mapper, system, api, row):
                 if  type(item) is types.DictType:
                     row2das(mapper, system, api, item)
 
-def aggregator(results):
+def aggregator(results, expire):
     """
     DAS aggregator which iterate over all records in results set and
     perform aggregation of records on the primary_key of the record.
     """
     record = results.next()
-    record['_id'] = str(record['_id']) # _id is ObjectId, convert it to string
     prim_key = record['primary_key']
-    del record['primary_key']
-    del record['das']
+    record.pop('primary_key')
+    record.pop('das')
+    record.pop('_id')
     update = 0
     for row in results:
-        row['_id'] = str(row['_id'])
-        del row['primary_key']
-        del row['das']
+        row.pop('primary_key')
+        row.pop('das')
+        row.pop('_id')
         val1 = dict_value(record, prim_key)
         val2 = dict_value(row, prim_key)
         if  val1 == val2:
             merge_dict(record, row)
             update = 1
         else:
+            record.update({'das':{'expire':expire}})
             yield record
             record = dict(row)
             update = 0
     if  update: # check if we did update for last row
+        record.update({'das':{'expire':expire}})
         yield record
