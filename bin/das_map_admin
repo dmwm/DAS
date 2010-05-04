@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# setup environment
+#. `dirname $0`/setup.sh
+
+cmd=$DAS_ROOT/src/python/DAS/tools/das_mapping_db.py
+chmod a+x $cmd
+$cmd "$@"
