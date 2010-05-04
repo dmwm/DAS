@@ -6,8 +6,8 @@
 General purpose DAS logger class
 """
 
-__revision__ = "$Id: logger.py,v 1.7 2009/12/07 20:53:03 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: logger.py,v 1.8 2010/01/06 21:16:00 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -109,6 +109,8 @@ class DASLogger:
         """
         Write given message to the logger at error logging level
         """
+        if  not msg:
+            msg = "No message"
         msg = self.addr + ' ' + msg
         self.logger.error(msg)
         if  self.stdout:
@@ -118,6 +120,8 @@ class DASLogger:
         """
         Write given message to the logger at info logging level
         """
+        if  not msg:
+            msg = "No message"
         msg = self.addr + ' ' + msg
         self.logger.info(msg)
         if  self.stdout:
@@ -127,6 +131,8 @@ class DASLogger:
         """
         Write given message to the logger at debug logging level
         """
+        if  not msg:
+            msg = "No message"
         msg = self.addr + ' ' + msg
         self.logger.debug(msg)
         if  self.stdout and self.verbose > 1:
@@ -136,6 +142,8 @@ class DASLogger:
         """
         Write given message to the logger at warning logging level
         """
+        if  not msg:
+            msg = "No message"
         msg = self.addr + ' ' + msg
         self.logger.warn(msg)
 
@@ -143,6 +151,8 @@ class DASLogger:
         """
         Write given message to the logger at exception logging level
         """
+        if  not msg:
+            msg = "No message"
         msg = self.addr + ' ' + msg
         self.logger.error(msg)
         if  self.stdout:
@@ -152,6 +162,8 @@ class DASLogger:
         """
         Write given message to the logger at critical logging level
         """
+        if  not msg:
+            msg = "No message"
         msg = self.addr + ' ' + msg
         self.logger.critical(msg)
 
