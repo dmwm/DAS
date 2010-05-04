@@ -19,7 +19,7 @@ params : {
 daskeys : [
         {"key": "primary_ds", "map":"primary_ds.name", "pattern":""},
 ]
-api2das : [
+das2api : [
         {"das_key":"primary_ds.name", "api_param": "primary_ds_name", "pattern":""},
 ]
 ---
@@ -41,7 +41,7 @@ daskeys : [
         {"key": "tag", "map":"globaltag", "pattern":""},
         {"key": "c_section", "map":"xtcrosssection", "pattern":""},
 ]
-api2das : [
+das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
@@ -54,7 +54,7 @@ params : {
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
 ]
-api2das : [
+das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
@@ -68,7 +68,7 @@ daskeys : [
         {"key": "config", "map":"config", "pattern":""},
         {"key": "dataset", "map":"dataset.name", "pattern":""},
 ]
-api2das : [
+das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
@@ -83,7 +83,7 @@ params : {
 daskeys : [
         {"key": "block", "map":"block.name", "pattern":""},
 ]
-api2das : [
+das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
         {"das_key":"block.name", "api_param": "block_name", "pattern":""},
 ]
@@ -98,7 +98,7 @@ daskeys : [
         {"key": "file", "map":"file.name", "pattern":""},
         {"key": "dataset", "map":"file.dataset.name", "pattern":""},
 ]
-api2das : [
+das2api : [
         {"das_key":"file.dataset.name", "api_param":"dataset", "pattern":""},
         {"das_key":"file.block.name", "api_param":"block_name", "pattern":""}
 ]
@@ -113,7 +113,7 @@ daskeys : [
         {"key": "file", "map":"file.name", "pattern":""},
         {"key": "block", "map":"file.block.name", "pattern":""},
 ]
-api2das : [
+das2api : [
         {"das_key":"file.dataset", "api_param":"dataset", "pattern":""},
         {"das_key":"file.block.name", "api_param":"block_name", "pattern":""}
 ]
@@ -127,7 +127,7 @@ params : {
 daskeys : [
         {"key": "file", "map":"file.name", "pattern":""},
 ]
-api2das : [
+das2api : [
         {"das_key":"file.name", "api_param":"logical_file_name", "pattern":""},
 ]
 ---
@@ -140,7 +140,7 @@ params : {
 daskeys : [
         {"key": "file", "map":"file.name", "pattern":""},
 ]
-api2das : [
+das2api : [
         {"das_key":"file.name", "api_param":"logical_file_name", "pattern":""},
 ]
 ---

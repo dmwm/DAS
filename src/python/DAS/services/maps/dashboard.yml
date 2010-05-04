@@ -24,13 +24,13 @@ params : {
 daskeys : [
     {"key":"jobsummary", "map":"jobsummary", "pattern":""},
 ]
-api2das : [
-    {"api_param":"date1", "das_key":"date", "pattern":""},
-    {"api_param":"date2", "das_key":"date", "pattern":""},
-    {"api_param":"ce", "das_key":"site", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-    {"api_param":"ce", "das_key":"site.ce", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-    {"api_param":"site", "das_key":"site", "pattern":"re.compile('^T[0-3]_')"},
-    {"api_param":"site", "das_key":"site.name", "pattern":"re.compile('^T[0-3]_')"},
+das2api : [
+    {"das_key":"date", "api_param":"date1", "pattern":""},
+    {"das_key":"date", "api_param":"date2", "pattern":""},
+    {"das_key":"site", "api_param":"ce", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+    {"das_key":"site.ce", "api_param":"ce", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+    {"das_key":"site", "api_param":"site", "pattern":"re.compile('^T[0-3]_')"},
+    {"das_key":"site.name", "api_param":"site", "pattern":"re.compile('^T[0-3]_')"},
 ]
 ---
 notations : [
