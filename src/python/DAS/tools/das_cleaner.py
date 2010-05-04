@@ -10,6 +10,8 @@ __author__ = "Valentin Kuznetsov"
 
 import time
 from optparse import OptionParser
+from DAS.utils.das_config import das_readconfig
+from DAS.utils.logger import DASLogger
 from DAS.core.das_cache import DASCache
 from DAS.utils.utils import dump
 
@@ -23,10 +25,13 @@ class DASOptionParser:
                                           type="int", default=0, 
                                           dest="verbose",
              help="verbose output")
+        self.parser.add_option("-l", "--list-caches", action="store_true", 
+                                          dest="listcaches",
+             help="specify which cache to clean, e.g. memcache")
         self.parser.add_option("-c", "--cache", action="store", 
                                           type="string", default=None, 
                                           dest="cache",
-             help="specify which cache to clean, e.g. memcache or couch")
+             help="specify which cache to clean, e.g. memcache")
         self.parser.add_option("-d", "--delete", action="store", 
                                           type="string", default="das", 
                                           dest="delete",
@@ -49,8 +54,24 @@ if __name__ == '__main__':
         debug = opts.verbose
     else:
         debug = 0
-    DAS = DASCache(debug=debug)
-    if  opts.delete:
+    config = das_readconfig()
+    logger = DASLogger(verbose=debug, stdout=debug)
+    config['logger'] = logger
+    config['verbose'] = debug
+    DAS = DASCache(config)
+    if  opts.listcaches:
+        for name, obj in DAS.servers.items():
+            print name, obj
+            if  name == 'memcache':
+                print "cache lifetime: %s" % obj.limit
+                print "cache servers : %s" % obj.servers
+            elif  name == 'couchcache':
+                print "cache lifetime: %s" % obj.limit
+                print "cache servers : %s" % obj.uri
+            elif  name == 'filecache':
+                print "cache lifetime: %s" % obj.limit
+                print "cache dir     : %s" % obj.dir
+    elif  opts.delete:
         DAS.delete_cache(dbname=opts.delete, cache=opts.cache)
     else:
         DAS.clean_cache(cache=opts.cache)
