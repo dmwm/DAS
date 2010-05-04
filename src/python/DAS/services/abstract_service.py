@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.49 2009/11/17 19:33:22 valya Exp $"
-__version__ = "$Revision: 1.49 $"
+__revision__ = "$Id: abstract_service.py,v 1.50 2009/11/20 15:48:46 valya Exp $"
+__version__ = "$Revision: 1.50 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,8 +17,7 @@ import traceback
 import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
-#from DAS.utils.utils import json_parser
-#from DAS.utils.utils import cartesian_product
+from DAS.utils.utils import row2das
 
 class DASAbstractService(object):
     """
@@ -163,7 +162,7 @@ class DASAbstractService(object):
         Convert keys in resulted rows into DAS notations.
         """
         for row in gen:
-            self.row2das(self.name, api, row)
+            row2das(self.dasmapping.notation2das, self.name, api, row)
             yield row
 
     def lookup_keys(self, api):
@@ -305,21 +304,3 @@ class DASAbstractService(object):
             if 'required' in args.values():
                 continue
             yield url, api, args
-        
-    def row2das(self, system, api, row):
-        """Transform keys of row into DAS notations, e.g. bytes to size"""
-        if  type(row) is not types.DictType:
-            return
-        for key, val in row.items():
-            newkey = self.dasmapping.notation2das(system, key, api)
-            if  newkey != key:
-                row[newkey] = row.pop(key)
-#                row[newkey] = row[key]
-#                del row[key]
-            if  type(val) is types.DictType:
-                self.row2das(system, api, val)
-            elif type(val) is types.ListType:
-                for item in val:
-                    if  type(item) is types.DictType:
-                        self.row2das(system, api, item)
- 
