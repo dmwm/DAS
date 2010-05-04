@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.64 2010/02/16 01:07:31 valya Exp $"
-__version__ = "$Revision: 1.64 $"
+__revision__ = "$Id: utils.py,v 1.65 2010/02/16 18:36:25 valya Exp $"
+__version__ = "$Revision: 1.65 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -1042,3 +1042,20 @@ def aggregator(results, expire):
     if  update: # check if we did update for last row
         record.update({'das':{'expire':expire}})
         yield record
+
+def extract_http_error(err):
+    """
+    Upon urllib failure the data-service can send HTTPError message.
+    It can be in a form of JSON, etc. This function attempts to extract
+    such message. If it fails it just str(err) and return.
+    """
+    msg  = str(err)
+    try:
+        err = json.loads(err)
+        if  err.has_key('message') and \
+            err['message'].has_key('Exception'): # DBS3
+            msg = err['message']['Exception']
+    except:
+        pass
+    return msg
+
