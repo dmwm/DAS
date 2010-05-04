@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.9 2009/06/09 13:33:00 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_webconfig.py,v 1.10 2009/06/09 18:16:06 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -29,7 +29,7 @@ config.Webtools.port = 8212
 #config.Webtools.host = '0.0.0.0' 
 # listen only to localhost, do not allow connection outside of it, this can be
 # used to hide service behind front-end
-config.Webtools.host = 'localhost' 
+config.Webtools.host = '127.0.0.1' 
 config.Webtools.application = 'DASWeb'
 # This is the config for the application
 config.component_('DASWeb')
