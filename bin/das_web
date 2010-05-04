@@ -8,6 +8,7 @@ if [ -z ${WMCORE_ROOT} ]; then
    echo "The WMCORE_ROOT environment is not set"
    exit 1
 fi
+export WTBASE=$WMCORE_ROOT/src
 if [ -z $DAS_ROOT ]; then
    echo "The DAS_ROOT environment is not set"
    exit 1
