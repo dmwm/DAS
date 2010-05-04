@@ -4,11 +4,12 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.25 2010/01/25 20:23:04 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: das_cli.py,v 1.26 2010/02/05 21:18:25 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
+from pprint import pformat
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
 from DAS.core.das_mongocache import convert2pattern
@@ -114,12 +115,17 @@ if __name__ == '__main__':
     debug = opts.verbose
     DAS = DASCore(debug=debug, nores=opts.noresults)
     if  opts.hash:
-        mongo_query = DAS.mongoparser.requestquery(query)
+        mongo_query = DAS.mongoparser.\
+                requestquery(query, add_to_analytics=False)
         loose_query_pat, loose_query = convert2pattern(mongo_query)
+        service_map = DAS.mongoparser.service_apis_map(mongo_query)
+        print "-------------"
         print "DAS-QL query:", query
         print "Mongo query :", mongo_query
         print "Loose query :", loose_query
         print "query hash  :", genkey(str(mongo_query))
+        print "Services    : map of service and api list\n", 
+        print pformat(service_map)
         sys.exit(0)
     sdict = DAS.keys()
     if  opts.services:
