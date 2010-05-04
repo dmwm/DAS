@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.11 2009/05/30 19:02:23 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_cache.py,v 1.12 2009/06/02 02:01:43 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -147,12 +147,6 @@ class DASCacheMgr(object):
         nprocs  = 2*processing.cpuCount()
         pool    = processing.Pool(nprocs)
         orphans = {} # map of orphans requests
-        def update(orphans, item):
-            """Update orphans dict"""
-            if  orphans.has_key(item):
-                orphans[item] = orphans[item] + 1
-            else:
-                orphans[item] = 1
         while True: 
             to_remove = {}
             msg = "waiting queue %s" % self.queue
@@ -165,7 +159,7 @@ class DASCacheMgr(object):
                         break
                 except:
                     traceback.print_exc()
-                    update(orphans, item)
+                    orphans[item] = orphans.get(item, 0) + 1
                     break
                 time.sleep(self.sleep) # separate processes
             msg = "will remove %s" % to_remove
@@ -178,31 +172,9 @@ class DASCacheMgr(object):
                     if  status:
                         self.queue.remove(key)
                     else:
-                        update(orphans, item)
+                        orphans[item] = orphans.get(item, 0) + 1
                 # check if we have this request in orphans maps
                 # if number of retries more then 2, discard request
                 if  orphans.has_key(key) and orphans[key] > 2:
                     del orphans[key]
                     self.queue.remove(key)
-
-    def worker_v1(self, func):
-        time.sleep(5) # sleep to allow main thread with DAS core take off
-        print "\n#### start DASCacheMgr::worker with", func
-        nprocs = 2*processing.cpuCount()
-        pool   = processing.Pool(nprocs)
-        while True: 
-            to_remove = []
-            print "waiting queue", self.queue
-            for item in self.queue:
-                try:
-                    result = pool.apply_async(func, (item, ))
-                    to_remove.append(item)
-                    if  len(to_remove) == nprocs:
-                        break
-                except:
-                    traceback.print_exc()
-                    break
-            print "will remove", to_remove
-            time.sleep(self.sleep)
-            for item in to_remove:
-                self.queue.remove(item)
