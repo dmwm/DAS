@@ -2,16 +2,17 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-DQ service
+DQ data-service plugin.
 """
-__revision__ = "$Id: dq_service.py,v 1.5 2009/10/16 18:02:48 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: dq_service.py,v 1.6 2009/11/19 20:15:35 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import types
 import urllib2
-import DAS.utils.jsonwrapper as json
+#import DAS.utils.jsonwrapper as json
+import json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import genkey, map_validator
 
@@ -41,38 +42,8 @@ class DQService(DASAbstractService):
     def __init__(self, config):
         DASAbstractService.__init__(self, 'dq', config)
         self._keys = None
-#        self.map = self.dq_map()
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-
-    def dq_map(self):
-        """
-        Fetch DQ map
-        """
-        if  self._keys:
-            return self._keys
-        url    = self.url
-        params = {"api":"doc"}
-        data = urllib2.urlopen(url, json.dumps(params))
-        res  = data.read()
-        jsondict = json.loads(res)
-        # TEMP fix, until Anzar will fix its map, it should not contain dataset
-        # and dqflaglist should be replaced with dqflags.
-        # {u'listRuns4DQ': {u'keys': [u'dataset', u'run', u'dqflaglist'], 
-        #  u'params': {u'api': u'listRuns4DQ', u'DQFlagList': u'list', u'dataset': u'string'}}, 
-        #  u'listSubSystems': {u'keys': [u'subsystems'], u'params': {u'api': u'listSubSystems'}}}
-        for key, val in jsondict.items():
-            if  val.has_key('keys'):
-                keys = val['keys']
-                if  'dataset' in keys:
-                    keys.remove('dataset')
-                if  'dqflaglist' in keys:
-                    keys.remove('dqflaglist')
-                    keys.append('dqflags')
-                val['keys'] = keys
-#                val['primary_key'] = ''
-                jsondict[key] = val
-        return jsondict
 
     def adjust_params(self, args):
         """
@@ -81,4 +52,17 @@ class DQService(DASAbstractService):
         """
         for key, val in args.items():
             args[key] = param_parser(val)
+
+    def parser(self, data_ptr, api, params=None):
+        """
+        Dashboard data-service parser.
+        """
+        jsondict = json.load(data_ptr)
+        for key in jsondict.keys():
+            newkey = self.dasmapping.notation2das(self.name, key)
+            if  newkey != key:
+                jsondict[newkey] = jsondict[key]
+                del jsondict[key]
+        yield jsondict
+        data_ptr.close()
 

@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.14 2009/11/10 16:20:56 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.15 2009/11/19 20:15:35 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -421,9 +421,12 @@ if __name__ == '__main__':
     params = {'api': 'listRuns4DQ', 'DQFlagList': 'list', 'dataset': 'string'}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='dq', map='dq', pattern='')],
+        'daskeys' : [dict(key='dq', map='dq', pattern=''),
+                     dict(key='dataset', map='dataset.name', pattern='')],
         'api2das' : [
                 dict(api_param='DQFlagList', das_key='dq', pattern=""),
+                dict(api_param='dataset', das_key='dataset', pattern=''),
+                dict(api_param='dataset', das_key='dataset.name', pattern=''),
         ]
     }
     mgr.add(rec)
