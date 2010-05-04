@@ -10,7 +10,7 @@ from utils.utils import genkey
 from core.das_couchdb import DASCouchDB
 from core.das_core import DASCore
 
-class testDASCache(unittest.TestCase):
+class testDASCouchDB(unittest.TestCase):
     """
     A test class for the DAS cache module
     """
