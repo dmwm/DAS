@@ -4,8 +4,8 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.5 2009/09/01 01:42:46 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: monitor_service.py,v 1.6 2009/09/02 19:56:38 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -51,6 +51,8 @@ class MonitorService(DASAbstractService):
             ctime = time.time() - time0
             header = dasheader(self.name, query, api, self.url, args,
                 ctime, self.expire, self.version())
+            header['lookup_keys'] = self.lookup_keys(api)
+            header['selection_keys'] = selkeys
             self.localcache.update_cache(mongo_query, data, header)
         return True
 

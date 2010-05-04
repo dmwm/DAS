@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.8 2009/09/01 01:42:45 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: dbs_service.py,v 1.9 2009/09/02 19:56:38 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -76,11 +76,12 @@ class DBSService(DASAbstractService):
                 newrow = {newkey : row}
 # I'm not sure I'll need this anymore in DBS, let's keep for a while
 # this add input parameters into DBS output.
-#                if  params:
-#                    for key, val in params.items():
-#                        nkey = self.dasmapping.notation2das(self.name, key)
-#                        if  not newrow.has_key(nkey) and nkey not in self.reserved:
-#                            newrow[nkey] = val
+                if  params:
+                    for key, val in params.items():
+                        if  val and val.find('*') == -1:
+                            nkey = self.dasmapping.notation2das(self.name, key)
+                            if  not newrow.has_key(nkey) and nkey not in self.reserved:
+                                newrow[nkey] = val
 #                print "\n\n### yield DBS row"
 #                print newrow
                 yield newrow

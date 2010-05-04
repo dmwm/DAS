@@ -7,11 +7,11 @@ DAS mapping
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_mapping.py,v 1.14 2009/09/01 20:21:57 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_mapping.py,v 1.15 2009/09/02 19:56:37 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
-import re # we get regex pattern from DB and eval it in primary_key
+import re # we get regex pattern from DB and eval it in lookup_key
 import types
 from DAS.core.das_mapping_db import DASMappingMgr
 from DAS.core.das_mapping_db import System, DASKey, Api, APIMap 
@@ -30,9 +30,9 @@ class DASMapping(DASMappingMgr):
     def __init__(self, config):
         DASMappingMgr.__init__(self, config)
 
-    def primary_key(self, system, daskey, api=None, value=None):
+    def lookup_keys(self, system, daskey, api=None, value=None):
         """
-        Returns primary key for given system and provided
+        Returns lookup keys for given system and provided
         selection DAS key, e.g. block => block.name
         """
         session = self.session()
@@ -40,11 +40,14 @@ class DASMapping(DASMappingMgr):
             filter(DASMap.system_id==System.id).\
             filter(DASMap.daskey_id==DASKey.id).\
             filter(System.name==system).\
-            filter(DASKey.name==daskey).\
             filter(Api.id==API2DAS.api_id).\
             filter(Api.id==DASMap.api_id).\
             filter(API2DAS.daskey_id==DASMap.daskey_id).\
             filter(API2DAS.system_id==System.id)
+        if  value:
+            query = query.filter(DASKey.name.like('%%%s' % daskey))
+        else:
+            query = query.filter(DASKey.name==daskey)
         if  api:
             query = session.query(Api, API2DAS, DASKey, System, DASMap).\
                 filter(DASMap.system_id==System.id).\
@@ -54,28 +57,29 @@ class DASMapping(DASMappingMgr):
                 filter(Api.id==API2DAS.api_id).\
                 filter(Api.id==DASMap.api_id).\
                 filter(Api.name==api)
-        primkeys = []
+        lookupkeys = []
         for aobj, adas, dobj, sobj, dmap in query.all():
-            pkey = dmap.primary_key
+            lkey = dmap.lookup_key
             if  value and adas.pattern:
                 pat  = eval(adas.pattern)
                 if  pat.match(value): 
-                    if  pkey not in primkeys:
-                        primkeys.append(pkey)
+                    if  lkey not in lookupkeys:
+                        lookupkeys.append(lkey)
             else:
-                if  pkey not in primkeys:
-                    primkeys.append(pkey)
-        if  len(primkeys) > 1:
-            msg  = 'Ambigous primary keys: %s\n' % str(primkeys)
+                if  lkey not in lookupkeys:
+                    lookupkeys.append(lkey)
+#        if  len(lookupkeys) > 1:
+#            msg  = 'Ambigous look-up keys: %s\n' % str(lookupkeys)
+#            msg += 'system=%s, daskey=%s, api=%s, value=%s' \
+#                % (system, daskey, api, value)
+#            raise Exception(msg)
+        if  not lookupkeys:
+            msg = 'Unable to find look-up key for '
             msg += 'system=%s, daskey=%s, api=%s, value=%s' \
                 % (system, daskey, api, value)
             raise Exception(msg)
-        if  not primkeys:
-            msg = 'Unable to find primary key for '
-            msg += 'system=%s, daskey=%s, api=%s, value=%s' \
-                % (system, daskey, api, value)
-            raise Exception(msg)
-        return primkeys[0]
+#        return lookupkeys[0]
+        return lookupkeys
 
     def api2das(self, system, api_input_name):
         """

@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.3 2009/09/01 20:17:02 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.4 2009/09/02 19:56:38 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -151,6 +151,12 @@ if __name__ == '__main__':
                ('pattern_lfn', 'file', ''),
               ]
     mgr.add_api(system, api, params, daskeys, api2das)
+    # listFileLumis
+#    api = 'listFileLumis'
+#    params = {'apiversion':apiversion, 'lfn': 'required'}
+#    daskeys = dict(file='file.name')
+#    api2das = [('lfn', 'file', ''), ('lfn', 'file.name', '')]
+#    mgr.add_api(system, api, params, daskeys, api2das)
     # listProcessedDatasets API
     api = 'listProcessedDatasets' 
     params = {'apiversion':apiversion,
@@ -179,6 +185,15 @@ if __name__ == '__main__':
               ]
     mgr.add_api(system, api, params, daskeys, api2das)
 
+    # listRuns API
+    api = 'listRuns'
+    params = { 'apiversion':apiversion, 'path' : 'required'}
+    daskeys = dict(run='run.run_number')
+    api2das = [('path', 'dataset', ''),
+               ('path', 'dataset.name', ''),
+              ]
+    mgr.add_api(system, api, params, daskeys, api2das)
+
     # insert DAS notations for DBS apis
     mgr.add_notation(system, 'creation_date', 'creation_time')
     mgr.add_notation(system, 'last_modification_date', 'modification_time')
@@ -189,9 +204,10 @@ if __name__ == '__main__':
     mgr.add_notation(system, 'storage_element_name', 'se')
     mgr.add_notation(system, 'number_of_files', 'nfiles')
     mgr.add_notation(system, 'number_of_events', 'nevents')
+    mgr.add_notation(system, 'number_of_lumi_sections', 'nlumis')
+    mgr.add_notation(system, 'total_luminosity', 'totlumi')
 #    mgr.add_notation(system, 'block_name', 'block.name')
     mgr.add_notation(system, 'lfn', 'name')
-
 #    print "DBS map"
 #    print mgr.servicemap(system, implementation='javaservlet')
 #    print "daskeys", mgr.list_daskeys(system)
@@ -312,7 +328,7 @@ if __name__ == '__main__':
     system = 'runsum'
     api = 'runsum'
     params  = {'DB':'cms_omds_lb', 'FORMAT':'XML', 'RUN':'required'}
-    daskeys = dict(run='run.runnumber')
+    daskeys = dict(run='run.run_number')
     api2das = [('RUN', 'run', "re.compile('[1-9][0-9]{4,5}')"),
                ('RUN', 'run', "re.compile('[1-9][0-9]{4,5}')"),
               ]
@@ -320,7 +336,7 @@ if __name__ == '__main__':
 
     mgr.add_notation(system, 'bField', 'bfield')
     mgr.add_notation(system, 'hltKey', 'hlt')
-    mgr.add_notation(system, 'runNumber', 'runnumber')
+    mgr.add_notation(system, 'runNumber', 'run_number')
 
     ##### END OF RunSummary
 
@@ -345,7 +361,11 @@ if __name__ == '__main__':
     }
     daskeys = dict(jobsummary='jobsummary')
     api2das = [('date1', 'date', ''), ('date2', 'date', ''), 
-               ('ce', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')")]
+               ('ce', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')"),
+               ('ce', 'jobsummary.ce', "re.compile('([a-zA-Z0-9]+\.){2}')"),
+               ('site', 'site', "re.compile('^T[0-3]_')"),
+               ('site', 'jobsummary.site', "re.compile('^T[0-3]_')"),
+              ]
     mgr.add_api(system, api, params, daskeys, api2das)
 
     ##### END OF Dashboard
@@ -418,11 +438,17 @@ if __name__ == '__main__':
         'type': 'json',
     }
     daskeys = {'monitor':'monitor', 
-               'monitor.site':'monitor.site', 
-               'monitor.country':'monitor.country',
-               'monitor.node':'monitor.node', 
-               'monitor.region':'monitor.region',
-               'monitor.tier':'monitor.tier'}
+               'monitor.site':'monitor', 
+               'monitor.country':'monitor',
+               'monitor.node':'monitor', 
+               'monitor.region':'monitor',
+               'monitor.tier':'monitor'}
+#    daskeys = {'monitor':'monitor', 
+#               'monitor.site':'monitor.site', 
+#               'monitor.country':'monitor.country',
+#               'monitor.node':'monitor.node', 
+#               'monitor.region':'monitor.region',
+#               'monitor.tier':'monitor.tier'}
     api2das = [('start', 'date', ''), ('end', 'date', '')]
     mgr.add_api(system, api, params, daskeys, api2das)
     ##### END OF monitor
