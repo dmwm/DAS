@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.41 2009/11/20 00:56:52 valya Exp $"
-__version__ = "$Revision: 1.41 $"
+__revision__ = "$Id: utils.py,v 1.42 2009/11/20 15:44:48 valya Exp $"
+__version__ = "$Revision: 1.42 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -708,8 +708,8 @@ def xml_parser(source, tag, add=None):
             else:
                 row[elem.tag][child.tag] = dict(child.attrib)
             child.clear()
-        elem.clear()
         yield row
+        elem.clear()
     root.clear()
     source.close()
 
@@ -735,4 +735,19 @@ def json_parser(data):
             jsondict = eval(res)
             pass
     yield jsondict
+
+def row2das(mapper, system, api, row):
+    """Transform keys of row into DAS notations, e.g. bytes to size"""
+    if  type(row) is not types.DictType:
+        return
+    for key, val in row.items():
+        newkey = mapper(system, key, api)
+        if  newkey != key:
+            row[newkey] = row.pop(key)
+        if  type(val) is types.DictType:
+            row2das(mapper, system, api, val)
+        elif type(val) is types.ListType:
+            for item in val:
+                if  type(item) is types.DictType:
+                    row2das(mapper, system, api, item)
 
