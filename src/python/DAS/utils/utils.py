@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.12 2009/05/08 15:52:51 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: utils.py,v 1.13 2009/05/13 14:54:08 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -395,3 +395,21 @@ def unique_list(ilist):
     tmplist = [k for k, g in groupby(ilist)]
     tmplist.sort()
     return tmplist
+
+def izip_longest(*args, **kwds):
+    """
+    izip_longest('ABCD', 'xy', fillvalue='-') --> Ax By C- D-
+    introduced in python 2.6
+    """
+    fillvalue = kwds.get('fillvalue')
+    def sentinel(counter = ([fillvalue]*(len(args)-1)).pop):
+        yield counter()         # yields the fillvalue, or raises IndexError
+    from itertools import repeat, chain, izip
+    fillers = repeat(fillvalue)
+    iters = [chain(it, sentinel(), fillers) for it in args]
+    try:
+        for tup in izip(*iters):
+            yield tup
+    except IndexError:
+        pass
+
