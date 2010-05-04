@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.67 2010/03/09 02:31:19 valya Exp $"
-__version__ = "$Revision: 1.67 $"
+__revision__ = "$Id: das_core.py,v 1.68 2010/03/17 20:06:16 valya Exp $"
+__version__ = "$Revision: 1.68 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -125,12 +125,12 @@ class DASCore(object):
 #            self.cache   = self.hotcache
 #            self.logger.info('DASCore::__init__ hotcache=%s' % klass)
 
-        systems = dasmapping.list_systems()
+        self.systems = dasmapping.list_systems()
 
         # plug-in architecture: loop over registered data-services in
         # dasconfig; load appropriate module/class; register data
         # service with DASCore.
-        for name in systems:
+        for name in self.systems:
             try:
                 klass   = 'src/python/DAS/services/%s/%s_service.py'\
                     % (name, name)
@@ -168,7 +168,7 @@ class DASCore(object):
         self.service_parameters = {}
         # loop over systems and get system keys,
         # add mapping keys to final list
-        for name in systems: 
+        for name in self.systems: 
             skeys = getattr(self, name).keys()
             self.service_keys[getattr(self, name).name] = skeys
             sparams = getattr(self, name).parameters()
@@ -293,8 +293,9 @@ class DASCore(object):
         Return status 0/1 depending on success of the calls, can be
         used by workers on cache server.
         """
-        if  self.in_raw_cache(query):
-            return 1
+        if  self.rawcache.similar_queries(query):
+            if  self.in_raw_cache(query):
+                return 1
 
         query = self.adjust_query(query, add_to_analytics)
         msg = 'DASCore::call, query=%s' % query
@@ -333,10 +334,19 @@ class DASCore(object):
         self.logger.info(msg)
         spec      = query.get('spec', {})
         fields    = query.get('fields', None)
+        if  fields:
+            prim_keys = []
+            for key in fields:
+                for srv in self.systems:
+                    prim_key = self.mapping.find_mapkey(srv, key)
+                    if  prim_key and prim_key not in prim_keys:
+                        prim_keys.append(prim_key)
+            if  prim_keys:
+                query['spec'].update({"das.primary_key": {"$in":prim_keys}})
         mapreduce = query.get('mapreduce', None)
         filters   = query.get('filters', None)
         if  filters:
-            fields = filters
+            query['fields'] = filters
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
         else:
