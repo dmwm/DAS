@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.41 2010/02/13 02:19:12 valya Exp $"
-__version__ = "$Revision: 1.41 $"
+__revision__ = "$Id: DASSearch.py,v 1.42 2010/02/15 18:30:47 valya Exp $"
+__version__ = "$Revision: 1.42 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -25,15 +25,22 @@ from itertools import groupby
 from cherrypy import expose, tools
 from cherrypy.lib.static import serve_file
 
-# WMCore/WebTools modules
-from WMCore.WebTools.Page import TemplatedPage
-from WMCore.WebTools.Page import exposedasjson, exposetext
-from WMCore.WebTools.Page import exposejson, exposedasplist
+try:
+    # WMCore/WebTools modules
+    from WMCore.WebTools.Page import TemplatedPage
+    from WMCore.WebTools.Page import exposedasjson, exposetext
+    from WMCore.WebTools.Page import exposejson, exposedasplist
+except:
+    # stand-alone version
+    from DAS.web.tools import exposedasjson, exposetext
+    from DAS.web.tools import exposejson, exposedasplist
 
 # DAS modules
 from DAS.core.das_core import DASCore
 from DAS.utils.utils import getarg, access
+from DAS.web.das_webmanager import DASWebManager
 from DAS.web.utils import urllib2_request, json2html, web_time
+
 import DAS.utils.jsonwrapper as json
 
 if sys.version_info < (2, 5):
@@ -54,20 +61,29 @@ def ajax_response(msg):
     page += "</ajax-response>"
     return page
 
-class DASSearch(TemplatedPage):
+#class DASSearch(TemplatedPage):
+class DASSearch(DASWebManager):
     """
     DAS web interface.
     """
-    def __init__(self, config):
-        TemplatedPage.__init__(self, config)
-        cdict           = self.config.dictionary_()
-        self.cachesrv   = getarg(cdict, 'cache_server_url', 
-                            'http://localhost:8011')
+    def __init__(self, config={}):
+#        TemplatedPage.__init__(self, config)
+        DASWebManager.__init__(self, config)
+        try:
+            # try what is supplied from WebTools framework
+            cdict         = self.config.dictionary_()
+            self.cachesrv = cdict.get('cache_server_url', 
+                                'http://localhost:8211')
+            self.base     = '/dascontrollers'
+        except:
+            # stand-alone version
+            self.cachesrv = config.get('cache_server_url',
+                                'http://localhost:8211')
+            self.base     = '/das'
         self.dasmgr     = DASCore()
         self.dasmapping = self.dasmgr.mapping
         self.daslogger  = self.dasmgr.logger
         self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 
-        self.base       = '/dascontrollers'
 
     def top(self):
         """
@@ -174,6 +190,7 @@ class DASSearch(TemplatedPage):
         Check provided input for valid DAS keys.
         """
         das_keys = self.dasmgr.das_keys()
+        das_keys.sort()
         if  not uinput:
             return self.templatepage('das_ambiguous', 
                     input=uinput, entities=','.join(das_keys))
@@ -211,21 +228,30 @@ class DASSearch(TemplatedPage):
                 raise Exception("Page view '%s' is not supported" % view)
             return getattr(self, '%sview' % view)(kwargs)
         except:
-            self.daslogger.error(traceback.format_exc())
-            error  = "args: %s\nkwargs: %s\n" % (args, kwargs)
-            error += "Exception type: %s\nException value: %s\nTime: %s" \
-                        % (sys.exc_type, sys.exc_value, web_time())
-            error = error.replace("<", "").replace(">", "")
-            return self.error(error)
+            return self.error(self.gen_error_msg(kwargs))
 
     @expose
     def form(self, uinput=None, msg=None):
         """
         provide input DAS search form
         """
-        page = self.templatepage('das_searchform', input=uinput, msg=msg,
+        page = self.templatepage('das_searchform', input=uinput, msg=msg, 
                                         base=self.base)
         return page
+
+    def gen_error_msg(self, kwargs):
+        """
+        Generate standard error message.
+        """
+        self.daslogger.error(traceback.format_exc())
+        error  = "My request to DAS is failed\n\n"
+        error += "Input parameters:\n"
+        for key, val in kwargs.items():
+            error += '%s: %s\n' % (key, val)
+        error += "Exception type: %s\nException value: %s\nTime: %s" \
+                    % (sys.exc_info()[0], sys.exc_info()[1], web_time())
+        error = error.replace("<", "").replace(">", "")
+        return error
 
     @expose
     def error(self, msg):
@@ -281,9 +307,12 @@ class DASSearch(TemplatedPage):
                         'collection':coll}
             path     = '/rest/records'
             headers  = {"Accept": "application/json"}
-            result   = json.loads(
-            urllib2_request('GET', url+path, params, headers=headers))
-#            print "\n### result", result
+            try:
+                data = urllib2_request('GET', url+path, params, headers=headers)
+                result = json.loads(data)
+            except:
+                self.daslogger.error(traceback.format_exc())
+                result = {'status':'fail', 'reason':traceback.format_exc()}
             res = ""
             if  result['status'] == 'success':
                 if  recordid: # we got id
@@ -326,12 +355,7 @@ class DASSearch(TemplatedPage):
             page = self.page(form + page, ctime=ctime)
             return page
         except:
-            self.daslogger.error(traceback.format_exc())
-            error  = "args: %s\nkwargs: %s\n" % (args, kwargs)
-            error += "Exception type: %s\nException value: %s\nTime: %s" \
-                        % (sys.exc_type, sys.exc_value, web_time())
-            error = error.replace("<", "").replace(">", "")
-            return self.error(error)
+            return self.error(self.gen_error_msg(kwargs))
 
     def nresults(self, kwargs):
         """
@@ -343,14 +367,17 @@ class DASSearch(TemplatedPage):
         params  = {'query':uinput}
         path    = '/rest/nresults'
         headers = {"Accept": "application/json"}
-        data    = json.loads(
-        urllib2_request('GET', url+path, params, headers=headers))
-        if  data['status'] == 'success':
-            return data['nresults']
+        try:
+            data = urllib2_request('GET', url+path, params, headers=headers)
+            record = json.loads(data)
+        except:
+            self.daslogger.error(traceback.format_exc())
+            record = {'status':'fail', 'reason':traceback.format_exc()}
+        if  record['status'] == 'success':
+            return record['nresults']
         else:
-            msg = "nresults returns status: %s" % str(data)
+            msg = "nresults returns status: %s" % str(record)
             self.daslogger.info(msg)
-#        self.send_request('POST', kwargs)
         return -1
 
     def send_request(self, method, kwargs):
@@ -372,9 +399,13 @@ class DASSearch(TemplatedPage):
             raise Exception('Unsupported method %s' % method)
         headers = {'Accept': 'application/json', 
                    'Content-type': 'application/json'} 
-        res     = json.loads(
-        urllib2_request(method, url+path, params, headers=headers))
-        return res
+        try:
+            data = urllib2_request(method, url+path, params, headers=headers)
+            result = json.loads(data)
+        except:
+            self.daslogger.error(traceback.format_exc())
+            result = {'status':'fail', 'reason':traceback.format_exc()}
+        return result
 
     def result(self, kwargs):
         """
@@ -382,14 +413,13 @@ class DASSearch(TemplatedPage):
         web methods
         """
         result  = self.send_request('GET', kwargs)
+        res = []
         if  type(result) is types.StringType:
             data = json.loads(result)
         else:
             data = result
         if  data['status'] == 'success':
             res    = data['data']
-        elif data['status'] == 'not found':
-            res  = []
         return res
         
     @exposedasplist
@@ -445,11 +475,14 @@ class DASSearch(TemplatedPage):
         if  status == 'no data':
             # no data in raw cache, send POST request
             self.send_request('POST', kwargs)
-            ctime   = (time.time()-time0)
+            ctime = (time.time()-time0)
 #            page    = self.templatepage('not_ready')
-            page    = self.status(input=uinput)
-            page    = self.page(form + page, ctime=ctime)
+            page  = self.status(input=uinput)
+            page  = self.page(form + page, ctime=ctime)
             return page
+        elif status == 'fail':
+            kwargs['reason'] = 'Unable to get status from data-service'
+            return self.error(self.gen_error_msg(kwargs))
 
         total   = self.nresults(kwargs)
         rows    = self.result(kwargs)
@@ -618,8 +651,8 @@ class DASSearch(TemplatedPage):
         """
         Place request to obtain status about given query
         """
-        img = '<img src="/dascontrollers/images/loading.gif" alt="loading"/>'
-        req = """
+        img  = '<img src="/dascontrollers/images/loading.gif" alt="loading"/>'
+        req  = """
         <script type="application/javascript">
         setTimeout('ajaxStatus()',3000)
         </script>"""
@@ -638,14 +671,23 @@ class DASSearch(TemplatedPage):
         path    = '/rest/status'
         url     = self.cachesrv
         headers = {'Accept': 'application/json'}
-        data    = json.loads(
-        urllib2_request('GET', url+path, params, headers=headers))
+        try:
+            res  = urllib2_request('GET', url+path, params, headers=headers)
+            data = json.loads(res)
+        except:
+            self.daslogger.error(traceback.format_exc())
+            data = {'status':'fail'}
         if  ajax:
             cherrypy.response.headers['Content-Type'] = 'text/xml'
             if  data['status'] == 'ok':
                 page  = '<script type="application/javascript">reload()</script>'
+            elif data['status'] == 'fail':
+                page  = '<script type="application/javascript">reload()</script>'
+                page += self.error(self.gen_error_msg(kwargs))
             else:
                 page  = img + ' ' + str(data['status']) + ', please wait...'
+                img_stop = ''
+                page += ', <a href="/das/">stop</a> request' 
                 page += req
                 set_header()
             page = ajax_response(page)
