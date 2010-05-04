@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.10 2009/10/13 14:03:33 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: dbs_service.py,v 1.11 2009/10/13 14:05:00 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -25,7 +25,6 @@ class DBSService(DASAbstractService):
         DASAbstractService.__init__(self, 'dbs', config)
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name, 'javaservlet')
-        print "#####DBS", self.map
         map_validator(self.map)
 
     def transform_tag(self, system, tag, cache):
