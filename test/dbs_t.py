@@ -6,7 +6,7 @@ Unit test for DAS DBS module
 """
 
 import unittest
-from services.dbs.dbs_parser import parser
+from DAS.services.dbs.dbs_parser import parser
 
 class testDBS(unittest.TestCase):
     """
