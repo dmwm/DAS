@@ -5,12 +5,13 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.29 2010/01/05 19:35:47 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.30 2010/01/15 17:20:54 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import re
+import sys
 import time
 import types
 import thread
@@ -73,7 +74,7 @@ def checkargs(func):
 #                    kwds[str(key)] = str(val)
         pat  = re.compile('^[+]?\d*$')
         supported = ['query', 'idx', 'limit', 'expire', 'method', 
-                     'skey', 'order']
+                     'skey', 'order', 'collection']
         if  not kwds:
             if  args:
                 kwds = args[-1]
@@ -134,6 +135,9 @@ class DASCacheModel(RESTModel):
             'nresults':
                 {'args':['query'],
                  'call': self.nresults, 'version':__version__},
+            'records':
+                {'args':['query', 'count', 'collection'],
+                 'call': self.records, 'version':__version__},
             'status':
                 {'args':['query'],
                  'call': self.status, 'version':__version__},
@@ -183,9 +187,45 @@ class DASCacheModel(RESTModel):
                 hostname=cherrypy.request.remote.name,
                 port=cherrypy.request.remote.port)
         self.col.insert(doc)
-#        keys = ["qhash", "timestamp"] # can be adjusted later
-#        index_list = [(key, DESCENDING) for key in keys]
-#        self.col.ensure_index(index_list)
+
+    @checkargs
+    def records(self, *args, **kwargs):
+        """
+        HTTP GET request.
+        Retrieve records from provided collection.
+        """
+        data  = {'server_method':'request'}
+        if  not kwargs.has_key('query'):
+            data['status'] = 'fail, no query provided'
+            return data
+        query = json.loads(kwargs.get('query'))
+        coll  = kwargs.get('collection', 'merge')
+        idx   = getarg(kwargs, 'idx', 0)
+        limit = getarg(kwargs, 'limit', 10) # getarg perfrom type convertion
+        count = kwargs.get('count', 0)
+        data.update({'status':'requested', 'query':kwargs['query'], 
+                 'collection':coll, 'count': count})
+        if  query['spec'].has_key('_id'):
+            recid = query['spec']['_id']
+            ids   = []
+            if  type(recid) is types.StringType:
+                ids = [ObjectId(recid)]
+            elif type(recid) is types.ListType:
+                ids = [ObjectId(r) for r in recid]
+            spec = {'spec':{'_id':{'$in':ids}}}
+        else: # look-up all records
+            spec = {}
+        self.logdb(query)
+        try:
+            gen = self.dascore.rawcache.get_from_cache\
+                (spec, idx=idx, limit=limit, collection=coll, adjust=False)
+            data['status'] = 'success'
+            data['data']   = [r for r in gen]
+        except:
+            self.debug(traceback.format_exc())
+            data['status'] = 'fail'
+            data['reason'] =  sys.exc_type
+        return data
 
     @checkargs
     def status(self, *args, **kwargs):
@@ -201,7 +241,7 @@ class DASCacheModel(RESTModel):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-        self.debug(str(data))
+#        self.debug(str(data))
         return data
 
     @checkargs
@@ -216,23 +256,16 @@ class DASCacheModel(RESTModel):
             self.logdb(query)
             query = self.dascore.mongoparser.requestquery(query)
             data.update({'status':'success'})
-            if  hasattr(self.dascore, 'cache'):
-                res = self.dascore.cache.nresults(query)
-                if  res:
-                    data['nresults'] = res
-                else:
-                    data['status'] = 'not found'
+            res = self.dascore.in_raw_cache_nresults(query)
+            if  res:
+                data['status'] = 'success'
+                data['nresults'] = res
             else:
-                res = self.dascore.in_raw_cache_nresults(query)
-                if  res:
-                    data['status'] = 'success'
-                    data['nresults'] = res
-                else:
-                    data['status'] = 'not found'
+                data['status'] = 'not found'
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-        self.debug(str(data))
+#        self.debug(str(data))
         return data
 
     @checkargs
@@ -253,40 +286,26 @@ class DASCacheModel(RESTModel):
             data.update({'status':'requested', 'idx':idx, 
                      'limit':limit, 'query':query,
                      'skey':skey, 'order':order})
-            if  hasattr(self.dascore, 'cache'):
-                if  self.dascore.cache.incache(query):
-                    res = self.dascore.cache.\
-                                get_from_cache(query, idx, limit, skey, order)
-                    tot = self.dascore.cache.nresults(query)
-                    if  type(res) is types.GeneratorType:
-                        data['data'] = [i for i in res]
-                    else:
-                        data['data'] = res
-                    data['status'] = 'success'
-                    data['nresults'] = tot
+            if  self.dascore.in_raw_cache(query):
+                res = self.dascore.result(query, idx, limit)
+                if  type(res) is types.GeneratorType:
+                    result = []
+                    for item in res:
+                        if  item not in result:
+                            result.append(item)
+                    data['data'] = result
+                    tot = len(data['data'])
                 else:
-                    data['status'] = 'not found'
+                    data['data'] = res
+                    tot = 1
+                data['status'] = 'success'
+                data['nresults'] = tot
             else:
-                if  self.dascore.in_raw_cache(query):
-                    res = self.dascore.result(query, idx, limit)
-                    if  type(res) is types.GeneratorType:
-                        result = []
-                        for item in res:
-                            if  item not in result:
-                                result.append(item)
-                        data['data'] = result
-                        tot = len(data['data'])
-                    else:
-                        data['data'] = res
-                        tot = 1
-                    data['status'] = 'success'
-                    data['nresults'] = tot
-                else:
-                    data['status'] = 'not found'
+                data['status'] = 'not found'
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-        self.debug(str(data))
+#        self.debug(str(data))
         return data
 
     @checkargs
@@ -312,7 +331,7 @@ class DASCacheModel(RESTModel):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-        self.debug(str(data))
+#        self.debug(str(data))
         return data
 
     @checkargs
@@ -333,7 +352,7 @@ class DASCacheModel(RESTModel):
             except:
                 msg  = traceback.format_exc()
                 data.update({'status':'fail', 'query':query, 'exception':msg})
-                self.debug(str(data))
+#                self.debug(str(data))
                 return data
             expire = getarg(kwargs, 'expire', 600)
             try:
@@ -345,7 +364,7 @@ class DASCacheModel(RESTModel):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-        self.debug(str(data))
+#        self.debug(str(data))
         return data
 
     @checkargs
@@ -369,6 +388,6 @@ class DASCacheModel(RESTModel):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-        self.debug(str(data))
+#        self.debug(str(data))
         return data
 

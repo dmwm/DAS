@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.15 2010/01/11 21:08:12 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: utils.py,v 1.16 2010/01/15 17:20:54 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -96,15 +96,12 @@ class UrlRequest(urllib2.Request):
         """Return request method"""
         return self._method
 
-def json2html(idict, pad="", short=False):
+def json2html(idict, pad=""):
     """
     Convert input JSON into HTML code snippet.
     """
     width = 100
     newline = '\n'
-    if  short:
-        newline = ''
-        pad = ''
     pat=re.compile('^[0-9][0-9\.]*$')
     orig_pad = pad
     sss = pad + '{' + newline
@@ -120,14 +117,14 @@ def json2html(idict, pad="", short=False):
                     if  _width > width:
                         value += '\n' + lpad
                         _width = len("'', ")
-                    value += """<a href="/das/records/%s">%s</a>, """ \
+                    value += \
+                        "<a href=\"/das/records/%s?collection=cache\">%s</a>, "\
                         % (item, item)
-#                    if  counter and counter % 2:
-#                        value += '\n' + lpad
                     counter += 1
                 value = value[:-2] + ']'
             else:
-                value = """<a href="/das/records/%s">%s</a>""" % (val, val)
+                value = "<a href=\"/das/records/%s?collection=cache\">%s</a>"\
+                        % (val, val)
             sss += pad + """ <code class="key">"%s": </code>%s""" % (key, value)
         elif  type(val) is types.ListType:
             if  len(val) == 1:
@@ -136,16 +133,14 @@ def json2html(idict, pad="", short=False):
                 nline = newline
             sss += pad + """ <code class="key">"%s": </code>""" % key
             sss += '[' + nline
-            ppp  = ''
-            if  not short:
-                pad += " "*3
-                ppp  = pad
+            pad += " "*3
+            ppp  = pad
             if  not nline:
                 ppp  = ''
             for idx in range(0, len(val)):
                 item = val[idx]
                 if  type(item) is types.DictType:
-                    sss += json2html(item, pad, short)
+                    sss += json2html(item, pad)
                 else:
                     if type(item) is types.NoneType:
                         sss += """%s<code class="null">None</code>""" % ppp
@@ -160,7 +155,7 @@ def json2html(idict, pad="", short=False):
         elif type(val) is types.DictType:
             sss += pad + """ <code class="key">"%s"</code>: """ % key
             pad += ' '*3
-            sss += json2html(val, pad, short)[len(pad):] # don't account for first pad
+            sss += json2html(val, pad)[len(pad):] # don't account for first pad
             pad  = pad[:-3]
         else:
             sss += pad + """ <code class="key">"%s"</code>""" % key

@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.36 2010/01/11 21:11:35 valya Exp $"
-__version__ = "$Revision: 1.36 $"
+__revision__ = "$Id: DASSearch.py,v 1.37 2010/01/15 17:20:54 valya Exp $"
+__version__ = "$Revision: 1.37 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -273,15 +273,16 @@ class DASSearch(TemplatedPage):
             idx      = getarg(kwargs, 'idx', 0)
             limit    = getarg(kwargs, 'limit', 10)
             show     = getarg(kwargs, 'show', 'json')
-            params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit}
-            path     = '/rest/request'
+            coll     = getarg(kwargs, 'collection', 'merge')
+#            params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit}
+#            path     = '/rest/request'
+            params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit, 
+                        'collection':coll}
+            path     = '/rest/records'
             headers  = {"Accept": "application/json"}
-            data     = json.loads(
+            result   = json.loads(
             urllib2_request('GET', url+path, params, headers=headers))
-            if  type(data) is types.StringType:
-                result = json.loads(data)
-            else:
-                result = data
+#            print "\n### result", result
             res = ""
             if  result['status'] == 'success':
                 if  recordid: # we got id
@@ -341,12 +342,8 @@ class DASSearch(TemplatedPage):
         params  = {'query':uinput}
         path    = '/rest/nresults'
         headers = {"Accept": "application/json"}
-        result  = json.loads(
+        data    = json.loads(
         urllib2_request('GET', url+path, params, headers=headers))
-        if  type(result) is types.StringType:
-            data = json.loads(result)
-        else:
-            data = result
         if  data['status'] == 'success':
             return data['nresults']
         else:
@@ -640,12 +637,8 @@ class DASSearch(TemplatedPage):
         path    = '/rest/status'
         url     = self.cachesrv
         headers = {'Accept': 'application/json'}
-        result  = json.loads(
+        data    = json.loads(
         urllib2_request('GET', url+path, params, headers=headers))
-        if  type(result) is types.StringType:
-            data  = json.loads(result)
-        else:
-            data  = result
         if  data['status'] == 'ok':
             page  = '<script type="application/javascript">reload()</script>'
         else:
