@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.5 2009/09/14 20:39:08 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.6 2009/09/29 20:45:29 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -77,6 +77,14 @@ if __name__ == '__main__':
         keys = mgr.list_daskeys(opts.system)
         print keys
         sys.exit(0)
+    # daskeys defines a mapping between daskey used in DAS-QL and DAS record key
+    # e.g. block means block.name, the pattern defines regular expression to which
+    # daskey should satisfy
+    #
+    # api2das defines mapping between API input parameter and DAS-QL key,
+    # dict(api_param='storage_element_name', das_key='site', 
+    #      pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+    # here pattern is applied to passed api_param
 
     ##### DBS
     apiversion = 'DBS_2_0_8'
@@ -244,8 +252,10 @@ if __name__ == '__main__':
         'api' : dict(name=api, params=params),
         'daskeys' : [dict(key='block', map='block.name', pattern='')],
         'api2das' : [
-                dict(api_param='se', das_key='site', pattern="re.compile('^T[0-3]_')"),
-                dict(api_param='node', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+                dict(api_param='node', das_key='site', pattern="re.compile('^T[0-3]_')"),
+                dict(api_param='node', das_key='site.name', pattern="re.compile('^T[0-3]_')"),
+                dict(api_param='se', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+                dict(api_param='se', das_key='site.se', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
                 dict(api_param='block', das_key='block', pattern=""),
         ]
     }
@@ -258,8 +268,10 @@ if __name__ == '__main__':
         'api' : dict(name=api, params=params),
         'daskeys' : [dict(key='file', map='file.name', pattern='')],
         'api2das' : [
-                dict(api_param='se', das_key='site', pattern="re.compile('^T[0-3]_')"),
-                dict(api_param='node', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+                dict(api_param='node', das_key='site', pattern="re.compile('^T[0-3]_')"),
+                dict(api_param='node', das_key='site.name', pattern="re.compile('^T[0-3]_')"),
+                dict(api_param='se', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+                dict(api_param='se', das_key='site.se', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
         ]
     }
     mgr.add(rec)
@@ -269,9 +281,10 @@ if __name__ == '__main__':
     params = {'node':'*', 'noempty':''}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'daskeys' : [dict(key='site', map='site.name', pattern="re.compile('^T[0-3]_')")],
         'api2das' : [
                 dict(api_param='node', das_key='site', pattern="re.compile('^T[0-3]_')"),
+                dict(api_param='node', das_key='site.name', pattern="re.compile('^T[0-3]_')"),
         ]
     }
     mgr.add(rec)
@@ -283,7 +296,8 @@ if __name__ == '__main__':
         'api' : dict(name=api, params=params),
         'daskeys' : [dict(key='file', map='file.name', pattern='')],
         'api2das' : [
-                dict(api_param='node', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+                dict(api_param='node', das_key='site', pattern="re.compile('^T[0-3]_')"),
+                dict(api_param='node', das_key='site.name', pattern="re.compile('^T[0-3]_')"),
                 dict(api_param='lfn', das_key='file', pattern=""),
         ]
     }
@@ -319,7 +333,7 @@ if __name__ == '__main__':
     params = {'name':''}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'daskeys' : [dict(key='site', map='site.se', pattern="re.compile('([a-zA-Z0-9]+\.){2}')")],
         'api2das' : [
                 dict(api_param='name', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
         ]
@@ -330,7 +344,7 @@ if __name__ == '__main__':
     params = {'name':''}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'daskeys' : [dict(key='site', map='site.name', pattern="re.compile('^T[0-3]_')")],
         'api2das' : [
                 dict(api_param='name', das_key='site', pattern="re.compile('^T[0-3]_')"),
         ]
@@ -341,7 +355,7 @@ if __name__ == '__main__':
     params = {'name':''}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'daskeys' : [dict(key='site', map='site.name', pattern="re.compile('^T[0-3]_')")],
         'api2das' : [
                 dict(api_param='name', das_key='site', pattern="re.compile('^T[0-3]_')"),
         ]
@@ -352,9 +366,9 @@ if __name__ == '__main__':
     params = {'name':'required'}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'daskeys' : [dict(key='site', map='site.name', pattern="re.compile('^T[0-3]_')")],
         'api2das' : [
-                dict(api_param='name', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+                dict(api_param='name', das_key='site', pattern="re.compile('^T[0-3]_')"),
         ]
     }
     mgr.add(rec)
@@ -363,7 +377,7 @@ if __name__ == '__main__':
     params = {'name':''}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='site', map='site.name', pattern='')],
+        'daskeys' : [dict(key='site', map='site.name', pattern="re.compile('^T[0-3]_')")],
         'api2das' : [
                 dict(api_param='name', das_key='site', pattern="re.compile('^T[0-3]_')"),
         ]
@@ -456,8 +470,10 @@ if __name__ == '__main__':
             dict(api_param='date1', das_key='date', pattern=""),
             dict(api_param='date2', das_key='date', pattern=""),
             dict(api_param='ce', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+            dict(api_param='ce', das_key='site.ce', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
             dict(api_param='ce', das_key='jobsummary.ce', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
             dict(api_param='site', das_key='site', pattern="re.compile('^T[0-3]_')"),
+            dict(api_param='site', das_key='site.name', pattern="re.compile('^T[0-3]_')"),
             dict(api_param='site', das_key='jobsummary.site', pattern="re.compile('^T[0-3]_')"),
         ]
     }
@@ -533,4 +549,12 @@ if __name__ == '__main__':
     }
     mgr.add(rec)
     ##### END OF monitor
+
+    ##### Add web UI mapping
+    rec = {'presentation': {
+                'block': ['block.name', 'block.size'],
+                'site': ['site.name']}
+          }
+    mgr.add(rec)
+    ##### End of web UI mapping
     print "New DAS Mapping DB has been created"
