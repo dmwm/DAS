@@ -4,10 +4,11 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.1 2009/09/01 01:42:47 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.2 2009/09/01 18:23:09 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
+import os
 import sys
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
@@ -58,6 +59,11 @@ if __name__ == '__main__':
     logger = DASLogger(verbose=opts.debug, stdout=opts.debug)
     config = dict(logger=logger, verbose=opts.debug,
         mapping_db_engine= 'sqlite:///%s' % opts.dbfile)
+
+    if  os.path.isfile(opts.dbfile) and not opts.listapis and not opts.listkeys:
+        print "remove", opts.dbfile
+        os.remove(opts.dbfile)
+
     mgr = DASMapping(config)
 
     if  opts.listapis:
@@ -217,7 +223,7 @@ if __name__ == '__main__':
     # nodes API
     api = 'nodes'
     params = {'node':'*', 'noempty':''}
-    daskeys = dict(site='site.name', node='site.name')
+    daskeys = dict(site='site.name')
     api2das = [('node', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')")]
     mgr.add_api(system, api, params, daskeys, api2das)
     # lfn2pfn API
@@ -235,6 +241,7 @@ if __name__ == '__main__':
     mgr.add_notation(system, 'files', 'nfiles')
     mgr.add_notation(system, 'events', 'nevents')
     mgr.add_notation(system, 'lfn', 'name')
+    mgr.add_notation(system, 'node', 'site')
     ##### END OF PHEDEX
 
     # SiteDB
@@ -271,6 +278,7 @@ if __name__ == '__main__':
 
     api = 'CMSNametoSE'
     params = {'name':''}
+#    daskeys = dict(site='site.se')
     daskeys = dict(site='site.name')
     api2das = [('name', 'site', "re.compile('^T[0-3]_')")]
     mgr.add_api(system, api, params, daskeys, api2das)
@@ -281,6 +289,7 @@ if __name__ == '__main__':
 #    api2das = [('cms_name', 'site', "re.compile('^T[0-3]_')")]
 #    mgr.add_api(system, api, params, daskeys, api2das)
 
+    mgr.add_notation(system, 'cmsname', 'name')
     ##### END OF SITEDB
 
     # DQ
@@ -414,4 +423,4 @@ if __name__ == '__main__':
     api2das = [('start', 'date', ''), ('end', 'date', '')]
     mgr.add_api(system, api, params, daskeys, api2das)
     ##### END OF monitor
-
+    print "New DAS Mapping DB is created:", opts.dbfile
