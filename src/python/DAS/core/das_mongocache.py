@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.47 2009/12/21 16:09:57 valya Exp $"
-__version__ = "$Revision: 1.47 $"
+__revision__ = "$Id: das_mongocache.py,v 1.48 2009/12/22 15:10:59 valya Exp $"
+__version__ = "$Revision: 1.48 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -99,8 +99,12 @@ def convert2pattern(query):
     for key, val in spec.items():
         if  type(val) is types.StringType or type(val) is types.UnicodeType:
             if  val.find('*') != -1:
-                val = re.compile(val.replace('*', '.*'))
-                verspec[key] = val.pattern
+                if  val == '*':
+                    val = {'$exists':True}
+                    verspec[key] = val
+                else:
+                    val = re.compile(val.replace('*', '.*'))
+                    verspec[key] = val.pattern
             else:
                 verspec[key] = val
             newspec[key] = val
@@ -455,18 +459,13 @@ class DASMongocache(Cache):
         if  not results:
             return
         dasheader  = header['das']
-        dasheader['selection_keys'] = header['selection_keys']
 
         # check presence of query in a cache regardless of the system
         # and insert it for this system
-#        record = dict(query=encode_mongo_query(query),
-#                 das=dict(expire=dasheader['expire'], 
-#                        system=dasheader['system']))
         query_in_cache = False
         spec = {'spec' : dict(query=encode_mongo_query(query))}
         if  self.incache(spec):
             query_in_cache = True
-#        self.col.insert(dict(record))
 
         # insert das record for this set of results
         das_record = dict(das=dasheader, query=encode_mongo_query(query))
@@ -486,7 +485,6 @@ class DASMongocache(Cache):
                 if  item.has_key('exception') or item.has_key('error'):
                     continue
                 counter += 1
-#                item['das'] = dasheader
                 item['das'] = dict(expire=dasheader['expire'])
                 item['das_id'] = str(objid)
                 row = None
@@ -501,9 +499,6 @@ class DASMongocache(Cache):
                 if  row:
                     value = dict_value(row, prim_key)
                     if  value == entry: # we found a match in cache
-#                        mdict = merge_dict(item, row)
-#                        mdict.pop('_id')
-#                        self.col.insert(mdict)
                         merge_dict(item, row)
                         item.pop('_id')
                         self.col.insert(item)
