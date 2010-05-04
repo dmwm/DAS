@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.67 2010/02/04 21:24:56 valya Exp $"
-__version__ = "$Revision: 1.67 $"
+__revision__ = "$Id: abstract_service.py,v 1.68 2010/02/05 21:30:51 valya Exp $"
+__version__ = "$Revision: 1.68 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -321,24 +321,31 @@ class DASAbstractService(object):
         - *api* is API name
         - *args* API input parameters 
         """
+        prim_key  = self.dasmapping.primary_key(self.name, api)
         notations = self.get_notations(api)
         if  format.lower() == 'xml':
             tags = self.dasmapping.api2daskey(self.name, api)
-            gen  = xml_parser(notations, data, tags)
+            gen  = xml_parser(notations, data, prim_key, tags)
             for row in gen:
                 yield row
         elif format.lower() == 'json':
-            gen = json_parser(data)
+            gen  = json_parser(data)
             for row in gen:
                 if  type(row) is types.ListType:
                     for item in row:
                         row2das(self.dasmapping.notation2das, 
                                 self.name, api, item)
-                        yield item
+                        if  item.has_key(prim_key):
+                            yield item
+                        else:
+                            yield {prim_key:item}
                 else:
                     row2das(self.dasmapping.notation2das, 
                             self.name, api, row)
-                    yield row
+                    if  row.has_key(prim_key):
+                        yield row
+                    else:
+                        yield {prim_key:row}
         else:
             msg = 'Unsupported data format="%s", API="%s"' % (format, api)
             raise Exception(msg)
@@ -388,30 +395,17 @@ class DASAbstractService(object):
             format = value['format']
             url    = value['url']
             args   = value['params']
-            if  skeys:
-                if  not set(value['keys']) & set(query['fields']):
-                    continue
-            elif args:
-                found = False
-                for key, val in cond.items():
-                    entity = key.split('.')[0] # key either entity.attr or just entity
-                    for apiparam in self.dasmapping.das2api(self.name, entity):
-                        if  args.has_key(apiparam):
-                            found = True
-                            break
-                if  not found:
-                    continue
-            accept = True
+            found  = False
             for key, val in cond.items():
-                if  not self.dasmapping.check_daskey(self.name, api, key):
-                    accept = False
-                    continue # skip if condition key is not valid for this system
-                entity = key.split('.')[0] # key either entity.attr or just entity
-                for apiparam in self.dasmapping.das2api(self.name, entity):
-                    if  args.has_key(apiparam):
-                        args[apiparam] = val
-            # check if our URI=url+api+key is acceptable
-            if  not accept:
+                # check if keys from conditions are accepted by API.
+                if  self.dasmapping.check_dasmap(self.name, api, key):
+                    # need to convert key (which is daskeys.map) into
+                    # input api parameter
+                    found = True
+                    for apiparam in self.dasmapping.das2api(self.name, key):
+                        if  args.has_key(apiparam):
+                            args[apiparam] = val
+            if  not found:
                 continue
             # check that there is no "required" parameter left in args,
             # since such api will not work
