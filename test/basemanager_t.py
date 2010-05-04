@@ -6,8 +6,8 @@ unit test for base manager module
 """
 
 import unittest
-from utils.das_config import das_readconfig
-from core.basemanager import BaseManager
+from DAS.utils.das_config import das_readconfig
+from DAS.core.basemanager import BaseManager
 
 class testBaseManager(unittest.TestCase):
     """
