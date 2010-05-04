@@ -4,8 +4,8 @@
 """
 DAS cache client tools 
 """
-__revision__ = "$Id: das_cache_client.py,v 1.10 2009/06/19 18:02:11 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_cache_client.py,v 1.11 2009/06/30 19:38:15 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.web.utils import urllib2_request, httplib_request
@@ -42,7 +42,7 @@ class DASOptionParser:
              help="start index for returned result set, aka pagination, use w/ limit")
         self.parser.add_option("--limit", action="store", type="int", 
                                default=10, dest="limit",
-             help="limit number of returned results")
+             help="number of returned results (results per page)")
         self.parser.add_option("--lib", action="store", type="string", 
                                default='urllib2', dest="lib",
              help="specify which lib to use, httplib or urllib2 (default)")
@@ -67,10 +67,13 @@ if __name__ == '__main__':
     host    = opts.host
     debug   = opts.verbose
     request = opts.request
+    query   = opts.query
+    idx     = opts.idx
+    limit   = opts.limit
     if  opts.input:
         params = eval(opts.input)
     elif opts.query:
-        params = {'query':opts.query, 'idx':opts.idx, 'limit':opts.limit}
+        params = {'query':query, 'idx':idx, 'limit':limit}
     else:
         msg = 'You need to provide either input dict or query.'
         raise Exception(msg)
