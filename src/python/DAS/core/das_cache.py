@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.14 2009/06/04 18:29:46 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_cache.py,v 1.15 2009/06/10 15:52:27 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -17,7 +17,7 @@ try:
     import multiprocessing 
     from multiprocessing import cpu_count
 except:
-    # Prior to 2.6 requires simplejson
+    # Prior to 2.6 requires py-processing package
     import processing as multiprocessing
     from processing import cpuCount as cpu_count
 import logging
