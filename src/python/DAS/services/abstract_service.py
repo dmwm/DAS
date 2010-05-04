@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.68 2010/02/05 21:30:51 valya Exp $"
-__version__ = "$Revision: 1.68 $"
+__revision__ = "$Id: abstract_service.py,v 1.69 2010/02/10 18:59:19 valya Exp $"
+__version__ = "$Revision: 1.69 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -115,9 +115,6 @@ class DASAbstractService(object):
         by data-service parsers to provide uniform JSON representation
         for further processing.
         """
-        msg = 'DASAbstractService::%s::getdata(%s, %s)' \
-                % (self.name, url, params)
-        self.logger.info(msg)
         input_params = params
         # if necessary the data-service implementation will adjust parameters,
         # for instance, DQ need to parse the following input
@@ -133,17 +130,17 @@ class DASAbstractService(object):
             encoded_data = urllib.urlencode(params, doseq=True)
         if  encoded_data:
             url = url + '?' + encoded_data
+        msg = 'DASAbstractService::%s::getdata, request url=%s' \
+                % (self.name, url)
+        self.logger.info(msg)
         req = urllib2.Request(url)
         if  headers:
             for key, val in headers.items():
                 req.add_header(key, val)
-#        if  not encoded_data:
-#            encoded_data = None
         if  self.verbose > 1:
             h=urllib2.HTTPHandler(debuglevel=1)
             opener = urllib2.build_opener(h)
             urllib2.install_opener(opener)
-#        data = urllib2.urlopen(req, encoded_data)
         data = urllib2.urlopen(req)
         return data
 
@@ -163,15 +160,6 @@ class DASAbstractService(object):
         if  self.localcache.incache(query=dasquery, collection='cache'):
             self.analytics.update(self.name, query)
             return
-        # check the cache contains records with similar queries
-#        if  self.localcache.similar_queries(self.name, query):
-#            self.analytics.update(self.name, query)
-#            return
-        # check the cache if there are records with given parameters
-#        if  self.localcache.incache(query=mongo_query):
-#            self.analytics.update(self.name, query)
-#            return
-
         # ask data-service api to get results, they'll be store them in
         # cache, so return at the end what we have in cache.
         result = self.api(query)
@@ -202,14 +190,6 @@ class DASAbstractService(object):
         specifications.
         """
         pass
-
-#    def data2das(self, row, api):
-#        """
-#        Convert keys in provided row into DAS notations.
-#        """
-#        for row in gen:
-#            row2das(self.dasmapping.notation2das, self.name, api, row)
-#            yield row
 
     def insert_apicall(self, expire, url, api, api_params):
         """
@@ -323,25 +303,26 @@ class DASAbstractService(object):
         """
         prim_key  = self.dasmapping.primary_key(self.name, api)
         notations = self.get_notations(api)
+        apitag    = self.dasmapping.apitag(self.name, api)
+        print "\n### parser", prim_key, notations, apitag
         if  format.lower() == 'xml':
             tags = self.dasmapping.api2daskey(self.name, api)
-            gen  = xml_parser(notations, data, prim_key, tags)
+            gen  = xml_parser(data, prim_key, tags)
             for row in gen:
                 yield row
         elif format.lower() == 'json':
             gen  = json_parser(data)
             for row in gen:
+                if  apitag and row.has_key(apitag):
+                    row = row[apitag]
+                print "\n###row\n", row
                 if  type(row) is types.ListType:
                     for item in row:
-                        row2das(self.dasmapping.notation2das, 
-                                self.name, api, item)
                         if  item.has_key(prim_key):
                             yield item
                         else:
                             yield {prim_key:item}
                 else:
-                    row2das(self.dasmapping.notation2das, 
-                            self.name, api, row)
                     if  row.has_key(prim_key):
                         yield row
                     else:
@@ -349,6 +330,27 @@ class DASAbstractService(object):
         else:
             msg = 'Unsupported data format="%s", API="%s"' % (format, api)
             raise Exception(msg)
+
+    def translator(self, api, genrows):
+        """
+        Convert raw results into DAS records.
+        """
+        prim_key  = self.dasmapping.primary_key(self.name, api)
+        notations = self.dasmapping.notations(self.name)[self.name]
+        count = 0
+        for row in genrows:
+            row2das(self.dasmapping.notation2das, self.name, api, row)
+            count += 1
+            # check for primary key existance, since it can be overriden
+            # by row2das. For example DBS3 uses flat namespace, so we
+            # override dataset=>name, while dataset still is a primary key
+            if  row.has_key(prim_key):
+                yield row
+            else:
+                yield {prim_key:row}
+        msg = "DASAbstractService::%s::translator yield %s records" \
+                % (self.name, count)
+        self.logger.info(msg)
 
     def api(self, query):
         """
@@ -362,18 +364,17 @@ class DASAbstractService(object):
         result = False
         for url, api, args, format, expire in self.apimap(query):
             try:
-                args = self.inspect_params(api, args)
-                args = self.clean_params(api, args)
-                args = self.patterns(api, args)
-                msg  = 'DASAbstractService::%s::api found %s, %s' \
-                    % (self.name, api, str(args))
-                self.logger.info(msg)
+                mkey    = self.dasmapping.primary_mapkey(self.name, api)
+                args    = self.inspect_params(api, args)
+                args    = self.clean_params(api, args)
+                args    = self.patterns(api, args)
                 time0   = time.time()
                 data    = self.getdata(url, args)
-                genrows = self.parser(format, data, api, args)
+                rawrows = self.parser(format, data, api, args)
+                dasrows = self.translator(api, rawrows)
                 ctime   = time.time() - time0
                 self.write_to_cache(query, expire, url, api, args, 
-                        genrows, ctime)
+                        dasrows, ctime)
             except:
                 msg  = 'Fail to process: url=%s, api=%s, args=%s' \
                         % (url, api, args)
@@ -415,7 +416,7 @@ class DASAbstractService(object):
             if  not self.pass_apicall(url, api, args):
                 continue
             msg  = "DASAbstractService::apimap yield "
-            msg += "url=%s, api=%s, args=%s, format=%s, expire=%s" \
-                % (url, api, args, format, expire)
+            msg += "system %s, url=%s, api=%s, args=%s, format=%s, expire=%s" \
+                % (self.name, url, api, args, format, expire)
             self.logger.info(msg)
             yield url, api, args, format, expire
