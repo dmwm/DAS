@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.20 2009/07/22 20:40:11 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: das_config.py,v 1.21 2009/07/24 01:08:14 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -44,6 +44,12 @@ def das_readconfig(dasconfig=None):
     configdict['couch_servers'] = config.get('couch', 'servers', '')
     configdict['couch_lifetime'] = config.getint('couch', 'lifetime')
     configdict['couch_cleantime'] = config.getint('couch', 'cleantime')
+
+    configdict['mongocache_dir'] = config.get('mongocache', 'dir', '')
+    configdict['mongocache_dbhost'] = config.get('mongocache', 'dbhost', 'localhost')
+    configdict['mongocache_dbport'] = int(config.get('mongocache', 'dbport', '27017'))
+    configdict['mongocache_dbname'] = config.get('mongocache', 'dbname', 'das')
+    configdict['mongocache_lifetime'] = config.getint('mongocache', 'lifetime')
 
     configdict['filecache_dir'] = config.get('filecache', 'dir', '')
     configdict['filecache_lifetime'] = config.getint('filecache', 'lifetime')
@@ -114,6 +120,13 @@ def das_writeconfig():
     config.set('couch', 'servers', 'http://localhost:5984' )
     config.set('couch', 'lifetime', 1*24*60*60) # in seconds
     config.set('couch', 'cleantime', 2*60*60) # in seconds
+
+    config.add_section('mongocache')
+    config.set('mongocache', 'dir', '/tmp/db')
+    config.set('mongocache', 'lifetime', 1*24*60*60) # in seconds
+    config.set('mongocache', 'dbhost', 'localhost')
+    config.set('mongocache', 'dbport', '27017')
+    config.set('mongocache', 'dbname', 'das')
 
     config.add_section('filecache')
     dbdir  = os.path.join(os.environ['DAS_ROOT'], 'cache')
