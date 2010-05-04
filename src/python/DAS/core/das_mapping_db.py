@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.13 2009/11/17 17:35:20 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.14 2009/11/17 17:42:04 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -33,6 +33,7 @@ class DASMapping(object):
         self.dbname  = getarg(config, 'mapping_dbname', 'mapping')
         self.colname = 'db'
         self.notationcache = {}
+        self.notationmap = {}
 
         msg = "DASMapping::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
@@ -260,6 +261,8 @@ class DASMapping(object):
 #                    return value
 #        self.notationcache[(system, api_param, api)] = api_param
 #        return api_param
+        if  not self.notationmap:
+            self.notationmap = self.notations()
         if  self.notationcache.has_key((system, api_param, api)):
             return self.notationcache[(system, api_param, api)]
         for row in self.notationmap[system]:
