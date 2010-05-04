@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.39 2009/11/17 19:35:55 valya Exp $"
-__version__ = "$Revision: 1.39 $"
+__revision__ = "$Id: utils.py,v 1.40 2009/11/20 00:21:20 valya Exp $"
+__version__ = "$Revision: 1.40 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -23,7 +23,7 @@ import types
 import traceback
 from itertools import groupby
 from pymongo.objectid import ObjectId
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 
 def adjust_value(value):
     """
@@ -678,7 +678,7 @@ def xml_parser(data_ptr, tag, add=None):
     containig XML data_ptr).
     """
     sup = {}
-    for item in ET.iterparse(data_ptr, ["start", "end"]):
+    for item in ET.iterparse(data_ptr, events=("start", "end")):
         end, elem = item
         row = {}
         if  add and not sup:
