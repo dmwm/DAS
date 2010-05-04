@@ -1,0 +1,103 @@
+<!-- das_pagination.tmpl -->
+#import types
+<div id="div_results">
+
+<div align="left">
+<p>
+<table width="100%" class="normal">
+<tr>
+<td align="left">
+Found $nrows results, showing
+#if not $limit
+all results
+</td>
+</tr>
+#else
+results
+<span id="results" name="results">
+#set total = $idx+$limit
+#if $total>$nrows
+#set total=$nrows
+#end if
+$idx-$total
+</span>
+</td>
+<td align="right">
+<div id='paginator' name='paginator'> </div>
+</td>
+</tr>
+#end if
+</table>
+
+</p>
+
+$results
+</div> <!-- end of align="left" -->
+
+</div> <!-- end of id="div_results" -->
+#if $limit
+<script type="application/javascript">
+function changeRange(page) {
+    var newidx = (page-1)*$limit;
+    var newurl = '$url' + 'idx=' + newidx  + '&limit=$limit';
+    load(newurl);
+}
+#set npages = $nrows/$limit
+function makePagination(startWith) {
+    var str = '';
+    var nrows = $nrows;
+    var npages = $npages;
+    var pagination = 5;
+
+    if (npages*pagination < nrows) {
+        npages += 1;
+    }
+    if (npages < pagination) {
+        pagination = npages;
+    }
+
+    var start = startWith-2;
+    var end   = startWith+2;
+    if (start < 1) {
+        start = 1;
+        end   = pagination;
+    }
+    if (end  >= npages) {
+        end   = npages;
+    }
+    var prev  = startWith-1;
+    var next  = startWith+1;
+
+    if (start != 1) {
+        str += '<a href="javascript:changeRange(1)">first</a>&nbsp;';
+        str += '<a href="javascript:changeRange('+prev+')">prev</a>&nbsp;';
+    }
+    for(page=start; page<=end; page++) {
+        if(page==startWith) {
+            str += '<span id="page'+page+'" name="page'+page+'" class="gray_box">';
+        } else {
+            str += '<span id="page'+page+'" name="page'+page+'" class="box">';
+        }
+        var strpage = '';
+        if (page<10) {
+            strpage = '&nbsp;'+page
+        } else {
+            strpage = page;
+        }
+        str += '<a href="javascript:changeRange('+page+')">'+strpage+'</a>';
+        str += '</span> &nbsp';
+    }
+    if (end != npages) {
+        str += '<a href="javascript:changeRange('+next+')">next</a>&nbsp;';
+        str += '<a href="javascript:changeRange('+npages+')">last</a>';
+    } else {
+        str += '<a href="javascript:changeRange('+npages+')">last</a>';
+    }
+    id = document.getElementById('paginator');
+    id.innerHTML = str;
+}
+#set loadpage=$idx/$limit+1
+makePagination($loadpage);
+</script>
+#end if
+<!-- end of das_pagination.tmpl -->
