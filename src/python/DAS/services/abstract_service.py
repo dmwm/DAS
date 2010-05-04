@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.66 2010/02/03 20:48:38 valya Exp $"
-__version__ = "$Revision: 1.66 $"
+__revision__ = "$Id: abstract_service.py,v 1.67 2010/02/04 21:24:56 valya Exp $"
+__version__ = "$Revision: 1.67 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,7 +17,7 @@ import traceback
 import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
-#from DAS.utils.utils import row2das
+from DAS.utils.utils import row2das
 from DAS.utils.utils import xml_parser, json_parser
 from DAS.core.das_mongocache import compare_specs
 
@@ -100,12 +100,12 @@ class DASAbstractService(object):
         for _, rows in self.dasmapping.notations(self.name).items():
             for row in rows:
                 api = row['api']
-                name = row['das_name']
-                param = row['api_param']
+                map = row['map']
+                notation = row['notation']
                 if  self._notations.has_key(api):
-                    self._notations[api].update({param:name})
+                    self._notations[api].update({notation:map})
                 else:
-                    self._notations[api] = {param:name}
+                    self._notations[api] = {notation:map}
         return self._notations
 
     def getdata(self, url, params, headers=None):
@@ -203,9 +203,9 @@ class DASAbstractService(object):
         """
         pass
 
-#    def data2das(self, gen, api):
+#    def data2das(self, row, api):
 #        """
-#        Convert keys in resulted rows into DAS notations.
+#        Convert keys in provided row into DAS notations.
 #        """
 #        for row in gen:
 #            row2das(self.dasmapping.notation2das, self.name, api, row)
@@ -332,8 +332,12 @@ class DASAbstractService(object):
             for row in gen:
                 if  type(row) is types.ListType:
                     for item in row:
+                        row2das(self.dasmapping.notation2das, 
+                                self.name, api, item)
                         yield item
                 else:
+                    row2das(self.dasmapping.notation2das, 
+                            self.name, api, row)
                     yield row
         else:
             msg = 'Unsupported data format="%s", API="%s"' % (format, api)
@@ -378,15 +382,12 @@ class DASAbstractService(object):
         """
         cond = getarg(query, 'spec', {})
         skeys = getarg(query, 'fields', [])
+        self.logger.info("\n")
         for api, value in self.map.items():
             expire = value['expire']
             format = value['format']
             url    = value['url']
-#            if  value['params'].has_key('api'):
-#                url = value['url'] # JAVA, e.g. http://host/Servlet
-#            else: # if we have http://host/api?...
-#                url = value['url'] + '/' + api
-            args = value['params']
+            args   = value['params']
             if  skeys:
                 if  not set(value['keys']) & set(query['fields']):
                     continue
@@ -400,13 +401,18 @@ class DASAbstractService(object):
                             break
                 if  not found:
                     continue
+            accept = True
             for key, val in cond.items():
-                if  not self.dasmapping.check_daskey(self.name, key):
+                if  not self.dasmapping.check_daskey(self.name, api, key):
+                    accept = False
                     continue # skip if condition key is not valid for this system
                 entity = key.split('.')[0] # key either entity.attr or just entity
                 for apiparam in self.dasmapping.das2api(self.name, entity):
                     if  args.has_key(apiparam):
                         args[apiparam] = val
+            # check if our URI=url+api+key is acceptable
+            if  not accept:
+                continue
             # check that there is no "required" parameter left in args,
             # since such api will not work
             if 'required' in args.values():
@@ -414,4 +420,8 @@ class DASAbstractService(object):
             # check if analytics db has a similar API call
             if  not self.pass_apicall(url, api, args):
                 continue
+            msg  = "DASAbstractService::apimap yield "
+            msg += "url=%s, api=%s, args=%s, format=%s, expire=%s" \
+                % (url, api, args, format, expire)
+            self.logger.info(msg)
             yield url, api, args, format, expire
