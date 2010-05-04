@@ -1,0 +1,12 @@
+# DBS3 API mapping to DAS
+system : dbs3
+format : JSON
+---
+urn: datasets
+url : "http://localhost:8585/DBS/datasets/"
+expire : 3600
+params : {}
+daskeys :
+  - key : dataset
+    map : dataset
+    pattern : ""
