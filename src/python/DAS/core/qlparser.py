@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.44 2010/03/01 20:38:02 valya Exp $"
-__version__ = "$Revision: 1.44 $"
+__revision__ = "$Id: qlparser.py,v 1.45 2010/03/02 01:34:01 valya Exp $"
+__version__ = "$Revision: 1.45 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -226,10 +226,11 @@ def fix_operator(query, pos, operators):
         if  pat.match(operator):
             operator = ' %s ' % operator
         idx = query[pos:].find(operator)
-        if  idx != -1 and idx < idx_pos:
+        if  idx == -1:
+            continue
+        if  idx < idx_pos:
             idx_pos = idx
             oper_pos = operator
-            break
     if  idx_pos >= len(query):
         return None, None
     if  idx_pos != -1:
