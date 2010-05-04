@@ -5,8 +5,8 @@
 Define core class for Data Aggregation Service (DAS)
 """
 
-__revision__ = "$Id: das_core.py,v 1.7 2009/04/30 20:48:51 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_core.py,v 1.8 2009/04/30 21:00:21 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -102,6 +102,10 @@ class DASCore(object):
         for item in results:
             print item
         return
+
+    def views(self):
+        """return a registered dict of views in DAS"""
+        return self.viewmgr.all()
 
     def viewanalyzer(self, input):
         """
