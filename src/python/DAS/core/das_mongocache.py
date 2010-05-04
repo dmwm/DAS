@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.26 2009/11/03 16:30:00 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: das_mongocache.py,v 1.27 2009/11/05 18:24:48 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -252,6 +252,7 @@ class DASMongocache(Cache):
         self.dbhost  = config['mongocache_dbhost']
         self.dbport  = config['mongocache_dbport']
         self.limit   = config['mongocache_lifetime']
+        self.cache_size = config['mongocache_bulkupdate_size']
         self.dbname  = getarg(config, 'mongocache_dbname', 'das')
         self.colname = 'cache'
         self.logger  = config['logger']
@@ -264,7 +265,6 @@ class DASMongocache(Cache):
         self.conn    = Connection(self.dbhost, self.dbport)
         self.db      = self.conn[self.dbname]
         self.col     = self.db[self.colname]
-        self.cache_size = 100 # TODO: I can pass it via config
         
     def is_expired(self, query):
         """
