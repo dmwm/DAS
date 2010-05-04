@@ -21,10 +21,10 @@ class testDAS(unittest.TestCase):
     def test_call(self):                          
         """test call routine"""
         query = "find site where site = srm-cms.cern.ch"
-        query = "find run where run=84193"
+        query = "find run.number where run.number=84193"
         result = self.das.call(query)
         resultlist = [res for res in result]
-        expectlist = [{'run': '84193', 'system': 'dbs'}]
+        expectlist = [{'run.number': '84193', 'system': 'dbs'}]
         self.assertEqual(expectlist, resultlist)
 
 #
