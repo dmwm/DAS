@@ -51,11 +51,11 @@ class testUtils(unittest.TestCase):
         
     def test_adjust_value(self):
         """Test adjust_value"""
-        expect = 1
+        expect = "1"
         result = adjust_value("1")
         self.assertEqual(expect, result)
 
-        expect = 1.1
+        expect = "1.1"
         result = adjust_value("1.1")
         self.assertEqual(expect, result)
 
