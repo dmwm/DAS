@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.22 2009/09/01 01:42:47 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: das_config.py,v 1.23 2009/09/09 21:00:02 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -64,6 +64,9 @@ def das_readconfig(dasconfig=None):
 
     configdict['mapping_db_engine'] = config.get('mapping_db', 'db_engine', None)
     configdict['mapping_db_dir'] = config.get('mapping_db', 'dir', '')
+
+    configdict['analytics_db_engine'] = config.get('analytics_db', 'db_engine', None)
+    configdict['analytics_db_dir'] = config.get('analytics_db', 'dir', '')
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
     configdict['hotcache'] = config.get('das', 'hotcache', None)
@@ -151,6 +154,12 @@ def das_writeconfig():
     dbfile = os.path.join(dbdir, 'das_mapping.db')
     config.set('mapping_db', 'dir', dbdir)
     config.set('mapping_db', 'db_engine', 'sqlite:///%s' % dbfile)
+
+    config.add_section('analytics_db')
+    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'db')
+    dbfile = os.path.join(dbdir, 'das_analytics.db')
+    config.set('analytics_db', 'dir', dbdir)
+    config.set('analytics_db', 'db_engine', 'sqlite:///%s' % dbfile)
 
     config.add_section('summary views')
     query  = 'find dataset, dataset.createdate, dataset.createby, '
