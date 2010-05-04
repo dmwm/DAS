@@ -65,8 +65,8 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.14 2009/08/07 03:21:41 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: qlparser.py,v 1.15 2009/09/01 01:42:44 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -96,7 +96,7 @@ def mongo_exp(cond_list):
     # TODO: for and brackets operators I can combine everything in a
     # single dictionary. While if operator OR is met, I can return list of
     # mongo_dicts for processing, since list represent list of OR'ed results
-    print "mongo_exp, input", cond_list
+#    print "mongo_exp, input", cond_list
     mongo_list = []
     mongo_dict = {}
     for cond in cond_list:
@@ -107,7 +107,7 @@ def mongo_exp(cond_list):
         key  = cond['key']
         val  = cond['value']
         oper = cond['op']
-        print "key, op, val", key, oper, val
+#        print "key, op, val", key, oper, val
         if  MONGO_MAP.has_key(oper):
             if  mongo_dict.has_key(key):
                 mongo_value = mongo_dict[key]
@@ -133,9 +133,10 @@ def mongo_exp(cond_list):
         else:
             msg = 'Not supported operator %s' % oper
             raise Exception(msg)
-        if  mongo_dict not in mongo_list:
-            mongo_list.append(mongo_dict)
-    return mongo_list
+#        if  mongo_dict not in mongo_list:
+#            mongo_list.append(mongo_dict)
+#    return mongo_list
+    return mongo_dict
 
 # NOTE: I used this method originally, so will keep it around for a while
 # the rest of the code should use QLLexer.query_parser instead which
@@ -300,7 +301,7 @@ class QLLexer(object):
         self.operators = DAS_OPERATORS
         self.qlmap = imap #{'dbs': [list of keys], ...}
         self.qlparams = params #{'dbs': [list of params passed to srv], ...}
-        self.reserved_keys = ['system', 'date']
+        self.reserved_keys = ['system', 'date', 'records']
         self.known_keys = [k for i in self.qlmap.values() for k in i]
         self.known_params = [k for i in self.qlparams.values() for k in i]
         self.known_func = funclist
@@ -461,11 +462,30 @@ class QLLexer(object):
             pos = exp.find(oper)
             if  pos != -1:
                 olist.append((pos, oper))
-                break
+#                break
         olist.sort()
+        # now we have list of postition/operators pairs, let's find out
+        # which operator has least preferences, e.g we got expression
+        # a=A=2&B<=2, in this case we find position for '=', '<' and '<='
+        # so we must distinguish case of '<' and '<='
+        nlist = []
+        for item in olist:
+            if  not nlist:
+                nlist.append(item)
+            else:
+                idx0  = nlist[0][0]
+                oper0 = nlist[0][1]
+                idx1  = item[0]
+                oper1 = item[1]
+                if  idx1 == idx0: # find out which oper has least preference
+                    oper1_pos = self.operators.index(oper1)
+                    oper0_pos = self.operators.index(oper0)
+                    if  oper1_pos < oper0_pos:
+                        nlist[0] = item
         if  not olist:
             return
-        oper = olist[0][-1]
+        oper = nlist[0][-1]
+#        oper = olist[0][-1]
 
         # split expression into key op value and analyze the value
         key, value = exp.split(oper, 1)
@@ -673,22 +693,31 @@ class QLParser(QLLexer):
         rbr = query.count(')')
         if  lbr != rbr:
             msg =  "Unequal number of ( and ) brackets"
+            msg += '\n' + str(rdict)
             raise Exception(msg)
         # check presence of correct action
         first_word = query.split()[0] + ' '
         if  first_word not in self.prefix:
             msg = "Unsupported keyword '%s'" % first_word
+            msg += '\n' + str(rdict)
             raise Exception(msg)
         # check presence of where
         if  query.find(' where') != -1:
             last_word = query.split(',')[-1]
             if  last_word not in self.known_keys:
                 msg = "Unsupported keyword '%s'" % last_word
+                msg += '\n' + str(rdict)
                 Exception(msg)
         # check presence of order by
         cond = rdict['conditions']
         if  cond and (cond[-1] == 'and' or cond[-1] == 'or'):
             msg = "Unbounded boolean expression at the end of query"
+            msg += '\n' + str(rdict)
+            raise Exception(msg)
+        # check if dasqueries is a dict type
+        if  type(rdict['dasqueries']) is not types.DictType:
+            msg = 'DAS QL dasqueries is not a DictType'
+            msg += '\n' + str(rdict)
             raise Exception(msg)
         # check if all keys are valid ones
         for k in rdict['allkeys']:
@@ -700,9 +729,11 @@ class QLParser(QLLexer):
                     k = ''.join(k.split('(')[-1]).split(')')[0]
                     if  k not in self.known_keys:
                         msg = "Unsupported key '%s'" % k
+                        msg += '\n' + str(rdict)
                         raise Exception(msg)
                 else:
                     msg = "Unsupported key '%s'" % k
+                    msg += '\n' + str(rdict)
                     raise Exception(msg)
 
     def params(self, query):
@@ -726,16 +757,16 @@ class QLParser(QLLexer):
         rdict['order_by_order']  = order_by
         rdict['selkeys']         = unique_list(self.selkeys(query))
         rdict['allkeys']         = unique_list(self.allkeys(query))
-        services, uservices, ulist, daslist = self.uniq_services(query)
+        services, uservices, ulist, dasqueries = self.uniq_services(query)
         rdict['services']        = services
         rdict['unique_services'] = unique_list(uservices)
         if  len(uservices) == 1:
             rdict['unique_keys'] = rdict['selkeys']
         else:
             rdict['unique_keys'] = unique_list(ulist)
-        rdict['daslist']         = daslist
+        rdict['dasqueries']         = dasqueries
         self.check(query, rdict)
-#        print "qlparser", rdict
+#        print "\n### qlparser ###\n", rdict
 #        import sys
 #        sys.exit(0)
         return rdict
@@ -751,9 +782,7 @@ class QLParser(QLLexer):
         params = list(set(akeys) - set(skeys))
         allkeys = []
         for key in skeys:
-#            entity = key.split('.')[0]
             for service, keys in self.qlmap.items():
-#                if  entity in keys:
                 if  key in keys:
                     if  key not in allkeys:
                         allkeys.append(key)
@@ -774,15 +803,15 @@ class QLParser(QLLexer):
                         sdict[service] = [key]
         # I need to assing service weight to distinguish a case
         # when several services can answer the same query
-        overlap = [s for s, k in sdict.items() if k == allkeys]
-        weight_tuple = [(w, s) for s, w in self.service_weights.items()\
-             if s in overlap]
-        weight_tuple.sort()
-        if  weight_tuple:
-            srv_winner = weight_tuple[0][1]
-            for srv in list(sdict.keys()):
-                if  srv != srv_winner:
-                    del sdict[srv]
+#        overlap = [s for s, k in sdict.items() if k == allkeys]
+#        weight_tuple = [(w, s) for s, w in self.service_weights.items()\
+#             if s in overlap]
+#        weight_tuple.sort()
+#        if  weight_tuple:
+#            srv_winner = weight_tuple[0][1]
+#            for srv in list(sdict.keys()):
+#                if  srv != srv_winner:
+#                    del sdict[srv]
         return sdict
 
     def uniq_services(self, query):
@@ -795,51 +824,48 @@ class QLParser(QLLexer):
         """
         query = self.fix_reserved_keywords(query)
         skeys = unique_list(self.selkeys(query)) # selection keys
-#        entities = [i.split('.')[0] for i in skeys]
         akeys = unique_list(self.allkeys(query)) # all keys
         ckeys = [row['key'] for row in self.conditions(query) \
                     if type(row) is types.DictType] # condition keys
         ckeys = unique_list(ckeys)
 
         services = self.services(query)
-        if  len(services.keys()) == 1: # all keys from one data-service
+        if skeys == ['records'] : # we asked for all records 
+            ulist = skeys
+            uservices = []
+            for srv, keys in self.qlmap.items():
+                if  set(keys) & set(ckeys):
+                    uservices.append(srv)
+            dasqueries = {}
+            for srv in uservices:
+                dasqueries[srv] = [query]
+            return uservices, uservices, ulist, dasqueries
+        elif  len(services.keys()) == 1: # all keys from one data-service
             uservices = services.keys()
             ulist = skeys
-            daslist = [{services.keys()[0]:query}]
-            return services, uservices, ulist, daslist
+            dasqueries = {services.keys()[0]:[query]}
+            return services, uservices, ulist, dasqueries
         else:
             uservices = [] # unique set of services for list of keys
-            onesrvcoverage = None
             for srv in services.keys():
                 srv_keys = self.qlmap[srv]
                 srv_args = self.qlparams[srv]
+                if  set(srv_keys) & set(akeys): # all keys are covered
+                    if  srv not in uservices:
+                        uservices.append(srv)
                 if  ckeys:
                     cond1 = set(srv_keys) & set(skeys)# srv keys covers skeys
-#                    cond1 = set(srv_keys) & set(entities)# srv keys covers entities
                     if  not srv_args:
                         cond2 = True
                     else:
                         cond2 = set(srv_args) & set(ckeys)# params covers ckeys
                     if  cond1 and cond2:
-                        uservices.append(srv)
-                        covlist1 = list(cond1)
-                        covlist1.sort()
-                        covlist2 = list(set(srv_args) & set(ckeys))
-                        covlist2.sort()
-                        if  covlist1 == skeys and covlist2 == ckeys:
-#                        if  covlist1 == entities and covlist2 == ckeys:
-                            onesrvcoverage = srv
-                            break
+                        if  srv not in uservices:
+                            uservices.append(srv)
                 else:
                     if  set(srv_keys) & set(skeys):# srv keys covers skeys
-#                    if  set(srv_keys) & set(entities):# srv keys covers entities
-                        uservices.append(srv)
-                        onesrvcoverage = srv
-                        break
-
-        # one service can cover selection and parameter keys
-        if  onesrvcoverage:
-            uservices = [onesrvcoverage]
+                        if  srv not in uservices:
+                            uservices.append(srv)
 
         if  not uservices:
             msg = 'Unable to find unique set of services out of %s' % services
@@ -916,21 +942,53 @@ class QLParser(QLLexer):
                 break
             idx += 1
         # find final set of sub-queries to be executed by DAS
-        ustr = ','.join(ulist)
+#        ustr = ','.join(ulist)
+        # in MongoDB I don't need selection and relation keys,
+        # instead I need to use only selection keys
+        ustr = ','.join(skeys)
         daslist = []
+        dasqueries = {}
         for exp in final.split(' or '):
-            dasqueries = {}
-            for item in exp.split(' and '):
-                cond, srvlist = conddict[item.strip()]
-                subquery  = 'find %s where %s' % (ustr, cond)
+            cond = ''
+            for item in exp.strip().split(' and '):
+                condition, srvlist = conddict[item.strip()]
+                if  cond:
+                    cond += ' and ' + condition
+                else:
+                    cond = condition
+#            cond, srvlist = conddict[exp.strip()]
+            
+            # NEW: we just need to loop over found
+            # services, regardless of conditions
+            srvlist = uservices 
+            if  srvlist:
                 for srv in srvlist:
+                    clause = ''
+                    if  cond:
+                        clause = 'where %s' % cond.strip()
+                    subquery = 'find %s %s' % (ustr, clause)
                     if  dasqueries.has_key(srv):
-                        dasqueries[srv] = dasqueries[srv] + ' and ' + cond
+                        value = dasqueries[srv]
+                        if  subquery not in value:
+                            value.append(subquery)
+                        dasqueries[srv] = value
                     else:
-                        dasqueries[srv] = subquery
-            for srv in list(set(uservices) - set(dasqueries.keys())):
-                dasqueries[srv] = 'find %s' % ustr
-            daslist.append(dasqueries)
+                        dasqueries[srv] = [subquery]
+        return services, uservices, ulist, dasqueries
+
+#        for exp in final.split(' or '):
+#            dasqueries = {}
+#            for item in exp.split(' and '):
+#                cond, srvlist = conddict[item.strip()]
+#                subquery  = 'find %s where %s' % (ustr, cond)
+#                for srv in srvlist:
+#                    if  dasqueries.has_key(srv):
+#                        dasqueries[srv] = dasqueries[srv] + ' and ' + cond
+#                    else:
+#                        dasqueries[srv] = subquery
+#            for srv in list(set(uservices) - set(dasqueries.keys())):
+#                dasqueries[srv] = 'find %s' % ustr
+#            daslist.append(dasqueries)
 #        print
 #        print "query", query
 #        print "services", services
@@ -940,5 +998,5 @@ class QLParser(QLLexer):
 #        print "final", final
 #        print "conddict", conddict
 #        print "daslist", daslist
-        return services, uservices, ulist, daslist
+#        return services, uservices, ulist, daslist
 

@@ -4,8 +4,8 @@
 """
 DQ service
 """
-__revision__ = "$Id: dq_service.py,v 1.3 2009/07/22 20:40:10 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: dq_service.py,v 1.4 2009/09/01 01:42:46 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 try:
@@ -32,6 +32,7 @@ def param_parser(param_str):
                 if  cond.find(op) != -1:
                     key, val = cond.split(op)
                     olist.append(dict(Name=key, Value=val, Oper=op))
+                    break
     if  olist:
         return olist
     return param_str
@@ -43,7 +44,8 @@ class DQService(DASAbstractService):
     def __init__(self, config):
         DASAbstractService.__init__(self, 'dq', config)
         self._keys = None
-        self.map = self.dq_map()
+#        self.map = self.dq_map()
+        self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
     def dq_map(self):
@@ -71,6 +73,7 @@ class DQService(DASAbstractService):
                     keys.remove('dqflaglist')
                     keys.append('dqflags')
                 val['keys'] = keys
+#                val['primary_key'] = ''
                 jsondict[key] = val
         return jsondict
 

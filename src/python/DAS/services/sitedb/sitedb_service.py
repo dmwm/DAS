@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.10 2009/06/05 14:08:22 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: sitedb_service.py,v 1.11 2009/09/01 01:42:47 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -19,67 +19,46 @@ class SiteDBService(DASAbstractService):
     """
     def __init__(self, config):
         DASAbstractService.__init__(self, 'sitedb', config)
-        self.map = {
-            'CMSNametoAdmins' : {
-                'keys': ['admin'],
-                'params' : {'name':'required'}
-            },
-            'SEtoCMSName' : {
-                'keys': ['site.cmsname'],
-                'params' : {'name':'required'}
-            },
-            'CMStoSAMName' : {
-                'keys': ['site.samname'],
-                'params' : {'name':'required'}
-            },
-            'CMStoSiteName' : {
-                'keys': ['site.sitename'],
-                'params' : {'name':'required'}
-            },
-            'CMSNametoCE' : {
-                'keys': ['site.cename'],
-                'params' : {'name':'required'}
-            },
-            'CMSNametoSE' : {
-                'keys': ['site', 'site.sename'],
-                'params' : {'name':'required'}
-            },
-            'CMSNametoPhEDExNode' : {
-                'keys': ['site.phedexname'],
-                'params' : {'cms_name':'required'}
-            },
-            'SiteStatus' : {
-                'keys': ['site.status'],
-                'params' : {'cms_name':'required'}
-            },
-        }
+        self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def adjust(self, apidict):
+    def parser(self, api, data, params=None):
         """
-        Fix apidict if API requires CMS name and provided name is se one.
-        And to reverse if necessary.
+        Parser for SiteDB JSON data-services
         """
-        pat = re.compile('^CMSName')
-        for api, params in apidict.items():
-            if  pat.match(api) and params.has_key('name'):
-                nlist = []
-                for val in params['name']:
-                    if  val.find('.') != -1:
-                        newval = self.se2cms(val)
-                        nlist.append(newval)
-                if  nlist:
-                    params['name'] = nlist
-
-    def adjust_result(self, api, idict):
-        """
-        Convert sitedb dict into expected dict structure
-        {'key':[results]}.
-        """
-        jsondict = {}
-        for key in self.map[api]['keys'] :
-            jsondict[key] = idict.values()
-        return jsondict
+        jsondict = eval(data)
+        pat = re.compile('T[0-9]_')
+        for key, val in jsondict.items():
+            if  api == 'CMSNametoAdmins':
+                row = {'admin':val}
+#            elif api == 'CEtoCMSName':
+#                row = {'name': val['name']}
+            elif api == 'SEtoCMSName':
+                row = {'name': val['name']}
+            elif api == 'CMStoSAMName':
+                row = {'samname': val['name']}
+            elif api == 'CMStoSiteName':
+                row = {'sitename': val['name']}
+            elif api == 'CMSNametoCE':
+                row = {'ce': val['name']}
+            elif api == 'CMSNametoSE':
+                row = {'se': val['name']}
+#            elif api == 'CMSNametoPhEDExNode':
+#                row = {'node': val['phedex_node']}
+            elif api == 'SiteStatus':
+                row = val
+            else:
+                raise Exception('Not implemented yet')
+            if  params:
+                for key, val in params.items():
+                    if  val:
+                        if  pat.match(val):
+                            if  not row.has_key('cmsname'):
+                                row['cmsname'] = val
+                        if  val.find('.') != -1: # SE or CE
+                            if  not row.has_key('se'):
+                                row['se'] = val
+            yield {'site': row}
 
     def se2cms(self, site_se):
         """

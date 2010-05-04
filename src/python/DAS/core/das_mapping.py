@@ -5,110 +5,148 @@
 DAS mapping
 """
 
-__revision__ = "$Id: das_mapping.py,v 1.11 2009/07/17 19:38:58 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+from __future__ import with_statement
+
+__revision__ = "$Id: das_mapping.py,v 1.12 2009/09/01 01:42:44 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
-import os
 import types
-import ConfigParser
-from DAS.utils.utils import transform_dict2list
-from DAS.utils.utils import izip_longest
+from DAS.core.das_mapping_db import DASMappingMgr
+from DAS.core.das_mapping_db import System, DASKey, Api, APIMap 
+from DAS.core.das_mapping_db import DASMap, API2DAS, DASNotation
 
-def read_config(cname):
+class DASMapping(DASMappingMgr):
     """
-    Return DAS map file found in $DAS_ROOT/etc/cname
+    Provides bi-directional mapping between DAS and data-services.
+    So far all maps are defined in configuration files, later we
+    will switch to mapping DB. We require 3 type of maps:
+    1. mapping between DAS keyword to data-service APIs notations
+    2. mapping between data-service output to DAS keys
+    3. mapping between data-services, e.g. in phedex the block
+    size is defined as "bytes", while in DBS as "size"
     """
-    dasconfig = ''
-    if  os.environ.has_key('DAS_ROOT'):
-        dasconfig = os.path.join(os.environ['DAS_ROOT'], 'etc/%s' % cname)
-        if  not os.path.isfile(dasconfig):
-            raise EnvironmentError('No DAS config file %s found' % dasconfig)
-    else:
-        raise EnvironmentError('DAS_ROOT environment is not set up')
-    config = ConfigParser.ConfigParser()
-    config.read(dasconfig)
-    mapdict = {}
-    for system in config.sections():
-        sectdict = {}
-        for opt in config.options(system):
-            sectdict[opt] = config.get(system, opt).split(',')
-        mapdict[system] = sectdict
-    return mapdict
+    def __init__(self, config):
+        DASMappingMgr.__init__(self, config)
 
-def parselist(result):
-    """
-    parse input list and look-up if it's elements are lists
-    if so, parse them and make final list. Used by translate.
-    """
-    if  type(result) is not types.ListType:
-        return [result]
-    olist = []
-    for item in result:
-        if  type(item) is types.ListType:
-            for elem in item:
-                olist.append(elem)
-        else:
-            olist.append(item)
-    return olist
+    def primary_key(self, system, daskey):
+        """
+        Returns primary key for given system and provided
+        selection DAS key, e.g. block => block.name
+        """
+        session = self.session()
+        query = session.query(DASKey, System, DASMap).\
+            filter(DASMap.system_id==System.id).\
+            filter(DASMap.daskey_id==DASKey.id).\
+            filter(System.name==system).\
+            filter(DASKey.name==daskey)
+        primkeys = []
+        for row in query.all():
+            pkey = row[-1].primary_key
+            if  pkey not in primkeys:
+                primkeys.append(pkey)
+        if  len(primkeys) > 1:
+            msg  = 'Ambigous primary keys: %s\n' % str(primkeys)
+            msg += 'system=%s, daskey=%s' % (system, daskey)
+            raise Exception(msg)
+        return primkeys[0]
+#        row = query.one()
+#        return row[-1].primary_key
 
-def api2das(system, name):
-    """
-    Translate data-service API input parameter into DAS QL key,
-    LumiDB uses run_number, while DAS uses run
-    """
-    dasmap = read_config('dasmap.cfg')
-    keys = []
-    if  dasmap.has_key(system):
-        for key, values in dasmap[system].items():
-            if  name in values:
-                keys.append(key)
-    if  keys:
+    def api2das(self, system, api_input_name):
+        """
+        Translates data-service API input parameter into DAS QL key,
+        e.g. run_number => run.
+        """
+        session = self.session()
+        query = session.query(System, APIMap, API2DAS, DASKey).\
+        filter(System.name==system).\
+        filter(System.id==APIMap.system_id).\
+        filter(APIMap.param==api_input_name).\
+        filter(APIMap.api_id==API2DAS.api_id).\
+        filter(API2DAS.system_id==System.id).\
+        filter(API2DAS.param_id==APIMap.id).\
+        filter(API2DAS.daskey_id==DASKey.id)
+        names = []
+        for row in query.all():
+            daskey = row[-1].name
+            if  daskey not in names:
+                names.append(daskey)
+        return names
+
+    def das2api(self, system, daskey, value=None):
+        """
+        Translates DAS QL key into data-service API input parameter
+        """
+        session = self.session()
+        query = session.query(System, DASKey, API2DAS, APIMap).\
+        filter(System.name==system).\
+        filter(System.id==APIMap.system_id).\
+        filter(APIMap.api_id==API2DAS.api_id).\
+        filter(API2DAS.system_id==System.id).\
+        filter(API2DAS.param_id==APIMap.id).\
+        filter(API2DAS.daskey_id==DASKey.id).\
+        filter(DASKey.name==daskey)
+        if  value:
+            query.filter(API2DAS.pattern==value)
+        names = []
+        for row in query.all():
+            api_param = row[-1].param
+            if  api_param not in names:
+                names.append(api_param)
+        return names
+
+    def notation2das(self, system, api_param):
+        """
+        Translates data-service API parameter name into DAS name, e.g.
+        run_number=run. In case when api_param is not presented in DB
+        just return it back.
+        """
+        session = self.session()
+        try:
+            row = session.query(System, DASNotation).\
+            filter(System.name==system).\
+            filter(System.id==DASNotation.system_id).\
+            filter(DASNotation.api_param==api_param).one()
+            daskey = row[-1].das_param
+        except:
+            daskey = api_param
+        return daskey
+
+    def api2daskey(self, system, api):
+        """
+        Returns list of DAS keys which cover provided data-service API
+        """
+        session = self.session()
+        query = session.query(System, Api, API2DAS, DASKey).\
+        filter(System.name==system).\
+        filter(System.id==Api.system_id).\
+        filter(API2DAS.api_id==Api.id).\
+        filter(API2DAS.system_id==System.id).\
+        filter(API2DAS.daskey_id==DASKey.id).\
+        filter(Api.name==api)
+        keys = []
+        for row in query.all():
+            daskey = row[-1].name
+            if  daskey not in keys:
+                keys.append(daskey)
         return keys
-    return [name]
 
-def das2api(system, name):
-    """
-    Translate DAS QL key, name, into data-service API input parameter
-    """
-    result = translate('das2api.cfg', system, name)
-    return parselist(result)
-
-def das2result(system, name):
-    """
-    Translate DAS QL key, name, into data-service result dict, e.g.
-    block.complete => block.replica.complete
-    """
-    result = translate('dasmap.cfg', system, name)
-    return parselist(result)
-
-def result2das(system, name):
-    """
-    Translate data-service output into DAS QL keys, e.g.
-    block.replica.complete => block.complete
-    """
-    dasmap = read_config('dasmap.cfg')
-    olist  = []
-    if  dasmap.has_key(system):
-        mapdict = dasmap[system]
-        for k, v in mapdict.items():
-            if  v.count(name):
-                olist.append(k)
-        if  olist:
-            return olist
-    return [name]
-
-def translate(cname, system, name):
-    """
-    Translate given QL key into data-service notation.
-    """
-    dasmap = read_config(cname)
-    if  not dasmap.has_key(system):
-        return name
-    for key, val in dasmap[system].items():
-        if  key == name:
-            return val
-    return name
+    def servicemap(self, system, implementation=None):
+        """
+        Constructs data-service map, e.g.
+        {api: {keys:[list of DAS keys], params: dict_of_api_params} }
+        """
+        smap = {}
+        apis = self.list_apis(system)
+        for api in self.list_apis(system):
+            params = self.api_params(api)
+            daskeys = self.api_keys(api)
+            if  implementation=='javaservlet':
+                smap[api] = dict(keys=daskeys, params=params, api=dict(api=api))
+            else:
+                smap[api] = dict(keys=daskeys, params=params)
+        return smap
 
 # NEW json2das/jsonparser implementation
 def json2das(system, input, keylist, selkeys):

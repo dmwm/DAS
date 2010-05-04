@@ -4,18 +4,24 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.4 2009/06/09 14:07:24 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: runsum_service.py,v 1.5 2009/09/01 01:42:47 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
+import time
 import ConfigParser
+try:
+    # Python 2.5
+    import xml.etree.ElementTree as ET
+except:
+    # prior requires elementtree
+    import elementtree.ElementTree as ET
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, get_key_cert
-from DAS.services.runsum.runsum_parser import parser as runsum_parser
+from DAS.utils.utils import map_validator, get_key_cert, dasheader
+#from DAS.services.runsum.runsum_parser import parser as runsum_parser
 from DAS.services.runsum.run_summary import get_run_summary
-from DAS.core.das_mapping import json2das, das2result
 
 def runsum_keys():
     """Retrieve run summary keys directly from dasmap.cfg file"""
@@ -39,17 +45,10 @@ class RunSummaryService(DASAbstractService):
         self.results = []
         self.params  = {'DB':'cms_omds_lb', 'FORMAT':'XML'}
         self._keys   = None
-        # DBS uses DBSServlet and API passed as parameter, so we don't
-        # define api in map and rather use url w/ DBSServlet
-        self.map     = {
-            '' : {
-                'keys' : runsum_keys(),
-                'params' : self.params
-            }
-        }
+        self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def api(self, query, cond_dict=None):
+    def api(self, query):
         """
         Invoke DBS API to execute given query.
         Return results as a list of dict, e.g.
@@ -57,11 +56,10 @@ class RunSummaryService(DASAbstractService):
         """
         # translate selection keys into ones data-service APIs provides
         selkeys, conditions = self.query_parser(query)
-        keylist = []
-        for key in selkeys:
-            res = das2result(self.name, key)
-            for item in das2result(self.name, key):
-                keylist.append(item)
+#        keylist = []
+#        for key in selkeys:
+#            for item in self.dasmapping.das2result(self.name, key):
+#                keylist.append(item)
 
         params  = dict(self.params)
         for item in conditions:
@@ -70,12 +68,42 @@ class RunSummaryService(DASAbstractService):
         debug   = 0
         if  self.verbose > 1:
             debug = 1
-        res      = get_run_summary(self.url, params, key, cert, debug)
-#        data    = runsum_parser(res)
+        time0 = time.time()
+        data  = get_run_summary(self.url, params, key, cert, debug)
         # similar to worker method, get all results, parse them and do
         # mapping between returned keys to DAS ones
-        res      = runsum_parser(res)
-        jsondict = [i for i in res][0]
-        # NOTE: json2das accepts dict as {'system':{result dict}}
-        data = json2das(self.name, {'runsum':jsondict}, keylist, selkeys)
-        return data
+#        genrows = runsum_parser(res)
+        api = '' # there is no particular API, so will use empty one
+        genrows = self.parser(api, data, params)
+        ctime = time.time()-time0
+        header = dasheader(self.name, query, api, self.url, params,
+            ctime, self.expire, self.version())
+        mongo_query = self.mongo_query_parser(query)
+        self.localcache.update_cache(mongo_query, genrows, header)
+        return True
+
+    def parser(self, api, data, params=None):
+        """
+        RunSummary XML parser, it returns a list of dict rows, e.g.
+        [{'file':value, 'run':value}, ...]
+        """
+        try:
+            elem  = ET.fromstring(data)
+        except:
+            print "data='%s'" % data
+            raise Exception('Unable to parse run summary output')
+        for i in elem:
+            if  i.tag == 'runInfo':
+                row = {}
+                for j in i:
+                    if  j.tag:
+                        newkey = self.dasmapping.notation2das(self.name, j.tag)
+                        row[newkey] = j.text
+                    nrow = {}
+                    for k in j.getchildren():
+                        if  k.tag:
+                            nkey = self.dasmapping.notation2das(self.name, k.tag)
+                            nrow[nkey] = k.text
+                    if  nrow:
+                        row[newkey] = nrow
+                yield row

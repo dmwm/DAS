@@ -4,10 +4,10 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.27 2009/07/22 20:40:10 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: abstract_service.py,v 1.28 2009/09/01 01:42:45 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
-
+import time
 import types
 import urllib
 import urllib2
@@ -19,11 +19,9 @@ except:
     # Prior to 2.6 requires simplejson
     import simplejson as json
 
-from DAS.utils.utils import genresults
+from DAS.utils.utils import dasheader
 from DAS.utils.utils import cartesian_product
-from DAS.core.das_mapping import json2das, das2api, api2das
-from DAS.core.das_mapping import result2das, das2result
-from DAS.core.qlparser import QLLexer
+from DAS.core.qlparser import QLLexer, mongo_exp
 
 class DASAbstractService(object):
     """
@@ -32,13 +30,14 @@ class DASAbstractService(object):
     Those parameters are keys, verbosity level, URL of the data-service.
     """
     def __init__(self, name, config):
-        self.name         = name
+        self.name = name
         try:
-            sdict         = config[name]
-            self.verbose  = int(sdict['verbose'])
-            self.expire   = int(sdict['expire'])
-            self.url      = sdict['url']
-            self.logger   = config['logger']
+            sdict           = config[name]
+            self.verbose    = int(sdict['verbose'])
+            self.expire     = int(sdict['expire'])
+            self.url        = sdict['url']
+            self.logger     = config['logger']
+            self.dasmapping = config['dasmapping']
         except:
             traceback.print_exc()
             print config
@@ -49,12 +48,18 @@ class DASAbstractService(object):
         self._keys        = None # to be defined at run-time in self.keys
         self._params      = None # to be defined at run-time in self.parameters
 
-        # define internal couch DB manager to put 'raw' results into CouchDB
+        msg = 'DASAbstractService::__init__ %s' % self.name
+        self.logger.info(msg)
+        # define internal cache manager to put 'raw' results into cache
         if  config.has_key('rawcache') and config['rawcache']:
             self.localcache   = config['rawcache']
-            msg = 'DASAbstractService::__init__ localcache=%s'\
-                     % self.localcache
-            self.logger.info(msg)
+        else:
+            msg = 'Undefined rawcache, please check your configuration'
+            raise Exception(msg)
+
+    def version(self):
+        """Return data-services version, should be implemented in sub-classes"""
+        return ''
 
     def keys(self):
         """
@@ -65,10 +70,8 @@ class DASAbstractService(object):
         srv_keys = []
         for api, params in self.map.items():
             for key in params['keys']:
-                key_list = result2das(self.name, key)
-                for kkk in key_list:
-                    if  not kkk in srv_keys:
-                        srv_keys.append(kkk)
+                if  not key in srv_keys:
+                    srv_keys.append(key)
         self._keys = srv_keys
         return srv_keys
 
@@ -81,27 +84,24 @@ class DASAbstractService(object):
         srv_params = []
         for api, params in self.map.items():
             for key in params['params']:
-                param_list = api2das(self.name, key)
+                param_list = self.dasmapping.api2das(self.name, key)
                 for par in param_list:
                     if  not par in srv_params:
                         srv_params.append(par)
         self._params = srv_params
         return srv_params
 
-    def getdata(self, url, params, iface=None, headers=None):
+    def getdata(self, url, params, headers=None):
         """
-        Invoke URL call and retrieve data from data-service.
-        User provides a set of parameters passed to data-service URL.
+        Invoke URL call and retrieve data from data-service based
+        on provided URL and set of parameters. All data are parsed
+        by data-service parsers to provide uniform JSON representation
+        for further processing.
         """
-        msg = 'DASAbstractService::%s getdata(%s, %s)' \
+        msg = 'DASAbstractService::%s::getdata(%s, %s)' \
                 % (self.name, url, params)
         self.logger.info(msg)
-        # call couch cache to get results from it,
-        # otherwise call data service as shown below.
-#        cquery = "%s %s" % (url, params)
-#        if  hasattr(self, 'localcache') and self.localcache.incache(cquery):
-#            return self.localcache.get_from_cache(cquery)
-
+        input_params = params
         # if necessary the data-service implementation will adjust parameters,
         # for instance, DQ parser Tracker_Global=GOOD&Tracker_Local1=1
         # into the following form
@@ -109,7 +109,7 @@ class DASAbstractService(object):
         self.adjust_params(params)
 
         # based on provided interface correctly deal with input parameters
-        if  iface == 'json':
+        if  self.name == 'dq':
             encoded_data = json.dumps(params)
         else:
             encoded_data = urllib.urlencode(params, doseq=True)
@@ -120,36 +120,9 @@ class DASAbstractService(object):
         if  not encoded_data:
             encoded_data = None
         data = urllib2.urlopen(req, encoded_data)
-#        data = urllib2.urlopen(url, encoded_data)
-        results = data.read()
-        # to prevent unicode/ascii errors like
-        # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
-        if  type(results) is types.StringType:
-            results = unicode(results, errors='ignore')
-
-        self.logger.debug('DASAbstractService::%s results=%s' \
-                % (self.name, results))
-
-        # store to couch 'raw' data coming out of concrete data service
-        # will add 'query' and 'timestamp' for every row in results
-#        if  hasattr(self, 'localcache'):
-#            self.logger.debug('DASAbstractService::getdata updating localcache')
-#            results = self.localcache.update_cache(cquery, results, self.expire)
-
-        return results
-
-    def api(self, query, cond_dict=None):
-        """
-        Data service api method, can be defined by data-service class.
-        return a list of results with selected keys.
-        """
-        self.logger.info('DASAbstractService::%s api(%s)' \
-                % (self.name, query))
-        msg = 'DASAbstractService::%s api uses cond_dict\n%s' \
-                % (self.name, str(cond_dict))
-        self.logger.debug(msg)
-        results = self.worker(query, cond_dict)
-        return results
+        return data.read()
+#        results = data.read()
+#        return self.parser(results, input_params)
 
     def product(self, resdict):
         """
@@ -172,53 +145,37 @@ class DASAbstractService(object):
             data = result
         return data
 
-    def call(self, query, collect_list, cond_dict=None):
+    def call(self, query):
         """
         Invoke service API to execute given query.
         Return results as a collect list set.
         """
-        msg = 'DASAbstractService::%s call(%s, %s)' \
-                % (self.name, query, collect_list)
+        msg = 'DASAbstractService::%s::call(%s)' \
+                % (self.name, query)
         self.logger.info(msg)
-        # call couch cache to get results from it,
-        # otherwise call data service as shown below.
-        cquery = '%s @ %s' % (query, self.name)
-#        res = self.localcache.get_from_cache(cquery)
-#        if  res:
-#            return res
-        if  hasattr(self, 'localcache') and self.localcache.incache(cquery):
-            return self.localcache.get_from_cache(cquery)
+        mongo_query = self.mongo_query_parser(query)
+        msg = 'DASAbstractService::%s mongo_query=%s' % (self.name, mongo_query)
+        self.logger.info(msg)
 
-        skeys = [key for key in collect_list if self.keys().count(key)]
-        # NOTE: if we will use entities in qlparser then I need this line
-#        skeys = [key for key in collect_list \
-#                if self.keys().count(key.split('.')[0])]
+        # check the cache if there are records with given parameters
+        spec = mongo_query['spec'].keys() # we take all parameters
+        spec.remove('das.system') # and check if conditions provided
+        if  self.localcache.incache(query=mongo_query) and spec:
+            return self.localcache.get_from_cache(query=mongo_query)
+        # check the cache if there are records with given input query
+        dasquery = {'spec': {'das.query': query, 'das.system': self.name}, 
+                    'fields': None}
+        if  self.localcache.incache(query=dasquery):
+            return self.localcache.get_from_cache(query=dasquery)
 
-        # add exception for DBS for aggregated functions
-        if  self.name == 'dbs':
-            for key in collect_list:
-                for agg in ['count', 'sum']:
-                    if  key.find('%s(' % agg) != -1:
-                        kkk = key.replace('%s(' % agg, '').replace(')', '')
-                        if  self.keys().count(kkk):
-                            skeys += [key]
-
-        split = query.split(' where ')
-        if  len(split) == 1:
-            cond = ""
+        # ask data-service api to get results, they'll be store them in
+        # cache, so return at the end what we have in cache.
+        result = self.api(query)
+        if  result:
+            return self.localcache.get_from_cache(query=mongo_query)
         else:
-            cond = ' where ' + split[-1]
-        service_query = "find " + ','.join(skeys) + cond
-        # ask data-service api to get result set in form [row1, row2, ...]
-        res = self.api(service_query, cond_dict)
-        results = genresults(self.name, res, collect_list)
-        # store to couch 'raw' data coming out of concrete data service
-        # will add 'query' and 'timestamp' for every row in results
-        if  hasattr(self, 'localcache'):
-            self.logger.debug('DASAbstractService::call updating localcache')
-            results = self.localcache.update_cache(cquery, results, self.expire)
-
-        return results
+            return []
+#        return self.localcache.get_from_cache(query=dasquery)
 
     def adjust_params(self, args):
         """
@@ -227,30 +184,43 @@ class DASAbstractService(object):
         """
         pass
 
-    def adjust(self, apidict):
+    def parser(self, api, data, params=None):
         """
-        There are some special cases (based on DBS QL legacy) when we have
-        one to many sel.key mapping to API. For example, the "site" can be
-        used in SiteDB as cms name or as se name. To fix that we use
-        data-service specific adjust call to convert such sel. key value
-        from one format to another
+        Output data parser, can be implemeted in derived classes.
+        By default we assume that data has string type (returned by
+        URL call to data-service api). We substitute
+        null (e.g. Phedex) into null string and evaluate the results.
         """
-        return
+        # to prevent unicode/ascii errors like
+        # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
+        if  type(data) is types.StringType:
+            data = unicode(data, errors='ignore')
 
-    def parser(self, data):
-        """
-        Custom parser for output data, must be implemeted in derived classes
-        """
-        return data
+        self.logger.debug('DASAbstractService::%s results=%s' \
+                % (self.name, data))
 
-    def update_args(self, api, args, intdict):
-        """
-        Update args dict from intermediate dict of results (intdict). Must
-        be implemented in derived classes if necessary, otherwise just 
-        pass back the args. The passed api parameter instruct which API
-        is in use to verify input parameter set.
-        """
-        return args
+        res = data.replace('null', '\"null\"')
+        try:
+            jsondict = json.loads(res)
+        except:
+            jsondict = eval(res)
+            pass
+        if  self.verbose > 2:
+            print "\n### %s returns" % self.name
+            print jsondict
+        for key in jsondict.keys():
+            newkey = self.dasmapping.notation2das(self.name, key)
+            if  newkey != key:
+                jsondict[newkey] = jsondict[key]
+                del jsondict[key]
+        # add which sub-system has been used parameters
+#        jsondict['system'] = self.name
+        if  params:
+            for key, val in params.items():
+                newkey = self.dasmapping.notation2das(self.name, key)
+                if  not jsondict.has_key(newkey):
+                    jsondict[newkey] = val
+        yield jsondict
 
     def query_parser(self, query):
         """
@@ -269,13 +239,87 @@ class DASAbstractService(object):
         self.logger.debug(msg)
         return selkeys, conditions
 
-    def worker(self, query, icond_dict=None):
+    def mongo_query_parser(self, query):
         """
-        A service worker. It parses input query, invoke service API 
-        and return results in a list with provided row.
+        Init QLLexer and transform input query into MongoDB syntax
         """
-        msg = 'DASAbstractService::worker(%s, %s)' % (query, icond_dict)
-        self.logger.info(msg)
+        selkeys, conditions = self.query_parser(query)
+        specialcase = False
+        if  selkeys == ['records']: # special case to look-up all records
+            specialcase = True
+            fields = None
+        else:
+            fields = ['das'] # we will always look-up the system name
+            for key in selkeys:
+                fields.append(key)
+        condlist = []
+        for item in conditions:
+            if  type(item) is types.DictType:
+                key = item['key']
+                nkey = self.dasmapping.primary_key(self.name, key)
+                if  not nkey:
+                    nkey = key
+                cdict = dict(key=nkey, op=item['op'], value=item['value'])
+                condlist.append(cdict)
+            else:
+                condlist.append(item)
+        cond_dict = mongo_exp(condlist)
+        cond_dict['das.system'] = self.name
+        cond_dict['das.selection_keys'] = {'$in' : selkeys}
+        # see MongoDB API, http://api.mongodb.org/python/
+        # we return spec and fields dict
+        return dict(spec=cond_dict, fields=fields)
+
+    def primary_key(self, api):
+        """
+        Return primary key of data output for given data-service API.
+        """
+#        return self.map[api]['primary_key']
+        # TODO: I'm not sure what to do with primary keys yet
+        # how many each API output will supply?
+        prim_keys = []
+        for key in self.map[api]['keys']:
+            pkey = self.dasmapping.primary_key(self.name, key)
+            if  pkey not in prim_keys:
+                prim_keys.append(pkey)
+        return prim_keys[0]
+
+    def api(self, query):
+        """
+        Data service api method, can be defined by data-service class.
+        It parse input query and invoke appropriate data-service API
+        call. All results are store into localcache.
+        """
+        self.logger.info('DASAbstractService::%s::api(%s)' \
+                % (self.name, query))
+        selkeys, conditions = self.query_parser(query)
+        mongo_query = self.mongo_query_parser(query)
+        result = False
+        for url, api, args in self.apimap(query):
+            msg  = 'DASAbstractService::%s::api found %s, %s' \
+                % (self.name, api, str(args))
+            self.logger.info(msg)
+            time0   = time.time()
+            data    = self.getdata(url, args)
+            genrows = self.parser(api, data, args)
+            ctime   = time.time() - time0
+            header  = dasheader(self.name, query, api, url, args, ctime,
+                self.expire, self.version())
+            header['primary_keys'] = self.primary_key(api)
+            header['selection_keys'] = selkeys
+            self.localcache.update_cache(mongo_query, genrows, header)
+            msg  = 'DASAbstractService::%s cache has been updated,' % self.name
+            self.logger.info(msg)
+            result = True
+        return result
+
+    def apimap(self, query):
+        """
+        This method analyze the input query and create apimap
+        dictionary which includes url, api, parameters and
+        data services interface (JSON, XML, etc.)
+        In a long term we can store this results into API db.
+        """
         selkeys, conditions = self.query_parser(query)
 
         # loop over conditions and create input params dict which will
@@ -289,30 +333,13 @@ class DASAbstractService(object):
                 key  = item['key']
             else:
                 continue # TODO: what should I do if I find brackets?
-            keylist = das2api(self.name, key)
+            keylist = self.dasmapping.das2api(self.name, key, val)
             if  type(keylist) is not types.ListType:
                 keylist = [keylist]
             for newkey in keylist:
                 params[newkey] = val
-        # loop over input condition dict which can be provided by
-        # another data-service who found values for some keys used here
-        for key in icond_dict:
-            keylist = das2api(self.name, key)
-            if  type(keylist) is not types.ListType:
-                keylist = [keylist]
-            for newkey in keylist:
-                params[newkey] = icond_dict[key]
-
-        # translate selection keys into ones data-service APIs provides
-#        keylist = [das2result(self.name, key) for key in selkeys]
-        keylist = []
-        for key in selkeys:
-            res = das2result(self.name, key)
-            for item in das2result(self.name, key):
-                keylist.append(item)
 
         apiname = ""
-#        args = {}
         def get_args(params):
             """
             Create a dict of arguments passed to API out of required and
@@ -326,85 +353,37 @@ class DASAbstractService(object):
                     args[key] = val
             return args
 
-        if  self.name == 'dq':
-            iface = 'json'
-        else:
-            iface = None
-        # check if all requested keys are covered by one API
+        # loop over dataservices and find out which api/params
+        # we need to call. Yield results in a form of
+        # url, api, args
         for api, aparams in self.map.items():
-            if  set(selkeys) & set(aparams['keys']) == set(selkeys):
-                apiname = api
-#                args = aparams['params']
-                args = get_args(aparams['params'])
-                for par in aparams['params']:
-                    if  params.has_key(par):
-                        args[par] = params[par]
-                if  aparams.has_key('api') or aparams['params'].has_key('api'):
-                    try:
-                        apidict = aparams['api']
-                        apikey  = apidict.keys()[0]
-                        apival  = apidict[apikey]
-                        args[apikey] = apival 
-                    except:
-                        pass
-                    url = self.url # JAVA, e.g. http://host/Servlet
-                else: # if we have http://host/apiname?...
-                    url = self.url + '/' + apiname
-                res = self.getdata(url, args, iface)
-                if  type(res) is types.GeneratorType:
-                    res = [i for i in res][0]
-                res = self.parser(res)
-                res = res.replace('null', '\"null\"')
-                try:
-                    jsondict = json.loads(res)
-                except:
-                    jsondict = eval(res)
-                    pass
-                if  self.verbose > 2:
-                    print "\n### %s::%s returns" % (self.name, api)
-                    print jsondict
-                if  jsondict.has_key('error'):
+            if  selkeys == ['records']: # special case
+                if  not set(params.keys()) & set(aparams['params']):
                     continue
-                data = json2das(self.name, jsondict, keylist, selkeys)
-                return data
-
-        # if one API doesn't cover sel keys, will call multiple APIs
-        if  self.verbose > 2:
-            print "\n#### call multiple APIs"
-        apidict = {}
-        for key in selkeys:
-            for api, aparams in self.map.items():
-                if  aparams['keys'].count(key) and not apidict.has_key(api):
-#                    args = {}
-#                    args = aparams['params']
-                    args = get_args(aparams['params'])
-                    for par in aparams['params']:
-                        if  params.has_key(par):
-                            args[par] = params[par]
-                    apidict[api] = args
-        self.adjust(apidict)
-        resdict  = {} # final result dict
-        intdict  = {} # keep track of intermediate results
-        for api, args in apidict.items():
-            self.update_args(api, args, intdict)
-            url = self.url + '/' + api
-            res = self.getdata(url, args)
-            if  type(res) is types.GeneratorType:
-                res = [i for i in res][0]
-            res = self.parser(res)
-            res = res.replace('null', '\"null\"')
-            try:
-                jsondict = json.loads(res)
-            except:
-                jsondict = eval(res)
-                pass
-            if  self.verbose > 2:
-                print "\n### %s::%s returns" % (self.name, api)
-                print jsondict, keylist
-            intdict[api] = jsondict
-            data = [i for i in json2das(self.name, jsondict, keylist, selkeys)]
-            resdict[api] = data
-            first_row = data[0]
-            keys = first_row.keys()
-        data = self.product(resdict)
-        return data
+            elif  not set(selkeys) & set(aparams['keys']):
+                continue # datasrv API doesn't cover requested selkeys
+            
+            args = get_args(aparams['params'])
+            for par, value in aparams['params'].items():
+                if  params.has_key(par):
+                    args[par] = params[par]
+                else:
+                    args[par] = value
+                if  args[par] == 'list' or args[par] == 'required':
+                    msg  = 'Missing required parameter %s, api2das returns %s'\
+                        % (par, self.dasmapping.api2das(self.name, par))
+                    msg += '\nAPI: %s, params %s' % (api, str(aparams))
+                    self.logger.info('Skip API=%s, reason\n%s' % (api, msg))
+#                    raise Exception(msg)
+            if  aparams.has_key('api') or aparams['params'].has_key('api'):
+                try:
+                    apidict = aparams['api']
+                    apikey  = apidict.keys()[0]
+                    apival  = apidict[apikey]
+                    args[apikey] = apival 
+                except:
+                    pass
+                url = self.url # JAVA, e.g. http://host/Servlet
+            else: # if we have http://host/api?...
+                url = self.url + '/' + api
+            yield url, api, args

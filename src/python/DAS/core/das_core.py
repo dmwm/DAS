@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.27 2009/07/22 20:40:10 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: das_core.py,v 1.28 2009/09/01 01:42:44 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -24,10 +24,10 @@ import traceback
 
 from DAS.core.qlparser import QLParser
 from DAS.core.das_viewmanager import DASViewManager
-
-from DAS.utils.utils import cartesian_product
+from DAS.core.das_mapping import DASMapping
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
+
 import DAS.core.das_functions as das_functions
 
 class DASTimer(object):
@@ -68,6 +68,9 @@ class DASCore(object):
         logdir = dasconfig['logdir']
         self.logger = DASLogger(idir=logdir, verbose=self.verbose, stdout=debug)
         dasconfig['logger'] = self.logger
+
+        dasmapping = DASMapping(dasconfig)
+        dasconfig['dasmapping'] = dasmapping
 
         self.viewmgr = DASViewManager(dasconfig)
 
@@ -121,6 +124,11 @@ class DASCore(object):
                 msg = "Unable to load %s plugin (%s_service.py)" \
                 % (name, name)
                 raise Exception(msg)
+        # load abstract service for all data-services
+#        conf4all = dict(dasconfig)
+#        conf4all['all'] = dict(url='', logger=self.logger, dasmapping=dasmapping, 
+#                                verbose=self.verbose, expire=0)
+#        self.all = DASAbstractService('all', conf4all)
 
         self.service_maps = dasconfig['mapping']
         self.service_keys = {}
@@ -293,24 +301,24 @@ class DASCore(object):
             if  self.cache.incache(query):
                 self.cache.remove_from_cache(query)
 
-    def in_raw_cache(self, uinput):
-        """
-        Check if input query is presented in raw cache
-        """
-        query    = self.viewanalyzer(uinput)
-        params   = self.qlparser.params(query)
-        services = params['unique_services']
-        daslist  = params['daslist']
-        for qdict in daslist:
-            for service in services:
-                if  qdict.has_key(service):
-                    squery = qdict[service]
+#    def in_raw_cache(self, uinput):
+#        """
+#        Check if input query is presented in raw cache
+#        """
+#        query    = self.viewanalyzer(uinput)
+#        params   = self.qlparser.params(query)
+#        services = params['unique_services']
+#        daslist  = params['daslist']
+#        for qdict in daslist:
+#            for service in services:
+#                if  qdict.has_key(service):
+#                    squery = qdict[service]
                     # raw cache uses "query @ service" syntax to store queries
                     # see services/abstrace_service.py call method
-                    qqq = '%s @ %s' % (squery, service)
-                    if  self.rawcache.incache(qqq):
-                        return True
-        return False
+#                    qqq = '%s @ %s' % (squery, service)
+#                    if  self.rawcache.incache(qqq):
+#                        return True
+#        return False
 
     def get_params(self, uinput):
         """
@@ -343,9 +351,8 @@ class DASCore(object):
         sellist  = params['selkeys']
         ulist    = params['unique_keys']
         services = params['unique_services']
-        daslist  = params['daslist']
-        self.logger.info('DASCore::call, unique set of keys %s' % ulist)
-        self.logger.info('DASCore::call, unique set of services %s' % services)
+        dasqueries  = params['dasqueries']
+        self.logger.info('DASCore::call, QL parser results\n%s' % params)
         # main loop, it goes over query dict in daslist. The daslist
         # contains subqueries (in a form of dict={system:subquery}) to
         # be executed by underlying systems. The number of entreis in daslist
@@ -355,88 +362,17 @@ class DASCore(object):
         # - list of runs from DBS
         # - list of runs from run-summary
         # while if we have
-        # find run where dataset=/a/b/c/ and hlt=ok we end-up with 1 entry
-        # find all runs in DBS and make cartesian product with those found
-        # in run-summary.
+        # find run where dataset=/a/b/c/ and hlt=ok we may have 1 or more
+        # data-services to be called, based on provided selection keys and
+        # conditions.
         #
-        # the results from service call API are generators, since we
-        # re-use them in condition dict passed from one service to
-        # another we must get a list out of generators, therefore
-        # we use rdict[service] = [i for i in res]
-        for qdict in daslist:
-            self.logger.info('DASCore::call, qdict = %s' % str(qdict))
-            rdict = {}
-            for service in services:
+        for srv, queries in dasqueries.items():
+            for squery in queries:
+                self.logger.info('DASCore::call %s(%s)' % (srv, squery))
                 if  self.verbose:
-                    self.timer.record(service)
-                # find if we already run one service whose results
-                # can be used in current one
-                cond_dict = self.find_cond_dict(service, rdict)
-                if  qdict.has_key(service):
-                    squery = qdict[service]
-                    res = getattr(getattr(self, service), 'call')\
-                                 (squery, ulist, cond_dict)
-                    rdict[service] = [i for i in res]
-                else:
-                    qqq = "find " + ','.join(sellist)
-                    res = getattr(getattr(self, service), 'call')\
-                                    (qqq, ulist, cond_dict)
-                    rdict[service] = [i for i in res]
+                    self.timer.record(srv)
+                res = getattr(getattr(self, srv), 'call')(squery)
                 if  self.verbose:
-                    self.timer.record(service)
-
-            systems = rdict.keys()
-            delkeys = [] # list of keys to be deleted from final results
-            def slice_row(delkeys, entry):
-                "Select only those keys in entry dict which were requested"
-                if  not delkeys:
-                    delkeys = list(set(entry.keys()) - set(sellist))
-                delkeys.remove('system')
-                for key in delkeys:
-                    del entry[key]
-
-            # if result dict contains only single result set just return it
-            if  len(systems) == 1:
-                for entry in rdict[systems[0]]:
-                    slice_row(delkeys, entry)
-                    yield entry
-                return
-
-            # find pairs who has relationships, e.g. (dbs, phedex),
-            # and make cartesian product out of them based on found relation keys
-            list0 = rdict[systems[0]]
-            list1 = rdict[systems[1]]
-            idx   = 2
-            while 1:
-                product = cartesian_product(list0, list1)
-                if  idx >= len(systems):
-                    break
-                list0 = product
-                list1 = rdict[systems[idx]]
-                idx  += 1
-            for entry in product:
-                slice_row(delkeys, entry)
-                yield entry
-
-    def find_cond_dict(self, service, rdict):
-        """
-        For given service find if it contains in provided result dict
-        a key. If so, return a dictionary with values for those found
-        keys.
-        """
-        cond_dict = {}
-        if  rdict:
-            for key in rdict.keys():
-                map1 = (key, service)
-                map2 = (service, key)
-                for mmm in [map1, map2]:
-                    if  self.service_maps.has_key(mmm):
-                        skey = self.service_maps[mmm]
-                        for skey in self.service_maps[mmm]:
-                            prev = list(set(\
-                                   [item[skey] for item in rdict[key]\
-                                        if item.has_key(skey)]))
-                            if  prev:
-                                cond_dict[skey] = prev
-        return cond_dict
-
+                    self.timer.record(srv)
+                for row in res:
+                    yield row

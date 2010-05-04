@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.11 2009/07/15 18:59:03 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.12 2009/09/01 01:42:48 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -145,8 +145,8 @@ class DASCacheModel(RESTModel):
                         data['data'] = res
                     data['status'] = 'success'
                     data['nresults'] = tot
-                elif self.dascore.in_raw_cache(query):
-                    data['status'] = 'in raw cache'
+#                elif self.dascore.in_raw_cache(query):
+#                    data['status'] = 'in raw cache'
                 else:
                     data['status'] = 'not found'
             else:

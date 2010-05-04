@@ -4,13 +4,13 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.4 2009/07/22 20:40:11 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: monitor_service.py,v 1.5 2009/09/01 01:42:46 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator
+from DAS.utils.utils import map_validator, dasheader
 
 class MonitorService(DASAbstractService):
     """
@@ -18,50 +18,39 @@ class MonitorService(DASAbstractService):
     """
     def __init__(self, config):
         DASAbstractService.__init__(self, 'monitor', config)
-        self.map = {
-            '/plotfairy/phedex/prod/link-rate:plot' : {
-                'keys' : ['monitor.site', 'monitor.node',
-                          'monitor.country', 'monitor.region',
-                          'monitor.tier' ],
-                'params' : {
-                    'session': 'kkk777',
-                    'version': '1224790775',
-                    'span': 'hour',
-                    'start': '',
-                    'end': '1224792000',
-                    'qty': 'destination',
-                    'grouping': 'node',
-                    'src-grouping': 'same',
-                    'links': 'nomss',
-                    'from': '',
-                    'to': '',
-                    'type': 'json',
-                }
-            }
-        }
+        self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def api(self, query, cond_dict=None):
+    def api(self, query):
         """
-        A service worker. It parses input query, invoke service API 
-        and return results in a list with provided row.
+        An overview data-service worker.
         """
         selkeys, cond = self.query_parser(query)
         api  = self.map.keys()[0] # we have only one key
         args = dict(self.map[api]['params'])
         data = []
+        mongo_query = self.mongo_query_parser(query)
+        keys = [key for key in self.map[api]['keys'] for api in self.map.keys()]
         for key in selkeys:
-            args['grouping'] = key.split('.')[-1]
+            if  key not in keys:
+                continue
+            if  key.find('.') != -1:
+                args['grouping'] = key.split('.')[-1]
             args['end'] = '%d' % time.time()
             url = self.url + '/' + api
+            time0 = time.time()
             res = self.getdata(url, args)
             jsondict = eval(res)
             monitor_time = jsondict['series']
             monitor_data = jsondict['data']
-            items = ({'time':t, 'data':d} for t, d in \
+            items = ({'time':list(t), 'data':d} for t, d in \
                                 zip(monitor_time, monitor_data))
-            data  = [{key: d} for d in items]
-#            data  = [{key: '%s' % str(d)} for d in items]
-        # TODO: I need to see how to multiplex data for different keys
-        return data
+#            data  = [{key: d} for d in items]
+            data  = [{'monitor':{args['grouping'] : d}} for d in items]
+
+            ctime = time.time() - time0
+            header = dasheader(self.name, query, api, self.url, args,
+                ctime, self.expire, self.version())
+            self.localcache.update_cache(mongo_query, data, header)
+        return True
 
