@@ -26,30 +26,18 @@ class testDASAnalyticsMgr(unittest.TestCase):
         logger   = DASLogger(verbose=debug, stdout=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        config['analytics_db_engine'] = 'sqlite:///%s' % self.db
+        config['mongocache_dbhost'] = 'localhost'
+        config['mongocache_dbport'] = 27017
+        config['mongocache_dbname'] = 'test_analytics'
         self.mgr = DASAnalytics(config)
 
     def tearDown(self):
         """Invoke after each test"""
-        try:
-            os.remove(self.db)
-        except:
-            pass
-
-    def test_system(self):                          
-        """test methods for system table"""
-        self.mgr.create_db()
-        self.mgr.add_system('dbs')
-        res = self.mgr.list_systems()
-        self.assertEqual(['dbs'], res)
-        res = self.mgr.delete_system('dbs')
-        self.assertEqual(True, res)
+        self.mgr.delete_db()
 
     def test_api(self):                          
         """test methods for api table"""
         self.mgr.create_db()
-        self.mgr.add_system('dbs')
-        self.mgr.add_system('phedex')
 
         query = 'find block'
         dbs_api = 'listBlocks'
@@ -72,20 +60,12 @@ class testDASAnalyticsMgr(unittest.TestCase):
         res = self.mgr.api_counter(dbs_api)
         self.assertEqual(2, res) # we invoke API twice, so should get 2
 
+        self.mgr.update(query)
+        res = self.mgr.api_counter(dbs_api)
+        self.assertEqual(3, res) # we update API call, so should get 3
+        
         res = self.mgr.api_params(phedex_api)
-        self.assertEqual(phedex_params, res)
-
-        res = self.mgr.delete_api(dbs_api)
-        self.assertEqual(True, res)
-
-        res = self.mgr.delete_api(phedex_api)
-        self.assertEqual(True, res)
-
-        res = self.mgr.delete_system('dbs')
-        self.assertEqual(True, res)
-
-        res = self.mgr.delete_system('phedex')
-        self.assertEqual(True, res)
+        self.assertEqual([phedex_params], res)
 #
 # main
 #
