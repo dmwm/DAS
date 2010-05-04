@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.63 2010/02/10 19:03:15 valya Exp $"
-__version__ = "$Revision: 1.63 $"
+__revision__ = "$Id: das_mongocache.py,v 1.64 2010/02/16 18:38:24 valya Exp $"
+__version__ = "$Revision: 1.64 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -413,6 +413,7 @@ class DASMongocache(object):
         col = self.db[collection]
         msg = "DASMongocache::get_from_cache(%s, %s, %s, %s, %s, coll=%s)"\
                 % (query, idx, limit, skey, order, collection)
+        strquery = json.dumps(query)
         self.logger.info(msg)
         if  adjust:
             query  = adjust_id(query)
@@ -422,6 +423,11 @@ class DASMongocache(object):
         idx    = int(idx)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
+
+        # look-up API query
+        recapi = self.col.find_one({"query":strquery})
+
+        # look-up raw record
         if  fields:
             fields += ['das_id'] # always extract das_id's
         skeys  = []
@@ -451,10 +457,8 @@ class DASMongocache(object):
         except Exception as exp:
             row = {'exception': exp}
             yield row
+        counter = 0
         for row in res:
-            # use this if there is no das_son_manipulator
-#            obj_id = row['_id']
-#            row['_id'] = str(obj_id)
             # DAS info is stored via das_id, the records only contains
             # {'das':{'expire':123}} to consistently manage delete operation
             if  row.has_key('das'):
@@ -464,8 +468,17 @@ class DASMongocache(object):
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
+                    counter += 1
                     yield row # only when row has all fields
             else:
+                counter += 1
+                yield row
+
+        # if no raw records were yield we look-up possible error records
+        if  not counter:
+            spec = {'das_id':recapi['_id']}
+            res = self.col.find(spec)
+            for row in res:
                 yield row
 
     def map_reduce(self, mr_input, spec=None, collection='merge'):
