@@ -65,8 +65,8 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.15 2009/09/01 01:42:44 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: qlparser.py,v 1.16 2009/09/02 19:52:55 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -543,6 +543,8 @@ class QLLexer(object):
             value = [date1, date2]
         if  type(value) is types.StringType:
             value = value.strip()
+            if  value and value[0]=='[' and value[-1]==']':
+                value = eval(value)
         return {'key':key.strip(), 'op':oper.strip(), 'value':value}
 
     def selkeys(self, query):
@@ -850,9 +852,12 @@ class QLParser(QLLexer):
             for srv in services.keys():
                 srv_keys = self.qlmap[srv]
                 srv_args = self.qlparams[srv]
-                if  set(srv_keys) & set(akeys): # all keys are covered
-                    if  srv not in uservices:
-                        uservices.append(srv)
+#                print "srv", srv
+#                print "srv_keys", srv_keys
+#                print "srv_args", srv_args
+#                if  set(srv_keys) & set(akeys): # all keys are covered
+#                    if  srv not in uservices:
+#                        uservices.append(srv)
                 if  ckeys:
                     cond1 = set(srv_keys) & set(skeys)# srv keys covers skeys
                     if  not srv_args:
