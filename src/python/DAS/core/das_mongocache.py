@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.6 2009/09/02 20:57:11 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_mongocache.py,v 1.7 2009/09/09 18:33:04 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -91,18 +91,9 @@ class DASMongocache(Cache):
         # remove from cache all expire docs
         self.col.remove({'das.expire': {'$lt' : int(time.time())}})
         
-        # so far there is a bug in count, which doesn't account for
-        # provided fields, so will use general find and loop
-        res = self.col.find(**query)
-        count = 0
-        for item in res:
-            count += 1
-            break
-        if  count:
+        res = self.col.find(**query).count()
+        if  res:
             return True
-#            res = col.find(**query).count()
-#            if  res:
-#                return True
         return False
 
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc'):
@@ -119,8 +110,7 @@ class DASMongocache(Cache):
             res = self.col.find(**query).skip(idx).limit(limit)
         else:
             res = self.col.find(**query)
-        for obj in res:
-            row = obj.to_dict()
+        for row in res:
             del(row['_id']) #mongo add internal _id, we don't need it
             fields = query['fields']
             if  fields:
@@ -149,15 +139,14 @@ class DASMongocache(Cache):
             for item in results:
                 item['das'] = dasheader
                 entry = dict_value(item, prim_key)
-                res = self.col.find_one({prim_key:entry})
-                if  res:
-                    row = res.to_dict()
+                row = self.col.find_one({prim_key:entry})
+                if  row:
                     value = dict_value(row, prim_key)
                     if  value == entry: # we found a match in cache
                         mdict = merge_dict(item, row)
                         del mdict['_id']
                         self.col.insert(mdict)
-                        self.col.remove({'_id': res['_id']})
+                        self.col.remove({'_id': row['_id']})
                     else:
                         self.col.insert(item)
                 else:
@@ -168,10 +157,8 @@ class DASMongocache(Cache):
                     except:
                         pass
         else:
+            print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
-#            system = header['das']['system']
-#            col = self.collections[system]
-#            col.insert(results)
 
     def remove_from_cache(self, query):
         """
