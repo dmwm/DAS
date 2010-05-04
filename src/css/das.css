@@ -68,6 +68,19 @@ h3 {
     border: 1px dashed #B3B3B3;
     width: 80%;
 }
+.code {
+    margin: 10px;
+    padding: 5px;
+    font-size: 12px;
+    font-weight: normal;
+    font-family: helvetica, arial, verdana, sans-serif;
+    text-decoration: none;
+    text-transform: none;
+    color: #000000;
+    background-color: rgb(247, 247, 247);
+    border: 1px solid rgb(215, 215, 215);
+    width: 98%;
+}
 hr.line {
     width: 100%;
     border: none;
