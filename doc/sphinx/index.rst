@@ -16,6 +16,9 @@ Contents:
    workflow
    mapping
    analytics
+   das_cache
+   das_merge
+   das_logging
    code
    new_service
 
