@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.25 2009/07/09 19:43:45 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: abstract_service.py,v 1.26 2009/07/10 19:26:11 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -21,7 +21,8 @@ except:
 
 from DAS.utils.utils import genresults
 from DAS.utils.utils import cartesian_product
-from DAS.core.das_mapping import json2das, das2api, das2result
+from DAS.core.das_mapping import json2das, das2api, api2das
+from DAS.core.das_mapping import result2das, das2result
 from DAS.core.qlparser import QLLexer
 
 class DASAbstractService(object):
@@ -46,6 +47,7 @@ class DASAbstractService(object):
         self.map          = {} # to be defined by data-service implementation
         self.qllexer      = None # to be defined at run-time in self.worker
         self._keys        = None # to be defined at run-time in self.keys
+        self._params      = None # to be defined at run-time in self.parameters
 
         # define internal couch DB manager to put 'raw' results into CouchDB
         if  config.has_key('rawcache') and config['rawcache']:
@@ -63,10 +65,28 @@ class DASAbstractService(object):
         srv_keys = []
         for api, params in self.map.items():
             for key in params['keys']:
-                if  not key in srv_keys:
-                    srv_keys.append(key)
+                key_list = result2das(self.name, key)
+                for kkk in key_list:
+                    if  not kkk in srv_keys:
+                        srv_keys.append(kkk)
         self._keys = srv_keys
         return srv_keys
+
+    def parameters(self):
+        """
+        Return mapped service parameters
+        """
+        if  self._params:
+            return self._params
+        srv_params = []
+        for api, params in self.map.items():
+            for key in params['params']:
+                param_list = api2das(self.name, key)
+                for par in param_list:
+                    if  not par in srv_params:
+                        srv_params.append(par)
+        self._params = srv_params
+        return srv_params
 
     def getdata(self, url, params, iface=None, headers=None):
         """
@@ -233,7 +253,9 @@ class DASAbstractService(object):
         Init QLLexer and parse input query.
         """
         if  not self.qllexer:
-            self.qllexer = QLLexer({self.name:self.keys()})
+            imap = {self.name:self.keys()}
+            params = {self.name:self.parameters()}
+            self.qllexer = QLLexer(imap, params)
 
         selkeys = self.qllexer.selkeys(query)
         conditions = self.qllexer.conditions(query)

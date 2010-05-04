@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.20 2009/06/24 13:56:44 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: das_core.py,v 1.21 2009/07/10 19:26:10 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -123,6 +123,7 @@ class DASCore(object):
 
         self.service_maps = dasconfig['mapping']
         self.service_keys = {}
+        self.service_parameters = {}
         # loop over systems and get system keys,
         # add mapping keys to final list
         for name in dasconfig['systems']: 
@@ -137,7 +138,16 @@ class DASCore(object):
 #                if  name in list(key):
 #                    skeys += [s for s in val if s not in skeys]
             self.service_keys[getattr(self, name).name] = skeys
-        self.qlparser = QLParser(self.service_keys)
+            sparams = getattr(self, name).parameters()
+            self.service_parameters[getattr(self, name).name] = sparams
+
+        # TODO: das_functions should be defined somehow externally
+        # here is just a names. Instead I should have function plugin
+        # which will contains python code with those functions.
+        self.das_functions = ['das_sum', 'das_count', 'das_min', 'das_max',
+                'das_avg']
+        self.qlparser = QLParser(self.service_keys, self.service_parameters,
+                        self.das_functions)
         if  self.verbose:
             self.timer.record('DASCore.__init__')
 
