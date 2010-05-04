@@ -7,9 +7,20 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
-- V04_00_02
+- V04_00_04
 
-  - bug fix for das_cacheserver
+  - added wild_card parameter into maps to handle data-service with
+    specific wild_card characters, e.g. \*, %, etc.
+  - added ability to handle data-service HTTPErrors. The error records
+    are recorded into both DAS cache and DAS merge collection. They will
+    be propagated to DAS web server where admin view can be created to
+    view them
+  - re-wrote C-extension for dict_helper
+  - extended dotdict class with _set/_get methods
+
+- V04_00_02, V04_00_03
+
+  - bug fix releases
 
 - V04_00_01
 
