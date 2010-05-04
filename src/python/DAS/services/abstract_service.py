@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.19 2009/06/03 19:51:29 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: abstract_service.py,v 1.20 2009/06/12 14:41:34 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -194,6 +194,15 @@ class DASAbstractService(object):
         """
         return data
 
+    def update_args(self, api, args, intdict):
+        """
+        Update args dict from intermediate dict of results (intdict). Must
+        be implemented in derived classes if necessary, otherwise just 
+        pass back the args. The passed api parameter instruct which API
+        is in use to verify input parameter set.
+        """
+        return args
+
     def query_parser(self, query):
         """
         Init QLLexer and parse input query.
@@ -316,8 +325,10 @@ class DASAbstractService(object):
                             args[par] = params[par]
                     apidict[api] = args
         self.adjust(apidict)
-        resdict  = {}
+        resdict  = {} # final result dict
+        intdict  = {} # keep track of intermediate results
         for api, args in apidict.items():
+            self.update_args(api, args, intdict)
             url = self.url + '/' + api
             res = self.getdata(url, args)
             if  type(res) is types.GeneratorType:
@@ -332,6 +343,7 @@ class DASAbstractService(object):
             if  self.verbose > 2:
                 print "\n### %s::%s returns" % (self.name, api)
                 print jsondict, keylist
+            intdict[api] = jsondict
             data = [i for i in json2das(self.name, jsondict, keylist, selkeys)]
             resdict[api] = data
             first_row = data[0]
