@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.13 2009/11/10 16:08:28 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.14 2009/11/10 16:20:56 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -234,6 +234,10 @@ if __name__ == '__main__':
         dict(api_param='last_modification_date', das_name='modification_time', api=''),
         dict(api_param='app_family_name', das_name='name', api=''),
         dict(api_param='app_executable_name', das_name='executable', api=''),
+# if I change path for all api, it will cause a problem for listBlocks
+# whose output contains <block path=a/b/c name=/a/b/c#123 ... />
+# so path will replace name. If I need to change path I need to make it
+# per API basis.
 #        dict(api_param='path', das_name='name', api=''),
         dict(api_param='storage_element', das_name='se', api=''),
         dict(api_param='storage_element_name', das_name='se', api=''),
