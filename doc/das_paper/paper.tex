@@ -340,7 +340,18 @@ data representation and security policies are left intact. Consequently,
 DAS does not require a data preservation and transaction capabilities. 
 Instead DAS can be treated as proxy or caching layer where information 
 retrieval and aggregation are triggered dynamically by user queries. 
-Below we discuss in details the DAS architecture.
+Imaging, a user opens a browser and places a query, e.g.
+{\it file block=abc}. The DAS system responds with aggregated infromation about files
+for provided set of conditions from all CMS data-services. Information
+is either retrieved from the DAS cache or fetched on-demand from relevant
+data-providers. Such system provides a uniform access to all meta-data in CMS 
+via simple, intuitive query interface. It neither enforces users to learn 
+the structure of CMS data-services
+%, their intefaces, data-formats and access policies
+or requires data-providers to agree on common data representation
+and requirement to have central meta-data repository.
+
+%Below we discuss in details the DAS architecture.
 
 \subsection{DAS architecture}
 The design of the DAS system was based on previous studies of CMS Data 
