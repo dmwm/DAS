@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.35 2010/01/07 21:29:02 valya Exp $"
-__version__ = "$Revision: 1.35 $"
+__revision__ = "$Id: DASSearch.py,v 1.36 2010/01/11 21:11:35 valya Exp $"
+__version__ = "$Revision: 1.36 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -19,6 +19,7 @@ import cherrypy
 import traceback
 
 import yaml
+from pprint import pformat
 
 from itertools import groupby
 from cherrypy import expose
@@ -152,6 +153,9 @@ class DASSearch(TemplatedPage):
         if  show == 'json':
             jsoncode = {'jsoncode': json2html(record, "")}
             page += self.templatepage('das_json', **jsoncode)
+        elif show == 'code':
+            code  = pformat(record, indent=1, width=100)
+            page += self.templatepage('das_code', code=code)
         else:
             code  = yaml.dump(record, width=100, indent=4, 
                         default_flow_style=False)
@@ -285,6 +289,9 @@ class DASSearch(TemplatedPage):
                         if  show == 'json':
                             jsoncode = {'jsoncode': json2html(row, "")}
                             res += self.templatepage('das_json', **jsoncode)
+                        elif show == 'code':
+                            code  = pformat(row, indent=1, width=100)
+                            res += self.templatepage('das_code', code=code)
                         else:
                             code = yaml.dump(row, width=100, indent=4, 
                                         default_flow_style=False)
@@ -469,6 +476,11 @@ class DASSearch(TemplatedPage):
                 jsonhtml = self.templatepage('das_json', **jsoncode)
                 jsondict = dict(data=jsonhtml, id=id)
                 page += self.templatepage('das_row', **jsondict)
+            elif show == 'code':
+                code  = pformat(row, indent=1, width=100)
+                data  = self.templatepage('das_code', code=code)
+                datadict = {'data':data, 'id':id}
+                page += self.templatepage('das_row', **datadict)
             else:
                 code  = yaml.dump(row, width=100, indent=4, 
                                 default_flow_style=False)
