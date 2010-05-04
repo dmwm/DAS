@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.7 2009/05/15 14:19:59 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: sitedb_service.py,v 1.8 2009/05/18 01:19:22 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -22,35 +22,35 @@ class SiteDBService(DASAbstractService):
         self.map = {
             'CMSNametoAdmins' : {
                 'keys': ['admin'],
-                'params' : {'name':''}
+                'params' : {'name':'required'}
             },
             'SEtoCMSName' : {
                 'keys': ['site.cmsname'],
-                'params' : {'name':''}
+                'params' : {'name':'required'}
             },
             'CMStoSAMName' : {
                 'keys': ['site.samname'],
-                'params' : {'name':''}
+                'params' : {'name':'required'}
             },
             'CMStoSiteName' : {
                 'keys': ['site.sitename'],
-                'params' : {'name':''}
+                'params' : {'name':'required'}
             },
             'CMSNametoCE' : {
                 'keys': ['site.cename'],
-                'params' : {'name':''}
+                'params' : {'name':'required'}
             },
             'CMSNametoSE' : {
                 'keys': ['site'],
-                'params' : {'name':''}
+                'params' : {'name':'required'}
             },
             'CMSNametoPhEDExNode' : {
                 'keys': ['site.phedexname'],
-                'params' : {'cms_name':''}
+                'params' : {'cms_name':'required'}
             },
             'SiteStatus' : {
                 'keys': ['site.status'],
-                'params' : {'cms_name':''}
+                'params' : {'cms_name':'required'}
             },
         }
         map_validator(self.map)

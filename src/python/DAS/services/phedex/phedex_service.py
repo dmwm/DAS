@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.5 2009/05/13 15:19:33 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: phedex_service.py,v 1.6 2009/05/18 01:19:22 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -30,22 +30,23 @@ class PhedexService(DASAbstractService):
                          'block.size', 'block.numfiles',
                          'file', 'file.checksum',
                          'file.node', 'file.origin_node'],
-                'params' : {'se':'', 'block':'', 'node':''}
+                'params' : {'se':'', 'block':'required', 'node':''}
             },
             'nodes' : {
                 'keys': ['site', 'node', 
                          'node.storage', 'node.kind'],
                 'params' : {'node':'', 'noempty':''}
             },
-#            'lfn2pfn' : {
-#                'keys': ['file.pfn', 'file', 'node', 'file.protocol',
-#                         'file.custodial'],
-#                'params' : {'node':'', 'lfn':'', 'destination':'', 'protocol':'srmv2'}
-#            },
-#            'tfc' : {
-#                'keys': ['tfc', 'tfc.protocol', 'tfc.element_name'],
-#                'params' : {'node':''}
-#            },
+            'lfn2pfn' : {
+                'keys': ['file.pfn', 'file', 'node', 'file.protocol',
+                         'file.custodial'],
+                'params' : {'node':'required', 'lfn':'required', 
+                            'destination':'', 'protocol':'srmv2'}
+            },
+            'tfc' : {
+                'keys': ['tfc', 'tfc.protocol', 'tfc.element_name'],
+                'params' : {'node':'required'}
+            },
         }
         map_validator(self.map)
 
