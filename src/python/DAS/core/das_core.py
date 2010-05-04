@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.17 2009/06/05 14:05:11 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: das_core.py,v 1.18 2009/06/12 14:51:05 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -194,10 +194,6 @@ class DASCore(object):
             if  self.cache.incache(query):
                 results = self.cache.get_from_cache(query, idx, limit)
             else:
-                # TODO: I can put threads here to update_cache in
-                # background and only allow to retrieve results 
-                # from cache
-                #
                 # NOTE: the self.call returns generator, update_cache
                 # consume and iterate over its items. So if I need to
                 # re-use it, the update_cache will yeild them back
@@ -245,29 +241,6 @@ class DASCore(object):
         if  hasattr(self, 'cache'):
             if  self.cache.incache(query):
                 self.cache.remove_from_cache(query)
-
-    def json(self, query):
-        """
-        Wrap returning results into DAS header and return JSON dict.
-        """
-        # TODO: replace request_url, version with real values
-        init_time   = time.time()
-
-        rdict = {}
-        rdict['request_timestamp'] = str(init_time)
-        rdict['request_url'] = ''
-        rdict['request_version'] = __version__
-        rdict['request_expires'] = ''
-        rdict['request_call'] = ''
-        rdict['call_time'] = ''
-        rdict['request_query'] = query
-
-        results  = self.result(query)
-        end_time = time.time()
-
-        rdict['call_time'] = str(end_time-init_time)
-        rdict['results'] = results
-        return rdict
 
     def call(self, uinput):
         """
@@ -330,10 +303,21 @@ class DASCore(object):
                     rdict[service] = [i for i in res]
                 if  self.verbose:
                     self.timer.record(service)
-            # if result dict contains only single result set just return it
+
             systems = rdict.keys()
+            delkeys = [] # list of keys to be deleted from final results
+            def slice_row(delkeys, entry):
+                "Select only those keys in entry dict which were requested"
+                if  not delkeys:
+                    delkeys = list(set(entry.keys()) - set(sellist))
+                delkeys.remove('system')
+                for key in delkeys:
+                    del entry[key]
+
+            # if result dict contains only single result set just return it
             if  len(systems) == 1:
                 for entry in rdict[systems[0]]:
+                    slice_row(delkeys, entry)
                     yield entry
                 return
 
@@ -350,6 +334,7 @@ class DASCore(object):
                 list1 = rdict[systems[idx]]
                 idx  += 1
             for entry in product:
+                slice_row(delkeys, entry)
                 yield entry
 
     def find_cond_dict(self, service, rdict):
