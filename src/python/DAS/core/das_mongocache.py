@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.66 2010/02/24 21:33:26 valya Exp $"
-__version__ = "$Revision: 1.66 $"
+__revision__ = "$Id: das_mongocache.py,v 1.67 2010/02/25 16:46:17 valya Exp $"
+__version__ = "$Revision: 1.67 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -130,6 +130,7 @@ def convert2pattern(query):
                     cond[ckey] = cval
                 else:
                     cond[ckey] = cval
+                    vcond[ckey] = cval
             newspec[key] = cond
             verspec[key] = vcond
         else:
