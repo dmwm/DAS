@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.16 2010/01/25 20:17:04 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: das_webconfig.py,v 1.17 2010/01/26 21:03:53 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -79,7 +79,7 @@ active.dascontrollers.object = 'WMCore.WebTools.Controllers'
 active.dascontrollers.css = {
 #    'reset.css': environ['YUI_ROOT'] + '/build/reset/reset.css', 
     'cms_reset.css': environ['WMCORE_ROOT'] + '/src/css/WMCore/WebTools/cms_reset.css', 
-    'das.css': environ['DAS_ROOT'] + '/src/css/das.css'
+    'das.css': environ['DAS_ROOT'] + '/src/css/das.css',
 }
 
 active.dascontrollers.js = {
