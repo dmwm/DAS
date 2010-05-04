@@ -4,13 +4,14 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.21 2009/11/24 16:01:10 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: das_cli.py,v 1.22 2009/12/01 15:12:50 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
+from DAS.core.das_mongocache import convert2pattern
 from DAS.utils.utils import dump, genkey
 
 import sys
@@ -109,8 +110,10 @@ if __name__ == '__main__':
     DAS = DASCore(debug=debug)
     if  opts.hash:
         mongo_query = DAS.mongoparser.requestquery(query)
+        loose_query_pat, loose_query = convert2pattern(mongo_query)
         print "DAS-QL query:", query
         print "Mongo query :", mongo_query
+        print "Loose query :", loose_query
         print "query hash  :", genkey(str(mongo_query))
         sys.exit(0)
     sdict = DAS.keys()
