@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.16 2009/06/30 19:35:42 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: das_filecache.py,v 1.17 2009/07/06 20:22:49 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -46,19 +46,36 @@ class System(Base):
         """String representation of System ORM object"""
         return "<System('%s')>" % self.name
 
+class Location(Base):
+    """Location ORM"""
+    __tablename__ = 'locations'
+    __table_args__ = {'mysql_engine':'InnoDB'}
+
+    id  = Column(Integer, primary_key=True)
+    dir = Column(Text, nullable=False, unique=True)
+
+    def __init__(self, idir):
+        self.dir = idir
+
+    def __repr__(self):
+        """String representation of Location ORM object"""
+        return "<Location('%s')>" % self.dir
+
 class Query(Base):
     """Query ORM"""
     __tablename__ = 'queries'
     __table_args__ = {'mysql_engine':'InnoDB'}
 
-    id = Column(Integer, primary_key=True)
-    hash = Column(String(32), unique=True)
-    name = Column(Text)
-    create = Column(String(16))
-    expire = Column(String(16))
+    id        = Column(Integer, primary_key=True)
+    hash      = Column(String(32), unique=True)
+    name      = Column(Text)
+    create    = Column(String(16))
+    expire    = Column(String(16))
     system_id = Column(Integer, ForeignKey('systems.id'))
+    dir_id    = Column(Integer, ForeignKey('locations.id'))
 
-    system = relation(System, backref=backref('systems', order_by=id))
+    system    = relation(System, backref=backref('systems', order_by=id))
+    location  = relation(Location, backref=backref('locations', order_by=id))
 
     def __init__(self, ihash, name, create, expire):
         self.hash = ihash
@@ -83,20 +100,67 @@ def hour(itime=None):
         return time.strftime("%H", time.gmtime(itime))
     return time.strftime("%H", time.gmtime())
 
-def clean_dirs(hourdir, datedir):
-    """clean directories"""
-    # if no more files in dir area (creationdatehour), remove dir
-    for root, dirs, files in os.walk(hourdir):
-        if  not len(files):
-            os.rmdir(hourdir)
-            break
-    # if there are empty dirs in creationdate area, remove them
-    for root, dirs, files in os.walk(datedir):
-        for dirname in dirs:
-            try:
-                os.rmdir(dirname)
-            except:
-                pass
+def next_triplet(triplet):
+    """
+    Create next number in format of three digits, e.g. 001, out of provided one
+    """
+    number = '%(n)03d' % {'n' : int(triplet) + 1}
+    if  int(number) > 999:
+        raise Exception('Run out of dir space')
+    return number
+    
+def create_dir(topdir, system, filesperdir=100):
+    """
+    Allocate new dir name for provided topdir and DAS system name.
+    We use the following schema: YYYYMMDD/HOUR/XXX/YYY
+    where HOUR is 00-24, XXX and YYY span from 000 to 999.
+    """
+    idir = os.path.join(topdir, system)
+    idir = os.path.join(idir, yyyymmdd())
+    idir = os.path.join(idir, hour())
+    if  not os.path.isdir(idir):
+        idir = os.path.join(os.path.join(idir, '000'), '000')
+    else:
+        for root, dirs, files in os.walk(idir):
+            dirs.sort()
+            if  dirs:
+                idir = os.path.join(root, dirs[-1])
+                for _root, _dirs, _files in os.walk(idir):
+                    if  _dirs:
+                        _dirs.sort()
+                        try:
+                            newdir = next_triplet(_dirs[-1])
+                        except:
+                            try:
+                                newdir = next_triplet(dirs[-1])
+                                idir = os.path.join(os.path.join(root, newdir) , '000')
+                            except:
+                                raise
+                            break
+                        last_dir = os.path.join(_root, _dirs[-1])
+                        if  len(os.listdir(last_dir)) > filesperdir:
+                            idir = os.path.join(_root, newdir)
+                        else:
+                            idir = os.path.join(_root, _dirs[-1])
+                    else:
+                        idir = os.path.join(idir, '000')
+                    break
+                break
+                if  not _dirs:
+                    idir = os.path.join(idir, '000')
+            else:
+                idir = os.path.join(os.path.join(root, '000'), '000')
+    try:
+        os.makedirs(idir)
+    except:
+        pass
+    return idir
+
+def clean_dirs(topdir):
+    """Scan provided topdir and remove empty dirs"""
+    for root, dirs, files in os.walk(topdir):
+        if  not dirs:
+            os.rmdir(root)
 
 class DASFilecache(Cache):
     """
@@ -105,20 +169,12 @@ class DASFilecache(Cache):
     bookkeep all queries, along with their hash, creation and expiration
     times.
 
-    The cache structure is the following:
-    cache
-    |
-    |-- dbs (data-service area)
-    |      |
-    |      |-- 20090518 (current day area)
-    |      |    |
-    |      |    |-- 01
-    |      |    |-- 02
-    |      |    |-- ..
-    |      |    |-- 24 (24th hour)
-
-    This will allow to address a hit pattern we expect, > 1000 queries a day, but
-    < 1000 queries/hour/data-service
+    The cache structure is the following YYYYMMDD/HH/XXX/YYY, where
+    YYYYMMDD is 4 digit for year, 2 digit for month, 2 digit for day;
+    HH represents hours in 0-24 cycle;
+    XXX and YYY are span from 0 to 999 using 3 digits. Here is an example
+    of cache dir stucture: cache_top/dbs/20090706/02/001/998/
+    We use XXX/YYY sub-dir structure to allocate 1M dirs within 1 hour.
     """
     def __init__(self, config):
         Cache.__init__(self, config)
@@ -208,20 +264,18 @@ class DASFilecache(Cache):
         sysdir  = os.path.join(self.dir, self.get_system(query))
         session = self.session()
         try: # transactions
-            res = session.query(Query).filter(Query.hash==key)
+            res = session.query(Query, Location).\
+                        filter(Query.dir_id==Location.id).\
+                        filter(Query.hash==key)
             session.commit()
         except:
             session.rollback()
             self.logger.debug(traceback.format_exc())
             pass
-        for qobj in res:
+        for qobj, dobj in res:
             valid = eval(qobj.expire) - time.time()
             timestring   = eval(qobj.create)
-            creationdate = yyyymmdd(timestring)
-            creationhour = hour(timestring)
-            datedir      = os.path.join(sysdir, creationdate)
-            hourdir      = os.path.join(datedir, creationhour)
-            idir         = hourdir
+            idir         = dobj.dir
             filename     = os.path.join(idir, key)
             self.logger.info("DASFilecache::get_from_cache %s" % filename)
             if  valid > 0:
@@ -234,7 +288,8 @@ class DASFilecache(Cache):
                             try:
                                 res = marshal.load(fdr)
                                 if  i >= idx:
-                                    res['id'] = id
+                                    if  type(res) is types.DictType:
+                                        res['id'] = id
                                     yield res
                                     id += 1
                             except EOFError, err:
@@ -243,7 +298,8 @@ class DASFilecache(Cache):
                         while 1:
                             try:
                                 res = marshal.load(fdr)
-                                res['id'] = id
+                                if  type(res) is types.DictType:
+                                    res['id'] = id
                                 yield res
                                 id += 1
                             except EOFError, err:
@@ -252,9 +308,10 @@ class DASFilecache(Cache):
             else:
                 msg = "found expired query in cache, key=%s" % key
                 self.logger.debug("DASFilecache::get_from_cache %s" % msg)
+                fdir = os.path.split(filename)[0]
                 if  os.path.isfile(filename):
                     os.remove(filename)
-                clean_dirs(hourdir, datedir)
+                clean_dirs(fdir)
                 try: # session transactions
                     session.delete(qobj)
                     session.commit()
@@ -277,13 +334,7 @@ class DASFilecache(Cache):
             return
         system = self.get_system(query)
         key  = genkey(query)
-        idir = os.path.join(self.dir, system)
-        idir = os.path.join(idir, yyyymmdd())
-        idir = os.path.join(idir, hour())
-        try:
-            os.makedirs(idir)
-        except:
-            pass
+        idir = create_dir(self.dir, system)
         filename = os.path.join(idir, key)
         fdr = open(filename, 'wb')
         if  type(results) is types.ListType or \
@@ -303,11 +354,15 @@ class DASFilecache(Cache):
         try: # session transactions
             try:
                 sobj = session.query(System).filter(System.name==system).one()
+                dobj = session.query(Location).filter(Location.dir==idir).one()
             except:
                 sobj = System(system)
+                dobj = Location(idir)
                 session.add(sobj)
+                session.add(dobj)
                 pass
             qobj.system = sobj
+            qobj.location = dobj
             session.add(qobj)
             session.commit()
         except:
