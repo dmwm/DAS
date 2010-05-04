@@ -9,7 +9,8 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - V04_00_06
 
-  - Resolve issue with single das keyword provided in an input query
+  - added support for proximity results
+  - resolve issue with single das keyword provided in an input query
   - dynamically load of DAS plugins using __import__ instead of eval(klass)
   - first appearance of analytics code
   - fix issue with data object look-up
