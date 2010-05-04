@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.2 2009/03/18 19:18:58 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_cli.py,v 1.3 2009/04/29 16:09:51 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -13,6 +13,10 @@ from optparse import OptionParser
 #from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCache
 from DAS.utils.utils import dump
+
+import sys
+if sys.version_info < (2, 5):
+    raise Exception("DAS requires python 2.5 or greater")
 
 class DASOptionParser: 
     """

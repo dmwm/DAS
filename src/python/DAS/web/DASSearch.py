@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.2 2009/03/16 15:28:51 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: DASSearch.py,v 1.3 2009/04/29 16:09:52 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -23,6 +23,11 @@ from WMCore.WebTools.Page import exposedasjson, exposedasxml, exposetext
 from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCache
 from DAS.utils.utils import getarg
+
+import sys
+if sys.version_info < (2, 5):
+    raise Exception("DAS requires python 2.5 or greater")
+
 
 class DASSearch(TemplatedPage):
     """
