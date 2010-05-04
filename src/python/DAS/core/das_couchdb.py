@@ -5,8 +5,8 @@
 DAS couchdb wrapper. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchdb.py,v 1.3 2009/03/18 19:19:30 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_couchdb.py,v 1.4 2009/03/19 18:36:38 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -147,13 +147,21 @@ function(k,v,r) {
         else:
             self.logger.warning("No '%s' found in couch db" % dbname)
 
-    def delete(self, dbname):
+    def delete(self, dbname, system=None):
         """
         Delete couch db
         """
         cdb = self.couchdb(dbname)
         if  cdb:
-            self.server.deleteDatabase(dbname)
+            if  system:
+                key = '"%s"' % system
+                options = {'key' : key}
+                results = self.get_view('dasadmin', 'system', options)
+                for doc in results:
+                    cdb.queuedelete(doc)
+                cdb.commit()
+            else:
+                self.server.deleteDatabase(dbname)
         return
 
     def couchdb(self, dbname):
