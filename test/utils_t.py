@@ -7,6 +7,7 @@ Unit test for DAS QL parser
 
 import unittest
 from utils.utils import cartesian_product, query_params
+from utils.utils import transform_dict2list
 
 class testUtils(unittest.TestCase):
     """
@@ -115,6 +116,7 @@ class testUtils(unittest.TestCase):
 #        print "expectlist", expectlist
 #        print "resultlist", resultlist
         self.assertEqual(expectlist, resultlist)
+
     def test_query_params(self):
         """
         Test query_params utility which split query into set of parameters and
@@ -130,6 +132,40 @@ class testUtils(unittest.TestCase):
             expect = elist[idx]
             result = query_params(query)
             self.assertEqual(expect, result)
+
+    def test_transform_dict2list(self):
+        """
+        Test for transform_dict2list utility
+        """
+        indict = {'a':1, 'b':[1]}
+        result = transform_dict2list(indict)
+        expect = [{'a':1, 'b':1}]
+        self.assertEqual(expect, result)
+
+        indict = {'a':1, 'b':[1,2]}
+        result = transform_dict2list(indict)
+        result.sort()
+        expect = [{'a':1, 'b':1}, {'a':1, 'b':2}]
+        self.assertEqual(expect, result)
+
+        indict = {'a':[1,2], 'b':1}
+        result = transform_dict2list(indict)
+        result.sort()
+        expect = [{'a':1, 'b':1}, {'a':2, 'b':1}]
+        self.assertEqual(expect, result)
+
+        indict = {'a':[1,2], 'b':[1,2]}
+        result = transform_dict2list(indict)
+        result.sort()
+        expect = [{'a':1, 'b':1}, {'a':1, 'b':2}, 
+                  {'a':2, 'b':1}, {'a':2, 'b':2}]
+        expect.sort()
+        self.assertEqual(expect, result)
+
+        indict = {'a':1, 'b':1, 'c':[1]}
+        result = transform_dict2list(indict)
+        expect = [{'a':1, 'b':1, 'c':1}]
+        self.assertEqual(expect, result)
 
 #
 # main
