@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.19 2010/02/05 21:23:13 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: phedex_service.py,v 1.20 2010/02/16 18:34:51 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -22,13 +22,6 @@ class PhedexService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
         self.notationmap = self.notations()
-
-    def get_notations(self, api):
-        """Return notations used for given API"""
-        notations = dict(self.notationmap[''])
-        if  self.notationmap.has_key(api):
-            notations.update(self.notationmap[api])
-        return notations
 
     def clean_params(self, api, params):
         """
@@ -50,7 +43,6 @@ class PhedexService(DASAbstractService):
         """
         Phedex data-service parser.
         """
-        notations = self.get_notations(api)
         tags = []
         if  api == 'blockReplicas':
             prim_key = 'block'
@@ -65,6 +57,6 @@ class PhedexService(DASAbstractService):
             msg = 'PhedexService::parser, unsupported %s API %s' \
                 % (self.name, api)
             raise Exception(msg)
-        gen = xml_parser(notations, source, prim_key, tags)
+        gen = xml_parser(source, prim_key, tags)
         for row in gen:
             yield row
