@@ -6,8 +6,8 @@ DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.
 """
 
-__revision__ = "$Id: das_server.py,v 1.4 2010/03/15 02:44:09 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_server.py,v 1.5 2010/03/18 17:52:02 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -24,9 +24,9 @@ from cherrypy import config as cpconfig
 # DAS modules
 from DAS.utils.das_config import das_readconfig
 from DAS.web.das_webmanager import DASWebManager
-from DAS.web.DASSearch import DASSearch
-from DAS.web.DASCacheModel import DASCacheModel
-from DAS.web.das_doc import DocServer
+from DAS.web.das_web import DASWebService
+from DAS.web.das_cache import DASCacheService
+from DAS.web.das_doc import DASDocService
 
 class Root(object):
     """
@@ -103,10 +103,10 @@ class Root(object):
         self.configure()
         config = {} # can be something to consider
         if  self.model == 'cache_server':
-            obj = DASCacheModel(config) # mount cache server
+            obj = DASCacheService(config) # mount cache server
             tree.mount(obj, '/')
         elif self.model == 'web_server':
-            obj = DASSearch(config)
+            obj = DASWebService(config)
             tree.mount(obj, '/das') # mount web server
             sdir = os.environ['DAS_ROOT'] + '/doc/build/html'
             static_dict = { 
@@ -117,7 +117,7 @@ class Root(object):
                     '_static' : static_dict,
             }
             cpconfig.update(conf)
-            obj = DocServer(dir)
+            obj = DASDocService(dir)
             tree.mount(obj, '/das/doc') # mount doc server
         else:
             obj = DASWebManager(config)
