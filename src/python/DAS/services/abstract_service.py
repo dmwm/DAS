@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.43 2009/10/15 21:01:23 valya Exp $"
-__version__ = "$Revision: 1.43 $"
+__revision__ = "$Id: abstract_service.py,v 1.44 2009/10/16 18:02:48 valya Exp $"
+__version__ = "$Revision: 1.44 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -14,12 +14,7 @@ import types
 import urllib
 import urllib2
 import traceback
-try:
-    # Python 2.6
-    import json
-except:
-    # Prior to 2.6 requires simplejson
-    import simplejson as json
+import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
 from DAS.utils.utils import cartesian_product

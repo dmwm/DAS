@@ -4,17 +4,14 @@
 """
 DQ service
 """
-__revision__ = "$Id: dq_service.py,v 1.4 2009/09/01 01:42:46 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: dq_service.py,v 1.5 2009/10/16 18:02:48 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
-try:
-    import json # python 2.6 and later
-except:
-    import simplejson as json
 import re
 import types
 import urllib2
+import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import genkey, map_validator
 

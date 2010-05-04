@@ -7,17 +7,14 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.13 2009/10/12 20:16:30 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.14 2009/10/16 18:04:27 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import types
 import traceback
-try:
-    import json # since python 2.6
-except:
-    import simplejson as json # prior python 2.6
+import DAS.utils.jsonwrapper as json
 
 # monogo db modules
 from pymongo.connection import Connection

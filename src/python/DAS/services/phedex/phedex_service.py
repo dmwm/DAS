@@ -4,19 +4,14 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.10 2009/09/01 17:06:15 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: phedex_service.py,v 1.11 2009/10/16 18:02:47 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator
 import types
-try:
-    # Python 2.6
-    import json
-except:
-    # Prior to 2.6 requires simplejson
-    import simplejson as json
+import DAS.utils.jsonwrapper as json
 
 class PhedexService(DASAbstractService):
     """

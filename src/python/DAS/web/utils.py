@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.8 2009/10/13 18:06:19 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: utils.py,v 1.9 2009/10/16 18:02:47 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -14,10 +14,7 @@ import types
 import httplib
 import urllib
 import urllib2
-try:
-    import json # since python 2.6
-except:
-    import simplejson as json # prior python 2.6
+import DAS.utils.jsonwrapper as json
 
 def urllib2_request(request, url, params, headers={}, debug=0):
     """request method using GET request from urllib2 library"""

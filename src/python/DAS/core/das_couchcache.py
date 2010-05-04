@@ -5,18 +5,13 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.14 2009/07/09 16:00:01 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_couchcache.py,v 1.15 2009/10/16 18:02:48 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 import traceback
-try:
-    # Python 2.6
-    import json
-except:
-    # Prior to 2.6 requires simplejson
-    import simplejson as json
+import DAS.utils.jsonwrapper as json
 
 from WMCore.Database.CMSCouch import CouchServer
 
