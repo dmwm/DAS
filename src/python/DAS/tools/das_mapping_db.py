@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.8 2009/10/10 14:54:17 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.9 2009/10/12 20:07:42 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -298,7 +298,8 @@ if __name__ == '__main__':
     params = {'node':'required', 'lfn':'required', 'destination':'', 'protocol':'srmv2'}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='file', map='file.name', pattern='')],
+#        'daskeys' : [dict(key='file', map='file.name', pattern='')],
+        'daskeys' : [dict(key='pfn', map='file.name', pattern='')],
         'api2das' : [
                 dict(api_param='node', das_key='site', pattern="re.compile('^T[0-3]_')"),
                 dict(api_param='node', das_key='site.name', pattern="re.compile('^T[0-3]_')"),
