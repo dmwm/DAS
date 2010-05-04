@@ -4,13 +4,15 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.8 2009/09/14 20:35:48 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: runsum_service.py,v 1.9 2009/10/10 15:55:57 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import time
+import types
 import ConfigParser
+import traceback
 try:
     # Python 2.5
     import xml.etree.ElementTree as ET
@@ -20,7 +22,6 @@ except:
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, get_key_cert, dasheader
-#from DAS.services.runsum.runsum_parser import parser as runsum_parser
 from DAS.services.runsum.run_summary import get_run_summary
 
 def runsum_keys():
@@ -55,30 +56,48 @@ class RunSummaryService(DASAbstractService):
         [{'run':1,'dataset':/a/b/c'}, ...]
         """
         # translate selection keys into ones data-service APIs provides
-        selkeys, conditions = self.query_parser(query)
-        params  = dict(self.params)
-        for item in conditions:
-            params[item['key'].upper()] = item['value']
+        selkeys = query['fields']
+        cond = query['spec']
+        args = dict(self.params)
+        for key, value in cond.items():
+            if  type(value) is not types.DictType: # we got equal condition
+                if  key == 'date':
+                    if  type(value) is not types.ListType \
+                    and len(value) != 2:
+                        msg  = 'RunSummary service requires 2 time stamps.'
+                        msg += 'Please use either date last XXh format or'
+                        msg += 'date in YYYYMMDD-YYYYMMDD'
+                        raise Exception(msg)
+                    args['date1'] = convert_datetime(value[0])
+                    args['date2'] = convert_datetime(value[1])
+                else:
+                    for param in self.dasmapping.das2api(self.name, key):
+                        args[param] = value
+            else: # we got some operator, e.g. key :{'$in' : [1,2,3]}
+                # TODO: not sure how to deal with them right now, will throw
+                msg = 'RunSummary does not support operator %s' % oper
+                raise Exception(msg)
         key, cert = get_key_cert()
         debug   = 0
         if  self.verbose > 1:
             debug = 1
         try:
             time0 = time.time()
-            data  = get_run_summary(self.url, params, key, cert, debug)
+            data  = get_run_summary(self.url, args, key, cert, debug)
             api = self.map.keys()[0] # we only register 1 API
-            genrows = self.parser(api, data, params)
+            genrows = self.parser(api, data, args)
             ctime = time.time()-time0
-            header = dasheader(self.name, query, api, self.url, params,
+            header = dasheader(self.name, query, api, self.url, args,
                 ctime, self.expire, self.version())
             header['lookup_keys'] = self.lookup_keys(api)
             header['selection_keys'] = selkeys
-            mongo_query = self.mongo_query_parser(query)
+            mongo_query = query
             self.analytics.add_api(self.name, query, api, args)
             self.localcache.update_cache(mongo_query, genrows, header)
         except:
+            traceback.print_exc()
             msg = 'Fail to process: url=%s, api=%s, args=%s' \
-                    % (self.url, api, params)
+                    % (self.url, api, args)
             self.logger.warning(msg)
         return True
 
