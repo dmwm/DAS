@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.11 2009/09/01 01:42:47 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: sitedb_service.py,v 1.12 2009/09/01 17:06:16 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -22,10 +22,24 @@ class SiteDBService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
+#    def clean_params(self, api, params):
+#        """
+#        Clean all parameters to get as much as possible information
+#        from SiteDB. Skip only those which marked as required.
+#        """
+#        args = {}
+#        for key, val in self.map[api]['params'].items():
+#            if  val != 'required':
+#                args[key] = val
+#            else:
+#                args[key] = params[key]
+#        return args
+
     def parser(self, api, data, params=None):
         """
         Parser for SiteDB JSON data-services
         """
+        cache = {}
         jsondict = eval(data)
         pat = re.compile('T[0-9]_')
         for key, val in jsondict.items():
@@ -58,84 +72,5 @@ class SiteDBService(DASAbstractService):
                         if  val.find('.') != -1: # SE or CE
                             if  not row.has_key('se'):
                                 row['se'] = val
+            self.row2das(self.name, row)
             yield {'site': row}
-
-    def se2cms(self, site_se):
-        """
-        Convert SE to CMS names.
-        """
-        args = {'name': site_se}
-        jsondict = self.call_service_api('SEtoCMSName', args)
-        for value in jsondict.values():
-            return value['name']
-
-    def cms2se(self, cmsname):
-        """
-        Convert CMS name to SE.
-        """
-        args = {'name':cmsname}
-        jsondict = self.call_service_api('CMSNametoSE', args)
-        selist = []
-        for value in jsondict.values():
-            se = value['name']
-            if  not selist.count(se):
-                selist.append(se)
-        return selist
-
-    def findapi(self, key, site):
-        """
-        Find SiteDB api corresponding to given key
-        """
-        api  = ""
-        args = {}
-        for api, val in self.map.items():
-            keys = val['keys']
-            args = val['params']
-            if  keys.count(key):
-                for k in args.keys():
-                    if  api == 'SEtoCMSName':
-                        args['name'] = self.site2se(site)
-                    else:
-                        args[k] = self.cmsname(site)
-                break
-        return api, args
-
-
-    def site2se(self, site):
-        """
-        convert given site name to SE
-        """
-        if  site == '':
-            return ''
-        # TODO: extend to cover SAM, phedex, site, etc. names
-        pat = re.compile('^T[0-9]_')
-        if  pat.match(site):
-            sitese = self.cms2se(site)
-        else:
-            sitese = site
-        return sitese
-        
-    def cmsname(self, site):
-        """
-        convert given site name to CMS name
-        """
-        if  site == '':
-            return ''
-        # TODO: extend to cover SAM, phedex, site, etc. names
-        if  site.count(".") >= 2:
-            sitese = self.se2cms(site)
-        else:
-            sitese = site
-        return sitese
-
-    def call_service_api(self, apiname, params):
-        """
-        Call SiteDB API, since its return type is JSON, we eval the results to
-        get back the dictionary.
-        """
-        url = self.url + '/' + apiname
-        res = self.getdata(url, params)
-        if  type(res) is types.GeneratorType:
-            res = [i for i in res][0]
-        data  = eval(res)
-        return data
