@@ -6,15 +6,15 @@ Core class for Data Aggregation Service (DAS) framework.
 It performs the following tasks:
 
 - registers data-services found in DAS configuration file (das.cfg).
-- invoke data-service subqueries and either multiplex results or
-  combine them together for presentation layer (CLI or WEB).
-- creates DAS views
+- invoke data-service APIs
+- merge results based on common keys
+- pass results to presentation layer (CLI or WEB)
 """
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.54 2010/01/25 20:23:03 valya Exp $"
-__version__ = "$Revision: 1.54 $"
+__revision__ = "$Id: das_core.py,v 1.55 2010/01/26 21:02:04 valya Exp $"
+__version__ = "$Revision: 1.55 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -37,7 +37,7 @@ import DAS.core.das_functions as das_functions
 
 class DASTimer(object):
     """
-    DAS timer class, keeps track of execution time
+    DAS timer class keeps track of execution time.
     """
     def __init__(self):
         self.timer = {'init':[time.time()]}
@@ -72,6 +72,7 @@ class DASCore(object):
             self.timer = DASTimer()
 
         # set noresults option
+        self.noresults = False
         if  nores:
             dasconfig['write_cache'] = True
             self.noresults = nores
@@ -170,13 +171,13 @@ class DASCore(object):
 
     def keys(self):
         """
-        return map of data service keys
+        Return map of data service keys
         """
         return self.service_keys
 
     def das_keys(self):
         """
-        return map of data service keys
+        Return map of data service keys
         """
         _keys = []
         for values in self.service_keys.values():
@@ -184,12 +185,12 @@ class DASCore(object):
                 _keys.append(key)
         return _keys
 
-    def plot(self, query):
-        """plot data for requested query"""
-        results = self.result(query)
-        for item in results:
-            print item
-        return
+#    def plot(self, query):
+#        """Plot data for requested query"""
+#        results = self.result(query)
+#        for item in results:
+#            print item
+#        return
 
 #    def get_view(self, name=None):
 #        """return DAS view"""
@@ -251,7 +252,7 @@ class DASCore(object):
 #            yield agg_dict
 
     def adjust_query(self, query):
-        # check that provided query is indeed in MongoDB format.
+        """Check that provided query is indeed in MongoDB format"""
         err = '\nDASCore::result unable to load the input query=%s' % query
         if  type(query) is types.StringType: # DAS-QL
             try:
@@ -301,14 +302,14 @@ class DASCore(object):
 
     def in_raw_cache(self, query):
         """
-        Look-up input query if it exists in raw-cache.
+        Return true/false for input query if it exists in raw-cache.
         """
         query, dquery = convert2pattern(loose(query))
         return self.rawcache.incache(query, collection='merge')
 
     def in_raw_cache_nresults(self, query):
         """
-        Look-up how manu records for given query exists in raw-cache.
+        Return total number of results (count) for progived query.
         """
         query, dquery = convert2pattern(loose(query))
         return self.rawcache.nresults(query, collection='merge')
@@ -318,11 +319,12 @@ class DASCore(object):
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
 
-        1. identify data-sercices in questions, based on selection keys
-           and where clause conditions by parsing input query
-        2. construct workflow and execute data-service calls with found
-           sub-queries. At this step individual data-services invoke
-           store results into DAS cache.
+            - parse input query
+            - identify data-sercices based on selection keys
+              and where clause conditions
+            - construct DAS workflow and execute data-service 
+              API calls. At this step individual 
+              data-services store results into DAS cache.
 
         Return status 0/1 depending on success of the calls, can be
         used by workers on cache server.

@@ -2,13 +2,13 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-DAS analytics DB
+DAS analytics DB module.
 """
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.14 2009/10/16 18:04:27 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.15 2010/01/26 21:02:04 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -25,7 +25,7 @@ from DAS.utils.utils import getarg, gen2list, genkey
 
 class DASAnalytics(object):
     """
-    This class manages DAS analytics DB.
+    DAS analytics DB manager.
     """
     def __init__(self, config):
         self.logger  = config['logger']
@@ -43,8 +43,7 @@ class DASAnalytics(object):
 
     def create_db(self):
         """
-        Establish connection to MongoDB back-end and create DB if
-        necessary.
+        Establish connection to MongoDB back-end and create DB.
         """
         self.conn    = Connection(self.dbhost, self.dbport)
         self.db      = self.conn[self.dbname]

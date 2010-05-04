@@ -2,11 +2,11 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-DAS mapping DB
+DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.21 2010/01/25 20:23:03 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.22 2010/01/26 21:02:04 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -53,8 +53,7 @@ class DASMapping(object):
 
     def create_db(self):
         """
-        Establish connection to MongoDB back-end and create DB if
-        necessary.
+        Establish connection to MongoDB back-end and create DB.
         """
         self.conn    = Connection(self.dbhost, self.dbport)
         self.db      = self.conn[self.dbname]
@@ -69,7 +68,7 @@ class DASMapping(object):
     def add(self, record):
         """
         Add new record into mapping DB. 
-        We insert the following API records into mapping DB
+        Example of API record:
 
         .. doctest::
 
@@ -80,7 +79,7 @@ class DASMapping(object):
              api2das:[{api_param:site, das_key:site, 
                        pattern:re.compile('^T[0-3]_')}, ...]}
 
-        We insert the following notation record into mapping DB
+        Example of notation record:
 
         .. doctest::
 
