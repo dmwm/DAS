@@ -4,13 +4,14 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.2 2009/03/12 20:54:07 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: abstract_service.py,v 1.3 2009/04/08 20:53:26 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 import urllib
 import urllib2
+import traceback
 from DAS.utils.utils import query_params, transform_dict2list
 from DAS.utils.utils import genresults, results2couch
 from DAS.utils.utils import cartesian_product, genkey
@@ -25,12 +26,18 @@ class DASAbstractService(object):
     """
     def __init__(self, name, config):
         self.name         = name
-        sdict             = config[name]
-        self.verbose      = int(sdict['verbose'])
-        self.expire       = int(sdict['expire'])
-        self.url          = sdict['url']
-        self.mode         = config['mode']
-        self.logger       = config['logger']
+        try:
+            sdict         = config[name]
+            self.verbose  = int(sdict['verbose'])
+            self.expire   = int(sdict['expire'])
+            self.url      = sdict['url']
+            self.mode     = config['mode']
+            self.logger   = config['logger']
+        except:
+            traceback.print_exc()
+            print config
+            raise Exception('fail to parse DAS config')
+
         self.map          = {} # to be defined by data-serice implementation
         # define internal couch DB manager to put 'raw' results into CouchDB
         mgr               = BaseManager(config)
