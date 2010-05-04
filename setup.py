@@ -13,6 +13,7 @@ from distutils.errors import DistutilsPlatformError, DistutilsExecError
 from distutils.core import Extension
 from distutils.command.install import INSTALL_SCHEMES
 
+sys.path.append(os.path.join(os.getcwd(), 'src/python'))
 from DAS import version as das_version
 
 requirements = []
