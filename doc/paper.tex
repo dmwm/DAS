@@ -224,11 +224,10 @@ a common patterns. Based on this information we organized a pre-fetching
 strategies.}
 Once data were retreived from data-services an additional step to aggregate
 matched objects in DAS cache were applied. For instance in above examples
-file information from DBS and Phedex systems were
-retrieved. Since both data-services output contained file name as a common
-key, their output where merged and final result was stored into raw-cache.
-This merged (aggregated) results were shipped back to client and stored into
-hot-cache (memcached) to speed up a DAS web client application. Each DAS data
+file information came from DBS and Phedex systems. 
+Since both data-services output contained file name as a common
+key, their output where merged and final result was stored into DAS cache.
+This merged (aggregated) results represented a DAS data object. Each DAS data
 object contains a standard DAS header, which identify look-up time,
 request url, API, parameters and method as well as response version, expiration
 time and checksum of the output. 
