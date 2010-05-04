@@ -5,11 +5,12 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s).
 """
 
-__revision__ = "$Id: das_cache.py,v 1.22 2010/01/26 21:02:04 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: das_cache.py,v 1.23 2010/02/11 21:38:14 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
+import types
 import traceback
 try:
     # Python 2.6
