@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.25 2009/07/14 15:58:46 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: das_core.py,v 1.26 2009/07/15 15:55:30 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -172,7 +172,8 @@ class DASCore(object):
             return self.viewmgr.get(name)
         return self.viewmgr.all()
 
-    def create_view(self, name, query):
+    def create_view(self, name, query, 
+                        login='nobody', fullname='N/A', group='users'):
         """create DAS view"""
         return self.viewmgr.create(name, query)
 
