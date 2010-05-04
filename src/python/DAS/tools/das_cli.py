@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.22 2009/12/01 15:12:50 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: das_cli.py,v 1.23 2009/12/14 16:56:42 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -88,15 +88,16 @@ def run(DAS, query, idx, limit, skey, sorder, nooutput, plain, debug):
     Execute DAS workflow for given set of parameters.
     We use this function in main and in profiler.
     """
-    results = DAS.result(query, idx, limit, skey, sorder)
     if  not nooutput:
+        results = DAS.result(query, idx, limit, skey, sorder)
         if  plain:
             for item in results:
                 print item
         else:
             dump(results, idx)
     else:
-        iterate(results)
+        results = DAS.call(query)
+        print "\n### DAS.call returns", results
 #
 # main
 #

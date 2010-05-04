@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.47 2009/12/07 21:22:26 valya Exp $"
-__version__ = "$Revision: 1.47 $"
+__revision__ = "$Id: das_core.py,v 1.48 2009/12/14 16:56:42 valya Exp $"
+__version__ = "$Revision: 1.48 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -234,10 +234,7 @@ class DASCore(object):
         else:
             yield agg_dict
 
-    def result(self, query, idx=0, limit=None, skey=None, sorder='asc'):
-        """
-        Get results either from cache or from explicit call
-        """
+    def adjust_query(self, query):
         # check that provided query is indeed in MongoDB format.
         err = '\nDASCore::result unable to load the input query=%s' % query
         if  type(query) is types.StringType: # DAS-QL
@@ -255,6 +252,13 @@ class DASCore(object):
         else:
             if  not query.has_key('fields') and not query.has_key('spec'):
                 raise Exception(err)
+        return query
+
+    def result(self, query, idx=0, limit=None, skey=None, sorder='asc'):
+        """
+        Get results either from cache or from explicit call
+        """
+        query = self.adjust_query(query)
         # lookup provided query in a cache
         if  hasattr(self, 'cache'):
             if  self.cache.incache(query):
@@ -326,6 +330,7 @@ class DASCore(object):
         Return status 0/1 depending on success of the calls, can be
         used by workers on cache server.
         """
+        query = self.adjust_query(query)
         msg = 'DASCore::call, query=%s' % query
         self.logger.info(msg)
         params = self.mongoparser.params(query)
