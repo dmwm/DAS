@@ -5,8 +5,8 @@
 DAS couchdb wrapper. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchdb.py,v 1.5 2009/04/07 19:38:27 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_couchdb.py,v 1.6 2009/04/29 15:51:57 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -222,6 +222,8 @@ function(k,v,r) {
         row and use db.create. The speed up is factor of 10
         """
         self.logger.info("DASCouchDB::update_cache for %s" % query)
+        if  not results:
+            return
         dbname = self.dbname
         cdb = self.couchdb(dbname)
         if  not cdb:

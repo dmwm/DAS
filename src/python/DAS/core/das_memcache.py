@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.1 2009/03/13 21:10:04 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_memcache.py,v 1.2 2009/04/29 15:52:00 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -61,8 +61,10 @@ class DASMemcache(Cache):
           - each row uses unique row_key which are stored into cache 
             within key namespace. 
         """
-        key = genkey(query)
         self.logger.info("DASMemcache::result(%s) store to cache" % query)
+        if  not results:
+            return
+        key = genkey(query)
         rowdict = {}
         rowid = 0
         for row in results:
