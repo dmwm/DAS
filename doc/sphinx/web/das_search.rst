@@ -1,5 +1,5 @@
 DAS Web Server
 --------------
-.. automodule:: DAS.web.DASSearch
+.. automodule:: DAS.web.das_web
    :members:
 

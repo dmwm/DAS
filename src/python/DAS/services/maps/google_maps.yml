@@ -11,4 +11,19 @@ daskeys : [
 das2api : [
     {"das_key":"city.name","api_param":"q","pattern":""},
 ]
-
+---
+urn : google_geo_maps_zip
+url : "http://maps.google.com/maps/geo"
+expire : 30
+params : { "q" : "required", "output": "json" }
+daskeys : [
+    {"key":"zip","map":"zip.code","pattern":""},
+]
+das2api : [
+    {"das_key":"zip.code","api_param":"q","pattern":""},
+]
+---
+notations : [
+    {"notation":"zip.name", "map":"zip.code", "api":""},
+    {"notation":"name", "map":"code", "api":"google_geo_maps_zip"},
+]
