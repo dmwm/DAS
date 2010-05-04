@@ -9,7 +9,7 @@ import unittest
 from DAS.utils.utils import cartesian_product, query_params
 from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
-from DAS.utils.utils import splitlist
+from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 
 class testUtils(unittest.TestCase):
     """
@@ -278,6 +278,48 @@ class testUtils(unittest.TestCase):
         expect = [[i for i in range(0,10)]]
         llist = [i for i in splitlist(ilist, 10)]
         self.assertEqual(expect, llist)
+
+    def test_sorting(self):
+        """Test sorting routines"""
+        data = [
+            {'id':6, 'dataset': 'bla6', 'run':200},
+            {'id':1, 'dataset': 'bla1', 'run':100},
+            {'id':2, 'dataset': 'bla2', 'run':700},
+            {'id':3, 'dataset': 'bla3', 'run':400},
+            {'id':4, 'dataset': 'bla4', 'run':300},
+            {'id':5, 'dataset': 'bla5', 'run':800},
+        ]
+        sorted_data = [i for i in sort_data(data, 'dataset')]
+        expect = [
+                {'run': 100, 'id': 1, 'dataset': 'bla1'}, 
+                {'run': 700, 'id': 2, 'dataset': 'bla2'}, 
+                {'run': 400, 'id': 3, 'dataset': 'bla3'}, 
+                {'run': 300, 'id': 4, 'dataset': 'bla4'}, 
+                {'run': 800, 'id': 5, 'dataset': 'bla5'}, 
+                {'run': 200, 'id': 6, 'dataset': 'bla6'},
+        ]
+        self.assertEqual(expect, sorted_data)
+        sorted_data = [i for i in sort_data(data, 'run')]
+        expect = [
+                {'run': 100, 'id': 1, 'dataset': 'bla1'}, 
+                {'run': 200, 'id': 6, 'dataset': 'bla6'}, 
+                {'run': 300, 'id': 4, 'dataset': 'bla4'}, 
+                {'run': 400, 'id': 3, 'dataset': 'bla3'}, 
+                {'run': 700, 'id': 2, 'dataset': 'bla2'}, 
+                {'run': 800, 'id': 5, 'dataset': 'bla5'},
+        ]
+        self.assertEqual(expect, sorted_data)
+        sorted_data = [i for i in sort_data(data, 'run', 'desc')]
+        expect = [
+                {'run': 800, 'id': 5, 'dataset': 'bla5'},
+                {'run': 700, 'id': 2, 'dataset': 'bla2'}, 
+                {'run': 400, 'id': 3, 'dataset': 'bla3'}, 
+                {'run': 300, 'id': 4, 'dataset': 'bla4'}, 
+                {'run': 200, 'id': 6, 'dataset': 'bla6'}, 
+                {'run': 100, 'id': 1, 'dataset': 'bla1'}, 
+        ]
+        self.assertEqual(expect, sorted_data)
+
 #
 # main
 #
