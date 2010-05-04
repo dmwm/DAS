@@ -222,27 +222,30 @@ services (jobs) to feed raw-cache with highly requested queries. Here we will on
 discuss the raw-cache organization. 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=150mm]{DAS_cache.pdf}
+\includegraphics[width=150mm]{DAS_Cache_and_Analytics.pdf}
 \caption{
 DAS cache system.
 }
 \label{DAS_cache}
 \end{figure}
-As it shown in figure \ref{DAS_cache} we setup
-dedicated DAS cache request server to manage user requests. Each request placed into
-queue who was used by workers to spawn a data-service request. 
-This allows us to utilze a multi-core technology and place a workers at each 
-core.\footnote{A number of workers per core were adjustable to satisfy requests load.}
-Each worker talk to DAS raw-cache and either stored mapped results over there or merge
-them with existing data object in DAS cache. We evaluated several technologies
+As it shown in figure \ref{DAS_cache} the DAS cache server has dual purpose.
+On one side it talks to DAS Analytics DB to trigger jobs for worker robot
+who update cache with most popular queries, on another it talks to DAS
+raw-cache back-end to either stored mapped results or merge them with 
+existing DAS objects in a cache. We should note that we use on-demand
+approach to answer user queries, but at the same time with a help of
+DAS Analytics DB we force worker robots (populators) to pre-fetch
+the most popular queries up-front.
+
+We evaluated several technologies
 as a choice for DAS cache back-end, including relational MySQL DB \cite{MySQL} 
 and object oriented CouchDB \cite{CouchDB} and MongoDB \cite{MongoDB}.
-Each of this technologies had its own pros and cons. For instance usage
+Each of them had its own pros and cons. For instance usage
 of MySQL provided a SQL queries (as in federated DBs, see \cite{FedDB}), but
 required auto-schema generation on a fly.\footnote{We did not apply any
 restriction to DAS QL and did not know in advance what our users will be
 querying.} While, using CouchDB and MongoDB, we were able to store
-data-service output naturally as data objects into DB. Finally we decided
+data-service output naturally as documents objects into DB. Finally we decided
 to use MongoDB due to its flexible and
 powerful querying syntax, which were easy to map into DAS QL expressions. 
 
