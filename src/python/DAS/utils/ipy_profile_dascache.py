@@ -117,7 +117,7 @@ def db_info():
     host  = URI
     path  = '/%s' % DB
     data  = httplib_request(host, path, {}, 'GET', DEBUG)
-    return data
+    return json.loads(data)
 
 def couch_views():
     """
@@ -165,7 +165,7 @@ def create_view(view_dict):
     request = 'PUT'
     debug   = DEBUG
     data    = httplib_request(host, path, params, request, debug)
-    return data
+    return json.loads(data)
 
 def delete_view(view_name):
     """
@@ -201,7 +201,7 @@ def delete_all_views(design):
     host  = URI
     path  = '/%s/_design/%s' % (DB, design)
     data  = httplib_request(host, path, {}, 'DELETE', DEBUG)
-    return data
+    return json.loads(data)
 
 def create_db(db_name):
     """
@@ -211,7 +211,7 @@ def create_db(db_name):
     host  = URI
     path  = '/%s' % db_name
     data  = httplib_request(host, path, {}, 'PUT', DEBUG)
-    return data
+    return json.loads(data)
 
 def delete_db(db_name):
     """
@@ -219,9 +219,38 @@ def delete_db(db_name):
     Parameters: <db_name, e.g. das>
     """
     host  = URI
-    path  = '/%s' % db_name
+    path  = '/%s' % DB
     data  = httplib_request(host, path, {}, 'DELETE', DEBUG)
-    return data
+    return json.loads(data)
+
+def get_all_docs(idx=0, limit=0, pretty_print=False):
+    """
+    Retrieve all documents from CouchDB.
+    Parameters: <idx=0> <limit=0> <pretty_print=False>
+    """
+    host  = URI
+    path  = '/%s/_all_docs' % DB
+    kwds  = {}
+    if  idx:
+        kwds['skip'] = idx
+    if  limit:
+        kwds['limit'] = limit
+    data  = httplib_request(host, path, kwds, 'GET', DEBUG)
+    if  pretty_print:
+        print_data(data, lookup='id')
+    else:
+        return json.loads(data)
+
+def get_doc(id):
+    """
+    Retrieve document with given id from CouchDB.
+    Parameters: <id, e.g. 1323764f7a6af1b37b72119920cbaa08>
+    """
+    host  = URI
+    path  = '/%s/%s' % (DB, id)
+    kwds  = {}
+    data  = httplib_request(host, path, kwds, 'GET', DEBUG)
+    return json.loads(data)
 
 ### DAS MAGIC commands
 def das_system(system, pretty_print=False):
@@ -236,12 +265,12 @@ def das_system(system, pretty_print=False):
     if  pretty_print:
         print_data(data)
     else:
-        return data
+        return json.loads(data)
 
 def das_between(min_time, max_time=9999999999, pretty_print=False):
     """
     Retrieve results from provided time stamp range
-    Parameters: <min_time, max_time>
+    Parameters: <min_time, max_time> <pretty_print=False>
     Comments: times are seconds since epoch, max_time is optional. 
     """
     host  = URI
@@ -251,11 +280,12 @@ def das_between(min_time, max_time=9999999999, pretty_print=False):
     if  pretty_print:
         print_data(data)
     else:
-        return data
+        return json.loads(data)
 
 def das_queries(pretty_print=False):
     """
     Get queries which present currently in couch DB.
+    Parameters: <pretty_print=False>
     """
     host  = URI
     # pass group=true to the view to get the grouping done
@@ -266,7 +296,7 @@ def das_queries(pretty_print=False):
     if  pretty_print:
         print_data(data, lookup='key')
     else:
-        return data
+        return json.loads(data)
 
 def das_get(query):
     """
@@ -280,7 +310,7 @@ def das_get(query):
     ekey  = ["%s" % key, 9999999999]
     kwds  = {'startkey': skey, 'endkey': ekey}
     data  = httplib_request(host, path, kwds, 'GET', DEBUG)
-    return data
+    return json.loads(data)
 
 def das_incache(query):
     """
@@ -305,6 +335,8 @@ magic_list = [
         ('create_view', create_view),
         ('delete_view', delete_view),
         ('delete_all_views', delete_all_views),
+        ('get_all_docs', get_all_docs),
+        ('get_doc', get_doc),
         ('create_db', create_db),
         ('delete_db', delete_db),
         ('das_system', das_system),
