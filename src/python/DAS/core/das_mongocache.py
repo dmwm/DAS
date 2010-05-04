@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.45 2009/12/14 15:39:46 valya Exp $"
-__version__ = "$Revision: 1.45 $"
+__revision__ = "$Id: das_mongocache.py,v 1.46 2009/12/15 19:42:09 valya Exp $"
+__version__ = "$Revision: 1.46 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -420,18 +420,25 @@ class DASMongocache(Cache):
         Insert results into cache. Use bulk insert controller by
         self.cache_size. Upon completion ensure indexies.
         """
+        lkeys      = header['lookup_keys']
+        index_list = [(key, DESCENDING) for key in lkeys]
+        if  index_list:
+            try:
+                self.col.create_index(index_list)
+            except:
+                pass
         gen = self.update_records(query, results, header)
         idx = 0
         while True:
             if  not self.col.insert(itertools.islice(gen, self.cache_size)):
                 break
-        lkeys      = header['lookup_keys']
-        index_list = [(key, DESCENDING) for key in lkeys]
-        if  index_list:
-            try:
-                self.col.ensure_index(index_list)
-            except:
-                pass
+#        lkeys      = header['lookup_keys']
+#        index_list = [(key, DESCENDING) for key in lkeys]
+#        if  index_list:
+#            try:
+#                self.col.ensure_index(index_list)
+#            except:
+#                pass
 
     def update_records(self, query, results, header):
         """
