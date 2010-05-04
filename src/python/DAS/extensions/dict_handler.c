@@ -1,6 +1,8 @@
 #include <stdio.h>
-#include <Python.h>  /* Python header */
-#include <regex.h>   /* Provides regular expression matching */
+#include <stdlib.h>
+#include <Python.h>
+/*
+#include <regex.h>
 
 static int rematch(const char *re, const char *s)
 {
@@ -8,7 +10,6 @@ static int rematch(const char *re, const char *s)
     regmatch_t match;
     regex_t compiled;
   
-    /* compile the regular expression */
     result = regcomp (&compiled, re, REG_EXTENDED | REG_ICASE | REG_NOSUB);
     if (result) {
         char errorstring[128];
@@ -21,9 +22,10 @@ static int rematch(const char *re, const char *s)
   
     result = regexec (&compiled, s, 1, &match, 0);
     regfree (&compiled);
-/*    printf("Match result=%d, input=%s, re=%s \n", result, s, re);*/
     return result; // 0 is True
 }
+*/
+
 /* 
  * C-version of dict_helper from utils/utils.py
  * We need to perform mapping of parsed record into DAS notations
@@ -35,8 +37,8 @@ static int rematch(const char *re, const char *s)
 static PyObject*
 _dict_handler(PyObject *self, PyObject *args)
 {
-    char *pat_int = "(^[0-9]$|^[0-9][0-9]*$)";
-    char *pat_float = "(^[0-9]+.[0-9]*$|^[0-9]*.{1,1}[0-9]+$)";
+/*    char *pat_int = "(^[0-9]$|^[0-9][0-9]*$)";*/
+/*    char *pat_float = "(^[0-9]+.[0-9]*$|^[0-9]*.{1,1}[0-9]+$)";*/
     PyObject* dict;
     PyObject* map;
     PyObject* data = PyDict_New();
@@ -50,27 +52,37 @@ _dict_handler(PyObject *self, PyObject *args)
 
     const char* cstr;
     Py_ssize_t len;
-/*    PyObject_AsReadBuffer(dict, &cstr, &len);*/
-/*    printf("DIct object %s\n", cstr);*/
     while((item = PyIter_Next(iter))) {
         key = PyDict_GetItem(map, item);
         val = PyDict_GetItem(dict, item);
 
-        if(PyObject_AsReadBuffer(val, &cstr, &len) == 0) {
+        res = val;
+        if (val && PyString_Check(val) &&
+                PyObject_AsCharBuffer(val, &cstr, &len) == 0) {
 
-            if  (rematch(pat_int, cstr) == 0) {
-                res = PyInt_FromString(cstr, NULL, 10);
-            } else if  (rematch(pat_float, cstr) == 0) {
+            const char* copy = cstr;
+            int test_float = 0;
+            while(*copy != NULL) {
+                if (*copy=='.') {
+                    test_float=1;
+                    break;
+                }
+                *copy++;
+            }
+            if (test_float==1) {
                 res = PyFloat_FromString(val, NULL);
-                if  (res == NULL)
+                if (res == NULL)
                     res = val;
-            } else{
-                res = val;
+            } else {
+                res = PyInt_FromString(cstr, NULL, 10);
+                if (res == NULL)
+                    res = val;
             }
 
         } else {
-            PyErr_SetString(PyExc_ValueError, "could not convert value to buffer");
-            break;
+/*            PyErr_SetString(PyExc_ValueError, "could not convert value to buffer");*/
+            PyErr_Print();
+            res = val;
         }
 
         if  (key!= NULL) {
@@ -80,6 +92,7 @@ _dict_handler(PyObject *self, PyObject *args)
         }
         Py_XDECREF(item);
     }
+    PyErr_Clear();
 
     Py_XDECREF(iter);
     return data;
