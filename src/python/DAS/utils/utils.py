@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.79 2010/03/03 19:04:03 valya Exp $"
-__version__ = "$Revision: 1.79 $"
+__revision__ = "$Id: utils.py,v 1.80 2010/03/05 18:06:31 valya Exp $"
+__version__ = "$Revision: 1.80 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -248,19 +248,6 @@ def splitlist(ilist, nentries):
             jdx = len(ilist)
         yield ilist[idx:jdx]
 
-def dasheader(system, query, api, url, args, ctime, expire):
-    """
-    Return DAS header (dict) wrt DAS specifications, see
-    https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
-    """
-    timestamp = time.time()
-    if  type(query) is types.DictType:
-        query = json.dumps(query)
-    dasdict = dict(system=[system], timestamp=timestamp,
-                url=[url], ctime=[ctime], qhash=genkey(query), 
-                expire=timestamp+expire, api=[api], status="requested")
-    return dict(das=dasdict)
-
 def genkey(query):
     """
     Generate a new key-hash for a given query. We use md5 hash for the
@@ -272,11 +259,11 @@ def genkey(query):
         # prior python 2.5
         keyhash = md5.new()
     if  type(query) is types.DictType:
-        if  query.has_key('spec') and query['spec'].has_key('_id'):
-            val = query['spec']['_id']
-            if  isinstance(val, ObjectId):
-                val = str(val)
-                query['spec']['_id'] = val
+#        if  query.has_key('spec') and query['spec'].has_key('_id'):
+#            val = query['spec']['_id']
+#            if  isinstance(val, ObjectId):
+#                val = str(val)
+#                query['spec']['_id'] = val
         query = json.dumps(query)
     keyhash.update(query)
     return keyhash.hexdigest()
