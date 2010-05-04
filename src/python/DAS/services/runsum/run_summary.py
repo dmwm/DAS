@@ -31,15 +31,18 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
             return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
         return httplib.HTTPSConnection(host)
 
-def run_summary_url(params):
+def run_summary_url(url, params):
     """Construct Run Summary URL from provided parameters"""
-    url = 'https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary?'
+    if  url[-1] == '/':
+        url = url[:-1]
+    if  url[-1] == '?':
+        url = url[:-1]
     paramstr = ''
     for key, val in params.items():
         paramstr += '%s=%s&' % (key, val)
-    return url + paramstr[:-1]
+    return url + '?' + paramstr[:-1]
 
-def get_run_summary(params, key, cert, debug=0):
+def get_run_summary(url, params, key, cert, debug=0):
     """Main routine to get information from Run Summary data service"""
     # setup HTTP handlers
     cookie_handler = urllib2.HTTPCookieProcessor()
@@ -49,7 +52,7 @@ def get_run_summary(params, key, cert, debug=0):
 
     # send request to RunSummary, it set the _shibstate_XXXXX cookie which 
     # will be used for redirection
-    f      = opener.open(run_summary_url(params))
+    f      = opener.open(run_summary_url(url, params))
     data   = f.read()
     f.close()
 
@@ -94,5 +97,6 @@ if __name__ == '__main__':
     key  = '/Users/vk/.globus/userkey.pem'
     cert = '/Users/vk/.globus/usercert.pem'
     params = {'RUN':97029, 'DB':'cms_omds_lb', 'FORMAT':'XML'}
-    data = get_run_summary(params, key, cert, debug)
+    url  = 'https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary'
+    data = get_run_summary(url, params, key, cert, debug)
     print data
