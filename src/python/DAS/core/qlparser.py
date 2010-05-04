@@ -4,15 +4,41 @@
 """
 Query parser for DAS
 """
-__revision__ = "$Id: qlparser.py,v 1.1 2009/03/13 21:10:04 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: qlparser.py,v 1.2 2009/03/31 15:41:33 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
+
+def antrlparser(uinput):
+    """
+    Parser based on ANTRL. It returns the following dict for
+    query = find dataset, run where site = T2
+    {'ORDERING': [], 
+     'FIND_KEYWORDS': ['dataset', 'run'], 
+     'ORDER_BY_KEYWORDS': [], 
+     'WHERE_CONSTRAINTS': [{'value': 'T2', 'key': 'site', 'op': '='}, {'bracket': 'T2'}]}
+    """
+    from Wrapper import Wrapper
+    parserObj = Wrapper()
+    tokens = parserObj.parseQuery(uinput)
+    return tokens
 
 def dasqlparser(uinput):
     """
     Main routine which does the parsing of input user query
     it creates an output dictionary with selection list, list of queries
-    for execution by DAS service and condition list
+    for execution by DAS service and condition list. Here is an example 
+    {'condlist': {
+       'q1': 'admin=VK', 
+       'q0': 'site = T2', 
+       'q2': 'storage=castor'}, 
+     'input': 'find dataset, run, bfield where site = T2 and admin=VK and storage=castor', 
+     'queries': {
+       'q1': 'find dataset,run,bfield where admin=VK', 
+       'q0': 'find dataset,run,bfield where site = T2', 
+       'q2': 'find dataset,run,bfield where storage=castor'}, 
+     'sellist': ['dataset', 'run', 'bfield'], 
+     'query': 'find dataset, run, bfield where q0 and q1 and q2'}
+
     """
     uinput = uinput.strip()
     rdict  = {}
