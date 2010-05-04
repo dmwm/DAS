@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.31 2010/01/19 18:24:11 valya Exp $"
-__version__ = "$Revision: 1.31 $"
+__revision__ = "$Id: das_config.py,v 1.32 2010/02/02 20:06:37 valya Exp $"
+__version__ = "$Revision: 1.32 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -78,16 +78,16 @@ def das_readconfig(dasconfig=None):
 #        configdict['hotcache'] = None
     configdict['logdir'] = config.get('das', 'logdir', '/tmp')
 
-    systems = config.get('das', 'systems', ACTIVE_SYSTEMS).split(',') 
+#    systems = config.get('das', 'systems', ACTIVE_SYSTEMS).split(',') 
     verbose = config.getint('das', 'verbose')
-    configdict['systems'] = systems
+#    configdict['systems'] = systems
     configdict['verbose'] = verbose
-    for system in systems:
-        verbose = config.getint(system, 'verbose')
-        expire  = config.getint(system, 'expire')
-        url     = config.get(system, 'url', '')
-        configdict[system] = {'verbose': verbose, 'expire': expire,
-                              'url'  : url}
+#    for system in systems:
+#        verbose = config.getint(system, 'verbose')
+#        expire  = config.getint(system, 'expire')
+#        url     = config.get(system, 'url', '')
+#        configdict[system] = {'verbose': verbose, 'expire': expire,
+#                              'url'  : url}
 #    sum_views = {}
 #    for item in config.options('summary views'):
 #        sum_views[item] = config.get('summary views', item)
@@ -101,9 +101,9 @@ def das_writeconfig():
 
     config = ConfigParser.ConfigParser()
 
-    systems = ACTIVE_SYSTEMS
+#    systems = ACTIVE_SYSTEMS
     config.add_section('das')
-    config.set('das', 'systems', '%s' % systems)
+#    config.set('das', 'systems', '%s' % systems)
     config.set('das', 'verbose', 0)
     config.set('das', 'rawcache', 'DASMongocache')
 #    config.set('das', 'hotcache', 'DASMemcache')
@@ -172,54 +172,54 @@ def das_writeconfig():
 #    query += 'sum(file.numevents)'
 #    config.set('summary views', 'run' , query)
 
-    config.add_section('dbs')
-    config.set('dbs', 'expire', 1*60*60) # 1 hour, in seconds
-    config.set('dbs', 'verbose', 0)
-    config.set('dbs', 'url', 
-    'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet')
+#    config.add_section('dbs')
+#    config.set('dbs', 'expire', 1*60*60) # 1 hour, in seconds
+#    config.set('dbs', 'verbose', 0)
+#    config.set('dbs', 'url', 
+#    'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet')
 
-    config.add_section('sitedb')
-    config.set('sitedb', 'expire', 12*60*60) # 12 hours
-    config.set('sitedb', 'verbose', 0)
-    config.set('sitedb', 'url', 
-    'https://cmsweb.cern.ch/sitedb/json/index')
+#    config.add_section('sitedb')
+#    config.set('sitedb', 'expire', 12*60*60) # 12 hours
+#    config.set('sitedb', 'verbose', 0)
+#    config.set('sitedb', 'url', 
+#    'https://cmsweb.cern.ch/sitedb/json/index')
 #    'http://localhost:8010/sites')
 
-    config.add_section('phedex')
-    config.set('phedex', 'expire', 30*60) # 30 minutes
-    config.set('phedex', 'verbose', 0)
-    config.set('phedex', 'url', 
-    'http://cmsweb.cern.ch/phedex/datasvc/xml/prod')
+#    config.add_section('phedex')
+#    config.set('phedex', 'expire', 30*60) # 30 minutes
+#    config.set('phedex', 'verbose', 0)
+#    config.set('phedex', 'url', 
+#    'http://cmsweb.cern.ch/phedex/datasvc/xml/prod')
 
-    config.add_section('monitor')
-    config.set('monitor', 'expire', 1*60*60) # 1 hour
-    config.set('monitor', 'verbose', 0)
-    config.set('monitor', 'url', 
-    'https://cmsweb.cern.ch/overview/')
+#    config.add_section('monitor')
+#    config.set('monitor', 'expire', 1*60*60) # 1 hour
+#    config.set('monitor', 'verbose', 0)
+#    config.set('monitor', 'url', 
+#    'https://cmsweb.cern.ch/overview/')
 
-    config.add_section('lumidb')
-    config.set('lumidb', 'expire', 1*60*60) # 1 hour
-    config.set('lumidb', 'verbose', 0)
-    config.set('lumidb', 'url', 
-    'http://cmslumi.cern.ch/lumi/servlet/LumiServlet')
+#    config.add_section('lumidb')
+#    config.set('lumidb', 'expire', 1*60*60) # 1 hour
+#    config.set('lumidb', 'verbose', 0)
+#    config.set('lumidb', 'url', 
+#    'http://cmslumi.cern.ch/lumi/servlet/LumiServlet')
 
-    config.add_section('runsum')
-    config.set('runsum', 'expire', 1*60*60) # 1 hour
-    config.set('runsum', 'verbose', 0)
-    config.set('runsum', 'url', 
-    'https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary')
+#    config.add_section('runsum')
+#    config.set('runsum', 'expire', 1*60*60) # 1 hour
+#    config.set('runsum', 'verbose', 0)
+#    config.set('runsum', 'url', 
+#    'https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary')
 
-    config.add_section('dq')
-    config.set('dq', 'expire', 1*60*60) # 1 hour
-    config.set('dq', 'verbose', 0)
-    config.set('dq', 'url', 
-    'http://cmssrv49.fnal.gov:8989/DQSrvcTEST/DQSrvcServlet')
+#    config.add_section('dq')
+#    config.set('dq', 'expire', 1*60*60) # 1 hour
+#    config.set('dq', 'verbose', 0)
+#    config.set('dq', 'url', 
+#    'http://cmssrv49.fnal.gov:8989/DQSrvcTEST/DQSrvcServlet')
 
-    config.add_section('dashboard')
-    config.set('dashboard', 'expire', 1*60*60) # 1 hour
-    config.set('dashboard', 'verbose', 0)
-    config.set('dashboard', 'url', 
-    'http://dashb-cms-job.cern.ch/dashboard/request.py')
+#    config.add_section('dashboard')
+#    config.set('dashboard', 'expire', 1*60*60) # 1 hour
+#    config.set('dashboard', 'verbose', 0)
+#    config.set('dashboard', 'url', 
+#    'http://dashb-cms-job.cern.ch/dashboard/request.py')
 
     dasconfig = das_configfile()
     config.write(open(dasconfig, 'wb'))
