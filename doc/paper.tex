@@ -439,7 +439,7 @@ Mapping DB to keep information about data-service APIs, e.g.
 notations and mapping to DAS keys;
 Analytics DB for query analysis.
 
-\subsection{DAS core}
+\subsection{DAS core\label{DAS_core}}
 The DAS core library was responsible for data retrieval on demand. 
 It had the following components: input query validator and parser,
 query analyzer, workflow builder, execution engine and data-service 
@@ -455,12 +455,26 @@ compared input query condition set to the records in analytics DB
 in order to understand if other API calls are covered the input request.}
 Otherwise, the appropriate workflow, a set of API calls, was constructed
 for the execution engine. It invoked the API calls via data-service
-plug-ins and store results into the cache. Finally, the results were
-retrieved from the cache and delivered to the user. 
+plug-ins and stored results into the cache. At this step we also
+performed necessary data aggregation for records with similar key-value
+pairs. The data-service plug-in implementation were similar and their 
+logic was abstracted, while a few extentions were required, e.g. specific 
+security modules for data-services accessible via private network.
+Finally, the results were retrieved from the cache and delivered to the user. 
 
-The mapping between user queries, the DAS keys used in a query, 
-and API names/parameters was stored in a Mapping DB. Such mapping was 
-used by data-service plug-ins. For example
+\subsection{DAS Mapping DB}
+The Mapping DB represents DAS {\it registration} service. It collects
+information about data-service APIs, translates API input/output
+parameters into DAS keys and contains mapping between DAS records
+and their UI representation.
+
+%The Mapping DB hold the mapping between data-service APIs and DAS keys exposed to
+%the users. It created a necessary glue between data-services and identifies
+%how their data can be related to each other. Basically Mapping DB was positioned 
+%as a {\it registration} service with ability to translate notations among data-services.
+Upon identification of APIs which participate in DAS 
+we stored their names, input parameters and associated DAS keys
+into the Mapping DB. For example
 \begin{verbatim}
 {"api":{"params":{"name":""}, "name":"CMSNametoSE"}, "system":"sitedb",
  "api2das": [{"pattern": "re.compile('^T[0-3]_')", 
@@ -468,54 +482,27 @@ used by data-service plug-ins. For example
  "daskeys": [{"pattern": "re.compile('^T[0-3]_')", 
               "key": "site", "map": "site.name"}]}
 \end{verbatim}
-represents the mapping between \verb+site+ DAS keyword and
-\verb+CMSNametoSE+ API provided by SiteDB data-service (the data-service
-URLs were kept in the configuration file).
-The data-service plug-in implementation were similar and their logic was 
-abstracted, while a few extentions were required, e.g. specific 
-security modules for data-services accessible via private network.
+represents DAS mapping record.\footnote{
+The data-service URLs were kept in the configuration file.
+}
+This record can be read as following:
+the \verb+CMSNametoSE+ API provided by 
+\verb+sitedb+ data-service accepts \verb+name+ as input parameter. It
+confirms regular expression pattern, \verb+re.compile('^T[0-3]_')+, and
+corresponds to \verb+site+ DAS key. The \verb+site+ key
+maps into \verb+site.name+ within DAS record. 
 
-\subsection{DAS Mapping DB}
-The Mapping DB hold the mapping between data-service APIs and DAS keys exposed to
-the users. It created a necessary glue between data-services and identifies
-how their data can be related to each other. Basically Mapping DB was positioned 
-as a {\it registration} service with ability to translate notations among data-services.
-Upon identification of APIs which will participate in DAS activity 
-we stored their names, input parameters, together with their type and accept 
-values, as regular expression patterns, into the Mapping DB. 
-Also we stored the mapping between data-service notations and DAS keys. 
-For instance, the CMS DBS system \cite{DBS}
-used a \verb+logical_file_name+ notation to identify the name of the
-logical file, while the same entity was called \verb+lfn+ 
-in CMS PhEDEx system \cite{PhEDEx}.
-Since both of them were referred to the logical file name, 
-we map both notations into DAS key \verb+file+.
-%\footnote{We
-%also deal with physical file names, but still used {\it file} to refer to them in
-%DAS notations, since simple regular expressions were used to identify the
-%meaning of the {\it file} keyword from the provided value.}
-Such keys, e.g. \verb+file+, were exposed to the end-users as pre-defined keywords to
-be used in search queries. For instance, end-users were able to type \verb+file+ in
-order to get all file names known to DAS via data-services as well as
-provide a concrete patterns associated with a file, e.g. \verb+file = abc*+.
-Under the hood, the appropriate data-service APIs were looked up along with appropriate
-parameters to answer those questions. In aforementioned example, 
-usage of \verb+file+ in DAS query cause a call of DBS 
-\verb+listFiles+ and PhEDEx \verb+fileReplicas+ APIs, respectively.
-This approach gave ability to end-users to express the meaning of their queries, especially
-when they deal with numbers, and achieve accuracy of results. 
-For instance, users were able to type \verb+run > 10 and run < 100+
-to specify a range of run numbers to be looked up in DAS cache. At the same time
-a full keyword search is under development.
-% within MongoDB.
+Therefore the Mapping DB identifies a set of pre-defined DAS keys, 
+e.g. \verb+site, file, run+, etc., to be used by end-users in their queries.
+Each key was mapped into set of APIs whose output was aggregated afterwards. 
 
 \subsection{DAS Analytics DB}
-The DAS Analytics DB played a special role. It collected information
+The DAS Analytics DB was used to collect information
 about user requests placed to the system. Each request was recorded. Upon its
 decomposition into set of selection keys and conditions we also recorded
-API name and input parameters into the Analytics database and 
-keep updating their counter information for repeated calls. 
-This allows to keep track of frequency of API calls and establish 
+API name and input parameters into the Analytics DB and 
+kept updating their counter information for repeated calls. 
+This allowed to keep track of frequency of API calls and establish 
 pre-fetch strategies for most common queries.
 
 \subsection{DAS caching system}
@@ -604,7 +591,10 @@ a context in their queries by using appropriate attribute(s). For example,
 for query \verb+block+ we didn't perform a string matching to the
 ``block'' string, but rather look-up a block objects in a DAS, while query
 \verb+block.name=abc*+ instructs system to look-up appropriate blocks
-with matched names. At the same time, to complement the strength of the 
+with matched names. The numerical values, conditions, groupping were
+easy to express too. For example, \verb+run > 10 and run < 100+ query 
+was used to get all run records for provided range of run numbers. 
+At the same time, to complement the strength of the 
 DAS, we do plan to index dynamically retrieved meta-data and add a keyword-based 
 search later.
 
