@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.48 2009/12/22 15:10:59 valya Exp $"
-__version__ = "$Revision: 1.48 $"
+__revision__ = "$Id: das_mongocache.py,v 1.49 2009/12/22 15:34:00 valya Exp $"
+__version__ = "$Revision: 1.49 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -15,7 +15,7 @@ import types
 import itertools
 
 # DAS modules
-from DAS.utils.utils import getarg, dict_value, merge_dict, genkey
+from DAS.utils.utils import getarg, dict_value, merge_dict
 from DAS.core.cache import Cache
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 import DAS.utils.jsonwrapper as json
@@ -23,6 +23,7 @@ import DAS.utils.jsonwrapper as json
 # monogo db modules
 from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
+from pymongo.code import Code
 from pymongo import DESCENDING, ASCENDING
 
 DOT = '.'
@@ -50,7 +51,8 @@ def adjust_id(query):
                 elif type(item) is types.UnicodeType:
                     newval.append(ObjectId(unicode.encode(item)))
                 else:
-                     raise Exception('Wrong type for id, %s=%s' % (item, type(item)))
+                    raise Exception('Wrong type for id, %s=%s' \
+                        % (item, type(item)))
             spec['_id'] = newval
         query['spec'] = spec
     return query
@@ -307,7 +309,8 @@ class DASMongocache(Cache):
         else:
             newspec['das.system'] = system
         msg  = "DASMongocache::similar_queries, "
-        msg += "loose condition query: verspec=%s, newspec=%s" % (verspec, newspec)
+        msg += "loose condition query: verspec=%s, newspec=%s" \
+                % (verspec, newspec)
         self.logger.info(msg)
         func = "function(obj,prev){ return true;}"
         res  = self.col.group(['query'], newspec, 0, reduce=func)
@@ -409,7 +412,7 @@ class DASMongocache(Cache):
             row = {'exception': exp}
             yield row
         for row in res:
-            # TODO: use this if there is no das_son_manipulator
+            # use this if there is no das_son_manipulator
             obj_id = row['_id']
             row['_id'] = str(obj_id)
             # DAS info stored via das_id, the records only contains
@@ -423,6 +426,18 @@ class DASMongocache(Cache):
                     yield row # only when row has all fields
             else:
                 yield row
+
+    def map_reduce(self, fmap, freduce, spec=None):
+        """
+        Perform map/reduce operation over DAS cache using provided
+        map/reduce functions and optional conditions.
+        """
+        if  spec:
+            result = self.col.map_reduce(Code(fmap), Code(freduce), query=spec)
+        else:
+            result = self.col.map_reduce(Code(fmap), Code(freduce))
+        for row in result:
+            yield row
 
     def update_cache(self, query, results, header):
         """
@@ -473,7 +488,7 @@ class DASMongocache(Cache):
 
         # insert DAS records
         lkeys       = header['lookup_keys']
-        prim_key    = lkeys[0] # TODO: what to do with multiple look-up keys
+        prim_key    = lkeys[0] # what to do with multiple look-up keys
         counter     = 0
         merge_count = 0
         if  type(results) is types.ListType or \
