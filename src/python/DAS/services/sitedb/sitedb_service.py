@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.9 2009/06/03 19:40:39 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: sitedb_service.py,v 1.10 2009/06/05 14:08:22 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -155,5 +155,8 @@ class SiteDBService(DASAbstractService):
         get back the dictionary.
         """
         url = self.url + '/' + apiname
-        data  = eval(self.getdata(url, params))
+        res = self.getdata(url, params)
+        if  type(res) is types.GeneratorType:
+            res = [i for i in res][0]
+        data  = eval(res)
         return data
