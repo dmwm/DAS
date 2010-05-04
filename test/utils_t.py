@@ -8,7 +8,7 @@ Unit test for DAS QL parser
 import unittest
 from DAS.utils.utils import cartesian_product, query_params
 from DAS.utils.utils import genresults, transform_dict2list
-from DAS.utils.utils import sitename, add2dict
+from DAS.utils.utils import sitename, add2dict, map_validator
 
 class testUtils(unittest.TestCase):
     """
@@ -214,6 +214,24 @@ class testUtils(unittest.TestCase):
         add2dict(idict, key, val)
         expect = {'test':['abc',3,4]}
         self.assertEqual(expect, idict)
+
+    def test_map_validator(self):
+        """
+        test map_validator utility
+        """
+        # test 1
+        smap   = {
+                'api1' : {
+                        'keys': ['k1', 'k2'],
+                        'params' : {'p1': 1, 'p2': 2}
+                }
+        }
+        result = map_validator(smap)
+        expect = None
+        self.assertEqual(expect, result)
+        # test 2
+        smap['newkey'] = 1
+        self.assertRaises(Exception, map_validator, smap)
 
 #
 # main
