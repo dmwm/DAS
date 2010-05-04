@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.72 2010/02/23 19:35:56 valya Exp $"
-__version__ = "$Revision: 1.72 $"
+__revision__ = "$Id: utils.py,v 1.73 2010/02/24 21:31:07 valya Exp $"
+__version__ = "$Revision: 1.73 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -78,7 +78,7 @@ class dotdict(dict):
                 obj = self.get(key, None)
             else:
                 obj = getattr(obj, key)
-            if  not obj:
+            if  not obj and obj != 0:
                 return None
             if  type(obj) is types.DictType:
                 obj = dotdict(obj)
@@ -1039,3 +1039,13 @@ def make_headers(data_format):
     elif data_format.lower() == 'xml':
         headers.update({'Accept':'text/xml;application/xml'})
     return headers
+
+def filter(rows, filters):
+    """
+    Filter given rows with provided set of filters.
+    """
+    for row in rows:
+        ddict = dotdict(row)
+        flist = [(f,ddict._get(f)) for f in filters]
+        for iter in flist:
+            yield iter

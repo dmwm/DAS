@@ -17,12 +17,27 @@ from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser
-from DAS.utils.utils import dotdict
+from DAS.utils.utils import dotdict, filter
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_filter(self):
+        """Test filter function"""
+        rows = []
+        expect = []
+        for i in range(0, 3):
+            res = {'file':{'name':'a'}}
+            res['file']['size'] = i
+            res['file']['evts'] = i**2
+            rows.append(dict(res))
+            expect.append(('file.size',i))
+            expect.append(('file.evts',i**2))
+        filters = ['file.size', 'file.evts']
+        result = [r for r in filter(rows, filters)]
+        self.assertEqual(expect, result)
+
     def test_dotdict(self):
         """Test dotdict class"""
         res = {'a':{'b':{'c':10}, 'd':10}}
