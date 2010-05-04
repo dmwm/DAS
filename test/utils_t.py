@@ -17,12 +17,20 @@ from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser
-from DAS.utils.utils import dotdict, filter, aggregator
+from DAS.utils.utils import dotdict, filter, aggregator, yield_rows
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_yield_rows(self):
+        """Test yield_rows function"""
+        val    = 1
+        rows   = (r for r in range(2,5))
+        expect = [1,2,3,4]
+        result = [r for r in yield_rows(val, rows)]
+        self.assertEqual(result, expect)
+
     def test_aggregator(self):
         """Test aggregator function"""
         # 1 row in results

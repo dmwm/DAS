@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.78 2010/03/03 18:46:22 valya Exp $"
-__version__ = "$Revision: 1.78 $"
+__revision__ = "$Id: utils.py,v 1.79 2010/03/03 19:04:03 valya Exp $"
+__version__ = "$Revision: 1.79 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -26,18 +26,19 @@ from pymongo.objectid import ObjectId
 import xml.etree.cElementTree as ET
 import plistlib
 
-def yield_rows(input):
+def yield_rows(*args):
     """
     Yield rows from provided input.
     """
-    if  type(input) is types.GeneratorType:
-        for row in input:
-            yield row
-    elif type(input) is types.ListType:
-        for row in input:
-            yield row
-    else:
-        yield input
+    for input in args:
+        if  type(input) is types.GeneratorType:
+            for row in input:
+                yield row
+        elif type(input) is types.ListType:
+            for row in input:
+                yield row
+        else:
+            yield input
 
 def adjust_value(value):
     """
