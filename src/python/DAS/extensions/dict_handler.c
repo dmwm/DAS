@@ -1,6 +1,29 @@
 #include <stdio.h>
-#include <Python.h>
+#include <Python.h>  /* Python header */
+#include <regex.h>   /* Provides regular expression matching */
 
+static int rematch(const char *re, const char *s)
+{
+    int result;
+    regmatch_t match;
+    regex_t compiled;
+  
+    /* compile the regular expression */
+    result = regcomp (&compiled, re, REG_EXTENDED | REG_ICASE | REG_NOSUB);
+    if (result) {
+        char errorstring[128];
+      
+        regerror (result, &compiled, errorstring, sizeof(errorstring));
+        regfree (&compiled);
+        printf("Error %d \n", result);
+        return result; // False
+    }
+  
+    result = regexec (&compiled, s, 1, &match, 0);
+    regfree (&compiled);
+    printf("Match result %d %s \n", result, s);
+    return result; // 0 is True
+}
 /* 
  * C-version of dict_helper from utils/utils.py
  * We need to perform mapping of parsed record into DAS notations
@@ -12,20 +35,29 @@
 static PyObject*
 _dict_handler(PyObject *self, PyObject *args)
 {
+    char *pat_int = "(^[0-9]$|^[0-9][0-9]*$)";
+    char *pat_float = "(^[0-9]+.[0-9]*$|^[0-9]*.{1,1}[0-9]+$)";
     PyObject* dict;
     PyObject* map;
     PyObject* data = PyDict_New();
     if (!PyArg_ParseTuple(args, "OO", &dict, &map))
             return NULL;
 
-    PyObject *iter = NULL, *res = NULL, *key = NULL, *item = NULL;
+    PyObject *iter = NULL, *res = NULL, *key = NULL, *item = NULL, *val = NULL;
     iter = PyObject_GetIter(dict);
     if (iter == NULL)
         return dict;
 
     while((item = PyIter_Next(iter))) {
         key = PyDict_GetItem(map, item);
-        res = PyDict_GetItem(dict, item);
+        val = PyDict_GetItem(dict, item);
+        if  (rematch(pat_int, PyString_AsString(val)) == 0) {
+            res = PyInt_FromString(PyObject_AsString(val), NULL, 10);
+        } else if  (rematch(pat_float, PyString_AsString(val)) == 0) {
+            res = PyFloat_FromString(PyObject_AsString(val), NULL);
+        } else{
+            res = val;
+        }
         if  (key!= NULL) {
             PyDict_SetItem(data, key, res);
         } else {

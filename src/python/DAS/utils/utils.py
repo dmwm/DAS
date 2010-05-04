@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.50 2009/12/17 20:01:33 valya Exp $"
-__version__ = "$Revision: 1.50 $"
+__revision__ = "$Id: utils.py,v 1.51 2009/12/20 15:41:31 valya Exp $"
+__version__ = "$Revision: 1.51 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -29,11 +29,15 @@ def adjust_value(value):
     """
     Change null value to None.
     """
-#    pat_float   = re.compile(r'(^\d+\.\d*$|^\d*\.{1,1}\d+$)')
-#    pat_integer = re.compile(r'(^[1-9]$|^[1-9][0-9]*$)')
+    pat_float   = re.compile(r'(^\d+\.\d*$|^\d*\.{1,1}\d+$)')
+    pat_integer = re.compile(r'(^[0-9]$|^[0-9][0-9]*$)')
     if  type(value) is types.StringType:
         if  value == 'null' or value == '(null)':
             return None
+        elif pat_float.match(value):
+            return float(value)
+        elif pat_integer.match(value):
+            return int(value)
         else:
             return value
     else:
@@ -697,7 +701,7 @@ def dict_helper(idict, notations):
     except:
         child_dict = {}
         for kkk, vvv in idict.items():
-            child_dict[notations.get(kkk, kkk)] = vvv
+            child_dict[notations.get(kkk, kkk)] = adjust_value(vvv)
         return child_dict
 
 def xml_parser(notations, source, tag, add=None):
