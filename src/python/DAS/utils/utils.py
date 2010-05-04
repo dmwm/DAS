@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.74 2010/02/26 15:21:23 valya Exp $"
-__version__ = "$Revision: 1.74 $"
+__revision__ = "$Id: utils.py,v 1.75 2010/03/01 18:53:25 valya Exp $"
+__version__ = "$Revision: 1.75 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -30,8 +30,8 @@ def adjust_value(value):
     """
     Change null value to None.
     """
-    pat_float   = re.compile(r'(^\d+\.\d*$|^\d*\.{1,1}\d+$)')
-    pat_integer = re.compile(r'(^[0-9]$|^[0-9][0-9]*$)')
+    pat_float   = re.compile(r'(^[-]?\d+\.\d*$|^\d*\.{1,1}\d+$)')
+    pat_integer = re.compile(r'(^[0-9-]$|^[0-9-][0-9]*$)')
     if  type(value) is types.StringType:
         if  value == 'null' or value == '(null)':
             return None
