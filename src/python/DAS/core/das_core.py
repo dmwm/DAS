@@ -5,8 +5,8 @@
 Define core class for Data Aggregation Service (DAS)
 """
 
-__revision__ = "$Id: das_core.py,v 1.5 2009/04/29 15:49:22 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_core.py,v 1.6 2009/04/29 19:51:14 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -125,7 +125,6 @@ class DASCore(object):
         for service, keys in self.service_keys.items():
             set2 = set(keys)
             if  (set1 & set2) == set1:
-                print "Service cover all keys", service
                 del qldict['queries']
                 qldict['queries'] = {service:qldict['input']}
                 return qldict
