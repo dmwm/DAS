@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.25 2009/09/01 18:21:31 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: utils.py,v 1.26 2009/09/01 20:15:58 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -538,6 +538,13 @@ def get_key_cert():
     """
     key  = None
     cert = None
+    globus_key  = os.path.join(os.environ['HOME'], '.globus/userkey.pem')
+    globus_cert = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
+    if  os.path.isfile(globus_key):
+        key  = globus_key
+    if  os.path.isfile(globus_cert):
+        cert  = globus_cert
+
     # First presendence to HOST Certificate, RARE
     if  os.environ.has_key('X509_HOST_CERT'):
         cert = os.environ['X509_HOST_CERT']
@@ -554,14 +561,10 @@ def get_key_cert():
         key  = os.environ['X509_USER_KEY']
 
     # Worst case, look for cert at default location /tmp/x509up_u$uid
-    else :
+    elif not key or not cert:
         uid  = os.getuid()
         cert = '/tmp/x509up_u'+str(uid)
         key  = cert
-
-    if  not key or not cert:
-        key  = os.path.join(os.environ['HOME'], '.globus/userkey.pem')
-        cert = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
 
     if  not os.path.exists(cert):
         raise Exception("Certificate PEM file %s not found" % key)
