@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.78 2010/03/02 03:39:55 valya Exp $"
-__version__ = "$Revision: 1.78 $"
+__revision__ = "$Id: abstract_service.py,v 1.79 2010/03/03 19:09:37 valya Exp $"
+__version__ = "$Revision: 1.79 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -19,6 +19,8 @@ import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import dasheader, getarg, genkey, dotdict
 from DAS.utils.utils import row2das, extract_http_error, make_headers
 from DAS.utils.utils import xml_parser, json_parser, plist_parser
+from DAS.utils.utils import yield_rows
+from DAS.core.das_aggregators import das_func
 from DAS.core.das_mongocache import compare_specs
 
 from pymongo import DESCENDING, ASCENDING
@@ -192,7 +194,23 @@ class DASAbstractService(object):
         header  = dasheader(self.name, query, api, url, args, ctime,
             expire)
         header['lookup_keys'] = self.lookup_keys(api)
-        self.localcache.update_cache(query, result, header)
+
+        # check for aggregators, if found perform the action
+        aggregators = query.get('aggregators', None)
+        if  aggregators:
+            for func, val in aggregators:
+                # TODO: I need to reproduce generator from result
+                # each time in a loop, since result is a generator
+                # copy generator code can be found at
+                # http://www.fiber-space.de/generator_tools/doc/generator_tools.html
+                # but I fair to use it now
+                res = das_func(func, val, result)
+                if  res:
+                    result = {'function':'%s(%s)' % (func,val), 'result':res}
+                    result = dict(aggregator=result)
+                self.localcache.update_cache(query, yield_rows(result), header)
+        else:
+            self.localcache.update_cache(query, result, header)
         msg  = 'DASAbstractService::%s cache has been updated,' \
                 % self.name
         self.logger.info(msg)
@@ -358,20 +376,18 @@ class DASAbstractService(object):
                 % (self.name, count)
         self.logger.info(msg)
 
-    def set_misses(self, query, genrows):
+    def set_misses(self, query, api, genrows):
         """
         Check and adjust DAS records wrt input query. If some of the DAS
         keys are missing, add it with its value to the DAS record.
         """
+        prim_key  = self.dasmapping.primary_key(self.name, api)
         spec  = query['spec']
         skeys = spec.keys()
         row   = genrows.next()
         ddict = dotdict(row)
         keys2adjust = []
         for key, val in spec.items():
-            if  type(val) is types.StringType and \
-                val and val[0] == '*': # is a pattern
-                continue
             if  not ddict._get(key) and key not in keys2adjust:
                 keys2adjust.append(key)
         msg   = "DASAbstractService::%s::set_misses, adjust keys %s"\
@@ -379,16 +395,16 @@ class DASAbstractService(object):
         self.logger.info(msg)
         count = 1
         if  keys2adjust:
-            # adjust first row
-            for key in keys2adjust:
-                value = spec[key]
-                ddict._set(key, value)
-                yield ddict
-            # adjust rest of the rows
-            for row in genrows:
+            # adjust of the rows
+            for row in yield_rows(row, genrows):
                 ddict = dotdict(row)
                 for key in keys2adjust:
                     value = spec[key]
+                    ckey  = "%s.%s" %(prim_key, key)
+                    existing_value = ddict._get(ckey)
+                    if  existing_value:
+                        value = existing_value
+#                        ddict._delete(ckey)
                     ddict._set(key, value)
                 yield ddict
                 count += 1
@@ -423,7 +439,7 @@ class DASAbstractService(object):
                 data    = self.getdata(url, args, headers)
                 rawrows = self.parser(dformat, data, api)
                 dasrows = self.translator(api, rawrows)
-                dasrows = self.set_misses(query, dasrows)
+                dasrows = self.set_misses(query, api, dasrows)
                 ctime   = time.time() - time0
                 self.write_to_cache(query, expire, url, api, args, 
                         dasrows, ctime)
