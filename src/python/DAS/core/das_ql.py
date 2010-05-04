@@ -1,12 +1,13 @@
 #!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
 
 """
 DAS QL module include definition of DAS operators,
 filters, aggregators, etc.
 """
 
-__revision__ = "$Id: das_ql.py,v 1.1 2010/03/04 15:34:35 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_ql.py,v 1.2 2010/03/05 18:10:52 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import inspect
