@@ -5,8 +5,8 @@
 View manager class.
 """
 
-__revision__ = "$Id: das_viewmanager.py,v 1.5 2009/07/15 14:23:29 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_viewmanager.py,v 1.6 2009/07/15 15:58:27 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -115,6 +115,14 @@ class DASViewManager(object):
         else: # sqlite case
             if  not os.path.isfile(dbfile):
                 self.create_table()
+        if  config.has_key('sum_views'):
+            login = 'dascore'
+            fullname = 'DAS'
+            group = 'admin'
+            existing_views = self.all()
+            for viewname, viewdef in config['sum_views'].items():
+                if  not existing_views.has_key(viewname):
+                    self.create(viewname, viewdef, login, fullname, group)
 
     def create_table(self):
         """Create DB tables based on ORM objects"""
