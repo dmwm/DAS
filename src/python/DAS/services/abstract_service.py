@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.26 2009/07/10 19:26:11 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: abstract_service.py,v 1.27 2009/07/22 20:40:10 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -190,6 +190,10 @@ class DASAbstractService(object):
             return self.localcache.get_from_cache(cquery)
 
         skeys = [key for key in collect_list if self.keys().count(key)]
+        # NOTE: if we will use entities in qlparser then I need this line
+#        skeys = [key for key in collect_list \
+#                if self.keys().count(key.split('.')[0])]
+
         # add exception for DBS for aggregated functions
         if  self.name == 'dbs':
             for key in collect_list:

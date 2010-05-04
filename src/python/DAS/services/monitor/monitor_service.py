@@ -4,13 +4,13 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.3 2009/04/30 18:31:33 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: monitor_service.py,v 1.4 2009/07/22 20:40:11 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import query_params, map_validator
+from DAS.utils.utils import map_validator
 
 class MonitorService(DASAbstractService):
     """
@@ -46,7 +46,7 @@ class MonitorService(DASAbstractService):
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
-        selkeys, cond = query_params(query)
+        selkeys, cond = self.query_parser(query)
         api  = self.map.keys()[0] # we have only one key
         args = dict(self.map[api]['params'])
         data = []

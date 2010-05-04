@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.26 2009/07/15 15:55:30 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: das_core.py,v 1.27 2009/07/22 20:40:10 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -147,8 +147,9 @@ class DASCore(object):
         [item for item in das_functions.__dict__.keys() if item.find('__') == -1]
 
         # init QL parser
+        srv_weights = dasconfig['srv_weights']
         self.qlparser = QLParser(self.service_keys, self.service_parameters,
-                        self.das_functions)
+                        self.das_functions, srv_weights)
         self.das_aggregation = {} # determine at run-time
         if  self.verbose:
             self.timer.record('DASCore.__init__')
@@ -320,10 +321,10 @@ class DASCore(object):
         self.logger.info("DASCore::get_query_params, user input '%s'" % uinput)
         self.logger.info("DASCore::get_query_params, DAS query '%s'" % query)
         params   = self.qlparser.params(query)
+        self.logger.debug('DASCore::call, QLParser results:\n %s' % params)
         self.das_aggregation = params['functions']
         return params
 
-#    def call(self, uinput):
     def call(self, params):
         """
         Top level DAS api which execute a given query using underlying
@@ -335,13 +336,10 @@ class DASCore(object):
         Step 3. Collect results into service sets, multiplex them together
                 using cartesian product, and return result set back to the user
         Return a list of generators containing results for further processing.
-        """
-#        query = self.viewanalyzer(uinput)
-#        self.logger.info("DASCore::call, user input '%s'" % uinput)
-#        self.logger.info("DASCore::call, DAS query '%s'" % query)
 
-#        params   = self.qlparser.params(query)
-#        self.das_aggregation = params['functions']
+        Input is param dict returned by QLParser. We use a dict since call method
+        is generator. So the QLParser results can be used elsewhere outside of it.
+        """
         sellist  = params['selkeys']
         ulist    = params['unique_keys']
         services = params['unique_services']

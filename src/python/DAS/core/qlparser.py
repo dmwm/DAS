@@ -65,14 +65,41 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.12 2009/07/13 15:24:56 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: qlparser.py,v 1.13 2009/07/22 20:40:10 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
+import time
 import types
 from itertools import groupby
-from DAS.utils.utils import oneway_permutations, unique_list
+from DAS.utils.utils import oneway_permutations, unique_list, add2dict
+
+DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
+                 ' not like ', ' like ', 
+                 ' between ', ' not in ', ' in ', ' last ']
+
+# NOTE: I used this method originally, so will keep it around for a while
+# the rest of the code should use QLLexer.query_parser instead which
+# provides the same functionality
+def query_params(query):
+    """
+    Divide input query in a set of select keys and set of parameters. All queries
+    are in a form of
+    find key1, key2, ... where param=val
+    """
+    parts = query.split(' where ')
+    selkeys = parts[0].replace('find ','').split(',')
+    params = {}
+    if  len(parts) > 1:
+        cond_exp = parts[1]
+        for cond in cond_exp.split(' and '):
+            for oper in DAS_OPERATORS:
+                if  cond.find(oper) != -1:
+                    clist = cond.split(oper)
+                    params[clist[0].strip()]=(oper.strip(), clist[1].strip())
+                    break
+    return selkeys, params
 
 def antrlparser(uinput):
     """
@@ -210,16 +237,32 @@ class QLLexer(object):
     - order_by keys
     - create condition dictionaries, {'value':'bla', 'op':'=', 'key':'run'}
     """
-    def __init__(self, imap, params, funclist=[]):
+    def __init__(self, imap, params, funclist=[], weights={}):
         self.prefix    = ['find ', 'plot ', 'view ']
-        self.operators = ['!=', '<=', '<', '>=', '>', '=', 
-                          ' not like ', ' like ', 
-                          ' between ', ' not in ', ' in ']
+        self.operators = DAS_OPERATORS
         self.qlmap = imap #{'dbs': [list of keys], ...}
         self.qlparams = params #{'dbs': [list of params passed to srv], ...}
+        self.reserved_keys = ['system', 'date']
         self.known_keys = [k for i in self.qlmap.values() for k in i]
         self.known_params = [k for i in self.qlparams.values() for k in i]
         self.known_func = funclist
+        # TODO: services weights will be used to pick-up least expensive
+        # data-service to use if common key found accross multiple
+        # data-services. This should be assigned elswhere, in DAS entity DB.
+        if  weights:
+            self.service_weights = weights
+        else:
+            self.service_weights = {
+                'dbs': 5,
+                'phedex': 10,
+                'sitedb': 0,
+                'runsum': 6,
+                'lumidb': 7,
+                'dq': 8,
+            }
+        for key in imap.keys():
+            if  not self.service_weights.has_key(key):
+                self.service_weights[key] = 1
 
     def das_functions(self, uinput):
         """
@@ -290,6 +333,28 @@ class QLLexer(object):
             query = query.replace(str(word).upper(), word)
         return query
         
+    def find_namespaces(self, query):
+        """
+        DAS-QL syntax allows namespace in a query, e.g.
+        find phedex:block where block=bla
+        This method analyze the query and build namespace dict.
+        Namespace names cut out from the query for further processing.
+        """
+        namespace = {}
+        newquery  = str(query)
+        pat = re.compile('[a-zA-Z:]')
+        for word in query.split():
+            if  word.find(':') != -1 and pat.match(word):
+                srv, keyword = word.split(':')
+                if  srv in self.qlmap.keys():
+                    add2dict(namespace, srv, [keyword])
+                    self.service_weights[srv] = -1
+                    newquery = newquery.replace(word, keyword)
+                else:
+                    msg = "Found unkonwn service '%s' in input query" % srv
+                    raise Exception(msg)
+        return newquery, namespace
+        
     def findservices(self, key):
         """
         For given key find a list of corresponding data-services
@@ -345,6 +410,20 @@ class QLLexer(object):
 
         # split expression into key op value and analyze the value
         key, value = exp.split(oper, 1)
+        if  key.strip() == 'system':
+            if  value.strip() == 'all':
+                value = self.qlmap.keys()
+        if  key == 'date': # convert date into seconds since epoch
+            if  oper != ' last ': # we already converted date
+                pat = re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
+                if  pat.match(value): # we accept YYYYMMDD
+                    d = datetime.date(int(value[0:4]), # YYYY
+                                      int(value[4:6]), # MM
+                                      int(value[6:8])) # DD
+                    value = time.mktime(d.timetuple())
+                else:
+                    msg = 'Unacceptable date format'
+                    raise Exception(msg)
         if  oper == ' in ' or oper == ' not in ':
             value = value.strip()
             if  value[0] != '(' and value[-1] != ')':
@@ -362,6 +441,27 @@ class QLLexer(object):
             except:
                 raise Exception(msg)
             value = [i.strip() for i in value]
+        if  oper == ' last ':
+            msg = "Unsupported syntax for value of between operator"
+            pat = re.compile('^[0-9][0-9](h|m)$')
+            if  not pat.match(value):
+                raise Exception(msg)
+            oper = ' = '
+            if  value.find('h') != -1:
+                hour = int(value.split('h')[0])
+                if  hour > 24:
+                    raise Exception('Wrong hour %s' % value)
+                date1 = time.time() - hour*60*60
+                date2 = time.time()
+            elif value.find('m') != -1:
+                minute = int(value.split('m')[0])
+                if  minute > 60:
+                    raise Exception('Wrong minutes %s' % value)
+                date1 = time.time() - minute*60
+                date2 = time.time()
+            else:
+                raise Exception('Unsupported value for last operator')
+            value = [date1, date2]
         if  type(value) is types.StringType:
             value = value.strip()
         return {'key':key.strip(), 'op':oper.strip(), 'value':value}
@@ -492,28 +592,14 @@ class QLParser(QLLexer):
     - map of service names and data-service input parameters, e.g.
        {'lumidb':['run'], ...}
     """
-    def __init__(self, imap, params, funclist=[]):
+    def __init__(self, imap, params, funclist=[], weights={}):
         if  imap.keys() != params.keys():
             msg  = 'Provided service names from map of data-service QL keys'
             msg += 'does not match with'
             msg += 'service names from map of data-service parameters.\n'
             msg += '%s != %s' % (imap.keys(), params.keys())
             raise Exception(msg)
-        QLLexer.__init__(self, imap, params, funclist)
-        # TODO: services weights will be used to pick-up least expensive
-        # data-service to use if common key found accross multiple
-        # data-services. This should be assigned elswhere, in DAS entity DB.
-        self.service_weights = {
-                'dbs': 5,
-                'phedex': 10,
-                'sitedb': 0,
-                'runsum': 6,
-                'lumidb': 7,
-                'dq': 8,
-        }
-        for key in imap.keys():
-            if  not self.service_weights.has_key(key):
-                self.service_weights[key] = 1
+        QLLexer.__init__(self, imap, params, funclist, weights)
 
     def check(self, query, rdict):
         """
@@ -547,7 +633,10 @@ class QLParser(QLLexer):
             raise Exception(msg)
         # check if all keys are valid ones
         for k in rdict['allkeys']:
-            if  k not in self.known_keys and k not in self.known_params:
+            if  k.find('.') != -1: # key is in form key.attr
+                k = k.split('.')[0]
+            if  k not in self.known_keys and k not in self.known_params\
+                and k not in self.reserved_keys:
                 if  k.find('count') !=-1 or k.find('sum') != -1: # DBS
                     k = ''.join(k.split('(')[-1]).split(')')[0]
                     if  k not in self.known_keys:
@@ -568,6 +657,7 @@ class QLParser(QLLexer):
         - unique set of keys and service necessary to run a query
         """
         query = self.fix_reserved_keywords(query)
+        query, namespace = self.find_namespaces(query)
         query, functions = self.das_functions(query)
         rdict = {}
         rdict['functions']       = functions
@@ -577,15 +667,18 @@ class QLParser(QLLexer):
         rdict['order_by_order']  = order_by
         rdict['selkeys']         = unique_list(self.selkeys(query))
         rdict['allkeys']         = unique_list(self.allkeys(query))
-        rdict['services']        = self.services(query)
-        services, ulist, daslist = self.uniq_services(query)
-        rdict['unique_services'] = unique_list(services)
-        if  len(services) == 1:
+        services, uservices, ulist, daslist = self.uniq_services(query)
+        rdict['services']        = services
+        rdict['unique_services'] = unique_list(uservices)
+        if  len(uservices) == 1:
             rdict['unique_keys'] = rdict['selkeys']
         else:
             rdict['unique_keys'] = unique_list(ulist)
         rdict['daslist']         = daslist
         self.check(query, rdict)
+#        print "qlparser", rdict
+#        import sys
+#        sys.exit(0)
         return rdict
         
     def services(self, query):
@@ -599,7 +692,9 @@ class QLParser(QLLexer):
         params = list(set(akeys) - set(skeys))
         allkeys = []
         for key in skeys:
+#            entity = key.split('.')[0]
             for service, keys in self.qlmap.items():
+#                if  entity in keys:
                 if  key in keys:
                     if  key not in allkeys:
                         allkeys.append(key)
@@ -620,12 +715,15 @@ class QLParser(QLLexer):
                         sdict[service] = [key]
         # I need to assing service weight to distinguish a case
         # when several services can answer the same query
-        if  len(allkeys) == 1:
-            srvlist = sdict.keys()
-            weight_tuple = [(w, s) for s, w in self.service_weights.items()\
-                 if s in srvlist]
-            weight_tuple.sort()
-            sdict = {weight_tuple[0][1]:allkeys}
+        overlap = [s for s, k in sdict.items() if k == allkeys]
+        weight_tuple = [(w, s) for s, w in self.service_weights.items()\
+             if s in overlap]
+        weight_tuple.sort()
+        if  weight_tuple:
+            srv_winner = weight_tuple[0][1]
+            for srv in list(sdict.keys()):
+                if  srv != srv_winner:
+                    del sdict[srv]
         return sdict
 
     def uniq_services(self, query):
@@ -638,25 +736,27 @@ class QLParser(QLLexer):
         """
         query = self.fix_reserved_keywords(query)
         skeys = unique_list(self.selkeys(query)) # selection keys
+#        entities = [i.split('.')[0] for i in skeys]
         akeys = unique_list(self.allkeys(query)) # all keys
         ckeys = [row['key'] for row in self.conditions(query) \
                     if type(row) is types.DictType] # condition keys
         ckeys = unique_list(ckeys)
 
-        services = self.services(query).keys()
-        if  len(services) == 1: # all keys from one data-service
-            uservices = services
+        services = self.services(query)
+        if  len(services.keys()) == 1: # all keys from one data-service
+            uservices = services.keys()
             ulist = skeys
-            daslist = [{services[0]:query}]
-            return uservices, ulist, daslist
+            daslist = [{services.keys()[0]:query}]
+            return services, uservices, ulist, daslist
         else:
             uservices = [] # unique set of services for list of keys
             onesrvcoverage = None
-            for srv in services:
+            for srv in services.keys():
                 srv_keys = self.qlmap[srv]
                 srv_args = self.qlparams[srv]
                 if  ckeys:
                     cond1 = set(srv_keys) & set(skeys)# srv keys covers skeys
+#                    cond1 = set(srv_keys) & set(entities)# srv keys covers entities
                     if  not srv_args:
                         cond2 = True
                     else:
@@ -668,10 +768,12 @@ class QLParser(QLLexer):
                         covlist2 = list(set(srv_args) & set(ckeys))
                         covlist2.sort()
                         if  covlist1 == skeys and covlist2 == ckeys:
+#                        if  covlist1 == entities and covlist2 == ckeys:
                             onesrvcoverage = srv
                             break
                 else:
                     if  set(srv_keys) & set(skeys):# srv keys covers skeys
+#                    if  set(srv_keys) & set(entities):# srv keys covers entities
                         uservices.append(srv)
                         onesrvcoverage = srv
                         break
@@ -681,7 +783,7 @@ class QLParser(QLLexer):
             uservices = [onesrvcoverage]
 
         if  not uservices:
-            msg = 'Unable to find unique set of service out of %s' % services
+            msg = 'Unable to find unique set of services out of %s' % services
             raise Exception(msg)
         # find relation keys in uservices
         pairs = [i for i in oneway_permutations(uservices)]
@@ -772,12 +874,12 @@ class QLParser(QLLexer):
             daslist.append(dasqueries)
 #        print
 #        print "query", query
-#        print "services", self.services(query)
+#        print "services", services
 #        print "uservices", uservices
 #        print "cond_exp", cond_exp
 #        print "ulist", ulist
 #        print "final", final
 #        print "conddict", conddict
 #        print "daslist", daslist
-        return uservices, ulist, daslist
+        return services, uservices, ulist, daslist
 
