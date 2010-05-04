@@ -23,7 +23,7 @@ daskeys : [
         {"key":"site", "map":"site.se", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"}
 ]
 api2das : [
-        {"api_param":"name", "das_key":"site", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+        {"api_param":"name", "das_key":"site.se", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
 ]
 ---
 urn : "CMStoSAMName"
@@ -32,7 +32,7 @@ expire : 3600
 params : {"name":""}
 daskeys : [{"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]')"}]
 api2das : [
-        {"api_param":"name", "das_key":"site", "pattern":"re.compile('^T[0-3]')"},
+        {"api_param":"name", "das_key":"site.name", "pattern":"re.compile('^T[0-3]')"},
 ]
 ---
 urn : "CMStoSiteName"
@@ -41,7 +41,7 @@ expire : 3600
 params : {"name":""}
 daskeys : [{"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]')"}]
 api2das : [
-        {"api_param":"name", "das_key":"site", "pattern":"re.compile('^T[0-3]')"},
+        {"api_param":"name", "das_key":"site.name", "pattern":"re.compile('^T[0-3]')"},
 ]
 ---
 urn : "CMSNametoCE"
@@ -50,7 +50,7 @@ expire : 3600
 params : {"name":"required"}
 daskeys : [{"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]')"}]
 api2das : [
-        {"api_param":"name", "das_key":"site", "pattern":"re.compile('^T[0-3]')"},
+        {"api_param":"name", "das_key":"site.name", "pattern":"re.compile('^T[0-3]')"},
 ]
 ---
 urn : "CMSNametoSE"
@@ -59,7 +59,7 @@ expire : 3600
 params : {"name":""}
 daskeys : [{"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]')"}]
 api2das : [
-        {"api_param":"name", "das_key":"site", "pattern":"re.compile('^T[0-3]')"},
+        {"api_param":"name", "das_key":"site.name", "pattern":"re.compile('^T[0-3]')"},
 ]
 ---
 notations : [
