@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.3 2009/04/29 16:09:51 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_cli.py,v 1.4 2009/04/30 19:36:15 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -40,9 +40,9 @@ class DASOptionParser:
         self.parser.add_option("--keys", action="store", 
                                           dest="service",
              help="return set of keys for given data service")
-#        self.parser.add_option("--json", action="store_true", 
-#                                          dest="json",
-#             help="return JSON dict")
+        self.parser.add_option("--no-format", action="store_true", 
+                                          dest="plain",
+             help="return unformatted output, useful for scripting")
         self.parser.add_option("--limit", action="store", type="int", 
                                           default=0, dest="limit",
              help="limit number of returned results")
@@ -98,7 +98,11 @@ if __name__ == '__main__':
             stats.print_stats()
         else:
             results = DAS.result(query)
-            dump(results, opts.limit)
+            if  opts.plain:
+                for item in results:
+                    print item
+            else:
+                dump(results, opts.limit)
     else:
         print
         print "DAS CLI interface, no actions found,"
