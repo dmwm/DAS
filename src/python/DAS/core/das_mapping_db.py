@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.23 2010/02/02 20:15:43 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.24 2010/02/03 16:48:18 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -73,17 +73,19 @@ class DASMapping(object):
         
     def add(self, record):
         """
-        Add new record into mapping DB. 
-        Example of API record:
+        Add new record into mapping DB. Example of URI record
 
         .. doctest::
 
-            {system:dbs, 
-             api: {name:listBlocks, 
-                   params:[{name:apiversion:1_2_2, value:*, required:0}, ...]}, 
-             daskeys:[{key:block, map:block.name, pattern:pat}, ...], 
-             api2das:[{api_param:site, das_key:site, 
-                       pattern:re.compile('^T[0-3]_')}, ...]}
+            {
+             system:dbs, 
+             urn : listBlocks, 
+             url : "http://a.b.com/api"
+             params:[{apiversion:1_2_2, test:"*"}, ...]
+             daskeys:[{key:block, map:block.name, pattern:pat}, ...]
+             api2das:[{api_param:se, das_key:site, 
+                       pattern:re.compile('^T[0-3]_')}, ...]
+            }
 
         Example of notation record:
 
@@ -96,16 +98,16 @@ class DASMapping(object):
         self.logger.info(msg)
         self.col.insert(record)
         index = None
-        if  record.has_key('api'):
+        if  record.has_key('urn'):
             index = [('system', DESCENDING), ('daskeys', DESCENDING),
-                     ('api.name', DESCENDING) ]
+                     ('urn', DESCENDING) ]
         elif record.has_key('notations'):
             index = [('system', DESCENDING), 
                      ('notations.api_param', DESCENDING)]
         elif record.has_key('presentation'):
             index = []
         else:
-            msg = 'Invalid record %s, no api/notations keys' % record
+            msg = 'Invalid record %s' % record
             raise Exception(msg)
         if  index:
             self.col.ensure_index(index)
@@ -128,7 +130,7 @@ class DASMapping(object):
         gen   = (row['system'] for row in self.col.find(cond, ['system']))
         kdict = {}
         for system in gen:
-            query = {'system':system, 'api':{'$ne':None}}
+            query = {'system':system, 'urn':{'$ne':None}}
             keys  = []
             for row in self.col.find(query):
                 for entry in row['daskeys']:
@@ -177,18 +179,17 @@ class DASMapping(object):
         """
         List all APIs.
         """
-        cond = { 'api.name' : { '$ne' : None } }
+        cond = { 'urn' : { '$ne' : None } }
         if  system:
             cond['system'] = system
-        gen  = (row['api']['name'] for row in \
-                self.col.find(cond, ['api.name']))
+        gen  = (row['urn'] for row in self.col.find(cond, ['urn']))
         return gen2list(gen)
 
     def api_info(self, api_name):
         """
         Return full API info record.
         """
-        return self.col.find_one({'api.name':api_name})
+        return self.col.find_one({'urn':api_name})
 
     def lookup_keys(self, system, daskey, api=None, value=None):
         """
@@ -197,7 +198,7 @@ class DASMapping(object):
         """
         query = {'system':system, 'daskeys.key':daskey}
         if  api:
-            query['api.name'] = api
+            query['urn'] = api
         lookupkeys = []
         for row in self.col.find(query):
             for kdict in row['daskeys']:
@@ -301,7 +302,7 @@ class DASMapping(object):
         """
         Returns list of DAS keys which cover provided data-service API
         """
-        query = {'system':system, 'api.name':api}
+        query = {'system':system, 'urn':api}
         keys = []
         for row in self.col.find(query):
             for entry in row['daskeys']:
@@ -310,23 +311,24 @@ class DASMapping(object):
 
     def servicemap(self, system, implementation=None):
         """
-        Constructs data-service map, e.g.::
+        Constructs data-service map, e.g.
 
-        {api: {keys:[list of DAS keys], params: args, url:url, format:ext} }
+        .. doctest::
+
+            {api: {keys:[list of DAS keys], params: args, 
+             url:url, format:ext, expire:exp} }
         """
-        query = {'system':system, 'api':{'$ne':None}}
+        query = {'system':system, 'urn':{'$ne':None}}
         smap = {}
         for row in self.col.find(query):
             url  = row['url']
             exp  = row['expire']
             ext  = row['format']
-            api  = row['api']['name']
+            api  = row['urn']
             keys = []
             for entry in row['daskeys']:
                 keys.append(entry['key'])
-            params = dict(row['api']['params'])
-            if  implementation=='javaservlet':
-                params['api'] = api
+            params = dict(row['params'])
             smap[api] = dict(keys=keys, params=params, url=url, expire=exp,
                                 format=ext)
         return smap
