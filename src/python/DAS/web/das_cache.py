@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.3 2010/04/06 20:42:20 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_cache.py,v 1.4 2010/04/08 15:12:00 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -159,9 +159,9 @@ class DASCacheService(DASWebManager):
             self.base = ''
 
         self.dascore  = DASCore()
-        dbhost        = self.dascore.dasconfig['mongocache_dbhost']
-        dbport        = self.dascore.dasconfig['mongocache_dbport']
-        capped_size   = self.dascore.dasconfig['mongocache_capped_size']
+        dbhost        = self.dascore.dasconfig['mongodb']['dbhost']
+        dbport        = self.dascore.dasconfig['mongodb']['dbport']
+        capped_size   = self.dascore.dasconfig['mongodb']['capped_size']
         self.con      = Connection(dbhost, dbport)
         if  'logging' not in self.con.database_names():
             dbname = self.con['logging']
