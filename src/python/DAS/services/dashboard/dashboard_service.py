@@ -95,7 +95,8 @@ class DashboardService(DASAbstractService):
                 msg = 'JobSummary does not support operator %s' % oper
                 raise Exception(msg)
 
-        url = url + '/' + api + '?%s' % urllib.urlencode(args)
+#        url = url + '/' + api + '?%s' % urllib.urlencode(args)
+        url = url + '?%s' % urllib.urlencode(args)
 
         time0 = time.time()
         params = {} # all params are passed in url

@@ -4,8 +4,8 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.12 2010/02/02 19:55:21 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: monitor_service.py,v 1.13 2010/02/03 16:49:31 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -63,7 +63,7 @@ class MonitorService(DASAbstractService):
             if  key not in keys:
                 continue
             args['end'] = '%d' % time.time()
-            url = url + '/' + api
+#            url = url + '/' + api
             time0 = time.time()
             res = self.getdata(url, args)
             try:
