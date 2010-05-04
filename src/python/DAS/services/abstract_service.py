@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.48 2009/11/16 16:03:17 valya Exp $"
-__version__ = "$Revision: 1.48 $"
+__revision__ = "$Id: abstract_service.py,v 1.49 2009/11/17 19:33:22 valya Exp $"
+__version__ = "$Revision: 1.49 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -313,8 +313,9 @@ class DASAbstractService(object):
         for key, val in row.items():
             newkey = self.dasmapping.notation2das(system, key, api)
             if  newkey != key:
-                row[newkey] = row[key]
-                del row[key]
+                row[newkey] = row.pop(key)
+#                row[newkey] = row[key]
+#                del row[key]
             if  type(val) is types.DictType:
                 self.row2das(system, api, val)
             elif type(val) is types.ListType:
