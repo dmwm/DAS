@@ -4,10 +4,11 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.4 2009/04/23 01:11:31 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: dbs_service.py,v 1.5 2009/05/27 20:28:04 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
+import types
 import memcache
 from DAS.services.abstract_service import DASAbstractService
 from DAS.services.dbs.dbs_parser import parser, parser_dbshelp
@@ -61,9 +62,13 @@ class DBSService(DASAbstractService):
         Return results as a list of dict, e.g.
         [{'run':1,'dataset':/a/b/c'}, ...]
         """
-        url   = self.url
-        params = dict(self.params)
+        url     = self.url
+        params  = dict(self.params)
         params['query'] = query
-        data = parser(self.getdata(url, params))
+        res     = self.getdata(url, params) 
+        if  type(res) is types.GeneratorType:
+            res = [i for i in res][0]
+        data    = parser(res)
+#        data = parser(self.getdata(url, params))
         return data
 

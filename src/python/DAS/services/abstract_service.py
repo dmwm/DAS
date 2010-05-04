@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.16 2009/05/22 21:04:40 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: abstract_service.py,v 1.17 2009/05/27 20:28:03 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -79,7 +79,7 @@ class DASAbstractService(object):
 #        res = self.localcache.get_from_cache(cquery)
 #        if  res:
 #            return res
-        if  hasattr(self, 'localhost') and self.localcache.incache(cquery):
+        if  hasattr(self, 'localcache') and self.localcache.incache(cquery):
             return self.localcache.get_from_cache(cquery)
 
         data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
@@ -93,7 +93,8 @@ class DASAbstractService(object):
 
         # store to couch 'raw' data coming out of concrete data service
         # will add 'query' and 'timestamp' for every row in results
-        if  hasattr(self, 'localhost'):
+        if  hasattr(self, 'localcache'):
+            self.logger.debug('DASAbstractService::getdata updating localcache')
             results = self.localcache.update_cache(cquery, results, self.expire)
 
         return results
@@ -143,7 +144,7 @@ class DASAbstractService(object):
 #        res = self.localcache.get_from_cache(cquery)
 #        if  res:
 #            return res
-        if  hasattr(self, 'localhost') and self.localcache.incache(cquery):
+        if  hasattr(self, 'localcache') and self.localcache.incache(cquery):
             return self.localcache.get_from_cache(cquery)
 
         skeys = [key for key in collect_list if self.keys().count(key)]
@@ -167,7 +168,8 @@ class DASAbstractService(object):
         results = genresults(self.name, res, collect_list)
         # store to couch 'raw' data coming out of concrete data service
         # will add 'query' and 'timestamp' for every row in results
-        if  hasattr(self, 'localhost'):
+        if  hasattr(self, 'localcache'):
+            self.logger.debug('DASAbstractService::call updating localcache')
             results = self.localcache.update_cache(cquery, results, self.expire)
 
         return results

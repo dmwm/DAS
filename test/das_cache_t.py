@@ -25,6 +25,7 @@ class testDASCache(unittest.TestCase):
         config['logger']  = logger
         config['verbose'] = debug
         self.dascache = DASCache(config)
+#        self.cachemgr = DASCacheMgr()
 
     def test_key(self):                          
         """test DAS cache key generator"""
@@ -51,6 +52,23 @@ class testDASCache(unittest.TestCase):
         result = [k for k, g in groupby(result)]
         self.assertEqual(expect, result)
         self.dascache.delete_cache()
+
+#    def test_cachemgr(self):
+#        """test DASCacheMgr class functionality"""
+#        cmgr = self.cachemgr
+#        def worker(item):
+#            """test worker"""
+#            print item
+#        thread.start_new_thread(cmgr.worker, (worker, ))
+#        for i in range(0, 10):
+#            query = 'find site where site=%s' % i
+#            cmgr.add(query, 10)
+#        time.sleep(2)
+#        for i in range(11, 20):
+#            query = 'find site where site=%s' % i
+#            cmgr.add(query, 10)
+#        time.sleep(10)
+#        print "the end"
 #
 # main
 #

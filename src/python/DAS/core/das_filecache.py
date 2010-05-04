@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.10 2009/05/22 21:04:40 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_filecache.py,v 1.11 2009/05/27 20:28:03 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -18,8 +18,8 @@ import marshal
 
 import time
 
-from sqlalchemy import Table, Column, Integer, String, Text
-from sqlalchemy import create_engine, MetaData, ForeignKey
+from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import create_engine, MetaData, ForeignKey, and_
 from sqlalchemy.orm import relation, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -27,11 +27,14 @@ from sqlalchemy.orm import sessionmaker
 
 # DAS modules
 from DAS.utils.utils import genkey
-from DAS.core.cache import Cache, NoResults
+from DAS.core.cache import Cache
 
 Base = declarative_base()
 class System(Base):
+    """System ORM"""
     __tablename__ = 'systems'
+    __table_args__ = {'mysql_engine':'InnoDB'}
+
     id = Column(Integer, primary_key=True)
     name = Column(String(10), nullable=False, unique=True)
 
@@ -39,13 +42,16 @@ class System(Base):
         self.name = name
 
     def __repr__(self):
+        """String representation of System ORM object"""
         return "<System('%s')>" % self.name
 
 class Query(Base):
+    """Query ORM"""
     __tablename__ = 'queries'
+    __table_args__ = {'mysql_engine':'InnoDB'}
 
     id = Column(Integer, primary_key=True)
-    hash = Column(String(32))
+    hash = Column(String(32), unique=True)
     name = Column(Text)
     create = Column(String(16))
     expire = Column(String(16))
@@ -53,27 +59,31 @@ class Query(Base):
 
     system = relation(System, backref=backref('systems', order_by=id))
 
-    def __init__(self, hash, name, create, expire):
-        self.hash = hash
+    def __init__(self, ihash, name, create, expire):
+        self.hash = ihash
         self.name = name
         self.create = create
         self.expire = expire
 
     def __repr__(self):
-       return "<Query('%s', '%s','%s', '%s')>" \
+        """String representation of Query ORM object"""
+        return "<Query('%s', '%s','%s', '%s')>" \
                 % (self.hash, self.name, self.create, self.expire)
 
 def yyyymmdd(itime=None):
+    """returns time in yyyymmdd format"""
     if  itime:
-        return time.strftime("%Y%m%d",time.gmtime(itime))
-    return time.strftime("%Y%m%d",time.gmtime())
+        return time.strftime("%Y%m%d", time.gmtime(itime))
+    return time.strftime("%Y%m%d", time.gmtime())
 
 def hour(itime=None):
+    """returns current hour"""
     if  itime:
-        return time.strftime("%H",time.gmtime(itime))
-    return time.strftime("%H",time.gmtime())
+        return time.strftime("%H", time.gmtime(itime))
+    return time.strftime("%H", time.gmtime())
 
 def clean_dirs(hourdir, datedir):
+    """clean directories"""
     # if no more files in dir area (creationdatehour), remove dir
     for root, dirs, files in os.walk(hourdir):
         if  not len(files):
@@ -131,12 +141,18 @@ class DASFilecache(Cache):
             verbose  = False
         dbfile       = os.path.join(self.dir, 'das_filecache.db')
         db_engine    = 'sqlite:///%s' % dbfile
+#        dbfile       = None
+#        db_engine    = 'mysql://xxx:yyy@localhost/DAS'
         self.engine  = create_engine(db_engine, echo=verbose)
-        self.session = sessionmaker(bind=self.engine)
-        if  not os.path.isfile(dbfile):
+        self.session = sessionmaker(bind=self.engine, autocommit=True)
+        if  not dbfile:
             self.create_table()
+        else: # sqlite case
+            if  not os.path.isfile(dbfile):
+                self.create_table()
 
     def create_table(self):
+        """Create DB tables based on ORM objects"""
         metadata = MetaData()
         query_table = Query.__table__
         Base.metadata.create_all(self.engine)
@@ -148,25 +164,32 @@ class DASFilecache(Cache):
         key     = genkey(query)
         sysdir  = os.path.join(self.dir, self.get_system(query))
         session = self.session()
+        session.begin()
         try: # transactions
-            res = session.query(Query).filter(Query.hash==key)
+#            res = session.query(Query).filter(Query.hash==key)
+            res = session.query(Query).filter(and_(Query.hash==key, \
+                Query.expire > '%s' % time.time() ))
             session.commit()
         except:
             session.rollback()
             traceback.print_exc()
             return False
-        for qobj in res:
-            valid = eval(qobj.expire) - time.time()
-            timestring   = eval(qobj.create)
-            creationdate = yyyymmdd(timestring)
-            creationhour = hour(timestring)
-            datedir      = os.path.join(sysdir, creationdate)
-            hourdir      = os.path.join(datedir, creationhour)
-            dir          = hourdir
-            filename     = os.path.join(dir, key)
-            if  valid > 0 and os.path.isfile(filename):
-                return True
-        return False
+        found = 0
+        if  res.first():
+            found = 1
+        return found
+#        for qobj in res:
+#            valid = eval(qobj.expire) - time.time()
+#            timestring   = eval(qobj.create)
+#            creationdate = yyyymmdd(timestring)
+#            creationhour = hour(timestring)
+#            datedir      = os.path.join(sysdir, creationdate)
+#            hourdir      = os.path.join(datedir, creationhour)
+#            dir          = hourdir
+#            filename     = os.path.join(dir, key)
+#            if  valid > 0 and os.path.isfile(filename):
+#                return True
+#        return False
 
     def get_from_cache(self, query, idx=0, limit=None):
         """
@@ -175,6 +198,7 @@ class DASFilecache(Cache):
         key     = genkey(query)
         sysdir  = os.path.join(self.dir, self.get_system(query))
         session = self.session()
+        session.begin()
         try: # transactions
             res = session.query(Query).filter(Query.hash==key)
             session.commit()
@@ -189,8 +213,8 @@ class DASFilecache(Cache):
             creationhour = hour(timestring)
             datedir      = os.path.join(sysdir, creationdate)
             hourdir      = os.path.join(datedir, creationhour)
-            dir          = hourdir
-            filename     = os.path.join(dir, key)
+            idir         = hourdir
+            filename     = os.path.join(idir, key)
             self.logger.info("DASFilecache::get_from_cache %s" % filename)
             if  valid > 0:
                 msg = "found valid query in cache, key=%s" % key
@@ -216,6 +240,7 @@ class DASFilecache(Cache):
                 if  os.path.isfile(filename):
                     os.remove(filename)
                 clean_dirs(hourdir, datedir)
+                session.begin()
                 try: # session transactions
                     session.delete(qobj)
                     session.commit()
@@ -230,19 +255,22 @@ class DASFilecache(Cache):
         Insert results into cache. Query provides a hash key which
         becomes a file name.
         """
-        self.logger.info("DASFilecache::update_cache(%s) store to cache" % query)
+        if  not expire:
+            raise Exception('Expire parameter is null')
+        self.logger.info("DASFilecache::update_cache(%s) store to cache" \
+                % query)
         if  not results:
             return
         system = self.get_system(query)
-        key = genkey(query)
-        dir = os.path.join(self.dir, system)
-        dir = os.path.join(dir, yyyymmdd())
-        dir = os.path.join(dir, hour())
+        key  = genkey(query)
+        idir = os.path.join(self.dir, system)
+        idir = os.path.join(idir, yyyymmdd())
+        idir = os.path.join(idir, hour())
         try:
-            os.makedirs(dir)
+            os.makedirs(idir)
         except:
             pass
-        filename = os.path.join(dir, key)
+        filename = os.path.join(idir, key)
         fdr = open(filename, 'wb')
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
@@ -254,15 +282,17 @@ class DASFilecache(Cache):
             yield results
         fdr.close()
         
-        session  = self.session()
         create   = time.time()
         expire   = create+expire
         qobj     = Query(key, query, str(create), str(expire))
+        session  = self.session()
+        session.begin()
         try: # session transactions
             try:
                 sobj = session.query(System).filter(System.name==system).one()
             except:
                 sobj = System(system)
+                session.add(sobj)
                 pass
             qobj.system = sobj
             session.add(qobj)
@@ -274,6 +304,7 @@ class DASFilecache(Cache):
             raise Exception(msg)
 
     def get_system(self, query):
+        """Look-up system used for given query"""
         system = 'das'
         url = query.split(' ')[0]
         if  url.find('http') != -1:

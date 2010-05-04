@@ -5,11 +5,19 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.8 2009/05/22 21:04:40 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_cache.py,v 1.9 2009/05/27 20:28:03 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
+import time
+import Queue 
+import traceback
+import processing 
+import logging
+
 # DAS modules
+from DAS.utils.utils import getarg
+from DAS.utils.logger import DASLogger
 from DAS.core.cache import Cache, NoResults
 from DAS.core.das_memcache import DASMemcache
 from DAS.core.das_couchcache import DASCouchcache
@@ -100,3 +108,87 @@ class DASCache(Cache):
             self.logger.info("DASCache::clean_cache, using %s" % name)
             srv = self.servers[name]
             srv.delete_cache(dbname)
+
+class DASCacheMgr(object):
+    """
+    DAS cache manager class. It consists of simple queue and worker.
+    Worker method runs in separate thread and monitor internal queue.
+    It uses 2*N-cores processes to run external function over there.
+    """
+    def __init__(self, config={}):
+        """
+        Initialize DAS cache manager.
+        """
+        logdir      = getarg(config, 'logdir', '/tmp')
+        sleep       = getarg(config, 'sleep', 2)
+        verbose     = getarg(config, 'verbose', None)
+        debug       = getarg(config, 'debug', None)
+        self.queue  = [] # keep track of waiting queries, (query, expire)
+        self.sleep  = sleep # in sec. to sleep at each iteration of worker
+        self.logger = DASLogger(idir=logdir, name='DASCacheMgr', 
+                verbose=verbose, stdout=debug)
+
+    def add(self, query, expire):
+        """Add new query to the queue"""
+        self.queue.append((query, expire))
+
+    def worker(self, func):
+        """
+        Monitoring worker. Must be run in separate thread. It uses infinitive
+        loop to watch internal queue. Once queries has been added it pop them
+        up for processing by external function. The number of allowed
+        processes equal to 2*N-cores on a system.
+        """
+        time.sleep(5) # sleep to allow main thread with DAS core take off
+        msg = "start DASCacheMgr::worker with %s" % func
+        self.logger.info(msg)
+#        print msg
+        nprocs = 2*processing.cpuCount()
+        pool   = processing.Pool(nprocs)
+        while True: 
+            to_remove = {}
+            msg = "waiting queue %s" % self.queue
+            self.logger.debug(msg)
+#            print msg
+            for item in self.queue:
+                try:
+                    result = pool.apply_async(func, (item, ))
+                    to_remove[item] = result
+                    if  len(to_remove.keys()) == nprocs:
+                        break
+                except:
+                    traceback.print_exc()
+                    break
+                time.sleep(1) # separate processes
+            msg = "will remove %s" % to_remove
+            self.logger.debug(msg)
+#            print msg
+            time.sleep(self.sleep)
+            for key in to_remove.keys():
+                proc = to_remove[key]
+                if  proc.ready():
+                    status = proc.get()
+                    if  status:
+                        self.queue.remove(key)
+
+    def worker_v1(self, func):
+        time.sleep(5) # sleep to allow main thread with DAS core take off
+        print "\n#### start DASCacheMgr::worker with", func
+        nprocs = 2*processing.cpuCount()
+        pool   = processing.Pool(nprocs)
+        while True: 
+            to_remove = []
+            print "waiting queue", self.queue
+            for item in self.queue:
+                try:
+                    result = pool.apply_async(func, (item, ))
+                    to_remove.append(item)
+                    if  len(to_remove) == nprocs:
+                        break
+                except:
+                    traceback.print_exc()
+                    break
+            print "will remove", to_remove
+            time.sleep(self.sleep)
+            for item in to_remove:
+                self.queue.remove(item)
