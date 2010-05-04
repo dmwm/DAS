@@ -2,11 +2,11 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-DAS cache wrapper. Communitate with DAS core and cache server(s)
+DAS cache wrapper. Communitate with DAS core and cache server(s).
 """
 
-__revision__ = "$Id: das_cache.py,v 1.21 2010/01/19 19:05:26 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: das_cache.py,v 1.22 2010/01/26 21:02:04 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -69,9 +69,9 @@ class DASCacheMgr(object):
 
     def worker(self, func):
         """
-        Monitoring worker. Must be run in separate thread. It uses infinitive
-        loop to watch internal queue. Once queries has been added it pop them
-        up for processing by external function. The number of allowed
+        Monitoring worker. Must run in separate thread. It uses infinitive
+        loop to watch internal queue. Once query has been added it pops
+        up it for processing by external function. The number of allowed
         processes equal to 2*N-cores on a system.
         """
         time.sleep(5) # sleep to allow main thread with DAS core take off
