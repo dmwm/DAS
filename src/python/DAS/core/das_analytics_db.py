@@ -7,8 +7,8 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.7 2009/09/14 20:34:32 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.8 2009/09/18 00:10:07 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -78,7 +78,15 @@ class DASAnalytics(object):
         msg = 'DASAnalytics::update(%s, %s)' % (system, query)
         self.logger.info(msg)
         cond = {'query':query, 'system':system}
-        self.col.update(cond, {'$inc' : {'counter':1}})
+        # TODO:
+        # MongoDB has a bug, http://jira.mongodb.org/browse/SERVER-268 
+        # which prevent from bulk update of all records, uncomment the
+        # line below once it's fixed
+#        self.col.update(cond, {'$inc' : {'counter':1}})
+        # meanwhile we'll retrieve all records and update them individually
+        for record in self.col.find(cond):
+            self.col.update({'_id':record['_id']}, {'$inc' : {'counter':1}})
+        
 
     def list_systems(self):
         """
