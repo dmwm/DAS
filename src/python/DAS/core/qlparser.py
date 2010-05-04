@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.28 2009/11/18 15:56:33 valya Exp $"
-__version__ = "$Revision: 1.28 $"
+__revision__ = "$Id: qlparser.py,v 1.29 2009/11/18 17:06:16 valya Exp $"
+__version__ = "$Revision: 1.29 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -336,9 +336,13 @@ class MongoParser(object):
                         if  type(value) is types.StringType:
                             value = [das_dateformat(value), time.time()]
                         elif type(value) is types.ListType:
-                            value1 = das_dateformat(value[0])
-                            value2 = das_dateformat(value[1])
-                            value  = [value1, value2]
+                            try:
+                                value1 = das_dateformat(value[0])
+                                value2 = das_dateformat(value[1])
+                                value  = [value1, value2]
+                            except:
+                                msg = "Unable to parse %s" % value
+                                raise Exception(msg)
                     cdict = dict(key='date', op='in', value=value)
                     condlist.append(cdict)
                     value = None
