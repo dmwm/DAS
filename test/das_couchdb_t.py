@@ -18,20 +18,19 @@ class testDASCouchDB(unittest.TestCase):
         """
         set up DAS core module
         """
-        host = 'http://localhost'
-        port = 5984
-        self.dascache = DASCouchDB(host, port, debug=1)
+        self.dascache = DASCouchDB(debug=1)
         self.das = DASCore()
 
     def test_result(self):                          
         """test DAS couchdb cache result method"""
         query  = "find dataset,admin,node where site=T2_UK_SGrid_Bristol"
 #        query  = "find site where site=T2_UK"
-        result = self.dascache.result(query)
-        result.sort()
-        expect = self.das.result(query)
-        expect.sort()
-        self.assertEqual(expect, result)
+        if  self.dascache.test():
+            result = self.dascache.result(query)
+            result.sort()
+            expect = self.das.result(query)
+            expect.sort()
+            self.assertEqual(expect, result)
 #
 # main
 #
