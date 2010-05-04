@@ -4,8 +4,8 @@
 """
 DBS XML parser
 """
-__revision__ = "$Id: dbs_parser.py,v 1.6 2009/06/03 19:47:27 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: dbs_parser.py,v 1.7 2009/06/09 18:18:48 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 #from xml.dom.minidom import parseString
@@ -81,8 +81,10 @@ def parser_dbshelp(data):
     """
     XML parser for DBS getHelp API
     """
-    elem  = ET.fromstring(data)
     olist = []
+    if  not data:
+        return olist
+    elem  = ET.fromstring(data)
     for i in elem:
         if  i.tag == 'dbs-ql':
             for j in i:
