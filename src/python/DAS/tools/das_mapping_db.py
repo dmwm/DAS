@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.22 2010/02/03 16:46:48 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.23 2010/02/04 21:23:24 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -85,8 +85,9 @@ if __name__ == '__main__':
         for rec in read_service_map(opts.umap, field='uri'):
             if  opts.debug:
                 print rec
-            spec = dict(rec)
-            spec.pop('created')
+            spec = {'url':rec['url'], 'urn':rec['urn']}
+#            spec = dict(rec)
+#            spec.pop('created')
             mgr.remove(spec) # remove previous record
             mgr.add(rec)
 
