@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.12 2009/06/24 13:56:44 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_couchcache.py,v 1.13 2009/06/30 19:32:14 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -216,28 +216,38 @@ function(keys, values) {
         """
         Retreieve results from cache, otherwise return null.
         """
-        idx = int(idx)
-        limit = long(limit)
-        dbname = self.dbname
-        cdb = self.couchdb(dbname)
+        id      = 0
+        idx     = int(idx)
+        limit   = long(limit)
+        stop    = idx + limit # get upper bound for range
+        dbname  = self.dbname
+        cdb     = self.couchdb(dbname)
         if  not cdb:
             return
-        key  = genkey(query)
+        key     = genkey(query)
 
-        skey = ["%s" % key, timestamp()]
-        ekey = ["%s" % key, self.future]
+        skey    = ["%s" % key, timestamp()]
+        ekey    = ["%s" % key, self.future]
         options = {'startkey': skey, 'endkey': ekey}
         results = cdb.loadView('dasviews', 'query', options)
         try:
             res = [row['value'] for row in results['rows']]
+            for row in results['rows']:
+                row['id'] = id
+                if  limit:
+                    if  id >= idx and id <= stop:
+                        yield row
+                else:
+                    yield row
+                id += 1
         except:
             traceback.print_exc()
             return
         if  res:
             self.logger.info("DASCouchcache::get_from_cache for %s" % query)
-        if  len(res) == 1:
-            return res[0]
-        return res
+#        if  len(res) == 1:
+#            return res[0]
+#        return res
 
     def update_cache(self, query, results, expire):
         """

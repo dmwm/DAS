@@ -5,8 +5,8 @@
 Abstract cache class.
 """
 
-__revision__ = "$Id: cache.py,v 1.9 2009/06/04 14:09:26 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: cache.py,v 1.10 2009/06/30 19:32:14 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 class NoResults(Exception):
@@ -39,6 +39,17 @@ class Cache(object):
         """
         self.logger.info('Cache::is_expired(%s)' % query)
         return
+
+    def nresults(self, query):
+        """
+        Return number of reulsts in cache for given query.
+        We implement this method in base class since all
+        get_from_cache implementations are generators or lists.
+        """
+        res = 0
+        for item in self.get_from_cache(query):
+            res += 1
+        return res
 
     def get_from_cache(self, query, idx=0, limit=0):
         """
