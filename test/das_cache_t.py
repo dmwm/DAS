@@ -7,8 +7,9 @@ Unit test for DAS cache module
 
 import unittest
 from DAS.utils.utils import genkey
+from DAS.utils.das_config import das_readconfig
+from DAS.utils.logger import DASLogger
 from DAS.core.das_cache import DASCache
-from DAS.core.das_core import DASCore
 
 class testDASCache(unittest.TestCase):
     """
@@ -18,9 +19,12 @@ class testDASCache(unittest.TestCase):
         """
         set up DAS core module
         """
-        debug = 0
-        self.das = DASCore(debug=debug)
-        self.dascache = DASCache(debug=debug)
+        debug    = 0
+        config   = das_readconfig()
+        logger   = DASLogger(verbose=debug, stdout=debug)
+        config['logger']  = logger
+        config['verbose'] = debug
+        self.dascache = DASCache(config)
 
     def test_key(self):                          
         """test DAS cache key generator"""
@@ -35,10 +39,13 @@ class testDASCache(unittest.TestCase):
     def test_result(self):                          
         """test DAS cache result method"""
         query  = "find site where site=T2_UK"
-        result = self.dascache.result(query)
+        expire = 60
+        expect = [1,2,3,4]
+        self.dascache.update_cache(query, expect, expire)
+        result = self.dascache.get_from_cache(query) 
         result.sort()
-        expect = self.das.result(query)
-        expect.sort()
+        from itertools import groupby
+        result = [k for k, g in groupby(result)]
         self.assertEqual(expect, result)
 #
 # main

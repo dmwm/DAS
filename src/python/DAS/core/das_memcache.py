@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.5 2009/05/19 12:43:10 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_memcache.py,v 1.6 2009/05/19 17:24:12 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -39,7 +39,7 @@ class DASMemcache(Cache):
         #from zlib import adler32
         #memcache.serverHashFunction = adler32
 
-        self.logger.info("Init memcache" % cachelist)
+        self.logger.info("Init memcache %s" % cachelist)
 
     def get_from_cache(self, query):
         """
@@ -82,7 +82,7 @@ class DASMemcache(Cache):
         """
         return
 
-    def delete(self, dbname=None):
+    def delete_cache(self, dbname=None):
         """
         Delete all results in cache
         dbname is unused parameter to match behavior of couchdb cache

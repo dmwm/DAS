@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.4 2009/05/19 12:43:10 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_filecache.py,v 1.5 2009/05/19 17:24:12 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -70,23 +70,57 @@ def yyyymmdd(itime=None):
         return time.strftime("%Y%m%d",time.gmtime(itime))
     return time.strftime("%Y%m%d",time.gmtime())
 
+def hour(itime=None):
+    if  itime:
+        return time.strftime("%H",time.gmtime(itime))
+    return time.strftime("%H",time.gmtime())
+
+def clean_dirs(hourdir, datedir):
+    # if no more files in dir area (creationdatehour), remove dir
+    for root, dirs, files in os.walk(hourdir):
+        if  not len(files):
+            os.rmdir(hourdir)
+            break
+    # if there are empty dirs in creationdate area, remove them
+    for root, dirs, files in datedir:
+        for dirname in dirs:
+            try:
+                os.rmdir(dirname)
+            except:
+                pass
+
 class DASFilecache(Cache):
     """
     File system based DAS cache. Each query stored in cache as a single
     file whose name is hash of the query. We use simple SQLite DB to 
     bookkeep all queries, along with their hash, creation and expiration
     times.
+
+    The cache structure is the following:
+    cache
+    |
+    |-- dbs (data-service area)
+    |      |
+    |      |-- 20090518 (current day area)
+    |      |    |
+    |      |    |-- 01
+    |      |    |-- 02
+    |      |    |-- ..
+    |      |    |-- 24 (24th hour)
+
+    This will allow to address a hit pattern we expect, > 1000 queries a day, but
+    < 1000 queries/hour/data-service
     """
-    def __init__(self, config, idir=None):
+    def __init__(self, config):
         Cache.__init__(self, config)
-        if  idir:
-            self.dir = idir
-        else:
-            self.dir = config['filecache_dir']
+        self.dir     = config['filecache_dir']
         self.limit   = config['filecache_lifetime']
         self.logger  = config['logger']
         self.verbose = config['verbose']
         self.logger.info("Init filecache %s" % self.dir)
+        self.systemdict = {}
+        for system in config['systems']:
+            self.systemdict[system] = config[system]['url']
 
         try:
             os.makedirs(self.dir)
@@ -113,14 +147,18 @@ class DASFilecache(Cache):
         """
         Retreieve results from cache, otherwise return null.
         """
-        key = genkey(query)
-
+        key     = genkey(query)
+        sysdir  = os.path.join(self.dir, self.get_system(query))
         session = self.session()
-        res = session.query(Query).filter(Query.hash==key)
+        res     = session.query(Query).filter(Query.hash==key)
         for qobj in res:
             valid = eval(qobj.expire) - time.time()
-            creationdate = yyyymmdd(eval(qobj.create))
-            dir = os.path.join(self.dir, creationdate)
+            timestring   = eval(qobj.create)
+            creationdate = yyyymmdd(timestring)
+            creationhour = hour(timestring)
+            datedir = os.path.join(sysdir, creationdate)
+            hourdir = os.path.join(datedir, creationhour)
+            dir     = hourdir
             filename = os.path.join(dir, key)
             self.logger.info("DASFilecache::get_from_cache %s" % filename)
             if  valid > 0:
@@ -136,11 +174,7 @@ class DASFilecache(Cache):
                 self.logger.debug("DASFilecache::get_from_cache %s" % msg)
                 if  os.path.isfile(filename):
                     os.remove(filename)
-                # if no more files in creationdate dir, remove the dir
-                for root, dirs, files in os.walk(dir):
-                    if  not len(files):
-                        os.rmdir(dir)
-                        break
+                clean_dirs(hourdir, datedir)
                 session.delete(qobj)
                 session.commit()
         return
@@ -153,8 +187,11 @@ class DASFilecache(Cache):
         self.logger.info("DASFilecache::update_cache(%s) store to cache" % query)
         if  not results:
             return
+        system = self.get_system(query)
         key = genkey(query)
-        dir = os.path.join(self.dir, yyyymmdd())
+        dir = os.path.join(self.dir, system)
+        dir = os.path.join(dir, yyyymmdd())
+        dir = os.path.join(dir, hour())
         try:
             os.makedirs(dir)
         except:
@@ -164,12 +201,9 @@ class DASFilecache(Cache):
         pickle.dump(results, fdr)
         fdr.close()
         
-        session = self.session()
-        create  = time.time()
-        expire  = create+expire
-
-        # get system entry
-        system = 'test_system' # pass to update_cache
+        session  = self.session()
+        create   = time.time()
+        expire   = create+expire
         try:
             sobj = session.query(System).filter(System.name==system).one()
         except:
@@ -180,13 +214,23 @@ class DASFilecache(Cache):
         session.add(qobj)
         session.commit()
 
+    def get_system(self, query):
+        system = 'das'
+        url = query.split(' ')[0]
+        if  url.find('http') != -1:
+            for sysname, val in self.systemdict.items():
+                if  url.find(val) != -1:
+                    system = sysname
+                    break
+        return system
+
     def clean_cache(self):
         """
         Clean expired docs in cache 
         """
         return
 
-    def delete(self, dbname=None):
+    def delete_cache(self, dbname=None):
         """
         Delete all results in cache
         dbname is unused parameter to match behavior of couchdb cache

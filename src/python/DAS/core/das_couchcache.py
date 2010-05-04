@@ -5,11 +5,12 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.1 2009/05/19 12:38:57 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_couchcache.py,v 1.2 2009/05/19 17:24:12 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
+import traceback
 from WMCore.Database.CMSCouch import CouchServer
 
 # DAS modules
@@ -147,7 +148,7 @@ function(k,v,r) {
         else:
             self.logger.warning("No '%s' found in couch db" % dbname)
 
-    def delete(self, dbname, system=None):
+    def delete_cache(self, dbname, system=None):
         """
         Delete couch db
         """
@@ -196,8 +197,10 @@ function(k,v,r) {
             return
         key  = genkey(query)
 
-        skey = '["%s", %s ]' % (key, timestamp())
-        ekey = '["%s", %s ]' % (key, 9999999999)
+#        skey = '["%s", %s ]' % (key, timestamp())
+#        ekey = '["%s", %s ]' % (key, 9999999999)
+        skey = ["%s" % key, timestamp()]
+        ekey = ["%s" % key, 9999999999]
         options = {'startkey': skey, 'endkey': ekey}
         results = cdb.loadview('dasviews', 'query', options)
 

@@ -38,7 +38,7 @@ class testDBS(unittest.TestCase):
 <SUCCESS/>
 </dbs>
 """
-        resultlist = parser(data)
+        resultlist = [i for i in parser(data)]
         expectlist = [{'site': 'se', 
                        'file': 'test'}]
         self.assertEqual(expectlist, resultlist)
