@@ -2,30 +2,40 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-Define core class for Data Aggregation Service (DAS)
+Core class for Data Aggregation Service (DAS) framework.
+It performs the following tasks:
+- registers data-services found in DAS configuration file (das.cfg).
+- invoke data-service subqueries and either multiplex results or
+combine them together for presentation layer (CLI or WEB).
+- creates DAS views
 """
 
-__revision__ = "$Id: das_core.py,v 1.9 2009/05/01 17:44:26 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+from __future__ import with_statement
+
+__revision__ = "$Id: das_core.py,v 1.10 2009/05/11 20:18:20 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
+import os
 import time
 import types
+import traceback
 
-from DAS.core.qlparser import dasqlparser
+from DAS.core.qlparser import dasqlparser, QLParser
 from DAS.core.das_viewmanager import DASViewManager
 
 from DAS.utils.utils import cartesian_product, gen2list
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 
-from DAS.services.dbs.dbs_service import DBSService
-from DAS.services.sitedb.sitedb_service import SiteDBService
+#from DAS.services.dbs.dbs_service import DBSService
+#from DAS.services.sitedb.sitedb_service import SiteDBService
+#from DAS.services.phedex.phedex_service import PhedexService
+#from DAS.services.monitor.monitor_service import MonitorService
+#from DAS.services.lumidb.lumidb_service import LumiDBService
+
 #from DAS.services.runsum.runsum_service import RunSummaryService
-from DAS.services.phedex.phedex_service import PhedexService
-from DAS.services.monitor.monitor_service import MonitorService
-from DAS.services.lumidb.lumidb_service import LumiDBService
 
 class DASCore(object):
     """
@@ -57,32 +67,53 @@ class DASCore(object):
         self.cache_lifetime = dasconfig['cache_lifetime']
         self.couch_servers  = dasconfig['couch_servers']
         self.couch_lifetime = dasconfig['couch_lifetime']
-        # I can step forward and pass class names into config as well
-        # this will allow to inialize data-service on a fly
-        # but it will require to load their modules first
-        # for example
-        # for name in dasconfig['systems']:
-        #     from service.name import ServiceClass
-        #     getattr(self, name) = ServiceClass(dasconfig)
-        self.dbs     = DBSService(dasconfig)
+
+        # plug-in architecture: loop over registered data-services in
+        # dasconfig; load appropriate module/class; register data
+        # service with DASCore.
+        for name in dasconfig['systems']:
+            try:
+                dasroot = os.environ['DAS_ROOT']
+                klass   = 'src/python/DAS/services/%s/%s_service.py'\
+                    % (name, name)
+                srvfile = os.path.join(dasroot, klass)
+                with file(srvfile) as srvclass:
+                    for line in srvclass:
+                        if  line.find('(DASAbstractService)') != -1:
+                            klass = line.split('(DASAbstractService)')[0]
+                            klass = klass.split('class ')[-1] 
+                            break
+                stm = "from DAS.services.%s.%s_service import %s\n" \
+                    % (name, name, klass)
+                obj = compile(str(stm), '<string>', 'exec')
+                eval(obj) # load class def
+                klassobj = '%s(dasconfig)' % klass
+                setattr(self, name, eval(klassobj))
+            except:
+                traceback.print_exc()
+                msg = "Unable to load %s plugin (%s_service.py)" \
+                % (name, name)
+                raise Exception(msg)
+
+        # explicit architecture
+#        self.dbs     = DBSService(dasconfig)
+#        self.sitedb  = SiteDBService(dasconfig)
+#        self.phedex  = PhedexService(dasconfig)
+#        self.monitor = MonitorService(dasconfig)
+#        self.lumidb  = LumiDBService(dasconfig)
 #        self.runsum  = RunSummaryService(dasconfig)
-        self.sitedb  = SiteDBService(dasconfig)
-        self.phedex  = PhedexService(dasconfig)
-        self.monitor = MonitorService(dasconfig)
-        self.lumidb  = LumiDBService(dasconfig)
 
         self.service_maps = dasconfig['mapping']
         self.service_keys = {}
-        # loop over systems and get system keys
+        # loop over systems and get system keys,
         # add mapping keys to final list
         for name in dasconfig['systems']: 
-#            self.service_keys[getattr(self, name).name] = \
-#                getattr(self, name).keys()
             skeys = getattr(self, name).keys()
             for k, v in self.service_maps.items():
                 if  list(k).count(name):
                     skeys += [s for s in v if not skeys.count(s)]
             self.service_keys[getattr(self, name).name] = skeys
+        self.qlparser = QLParser(self.service_keys)
 
     def keys(self):
         """
@@ -131,134 +162,6 @@ class DASCore(object):
             query = input
         return query
 
-    def queryanalyzer(self, qldict):
-        """
-        Analyze set of queries against data services. Consturct new query based
-        on data-service conditions. Example, the following query
-        query find dataset, block, admin where site=T2 and run=123
-        produces a dictionary (by qlparser) which now can be analyzed
-        to combine q0 and q1 into single condition set.
-        qldict {'condlist': {'q1': 'run=123', 'q0': 'site=T2'}, 
-                'input': 'find dataset, block, admin where site=T2 and run=123', 
-                'queries': {'q1': 'find dataset,block,admin where run=123', 
-                            'q0': 'find dataset,block,admin where site=T2'}, 
-                'sellist': ['dataset', 'block', 'admin'], 
-                'query': 'find dataset, block, admin where q0 and q1'}
-        """
-        query = qldict['query']
-        queries = qldict['queries']
-
-        # make copies
-        qldict['qlqueries'] = dict(queries)
-        qldict['qlquery'] = str(query)
-
-        # check if input query can be addressed by a single data-service
-        # TODO: should be replaced with ANTRL
-        _sellist  = qldict['sellist']
-        _condlist = []
-        for val in qldict['condlist'].values():
-            key = val.split('=')[0] # so far I only look at k=v
-            if  not _condlist.count(key):
-                _condlist.append(key)
-        ulist = _sellist + _condlist
-        slist = []
-        set1  = set(ulist)
-        for service, keys in self.service_keys.items():
-            set2 = set(keys)
-            if  (set1 & set2) == set1:
-                del qldict['queries']
-                qldict['queries'] = {service:qldict['input']}
-                return qldict
-
-        # proceed if query is not unique to 1 data service
-        condlist = query.split(' where ')
-        if  len(condlist) == 1:
-            return qldict
-
-        qkeys   = queries.keys()
-        qkeys.sort()
-        newcond = []
-        idx = 0
-        while 1:
-            curr_query = queries[qkeys[idx]]
-            try:
-                next_query = queries[qkeys[idx+1]]
-            except IndexError:
-                break
-            set1 = set(self.findservices(curr_query))
-            set2 = set(self.findservices(next_query))
-            systems = set1 & set2
-            if  systems:
-                if  newcond:
-                    last = newcond[-1][0]
-                    if  last == systems:
-                        items = [systems, newcond[-1][1:], qkeys[idx+1]]
-                        newcond[-1] = items
-                else:
-                    newcond.append([systems, qkeys[idx], qkeys[idx+1]]) 
-            else:
-                newcond.append([systems, qkeys[idx+1]])
-            idx += 1
-        counter = 0
-        for item in newcond:
-            first_key = item[1]
-            last_key  = item[-1]
-            substr = query[query.find(first_key) :\
-                           query.rfind(last_key)+len(last_key)]
-            newcond = ""
-            for elem in substr.split():
-                if  elem == 'and' or elem == 'or':
-                    newcond += ' ' + elem
-                else:
-                    cond = queries[elem].split(' where ')[-1]
-                    newcond += ' ' + cond
-            newkey = "cond%s" % counter
-            qldict['condlist'][newkey] = newcond.strip()
-            query = query.replace(substr, newkey)
-            queries[newkey] = query.split(' where ')[0] + ' where %s' % \
-                                newcond.strip()
-            for key in item[1:]:
-                del queries[key]
-            counter += 1
-        qldict['query'] = query
-        return qldict
-
-    def findservices(self, query):
-        """
-        for provided query find out which service to use. Algorithm based on
-        1. if where clause is not found, use list of selected keywords and
-           find out their mapping to services
-        2. if where clause is found, use it to find out which service to use
-        In both cases DBS takes priority over other services if selected key
-        or where clause key is mapped to DBS and service in question.
-        """
-        slist = []
-        if  query.find(' where') == -1:
-            query = query.replace('find ', '').replace('plot ', '')
-            sellist = query.split(',')
-            for service, keys in self.service_keys.items():
-                for key in sellist:
-                    if  keys.count(key) and not slist.count(service):
-                        slist.append(service)
-        else:
-            # TODO: I need to cover all cases for cond_key, so far I only 
-            # use = operator, what about like, etc.
-            cond = query.split(' where ')[-1]
-            cond_key = cond.split()[0].split("=")[0]
-            slist += [s for s in self.findmappedservices(cond_key) \
-                                if not slist.count(s)]
-        return slist
-
-    def findmappedservices(self, cond_key):
-        """
-        Generator function which finds mapped services for provided key.
-        DBS takes priority over other services.
-        """
-        for service, keylist in self.service_keys.items():
-            for key in keylist:
-                if  key == cond_key:
-                    yield service
-
     def result(self, query):
         """
         Wrap returning results into returning list
@@ -301,148 +204,68 @@ class DASCore(object):
                 using cartesian product, and return result set back to the user
         Return a list of generators containing results for further processing.
         """
-        query    = self.viewanalyzer(uinput)
+        query = self.viewanalyzer(uinput)
         self.logger.info("DASCore::call, user input '%s'" % uinput)
         self.logger.info("DASCore::call, DAS query '%s'" % query)
 
-        qldict   = self.queryanalyzer(dasqlparser(query))
-        self.logger.info('DASCore::call(%s)' % query)
-        self.logger.debug('DASCore::call, qldict = %s' % str(qldict))
-        sellist  = qldict['sellist']
-
-        # find list of services we need to query based on selection keys
-        # of the query
-        services = []
-        for key in sellist:
-            services += [s for s in self.findmappedservices(key) \
-                                    if not services.count(s)]
-
-        # loop over all sub-queries and update a list of involved services
-        qdict   = {}
-        for key, query in qldict['queries'].items():
-            slist = self.findservices(query)
-            qdict[query] = slist
-            services += [s for s in slist if not services.count(s)]
-
-        # always gives DBS priority to look-up data
-        if  services.count('dbs'):
-            services.remove('dbs')
-            services = ['dbs'] + services
-
-        # walk through services and look-up if a single service cover
-        # all selection keys, if so we do not need other services.
-        for srv in services:
-            set1 = set(sellist)
-            set2 = set(getattr(self, srv).keys())
-            if  (set1 & set2) == set1:
-                services = [srv]
-                break
-            
-        self.logger.info('DASCore::call, complete list of services %s' \
-                        % services)
-
-        # IMPORTANT
-        # TODO: I need ANTRL parser to return me a list of keys
-        # list of conditions, then I need to combine those to make
-        # unique list of keys to retreive
-        ###########
-
-        # form unique set to retrieve from all services, based on 
-        # selection keys of the query and inter-service relationships
-        ulist   = list(sellist)
-        
-        for service in services:
-            if  service != self.dbs.name:
-                keys = self.relation_keys(self.dbs.name, service)
-                for key in keys:
-                    if  not ulist.count(key):
-                        ulist.append(key)
+        params   = self.qlparser.params(query)
+        sellist  = params['selkeys']
+        ulist    = params['unique_keys']
+        services = params['unique_services']
+        daslist  = params['daslist']
         self.logger.info('DASCore::call, unique set of keys %s' % ulist)
-
-        # I need one more loop to discard services which doesn't cover
-        # output selection list, e.g.
-        # find dataset, admin where site=T2_UK
-        # finds dbs, sitedb, phedex based on their relation keys
-        # but phedex doesn't need to be used since not selection keys
-        # from this service.
-        discard_services = []
-        for service in services:
-            if  not set(self.service_keys[service]) & set(sellist):
-                discard_services.append(service)
-        for srv in discard_services:
-            services.remove(srv)
         self.logger.info('DASCore::call, unique set of services %s' % services)
-
-        # call data-services to execute sub-queries
-        # TODO: I need to cover the case when 
-        # find dataset,admin where site=T2
-        # should result to the same query pass to both services
-        rdict = {}
-        for service in services:
-            # find if we already run one service whose results
-            # can be used in current one
-            cond_dict = self.find_cond_dict(service, rdict)
-            if  qdict:
-                for query, slist in qdict.items():
-                    if  slist.count(service):
-                        res = getattr(getattr(self, service), 'call')\
-                                     (query, ulist, cond_dict)
-                    else:
-                        qqq = "find " + ','.join(sellist)
-                        res = getattr(getattr(self, service), 'call')\
-                                     (qqq, ulist, cond_dict)
+        # main loop, it goes over query dict in daslist. The daslist
+        # contains subqueries (in a form of dict={system:subquery}) to
+        # be executed by underlying systems. The number of entreis in daslist
+        # is determined by number of logical OR operators which separates
+        # conditions applied to data-services. For example, if we have
+        # find run where dataset=/a/b/c or hlt=ok we will have 2 entries:
+        # - list of runs from DBS
+        # - list of runs from run-summary
+        # while if we have
+        # find run where dataset=/a/b/c/ and hlt=ok we end-up with 1 entry
+        # find all runs in DBS and make cartesian product with those found
+        # in run-summary.
+        for qdict in daslist:
+            self.logger.info('DASCore::call, qdict = %s' % str(qdict))
+            rdict = {}
+            for service in services:
+                # find if we already run one service whose results
+                # can be used in current one
+                cond_dict = self.find_cond_dict(service, rdict)
+                if  qdict.has_key(service):
+                    squery = qdict[service]
+                    res = getattr(getattr(self, service), 'call')\
+                                 (squery, ulist, cond_dict)
                     rdict[service] = res
-            else:
-                qqq = "find " + ','.join(sellist)
-                res = getattr(getattr(self, service), 'call')\
-                                (qqq, ulist, cond_dict)
-                rdict[service] = res
+                else:
+                    qqq = "find " + ','.join(sellist)
+                    res = getattr(getattr(self, service), 'call')\
+                                    (qqq, ulist, cond_dict)
+                    rdict[service] = res
+            # if result dict contains only single result set just return it
+            systems = rdict.keys()
+            if  len(systems) == 1:
+                for entry in rdict[systems[0]]:
+                    yield entry
+                continue
 
-        # if result dict contains only single result set just return it
-        systems = rdict.keys()
-        if  len(systems) == 1:
-            return rdict[systems[0]]
+            # find pairs who has relationships, e.g. (dbs, phedex),
+            # and make cartesian product out of them based on found relation keys
+            list0 = rdict[systems[0]]
+            list1 = rdict[systems[1]]
+            idx  = 2
+            while 1:
+                product = cartesian_product(list0, list1)
+                if  idx >= len(systems):
+                    break
+                list0 = [i for i in product] # may be I should do: list0 = product
+                list1 = rdict[systems[idx]]
+                idx += 1
+            for entry in product:
+                yield entry
 
-        # find pairs who has relationships, e.g. (dbs, phedex),
-        # and make cartesian product out of them based on found relation keys
-
-        # NEW CODE using generators, I see speed up
-        list0 = rdict[systems[0]]
-        list1 = rdict[systems[1]]
-        idx  = 2
-        while 1:
-            product = cartesian_product(list0, list1)
-            if  idx >= len(systems):
-                break
-            list0 = [i for i in product] # may be I should do: list0 = product
-            list1 = rdict[systems[idx]]
-            idx += 1
-        return product
-        # OLD CODE via list
-#        reldict = {}
-#        result = ""
-#        for sys0 in systems:
-#            for sys1 in systems:
-#                rel_keys = self.relation_keys(sys0, sys1)
-#                if  sys1 != sys0 and rel_keys:
-#                    reldict[(sys0, sys1)] = rel_keys
-#                    set0    = rdict[sys0]
-#                    set1    = rdict[sys1]
-#                    if  not result:
-#                        result  = cartesian_product(set0, set1, rel_keys)
-#                    else:
-#                        result  = cartesian_product(result, set1, rel_keys)
-#        finalset = gen2list(result)
-#        return finalset
-
-#        set0    = rdict[systems[0]]
-#        set1    = rdict[systems[1]]
-#        result  = cartesian_product(set0, set1)
-#        if  len(systems) > 2:
-#            for rest in systems[2:]: 
-#                result = cartesian_product(result, rdict[rest])
-#        finalset = gen2list(result)
-#        return finalset
     def find_cond_dict(self, service, rdict):
         """
         For given service find if it contains in provided result dict
@@ -464,18 +287,4 @@ class DASCore(object):
                             if  prev:
                                 cond_dict[skey] = prev
         return cond_dict
-
-    def mapping(self, service):
-        """retrieve mapping for given service, return dict[key]=service_api"""
-
-    def relation_keys(self, service1, service2):
-        """return a relation key(s) between two services"""
-        key = (service1, service2)
-        if  self.service_maps.has_key(key):
-            keys = self.service_maps[(service1, service2)]
-            msg  = 'DASCore::key(%s, %s) found relation keys %s' \
-                    % (service1, service2, keys)
-            self.logger.info(msg)
-            return keys
-        return []
 
