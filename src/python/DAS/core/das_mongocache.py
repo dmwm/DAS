@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.7 2009/09/09 18:33:04 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_mongocache.py,v 1.8 2009/09/11 15:59:18 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -18,7 +18,7 @@ from DAS.core.cache import Cache
 
 # monogo db modules
 from pymongo.connection import Connection
-import pymongo
+from pymongo import DESCENDING
 
 def mongo_query(query):
     """Take das input query and convert it into mongo DB one"""
@@ -62,18 +62,20 @@ class DASMongocache(Cache):
     """
     def __init__(self, config):
         Cache.__init__(self, config)
-        self.dbhost      = config['mongocache_dbhost']
-        self.dbport      = config['mongocache_dbport']
-        self.limit       = config['mongocache_lifetime']
-        self.dbname      = getarg(config, 'mongocache_dbname', 'das')
-        self.colname     = 'cache'
-        self.logger      = config['logger']
-        self.verbose     = config['verbose']
+        self.dbhost  = config['mongocache_dbhost']
+        self.dbport  = config['mongocache_dbport']
+        self.limit   = config['mongocache_lifetime']
+        self.dbname  = getarg(config, 'mongocache_dbname', 'das')
+        self.colname = 'cache'
+        self.logger  = config['logger']
+        self.verbose = config['verbose']
 
-        self.logger.info("Init mongocache")
-        self.conn        = Connection(self.dbhost, self.dbport)
-        self.db          = self.conn[self.dbname]
-        self.col         = self.db[self.colname]
+        msg = "Init mongocache %s:%s@%s" % (self.dbhost, self.dbport, self.dbname)
+        self.logger.info(msg)
+
+        self.conn    = Connection(self.dbhost, self.dbport)
+        self.db      = self.conn[self.dbname]
+        self.col     = self.db[self.colname]
         
     def is_expired(self, query):
         """
@@ -132,7 +134,7 @@ class DASMongocache(Cache):
         dasheader = header['das']
         dasheader['selection_keys'] = header['selection_keys']
         lkeys = header['lookup_keys']
-        index_list = [(key, pymongo.DESCENDING) for key in lkeys]
+        index_list = [(key, DESCENDING) for key in lkeys]
         prim_key = lkeys[0] # TODO: what to do with multiple look-up keys
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
