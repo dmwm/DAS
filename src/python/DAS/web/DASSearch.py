@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.46 2010/03/09 02:42:27 valya Exp $"
-__version__ = "$Revision: 1.46 $"
+__revision__ = "$Id: DASSearch.py,v 1.47 2010/03/10 01:19:56 valya Exp $"
+__version__ = "$Revision: 1.47 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -86,6 +86,9 @@ class DASSearch(DASWebManager):
         self.dasmapping = self.dasmgr.mapping
         self.daslogger  = self.dasmgr.logger
         self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 
+        msg = "DASSearch::init is started with base=%s" % self.base
+        self.daslogger.debug(msg)
+        print msg
 
     def top(self):
         """

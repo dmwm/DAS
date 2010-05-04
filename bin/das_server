@@ -9,11 +9,11 @@ if [ $# != 2 ]; then
     exit 1
 fi
 
-server="$1-server"
+server="$1"
 
 # run actual script
 chmod a+x $DAS_ROOT/src/python/DAS/web/das_server.py
-cmd="$DAS_ROOT/src/python/DAS/web/das_server.py --$server"
+cmd="$DAS_ROOT/src/python/DAS/web/das_server.py --server=$server"
 
 if [ -z $DAS_ROOT ]; then
    echo "The DAS_ROOT environment is not set"
@@ -22,7 +22,7 @@ fi
 
 RETVAL=$?
 
-pid=`ps auxwww | grep das_server.py | grep $server | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+pid=`ps auxwww | grep das_server.py | grep "server=$server" | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
 echo $pid
 
 case "$2" in

@@ -4,8 +4,8 @@ DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.
 """
 
-__revision__ = "$Id: das_server.py,v 1.2 2010/03/09 02:27:15 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_server.py,v 1.3 2010/03/10 01:19:56 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -22,7 +22,8 @@ from cherrypy import quickstart, expose, server, log
 from cherrypy import tree, engine, dispatch, tools
 from cherrypy import config as cpconfig
 
-# local modules
+# DAS modules
+from DAS.utils.das_config import das_readconfig
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.DASSearch import DASSearch
 from DAS.web.DASCacheModel import DASCacheModel
@@ -127,12 +128,14 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-c", "--config", dest="config", default=False,
         help="provide cherrypy configuration file")
-    parser.add_option("--cache-server", action="store_true", dest="cache_server",
-        help="start DAS cache server, default port 8211")
-    parser.add_option("--web-server", action="store_true", dest="web_server",
-        help="start DAS web server, default port 8212")
-    parser.add_option("-p", "--port", dest="port", default=False,
-        help="specify port number")
+#    parser.add_option("--cache-server", action="store_true", dest="cache_server",
+#        help="start DAS cache server, default port 8211")
+#    parser.add_option("--web-server", action="store_true", dest="web_server",
+#        help="start DAS web server, default port 8212")
+#    parser.add_option("-p", "--port", dest="port", default=False,
+#        help="specify port number")
+    parser.add_option("-s", "--server", dest="server", default=None,
+        help="specify DAS server, e.g. web or cache")
     opts, args = parser.parse_args()
 
     # Read server configuration
@@ -143,20 +146,17 @@ if __name__ == "__main__":
         config = yaml.loads(fdesc.read())
         fdesc.close()
 
+    dasconfig = das_readconfig()
     # Choose which DAS server to start
-    if  opts.cache_server:
+    if  opts.server == 'cache':
         model = "cache_server"
-        config['port'] = 8211
-    elif opts.web_server:
+        config['port'] = dasconfig['cache_server_port']
+    elif opts.server == 'web':
         model = "web_server"
-        config['port'] = 8212
+        config['port'] = dasconfig['web_server_port']
     else:
         print "Please specify which DAS server you want to start, see --help"
         sys.exit(1)
-
-    # Redefine DAS port if it is required
-    if  opts.port:
-        config['port'] = int(opts.port)
 
     # Start DAS server
     root = Root(model, config)
