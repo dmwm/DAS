@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.47 2009/11/27 19:16:43 valya Exp $"
-__version__ = "$Revision: 1.47 $"
+__revision__ = "$Id: utils.py,v 1.48 2009/12/14 15:40:42 valya Exp $"
+__version__ = "$Revision: 1.48 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -182,7 +182,7 @@ def genkey(query):
         if  query.has_key('spec') and query['spec'].has_key('_id'):
             val = query['spec']['_id']
             if  isinstance(val, ObjectId):
-                val = val.url_encode()
+                val = str(val)
                 query['spec']['_id'] = val
         query = json.dumps(query)
     keyhash.update(query)

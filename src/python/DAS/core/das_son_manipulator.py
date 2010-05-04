@@ -5,8 +5,8 @@
 DAS MongoDB SON manipulator.
 """
 
-__revision__ = "$Id: das_son_manipulator.py,v 1.1 2009/11/17 19:29:31 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_son_manipulator.py,v 1.2 2009/12/14 15:40:15 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -52,6 +52,6 @@ class DAS_SONManipulator(SONManipulator):
             return SON(son)
         if  type(son) is types.DictType and son.has_key('_id'):
             obj_id = son['_id']
-            son['_id'] = obj_id.url_encode()
+            son['_id'] = str(obj_id)
         return son
 
