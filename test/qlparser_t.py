@@ -6,7 +6,7 @@ Unit test for DAS QL parser
 """
 
 import unittest
-from core.qlparser import dasqlparser, findbracketobj
+from DAS.core.qlparser import dasqlparser, findbracketobj
 
 class testQLParser(unittest.TestCase):
     """

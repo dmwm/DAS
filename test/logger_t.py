@@ -7,7 +7,7 @@ unit test for logger module
 
 import os
 import unittest
-from utils.logger import DASLogger
+from DAS.utils.logger import DASLogger
 
 class testDASLogger(unittest.TestCase):
     """
