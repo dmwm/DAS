@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.4 2009/05/29 17:21:52 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.5 2009/05/30 19:06:41 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -127,9 +127,9 @@ class DASCacheModel(RESTModel):
         if  kwargs.has_key('query'):
             query  = kwargs['query']
             expire = getarg(kwargs, 'expire', 600)
-            data   = {'status':'requested', 'query':query, 'expire':expire}
             try:
-                self.cachemgr.add(query, expire)
+                status = self.cachemgr.add(query, expire)
+                data   = {'status':status, 'query':query, 'expire':expire}
             except:
                 data['exception'] = traceback.format_exc()
                 data['status'] = 'fail'

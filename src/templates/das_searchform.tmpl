@@ -23,7 +23,7 @@ function clearForm(tag) {
 *#
 </script>
 <div align="center">
-<form action="/das" method="get">
+<form action="/das/" method="get">
 <table class="normal">
 <tr>
 <td>
@@ -61,6 +61,10 @@ results/per page
 <input type="reset" />
 
 </form>
+
+#if $msg
+$msg
+#end if
 
 #if $input
 <script text="type/javascript">
