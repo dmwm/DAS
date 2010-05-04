@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.29 2009/12/21 18:09:13 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: DASSearch.py,v 1.30 2009/12/23 15:18:45 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -184,7 +184,9 @@ class DASSearch(TemplatedPage):
                     daskeys.append(key)
             dasdict[system] = dict(keys=dict(tmpdict), 
                 apis=self.dasmgr.mapping.list_apis(system))
-        page = self.templatepage('das_services', dasdict=dasdict, daskeys=daskeys)
+        mapreduce = [r for r in self.dasmgr.rawcache.get_map_reduce()]
+        page = self.templatepage('das_services', dasdict=dasdict, 
+                        daskeys=daskeys, mapreduce=mapreduce)
         return self.page(page, response_div=False)
 
     @expose
