@@ -9,19 +9,17 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.43 2010/03/01 19:33:58 valya Exp $"
-__version__ = "$Revision: 1.43 $"
+__revision__ = "$Id: qlparser.py,v 1.44 2010/03/01 20:38:02 valya Exp $"
+__version__ = "$Revision: 1.44 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import time
 import types
 import datetime
-import traceback
 
 from itertools import groupby
-from DAS.utils.utils import oneway_permutations, unique_list, add2dict
-from DAS.utils.utils import getarg, genkey, adjust_value
+from DAS.utils.utils import getarg, adjust_value
 
 import DAS.utils.jsonwrapper as json
 
@@ -68,10 +66,10 @@ def das_dateformat(value):
     """Check if provided value in expected DAS date format."""
     pat = re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
     if  pat.match(value): # we accept YYYYMMDD
-        d = datetime.date(int(value[0:4]), # YYYY
-                          int(value[4:6]), # MM
-                          int(value[6:8])) # DD
-        return time.mktime(d.timetuple())
+        ddd = datetime.date(int(value[0:4]), # YYYY
+                            int(value[4:6]), # MM
+                            int(value[6:8])) # DD
+        return time.mktime(ddd.timetuple())
     else:
         msg = 'Unacceptable date format'
         raise Exception(msg)
@@ -118,7 +116,6 @@ def mongo_exp(cond_list, lookup=False):
                 else:
                     mongo_dict[key] = val
             elif oper == 'not like':
-                # TODO, reverse the following:
                 msg = 'Operator not like is not supported yet'
                 raise Exception(msg)
                 # for expressions: *val* use pattern .*val.*
@@ -304,13 +301,13 @@ class MongoParser(object):
                 for item in split_results[1:]:
                     if  item.find(self.filter) != -1:
                         for elem in item.replace(self.filter, '').split(','):
-                            filter = elem.strip()
-                            if  not filter:
+                            dasfilter = elem.strip()
+                            if  not dasfilter:
                                 continue
-                            if  not pat.match(filter):
-                                msg = 'Incorrect filter: %s' % filter
+                            if  not pat.match(dasfilter):
+                                msg = 'Incorrect filter: %s' % dasfilter
                                 raise Exception(msg)
-                            filters.append(filter)
+                            filters.append(dasfilter)
                     else:
                         mapreduce.append(item)
 #                mapreduce = [i.strip() for i in split_results[1:]]
@@ -354,7 +351,8 @@ class MongoParser(object):
                 if  word in ['in', 'nin']:
                     first = next_word
                     if  first.find('[') == -1:
-                        raise Exception('No open bracket [ found in query expression')
+                        msg = 'No open bracket [ found in query expression'
+                        raise Exception(msg)
                     arr = []
                     found_last = False
                     for item in slist[idx+1:]:
@@ -364,7 +362,8 @@ class MongoParser(object):
                         if  val:
                             arr.append(val)
                     if  not found_last:
-                        raise Exception('No closed bracket ] found in query expression')
+                        msg = 'No closed bracket ] found in query expression'
+                        raise Exception(msg)
                     value = arr
                 elif word == 'last':
                     value = convert2date(next_word)
