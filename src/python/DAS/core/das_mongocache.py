@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.36 2009/11/17 19:31:38 valya Exp $"
-__version__ = "$Revision: 1.36 $"
+__revision__ = "$Id: das_mongocache.py,v 1.37 2009/11/18 21:38:10 valya Exp $"
+__version__ = "$Revision: 1.37 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -368,6 +368,10 @@ class DASMongocache(Cache):
         idx    = int(idx)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
+        ### The date is special key in DAS, data-services doesn't provide
+        ### it, so we must drop it.
+        if  spec.has_key('date'):
+            del spec['date']
 #        spec.update({'query.spec':{'$exists':False}}) # exclude query records
         if  limit:
             res = self.col.find(spec=spec, fields=fields)\
