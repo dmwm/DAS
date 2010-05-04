@@ -5,15 +5,14 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.5 2009/05/01 17:44:27 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: DASSearch.py,v 1.6 2009/05/11 20:08:20 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
 import types
 import thread
-import traceback
 from cherrypy import expose
 
 # WMCore/WebTools modules
@@ -21,7 +20,7 @@ from WMCore.WebTools.Page import TemplatedPage
 from WMCore.WebTools.Page import exposedasjson, exposedasxml, exposetext
 
 # DAS modules
-from DAS.core.das_core import DASCore
+#from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCache
 from DAS.utils.utils import getarg
 
@@ -44,14 +43,22 @@ class DASSearch(TemplatedPage):
         # TMP: I define a few useful views, this should be done
         # elswhere (may be here, may be in external configuration,
         # may be in couchdb
-        query = 'find dataset, count(file), sum(file.size)'
-        query = 'find dataset, dataset.createdate, dataset.createby, sum(block.size), sum(file.numevents), count(file)'
+#        query  = 'find dataset, count(file), sum(file.size)'
+        query  = 'find dataset, dataset.createdate, dataset.createby, '
+        query += 'sum(block.size), sum(file.numevents), count(file)'
         self.dasmgr.create_view('dataset', query)
-        query = 'find block.name, block.size, block.numfiles, block.numevents, block.status, block.createby, block.createdate, block.modby, block.moddate'
+        query  = 'find block.name, block.size, block.numfiles, '
+        query += 'block.numevents, block.status, block.createby, '
+        query += 'block.createdate, block.modby, block.moddate'
         self.dasmgr.create_view('block', query)
-        query = 'find site, sum(block.numevents), sum(block.numfiles), sum(block.size)'
+        query  = 'find site, sum(block.numevents), '
+        query += 'sum(block.numfiles), sum(block.size)'
         self.dasmgr.create_view('site', query)
-        query = 'find datatype, dataset, run.number, run.numevents, run.numlss, run.totlumi, run.store, run.starttime, run.endtime, run.createby, run.createdate, run.modby, run.moddate, count(file), sum(file.size), sum(file.numevents) where dataset = %s'
+        query  = 'find datatype, dataset, run.number, run.numevents, '
+        query += 'run.numlss, run.totlumi, run.store, run.starttime, '
+        query += 'run.endtime, run.createby, run.createdate, run.modby, '
+        query += 'run.moddate, count(file), sum(file.size), '
+        query += 'sum(file.numevents)'
         self.dasmgr.create_view('run', query)
 
 #    def clean_couch(self):
@@ -116,11 +123,11 @@ class DASSearch(TemplatedPage):
             try:
                 self.dasmgr.create_view(name, query)
                 msg = "View '%s' has been created" % name
-            except Exception, e:
+            except Exception, exc:
                 msg = "Fail to create view '%s' with query '%s'" \
                 % (name, query)
                 msg += '</br>Reason: <span class="box_blue">' 
-                msg += e.message + '</span>'
+                msg += exc.message + '</span>'
                 pass
         views = self.dasmgr.get_view()
         page  = self.templatepage('das_views', views=views, msg=msg)
@@ -188,25 +195,25 @@ class DASSearch(TemplatedPage):
         # format we take its string representation and replace 
         # curle brackets with appropriate HTML symbols.
         res     = []
-        id      = 0
+        idx     = 0
         for item in self.dasmgr.result(uinput):
-            item['id'] = id
+            item['id'] = idx
             if  format == 'html':
-                for k, v in item.items():
-                    if  type(v) is types.DictType:
-                        newval = str(v).replace('{','&#123;')
-                        newval = newval.replace('}','&#125;')
-                        item[k] = newval.replace("'",'')
-                    if  k.find('.') != -1:
-                        item[k.replace('.', '_dot_')] = item[k]
-                for k in item.keys():
-                    if  k.find('.') != -1:
-                        del(item[k])
+                for key, val in item.items():
+                    if  type(val) is types.DictType:
+                        newval = str(val).replace('{', '&#123;')
+                        newval = newval.replace('}', '&#125;')
+                        item[key] = newval.replace("'", '')
+                    if  key.find('.') != -1:
+                        item[key.replace('.', '_dot_')] = item[key]
+                for key in item.keys():
+                    if  key.find('.') != -1:
+                        del(item[key])
                     
                 res.append(item)
             else:
                 res.append(item)
-            id += 1
+            idx += 1
 
 #        res     = self.dasmgr.result(uinput)
         titles  = res[0].keys()
@@ -239,9 +246,9 @@ class DASSearch(TemplatedPage):
         """
         provide DAS list view
         """
-        t0 = time.time()
+        time0   = time.time()
         titles, rows, form = self.result(kwargs)
-        ctime   = (time.time()-t0)
+        ctime   = (time.time()-time0)
         nrows   = len(rows)
         limit   = getarg(kwargs, 'limit', nrows)
         names   = {'titlelist':titles, 'nrows':nrows, 'limit':limit,
@@ -267,7 +274,7 @@ class DASSearch(TemplatedPage):
         provide DAS table view
         """
         kwargs['format'] = 'html'
-        t0 = time.time()
+        time0 = time.time()
         titles, rows, form = self.result(kwargs)
         coldefs = ""
         for title in titles:
@@ -286,7 +293,7 @@ class DASSearch(TemplatedPage):
                    'coldefs':coldefs, 'nrows':nrows, 'rowsperpage':limit,
                    'tag':'mytag'}
         page    = self.templatepage('das_table', **names)
-        ctime   = (time.time()-t0)
+        ctime   = (time.time()-time0)
         return self.page(page, ctime)
 
     @expose
