@@ -21,6 +21,7 @@ dbs_info = [
 ]
 dbs_tables = sum(i[1] for i in dbs_info)
 dbs_index = sum(i[2] for i in dbs_info)
+print "Total DBS size:", dbs_tables, dbs_index
 db_info = [
 ('dashboard', 40.82977294921875, 135.9593505859375),
 ('phedex', 5.51031494, 12.5614014),
