@@ -7,8 +7,8 @@ DAS analytics DB module.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.15 2010/01/26 21:02:04 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.16 2010/03/05 18:09:26 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -22,6 +22,7 @@ from pymongo import DESCENDING
 
 # DAS modules
 from DAS.utils.utils import getarg, gen2list, genkey
+from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
 
 class DASAnalytics(object):
     """
@@ -60,7 +61,8 @@ class DASAnalytics(object):
         Add DAS-QL/MongoDB-QL queries into analytics.
         """
         if  type(mongoquery) is types.DictType:
-            mongoquery = json.dumps(mongoquery)
+#            mongoquery = json.dumps(mongoquery)
+            mongoquery = encode_mongo_query(mongoquery)
         msg = 'DASAnalytics::add_query("%s", %s)' % (dasquery, mongoquery)
         self.logger.info(msg)
         dhash   = genkey(dasquery)
@@ -77,16 +79,18 @@ class DASAnalytics(object):
         Add API info to analytics DB. 
         Here args is a dict of API parameters.
         """
+        orig_query = query
         if  type(query) is types.DictType:
-            query = json.dumps(query)
+#            query = json.dumps(query)
+            query = encode_mongo_query(query)
         msg = 'DASAnalytics::add_api(%s, %s, %s, %s)' \
         % (system, query, api, args)
         self.logger.info(msg)
         # find query record
-        qhash   = genkey(str(query))
+        qhash   = genkey(query)
         record  = self.col.find_one({'qhash':qhash}, fields=['dasquery'])
         if  not record:
-            self.add_query("", query)
+            self.add_query("", orig_query)
         # find api record
         record  = self.col.find_one({'qhash':qhash, 'system':system, 
                         'api.name':api, 'api.params':args}) 
@@ -105,10 +109,11 @@ class DASAnalytics(object):
         Update records for given system/query.
         """
         if  type(query) is types.DictType:
-            query = json.dumps(query)
+#            query = json.dumps(query)
+            query = encode_mongo_query(query)
         msg = 'DASAnalytics::update(%s, %s)' % (system, query)
         self.logger.info(msg)
-        qhash = genkey(str(query))
+        qhash = genkey(query)
         cond  = {'qhash':qhash, 'system':system}
         # TODO:
         # MongoDB has a bug, http://jira.mongodb.org/browse/SERVER-268 
