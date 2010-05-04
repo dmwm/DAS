@@ -5,11 +5,9 @@
 Abstract cache class.
 """
 
-__revision__ = "$Id: cache.py,v 1.4 2009/05/13 15:18:02 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: cache.py,v 1.5 2009/05/19 12:43:10 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
-
-#from DAS.utils.logger import DASLogger
 
 class Cache(object):
     """
@@ -17,58 +15,9 @@ class Cache(object):
     method used by DAS core. And cache/update_cache used by
     concrete cache implementations.
     """
-    def __init__(self, mgr):
-        self.dasmgr  = mgr
-        self.verbose = mgr.verbose
-        self.logger  = mgr.logger
-#        self.logger  = DASLogger(verbose=mgr.verbose, stdout=mgr.stdout)
-
-    def timer(self):
-        """
-        Mimic DAS core functionality, return timer
-        """
-        return self.dasmgr.timer
-
-    def keys(self):
-        """
-        Mimic DAS core functionality, return service keys
-        """
-        return self.dasmgr.service_keys
-
-    def get_view(self, name=None):
-        """
-        Mimic DAS core functionality, return DAS views
-        """
-        return self.dasmgr.get_view(name)
-
-    def create_view(self, name, query):
-        """
-        Mimic DAS core functionality, create DAS view
-        """
-        return self.dasmgr.create_view(name, query)
-
-    def update_view(self, name, query):
-        """
-        Mimic DAS core functionality, update DAS view
-        """
-        return self.dasmgr.update_view(name, query)
-
-    def delete_view(self, name):
-        """
-        Mimic DAS core functionality, delete DAS view
-        """
-        return self.dasmgr.delete_view(name)
-
-    def result(self, query):
-        """
-        Return results for given query. If results found in cache
-        use it, otherwire invoke core DAS call and update the cache.
-        """
-        results = self.get_from_cache(query)
-        if  not results:
-            results = self.dasmgr.result(query)
-            self.update_cache(query, results, expire=600)
-        return results
+    def __init__(self, config):
+        self.config  = config
+        self.logger  = config['logger']
 
     def get_from_cache(self, query):
         """

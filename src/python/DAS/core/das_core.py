@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.12 2009/05/18 01:17:16 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_core.py,v 1.13 2009/05/19 12:43:10 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -22,20 +22,13 @@ import time
 import types
 import traceback
 
+from DAS.core.das_cache import DASCache
 from DAS.core.qlparser import QLParser
 from DAS.core.das_viewmanager import DASViewManager
 
 from DAS.utils.utils import cartesian_product, gen2list
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
-
-#from DAS.services.dbs.dbs_service import DBSService
-#from DAS.services.sitedb.sitedb_service import SiteDBService
-#from DAS.services.phedex.phedex_service import PhedexService
-#from DAS.services.monitor.monitor_service import MonitorService
-#from DAS.services.lumidb.lumidb_service import LumiDBService
-
-#from DAS.services.runsum.runsum_service import RunSummaryService
 
 class DASTimer(object):
     """
@@ -77,20 +70,23 @@ class DASCore(object):
         dasconfig['logger'] = self.logger
 
         self.viewmgr = DASViewManager()
+        self.cache   = DASCache(dasconfig)
 
-        self.cache_servers  = dasconfig['cache_servers']
-        self.cache_lifetime = dasconfig['cache_lifetime']
-        self.couch_servers  = dasconfig['couch_servers']
-        self.couch_lifetime = dasconfig['couch_lifetime']
-        self.filecache_dir  = dasconfig['filecache_dir']
-        self.filecache_lifetime = dasconfig['filecache_lifetime']
+        dasroot = os.environ['DAS_ROOT']
+        klass   = dasconfig['rawcache']
+        name    = klass.lower().replace('das', 'das_')
+        stm     = "from DAS.core.%s import %s\n" % (name, klass)
+        obj     = compile(str(stm), '<string>', 'exec')
+        eval(obj) # load class def
+        klassobj = '%s(dasconfig)' % klass
+        setattr(self, 'rawcache', eval(klassobj))
+        dasconfig['rawcache'] = self.rawcache
 
         # plug-in architecture: loop over registered data-services in
         # dasconfig; load appropriate module/class; register data
         # service with DASCore.
         for name in dasconfig['systems']:
             try:
-                dasroot = os.environ['DAS_ROOT']
                 klass   = 'src/python/DAS/services/%s/%s_service.py'\
                     % (name, name)
                 srvfile = os.path.join(dasroot, klass)
@@ -111,14 +107,6 @@ class DASCore(object):
                 msg = "Unable to load %s plugin (%s_service.py)" \
                 % (name, name)
                 raise Exception(msg)
-
-        # explicit architecture
-#        self.dbs     = DBSService(dasconfig)
-#        self.sitedb  = SiteDBService(dasconfig)
-#        self.phedex  = PhedexService(dasconfig)
-#        self.monitor = MonitorService(dasconfig)
-#        self.lumidb  = LumiDBService(dasconfig)
-#        self.runsum  = RunSummaryService(dasconfig)
 
         self.service_maps = dasconfig['mapping']
         self.service_keys = {}
@@ -182,10 +170,13 @@ class DASCore(object):
 
     def result(self, query):
         """
-        Wrap returning results into returning list
+        Get results either from cache or from explicit call
         """
-        res = [i for i in self.call(query)]
-        return res
+        results = self.cache.get_from_cache(query)
+        if  not results:
+            results = [i for i in self.call(query)]
+            self.cache.update_cache(query, results, expire=600)
+        return results
 
     def json(self, query):
         """

@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.14 2009/05/18 21:11:37 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: abstract_service.py,v 1.15 2009/05/19 12:43:10 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -21,9 +21,9 @@ except:
 
 from DAS.utils.utils import genresults
 from DAS.utils.utils import cartesian_product
-from DAS.core.das_couchdb import DASCouchDB
-from DAS.core.das_filecache import DASFilecache
-from DAS.core.basemanager import BaseManager
+#from DAS.core.das_couchdb import DASCouchDB
+#from DAS.core.das_filecache import DASFilecache
+#from DAS.core.basemanager import BaseManager
 #from DAS.core.das_mapping import jsonparser, das2api, das2result
 from DAS.core.das_mapping import json2das, das2api, das2result
 from DAS.core.qlparser import QLLexer
@@ -53,9 +53,10 @@ class DASAbstractService(object):
         self._keys        = None # to be defined at run-time in self.keys
 
         # define internal couch DB manager to put 'raw' results into CouchDB
-        mgr               = BaseManager(config)
+#        mgr               = BaseManager(config)
 #        self.localcache       = DASCouchDB(mgr)
-        self.localcache       = DASFilecache(mgr)
+#        self.localcache       = DASFilecache(mgr)
+        self.localcache   = config['rawcache']
 
     def keys(self):
         """

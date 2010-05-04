@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.3 2009/05/19 02:33:19 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_filecache.py,v 1.4 2009/05/19 12:43:10 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -77,13 +77,15 @@ class DASFilecache(Cache):
     bookkeep all queries, along with their hash, creation and expiration
     times.
     """
-    def __init__(self, mgr, idir=None):
-        Cache.__init__(self, mgr)
+    def __init__(self, config, idir=None):
+        Cache.__init__(self, config)
         if  idir:
             self.dir = idir
         else:
-            self.dir = self.dasmgr.filecache_dir
-        self.limit = self.dasmgr.filecache_lifetime
+            self.dir = config['filecache_dir']
+        self.limit   = config['filecache_lifetime']
+        self.logger  = config['logger']
+        self.verbose = config['verbose']
         self.logger.info("Init filecache %s" % self.dir)
 
         try:

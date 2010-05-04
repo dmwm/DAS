@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.6 2009/05/11 20:08:20 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: DASSearch.py,v 1.7 2009/05/19 12:43:11 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -20,8 +20,7 @@ from WMCore.WebTools.Page import TemplatedPage
 from WMCore.WebTools.Page import exposedasjson, exposedasxml, exposetext
 
 # DAS modules
-#from DAS.core.das_core import DASCore
-from DAS.core.das_cache import DASCache
+from DAS.core.das_core import DASCore
 from DAS.utils.utils import getarg
 
 import sys
@@ -35,7 +34,7 @@ class DASSearch(TemplatedPage):
     """
     def __init__(self, config):
         TemplatedPage.__init__(self, config)
-        self.dasmgr = DASCache(mode='html', debug=1)
+        self.dasmgr = DASCore(mode='html', debug=1)
         self.pageviews = ['xml', 'list', 'table', 'plain', 'json'] 
         self.cleantime = 60 # in seconds
         self.lastclean = time.time()

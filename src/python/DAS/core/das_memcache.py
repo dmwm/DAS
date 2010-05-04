@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.4 2009/05/15 15:12:22 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_memcache.py,v 1.5 2009/05/19 12:43:10 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -27,16 +27,18 @@ class DASMemcache(Cache):
     the C API to memcached, see
     http://gijsbert.org/cmemcache/index.html
     """
-    def __init__(self, mgr):
-        Cache.__init__(self, mgr)
-        cachelist = self.dasmgr.cache_servers.split(',')
-        self.memcache  = memcache.Client(cachelist, debug=self.verbose)
+    def __init__(self, config):
+        Cache.__init__(self, config)
+        cachelist     = config['cache_servers'].split(',')
+        self.verbose  = config['verbose']
+        self.memcache = memcache.Client(cachelist, debug=self.verbose)
+        self.limit    = config['cache_lifetime']
+        self.logger   = config['logger']
 
         # default hashing is crc32, but we can change that by using
         #from zlib import adler32
         #memcache.serverHashFunction = adler32
 
-        self.limit = self.dasmgr.cache_lifetime
         self.logger.info("Init memcache" % cachelist)
 
     def get_from_cache(self, query):
