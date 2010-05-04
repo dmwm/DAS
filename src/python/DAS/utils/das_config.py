@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.34 2010/04/05 19:09:47 valya Exp $"
-__version__ = "$Revision: 1.34 $"
+__revision__ = "$Id: das_config.py,v 1.35 2010/04/06 20:39:48 valya Exp $"
+__version__ = "$Revision: 1.35 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -58,8 +58,6 @@ def das_readconfig(dasconfig=None):
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
     configdict['logdir'] = config.get('das', 'logdir', '/tmp')
-#    configdict['web_server_port'] = config.get('das', 'web_server_port', 8212)
-#    configdict['cache_server_port'] = config.get('das', 'cache_server_port', 8211)
 
     cache_server = {}
     cache_server['port'] = config.getint('cache_server', 'port')
@@ -105,8 +103,6 @@ def das_writeconfig():
     config.set('das', 'verbose', 0)
     config.set('das', 'rawcache', 'DASMongocache')
     config.set('das', 'logdir', '/tmp')
-    config.set('das', 'web_server_port', 8212)
-    config.set('das', 'cache_server_port', 8211)
 
     config.add_section('mongodb')
     config.set('mongodb', 'lifetime', 1*24*60*60) # in seconds
