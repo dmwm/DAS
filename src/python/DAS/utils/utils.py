@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.10 2009/05/07 00:49:55 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: utils.py,v 1.11 2009/05/08 14:54:40 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -346,3 +346,43 @@ def map_validator(smap):
             raise Exception(msg)
         if  type(item['params']) is not types.DictType:
             raise Exception(msg)
+
+def permutations(iterable, r=None):
+    # permutations('ABCD', 2) --> AB AC AD BA BC BD CA CB CD DA DB DC
+    # permutations(range(3)) --> 012 021 102 120 201 210
+    pool = tuple(iterable)
+    n = len(pool)
+    r = n if r is None else r
+    if r > n:
+        return
+    indices = range(n)
+    cycles = range(n, n-r, -1)
+    yield tuple(pool[i] for i in indices[:r])
+    while n:
+        for i in reversed(range(r)):
+            cycles[i] -= 1
+            if cycles[i] == 0:
+                indices[i:] = indices[i+1:] + indices[i:i+1]
+                cycles[i] = n - i
+            else:
+                j = cycles[i]
+                indices[i], indices[-j] = indices[-j], indices[i]
+                yield tuple(pool[i] for i in indices[:r])
+                break
+        else:
+            return
+
+def oneway_permutations(ilist):
+    """
+    Uni-directional permutation function
+    Example: ilist=[a,b,c] and this function returns
+    (a,b), (a,c), (b,c)
+    """
+    for idx in range(0, len(ilist)):
+        key = ilist[idx]
+        try:
+            tmp = list(ilist[idx+1:])
+            for i in tmp:
+                yield (key, i)
+        except:
+            pass
