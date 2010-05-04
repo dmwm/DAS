@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.32 2010/01/05 21:03:15 valya Exp $"
-__version__ = "$Revision: 1.32 $"
+__revision__ = "$Id: DASSearch.py,v 1.33 2010/01/06 19:47:03 valya Exp $"
+__version__ = "$Revision: 1.33 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -154,6 +154,26 @@ class DASSearch(TemplatedPage):
         """
         return self.index(args, kwargs)
 
+    def check_input(self, uinput):
+        """
+        Check provided input for valid DAS keys.
+        """
+        das_keys = self.dasmgr.das_keys()
+        if  not uinput:
+            return self.templatepage('das_ambiguous', 
+                    input=uinput, entities=','.join(das_keys))
+        # check provided input. If at least one word is not part of das_keys
+        # return ambiguous template.
+        for word in uinput.split():
+            found = 0
+            for key in das_keys:
+                if  word.find(key) != -1:
+                    found = 1
+            if  not found:
+                return self.templatepage('das_ambiguous', 
+                        input=uinput, entities=', '.join(das_keys))
+        return
+
     @expose
     def index(self, *args, **kwargs):
         """
@@ -164,6 +184,10 @@ class DASSearch(TemplatedPage):
         if  not args and not kwargs:
             page = self.form()
             return self.page(page)
+        uinput  = getarg(kwargs, 'input', '')
+        results = self.check_input(uinput)
+        if  results:
+            return self.page(self.form() + results)
         view = getarg(kwargs, 'view', 'list')
         if  args:
             return getattr(self, args[0][0])(args[1])
