@@ -2,6 +2,7 @@
 <!-- das_services.tmpl -->
 <div class="page">
 <div class="normal">
+#*
 #for service in $service_keys.keys()
 <hr class="line" />
 <h3>$service.upper() service</h3>
@@ -16,6 +17,46 @@ keys
 </ul>
 </div>
 #end for
+*#
+<table class="daskeys">
+<tr>
+<th>DAS</th>
+#set systems=$dasdict.keys()
+#for system in $systems
+<th>$system</th> 
+#end for
+</tr>
+#set counter=0
+#for daskey in $daskeys
+#if $counter%2
+#set style="odd"
+#else
+#set style=""
+#end if
+#set $counter+=1
+<tr class="$style">
+<td>$daskey</td>
+#for system in $systems
+#set sysdict=$dasdict[$system]
+#if $sysdict.has_key($daskey)
+<td>
+#set uikeys=$dasdict[$system][$daskey]
+#for uikey in $uikeys
+#if  uikey!=$uikeys[-1]
+$uikey,
+#else
+$uikey
+#end if
+#end for
+</td>
+#else
+<td>&#8212;</td>
+#end if
+#end for
+</tr>
+#end for
+</table>
+
 </div>
 </div>
 <!-- end of das_services.tmpl -->
