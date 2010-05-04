@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.5 2009/09/01 01:42:47 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: runsum_service.py,v 1.6 2009/09/01 20:18:04 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -56,11 +56,6 @@ class RunSummaryService(DASAbstractService):
         """
         # translate selection keys into ones data-service APIs provides
         selkeys, conditions = self.query_parser(query)
-#        keylist = []
-#        for key in selkeys:
-#            for item in self.dasmapping.das2result(self.name, key):
-#                keylist.append(item)
-
         params  = dict(self.params)
         for item in conditions:
             params[item['key'].upper()] = item['value']
@@ -72,12 +67,13 @@ class RunSummaryService(DASAbstractService):
         data  = get_run_summary(self.url, params, key, cert, debug)
         # similar to worker method, get all results, parse them and do
         # mapping between returned keys to DAS ones
-#        genrows = runsum_parser(res)
-        api = '' # there is no particular API, so will use empty one
+        api = self.map.keys()[0] # we only register 1 API
         genrows = self.parser(api, data, params)
         ctime = time.time()-time0
         header = dasheader(self.name, query, api, self.url, params,
             ctime, self.expire, self.version())
+        header['primary_keys'] = self.primary_key(api)
+        header['selection_keys'] = selkeys
         mongo_query = self.mongo_query_parser(query)
         self.localcache.update_cache(mongo_query, genrows, header)
         return True
@@ -106,4 +102,4 @@ class RunSummaryService(DASAbstractService):
                             nrow[nkey] = k.text
                     if  nrow:
                         row[newkey] = nrow
-                yield row
+                yield {'run' : row}
