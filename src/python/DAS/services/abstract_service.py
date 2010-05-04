@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.8 2009/04/30 20:49:53 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: abstract_service.py,v 1.9 2009/05/11 20:11:49 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -101,6 +101,8 @@ class DASAbstractService(object):
         Make cartesian product for all entries in provided result dict.
         """
         data = []
+        if  not resdict:
+            return data
         keys = resdict.keys()
         if  len(keys) == 1:
             for rows in resdict.values():
