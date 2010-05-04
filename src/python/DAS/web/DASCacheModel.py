@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.13 2009/09/08 13:29:27 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.14 2009/09/16 20:36:56 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -127,9 +127,14 @@ class DASCacheModel(RESTModel):
 
         RESTModel.__init__(self, config)
         self.version = __version__
-        self.methods['GET']= {'request':
+        self.methods['GET']= {
+            'request':
                 {'args':['idx', 'limit', 'query', 'skey', 'order'],
-                 'call': self.request, 'version':__version__}}
+                 'call': self.request, 'version':__version__},
+            'nresults':
+                {'args':['query'],
+                 'call': self.nresults, 'version':__version__},
+        }
         self.methods['POST']= {'create':
                 {'args':['query', 'expire'],
                  'call': self.create, 'version':__version__}}
@@ -150,12 +155,38 @@ class DASCacheModel(RESTModel):
         thread.start_new_thread(self.cachemgr.worker, (worker, ))
 
     @checkargs
+    def nresults(self, *args, **kwargs):
+        """
+        HTTP GET request. Ask DAS for total number of records
+        for provided query.
+        """
+        data = {'server_method':'nresults'}
+        if  kwargs.has_key('query'):
+            query = kwargs['query']
+            data.update({'status':'success'})
+            if  hasattr(self.dascore, 'cache'):
+                if  self.dascore.cache.incache(query):
+                    data['nresults'] = self.dascore.cache.nresults(query)
+                else:
+                    data['status'] = 'not found'
+            else:
+                if  self.dascore.in_raw_cache(query):
+                    data['status'] = 'success'
+                    data['nresults'] = self.dascore.in_raw_cache_nresults(query)
+                else:
+                    data['status'] = 'not found'
+        else:
+            data.update({'status': 'fail', 
+                    'reason': 'Unsupported keys %s' % kwargs.keys() })
+        self.debug(str(data))
+        return data
+
+    @checkargs
     def request(self, *args, **kwargs):
         """
         HTTP GET request.
         Retrieve results from DAS cache.
         """
-#        print "\n#### call request", args, kwargs
         data = {'server_method':'request'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
@@ -177,12 +208,26 @@ class DASCacheModel(RESTModel):
                         data['data'] = res
                     data['status'] = 'success'
                     data['nresults'] = tot
-#                elif self.dascore.in_raw_cache(query):
-#                    data['status'] = 'in raw cache'
                 else:
                     data['status'] = 'not found'
             else:
-                data['status'] = 'no cache'
+                if  self.dascore.in_raw_cache(query):
+                    res = self.dascore.result(query, idx, limit)
+                    if  type(res) is types.GeneratorType:
+                        result = []
+                        for item in res:
+                            if  item not in result:
+                                result.append(item)
+                        data['data'] = result
+#                        data['data'] = [i for i in res]
+                        tot = len(data['data'])
+                    else:
+                        data['data'] = res
+                        tot = 1
+                    data['status'] = 'success'
+                    data['nresults'] = tot
+                else:
+                    data['status'] = 'not found'
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
@@ -197,7 +242,6 @@ class DASCacheModel(RESTModel):
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
-#        print "\n### call create", args, kwargs
         data = {'server_method':'create'}
         if  kwargs.has_key('query'):
             query  = kwargs['query']
