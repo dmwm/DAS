@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.37 2009/11/18 21:38:10 valya Exp $"
-__version__ = "$Revision: 1.37 $"
+__revision__ = "$Id: das_mongocache.py,v 1.38 2009/11/24 14:57:46 valya Exp $"
+__version__ = "$Revision: 1.38 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -226,7 +226,7 @@ def update_item(item, key, val):
             else:
                 newdict = {kkk : newdict}
         item[kkk] = newdict
-    
+
 class DASMongocache(Cache):
     """
     DAS cache based MongoDB. 
@@ -368,6 +368,10 @@ class DASMongocache(Cache):
         idx    = int(idx)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
+        if  fields:
+            skeys = [(k, DESCENDING) for k in list(fields)]
+        else:
+            skeys = [(k, DESCENDING) for k in spec.keys()]
         ### The date is special key in DAS, data-services doesn't provide
         ### it, so we must drop it.
         if  spec.has_key('date'):
@@ -375,9 +379,9 @@ class DASMongocache(Cache):
 #        spec.update({'query.spec':{'$exists':False}}) # exclude query records
         if  limit:
             res = self.col.find(spec=spec, fields=fields)\
-                .skip(idx).limit(limit)
+                .sort(skeys).skip(idx).limit(limit)
         else:
-            res = self.col.find(spec=spec, fields=fields)
+            res = self.col.find(spec=spec, fields=fields).sort(skeys)
         for row in res:
             # TODO: use this if there is no das_son_manipulator
             obj_id = row['_id']
