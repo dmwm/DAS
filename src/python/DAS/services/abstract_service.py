@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.6 2009/04/23 01:11:31 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: abstract_service.py,v 1.7 2009/04/29 15:50:51 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -14,6 +14,7 @@ import urllib2
 import traceback
 from DAS.utils.utils import query_params
 from DAS.utils.utils import genresults, results2couch
+#from DAS.utils.utils import cartesian_product_via_list, genkey
 from DAS.utils.utils import cartesian_product, genkey
 from DAS.core.das_couchdb import DASCouchDB
 from DAS.core.basemanager import BaseManager
@@ -107,10 +108,12 @@ class DASAbstractService(object):
         else: # need to make cartesian product of results
             set0 = resdict[keys[0]]
             set1 = resdict[keys[1]]
-            result = cartesian_product(set0, set1, rel_keys)
+#            result = cartesian_product_via_list(set0, set1, rel_keys)
+            result = cartesian_product(set0, set1)
             if  len(keys) > 2:
                 for rest in keys[2:]: 
-                    result = cartesian_product(result, resdict[rest], rel_keys)
+#                    result = cartesian_product_via_list(result, resdict[rest], rel_keys)
+                    result = cartesian_product(result, resdict[rest])
             data = result
         return data
 
