@@ -6,8 +6,8 @@
 DAS cache server web configuration file
 """
 
-__revision__ = "$Id: das_cacheconfig.py,v 1.3 2009/05/28 19:58:40 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_cacheconfig.py,v 1.4 2009/06/04 18:30:28 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -24,7 +24,7 @@ config = Configuration()
 config.component_('Webtools')
 
 # This is the application
-config.Webtools.port = 8011
+config.Webtools.port = 8211
 config.Webtools.application = 'DASCacheServer'
 # This is the config for the application
 config.component_('DASCacheServer')
