@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.46 2010/03/02 15:59:51 valya Exp $"
-__version__ = "$Revision: 1.46 $"
+__revision__ = "$Id: qlparser.py,v 1.47 2010/03/03 18:54:39 valya Exp $"
+__version__ = "$Revision: 1.47 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -20,6 +20,7 @@ import datetime
 
 from itertools import groupby
 from DAS.utils.utils import getarg, adjust_value
+from DAS.core.das_aggregators import das_aggregators
 
 import DAS.utils.jsonwrapper as json
 
@@ -257,6 +258,33 @@ def add_spaces(query, operators):
             break
     return query
 
+def get_aggregator(input):
+    """
+    Convert input into aggregator dict, e.g. sum(block.name)
+    info ('sum','block.name')
+    """
+    count = 0
+    for item in input.split(","):
+        if  count:
+            msg  = "Current implementation does not support multiple"
+            msg += " aggregator functions. Please use only"
+            msg += " one at a time."
+            raise Exception(msg)
+        if  item.count("(") != item.count(")"):
+            msg = "Not equal number of open/closed brackets %s" % item
+            raise Exception(msg)
+        left_split = item.split("(")
+        func = left_split[0].strip()
+        if  func not in das_aggregators():
+            msg = 'Unknown aggregator function %s' % func
+            raise Exception(msg)
+        expr = left_split[-1].split(")")[0]
+        if  len(left_split) > 2 or expr.find(",") != -1 or expr.find(" ") != -1:
+            msg = 'Multiple arguments found in %s' % item
+            raise Exception(msg)
+        yield (func, expr)
+        count += 1
+
 class MongoParser(object):
     """
     DAS Mongo query parser. 
@@ -267,6 +295,7 @@ class MongoParser(object):
         self.daskeysmap = self.map.daskeys()
         self.operators = DAS_OPERATORS
         self.filter = 'grep '
+        self.aggregators = das_aggregators()
 
         if  not self.map.check_maps():
             msg = "No DAS maps found in MappingDB"
@@ -294,12 +323,14 @@ class MongoParser(object):
         # find out if input query contains filters/mapreduce functions
         mapreduce = []
         filters   = []
+        aggregators = []
         pat = re.compile(r"^([a-z_]+\.?)+$") # match key.attrib
         if  query and type(query) is types.StringType:
             if  query.find("|") != -1:
                 split_results = query.split("|")
                 query = split_results[0]
                 for item in split_results[1:]:
+                    func = item.split("(")[0].strip()
                     if  item.find(self.filter) != -1:
                         for elem in item.replace(self.filter, '').split(','):
                             dasfilter = elem.strip()
@@ -308,7 +339,10 @@ class MongoParser(object):
                             if  not pat.match(dasfilter):
                                 msg = 'Incorrect filter: %s' % dasfilter
                                 raise Exception(msg)
-                            filters.append(dasfilter)
+                            if  dasfilter not in filters:
+                                filters.append(dasfilter)
+                    elif func in self.aggregators:
+                        aggregators = [agg for agg in get_aggregator(item)]
                     else:
                         mapreduce.append(item)
 #                mapreduce = [i.strip() for i in split_results[1:]]
@@ -428,6 +462,8 @@ class MongoParser(object):
             mongo_query['mapreduce'] = mapreduce
         if  filters:
             mongo_query['filters'] = filters
+        if  aggregators:
+            mongo_query['aggregators'] = aggregators
         if  add_to_analytics:
             self.analytics.add_query(query, mongo_query)
         return mongo_query
