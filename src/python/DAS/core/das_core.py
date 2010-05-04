@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.58 2010/02/05 21:27:35 valya Exp $"
-__version__ = "$Revision: 1.58 $"
+__revision__ = "$Id: das_core.py,v 1.59 2010/02/13 02:08:52 valya Exp $"
+__version__ = "$Revision: 1.59 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -304,7 +304,7 @@ class DASCore(object):
         """
         Look-up status of provided query in a cache.
         """
-        status = 'no data'
+        status = 0
         record = self.rawcache.das_record(query)
         if  record:
             status = record['das']['status']
