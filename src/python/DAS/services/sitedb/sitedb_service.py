@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.12 2009/09/01 17:06:16 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: sitedb_service.py,v 1.13 2009/10/13 23:50:23 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -34,6 +34,18 @@ class SiteDBService(DASAbstractService):
 #            else:
 #                args[key] = params[key]
 #        return args
+
+    def patterns(self, api, args):
+        """
+        Define how to deal with parameters when they contain
+        wild-card.
+        """
+        params = dict(args)
+        for key, val in params.items():
+            if  type(val) is types.StringType or type(val) is types.UnicodeType:
+                if  val.find('*') != -1:
+                    params[key] = val.replace('*', '')
+        return params
 
     def parser(self, api, data, params=None):
         """
