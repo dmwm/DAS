@@ -7,7 +7,8 @@ Unit test for DAS QL parser
 
 import unittest
 from utils.utils import cartesian_product, query_params
-from utils.utils import transform_dict2list
+from utils.utils import genresults, transform_dict2list
+from utils.utils import sitename, add2dict
 
 class testUtils(unittest.TestCase):
     """
@@ -20,29 +21,26 @@ class testUtils(unittest.TestCase):
         dbs_set = [
         {
                 'system' : 'dbs',
-                'dataset' : '/a/b/c',
-                'run' : '100',
-                'bfield' : '',
-                'site' : 'T2',
+                'admin' : '',
                 'block' : '123-123-100',
+                'dataset' : '/a/b/c',
+                'site' : 'T2',
         },
 
         {
                 'system' : 'dbs',
-                'dataset' : '/a/b/c',
-                'run' : '101',
-                'bfield' : '',
-                'site' : 'T2',
+                'admin' : '',
                 'block' : '123-123-101',
+                'dataset' : '/a/b/c',
+                'site' : 'T2',
         },
 
         {
                 'system' : 'dbs',
-                'dataset' : '/a/b/c',
-                'run' : '102',
-                'bfield' : '',
-                'site' : 'T2',
+                'admin' : '',
                 'block' : '123-123-102',
+                'dataset' : '/e/d/f',
+                'site' : 'T2',
         }
         ]
 
@@ -50,32 +48,17 @@ class testUtils(unittest.TestCase):
         sitedb_set = [
         {
                 'system' : 'sitedb',
+                'admin' : 'vk',
+                'block' : '',
                 'dataset' : '',
-                'run' : '',
-                'bfield' : '',
                 'site' : 'T2',
-                'block' : '',
-        }
-        ]
-
-        # results from RunSum
-        runsum_set = [
-        {
-                'system' : 'runsum',
-                'dataset' : '',
-                'run' : '101',
-                'bfield' : '0.2',
-                'site' : '',
-                'block' : '',
         },
-
         {
-                'system' : 'runsum',
-                'dataset' : '',
-                'run' : '102',
-                'bfield' : '0.3',
-                'site' : '',
+                'system' : 'sitedb',
+                'admin' : 'simon',
                 'block' : '',
+                'dataset' : '',
+                'site' : 'T2',
         }
         ]
 
@@ -83,36 +66,55 @@ class testUtils(unittest.TestCase):
         phedex_set = [
         {
                 'system' : 'phedex',
-                'dataset' : '',
-                'run' : '',
-                'bfield' : '',
-                'site' : '',
+                'admin' : '',
                 'block' : '123-123-100',
+                'dataset' : '',
+                'site' : 'T2',
         },
 
         {
                 'system' : 'phedex',
-                'dataset' : '',
-                'run' : '',
-                'bfield' : '',
-                'site' : '',
+                'admin' : '',
                 'block' : '123-123-102',
+                'dataset' : '',
+                'site' : 'T2',
         }
         ]
-        result = cartesian_product(dbs_set, sitedb_set)
-        result = cartesian_product(result, runsum_set)
-        result = cartesian_product(result, phedex_set)
+        result = cartesian_product(dbs_set, sitedb_set, ['site'])
+        result = cartesian_product(result, phedex_set, ['block','site'])
         resultlist = [res for res in result]
+        resultlist.sort()
         expectlist = [
         {
-                'bfield': '0.3', 
-                'run': '102', 
-                'system': 'dbs+sitedb+runsum+phedex', 
-                'site': 'T2', 
+                'system': 'dbs+sitedb+phedex', 
+                'admin' : 'vk',
+                'block': '123-123-100',
                 'dataset': '/a/b/c', 
-                'block': '123-123-102'
+                'site': 'T2', 
+        },
+        {
+                'system': 'dbs+sitedb+phedex', 
+                'admin' : 'vk',
+                'block': '123-123-102',
+                'dataset': '/e/d/f', 
+                'site': 'T2', 
+        },
+        {
+                'system': 'dbs+sitedb+phedex', 
+                'admin' : 'simon',
+                'block': '123-123-100',
+                'dataset': '/a/b/c', 
+                'site': 'T2', 
+        },
+        {
+                'system': 'dbs+sitedb+phedex', 
+                'admin' : 'simon',
+                'block': '123-123-102',
+                'dataset': '/e/d/f', 
+                'site': 'T2', 
         }
         ]
+        expectlist.sort()
         self.assertEqual(expectlist, resultlist)
 
     def test_query_params(self):
@@ -129,6 +131,28 @@ class testUtils(unittest.TestCase):
             query  = queries[idx]
             expect = elist[idx]
             result = query_params(query)
+            self.assertEqual(expect, result)
+
+    def test_genresults(self):
+        """
+        Test genresults utility
+        """
+        system = 'das'
+        res = [{'a':1, 'b':2, 'x':100}]
+        collect_list = ['a', 'b', 'c']
+        result = genresults(system, res, collect_list)
+        result.sort()
+        expect = [{'a':1, 'b':2, 'c':'', 'system':'das'}]
+        self.assertEqual(expect, result)
+
+    def test_sitename(self):
+        """
+        Test sitename utility
+        """
+        alist = [('cms', 'T2_UK'), ('se', 'a.b.c'), ('site', 'UK'),
+                 ('phedex', 'T2_UK_NO')]
+        for expect, site in alist:
+            result = sitename(site)
             self.assertEqual(expect, result)
 
     def test_transform_dict2list(self):
@@ -164,6 +188,32 @@ class testUtils(unittest.TestCase):
         result = transform_dict2list(indict)
         expect = [{'a':1, 'b':1, 'c':1}]
         self.assertEqual(expect, result)
+
+    def test_add2dict(self):
+        """
+        test add2dict utility
+        """
+        # test 1
+        idict  = {}
+        key    = 'test'
+        val    = 'abc'
+        add2dict(idict, key, val)
+        expect = {'test':'abc'}
+        self.assertEqual(expect, idict)
+        # test 2
+        idict  = {'test':[1,2]}
+        key    = 'test'
+        val    = [3,4]
+        add2dict(idict, key, val)
+        expect = {'test':[1,2,3,4]}
+        self.assertEqual(expect, idict)
+        # test 3
+        idict  = {'test':'abc'}
+        key    = 'test'
+        val    = [3,4]
+        add2dict(idict, key, val)
+        expect = {'test':['abc',3,4]}
+        self.assertEqual(expect, idict)
 
 #
 # main
