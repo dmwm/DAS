@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.76 2010/04/07 20:52:18 valya Exp $"
-__version__ = "$Revision: 1.76 $"
+__revision__ = "$Id: das_mongocache.py,v 1.77 2010/04/07 21:02:46 valya Exp $"
+__version__ = "$Revision: 1.77 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -325,7 +325,7 @@ class DASMongocache(object):
         For example, if cache contains records about T1 sites, 
         then input query T1_CH_CERN is subset of results stored in cache.
         """
-        self.logger.info("DASMongocache::similar_queries %s" % query)
+        msg = "DASMongocache::similar_queries %s" % query
         spec    = query.get('spec', {})
         fields  = query.get('fields', None)
 #        if  len(spec.keys()) > 1:
@@ -339,7 +339,9 @@ class DASMongocache(object):
         for row in self.col.find(cond):
             mongo_query = decode_mongo_query(row['query'])
             if  compare_specs(query, mongo_query):
+                self.logger.info("%s, True" % msg)
                 return True
+        self.logger.info("%s, False" % msg)
         return False
 
     def similar_queries_v1(self, system, query):
