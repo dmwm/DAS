@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.19 2009/07/08 13:40:54 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: das_filecache.py,v 1.20 2009/07/09 16:00:01 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -27,7 +27,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.exc import MultipleResultsFound
 
 # DAS modules
-from DAS.utils.utils import genkey, getarg
+from DAS.utils.utils import genkey, getarg, sort_data
 from DAS.core.cache import Cache
 
 Base = declarative_base()
@@ -257,11 +257,11 @@ class DASFilecache(Cache):
             return False
         return True
 
-    def get_from_cache(self, query, idx=0, limit=0):
+    def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc'):
         """
         Retreieve results from cache, otherwise return null.
         """
-        id      = int(idx)
+#        id      = int(idx)
         idx     = int(idx)
         stop    = idx + long(limit)
         key     = genkey(query)
@@ -287,28 +287,71 @@ class DASFilecache(Cache):
                 self.logger.debug("DASFilecache::get_from_cache %s" % msg)
                 if  os.path.isfile(filename):
                     fdr = open(filename, 'rb')
-                    if  limit:
-                        for i in range(0, stop):
-                            try:
-                                res = marshal.load(fdr)
-                                if  i >= idx:
-                                    if  type(res) is types.DictType:
-                                        res['id'] = id
-                                    yield res
-                                    id += 1
-                            except EOFError, err:
-                                break
-                    else:
+                    if  skey:
+                        # first retrieve full list of results and sort it
+                        data = []
+                        id = 0
                         while 1:
                             try:
                                 res = marshal.load(fdr)
                                 if  type(res) is types.DictType:
                                     res['id'] = id
-                                yield res
+                                data.append(res)
                                 id += 1
                             except EOFError, err:
                                 break
-                    fdr.close()
+                        fdr.close()
+                        sorted_data = sort_data(data, skey, order)
+                        index = 0
+                        for row in sorted_data:
+                            if  limit:
+                                if  index >= idx and index < stop:
+                                    yield row
+                            else:
+                                if  index >= idx:
+                                    yield row
+                            index += 1
+                    else:
+                        id = 0
+                        while 1:
+                            try:
+                                res = marshal.load(fdr)
+                                if  type(res) is types.DictType:
+                                    res['id'] = id
+                                if  limit:
+                                    if  id >= idx and id < stop:
+                                        yield res
+                                    if  id == stop:
+                                        break
+                                else:
+                                    yield res
+                                id += 1
+                            except EOFError, err:
+                                break
+                        fdr.close()
+
+#                    if  limit:
+#                        for i in range(0, stop):
+#                            try:
+#                                res = marshal.load(fdr)
+#                                if  i >= idx:
+#                                    if  type(res) is types.DictType:
+#                                        res['id'] = id
+#                                    yield res
+#                                    id += 1
+#                            except EOFError, err:
+#                                break
+#                    else:
+#                        while 1:
+#                            try:
+#                                res = marshal.load(fdr)
+#                                if  type(res) is types.DictType:
+#                                    res['id'] = id
+#                                yield res
+#                                id += 1
+#                            except EOFError, err:
+#                                break
+#                    fdr.close()
             else:
                 msg = "found expired query in cache, key=%s" % key
                 self.logger.debug("DASFilecache::get_from_cache %s" % msg)
@@ -358,11 +401,14 @@ class DASFilecache(Cache):
         try: # session transactions
             try:
                 sobj = session.query(System).filter(System.name==system).one()
-                dobj = session.query(Location).filter(Location.dir==idir).one()
             except:
                 sobj = System(system)
-                dobj = Location(idir)
                 session.add(sobj)
+                pass
+            try:
+                dobj = session.query(Location).filter(Location.dir==idir).one()
+            except:
+                dobj = Location(idir)
                 session.add(dobj)
                 pass
             qobj.system = sobj

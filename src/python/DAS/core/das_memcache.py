@@ -5,15 +5,15 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.13 2009/06/30 19:32:14 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_memcache.py,v 1.14 2009/07/09 16:00:01 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
 import types
 
 # DAS modules
-from DAS.utils.utils import genkey
+from DAS.utils.utils import genkey, sort_data
 from DAS.core.cache import Cache
 
 class DASMemcache(Cache):
@@ -53,7 +53,7 @@ class DASMemcache(Cache):
             return True
         return False
 
-    def get_from_cache(self, query, idx=0, limit=0):
+    def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc'):
         """
         Retreieve results from cache, otherwise return null.
         """
@@ -65,17 +65,48 @@ class DASMemcache(Cache):
         id    = idx
         if  res and type(res) is types.IntType:
             self.logger.info("DASMemcache::result(%s) using cache" % query)
-            if  limit:
-                if  limit > res:
-                    stop = res
-                rowlist = [i for i in range(idx, stop)]
-            else:
+            if  skey:
                 rowlist = [i for i in range(0, res)]
-            rowdict = self.memcache.get_multi(rowlist, key_prefix=key)
-            for item in rowdict.values():
-                item['id'] = id
+                rowdict = self.memcache.get_multi(rowlist, key_prefix=key)
+                data    = rowdict.values()
+                gendata = (i for i in sort_data(data, skey, order))
+                def subgroup(gen, idx, stop):
+                    """Extract sub-group of results from generator"""
+                    id = 0
+                    for item in gen:
+                        if  stop:
+                            if  id >= idx and id < stop:
+                                yield item
+                        else:
+                            if  id >= idx:
+                                yield item
+                        id += 1 
+                items   = subgroup(gendata, idx, stop)
+            else:
+                if  limit:
+                    if  limit > res:
+                        stop = res
+                    rowlist = [i for i in range(idx, stop)]
+                else:
+                    rowlist = [i for i in range(0, res)]
+                rowdict = self.memcache.get_multi(rowlist, key_prefix=key)
+                items = rowdict.values()
+            for item in items:
+#                item['id'] = id
                 yield item
                 id += 1
+
+#            if  limit:
+#                if  limit > res:
+#                    stop = res
+#                rowlist = [i for i in range(idx, stop)]
+#            else:
+#                rowlist = [i for i in range(0, res)]
+#            rowdict = self.memcache.get_multi(rowlist, key_prefix=key)
+#            for item in rowdict.values():
+#                item['id'] = id
+#                yield item
+#                id += 1
 
     def update_cache(self, query, results, expire):
         """
@@ -92,6 +123,8 @@ class DASMemcache(Cache):
         rowdict = {}
         rowid = 0
         for row in results:
+            if  type(row) is types.DictType:
+                row['id'] = rowid
             rowdict[rowid] = row
             rowid += 1
             if  len(rowdict.keys()) == self.chunk_size:

@@ -110,6 +110,39 @@ class testDASFilecache(unittest.TestCase):
         self.assertEqual(expect[idx:limit+1], result)
         self.dasfilecache.delete_cache()
 
+    def test_sorting(self):                          
+        """test DAS filecache result method with sorting"""
+        query  = "find site where site=T2_UK"
+        expire = 60
+        data = [
+            {'id':0, 'data':'a', 'run':1},
+            {'id':1, 'data':'b', 'run':3},
+            {'id':2, 'data':'c', 'run':2},
+        ]
+        gen = self.dasfilecache.update_cache(query, data, expire)
+        res = [i for i in gen]
+        skey = 'run'
+        order = 'desc'
+        result = [i for i in \
+            self.dasfilecache.get_from_cache(query, skey=skey, order=order)]
+        expect = [
+            {'id':1, 'data':'b', 'run':3},
+            {'id':2, 'data':'c', 'run':2},
+            {'id':0, 'data':'a', 'run':1},
+        ]
+        self.assertEqual(expect, result)
+        skey = 'run'
+        order = 'asc'
+        result = [i for i in \
+            self.dasfilecache.get_from_cache(query, skey=skey, order=order)]
+        expect = [
+            {'id':0, 'data':'a', 'run':1},
+            {'id':2, 'data':'c', 'run':2},
+            {'id':1, 'data':'b', 'run':3},
+        ]
+        self.assertEqual(expect, result)
+        self.dasfilecache.delete_cache()
+
     def test_incache(self):                          
         """test DAS filecache incache method"""
         query  = "find site where site=T2_UK"

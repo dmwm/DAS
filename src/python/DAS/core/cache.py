@@ -5,8 +5,8 @@
 Abstract cache class.
 """
 
-__revision__ = "$Id: cache.py,v 1.10 2009/06/30 19:32:14 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: cache.py,v 1.11 2009/07/09 16:00:01 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 class NoResults(Exception):
@@ -51,12 +51,12 @@ class Cache(object):
             res += 1
         return res
 
-    def get_from_cache(self, query, idx=0, limit=0):
+    def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc'):
         """
         Retreieve results from cache. Must be implemented by child class
         """
-        self.logger.info('Cache::get_from_cache(%s,%s,%s)' \
-                % (query, idx, limit))
+        self.logger.info('Cache::get_from_cache(%s,%s,%s,%s,%s)' \
+                % (query, idx, limit, skey, order))
         return
 
     def update_cache(self, query, results, expire):

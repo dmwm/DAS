@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.9 2009/06/30 19:45:30 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.10 2009/07/09 16:00:02 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -35,7 +35,8 @@ def checkargs(func):
         """Wrapper for decorator"""
         data = func (self, *args, **kwds)
         pat  = re.compile('^[+]?\d*$')
-        supported = ['query', 'idx', 'limit', 'expire', 'method']
+        supported = ['query', 'idx', 'limit', 'expire', 'method', 
+                     'skey', 'order']
         keys = [i for i in kwds.keys() if i not in supported]
         if  keys:
             msg  = 'Unsupported keys: %s' % keys
@@ -49,6 +50,10 @@ def checkargs(func):
         if  kwds.has_key('expire') and not pat.match(kwds['expire']):
             msg  = 'Unsupported value expire=%s' % (kwds['expire'])
             return {'status':'fail', 'reason': msg}
+        if  kwds.has_key('order'):
+            if  kwds['order'] not in ['asc', 'desc']:
+                msg  = 'Unsupported value order=%s' % (kwds['order'])
+                return {'status':'fail', 'reason': msg}
         pat  = re.compile('^find ')
         if  kwds.has_key('query') and not pat.match(kwds['query']):
             msg = 'Unsupported keyword query=%s' % kwds['query']
@@ -102,11 +107,15 @@ class DASCacheModel(RESTModel):
             query = kwargs['query']
             idx   = getarg(kwargs, 'idx', 0)
             limit = getarg(kwargs, 'limit', 0)
+            skey  = getarg(kwargs, 'skey', '')
+            order = getarg(kwargs, 'order', 'asc')
             data  = {'status':'requested', 'idx':idx, 
-                     'limit':limit, 'query':query}
+                     'limit':limit, 'query':query,
+                     'skey':skey, 'order':order}
             if  hasattr(self.dascore, 'cache'):
                 if  self.dascore.cache.incache(query):
-                    res = self.dascore.cache.get_from_cache(query, idx, limit)
+                    res = self.dascore.cache.\
+                                get_from_cache(query, idx, limit, skey, order)
                     tot = self.dascore.cache.nresults(query)
                     if  type(res) is types.GeneratorType:
                         data['data'] = [i for i in res]
