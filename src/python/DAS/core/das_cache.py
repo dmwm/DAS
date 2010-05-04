@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s).
 """
 
-__revision__ = "$Id: das_cache.py,v 1.27 2010/04/14 17:55:55 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: das_cache.py,v 1.28 2010/04/14 18:03:24 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -48,8 +48,9 @@ class DASCacheMgr(object):
 
     def remove(self, qhash):
         """Remove query from a queue"""
-        self.logger.info("DASCacheMgr::remove, hash=%s, query=%s, queue size=%s" \
-                % (qhash, self.qmap[qhash], len(self.queue)))
+        msg = "DASCacheMgr::remove, hash=%s, query=%s, queue size=%s" \
+                % (qhash, self.qmap[qhash], len(self.queue))
+        self.logger.info(msg)
         try:
             self.queue.remove(qhash)
         except:
@@ -106,8 +107,9 @@ def multiprocess_monitor(cachemgr, config):
                 traceback.print_exc()
                 orphans[item] = orphans.get(item, 0) + 1
                 break
-            msg = "monitoring_worker add %s, workers %s, in queue %s, orphans %s" \
-            % (query, len(worker_proc.keys()), len(cachemgr.queue), len(orphans.keys()))
+            msg = "monitor add %s, workers %s, in queue %s, orphans %s" \
+            % (query, len(worker_proc.keys()), len(cachemgr.queue), 
+                len(orphans.keys()))
             logger.debug(msg)
             time.sleep(sleep) # separate processes
         msg = "# workers %s, in queue %s, orphans %s" \
