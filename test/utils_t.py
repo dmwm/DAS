@@ -47,10 +47,14 @@ class testUtils(unittest.TestCase):
 
     def test_dict_helper(self):
         """Test dict_helper function"""
-        idict = {'test':'1', 'float':'1.1', 'another_int': '0', 'orig_int': 10, 'str': '2009 11.11'}
+        idict = {'test':'1', 'float':'1.1', 'another_int': '0', 
+                 'orig_int': 10, 'str': '2009 11.11', 'text':'text',
+                 'se':'se.grid.kiae.ru'}
         notations = {'test':'int'}
         result = dict_helper(idict, notations)
-        expect = {'int': 1, 'float': 1.1, 'another_int': 0, 'orig_int': 10, 'str': '2009 11.11'}
+        expect = {'int': 1, 'float': 1.1, 'another_int': 0, 
+                  'orig_int': 10, 'str': '2009 11.11', 'text':'text',
+                  'se':'se.grid.kiae.ru'}
         self.assertEqual(expect, result)
 
     def test_dict_value(self):
