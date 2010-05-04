@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.37 2009/10/02 18:59:51 valya Exp $"
-__version__ = "$Revision: 1.37 $"
+__revision__ = "$Id: das_core.py,v 1.38 2009/10/12 20:15:13 valya Exp $"
+__version__ = "$Revision: 1.38 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -33,6 +33,7 @@ from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
+from DAS.utils.utils import genkey
 
 import DAS.core.das_functions as das_functions
 
@@ -241,19 +242,22 @@ class DASCore(object):
         Get results either from cache or from explicit call
         """
         # check that provided query is indeed in MongoDB format.
-        err  = '\nDASCore::Unable to load the input query=%s' % query
-        err += '\nDASCore operates only with MongoDB queries.'
+        err = '\nDASCore::result unable to load the input query=%s' % query
         if  type(query) is types.StringType: # DAS-QL
             try:
                 query = json.loads(query)
             except:
-                query = self.mongoparser.dasql2mongo(query)
+                try:
+                    query = self.mongoparser.requestquery(query)
+                except:
+                    traceback.print_exc()
+                    raise Exception(err)
+        err = '\nDASCore::result query not in MongoDB format, %s' % query
         if  type(query) is not types.DictType:
             raise Exception(err)
         else:
             if  not query.has_key('fields') and not query.has_key('spec'):
                 raise Exception(err)
-
         # lookup provided query in a cache
         if  hasattr(self, 'cache'):
             if  self.cache.incache(query):
@@ -320,9 +324,10 @@ class DASCore(object):
         Step 3. Look-up results from the cache.
         Return a list of generators containing results for further processing.
         """
-        self.logger.info('DASCore::call, mongo query = %s' % query)
         params = self.mongoparser.params(query)
         services = params['services'].keys()
+        self.logger.info('DASCore::call, services = %s' % services)
+        qhash = genkey(json.dumps(query))
         for srv in services:
             self.logger.info('DASCore::call %s(%s)' % (srv, query))
             if  self.verbose:
@@ -330,8 +335,13 @@ class DASCore(object):
             getattr(getattr(self, srv), 'call')(query)
             if  self.verbose:
                 self.timer.record(srv)
-            # Yield results for every sub-system.
+            # Yield results for every sub-system with loose conditions
             res = self.rawcache.get_from_cache(\
                 self.mongoparser.lookupquery(srv, query))
             for row in res:
                 yield row
+        # Yield results for query hash
+        spec = dict(spec={"das.qhash":qhash})
+        res = self.rawcache.get_from_cache(spec)
+        for row in res:
+            yield row
