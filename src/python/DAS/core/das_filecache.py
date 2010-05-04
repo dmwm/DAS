@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.13 2009/05/30 19:00:44 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_filecache.py,v 1.14 2009/06/04 14:09:26 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -344,7 +344,7 @@ class DASFilecache(Cache):
         """
         return
 
-    def delete_cache(self, dbname=None):
+    def delete_cache(self, dbname=None, system=None):
         """
         Delete all results in cache
         dbname is unused parameter to match behavior of couchdb cache

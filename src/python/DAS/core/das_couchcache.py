@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.4 2009/05/28 18:59:10 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_couchcache.py,v 1.5 2009/06/04 14:09:26 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -17,7 +17,7 @@ from WMCore.Database.CMSCouch import CouchServer
 from DAS.utils.utils import genkey, timestamp, results2couch
 from DAS.core.cache import Cache
 
-def create_views(db, design, views):
+def create_views(cdb, design, views):
     """
     Create Couchcache views to look-up queries.
     """
@@ -26,7 +26,7 @@ def create_views(db, design, views):
     view['language'] = 'javascript' 
     view['doctype'] = 'view'
     view['views'] = views
-    db.commit(view)
+    cdb.commit(view)
 
 class DASCouchcache(Cache):
     """
@@ -148,7 +148,7 @@ function(k,v,r) {
         else:
             self.logger.warning("No '%s' found in couch db" % dbname)
 
-    def delete_cache(self, dbname, system=None):
+    def delete_cache(self, dbname=None, system=None):
         """
         Delete couch db
         """
@@ -196,10 +196,10 @@ function(k,v,r) {
         if  not cdb:
             return
         key  = genkey(query)
-        # TODO: check how to query 1 result, I copied the way from get_from_cache
+        #TODO:check how to query 1 result, I copied the way from get_from_cache
         skey = ["%s" % key, timestamp()]
         options = {'startkey': skey}
-        results = cdb.loadview('dasviews', 'query', options)
+        results = cdb.loadView('dasviews', 'query', options)
         try:
             res = [row['value'] for row in results['rows']]
         except:
@@ -224,7 +224,7 @@ function(k,v,r) {
         skey = ["%s" % key, timestamp()]
         ekey = ["%s" % key, 9999999999]
         options = {'startkey': skey, 'endkey': ekey}
-        results = cdb.loadview('dasviews', 'query', options)
+        results = cdb.loadView('dasviews', 'query', options)
         try:
             res = [row['value'] for row in results['rows']]
         except:
@@ -271,6 +271,8 @@ function(k,v,r) {
         """
         Delete query from cache
         """
+        self.logger.debug('DASCouchcache::remove_from_cache(%s)' \
+                % (query, ))
         return
 
     def get_view(self, design, view, options={}):
@@ -281,7 +283,7 @@ function(k,v,r) {
         cdb = self.couchdb(dbname)
         if  not cdb:
             return
-        results = cdb.loadview(design, view, options)
+        results = cdb.loadView(design, view, options)
         res = [row['value'] for row in results['rows']]
         if  len(res) == 1:
             return res[0]
@@ -304,12 +306,11 @@ function(k,v,r) {
         skey = '%s' % 0
         ekey = '%s' % timestamp()
         options = {'startkey': skey, 'endkey': ekey}
-        results = cdb.loadview('dasviews', 'query', options)
-#        results = cdb.loadview(self.design, 'cleaner', options)
+        results = cdb.loadView('dasviews', 'query', options)
 
         ndocs = 0
         for doc in results['rows']:
-            cdb.queuedelete(doc['value'])
+            cdb.queueDelete(doc['value'])
             ndocs += 1
 
         self.logger.info("DASCouchcache::clean_couch, will remove %s doc's" \
