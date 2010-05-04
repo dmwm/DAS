@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.41 2009/10/13 15:44:43 valya Exp $"
-__version__ = "$Revision: 1.41 $"
+__revision__ = "$Id: abstract_service.py,v 1.42 2009/10/13 23:47:31 valya Exp $"
+__version__ = "$Revision: 1.42 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -243,6 +243,15 @@ class DASAbstractService(object):
         """
         return args
 
+    def patterns(self, api, args):
+        """
+        Define how to deal with patterns at API level. Some API accept a 
+        star, '*', as pattern parameter, some use another schema, e.g.
+        SiteDB don't use '*', and instead it should be drop-off from parameter.
+        Must be implemented in sub-classes
+        """
+        return args
+
     def api(self, query):
         """
         Data service api method, can be defined by data-service class.
@@ -257,6 +266,7 @@ class DASAbstractService(object):
         for url, api, args in self.apimap(query):
             try:
                 args = self.clean_params(api, args)
+                args = self.patterns(api, args)
                 msg  = 'DASAbstractService::%s::api found %s, %s' \
                     % (self.name, api, str(args))
                 self.logger.info(msg)
