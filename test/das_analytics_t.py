@@ -12,7 +12,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_analytics_db import DASAnalytics
 
-class testDASAnalyticsMgr(unittest.TestCase):
+class testDASAnalytics(unittest.TestCase):
     """
     A test class for the DAS analyticsdb class
     """
@@ -26,9 +26,9 @@ class testDASAnalyticsMgr(unittest.TestCase):
         logger   = DASLogger(verbose=debug, stdout=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        config['mongocache_dbhost'] = 'localhost'
-        config['mongocache_dbport'] = 27017
-        config['mongocache_dbname'] = 'test_analytics'
+        config['analytics_dbhost'] = 'localhost'
+        config['analytics_dbport'] = 27017
+        config['analytics_dbname'] = 'test_analytics'
         self.mgr = DASAnalytics(config)
 
     def tearDown(self):
@@ -44,11 +44,11 @@ class testDASAnalyticsMgr(unittest.TestCase):
         dbs_params = {'apiversion':'DBS_2_0_8',
                   'block_name':'*', 'storage_element_name':'*',
                   'user_type':'NORMAL'}
-        self.mgr.add_api(query, 'dbs', dbs_api, dbs_params)
+        self.mgr.add_api('dbs', query, dbs_api, dbs_params)
 
         phedex_api = 'blockReplicas'
         phedex_params = {'node': '*', 'se': '*', 'block': '*'}
-        self.mgr.add_api(query, 'phedex', phedex_api, phedex_params)
+        self.mgr.add_api('phedex', query, phedex_api, phedex_params)
 
         res = self.mgr.list_systems()
         self.assertEqual(['dbs', 'phedex'], res)
@@ -56,11 +56,11 @@ class testDASAnalyticsMgr(unittest.TestCase):
         res = self.mgr.list_apis('dbs')
         self.assertEqual([dbs_api], res)
 
-        self.mgr.add_api(query, 'dbs', dbs_api, dbs_params)
+        self.mgr.add_api('dbs', query, dbs_api, dbs_params)
         res = self.mgr.api_counter(dbs_api)
         self.assertEqual(2, res) # we invoke API twice, so should get 2
 
-        self.mgr.update(query)
+        self.mgr.update('dbs', query)
         res = self.mgr.api_counter(dbs_api)
         self.assertEqual(3, res) # we update API call, so should get 3
         
