@@ -5,12 +5,17 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.16 2009/06/03 19:37:21 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: utils.py,v 1.17 2009/06/04 13:19:01 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
-import md5
+try:
+    # with python 2.5
+    import hashlib
+except:
+    # prior python 2.5
+    import md5
 import time
 import types
 import traceback
@@ -38,7 +43,12 @@ def genkey(query):
     Generate a new key for a given query. We use md5 hash for the
     query and key is just hex representation of this hash.
     """
-    keyhash = md5.new()
+    try:
+        keyhash = hashlib.md5()
+    except:
+        # prior python 2.5
+        keyhash = md5.new()
+
     keyhash.update(query)
     return keyhash.hexdigest()
 

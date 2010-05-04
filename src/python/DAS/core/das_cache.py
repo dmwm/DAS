@@ -5,14 +5,22 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.12 2009/06/02 02:01:43 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_cache.py,v 1.13 2009/06/04 13:19:01 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 import Queue 
 import traceback
-import processing 
+try:
+    # Python 2.6
+    import multiprocessing 
+    from multiprocessing import cpu_count
+except:
+    traceback.print_exc()
+    # Prior to 2.6 requires simplejson
+    import processing as multiprocessing
+    from processing import cpuCount as cpu_count
 import logging
 
 # DAS modules
@@ -144,8 +152,9 @@ class DASCacheMgr(object):
         time.sleep(5) # sleep to allow main thread with DAS core take off
         msg = "start DASCacheMgr::worker with %s" % func
         self.logger.info(msg)
-        nprocs  = 2*processing.cpuCount()
-        pool    = processing.Pool(nprocs)
+#        nprocs  = 2*multiprocessing.cpuCount()
+        nprocs  = 2*cpu_count()
+        pool    = multiprocessing.Pool(nprocs)
         orphans = {} # map of orphans requests
         while True: 
             to_remove = {}
