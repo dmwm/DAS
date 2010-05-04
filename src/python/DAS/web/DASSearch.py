@@ -5,15 +5,18 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.16 2009/07/09 16:00:02 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: DASSearch.py,v 1.17 2009/07/15 16:01:00 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import os
 import time
 import types
 import urllib
 from cherrypy import expose
+from cherrypy.lib.static import serve_file
+
 import cherrypy
 try:
     # Python 2.6
@@ -69,27 +72,6 @@ class DASSearch(TemplatedPage):
         self.decoder   = JSONDecoder()
         self.counter = 0 # TMP stuff, see request, TODO: remove
 
-        # TMP: I define a few useful views, this should be done
-        # elswhere (may be here, may be in external configuration,
-        # may be in couchdb
-#        query  = 'find dataset, count(file), sum(file.size)'
-        query  = 'find dataset, dataset.createdate, dataset.createby, '
-        query += 'sum(block.size), sum(file.numevents), count(file)'
-        self.dasmgr.create_view('dataset', query)
-        query  = 'find block.name, block.size, block.numfiles, '
-        query += 'block.numevents, block.status, block.createby, '
-        query += 'block.createdate, block.modby, block.moddate'
-        self.dasmgr.create_view('block', query)
-        query  = 'find site, sum(block.numevents), '
-        query += 'sum(block.numfiles), sum(block.size)'
-        self.dasmgr.create_view('site', query)
-        query  = 'find datatype, dataset, run.number, run.numevents, '
-        query += 'run.numlss, run.totlumi, run.store, run.starttime, '
-        query += 'run.endtime, run.createby, run.createdate, run.modby, '
-        query += 'run.moddate, count(file), sum(file.size), '
-        query += 'sum(file.numevents)'
-        self.dasmgr.create_view('run', query)
-
 #    def clean_couch(self):
 #        """
 #        Clean couch DB
@@ -139,6 +121,15 @@ class DASSearch(TemplatedPage):
         """
         page = self.templatepage('das_help')
         return self.page(page, response_div=False)
+
+    @expose
+    def cli(self, *args, **kwargs):
+        """
+        Serve DAS CLI file download.
+        """
+        clifile = os.path.join(os.environ['DAS_ROOT'], 
+                'src/python/DAS/tools/das_cache_client.py')
+        return serve_file(clifile, content_type='text/plain')
 
     @expose
     def create_view(self, *args, **kwargs):
