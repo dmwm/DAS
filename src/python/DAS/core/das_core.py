@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.55 2010/01/26 21:02:04 valya Exp $"
-__version__ = "$Revision: 1.55 $"
+__revision__ = "$Id: das_core.py,v 1.56 2010/02/02 20:17:20 valya Exp $"
+__version__ = "$Revision: 1.56 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -63,9 +63,6 @@ class DASCore(object):
         if  type(debug) is types.IntType:
             self.verbose = debug
             dasconfig['verbose'] = debug
-            for system in dasconfig['systems']:
-                sysdict = dasconfig[system]
-                sysdict['verbose'] = debug
         else:
             self.verbose = verbose
         if  self.verbose:
@@ -124,10 +121,12 @@ class DASCore(object):
 #            self.cache   = self.hotcache
 #            self.logger.info('DASCore::__init__ hotcache=%s' % klass)
 
+        systems = dasmapping.list_systems()
+
         # plug-in architecture: loop over registered data-services in
         # dasconfig; load appropriate module/class; register data
         # service with DASCore.
-        for name in dasconfig['systems']:
+        for name in systems:
             try:
                 klass   = 'src/python/DAS/services/%s/%s_service.py'\
                     % (name, name)
@@ -154,7 +153,7 @@ class DASCore(object):
         self.service_parameters = {}
         # loop over systems and get system keys,
         # add mapping keys to final list
-        for name in dasconfig['systems']: 
+        for name in systems: 
             skeys = getattr(self, name).keys()
             self.service_keys[getattr(self, name).name] = skeys
             sparams = getattr(self, name).parameters()
