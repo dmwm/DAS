@@ -8,7 +8,7 @@ expire : 3600
 params : {"se":"*", "block":"*", "node":"*"}
 daskeys : [
         {"key":"block", "map":"block.name", "pattern":""},
-        {"key":"file", "map":"file.name", "pattern":""},
+#        {"key":"file", "map":"file.name", "pattern":""},
 ]
 api2das : [
         {"api_param":"block", "das_key":"block.name", "pattern":""},
