@@ -1,9 +1,26 @@
 DAS architecture
 ================
 
-DAS architecture is based on client/server one but doesn't enforce it. 
-The code itself can work without introducing DAS cache server, but its 
-existence allows additional features, e.g. DAS robots. The following 
+DAS architecture is based on several components:
+   - common core library
+
+     - analytics DB
+     - mapping DB
+     - logging DB
+   - data-service plugins, each plugin contains
+
+     - data-service handler class
+     - API map
+     - notation map
+   - cache server
+   - client web server
+
+Last two components, cache and client servers, are optional.
+The code itself can work without cache/client servers by using
+CLI tool which uses core librarys. But their existence allow 
+to introduce DAS pre-fetch strategies, DAS robots, which can
+significantly improve responsiveness of the system and add
+multi-user support into DAS. The following 
 picture represents current DAS architecture:
 
 .. figure::  _images/das_architecture.jpg
@@ -14,7 +31,7 @@ DAS Analytics/Mapping/Cache DBs and optional DAS robots
 (for queries pre-fetching). The DAS cache server utilizes threading 
 technologies to consume and work on several requests at the same time. 
 All queries are written to DAS Analytics DB. A mapping between 
-data-service notations and DAS are stored in DAS Mapping DB. 
+data-service notations and DAS is stored in DAS Mapping DB. 
 Communication with end-users is done via set of REST calls. 
 User can pose GET/POST/DELETE requests to get/request or delete 
 data in DAS, respectively. Below we outline all steps in DAS workflow:
