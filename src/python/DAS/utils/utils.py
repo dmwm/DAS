@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.56 2010/01/26 21:03:52 valya Exp $"
-__version__ = "$Revision: 1.56 $"
+__revision__ = "$Id: utils.py,v 1.57 2010/02/02 20:08:57 valya Exp $"
+__version__ = "$Revision: 1.57 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -160,7 +160,7 @@ def splitlist(ilist, nentries):
             jdx = len(ilist)
         yield ilist[idx:jdx]
 
-def dasheader(system, query, api, url, args, ctime, expire, ver):
+def dasheader(system, query, api, url, args, ctime, expire):
     """
     Return DAS header (dict) wrt DAS specifications, see
     https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
@@ -169,7 +169,7 @@ def dasheader(system, query, api, url, args, ctime, expire, ver):
     if  type(query) is types.DictType:
         query = json.dumps(query)
     dasdict = dict(system=[system], timestamp=timestamp,
-                url=[url], ctime=[ctime], qhash=genkey(query), version=ver,
+                url=[url], ctime=[ctime], qhash=genkey(query), 
                 expire=timestamp+expire, api=[api], status="requested")
     return dict(das=dasdict)
 
@@ -497,28 +497,37 @@ def add2dict(idict, key, value):
 def map_validator(smap):
     """
     Validator for data-serivce maps. The data-service map should be
-    provided in a form::
+    provided in a form
+
+    .. doctest::
 
         map = {
                 'api' : {
                     'keys' : ['key1', 'key2'],
-                    'params' : {'param':1, 'param2':2}
+                    'params' : {'param':1, 'param2':2},
+                    'url' : 'service_url',
+                    'expire' : 'expiration timestamp',
+                    'format' : 'data_format',
                 }
         }
     """
     msg = 'Fail to validate data-service map %s' % smap
     if  type(smap.keys()) is not types.ListType:
         raise Exception(msg)
+    possible_keys = ['api', 'keys', 'params', 'url', 'expire', 'format']
+    possible_keys.sort()
     for item in smap.values():
         if  type(item) is not types.DictType:
             raise Exception(msg)
         keys = item.keys()
         keys.sort()
-        if  len(keys) == 3:
-            if  keys != ['api', 'keys', 'params']:
+        if  len(keys) == len(possible_keys):
+            if  keys != possible_keys:
                 raise Exception(msg)
-        elif len(keys) == 2:
-            if  keys != ['keys', 'params']:
+        elif len(keys) == len(possible_keys)-1:
+            pkeys = list(possible_keys)
+            pkeys.remove('api')
+            if  keys != pkeys:
                 raise Exception(msg)
         else:
             raise Exception(msg)
@@ -528,8 +537,10 @@ def map_validator(smap):
             raise Exception(msg)
 
 def permutations(iterable, r=None):
-    # permutations('ABCD', 2) --> AB AC AD BA BC BD CA CB CD DA DB DC
-    # permutations(range(3)) --> 012 021 102 120 201 210
+    """
+    permutations('ABCD', 2) --> AB AC AD BA BC BD CA CB CD DA DB DC
+    permutations(range(3)) --> 012 021 102 120 201 210
+    """
     pool = tuple(iterable)
     n = len(pool)
     r = n if r is None else r
@@ -575,23 +586,6 @@ def unique_list(ilist):
     tmplist = [k for k, g in groupby(ilist)]
     tmplist.sort()
     return tmplist
-
-def izip_longest(*args, **kwds):
-    """
-    izip_longest('ABCD', 'xy', fillvalue='-') --> Ax By C- D-
-    introduced in python 2.6
-    """
-    fillvalue = kwds.get('fillvalue')
-    def sentinel(counter = ([fillvalue]*(len(args)-1)).pop):
-        yield counter()         # yields the fillvalue, or raises IndexError
-    from itertools import repeat, chain, izip
-    fillers = repeat(fillvalue)
-    iters = [chain(it, sentinel(), fillers) for it in args]
-    try:
-        for tup in izip(*iters):
-            yield tup
-    except IndexError:
-        pass
 
 def get_key_cert():
     """
@@ -719,12 +713,15 @@ def dict_helper(idict, notations):
             child_dict[notations.get(kkk, kkk)] = adjust_value(vvv)
         return child_dict
 
-def xml_parser(notations, source, tag, add=None):
+def xml_parser(notations, source, tags, add=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
     large XML documents we use iterparse method to walk through provided
     source descriptor (a .read()/close()-supporting file-like object 
     containig XML source).
+
+    The provided *tags* parameter defines DAS tags to be parsed.
+    The additional elements can be supplied via add parameter.
     """
     sup     = {}
     context = ET.iterparse(source, events=("start", "end"))
@@ -738,14 +735,16 @@ def xml_parser(notations, source, tag, add=None):
             if  add.find("_") != -1:
                 atag, attr = add.split("_")
                 if  elem.tag == atag and elem.attrib.has_key(attr):
-                    sup[add] = elem.attrib[attr]
+#                    sup[add] = elem.attrib[attr]
+                    sup[atag] = {attr:elem.attrib[attr]}
             else:
                 if  elem.tag == add:
-                    sup[add] = elem.attrib
-        if  elem.tag != tag or event == 'end':
+#                    sup[add] = elem.attrib
+                    sup[atag] = {attr:elem.attrib}
+        key = notations.get(elem.tag, elem.tag)
+        if  key not in tags or event == 'end':
             elem.clear()
             continue
-        key = notations.get(elem.tag, elem.tag)
         row[key] = dict_helper(elem.attrib, notations)
         row.update(sup)
         for child in elem.getchildren():
@@ -820,9 +819,13 @@ def aggregator(results, expire):
     record.pop('_id')
     update = 0
     for row in results:
-        row.pop('primary_key')
+        row_prim_key = row.pop('primary_key')
         row.pop('das')
         row.pop('_id')
+        if  row_prim_key != prim_key:
+            prim_key = row_prim_key
+            record = row
+            continue
         val1 = dict_value(record, prim_key)
         val2 = dict_value(row, prim_key)
         if  val1 == val2:
