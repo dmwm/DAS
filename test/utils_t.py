@@ -9,7 +9,8 @@ import json
 import unittest
 import urllib2, urllib
 import tempfile
-from DAS.utils.utils import cartesian_product, dasheader
+from DAS.utils.utils import cartesian_product
+#, dasheader
 from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
@@ -184,6 +185,10 @@ class testUtils(unittest.TestCase):
         result = adjust_value("1.1")
         self.assertEqual(expect, result)
 
+        expect = -1.1
+        result = adjust_value("-1.1")
+        self.assertEqual(expect, result)
+
         expect = '2009.05.19 17:41:25'
         result = adjust_value("2009.05.19 17:41:25")
         self.assertEqual(expect, result)
@@ -196,11 +201,11 @@ class testUtils(unittest.TestCase):
         result = adjust_value("(null)")
         self.assertEqual(expect, result)
 
-    def test_dasheader(self):
-        """Test DAS header"""
-        expect = ['dbs']
-        header = dasheader('dbs', 'q1', 'api1', 'url1', 'args1', 'ct1', 10)
-        self.assertEqual(expect, header['das']['system'])
+#    def test_dasheader(self):
+#        """Test DAS header"""
+#        expect = ['dbs']
+#        header = dasheader('dbs', 'q1', 'api1', 'url1', 'args1', 'ct1', 10)
+#        self.assertEqual(expect, header['das']['system'])
 
     def test_cartesian_product(self):
         """Test cartesian product function"""
