@@ -5,8 +5,8 @@
 DAS mapping
 """
 
-__revision__ = "$Id: das_mapping.py,v 1.4 2009/04/21 22:09:23 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_mapping.py,v 1.5 2009/04/23 01:11:30 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -35,18 +35,36 @@ def read_config(cname):
         mapdict[system] = sectdict
     return mapdict
 
+def parselist(result):
+    """
+    parse input list and look-up if it's elements are lists
+    if so, parse them and make final list. Used by translate.
+    """
+    if  type(result) is not types.ListType:
+        return [result]
+    olist = []
+    for item in result:
+        if  type(item) is types.ListType:
+            for elem in item:
+                olist.append(elem)
+        else:
+            olist.append(item)
+    return olist
+
 def das2api(system, name):
     """
     Translate DAS QL key, name, into data-service API input parameter
     """
-    return translate('das2api.cfg', system, name)
+    result = translate('das2api.cfg', system, name)
+    return parselist(result)
 
 def das2result(system, name):
     """
     Translate DAS QL key, name, into data-service result dict, e.g.
     block.complete => block.replica.complete
     """
-    return translate('dasmap.cfg', system, name)
+    result = translate('dasmap.cfg', system, name)
+    return parselist(result)
 
 def result2das(system, name):
     """
@@ -70,8 +88,8 @@ def translate(cname, system, name):
         return name
     for key, val in dasmap[system].items():
         if  key == name:
-            if  type(val) is types.ListType:
-                return val[0]
+#            if  type(val) is types.ListType:
+#                return val[0]
             return val
     return name
 

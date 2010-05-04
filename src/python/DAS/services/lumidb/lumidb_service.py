@@ -2,8 +2,8 @@
 """
 LumiDB service
 """
-__revision__ = "$Id: lumidb_service.py,v 1.3 2009/04/21 22:11:59 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: lumidb_service.py,v 1.4 2009/04/23 01:11:31 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -59,7 +59,7 @@ class LumiDBService(DASAbstractService):
             'listLumiSummary' : {
                 'api' : {'api':'listLumiSummary'},
                 'keys': ['lumisummary', 'run'],
-                'params' : {'run_number':'', 'lumi_section_number':'', 'version':''}
+                'params' : {'run_number':'', 'lumi_section_number':'', 'version':'current'}
             },
 #            'listLumiTrigger' : {
 #                'api' : {'api':'listLumiTrigger'},

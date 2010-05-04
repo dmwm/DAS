@@ -4,8 +4,8 @@
 """
 DBS XML parser
 """
-__revision__ = "$Id: dbs_parser.py,v 1.1 2009/03/09 19:43:32 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: dbs_parser.py,v 1.2 2009/04/23 01:11:31 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 from xml.dom.minidom import parseString
@@ -17,7 +17,7 @@ CDICT = {
 'FILES_LOGICALFILENAME':'file',
 'BLOCK_NAME':'block',
 }
-def parser(data):
+def parser_old(data):
     """
     DBS XML parser, it returns a list of dict rows, e.g.
     [{'file':value, 'run':value}, ...]
@@ -35,22 +35,20 @@ def parser(data):
             olist.append(odict)
     return olist
 
-def parser_new(data):
+def parser(data):
     """
     DBS XML parser, it returns a list of dict rows, e.g.
     [{'file':value, 'run':value}, ...]
     """
-    dom = parseString(data)
+    elem  = ET.fromstring(data)
     olist = []
-    for node in dom.getElementsByTagName('result'):
-        item = []
-        for child in node.childNodes:
-            node3 = child.firstChild
-            if  node3 is None:
-                continue
-            elem = node3.data
-            item.append(elem)
-        olist.append(item)
+    for i in elem:
+        if  i.tag == 'results':
+            for j in i:
+                row = {}
+                for k in j.getchildren():
+                    row[k.tag] = k.text
+                olist.append(row)
     return olist
 
 def parser_dbshelp(data):

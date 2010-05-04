@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.5 2009/04/21 22:11:59 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: abstract_service.py,v 1.6 2009/04/23 01:11:31 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -157,18 +157,31 @@ class DASAbstractService(object):
         params = {}
         for key in cond.keys():
             oper, val = cond[key]
-            newkey = das2api(self.name, key)
-            if  oper == '=':
-                params[newkey] = val
-            else:
-                raise Exception("DAS::%s, not supported operator '%s'" \
-                % (self.name, oper))
+#            newkey = das2api(self.name, key)
+            keylist = das2api(self.name, key)
+            if  type(keylist) is not types.ListType:
+                keylist = [keylist]
+            for newkey in keylist:
+                if  oper == '=':
+                    params[newkey] = val
+                else:
+                    raise Exception("DAS::%s, not supported operator '%s'" \
+                    % (self.name, oper))
         for key in cond_dict:
-            newkey = das2api(self.name, key)
-            params[newkey] = cond_dict[key]
+#            newkey = das2api(self.name, key)
+            keylist = das2api(self.name, key)
+            if  type(keylist) is not types.ListType:
+                keylist = [keylist]
+            for newkey in keylist:
+                params[newkey] = cond_dict[key]
 
         # translate selection keys into ones data-service APIs provides
         keylist = [das2result(self.name, key) for key in selkeys]
+        keylist = []
+        for key in selkeys:
+            res = das2result(self.name, key)
+            for item in das2result(self.name, key):
+                keylist.append(item)
 
         apiname = ""
         args = {}

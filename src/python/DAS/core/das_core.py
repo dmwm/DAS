@@ -5,8 +5,8 @@
 Define core class for Data Aggregation Service (DAS)
 """
 
-__revision__ = "$Id: das_core.py,v 1.3 2009/04/13 19:01:56 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_core.py,v 1.4 2009/04/23 01:11:30 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -66,9 +66,16 @@ class DASCore(object):
 
         self.service_maps = dasconfig['mapping']
         self.service_keys = {}
+        # loop over systems and get system keys
+        # add mapping keys to final list
         for name in dasconfig['systems']: 
-            self.service_keys[getattr(self, name).name] = \
-                getattr(self, name).keys()
+#            self.service_keys[getattr(self, name).name] = \
+#                getattr(self, name).keys()
+            skeys = getattr(self, name).keys()
+            for k, v in self.service_maps.items():
+                if  list(k).count(name):
+                    skeys += [s for s in v if not skeys.count(s)]
+            self.service_keys[getattr(self, name).name] = skeys
 
     def keys(self):
         """
@@ -104,9 +111,30 @@ class DASCore(object):
         qldict['qlqueries'] = dict(queries)
         qldict['qlquery'] = str(query)
 
+        # check if input query can be addressed by a single data-service
+        # TODO: should be replaced with ANTRL
+        _sellist  = qldict['sellist']
+        _condlist = []
+        for val in qldict['condlist'].values():
+            key = val.split('=')[0] # so far I only look at k=v
+            if  not _condlist.count(key):
+                _condlist.append(key)
+        ulist = _sellist + _condlist
+        slist = []
+        set1  = set(ulist)
+        for service, keys in self.service_keys.items():
+            set2 = set(keys)
+            if  (set1 & set2) == set1:
+                print "Service cover all keys", service
+                del qldict['queries']
+                qldict['queries'] = {service:qldict['input']}
+                return qldict
+
+        # proceed if query is not unique to 1 data service
         condlist = query.split(' where ')
         if  len(condlist) == 1:
             return qldict
+
         qkeys   = queries.keys()
         qkeys.sort()
         newcond = []

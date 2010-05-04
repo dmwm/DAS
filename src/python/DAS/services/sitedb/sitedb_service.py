@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.3 2009/04/13 19:00:41 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: sitedb_service.py,v 1.4 2009/04/23 01:11:31 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -189,7 +189,7 @@ class SiteDBService(DASAbstractService):
             res = '%s %s (%s)' % \
             (val['forename'], val['surname'], val['email'])
             row['admin'] = res
-            if  sites is types.StringType:
+            if  type(sites) is types.StringType:
                 row['site'] = sites
                 if  not data.count(row):
                     data.append(row)
