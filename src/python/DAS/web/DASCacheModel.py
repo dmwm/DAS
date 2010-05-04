@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.14 2009/09/16 20:36:56 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.15 2009/10/02 15:31:29 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -103,12 +103,11 @@ def checkargs(func):
     wrapper.exposed = True
     return wrapper
 
-def worker(item):
+def worker(query, expire):
     """
     Worker function which invoke DAS core to update cache for input query
     """
     dascore = DASCore()
-    query, expire = item
     status  = dascore.update_cache(query, expire)
     return status
 
@@ -163,16 +162,19 @@ class DASCacheModel(RESTModel):
         data = {'server_method':'nresults'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
+            query = self.dascore.mongoparser.dasql2mongo(query)
             data.update({'status':'success'})
             if  hasattr(self.dascore, 'cache'):
-                if  self.dascore.cache.incache(query):
-                    data['nresults'] = self.dascore.cache.nresults(query)
+                res = self.dascore.cache.nresults(query)
+                if  res:
+                    data['nresults'] = res
                 else:
                     data['status'] = 'not found'
             else:
-                if  self.dascore.in_raw_cache(query):
+                res = self.dascore.in_raw_cache_nresults(query)
+                if  res:
                     data['status'] = 'success'
-                    data['nresults'] = self.dascore.in_raw_cache_nresults(query)
+                    data['nresults'] = res
                 else:
                     data['status'] = 'not found'
         else:
@@ -190,6 +192,7 @@ class DASCacheModel(RESTModel):
         data = {'server_method':'request'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
+            query = self.dascore.mongoparser.dasql2mongo(query)
             idx   = getarg(kwargs, 'idx', 0)
             limit = getarg(kwargs, 'limit', 0)
             skey  = getarg(kwargs, 'skey', '')
@@ -245,6 +248,7 @@ class DASCacheModel(RESTModel):
         data = {'server_method':'create'}
         if  kwargs.has_key('query'):
             query  = kwargs['query']
+            query  = self.dascore.mongoparser.dasql2mongo(query)
             expire = getarg(kwargs, 'expire', 600)
             try:
                 status = self.cachemgr.add(query, expire)
@@ -269,7 +273,8 @@ class DASCacheModel(RESTModel):
 #        print "\n\n### replace", args, kwargs
         data = {'server_method':'replace'}
         if  kwargs.has_key('query'):
-            query  = kwargs['query']
+            query = kwargs['query']
+            query = self.dascore.mongoparser.dasql2mongo(query)
             try:
                 self.dascore.remove_from_cache(query)
             except:
@@ -299,7 +304,8 @@ class DASCacheModel(RESTModel):
 #        print "\n\n### delete", args, kwargs
         data = {'server_method':'delete'}
         if  kwargs.has_key('query'):
-            query  = kwargs['query']
+            query = kwargs['query']
+            query = self.dascore.mongoparser.dasql2mongo(query)
             data.update({'status':'requested', 'query':query})
             try:
                 self.dascore.remove_from_cache(query)
