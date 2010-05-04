@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.14 2009/11/16 16:08:21 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: runsum_service.py,v 1.15 2009/11/18 21:41:05 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -94,6 +94,11 @@ class RunSummaryService(DASAbstractService):
                         raise Exception(msg)
                 args['RUN_BEGIN'] = minrun
                 args['RUN_END']   = maxrun
+            elif key == 'date' and value.has_key('$in') and \
+                len(value['$in']) == 2:
+                date1, date2 = value['$in']
+                args['TIME_BEGIN'] = convert_datetime(date1)
+                args['TIME_END']   = convert_datetime(date2)
             else: # we got some operator, e.g. key :{'$in' : [1,2,3]}
                 # TODO: not sure how to deal with them right now, will throw
                 msg = 'RunSummary does not support value %s for key=%s' \
