@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.41 2009/10/15 00:17:16 valya Exp $"
-__version__ = "$Revision: 1.41 $"
+__revision__ = "$Id: das_core.py,v 1.42 2009/10/15 21:03:04 valya Exp $"
+__version__ = "$Revision: 1.42 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -327,7 +327,7 @@ class DASCore(object):
         params = self.mongoparser.params(query)
         services = params['services'].keys()
         self.logger.info('DASCore::call, services = %s' % services)
-        qhash = genkey(json.dumps(query))
+        qhash = genkey(query)
         for srv in services:
             self.logger.info('DASCore::call %s(%s)' % (srv, query))
             if  self.verbose:
