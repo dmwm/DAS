@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.26 2009/11/03 16:33:33 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: DASSearch.py,v 1.27 2009/12/14 15:41:34 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -69,7 +69,8 @@ class DASSearch(TemplatedPage):
         self.dasmgr = DASCore()
         self.dasmapping = self.dasmgr.mapping
         self.daslogger = self.dasmgr.logger
-        self.pageviews = ['xml', 'list', 'table', 'plain', 'json', 'yuijson'] 
+#        self.pageviews = ['xml', 'list', 'table', 'plain', 'json', 'yuijson'] 
+        self.pageviews = ['xml', 'list', 'json', 'yuijson'] 
         self.cleantime = 60 # in seconds
         self.lastclean = time.time()
         self.decoder   = JSONDecoder()
@@ -195,7 +196,8 @@ class DASSearch(TemplatedPage):
         if  not args and not kwargs:
             page = self.form()
             return self.page(page)
-        view = getarg(kwargs, 'view', 'table')
+#        view = getarg(kwargs, 'view', 'table')
+        view = getarg(kwargs, 'view', 'list')
         if  args:
             return getattr(self, args[0][0])(args[1])
         if  view not in self.pageviews:
@@ -221,6 +223,10 @@ class DASSearch(TemplatedPage):
         if  args:
             recordid = args[0]
             spec = {'_id':recordid}
+            fields = None
+            query = dict(fields=fields, spec=spec)
+        elif  kwargs and kwargs.has_key('_id'):
+            spec = {'_id': kwargs['_id']}
             fields = None
             query = dict(fields=fields, spec=spec)
         else: # return all ids
@@ -352,7 +358,7 @@ class DASSearch(TemplatedPage):
         Convert input row (dict) into UI presentation
         """
         for key in idict.keys():
-            if  key == 'das' or key == '_id':
+            if  key == 'das' or key == '_id' or key == 'das_id':
                 continue
             for item in self.dasmapping.presentation(key):
                 daskey = item['das']
@@ -365,6 +371,10 @@ class DASSearch(TemplatedPage):
         """
         provide DAS list view
         """
+        # force to load the page all the time
+        cherrypy.response.headers['Cache-Control'] = 'no-cache'
+        cherrypy.response.headers['Pragma'] = 'no-cache'
+
         time0   = time.time()
         ajaxreq = getarg(kwargs, 'ajax', 0)
         uinput  = getarg(kwargs, 'input', '')
@@ -382,42 +392,27 @@ class DASSearch(TemplatedPage):
         page    = ""
         ndict   = {'nrows':total, 'limit':limit}
         page    = self.templatepage('das_nrecords', **ndict)
-        for nrecord in range(0, len(rows)):
-            row = rows[nrecord]
-            style = "white"
+#        for nrecord in range(0, len(rows)):
+#            row = rows[nrecord]
+#            style = "white"
 #            if  nrecord % 2:
 #                style = "white"
 #            else:
 #                style = "blue" 
-            page += '<div class="%s"><hr class="line" /><b>Record #%s</b><br />' % (style, nrecord)
-            das = row['das']
-            if  type(das) is types.DictType:
-                das = [das]
-            for jdx in range(0, len(das)):
-                item = das[jdx]
-                for idx in range(0, len(item['system'])):
-                    api    = item['api'][idx]
-                    system = item['system'][idx]
-                    try:
-                        key    = item['selection_keys'][idx]
-                        data   = row[key]
-                        if  type(data) is types.ListType:
-                            data = data[jdx]
-                        if  type(data) is types.ListType:
-                            data = data[idx]
-                    except:
-                        data = row
-                        key  = 'N/A'
-                    gen = self.convert2ui(data)
-                    for uikey, value in [k for k, g in groupby(gen)]:
-                        page += "<b>%s</b>: %s, " % (uikey, value)
-                    pad = ""
-                    id = data['_id']
-                    jsoncode = {'jsoncode': json2html(data, pad)}
-                    jsonhtml = self.templatepage('das_json', **jsoncode)
-                    jsondict = dict(system=system, api=api, daskey=key, 
-                                data=jsonhtml, id=id)
-                    page += self.templatepage('das_row', **jsondict)
+        style = "white"
+        for row in rows:
+            id    = row['_id']
+            rec   = '<a href="/das/records/%s">%s</a>, ' % (id, id)
+            page += '<div class="%s"><hr class="line" /><b>Record</b> %s<br />' \
+                % (style, rec)
+            gen   = self.convert2ui(row)
+            for uikey, value in [k for k, g in groupby(gen)]:
+                page += "<b>%s</b>: %s, " % (uikey, value)
+            pad   = ""
+            jsoncode = {'jsoncode': json2html(row, pad)}
+            jsonhtml = self.templatepage('das_json', **jsoncode)
+            jsondict = dict(data=jsonhtml, id=id)
+            page += self.templatepage('das_row', **jsondict)
             page += '</div>'
         ctime   = (time.time()-time0)
         return self.page(form + page, ctime=ctime)

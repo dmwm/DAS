@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.9 2009/10/16 18:02:47 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: utils.py,v 1.10 2009/12/14 15:41:34 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -107,7 +107,17 @@ def json2html(idict, pad="", short=False):
     orig_pad = pad
     sss = pad + '{' + newline
     for key, val in idict.items():
-        if  type(val) is types.ListType:
+        if  key == '_id' or key == 'das_id':
+            if  type(val) is types.ListType:
+                value = "["
+                for item in val:
+                    value += """<a href="/das/records/%s">%s</a>, """ \
+                        % (item, item)
+                value = value[:-2] + "]"
+            else:
+                value = """<a href="/das/records/%s">%s</a>""" % (val, val)
+            sss += pad + """ <code class="key">"%s":</code>%s""" % (key, value)
+        elif  type(val) is types.ListType:
             sss += pad + """ <code class="key">"%s":</code>""" % key
             sss += pad + '[' + newline
             if  not short:
