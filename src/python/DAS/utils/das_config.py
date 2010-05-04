@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.38 2010/04/14 20:30:30 valya Exp $"
-__version__ = "$Revision: 1.38 $"
+__revision__ = "$Id: das_config.py,v 1.39 2010/04/15 18:01:27 valya Exp $"
+__version__ = "$Revision: 1.39 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -66,6 +66,8 @@ def das_readconfig(dasconfig=None):
     cache_server['host'] = config.get('cache_server', 'host')
     cache_server['thread_pool'] = config.get('cache_server', 'thread_pool')
     cache_server['log_screen'] = config.get('cache_server', 'log_screen')
+    cache_server['queue_limit'] = \
+                config.get('cache_server', 'queue_limit', 100)
     cache_server['socket_queue_size'] = \
                 config.get('cache_server', 'socket_queue_size')
     cache_server['n_worker_threads'] = \
@@ -141,6 +143,7 @@ def das_writeconfig():
     config.set('cache_server', 'log_screen', True)
     config.set('cache_server', 'socket_queue_size', 15)
     config.set('cache_server', 'n_worker_threads', 4)
+    config.set('cache_server', 'queue_limit', 100)
 
     config.add_section('web_server')
     config.set('web_server', 'port', 8212)
