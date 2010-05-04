@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.11 2009/06/24 13:56:44 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_memcache.py,v 1.12 2009/06/24 19:47:44 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -33,6 +33,7 @@ class DASMemcache(Cache):
         self.verbose  = config['verbose']
         self.memcache = memcache.Client(cachelist, debug=self.verbose)
         self.limit    = config['cache_lifetime']
+        self.chunk_size = config['cache_chunk_size']
         self.logger   = config['logger']
         self.servers  = cachelist
 
@@ -89,8 +90,10 @@ class DASMemcache(Cache):
         for row in results:
             rowdict[rowid] = row
             rowid += 1
+            if  len(rowdict.keys()) == self.chunk_size:
+                self.memcache.set_multi(rowdict, time=expire, key_prefix=key)
+                rowdict = {}
             yield row
-#        self.memcache.set_multi(rowdict, time=self.limit, key_prefix=key)
         self.memcache.set_multi(rowdict, time=expire, key_prefix=key)
         self.memcache.set(key, rowid, expire)
 
