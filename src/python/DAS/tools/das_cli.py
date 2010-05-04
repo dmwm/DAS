@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.13 2009/06/05 14:14:03 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_cli.py,v 1.14 2009/07/14 13:49:05 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -14,8 +14,8 @@ from DAS.core.das_core import DASCore
 from DAS.utils.utils import dump
 
 import sys
-if sys.version_info < (2, 5):
-    raise Exception("DAS requires python 2.5 or greater")
+if sys.version_info < (2, 6):
+    raise Exception("DAS requires python 2.6 or greater")
 
 class DASOptionParser: 
     """
@@ -30,7 +30,7 @@ class DASOptionParser:
         self.parser.add_option("--profile", action="store_true", 
                                           dest="profile",
              help="profile output")
-        self.parser.add_option("--query", action="store", type="string", 
+        self.parser.add_option("-q", "--query", action="store", type="string", 
                                           default=False, dest="query",
              help="specify query for your request.")
         self.parser.add_option("--services", action="store_true", 
