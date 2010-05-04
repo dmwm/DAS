@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.40 2009/11/20 00:21:20 valya Exp $"
-__version__ = "$Revision: 1.40 $"
+__revision__ = "$Id: utils.py,v 1.41 2009/11/20 00:56:52 valya Exp $"
+__version__ = "$Revision: 1.41 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -670,16 +670,20 @@ def access(data, elem):
                         for item in result:
                             yield item
 
-def xml_parser(data_ptr, tag, add=None):
+def xml_parser(source, tag, add=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
     large XML documents we use iterparse method to walk through provided
-    data_ptr descriptor (a .read()/close()-supporting file-like object 
-    containig XML data_ptr).
+    source descriptor (a .read()/close()-supporting file-like object 
+    containig XML source).
     """
-    sup = {}
-    for item in ET.iterparse(data_ptr, events=("start", "end")):
-        end, elem = item
+    sup     = {}
+    context = ET.iterparse(source, events=("start", "end"))
+    root    = None
+    for item in context:
+        event, elem = item
+        if  event == "start" and root is None:
+            root = elem # the first element is root
         row = {}
         if  add and not sup:
             if  add.find("_") != -1:
@@ -689,7 +693,7 @@ def xml_parser(data_ptr, tag, add=None):
             else:
                 if  elem.tag == add:
                     sup[add] = elem.attrib
-        if  elem.tag != tag or end == 'end':
+        if  elem.tag != tag or event == 'end':
             continue
         row[elem.tag] = dict(elem.attrib)
         row.update(sup)
@@ -706,7 +710,8 @@ def xml_parser(data_ptr, tag, add=None):
             child.clear()
         elem.clear()
         yield row
-    data_ptr.close()
+    root.clear()
+    source.close()
 
 def json_parser(data):
     """
