@@ -5,9 +5,15 @@
 Couch DB command line admin tool
 """
 
-__revision__ = "$Id: ipy_profile_couch.py,v 1.1 2009/06/18 17:56:13 valya Exp $"
-__version__ = "$Revision: 1.1 $"
-__author__ = "Valentin Kuznetsov"
+__revision__   = "$Id: ipy_profile_couch.py,v 1.2 2009/06/18 18:15:30 valya Exp $"
+__version__    = "$Revision: 1.2 $"
+__author__     = "Valentin Kuznetsov"
+__license__    = "GPL"
+__version__    = "1.0.1"
+__maintainer__ = "Valentin Kuznetsov"
+__email__      = "vkuznet@gmail.com"
+__status__     = "Alpha"
+
 
 # system modules
 import os
@@ -20,9 +26,6 @@ import traceback
 # ipython modules
 from   IPython import Release
 import IPython.ipapi
-
-#from DAS.utils.iprint import PrintManager
-
 import __main__
 
 class PrintManager:
@@ -210,12 +213,20 @@ class TerminalController:
 #
 # load managers
 #
+#######################################################################
 try:
     PM = PrintManager()
 except:
     traceback.print_exc()
 
 def load_config(func_list=[]):
+    """
+    Defines default configuration for Couch DB. We need the following:
+    URI - the Couch DB URI
+    DB  - the Couch DB name
+    DESIGN - the Couch DB design name
+    DEBUG  - debug level, used to setup HTTPConnection debug level
+    """
     msg = """
 import os, re, sys, time, types, traceback, inspect
 import urllib, urllib2, httplib
@@ -488,8 +499,9 @@ def load_module(arg):
     except:
         traceback.print_exc()
         pass
-    msg  = "Loaded %s module." % arg
-    msg += "Use " + PM.msg_blue("%s_help" %arg) + " if it's implemented"
+    msg  = "Loaded %s module. " % arg
+    msg += "Use " + PM.msg_blue("%s_help" %arg) + \
+                " for concrete module help if it's implemented"
     print msg
 
 # keep magic list as global since it's used in couch_help
