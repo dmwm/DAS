@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.18 2009/11/25 18:19:17 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.19 2009/12/02 21:01:08 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -40,6 +40,12 @@ class DASMapping(object):
         self.create_db()
 
         self.notationcache = {}
+        self.init_notationcache()
+
+    def init_notationcache(self):
+        """
+        Initialize notation cache by reading notations.
+        """
         for system, notations in self.notations().items():
             for row in notations:
                 key = system, row['api_param']
@@ -251,7 +257,8 @@ class DASMapping(object):
         Return DAS notation map.
         """
         notationmap = {}
-        spec = {'notations':{'$ne':None}}
+#        spec = {'notations':{'$ne':None}}
+        spec = {'notations':{'$exists':True}}
         if  system:
             spec['system'] = system
         for item in self.col.find(spec):
@@ -264,6 +271,8 @@ class DASMapping(object):
         run_number=run. In case when api_param is not presented in DB
         just return it back.
         """
+        if  not self.notationcache:
+            self.init_notationcache()
         if  self.notationcache.has_key((system, api_param)):
             _api, das_name = self.notationcache[(system, api_param)]
             if  _api:
