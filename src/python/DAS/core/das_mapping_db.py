@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.29 2010/02/16 18:37:37 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.30 2010/02/17 17:01:26 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -407,12 +407,13 @@ class DASMapping(object):
             exp  = row['expire']
             ext  = row['format']
             api  = row['urn']
+            wild = row.get('wild_card', '*')
             keys = []
             for entry in row['daskeys']:
                 keys.append(entry['key'])
             params = dict(row['params'])
             smap[api] = dict(keys=keys, params=params, url=url, expire=exp,
-                                format=ext)
+                                format=ext, wild_card=wild)
         return smap
 
     def presentation(self, daskey):
