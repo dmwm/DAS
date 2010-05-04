@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.53 2009/12/02 14:40:15 valya Exp $"
-__version__ = "$Revision: 1.53 $"
+__revision__ = "$Id: abstract_service.py,v 1.54 2009/12/02 15:44:56 valya Exp $"
+__version__ = "$Revision: 1.54 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -203,11 +203,11 @@ class DASAbstractService(object):
         Filter provided apicall wrt existing apicall records in Analytics DB.
         """
         spec = {'apicall.url':url, 'apicall.api':api}
-        msg  = 'DBSAbstractService::pass_apicall, %s, API=%s, args=%s,'\
+        msg  = 'DBSAbstractService::pass_apicall, %s, API=%s, args=%s'\
         % (self.name, api, api_params)
         for row in self.analytics.col.find(spec):
             if  compare_specs(api_params, row['apicall']['api_params']):
-                msg += ' will re-use existing api call with args=%s'\
+                msg += '\nwill re-use existing api call with args=%s'\
                 % row['apicall']['api_params']
                 self.logger.info(msg)
                 return True
