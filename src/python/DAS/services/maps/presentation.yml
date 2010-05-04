@@ -1,0 +1,26 @@
+# DAS presentation map, it applies to all systems and all urls
+# to create uniform representation of meta-data
+presentation: {
+'block': [
+        {'das':'block.name', 'ui':'BlockName'}, 
+        {'das':'block.size', 'ui':'BlockSize'},
+        {'das':'block.nevents', 'ui':'Number of events'},
+        {'das':'block.nfiles', 'ui':'Number of files'},
+        ],
+'site': [
+        {'das':'site.name', 'ui':'CMSName'}, 
+        {'das':'site.se', 'ui':'StorageElement'}, 
+        {'das':'site.samname', 'ui':'SAMName'}, 
+        {'das':'site.sitename', 'ui':'Site'},
+        {'das':'site.admin.email', 'ui':'Site Admin Email'},
+        {'das':'site.admin.title', 'ui':'Site Admin Role'},
+        ],
+'monitor' : [
+        {'das':'monitor.node', 'ui':'Phedex Node'},
+        {'das':'monitor.rate', 'ui':'Transfer rate'},
+        {'das':'monitor.country', 'ui':'Country'},
+        {'das':'monitor.region', 'ui':'Region'},
+        {'das':'monitor.time', 'ui':'Time interval'},
+        ],
+}
+
