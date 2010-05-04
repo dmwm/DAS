@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.39 2009/10/12 21:02:02 valya Exp $"
-__version__ = "$Revision: 1.39 $"
+__revision__ = "$Id: das_core.py,v 1.40 2009/10/14 15:19:05 valya Exp $"
+__version__ = "$Revision: 1.40 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -28,7 +28,7 @@ except:
 
 #from DAS.core.qlparser import QLParser
 from DAS.core.qlparser import MongoParser
-from DAS.core.das_viewmanager import DASViewManager
+#from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.utils.das_config import das_readconfig
@@ -89,7 +89,7 @@ class DASCore(object):
         self.mongoparser = MongoParser(dasconfig)
         dasconfig['mongoparser'] = self.mongoparser
 
-        self.viewmgr = DASViewManager(dasconfig)
+#        self.viewmgr = DASViewManager(dasconfig)
 
         dasroot = os.environ['DAS_ROOT']
         self.rawcache = None
@@ -178,40 +178,40 @@ class DASCore(object):
             print item
         return
 
-    def get_view(self, name=None):
-        """return DAS view"""
-        if  name:
-            return self.viewmgr.get(name)
-        return self.viewmgr.all()
+#    def get_view(self, name=None):
+#        """return DAS view"""
+#        if  name:
+#            return self.viewmgr.get(name)
+#        return self.viewmgr.all()
 
-    def create_view(self, name, query, 
-                        login='nobody', fullname='N/A', group='users'):
-        """create DAS view"""
-        return self.viewmgr.create(name, query)
+#    def create_view(self, name, query, 
+#                        login='nobody', fullname='N/A', group='users'):
+#        """create DAS view"""
+#        return self.viewmgr.create(name, query)
 
-    def update_view(self, name, query):
-        """update DAS view"""
-        return self.viewmgr.update(name, query)
+#    def update_view(self, name, query):
+#        """update DAS view"""
+#        return self.viewmgr.update(name, query)
 
-    def delete_view(self, name):
-        """delete DAS view"""
-        return self.viewmgr.delete(name)
+#    def delete_view(self, name):
+#        """delete DAS view"""
+#        return self.viewmgr.delete(name)
 
-    def viewanalyzer(self, input):
-        """
-        Simple parser input and look-up if it's view or DAS query
-        """
-        pat = re.compile('^view')
-        if  pat.match(input):
-            qlist = input.replace('view ', '').strip().split()
-            name  = qlist[0]
-            cond  = ''
-            if  len(qlist) > 1:
-                cond = ' '.join(qlist[1:])
-            query = self.viewmgr.get(name) + ' ' + cond
-        else:
-            query = input
-        return query
+#    def viewanalyzer(self, input):
+#        """
+#        Simple parser input and look-up if it's view or DAS query
+#        """
+#        pat = re.compile('^view')
+#        if  pat.match(input):
+#            qlist = input.replace('view ', '').strip().split()
+#            name  = qlist[0]
+#            cond  = ''
+#            if  len(qlist) > 1:
+#                cond = ' '.join(qlist[1:])
+#            query = self.viewmgr.get(name) + ' ' + cond
+#        else:
+#            query = input
+#        return query
 
     def aggregation(self, results):
         """

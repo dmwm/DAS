@@ -1,4 +1,5 @@
 <!-- das_list.tmpl -->
+#import types
 <div id="results">
 
 <div align="left">
@@ -38,7 +39,25 @@ results
 <hr class="line" />
 #set row = $resultlist[$idx]
 #for key in $titlelist
-<b>$key</b>: $row[$key]
+###<b>$key</b>: $row[$key]
+<b>$key</b> entity contains the following information
+<br/>
+#set das_data=$row[$key]
+#if type($das_data) is types.ListType
+#for item in $das_data
+#for kkk, vvv in $item.items()
+$kkk: $vvv<br/>
+#end for
+#end for
+
+#elif type($das_data) is types.DictType
+#for kkk, vvv in $item.items()
+$kkk: $vvv<br/>
+#end for
+
+#else
+$das_data
+#end if
 <br/>
 #end for
 </div>

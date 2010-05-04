@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.23 2009/10/13 18:11:05 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: DASSearch.py,v 1.24 2009/10/14 15:19:05 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -126,36 +126,36 @@ class DASSearch(TemplatedPage):
                 'src/python/DAS/tools/das_cache_client.py')
         return serve_file(clifile, content_type='text/plain')
 
-    @expose
-    def create_view(self, *args, **kwargs):
-        """
-        create DAS view.
-        """
-        msg   = ''
-        if  kwargs.has_key('name') and kwargs.has_key('query'):
-            name  = kwargs['name']
-            query = kwargs['query']
-            try:
-                self.dasmgr.create_view(name, query)
-                msg = "View '%s' has been created" % name
-            except Exception, exc:
-                msg = "Fail to create view '%s' with query '%s'" \
-                % (name, query)
-                msg += '</br>Reason: <span class="box_blue">' 
-                msg += exc.message + '</span>'
-                pass
-        views = self.dasmgr.get_view()
-        page  = self.templatepage('das_views', views=views, msg=msg)
-        return self.page(page, response_div=False)
+#    @expose
+#    def create_view(self, *args, **kwargs):
+#        """
+#        create DAS view.
+#        """
+#        msg   = ''
+#        if  kwargs.has_key('name') and kwargs.has_key('query'):
+#            name  = kwargs['name']
+#            query = kwargs['query']
+#            try:
+#                self.dasmgr.create_view(name, query)
+#                msg = "View '%s' has been created" % name
+#            except Exception, exc:
+#                msg = "Fail to create view '%s' with query '%s'" \
+#                % (name, query)
+#                msg += '</br>Reason: <span class="box_blue">' 
+#                msg += exc.message + '</span>'
+#                pass
+#        views = self.dasmgr.get_view()
+#        page  = self.templatepage('das_views', views=views, msg=msg)
+#        return self.page(page, response_div=False)
 
-    @expose
-    def views(self, *args, **kwargs):
-        """
-        represent DAS views.
-        """
-        views = self.dasmgr.get_view()
-        page  = self.templatepage('das_views', views=views, msg='')
-        return self.page(page, response_div=False)
+#    @expose
+#    def views(self, *args, **kwargs):
+#        """
+#        represent DAS views.
+#        """
+#        views = self.dasmgr.get_view()
+#        page  = self.templatepage('das_views', views=views, msg='')
+#        return self.page(page, response_div=False)
 
     @expose
     def services_v1(self, *args, **kwargs):

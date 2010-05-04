@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.27 2009/10/02 19:07:49 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: das_config.py,v 1.28 2009/10/14 15:19:05 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -59,8 +59,8 @@ def das_readconfig(dasconfig=None):
     configdict['filecache_db_engine'] = \
                 config.get('filecache', 'db_engine', None)
 
-    configdict['views_engine'] = config.get('views', 'db_engine', None)
-    configdict['views_dir'] = config.get('views', 'dir', '')
+#    configdict['views_engine'] = config.get('views', 'db_engine', None)
+#    configdict['views_dir'] = config.get('views', 'dir', '')
 
     configdict['mapping_dbhost'] = config.get('mapping_db', 'dbhost', 'localhost')
     configdict['mapping_dbport'] = int(config.get('mapping_db', 'dbport', '27017'))
@@ -87,10 +87,10 @@ def das_readconfig(dasconfig=None):
         url     = config.get(system, 'url', '')
         configdict[system] = {'verbose': verbose, 'expire': expire,
                               'url'  : url}
-    sum_views = {}
-    for item in config.options('summary views'):
-        sum_views[item] = config.get('summary views', item)
-    configdict['sum_views'] = sum_views
+#    sum_views = {}
+#    for item in config.options('summary views'):
+#        sum_views[item] = config.get('summary views', item)
+#    configdict['sum_views'] = sum_views
     return configdict
 
 def das_writeconfig():
@@ -136,11 +136,11 @@ def das_writeconfig():
 #    config.set('filecache', 'db_engine', \
 #                'mysql://%s:%s@localhost/DAS' % (login, pw))
 
-    config.add_section('views')
-    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'db')
-    dbfile = os.path.join(dbdir, 'das_views.db')
-    config.set('views', 'dir', dbdir)
-    config.set('views', 'db_engine', 'sqlite:///%s' % dbfile)
+#    config.add_section('views')
+#    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'db')
+#    dbfile = os.path.join(dbdir, 'das_views.db')
+#    config.set('views', 'dir', dbdir)
+#    config.set('views', 'db_engine', 'sqlite:///%s' % dbfile)
 
     config.add_section('mapping_db')
     config.set('mapping_db', 'dbhost', 'localhost')
@@ -152,23 +152,23 @@ def das_writeconfig():
     config.set('analytics_db', 'dbport', '27017')
     config.set('analytics_db', 'dbname', 'analytics')
 
-    config.add_section('summary views')
-    query  = 'find dataset, dataset.createdate, dataset.createby, '
-    query += 'sum(block.size), sum(file.numevents), count(file)'
-    config.set('summary views', 'dataset' , query)
-    query  = 'find block.name, block.size, block.numfiles, '
-    query += 'block.numevents, block.status, block.createby, '
-    query += 'block.createdate, block.modby, block.moddate'
-    config.set('summary views', 'block' , query)
-    query  = 'find site, sum(block.numevents), '
-    query += 'sum(block.numfiles), sum(block.size)'
-    config.set('summary views', 'site' , query)
-    query  = 'find datatype, dataset, run.number, run.numevents, '
-    query += 'run.numlss, run.totlumi, run.store, run.starttime, '
-    query += 'run.endtime, run.createby, run.createdate, run.modby, '
-    query += 'run.moddate, count(file), sum(file.size), '
-    query += 'sum(file.numevents)'
-    config.set('summary views', 'run' , query)
+#    config.add_section('summary views')
+#    query  = 'find dataset, dataset.createdate, dataset.createby, '
+#    query += 'sum(block.size), sum(file.numevents), count(file)'
+#    config.set('summary views', 'dataset' , query)
+#    query  = 'find block.name, block.size, block.numfiles, '
+#    query += 'block.numevents, block.status, block.createby, '
+#    query += 'block.createdate, block.modby, block.moddate'
+#    config.set('summary views', 'block' , query)
+#    query  = 'find site, sum(block.numevents), '
+#    query += 'sum(block.numfiles), sum(block.size)'
+#    config.set('summary views', 'site' , query)
+#    query  = 'find datatype, dataset, run.number, run.numevents, '
+#    query += 'run.numlss, run.totlumi, run.store, run.starttime, '
+#    query += 'run.endtime, run.createby, run.createdate, run.modby, '
+#    query += 'run.moddate, count(file), sum(file.size), '
+#    query += 'sum(file.numevents)'
+#    config.set('summary views', 'run' , query)
 
     config.add_section('dbs')
     config.set('dbs', 'expire', 1*60*60) # 1 hour, in seconds
