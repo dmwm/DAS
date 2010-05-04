@@ -1,11 +1,32 @@
 
 <!-- das_admin.tmpl -->
+<div id="container">
+
+<div id="left">
+
+<div id="vmenu">
+<h3 class="sectionhead">DATABASES</h3>
+<ul>
+#for db in $ddict.keys()
+<li><a href="javascript:HideAll();ShowTag('$db')">$db</a></li>
+#end for
+</ul>
+</div>
+
+</div> <!-- end of left -->
+
+<div id="right">
+
+<div id="info" name="info" class="show">
 <h3>MongoDB info</h3>
 #for key, val in $mongo_info.items()
 <b>$key</b>: $val
 <br />
 #end for
+</div> <!--end of id=info -->
+
 #for db in $ddict.keys()
+<div id="$db" name="$db" class="hide">
 <h3 class="gray_box">Database: $db</h3>
 #for coll, info in $ddict[$db].items()
 <h4>Collection: $coll</h4>
@@ -36,5 +57,20 @@ $info[1]
 #end if
 
 #end for
+</div> <!-- end of class hide -->
 #end for
+
+</div> <!-- end of right -->
+
+<div class="clearer"></div>
+
+</div> <!-- end of container -->
+<script type="text/javascript">
+function HideAll() {
+HideTag('info');
+#for db in $ddict.keys()
+HideTag('$db');
+#end for
+}
+</script>
 <!-- end of das_admin.tmpl -->
