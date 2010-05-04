@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.10 2009/06/04 14:09:26 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_memcache.py,v 1.11 2009/06/24 13:56:44 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -90,7 +90,8 @@ class DASMemcache(Cache):
             rowdict[rowid] = row
             rowid += 1
             yield row
-        self.memcache.set_multi(rowdict, time=self.limit, key_prefix=key)
+#        self.memcache.set_multi(rowdict, time=self.limit, key_prefix=key)
+        self.memcache.set_multi(rowdict, time=expire, key_prefix=key)
         self.memcache.set(key, rowid, expire)
 
     def remove_from_cache(self, query):
