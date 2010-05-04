@@ -10,14 +10,14 @@
 -->
 <div style="width:15%; background:#E6E6E6">
 #if  $fromrow and $fromrow != 0
-<a href="/dassearch/?input=$input&amp;fromrow=0&amp;limit=$limit">&#171;</a>
+<a href="/das/?input=$input&amp;fromrow=0&amp;limit=$limit">&#171;</a>
 &nbsp;
-<a href="/dassearch/?input=$input&amp;fromrow=$prevfrom&amp;limit=$limit">prev</a> |
+<a href="/das/?input=$input&amp;fromrow=$prevfrom&amp;limit=$limit">prev</a> |
 #end if
 #if  $fromrow != $nresults
-<a href="/dassearch/?input=$input&amp;fromrow=$nextfrom&amp;limit=$limit">next</a>
+<a href="/das/?input=$input&amp;fromrow=$nextfrom&amp;limit=$limit">next</a>
 &nbsp;
-<a href="/dassearch/?input=$input&amp;fromrow=$lastfrom&amp;limit=$limit">&#187;</a>
+<a href="/das/?input=$input&amp;fromrow=$lastfrom&amp;limit=$limit">&#187;</a>
 #end if
 </div>
 
