@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.77 2010/03/01 19:19:58 valya Exp $"
-__version__ = "$Revision: 1.77 $"
+__revision__ = "$Id: abstract_service.py,v 1.78 2010/03/02 03:39:55 valya Exp $"
+__version__ = "$Revision: 1.78 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -261,20 +261,24 @@ class DASAbstractService(object):
                     if  oper == '$in':
                         minval = int(val[0])
                         maxval = int(val[-1])
+                        args[key] = range(minval, maxval)
                     elif oper == '$lt':
                         maxval = int(val) - 1
+                        args[key] = maxval
                     elif oper == '$lte':
                         maxval = int(val)
+                        args[key] = maxval
                     elif oper == '$gt':
                         minval = int(val) + 1
+                        args[key] = minval
                     elif oper == '$gte':
                         minval = int(val)
+                        args[key] = minval
                     else:
                         msg  = 'DASAbstractService::inspect_params, API=%s'\
                                 % api
                         msg += ' does not support operator %s' % oper
                         raise Exception(msg)
-                args[key] = range(minval, maxval)
         return args
 
     def get_notations(self, api):
