@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.20 2009/11/16 20:53:10 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: das_cli.py,v 1.21 2009/11/24 16:01:10 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -62,6 +62,12 @@ class DASOptionParser:
         self.parser.add_option("--limit", action="store", type="int", 
                                           default=0, dest="limit",
              help="limit number of returned results")
+        self.parser.add_option("--sort-key", action="store", type="string", 
+                                          default=None, dest="skey",
+             help="specify sorting key, please use dot notation for compound keys")
+        self.parser.add_option("--sort-order", action="store", type="string", 
+                                          default='asc', dest="sorder",
+             help="specify sorting order, e.g. asc/desc")
         self.parser.add_option("--no-output", action="store_true", 
                                           dest="nooutput",
              help="run DAS but don't print results")
@@ -76,12 +82,12 @@ def iterate(input_results):
     for elem in input_results:
         pass
 
-def run(DAS, query, idx, limit, nooutput, plain, debug):
+def run(DAS, query, idx, limit, skey, sorder, nooutput, plain, debug):
     """
     Execute DAS workflow for given set of parameters.
     We use this function in main and in profiler.
     """
-    results = DAS.result(query, idx, limit)
+    results = DAS.result(query, idx, limit, skey, sorder)
     if  not nooutput:
         if  plain:
             for item in results:
@@ -130,16 +136,19 @@ if __name__ == '__main__':
         limit  = opts.limit
         output = opts.nooutput
         plain  = opts.plain
+        skey   = opts.skey
+        sorder = opts.sorder
 
         if  opts.profile:
             import cProfile # python profiler
             import pstats   # profiler statistics
-            cProfile.run('run(DAS,query,idx,limit,output,plain,debug)', 'profile.dat')
+            cmd  = 'run(DAS,query,idx,limit,skey,sorder,output,plain,debug)'
+            cProfile.run(cmd, 'profile.dat')
             info = pstats.Stats('profile.dat')
             info.sort_stats('cumulative')
             info.print_stats()
         else:
-            run(DAS, query, idx, limit, output, plain, debug)
+            run(DAS, query, idx, limit, skey, sorder, output, plain, debug)
     else:
         print
         print "DAS CLI interface, no actions found,"

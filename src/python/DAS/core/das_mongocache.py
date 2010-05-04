@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.38 2009/11/24 14:57:46 valya Exp $"
-__version__ = "$Revision: 1.38 $"
+__revision__ = "$Id: das_mongocache.py,v 1.39 2009/11/24 16:01:10 valya Exp $"
+__version__ = "$Revision: 1.39 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -23,7 +23,7 @@ import DAS.utils.jsonwrapper as json
 # monogo db modules
 from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
-from pymongo import DESCENDING
+from pymongo import DESCENDING, ASCENDING
 
 DOT = '.'
 SEP = '___'
@@ -250,6 +250,7 @@ class DASMongocache(Cache):
         self.db      = self.conn[self.dbname]
         self.col     = self.db[self.colname]
 
+        self.mapping = self.conn['mapping']['db']
 # Not ready yet
 #        self.add_manipulator()
         
@@ -368,20 +369,33 @@ class DASMongocache(Cache):
         idx    = int(idx)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
-        if  fields:
-            skeys = [(k, DESCENDING) for k in list(fields)]
-        else:
-            skeys = [(k, DESCENDING) for k in spec.keys()]
+        skeys  = []
+        if  skey:
+            if  order == 'asc':
+                skeys = [(skey, ASCENDING)]
+            else:
+                skeys = [(skey, DESCENDING)]
         ### The date is special key in DAS, data-services doesn't provide
         ### it, so we must drop it.
         if  spec.has_key('date'):
             del spec['date']
-#        spec.update({'query.spec':{'$exists':False}}) # exclude query records
-        if  limit:
-            res = self.col.find(spec=spec, fields=fields)\
-                .sort(skeys).skip(idx).limit(limit)
-        else:
-            res = self.col.find(spec=spec, fields=fields).sort(skeys)
+        res = []
+        try:
+            if  limit:
+                if  skeys:
+                    res = self.col.find(spec=spec, fields=fields)\
+                        .sort(skeys).skip(idx).limit(limit)
+                else:
+                    res = self.col.find(spec=spec, fields=fields)\
+                        .skip(idx).limit(limit)
+            else:
+                if  skeys:
+                    res = self.col.find(spec=spec, fields=fields).sort(skeys)
+                else:
+                    res = self.col.find(spec=spec, fields=fields)
+        except Exception as exp:
+            row = {'exception': exp}
+            yield row
         for row in res:
             # TODO: use this if there is no das_son_manipulator
             obj_id = row['_id']

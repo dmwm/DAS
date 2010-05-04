@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.16 2009/11/19 17:35:42 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.17 2009/11/24 16:01:10 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -234,6 +234,17 @@ class DASMapping(object):
                     if  api_param not in names:
                         names.append(api_param)
         return names
+
+    def sort_keys(self, daskey):
+        """
+        Translates DAS QL key into data-service API input parameter
+        """
+        query = {'daskeys.key': daskey}
+        keys  = []
+        for row in self.col.find(query, ['daskeys.map']):
+            if  row['daskeys']['map'] not in keys:
+                keys.append(row['daskeys']['map'])
+        return keys
 
     def notations(self):
         """
