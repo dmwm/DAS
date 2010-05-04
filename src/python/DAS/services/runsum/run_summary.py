@@ -4,8 +4,8 @@
 """
 RunSummary service tools
 """
-__revision__ = "$Id: run_summary.py,v 1.3 2009/06/04 14:10:18 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: run_summary.py,v 1.4 2009/10/13 15:42:08 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import urllib2
@@ -57,7 +57,7 @@ def run_summary_url(url, params):
         url = url[:-1]
     paramstr = ''
     for key, val in params.items():
-        paramstr += '%s=%s&' % (key, val)
+        paramstr += '%s=%s&' % (key, urllib.quote(val))
     return url + '?' + paramstr[:-1]
 
 def get_run_summary(url, params, key, cert, debug=0):

@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.9 2009/10/10 15:55:57 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: runsum_service.py,v 1.10 2009/10/13 15:42:08 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -23,6 +23,10 @@ except:
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, get_key_cert, dasheader
 from DAS.services.runsum.run_summary import get_run_summary
+
+def convert_datetime(sec):
+    """Convert seconds since epoch to date format used in RunSummary"""
+    return time.strftime("%Y.%m.%d %H:%M:%S", time.gmtime(sec))
 
 def runsum_keys():
     """Retrieve run summary keys directly from dasmap.cfg file"""
@@ -68,8 +72,8 @@ class RunSummaryService(DASAbstractService):
                         msg += 'Please use either date last XXh format or'
                         msg += 'date in YYYYMMDD-YYYYMMDD'
                         raise Exception(msg)
-                    args['date1'] = convert_datetime(value[0])
-                    args['date2'] = convert_datetime(value[1])
+                    args['TIME_BEGIN'] = convert_datetime(value[0])
+                    args['TIME_END']   = convert_datetime(value[1])
                 else:
                     for param in self.dasmapping.das2api(self.name, key):
                         args[param] = value
@@ -77,6 +81,9 @@ class RunSummaryService(DASAbstractService):
                 # TODO: not sure how to deal with them right now, will throw
                 msg = 'RunSummary does not support operator %s' % oper
                 raise Exception(msg)
+        if  args == self.params: # no parameter is provided
+            args['TIME_END'] = convert_datetime(time.time())
+            args['TIME_BEGIN'] = convert_datetime(time.time() - 24*60*60)
         key, cert = get_key_cert()
         debug   = 0
         if  self.verbose > 1:
