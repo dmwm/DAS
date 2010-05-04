@@ -7,6 +7,8 @@ Unit test for DAS QL parser
 
 import unittest
 from DAS.core.qlparser import dasqlparser, findbracketobj, antrlparser
+from DAS.core.qlparser import getconditions
+from DAS.core.qlparser import QLParser
 
 class testQLParser(unittest.TestCase):
     """
@@ -77,6 +79,56 @@ class testQLParser(unittest.TestCase):
         res_queries = res['queries'].values()
         res_queries.sort()
         self.assertEqual(res_queries, querylist)
+
+    def test_qlparser(self):
+        """test QLParser class"""
+        imap = {'dbs':['dataset', 'run', 'site', 'block'],
+                'phedex':['block', 'replica', 'site'], 
+                'sitedb': ['admin', 'site']}
+        q = "find dataset where ((run=1 or run=2) or dataset=bla) and site=cern order by block"
+        ql = QLParser(imap)
+
+        result = ql.selkeys(q)
+        expect = ['dataset']
+        self.assertEqual(result, expect)
+
+        result = ql.conditions(q)
+        expect = ['(', '(', {'value': '1', 'key': 'run', 'op': '='}, 
+                  'or', {'value': '2', 'key': 'run', 'op': '='}, ')', 
+                  'or', {'value': 'bla', 'key': 'dataset', 'op': '='}, ')', 
+                  'and', {'value': 'cern', 'key': 'site', 'op': '='}]
+        self.assertEqual(result, expect)
+
+        result = ql.allkeys(q)
+        expect = ['block', 'dataset', 'run', 'site']
+        self.assertEqual(result, expect)
+
+        q = "find a,b,c where r=1)"
+        self.assertRaises(Exception, ql.params, q)
+
+        q = "find a,v whhhere"
+        self.assertRaises(Exception, ql.params, q)
+        
+        q = "finds a,v"
+        self.assertRaises(Exception, ql.params, q)
+        
+        q = "find dataset,admin,replica where site=123 or site=345 order by site desc"
+        result = ql.params(q)
+        expect = {'order_by_list': ['site'], 
+                  'selkeys': ['dataset', 'admin', 'replica'], 
+                  'unique_services': ['sitedb', 'dbs', 'phedex'], 
+                  'order_by_order': 'desc', 
+                  'services': {'sitedb': ['admin', 'site'], 
+                               'dbs': ['dataset', 'site'], 
+                               'phedex': ['replica', 'site']}, 
+                  'conditions': [{'value': '123', 'key': 'site', 'op': '='}, 
+                                 'or', 
+                                 {'value': '345', 'key': 'site', 'op': '='}], 
+                  'allkeys': ['admin', 'dataset', 'replica', 'site'], 
+                  'unique_keys': ['admin', 'dataset', 'replica', 'site', 'block']}
+        self.assertEqual(result, expect)
+
+
 #
 # main
 #

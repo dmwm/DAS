@@ -4,8 +4,8 @@
 """
 Query parser for DAS
 """
-__revision__ = "$Id: qlparser.py,v 1.5 2009/05/08 14:52:31 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: qlparser.py,v 1.6 2009/05/08 15:04:21 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -298,7 +298,7 @@ class QLParser(object):
             msg =  "Unequal number of ( and ) brackets"
             raise Exception(msg)
         # check presence of correct action
-        first_word = query.split()[0]
+        first_word = query.split()[0] + ' '
         if  first_word not in self.prefix:
             msg = "Unsupported keyword '%s'" % first_word
             raise Exception(msg)
