@@ -54,16 +54,16 @@ class testDASLogger(unittest.TestCase):
         self.remove()
         self.daslogger.level(1)
         self.daslogger.info('test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = '- DAS - INFO - test'
-        self.assertEqual(expect, result)
+        result = self.logcontent().split()[2:]
+        self.assertEqual('INFO', result[3])
+        self.assertEqual('test', result[-1])
 
         self.remove()
         self.daslogger.level(2)
         self.daslogger.info('test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = '- DAS - INFO - test'
-        self.assertEqual(expect, result)
+        result = self.logcontent().split()[2:]
+        self.assertEqual('INFO', result[3])
+        self.assertEqual('test', result[-1])
 
         self.remove()
         self.daslogger.level(1)
@@ -75,44 +75,44 @@ class testDASLogger(unittest.TestCase):
         self.remove()
         self.daslogger.level(2)
         self.daslogger.debug('test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = '- DAS - DEBUG - test'
-        self.assertEqual(expect, result)
+        result = self.logcontent().split()[2:]
+        self.assertEqual('DEBUG', result[3])
+        self.assertEqual('test', result[-1])
 
         self.remove()
         self.daslogger.level(0)
         self.daslogger.error('error test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = '- DAS - ERROR - error test'
-        self.assertEqual(expect, result)
+        result = self.logcontent().split()[2:]
+        self.assertEqual('ERROR', result[3])
+        self.assertEqual('test', result[-1])
 
         self.remove()
         self.daslogger.level(2)
         self.daslogger.error('error test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = '- DAS - ERROR - error test'
-        self.assertEqual(expect, result)
+        result = self.logcontent().split()[2:]
+        self.assertEqual('ERROR', result[3])
+        self.assertEqual('test', result[-1])
 
         self.remove()
         self.daslogger.level(0)
         self.daslogger.warning('test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = '- DAS - WARNING - test'
-        self.assertEqual(expect, result)
+        result = self.logcontent().split()[2:]
+        self.assertEqual('WARNING', result[3])
+        self.assertEqual('test', result[-1])
 
         self.remove()
         self.daslogger.level(0)
         self.daslogger.exception('test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = '- DAS - ERROR - test'
-        self.assertEqual(expect, result)
+        result = self.logcontent().split()[2:]
+        self.assertEqual('ERROR', result[3])
+        self.assertEqual('test', result[-1])
 
         self.remove()
         self.daslogger.level(0)
         self.daslogger.critical('test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = '- DAS - CRITICAL - test'
-        self.assertEqual(expect, result)
+        result = self.logcontent().split()[2:]
+        self.assertEqual('CRITICAL', result[3])
+        self.assertEqual('test', result[-1])
 
 #
 # main
