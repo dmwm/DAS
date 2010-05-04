@@ -1,21 +1,19 @@
 # RunSummary API mapping to DAS
 system : runsum
-url : "https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary"
 format : XML
 ---
-api : 'runsum'
+urn : 'runsum'
+url : "https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary"
 expire : 3600
 params  : {'DB':'cms_omds_lb', 'FORMAT':'XML', 'RUN':'required'}
-record : { 
-    'daskeys' : [
-            {'key':'run', 'map':'run.run_number', 'pattern':''},
-            {'key':'bfield', 'map':'run.bfield', 'pattern':''},
-                ],
-    'api2das' : [
-            {'api_param':'RUN', 'das_key':'run', 'pattern':"re.compile('[1-9][0-9]{4,5}')"},
-            {'api_param':'RUN', 'das_key':'run.run_number', 'pattern':"re.compile('[1-9][0-9]{4,5}')"},
-    ]
-}
+daskeys : [
+        {'key':'run', 'map':'run.run_number', 'pattern':''},
+        {'key':'bfield', 'map':'run.bfield', 'pattern':''},
+]
+api2das : [
+        {'api_param':'RUN', 'das_key':'run', 'pattern':"re.compile('[1-9][0-9]{4,5}')"},
+        {'api_param':'RUN', 'das_key':'run.run_number', 'pattern':"re.compile('[1-9][0-9]{4,5}')"},
+]
 ---
 notations : [
     {'api_param':'bField', 'das_name':'bfield', 'api':''},

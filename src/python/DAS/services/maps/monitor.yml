@@ -1,9 +1,9 @@
 # Overview (monitor) data-service API mapping to DAS
 system : monitor
-url : https://cmsweb.cern.ch/overview/
 format : JSON
 ---
-api : '/plotfairy/phedex/prod/link-rate:plot'
+urn: 'plot'
+url : "https://cmsweb.cern.ch/overview/plotfairy/phedex/prod/link-rate:plot"
 expire : 3600
 params : {
     'session': 'kkk777',
@@ -19,15 +19,13 @@ params : {
     'to': '',
     'type': 'json',
 }
-record : { 
-    'daskeys' : [
-            {'key':'monitor', 'map':'monitor', 'pattern':''},
-    ],
-    'api2das' : [
-            {'api_param':'start', 'das_key':'date', 'pattern':""},
-            {'api_param':'end', 'das_key':'date', 'pattern':""},
-    ]
-}
+daskeys : [
+        {'key':'monitor', 'map':'monitor', 'pattern':''},
+]
+api2das : [
+        {'api_param':'start', 'das_key':'date', 'pattern':""},
+        {'api_param':'end', 'das_key':'date', 'pattern':""},
+]
 ---
 notations : [
     {'api_param':'bField', 'das_name':'bfield', 'api':''},

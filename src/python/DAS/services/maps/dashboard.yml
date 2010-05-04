@@ -1,9 +1,9 @@
 # Dashboard API mapping to DAS
 system : dashboard
-url : "http://dashb-cms-job.cern.ch/dashboard/request.py"
 format : XML
 ---
-api : 'jobsummary-plot-or-table'
+urn: 'jobsummary-plot-or-table'
+url : "http://dashb-cms-job.cern.ch/dashboard/request.py/jobsummary-plot-or-table"
 expire : 3600
 params : {
     'user': '',
@@ -21,19 +21,17 @@ params : {
     'tier': '',
     'check': 'submitted',
 }
-record : { 
-    'daskeys' : [
-        {'key':'jobsummary', 'map':'jobsummary', 'pattern':''},
-    ],
-    'api2das' : [
-        {'api_param':'date1', 'das_key':'date', 'pattern':""},
-        {'api_param':'date2', 'das_key':'date', 'pattern':""},
-        {'api_param':'ce', 'das_key':'site', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-        {'api_param':'ce', 'das_key':'site.ce', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-        {'api_param':'site', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
-        {'api_param':'site', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
-    ]
-}
+daskeys : [
+    {'key':'jobsummary', 'map':'jobsummary', 'pattern':''},
+]
+api2das : [
+    {'api_param':'date1', 'das_key':'date', 'pattern':""},
+    {'api_param':'date2', 'das_key':'date', 'pattern':""},
+    {'api_param':'ce', 'das_key':'site', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+    {'api_param':'ce', 'das_key':'site.ce', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+    {'api_param':'site', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
+    {'api_param':'site', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
+]
 ---
 notations : [
     {'api_param':'bField', 'das_name':'bfield', 'api':''},
