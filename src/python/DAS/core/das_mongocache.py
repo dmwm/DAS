@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.44 2009/12/07 21:21:57 valya Exp $"
-__version__ = "$Revision: 1.44 $"
+__revision__ = "$Id: das_mongocache.py,v 1.45 2009/12/14 15:39:46 valya Exp $"
+__version__ = "$Revision: 1.45 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -324,7 +324,7 @@ class DASMongocache(Cache):
         spec   = {'das.expire' : {'$lt' : int(time.time())}}
 #        fields = ['_id']
 #        for row in self.col.find(spec, fields):
-#            objid = row['_id'].url_encode()
+#            objid = str(row['_id'])
 #            self.col.remove({'das_id':objid})
         self.col.remove(spec)
 
@@ -407,7 +407,7 @@ class DASMongocache(Cache):
         for row in res:
             # TODO: use this if there is no das_son_manipulator
             obj_id = row['_id']
-            row['_id'] = obj_id.url_encode()
+            row['_id'] = str(obj_id)
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
@@ -476,7 +476,7 @@ class DASMongocache(Cache):
                 counter += 1
 #                item['das'] = dasheader
                 item['das'] = dict(expire=dasheader['expire'])
-                item['das_id'] = objid.url_encode()
+                item['das_id'] = str(objid)
                 row = None
                 if  query_in_cache:
                     try:
