@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.18 2009/11/06 00:05:08 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: das_cli.py,v 1.19 2009/11/08 19:07:15 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -132,14 +132,12 @@ if __name__ == '__main__':
         plain  = opts.plain
 
         if  opts.profile:
-            import hotshot                   # Python profiler
-            import hotshot.stats             # profiler statistics
-            profiler = hotshot.Profile("profile.dat")
-            profiler.run("run(DAS,query,idx,limit,output,plain,debug)")
-            profiler.close()
-            stats = hotshot.stats.load("profile.dat")
-            stats.sort_stats('time', 'calls')
-            stats.print_stats()
+            import cProfile # python profiler
+            import pstats   # profiler statistics
+            cProfile.run('run(DAS,query,idx,limit,output,plain,debug)', 'profile.dat')
+            info = pstats.Stats('profile.dat')
+            info.sort_stats('cumulative')
+            info.print_stats()
         else:
             run(DAS, query, idx, limit, output, plain, debug)
     else:
