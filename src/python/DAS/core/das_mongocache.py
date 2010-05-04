@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.35 2009/11/16 20:49:05 valya Exp $"
-__version__ = "$Revision: 1.35 $"
+__revision__ = "$Id: das_mongocache.py,v 1.36 2009/11/17 19:31:38 valya Exp $"
+__version__ = "$Revision: 1.36 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,6 +17,7 @@ import itertools
 # DAS modules
 from DAS.utils.utils import getarg, dict_value, merge_dict, genkey
 from DAS.core.cache import Cache
+from DAS.core.das_son_manipulator import DAS_SONManipulator
 import DAS.utils.jsonwrapper as json
 
 # monogo db modules
@@ -248,7 +249,27 @@ class DASMongocache(Cache):
         self.conn    = Connection(self.dbhost, self.dbport)
         self.db      = self.conn[self.dbname]
         self.col     = self.db[self.colname]
+
+# Not ready yet
+#        self.add_manipulator()
         
+    def add_manipulator(self):
+        """
+        Add DAS-specific MongoDB SON manipulator to perform
+        conversion of inserted data into DAS cache.
+        """
+        mapping_db  = self.conn['mapping']
+        collection  = mapping_db['db']
+        notationmap = {}
+        spec = {'notations':{'$ne':None}}
+        for item in collection.find(spec):
+            notationmap[item['system']] = item['notations']
+        das_son_manipulator = DAS_SONManipulator(notationmap)
+        self.db.add_son_manipulator(das_son_manipulator)
+        msg = "DASMongocache::__init__, DAS_SONManipulator %s" \
+        % das_son_manipulator
+        self.logger.info(msg)
+
     def is_expired(self, query):
         """
         Check if we have query result is expired in cache.
@@ -354,6 +375,7 @@ class DASMongocache(Cache):
         else:
             res = self.col.find(spec=spec, fields=fields)
         for row in res:
+            # TODO: use this if there is no das_son_manipulator
             obj_id = row['_id']
             row['_id'] = obj_id.url_encode()
             if  fields:
@@ -434,7 +456,8 @@ class DASMongocache(Cache):
                         mdict = merge_dict(item, row)
                         mdict.pop('_id')
                         self.col.insert(mdict)
-                        self.col.remove({'_id': row['_id']})
+                        obj_id = ObjectId(row['_id'])
+                        self.col.remove({'_id': obj_id})
                         merge_count += 1
                         del mdict
                     else:
