@@ -19,7 +19,7 @@ class testUtils(unittest.TestCase):
         """
         dbs_set = [
         {
-                '_system_' : 'dbs',
+                'system' : 'dbs',
                 'dataset' : '/a/b/c',
                 'run' : '100',
                 'bfield' : '',
@@ -28,7 +28,7 @@ class testUtils(unittest.TestCase):
         },
 
         {
-                '_system_' : 'dbs',
+                'system' : 'dbs',
                 'dataset' : '/a/b/c',
                 'run' : '101',
                 'bfield' : '',
@@ -37,7 +37,7 @@ class testUtils(unittest.TestCase):
         },
 
         {
-                '_system_' : 'dbs',
+                'system' : 'dbs',
                 'dataset' : '/a/b/c',
                 'run' : '102',
                 'bfield' : '',
@@ -49,7 +49,7 @@ class testUtils(unittest.TestCase):
         # results from SiteDB
         sitedb_set = [
         {
-                '_system_' : 'sitedb',
+                'system' : 'sitedb',
                 'dataset' : '',
                 'run' : '',
                 'bfield' : '',
@@ -61,7 +61,7 @@ class testUtils(unittest.TestCase):
         # results from RunSum
         runsum_set = [
         {
-                '_system_' : 'runsum',
+                'system' : 'runsum',
                 'dataset' : '',
                 'run' : '101',
                 'bfield' : '0.2',
@@ -70,7 +70,7 @@ class testUtils(unittest.TestCase):
         },
 
         {
-                '_system_' : 'runsum',
+                'system' : 'runsum',
                 'dataset' : '',
                 'run' : '102',
                 'bfield' : '0.3',
@@ -82,7 +82,7 @@ class testUtils(unittest.TestCase):
         # results from Phedex
         phedex_set = [
         {
-                '_system_' : 'phedex',
+                'system' : 'phedex',
                 'dataset' : '',
                 'run' : '',
                 'bfield' : '',
@@ -91,7 +91,7 @@ class testUtils(unittest.TestCase):
         },
 
         {
-                '_system_' : 'phedex',
+                'system' : 'phedex',
                 'dataset' : '',
                 'run' : '',
                 'bfield' : '',
@@ -107,14 +107,12 @@ class testUtils(unittest.TestCase):
         {
                 'bfield': '0.3', 
                 'run': '102', 
-                '_system_': 'dbs+sitedb+runsum+phedex', 
+                'system': 'dbs+sitedb+runsum+phedex', 
                 'site': 'T2', 
                 'dataset': '/a/b/c', 
                 'block': '123-123-102'
         }
         ]
-#        print "expectlist", expectlist
-#        print "resultlist", resultlist
         self.assertEqual(expectlist, resultlist)
 
     def test_query_params(self):
