@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=C0103
 
 """
 Regular expression patterns
 """
 
-__revision__ = "$Id: regex.py,v 1.1 2010/03/19 17:22:45 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: regex.py,v 1.2 2010/04/06 20:39:27 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
