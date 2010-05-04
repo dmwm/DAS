@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.20 2009/07/09 16:00:01 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: das_filecache.py,v 1.21 2009/07/14 15:58:46 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -200,11 +200,11 @@ class DASFilecache(Cache):
             verbose  = True
         else:
             verbose  = False
-        dbfile       = os.path.join(self.dir, 'das_filecache.db')
-        db_engine    = 'sqlite:///%s' % dbfile
-#        dbfile       = None
-#        db_engine    = 'mysql://xxx:yyy@localhost/DAS'
-        self.engine  = create_engine(db_engine, echo=False)
+        dbengine     = config['filecache_db_engine'] 
+        dbfile       = None
+        if  dbengine.find('sqlite:///') != -1:
+            dbfile   = dbengine.replace('sqlite:///', '')
+        self.engine  = create_engine(dbengine, echo=False)
         self.session = sessionmaker(bind=self.engine)
         if  not dbfile:
             self.create_table()
@@ -329,29 +329,6 @@ class DASFilecache(Cache):
                             except EOFError, err:
                                 break
                         fdr.close()
-
-#                    if  limit:
-#                        for i in range(0, stop):
-#                            try:
-#                                res = marshal.load(fdr)
-#                                if  i >= idx:
-#                                    if  type(res) is types.DictType:
-#                                        res['id'] = id
-#                                    yield res
-#                                    id += 1
-#                            except EOFError, err:
-#                                break
-#                    else:
-#                        while 1:
-#                            try:
-#                                res = marshal.load(fdr)
-#                                if  type(res) is types.DictType:
-#                                    res['id'] = id
-#                                yield res
-#                                id += 1
-#                            except EOFError, err:
-#                                break
-#                    fdr.close()
             else:
                 msg = "found expired query in cache, key=%s" % key
                 self.logger.debug("DASFilecache::get_from_cache %s" % msg)

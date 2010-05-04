@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.24 2009/07/13 15:24:15 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: das_core.py,v 1.25 2009/07/14 15:58:46 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -69,7 +69,7 @@ class DASCore(object):
         self.logger = DASLogger(idir=logdir, verbose=self.verbose, stdout=debug)
         dasconfig['logger'] = self.logger
 
-        self.viewmgr = DASViewManager()
+        self.viewmgr = DASViewManager(dasconfig)
 
         dasroot = os.environ['DAS_ROOT']
         # load from configuration what will be used as a raw/cold cache
@@ -205,30 +205,25 @@ class DASCore(object):
         Perform aggregation of information if DAS functions
         is found.
         """
-        if  self.das_aggregation:
 #            print "will do aggregation", self.das_aggregation
-            results  = [i for i in results]
-            agg_dict = {}
-            for func, arg in self.das_aggregation.items():
-                agg  = getattr(das_functions, func)(arg, results)
-                for key, val in agg.items():
-                    agg_dict[key] = val
-            first = results[0]
-            try:
-                del first['system'] # don't account as selection key
-            except:
-                pass
-            if  len(first.keys()) != len(agg_dict.keys()):
-                for row in results:
-                    for key, val in agg_dict.items():
-                        row[key] = val
-                    yield row
-            else:
-                yield agg_dict
-#            results  = [i for i in results]
-#            for func, arg in self.das_aggregation.items():
-#                results = getattr(das_functions, func)(arg, results)
-#        return results
+        results  = [i for i in results]
+        agg_dict = {}
+        for func, arg in self.das_aggregation.items():
+            agg  = getattr(das_functions, func)(arg, results)
+            for key, val in agg.items():
+                agg_dict[key] = val
+        first = results[0]
+        try:
+            del first['system'] # don't account as selection key
+        except:
+            pass
+        if  len(first.keys()) != len(agg_dict.keys()):
+            for row in results:
+                for key, val in agg_dict.items():
+                    row[key] = val
+                yield row
+        else:
+            yield agg_dict
 
     def result(self, query, idx=0, limit=None):
         """
@@ -243,13 +238,15 @@ class DASCore(object):
                 # re-use it, the update_cache will yeild them back
 #                results = self.call(query) 
                 results = self.call(self.get_params(query)) 
-                results = self.aggregation(results)
+                if  self.das_aggregation:
+                    results = self.aggregation(results)
                 results = self.cache.update_cache(query, results, 
                                 expire=self.cache.limit)
         else:
 #            results = self.call(query)
             results = self.call(self.get_params(query)) 
-            results = self.aggregation(results)
+            if  self.das_aggregation:
+                results = self.aggregation(results)
         return results
 
     def update_cache(self, query, expire=600):
@@ -273,7 +270,8 @@ class DASCore(object):
                 self.logger.info('updating DAS cache')
 #                results = self.call(query) 
                 results = self.call(self.get_params(query)) 
-                results = self.aggregation(results)
+                if  self.das_aggregation:
+                    results = self.aggregation(results)
                 try:
                     results = self.cache.update_cache(query, results, expire)
                     # loop over results since it's generator
