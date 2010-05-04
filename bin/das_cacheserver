@@ -8,8 +8,9 @@ ver="cms"
 if [ -z ${WMCORE_ROOT} ]; then
    echo "The WMCORE_ROOT environment is not set"
    echo "Will switch to stand-alone mode"
-   export WTBASE=$WMCORE_ROOT/src
    ver="stand_alone"
+else
+   export WTBASE=$WMCORE_ROOT/src
 fi
 if [ -z $DAS_ROOT ]; then
    echo "The DAS_ROOT environment is not set"
