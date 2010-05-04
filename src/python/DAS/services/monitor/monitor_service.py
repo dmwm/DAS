@@ -4,8 +4,8 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.10 2010/01/04 19:03:51 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: monitor_service.py,v 1.11 2010/01/25 20:23:03 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -63,17 +63,11 @@ class MonitorService(DASAbstractService):
             args['end'] = '%d' % time.time()
             url = self.url + '/' + api
             time0 = time.time()
-            print "url, args", url, args
             res = self.getdata(url, args)
             try:
                 genrows = self.parser(res, args)
             except:
                 traceback.print_exc()
             ctime = time.time() - time0
-            header = dasheader(self.name, query, api, self.url, args,
-                ctime, self.expire, self.version())
-            header['lookup_keys'] = self.lookup_keys(api)
-            self.analytics.add_api(self.name, query, api, args)
-            self.localcache.update_cache(query, genrows, header)
-        return True
+            self.write_to_cache(query, api, url, args, genrows, ctime)
 

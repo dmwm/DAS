@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.62 2010/01/17 22:46:22 valya Exp $"
-__version__ = "$Revision: 1.62 $"
+__revision__ = "$Id: abstract_service.py,v 1.63 2010/01/25 20:23:03 valya Exp $"
+__version__ = "$Revision: 1.63 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -39,6 +39,7 @@ class DASAbstractService(object):
             self.dasmapping  = config['dasmapping']
             self.analytics   = config['dasanalytics']
             self.mongoparser = config['mongoparser']
+            self.write2cache = config.get('write_cache', True)
         except:
             traceback.print_exc()
             print config
@@ -177,6 +178,26 @@ class DASAbstractService(object):
         # cache, so return at the end what we have in cache.
         result = self.api(query)
 
+    def write_to_cache(self, query, api, url, args, result, ctime):
+        """
+        Write provided result set into DAS cache. Update analytics
+        db appropriately.
+        """
+        if  not self.write2cache:
+            return
+        self.analytics.add_api(self.name, query, api, args)
+        msg  = 'DASAbstractService::%s Analytics DB has been updated,' \
+                % self.name
+        self.logger.info(msg)
+        header  = dasheader(self.name, query, api, url, args, ctime,
+            self.expire, self.version())
+        header['lookup_keys'] = self.lookup_keys(api)
+        self.localcache.update_cache(query, result, header)
+        msg  = 'DASAbstractService::%s cache has been updated,' \
+                % self.name
+        self.logger.info(msg)
+        self.insert_apicall(url, api, args)
+
     def adjust_params(self, args):
         """
         Data-service specific parser to adjust parameters according to
@@ -291,8 +312,6 @@ class DASAbstractService(object):
         """
         self.logger.info('DASAbstractService::%s::api(%s)' \
                 % (self.name, query))
-        selkeys, cond = self.mongoparser.decompose(query)
-        mongo_query = query
         result = False
         for url, api, args in self.apimap(query):
             try:
@@ -306,22 +325,12 @@ class DASAbstractService(object):
                 data    = self.getdata(url, args)
                 genrows = self.parser(data, api, args)
                 ctime   = time.time() - time0
-                self.analytics.add_api(self.name, query, api, args)
-                header  = dasheader(self.name, query, api, url, args, ctime,
-                    self.expire, self.version())
-                header['lookup_keys'] = self.lookup_keys(api)
-                self.localcache.update_cache(mongo_query, genrows, header)
-                msg  = 'DASAbstractService::%s cache has been updated,' \
-                        % self.name
-                self.logger.info(msg)
-                self.insert_apicall(url, api, args)
-                result = True
+                self.write_to_cache(query, api, url, args, genrows, ctime)
             except:
                 msg  = 'Fail to process: url=%s, api=%s, args=%s' \
                         % (url, api, args)
                 msg += traceback.format_exc()
                 self.logger.info(msg)
-        return result
 
     def apimap(self, query):
         """

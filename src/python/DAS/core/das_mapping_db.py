@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.20 2009/12/21 18:04:35 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.21 2010/01/25 20:23:03 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -71,19 +71,21 @@ class DASMapping(object):
         Add new record into mapping DB. 
         We insert the following API records into mapping DB
 
-        {system:dbs, 
-         api:{name:listBlocks, 
-              params:[{name:apiversion:1_2_2, value:*, required:0}, ...]
-             },
-         daskeys:[{key:block, map:block.name, pattern:pat}, ...],
-         api2das:[{api_param:site, das_key:site, 
-                   pattern:re.compile('^T[0-3]_')}, ...]
+        .. doctest::
 
-        We insert the following notation record into mapping DB:
+            {system:dbs, 
+             api: {name:listBlocks, 
+                   params:[{name:apiversion:1_2_2, value:*, required:0}, ...]}, 
+             daskeys:[{key:block, map:block.name, pattern:pat}, ...], 
+             api2das:[{api_param:site, das_key:site, 
+                       pattern:re.compile('^T[0-3]_')}, ...]}
 
-        {system:dbs, 
-         notations:[{api_param:storage_element_name, das_name:se}, ...]
-        }
+        We insert the following notation record into mapping DB
+
+        .. doctest::
+
+            {system:dbs,
+             notations:[{api_param:storage_element_name, das_name:se},...]}
         """
         msg = 'DASMapping::add(%s)' % record
         self.logger.info(msg)
@@ -301,7 +303,8 @@ class DASMapping(object):
 
     def servicemap(self, system, implementation=None):
         """
-        Constructs data-service map, e.g.
+        Constructs data-service map, e.g.::
+
         {api: {keys:[list of DAS keys], params: dict_of_api_params} }
         """
         query = {'system':system, 'api':{'$ne':None}}

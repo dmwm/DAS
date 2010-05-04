@@ -4,16 +4,17 @@
 """
 Core class for Data Aggregation Service (DAS) framework.
 It performs the following tasks:
+
 - registers data-services found in DAS configuration file (das.cfg).
 - invoke data-service subqueries and either multiplex results or
-combine them together for presentation layer (CLI or WEB).
+  combine them together for presentation layer (CLI or WEB).
 - creates DAS views
 """
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.53 2010/01/15 17:14:46 valya Exp $"
-__version__ = "$Revision: 1.53 $"
+__revision__ = "$Id: das_core.py,v 1.54 2010/01/25 20:23:03 valya Exp $"
+__version__ = "$Revision: 1.54 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -52,7 +53,7 @@ class DASCore(object):
     """
     DAS core class.
     """
-    def __init__(self, config=None, debug=None):
+    def __init__(self, config=None, debug=None, nores=False):
         if  config:
             dasconfig = config
         else:
@@ -69,6 +70,11 @@ class DASCore(object):
             self.verbose = verbose
         if  self.verbose:
             self.timer = DASTimer()
+
+        # set noresults option
+        if  nores:
+            dasconfig['write_cache'] = True
+            self.noresults = nores
 
         logdir = dasconfig['logdir']
         self.logger = DASLogger(idir=logdir, verbose=self.verbose, stdout=debug)
@@ -271,7 +277,8 @@ class DASCore(object):
         query = self.adjust_query(query)
         # lookup provided query in a cache
         self.call(query) 
-        results = self.get_from_cache(query, idx, limit, skey, sorder)
+        if  not self.noresults:
+            results = self.get_from_cache(query, idx, limit, skey, sorder)
 #        if  self.das_aggregation:
 #            results = self.aggregation(results)
         return results
@@ -310,11 +317,13 @@ class DASCore(object):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
-        Step 1. identify data-sercices in questions, based on selection keys
-                and where clause conditions by parsing input query
-        Step 2. construct workflow and execute data-service calls with found
-                sub-queries. At this step individual data-services invoke
-                store results into DAS cache.
+
+        1. identify data-sercices in questions, based on selection keys
+           and where clause conditions by parsing input query
+        2. construct workflow and execute data-service calls with found
+           sub-queries. At this step individual data-services invoke
+           store results into DAS cache.
+
         Return status 0/1 depending on success of the calls, can be
         used by workers on cache server.
         """

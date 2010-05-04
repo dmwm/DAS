@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.17 2009/12/22 15:13:11 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: runsum_service.py,v 1.18 2010/01/25 20:23:03 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -118,18 +118,12 @@ class RunSummaryService(DASAbstractService):
             data    = get_run_summary(self.url, args, key, cert, debug)
             genrows = self.parser(data, api)
             ctime   = time.time()-time0
-            header  = dasheader(self.name, query, api, self.url, args,
-                ctime, self.expire, self.version())
-            header['lookup_keys'] = self.lookup_keys(api)
-            mongo_query = query
-            self.analytics.add_api(self.name, query, api, args)
-            self.localcache.update_cache(mongo_query, genrows, header)
+            self.write_to_cache(query, api, self.url, args, genrows, ctime)
         except:
             traceback.print_exc()
             msg = 'Fail to process: url=%s, api=%s, args=%s' \
                     % (self.url, api, args)
             self.logger.warning(msg)
-        return True
 
     def parser(self, source, api):
         """
