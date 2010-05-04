@@ -17,6 +17,7 @@ Contents:
    mapping
    analytics
    code
+   new_service
 
 Indices and tables
 ==================
