@@ -5,16 +5,21 @@
 Define core class for Data Aggregation Service (DAS)
 """
 
-__revision__ = "$Id: das_core.py,v 1.6 2009/04/29 19:51:14 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_core.py,v 1.7 2009/04/30 20:48:51 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
+import re
 import time
 import types
+
 from DAS.core.qlparser import dasqlparser
+from DAS.core.das_viewmanager import DASViewManager
+
 from DAS.utils.utils import cartesian_product, gen2list
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
+
 from DAS.services.dbs.dbs_service import DBSService
 from DAS.services.sitedb.sitedb_service import SiteDBService
 #from DAS.services.runsum.runsum_service import RunSummaryService
@@ -45,6 +50,14 @@ class DASCore(object):
 
         self.logger  = DASLogger(verbose=self.verbose, stdout=debug)
         dasconfig['logger'] = self.logger
+
+        self.viewmgr = DASViewManager()
+
+        # TODO: this should be done externally, we can either
+        # define views in configuration or in couchdb
+        # so far I'll keep it for testing
+        query = 'find dataset, count(file), sum(file.size)'
+        self.viewmgr.create('dataset', query)
 
         self.cache_servers  = dasconfig['cache_servers']
         self.cache_lifetime = dasconfig['cache_lifetime']
@@ -89,6 +102,22 @@ class DASCore(object):
         for item in results:
             print item
         return
+
+    def viewanalyzer(self, input):
+        """
+        Simply parser input and look-up if it's view or DAS query
+        """
+        pat = re.compile('^view')
+        if  pat.match(input):
+            qlist = input.replace('view ', '').strip().split()
+            name  = qlist[0]
+            cond  = ''
+            if  len(qlist) > 1:
+                cond = ' '.join(qlist[1:])
+            query = self.viewmgr.get(name) + ' ' + cond
+        else:
+            query = input
+        return query
 
     def queryanalyzer(self, qldict):
         """
@@ -248,7 +277,7 @@ class DASCore(object):
         rdict['results'] = results
         return rdict
 
-    def call(self, query):
+    def call(self, uinput):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
@@ -260,6 +289,10 @@ class DASCore(object):
                 using cartesian product, and return result set back to the user
         Return a list of generators containing results for further processing.
         """
+        query    = self.viewanalyzer(uinput)
+        self.logger.info("DASCore::call, user input '%s'" % uinput)
+        self.logger.info("DASCore::call, DAS query '%s'" % query)
+
         qldict   = self.queryanalyzer(dasqlparser(query))
         self.logger.info('DASCore::call(%s)' % query)
         self.logger.debug('DASCore::call, qldict = %s' % str(qldict))
