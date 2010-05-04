@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.33 2010/02/16 18:35:44 valya Exp $"
-__version__ = "$Revision: 1.33 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.34 2010/03/05 18:05:13 valya Exp $"
+__version__ = "$Revision: 1.34 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -26,14 +26,15 @@ from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCacheMgr
 from DAS.utils.utils import getarg, genkey
 
-try:
+#try:
     # WMCore/WebTools modules
-    from WMCore.WebTools.RESTModel import RESTModel
-    from WMCore.WebTools.Page import exposejson
-except:
+#    from WMCore.WebTools.RESTModel import RESTModel
+#    from WMCore.WebTools.Page import exposejson
+#except:
     # stand-alone version
-    from DAS.web.tools import exposejson
+#    from DAS.web.tools import exposejson
 
+from DAS.web.tools import exposejson
 from DAS.web.das_webmanager import DASWebManager
 
 # monogo db modules
@@ -211,7 +212,8 @@ class DASCacheModel(DASWebManager):
         """
         data  = {'server_method':'request'}
         if  not kwargs.has_key('query'):
-            data['status'] = 'fail, no query provided'
+            data['status'] = 'fail'
+            data['reason'] = 'no query is provided'
             return data
         query = json.loads(kwargs.get('query'))
         coll  = kwargs.get('collection', 'merge')

@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.44 2010/03/04 15:45:11 valya Exp $"
-__version__ = "$Revision: 1.44 $"
+__revision__ = "$Id: DASSearch.py,v 1.45 2010/03/05 18:05:13 valya Exp $"
+__version__ = "$Revision: 1.45 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -25,15 +25,18 @@ from itertools import groupby
 from cherrypy import expose, tools
 from cherrypy.lib.static import serve_file
 
-try:
+#try:
     # WMCore/WebTools modules
-    from WMCore.WebTools.Page import TemplatedPage
-    from WMCore.WebTools.Page import exposedasjson, exposetext
-    from WMCore.WebTools.Page import exposejson, exposedasplist
-except:
+#    from WMCore.WebTools.Page import TemplatedPage
+#    from WMCore.WebTools.Page import exposedasjson, exposetext
+#    from WMCore.WebTools.Page import exposejson, exposedasplist
+#except:
     # stand-alone version
-    from DAS.web.tools import exposedasjson, exposetext
-    from DAS.web.tools import exposejson, exposedasplist
+#    from DAS.web.tools import exposedasjson, exposetext
+#    from DAS.web.tools import exposejson, exposedasplist
+
+from DAS.web.tools import exposedasjson, exposetext
+from DAS.web.tools import exposejson, exposedasplist
 
 # DAS modules
 from DAS.core.das_core import DASCore
@@ -62,13 +65,11 @@ def ajax_response(msg):
     page += "</ajax-response>"
     return page
 
-#class DASSearch(TemplatedPage):
 class DASSearch(DASWebManager):
     """
     DAS web interface.
     """
     def __init__(self, config={}):
-#        TemplatedPage.__init__(self, config)
         DASWebManager.__init__(self, config)
         try:
             # try what is supplied from WebTools framework
@@ -345,6 +346,11 @@ class DASSearch(DASWebManager):
                         res += self.templatepage('das_record', **record)
             else:
                 res = result['status']
+                if  res.has_key('reason'):
+                    return self.error(res['reason'])
+                else:
+                    msg = 'Uknown error, kwargs=' % kwargs
+                    return self.error(msg)
             if  recordid:
                 if  format:
                     if  format == 'xml':
@@ -500,38 +506,38 @@ class DASSearch(DASWebManager):
         page    = ""
         ndict   = {'nrows':total, 'limit':limit}
         page    = self.templatepage('das_nrecords', **ndict)
-#        for nrecord in range(0, len(rows)):
-#            row = rows[nrecord]
-#            style = "white"
-#            if  nrecord % 2:
-#                style = "white"
-#            else:
-#                style = "blue" 
+        for nrecord in range(0, len(rows)):
+            row = rows[nrecord]
+            style = "white"
+            if  nrecord % 2:
+                style = "white"
+            else:
+                style = "blue" 
         style = "white"
         for row in rows:
             id    = row['_id']
-            rec   = '<a href="/das/records/%s">%s</a>, ' % (id, id)
-            page += '<div class="%s"><hr class="line" /><b>Record</b> %s<br />'\
-                % (style, rec)
+#            rec   = '<a href="/das/records/%s">%s</a>, ' % (id, id)
+            page += '<div class="%s"><hr class="line" />' % style
+#            page += '<b>Record</b> %s<br />' % rec
             gen   = self.convert2ui(row)
             for uikey, value in [k for k, g in groupby(gen)]:
-                page += "<b>%s</b>: %s, " % (uikey, value)
+                page += "<b>%s</b>: %s<br />" % (uikey, value)
             pad   = ""
             if  show == 'json':
                 jsoncode = {'jsoncode': json2html(row, pad)}
                 jsonhtml = self.templatepage('das_json', **jsoncode)
-                jsondict = dict(data=jsonhtml, id=id)
+                jsondict = dict(data=jsonhtml, id=id, rec_id=id)
                 page += self.templatepage('das_row', **jsondict)
             elif show == 'code':
                 code  = pformat(row, indent=1, width=100)
                 data  = self.templatepage('das_code', code=code)
-                datadict = {'data':data, 'id':id}
+                datadict = {'data':data, 'id':id, rec_id:id}
                 page += self.templatepage('das_row', **datadict)
             else:
                 code  = yaml.dump(row, width=100, indent=4, 
                                 default_flow_style=False)
                 data  = self.templatepage('das_code', code=code)
-                datadict = {'data':data, 'id':id}
+                datadict = {'data':data, 'id':id, rec_id:id}
                 page += self.templatepage('das_row', **datadict)
             page += '</div>'
         ctime   = (time.time()-time0)
@@ -661,7 +667,7 @@ class DASSearch(DASWebManager):
         """
         Place request to obtain status about given query
         """
-        img  = '<img src="/dascontrollers/images/loading.gif" alt="loading"/>'
+        img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         req  = """
         <script type="application/javascript">
         setTimeout('ajaxStatus()',3000)
