@@ -1,0 +1,34 @@
+1. Definition of data-service keywords, e.g.
+   sitedb : admin, sename, sitename, cmsname, etc.
+   phedex : block, node, se, filereplica, blockreplica
+   runsum : run, bfield
+   pset   : ...
+   conddb : ...
+
+2. Define relationships between data-services
+   (DBS,Runsum):run, (DBS,phedex):block, (phedex,sitedb):se
+
+3. Define mapping between keywords and data-service APIs
+
+4. QLParser
+   a. identify where clauses to data-service
+   example: find ... where run=123 and dataset=/a/b/c and node = ...
+   should be split into
+            find ... where run=123 and dataset=/a/b/c/ to DBS
+            find ... where node = ... to PHEDEX
+   b. AND/OR conditions for multiplexer
+
+5. DAS output format 
+{"$servicename": { 
+     "request_timestamp";: int(epochseconds), 
+     "request_url": "http://host:port/path", 
+     "request_version": "service version id", 
+     "request_expires": int(epochseconds), 
+     "request_checksum": "hash of $call", 
+     "request_call": $call, 
+     "call_time": 0.05,    #seconds 
+     "$call": []} 
+}
+
+6. Data service implementation, DBS is done via DBS-QL, I need to
+work on sitedb and phedex to define which API to call for input queries.
