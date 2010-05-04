@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.35 2010/03/09 02:33:21 valya Exp $"
-__version__ = "$Revision: 1.35 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.36 2010/03/09 23:20:02 valya Exp $"
+__version__ = "$Revision: 1.36 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -173,11 +173,11 @@ class DASCacheModel(DASWebManager):
         self.dascore  = DASCore()
         dbhost        = self.dascore.dasconfig['mongocache_dbhost']
         dbport        = self.dascore.dasconfig['mongocache_dbport']
+        capped_size   = self.dascore.dasconfig['mongocache_capped_size']
         self.con      = Connection(dbhost, dbport)
         if  'logging' not in self.con.database_names():
             db = self.con['logging']
-            size = cdict.get('capped_size', 10*1024*1024*1024) # 10 GB
-            options = {'capped':True, 'size': size}
+            options = {'capped':True, 'size': capped_size}
             db.create_collection('db', options)
             self.warning('Created logging.db, size=%s' % size)
         self.col      = self.con['logging']['db']
@@ -187,6 +187,10 @@ class DASCacheModel(DASWebManager):
                          'logger':self.dascore.logger}
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(self.cachemgr.worker, (worker, ))
+        msg = 'DASCacheMode::init, host=%s, port=%s, capped_size=%s' \
+                % (dbhost, dbport, capped_size)
+        self.dascore.logger.debug(msg)
+        print msg
 
     def logdb(self, query):
         """
