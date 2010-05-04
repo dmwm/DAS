@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.11 2009/05/29 17:13:25 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_cli.py,v 1.12 2009/05/30 19:04:16 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -58,7 +58,7 @@ class DASOptionParser:
                                           default=0, dest="idx",
              help="start index for returned result set, aka pagination, use w/ limit")
         self.parser.add_option("--limit", action="store", type="int", 
-                                          default=None, dest="limit",
+                                          default=0, dest="limit",
              help="limit number of returned results")
         self.parser.add_option("--no-output", action="store_true", 
                                           dest="nooutput",
