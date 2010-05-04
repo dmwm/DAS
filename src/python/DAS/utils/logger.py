@@ -6,13 +6,53 @@
 General purpose DAS logger class
 """
 
-__revision__ = "$Id: logger.py,v 1.4 2009/06/05 14:13:33 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: logger.py,v 1.5 2009/06/10 20:31:22 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import logging
 import logging.handlers
+
+class DummyLogger:
+    """
+    Base logger class
+    """
+    def error(self, msg):
+        """
+        logger error method
+        """
+        pass
+
+    def info(self, msg):
+        """
+        logger info method
+        """
+        pass
+
+    def debug(self, msg):
+        """
+        logger debug method
+        """
+        pass
+
+    def warning(self, msg):
+        """
+        logger warning method
+        """
+        pass
+
+    def exception(self, msg):
+        """
+        logger expception method
+        """
+        pass
+
+    def critical(self, msg):
+        """
+        logger critical method
+        """
+        pass
 
 class DASLogger:
     """
