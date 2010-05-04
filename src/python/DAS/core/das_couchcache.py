@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.11 2009/06/17 15:20:25 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_couchcache.py,v 1.12 2009/06/24 13:56:44 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -45,6 +45,7 @@ class DASCouchcache(Cache):
         self.server = CouchServer(self.uri)
         self.dbname = "das"
         self.cdb    = None # cached couch DB handler
+        self.future = 9999999999 # unreachable timestamp
         self.logger.info('Init couchcache %s' % self.uri)
 
         self.views = { 
@@ -55,6 +56,13 @@ function(doc) {
     }
 }"""
             },
+#            'incache': {'map': """
+#function(doc) {
+#    if(doc.hash) {
+#        emit([doc.hash, doc.expire], null);
+#    }
+#}"""
+#            },
         }
 
         self.adminviews = { 
@@ -191,8 +199,9 @@ function(keys, values) {
         key  = genkey(query)
         #TODO:check how to query 1 result, I copied the way from get_from_cache
         skey = ["%s" % key, timestamp()]
-        ekey = ["%s" % key, 9999999999]
+        ekey = ["%s" % key, self.future]
         options = {'startkey': skey, 'endkey': ekey}
+#        results = cdb.loadView('dasviews', 'incache', options)
         results = cdb.loadView('dasviews', 'query', options)
         try:
             res = len(results['rows'])
@@ -216,7 +225,7 @@ function(keys, values) {
         key  = genkey(query)
 
         skey = ["%s" % key, timestamp()]
-        ekey = ["%s" % key, 9999999999]
+        ekey = ["%s" % key, self.future]
         options = {'startkey': skey, 'endkey': ekey}
         results = cdb.loadView('dasviews', 'query', options)
         try:
@@ -242,6 +251,9 @@ function(keys, values) {
         if  not results:
             return
         dbname = self.dbname
+        viewlist = []
+        for key in self.views.keys():
+            viewlist.append("/%s/_design/dasviews/_view/%s" % (dbname, key))
         cdb = self.couchdb(dbname)
         self.clean_cache()
         if  not cdb:
@@ -256,13 +268,13 @@ function(keys, values) {
             type(results) is types.GeneratorType:
             for row in results:
                 res = results2couch(query, row, expire)
-                cdb.queue(res)
+                cdb.queue(res, viewlist=viewlist)
                 yield row
         else:
             res = results2couch(query, results, expire)
             yield results
-            cdb.queue(res)
-        cdb.commit()
+            cdb.queue(res, viewlist=viewlist)
+        cdb.commit(viewlist=viewlist)
 
     def remove_from_cache(self, query):
         """

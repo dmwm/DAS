@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.19 2009/06/19 18:00:38 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: das_core.py,v 1.20 2009/06/24 13:56:44 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -200,7 +200,8 @@ class DASCore(object):
                 # consume and iterate over its items. So if I need to
                 # re-use it, the update_cache will yeild them back
                 results = self.call(query) 
-                results = self.cache.update_cache(query, results, expire=600)
+                results = self.cache.update_cache(query, results, 
+                                expire=self.cache.limit)
         else:
             results = self.call(query)
         return results
@@ -243,6 +244,25 @@ class DASCore(object):
         if  hasattr(self, 'cache'):
             if  self.cache.incache(query):
                 self.cache.remove_from_cache(query)
+
+    def in_raw_cache(self, uinput):
+        """
+        Check if input query is presented in raw cache
+        """
+        query    = self.viewanalyzer(uinput)
+        params   = self.qlparser.params(query)
+        services = params['unique_services']
+        daslist  = params['daslist']
+        for qdict in daslist:
+            for service in services:
+                if  qdict.has_key(service):
+                    squery = qdict[service]
+                    # raw cache uses "query @ service" syntax to store queries
+                    # see services/abstrace_service.py call method
+                    qqq = '%s @ %s' % (squery, service)
+                    if  self.rawcache.incache(qqq):
+                        return True
+        return False
 
     def call(self, uinput):
         """
