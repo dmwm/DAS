@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.17 2009/07/06 20:22:49 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: das_filecache.py,v 1.18 2009/07/06 20:24:45 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import os

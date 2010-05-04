@@ -11,6 +11,8 @@ import unittest
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_filecache import DASFilecache
+from DAS.core.das_filecache import next_triplet, clean_dirs
+from DAS.core.das_filecache import create_dir, yyyymmdd, hour
 
 class testDASFilecache(unittest.TestCase):
     """
@@ -31,6 +33,53 @@ class testDASFilecache(unittest.TestCase):
         config['filecache_dir'] = self.dir
         self.dasfilecache = DASFilecache(config)
 
+    def test_create_dir(self):                          
+        """test create_dir function"""
+        topdir = '/tmp'
+        system = 'das_test'
+        try:
+            clean_dirs(os.path.join(topdir, system))
+            os.removedirs(os.path.join(topdir, system))
+        except:
+            pass
+
+        idir = create_dir(topdir, system, filesperdir=5)
+        expect = '%s/%s/%s/%s/000/000' % (topdir, system, yyyymmdd(), hour())
+        self.assertEqual(expect, idir)
+
+        # create 5 files in our recent dir and check that new dir will be created
+        for i in range(0, 6):
+            fdesc = open(os.path.join(idir, str(i)), 'w')
+            fdesc.write(str(i))
+            fdesc.close()
+        jdir = create_dir(topdir, system, filesperdir=5)
+        expect2 = '%s/%s/%s/%s/000/001' % (topdir, system, yyyymmdd(), hour())
+        self.assertEqual(expect2, jdir)
+        for i in range(0, 6):
+            os.remove(os.path.join(idir, str(i)))
+
+        ndir = '%s/%s/%s/%s/000' % (topdir, system, yyyymmdd(), hour())
+        clean_dirs(ndir)
+        ndir = '%s/%s/%s/%s' % (topdir, system, yyyymmdd(), hour())
+        clean_dirs(ndir)
+        ndir = '%s/%s/%s' % (topdir, system, yyyymmdd())
+        clean_dirs(ndir)
+        ndir = '%s/%s' % (topdir, system)
+        clean_dirs(ndir)
+        os.removedirs(os.path.join(topdir, system))
+
+    def test_next_triplet(self):                          
+        """test next_triplet function"""
+        expect = '001'
+        result = next_triplet('000')
+        self.assertEqual(expect, result)
+
+        expect = '100'
+        result = next_triplet('099')
+        self.assertEqual(expect, result)
+
+        self.assertRaises(Exception, next_triplet, '999')
+
     def test_result(self):                          
         """test DAS filecache result method"""
         query  = "find site where site=T2_UK"
@@ -43,7 +92,7 @@ class testDASFilecache(unittest.TestCase):
         self.assertEqual(expect, result)
         self.dasfilecache.delete_cache()
 
-    def test_pagintation(self):                          
+    def test_pagination(self):                          
         """test DAS filecache result method with pagination"""
         query  = "find site where site=T2_UK"
         expire = 60
@@ -54,7 +103,7 @@ class testDASFilecache(unittest.TestCase):
         limit  = 3
         result = [i for i in self.dasfilecache.get_from_cache(query, idx, limit)]
         result.sort()
-        self.assertEqual(expect[idx:limit], result)
+        self.assertEqual(expect[idx:limit+1], result)
         self.dasfilecache.delete_cache()
 
     def test_incache(self):                          
