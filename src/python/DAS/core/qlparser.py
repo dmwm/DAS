@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.27 2009/11/10 19:57:16 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: qlparser.py,v 1.28 2009/11/18 15:56:33 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -71,11 +71,10 @@ def das_dateformat(value):
         d = datetime.date(int(value[0:4]), # YYYY
                           int(value[4:6]), # MM
                           int(value[6:8])) # DD
-        value = time.mktime(d.timetuple())
+        return time.mktime(d.timetuple())
     else:
         msg = 'Unacceptable date format'
         raise Exception(msg)
-    return [value, value]
 
 def mongo_exp(cond_list, lookup=False):
     """
@@ -88,7 +87,7 @@ def mongo_exp(cond_list, lookup=False):
             continue
         key  = cond['key']
         val  = cond['value']
-        oper = cond['op']
+        oper = cond['op'].strip()
         if  type(val) is types.StringType and val.find('%') != -1:
             val = val.replace('%', '*')
         if  mongo_dict.has_key(key):
@@ -291,10 +290,12 @@ class MongoParser(object):
             for item in val:
                 daskeys.append(item)
         condlist = []
+        # strip operators while we will match words against them
+        operators = [o.strip() for o in self.operators]
         while True:
             if  idx >= len(slist):
                 break
-            word = slist[idx]
+            word = slist[idx].strip()
             if  word in daskeys: # look-up for selection keys
                 try:
                     next_word = slist[idx+1]
@@ -304,7 +305,7 @@ class MongoParser(object):
                     pass
                 if  word == slist[-1] and word not in skeys: # last word
                     skeys.append(word)
-            elif word in self.operators: # look-up conditions
+            elif word in operators: # look-up conditions
                 oper = word
                 prev_word = slist[idx-1]
                 next_word = slist[idx+1]
@@ -325,11 +326,25 @@ class MongoParser(object):
                     value = arr
                 elif word == 'last':
                     value = convert2date(next_word)
+                    cdict = dict(key='date', op='in', value=value)
+                    condlist.append(cdict)
+                    value = None
                 else:
                     value = next_word
                 if  prev_word == 'date':
                     if  word != 'last': # we already converted date
-                        value = das_dateformat(value)
+                        if  type(value) is types.StringType:
+                            value = [das_dateformat(value), time.time()]
+                        elif type(value) is types.ListType:
+                            value1 = das_dateformat(value[0])
+                            value2 = das_dateformat(value[1])
+                            value  = [value1, value2]
+                    cdict = dict(key='date', op='in', value=value)
+                    condlist.append(cdict)
+                    value = None
+                idx += 1
+                if  not value:
+                    continue
                 key = prev_word
                 for system in self.map.list_systems():
                     try:
@@ -342,7 +357,6 @@ class MongoParser(object):
                                     condlist.append(cdict)
                     except:
                         pass
-                idx += 1
             idx += 1
         spec = mongo_exp(condlist)
         mongo_query = dict(fields=skeys, spec=spec)
