@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.74 2010/03/24 18:37:40 valya Exp $"
-__version__ = "$Revision: 1.74 $"
+__revision__ = "$Id: das_mongocache.py,v 1.75 2010/04/05 19:11:44 valya Exp $"
+__version__ = "$Revision: 1.75 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -21,7 +21,7 @@ import types
 import itertools
 
 # DAS modules
-from DAS.utils.utils import getarg, genkey
+from DAS.utils.utils import genkey
 from DAS.utils.utils import aggregator
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 import DAS.utils.jsonwrapper as json
@@ -69,8 +69,8 @@ def loose(query):
     string type values for all conditions. We use this to look-up similar records
     in DB.
     """
-    spec    = getarg(query, 'spec', {})
-    fields  = getarg(query, 'fields', None)
+    spec    = query.get('spec', {})
+    fields  = query.get('fields', None)
     newspec = {}
     for key, val in spec.items():
         if  key != '_id' and \
@@ -135,8 +135,8 @@ def convert2pattern(query):
     Convert input query condition into regular expression patterns.
     Return new MongoDB compiled w/ regex query and query w/ debug info.
     """
-    spec    = getarg(query, 'spec', {})
-    fields  = getarg(query, 'fields', None)
+    spec    = query.get('spec', {})
+    fields  = query.get('fields', None)
     newspec = {}
     verspec = {}
     for key, val in spec.items():
@@ -209,15 +209,15 @@ def compare_specs(input_query, exist_query):
     # we use notation query2 is superset of query1
     query1  = input_query
     query2  = exist_query
-    fields1 = getarg(query1, 'fields', None)
+    fields1 = query1.get('fields', None)
     if  not fields1:
         fields1 = []
-    spec1   = getarg(query1, 'spec', {})
+    spec1   = query1.get('spec', {})
 
-    fields2 = getarg(query2, 'fields', None)
+    fields2 = query2.get('fields', None)
     if  not fields2:
         fields2 = []
-    spec2   = getarg(query2, 'spec', {})
+    spec2   = query2.get('spec', {})
 
     if  spec2 == {}: # empty conditions for existing query, look at sel. fields
         if  set(fields2) > set(fields1): # set2 is superset of set1
@@ -280,11 +280,11 @@ class DASMongocache(object):
     DAS cache based MongoDB. 
     """
     def __init__(self, config):
-        self.dbhost  = config['mongocache_dbhost']
-        self.dbport  = config['mongocache_dbport']
-        self.limit   = config['mongocache_lifetime']
-        self.cache_size = config['mongocache_bulkupdate_size']
-        self.dbname  = getarg(config, 'mongocache_dbname', 'das')
+        self.dbhost  = config['mongodb']['dbhost']
+        self.dbport  = config['mongodb']['dbport']
+        self.limit   = config['mongodb']['lifetime']
+        self.cache_size = config['mongodb']['bulkupdate_size']
+        self.dbname  = config['mongodb'].get('dbname', 'das')
         self.logger  = config['logger']
         self.verbose = config['verbose']
 
@@ -352,8 +352,8 @@ class DASMongocache(object):
         in cache.
         """
         self.logger.info("DASMongocache::similar_queries(%s)" % query)
-        spec    = getarg(query, 'spec', {})
-        fields  = getarg(query, 'fields', {})
+        spec    = query.get('spec', {})
+        fields  = query.get('fields', {})
         newspec = {}
         verspec = {} # verbose spec
         # enable loose constraints, use LIKE pattern
@@ -443,8 +443,8 @@ class DASMongocache(object):
         col    = self.db[collection]
         self.remove_expired(collection)
         query  = adjust_id(query)
-        spec   = getarg(query, 'spec', {})
-        fields = getarg(query, 'fields', None)
+        spec   = query.get('spec', {})
+        fields = query.get('fields', None)
         res    = col.find(spec=spec, fields=fields).count()
         msg    = "DASMongocache::incache(%s, coll=%s) found %s results"\
                 % (query, collection, res)
@@ -464,8 +464,8 @@ class DASMongocache(object):
         self.logger.info("DASMongocache::nresults(%s, coll=%s)" \
                 % (query, collection))
         query  = adjust_id(query)
-        spec   = getarg(query, 'spec', {})
-        fields = getarg(query, 'fields', None)
+        spec   = query.get('spec', {})
+        fields = query.get('fields', None)
         return col.find(spec=spec, fields=fields).count()
 
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc', 

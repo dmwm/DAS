@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.34 2010/03/02 15:59:51 valya Exp $"
-__version__ = "$Revision: 1.34 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.35 2010/04/05 19:11:44 valya Exp $"
+__version__ = "$Revision: 1.35 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -20,7 +20,7 @@ from pymongo.connection import Connection
 from pymongo import DESCENDING
 
 # DAS modules
-from DAS.utils.utils import getarg, gen2list, access
+from DAS.utils.utils import gen2list, access
 
 class DASMapping(object):
     """
@@ -29,9 +29,9 @@ class DASMapping(object):
     def __init__(self, config):
         self.logger  = config['logger']
         self.verbose = config['verbose']
-        self.dbhost  = config['mapping_dbhost']
-        self.dbport  = config['mapping_dbport']
-        self.dbname  = getarg(config, 'mapping_dbname', 'mapping')
+        self.dbhost  = config['mappingdb']['dbhost']
+        self.dbport  = config['mappingdb']['dbport']
+        self.dbname  = config['mappingdb'].get('dbname', 'mapping')
         self.colname = 'db'
 
         msg = "DASMapping::__init__ %s:%s@%s" \
