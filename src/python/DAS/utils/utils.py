@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.63 2010/02/13 02:02:03 valya Exp $"
-__version__ = "$Revision: 1.63 $"
+__revision__ = "$Id: utils.py,v 1.64 2010/02/16 01:07:31 valya Exp $"
+__version__ = "$Revision: 1.64 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -962,7 +962,7 @@ def json_parser(source):
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
         if  type(data) is types.StringType:
             data = unicode(data, errors='ignore')
-        res = data.replace('null', '\"null\"')
+            res = data.replace('null', '\"null\"')
         try:
             jsondict = json.loads(res)
         except:
