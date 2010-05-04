@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.65 2010/02/17 17:00:13 valya Exp $"
-__version__ = "$Revision: 1.65 $"
+__revision__ = "$Id: das_mongocache.py,v 1.66 2010/02/24 21:33:26 valya Exp $"
+__version__ = "$Revision: 1.66 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -457,6 +457,7 @@ class DASMongocache(object):
         except Exception as exp:
             row = {'exception': exp}
             yield row
+        counter = 0
         for row in res:
             # DAS info is stored via das_id, the records only contains
             # {'das':{'expire':123}} to consistently manage delete operation
@@ -470,7 +471,12 @@ class DASMongocache(object):
                     counter += 1
                     yield row # only when row has all fields
             else:
+                counter += 1
                 yield row
+        if  counter:
+            msg = "DASMongocache::get_from_cache, yield %s record(s)"\
+                    % counter
+            self.logger.info(msg)
 
         # if no raw records were yield we look-up possible error records
         counter = 0
