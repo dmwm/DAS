@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.70 2010/03/05 18:11:46 valya Exp $"
-__version__ = "$Revision: 1.70 $"
+__revision__ = "$Id: das_mongocache.py,v 1.71 2010/03/17 20:07:31 valya Exp $"
+__version__ = "$Revision: 1.71 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -238,6 +238,8 @@ def compare_specs(input_query, exist_query):
                 if  val1.find(val2) == -1:
                     return False
             else:
+                val1 = val1.replace('*', '')
+                val2 = val2.replace('*', '')
                 if  val1 != val2:
                     return False
         elif type(val1) is types.DictType and type(val2) is types.DictType:
@@ -323,17 +325,17 @@ class DASMongocache(object):
         For example, if cache contains records about T1 sites, 
         then input query T1_CH_CERN is subset of results stored in cache.
         """
-        self.logger.info("DASMongocache::similar_queries(%s)" % query)
+        self.logger.info("DASMongocache::similar_queries %s" % query)
         spec    = query.get('spec', {})
         fields  = query.get('fields', None)
-        if  spec.keys() != 1:
+        if  len(spec.keys()) != 1:
             msg = 'DASMongocache::similar_queries, too many keys'
             self.logger.info(msg)
         key     = spec.keys()[0]
         val     = spec[key]
-        cond    = {'spec.key': key}
+        cond    = {'query.spec.key': key}
         for row in self.col.find(cond):
-            mongo_query = decode_mongo_query(row)
+            mongo_query = decode_mongo_query(row['query'])
             if  compare_specs(query, mongo_query):
                 return True
 #            value = mongo_query['spec'][key].replace('*', '')
