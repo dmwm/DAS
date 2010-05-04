@@ -65,8 +65,8 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.9 2009/05/13 15:19:32 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: qlparser.py,v 1.10 2009/06/12 14:48:56 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -602,7 +602,8 @@ class QLParser(QLLexer):
         for pair in pairs:
             list0 = self.qlmap[pair[0]]
             list1 = self.qlmap[pair[1]]
-            ulist += [i for i in list(set(list0) & set(list1)) if i not in ulist]
+            ulist += [i for i in list(set(list0) & set(list1)) if i not in ulist\
+                        and i.find('.') == -1]
         # find final set of sub-queries to be executed by DAS
         ustr = ','.join(ulist)
         daslist = []
