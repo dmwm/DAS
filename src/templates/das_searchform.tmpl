@@ -5,7 +5,7 @@
 <tr>
 <td class="right">
 data in
-<select name="view">
+<select id="view" name="view">
 <option value="list">list</option>
 <option value="xml">xml</option>
 <option value="json">json</option>
@@ -13,7 +13,7 @@ data in
 format,
 </td>
 <td class="left">
-<select name="limit">
+<select id="limit" name="limit">
 <option value="10">10</option>
 <option value="25">25</option>
 <option value="50">50</option>
@@ -38,17 +38,28 @@ results/per page,
 <p></p>
 -->
 
-#if $input
 <script type="application/javascript">
 //<![CDATA[
-function updateInput(val) {
+function updateInput_orig(val) {
    var id = document.getElementById('input');
    id.value=val;
 }
-updateInput('$input');
+function updateInput() {
+   var uinput = gup('input');
+   if  (uinput) updateTag('input', uinput);
+   else updateTag('input', '');
+
+   var ulimit = gup('limit');
+   if  (ulimit) updateTag('limit', ulimit);
+   else updateTag('limit', '');
+
+   var uview = gup('view');
+   if  (uview) updateTag('view', uview);
+   else updateTag('view', '');
+}
+updateInput();
 //]]>
 </script>
-#end if
 <!-- end of das_searchform.tmpl -->
 
 <div id="_response" class="results"> <!-- we close this tag in das_bottom.tmpl -->

@@ -23,19 +23,27 @@
     <script type="application/javascript" src="/dascontrollers/js/ajax_utils.js"></script>
 
     <!-- YUI stuff -->
+<!--
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/paginator/assets/skins/sam/paginator.css" />
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/datatable/assets/skins/sam/datatable.css" />
+-->
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/fonts/fonts-min.css" />
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/container/assets/skins/sam/container.css" />
+
     <script type="application/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+    <script type="application/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/container/container-min.js"></script>
+
+<!--
     <script type="application/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/connection/connection-min.js"></script>
     <script type="application/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/json/json-min.js"></script>
     <script type="application/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/element/element-min.js"></script>
     <script type="application/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/paginator/paginator-min.js"></script>
     <script type="application/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/datasource/datasource-min.js"></script>
     <script type="application/javascript" src="http://yui.yahooapis.com/2.8.0r4/build/datatable/datatable-min.js"></script>
-
+-->
 
 </head>
-<body>
+<body class="yui-skin-sam">
 
 <div id="banner">
 <table>
@@ -44,13 +52,24 @@
 </td><td>
 <h3>Data Aggregation Service (DAS) &nbsp;
 <a href="/das/">Home</a> |
-<a href="/das/services">Services</a> |
-<a href="https://savannah.cern.ch/projects/das/">Bug report</a> |
-<a href="/das/faq">FAQ</a> |
-<a href="/das/cli">CLI</a>
+<a id="srv" href="/das/services">Services</a> |
+<a id="bug" href="https://savannah.cern.ch/projects/das/">Bug report</a> |
+<a id="faq" href="/das/faq">FAQ</a> |
+<a id="cli" href="/das/cli">CLI</a>
 </h3>
 </td></tr>
 </table>
 </div>
 <hr class="line" />
+<script type="application/javascript">
+//YAHOO.example.container.tt1 = new YAHOO.widget.Tooltip("tt1", 
+top_tt1 = new YAHOO.widget.Tooltip("top_tt1", 
+    { context:"srv", text:"DAS service description" });
+top_tt2 = new YAHOO.widget.Tooltip("top_tt2", 
+    { context:"bug", text:"Report DAS problem into CMS Savannah" });
+top_tt3 = new YAHOO.widget.Tooltip("top_tt3", 
+    { context:"faq", text:"Frequiently Asked Question or HELP" });
+top_tt4 = new YAHOO.widget.Tooltip("top_tt4", 
+    { context:"cli", text:"DAS Command Line Tool" });
+</script>
 <!-- end of das_top.tmpl -->
