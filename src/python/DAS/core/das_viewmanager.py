@@ -5,8 +5,8 @@
 View manager class.
 """
 
-__revision__ = "$Id: das_viewmanager.py,v 1.1 2009/04/30 20:47:37 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_viewmanager.py,v 1.2 2009/04/30 20:54:11 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 class DASViewManager(object):
@@ -39,7 +39,7 @@ class DASViewManager(object):
             # TODO: we can add logic to keep track of updates here
             self.create(name, query)
         else:
-            Exception("View '%s', doesn't exists")
+            raise Exception("View '%s', doesn't exists" % name)
         
 
     def get(self, name):
@@ -47,7 +47,7 @@ class DASViewManager(object):
         retrieve DAS query for given name
         """
         if  not self.map.has_key(name):
-            Exception("View '%s', doesn't exists")
+            raise Exception("View '%s', doesn't exists" % name)
         return self.map[name]
 
     def all(self):
