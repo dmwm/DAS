@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.12 2009/05/18 01:17:16 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: abstract_service.py,v 1.13 2009/05/18 01:40:11 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -284,8 +284,12 @@ class DASAbstractService(object):
                 print "url time", time.time()-time2
                 time3 = time.time()
                 res = res.replace('null', '\"null\"')
-                jsondict = eval(res)
-#                jsondict = json.loads(res)
+#                jsondict = eval(res)
+                try:
+                    jsondict = json.loads(res)
+                except:
+                    jsondict = eval(res)
+                    pass
                 print "eval time", time.time()-time3
 #                jsondict = self.adjust_result(api, jsondict)
                 if  self.verbose > 2:
@@ -320,8 +324,11 @@ class DASAbstractService(object):
             url = self.url + '/' + api
             res = self.getdata(url, args)
             res = res.replace('null', '\"null\"')
-            jsondict = eval(res)
-#            jsondict = json.loads(res)
+            try:
+                jsondict = json.loads(res)
+            except:
+                jsondict = eval(res)
+                pass
 #            jsondict = self.adjust_result(api, jsondict)
             if  self.verbose > 2:
                 print "\n### %s::%s returns" % (self.name, api)
