@@ -4,36 +4,35 @@
 """
 DBS XML parser
 """
-__revision__ = "$Id: dbs_parser.py,v 1.3 2009/04/30 20:46:24 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: dbs_parser.py,v 1.4 2009/05/11 20:09:46 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
-from xml.dom.minidom import parseString
+#from xml.dom.minidom import parseString
 import elementtree.ElementTree as ET
 
-CDICT = {
-'STORAGEELEMENT_SENAME':'site',
-'PATH':'dataset',
-'FILES_LOGICALFILENAME':'file',
-'BLOCK_NAME':'block',
-}
-def parser_old(data):
-    """
-    DBS XML parser, it returns a list of dict rows, e.g.
-    [{'file':value, 'run':value}, ...]
-    """
-    dom = parseString(data)
-    odict = {}
-    olist = []
-    for node in dom.getElementsByTagName('result'):
-        odict = {}
-        for attr in node.attributes.keys():
-            key = CDICT[attr]
-            odict[key] = str(node.getAttribute(attr))
-#            odict[attr] = str(node.getAttribute(attr))
-        if  odict:
-            olist.append(odict)
-    return olist
+#CDICT = {
+#'STORAGEELEMENT_SENAME':'site',
+#'PATH':'dataset',
+#'FILES_LOGICALFILENAME':'file',
+#'BLOCK_NAME':'block',
+#}
+#def parser_old(data):
+#    """
+#    DBS XML parser, it returns a list of dict rows, e.g.
+#    [{'file':value, 'run':value}, ...]
+#    """
+#    dom = parseString(data)
+#    odict = {}
+#    olist = []
+#    for node in dom.getElementsByTagName('result'):
+#        odict = {}
+#        for attr in node.attributes.keys():
+#            key = CDICT[attr]
+#            odict[key] = str(node.getAttribute(attr))
+#        if  odict:
+#            olist.append(odict)
+#    return olist
 
 def parser(data):
     """
