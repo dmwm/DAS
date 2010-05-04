@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.76 2010/02/25 14:55:33 valya Exp $"
-__version__ = "$Revision: 1.76 $"
+__revision__ = "$Id: abstract_service.py,v 1.77 2010/03/01 19:19:58 valya Exp $"
+__version__ = "$Revision: 1.77 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -299,10 +299,12 @@ class DASAbstractService(object):
         prim_key  = self.dasmapping.primary_key(self.name, api)
         notations = self.get_notations(api)
         apitag    = self.dasmapping.apitag(self.name, api)
+        counter   = 0
         if  dformat.lower() == 'xml':
             tags = self.dasmapping.api2daskey(self.name, api)
             gen  = xml_parser(data, prim_key, tags)
             for row in gen:
+                counter += 1
                 yield row
         elif dformat.lower() == 'json':
             gen  = json_parser(data)
@@ -312,17 +314,24 @@ class DASAbstractService(object):
                 if  type(row) is types.ListType:
                     for item in row:
                         if  item.has_key(prim_key):
+                            counter += 1
                             yield item
                         else:
+                            counter += 1
                             yield {prim_key:item}
                 else:
                     if  row.has_key(prim_key):
+                        counter += 1
                         yield row
                     else:
+                        counter += 1
                         yield {prim_key:row}
         else:
             msg = 'Unsupported data format="%s", API="%s"' % (dformat, api)
             raise Exception(msg)
+        msg = "DASAbstractService::%s::parser, api=%s, format=%s yield %s rows" \
+                % (self.name, api, dformat, counter)
+        self.logger.info(msg)
 
     def translator(self, api, genrows):
         """
@@ -422,12 +431,10 @@ class DASAbstractService(object):
 
     def apimap(self, query):
         """
-        This method analyze the input query and create apimap
-        dictionary which includes url, api, parameters and
-        data services interface (JSON, XML, etc.)
-        In a long term we can store this results into API db.
+        Analyze input query and yield url, api, args, format, expire
+        for further processing.
         """
-        cond = getarg(query, 'spec', {})
+        cond  = getarg(query, 'spec', {})
         skeys = getarg(query, 'fields', [])
         self.logger.info("\n")
         for api, value in self.map.items():
