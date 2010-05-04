@@ -4,10 +4,11 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.1 2009/03/09 19:43:32 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: abstract_service.py,v 1.2 2009/03/12 20:54:07 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
+import types
 import urllib
 import urllib2
 from DAS.utils.utils import query_params, transform_dict2list
@@ -62,6 +63,10 @@ class DASAbstractService(object):
 
         data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
         results = data.read()
+        # to prevent unicode/ascii errors like
+        # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
+        if  type(results) is types.StringType:
+            results = unicode(results, errors='ignore')
 
         self.logger.debug('DAS::%s results=%s' % (self.name, results))
 
