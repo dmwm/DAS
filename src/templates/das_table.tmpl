@@ -1,85 +1,88 @@
 
 <!-- das_table.tmpl -->
-#if $nrows and not $ajax
+#if $total and not $ajax
 
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.6.0/build/paginator/assets/skins/sam/paginator.css" />
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.6.0/build/datatable/assets/skins/sam/datatable.css" />
-<script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/dragdrop/dragdrop-min.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/element/element-beta-min.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/paginator/paginator-min.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/datasource/datasource-min.js"></script>
-<script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/datatable/datatable-min.js"></script>
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/paginator/assets/skins/sam/paginator.css" />
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/datatable/assets/skins/sam/datatable.css" />
+<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/connection/connection-min.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/json/json-min.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/element/element-min.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/paginator/paginator-min.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/datasource/datasource-min.js"></script>
+<script type="text/javascript" src="http://yui.yahooapis.com/2.7.0/build/datatable/datatable-min.js"></script>
+
 
 <!--begin custom header content for this example-->
-<style type="text/css">
-/* custom styles for this example */
-/*.yui-skin-sam .yui-dt-liner { white-space:nowrap; } */
-
-#paginated {
-    text-align: center;
-}
-#paginated table {
-    margin-left:auto; margin-right:auto;
-}
-#paginated, #paginated .yui-dt-loading {
-    text-align: center; background-color: transparent;
-}
-</style>
-
-
-<!--end custom header content for this example-->
-
 <div class="yui-skin-sam">
-<script type="text/javascript">
-//<![CDATA[
-YAHOO.example.Data = {
-    ddresult: ${results}
-}
-//]]>
-</script>
 
-Found $nrows results
-<div id="$tag">
-</div> 
+Found $total results
+<div id="$tag"></div>
 
 <script type="text/javascript">
+YAHOO.example.DynamicData = function() {
+    // Column definitions
+    var myColumnDefs = ${coldefs};
 
-YAHOO.util.Event.addListener(window, "load", function() {
-    YAHOO.example.ClientPagination = function() {
-        var myColumnDefs = ${coldefs};
+    // Custom parser
+    var stringToDate = function(sData) {
+        var array = sData.split("-");
+        return new Date(array[1] + " " + array[0] + ", " + array[2]);
+    };
+    
+    // DataSource instance
+    var myDataSource = new YAHOO.util.DataSource("yuijson?");
+    myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSON;
+    myDataSource.responseSchema = {
+        resultsList: "records",
+        fields: ${titlelist},
+        metaFields: {
+            totalRecords: "totalRecords" // Access to value in the server response
+        }
+    };
+    // DataTable configuration
+    var myConfigs = {
+        initialRequest: "input=$input&idx=0&limit=$rowsperpage", // Initial request for first page of data
+        dynamicData: true, // Enables dynamic server-driven data
+        sortedBy : {key:"id", dir:YAHOO.widget.DataTable.CLASS_ASC}, // Sets UI initial sort arrow
+        paginator: new YAHOO.widget.Paginator({ rowsPerPage:$rowsperpage}) // Enables pagination 
+    };
+    
+    // DataTable instance
+    var myDataTable = new YAHOO.widget.DataTable("$tag", myColumnDefs, myDataSource, myConfigs);
+    // Overrite default generateRequest to adjust for parameters used in DAS.
+    // Example taken from datatable.js default implementation
+    myDataTable.setAttributeConfig("generateRequest", {
+        value: function(oState, oSelf) {
+            // Set defaults
+            oState = oState || {pagination:null, sortedBy:null};
+            var sort = (oState.sortedBy) ? oState.sortedBy.key : oSelf.getColumnSet().keys[0].getKey();
+            var dir = (oState.sortedBy && oState.sortedBy.dir === YAHOO.widget.DataTable.CLASS_DESC) ? "desc" : "asc";
+            var idx = (oState.pagination) ? oState.pagination.recordOffset : 0;
 
-        var myDataSource = new YAHOO.util.DataSource(YAHOO.example.Data.ddresult);
-        myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSON;
-        myDataSource.responseSchema = {
-            resultsList: "records",
-            fields: ${titlelist}
-        };
-
-        var oConfigs = {
-                paginator: new YAHOO.widget.Paginator({
-                    rowsPerPage: $rowsperpage
-                }),
-                initialRequest: "results=$nrows"
-        };
-        var myDataTable = new YAHOO.widget.DataTable($tag, myColumnDefs,
-                myDataSource, oConfigs);
-                
-        return {
-            oDS: myDataSource,
-            oDT: myDataTable
-        };
-    }();
-});
-
+            // parameters used in DAS
+            var dasparams = "input=$input&limit=$rowsperpage&idx=" + idx;
+            // Build the request
+            return dasparams + "&sort=" + sort + "&dir=" + dir;
+        },
+        validator: YAHOO.lang.isFunction
+    });
+    // Update totalRecords on the fly with value from server
+    myDataTable.handleDataReturnPayload = function(oRequest, oResponse, oPayload) {
+        oPayload.totalRecords = oResponse.meta.totalRecords;
+        return oPayload;
+    }
+    
+    return {
+        ds: myDataSource,
+        dt: myDataTable
+    };
+}();
 </script>
+
 
 </div> <!-- class="yui-skin-sam" -->
 <br />
-
-##<div align="center">
-##$pages
-##</div>
 
 #end if
 <!-- end of das_table.tmpl -->
