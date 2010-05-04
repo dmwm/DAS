@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.69 2010/02/10 18:59:19 valya Exp $"
-__version__ = "$Revision: 1.69 $"
+__revision__ = "$Id: abstract_service.py,v 1.70 2010/02/10 19:22:04 valya Exp $"
+__version__ = "$Revision: 1.70 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -304,7 +304,6 @@ class DASAbstractService(object):
         prim_key  = self.dasmapping.primary_key(self.name, api)
         notations = self.get_notations(api)
         apitag    = self.dasmapping.apitag(self.name, api)
-        print "\n### parser", prim_key, notations, apitag
         if  format.lower() == 'xml':
             tags = self.dasmapping.api2daskey(self.name, api)
             gen  = xml_parser(data, prim_key, tags)
@@ -315,7 +314,6 @@ class DASAbstractService(object):
             for row in gen:
                 if  apitag and row.has_key(apitag):
                     row = row[apitag]
-                print "\n###row\n", row
                 if  type(row) is types.ListType:
                     for item in row:
                         if  item.has_key(prim_key):
