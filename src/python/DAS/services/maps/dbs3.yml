@@ -2,11 +2,43 @@
 system : dbs3
 format : JSON
 ---
+urn: acquisitioneras
+url : "http://localhost:8585/DBS/acquisitioneras/"
+expire : 3600
+params : {}
+daskeys : [
+        {"key": "era", "map":"era", "pattern":""},
+]
+---
+urn: primarydatasets
+url : "http://localhost:8585/DBS/primarydatasets/"
+expire : 3600
+params : {}
+daskeys : [
+        {"key": "primary_ds", "map":"primary_ds.name", "pattern":""},
+]
+---
 urn: datasets
 url : "http://localhost:8585/DBS/datasets/"
 expire : 3600
 params : {}
-daskeys :
-  - key : dataset
-    map : dataset
-    pattern : ""
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "type", "map":"datasettype", "pattern":""},
+        {"key": "group", "map":"physicsgroup", "pattern":""},
+        {"key": "tag", "map":"globaltag", "pattern":""},
+        {"key": "c_section", "map":"xtcrosssection", "pattern":""},
+]
+---
+urn: blocks
+url : "http://localhost:8585/DBS/blocks/"
+expire : 3600
+params : {}
+daskeys : [
+        {"key": "block", "map":"block.name", "pattern":""},
+]
+---
+notations : [
+        {"notation": "dataset", "map": "dataset.name", "api": ""},
+        {"notation": "primary_ds_name", "map": "primary_ds.name", "api": ""},
+]
