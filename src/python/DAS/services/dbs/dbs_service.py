@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.6 2009/05/28 18:59:11 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: dbs_service.py,v 1.7 2009/07/10 19:26:11 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -31,6 +31,13 @@ class DBSService(DASAbstractService):
             }
         }
         map_validator(self.map)
+
+    def parameters(self):
+        """
+        Return mapped service parameters, we overwrite this function since 
+        in DBS case input parameters for query are equal to DBS keys
+        """
+        return self.dbs_keys()
 
     def dbs_keys(self):
         """

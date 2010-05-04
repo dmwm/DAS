@@ -5,8 +5,8 @@
 DAS mapping
 """
 
-__revision__ = "$Id: das_mapping.py,v 1.9 2009/06/03 19:45:52 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_mapping.py,v 1.10 2009/07/10 19:26:10 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -51,6 +51,21 @@ def parselist(result):
         else:
             olist.append(item)
     return olist
+
+def api2das(system, name):
+    """
+    Translate data-service API input parameter into DAS QL key,
+    LumiDB uses run_number, while DAS uses run
+    """
+    dasmap = read_config('dasmap.cfg')
+    keys = []
+    if  dasmap.has_key(system):
+        for key, values in dasmap[system].items():
+            if  name in values:
+                keys.append(key)
+    if  keys:
+        return keys
+    return [name]
 
 def das2api(system, name):
     """

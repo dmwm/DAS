@@ -23,7 +23,7 @@ class DashboardService(DASAbstractService):
         self.headers = {'Accept': 'text/xml'}
         self.map = {
             'jobsummary-plot-or-table' : {
-                'keys' : ['jobsummary', 'jobsummary.site'],
+                'keys' : ['jobsummary'],
                 'params' : {
                     'user': '',
                     'site': '',
@@ -50,7 +50,6 @@ class DashboardService(DASAbstractService):
         and return results in a list with provided row.
         """
         selkeys, cond = query_params(query)
-        print "selkeys, cond", selkeys, cond
         api   = self.map.keys()[0] # we have only one key
         args  = dict(self.map[api]['params'])
         date1 = time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(time.time()-24*60*60))

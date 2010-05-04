@@ -45,24 +45,32 @@ class testQLParser(unittest.TestCase):
         q = "test (test1 (test2 or test3)"
         self.assertRaises(Exception, findbracketobj, q)
 
+    def test_qlparser_init(self):
+        """test initalization of QLParser class"""
+        imap = {'dbs':['dataset', 'run', 'site', 'block'],
+                'phedex':['block', 'replica', 'site'], 
+                'sitedb': ['admin', 'site'],
+                'dq': ['runs', 'DQFlagList']}
+        params = {}
+        self.assertRaises(Exception, QLParser, (imap, params))
+
     def test_qlparser(self):
         """test QLParser class"""
         imap = {'dbs':['dataset', 'run', 'site', 'block'],
                 'phedex':['block', 'replica', 'site'], 
                 'sitedb': ['admin', 'site'],
                 'dq': ['runs', 'DQFlagList']}
+        params = {'dbs':['dataset', 'run', 'site', 'block'], 
+                'phedex':['block', 'replica', 'site'], 
+                'sitedb':['admin', 'site'], 
+                'dq':['run','dataset']}
 
-        ql = QLParser(imap)
+        ql = QLParser(imap, params)
 
         q = "find runs where DQFlagList=Tracker_Global=GOOD&Tracker_Local1=1"
         result = ql.params(q)
-#        print "ql.params", result
-#        expect = ['']
-#        self.assertEqual(result, expect)
 
         q = "find dataset where ((run=1 or run=2) or dataset=bla) and site=cern order by block"
-#        ql = QLParser(imap)
-
         result = ql.selkeys(q)
         expect = ['dataset']
         self.assertEqual(result, expect)
@@ -92,6 +100,7 @@ class testQLParser(unittest.TestCase):
         q = "find dataset,admin,replica where site=123 or site=345 order by site desc"
         result = ql.params(q)
         expect = {'order_by_list': ['site'], 
+                  'functions' : {},
                   'selkeys': ['admin', 'dataset', 'replica'], 
                   'unique_services': ['dbs', 'phedex', 'sitedb'], 
                   'order_by_order': 'desc', 
@@ -108,7 +117,20 @@ class testQLParser(unittest.TestCase):
                                  'or', 
                                  {'value': '345', 'key': 'site', 'op': '='}], 
                   'allkeys': ['admin', 'dataset', 'replica', 'site'], 
-                  'unique_keys': ['admin', 'block', 'dataset', 'replica', 'site']}
+                  'unique_keys': ['admin', 'block', 'dataset', 'replica', 'site'],
+        }
+#        print "### expect"
+#        keys = expect.keys()
+#        keys.sort()
+#        for key in keys:
+#            print key, expect[key]
+#            print
+#        print "### result"
+#        keys = result.keys()
+#        keys.sort()
+#        for key in keys:
+#            print key, result[key]
+#            print
         self.assertEqual(result, expect)
 
 

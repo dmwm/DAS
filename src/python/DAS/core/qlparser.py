@@ -65,8 +65,8 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.10 2009/06/12 14:48:56 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: qlparser.py,v 1.11 2009/07/10 19:26:11 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -177,12 +177,13 @@ def getconditions(uinput):
             rdict['q%s' % counter] = substr
     return rdict
 
-def findbracketobj(uinput):
+def findbracketobj(uinput, dbs_func=True):
     """
     Find out bracket object, e.g. ((test or test) or test)
     """
-    if  uinput.find('count(') != -1 or uinput.find('sum(') != -1:
-        return
+    if  dbs_func:
+        if  uinput.find('count(') != -1 or uinput.find('sum(') != -1:
+            return
     left = uinput.find('(')
     robj = ''
     if  left != -1:
@@ -209,14 +210,78 @@ class QLLexer(object):
     - order_by keys
     - create condition dictionaries, {'value':'bla', 'op':'=', 'key':'run'}
     """
-    def __init__(self, imap):
+    def __init__(self, imap, params, funclist=[]):
         self.prefix    = ['find ', 'plot ', 'view ']
         self.operators = ['!=', '<=', '<', '>=', '>', '=', 
                           ' not like ', ' like ', 
                           ' between ', ' not in ', ' in ']
         self.qlmap = imap #{'dbs': [list of keys], ...}
+        self.qlparams = params #{'dbs': [list of params passed to srv], ...}
         self.known_keys = [k for i in self.qlmap.values() for k in i]
+        self.known_params = [k for i in self.qlparams.values() for k in i]
+        self.known_func = funclist
 
+    def das_functions(self, uinput):
+        """
+        Extract from given query a list of DAS aggregation functions.
+        Modify query to plain form and return plain queyry and DAS functions.
+        For example:
+        find das_sum(a,b),c where d=1
+        we will return
+        find a,b,c where d=1
+        functions = {'das_sum': ['a','b']}
+        """
+        functions = {}
+        # look-up if we have any DAS function in input query
+        found = 0
+        for func in self.known_func:
+            if  uinput.find(func) != -1:
+                found = 1
+        if  not found:
+            return uinput, functions
+
+        # if found we need to extract them
+        cond = ''
+        if  uinput.find(' where ') != -1:
+            usplit = uinput.split(' where ')
+            uinput = usplit[0]
+            cond = ' where ' + usplit[1]
+        for prx in self.prefix:
+            if  uinput.find(prx) == 0:
+                uinput = uinput.replace(prx, '')
+                break
+        expression = uinput
+        bckdict = {}
+        counter = 0
+        while 1:
+            bckobj = findbracketobj(expression, dbs_func=False)
+            if  not bckobj:
+                break
+            bidx = '_bobj_%s' % counter
+            bckdict[bidx] = bckobj.replace('(', '').replace(')', '')
+            counter += 1
+            expression = expression.replace(bckobj, bidx)
+        selkeys = []
+        for item in expression.split(','):
+            item = item.strip()
+            found = 0
+            for func in self.known_func:
+                if  item.find(func) == 0:
+                    bobj = item.replace(func, '')
+                    functions[func] = bckdict[bobj]
+                    found = bckdict[bobj]
+                    break
+            if  found:
+                for elem in found.split(','):
+                    elem = elem.strip()
+                    if  elem not in selkeys:
+                        selkeys.append(elem)
+            else:
+                if  item not in selkeys:
+                    selkeys.append(item)
+        query = prx + ','.join(selkeys) + cond
+        return query, functions
+        
     def fix_reserved_keywords(self, query):
         """
         Lowering all reserved keywords in a query
@@ -231,6 +296,9 @@ class QLLexer(object):
         """
         for srv, keys in self.qlmap.items():
             if  key in keys:
+                yield srv
+        for srv, args in self.qlparams.items():
+            if  key in args:
                 yield srv
         
     def condkeys(self, exp):
@@ -418,9 +486,34 @@ class QLParser(QLLexer):
     - find selection, order_by, all keys
     - construct unique set of services to be used for query
     - construct unique set of keys to be retrieved for query
+    Initialized with two maps:
+    - map of service names and data-service QL keys, e.g.
+       {'dbs':['run', 'dataset', ...], ...}
+    - map of service names and data-service input parameters, e.g.
+       {'lumidb':['run'], ...}
     """
-    def __init__(self, imap):
-        QLLexer.__init__(self, imap)
+    def __init__(self, imap, params, funclist=[]):
+        if  imap.keys() != params.keys():
+            msg  = 'Provided service names from map of data-service QL keys'
+            msg += 'does not match with'
+            msg += 'service names from map of data-service parameters.\n'
+            msg += '%s != %s' % (imap.keys(), params.keys())
+            raise Exception(msg)
+        QLLexer.__init__(self, imap, params, funclist)
+        # TODO: services weights will be used to pick-up least expensive
+        # data-service to use if common key found accross multiple
+        # data-services. This should be assigned elswhere, in DAS entity DB.
+        self.service_weights = {
+                'dbs': 5,
+                'phedex': 10,
+                'sitedb': 0,
+                'runsum': 6,
+                'lumidb': 7,
+                'dq': 8,
+        }
+        for key in imap.keys():
+            if  not self.service_weights.has_key(key):
+                self.service_weights[key] = 1
 
     def check(self, query, rdict):
         """
@@ -454,7 +547,7 @@ class QLParser(QLLexer):
             raise Exception(msg)
         # check if all keys are valid ones
         for k in rdict['allkeys']:
-            if  k not in self.known_keys:
+            if  k not in self.known_keys and k not in self.known_params:
                 if  k.find('count') !=-1 or k.find('sum') != -1: # DBS
                     k = ''.join(k.split('(')[-1]).split(')')[0]
                     if  k not in self.known_keys:
@@ -475,7 +568,9 @@ class QLParser(QLLexer):
         - unique set of keys and service necessary to run a query
         """
         query = self.fix_reserved_keywords(query)
+        query, functions = self.das_functions(query)
         rdict = {}
+        rdict['functions']       = functions
         rdict['conditions']      = self.conditions(query)
         order_by_list, order_by  = self.order_by(query)
         rdict['order_by_list']   = order_by_list
@@ -499,15 +594,38 @@ class QLParser(QLLexer):
         """
         query = self.fix_reserved_keywords(query)
         sdict = {}
+        skeys = unique_list(self.selkeys(query))
         akeys = unique_list(self.allkeys(query))
-        for key in akeys:
+        params = list(set(akeys) - set(skeys))
+        allkeys = []
+        for key in skeys:
             for service, keys in self.qlmap.items():
                 if  key in keys:
+                    if  key not in allkeys:
+                        allkeys.append(key)
                     if  sdict.has_key(service):
                         vlist = sdict[service]
                         sdict[service] = vlist +[key]
                     else:
                         sdict[service] = [key]
+        for key in params:
+            for service, keys in self.qlparams.items():
+                if  key in keys:
+                    if  key not in allkeys:
+                        allkeys.append(key)
+                    if  sdict.has_key(service):
+                        vlist = sdict[service]
+                        sdict[service] = vlist +[key]
+                    else:
+                        sdict[service] = [key]
+        # I need to assing service weight to distinguish a case
+        # when several services can answer the same query
+        if  len(allkeys) == 1:
+            srvlist = sdict.keys()
+            weight_tuple = [(w, s) for s, w in self.service_weights.items()\
+                 if s in srvlist]
+            weight_tuple.sort()
+            sdict = {weight_tuple[0][1]:allkeys}
         return sdict
 
     def uniq_services(self, query):
@@ -519,29 +637,51 @@ class QLParser(QLLexer):
         can answer this query without phedex
         """
         query = self.fix_reserved_keywords(query)
-        skeys = unique_list(self.selkeys(query))
-        akeys = unique_list(self.allkeys(query))
+        skeys = unique_list(self.selkeys(query)) # selection keys
+        akeys = unique_list(self.allkeys(query)) # all keys
+        ckeys = list(set(akeys) - set(skeys))    # condition keys
         oneservice = None
-        for srv, keys in self.qlmap.items():
-            if  set(akeys) & set(keys) == set(akeys):
-                oneservice = srv
-                break
-        if  oneservice: # all keys from one data-service
-            uservices = [oneservice]
+        services = self.services(query).keys()
+        if  len(services) == 1: # all keys from one data-service
+            uservices = services
             ulist = skeys
-            daslist = [{oneservice:query}]
+            daslist = [{services[0]:query}]
             return uservices, ulist, daslist
         else:
             uservices = [] # unique set of services for list of keys
-#            for key in skeys:
-            for key in akeys:
-                srvs = [i for i in self.findservices(key)]
-                if  not uservices:
-                    uservices = [i for i in srvs]
+            for srv in services:
+                srv_keys = self.qlmap[srv]
+                srv_args = self.qlparams[srv]
+                if  ckeys:
+                    cond1 = set(srv_keys) & set(skeys)# srv keys covers skeys
+                    if  not srv_args:
+                        cond2 = True
+                    else:
+                        cond2 = set(srv_args) & set(ckeys)# params covers ckeys
+                    if  cond1 and cond2:
+                        uservices.append(srv)
                 else:
-                    int_srvs = set(srvs) & set(uservices)
-                    if  not int_srvs:
-                        uservices += [i for i in srvs]
+                    if  set(srv_keys) & set(skeys):# srv keys covers skeys
+                        uservices.append(srv)
+        if  not uservices:
+            msg = 'Unable to find unique set of service out of %s' % services
+            raise Exception(msg)
+        # find relation keys in uservices
+        pairs = [i for i in oneway_permutations(uservices)]
+        ulist = list(skeys)
+        for pair in pairs:
+            list0 = self.qlmap[pair[0]]
+            list1 = self.qlmap[pair[1]]
+            ulist += [i for i in list(set(list0) & set(list1)) if i not in ulist\
+                        and i.find('.') == -1]
+
+        # based on conditions figure which data services to query
+        # first we construct condition dict in a form {'srv0':'condition'} and
+        # 'final' list of conditions in a form srv0 and|or srv1, etc.
+        # then we disallow conditions from different data-services 
+        # if they're outside of common brackets.
+        # Finally we construct DAS queries with proper conditions
+
         cond_exp = mergecond(self.conditions(query))
         bckdict  = {}
         counter  = 0
@@ -580,13 +720,14 @@ class QLParser(QLLexer):
                     uservices += [i for i in srvs if i not in uservices]
                     cond_srvs = list(srvs)
                 else:
-#                    cond_srvs = list(int_srvs)
                     cond_srvs += list(int_srvs)
+            cond_srvs = unique_list(cond_srvs)
             # check if we have more then 1 data-srv for bracket obj
             if  bracket_found:
                 if  len(cond_srvs) > 1:
                     msg  = "Unsupported conditions: mix of conditions from more"
                     msg += " then on data-service inside of brackets"
+                    msg += "condition services %s" % cond_srvs
                     raise Exception(msg)
             srvkey = 'srv%s' % idx
             conddict[srvkey] = condition, cond_srvs
@@ -596,14 +737,6 @@ class QLParser(QLLexer):
             if  not cond:
                 break
             idx += 1
-        # find relation keys in uservices
-        pairs = [i for i in oneway_permutations(uservices)]
-        ulist = list(skeys)
-        for pair in pairs:
-            list0 = self.qlmap[pair[0]]
-            list1 = self.qlmap[pair[1]]
-            ulist += [i for i in list(set(list0) & set(list1)) if i not in ulist\
-                        and i.find('.') == -1]
         # find final set of sub-queries to be executed by DAS
         ustr = ','.join(ulist)
         daslist = []
@@ -620,7 +753,9 @@ class QLParser(QLLexer):
             for srv in list(set(uservices) - set(dasqueries.keys())):
                 dasqueries[srv] = 'find %s' % ustr
             daslist.append(dasqueries)
+#        print
 #        print "query", query
+#        print "services", self.services(query)
 #        print "uservices", uservices
 #        print "cond_exp", cond_exp
 #        print "ulist", ulist
