@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.18 2010/03/09 02:41:35 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: utils.py,v 1.19 2010/03/19 17:25:48 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -16,6 +16,7 @@ import httplib
 import urllib
 import urllib2
 import DAS.utils.jsonwrapper as json
+from DAS.utils.regex import number_pattern
 
 def urllib2_request(request, url, params, headers={}, debug=0):
     """request method using GET request from urllib2 library"""
@@ -102,7 +103,7 @@ def json2html(idict, pad=""):
     """
     width = 100
     newline = '\n'
-    pat=re.compile('^[-]?[0-9][0-9\.]*$')
+    pat = number_pattern
     orig_pad = pad
     sss = pad + '{' + newline
     for key, val in idict.items():

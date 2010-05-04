@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.20 2010/02/25 14:49:59 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: sitedb_service.py,v 1.21 2010/03/19 17:25:49 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -13,6 +13,7 @@ import types
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import add2dict, map_validator
 from DAS.utils.utils import row2das
+from DAS.utils.regex import cms_tier_pattern
 import DAS.utils.jsonwrapper as json
 
 class SiteDBService(DASAbstractService):
@@ -38,7 +39,7 @@ class SiteDBService(DASAbstractService):
             jsondict = json.loads(data)
         except:
             jsondict = eval(data)
-        pat = re.compile('T[0-9]_')
+        pat = cms_tier_pattern
         for key, val in jsondict.items():
             if  api == 'CMSNametoAdmins':
                 row = {'admin':val}

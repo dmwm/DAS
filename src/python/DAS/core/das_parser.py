@@ -5,8 +5,8 @@
 DAS Query Language parser.
 """
 
-__revision__ = "$Id: das_parser.py,v 1.3 2010/03/09 15:22:07 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_parser.py,v 1.4 2010/03/19 17:25:49 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -16,13 +16,15 @@ import urllib
 from DAS.utils.utils import adjust_value
 from DAS.core.das_ql import das_filters, das_aggregators
 from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
+from DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
+from DAS.utils.regex import key_attrib_pattern
 
 def convert2date(value):
     """
     Convert input value to date range format expected by DAS.
     """
     msg = "Unsupported syntax for value of last operator"
-    pat = re.compile('^[0-9][0-9](h|m)$')
+    pat = last_time_pattern
     if  not pat.match(value):
         raise Exception(msg)
     oper = ' = '
@@ -45,7 +47,7 @@ def convert2date(value):
 
 def das_dateformat(value):
     """Check if provided value in expected DAS date format."""
-    pat = re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
+    pat = date_yyyymmdd_pattern
     if  pat.match(value): # we accept YYYYMMDD
         ddd = datetime.date(int(value[0:4]), # YYYY
                             int(value[4:6]), # MM
@@ -138,7 +140,7 @@ def get_filters(query):
     mapreduce   = []
     aggregators = []
     filters     = []
-    pat         = re.compile(r"^([a-z_]+\.?)+$") # match key.attrib
+    pat         = key_attrib_pattern
     if  query.find("|") != -1:
         split_results = query.split("|")
         query = split_results[0]
