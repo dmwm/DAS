@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.73 2010/02/24 21:31:07 valya Exp $"
-__version__ = "$Revision: 1.73 $"
+__revision__ = "$Id: utils.py,v 1.74 2010/02/26 15:21:23 valya Exp $"
+__version__ = "$Revision: 1.74 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -987,6 +987,10 @@ def aggregator(results, expire):
         try:
             val1 = dict_value(record, prim_key)
         except:
+            record.update({'das':{'expire':expire}})
+            yield record
+            record = dict(row)
+            update = 0
             continue
         try:
             val2 = dict_value(row, prim_key)
@@ -1007,6 +1011,9 @@ def aggregator(results, expire):
     if  update: # check if we did update for last row
         record.update({'das':{'expire':expire}})
         yield record
+    else:
+        row.update({'das':{'expire':expire}})
+        yield row
 
 def extract_http_error(err):
     """
