@@ -7,6 +7,7 @@ examples of API metrics and API notations records in DAS Mapping DB:
 
 - API metric example:
 
+.. _api_map:
 .. doctest::
 
     {"api": {"params": {"node": "*", "se": "*", "block": "*"}, "name": "blockReplicas"}, 
@@ -21,6 +22,7 @@ examples of API metrics and API notations records in DAS Mapping DB:
 
 - API notations example:
 
+.. _notation:
 .. doctest::
 
     {"notations": [
