@@ -12,8 +12,10 @@ DAS comes with 2 services
 - DAS cache server
 - DAS web server
 
-All of them can either reside on a single node or can run on dedicated machines.
-Please refer to :ref:`DAS CMS operations <cms_operations>` section for deployment instructions.
+Both can either reside on a single node or can run on dedicated machines.
+Please refer to :ref:`DAS CMS operations <cms_operations>` section for deployment instructions
+and :ref:`DAS configuration <das_config>` section for description of configuration
+parameters.
 
 By CMS conventions DAS uses the following ports
 
