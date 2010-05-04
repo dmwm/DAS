@@ -4,8 +4,8 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.8 2009/10/20 15:00:54 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: monitor_service.py,v 1.9 2009/12/22 15:13:10 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -25,12 +25,12 @@ class MonitorService(DASAbstractService):
         """
         An overview data-service worker.
         """
-        selkeys = query['fields']
         api  = self.map.keys()[0] # we have only one key
         args = dict(self.map[api]['params'])
         data = []
         keys = [key for key in self.map[api]['keys'] for api in self.map.keys()]
-        for key in selkeys:
+        cond = query['spec']
+        for key, value in cond.items():
             if  key not in keys:
                 continue
             if  key.find('.') != -1:
@@ -51,7 +51,6 @@ class MonitorService(DASAbstractService):
             header = dasheader(self.name, query, api, self.url, args,
                 ctime, self.expire, self.version())
             header['lookup_keys'] = self.lookup_keys(api)
-            header['selection_keys'] = selkeys
             self.analytics.add_api(self.name, query, api, args)
             self.localcache.update_cache(query, data, header)
         return True

@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.16 2009/11/20 00:59:11 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: runsum_service.py,v 1.17 2009/12/22 15:13:11 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -56,7 +56,6 @@ class RunSummaryService(DASAbstractService):
         [{'run':1,'dataset':/a/b/c'}, ...]
         """
         # translate selection keys into ones data-service APIs provides
-        selkeys = query['fields']
         cond = query['spec']
         args = dict(self.params)
         for key, value in cond.items():
@@ -122,7 +121,6 @@ class RunSummaryService(DASAbstractService):
             header  = dasheader(self.name, query, api, self.url, args,
                 ctime, self.expire, self.version())
             header['lookup_keys'] = self.lookup_keys(api)
-            header['selection_keys'] = selkeys
             mongo_query = query
             self.analytics.add_api(self.name, query, api, args)
             self.localcache.update_cache(mongo_query, genrows, header)

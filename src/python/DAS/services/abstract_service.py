@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.57 2009/12/11 18:25:27 valya Exp $"
-__version__ = "$Revision: 1.57 $"
+__revision__ = "$Id: abstract_service.py,v 1.58 2009/12/22 15:13:10 valya Exp $"
+__version__ = "$Revision: 1.58 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -304,7 +304,6 @@ class DASAbstractService(object):
                 header  = dasheader(self.name, query, api, url, args, ctime,
                     self.expire, self.version())
                 header['lookup_keys'] = self.lookup_keys(api)
-                header['selection_keys'] = selkeys
                 self.localcache.update_cache(mongo_query, genrows, header)
                 msg  = 'DASAbstractService::%s cache has been updated,' \
                         % self.name
