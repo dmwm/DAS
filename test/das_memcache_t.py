@@ -17,8 +17,7 @@ class testDASCache(unittest.TestCase):
         """
         set up DAS core module
         """
-        cachelist = ['127.0.0.1:11211']
-        self.dascache = DASCache(cachelist, debug=1)
+        self.dascache = DASCache(debug=1)
         self.das = DASCore()
 
     def test_key(self):                          
