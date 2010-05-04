@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.24 2009/09/11 15:58:10 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: das_config.py,v 1.25 2009/09/14 20:39:40 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -62,12 +62,15 @@ def das_readconfig(dasconfig=None):
     configdict['views_engine'] = config.get('views', 'db_engine', None)
     configdict['views_dir'] = config.get('views', 'dir', '')
 
-    configdict['mapping_db_engine'] = config.get('mapping_db', 'db_engine', None)
-    configdict['mapping_db_dir'] = config.get('mapping_db', 'dir', '')
+#    configdict['mapping_db_engine'] = config.get('mapping_db', 'db_engine', None)
+#    configdict['mapping_db_dir'] = config.get('mapping_db', 'dir', '')
+    configdict['mapping_dbhost'] = config.get('mapping_db', 'dbhost', 'localhost')
+    configdict['mapping_dbport'] = int(config.get('mapping_db', 'dbport', '27017'))
+    configdict['mapping_dbname'] = config.get('mapping_db', 'dbname', 'mapping')
 
-    configdict['analytics_dbhost'] = config.get('analytics', 'dbhost', 'localhost')
-    configdict['analytics_dbport'] = int(config.get('analytics', 'dbport', '27017'))
-    configdict['analytics_dbname'] = config.get('analytics', 'dbname', 'analytics')
+    configdict['analytics_dbhost'] = config.get('analytics_db', 'dbhost', 'localhost')
+    configdict['analytics_dbport'] = int(config.get('analytics_db', 'dbport', '27017'))
+    configdict['analytics_dbname'] = config.get('analytics_db', 'dbname', 'analytics')
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
     configdict['hotcache'] = config.get('das', 'hotcache', None)
@@ -150,16 +153,21 @@ def das_writeconfig():
     config.set('views', 'dir', dbdir)
     config.set('views', 'db_engine', 'sqlite:///%s' % dbfile)
 
-    config.add_section('mapping_db')
-    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'db')
-    dbfile = os.path.join(dbdir, 'das_mapping.db')
-    config.set('mapping_db', 'dir', dbdir)
-    config.set('mapping_db', 'db_engine', 'sqlite:///%s' % dbfile)
+#    config.add_section('mapping_db')
+#    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'db')
+#    dbfile = os.path.join(dbdir, 'das_mapping.db')
+#    config.set('mapping_db', 'dir', dbdir)
+#    config.set('mapping_db', 'db_engine', 'sqlite:///%s' % dbfile)
 
-    config.add_section('analytics')
-    config.set('analytics', 'dbhost', 'localhost')
-    config.set('analytics', 'dbport', '27017')
-    config.set('analytics', 'dbname', 'analytics')
+    config.add_section('mapping_db')
+    config.set('mapping_db', 'dbhost', 'localhost')
+    config.set('mapping_db', 'dbport', '27017')
+    config.set('mapping_db', 'dbname', 'mapping')
+
+    config.add_section('analytics_db')
+    config.set('analytics_db', 'dbhost', 'localhost')
+    config.set('analytics_db', 'dbport', '27017')
+    config.set('analytics_db', 'dbname', 'analytics')
 
     config.add_section('summary views')
     query  = 'find dataset, dataset.createdate, dataset.createby, '
