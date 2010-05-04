@@ -35,7 +35,7 @@
 
 %% Give the author list to appear in the running head
 %% Example \runauth{C.V. Radhakrishnan et al.}
-\runauth{}
+\runauth{V. Kuznetsov, D. Evans, S. Metson}
 
 %% The choice of journal logo is determined by the \jid and \jnltitlelogo commands.
 %% A user-supplied logo with the name <\jid>logo.pdf will be inserted if present.
@@ -100,6 +100,9 @@
 % add words to TeX's hyphenation exception list
 %\hyphenation{author another created financial paper re-commend-ed Post-Script}
 
+% mdwlist allows you to create e.g. bulleted lists without extra line spacing
+\usepackage{mdwlist}
+
 % declarations for front matter
 
 \begin{document}
@@ -127,7 +130,7 @@
 %% \address{Address\fnref{label3}}
 %% \fntext[label3]{}
 
-\dochead{}
+\dochead{International Conference on Computational Science, ICCS 2010}
 %% Use \dochead if there is an article header, e.g. \dochead{Short communication}
 
 \title{The CMS Data Aggregation System}
@@ -140,15 +143,15 @@
 %\author[vkuznet]{Valentin Kuznetsov\corref{cor1}}
 \author[vkuznet]{Valentin Kuznetsov}
 \address[vkuznet]{Cornell University, Ithaca, New York, USA}
-\ead{vkuznet@gmail.com}
+%\ead{vkuznet@gmail.com}
 
 \author[evans]{Dave Evans}
 \address[evans]{Fermilab, Batavia, Illinois, USA}
-\ead{evansde@fnal.gov}
+%\ead{evansde@fnal.gov}
 
 \author[metson]{Simon Metson}
 \address[metson]{Bristol University, Bristol, UK}
-\ead{s.metson@bristol.ac.uk}
+%\ead{s.metson@bristol.ac.uk}
 
 %\cortext[cor1]{Corresponding author}
 
@@ -219,8 +222,9 @@ used elsewhere.
 The rest of this paper is organized as follows. 
 In section \ref{RelatedWork} we discuss related work in a domain of 
 keyword search over relational data sources.
-Section \ref{DataModel} describes the CMS experiment and its data model. In section
-\ref{DAS} we present the architecture of the DAS system, including discussion of its
+Section \ref{DataModel} breifly describes the Compact Muon Solenoid (CMS) experiment 
+and its data model. In section \ref{DAS} we present the architecture 
+of the DAS system, including discussion of its
 various components. Finally, our results are summarized in section \ref{Results}.
 
 \section{Related Work\label{RelatedWork}}
@@ -354,28 +358,32 @@ discovery service.
 Starting from this ground we are designed the DAS system as an
 additional layer on top of the existing data-services
 within CMS computing infrastructure by imposing the following set of requirements:
-\begin{itemize}
-\item support a keyword based search queries with ability to use conditional operators;
-%\item pluggable interface to existing and up-coming data-service APIs;
-\item use existing heterogeneous software environment and distributed nature of the data-services;
-\item preserve access rules and security policies of individual data-services;
-%\item be flexible to adjust to dynamic nature of data-service APIs, 
-%due to continuously changing detector and software environments;
-\item retrieve data on demand and aggregate them if necessary across
+support a keyword based search queries with ability to use conditional operators;
+use existing heterogeneous software environment and distributed nature of the data-services;
+preserve access rules and security policies of individual data-services;
+retrieve data on demand and aggregate them if necessary across
 multiple data-services;
-\item be transparent to data-services implementation and their data formats;
-%\item support legacy data-services, applications and APIs.
-\end{itemize}
+be transparent to data-services implementation and their data formats.
+%\begin{itemize}
+%\item support a keyword based search queries with ability to use conditional operators;
+%\item use existing heterogeneous software environment and distributed nature of the data-services;
+%\item preserve access rules and security policies of individual data-services;
+%\item retrieve data on demand and aggregate them if necessary across
+%multiple data-services;
+%\item be transparent to data-services implementation and their data formats;
+%\end{itemize}
 \begin{figure}[htb]
 \centering
-\includegraphics[width=100mm]{DAS_Cache_and_Analytics.pdf}
+\includegraphics[width=90mm]{DAS_Cache_and_Analytics.pdf}
 \caption{
 The DAS architecture diagram. It consists of cache server,
-analytics and mapping databases. The data in a cache can be shared
+analytics, mapping and cache databases. The data in a cache can be shared
 across multiple queries. The information retrieval is triggered
 on demand basis by invoking appropriate data-service APIs. The
 optional DAS robots (Unix daemons) can be used to pre-fetch
-the most popular query requests.
+the most popular query requests. The solid, dashed and dotted lines 
+represent outer, inner and optional process communications between
+different DAS components, respectively.
 }
 \label{DAS_cache}
 \end{figure}
@@ -400,7 +408,8 @@ which will be discussed next.
 
 The DAS architecture is shown in Fig. \ref{DAS_cache}. It consists of
 the core library with support of pluggable modules for data retrieval;
-caching layer to store and aggregate results;
+caching layer to store and aggregate results into DAS Cache and DAS merge
+databases, respectively;
 request service to handle user queries;
 Mapping DB to keep information about data-service APIs, e.g.
 notations and mapping to DAS keys;
@@ -439,36 +448,36 @@ On identifying API's that are accessible to DAS we store
 their names, input parameters and associated DAS keys
 into the Mapping DB. For example
 \begin{verbatim}
-{"api":{"params":{"name":""}, "name":"CMSNametoSE"}, "system":"sitedb",
- "api2das": [{"pattern": "re.compile('^T[0-3]_')", 
-              "api_param": "name", "das_key": "site"}], 
- "daskeys": [{"pattern": "re.compile('^T[0-3]_')", 
-              "key": "site", "map": "site.name"}]}
+{"system": "phedex", "format": "XML", "urn": "fileReplicas",
+ "url": "http://a.b.com/phedex/datasvc/xml/prod/fileReplicas", 
+ "params": {"node": "*", "block": "required", "se": "*"}, 
+ "api2das": [{"pattern": "", "das_key": "file.block.name", 
+    "api_param": "block"}, {"pattern": "re.compile('^T[0-3]_')", 
+    "das_key": "site", "api_param": "node"}], 
+ "daskeys": [{"map": "file.name", "key": "file", "pattern": ""}, 
+             {"map": "file.block.name", "key": "block", "pattern": ""}]}
 \end{verbatim}
-represents DAS mapping record.\footnote{
-The data-service URL's are kept in the configuration file.
-}
+represents DAS mapping record.
 This record can be read as following:
-the \verb+CMSNametoSE+ API provided by 
-\verb+sitedb+ data-service accepts \verb+name+ as input parameter. It
-confirms regular expression pattern, \verb+re.compile('^T[0-3]_')+, and
-corresponds to \verb+site+ DAS key. The \verb+site+ key
-maps into \verb+site.name+ within DAS record. 
+the \verb+fileReplicas+ API (urn) provided by given url delivers data in
+XML data format and belongs to \verb+phedex+ system.
+It accepts \verb+node+, \verb+block+ and \verb+se+ input parameters, shown in \verb+params+ part
+of the record. Each record has two maps: \verb+api2das+ for mapping api input parameters into
+DAS keys and \verb+daskeys+ for mapping input DAS keys into DAS record access keys.
+
 
 Therefore the Mapping DB identifies a set of pre-defined DAS keys, 
-e.g. \verb+site, file, run+, etc., to be used by end-users in their queries.
+e.g. \verb+file, block+, etc., to be used by end-users in their queries.
 Each key is mapped onto set of API calls, whose output is retrieved,
 cached and aggregated as required. 
 
 \subsection{DAS Analytics DB}
 The DAS Analytics DB collects information on user requests against the system.
 Each request that DAS handles is recorded.
-The Analytics DB tracks:
-\begin{itemize}
-\item The users request
-\item How DAS has mapped the request onto data service API's
-\item The time taken by the remote data services to process the API calls
-\end{itemize}
+The Analytics DB tracks: the users request; how DAS has mapped the request 
+onto data service API's; the time taken by the remote data services to 
+process the API calls.
+
 By recording this information we can plan pre-fetch strategies for common queries,
 identify issues in remote data services and cross check that DAS resolves requests
 in a deterministic manner.
@@ -482,8 +491,13 @@ in a deterministic manner.
 
 \subsection{DAS caching system}
 The DAS caching system is used to dynamically fetch
-and aggregate data upon user requests. We use the following 
-algorithm (code snippets are written in Python \cite{Python}):
+and aggregate data upon user requests. It consits of
+DAS cache and DAS merge independent databases. The former one is used to store
+the raw results coming out from data-services, while the later contains aggregated
+records. Each data record in DAS cache/merge DBs contains expiration timestamps 
+provided either by data-service itself or based on default values during 
+data-service registration.
+We use the following algorithm (code snippets are written in Python \cite{Python}):
 \begin{enumerate}[1.]
 \item Decompose query into set of conditions (\verb+conds+) 
 and selection keys (\verb+skeys+).
@@ -601,12 +615,11 @@ based on \verb+block.name+ key. Here is an example of such an aggregated record:
 \begin{verbatim}
 {"das_id": ["4b195404e2194e21c4000030", "4b1953fee2194e21c4000002"], 
  "block": [{"name": "/a/b/c#123", "replica": [{"complete": "y", 
-            "subscribed": "n", "custodial": "n", "site": "T1_US_Buffer", 
-            "nfiles": "18", "se": "srm.site.com", 
-            "size": "112694171838"}, {....}]},
+            "subscribed": "n", "site": "T1_US_Buffer", "nfiles": "18", 
+            "se": "a.b.com", "size": "112694171838"}, {....}]},
            {"name": "a/b/c#123", "nevents": "570200", 
             "created_by": "USER_DN", "path": "/a/b/c", ...}],
- "das": [{"expire": 1259952908}, {"expire": 1259954702}]}
+ "das": {"expire": 1259952908}}
 \end{verbatim}
 The \verb+das_id+ indicates the records stored in the DAS Analytics DB,
 the \verb+block+ part represents the aggregated block meta-data information from DBS
@@ -618,29 +631,26 @@ latency studies, etc.
 
 \section{Results\label{Results}}
 In this section we discuss preliminary results achieved with DAS system
-using the following CMS data-services:
-\begin{itemize}
-\item Data Bookkeeping System, DBS \cite{DBS}, the CMS meta-data service;
-\item Physics Experiment Data Export, PhEDEx \cite {PhEDEx}, the 
-CMS data location and file transfer system;
-\item SiteDB \cite{SiteDB}, the CMS site resources;
-\item RunSummary \cite{RunSummary}, the CMS run and trigger data-service;
-%\item LumiDB \cite{LumiDB} collects information about Luminosity conditions;
-%\item DQ \cite{DQ}, Data Quality data-service which collects information
-%about detector conditions during data taking;
-%\item Overview \cite{Overview}, collects information about CMS
-%transfer rate, etc.;
-\item Dashboard \cite{Dashboard}, the LHC virtual organization
-monitoring data-service portal;
-\end{itemize}
-Each data-service has its own scope, size and peculiarities. 
-For instance, the data in PhEDEx is transient due to constant 
-migration of CMS data; the DBS system is divided into several individual 
-instances with sizes and lifetimes driven by specific processing tasks; 
-the RunSummary data-service is operated on private network accessible 
-at CMS online operation center.
+using different CMS data-services, see \cite{CMS, CMSDataModel}.
 
-At the moment, the amount of meta-data stored in all services is around
+%using the following CMS data-services:
+%Data Bookkeeping System (DBS) \cite{DBS}, the CMS meta-data service;
+%Physics Experiment Data Export (PhEDEx) \cite {PhEDEx}, the 
+%CMS data location and file transfer system;
+%SiteDB \cite{SiteDB}, the CMS site resources;
+%RunSummary \cite{RunSummary}, the CMS run and trigger data-service;
+%Dashboard \cite{Dashboard}, the LHC virtual organization
+%monitoring data-service portal.
+
+%Each data-service has its own scope, size and peculiarities. 
+%For instance, the data in PhEDEx is transient due to constant 
+%migration of CMS data; the DBS system is divided into several individual 
+%instances with sizes and lifetimes driven by specific processing tasks; 
+%the RunSummary data-service is operated on private network accessible 
+%at CMS online operation center.
+
+At the moment, the amount of meta-data stored in all services participating
+in DAS is around
 75 GB and 200 GB in tables and index sizes, respectively. We estimate to
 collect around 500 GB of meta-data each year during 
 normal CMS operations. The average query rate to DAS is expected to be at the 
@@ -673,17 +683,16 @@ PhEDEx CMS data-services.
 System & Format & Records & Elapsed time & Elapsed time \\
 & & & no cached data & w/ cached data \\
 \hline
-DAS (DBS) & XML & 382396 & 63 sec & 0.98 sec \\
-DAS (PhEDEx) & XML & 186145/180439 & 164 sec & 0.98 sec \\
-DAS (total) & JSON & 388108 & 234 sec & 2.05/50.7 sec \\
+DBS yield & XML & 386943 & 68 sec & 0.98 sec \\
+PhEDEx yield & XML & 189679 & 107 sec & 0.98 sec \\
+Merge step & JSON & 576622 & 63 sec & 0.9 sec \\
+DAS total & JSON & 392635 & 238 sec & 2.05/50.7 sec \\
 \hline
 \hline
 \end{tabular}
 \caption{Time required to fetch, parse and aggregate block information
-from DBS and PhEDEx systems. The PhEDEx
-system shows fetched (186145) and merged (180439) records. 
-The last row shows aggregated results and total time
-spent in all components (DBS+PhEDEx+aggregation).
+from DBS and PhEDEx systems. The last row shows aggregated results and 
+total time spent in all DAS components.
 The total number of DAS records are calculated as number of 
 aggregated records plus left overs, the non-matched records from both systems. 
 The look-up time shown in last column represents query look-up 
@@ -702,7 +711,7 @@ The elapsed time is measured and consists of the following components:
 {\it
 Elapsed time = retrieval time + parsing time + re-mapping time 
         + cache insertion/indexing time 
-        + (aggregation time) + (output creation time)
+        + aggregation time + output creation time
 }
 \end{itemize}
 Here {\it retrieval time} is the time required to access data from data-service,
@@ -712,39 +721,44 @@ that information into DAS. {\it Cache insertion} and {\it indexing time}
 represents time spent on DAS back-end caching, {\it aggregation time} is
 the time required to merge objects into DAS records based
 on their common keys (\verb+block.name+ in this case) and {\it output creation time}
-is the time required to write DAS records to disk. Please note that last two
-components, {\it aggregation} and {\it output creation time}, are only applied to
-one of the sub-system, either DBS or PhEDEx, depending on the insertion order.
-
-%DAS execution time (phedex) 160.606897116 sec
-%DAS execution time (dbs) 52.5349619389 sec
-%DAS execution time 256.0670228 sec, Sat, 28 Nov 2009 15:46:39 GMT
-%
-%DAS execution time (phedex) 0.952513933182 sec
-%DAS execution time (dbs) 0.951184034348 sec
-%DAS execution time 44.7982931137 sec, Sat, 28 Nov 2009 15:52:11 GMT
+is the time required to write DAS records to disk.
+% Please note that last two
+%components, {\it aggregation} and {\it output creation time}, are only applied to
+%one of the sub-system, either DBS or PhEDEx, depending on the insertion order.
 
 The individual tests of DAS components (DBS and PhEDEx) show roughly 
 the same performance, although the time taken by the PhEDEx component is longer
-due to higher retrieval and parsing time as well as time spent
-during aggregation step. As shown in Table \ref{DAS_benchmark},
+due to more complex records which leads to higher retrieval and parsing time. 
+As shown in Table \ref{DAS_benchmark},
 the look-up time spent to access individual components (last column) is quite
 reasonable, roughly 1 second for both systems. While the final time to
 get DAS records on disk is about 50 seconds. This is mostly due to I/O and
 conversion operations between binary data format used by MongoDB, BSON, to DAS
 data format, JSON.
 
-The results of the stress tests have shown that we can achieve a throughput of
-$\sim$6000 docs/sec for insertion, $\sim$1100 docs/sec for aggregation and 
+The individual benchmarks of MongoDB have shown that it can deliver insert rate of
+20K docs/sec and provide look-up time of $10^-5$ sec per random document.
+The results of DAS stress tests have demonstrated that we can achieve a throughput of
+$\sim$6000 docs/sec for raw cache population, 
+%$\sim$6000 docs/sec for aggregation and 
 $\sim$7600 docs/sec for reading and writing DAS records to disk,
-which is suitable for our 
-needs. Please note, we have relatively small audience of users
+which is suitable for our needs. 
+Please note, we have relatively small audience of users
 who perform complex queries and get precise results, while search 
 engines are designed for a large number of users asking for imprecise, simple data.
 Since all tests were performed on a single CPU, further improvements from
 expanding to multiple CPUs are expected. In addition, more
 performance advantage can be gained by writing dedicated C/C++
 python extensions for data intensive operations.
+
+\section{Future work}
+The DAS system was desgined for CMS HEP experiment, while its architecture is
+transparent to consumed meta-data, data formats and participating data-providers. 
+In the current year we plan to put DAS into production and confirm its scalability, 
+transparency and durability for various CMS data-services. Our goal is to sustain 
+in DAS 1TB of meta-data per year. The DISCOVER Research Service Group at Cornell 
+University \cite{DRSG} is expressed its interests to apply DAS for other 
+scientific domains and turn it into generic open-source project.
 
 \section{Summary}
 %We are presented a new data aggregation service (DAS) developed for CMS High-Energy experiment
@@ -905,11 +919,11 @@ L. Tuura et al.,
 ``Scaling CMS data transfer system for LHC start-up'', 
 J. Phys. Conf. Ser, 119, 072030 (2008).
 
-\bibitem{RunSummary}
-https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary
+%\bibitem{RunSummary}
+%https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary
 
-\bibitem{SiteDB}
-https://cmsweb.cern.ch/sitedb/
+%\bibitem{SiteDB}
+%https://cmsweb.cern.ch/sitedb/
 
 %\bibitem{LumiDB}
 %https://twiki.cern.ch/twiki/bin/view/CMS/CMS-DMWM-DBS-Luminosity
@@ -920,10 +934,10 @@ https://cmsweb.cern.ch/sitedb/
 %\bibitem{Overview}
 %https://cmsweb.cern.ch/overview/
 
-\bibitem{Dashboard}
-J. Andreeva, et. al,
-``Experiment Dashboard – The Monitoring System for the LHC Experiments'',
-GMW’07, June 25, 2007, Monterey, California, USA.
+%\bibitem{Dashboard}
+%J. Andreeva, et. al,
+%``Experiment Dashboard – The Monitoring System for the LHC Experiments'',
+%GMW’07, June 25, 2007, Monterey, California, USA.
 
 %\bibitem{CRAFT09}
 %https://twiki.cern.ch/twiki/bin/view/CMS/CRAFT09AnalysisInfo
@@ -932,5 +946,8 @@ GMW’07, June 25, 2007, Monterey, California, USA.
 %D. Konopnicki, O. Shmueli,
 %``Database-Inspired Search'', 
 %Proc. of the 31st VLDB Conference, 2005.
+
+\bibitem{DRSG}
+http://drsg.cac.cornell.edu/
 \end{thebibliography}
 \end{document}

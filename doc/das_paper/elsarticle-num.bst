@@ -17,7 +17,7 @@
 %% given in the file `manifest.txt'.
 %% 
 %%
-%% $Id: elsarticle-num.bst,v 1.1 2010/02/06 01:19:15 valya Exp $
+%% $Id: elsarticle-num.bst,v 1.2 2010/02/22 18:03:00 valya Exp $
 %%
 %%
 %% ----------------------------------------
