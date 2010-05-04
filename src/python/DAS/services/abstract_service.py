@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.71 2010/02/16 01:03:13 valya Exp $"
-__version__ = "$Revision: 1.71 $"
+__revision__ = "$Id: abstract_service.py,v 1.72 2010/02/16 18:42:30 valya Exp $"
+__version__ = "$Revision: 1.72 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,7 +17,7 @@ import traceback
 import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
-from DAS.utils.utils import row2das
+from DAS.utils.utils import row2das, extract_http_error
 from DAS.utils.utils import xml_parser, json_parser
 from DAS.core.das_mongocache import compare_specs
 
@@ -149,7 +149,7 @@ class DASAbstractService(object):
             data = {'error': msg}
             try:
                 err  = httperror.read()
-                data.update({'httperror':str(err)})
+                data.update({'httperror':extract_http_error(err)})
             except:
                 pass
             data = str(data)
