@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+# setup environment
+#. `dirname $0`/setup.sh
+
+usage="Usage: das_server <web|doc|cache> {start|stop|status|restart|stdout}"
+if [ $# != 2 ]; then
+    echo $usage
+    exit 1
+fi
+
+server="$1-server"
+
+# run actual script
+chmod a+x $DAS_ROOT/src/python/DAS/web/das_server.py
+cmd="$DAS_ROOT/src/python/DAS/web/das_server.py --$server"
+
+if [ -z $DAS_ROOT ]; then
+   echo "The DAS_ROOT environment is not set"
+   exit 1
+fi
+
+RETVAL=$?
+
+pid=`ps auxwww | grep das_server.py | grep $server | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+echo $pid
+
+case "$2" in
+ stdout)
+        echo $"Checking for existing DAS $server..."
+        if [ ! -z "${pid}" ]; then
+          kill -9 ${pid}
+        fi
+        echo $"Restart DAS $server..."
+        ${cmd}
+        ;;
+ restart)
+        echo $"Checking for existing DAS $server..."
+        if [ ! -z "${pid}" ]; then
+          kill -9 ${pid}
+        fi
+        echo $"Restart DAS $server..."
+        nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
+        ;;
+ start)
+        if [ ! -z "${pid}" ]; then
+          kill -9 ${pid}
+        fi
+        nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
+        ;;
+ status)
+        if [ ! -z "${pid}" ]; then
+          echo $"DAS $server is running, pid=${pid}"
+          ps -f -wwww -p ${pid}
+          exit 0
+        fi
+        echo $"DAS $server is stopped"
+        exit 3
+        ;;
+ stop)
+        if [ ! -z "${pid}" ]; then
+          kill -9 ${pid}
+        fi
+        ;;
+ *)
+        echo $usage
+        exit 1
+        ;;
+esac
+
+exit $RETVAL
+
