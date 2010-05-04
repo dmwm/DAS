@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.4 2009/04/23 01:11:31 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: sitedb_service.py,v 1.5 2009/05/11 20:21:20 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -155,10 +155,20 @@ class SiteDBService(DASAbstractService):
 
         data = []
         resdict = {}
+        # HACK to use 1 arg and 1 sel keys
+        if  len(sitelist) == 1 and len(selkeys) == 1:
+            api, args = self.findapi(selkeys[0], sitelist[0])
+            jsondict  = self.call_service_api(api, args)
+            data = []
+            for key, val in jsondict.items():
+                row = {selkeys[0]: val['name']}
+                data.append(row)
+            return data
+        # TODO: review how to abstract SiteDB
         for site in sitelist:
             for key in selkeys:
-                if  key == 'site':
-                    continue
+#                if  key == 'site':
+#                    continue
                 api, args = self.findapi(key, site)
                 jsondict = self.call_service_api(api, args)
                 data = getattr(self, 'parser_%s' % api)(jsondict, site)
