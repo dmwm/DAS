@@ -4,15 +4,15 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.26 2010/02/05 21:18:25 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: das_cli.py,v 1.27 2010/03/09 02:36:20 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 from pprint import pformat
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
-from DAS.core.das_mongocache import convert2pattern
+from DAS.core.das_mongocache import convert2pattern, encode_mongo_query
 from DAS.utils.utils import dump, genkey
 
 import sys
@@ -33,7 +33,7 @@ class DASOptionParser:
                                           dest="profile",
              help="profile output")
         self.parser.add_option("-q", "--query", action="store", type="string", 
-                                          default=False, dest="query",
+                                          default="", dest="query",
              help="specify query for your request.")
         self.parser.add_option("--hash", action="store_true", dest="hash",
              help="look-up MongoDB-QL query and its hash")
@@ -115,17 +115,17 @@ if __name__ == '__main__':
     debug = opts.verbose
     DAS = DASCore(debug=debug, nores=opts.noresults)
     if  opts.hash:
-        mongo_query = DAS.mongoparser.\
-                requestquery(query, add_to_analytics=False)
-        loose_query_pat, loose_query = convert2pattern(mongo_query)
+        mongo_query = DAS.mongoparser.parse(query, add_to_analytics=False)
         service_map = DAS.mongoparser.service_apis_map(mongo_query)
-        print "-------------"
-        print "DAS-QL query:", query
-        print "Mongo query :", mongo_query
-        print "Loose query :", loose_query
-        print "query hash  :", genkey(str(mongo_query))
-        print "Services    : map of service and api list\n", 
-        print pformat(service_map)
+        enc_query   = encode_mongo_query(mongo_query)
+        loose_query_pat, loose_query = convert2pattern(mongo_query)
+        print "---------------"
+        print "DAS-QL query  :", query
+        print "Mongo query   :", mongo_query
+        print "Loose query   :", loose_query
+        print "Encoded query :", enc_query
+        print "enc_query hash:", genkey(enc_query)
+        print "Services      :\n%s" % pformat(service_map) 
         sys.exit(0)
     sdict = DAS.keys()
     if  opts.services:
