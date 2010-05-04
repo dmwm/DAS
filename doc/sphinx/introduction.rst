@@ -40,7 +40,3 @@ Here the wmcore-webtools is a CMS general purpose web framework
 based on CherryPy framework, see [CPF]_. 
 Such dependencies will be deprecated in a nearest future.
 
-.. [CMS] http://cms.web.cern.ch/cms/
-.. [LHC] http://en.wikipedia.org/wiki/Lhc
-.. [DAS] https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService
-.. [CPF] http://www.cherrypy.org/

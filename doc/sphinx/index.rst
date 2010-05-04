@@ -29,6 +29,7 @@ Contents:
    das_operations.rst
    benchmark.rst
    changelog.rst
+   references.rst
 
 Indices and tables
 ------------------

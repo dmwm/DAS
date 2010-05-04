@@ -100,5 +100,3 @@ The hypotetical function call should contact data-service and retrieve,
 parse and yield data. Please note that we encourage to use 
 generator [Gen]_ in function implementation.
 
-.. [Gen] http://www.dabeaz.com/generators/
-.. [YAML] http://en.wikipedia.org/wiki/Yaml, http://pyyaml.org/wiki/PyYAMLDocumentation
