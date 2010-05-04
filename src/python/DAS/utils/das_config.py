@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.5 2009/04/07 20:10:04 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_config.py,v 1.6 2009/05/18 01:17:16 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -37,9 +37,13 @@ def das_readconfig(dasconfig=None):
 
     configdict['cache_servers'] = config.get('cache', 'servers', '')
     configdict['cache_lifetime'] = config.getint('cache', 'lifetime')
+
     configdict['couch_servers'] = config.get('couch', 'servers', '')
     configdict['couch_lifetime'] = config.getint('couch', 'lifetime')
     configdict['couch_cleantime'] = config.getint('couch', 'cleantime')
+
+    configdict['filecache_dir'] = config.get('filecache', 'dir', '')
+    configdict['filecache_lifetime'] = config.getint('filecache', 'lifetime')
 
 #    systems = config.get('das', 'systems', 'dbs,sitedb,phedex').split(',')
     systems = config.get('das', 'systems', 
@@ -81,6 +85,10 @@ def das_writeconfig():
     config.set('couch', 'servers', 'http://localhost:5984' )
     config.set('couch', 'lifetime', 1*24*60*60) # in seconds
     config.set('couch', 'cleantime', 2*60*60) # in seconds
+
+    config.add_section('filecache')
+    config.set('filecache', 'dir', os.path.join(os.getcwd(), 'cache') )
+    config.set('filecache', 'lifetime', 1*24*60*60) # in seconds
 
     config.add_section('dbs')
     config.set('dbs', 'expire', 600) # in seconds

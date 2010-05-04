@@ -5,8 +5,8 @@
 Abstract manager class.
 """
 
-__revision__ = "$Id: basemanager.py,v 1.1 2009/03/13 21:10:03 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: basemanager.py,v 1.2 2009/05/18 01:17:16 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.utils.das_config import das_readconfig
@@ -23,6 +23,8 @@ class BaseManager(object):
         self.cache_lifetime = dasconfig['cache_lifetime']
         self.couch_servers  = dasconfig['couch_servers']
         self.couch_lifetime = dasconfig['couch_lifetime']
+        self.filecache_dir  = dasconfig['filecache_dir']
+        self.filecache_lifetime = dasconfig['filecache_lifetime']
         self.service_keys   = {}
 
     def keys(self):
