@@ -6,8 +6,8 @@ Web tools.
 """
 
 __license__ = "GPL"
-__revision__ = "$Id: tools.py,v 1.2 2010/02/18 15:08:14 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: tools.py,v 1.3 2010/03/14 20:20:58 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 __email__ = "vkuznet@gmail.com"
 
@@ -155,7 +155,7 @@ def exposejson (func):
             jsondata = encoder.encode(data)
             return jsondata
         except:
-            Exception("Fail to jsontify obj '%s' type '%s'" % (data, type(data)))
+            Exception("Fail to JSONtify obj '%s' type '%s'" % (data, type(data)))
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
     wrapper.exposed = True
@@ -204,14 +204,13 @@ def exposedasjson (func):
     """
     def wrapper (self, *args, **kwds):
         encoder = JSONEncoder()
-#        data = runDas(self, func, *args, **kwds)
         data = func(self, *args, **kwds)
         cherrypy.response.headers['Content-Type'] = "application/json"
         try:
             jsondata = encoder.encode(data)
             return jsondata
         except:
-            Exception("Failed to json-ify obj '%s' type '%s'" % (data, type(data)))
+            Exception("Failed to JSONtify obj '%s' type '%s'" % (data, type(data)))
 
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
@@ -224,10 +223,8 @@ def exposedasplist (func):
     see http://docs.python.org/library/plistlib.html#module-plistlib
     """
     def wrapper (self, *args, **kwds):
-#        data_struct = runDas(self, func, *args, **kwds)
         data_struct = func(self, *args, **kwds)
         plist_str = plistlib.writePlistToString(data_struct)
-        cherrypy.response.headers['ETag'] = data_struct['results'].__str__().__hash__()
         cherrypy.response.headers['Content-Type'] = "application/xml"
         return plist_str
     wrapper.__doc__ = func.__doc__
