@@ -6,8 +6,8 @@ DAS robot base class. Code based on
 http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 """
 
-__revision__ = "$Id: das_robot.py,v 1.3 2009/09/18 14:50:11 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_robot.py,v 1.4 2010/03/05 18:14:46 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -26,7 +26,7 @@ class Robot(object):
     and store them into DAS cache.
     """
     def __init__(self, config=None, query=None, sleep=600):
-        self.dascore = DASCore(config)
+        self.dascore = DASCore(config, nores=True)
         logdir       = getarg(config, 'logdir', '/tmp')
         self.pidfile = os.path.join(logdir, 'robot-%s.pid' % genkey(query))
 
@@ -188,5 +188,5 @@ class Robot(object):
             sys.exit(1)
 
         while True:
-            self.dascore.update_cache(self.query)
+            self.dascore.call(self.query, add_to_analytics=False)
             time.sleep(self.sleep)
