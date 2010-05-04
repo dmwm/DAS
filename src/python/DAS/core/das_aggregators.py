@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
 
 """
 DAS aggregators provides basic aggregation functions such as
@@ -7,8 +8,8 @@ das_func sink, which by itself hold ResultObject as a result
 holder.
 """
 
-__revision__ = "$Id: das_aggregators.py,v 1.2 2010/03/04 15:43:36 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_aggregators.py,v 1.3 2010/03/05 18:08:23 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
