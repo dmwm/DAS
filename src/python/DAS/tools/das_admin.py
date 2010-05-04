@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-#pylint: disable-msg=C0301,C0103
+#-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=C0301,C0103,E1101
 
 """
 DAS admin tool to handle DAS records in DAS cache server
@@ -19,6 +20,9 @@ from DAS.utils.das_config import das_readconfig
 from pymongo.connection import Connection
 
 class PrintManager:
+    """
+    Print manager class defines color-full output of the messages.
+    """
     def __init__(self):
         from IPython import ColorANSI
         self.term = ColorANSI.TermColors

@@ -1,21 +1,34 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0613,W0622
 
 """
 DAS doc server class.
 """
 
-__revision__ = "$Id: das_doc.py,v 1.1 2010/02/15 18:30:47 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_doc.py,v 1.2 2010/03/15 02:44:09 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
-import sys
-import types
 
 from cherrypy import expose
-from cherrypy.lib.static import serve_file, staticdir
+from cherrypy.lib.static import serve_file
+
+@expose
+def error(msg):
+    """Return error message"""
+    return msg
+
+def construct_filename(args):
+    """Construct input filename out of provided list"""
+    input = ""
+    for item in args:
+        input += item
+        if  item != args[-1]:
+            input += '/'
+    return input
 
 class DocServer(object):
     """
@@ -24,51 +37,37 @@ class DocServer(object):
     All methods are defined with respect to default
     sphinx notations.
     """
-    def __init__(self, dir):
-        self.dir = dir
-
-    @expose
-    def error(self, msg):
-        """Return error message"""
-        return msg
+    def __init__(self, idir):
+        self.dir = idir
 
     @expose
     def index(self, *args, **kwargs):
         """Serve default index.html web page"""
         return serve_file(os.path.join(self.dir, 'index.html'))
 
-    def filename(self, args):
-        """Construct input filename out of provided list"""
-        input = ""
-        for item in args:
-            input += item
-            if  item != args[-1]:
-                input += '/'
-        return input
-
     @expose
     def default(self, *args, **kwargs):
         """Default method to redirect input requests."""
-        input = self.filename(args)
+        input = construct_filename(args)
         filename = os.path.join(self.dir, input)
         if  not os.path.isfile(filename):
-            return self.error('No such file %s' % input) 
+            return error('No such file %s' % input) 
         return serve_file(filename)
 
     @expose
     def _static(self, *args, **kwargs):
         """Serve _static/<filename> content"""
-        input = self.filename(args)
+        input = construct_filename(args)
         filename = os.path.join(self.dir, '_static/%s' % input)
         if  not os.path.isfile(filename):
-            return self.error('No such file %s' % input) 
+            return error('No such file %s' % input) 
         return serve_file(filename)
 
     @expose
     def _images(self, *args, **kwargs):
         """Serve _images/<filename> content"""
-        input = self.filename(args)
+        input = construct_filename(args)
         filename = os.path.join(self.dir, '_images/%s' % input)
         if  not os.path.isfile(filename):
-            return self.error('No such file %s' % input) 
+            return error('No such file %s' % input) 
         return serve_file(filename)

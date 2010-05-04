@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=E1101,C0103,R0902
+#pylint: disable-msg=E1101,C0103,R0902,E0602
 """
 CMS DAS specific implementation for ipython.
 """
-__revision__ = "$Id: das_ipython.py,v 1.1 2009/06/18 17:56:13 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_ipython.py,v 1.2 2010/03/15 02:44:08 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import IPython.ipapi

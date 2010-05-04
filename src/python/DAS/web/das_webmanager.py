@@ -6,8 +6,8 @@ DAS web server.
 """
 
 __license__ = "GPL"
-__revision__ = "$Id: das_webmanager.py,v 1.2 2010/03/05 18:01:43 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_webmanager.py,v 1.3 2010/03/15 02:44:09 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 __email__ = "vkuznet@gmail.com"
 
@@ -27,6 +27,25 @@ from cherrypy import config as cherryconf
 #except:
 #    from DAS.web.tools import exposecss, exposejs, TemplatedPage
 from DAS.web.tools import exposecss, exposejs, TemplatedPage
+
+def set_headers(itype, size=0):
+    """
+    Set response header Content-type (itype) and Content-Length (size).
+    """
+    if  size > 0:
+        response.headers['Content-Length'] = size
+    response.headers['Content-Type'] = itype
+    response.headers['Expires'] = 'Sat, 14 Oct 2017 00:59:30 GMT'
+    
+def minify(content):
+    """
+    Remove whitespace in provided content.
+    """
+    content = content.replace('\n', ' ')
+    content = content.replace('\t', ' ')
+    content = content.replace('   ', ' ')
+    content = content.replace('  ', ' ')
+    return content
 
 class DASWebManager(TemplatedPage):
     """
@@ -98,7 +117,8 @@ class DASWebManager(TemplatedPage):
         """
         Serve static images.
         """
-        mime_types = ['*/*', 'image/gif', 'image/png', 'image/jpg', 'image/jpeg']
+        mime_types = ['*/*', 'image/gif', 'image/png', 
+                      'image/jpg', 'image/jpeg']
         accepts = cherrypy.request.headers.elements('Accept')
         for accept in accepts:
             if  accept.value in mime_types and len(args) == 1 \
@@ -124,21 +144,21 @@ class DASWebManager(TemplatedPage):
         
         args = list(args)
         scripts = self.check_scripts(args, self.cssmap)
-        id = "-".join(scripts)
+        idx = "-".join(scripts)
         
-        if id not in self.cache.keys():
+        if  idx not in self.cache.keys():
             data = '@CHARSET "UTF-8";'
             for script in args:
                 if  self.cssmap.has_key(script):
                     path = os.path.join(sys.path[0], self.cssmap[script])
                     path = os.path.normpath(path)
-                    file = open(path)
-                    data = "\n".join ([data, file.read().\
+                    ifile = open(path)
+                    data = "\n".join ([data, ifile.read().\
                         replace('@CHARSET "UTF-8";', '')])
-                    file.close()
-            self.set_headers ("text/css")
-            self.cache[id] = self.minify(data)
-        return self.cache[id] 
+                    ifile.close()
+            set_headers ("text/css")
+            self.cache[idx] = minify(data)
+        return self.cache[idx] 
         
     @exposejs
     @tools.gzip()
@@ -156,28 +176,28 @@ class DASWebManager(TemplatedPage):
         
         args = list(args)
         scripts = self.check_scripts(args, self.jsmap)
-        id = "-".join(scripts)
+        idx = "-".join(scripts)
         
-        if id not in self.cache.keys():
+        if  idx not in self.cache.keys():
             data = ''
             for script in args:
                 path = os.path.join(sys.path[0], self.jsmap[script])
                 path = os.path.normpath(path)
-                file = open(path)
-                data = "\n".join ([data, file.read()])
-                file.close()
-            self.cache[id] = data
-        return self.cache[id] 
+                ifile = open(path)
+                data = "\n".join ([data, ifile.read()])
+                ifile.close()
+            self.cache[idx] = data
+        return self.cache[idx] 
     
-    @exposejs
-    def yui(self, *args, **kwargs):
-        """
-        cat together the specified YUI files. args[0] should be the YUI version,
-        and the scripts should be specified in the kwargs s=scriptname
-        """
-        cherryconf.update ({'tools.encode.on': True, 'tools.gzip.on': True})
-        version = args[0]
-        scripts = self.makelist(kwargs['s'])
+#    @exposejs
+#    def yui(self, *args, **kwargs):
+#        """
+#        cat together the specified YUI files. args[0] should be the YUI version,
+#        and the scripts should be specified in the kwargs s=scriptname
+#        """
+#        cherryconf.update ({'tools.encode.on': True, 'tools.gzip.on': True})
+#        version = args[0]
+#        scripts = self.makelist(kwargs['s'])
         
         
     def check_scripts(self, scripts, map):
@@ -195,23 +215,4 @@ class DASWebManager(TemplatedPage):
                     self.warning("%s not found at %s" % (script, path))
                     scripts.remove(script)
         return scripts
-    
-    def minify(self, content):
-        """
-        Remove whitespace in provided content.
-        """
-        content = content.replace('\n', ' ')
-        content = content.replace('\t', ' ')
-        content = content.replace('   ', ' ')
-        content = content.replace('  ', ' ')
-        return content
-
-    def set_headers(self, itype, size=0):
-        """
-        Set response header Content-type (itype) and Content-Length (size).
-        """
-        if size > 0:
-            response.headers['Content-Length'] = size
-        response.headers['Content-Type'] = itype
-        response.headers['Expires'] = 'Sat, 14 Oct 2017 00:59:30 GMT'
     
