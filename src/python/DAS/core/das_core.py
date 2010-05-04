@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.32 2009/09/14 20:41:18 valya Exp $"
-__version__ = "$Revision: 1.32 $"
+__revision__ = "$Id: das_core.py,v 1.33 2009/09/16 20:34:28 valya Exp $"
+__version__ = "$Revision: 1.33 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -72,6 +72,7 @@ class DASCore(object):
 
         dasmapping = DASMapping(dasconfig)
         dasconfig['dasmapping'] = dasmapping
+        self.mapping = dasmapping
 
         self.analytics = DASAnalytics(dasconfig)
         dasconfig['dasanalytics'] = self.analytics
@@ -275,6 +276,16 @@ class DASCore(object):
         """
         Update cache with result of the query
         """
+        try:
+            genres = self.result(query)
+            for row in genres:
+                pass
+            status = 1
+        except:
+            status = 0
+        return status
+
+    def update_cache_v1(self, query, expire=600):
         status = 0
         if  hasattr(self, 'cache'):
             try:
@@ -312,6 +323,31 @@ class DASCore(object):
         if  hasattr(self, 'cache'):
             if  self.cache.incache(query):
                 self.cache.remove_from_cache(query)
+
+    def in_raw_cache(self, query):
+        """
+        Look-up input query if it exists in raw-cache.
+        """
+        params = self.get_params(query) # does query parsing/adjustment
+        dasquery = params['dasqueries'].values()[0][0]
+        mongo_query = {'spec': {'das.query':dasquery}}
+        return self.rawcache.incache(query=mongo_query)
+
+    def in_raw_cache_nresults(self, query):
+        """
+        Look-up how manu records for given query exists in raw-cache.
+        """
+        # TODO: this is incorrect way to get unique number of results
+        # in cache, since self.result throw duplicates
+        genres = self.result(query)
+        nres   = 0
+        for item in genres:
+            nres += 1
+        return nres
+#        params = self.get_params(query) # does query parsing/adjustment
+#        dasquery = params['dasqueries'].values()[0][0]
+#        mongo_query = {'spec': {'das.query':dasquery}}
+#        return self.rawcache.nresults(query=mongo_query)
 
     def get_params(self, uinput):
         """
@@ -374,9 +410,11 @@ class DASCore(object):
                     self.timer.record(srv)
 #                for row in res:
 #                    yield row
-        # use last used service to get mongo query
-        mongo_query = getattr(getattr(self, srv), 'mongo_query_parser')(query)
-        del mongo_query['spec']['das.system'] # I don't to specify a system
-        res = self.rawcache.get_from_cache(query=mongo_query)
-        for row in res:
-            yield row
+            # Yield results for every sub-system, this leads to duplicates since
+            # mongo_query contains das.system, but I cannot avoid it since
+            # output of sub-system can differ for given das key.
+            mongo_query = getattr(getattr(self, srv), 'mongo_query_parser')(query)
+#            del mongo_query['spec']['das.system'] # I don't to specify a system
+            res = self.rawcache.get_from_cache(query=mongo_query)
+            for row in res:
+                yield row
