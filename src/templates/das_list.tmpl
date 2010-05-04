@@ -29,7 +29,13 @@ results
 <span class="hide" id="startIdx" name="startIdx">0</span>
 
 #for idx in $range(0, len($resultlist))
-<div id="row$idx" name="row$idx" class="hide">
+#if $limit
+#set classname="hide"
+#else
+#set classname=""
+#end if
+<div id="row$idx" name="row$idx" class="$classname">
+##<div id="row$idx" name="row$idx" class="hide">
 <hr class="line">
 #set row = $resultlist[$idx]
 #for key in $titlelist
@@ -41,7 +47,7 @@ results
 </div>
 
 </div> <!-- end of id="results" -->
-
+#if $limit
 <script type="text/javascript">
 function changeRange(page) {
     var limit = $limit
@@ -131,4 +137,5 @@ function makePagination(startWith) {
 showRows(1);
 makePagination(1);
 </script>
+#end if
 <!-- end of asearch_list.tmpl -->

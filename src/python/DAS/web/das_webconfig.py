@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.2 2009/03/10 20:11:00 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_webconfig.py,v 1.3 2009/03/12 20:54:07 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -31,7 +31,7 @@ config.component_('DASWeb')
 config.DASWeb.templates = environ['DAS_ROOT'] + '/src/templates'
 
 # Define the class that is the applications index
-config.DASWeb.index = 'dassearch'
+#config.DASWeb.index = 'dassearch'
 
 # Views are all pages 
 config.DASWeb.section_('views')
