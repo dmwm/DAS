@@ -10,8 +10,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.57 2010/01/15 17:14:46 valya Exp $"
-__version__ = "$Revision: 1.57 $"
+__revision__ = "$Id: das_mongocache.py,v 1.58 2010/01/17 22:47:08 valya Exp $"
+__version__ = "$Revision: 1.58 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -557,7 +557,7 @@ class DASMongocache(Cache):
         index_list = [(key, DESCENDING) for key in lookup_keys]
         if  index_list:
             try:
-                self.merge.create_index(index_list)
+                self.merge.ensure_index(index_list)
             except:
                 pass
         # insert all records into das.merge using bulk insert
@@ -574,7 +574,7 @@ class DASMongocache(Cache):
         index_list = [(key, DESCENDING) for key in lkeys]
         if  index_list:
             try:
-                self.col.create_index(index_list)
+                self.col.ensure_index(index_list)
             except:
                 pass
         gen = self.update_records(query, results, header)
