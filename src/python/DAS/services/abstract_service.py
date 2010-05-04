@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.88 2010/04/08 00:37:03 valya Exp $"
-__version__ = "$Revision: 1.88 $"
+__revision__ = "$Id: abstract_service.py,v 1.89 2010/04/09 13:51:22 valya Exp $"
+__version__ = "$Revision: 1.89 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -156,12 +156,14 @@ class DASAbstractService(object):
         for key, val in headers.items():
             req.add_header(key, val)
         if  self.verbose > 1:
-            h=urllib2.HTTPHandler(debuglevel=1)
-            opener = urllib2.build_opener(h)
+            handler=urllib2.HTTPHandler(debuglevel=1)
+            opener = urllib2.build_opener(handler)
             urllib2.install_opener(opener)
         try:
             data = urllib2.urlopen(req)
         except urllib2.HTTPError, httperror:
+            msg = traceback.format_exc()
+            self.logger.error(msg)
             msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                         % (url, params, headers)
             data = {'error': msg}
@@ -173,6 +175,8 @@ class DASAbstractService(object):
                 pass
             data = str(data)
         except:
+            msg = traceback.format_exc()
+            self.logger.error(msg)
             msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                         % (url, params, headers)
             data = {'error': msg, 
