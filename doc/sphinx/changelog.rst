@@ -9,6 +9,7 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - V04_00_05
 
+  - re-wrote DAS QL parser
   - move to stand-alone web server (remove WebTools dependency)
   - adjust web UI
 

@@ -7,18 +7,16 @@ DAS operations
 Running DAS services
 --------------------
 
-DAS comes with 3 services
+DAS comes with 2 services
 
 - DAS cache server
 - DAS web server
-- DAS documentation server
 
 All of them can either reside on a single node or can run on dedicated machines.
 Please refer to :ref:`DAS CMS operations <cms_operations>` section for deployment instructions.
 
 By CMS conventions DAS uses the following ports
 
-- 8210 for DAS documentation server
 - 8211 for DAS cache server
 - 8212 for DAS web server
 
@@ -42,7 +40,9 @@ Apache redirect rules
 ---------------------
 
 Here we outline Apache redirect rules which can be used to serve
-DAS services.
+DAS services. Please note we used localhost IP, 127.0.0.1 for 
+reference, which should be substituted with actual hostname of
+the node where DAS services will run.
 
 Rewrite rules for apache configuration file, e.g. httpd.conf
 
@@ -55,9 +55,7 @@ Rewrite rules for apache configuration file, e.g. httpd.conf
     RewriteEngine on
 
     # DAS rewrite rules
-    RewriteRule ^(/das/doc(.*)?)$  https://127.0.0.1$1 [R=301,L]
     RewriteRule ^(/das(/.*)?)$  https://127.0.0.1$1 [R=301,L]
-    RewriteRule ^(/dascontrollers(/.*)?)$  https://127.0.0.1$1 [R=301,L]
 
     Include conf/extra/httpd-ssl.conf
 
@@ -65,9 +63,7 @@ Rules for SSL rewrites:
 
 .. doctest::
 
-    RewriteRule ^/das/doc(/.*)?$ http://127.0.0.1:8210/das/doc/$1 [P,L]
     RewriteRule ^/das(/.*)?$ http://127.0.0.1:8212/das/$1 [P,L]
-    RewriteRule ^/dascontrollers(/.*)?$ http://127.0.0.1:8212/dascontrollers/$1 [P,L]
 
 MongoDB server
 --------------
@@ -99,7 +95,7 @@ DAS server can be start as following:
 
 .. doctest::
 
-    das_cacheserver start|stop|status|restart
+    das_server cache start|stop|status|restart
 
 The das_cacheserver should be in your path once you setup your CMS DAS
 environment, see :ref:`setup.sh <setup.sh>`, otherwise please locate it under
@@ -113,7 +109,7 @@ following command
 
 .. doctest::
 
-    das_web start|stop|status|restart
+    das_server web start|stop|status|restart
 
 The das_web should be in your path once you setup your CMS DAS
 environment, see :ref:`setup.sh <setup.sh>`, otherwise please locate it under
@@ -126,13 +122,11 @@ DAS RPMs provide a set of tools for administration tasks.
 They are located at $DAS_ROOT/bin.
 
 - das_cacheclient is a CLI interface to DAS, it sends request to DAS cache server;
-- das_cacheserver is a DAS cache server init script;
+- das_server is a DAS server init script;
 - das_cli is DAS stand-along CLI tool, it doesn't require neither cache or web DAS servers;
 - das_code_quality.sh is a bash script to check DAS code quality. It is based on pylint
   tool, see [PYLINT]_.
 - das_config is a tool to create DAS configuration file;
-- das_docserver is DAS documentation server init script;
 - das_map is a tool to create DAS maps;
 - das_mapreduce is a tool to create map/reduce function for DAS;
-- das_web is a DAS web server init script.
 
