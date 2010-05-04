@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.84 2010/03/25 15:20:02 valya Exp $"
-__version__ = "$Revision: 1.84 $"
+__revision__ = "$Id: abstract_service.py,v 1.85 2010/03/25 20:27:58 valya Exp $"
+__version__ = "$Revision: 1.85 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -418,16 +418,28 @@ class DASAbstractService(object):
                     value = spec[key]
                     ckey  = "%s.%s" %(prim_key, key)
                     existing_value = ddict._get(ckey)
-# TODO: I don't know yet how to deal with values which are proximity of
-# input parameters. One way would be only to replace input parameters
-# who carry patterns with existing value of the field from the record
-# 
-#                    if  type(value) is types.StringType and \
-#                        value.find('*') != -1 and existing_value:
-                    if  existing_value:
-                        value = existing_value
-                    if  type(value) is types.DictType:
-                        value = str(value) # to avoid {'$gt':number'}
+                    # the way to deal with proximity/patern/condition results
+                    if  type(value) is types.StringType and \
+                        value.find('*') != -1: # we got pattern
+                        if  existing_value:
+                            value = existing_value
+                    elif type(value) is types.DictType or \
+                        type(value) is types.ListType: # we got condition
+                        if  existing_value:
+                            value = existing_value
+                        else:
+                            value = str(value) # to avoid {'$gt':number}
+                    elif value != existing_value: # we got proximity result
+                        if  ddict.has_key('proximity'):
+                            proximity = dotdict({key:existing_value})
+                            ddict['proximity'].update(proximity)
+                        else:
+                            proximity = dotdict({})
+                            proximity._set(key, existing_value)
+                            ddict['proximity'] = proximity
+                    else:
+                        if  existing_value:
+                            value = existing_value
                     ddict._set(key, value)
                 yield ddict
                 count += 1
