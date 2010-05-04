@@ -18,8 +18,9 @@ class testDASCouchDB(unittest.TestCase):
         """
         set up DAS core module
         """
-        self.dascache = DASCouchDB(debug=1)
-        self.das = DASCore()
+        debug = 0
+        self.das = DASCore(debug=debug)
+        self.dascache = DASCouchDB(self.das)
 
     def test_result(self):                          
         """test DAS couchdb cache result method"""

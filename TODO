@@ -5,6 +5,9 @@
    pset   : ...
    conddb : ...
 
+--- PRESERVE output coming from cache, if I got results in specific order, e.g. 1, 2, 3
+    cache should return the same order, see DD code for example.
+
 2. Define relationships between data-services
    (DBS,Runsum):run, (DBS,phedex):block, (phedex,sitedb):se
 

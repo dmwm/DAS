@@ -18,8 +18,9 @@ class testDASMemcache(unittest.TestCase):
         """
         set up DAS core module
         """
-        self.dascache = DASMemcache(debug=1)
-        self.das = DASCore()
+        debug = 0
+        self.das = DASCore(debug=debug)
+        self.dascache = DASMemcache(self.das)
 
     def test_key(self):                          
         """test DAS cache key generator"""
