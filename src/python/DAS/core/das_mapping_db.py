@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.32 2010/02/22 21:01:25 valya Exp $"
-__version__ = "$Revision: 1.32 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.33 2010/02/25 19:11:22 valya Exp $"
+__version__ = "$Revision: 1.33 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -100,8 +100,8 @@ class DASMapping(object):
              daskeys: [
                  {"key" : "block", "map":"block.name", "pattern":""}
              ]
-             api2das: [
-                 {"api_param":"se", "das_key":"site", 
+             das2api: [
+                 {"das_key":"site", "api_param":"se", 
                        "pattern":"re.compile('^T[0-3]_')"}
              ]
             }
@@ -311,10 +311,10 @@ class DASMapping(object):
         Translates data-service API input parameter into DAS QL key,
         e.g. run_number => run.
         """
-        query = {'system':system, 'api2das.api_param' : api_input_name}
+        query = {'system':system, 'das2api.api_param' : api_input_name}
         names = []
-        for adas in self.col.find(query, ['api2das']):
-            for row in adas['api2das']:
+        for adas in self.col.find(query, ['das2api']):
+            for row in adas['das2api']:
                 aparam = row['api_param']
                 daskey = row['das_key']
                 if  aparam == api_input_name and daskey not in names:
@@ -325,10 +325,10 @@ class DASMapping(object):
         """
         Translates DAS QL key into data-service API input parameter
         """
-        query = {'system':system, 'api2das.das_key': daskey}
+        query = {'system':system, 'das2api.das_key': daskey}
         names = []
-        for adas in self.col.find(query, ['api2das']):
-            for row in adas['api2das']:
+        for adas in self.col.find(query, ['das2api']):
+            for row in adas['das2api']:
                 api_param = row['api_param']
                 if  row['das_key'] != daskey:
                     continue
