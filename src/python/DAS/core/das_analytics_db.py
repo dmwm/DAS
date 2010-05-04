@@ -7,8 +7,8 @@ DAS analytics DB module.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.17 2010/04/05 19:11:44 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.18 2010/04/07 19:04:22 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -38,6 +38,12 @@ class DASAnalytics(object):
         msg = "DASAnalytics::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
         self.logger.info(msg)
+        self.create_db()
+
+    def create_db(self):
+        """
+        Create analytics DB in MongoDB back-end.
+        """
         self.conn    = Connection(self.dbhost, self.dbport)
         database     = self.conn[self.dbname]
         self.col     = database[self.colname]
