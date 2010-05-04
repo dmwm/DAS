@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.2 2009/05/18 13:15:17 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_filecache.py,v 1.3 2009/05/19 02:33:19 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -22,6 +22,7 @@ import time
 
 from sqlalchemy import Table, Column, Integer, String
 from sqlalchemy import create_engine, MetaData, ForeignKey
+from sqlalchemy.orm import relation, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -31,14 +32,28 @@ from DAS.utils.utils import genkey
 from DAS.core.cache import Cache
 
 Base = declarative_base()
+class System(Base):
+    __tablename__ = 'systems'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return "<System('%s')>" % self.name
+
 class Query(Base):
-    __tablename__ = 'query'
+    __tablename__ = 'queries'
 
     id = Column(Integer, primary_key=True)
     hash = Column(String)
     name = Column(String)
     create = Column(String)
     expire = Column(String)
+    system_id = Column(Integer, ForeignKey('systems.id'))
+
+    system = relation(System, backref=backref('systems', order_by=id))
 
     def __init__(self, hash, name, create, expire):
         self.hash = hash
@@ -71,7 +86,6 @@ class DASFilecache(Cache):
         self.limit = self.dasmgr.filecache_lifetime
         self.logger.info("Init filecache %s" % self.dir)
 
-#        self.dir = os.path.join(os.getcwd(), 'cache')
         try:
             os.makedirs(self.dir)
         except:
@@ -151,7 +165,16 @@ class DASFilecache(Cache):
         session = self.session()
         create  = time.time()
         expire  = create+expire
+
+        # get system entry
+        system = 'test_system' # pass to update_cache
+        try:
+            sobj = session.query(System).filter(System.name==system).one()
+        except:
+            sobj = System(system)
+            pass
         qobj = Query(key, query, str(create), str(expire))
+        qobj.system = sobj
         session.add(qobj)
         session.commit()
 
