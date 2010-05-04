@@ -25,8 +25,8 @@ db_info = [
 ('dashboard', 40.82977294921875, 135.9593505859375),
 ('phedex', 5.51031494, 12.5614014),
 ('dbs', dbs_tables, dbs_index),
-('sitedb', 0.001, 0.001),
-('runsum', 5.0, 5.0), # need real numbers
+('sitedb', 0.0057373046875, 0.0035400390625),
+('runsum', 0.920349121, 2.72839355), # need real numbers
 ]
 
 db_names = [i[0].replace('CMS_DBS_','') for i in db_info]
@@ -54,6 +54,7 @@ width = 0.35 # width of the bars
 rect1 = plt.bar(x, y_table, width, color='r')
 rect2 = plt.bar([i+width for i in x], y_index, width, color='y')
 plt.ylabel('Size GBs')
+#plt.yscale('log')
 plt.xlabel('CMS data-service')
 #plt.xticks([i+width for i in x], db_names, rotation=70 )
 plt.xticks([i+width for i in x], db_names)
