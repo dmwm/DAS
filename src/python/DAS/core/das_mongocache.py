@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.52 2009/12/22 19:26:29 valya Exp $"
-__version__ = "$Revision: 1.52 $"
+__revision__ = "$Id: das_mongocache.py,v 1.53 2009/12/23 15:18:45 valya Exp $"
+__version__ = "$Revision: 1.53 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -474,6 +474,18 @@ class DASMongocache(Cache):
         self.logger.debug(fmap)
         self.logger.debug(freduce)
         return result
+
+    def get_map_reduce(self, name=None):
+        """
+        Return definition of map/reduce functions for provided name
+        or gives full list.
+        """
+        spec = {}
+        if  name:
+            spec = {'name':name}
+        result = self.mrcol.find(spec)
+        for row in result:
+            yield row
 
     def update_cache(self, query, results, header):
         """

@@ -86,6 +86,30 @@ $uikey
 </table>
 </div>
 
+<p></p>
+
+<b>Map/reduce functions</b>
+<div class="normal">
+<ul>
+#for row in $mapreduce
+#set id=$row['_id']
+<li>
+$row['name'],
+<a href="javascript:ShowTag('$id')">show</a> |
+<a href="javascript:HideTag('$id')">hide</a>
+<div class="hide" id="$id">
+<pre>
+Map function:
+$row['map']
+
+Reduce function:
+$row['reduce']
+</div>
+</li>
+#end for
+</ul>
+</div>
+
 </div>
 <!-- end of das_services.tmpl -->
 
