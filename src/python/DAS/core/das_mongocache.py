@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.43 2009/12/02 14:38:58 valya Exp $"
-__version__ = "$Revision: 1.43 $"
+__revision__ = "$Id: das_mongocache.py,v 1.44 2009/12/07 21:21:57 valya Exp $"
+__version__ = "$Revision: 1.44 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -335,12 +335,13 @@ class DASMongocache(Cache):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        self.logger.info("DASMongocache::incache(%s)" % query)
         self.remove_expired()
         query  = adjust_id(query)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
         res    = self.col.find(spec=spec, fields=fields).count()
+        self.logger.info("DASMongocache::incache(%s) found %s results" \
+        % (query, res))
         if  res:
             return True
         return False
