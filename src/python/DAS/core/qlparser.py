@@ -9,13 +9,14 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.21 2009/10/10 15:04:53 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: qlparser.py,v 1.22 2009/10/12 20:13:26 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import time
 import types
+import datetime
 import traceback
 
 from itertools import groupby
@@ -23,8 +24,9 @@ from DAS.utils.utils import oneway_permutations, unique_list, add2dict
 from DAS.utils.utils import getarg, genkey
 
 DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
-                 ' not like ', ' like ', 
-                 ' between ', ' not in ', ' in ', ' last ']
+                 'between', 'nin', 'in', 'last']
+#                 ' not like ', ' like ', 
+#                 ' between ', ' not in ', ' in ', ' last ']
 MONGO_MAP = {
     '>':'$gt',
     '<':'$lt',
@@ -32,8 +34,46 @@ MONGO_MAP = {
     '<=':'$lte',
     'in':'$in',
     '!=':'$ne',
-    'not in':'$nin',
+    'nin':'$nin',
 }
+def convert2date(value):
+    """
+    Convert input value to date range format expected by DAS.
+    """
+    msg = "Unsupported syntax for value of last operator"
+    pat = re.compile('^[0-9][0-9](h|m)$')
+    if  not pat.match(value):
+        raise Exception(msg)
+    oper = ' = '
+    if  value.find('h') != -1:
+        hour = int(value.split('h')[0])
+        if  hour > 24:
+            raise Exception('Wrong hour %s' % value)
+        date1 = time.time() - hour*60*60
+        date2 = time.time()
+    elif value.find('m') != -1:
+        minute = int(value.split('m')[0])
+        if  minute > 60:
+            raise Exception('Wrong minutes %s' % value)
+        date1 = time.time() - minute*60
+        date2 = time.time()
+    else:
+        raise Exception('Unsupported value for last operator')
+    value = [date1, date2]
+    return value
+
+def das_dateformat(value):
+    """Check if provided value in expected DAS date format."""
+    pat = re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
+    if  pat.match(value): # we accept YYYYMMDD
+        d = datetime.date(int(value[0:4]), # YYYY
+                          int(value[4:6]), # MM
+                          int(value[6:8])) # DD
+        value = time.mktime(d.timetuple())
+    else:
+        msg = 'Unacceptable date format'
+        raise Exception(msg)
+    return [value, value]
 
 def mongo_exp(cond_list, lookup=False):
     """
@@ -83,7 +123,7 @@ def mongo_exp(cond_list, lookup=False):
             elif oper == 'between':
                 mongo_dict[key] = {'$in' : [i for i in range(val[0], val[1])]}
             elif oper == 'last':
-                mongo_dict[key] = 'last operator'
+                mongo_dict[key] = val
             else:
                 msg = 'Not supported operator %s' % oper
                 raise Exception(msg)
@@ -95,6 +135,7 @@ def find_index(qlist, tag):
         return qlist.index(tag)
     except:
         return -1
+
 def getnextcond(uinput):
     """
     Find out next where clause condition. It only understand conditions
@@ -184,10 +225,101 @@ class MongoParser(object):
         self.operators = DAS_OPERATORS
 
     def decompose(self, query):
-        """Extract selection keys and conditions from input Mongo query"""
+        """Extract selection keys and conditions from input query"""
         skeys = getarg(query, 'fields', [])
         cond  = getarg(query, 'spec', {})
         return skeys, cond
+
+    def requestquery(self, query):
+        """
+        Query analyzer which form request query to DAS from a free text-based form.
+        Return MongoDB request query.
+        """
+        findbracketobj(query) # check brackets in a query
+        skeys = []
+        query = query.strip()
+        query = query.replace(",", " ")
+        def fix_operator(query, pos):
+            """Add spaces around DAS operators in a query"""
+            for oper in self.operators:
+                idx = query[pos:len(query)].find(oper)
+                if  idx != -1:
+                    newpos = pos + idx + len(oper)
+                    rest = query[pos+idx+len(oper):len(query)]
+                    newquery = query[:pos+idx] + ' ' + oper + ' ' + rest
+                    return newquery, newpos+2
+            return None, None
+        pos   = 0
+        while True:
+            copy = query
+            query, pos = fix_operator(query, pos)
+            if  not query:
+                query = copy
+                break
+        slist = query.split()
+        idx   = 0
+        daskeys = ['system', 'date'] # two reserved words
+        for val in self.daskeys.values():
+            for item in val:
+                daskeys.append(item)
+        condlist = []
+        while True:
+            if  idx >= len(slist):
+                break
+            word = slist[idx]
+            if  word in daskeys: # look-up for selection keys
+                try:
+                    next_word = slist[idx+1]
+                    if  next_word not in self.operators and word not in skeys:
+                        skeys.append(word)
+                except:
+                    pass
+                if  word == slist[-1] and word not in skeys: # last word
+                    skeys.append(word)
+            elif word in self.operators: # look-up conditions
+                oper = word
+                prev_word = slist[idx-1]
+                next_word = slist[idx+1]
+                if  word in ['in', 'nin']:
+                    first = next_word
+                    if  first.find('[') == -1:
+                        raise Exception('No open bracket [ found in query expression')
+                    arr = []
+                    found_last = False
+                    for item in slist[idx+1:]:
+                        if  item.find(']') != -1:
+                            found_last = True
+                        val = item.replace('[', '').replace(']', '')
+                        if  val:
+                            arr.append(val)
+                    if  not found_last:
+                        raise Exception('No closed bracket ] found in query expression')
+                    value = arr
+                elif word == 'last':
+                    value = convert2date(next_word)
+                else:
+                    value = next_word
+                if  prev_word == 'date':
+                    if  word != 'last': # we already converted date
+                        value = das_dateformat(value)
+                key = prev_word
+                for system in self.map.list_systems():
+                    try:
+                        lkeys = self.map.lookup_keys(system, key, 
+                                                     value=value)
+                        for nkey in lkeys:
+                            if  nkey != 'date':
+                                cdict = dict(key=nkey, op=oper, value=value)
+                                if  cdict not in condlist:
+                                    condlist.append(cdict)
+                    except:
+                        pass
+                idx += 1
+            idx += 1
+        spec = mongo_exp(condlist)
+        mongo_query = dict(fields=skeys, spec=spec)
+        self.analytics.add_query(query, mongo_query)
+        return mongo_query
 
     def services(self, query):
         """Find out DAS services to use for provided query"""
@@ -196,7 +328,7 @@ class MongoParser(object):
             skeys = [skeys]
         sdict = {}
         # look-up services from Mapping DB
-        for key in skeys + cond.keys():
+        for key in skeys + [i.split('.')[0] for i in cond.keys()]:
             for service, keys in self.daskeys.items():
                 if  key in keys:
                     if  sdict.has_key(service):
@@ -214,258 +346,6 @@ class MongoParser(object):
         """
         skeys, cond = self.decompose(query)
         return dict(selkeys=skeys, conditions=cond, services=self.services(query))
-
-    def query_analyzer(self, query):
-        """
-        Analyze input DAS query and return a list of DAS queries to answer
-        the input question. For example:
-        find dataset where bfield=0.4
-        should be treated as 2 queries:
-        Q1: find run where bfield=0.4
-        Q2: find dataset where run in Q1
-        """
-        # get condition keys and find out appropriate sub-systems
-        findbracketobj(query) # check brackets in a query
-        wsplit = query.split(' where ')
-        skeys  = wsplit[0].replace('find ', '').strip().split(',')
-        if  len(wsplit) == 1: # no conditions
-            cond = ""
-        else:
-            cond = "where %s" % wsplit[1]
-        if  len(skeys) > 1:
-            msg  = "\nDAS does not work with multiple selection keys due to"
-            msg += "\ncomplexity of the system. But your request can be"
-            msg += "\naccomlpished by splitting your query as following:"
-            for key in skeys:
-                msg += "\nfind %s %s" % (key, cond)
-            raise Exception(msg)
-        if  len(wsplit) == 2:
-            condkeys = [item['key'] for item in self.condition_parser(query) \
-                        if type(item) is types.DictType]
-        else:
-            return [{genkey(query):query}]
-
-        queries = []
-        def qname(query):
-            """Generate query name"""
-            return "dasquery:%s" % genkey(query)
-
-        # get list of das systems for selection key
-        sel_systems = self.map.find_system(skeys[0])
-        msg  = "\nInput query:" + query
-        msg += "\nSelection keys:" + str(skeys) 
-        msg += " mapped systems:" + str(sel_systems)
-        msg += "\nCondition keys:" + str(condkeys)
-
-        # get list of system which are responsible for condtition keys
-        for key in condkeys:
-            con_systems = self.map.find_system(key)
-            msg += "\nCondition key: %s, mapped systems: %s" \
-                % (key, str(con_systems))
-            if  set(sel_systems) & set(con_systems): # there is overlap
-                query = "find %s %s" % (skeys[0], cond)
-                queries.append({genkey(query):query})
-            else:
-                for srv1 in sel_systems:
-                    for srv2 in con_systems:
-                        rel_keys = self.map.relational_keys(srv1, srv2)
-                        msg += "\nRelational_keys(%s, %s) => %s" \
-                        % (srv1, srv2, rel_keys) 
-                        for key in rel_keys:
-                            query = "find %s %s" % (key, cond)
-                            queries.append({genkey(query):query})
-                            query = "find %s where %s in (%s)" \
-                                % (skeys[0], key, qname(query))
-                            queries.append({genkey(query):query})
-        if  not queries:
-            err = "Unable to construct DAS queries out of provided query. Debug info:"
-            raise Exception(err + msg)
-        return queries
-        
-    def dasql2mongo(self, query, lookup=False):
-        """
-        Convert DAS QL expression into Mongo query. It can map into several Mongo
-        queries. We will return a dict of {system:mongo_query}.
-        """
-        findbracketobj(query) # check brackets in a query
-        wsplit = query.split(' where ')
-        skeys  = wsplit[0].replace('find ', '').strip().split(',')
-        # convert provided conditinos into MongoDB form
-        cond   = {}
-        if  len(wsplit) == 2:
-            condlist = []
-            for item in self.condition_parser(query):
-                if  type(item) is types.DictType:
-                    key = item['key']
-                    oper = item['op']
-                    value = item['value']
-                    for system in self.map.list_systems():
-                        try:
-                            lkeys = self.map.lookup_keys(system, key, 
-                                                         value=value)
-                            for nkey in lkeys:
-                                if  nkey != 'date':
-                                    cdict = dict(key=nkey, op=oper, value=value)
-                                    if  cdict not in condlist:
-                                        condlist.append(cdict)
-                        except:
-                            pass
-                elif  type(item) is types.StringType and item.strip() == 'or':
-                    msg  = "\nDAS currently do not support OR operator."
-                    msg += "\nAny OR'ing operation can be split into multiple DAS queries,"
-                    msg += "\nfind a,b,c where x=1 or y=2 is equivalent to 2 queries:\n"
-                    msg += "\nfind a,b,c where x=1"
-                    msg += "\nand"
-                    msg += "\nfind a,b,c where y=1"
-                    raise Exception(msg)
-            cond = mongo_exp(condlist, lookup)
-            mongo_query = dict(spec=cond, fields=skeys)
-            self.analytics.add_query(query, mongo_query)
-            return mongo_query
-        msg = "\nUnable to convert input DAS-QL expression '%s' into MongoDB query"\
-                % query
-        raise Exception(msg)
-
-    def condition_parser(self, uinput):
-        """Parse condition in given query"""
-        uinput  = uinput.split(' order by ')[0]
-        sublist = uinput.split(' where ')
-        olist = []
-
-        ########## internal helper function
-        def add_to_list(cond, olist):
-            """Helper function to add condition to the list"""
-            if  not cond:
-                return
-            cond_dict = self.make_cond_dict(cond)
-            tot_lb = 0
-            tot_rb = 0
-            for key, val in cond_dict.items():
-                lbr = str(val).count('(')
-                rbr = str(val).count(')')
-                if  lbr: 
-                    val = val.replace('(', '')
-                    cond_dict[key] = val
-                if  rbr: 
-                    val = val.replace(')', '')
-                    cond_dict[key] = val
-                tot_lb += lbr
-                tot_rb += rbr
-            if  tot_lb:
-                for i in range(0, tot_lb):
-                    olist.append('(')
-            olist.append(cond_dict)
-            if  tot_rb:
-                for i in range(0, tot_rb):
-                    olist.append(')')
-        ########## end of internal function
-
-        if  len(sublist)>1:
-            substr = ' '.join(sublist[1:])
-            while 1:
-                cond, oper, rest = getnextcond(substr)
-                substr = rest
-                # parse cond to extract brackets and make triples (key, op, val)
-                add_to_list(cond, olist)
-                if  oper:
-                    olist.append(oper.strip())
-                if  not cond:
-                    break
-            add_to_list(rest, olist)
-        return olist
-
-    def make_cond_dict(self, exp):
-        """Output of provided expression make a dict key op value"""
-
-        # find operator whose position is closest to key
-        olist = []
-        for oper in self.operators:
-            pos = exp.find(oper)
-            if  pos != -1:
-                olist.append((pos, oper))
-#                break
-        olist.sort()
-        # now we have list of position/operators pairs, let's find out
-        # which operator has least preferences, e.g we got expression
-        # a=A=2&B<=2, in this case we find position for '=', '<' and '<='
-        # so we must distinguish case of '<' and '<='
-        nlist = []
-        for item in olist:
-            if  not nlist:
-                nlist.append(item)
-            else:
-                idx0  = nlist[0][0]
-                oper0 = nlist[0][1]
-                idx1  = item[0]
-                oper1 = item[1]
-                if  idx1 == idx0: # find out which oper has least preference
-                    oper1_pos = self.operators.index(oper1)
-                    oper0_pos = self.operators.index(oper0)
-                    if  oper1_pos < oper0_pos:
-                        nlist[0] = item
-        if  not olist:
-            return
-        oper = nlist[0][-1]
-
-        # split expression into key op value and analyze the value
-        key, value = exp.split(oper, 1)
-        if  key.strip() == 'system':
-            if  value.strip() == 'all':
-                value = self.qlmap.keys()
-        if  key == 'date': # convert date into seconds since epoch
-            if  oper != ' last ': # we already converted date
-                pat = re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
-                if  pat.match(value): # we accept YYYYMMDD
-                    d = datetime.date(int(value[0:4]), # YYYY
-                                      int(value[4:6]), # MM
-                                      int(value[6:8])) # DD
-                    value = time.mktime(d.timetuple())
-                else:
-                    msg = 'Unacceptable date format'
-                    raise Exception(msg)
-        if  oper == ' in ' or oper == ' not in ':
-            value = value.strip()
-            if  value[0] != '(' and value[-1] != ')':
-                msg = "Value for '%s' operators not enclosed with brackets"\
-                    % oper 
-                raise Exception(msg)
-            value = [i.strip() for i in \
-                    value.replace('(', '').replace(')', '').split(',')]
-        if  oper == ' between ':
-            msg = "Unsupported syntax for value of between operator"
-            try:
-                value = value.split('and')
-                if  len(value) != 2:
-                    raise Exception(msg)
-            except:
-                raise Exception(msg)
-            value = [i.strip() for i in value]
-        if  oper == ' last ':
-            msg = "Unsupported syntax for value of between operator"
-            pat = re.compile('^[0-9][0-9](h|m)$')
-            if  not pat.match(value):
-                raise Exception(msg)
-            oper = ' = '
-            if  value.find('h') != -1:
-                hour = int(value.split('h')[0])
-                if  hour > 24:
-                    raise Exception('Wrong hour %s' % value)
-                date1 = time.time() - hour*60*60
-                date2 = time.time()
-            elif value.find('m') != -1:
-                minute = int(value.split('m')[0])
-                if  minute > 60:
-                    raise Exception('Wrong minutes %s' % value)
-                date1 = time.time() - minute*60
-                date2 = time.time()
-            else:
-                raise Exception('Unsupported value for last operator')
-            value = [date1, date2]
-        if  type(value) is types.StringType:
-            value = value.strip()
-            if  value and value[0]=='[' and value[-1]==']':
-                value = eval(value)
-        return {'key':key.strip(), 'op':oper.strip(), 'value':value}
 
     def lookupquery(self, system, query):
         """
@@ -495,6 +375,7 @@ class MongoParser(object):
                 val = re.compile('.*%s.*' % val)
             newspec[key] = val
         newspec['das.system'] = system
-#        return dict(spec=newspec, fields=fields)
-        return dict(spec=newspec, fields=daskeys + ['das'])
+        if  daskeys:
+            return dict(spec=newspec, fields=daskeys + ['das'])
+        return dict(spec=newspec)
 
