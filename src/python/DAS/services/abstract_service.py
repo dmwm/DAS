@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.44 2009/10/16 18:02:48 valya Exp $"
-__version__ = "$Revision: 1.44 $"
+__revision__ = "$Id: abstract_service.py,v 1.45 2009/11/03 16:32:48 valya Exp $"
+__version__ = "$Revision: 1.45 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -152,12 +152,14 @@ class DASAbstractService(object):
         msg = 'DASAbstractService::%s::call(%s)' \
                 % (self.name, query)
         self.logger.info(msg)
-#        mongo_query = self.mongoparser.lookupquery(self.name, query)
-#        msg = 'DASAbstractService::%s mongo_query=%s' \
-#                % (self.name, mongo_query)
-        msg = 'DASAbstractService::%s query=%s' % (self.name, query)
-        self.logger.info(msg)
 
+        # check the cache if there are records with given input query
+        qhash = genkey(query)
+        dasquery = {'spec': {'das.qhash': qhash, 'das.system': self.name}, 
+                    'fields': None}
+        if  self.localcache.incache(query=dasquery):
+            self.analytics.update(self.name, query)
+            return
         # check the cache contains records with similar queries
         if  self.localcache.similar_queries(self.name, query):
             self.analytics.update(self.name, query)
@@ -166,13 +168,6 @@ class DASAbstractService(object):
 #        if  self.localcache.incache(query=mongo_query):
 #            self.analytics.update(self.name, query)
 #            return
-        # check the cache if there are records with given input query
-        qhash = genkey(query)
-        dasquery = {'spec': {'das.qhash': qhash, 'das.system': self.name}, 
-                    'fields': None}
-        if  self.localcache.incache(query=dasquery):
-            self.analytics.update(self.name, query)
-            return
 
         # ask data-service api to get results, they'll be store them in
         # cache, so return at the end what we have in cache.
