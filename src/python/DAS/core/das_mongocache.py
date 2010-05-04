@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.24 2009/10/21 13:45:06 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: das_mongocache.py,v 1.25 2009/10/23 19:35:08 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -312,7 +312,6 @@ class DASMongocache(Cache):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        print "\n\n#### call nresults", query
         self.logger.info("DASMongocache::nresults(%s)" % query)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
@@ -340,7 +339,8 @@ class DASMongocache(Cache):
         else:
             res = self.col.find(spec=spec, fields=fields)
         for row in res:
-            del(row['_id']) #mongo add internal _id, cannot JSON'ify with it
+            obj_id = row['_id']
+            row['_id'] = obj_id.url_encode()
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
