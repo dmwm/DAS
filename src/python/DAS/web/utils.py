@@ -5,10 +5,11 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.3 2009/06/04 14:10:18 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: utils.py,v 1.4 2009/06/16 19:09:26 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
+import types
 import httplib
 import urllib
 import urllib2
@@ -24,7 +25,8 @@ def httplib_request(host, path, params, request='POST', debug=0):
     """request method using provided HTTP request and httplib library"""
     if  debug:
         httplib.HTTPConnection.debuglevel = 1
-    params = urllib.urlencode(params, doseq=True)
+    if  type(params) is not types.StringType:
+        params = urllib.urlencode(params, doseq=True)
     if  debug:
         print "input parameters", params
     headers = {"Content-type": "application/x-www-form-urlencoded",
@@ -35,11 +37,15 @@ def httplib_request(host, path, params, request='POST', debug=0):
     else:
         host = host.replace('http://', '')
         conn = httplib.HTTPConnection(host)
-    conn.request(request, path, params, headers)
+    if  request == 'GET':
+        conn.request(request, path)
+    else:
+        conn.request(request, path, params, headers)
+#    conn.request(request, path, params, headers)
     response = conn.getresponse()
 
     if  response.reason != "OK":
-        print response.status, response.reason
+        print response.status, response.reason, response.read()
         return 0
     else:
         res = response.read()
