@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.34 2009/09/11 18:44:56 valya Exp $"
-__version__ = "$Revision: 1.34 $"
+__revision__ = "$Id: abstract_service.py,v 1.35 2009/09/14 20:37:56 valya Exp $"
+__version__ = "$Revision: 1.35 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -165,24 +165,18 @@ class DASAbstractService(object):
         spec = mongo_query['spec'].keys() # we take all parameters
         spec.remove('das.system') # and check if conditions provided
         if  self.localcache.incache(query=mongo_query) and spec:
-#            return self.localcache.get_from_cache(query=mongo_query)
             self.analytics.update(self.name, query)
             return
         # check the cache if there are records with given input query
         dasquery = {'spec': {'das.query': query, 'das.system': self.name}, 
                     'fields': None}
         if  self.localcache.incache(query=dasquery):
-#            return self.localcache.get_from_cache(query=dasquery)
             self.analytics.update(self.name, query)
             return
 
         # ask data-service api to get results, they'll be store them in
         # cache, so return at the end what we have in cache.
         result = self.api(query)
-#        if  result:
-#            return self.localcache.get_from_cache(query=mongo_query)
-#        else:
-#            return []
 
     def adjust_params(self, args):
         """
