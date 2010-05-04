@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.14 2009/11/16 16:07:47 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: dbs_service.py,v 1.15 2009/11/19 20:12:58 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 #import xml.etree.cElementTree as ET
@@ -35,7 +35,8 @@ class DBSService(DASAbstractService):
         elif api == 'listFiles':
             tag = 'file'
         else:
-            msg = 'Unsupported %s API %s' % (self.name, api)
+            msg = 'DBSService::parser, unsupported %s API %s' \
+                % (self.name, api)
             raise Exception(msg)
         gen = xml_parser(data_ptr, tag, add)
         for row in gen:
