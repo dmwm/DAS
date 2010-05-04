@@ -7,8 +7,8 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.10 2009/10/02 15:06:02 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.11 2009/10/02 18:58:33 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -38,7 +38,7 @@ class DASAnalytics(object):
         self.dbname  = getarg(config, 'analytics_dbname', 'analytics')
         self.colname = 'db'
 
-        msg = "Init DAS analytics %s:%s@%s" \
+        msg = "DASAnalytics::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
         self.logger.info(msg)
         
