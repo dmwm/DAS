@@ -7,6 +7,12 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- V04_00_06
+
+  - first appearance of analytics code
+  - fix issue with data object look-up
+  - switch to new DAS QL parser
+
 - V04_00_05
 
   - re-wrote DAS QL parser
