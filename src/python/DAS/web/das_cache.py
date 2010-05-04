@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.6 2010/04/13 15:04:52 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_cache.py,v 1.7 2010/04/14 18:00:25 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -17,9 +17,6 @@ import thread
 import cherrypy
 import traceback
 
-from Queue import Queue
-from threading import Thread
-
 # monogo db modules
 from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
@@ -27,8 +24,10 @@ from pymongo.objectid import ObjectId
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.core.das_core import DASCore
-from DAS.core.das_cache import DASCacheMgr, monitoring_worker
+from DAS.core.das_cache import DASCacheMgr, thread_monitor
 from DAS.utils.utils import getarg, genkey
+from DAS.utils.logger import DASLogger
+from DAS.utils.das_config import das_readconfig
 from DAS.web.tools import exposejson
 from DAS.web.das_webmanager import DASWebManager
 from DAS.utils.regex import web_arg_pattern
@@ -102,26 +101,6 @@ def checkargs(func):
     wrapper.exposed = True
     return wrapper
 
-#def worker(query):
-#    """
-#    Worker function which invoke DAS core to update cache for input query
-#    """
-#    dascore = DASCore()
-#    status  = dascore.call(query)
-#    return status
-
-QUEUE = Queue()
-
-def worker():
-    """
-    Worker function which invokes DAS core to update cache for input query
-    """
-    dascore = DASCore()
-    while True:
-        query = QUEUE.get()
-        dascore.call(query)
-        QUEUE.task_done()
-
 class DASCacheService(DASWebManager):
     """
     DASCacheService represents DAS cache RESTful interface.
@@ -157,23 +136,10 @@ class DASCacheService(DASWebManager):
         self.methods['DELETE'] = {'delete':
                 {'args':['query'],
                  'call': self.delete, 'version':__version__}}
-
-        try:
-            # WMCore/WebTools
-            rest  = RESTModel(config)
-            rest.methods = self.methods # set RESTModel methods
-            self.model = self # re-reference model to my class
-            self.model.handler = rest.handler # reference handler to RESTModel
-            cdict = self.config.dictionary_()
-            self.base = '/rest'
-        except:
-            cdict = {}
-            self.base = ''
-
-        self.dascore  = DASCore()
-        dbhost        = self.dascore.dasconfig['mongodb']['dbhost']
-        dbport        = self.dascore.dasconfig['mongodb']['dbport']
-        capped_size   = self.dascore.dasconfig['mongodb']['capped_size']
+        dasconfig     = das_readconfig()
+        dbhost        = dasconfig['mongodb']['dbhost']
+        dbport        = dasconfig['mongodb']['dbport']
+        capped_size   = dasconfig['mongodb']['capped_size']
         self.con      = Connection(dbhost, dbport)
         if  'logging' not in self.con.database_names():
             dbname = self.con['logging']
@@ -181,23 +147,15 @@ class DASCacheService(DASWebManager):
             dbname.create_collection('db', **options)
             self.warning('Created logging.db, size=%s' % capped_size)
         self.col      = self.con['logging']['db']
-        sleep         = cdict.get('sleep', 2)
-        verbose       = cdict.get('verbose', None)
-        iconfig       = {'sleep':sleep, 'verbose':verbose, 
-                         'logger':self.dascore.logger}
+        sleep         = dasconfig.get('sleep', 2)
+        verbose       = dasconfig.get('verbose', 0)
+        nprocs        = dasconfig['cache_server']['n_worker_threads']
+        logger        = DASLogger(verbose=verbose)
+        iconfig       = {'sleep':sleep, 'verbose':verbose, 'nprocs':nprocs}
         self.cachemgr = DASCacheMgr(iconfig)
-        thread.start_new_thread(monitoring_worker, (self.cachemgr, iconfig))
-#        thr = Thread(name="MonitorWorker", target=monitoring_worker, 
-#                        args=(self.cachemgr, iconfig))
-#        thr.daemon = True
-#        thr.start()
+        thread.start_new_thread(thread_monitor, (self.cachemgr, iconfig))
 
-#        num_worker_threads = 2
-#        for nproc in range(num_worker_threads):
-#             thr = Thread(target=worker)
-#             thr.setDaemon(True)
-#             thr.start()
-
+        self.dascore  = DASCore(logger=logger)
         msg = 'DASCacheMode::init, host=%s, port=%s, capped_size=%s' \
                 % (dbhost, dbport, capped_size)
         self.dascore.logger.debug(msg)
@@ -347,9 +305,7 @@ class DASCacheService(DASWebManager):
             query  = kwargs['query']
             self.logdb(query)
             query  = self.dascore.mongoparser.parse(query)
-#            QUEUE.put(query)
-#            data.update({'status':'requested', 'query':query})
-            try:
+            try: # this block implies usage of multiprocessing, see DASCacheMgr
                 status = self.cachemgr.add(query)
                 data.update({'status':status, 'query':query})
             except:
