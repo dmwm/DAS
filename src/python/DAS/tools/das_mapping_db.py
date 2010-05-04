@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.6 2009/09/29 20:45:29 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.7 2009/10/02 15:13:12 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -85,6 +85,10 @@ if __name__ == '__main__':
     # dict(api_param='storage_element_name', das_key='site', 
     #      pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
     # here pattern is applied to passed api_param
+
+    # clean-up existing Mapping DB
+    mgr.delete_db()
+    mgr.create_db()
 
     ##### DBS
     apiversion = 'DBS_2_0_8'
@@ -463,18 +467,16 @@ if __name__ == '__main__':
         'api' : dict(name=api, params=params),
         'daskeys' : [
             dict(key='jobsummary', map='jobsummary', pattern=''),
-            dict(key='site', map='jobsummary.ce', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
-            dict(key='site', map='jobsummary.site', pattern="re.compile('^T[0-3]_')"),
+#            dict(key='site', map='jobsummary.ce', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
+#            dict(key='site', map='jobsummary.site', pattern="re.compile('^T[0-3]_')"),
         ],
         'api2das' : [
             dict(api_param='date1', das_key='date', pattern=""),
             dict(api_param='date2', das_key='date', pattern=""),
             dict(api_param='ce', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
             dict(api_param='ce', das_key='site.ce', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
-            dict(api_param='ce', das_key='jobsummary.ce', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
             dict(api_param='site', das_key='site', pattern="re.compile('^T[0-3]_')"),
             dict(api_param='site', das_key='site.name', pattern="re.compile('^T[0-3]_')"),
-            dict(api_param='site', das_key='jobsummary.site', pattern="re.compile('^T[0-3]_')"),
         ]
     }
     mgr.add(rec)
@@ -536,11 +538,11 @@ if __name__ == '__main__':
         'api' : dict(name=api, params=params),
         'daskeys' : [
                 dict(key='monitor', map='monitor', pattern=''),
-                dict(key='monitor.key', map='monitor', pattern=''),
-                dict(key='monitor.country', map='monitor', pattern=''),
-                dict(key='monitor.node', map='monitor', pattern=''),
-                dict(key='monitor.region', map='monitor', pattern=''),
-                dict(key='monitor.tier', map='monitor', pattern=''),
+#                dict(key='monitor.key', map='monitor', pattern=''),
+#                dict(key='monitor.country', map='monitor', pattern=''),
+#                dict(key='monitor.node', map='monitor', pattern=''),
+#                dict(key='monitor.region', map='monitor', pattern=''),
+#                dict(key='monitor.tier', map='monitor', pattern=''),
         ],
         'api2das' : [
                 dict(api_param='start', das_key='date', pattern=""),
@@ -552,8 +554,16 @@ if __name__ == '__main__':
 
     ##### Add web UI mapping
     rec = {'presentation': {
-                'block': ['block.name', 'block.size'],
-                'site': ['site.name']}
+                'block': [
+                        {'das':'block.name', 'ui':'BlockName'}, 
+                        {'das':'block.size', 'ui':'BlockSize'},
+                         ],
+                'site': [
+                        {'das':'site.name', 'ui':'CMSName'}, 
+                        {'das':'site.se', 'ui':'StorageElement'}, 
+                        {'das':'site.samname', 'ui':'SAMName'}, 
+                        {'das':'site.sitename', 'ui':'Site'}
+                        ]}
           }
     mgr.add(rec)
     ##### End of web UI mapping
