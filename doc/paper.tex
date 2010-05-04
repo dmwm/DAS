@@ -346,7 +346,7 @@ Data Aggregation System.
 
 \section{Data Aggregation System\label{DAS}}
 The goal of the Data Aggregation System was to combine and
-aggregate data from existing data-services
+aggregate meta-data from existing data-services
 under one umrella, utilizing their access rules, APIs, security policies, etc., and
 allowing users to perform queries against them. In contrast, the approaches
 discussed in \cite{DBXplorer, QueryAnswer, FedDB} are
@@ -593,23 +593,20 @@ Apart from the previous DBS-QL syntax we decided to drop its syntax and allow us
 express their queries in a free text-based form. Although we must clarify its
 meaning. We used a pre-defined set of keys registered in DAS to describe common
 entities of our data. For example, \verb+dataset+, 
-\verb+file+, \verb+block+, \verb+run+, \verb+event+. Those
-names were used by our users in their daily work operations. So, by typing a
-\verb+file+ we didn't perform a string matching to the 
-``file'' string, but rather look-up all file objects in a DAS. 
-Moreover each DAS key has a default attribute.
-For intance, the default attribute for
-\verb+dataset+, \verb+block+, \verb+file+ 
-was a \verb+name+, while the default attribute for
-\verb+run+ and \verb+event+ was a \verb+number+. 
-This allows to specify key-value pair as simple as possible, e.g.
-\verb+run=123456+, which means run number 123456. At the same time a query 
-key, e.g. \verb+site+ meant to look-up all site objects. Such ability
-to use key-value pairs resolve ambiguity in object values. For instance,
-specifying a run number as \verb+run=123456+ instructs system to resolve
-data object with run equal to 123456 rather then other objects which may have
-123456 values, e.g. event number or file size. At the same time, to complement
-the stregth of the DAS we do plan to index data objects and add a keyword-based 
+\verb+file+, \verb+block+, \verb+run+, \verb+event+, etc. Their choice
+was based on analysis of daily work operations of our users, see \cite{DBS07}.
+Each key had a set of attributes with primary one assigned to the key itself.
+For intance, the \verb+block+ key had the following attributes
+\verb+name+, \verb+size+, \verb+replica+ etc., 
+with primary attribute being \verb+name+.
+The choice of attributes were based on a set of meta-data information
+associated with a given DAS key. Therefore end-users where able to specify
+a context in their queries by using appropriate attribute(s). For example,
+for query \verb+block+ we didn't perform a string matching to the
+``block'' string, but rather look-up a block objects in a DAS, while query
+\verb+block.name=abc*+ instructs system to look-up appropriate blocks
+with matched names. At the same time, to complement the stregth of the 
+DAS, we do plan to index dynamically retrieved meta-data and add a keyword-based 
 search later.
 
 The free text-based queries were transformed into MongoDB query syntax, 
@@ -631,11 +628,11 @@ Based on information stored in Mapping DB we were able to
 retrieve appropriate data from different data-services, re-map them into 
 DAS notations and aggregate them on demand. For instance, the Data 
 Bookkeeping System (DBS) and data location system (PhEDEx)
-provided information about CMS data block objects. In former case, DBS 
+provided information about CMS block meta-data. In former case, DBS 
 stored information about blocks and their relationships to other 
-physics objects, such as dataset adn files, while PhEDEx kept
+physics objects, such as dataset and files, while PhEDEx kept
 information about its location and replicas. Upon a user request to 
-find a block, we were able to identify appropriate set of DBS and PhEDEx APIs, 
+find a block meta-data, we were able to identify appropriate set of DBS and PhEDEx APIs, 
 retrieve data from them, re-format their output to DAS notations 
 and store results into DAS cache performing aggregation of matched 
 objects using \verb+block.name+ key. The merged results were stored 
@@ -651,7 +648,7 @@ as a set of data records. Here is an example of such aggregated record:
  "das": [{"expire": 1259952908}, {"expire": 1259954702}]}
 \end{verbatim}
 Here \verb+das_id+ refers to api call records stored in Analytics DB,
-\verb+block+ represents an aggregation block object information from DBS
+\verb+block+ represents an aggregation block meta-data information from DBS
 and PhEDEx systems and \verb+das+ contains their expiration time stamps.
 Usage of this information was valuable contribution in debugging process of
 data-services themselves, e.g. identification of not-matched records, 
@@ -733,9 +730,10 @@ operates on private network accessible at CMS online operation center.
 %}
 %\label{db_size}
 %\end{table*}
-At the moment their size is quite small ranging from 1 to 40 GB and 2 to 140 GB in
-table and index sizes, respectively. But we estimate to accumulate $\sim$500 GB of 
-meta-data each year during normal CMS operation at LHC.
+At the moment, the amount of meta-data stored in all services is equal to
+$\sim$75 GB and $\sim$200 GB in tables and index sizes, respectively. While 
+we estimate to accumulate $\sim$500 GB of the meta-data each year during 
+normal CMS operation at LHC.
 %\footnote{This number is based on tests 
 %performed in CMS during Cosmic Run at Full Tesla (CRAFT) data taking \cite{CRAFT09}.}
 %In CRAFT09 acquisition era, Tier-0 produced a total of 6.03
@@ -756,7 +754,7 @@ meta-data each year during normal CMS operation at LHC.
 To test DAS performance we measured elapsed time and CPU/RAM utilization
 required to collect and aggregate information from different
 data-services. Table \ref{DAS_benchmark} summarizes the biggest 
-contributors so far, the block information between DBS and 
+contributors so far, the block meta-data information provided by DBS and 
 PhEDEx CMS data-services. 
 
 \begin{table*}[hbt]
@@ -781,10 +779,11 @@ the non-matched records from both systems.}
 \label{DAS_benchmark}
 \end{table*}
 
-Please note that initial DAS implementation was done in Python 
-and all tests were performed on x64 Linux platform with 16GB of RAM where
-1 CPU was used by DAS server and 1 CPU by MongoDB database server. The CPU utilization
-of DAS server was 67\% in average and RAM usage was below 35MB. 
+The initial DAS implementation was done in Python language \cite{Python}
+and all tests were performed on x64 Linux platform where
+1 CPU was used by DAS server and 1 CPU by MongoDB database server. 
+%The CPU utilization
+%of DAS server was 67\% in average and RAM usage was below 35MB. 
 All tests were performed multiple times to avoid fluctuations. 
 The elapsed time measured during those tests consists of the 
 following componenets:
@@ -798,14 +797,15 @@ Elapsed time = retrieval time + parsing time + re-mapping time
 \end{itemize}
 Here the {\it retrieval time} is a time required to access data from remote data-service,
 {\it parsing time} is a time required to read and parse received data, {\it re-mapping time}
-is a time required to convert notations used by data-service to DAS ones for every object
-we parse, {\it cache insertion} and {\it indexing time} represents time spend to add objects into
-the DAS cache, {\it aggregation time} is required to merge objects into DAS records based
-on their common key (block name in this case) and {\it output creation time}
+is a time required to convert data-service meta-data to DAS records for every object
+we parse, {\it cache insertion} and {\it indexing time} represents time spent on DAS 
+cache back-end, {\it aggregation time} is required to merge objects into DAS records based
+on their common key (\verb+block.name+ in this case) and {\it output creation time}
 is a time required to write DAS records to disk. Please note that last two
 components, {\it aggregation} and {\it output creation time}, were only applied to
-the one of the sub-system (either DBS or PhEDEx) since the first one was injected into
-the fresh database, while the second required the merging step.
+one of the sub-system, either DBS or PhEDEx, depending on insertion order.
+% since the first one was injected into
+%the fresh database, while the second required the merging step.
 
 %DAS execution time (phedex) 160.606897116 sec
 %DAS execution time (dbs) 52.5349619389 sec
@@ -819,19 +819,19 @@ The individual tests of DAS components (DBS and PhEDEx) shown roughly
 the same performance. Although the time of PhEDEx component was bigger 
 due to longer retrieval and parsing time.
 The time of PhEDEx component shown in Table \ref{DAS_benchmark} is divided 
-among: retrieval + parsing step, $\sim$110 sec, and merging step, $\sim$50 sec.
-As shown in Table \ref{DAS_benchmark},
+among retrieval and parsing, $\sim$110 sec, and merging steps, $\sim$50 sec,
+respectively. As shown in Table \ref{DAS_benchmark},
 the time spent to access individual components (last column) was quite
 reasonable, roughly 1 second for both systems. While final time to
 get DAS records on disk was about 45 seconds. This was mostly due to I/O and
 conversion operations between binary data format used by MongoDB, BSON, to DAS
 data format, JSON.
 
-Based on results of stress tests we measured that we can achieve 7000 docs/sec rate
-for insertion, 3400 docs/sec for aggregation and 8500 docs/sec for reading operation
-in DAS, which is suitable for our needs. Since all operations were performed 
-on a single CPU a further improvements are expected. Also, a necessary
-tuning can be done by using C++ driver instead of python one.
+Based on results of stress tests we measured that we can achieve throughput of
+7000 docs/sec for insertion, 3400 docs/sec for aggregation and 8500 docs/sec for 
+reading operations in DAS, which are suitable for our needs. Since all 
+operations were performed on a single CPU a further improvements are expected. 
+Also, a necessary tuning can be done by using C++ driver instead of python one.
 
 \section{Summary}
 We presented a new data aggregation service (DAS) developed for CMS High-Energy experiment
@@ -842,10 +842,10 @@ while data pre-fetching of most common queries is in our plans. We developed
 prototype in python for DAS system which is under commissioning phase right now 
 and presented performance studies in this paper. 
 The CMS experiment is started to collect its data in December of 2009 and 
-we expect to accumulate a few PB of real data each year to tape. 
+we expect to accumulate a few PB of real data each year. 
 In addition, the Monte-Carlo samples will be produced at this scale.
 Based on test studies performed in CMS, we expect that total size of
-meta-data produced by experiment each year will be of the order of
+meta-data produced each year by experiment will be of the order of
 500GB. The DAS should sustain such load and will provide generic 
 ``data-discovery'' service for CMS experiment in years to come.
 
@@ -995,7 +995,7 @@ GMW’07, June 25, 2007, Monterey, California, USA.
 %\bibitem{CRAFT09}
 %https://twiki.cern.ch/twiki/bin/view/CMS/CRAFT09AnalysisInfo
 
-%\bibitem{Python} Python programming language, http://www.python.org
+\bibitem{Python} Python programming language, http://www.python.org
 
 %\bibitem{DBSearch}
 %D. Konopnicki, O. Shmueli,
