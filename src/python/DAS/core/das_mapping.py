@@ -7,10 +7,11 @@ DAS mapping
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_mapping.py,v 1.12 2009/09/01 01:42:44 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_mapping.py,v 1.13 2009/09/01 17:06:15 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
+import re # we get regex pattern from DB and eval it in primary_key
 import types
 from DAS.core.das_mapping_db import DASMappingMgr
 from DAS.core.das_mapping_db import System, DASKey, Api, APIMap 
@@ -29,22 +30,41 @@ class DASMapping(DASMappingMgr):
     def __init__(self, config):
         DASMappingMgr.__init__(self, config)
 
-    def primary_key(self, system, daskey):
+    def primary_key(self, system, daskey, api=None, value=None):
         """
         Returns primary key for given system and provided
         selection DAS key, e.g. block => block.name
         """
         session = self.session()
-        query = session.query(DASKey, System, DASMap).\
+        query = session.query(Api, API2DAS, DASKey, System, DASMap).\
             filter(DASMap.system_id==System.id).\
             filter(DASMap.daskey_id==DASKey.id).\
             filter(System.name==system).\
-            filter(DASKey.name==daskey)
+            filter(DASKey.name==daskey).\
+            filter(Api.id==API2DAS.api_id).\
+            filter(Api.id==DASMap.api_id).\
+            filter(API2DAS.daskey_id==DASMap.daskey_id).\
+            filter(API2DAS.system_id==System.id)
+        if  api:
+            query = query.filter(Api.name==api)
         primkeys = []
-        for row in query.all():
-            pkey = row[-1].primary_key
-            if  pkey not in primkeys:
-                primkeys.append(pkey)
+        for aobj, adas, dobj, sobj, dmap in query.all():
+            pkey = dmap.primary_key
+            pat  = eval(adas.pattern)
+            if  value:
+                if  not pat.match(value): 
+                    # not match, since we already know value
+                    # and need to find key which provide other
+                    # information then value
+                    if  pkey not in primkeys:
+                        primkeys.append(pkey)
+            else:
+                if  pkey not in primkeys:
+                    primkeys.append(pkey)
+#        for row in query.all():
+#            pkey = row[-1].primary_key
+#            if  pkey not in primkeys:
+#                primkeys.append(pkey)
         if  len(primkeys) > 1:
             msg  = 'Ambigous primary keys: %s\n' % str(primkeys)
             msg += 'system=%s, daskey=%s' % (system, daskey)

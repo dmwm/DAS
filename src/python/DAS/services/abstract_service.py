@@ -4,9 +4,11 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.28 2009/09/01 01:42:45 valya Exp $"
-__version__ = "$Revision: 1.28 $"
+__revision__ = "$Id: abstract_service.py,v 1.29 2009/09/01 17:06:15 valya Exp $"
+__version__ = "$Revision: 1.29 $"
 __author__ = "Valentin Kuznetsov"
+
+import re
 import time
 import types
 import urllib
@@ -103,7 +105,8 @@ class DASAbstractService(object):
         self.logger.info(msg)
         input_params = params
         # if necessary the data-service implementation will adjust parameters,
-        # for instance, DQ parser Tracker_Global=GOOD&Tracker_Local1=1
+        # for instance, DQ need to parse the following input
+        # Tracker_Global=GOOD&Tracker_Local1=1
         # into the following form
         # [{"Oper": "=", "Name": "Tracker_Global",  "Value": "GOOD"},...]
         self.adjust_params(params)
@@ -256,10 +259,14 @@ class DASAbstractService(object):
         for item in conditions:
             if  type(item) is types.DictType:
                 key = item['key']
-                nkey = self.dasmapping.primary_key(self.name, key)
+                oper = item['op']
+                value = item['value']
+                nkey = self.dasmapping.primary_key(self.name, key, value=value)
                 if  not nkey:
                     nkey = key
-                cdict = dict(key=nkey, op=item['op'], value=item['value'])
+                if  oper == '=':
+                    value = re.compile('%s.*' % value)
+                cdict = dict(key=nkey, op=oper, value=value)
                 condlist.append(cdict)
             else:
                 condlist.append(item)
@@ -279,10 +286,19 @@ class DASAbstractService(object):
         # how many each API output will supply?
         prim_keys = []
         for key in self.map[api]['keys']:
-            pkey = self.dasmapping.primary_key(self.name, key)
+            pkey = self.dasmapping.primary_key(self.name, key, api=api)
             if  pkey not in prim_keys:
                 prim_keys.append(pkey)
         return prim_keys[0]
+
+    def clean_params(self, api, args):
+        """
+        For some data-services it's easier to call API with parameters
+        matching wild-card pattern. For instance, instead of passing 
+        site name into SiteDB API, we will call SiteDB API without
+        parameters (with wildcard). Must be implemented in sub-classes.
+        """
+        return args
 
     def api(self, query):
         """
@@ -296,6 +312,7 @@ class DASAbstractService(object):
         mongo_query = self.mongo_query_parser(query)
         result = False
         for url, api, args in self.apimap(query):
+            args = self.clean_params(api, args)
             msg  = 'DASAbstractService::%s::api found %s, %s' \
                 % (self.name, api, str(args))
             self.logger.info(msg)
@@ -387,3 +404,20 @@ class DASAbstractService(object):
             else: # if we have http://host/api?...
                 url = self.url + '/' + api
             yield url, api, args
+
+    def row2das(self, system, row):
+        """Transform keys of row into DAS notations, e.g. bytes to size"""
+        if  type(row) is not types.DictType:
+            return
+        for key, val in row.items():
+            newkey = self.dasmapping.notation2das(system, key)
+            if  newkey != key:
+                row[newkey] = row[key]
+                del row[key]
+            if  type(val) is types.DictType:
+                self.row2das(system, val)
+            elif type(val) is types.ListType:
+                for item in val:
+                    if  type(item) is types.DictType:
+                        self.row2das(system, item)
+ 
