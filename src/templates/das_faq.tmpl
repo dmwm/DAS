@@ -3,10 +3,9 @@
 <div class="page">
 <div class="normal">
 <h3>General questions about DAS</h3>
-In this section we discuss general questions about DAS,
 <a href="javascript:ShowTag('architecture')">show</a> |
 <a href="javascript:HideTag('architecture')">hide</a> this section.
-<div id="architecture" class="">
+<div id="architecture" class="hide">
 
 <div class="navcontainer">
 <ul>
@@ -64,10 +63,9 @@ knowledge DAS merges their output into a single DAS record.
 <hr class="line" />
 
 <h3>DAS queries</h3>
-In this section we discuss usage of DAS queries,
 <a href="javascript:ShowTag('dasql')">show</a> |
 <a href="javascript:HideTag('dasql')">hide</a> this section
-<div id="dasql" class="">
+<div id="dasql" class="hide">
 <div class="navcontainer">
 <ul>
 <li>
@@ -76,7 +74,10 @@ What should I type in DAS web interface?
 </ul>
 <p>
 DAS uses free text-based keyword search queries, so use your common knowledge about
-CMS data, e.g. dataset, block, run. Just type one of those in input field and
+CMS data, e.g. dataset, block, run. If you're not sure which DAS keys to use,
+please use <a href="/das/services">Services</a> URL.
+
+Just type one of those in input field and
 you'll invoke DAS query. For complete list of DAS keys use 
 <a href="/services/">services</a> section of DAS web portal.
 <br />
@@ -114,18 +115,15 @@ are equivalent.
 
 <ul>
 <li>
-Why my data sometimes appears instantaneously and sometime I see the following message:
-<em>
-DAS processing your request, please try in a few moments, more?
-</em>
+Why my data sometimes appears instantaneously?
 </li>
 </ul>
 <p>
 DAS doesn't hold any data, instead it retrieves data from data-services and
-place them into the cache. Therefore, when you see such message it means that 
-data were not present in DAS cache and DAS sent request to appropriate data-services.
-Wait a little bit and your data will appear shortly. It is OK to click multiple
-times on <em>Search</em> since DAS is smart enough to ignore multiple requests.
+place them into the cache. Therefore, when you place your query 
+DAS sends request to appropriate data-services. DAS web interface was
+designed to provide you as much feedback as possible, please pay attention
+to messages appearing next to the spining wheel.
 </p>
 
 </div>
@@ -133,19 +131,18 @@ times on <em>Search</em> since DAS is smart enough to ignore multiple requests.
 <hr class="line" />
 
 <h3>DAS records</h3>
-In this section we discuss DAS records,
-<a href="javascript:ShowTag('dasql')">show</a> |
-<a href="javascript:HideTag('dasql')">hide</a> this section
-<div id="dasql" class="">
+<a href="javascript:ShowTag('dasrecords')">show</a> |
+<a href="javascript:HideTag('dasrecords')">hide</a> this section
+<div id="dasrecords" class="hide">
 <div class="navcontainer">
 
 <ul>
 <li>
-What is DAS record?
+What is a DAS record?
 </li>
 </ul>
 <p>
-DAS record represents aggregated information about particular entity, e.g. site,
+A DAS record represents aggregated information about particular entity, e.g. site,
 combined from the results of different CMS data-services. For instance, the block
 information is stored in both DBS and PhEDEx data-service. In DAS this information
 is aggregated and stored as a single record. For example, here is typical DAS record:
@@ -209,7 +206,9 @@ we simply drop this header from shown records.
 
 </div>
 </div>
+<!-- LAST RECORD DOES NOT NEED THIS
 <hr class="line" />
+-->
 
 </div> <!-- end of class="normal" -->
 </div> <!-- end of class="page" -->

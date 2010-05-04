@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.31 2010/01/05 19:37:23 valya Exp $"
-__version__ = "$Revision: 1.31 $"
+__revision__ = "$Id: DASSearch.py,v 1.32 2010/01/05 21:03:15 valya Exp $"
+__version__ = "$Revision: 1.32 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
