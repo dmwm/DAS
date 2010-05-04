@@ -9,10 +9,11 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - V04_00_07
 
+  - re-factor DAS configuration system
   - switch to pymongo 1.5.2
   - switch to MongoDB 1.4
-  - added admin web interface; it shows basic db info and provide
-    ability to look-up records in any collection
+  - added admin web interface; it shows db info, DAS config, individual
+    databases and provide ability to look-up records in any collection
 
 - V04_00_06
 
