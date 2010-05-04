@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.22 2009/07/10 21:03:54 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: das_core.py,v 1.23 2009/07/12 19:16:20 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -142,11 +142,11 @@ class DASCore(object):
             sparams = getattr(self, name).parameters()
             self.service_parameters[getattr(self, name).name] = sparams
 
-        # TODO: das_functions should be defined somehow externally
-        # here is just a names. Instead I should have function plugin
-        # which will contains python code with those functions.
-        self.das_functions = ['das_sum', 'das_count', 'das_min', 'das_max',
-                'das_avg']
+        # find out names of function from agg module
+        self.das_functions = \
+        [item for item in das_functions.__dict__.keys() if item.find('__') == -1]
+
+        # init QL parser
         self.qlparser = QLParser(self.service_keys, self.service_parameters,
                         self.das_functions)
         self.das_aggregation = {} # determine at run-time
@@ -207,8 +207,8 @@ class DASCore(object):
         """
         if  self.das_aggregation:
             print "will do aggregation", self.das_aggregation
-            for func, args in self.das_aggregation.items():
-                results = getattr(das_functions, func)(args, results)
+            for func, arg in self.das_aggregation.items():
+                results = getattr(das_functions, func)(arg, results)
         return results
 
     def result(self, query, idx=0, limit=None):
