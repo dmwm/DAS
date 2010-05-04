@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.75 2010/04/05 19:11:44 valya Exp $"
-__version__ = "$Revision: 1.75 $"
+__revision__ = "$Id: das_mongocache.py,v 1.76 2010/04/07 20:52:18 valya Exp $"
+__version__ = "$Revision: 1.76 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -328,20 +328,18 @@ class DASMongocache(object):
         self.logger.info("DASMongocache::similar_queries %s" % query)
         spec    = query.get('spec', {})
         fields  = query.get('fields', None)
-        if  len(spec.keys()) > 1:
-            msg = 'DASMongocache::similar_queries, too many keys'
-            self.logger.info(msg)
-            return False
-        key     = spec.keys()[0]
-        val     = spec[key]
-        cond    = {'query.spec.key': key}
+#        if  len(spec.keys()) > 1:
+#            msg = 'DASMongocache::similar_queries, too many keys'
+#            self.logger.info(msg)
+#            return False
+#        key     = spec.keys()[0]
+#        val     = spec[key]
+#        cond    = {'query.spec.key': key}
+        cond    = {'query.spec.key': {'$in' : spec.keys()}}
         for row in self.col.find(cond):
             mongo_query = decode_mongo_query(row['query'])
             if  compare_specs(query, mongo_query):
                 return True
-#            value = mongo_query['spec'][key].replace('*', '')
-#            if  type(value) is types.StringType and val.count(value):
-#                return True
         return False
 
     def similar_queries_v1(self, system, query):
