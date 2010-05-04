@@ -7,12 +7,17 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.8 2009/09/18 00:10:07 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.9 2009/09/29 20:46:48 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
+import types
 import traceback
+try:
+    import json # since python 2.6
+except:
+    import simplejson as json # prior python 2.6
 
 # monogo db modules
 from pymongo.connection import Connection
@@ -59,6 +64,8 @@ class DASAnalytics(object):
         Add API info to analytics DB. 
         Here args is a dict of API parameters.
         """
+        if  type(query) is types.DictType:
+            query = json.dumps(query)
         msg = 'DASAnalytics::add_api(%s, %s, %s, %s)' \
         % (system, query, api, args)
         self.logger.info(msg)
@@ -75,6 +82,8 @@ class DASAnalytics(object):
         """
         Update record with given query.
         """
+        if  type(query) is types.DictType:
+            query = json.dumps(query)
         msg = 'DASAnalytics::update(%s, %s)' % (system, query)
         self.logger.info(msg)
         cond = {'query':query, 'system':system}

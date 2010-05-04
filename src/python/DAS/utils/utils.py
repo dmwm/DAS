@@ -5,12 +5,16 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.26 2009/09/01 20:15:58 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: utils.py,v 1.27 2009/09/29 20:46:16 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import re
+try:
+    import json # since python 2.6
+except:
+    import simplejson as json # prior python 2.6
 try:
     # with python 2.5
     import hashlib
@@ -93,7 +97,7 @@ def dasheader(system, query, api, url, args, ctime, expire, ver):
     """
     timestamp = time.time()
     dasdict = dict(system=[system], timestamp=timestamp,
-                url=url, ctime=ctime, query=[query],
+                url=url, ctime=ctime, query=[str(query)],
                 params={api:args}, version=ver,
                 expire=timestamp+expire, api=[api])
     return dict(das=dasdict)
@@ -158,7 +162,10 @@ def dump(ilist, idx=0):
     idx = 0
     for row in reslist:
         print "id : %s" % idx
-        print row
+        if  type(row) is types.DictType:
+            print json.dumps(row)
+        else:
+            print row
         print
         idx += 1
 #    try:
