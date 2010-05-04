@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.39 2009/10/02 19:02:21 valya Exp $"
-__version__ = "$Revision: 1.39 $"
+__revision__ = "$Id: abstract_service.py,v 1.40 2009/10/12 20:10:23 valya Exp $"
+__version__ = "$Revision: 1.40 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -167,7 +167,7 @@ class DASAbstractService(object):
             self.analytics.update(self.name, query)
             return
         # check the cache if there are records with given input query
-        qhash = genkey(str(query))
+        qhash = genkey(json.dumps(query))
         dasquery = {'spec': {'das.qhash': qhash, 'das.system': self.name}, 
                     'fields': None}
         if  self.localcache.incache(query=dasquery):
@@ -222,71 +222,6 @@ class DASAbstractService(object):
                 if  not jsondict.has_key(newkey):
                     jsondict[newkey] = val
         yield jsondict
-
-#    def query_parser(self, query):
-#        """
-#        Init QLLexer and parse input query.
-#        """
-#        if  not self.qllexer:
-#            imap = {self.name:self.keys()}
-#            params = {self.name:self.parameters()}
-#            self.qllexer = QLLexer(imap, params)
-
-#        selkeys = self.qllexer.selkeys(query)
-#        conditions = self.qllexer.conditions(query)
-#        msg = 'DASAbstractService::query_parser, selkeys %s' % selkeys
-#        self.logger.debug(msg)
-#        msg = 'DASAbstractService::query_parser, conditions %s' % conditions
-#        self.logger.debug(msg)
-#        return selkeys, conditions
-
-    def mongo_query_parser_v1(self, query):
-        """
-        Init QLLexer and transform input query into MongoDB syntax
-        """
-        selkeys, conditions = self.query_parser(query)
-        specialcase = False
-        if  selkeys == ['records']: # special case to look-up all records
-            specialcase = True
-            fields = None
-        else:
-            fields = ['das'] # we will always look-up the system name
-            for key in selkeys:
-                fields.append(key)
-        condlist = []
-        for item in conditions:
-            if  type(item) is types.DictType:
-                key = item['key']
-                oper = item['op']
-                value = item['value']
-                try:
-                    lkeys = self.dasmapping.lookup_keys(self.name, key, 
-                                                        value=value)
-                    # TODO, until mongo support OR I can't do much, we may
-                    # have several lookup keys, e.g. site means block.se or
-                    # block.replica.se
-                    # So will use first one
-                    nkey = lkeys[0] 
-                except:
-                    print "##### TODO: I need to decide what to do"
-                    traceback.print_exc()
-                    nkey = None
-                if  not nkey:
-                    nkey = key
-                if  oper == '=' and type(value) is types.StringType:
-                    value = re.compile('.*%s.*' % value)
-                if  key != 'date': # we skip date for Mongo to look-up,
-                    # due to variety of return formats
-                    cdict = dict(key=nkey, op=oper, value=value)
-                condlist.append(cdict)
-            else:
-                condlist.append(item)
-        cond_dict = mongo_exp(condlist)
-        cond_dict['das.system'] = self.name
-        cond_dict['das.selection_keys'] = {'$in' : selkeys}
-        # see MongoDB API, http://api.mongodb.org/python/
-        # we return spec and fields dict
-        return dict(spec=cond_dict, fields=fields)
 
     def lookup_keys(self, api):
         """
@@ -354,91 +289,38 @@ class DASAbstractService(object):
         In a long term we can store this results into API db.
         """
         cond = getarg(query, 'spec', {})
+        skeys = getarg(query, 'fields', [])
         for api, value in self.map.items():
-            if  not set(value['keys']) & set(query['fields']):
-                continue
             if  value['params'].has_key('api'):
                 url = self.url # JAVA, e.g. http://host/Servlet
             else: # if we have http://host/api?...
                 url = self.url + '/' + api
             args = value['params']
+            if  skeys:
+                if  not set(value['keys']) & set(query['fields']):
+                    continue
+            else:
+                found = False
+                for key, val in cond.items():
+                    entity = key.split('.')[0] # key either entity.attr or just entity
+                    for apiparam in self.dasmapping.das2api(self.name, entity):
+                        if  args.has_key(apiparam):
+                            found = True
+                            break
+                if  not found:
+                    continue
             for key, val in cond.items():
                 entity = key.split('.')[0] # key either entity.attr or just entity
                 # TODO: I'm not sure if I need to supply value to das2api
                 for apiparam in self.dasmapping.das2api(self.name, entity):
                     if  args.has_key(apiparam):
                         args[apiparam] = val
+            # check that there is no "required" parameter left in args,
+            # since such api will not work
+            if 'required' in args.values():
+                continue
             yield url, api, args
         
-    def apimap_v1(self, query):
-        selkeys, conditions = self.query_parser(query)
-
-        # loop over conditions and create input params dict which will
-        # be passed to data-service, convert DAS condition keys into
-        # ones accepted by data-service
-        params = {}
-        for item in conditions:
-            if  type(item) is types.DictType: # cond dict
-                oper = item['op']
-                val  = item['value']
-                key  = item['key']
-            else:
-                continue # TODO: what should I do if I find brackets?
-            keylist = self.dasmapping.das2api(self.name, key, val)
-            if  type(keylist) is not types.ListType:
-                keylist = [keylist]
-            for newkey in keylist:
-                params[newkey] = val
-
-        apiname = ""
-        def get_args(params):
-            """
-            Create a dict of arguments passed to API out of required and
-            default ones
-            """
-            args = {}
-            for key, val in params.items():
-                if  val == 'required':
-                    args[key] = ''
-                elif val: # default
-                    args[key] = val
-            return args
-
-        # loop over dataservices and find out which api/params
-        # we need to call. Yield results in a form of
-        # url, api, args
-        for api, aparams in self.map.items():
-            if  selkeys == ['records']: # special case
-                if  not set(params.keys()) & set(aparams['params']):
-                    continue
-            elif  not set(selkeys) & set(aparams['keys']):
-                continue # datasrv API doesn't cover requested selkeys
-            
-            args = get_args(aparams['params'])
-            for par, value in aparams['params'].items():
-                if  params.has_key(par):
-                    args[par] = params[par]
-                else:
-                    args[par] = value
-                if  args[par] == 'list' or args[par] == 'required':
-                    msg  = 'Missing required parameter %s, api2das returns %s'\
-                        % (par, self.dasmapping.api2das(self.name, par))
-                    msg += '\nAPI: %s, params %s' % (api, str(aparams))
-                    self.logger.info('Skip API=%s, reason\n%s' % (api, msg))
-#                    raise Exception(msg)
-            if  aparams.has_key('api') or aparams['params'].has_key('api'):
-                try:
-                    apidict = aparams['api']
-                    apikey  = apidict.keys()[0]
-                    apival  = apidict[apikey]
-                    args[apikey] = apival 
-                except:
-                    pass
-                url = self.url # JAVA, e.g. http://host/Servlet
-            else: # if we have http://host/api?...
-                url = self.url + '/' + api
-            yield url, api, args
-
     def row2das(self, system, row):
         """Transform keys of row into DAS notations, e.g. bytes to size"""
         if  type(row) is not types.DictType:
