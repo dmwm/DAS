@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.5 2009/06/04 14:09:26 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_couchcache.py,v 1.6 2009/06/09 18:22:43 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -198,10 +198,11 @@ function(k,v,r) {
         key  = genkey(query)
         #TODO:check how to query 1 result, I copied the way from get_from_cache
         skey = ["%s" % key, timestamp()]
-        options = {'startkey': skey}
+        ekey = ["%s" % key, 9999999999]
+        options = {'startkey': skey, 'endkey': ekey}
         results = cdb.loadView('dasviews', 'query', options)
         try:
-            res = [row['value'] for row in results['rows']]
+            res = len(results['rows'])
         except:
             traceback.print_exc()
             return
@@ -242,11 +243,14 @@ function(k,v,r) {
         db.update over entire set, rather looping for every single 
         row and use db.create. The speed up is factor of 10
         """
+        if  not expire:
+            raise Exception('Expire parameter is null')
         self.logger.info("DASCouchcache::update_cache for %s" % query)
         if  not results:
             return
         dbname = self.dbname
         cdb = self.couchdb(dbname)
+        self.clean_cache()
         if  not cdb:
             if  type(results) is types.ListType or \
                 type(results) is types.GeneratorType:
@@ -300,13 +304,12 @@ function(k,v,r) {
         """
         dbname = self.dbname
         cdb = self.couchdb(dbname)
-#        print "+++CALL das_couch::clean_cache", dbname, cdb
         if  not cdb:
             return
-        skey = '%s' % 0
-        ekey = '%s' % timestamp()
+        skey = 0
+        ekey = timestamp()
         options = {'startkey': skey, 'endkey': ekey}
-        results = cdb.loadView('dasviews', 'query', options)
+        results = cdb.loadView('dasadmin', 'cleaner', options)
 
         ndocs = 0
         for doc in results['rows']:
@@ -315,7 +318,8 @@ function(k,v,r) {
 
         self.logger.info("DASCouchcache::clean_couch, will remove %s doc's" \
             % ndocs )
-
+        if  not ndocs:
+            return
         cdb.commit()  # bulk delete
         cdb.compact() # remove them permanently
         
