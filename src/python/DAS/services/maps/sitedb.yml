@@ -1,0 +1,72 @@
+# SiteDB API mapping to DAS
+system : sitedb
+url : "https://cmsweb.cern.ch/sitedb/json/index"
+format : JSON
+---
+api : 'CMSNametoAdmins'
+expire : 3600
+params : {'name':''}
+record : {
+    'daskeys' : [{'key':'site', 'map':'site.name', 'pattern':''},
+                 {'key':'admin', 'map':'email', 'pattern':''}],
+    'api2das' : [
+            {'api_param':'name', 'das_key':'admin', 'pattern':""},
+    ]
+}
+---
+api : 'SEtoCMSName'
+expire : 3600
+params : {'name':''}
+record : {
+    'daskeys' : [{'key':'site', 'map':'site.name', 'pattern':''},
+            {'key':'site', 'map':'site.se', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"}],
+    'api2das' : [
+            {'api_param':'name', 'das_key':'site', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+    ]
+}
+---
+api : 'CMStoSAMName'
+expire : 3600
+params : {'name':''}
+record : {
+    'daskeys' : [{'key':'site', 'map':'site.name', 'pattern':"re.compile('^T[0-3]')"}],
+    'api2das' : [
+            {'api_param':'name', 'das_key':'site', 'pattern':"re.compile('^T[0-3]')"},
+    ]
+}
+---
+api : 'CMStoSiteName'
+expire : 3600
+params : {'name':''}
+record : {
+    'daskeys' : [{'key':'site', 'map':'site.name', 'pattern':"re.compile('^T[0-3]')"}],
+    'api2das' : [
+            {'api_param':'name', 'das_key':'site', 'pattern':"re.compile('^T[0-3]')"},
+    ]
+}
+---
+api : 'CMSNametoCE'
+expire : 3600
+params : {'name':'required'}
+record : {
+    'daskeys' : [{'key':'site', 'map':'site.name', 'pattern':"re.compile('^T[0-3]')"}],
+    'api2das' : [
+            {'api_param':'name', 'das_key':'site', 'pattern':"re.compile('^T[0-3]')"},
+    ]
+}
+---
+api : 'CMSNametoSE'
+expire : 3600
+params : {'name':''}
+record : {
+    'daskeys' : [{'key':'site', 'map':'site.name', 'pattern':"re.compile('^T[0-3]')"}],
+    'api2das' : [
+            {'api_param':'name', 'das_key':'site', 'pattern':"re.compile('^T[0-3]')"},
+    ]
+}
+---
+notations : [
+    {'api_param':'cmsname', 'das_name':'name', 'api':''},
+    {'api_param':'cms_name', 'das_name':'name', 'api':''},
+            ]
+
