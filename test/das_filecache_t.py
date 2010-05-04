@@ -34,12 +34,27 @@ class testDASFilecache(unittest.TestCase):
         """test DAS filecache result method"""
         query  = "find site where site=T2_UK"
         expire = 60
-        expect = [1,2,3]
-        self.dasfilecache.update_cache(query, expect, expire)
-        result = self.dasfilecache.get_from_cache(query)
+        expect = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        expect = self.dasfilecache.update_cache(query, expect, expire)
+        expect = [i for i in expect]
+        result = [i for i in self.dasfilecache.get_from_cache(query)]
         result.sort()
         self.assertEqual(expect, result)
-        os.system('rm -rf %s' % self.dir)
+        self.dasfilecache.delete_cache()
+
+    def test_pagintation(self):                          
+        """test DAS filecache result method with pagination"""
+        query  = "find site where site=T2_UK"
+        expire = 60
+        expect = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        expect = self.dasfilecache.update_cache(query, expect, expire)
+        expect = [i for i in expect]
+        idx    = 1
+        limit  = 3
+        result = [i for i in self.dasfilecache.get_from_cache(query, idx, limit)]
+        result.sort()
+        self.assertEqual(expect[idx:limit], result)
+        self.dasfilecache.delete_cache()
 #
 # main
 #

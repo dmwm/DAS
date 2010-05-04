@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.2 2009/05/19 17:24:12 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_couchcache.py,v 1.3 2009/05/22 21:04:40 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -187,7 +187,7 @@ function(k,v,r) {
         self.cdb = cdb
         return cdb
 
-    def get_from_cache(self, query):
+    def get_from_cache(self, query, idx=0, limit=None):
         """
         Retreieve results from cache, otherwise return null.
         """
@@ -197,16 +197,10 @@ function(k,v,r) {
             return
         key  = genkey(query)
 
-#        skey = '["%s", %s ]' % (key, timestamp())
-#        ekey = '["%s", %s ]' % (key, 9999999999)
         skey = ["%s" % key, timestamp()]
         ekey = ["%s" % key, 9999999999]
         options = {'startkey': skey, 'endkey': ekey}
         results = cdb.loadview('dasviews', 'query', options)
-
-#        options = {'key': '"%s"' % key}
-#        results = cdb.loadview(self.design, 'query', options)
-
         try:
             res = [row['value'] for row in results['rows']]
         except:
@@ -230,13 +224,22 @@ function(k,v,r) {
         dbname = self.dbname
         cdb = self.couchdb(dbname)
         if  not cdb:
+            if  type(results) is types.ListType or \
+                type(results) is types.GeneratorType:
+                for row in results:
+                    yield row
+            else:
+                yield results
             return
-        if  type(results) is types.ListType:
+        if  type(results) is types.ListType or \
+            type(results) is types.GeneratorType:
             for row in results:
                 res = results2couch(query, row, expire)
                 cdb.queue(res)
+                yield row
         else:
             res = results2couch(query, results, expire)
+            yield results
             cdb.queue(res)
         cdb.commit()
 

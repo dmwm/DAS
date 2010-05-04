@@ -37,15 +37,30 @@ class testDASMemcache(unittest.TestCase):
         self.assertEqual(expect, result)
 
     def test_result(self):                          
-        """test DAS cache result method"""
+        """test DAS memcache result method"""
         self.memcache.delete_cache()
         query  = "find site where site=T2_UK"
         expire = 60
-        expect = [1,2,3,4]
-        self.memcache.update_cache(query, expect, expire)
-        result = self.memcache.get_from_cache(query)
+        expect = [0,1,2,3,4,5,6,7,8,9]
+        expect = self.memcache.update_cache(query, expect, expire)
+        expect = [i for i in expect]
+        result = [i for i in self.memcache.get_from_cache(query)]
         result.sort()
         self.assertEqual(expect, result)
+
+    def test_pagintation(self):                          
+        """test DAS memcache result method with pagination"""
+        self.memcache.delete_cache()
+        query  = "find site where site=T2_UK"
+        expire = 60
+        expect = [0,1,2,3,4,5,6,7,8,9]
+        expect = self.memcache.update_cache(query, expect, expire)
+        expect = [i for i in expect]
+        idx    = 1
+        limit  = 3
+        result = [i for i in self.memcache.get_from_cache(query, idx, limit)]
+        result.sort()
+        self.assertEqual(expect[idx:limit], result)
 #
 # main
 #

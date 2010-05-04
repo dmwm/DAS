@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.9 2009/05/19 12:43:11 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_cli.py,v 1.10 2009/05/22 21:04:41 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -54,8 +54,11 @@ class DASOptionParser:
         self.parser.add_option("--no-format", action="store_true", 
                                           dest="plain",
              help="return unformatted output, useful for scripting")
+        self.parser.add_option("--idx", action="store", type="int", 
+                                          default=0, dest="idx",
+             help="start index for returned result set, aka pagination, use w/ limit")
         self.parser.add_option("--limit", action="store", type="int", 
-                                          default=0, dest="limit",
+                                          default=None, dest="limit",
              help="limit number of returned results")
         self.parser.add_option("--no-output", action="store_true", 
                                           dest="nooutput",
@@ -66,6 +69,10 @@ class DASOptionParser:
         """
         return self.parser.parse_args()
 
+def nooutput(results):
+    """Just iterate over generator, but don't print it out"""
+    for i in results:
+        a = 1
 #
 # main
 #
@@ -134,13 +141,15 @@ if __name__ == '__main__':
             stats.sort_stats('time', 'calls')
             stats.print_stats()
         else:
-            results = DAS.result(query)
+            results = DAS.result(query, opts.idx, opts.limit)
             if  not opts.nooutput:
                 if  opts.plain:
                     for item in results:
                         print item
                 else:
-                    dump(results, limit=opts.limit)
+                    dump(results, opts.idx)
+            else:
+                nooutput(results)
     else:
         print
         print "DAS CLI interface, no actions found,"

@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.14 2009/05/18 01:13:16 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: utils.py,v 1.15 2009/05/22 21:04:41 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -43,20 +43,21 @@ def gen2list(results):
     reslist = [name for name, group in groupby(results)]
     return reslist
 
-def dump(reslist, limit=None, selkeys=None):
+def dump(ilist, idx=0):
     """
     Print items in provided generator
     """
+    if  type(ilist) is types.GeneratorType:
+        reslist = [i for i in ilist]
+    elif type(ilist) is not types.ListType:
+        reslist = [ilist]
+    else:
+        reslist = ilist
     if  not reslist:
         print "No results found"
         return
-    if  type(reslist) is not types.ListType:
-        reslist = [reslist]
     try:
-        if  selkeys:
-            keys = [i for i in reslist[0].keys() if selkeys.count(i)]
-        else:
-            keys = reslist[0].keys()
+        keys = reslist[0].keys()
     except:
         traceback.print_exc()
         print "dump results fail, reslist", reslist
@@ -72,10 +73,8 @@ def dump(reslist, limit=None, selkeys=None):
         if  len(key) > keysize:
             keysize = len(key)
 
-    idx  = 0
+#    idx  = 0
     for res in reslist:
-        if  limit and idx >= limit:
-            break
         padding = " "*(keysize-len('id'))
         print "id%s : %s" % (padding, idx)
         for key in keys:
@@ -206,6 +205,11 @@ def results2couch(query, results, expire=600):
         resdict['results'] = results
     return resdict
 
+# TODO: I can use genresults generator implementation only if
+# I'll solve the problem with das_core.py:find_cond_dict since it's used
+# to read results from first data-service and pass found relative keys
+# to other data-service. At this point iteration from genresults will
+# cause empty generator at cartesian_product later on.
 def genresults_gen(system, results, collect_list):
     """
     Generator of results for given system based on provided dict 

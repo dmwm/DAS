@@ -5,9 +5,16 @@
 Abstract cache class.
 """
 
-__revision__ = "$Id: cache.py,v 1.5 2009/05/19 12:43:10 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: cache.py,v 1.6 2009/05/22 21:04:40 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
+
+class NoResults(Exception):
+    """
+    Base class exception for cache modules, should be thrown when
+    no results found in a cache.
+    """
+    pass
 
 class Cache(object):
     """
@@ -19,11 +26,18 @@ class Cache(object):
         self.config  = config
         self.logger  = config['logger']
 
-    def get_from_cache(self, query):
+    def incache(self, query):
+        """
+        Check if we have results in cache for given query
+        """
+        self.logger.info('Cache::incache(%s)' % query)
+        return
+
+    def get_from_cache(self, query, idx=0, limit=None):
         """
         Retreieve results from cache. Must be implemented by child class
         """
-        self.logger.info('Cache::cache(%s)' % query)
+        self.logger.info('Cache::get_from_cache(%s)' % query)
         return
 
     def update_cache(self, query, results, expire):
@@ -40,3 +54,9 @@ class Cache(object):
         self.logger.info('Cache::clean_cache(%s)' % query)
         return
 
+    def delete_cache(self, query, results, expire):
+        """
+        Delete results in cache. Must be implemented by child class.
+        """
+        self.logger.info('Cache::delete_cache(%s)' % query)
+        return

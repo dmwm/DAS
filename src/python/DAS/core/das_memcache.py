@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.7 2009/05/19 17:44:10 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_memcache.py,v 1.8 2009/05/22 21:04:40 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -42,7 +42,7 @@ class DASMemcache(Cache):
 
         self.logger.info("Init memcache %s" % cachelist)
 
-    def get_from_cache(self, query):
+    def get_from_cache(self, query, idx=0, limit=None):
         """
         Retreieve results from cache, otherwise return null.
         """
@@ -50,11 +50,15 @@ class DASMemcache(Cache):
         res = self.memcache.get(key)
         if  res and type(res) is types.IntType:
             self.logger.info("DASMemcache::result(%s) using cache" % query)
-            rowlist = ['%s' % i for i in range(0, res)]
+            if  limit:
+                if  limit > res:
+                    limit = res
+                rowlist = [i for i in range(idx, limit)]
+            else:
+                rowlist = [i for i in range(0, res)]
             rowdict = self.memcache.get_multi(rowlist, key_prefix=key)
-            return rowdict.values()
-        else:
-            return
+            for item in rowdict.values():
+                yield item
 
     def update_cache(self, query, results, expire):
         """
@@ -71,9 +75,9 @@ class DASMemcache(Cache):
         rowdict = {}
         rowid = 0
         for row in results:
-            rowkey = '%s' % rowid
-            rowdict[rowkey] = row
+            rowdict[rowid] = row
             rowid += 1
+            yield row
         self.memcache.set_multi(rowdict, time=self.limit, key_prefix=key)
         self.memcache.set(key, rowid, expire)
 

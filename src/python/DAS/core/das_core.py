@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.13 2009/05/19 12:43:10 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_core.py,v 1.14 2009/05/22 21:04:40 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -22,11 +22,10 @@ import time
 import types
 import traceback
 
-from DAS.core.das_cache import DASCache
 from DAS.core.qlparser import QLParser
 from DAS.core.das_viewmanager import DASViewManager
 
-from DAS.utils.utils import cartesian_product, gen2list
+from DAS.utils.utils import cartesian_product
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 
@@ -70,17 +69,29 @@ class DASCore(object):
         dasconfig['logger'] = self.logger
 
         self.viewmgr = DASViewManager()
-        self.cache   = DASCache(dasconfig)
 
         dasroot = os.environ['DAS_ROOT']
-        klass   = dasconfig['rawcache']
-        name    = klass.lower().replace('das', 'das_')
-        stm     = "from DAS.core.%s import %s\n" % (name, klass)
-        obj     = compile(str(stm), '<string>', 'exec')
-        eval(obj) # load class def
-        klassobj = '%s(dasconfig)' % klass
-        setattr(self, 'rawcache', eval(klassobj))
-        dasconfig['rawcache'] = self.rawcache
+        # load from configuration what whould be used as raw/cold cache
+        if  dasconfig.has_key('rawcache') and dasconfig['rawcache']:
+            klass   = dasconfig['rawcache']
+            name    = klass.lower().replace('das', 'das_')
+            stm     = "from DAS.core.%s import %s\n" % (name, klass)
+            obj     = compile(str(stm), '<string>', 'exec')
+            eval(obj) # load class def
+            klassobj = '%s(dasconfig)' % klass
+            setattr(self, 'rawcache', eval(klassobj))
+            dasconfig['rawcache'] = self.rawcache
+
+        # load from configuration what whould be used as hot cache
+        if  dasconfig.has_key('hotcache') and dasconfig['hotcache']:
+            klass   = dasconfig['hotcache']
+            name    = klass.lower().replace('das', 'das_')
+            stm     = "from DAS.core.%s import %s\n" % (name, klass)
+            obj     = compile(str(stm), '<string>', 'exec')
+            eval(obj) # load class def
+            klassobj = '%s(dasconfig)' % klass
+            setattr(self, 'hotcache', eval(klassobj))
+            self.cache   = self.hotcache
 
         # plug-in architecture: loop over registered data-services in
         # dasconfig; load appropriate module/class; register data
@@ -114,9 +125,9 @@ class DASCore(object):
         # add mapping keys to final list
         for name in dasconfig['systems']: 
             skeys = getattr(self, name).keys()
-            for k, v in self.service_maps.items():
-                if  list(k).count(name):
-                    skeys += [s for s in v if not skeys.count(s)]
+            for key, val in self.service_maps.items():
+                if  list(key).count(name):
+                    skeys += [s for s in val if not skeys.count(s)]
             self.service_keys[getattr(self, name).name] = skeys
         self.qlparser = QLParser(self.service_keys)
         self.timer.record('DASCore.__init__')
@@ -168,14 +179,25 @@ class DASCore(object):
             query = input
         return query
 
-    def result(self, query):
+    def result(self, query, idx=0, limit=None):
         """
         Get results either from cache or from explicit call
         """
-        results = self.cache.get_from_cache(query)
-        if  not results:
-            results = [i for i in self.call(query)]
-            self.cache.update_cache(query, results, expire=600)
+        if  hasattr(self, 'cache'):
+            if  self.cache.incache(query):
+                results = self.cache.get_from_cache(query, idx, limit)
+            else:
+                # TODO: I can put threads here to update_cache in
+                # background and only allow to retrieve results 
+                # from cache
+                #
+                # NOTE: the self.call returns generator, update_cache
+                # consume and iterate over its items. So if I need to
+                # re-use it, the update_cache will yeild them back
+                results = self.call(query) 
+                results = self.cache.update_cache(query, results, expire=600)
+        else:
+            results = self.call(query)
         return results
 
     def json(self, query):
@@ -260,7 +282,7 @@ class DASCore(object):
             if  len(systems) == 1:
                 for entry in rdict[systems[0]]:
                     yield entry
-                continue
+                return
 
             # find pairs who has relationships, e.g. (dbs, phedex),
             # and make cartesian product out of them based on found relation keys
@@ -271,7 +293,8 @@ class DASCore(object):
                 product = cartesian_product(list0, list1)
                 if  idx >= len(systems):
                     break
-                list0 = [i for i in product] # may be I should do: list0 = product
+#                list0 = [i for i in product] # may be I should do: list0 = product
+                list0 = product
                 list1 = rdict[systems[idx]]
                 idx += 1
             for entry in product:
