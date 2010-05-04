@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.54 2010/01/04 15:42:35 valya Exp $"
-__version__ = "$Revision: 1.54 $"
+__revision__ = "$Id: das_mongocache.py,v 1.55 2010/01/05 16:40:22 valya Exp $"
+__version__ = "$Revision: 1.55 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -15,7 +15,7 @@ import types
 import itertools
 
 # DAS modules
-from DAS.utils.utils import getarg, dict_value, merge_dict
+from DAS.utils.utils import getarg, dict_value, merge_dict, genkey
 from DAS.core.cache import Cache
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 import DAS.utils.jsonwrapper as json
@@ -329,6 +329,28 @@ class DASMongocache(Cache):
 #            self.col.remove({'das_id':objid})
         self.col.remove(spec)
 
+    def update_das_record(self, query, status, header=None):
+        """
+        Update DAS record for provided query.
+        """
+        qhash = genkey(query)
+        if  header:
+            record = self.col.find_one({'das.qhash': qhash})
+            if  header['das']['expire'] < record['das']['expire']:
+                expire = header['das']['expire']
+            else:
+                expire = record['das']['expire']
+            self.col.update({'_id':ObjectId(record['_id'])}, 
+                {'$pushAll':{'das.api':header['das']['api'], 
+                             'das.system':header['das']['system'], 
+                             'das.url':header['das']['url'],
+                             'das.ctime':header['das']['ctime'],
+                            }, 
+                 '$set': {'das.expire':expire, 'das.status':status}})
+        else:
+            self.col.update({'das.qhash': qhash},
+                    {'$set': {'das.status': status}})
+
     def incache(self, query):
         """
         Check if we have query results in cache, otherwise return null.
@@ -522,10 +544,14 @@ class DASMongocache(Cache):
         spec = {'spec' : dict(query=encode_mongo_query(query))}
         if  self.incache(spec):
             query_in_cache = True
-
-        # insert das record for this set of results
-        das_record = dict(das=dasheader, query=encode_mongo_query(query))
-        objid = self.col.insert(das_record)
+            qhash  = genkey(query)
+            record = self.col.find_one({'das.qhash':qhash}, fields=['_id'])
+            objid  = record['_id']
+        else:
+            # insert das record for this set of results
+            das_record = dict(das=dasheader, query=encode_mongo_query(query))
+            objid = self.col.insert(das_record)
+            self.col.ensure_index([('das.qhash', DESCENDING)])
 
         # insert DAS records
         lkeys       = header['lookup_keys']
@@ -577,6 +603,10 @@ class DASMongocache(Cache):
         msg = "DASMongocache::update_cache, %s yield %s rows/%s merged" \
                 % (dasheader['system'], counter, merge_count)
         self.logger.info(msg)
+
+        # update das record with new status
+        status = 'updated with results of %s API' % header['das']['api'][0]
+        self.update_das_record(query, status, header)
 
     def remove_from_cache(self, query):
         """
