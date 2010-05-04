@@ -17,13 +17,18 @@ class testDASConfig(unittest.TestCase):
 
     def setUp(self):
         """Initialization of unit test parameters"""
-        daskeys   = ['file', 'site', 'lat', 'lon', 'date']
+        daskeys   = ['file', 'site', 'lat', 'lon', 'date', 'ip']
         self.daslexer = DASLexer(daskeys)
         self.daslexer.build()
 
     def testDASLexer_positive(self):
         """test DAS lexer, positive test"""
         query  = "file=/test* site=T1_CH_CERN"
+        result = self.daslexer.test(query)
+        expect = None
+        self.assertEqual(result, expect)
+
+        query  = "ip=137.138.141.145"
         result = self.daslexer.test(query)
         expect = None
         self.assertEqual(result, expect)
