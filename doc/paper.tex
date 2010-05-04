@@ -296,11 +296,31 @@ notations and mapping to DAS;
 analytics DB for query analysis and identification of pre-fetch 
 strategies.
 
+\subsection{DAS core}
 The DAS core communicates with different data-services and retrieves
 data on demand. This was done by invoking appropriate data-service plugin
-upon the user request. Each plugin was responsible for invoking
-data-service APIs and parsing retrieved data into the DAS data format
-suitable for storage, JSON. Although the majority of data-services looks alike
+upon the user request. Each plugin consists of DAS map,
+data parser(s) suitable for data-service output format(s) into DAS common
+data format (JSON) and was responsible for data-service API calls.
+The data-service DAS map contains information about data-service APIs,
+input and output parameters and their mapping to DAS keys. 
+This information was stored into DAS Mapping DB which we discuss next.
+Below you can see a typical DAS Mapping DB record for CMS
+SiteDB data-service \cite{SiteDB}\footnote{We used regular expression 
+patterns, evaluated during run time, to validate provided set of input 
+paremters and DAS keys.}:
+\begin{verbatim}
+{"api": {"params": {"name": ""}, "name": "CMSNametoSE"}, 
+ "api2das": [{"pattern": "re.compile('^T[0-3]_')", 
+              "api_param": "name", 
+              "das_key": "site"}], 
+ "_id": "4ae1f8dfe2194e4581000014", 
+ "system": "sitedb", 
+ "daskeys": [{"pattern": "re.compile('^T[0-3]_')", 
+              "key": "site", 
+              "map": "site.name"}]}
+\end{verbatim}
+Although the majority of data-services looks alike
 and their logic was abstracted, including parsers, there were a few
 cases where special care was required. For instance,
 we dealt with data-services which were only accessible via private network.
@@ -312,6 +332,7 @@ to specific plugin implementation.
 %output were re-mapped into DAS notations and, if necessary, aggregated 
 %inside of the DAS cache.
 
+\subsection{DAS Mapping DB}
 DAS Mapping DB holded the mapping between data-service APIs and DAS keys exposed to
 the users. It created a necessary glue between data-services and identifies
 how their data can be related to each other. Basically Mapping DB was positioned 
@@ -331,17 +352,18 @@ meaning of the {\it file} keyword from the provided value.}
 Such keys, e.g. {\it file}, were exposed to the end-users as pre-defined keywords to
 be used in search queries. For instance, end-users were able to type {\it file} in
 order to get all file names known to DAS via data-services as well as
-provide a concrete patterns associated with a file, e.g. {\it file=/abc*}.
+provide a concrete patterns associated with a file, e.g. {\it file=abc*}.
 Under the hood, the appropriate data-service APIs were looked up along with appropriate
 parameters to answer those questions. For example,
-in aforementioned example, using {\it file} in DAS query cause invokation of DBS 
+in aforementioned example, using {\it file} in DAS query cause call of DBS 
 {\it listFiles} and PhEDEx {\it fileReplicas} APIs, respectively.
 This approach gave power to end-users to express the meaning of their queries, especially
 when they deal with numbers and achieve accuracy of results from DAS. 
-For instance, users were able to type {\it run > 10 and run < 100}
+For instance, users were able to type $run>10\,\,and\,\, run < 100$
 to specify a range of run numbers to be looked up in DAS cache. At the same time
 a full free text based keyword search is under development within MongoDB.
 
+\subsection{DAS Analytics DB}
 The DAS Analytics DB played a special role. It collected information
 about user requests placed to the system. Each request was recorded. Upon its
 decomposition into set of selection keys and conditions we also recorded
@@ -350,6 +372,7 @@ keep updating their counter information for repeated calls.
 This allows to keep track of frequency of API calls and establish 
 pre-fetch strategies for most common queries.
 
+\subsection{DAS caching system}
 The DAS caching system was used to store data-service results and aggregated
 information in form of DAS records. As it shown in figure \ref{DAS_cache} 
 the DAS cache server updates Analytics DB, requests and retrieve data from DAS cache
@@ -384,49 +407,31 @@ boolean expressions, conditional operators, regular expressions, etc. providing
 a real power for our end-users.
 
 \subsection{Data-services and aggregation}
-DAS provided an interface to add new CMS data-services via data-service plugins.
-Each plugin consists of its DAS map and data parser suitable for data-service output
-format(s).
-The data-service DAS map contains information about data-service APIs,
-input and output parameters, data-service
-format and their mapping to DAS keys as well as relation to other sub-systems. 
-Below you can see a typical DAS Mapping DB record for CMS
-SiteDB data-service \cite{SiteDB}\footnote{We used regular expression 
-patterns, evaluated by python during run time
-execution, to validate provided set of input paremters and DAS keys.}:
-\begin{verbatim}
-{"api": {"params": {"name": ""}, "name": "CMSNametoSE"}, 
- "api2das": [{"pattern": "re.compile('^T[0-3]_')", 
-              "api_param": "name", 
-              "das_key": "site"}], 
- "_id": "4ae1f8dfe2194e4581000014", 
- "system": "sitedb", 
- "daskeys": [{"pattern": "re.compile('^T[0-3]_')", 
-              "key": "site", 
-              "map": "site.name"}]}
-\end{verbatim}
-This information was stored into DAS Mapping DB. 
-
-The DAS Mapping DB becomes an authorative
-source of information about all data-services participating in DAS and their
-relationships. Based information stored there we were able to retrieve appropriate data
-from different data-services, re-map them into DAS notations and
-aggregate them on demand.
-For instance, the Data Bookkeeping System (DBS) and data location system (PhEDEx)
-provided information about CMS data files. In former case, DBS holds information about
-files and their relationship to other physics objects, such as run and luminosity, 
-while PhEDEx stores information about the file location, such as sites which
-holds copy of the files and details about site storage elements.
-Upon a user request to find a file, we were able to identify appropriate set of
-DBS and PhEDEx APIs, look-up data, re-format their output to DAS notations and
-store results into DAS cache.
-Once data were retreived from data-services an additional step to aggregate
-matched objects in DAS cache were applied. For instance, both data-service outputs 
-contained a file name in them. We use it as a common key to merge records in DAS cache.
-This merged (aggregated) results represent DAS records. Each DAS
+As we outlined above the DAS Mapping DB becomes an authorative
+source of information about all data-services participating in DAS.
+Based on information stored in Mapping DB we were able to 
+retrieve appropriate data from different data-services, re-map them into 
+DAS notations and aggregate them on demand. For instance, the Data 
+Bookkeeping System (DBS) and data location system (PhEDEx)
+provided information about CMS data files. In former case, DBS 
+stored information about files and their relationship to other 
+physics objects, such as run and luminosity, while PhEDEx kept
+information about the file location, e.g. details about sites 
+holding copy of the files. Upon a user request to find a file, 
+we were able to identify appropriate set of DBS and PhEDEx APIs, 
+retrieve data from them, re-format their output to DAS notations 
+and store results into DAS cache performing aggregation of matched 
+objects. For instance, since both data-services returns in their
+output a file name we used as a common key during aggregation.
+This merged results represented a set of DAS records. Each DAS
 record contains a standard DAS header, which identify look-up time,
-request url, input parameters and API method as well as response version, expiration
-time and checksum of the output. Here is an example of individual DAS record:
+request url, input parameters and API method as well as response 
+version, expiration time and checksum of the output. Usage of this 
+information was valuable contribution in debugging process of
+data-services themselves, e.g. identification of not-matched records, 
+latency studies, etc. Here is an example of DAS record representing
+aggregation information between two SiteDB APIs, {\it CMStoSAMName} 
+and {\it CMStoSiteName}, with API results merged under the {\it site} key.
 \begin{verbatim}
 {"_id": "4ae1e7ffe2194e4243000003", 
  "site":[{"samname": "CERN-PROD", "name": "T1_CH_CERN"}, 
@@ -445,24 +450,16 @@ time and checksum of the output. Here is an example of individual DAS record:
         ]
 }
 \end{verbatim}
-This DAS record represents aggregated information between two SiteDB APIs, 
-{\it CMStoSAMName} and {\it CMStoSiteName}, where API results were merged 
-under the {\it site} key. The information provided by {\it das} key shows 
-DAS header, which contains information about API name, location, execution 
-time and lifetime of the data.
-Usage of this information was valuable contribution in debugging process of
-data-services themselves, e.g. identification of not-matched records, 
-latency studies, etc.
 
-We used RESTful model \cite{REST} for all DAS cache server APIs.
-It allows us to share core library and other components during development of 
-various DAS clients, e.g. CLI, web interface, robots, etc. and hides
-complexity of access to individual data-services and their security policies
-as well as proper organize caching solution.
-For instance, to access on-line Run Summary information we were forced to use
-Grid certificates. Instead of propagating user certificate to data-service
-the DAS cache server works as a proxy to this server and used host certficiate 
-to serve such requests on behalf of the users.
+%We used RESTful model \cite{REST} for all DAS cache server APIs.
+%It allows us to share core library and other components during development of 
+%various DAS clients, e.g. CLI, web interface, robots, etc. and hides
+%complexity of access to individual data-services and their security policies
+%as well as proper organize caching solution.
+%For instance, to access on-line Run Summary information we were forced to use
+%Grid certificates. Instead of propagating user certificate to data-service
+%the DAS cache server works as a proxy to this server and used host certficiate 
+%to serve such requests on behalf of the users.
 
 \section{Results\label{Results}}
 DAS was deployed to work with the following CMS data-services:
