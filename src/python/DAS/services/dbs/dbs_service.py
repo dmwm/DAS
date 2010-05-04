@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.22 2010/02/16 18:34:51 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: dbs_service.py,v 1.23 2010/02/25 14:53:49 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -23,7 +23,7 @@ class DBSService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def parser(self, dformat, source, api, args=None):
+    def parser(self, dformat, source, api):
         """
         DBS data-service parser.
         """
