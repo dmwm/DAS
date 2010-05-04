@@ -5,16 +5,55 @@
 DAS Query Language parser.
 """
 
-__revision__ = "$Id: das_parser.py,v 1.2 2010/03/09 15:05:43 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_parser.py,v 1.3 2010/03/09 15:22:07 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
+import time
 import types
 import urllib
 from DAS.utils.utils import adjust_value
 from DAS.core.das_ql import das_filters, das_aggregators
 from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
+
+def convert2date(value):
+    """
+    Convert input value to date range format expected by DAS.
+    """
+    msg = "Unsupported syntax for value of last operator"
+    pat = re.compile('^[0-9][0-9](h|m)$')
+    if  not pat.match(value):
+        raise Exception(msg)
+    oper = ' = '
+    if  value.find('h') != -1:
+        hour = int(value.split('h')[0])
+        if  hour > 24:
+            raise Exception('Wrong hour %s' % value)
+        date1 = time.time() - hour*60*60
+        date2 = time.time()
+    elif value.find('m') != -1:
+        minute = int(value.split('m')[0])
+        if  minute > 60:
+            raise Exception('Wrong minutes %s' % value)
+        date1 = time.time() - minute*60
+        date2 = time.time()
+    else:
+        raise Exception('Unsupported value for last operator')
+    value = [long(date1), long(date2)]
+    return value
+
+def das_dateformat(value):
+    """Check if provided value in expected DAS date format."""
+    pat = re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
+    if  pat.match(value): # we accept YYYYMMDD
+        ddd = datetime.date(int(value[0:4]), # YYYY
+                            int(value[4:6]), # MM
+                            int(value[6:8])) # DD
+        return time.mktime(ddd.timetuple())
+    else:
+        msg = 'Unacceptable date format'
+        raise Exception(msg)
 
 def add_spaces(query):
     """Add spaces around DAS operators in input DAS query"""
@@ -161,15 +200,32 @@ def parser(query, daskeys, operators):
             else:
                 value = query[pos:idx]
             value = adjust_value(value.strip())
+            if  das_word:
+                das_word = das_word.strip()
+            if  oper:
+                oper = oper.strip()
             if  type(value) is types.StringType and value[0] == '[' and\
                 value[-1] == ']':
                 value = value.replace('[','').replace(']','')
                 value = [adjust_value(i) for i in value.split(',')]
-            if  oper.strip() == '=':
+            if  oper == '=':
                 mongo_value = value
+            elif oper == 'last':
+                mongo_value = convert2date(value)
+            elif das_word == 'date' and oper != 'last':
+                if  type(value) is types.StringType:
+                    value = [das_dateformat(value), time.time()]
+                elif type(value) is types.ListType:
+                    try:
+                        value1 = das_dateformat(value[0])
+                        value2 = das_dateformat(value[1])
+                        value  = [value1, value2]
+                    except:
+                        msg = "Unable to parse %s" % value
+                        raise Exception(msg)
             else:
-                mongo_value = {MONGO_MAP[oper.strip()]:value}
-            spec[das_word.strip()] = mongo_value
+                mongo_value = {MONGO_MAP[oper]:value}
+            spec[das_word] = mongo_value
         else:
             if  das_word and das_word not in fields:
                 fields.append(das_word.strip())
