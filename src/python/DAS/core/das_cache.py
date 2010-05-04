@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.18 2009/10/02 15:23:55 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: das_cache.py,v 1.19 2009/12/13 02:47:35 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -24,7 +24,6 @@ import logging
 
 # DAS modules
 from DAS.utils.utils import getarg, genkey
-from DAS.utils.logger import DASLogger
 from DAS.core.cache import Cache, NoResults
 from DAS.core.das_memcache import DASMemcache
 from DAS.core.das_couchcache import DASCouchcache
@@ -126,14 +125,12 @@ class DASCacheMgr(object):
         """
         Initialize DAS cache manager.
         """
-        logdir      = getarg(config, 'logdir', '/tmp')
         sleep       = getarg(config, 'sleep', 2)
         verbose     = getarg(config, 'verbose', None)
+        self.logger = config['logger']
         self.queue  = [] # keep track of waiting queries, (query, expire)
         self.qmap   = {} # map of hash:query
         self.sleep  = sleep # in sec. to sleep at each iteration of worker
-        self.logger = DASLogger(idir=logdir, name='DASCacheMgr', 
-                verbose=verbose)
         self.nprocs = 2*cpu_count()
         self.pool   = multiprocessing.Pool(self.nprocs)
         self.logger.info('Number of CPUs: %s' % self.nprocs)
