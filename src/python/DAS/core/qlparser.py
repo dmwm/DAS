@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.41 2010/02/25 17:43:44 valya Exp $"
-__version__ = "$Revision: 1.41 $"
+__revision__ = "$Id: qlparser.py,v 1.42 2010/02/26 15:20:16 valya Exp $"
+__version__ = "$Revision: 1.42 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -93,15 +93,15 @@ def mongo_exp(cond_list, lookup=False):
         if  mongo_dict.has_key(key):
             existing_value = mongo_dict[key]
             if  type(existing_value) is types.DictType:
-                if  existing_value.has_key('$all'):
-                    val = existing_value['$all'] + [val]
-                    mongo_dict[key] = {'$all' : val}
+                if  existing_value.has_key('$in'):
+                    val = existing_value['$in'] + [val]
+                    mongo_dict[key] = {'$in' : val}
                 else:
                     existing_value.update({MONGO_MAP[oper]:val})
                     mongo_dict[key] = existing_value
             else:
                 val = [existing_value, val]
-                mongo_dict[key] = {'$all' : val}
+                mongo_dict[key] = {'$in' : val}
         else:
             if  MONGO_MAP.has_key(oper):
                 if  mongo_dict.has_key(key):
@@ -248,7 +248,7 @@ class MongoParser(object):
         """
         mapreduce = []
         filters   = []
-        pat = re.compile(r"^([a-z]+\.?)+$") # match key.attrib
+        pat = re.compile(r"^([a-z_]+\.?)+$") # match key.attrib
         if  query and type(query) is types.StringType:
             if  query.find("|") != -1:
                 split_results = query.split("|")
