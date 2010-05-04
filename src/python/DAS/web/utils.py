@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.10 2009/12/14 15:41:34 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: utils.py,v 1.11 2009/12/21 16:09:58 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -109,43 +109,54 @@ def json2html(idict, pad="", short=False):
     for key, val in idict.items():
         if  key == '_id' or key == 'das_id':
             if  type(val) is types.ListType:
-                value = "["
+                value = ' ['
                 for item in val:
                     value += """<a href="/das/records/%s">%s</a>, """ \
                         % (item, item)
-                value = value[:-2] + "]"
+                value = value[:-2] + ']'
             else:
                 value = """<a href="/das/records/%s">%s</a>""" % (val, val)
-            sss += pad + """ <code class="key">"%s":</code>%s""" % (key, value)
+            sss += pad + """ <code class="key">"%s": </code>%s""" % (key, value)
         elif  type(val) is types.ListType:
-            sss += pad + """ <code class="key">"%s":</code>""" % key
-            sss += pad + '[' + newline
+            if  len(val) == 1:
+                nline = ''
+            else:
+                nline = newline
+            sss += pad + """ <code class="key">"%s": </code>""" % key
+            sss += '[' + nline
+            ppp  = ''
             if  not short:
                 pad += " "*3
+                ppp  = pad
+            if  not nline:
+                ppp  = ''
             for item in val:
                 if  type(item) is types.DictType:
                     sss += json2html(item, pad, short)
                 else:
                     if type(item) is types.NoneType:
-                        sss += """%s<code class="null">None</code>""" % pad
+                        sss += """%s<code class="null">None</code>""" % ppp
                     elif  type(item) is types.IntType or pat.match(item):
-                        sss += """%s<code class="number">%s</code>""" % (pad, item)
+                        sss += """%s<code class="number">%s</code>""" % (ppp, item)
                     else:
-                        sss += """%s<code class="string">"%s"</code>""" % (pad, item)
+                        sss += """%s<code class="string">"%s"</code>""" % (ppp, item)
                 if  item != val[-1]:
-                    sss += ',' + newline
+                    sss += ',' + nline
             sss += ']'
             pad = orig_pad
         elif type(val) is types.DictType:
-            sss += json2html(val, pad, short)
+            sss += pad + """ <code class="key">"%s"</code>: """ % key
+            pad += ' '*3
+            sss += json2html(val, pad, short)[len(pad):] # don't account for first pad
+            pad  = pad[:-3]
         else:
             sss += pad + """ <code class="key">"%s"</code>""" % key
             if type(val) is types.NoneType:
-                sss += """:<code class="null">None</code>"""
+                sss += """: <code class="null">None</code>"""
             elif  type(val) is types.IntType or pat.match(str(val)):
-                sss += """:<code class="number">%s</code>""" % val
+                sss += """: <code class="number">%s</code>""" % val
             else:
-                sss += """:<code class="string">"%s"</code>""" % val
+                sss += """: <code class="string">"%s"</code>""" % val
         if  key != idict.keys()[-1]:
             sss += ',' + newline
         else:
