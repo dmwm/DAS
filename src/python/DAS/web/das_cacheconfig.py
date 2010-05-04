@@ -6,8 +6,8 @@
 DAS cache server web configuration file
 """
 
-__revision__ = "$Id: das_cacheconfig.py,v 1.9 2009/12/13 02:51:07 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_cacheconfig.py,v 1.10 2009/12/14 17:38:22 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -61,4 +61,4 @@ active.rest.logLevel = 'INFO'
 # verbose defines level of logger
 active.rest.sleep = 1
 active.rest.verbose = 0
-active.rest.capped_size = 104857600 # 100 MB
+active.rest.capped_size = 10737418240 # 10 GB
