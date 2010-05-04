@@ -2,8 +2,8 @@
 """
 LumiDB service
 """
-__revision__ = "$Id: lumidb_service.py,v 1.6 2009/05/13 15:19:32 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: lumidb_service.py,v 1.7 2009/06/05 14:12:37 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -15,59 +15,59 @@ class LumiDBService(DASAbstractService):
         self.map = {
             'findTrgPathByRun' : {
                 'api' : {'api':'findTrgPathByRun'},
-                'keys': ['trigpath', 'run'],
+                'keys': ['trigpath'],
                 'params' : {'run_number':''}
             },
             'findIntegratedLuminosity' : {
                 'api' : {'api':'findIntegratedLuminosity'},
-                'keys': ['intlumi', 'run'],
+                'keys': ['intlumi'],
                 'params' : {'run_number':'', 'tag':'', 'hlt_path':''}
             },
             'findAvgIntegratedLuminosity' : {
                 'api' : {'api':'findAvgIntegratedLuminosity'},
-                'keys': ['avglumi', 'run'],
+                'keys': ['avglumi'],
                 'params' : {'run_number':'', 'tag':'', 'hlt_path':''}
             },
             'findIntRawLumi' : {
                 'api' : {'api':'findIntRawLumi'},
-                'keys': ['intrawlumi', 'run'],
+                'keys': ['intrawlumi'],
                 'params' : {'run_number':''}
             },
             'findL1Counts' : {
                 'api' : {'api':'findL1Counts'},
-                'keys': ['L1counts', 'run'],
+                'keys': ['L1counts'],
                 'params' : {'run_number':'', 'cond_name':''}
             },
             'findHLTCounts' : {
                 'api' : {'api':'findHLTCounts'},
-                'keys': ['HLTcounts', 'run'],
+                'keys': ['HLTcounts'],
                 'params' : {'run_number':'', 'path_name':'', 'count_type':''}
             },
             'findRawLumi' : {
                 'api' : {'api':'findRawLumi'},
-                'keys': ['rawlumi', 'run'],
+                'keys': ['rawlumi'],
                 'params' : {'run_number':'', 'tag':''}
             },
             'listLumiByBunch' : {
                 'api' : {'api':'listLumiByBunch'},
-                'keys': ['lumibybunch', 'run'],
+                'keys': ['lumibybunch'],
                 'params' : {'run_number':'', 'lumi_section_number':'', 
                             'option':''}
             },
             'listLumiSummary' : {
                 'api' : {'api':'listLumiSummary'},
-                'keys': ['lumisummary', 'run'],
+                'keys': ['lumisummary'],
                 'params' : {'run_number':'', 'lumi_section_number':'', 
                             'version':'current'}
             },
 #            'listLumiTrigger' : {
 #                'api' : {'api':'listLumiTrigger'},
-#                'keys': ['lumitrigger', 'run'],
+#                'keys': ['lumitrigger'],
 #                'params' : {'run_number':'', 'lumi_section_number':''}
 #            },
 #            'listLumiDeadTime' : {
 #                'api' : {'api':'listLumiDeadTime'},
-#                'keys': ['lumideadtime', 'run'],
+#                'keys': ['lumideadtime'],
 #                'params' : {'run_number':'', 'lumi_section_number':''}
 #            },
         }
