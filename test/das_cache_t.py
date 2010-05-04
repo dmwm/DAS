@@ -7,10 +7,10 @@ Unit test for DAS cache module
 
 import unittest
 from utils.utils import genkey
-from core.das_memcache import DASMemcache
+from core.das_cache import DASCache
 from core.das_core import DASCore
 
-class testDASMemcache(unittest.TestCase):
+class testDASCache(unittest.TestCase):
     """
     A test class for the DAS cache module
     """
@@ -18,12 +18,12 @@ class testDASMemcache(unittest.TestCase):
         """
         set up DAS core module
         """
-        self.dascache = DASMemcache(debug=1)
+        self.dascache = DASCache(debug=1)
         self.das = DASCore()
 
     def test_key(self):                          
         """test DAS cache key generator"""
-        query  = "find dataset,admin,node where site=T2_UK_SGrid_Bristol"
+        query  = "find site where site=T2_UK"
         result = genkey(query)
         import md5
         hash = md5.new()
@@ -33,7 +33,7 @@ class testDASMemcache(unittest.TestCase):
 
     def test_result(self):                          
         """test DAS cache result method"""
-        query  = "find dataset,admin,node where site=T2_UK_SGrid_Bristol"
+        query  = "find site where site=T2_UK"
         result = self.dascache.result(query)
         result.sort()
         expect = self.das.result(query)
