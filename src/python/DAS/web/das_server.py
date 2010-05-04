@@ -6,8 +6,8 @@ DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.
 """
 
-__revision__ = "$Id: das_server.py,v 1.7 2010/04/01 19:56:04 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_server.py,v 1.8 2010/04/05 20:15:24 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -15,10 +15,11 @@ import os
 import sys
 import yaml
 import logging 
+from pprint import pformat
 from optparse import OptionParser
 
 # CherryPy modules
-from cherrypy import log, tree, engine
+from cherrypy import log, tree, engine, tools
 from cherrypy import config as cpconfig
 
 # DAS modules
@@ -36,58 +37,29 @@ class Root(object):
     def __init__(self, model, config):
         self.model  = model
         self.config = config
-        self.app    = "Root"
+        self.auth   = None
         
     def configure(self):
         """Configure server, CherryPy and the rest."""
-        try:
-            cpconfig.update ({"server.environment": self.config['environment']})
-        except:
-            cpconfig.update ({"server.environment": 'production'})
-        try:
-            cpconfig.update ({"server.thread_pool": self.config['thread_pool']})
-        except:
-            cpconfig.update ({"server.thread_pool": 30})
-        try:
-            cpconfig.update ({"server.socket_queue_size": self.config['socket_queue_size']})
-        except:
-            cpconfig.update ({"server.socket_queue_size": 15})
-        try:
-            cpconfig.update ({"server.socket_port": int(self.config['port'])})
-        except:
-            cpconfig.update ({"server.socket_port": 8080})
-        try:
-            cpconfig.update ({"server.socket_host": self.config['host']})
-        except:
-            cpconfig.update ({"server.socket_host": '0.0.0.0'})
-        try:
-            cpconfig.update ({'tools.expires.secs': 
-                                int(self.config['expires'])})
-        except:
-            cpconfig.update ({'tools.expires.secs': 300})
-        try:
-            cpconfig.update ({'log.screen': 
-                                bool(self.config['log_screen'])})
-        except:
-            cpconfig.update ({'log.screen': True})
-        try:
-            cpconfig.update ({'log.access_file': 
-                                self.config['access_log_file']})
-        except:
-            cpconfig.update ({'log.access_file': None})
-        try:
-            cpconfig.update ({'log.error_file': 
-                                self.config['error_log_file']})
-        except:
-            cpconfig.update ({'log.error_file': None})
-        try:
-            log.error_log.setLevel(self.config['error_log_level'])
-        except:     
-            log.error_log.setLevel(logging.DEBUG)
-        try:
-            log.access_log.setLevel(self.config['access_log_level'])
-        except:
-            log.access_log.setLevel(logging.DEBUG)
+        config = self.config[self.model]
+        cpconfig["server.environment"] = config.get("environment", "production")
+        cpconfig["server.thread_pool"] = int(config.get("thread_pool", 30))
+        cpconfig["server.socket_port"] = int(config.get("port", 8080))
+        cpconfig["server.socket_host"] = config.get("host", "0.0.0.0")
+        cpconfig["server.socket_queue_size"] = \
+                int(config.get("socket_queue_size", 15))
+        cpconfig["tools.expires.secs"] = int(config.get("expires", 300))
+        cpconfig["log.screen"] = bool(config.get("log_screen", True))
+        cpconfig["log.access_file"] = config.get("access_log_file", None)
+        cpconfig["log.error_file"] = config.get("error_log_file", None)
+        #cpconfig.update ({'request.show_tracebacks': False})
+        #cpconfig.update ({'request.error_response': self.handle_error})
+        #cpconfig.update ({'tools.proxy.on': True})
+        #cpconfig.update ({'proxy.tool.base': '%s:%s' 
+#                                % (socket.gethostname(), opts.port)})
+        log.error_log.setLevel(config.get("error_log_level", logging.DEBUG))
+        log.access_log.setLevel(config.get("access_log_level", logging.DEBUG))
+
         cpconfig.update ({
                           'tools.expires.on': True,
                           'tools.response_headers.on':True,
@@ -96,25 +68,36 @@ class Root(object):
                           'tools.encode.on': True,
                           'tools.gzip.on': True
                           })
-        #cpconfig.update ({'request.show_tracebacks': False})
-        #cpconfig.update ({'request.error_response': self.handle_error})
-        #cpconfig.update ({'tools.proxy.on': True})
-        #cpconfig.update ({'proxy.tool.base': '%s:%s' 
-#                                % (socket.gethostname(), opts.port)})
+
+        # Security module
+#        if  self.config.has_key('security'):
+#            from oidservice.oid_consumer import OidConsumer
+#            cpconfig.update({'tools.sessions.on': True,
+#                             'tools.sessions.name': 'oidconsumer_sid'})
+#            secconfig = self.config['security']
+#            tools.oid = OidConsumer(secconfig)
+#            cpconfig.update({'tools.oid.on': True})
+#            cpconfig.update({'tools.oid.role': secconfig.get('role', None)})
+#            cpconfig.update({'tools.oid.group': secconfig.get('group', None)})
+#            cpconfig.update({'tools.oid.site': secconfig.get('site', None)})
+#            tree.mount(tools.oid.defhandler, 
+#                secconfig.get('mount_point', '/das/auth'))
+#            self.auth = tools.oid.defhandler
 
         log("loading config: %s" % cpconfig, 
-                                   context=self.app, 
+                                   context=self.model, 
                                    severity=logging.DEBUG, 
                                    traceback=False)
 
     def start(self, blocking=True):
         """Configure and start the server."""
         self.configure()
-        config = {} # can be something to consider
         if  self.model == 'cache_server':
+            config = self.config.get('cache_server', {})
             obj = DASCacheService(config) # mount cache server
             tree.mount(obj, '/')
         elif self.model == 'web_server':
+            config = self.config.get('web_server', {})
             obj = DASWebService(config)
             tree.mount(obj, '/das') # mount web server
             sdir = os.environ['DAS_ROOT'] + '/doc/build/html'
@@ -128,52 +111,50 @@ class Root(object):
             cpconfig.update(conf)
             obj = DASDocService(sdir)
             tree.mount(obj, '/das/doc') # mount doc server
+            config = self.config.get('admin_server', {})
             obj = DASAdminService(config)
             tree.mount(obj, '/das/admin') # mount admint server
         else:
-            obj = DASWebManager(config)
+            obj = DASWebManager({}) # pass empty config dict
             tree.mount(obj, '/')
         engine.start()
         if  blocking:
             engine.block()
             
-    def stop(self):
-        """Stop the server."""
-        engine.exit()
-        engine.stop()
+#    def stop(self):
+#        """Stop the server."""
+#        engine.exit()
+#        engine.stop()
         
 def main():
     """
     Start-up web server.
     """
-    parser = OptionParser()
+    parser  = OptionParser()
     parser.add_option("-c", "--config", dest="config", default=False,
         help="provide cherrypy configuration file")
     parser.add_option("-s", "--server", dest="server", default=None,
         help="specify DAS server, e.g. web or cache")
     opts, _ = parser.parse_args()
 
-    # Read server configuration
-    conf_file = opts.config
-    config = {}
-    if  conf_file:
-        fdesc  = open(conf_file, 'r')
+    config  = das_readconfig()
+    if  opts.config: # read provided configuration
+        fdesc  = open(opts.config, 'r')
         config = yaml.load(fdesc.read())
         fdesc.close()
 
-    dasconfig = das_readconfig()
     # Choose which DAS server to start
     if  opts.server == 'cache':
         model = "cache_server"
-        config['port'] = dasconfig['cache_server_port']
     elif opts.server == 'web':
         model = "web_server"
-        config['port'] = dasconfig['web_server_port']
     else:
         print "Please specify which DAS server you want to start, see --help"
         sys.exit(1)
 
     # Start DAS server
+    print "\n### Start %s server with DAS configuration:" % model
+    print pformat(config)
     root = Root(model, config)
     root.start()
 
