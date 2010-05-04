@@ -7,6 +7,24 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- 0.4.9
+
+  - update admin interface (added query info)
+  - integrate DAS lexer in to DAS parser
+  - add new class DASLexer, which is based on [PLY]
+  - remove >, <, >=, <= operators from a list of supported ones, since
+    they don't make sense when we map input DAS query into underlying
+    APIs. The API usually only support = and range operators. Those
+    operators are supported by MongoDB back-end, but we need more
+    information how to support them via DAS <-> API callback
+  - work on DAS parser to improve error catching of unsupported
+    keywords and operators
+  - split apart query insertion into DAS cache from record insertion to
+    ensure that every query is inserted. The separation is required since
+    record insertion is a generator which may not run if result set is
+    empty
+  - synchronized expire timestamp in DAS cache/merge/analytics db's
+
 - 0.4.8
 
   - fix pagination
