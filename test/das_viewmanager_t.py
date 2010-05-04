@@ -26,6 +26,7 @@ class testDAS(unittest.TestCase):
         logger   = DASLogger(verbose=debug, stdout=debug)
         config['logger']  = logger
         config['verbose'] = debug
+        config['views_dir'] = os.getcwd()
         config['views_engine'] = 'sqlite:///%s' % self.db
         try: 
             del config['sum_views']

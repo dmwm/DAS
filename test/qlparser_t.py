@@ -67,19 +67,20 @@ class testQLParser(unittest.TestCase):
         Test requestquery function.
         """
         query = 'block site=T1_CH_CERN'
-        expect = {'fields': ['block'], 
-                  'spec': {'site.name': 'T1_CH_CERN'}}
+        expect = {'fields': None, 
+                  'spec': {'site.name': 'T1_CH_CERN', 'block.name':'*'}}
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
         query = 'block site=a.b.c'
-        expect = {'fields': ['block'], 
-                  'spec': {'site.se': 'a.b.c'}}
+        expect = {'fields': None, 
+                  'spec': {'site.se': 'a.b.c', 'block.name':'*'}}
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
         query = 'file,site block=bla'
-        expect = {'fields': ['file', 'site'], 'spec': {'block.name': 'bla'}}
+        expect = {'fields': None, 'spec': {'block.name': 'bla', 
+                        'file.name':'*', 'site.name':'*', 'site.se':'*'}}
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 

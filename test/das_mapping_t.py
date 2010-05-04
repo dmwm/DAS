@@ -114,8 +114,8 @@ class testDASMapping(unittest.TestCase):
         # adding notations
         notations = {'system':system, 
             'notations':[
-                    {'api_param':'storage_element_name', 'das_name':'se'},
-                    {'api_param':'number_of_events', 'das_name':'nevents'},
+                    {'api_param':'storage_element_name', 'das_name':'se', 'api':''},
+                    {'api_param':'number_of_events', 'das_name':'nevents', 'api':''},
                         ]
         }
         self.mgr.add(notations)

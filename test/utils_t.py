@@ -21,29 +21,29 @@ class testUtils(unittest.TestCase):
         """Test merge_dict"""
         dict1  = {'block':{'name':'AAA', 'b':{'c':1}, 'size':2}, 'das':{'system':'dbs'}}
         dict2  = {'block':{'name':'AAA', 'x':{'y':1}, 'z':1, 'size':2}, 'das':{'system':'phedex'}}
-        result = merge_dict(dict1, dict2)
+        merge_dict(dict1, dict2)
         expect = {'block': [{'b': {'c': 1}, 'name': 'AAA', 'size': 2}, 
         {'x': {'y': 1}, 'z': 1, 'name': 'AAA', 'size': 2}], 
         'das': [{'system': 'dbs'}, {'system': 'phedex'}]}
-        self.assertEqual(expect, result)
+        self.assertEqual(expect, dict1)
 
         dict1  = {'test':[1,2]}
         dict2  = {'test':3}
         expect = {'test':[1,2,3]}
-        result = merge_dict(dict1, dict2)
-        self.assertEqual(expect, result)
+        merge_dict(dict1, dict2)
+        self.assertEqual(expect, dict1)
 
         dict1  = {'test':[1,2]}
         dict2  = {'test':[3,4]}
         expect = {'test':[1,2,3,4]}
-        result = merge_dict(dict1, dict2)
-        self.assertEqual(expect, result)
+        merge_dict(dict1, dict2)
+        self.assertEqual(expect, dict1)
 
         dict1  = {'test':1}
         dict2  = {'test':[2,3]}
         expect = {'test':[1,2,3]}
-        result = merge_dict(dict1, dict2)
-        self.assertEqual(expect, result)
+        merge_dict(dict1, dict2)
+        self.assertEqual(expect, dict1)
 
     def test_dict_value(self):
         """Test dict_value"""
@@ -63,9 +63,9 @@ class testUtils(unittest.TestCase):
         
         dict1 = {'a' : [{'b':1, 'c':1}, {'b':2, 'c':2}]}
         dict2 = {'a' : {'b':1, 'e':1}}
-        result = merge_dict(dict1, dict2)
+        merge_dict(dict1, dict2)
         expect = {'a': [{'c': 1, 'b': 1}, {'c': 2, 'b': 2}, {'b': 1, 'e': 1}]}
-        self.assertEqual(expect, result)
+        self.assertEqual(expect, dict1)
         
     def test_adjust_value(self):
         """Test adjust_value"""
