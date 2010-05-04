@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.10 2009/05/11 20:18:20 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_core.py,v 1.11 2009/05/13 15:18:02 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -22,7 +22,7 @@ import time
 import types
 import traceback
 
-from DAS.core.qlparser import dasqlparser, QLParser
+from DAS.core.qlparser import QLParser
 from DAS.core.das_viewmanager import DASViewManager
 
 from DAS.utils.utils import cartesian_product, gen2list
@@ -37,6 +37,20 @@ from DAS.utils.logger import DASLogger
 
 #from DAS.services.runsum.runsum_service import RunSummaryService
 
+class DASTimer(object):
+    """
+    DAS timer class, keeps track of execution time
+    """
+    def __init__(self):
+        self.timer = {'init':[time.time()]}
+    def record(self, tag):
+        """Record time for given tag"""
+        if  self.timer.has_key(tag):
+            time0 = self.timer[tag]
+            self.timer[tag] = time0 + [time.time()]
+        else:
+            self.timer[tag] = [time.time()]
+
 class DASCore(object):
     """
     DAS core class:
@@ -44,6 +58,7 @@ class DASCore(object):
     service_maps = {('service1', 'service2'):'key'}
     """
     def __init__(self, mode=None, debug=None):
+        self.timer = DASTimer()
         dasconfig    = das_readconfig()
         self.mode    = mode # used to distinguish html vs cli 
         dasconfig['mode'] = mode
@@ -114,6 +129,7 @@ class DASCore(object):
                     skeys += [s for s in v if not skeys.count(s)]
             self.service_keys[getattr(self, name).name] = skeys
         self.qlparser = QLParser(self.service_keys)
+        self.timer.record('DASCore.__init__')
 
     def keys(self):
         """
@@ -231,6 +247,7 @@ class DASCore(object):
             self.logger.info('DASCore::call, qdict = %s' % str(qdict))
             rdict = {}
             for service in services:
+                self.timer.record(service)
                 # find if we already run one service whose results
                 # can be used in current one
                 cond_dict = self.find_cond_dict(service, rdict)
@@ -244,6 +261,7 @@ class DASCore(object):
                     res = getattr(getattr(self, service), 'call')\
                                     (qqq, ulist, cond_dict)
                     rdict[service] = res
+                self.timer.record(service)
             # if result dict contains only single result set just return it
             systems = rdict.keys()
             if  len(systems) == 1:

@@ -5,8 +5,8 @@
 Abstract cache class.
 """
 
-__revision__ = "$Id: cache.py,v 1.3 2009/05/01 17:44:26 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: cache.py,v 1.4 2009/05/13 15:18:02 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 #from DAS.utils.logger import DASLogger
@@ -22,6 +22,12 @@ class Cache(object):
         self.verbose = mgr.verbose
         self.logger  = mgr.logger
 #        self.logger  = DASLogger(verbose=mgr.verbose, stdout=mgr.stdout)
+
+    def timer(self):
+        """
+        Mimic DAS core functionality, return timer
+        """
+        return self.dasmgr.timer
 
     def keys(self):
         """
