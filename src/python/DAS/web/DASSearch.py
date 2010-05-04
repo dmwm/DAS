@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.20 2009/09/17 18:51:39 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: DASSearch.py,v 1.21 2009/10/02 15:31:29 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -65,6 +65,7 @@ class DASSearch(TemplatedPage):
         cdict          = self.config.dictionary_()
         self.cachesrv  = getarg(cdict, 'cache_server_url', 'http://localhost:8011')
         self.dasmgr = DASCore()
+        self.dasmapping = self.dasmgr.mapping
         self.pageviews = ['xml', 'list', 'table', 'plain', 'json', 'yuijson'] 
         self.cleantime = 60 # in seconds
         self.lastclean = time.time()
@@ -337,14 +338,17 @@ class DASSearch(TemplatedPage):
         http://developer.yahoo.com/yui/examples/datatable/dt_dynamicdata.html
         """
         rows = self.result(kwargs)
+        print "\n\n#### yuijson", rows
         rowlist = []
         id = 0
         for row in rows:
             das = row['das']
             if  type(das) is types.DictType:
                 das = [das]
+            resdict = {}
             for jdx in range(0, len(das)):
                 item = das[jdx]
+                resdict[id] = id
                 for idx in range(0, len(item['system'])):
                     api    = item['api'][idx]
                     system = item['system'][idx]
@@ -354,13 +358,38 @@ class DASSearch(TemplatedPage):
                         data = data[jdx]
                     if  type(data) is types.ListType:
                         data = data[idx]
-                    pad = ""
-                    jsoncode = {'jsoncode': json2html(data, pad)}
-                    jsonhtml = self.templatepage('das_json', **jsoncode)
-                    jsondict = {'id':id, 'system':system, 'api':api, key:jsonhtml}
-                    if  jsondict not in rowlist:
-                        rowlist.append(jsondict)
-                    id += 1
+                    # I need to extract from DAS object the values for UI keys
+                    print "corresponding data", data
+                    for item in self.dasmapping.presentation(key):
+                        daskey = item['das']
+                        uiname = item['ui']
+                        if  not resdict.has_key(uiname):
+                            resdict[uiname] = ""
+                        print "daskey", daskey, uiname
+                        # look at key attributes, which may be compound as well
+                        # e.g. block.replica.se
+                        if  type(data) is types.DictType:
+                            result = dict(data)
+                        elif type(data) is types.ListType:
+                            result = list(data)
+                        else:
+                            result = data
+                        res = ""
+                        try:
+                            for elem in daskey.split('.')[1:]:
+                                if  result.has_key(elem):
+                                    res  = result[elem]
+                                    resdict[uiname] = res
+                        except:
+                            pass
+                        print "resdict", resdict
+#                    pad = ""
+#                    jsoncode = {'jsoncode': json2html(data, pad)}
+#                    jsonhtml = self.templatepage('das_json', **jsoncode)
+#                    jsondict = {'id':id, 'system':system, 'api':api, key:jsonhtml}
+            if  resdict not in rowlist:
+                rowlist.append(resdict)
+            id += 1
         idx      = getarg(kwargs, 'idx', 0)
         limit    = getarg(kwargs, 'limit', 10)
         total    = len(rowlist) 
@@ -369,6 +398,7 @@ class DASSearch(TemplatedPage):
                    'sort':'true', 'dir':'asc',
                    'pageSize': limit,
                    'records': rowlist}
+        print "\n\njsondict", jsondict
         return jsondict
 
     @expose
@@ -391,7 +421,11 @@ class DASSearch(TemplatedPage):
 
         # find out which selection keys were used
         selkeys = uinput.replace('find ', '').split(' where ')[0].split(',')
-        titles  = ["id", "system", "api"] + selkeys
+        uikeys  = []
+        for key in selkeys:
+            res = self.dasmapping.presentation(key)
+            uikeys += [item['ui'] for item in res]
+        titles = ["id"] + uikeys
         coldefs = ""
         for title in titles:
             coldefs += '{key:"%s",label:"%s",sortable:true,resizeable:true},' \
