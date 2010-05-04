@@ -6,16 +6,17 @@
 DAS admin service class.
 """
 
-__revision__ = "$Id: das_admin.py,v 1.2 2010/04/02 20:01:55 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_admin.py,v 1.3 2010/04/05 20:13:04 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
 import json
+from pprint import pformat
 
 # cherrypy modules
-from cherrypy import expose
+from cherrypy import expose, tools
 
 # monogo db modules
 from pymongo.connection import Connection
@@ -27,12 +28,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.utils import json2html
 
-@expose
 def error(msg):
-    """Return error message"""
-    return msg
-
-def red(msg):
     """Put message in red box"""
     err = '<div class="box_red">%s</div>' % msg
     return err
@@ -45,9 +41,10 @@ class DASAdminService(DASWebManager):
         DASWebManager.__init__(self, config)
         self.base   = '/das'
         das_config  = das_readconfig()
-        self.dbhost = das_config.get('mongocache_dbhost')
-        self.dbport = das_config.get('mongocache_dbport')
-        self.conn = Connection(self.dbhost, self.dbport)
+        self.dbhost = das_config['mongodb'].get('dbhost')
+        self.dbport = das_config['mongodb'].get('dbport')
+        self.conn   = Connection(self.dbhost, self.dbport)
+        self.dasconfig = das_config
 
     @expose
     def index(self, **kwargs):
@@ -67,24 +64,26 @@ class DASAdminService(DASWebManager):
                                     coll[cname].index_information())
             ddict[database] = info_dict
         info = self.templatepage('das_admin', mongo_info = server_info,
-                ddict=ddict, base=self.base, msg=msg)
+                ddict=ddict, base=self.base, msg=msg, 
+                dasconfig=pformat(self.dasconfig))
         return self.page(info)
 
     @expose
-    def records(self, database, collection=None, query={}, idx=0, limit=10, **kwargs):
+    def records(self, database, collection=None, query={}, idx=0, limit=10, 
+                **kwargs):
         """Return records in given collection"""
         if  not collection:
             try:
                 database, collection = database.split('.')
             except:
                 msg = 'ERROR: no db collection is found in your request'
-                return self.index(msg=red(msg))
+                return self.index(msg=error(msg))
         try:
             query = json.loads(query)
         except:
             msg = 'ERROR: fail to validate input query="%s" as JSON document'\
                 % query
-            return self.index(msg=red(msg))
+            return self.index(msg=error(msg))
         idx   = int(idx)
         limit = int(limit)
         recs  = self.conn[database][collection].find(query).\
@@ -107,3 +106,13 @@ class DASAdminService(DASWebManager):
                     limit=limit, results=page, url=url)
         page  = self.templatepage('das_pagination', **idict)
         return self.page(page)
+
+#    @expose
+#    @tools.oid()
+#    def secure(self, *args, **kwargs):
+#        return "TEST secure page"
+
+#    @expose
+#    def auth(self, *args, **kwargs):
+#        return "auth page"
+
