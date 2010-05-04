@@ -4,7 +4,7 @@ tests=`find $DAS_ROOT/test -name "*_t.py"`
 for t in $tests
 do
     cmgrcache=`echo $t | grep das_cache_t`
-    cmgrprocess=`ps auxww | grep das_cacheserver | grep -v grep`
+    cmgrprocess=`ps auxww | grep "das_server.py --server=cache" | grep -v grep`
     memcache=`echo $t | grep memcache`
     memprocess=`ps auxww | grep memcache | grep -v grep`
     couchcache=`echo $t | grep couchcache`
