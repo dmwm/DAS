@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.67 2010/02/25 16:46:17 valya Exp $"
-__version__ = "$Revision: 1.67 $"
+__revision__ = "$Id: das_mongocache.py,v 1.68 2010/03/01 19:23:30 valya Exp $"
+__version__ = "$Revision: 1.68 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -664,13 +664,6 @@ class DASMongocache(object):
                 item['das_id'] = str(objid)
                 item['das_primary_key'] = prim_key
                 yield item
-# NOTE: I put API call queries into Analytics DB
-# they contains expire timestamp, so the service api call
-# use pass_api_call method to check if API call is expired or not.
-#            if  not counter: # we got empty results
-                # we will insert empty record to avoid consequentive
-                # calls to service who doesn't have data
-#                yield dict(das=dasheader)
         else:
             print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
