@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.5 2009/04/07 19:41:17 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_webconfig.py,v 1.6 2009/05/29 18:29:48 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -49,6 +49,7 @@ active.documentation.object = 'WMCore.WebTools.Documentation'
 
 active.section_('das')
 active.das.object = 'DAS.web.DASSearch'
+active.das.cache_server_url = 'http://localhost:8011'
 
 # Controllers are standard way to return minified gzipped css and js
 active.section_('controllers')
