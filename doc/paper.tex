@@ -158,7 +158,7 @@ research experiments and digital libraries where it comes from many different
 sources and is distributed in a variety of digital formats. 
 It is organized and managed by constantly evolving software using 
 both relational and non-relational data sources. Even though we can apply
-an information retrieval approach to non-relation data sources,
+an information retrieval approach to non-relational data sources,
 we can't do so for relational ones, where information is accessed via
 a pre-established set of data-services.
 
@@ -195,162 +195,140 @@ Meta-data\sep data aggregation\sep information discovery\sep HEP.
 \section{Introduction}
 The European Organization for Nuclear Research, known as CERN, plays a leading
 role in fundamental studies of physics. It is also known as a place where
-many innovations in the area of computer science were developed, e.g. World Wide Web.
+many innovations in the area of computer science were developed, e.g. The World Wide Web.
 Today, the Large Hadron Collider (LHC) at CERN is marking a new era of High Energy
 Physics (HEP), promising to deliver a few PB of data each year. 
-At this scale the ``information discovery'' within heterogeneous, distributed 
+At this scale the ``information discovery'' within a heterogeneous, distributed 
 environment becomes a key ingredient of successful data analysis.
 The data and associated meta-data are produced in variety of forms and digital formats.
 They are stored and retrieved from relational and non-relational data-sources, such as 
 RDMS systems, document oriented databases, blogs, twikies, file systems,
-customized applications, etc. Working in such environment requires a lot 
-of expertise and easy way to look-up desired information is always a necessity.
+customized applications, etc. Working in such an environment requires a lot 
+of expertise and demands a straightforward, simple
+way to look-up the desired information.
 A well-known solutions, e.g. data-services, are tighten to a specific data 
 sources and end-users are left with a manual task to bookkeep and 
 relate information from them.
 
-Here we present a work on Data Aggregation System (DAS) which provides
+Here we present our work on Data Aggregation System (DAS) which provides
 ability to search and aggregate information across different 
-data-services. While it was designed for CMS High-Energy Physics 
-experiment at LHC, it can be applied elsewhere. 
+data-services. While designed for CMS High-Energy Physics 
+experiment at LHC, the strategies and technology could be
+used elsewhere. 
 
-The rest of this paper is organized as following. 
+The rest of this paper is organized as follows. 
 In section \ref{RelatedWork} we discuss related work in a domain of 
 keyword search over relational data sources.
 Section \ref{DataModel} describes the CMS experiment and its data model. In section
-\ref{DAS} we present architecture of the DAS system, including discussion of its
+\ref{DAS} we present the architecture of the DAS system, including discussion of its
 various components. Finally, our results are summarized in section \ref{Results}.
-
-%As was pointed out in \cite{Arms} a mixed content and 
-%mixed meta-data and meta-data consistency should be considered as a whole in design 
-%of the system to successful information discovery. 
 
 \section{Related Work\label{RelatedWork}}
 Even though the idea of keyword queries over the relational database
-%querying relation databases via keyword based search
-%algorithms 
 is not knew it is still under discussion in computer science domain.
-A few alternative solutions has been proposed to address this issue
+A few alternative solutions have been proposed to address this issue
 in last several years. In \cite{DBXplorer} the conjunctive keyword queries,
 i.e. retrieval of documents that contain all query keywords, has
 been discussed. It requires that all keywords are matched in a row from a
-single table or joined tables. Authors of \cite{QueryAnswer} are made a step forward
-and evaluated information around matched values. The results were presented as
+single table or joined tables. Authors of \cite{QueryAnswer} make a step forward
+and have evaluated information around matched values. The results were presented as
 customized templates to end-users. 
-These and other related works, see \cite{DBXplorer, QueryAnswer} 
-for more references, are based on some kind of the graph over the underlying 
-database and generated a new database out of pristine one to perform the work.
+These and other related works, (see \cite{DBXplorer, QueryAnswer} 
+for more references), are based on an approach that builds some 
+kind of the graph over the underlying 
+database and generates a new database out of the source database to perform the work.
 The proximity of the results in those techniques are mostly confined to a 
 text-based values stored in a database, since the usage of numerical ones 
 is mostly useless without knowledge of the context of the input value. 
 For example, typing a value 100 in the search input field can lead to 
 plenty of inappropriate matches, e.g. row ids. In order to be
-answered correctly it requires additional keyword, clarifying its meaning, 
+answered correctly it requires an additional keyword to clarify its meaning, 
 which should be matched with particular entity (table.column) in the 
 underlying database. Therefore the logical questions, e.g.
-{\it find me total number of files whose size more then 20 but less then 
+{\it find me the total number of files whose size more then 20 but less then 
 100} are hard to answer precisely using approaches outlined in \cite{DBXplorer, QueryAnswer}, 
 while it can be easily accomplished using SQL. 
 
-To address those limitations a keyword-based query language was introduced in \cite{DBS-QL}.
-It used a set of pre-defined keys mapped to underlying schema and shortest path
-algorithm which employed a foreign key constrains to build SQL queries. As a result
+To address these limitations a keyword-based query language was introduced in \cite{DBS-QL}.
+It used a set of pre-defined keys mapped to an underlying schema and shortest path
+algorithm which employed foreign key constraints to build SQL queries. As a result
 the question
 {\it I'm looking for files who contain data taken on certain date and located at
-particular site} was represented as simple as \cite{DBS-QL}
+particular site} was represented as simply as \cite{DBS-QL}
 \begin{verbatim}
 find file where date 2009-01-02 11:59 CET and site = T2
 \end{verbatim}
 without specifying any relational details.
-This solution represents a common use case in HEP community and provides
-an intuitive mapping between mental model of the end-users and 
-underlying database schema.
+This solution represents a common use case in the HEP community and provides
+an intuitive mapping between the mental model of the end-users and 
+the underlying database schema.
 
 At the same time the data aggregation is commonly addressed in the context of
 federated databases, see for example \cite{FedDB}. The data from different 
 RDMS systems are stored into the federated DB where SQL queries can be used to 
-search desired data. Apart from many internal obstacles, e.g.
-schema, domain and naming conflicts, the external ones are often
-a barrier to work with in distributed, heterogeneous environment where
-different security policies are in place. At the end an usage of SQL and/or
-any other Query Language will be required to search for data.
-%Even though it would be interesting to apply technique 
-%discussed in \cite{DBS-QL} to a federated DB it still requires 
-%an access to the underlying database schema.
+search desired data. Apart from many internal obstacles, such as
+schema, domain and naming conflicts, it is external issues that are often
+a large barrier within a distributed, heterogeneous environment where
+different security policies are in place. At the end the usage of SQL and/or
+any other Query Language is required to search for data.
 
-To avoid those limitations we decided to build a keyword-search based system around
-existing data-services whose nature and access policies are intact.
-%The information retrieval were triggered on demand and stored into the cache.
+To avoid these limitations we resolved to build a keyword-search based system around
+existing data-services whose nature and access policies are in place and well understood.
 The key ingredients were the setup of the mapping and analytics services which provided
-a necessary glue across existing API/notations and user queries. This approach 
+the necessary glue across existing API/notations and user queries. This approach 
 allows us to perform dynamic data aggregation across various data-services, achieve
 precise answers using keyword-based queries
 and organize information retrieval on demand.
-%to store meta-data information 
-%We wanted to expand this approach further and apply it 
-%to handle cross data-service queries from broad variety 
-%of relational and non-relational data-sources within 
-%our distributed heterogeneous environment.
 
 \section{CMS data model\label{DataModel}}
-The CMS, Compact Muon Solenoid, \cite{CMS} 
-is one of the two particle physics detectors built on 
-the proton-proton Large Hadron Collider (LHC) at CERN in Switzerland and France. 
-It is designed to explore the frontier of the HEP and provide physicists
-the ability to look at the conditions presented at the early stage of our Universe.
+The Compact Muon Solenoid, (CMS) \cite{CMS} 
+is one of the two general purpose particle physics detectors built on 
+the Large Hadron Collider (LHC) at CERN in Switzerland and France. 
+The experiment is designed to explore the frontiers of physics and provide physicists
+with the ability to look at the conditions presented in the early stage of our Universe.
 More then 3000 physicists from 183 institutions representing 38 countries 
 are involved in the design, construction and maintenance of the experiment.
 
 The CMS distributed computing and data model \cite{CMSDataModel} 
-is designed to process
-and efficiently manage a few PBs of data expected each year
-in CMS operation at LHC. The computing resources provided by members of CMS
+is designed to process and efficiently manage the few PBs of data expected each year
+during normal operation of the LHC. The computing resources available to the CMS
 collaboration are geographically distributed, 
 interconnected via high throughput networks and operated by means 
-of the Grid software. The model allows to cover broad variety of
-hardware, mass and storage elements and configuration of the
-clusters. To accommodate efficient data processing CMS uses
-a multi-Tier distributed model, where specific tasks of data taking,
-e.g. processing, archival and distribution, are assigned to each tier based
-on CMS data model. For example, the Tier-0 center at CERN is responsible
+of various Grid software infrastructure. The model is designed to
+incorporate a broad variety of both mass data storage and data processing
+resources into a single coherent system. CMS uses
+multi-Tiered model, where specific tasks related to data taking such as
+processing, archival and distribution, are assigned to each tier based
+on the CMS data model. For example, the Tier-0 center at CERN is responsible
 for archiving the data coming out from the detector, prompt first pass reconstruction
 and data distribution to Tier-1 centers, located around the world.
-%The 7 Tier-1 centers
-%located in France, Germany, Italy, Spain, Taiwan, United Kingdom and United States
-%keep a portion (copy) of the data delivered by Tier-0 for further processing.
-They provide storage and CPU power for high priority analysis jobs.
-The Tier-2 centers
-%, located at more then 50 sites around the world,
-are dedicated for user analysis tasks and production of simulated data.
+The Tier-1 centers provide archival storage and CPU power for high
+priority selection and re-reconstructions jobs and distribution points
+to the Tier 2 resources.
+The Tier-2 centers are dedicated for user analysis tasks and production of simulated data.
 
-A broad variety of data-services have being designed and developed to
+A broad variety of data-services have been designed and developed to
 maintain detector and production operations, including detector
-conditions databases, data location and bookkeeping services,
-data transfer and job monitoring tasks. Even though majority of them
-are located at CERN, it was never been a requirement in CMS computing
-and data model. 
-%For instance, the production teams operated at Tier-1,2
-%centers set up local services for data bookkeeping and operational
-%tasks. Based on their resources the choice of database back-end was
-%up to the site managers. Therefore the CMS software were designed to support different
-%DB back-ends and provide tools for migrating data across them.
+conditions databases, data bookkeeping services,
+data transfer and job monitoring tasks. While the majority of these
+services are located at CERN, they need to be accessed remotely, and
+combined with other distributed services.
 
-Once such conglomerate of data-services starts operating the obvious
-question arises: how to find out desired information across multiple data-services
-in our distributed environment? Even though individual data-services were designed
+Once such a conglomerate of data-services start operating the obvious
+question arises: how do we find the desired information across multiple data-services
+in our distributed environment? Even though the individual data-services were designed
 to answer specific questions about the data they serve, the ability to search and relate
-information among them was always a tedious human task. The growing amount of information
-and desire to make cross-service queries force us to design and develop new
+information among them was remains a tedious human task. The growing amount of information
+and desire to make cross-service queries led us to design and develop the new
 Data Aggregation System.
 
 \section{Data Aggregation System\label{DAS}}
-The goal of the Data Aggregation System was to fetch and aggregate meta-data 
+The goal of the Data Aggregation System (DAS) was to fetch and aggregate meta-data 
 on demand from existing CMS data-services under one umbrella by using their APIs, 
-security policies, etc.
-In contrast, the approaches
-discussed in \cite{DBXplorer, QueryAnswer, FedDB} are
-enforced a publication step of data into a dedicated database 
-or central repositories \cite{iRODS}. Therefore, quite often it was required
+security policies, etc. In contrast, the approaches
+discussed in \cite{DBXplorer, QueryAnswer, FedDB}
+enforce a publication step of data into a dedicated database 
+or central repository \cite{iRODS}. Therefore, quite often it was required
 that data should be converted into common data structure/format in order to enable
 aggregation, see \cite{OpenArchive}. In DAS the data are provided
 by existing data-services and infrastructure, whose implementation,
@@ -364,31 +342,20 @@ Below we discuss in details the DAS architecture.
 The design of the DAS system was based on previous studies of CMS Data 
 Bookkeeping System (DBS) \cite{DBS, DBS07}. The DBS Data Discovery service
 \cite{DD} was based on DBS Query Language (DBS-QL) \cite{DBS-QL}. It provided
-a syntax similar to SQL, without specific knowledge of underlying DB schema.
-%We carefully analyzed user
-%requests and queries placed into the DBS, their patterns, frequencies and latency. 
-%As a result we created a data discovery service \cite{DD}. Originally it used MVC
-%architecture and later, being re-factored as pure presentation layer on top of 
-%the DBS Query Language (DBS-QL) \cite{DBS-QL} with support of dynamic queries against
-%DBS back-ends. The DBS-QL \cite{DBS-QL} syntax was based on SQL query language, where 
-%we took away relations and details on underlying schema from end-users. 
-%This was achieved by using Dijkstra's shortest path algorithm 
-%to establish necessary table joins based on provided information in user queries and
-%knowledge of foreign key relationships from auto-loaded database schema.
-%The DBS-QL keys exposed to end-users were chosen based on a jargon used by
-%physicists. They're internally mapped into database entities and attributes, 
-%e.g. the {\it run} DBS-QL key refers to run number attribute of run summary table.
-A quick adoption and wide usage of DBS-QL in CMS gave us confidence in chosen approach 
-and provide a basis for building DAS system.
+a syntax similar to SQL, without specific knowledge of the underlying DB schema.
+Quick adoption and wide usage of DBS-QL in CMS gave us confidence in the chosen approach 
+and provided a basis for building the DAS system.
 
-As was pointed out in \cite{Arms} a mixed content and 
-mixed meta-data and meta-data consistency should be considered as a whole in design 
-of the system to successful information discovery. 
-Starting from this ground we are designed DAS system as an
+As was pointed out in \cite{Arms} the mixed content and 
+mixed meta-data and meta-data consistency 
+of the underlying services needs to be carefully
+considered in the design of the system if it is to be a successful information 
+discovery service.
+Starting from this ground we are designed the DAS system as an
 additional layer on top of the existing data-services
 within CMS computing infrastructure by imposing the following set of requirements:
 \begin{itemize}
-\item support a keyword based search queries with ability to use condition operators;
+\item support a keyword based search queries with ability to use conditional operators;
 %\item pluggable interface to existing and up-coming data-service APIs;
 \item use existing heterogeneous software environment and distributed nature of the data-services;
 \item preserve access rules and security policies of individual data-services;
@@ -403,7 +370,7 @@ multiple data-services;
 \centering
 \includegraphics[width=100mm]{DAS_Cache_and_Analytics.pdf}
 \caption{
-The DAS architecture diagram. It conists of cacher server,
+The DAS architecture diagram. It conists of cache server,
 analytics and mapping databases. The data in a cache can be shared
 across multiple queries. The information retrieval is triggered
 on demand basis by invoking appropriate data-service APIs. The
@@ -414,10 +381,10 @@ the most populary query requests.
 \end{figure}
 
 \noindent
-The choice of existing RDMS as DAS back-end(s) was ruled out for several reasons. 
+The choice of existing RDMS as DAS back-end(s) were ruled out for several reasons. 
 For instance, we didn't require any transactions and data persistency in DAS;
 a dynamically typing of stored meta-data objects was one of the requirements, etc.
-Those arguments forces us to look for alternative IT solutions.
+Those arguments forced us to look for alternative IT solutions.
 Through the careful analysis of available options, such as a file-based and in memory caches, 
 key-value databases, documented-oriented databases we made our choice in favor 
 of the last technology. Among them we evaluated CouchDB \cite{CouchDB} and 
@@ -425,8 +392,8 @@ MongoDB \cite{MongoDB}. Both systems are ``schemaless'' databases providing
 arbitrary document structure storage, replication and fail-over features. 
 We made our decision in favor of MongoDB, due to its support of dynamic queries, 
 full indexes, including inner objects and embedded arrays,
-and auto-sharding. Our preliminary benchmarks shown that it can sustain
-the desired load and size of our meta-data information. We used 
+and auto-sharding. Our preliminary benchmarks have shown that it can sustain
+the desired load and size capable of handling our meta-data information. We used 
 document-oriented database, MongoDB, as a back-end for three 
 main DAS components: Mapping, Analytics and DAS cache databases, 
 which will be discussed next. 
@@ -440,14 +407,13 @@ notations and mapping to DAS keys;
 Analytics DB for query analysis.
 
 \subsection{DAS core\label{DAS_core}}
-The DAS core library was responsible for data retrieval on demand. 
-It had the following components: input query validator and parser,
+The DAS core library is responsible for data retrieval on demand. 
+It has the following components: input query validator and parser,
 query analyzer, workflow builder, execution engine and data-service 
 plug-ins. The communication between client (web server or CLI) and 
 DAS cache server was done via the REST \cite{REST} interface. 
-%For each GET request we performed the following action.
-Each input query was recorded into Analytics DB for further 
-analysis. It was decomposed into the set of conditions and/or selection keys.
+Each input query was recorded into the Analytics DB for further 
+analysis, and was decomposed into a set of conditions and/or selection keys.
 First the results were looked up in a cache and delivered to the requestor
 if superset of input conditions was found in analytics DB.\footnote{It is important
 to note here that we didn't look-up results in a cache and rather
@@ -457,8 +423,8 @@ Otherwise, the appropriate workflow, a set of API calls, was constructed
 for the execution engine. It invoked the API calls via data-service
 plug-ins and stored results into the cache. At this step we also
 performed necessary data aggregation for records with similar key-value
-pairs. The data-service plug-in implementation were similar and their 
-logic was abstracted, while a few extentions were required, e.g. specific 
+pairs. The data-service plug-in implementations are similar and their 
+logic is largely abstracted, apart from a few extentions such as specific
 security modules for data-services accessible via private network.
 Finally, the results were retrieved from the cache and delivered to the user. 
 
