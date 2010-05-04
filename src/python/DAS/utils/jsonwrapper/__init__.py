@@ -7,8 +7,8 @@ So far we use simplejson (json) and cjson, other modules can be
 added in addition.
 """
 
-__revision__ = "$Id: __init__.py,v 1.2 2009/12/07 18:41:49 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: __init__.py,v 1.3 2010/01/04 19:01:21 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 __all__ = ['loads', 'dumps']
 
@@ -31,6 +31,15 @@ def loads(idict, **kwargs):
         return json.loads(idict, **kwargs)
     elif _module == 'cjson':
         return cjson.decode(idict)
+
+def load(source):
+    """
+    Use json.load for back-ward compatibility, since cjson doesn't
+    provide this method. The load method works on file-descriptor
+    objects.
+    """
+    return json.load(source)
+
 def dumps(idict, **kwargs):
     """
     Based on default _module invoke appropriate JSON encoding API call
