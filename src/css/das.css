@@ -81,8 +81,8 @@ a:active {
 .results
 {
     margin: 0;
-    padding-left: 1em;
-    padding-right: 1em;
+/*    padding-left: 1em;*/
+/*    padding-right: 1em;*/
 } 
 div#banner
 {
@@ -99,6 +99,12 @@ div#banner h3
 /*
  * Colorized output
  */
+.blue {
+    background-color: #EEF2FF;
+}
+.white {
+    background-color: #FFF;
+}
 .box {
     color: #0000FF;
 }
@@ -196,5 +202,21 @@ label {display:block;}
     border-bottom: 1px dotted #B3B3B3;
     font-weight: normal;
     width:80%;
+}
+
+/* Rules for representing JSON objects */
+code, tt, pre { font-family: "DejaVu Sans Mono",Monaco,monospace; }
+code.key { color: #333; font-weight: bold; }
+code.string { color: #393; }
+code.number, code.boolean { color: #339; }
+code.null { color: #666; }
+/*table.listing { border-collapse: separate; border-spacing: 0; border: 0; clear: both; width: 100%}*/
+table.listing { border-spacing: 0; border: 0; clear: both; width: 100%}
+table.listing caption { display: none; }
+table.listing th, table.listing td { padding: .2em .5em; }
+/*table.listing tbody tr th, table.listing tbody tr td { background: #feffea; }*/
+table.listing tbody tr.odd th, table.listing tbody tr.odd td,
+table.listing tbody.odd tr th, table.listing tbody.odd tr td {
+  background: #fff;
 }
 
