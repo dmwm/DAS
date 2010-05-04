@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.61 2010/01/15 17:10:32 valya Exp $"
-__version__ = "$Revision: 1.61 $"
+__revision__ = "$Id: abstract_service.py,v 1.62 2010/01/17 22:46:22 valya Exp $"
+__version__ = "$Revision: 1.62 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -202,7 +202,7 @@ class DASAbstractService(object):
         doc  = dict(sytsem=self.name, url=url, api=api, api_params=api_params,
                         expire=time.time()+self.expire)
         self.analytics.col.insert(dict(apicall=doc))
-        index_list = [(key, DESCENDING) for key in (url, api)]
+        index_list = [('apicall.url', DESCENDING), ('apicall.api', DESCENDING)]
         self.analytics.col.ensure_index(index_list)
 
     def pass_apicall(self, url, api, api_params):
