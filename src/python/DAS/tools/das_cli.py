@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.10 2009/05/22 21:04:41 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_cli.py,v 1.11 2009/05/29 17:13:25 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -30,9 +30,9 @@ class DASOptionParser:
         self.parser.add_option("--profile", action="store_true", 
                                           dest="profile",
              help="profile output")
-        self.parser.add_option("--input", action="store", type="string", 
-                                          default=False, dest="input",
-             help="specify input for your request.")
+        self.parser.add_option("--query", action="store", type="string", 
+                                          default=False, dest="query",
+             help="specify query for your request.")
         self.parser.add_option("--services", action="store_true", 
                                           dest="services",
              help="return a list of supported data services")
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     (opts, args) = optManager.getOpt()
 
     t0 = time.time()
-    query = opts.input
+    query = opts.query
     if  opts.verbose:
         debug = opts.verbose
     else:

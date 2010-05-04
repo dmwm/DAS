@@ -4,8 +4,8 @@
 """
 DAS cache client tools 
 """
-__revision__ = "$Id: das_cache_client.py,v 1.4 2009/05/28 19:23:42 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_cache_client.py,v 1.5 2009/05/29 17:13:25 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import httplib
@@ -56,9 +56,12 @@ class DASOptionParser:
         self.parser.add_option("-v", "--verbose", action="store", 
                                type="int", default=0, dest="verbose",
              help="verbose output")
+        self.parser.add_option("--query", action="store", type="string", 
+                               default=False, dest="query",
+             help="specify query for your request")
         self.parser.add_option("--input", action="store", type="string", 
                                default=False, dest="input",
-             help="specify input for your request.")
+             help="specify input for your request; the input should be in a form of dict")
         self.parser.add_option("--host", action="store", type="string", 
                                default='http://localhost:8011', dest="host",
              help="specify host name, e.g. http://hostname:port")
@@ -90,9 +93,15 @@ if __name__ == '__main__':
     (opts, args) = optManager.getOpt()
 
     host    = opts.host
-    request = opts.request
     debug   = opts.verbose
-    params  = {'query':opts.input, 'idx':opts.idx, 'limit':opts.limit}
+    request = opts.request
+    if  opts.input:
+        params = eval(opts.input)
+    elif opts.query:
+        params = {'query':opts.query, 'idx':opts.idx, 'limit':opts.limit}
+    else:
+        msg = 'You need to provide either input dict or query.'
+        raise Exception(msg)
     path    = '/rest/%s/%s' % (opts.format.lower(), opts.request.upper())
 
     if  opts.lib == 'urllib2':
