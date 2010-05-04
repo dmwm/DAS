@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.23 2009/06/25 18:05:28 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: abstract_service.py,v 1.24 2009/06/26 19:07:52 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -68,7 +68,7 @@ class DASAbstractService(object):
         self._keys = srv_keys
         return srv_keys
 
-    def getdata(self, url, params):
+    def getdata(self, url, params, iface=None):
         """
         Invoke URL call and retrieve data from data-service.
         User provides a set of parameters passed to data-service URL.
@@ -82,7 +82,18 @@ class DASAbstractService(object):
 #        if  hasattr(self, 'localcache') and self.localcache.incache(cquery):
 #            return self.localcache.get_from_cache(cquery)
 
-        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
+        # if necessary the data-service implementation will adjust parameters,
+        # for instance, DQ parser Tracker_Global=GOOD&Tracker_Local1=1
+        # into the following form
+        # [{"Oper": "=", "Name": "Tracker_Global",  "Value": "GOOD"},...]
+        self.adjust_params(params)
+
+        # based on provided interface correctly deal with input parameters
+        if  iface == 'json':
+            encoded_data = json.dumps(params)
+        else:
+            encoded_data = urllib.urlencode(params, doseq=True)
+        data = urllib2.urlopen(url, encoded_data)
         results = data.read()
         # to prevent unicode/ascii errors like
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
@@ -177,6 +188,13 @@ class DASAbstractService(object):
             results = self.localcache.update_cache(cquery, results, self.expire)
 
         return results
+
+    def adjust_params(self, args):
+        """
+        Data-service specific parser to adjust parameters according to
+        specifications.
+        """
+        pass
 
     def adjust(self, apidict):
         """
@@ -275,6 +293,10 @@ class DASAbstractService(object):
                     args[key] = val
             return args
 
+        if  self.name == 'dq':
+            iface = 'json'
+        else:
+            iface = None
         # check if all requested keys are covered by one API
         for api, aparams in self.map.items():
             if  set(selkeys) & set(aparams['keys']) == set(selkeys):
@@ -295,7 +317,7 @@ class DASAbstractService(object):
                     url = self.url # JAVA, e.g. http://host/Servlet
                 else: # if we have http://host/apiname?...
                     url = self.url + '/' + apiname
-                res = self.getdata(url, args)
+                res = self.getdata(url, args, iface)
                 if  type(res) is types.GeneratorType:
                     res = [i for i in res][0]
                 res = self.parser(res)
