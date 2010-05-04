@@ -2,42 +2,20 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-DAS doc server.
+DAS doc server class.
 """
 
-__revision__ = "$Id: das_doc_server.py,v 1.2 2010/01/27 01:16:13 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_doc.py,v 1.1 2010/02/15 18:30:47 valya Exp $"
+__version__ = "$Revision: 1.1 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
 import sys
 import types
-import cherrypy
 
-from cherrypy import expose, tools
+from cherrypy import expose
 from cherrypy.lib.static import serve_file, staticdir
-from optparse import OptionParser
-
-class DocOptionParser: 
-    """
-    Doc server option parser
-    """
-    def __init__(self):
-        dir = os.environ['DAS_ROOT'] + '/doc/build/html'
-        self.parser = OptionParser()
-        self.parser.add_option("-p", "--port", action="store", type="string", 
-                                          default=8213, dest="port",
-             help="specify port number.")
-        self.parser.add_option("-d", "--dir", action="store", type="string", 
-                                          default=dir, dest="dir",
-             help="specify port number.")
-
-    def getOpt(self):
-        """
-        Returns list of options
-        """
-        return self.parser.parse_args()
 
 class DocServer(object):
     """
@@ -94,25 +72,3 @@ class DocServer(object):
         if  not os.path.isfile(filename):
             return self.error('No such file %s' % input) 
         return serve_file(filename)
-        
-if __name__ == '__main__':
-    optManager  = DocOptionParser()
-    (opts, args) = optManager.getOpt()
-
-    cherrypy.config.update({'environment':'production', 
-        'log.screen':True, 
-        'server.socket_host':'0.0.0.0',
-        'server.socket_port': opts.port})
-
-    dir = opts.dir
-    mimes = ['text/css', 'application/javascript', 'text/javascript']
-    static_dict = { 'tools.gzip.on':True,
-                    'tools.gzip.mime_types':mimes,
-                    'tools.staticdir.on':True,
-                    'tools.staticdir.dir':dir,
-    }
-    conf = {'/': {'tools.staticdir.root':dir},
-            '_static' : static_dict,
-    }
-    cherrypy.quickstart(DocServer(dir), '/das/doc', config=conf)
-

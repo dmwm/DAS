@@ -2,11 +2,11 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-DAS cache RESTfull model, based on WMCore/WebTools
+DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.31 2010/02/13 02:19:12 valya Exp $"
-__version__ = "$Revision: 1.31 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.32 2010/02/15 18:30:47 valya Exp $"
+__version__ = "$Revision: 1.32 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -19,22 +19,28 @@ import cherrypy
 import traceback
 import DAS.utils.jsonwrapper as json
 
-# WMCore/WebTools modules
-from WMCore.WebTools.RESTModel import RESTModel
-#from WMCore.WebTools.Page import exposedasjson
-from WMCore.WebTools.Page import exposejson
+from cherrypy import expose
 
 # DAS modules
 from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCacheMgr
 from DAS.utils.utils import getarg, genkey
 
+try:
+    # WMCore/WebTools modules
+    from WMCore.WebTools.RESTModel import RESTModel
+    from WMCore.WebTools.Page import exposejson
+except:
+    # stand-alone version
+    from DAS.web.tools import exposejson
+
+from DAS.web.das_webmanager import DASWebManager
+
 # monogo db modules
 from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
 from pymongo import DESCENDING, ASCENDING
 
-import sys
 if  sys.version_info < (2, 5):
     raise Exception("DAS requires python 2.5 or greater")
 
@@ -54,7 +60,10 @@ def checkargs(func):
                 msg += 'Headers: %s\n' % headers
                 msg += 'Parameters: args=%s, kwds=%s\n' % (args, kwds)
                 return {'status':'fail', 'reason': msg}
-            jsondict = json.loads(body, encoding='latin-1')
+            if  body:
+                jsondict = json.loads(body, encoding='latin-1')
+            else:
+                jsondict = kwds
             for key, val in jsondict.items():
                 kwds[str(key)] = str(val)
 
@@ -109,25 +118,21 @@ def worker(query, expire):
     Worker function which invoke DAS core to update cache for input query
     """
     dascore = DASCore()
-#    status  = dascore.update_cache(query, expire)
     status  = dascore.call(query)
     return status
 
-class DASCacheModel(RESTModel):
+class DASCacheModel(DASWebManager):
     """
-    DASCacheModel class DAS cache interface. It is based on RESTfull model.
-    It supports POST/GET/DELETE/UPDATE method who operates with
+    DASCacheModel represents DAS cache RESTful interface.
+    It supports POST/GET/DELETE/UPDATE methods who communicate with
     DAS caching systems. The input queries are placed into DAS cache
-    queue and served via FIFO. DAS cache retrieves results from 
-    appropriate data-service and places them into DAS cache back-end.
-    All requests are placed into separate thread.
+    queue and served via FIFO mechanism. 
     """
     def __init__(self, config):
-        # keep this line, it defines self.config which is used in WMCore
-        self.config   = config 
-
-        RESTModel.__init__(self, config)
+        self.config  = config 
+        DASWebManager.__init__(self, config)
         self.version = __version__
+        self.methods = {}
         self.methods['GET']= {
             'request':
                 {'args':['idx', 'limit', 'query', 'skey', 'order'],
@@ -152,8 +157,18 @@ class DASCacheModel(RESTModel):
                 {'args':['query'],
                  'call': self.delete, 'version':__version__}}
 
-        # define config for DASCacheMgr
-        cdict         = self.config.dictionary_()
+        try:
+            # WMCore/WebTools
+            rest  = RESTModel(config)
+            rest.methods = self.methods # set RESTModel methods
+            self.model = self # re-reference model to my class
+            self.model.handler = rest.handler # reference handler to RESTModel
+            cdict = self.config.dictionary_()
+            self.base = '/rest'
+        except:
+            cdict = {}
+            self.base = ''
+
         self.dascore  = DASCore()
         dbhost        = self.dascore.dasconfig['mongocache_dbhost']
         dbport        = self.dascore.dasconfig['mongocache_dbport']
@@ -244,7 +259,6 @@ class DASCacheModel(RESTModel):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-#        self.debug(str(data))
         return data
 
     @checkargs
@@ -258,12 +272,12 @@ class DASCacheModel(RESTModel):
             query = kwargs['query']
             self.logdb(query)
             query = self.dascore.mongoparser.requestquery(query)
+            data.update({'status':'success'})
             res = self.dascore.in_raw_cache_nresults(query)
             data.update({'status':'success', 'nresults':res})
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-#        self.debug(str(data))
         return data
 
     @checkargs
@@ -303,7 +317,6 @@ class DASCacheModel(RESTModel):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-#        self.debug(str(data))
         return data
 
     @checkargs
@@ -329,7 +342,6 @@ class DASCacheModel(RESTModel):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-#        self.debug(str(data))
         return data
 
     @checkargs
@@ -350,7 +362,6 @@ class DASCacheModel(RESTModel):
             except:
                 msg  = traceback.format_exc()
                 data.update({'status':'fail', 'query':query, 'exception':msg})
-#                self.debug(str(data))
                 return data
             expire = getarg(kwargs, 'expire', 600)
             try:
@@ -362,7 +373,6 @@ class DASCacheModel(RESTModel):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-#        self.debug(str(data))
         return data
 
     @checkargs
@@ -386,6 +396,28 @@ class DASCacheModel(RESTModel):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
-#        self.debug(str(data))
         return data
 
+    @exposejson
+    def rest(self, *args, **kwargs):
+        """
+        RESTful interface. We use args tuple as access method(s), e.g.
+        args = ('method',) and kwargs to represent input parameters.
+        """
+        request = cherrypy.request.method
+        if  request not in self.methods.keys():
+            msg = "Usupported request '%s'" % requset
+            return {'error': msg}
+        method  = args[0]
+        if  method not in self.methods[request].keys():
+            msg  = "Unsupported method '%s'" % method
+            return {'error': msg}
+        if  request == 'POST':
+            if  cherrypy.request.body:
+                body = cherrypy.request.body.read()
+                try:
+                    kwargs = json.loads(body)
+                except:
+                    msg = "Unable to load body request"
+                    return {'error': msg}
+        return getattr(self, method)(kwargs)
