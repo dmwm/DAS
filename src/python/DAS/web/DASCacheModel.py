@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.32 2010/02/15 18:30:47 valya Exp $"
-__version__ = "$Revision: 1.32 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.33 2010/02/16 18:35:44 valya Exp $"
+__version__ = "$Revision: 1.33 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -298,22 +298,22 @@ class DASCacheModel(DASWebManager):
             data.update({'status':'requested', 'idx':idx, 
                      'limit':limit, 'query':query,
                      'skey':skey, 'order':order})
-            if  self.dascore.in_raw_cache(query):
-                res = self.dascore.result(query, idx, limit)
-                if  type(res) is types.GeneratorType:
-                    result = []
-                    for item in res:
-                        if  item not in result:
-                            result.append(item)
-                    data['data'] = result
-                    tot = len(data['data'])
-                else:
-                    data['data'] = res
-                    tot = 1
-                data['status'] = 'success'
-                data['nresults'] = tot
+#            if  self.dascore.in_raw_cache(query):
+            res = self.dascore.result(query, idx, limit)
+            if  type(res) is types.GeneratorType:
+                result = []
+                for item in res:
+                    if  item not in result:
+                        result.append(item)
+                data['data'] = result
+                tot = len(data['data'])
             else:
-                data['status'] = 'not found'
+                data['data'] = res
+                tot = 1
+            data['status'] = 'success'
+            data['nresults'] = tot
+#            else:
+#                data['status'] = 'not found'
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
