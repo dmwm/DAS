@@ -6,8 +6,8 @@
 General purpose DAS logger class
 """
 
-__revision__ = "$Id: logger.py,v 1.1 2009/03/09 19:43:35 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: logger.py,v 1.2 2009/05/27 20:28:04 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -25,7 +25,7 @@ class DASLogger:
         self.stdout = stdout
         self.logger = logging.getLogger(self.name)
         self.loglevel = logging.INFO
-        self.logname = os.path.join(self.dir, 'das.log') 
+        self.logname = os.path.join(self.dir, '%s.log' % name) 
         try:
             if  not os.path.isdir(self.dir):
                 os.makedirs(self.dir)
@@ -64,7 +64,7 @@ class DASLogger:
         """
         self.logger.error(msg)
         if  self.stdout:
-            print msg
+            print '### ERROR ###', msg
 
     def info(self, msg):
         """
@@ -73,6 +73,7 @@ class DASLogger:
         self.logger.info(msg)
         if  self.stdout:
             print msg
+            print '### INFO ###', msg
 
     def debug(self, msg):
         """
@@ -81,6 +82,7 @@ class DASLogger:
         self.logger.debug(msg)
         if  self.stdout and self.verbose > 1:
             print msg
+            print '### DEBUG ###', msg
 
     def warning(self, msg):
         """
@@ -89,6 +91,7 @@ class DASLogger:
         self.logger.warn(msg)
         if  self.stdout:
             print msg
+            print '### WARNING ###', msg
 
     def exception(self, msg):
         """
@@ -97,6 +100,7 @@ class DASLogger:
         self.logger.error(msg)
         if  self.stdout:
             print msg
+            print '### EXCEPTION ###', msg
 
     def critical(self, msg):
         """
@@ -104,4 +108,4 @@ class DASLogger:
         """
         self.logger.critical(msg)
         if  self.stdout:
-            print msg
+            print '### CRITICAL ###', msg

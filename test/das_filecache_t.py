@@ -6,6 +6,7 @@ Unit test for DAS filecache class
 """
 
 import os
+import time
 import unittest
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
@@ -54,6 +55,20 @@ class testDASFilecache(unittest.TestCase):
         result = [i for i in self.dasfilecache.get_from_cache(query, idx, limit)]
         result.sort()
         self.assertEqual(expect[idx:limit], result)
+        self.dasfilecache.delete_cache()
+
+    def test_incache(self):                          
+        """test DAS filecache incache method"""
+        query  = "find site where site=T2_UK"
+        expire = 1
+        expect = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        expect = self.dasfilecache.update_cache(query, expect, expire)
+        expect = [i for i in expect]
+        result = self.dasfilecache.incache(query)
+        self.assertEqual(1, result)
+        time.sleep(2)
+        result = self.dasfilecache.incache(query)
+        self.assertEqual(0, result)
         self.dasfilecache.delete_cache()
 #
 # main

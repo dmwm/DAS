@@ -5,8 +5,8 @@
 Abstract cache class.
 """
 
-__revision__ = "$Id: cache.py,v 1.6 2009/05/22 21:04:40 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: cache.py,v 1.7 2009/05/27 20:28:03 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 class NoResults(Exception):
@@ -37,26 +37,30 @@ class Cache(object):
         """
         Retreieve results from cache. Must be implemented by child class
         """
-        self.logger.info('Cache::get_from_cache(%s)' % query)
+        self.logger.info('Cache::get_from_cache(%s,%s,%s)' \
+                % (query, idx, limit))
         return
 
     def update_cache(self, query, results, expire):
         """
         Insert results into cache. Must be implemented by child class.
         """
-        self.logger.info('Cache::update_cache(%s)' % query)
+        self.logger.info('Cache::update_cache(%s,%s,%s)' \
+                % (query, results, expire))
         return
 
     def clean_cache(self, query, results, expire):
         """
         Clean expired results in cache. Must be implemented by child class.
         """
-        self.logger.info('Cache::clean_cache(%s)' % query)
+        self.logger.info('Cache::clean_cache(%s,%s,%s)' \
+                % (query, results, expire))
         return
 
     def delete_cache(self, query, results, expire):
         """
         Delete results in cache. Must be implemented by child class.
         """
-        self.logger.info('Cache::delete_cache(%s)' % query)
+        self.logger.info('Cache::delete_cache(%s,%s,%s)' \
+                % (query, results, expire))
         return

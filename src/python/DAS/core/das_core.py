@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.14 2009/05/22 21:04:40 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_core.py,v 1.15 2009/05/27 20:28:03 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -65,13 +65,14 @@ class DASCore(object):
         else:
             self.verbose = verbose
 
-        self.logger  = DASLogger(verbose=self.verbose, stdout=debug)
+        logdir = dasconfig['logdir']
+        self.logger = DASLogger(idir=logdir, verbose=self.verbose, stdout=debug)
         dasconfig['logger'] = self.logger
 
         self.viewmgr = DASViewManager()
 
         dasroot = os.environ['DAS_ROOT']
-        # load from configuration what whould be used as raw/cold cache
+        # load from configuration what will be used as a raw/cold cache
         if  dasconfig.has_key('rawcache') and dasconfig['rawcache']:
             klass   = dasconfig['rawcache']
             name    = klass.lower().replace('das', 'das_')
@@ -82,7 +83,7 @@ class DASCore(object):
             setattr(self, 'rawcache', eval(klassobj))
             dasconfig['rawcache'] = self.rawcache
 
-        # load from configuration what whould be used as hot cache
+        # load from configuration what will be used as a hot cache
         if  dasconfig.has_key('hotcache') and dasconfig['hotcache']:
             klass   = dasconfig['hotcache']
             name    = klass.lower().replace('das', 'das_')
@@ -199,6 +200,44 @@ class DASCore(object):
         else:
             results = self.call(query)
         return results
+
+    def update_cache(self, query, expire=600):
+        """
+        Update cache with result of the query
+        """
+        status = 0
+        if  hasattr(self, 'cache'):
+            found = 0
+            try:
+                found = self.cache.incache(query)
+                status = 1
+            except:
+                traceback.print_exc()
+            print "\n===> core:update_cache, incache", found
+            if  not found:
+                # NOTE: the self.call returns generator, update_cache
+                # consume and iterate over its items. So if I need to
+                # re-use it, the update_cache will yeild them back
+                print "\n===> core:update_cache, invoke call", query, expire
+                results = self.call(query) 
+                try:
+                    results = self.cache.update_cache(query, results, expire)
+                    # loop over results since it's generator
+                    for i in results:
+                        pass
+                    status = 1
+                except:
+                    status = 0
+                    pass
+        return status
+
+    def delete_from_cache(self, query, expire=600):
+        """
+        Delete in cache entries about input query
+        """
+        if  hasattr(self, 'cache'):
+            if  self.cache.incache(query):
+                print "core:delete_from_cache", query
 
     def json(self, query):
         """
