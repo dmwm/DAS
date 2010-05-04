@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.12 2009/06/24 19:47:44 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_memcache.py,v 1.13 2009/06/30 19:32:14 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -57,21 +57,25 @@ class DASMemcache(Cache):
         """
         Retreieve results from cache, otherwise return null.
         """
-        idx = int(idx)
+        idx   = int(idx)
         limit = long(limit)
-        key = genkey(query)
-        res = self.memcache.get(key)
+        stop  = idx + limit
+        key   = genkey(query)
+        res   = self.memcache.get(key)
+        id    = idx
         if  res and type(res) is types.IntType:
             self.logger.info("DASMemcache::result(%s) using cache" % query)
             if  limit:
                 if  limit > res:
-                    limit = res
-                rowlist = [i for i in range(idx, limit)]
+                    stop = res
+                rowlist = [i for i in range(idx, stop)]
             else:
                 rowlist = [i for i in range(0, res)]
             rowdict = self.memcache.get_multi(rowlist, key_prefix=key)
             for item in rowdict.values():
+                item['id'] = id
                 yield item
+                id += 1
 
     def update_cache(self, query, results, expire):
         """
