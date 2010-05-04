@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.20 2010/04/14 20:29:25 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: utils.py,v 1.21 2010/04/30 16:41:18 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -161,7 +161,8 @@ def json2html(idict, pad=""):
             sss += pad + """ <code class="key">"%s"</code>""" % key
             if type(val) is types.NoneType:
                 sss += """: <code class="null">None</code>"""
-            elif  type(val) is types.IntType or pat.match(str(val)):
+            elif  type(val) is types.IntType or \
+                (type(val) is types.StringType and pat.match(str(val))):
                 sss += """: <code class="number">%s</code>""" % val
             else:
                 sss += """: <code class="string">"%s"</code>""" % val
@@ -178,3 +179,20 @@ def web_time():
     """
     # 2010-01-04 10:40:53,850
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time()))
+
+def ajax_response_orig(msg, tag="_response", element="object"):
+    """AJAX response wrapper"""
+    page  = """<ajax-response><response type="%s" id="%s">""" % (element, tag)
+    page += msg
+    page += "</response></ajax-response>"
+    print page
+    return page
+
+def ajax_response(msg):
+    """AJAX response wrapper"""
+    page  = """<ajax-response>"""
+    page += "<div>" + msg + "</div>"
+    page += "</ajax-response>"
+    return page
+
+
