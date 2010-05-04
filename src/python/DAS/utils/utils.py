@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.62 2010/02/10 18:34:26 valya Exp $"
-__version__ = "$Revision: 1.62 $"
+__revision__ = "$Id: utils.py,v 1.63 2010/02/13 02:02:03 valya Exp $"
+__version__ = "$Revision: 1.63 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -953,6 +953,8 @@ def json_parser(source):
             jsondict = json.load(source)
         except:
             traceback.print_exc()
+            source.close()
+            raise
         source.close()
     else:
         data = source
