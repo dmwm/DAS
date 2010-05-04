@@ -110,11 +110,34 @@ if __name__ == '__main__':
     # add sum(block.replica.size) map/reduce function
     MAP = """
 function() {
-if(this.block) {
-    if (this.block.replica) {
-        if (this.block.replica.size) emit(this.block.replica.size, 1);
+    /*
+     * emit(a, 1) is suitable for counting
+     * emit(null, a) is suitable for summing
+     * Here we emit for different cases
+     * 1. when there is only {block:{replica:{size:1}}}
+     * 2. when there are records as {block:[{replica:{size:1}}]}
+     * 3. when all fields are list items, e.g.
+     * {block:[{replica:[{size:1}]}]}
+     */
+    if (this.block) {
+        if (this.block.replica) {
+            if (this.block.replica.size) 
+                emit(null, this.block.replica.size);
+        }
+        for (var i = 0; i < this.block.length; i++) {
+            var info = this.block[i];
+            if  (info.replica) {
+                if (info.replica.size)
+                    emit(null, info.replica.size);
+                for (var j=0; j< info.replica.length; j++) {
+                    var item = info.replica[j];
+                    if  (item.size) {
+                        emit(null, item.size);
+                    }
+                }
+            }
+        }
     }
-}
 }
 """
     REDUCE = """
@@ -124,6 +147,7 @@ function (key, values) {
         total += values[i];
     }
     return total;
+}
 """   
     MGR.add_mapreduce('sum(block.replica.size)', MAP, REDUCE)
 
