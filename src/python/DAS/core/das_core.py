@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.46 2009/12/07 20:54:34 valya Exp $"
-__version__ = "$Revision: 1.46 $"
+__revision__ = "$Id: das_core.py,v 1.47 2009/12/07 21:22:26 valya Exp $"
+__version__ = "$Revision: 1.47 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -27,7 +27,7 @@ from DAS.core.qlparser import MongoParser
 #from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
-from DAS.core.das_mongocache import loose
+from DAS.core.das_mongocache import loose, convert2pattern
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg
@@ -304,13 +304,15 @@ class DASCore(object):
         """
         Look-up input query if it exists in raw-cache.
         """
-        return self.rawcache.incache(loose(query))
+        query, dquery = convert2pattern(loose(query))
+        return self.rawcache.incache(query)
 
     def in_raw_cache_nresults(self, query):
         """
         Look-up how manu records for given query exists in raw-cache.
         """
-        return self.rawcache.nresults(loose(query))
+        query, dquery = convert2pattern(loose(query))
+        return self.rawcache.nresults(query)
 
     def call(self, query):
         """
