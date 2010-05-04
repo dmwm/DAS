@@ -4,8 +4,8 @@
 #awk '{print "echo; echo \"running pylint tests for "$0"\"; pylint "$0" | grep \"Your code\""}' | \
 #/bin/sh | awk '{split($0,a,"("); print a[1]}'
 
-if [ "$#" -gt 1 ]; then
-    echo "Usage: das_code_quality.sh <optional threashold up to 10>"
+if [ "$#" -gt 2 ]; then
+    echo "Usage: das_code_quality.sh <optional threashold up to 10> <stop at first failure, true or false>"
     exit 1
 fi 
 
@@ -15,10 +15,17 @@ else
 thr=$1
 fi
 
-echo "Run pylint with $thr/10 threashold level"
+if  [ "$#" -eq 2 ]; then
+immediate=$2
+else
+immediate="true"
+fi
+
+echo "Run pylint with $thr/10 threashold level, exit immediate=$immediate"
 echo
 
-files=`find $DASHOME -name "*.py"`
+#files=`find $DASHOME -name "*.py" | grep -v ipy_profile_mongo`
+files=`find $DASHOME -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config`
 fail_files=0
 for f in $files
 do
@@ -26,6 +33,10 @@ do
     echo $f
     out=`pylint $f | grep "Your code"`
     msg=`echo $out | grep -v "No config" | awk '{split($0,a,"at "); split(a[2],b,"/"); split(b[1],c,".");if(c[1]<THR) print "FAIL, score "b[1]"/10"; else print "PASS"}' THR=$thr`
+    if  [ "$msg" != "PASS" ] && [ "$immediate" == "true" ]; then
+        echo "--- $msg"
+        exit 1
+    fi
     if [ "$msg" == "PASS" ]; then
         echo "+++ PASS"
     else
