@@ -7,8 +7,8 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.9 2009/09/29 20:46:48 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.10 2009/10/02 15:06:02 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -24,7 +24,7 @@ from pymongo.connection import Connection
 from pymongo import DESCENDING
 
 # DAS modules
-from DAS.utils.utils import getarg, gen2list
+from DAS.utils.utils import getarg, gen2list, genkey
 
 class DASAnalytics(object):
     """
@@ -59,6 +59,22 @@ class DASAnalytics(object):
         """
         self.conn.drop_database(self.dbname)
 
+    def add_query(self, dasquery, mongoquery):
+        """
+        Add DAS-QL/MongoDB-QL queries into analytics.
+        """
+        if  type(mongoquery) is types.DictType:
+            mongoquery = json.dumps(mongoquery)
+        msg = 'DASAnalytics::add_query(%s, %s)' % (dasquery, mongoquery)
+        self.logger.info(msg)
+        qhash   = genkey(mongoquery)
+        record  = dict(dasquery=dasquery, mongoquery=mongoquery, qhash=qhash)
+        if  self.col.find({'qhash':qhash}).count():
+            return
+        self.col.insert(record)
+        index = [('qhash', DESCENDING)]
+        self.col.ensure_index(index)
+
     def add_api(self, system, query, api, args):
         """
         Add API info to analytics DB. 
@@ -69,24 +85,34 @@ class DASAnalytics(object):
         msg = 'DASAnalytics::add_api(%s, %s, %s, %s)' \
         % (system, query, api, args)
         self.logger.info(msg)
+        # find query record
+        qhash   = genkey(str(query))
+        record  = self.col.find_one({'qhash':qhash}, fields=['dasquery'])
+        if  not record:
+            self.add_query("", query)
+        # find api record
+        record  = self.col.find_one({'qhash':qhash, 'system':system, 
+                        'api.name':api, 'api.params':args}) 
         apidict = dict(name=api, params=args)
-        record = dict(query=query, system=system, api=apidict, counter=1)
-        if  self.col.find({'query':query, 'system':system, 'api.name':api}).count():
-            return self.update(system, query)
-        self.col.insert(record)
-        index = [('system', DESCENDING), ('query', DESCENDING),
-                 ('api.name', DESCENDING) ]
+        if  record:
+            self.col.update({'_id':record['_id']}, {'$inc':{'counter':1}})
+        else:
+            record = dict(system=system, api=apidict, qhash=qhash, counter=1)
+            self.col.insert(record)
+        index = [('system', DESCENDING), ('dasquery', DESCENDING),
+                 ('api.name', DESCENDING), ('qhash', DESCENDING) ]
         self.col.ensure_index(index)
 
     def update(self, system, query):
         """
-        Update record with given query.
+        Update records for given system/query.
         """
         if  type(query) is types.DictType:
             query = json.dumps(query)
         msg = 'DASAnalytics::update(%s, %s)' % (system, query)
         self.logger.info(msg)
-        cond = {'query':query, 'system':system}
+        qhash = genkey(str(query))
+        cond  = {'qhash':qhash, 'system':system}
         # TODO:
         # MongoDB has a bug, http://jira.mongodb.org/browse/SERVER-268 
         # which prevent from bulk update of all records, uncomment the
@@ -95,7 +121,6 @@ class DASAnalytics(object):
         # meanwhile we'll retrieve all records and update them individually
         for record in self.col.find(cond):
             self.col.update({'_id':record['_id']}, {'$inc' : {'counter':1}})
-        
 
     def list_systems(self):
         """
