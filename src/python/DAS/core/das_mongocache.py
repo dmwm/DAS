@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.55 2010/01/05 16:40:22 valya Exp $"
-__version__ = "$Revision: 1.55 $"
+__revision__ = "$Id: das_mongocache.py,v 1.56 2010/01/05 19:33:39 valya Exp $"
+__version__ = "$Revision: 1.56 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -329,6 +329,12 @@ class DASMongocache(Cache):
 #            self.col.remove({'das_id':objid})
         self.col.remove(spec)
 
+    def das_record(self, query):
+        """
+        Retrieve DAS record for given query.
+        """
+        return self.col.find_one({'das.qhash': genkey(query)})
+
     def update_das_record(self, query, status, header=None):
         """
         Update DAS record for provided query.
@@ -605,7 +611,7 @@ class DASMongocache(Cache):
         self.logger.info(msg)
 
         # update das record with new status
-        status = 'updated with results of %s API' % header['das']['api'][0]
+        status = 'Update DAS cache, %s API' % header['das']['api'][0]
         self.update_das_record(query, status, header)
 
     def remove_from_cache(self, query):
