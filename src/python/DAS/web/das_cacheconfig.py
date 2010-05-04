@@ -6,8 +6,8 @@
 DAS cache server web configuration file
 """
 
-__revision__ = "$Id: das_cacheconfig.py,v 1.5 2009/06/08 19:15:48 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_cacheconfig.py,v 1.6 2009/06/09 13:33:00 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -25,6 +25,11 @@ config.component_('Webtools')
 
 # This is the application
 config.Webtools.port = 8211
+# INADDR_ANY: listen on all interfaces (be visible outside of localhost)
+#config.Webtools.host = '0.0.0.0' 
+# listen only to localhost, do not allow connection outside of it, this can be
+# used to hide service behind front-end
+config.Webtools.host = 'localhost' 
 config.Webtools.application = 'DASCacheServer'
 # This is the config for the application
 config.component_('DASCacheServer')
