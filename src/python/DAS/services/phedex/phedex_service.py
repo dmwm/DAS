@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.11 2009/10/16 18:02:47 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: phedex_service.py,v 1.12 2009/11/10 16:08:27 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -49,7 +49,7 @@ class PhedexService(DASAbstractService):
             if  api == 'blockReplicas':
                 for block in data['block']:
                     row = dict(block=block)
-                    self.row2das(self.name, row)
+                    self.row2das(self.name, api, row)
                     yield row
             elif api == 'fileReplicas':
                 for block in data['block']:
@@ -57,19 +57,19 @@ class PhedexService(DASAbstractService):
                     del block['file']
                     for file in fileinfo:
                         row = dict(file=file, block=block)
-                        self.row2das(self.name, row)
+                        self.row2das(self.name, api, row)
 #                        print "\n\n#### yield phedex fileReplicas row"
 #                        print row
                         yield row
             elif api == 'nodes':
                 for node in data['node']:
                     row = dict(site=node)
-                    self.row2das(self.name, row)
+                    self.row2das(self.name, api, row)
                     yield row
             elif api == 'lfn2pfn':
                 for item in data['mapping']:
                     row = dict(file=item)
-                    self.row2das(self.name, row)
+                    self.row2das(self.name, api, row)
                     yield row
             else:
                 msg = 'Unsupported phedex API %s' % api
