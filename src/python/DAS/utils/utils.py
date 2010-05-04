@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.69 2010/02/18 22:08:23 valya Exp $"
-__version__ = "$Revision: 1.69 $"
+__revision__ = "$Id: utils.py,v 1.70 2010/02/19 17:29:04 valya Exp $"
+__version__ = "$Revision: 1.70 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -813,120 +813,6 @@ def xml_parser(source, prim_key, tags=[]):
         row[key].update(sup)
         for child in elem.getchildren():
             child_key  = child.tag
-            child_dict = dict_helper(child.attrib, notations)
-
-            if  row[key].has_key(child_key):
-                val = row[key][child_key]
-                if  type(val) is types.ListType:
-                    val.append(child_dict)
-                    row[key][child_key] = val
-                else:
-                    row[key][child_key] = [val] + [child_dict]
-            else:
-                row[key][child_key] = child_dict
-            child.clear()
-        elem.clear()
-        yield row
-    root.clear()
-    source.close()
-
-def xml_parser_v2(notations, source, prim_key, tags=[]):
-    """
-    XML parser based on ElementTree module. To reduce memory footprint for
-    large XML documents we use iterparse method to walk through provided
-    source descriptor (a .read()/close()-supporting file-like object 
-    containig XML source).
-
-    The provided prim_key defines a tag to capture, while supplementary
-    *tags* list defines additional tags which can be added to outgoing
-    result. For instance, file object shipped from PhEDEx is enclosed
-    into block one, so we want to capture block.name together with
-    file object.
-    """
-    sup     = {}
-    context = ET.iterparse(source, events=("start", "end"))
-    root    = None
-    for item in context:
-        event, elem = item
-        if  event == "start" and root is None:
-            root = elem # the first element is root
-        row = {}
-        if  tags and not sup:
-            for tag in tags:
-                if  tag.find(".") != -1:
-                    atag, attr = tag.split(".")
-                    if  elem.tag == atag and elem.attrib.has_key(attr):
-                        att_value = elem.attrib[attr]
-                        if  type(att_value) is types.DictType:
-                            att_value = dict_helper(elem.attrib[attr], notations)
-                        if  type(att_value) is types.StringType:
-                            att_value = adjust_value(att_value)
-                        sup[atag] = {attr:att_value}
-                else:
-                    if  elem.tag == tag:
-                        sup[tag] = dict_helper(elem.attrib, notations)
-        key = notations.get(elem.tag, elem.tag)
-        if  key != prim_key or event == 'end':
-            elem.clear()
-            continue
-        row[key] = dict_helper(elem.attrib, notations)
-#        row.update(sup)
-        row[key].update(sup)
-        for child in elem.getchildren():
-            child_key  = notations.get(child.tag, child.tag)
-            child_dict = dict_helper(child.attrib, notations)
-
-            if  row[key].has_key(child_key):
-                val = row[key][child_key]
-                if  type(val) is types.ListType:
-                    val.append(child_dict)
-                    row[key][child_key] = val
-                else:
-                    row[key][child_key] = [val] + [child_dict]
-            else:
-                row[key][child_key] = child_dict
-            child.clear()
-        elem.clear()
-        yield row
-    root.clear()
-    source.close()
-
-def xml_parser_v1(notations, source, tags, add=None):
-    """
-    XML parser based on ElementTree module. To reduce memory footprint for
-    large XML documents we use iterparse method to walk through provided
-    source descriptor (a .read()/close()-supporting file-like object 
-    containig XML source).
-
-    The provided *tags* parameter defines DAS tags to be parsed.
-    The additional elements can be supplied via add parameter.
-    """
-    sup     = {}
-    context = ET.iterparse(source, events=("start", "end"))
-    root    = None
-    for item in context:
-        event, elem = item
-        if  event == "start" and root is None:
-            root = elem # the first element is root
-        row = {}
-        if  add and not sup:
-            if  add.find("_") != -1:
-                atag, attr = add.split("_")
-                if  elem.tag == atag and elem.attrib.has_key(attr):
-#                    sup[add] = elem.attrib[attr]
-                    sup[atag] = {attr:elem.attrib[attr]}
-            else:
-                if  elem.tag == add:
-#                    sup[add] = elem.attrib
-                    sup[atag] = {attr:elem.attrib}
-        key = notations.get(elem.tag, elem.tag)
-        if  key not in tags or event == 'end':
-            elem.clear()
-            continue
-        row[key] = dict_helper(elem.attrib, notations)
-        row.update(sup)
-        for child in elem.getchildren():
-            child_key  = notations.get(child.tag, child.tag)
             child_dict = dict_helper(child.attrib, notations)
 
             if  row[key].has_key(child_key):
