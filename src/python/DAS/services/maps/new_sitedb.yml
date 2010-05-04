@@ -1,6 +1,7 @@
 # SiteDB API mapping to DAS
 system: new_sitedb
 format: JSON
+wild_card: "%"
 #---
 # NOT READY
 #urn : status
