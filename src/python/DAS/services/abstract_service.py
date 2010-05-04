@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.20 2009/06/12 14:41:34 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: abstract_service.py,v 1.21 2009/06/19 18:01:11 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -50,6 +50,9 @@ class DASAbstractService(object):
         # define internal couch DB manager to put 'raw' results into CouchDB
         if  config.has_key('rawcache') and config['rawcache']:
             self.localcache   = config['rawcache']
+            msg = 'DASAbstractService::__init__ localcache=%s'\
+                     % self.localcache
+            self.logger.info(msg)
 
     def keys(self):
         """
