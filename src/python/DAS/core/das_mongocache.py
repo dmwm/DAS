@@ -5,12 +5,16 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.10 2009/09/16 20:34:51 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_mongocache.py,v 1.11 2009/09/29 20:49:45 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 import types
+try:
+    import json # since python 2.6
+except:
+    import simplejson as json # prior python 2.6
 
 # DAS modules
 from DAS.utils.utils import getarg, dict_value, merge_dict
@@ -93,8 +97,9 @@ class DASMongocache(Cache):
         """
         # remove from cache all expire docs
         self.col.remove({'das.expire': {'$lt' : int(time.time())}})
-        
-        res = self.col.find(**query).count()
+        spec   = getarg(query, 'spec', {})
+        fields = getarg(query, 'fields', None)
+        res = self.col.find(spec=spec, fields=fields).count()
         if  res:
             return True
         return False
@@ -106,7 +111,9 @@ class DASMongocache(Cache):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        return self.col.find(**query).count()
+        spec   = getarg(query, 'spec', {})
+        fields = getarg(query, 'fields', None)
+        return self.col.find(spec=spec, fields=fields).count()
 
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc'):
         """
@@ -117,14 +124,16 @@ class DASMongocache(Cache):
         """
         self.logger.info("DASMongocache::get_from_cache(%s)" \
                 % query)
-        idx     = int(idx)
+        idx    = int(idx)
+        spec   = getarg(query, 'spec', {})
+        fields = getarg(query, 'fields', None)
         if  limit:
-            res = self.col.find(**query).skip(idx).limit(limit)
+            res = self.col.find(spec=spec, fields=fields)\
+                .skip(idx).limit(limit)
         else:
-            res = self.col.find(**query)
+            res = self.col.find(spec=spec, fields=fields)
         for row in res:
             del(row['_id']) #mongo add internal _id, we don't need it
-            fields = query['fields']
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
@@ -150,8 +159,11 @@ class DASMongocache(Cache):
             type(results) is types.GeneratorType:
             for item in results:
                 item['das'] = dasheader
-                entry = dict_value(item, prim_key)
-                row = self.col.find_one({prim_key:entry})
+                try:
+                    entry = dict_value(item, prim_key)
+                    row = self.col.find_one({prim_key:entry})
+                except:
+                    row = None
                 if  row:
                     value = dict_value(row, prim_key)
                     if  value == entry: # we found a match in cache
