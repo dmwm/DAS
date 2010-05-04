@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.61 2010/03/01 19:35:49 valya Exp $"
-__version__ = "$Revision: 1.61 $"
+__revision__ = "$Id: das_core.py,v 1.62 2010/03/01 20:13:36 valya Exp $"
+__version__ = "$Revision: 1.62 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -290,7 +290,7 @@ class DASCore(object):
         query   = self.adjust_query(query)
         # check if we have any service which cover the query
         # otherwise decompose it into list of queries
-        service_map = self.mongoparser.service_apis_map(mongo_query)
+        service_map = self.mongoparser.service_apis_map(query)
         if  not service_map:
             msg  = 'DASCore::result there is no single API to answer'
             msg += 'input query, will decompose it ...'
