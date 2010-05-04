@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.28 2009/11/08 19:17:29 valya Exp $"
-__version__ = "$Revision: 1.28 $"
+__revision__ = "$Id: das_mongocache.py,v 1.29 2009/11/10 03:20:39 valya Exp $"
+__version__ = "$Revision: 1.29 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -410,15 +410,15 @@ class DASMongocache(Cache):
         dasheader  = header['das']
         dasheader['selection_keys'] = header['selection_keys']
 
-        # check first if we have any results in cache for this query
-        query_in_cache = False
-        if  self.incache(query):
-            query_in_cache = True
-
-        # insert query
+        # check presence of query in a cache regardless of the system
+        # and insert it for this system
         record = dict(query=encode_mongo_keys(query),
                  das=dict(expire=dasheader['expire'], 
                         system=dasheader['system']))
+        query_in_cache = False
+        spec = {'spec' : dict(query=encode_mongo_keys(query))}
+        if  self.incache(spec):
+            query_in_cache = True
         self.col.insert(dict(record))
 
         # insert DAS records
@@ -427,14 +427,11 @@ class DASMongocache(Cache):
         prim_key   = lkeys[0] # TODO: what to do with multiple look-up keys
         trigger    = 0
         local_cache = [] # small cache to be used for bulk updates
-# This optimization is premature, since it leads to another problem of
-# cleaning expire records from DAS.
-#        dashash    = genkey(str(dasheader))
-#        if  not self.col.find_one({'dashash':dashash}):
-#            self.col.insert(dict(dashash=dashash, das=dasheader))
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
             for item in results:
+                if  str(item).find("8b9a9715-afb3-4489-a08a-60d508520534") != -1:
+                    print "###found in", system, item
                 # TODO:
                 # the exception/error records should not go to cache
                 # instead we can place them elsewhere for further analysis
@@ -443,8 +440,6 @@ class DASMongocache(Cache):
                 if  not trigger:
                     trigger = 1
                 item['das'] = dasheader
-#                item['query'] = str_query
-#                item['dashash'] = dashash # see above the dashash
                 row = None
                 if  query_in_cache:
                     try:
@@ -452,6 +447,7 @@ class DASMongocache(Cache):
                         row = self.col.find_one({prim_key:entry})
                     except:
                         row = None
+                        pass
                 if  row:
                     value = dict_value(row, prim_key)
                     if  value == entry: # we found a match in cache
