@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.70 2010/02/19 17:29:04 valya Exp $"
-__version__ = "$Revision: 1.70 $"
+__revision__ = "$Id: utils.py,v 1.71 2010/02/19 22:28:56 valya Exp $"
+__version__ = "$Revision: 1.71 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -985,3 +985,13 @@ def extract_http_error(err):
         pass
     return msg
 
+def make_headers(data_format):
+    """
+    Create HTTP header based on input parameters
+    """
+    headers = {}
+    if  data_format.lower() == 'json':
+        headers.update({'Accept':'text/json;application/json'})
+    elif data_format.lower() == 'xml':
+        headers.update({'Accept':'text/xml;application/xml'})
+    return headers
