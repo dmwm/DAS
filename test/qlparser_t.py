@@ -7,10 +7,12 @@ Unit test for DAS QL parser
 
 import unittest
 from DAS.core.qlparser import findbracketobj, mongo_exp
-from DAS.core.qlparser import getconditions, query_params
-from DAS.core.qlparser import QLParser, MongoParser
+from DAS.core.qlparser import getconditions
+from DAS.core.qlparser import MongoParser
 from DAS.utils.logger import DASLogger
 from DAS.utils.das_config import das_readconfig
+from DAS.core.das_mapping_db import DASMapping
+from DAS.core.das_analytics_db import DASAnalytics
 
 class testQLParser(unittest.TestCase):
     """
@@ -32,6 +34,8 @@ class testQLParser(unittest.TestCase):
         config['mapping_dbhost'] = 'localhost'
         config['mapping_dbport'] = 27017
         config['mapping_dbname'] = 'mapping'
+        config['dasmapping'] = DASMapping(config)
+        config['dasanalytics'] = DASAnalytics(config)
         self.parser = MongoParser(config)
 
     def testBracketObj(self):                          
@@ -48,12 +52,12 @@ class testQLParser(unittest.TestCase):
         """Test Mongo parser"""
         query  = dict(spec={'site':'a.b.c', 'block':'bla'}, fields='block')
         expect = {'sitedb': ['site'], 'dbs': ['block'], 
-                  'phedex': ['block', 'site'], 'dashboard': ['site']}
+                  'phedex': ['block', 'site']}
         result = self.parser.services(query)
         self.assertEqual(expect, result)
 
         expect = {'services': {'sitedb': ['site'], 'dbs': ['block'], 
-                               'phedex': ['block', 'site'], 'dashboard': ['site']}, 
+                               'phedex': ['block', 'site']}, 
                   'selkeys': 'block', 'conditions': {'site': 'a.b.c', 'block': 'bla'}}
         result = self.parser.params(query)
         self.assertEqual(expect, result)
@@ -63,19 +67,19 @@ class testQLParser(unittest.TestCase):
         Test das2l2mongo function.
         """
         query = 'find block where site=T1_CH_CERN'
-        expect = {'fields': ['block'], 
-                  'spec': {'site.name': 'T1_CH_CERN', 'jobsummary.site': 'T1_CH_CERN'}}
+        expect = {'fields': ['block', 'das'], 
+                  'spec': {'site.name': 'T1_CH_CERN'}}
         result = self.parser.dasql2mongo(query)
         self.assertEqual(expect, result)
 
         query = 'find block where site=a.b.c'
-        expect = {'fields': ['block'], 
-                  'spec': {'site.se': 'a.b.c', 'jobsummary.ce':'a.b.c'}}
+        expect = {'fields': ['block', 'das'], 
+                  'spec': {'site.se': 'a.b.c'}}
         result = self.parser.dasql2mongo(query)
         self.assertEqual(expect, result)
 
         query = 'find file,site where block=bla'
-        expect = {'fields': ['file', 'site'], 'spec': {'block.name': 'bla'}}
+        expect = {'fields': ['file', 'site', 'das'], 'spec': {'block.name': 'bla'}}
         result = self.parser.dasql2mongo(query)
         self.assertEqual(expect, result)
 
@@ -83,127 +87,6 @@ class testQLParser(unittest.TestCase):
         """false test for bracket objects"""
         q = "test (test1 (test2 or test3)"
         self.assertRaises(Exception, findbracketobj, q)
-
-    def test_qlparser_init(self):
-        """test initalization of QLParser class"""
-        imap = {'dbs':['dataset', 'run', 'site', 'block'],
-                'phedex':['block', 'replica', 'site'], 
-                'sitedb': ['admin', 'site'],
-                'dq': ['runs', 'DQFlagList']}
-        params = {}
-        self.assertRaises(Exception, QLParser, (imap, params))
-
-    def test_query_params(self):
-        """
-        Test query_params utility which split query into set of parameters and
-        selected keys.
-        """
-        queries = ['find a,b,c where d=2', 'find a,b,c where d not like 2',
-                   'find a,b,c', 'find a,b,c where d=2 and e=1']
-        selkeys = ['a', 'b', 'c']
-        elist   = [(selkeys, {'d':('=', '2')}), 
-                   (selkeys, {'d':('not like', '2')}), 
-                   (selkeys, {}),
-                   (selkeys, {'d':('=', '2'), 'e':('=', '1')}),
-                  ]
-        for idx in range(0, len(queries)):
-            query  = queries[idx]
-            expect = elist[idx]
-            result = query_params(query)
-            self.assertEqual(expect, result)
-
-    def test_qlparser(self):
-        """test QLParser class"""
-        imap = {'dbs':['dataset', 'run', 'file', 'block'],
-                'phedex':['block', 'file', 'site'], 
-                'sitedb': ['admin', 'site'],
-                'dq': ['runs', 'DQFlagList'],
-                'dashboard': ['jobsummary']}
-        params = {'dbs':['dataset', 'run', 'file', 'block'], 
-                'phedex':['block', 'file', 'site'], 
-                'sitedb':['admin', 'site'], 
-                'dq':['run','dataset'],
-                'dashboard':['site']}
-
-        ql = QLParser(imap, params)
-
-        q = "find runs where run>1 and run <= 200 "
-        result = mongo_exp(ql.conditions(q))
-        expect = {'run': {'$gt' : '1', '$lte' : '200'}}
-        self.assertEqual(result, expect)
-
-        q = "find runs where dataset=/a/b/c and DQFlagList=Tracker_Global=GOOD&Tracker_Local1=1"
-        result = ql.params(q)['conditions']
-        expect = [{'value': '/a/b/c', 'key': 'dataset', 'op': '='}, 'and', 
-        {'value': 'Tracker_Global=GOOD&Tracker_Local1=1', 'key': 'DQFlagList', 'op': '='}]
-        self.assertEqual(result, expect)
-
-        q = "find runs where DQFlagList=Tracker_Global=GOOD&Tracker_Local1<=1"
-        result = ql.params(q)['conditions']
-        expect = [{'value': 'Tracker_Global=GOOD&Tracker_Local1<=1', 'key': 'DQFlagList', 'op': '='}]
-        self.assertEqual(result, expect)
-
-        q = "find dataset where ((run=1 or run=2) or dataset=bla) and site=cern order by block"
-        result = ql.selkeys(q)
-        expect = ['dataset']
-        self.assertEqual(result, expect)
-
-        result = ql.conditions(q)
-        expect = ['(', '(', {'value': '1', 'key': 'run', 'op': '='}, 
-                  'or', {'value': '2', 'key': 'run', 'op': '='}, ')', 
-                  'or', {'value': 'bla', 'key': 'dataset', 'op': '='}, ')', 
-                  'and', {'value': 'cern', 'key': 'site', 'op': '='}]
-        self.assertEqual(result, expect)
-
-        result = ql.allkeys(q)
-        result.sort()
-        expect = ['block', 'dataset', 'run', 'site']
-        expect.sort()
-        self.assertEqual(result, expect)
-
-        q = "find a,b,c where r=1)"
-        self.assertRaises(Exception, ql.params, q)
-
-        q = "find a,v whhhere"
-        self.assertRaises(Exception, ql.params, q)
-        
-        q = "finds a,v"
-        self.assertRaises(Exception, ql.params, q)
-        
-        q = "find phedex:block where block=bla"
-        result = ql.params(q)
-        expect = {'functions': {}, 'selkeys': ['block'], 
-                'unique_services': ['dbs', 'phedex'], 'order_by_list': [], 
-                'order_by_order': None, 
-                'services': {'phedex': ['block'], 'dbs': ['block']}, 
-                'query' : 'find block where block=bla',
-                'dasqueries': {'phedex': ['find block where block = bla'],
-                               'dbs': ['find block where block = bla']}, 
-                'conditions': [{'value': 'bla', 'key': 'block', 'op': '='}], 
-                'allkeys': ['block'], 'unique_keys': ['block', 'file']}
-        self.assertEqual(result, expect)
-
-        q = "find dbs:block where block=bla"
-        result = ql.params(q)
-        expect = {'functions': {}, 'selkeys': ['block'], 
-                'unique_services': ['dbs', 'phedex'], 'order_by_list': [], 
-                'dasqueries': {'dbs': ['find block where block = bla'], 
-                               'phedex': ['find block where block = bla']}, 
-                'order_by_order': None, 
-                'query': 'find block where block=bla',
-                'services': {'dbs': ['block'], 'phedex': ['block']}, 
-                'conditions': [{'value': 'bla', 'key': 'block', 'op': '='}], 
-                'allkeys': ['block'], 'unique_keys': ['block', 'file']}
-        self.assertEqual(result, expect)
-
-        q = "find jobsummary where date last 25h"
-        self.assertRaises(Exception, ql.params, q)
-
-        q = "find jobsummary where date last 61m"
-        self.assertRaises(Exception, ql.params, q)
-
-        q = "find jobsummary where date last 61s"
-        self.assertRaises(Exception, ql.params, q)
 
 #
 # main
