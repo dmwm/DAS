@@ -8,8 +8,8 @@ DAS modules
 .. moduleauthor:: Valentin Kuznetsov <vkuznet@gmail.com>
 """
 
-__revision__ = "$Id: __init__.py,v 1.6 2010/04/15 15:19:46 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: __init__.py,v 1.7 2010/04/30 16:45:54 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
-version = "0.4.8"
+version = "0.4.9"
