@@ -10,8 +10,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.58 2010/01/17 22:47:08 valya Exp $"
-__version__ = "$Revision: 1.58 $"
+__revision__ = "$Id: das_mongocache.py,v 1.59 2010/01/19 19:14:22 valya Exp $"
+__version__ = "$Revision: 1.59 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -22,7 +22,6 @@ import itertools
 # DAS modules
 from DAS.utils.utils import getarg, dict_value, merge_dict, genkey
 from DAS.utils.utils import aggregator
-from DAS.core.cache import Cache
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 import DAS.utils.jsonwrapper as json
 
@@ -237,12 +236,11 @@ def update_item(item, key, val):
                 newdict = {kkk : newdict}
         item[kkk] = newdict
 
-class DASMongocache(Cache):
+class DASMongocache(object):
     """
     DAS cache based MongoDB. 
     """
     def __init__(self, config):
-        Cache.__init__(self, config)
         self.dbhost  = config['mongocache_dbhost']
         self.dbport  = config['mongocache_dbport']
         self.limit   = config['mongocache_lifetime']
