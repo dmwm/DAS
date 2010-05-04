@@ -17,12 +17,12 @@ fi
 RETVAL=$?
 
 cmd="$WMCORE_ROOT/src/python/WMCore/WebTools/Root.py --ini=$DAS_ROOT/src/python/DAS/web/das_cacheconfig.py"
-pid=`ps auxw | grep das_cacheconfig | grep -v grep | awk '{print $2}'`
+pid=`ps auxw | grep das_cacheconfig | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
 
 case "$1" in
  stdout)
         echo $"Checking for existing DAS service..."
-        if [ ! -z ${pid} ]; then
+        if [ ! -z "${pid}" ]; then
           kill -9 ${pid}
         fi
         echo $"Restart DAS service..."
@@ -30,20 +30,20 @@ case "$1" in
         ;;
  restart)
         echo $"Checking for existing DAS service..."
-        if [ ! -z ${pid} ]; then
+        if [ ! -z "${pid}" ]; then
           kill -9 ${pid}
         fi
         echo $"Restart DAS service..."
         nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
         ;;
  start)
-        if [ ! -z ${pid} ]; then
+        if [ ! -z "${pid}" ]; then
           kill -9 ${pid}
         fi
         nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
         ;;
  status)
-        if [ ! -z ${pid} ]; then
+        if [ ! -z "${pid}" ]; then
           echo $"DAS is running, pid=${pid}"
           ps -f -wwww -p ${pid}
           exit 0
@@ -52,7 +52,7 @@ case "$1" in
         exit 3
         ;;
  stop)
-        if [ ! -z ${pid} ]; then
+        if [ ! -z "${pid}" ]; then
           kill -9 ${pid}
         fi
         ;;
