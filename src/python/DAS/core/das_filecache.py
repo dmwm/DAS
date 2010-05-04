@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.18 2009/07/06 20:24:45 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: das_filecache.py,v 1.19 2009/07/08 13:40:54 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -27,7 +27,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.exc import MultipleResultsFound
 
 # DAS modules
-from DAS.utils.utils import genkey
+from DAS.utils.utils import genkey, getarg
 from DAS.core.cache import Cache
 
 Base = declarative_base()
@@ -100,26 +100,28 @@ def hour(itime=None):
         return time.strftime("%H", time.gmtime(itime))
     return time.strftime("%H", time.gmtime())
 
-def next_triplet(triplet):
+def next_number(inumber, base='00'):
     """
-    Create next number in format of three digits, e.g. 001, out of provided one
+    Create next number in a base format, e.g. 01, out of provided one.
     """
-    number = '%(n)03d' % {'n' : int(triplet) + 1}
-    if  int(number) > 999:
-        raise Exception('Run out of dir space')
+    format = '%%(n)0%sd' % len(base)
+    number = format % {'n' : int(inumber) + 1}
+    limit  = '9' * len(base)
+    if  int(number) > int(limit):
+        raise Exception('Run out of basedir space')
     return number
     
-def create_dir(topdir, system, filesperdir=100):
+def create_dir(topdir, system, base='00', filesperdir=100):
     """
     Allocate new dir name for provided topdir and DAS system name.
-    We use the following schema: YYYYMMDD/HOUR/XXX/YYY
-    where HOUR is 00-24, XXX and YYY span from 000 to 999.
+    We use the following schema: YYYYMMDD/HOUR/base/base
+    where HOUR is 00-24, and base provided as external parameter.
     """
     idir = os.path.join(topdir, system)
     idir = os.path.join(idir, yyyymmdd())
     idir = os.path.join(idir, hour())
     if  not os.path.isdir(idir):
-        idir = os.path.join(os.path.join(idir, '000'), '000')
+        idir = os.path.join(os.path.join(idir, base), base)
     else:
         for root, dirs, files in os.walk(idir):
             dirs.sort()
@@ -129,11 +131,11 @@ def create_dir(topdir, system, filesperdir=100):
                     if  _dirs:
                         _dirs.sort()
                         try:
-                            newdir = next_triplet(_dirs[-1])
+                            newdir = next_number(_dirs[-1], base)
                         except:
                             try:
-                                newdir = next_triplet(dirs[-1])
-                                idir = os.path.join(os.path.join(root, newdir) , '000')
+                                newdir = next_number(dirs[-1])
+                                idir = os.path.join(os.path.join(root, newdir) , base)
                             except:
                                 raise
                             break
@@ -143,13 +145,13 @@ def create_dir(topdir, system, filesperdir=100):
                         else:
                             idir = os.path.join(_root, _dirs[-1])
                     else:
-                        idir = os.path.join(idir, '000')
+                        idir = os.path.join(idir, base)
                     break
                 break
                 if  not _dirs:
-                    idir = os.path.join(idir, '000')
+                    idir = os.path.join(idir, base)
             else:
-                idir = os.path.join(os.path.join(root, '000'), '000')
+                idir = os.path.join(os.path.join(root, base), base)
     try:
         os.makedirs(idir)
     except:
@@ -178,10 +180,12 @@ class DASFilecache(Cache):
     """
     def __init__(self, config):
         Cache.__init__(self, config)
-        self.dir     = config['filecache_dir']
-        self.limit   = config['filecache_lifetime']
-        self.logger  = config['logger']
-        self.verbose = config['verbose']
+        self.dir        = config['filecache_dir']
+        self.limit      = config['filecache_lifetime']
+        self.base_dir   = getarg(config, 'filecache_base_dir', '00')
+        self.files_dir  = getarg(config, 'filecache_files_dir', 100)
+        self.logger     = config['logger']
+        self.verbose    = config['verbose']
         self.logger.info("Init filecache %s" % self.dir)
         self.systemdict = {}
         for system in config['systems']:
@@ -318,7 +322,7 @@ class DASFilecache(Cache):
                 except:
                     session.rollback()
                     self.logger.debug(traceback.format_exc())
-                    msg = "Unable to commit to DAS filecache DB"
+                    msg = "Unable to delete object from DAS filecache DB"
                     raise Exception(msg)
 
     def update_cache(self, query, results, expire):
@@ -334,7 +338,7 @@ class DASFilecache(Cache):
             return
         system = self.get_system(query)
         key  = genkey(query)
-        idir = create_dir(self.dir, system)
+        idir = create_dir(self.dir, system, self.base_dir, self.files_dir)
         filename = os.path.join(idir, key)
         fdr = open(filename, 'wb')
         if  type(results) is types.ListType or \

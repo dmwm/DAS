@@ -11,7 +11,7 @@ import unittest
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_filecache import DASFilecache
-from DAS.core.das_filecache import next_triplet, clean_dirs
+from DAS.core.das_filecache import next_number, clean_dirs
 from DAS.core.das_filecache import create_dir, yyyymmdd, hour
 
 class testDASFilecache(unittest.TestCase):
@@ -43,8 +43,10 @@ class testDASFilecache(unittest.TestCase):
         except:
             pass
 
-        idir = create_dir(topdir, system, filesperdir=5)
-        expect = '%s/%s/%s/%s/000/000' % (topdir, system, yyyymmdd(), hour())
+        base = '00'
+        idir = create_dir(topdir, system, base=base, filesperdir=5)
+        expect = '%s/%s/%s/%s/%s/%s' % \
+                (topdir, system, yyyymmdd(), hour(), base, base)
         self.assertEqual(expect, idir)
 
         # create 5 files in our recent dir and check that new dir will be created
@@ -52,13 +54,14 @@ class testDASFilecache(unittest.TestCase):
             fdesc = open(os.path.join(idir, str(i)), 'w')
             fdesc.write(str(i))
             fdesc.close()
-        jdir = create_dir(topdir, system, filesperdir=5)
-        expect2 = '%s/%s/%s/%s/000/001' % (topdir, system, yyyymmdd(), hour())
+        jdir = create_dir(topdir, system, base=base, filesperdir=5)
+        expect2 = '%s/%s/%s/%s/%s/%s' % \
+                (topdir, system, yyyymmdd(), hour(), base, next_number(base, base))
         self.assertEqual(expect2, jdir)
         for i in range(0, 6):
             os.remove(os.path.join(idir, str(i)))
 
-        ndir = '%s/%s/%s/%s/000' % (topdir, system, yyyymmdd(), hour())
+        ndir = '%s/%s/%s/%s/%s' % (topdir, system, yyyymmdd(), hour(), base)
         clean_dirs(ndir)
         ndir = '%s/%s/%s/%s' % (topdir, system, yyyymmdd(), hour())
         clean_dirs(ndir)
@@ -68,17 +71,18 @@ class testDASFilecache(unittest.TestCase):
         clean_dirs(ndir)
         os.removedirs(os.path.join(topdir, system))
 
-    def test_next_triplet(self):                          
-        """test next_triplet function"""
+    def test_next_number(self):                          
+        """test next_number function"""
+        base   = '000'
         expect = '001'
-        result = next_triplet('000')
+        result = next_number('000', base)
         self.assertEqual(expect, result)
 
-        expect = '100'
-        result = next_triplet('099')
+        expect = '10'
+        result = next_number('09')
         self.assertEqual(expect, result)
 
-        self.assertRaises(Exception, next_triplet, '999')
+        self.assertRaises(Exception, next_number, '99')
 
     def test_result(self):                          
         """test DAS filecache result method"""
