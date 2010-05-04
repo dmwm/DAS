@@ -7,8 +7,8 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.5 2009/09/11 18:42:14 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.6 2009/09/11 19:00:57 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -65,7 +65,7 @@ class DASAnalytics(object):
         apidict = dict(name=api, params=args)
         record = dict(query=query, system=system, api=apidict, counter=1)
         if  self.col.find({'query':query, 'system':system, 'api.name':api}).count():
-            return self.update(query)
+            return self.update(system, query)
         self.col.insert(record)
         index = [('system', DESCENDING), ('query', DESCENDING),
                  ('api.name', DESCENDING) ]
