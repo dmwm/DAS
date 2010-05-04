@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.40 2009/10/14 15:19:05 valya Exp $"
-__version__ = "$Revision: 1.40 $"
+__revision__ = "$Id: das_core.py,v 1.41 2009/10/15 00:17:16 valya Exp $"
+__version__ = "$Revision: 1.41 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -33,7 +33,7 @@ from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
-from DAS.utils.utils import genkey
+from DAS.utils.utils import genkey, getarg
 
 import DAS.core.das_functions as das_functions
 
@@ -268,13 +268,13 @@ class DASCore(object):
                 # NOTE: the self.call returns generator, update_cache
                 # consume and iterate over its items. So if I need to
                 # re-use it, the update_cache will yeild them back
-                results = self.call(query) 
+                results = self.call(query, idx, limit) 
                 if  self.das_aggregation:
                     results = self.aggregation(results)
                 results = self.cache.update_cache(query, results, 
                                 expire=self.cache.limit)
         else:
-            results = self.call(query)
+            results = self.call(query, idx, limit)
             if  self.das_aggregation:
                 results = self.aggregation(results)
         return results
@@ -312,7 +312,7 @@ class DASCore(object):
         """
         return self.rawcache.nresults(query)
 
-    def call(self, query):
+    def call(self, query, idx=0, limit=None):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
@@ -337,14 +337,21 @@ class DASCore(object):
                 self.timer.record(srv)
         # to avoid mis-counting record due their merge we loop once
         # more time over all services while extracting results from cache
-        for srv in services:
-            # Yield results for every sub-system with loose conditions
-            res = self.rawcache.get_from_cache(\
-                self.mongoparser.lookupquery(srv, query))
-            for row in res:
-                yield row
-        # Yield results for query hash
-        spec = dict(spec={"das.qhash":qhash})
-        res = self.rawcache.get_from_cache(spec)
+#        for srv in services:
+#            res = self.rawcache.get_from_cache(\
+#                self.mongoparser.lookupquery(srv, query))
+#            for row in res:
+#                yield row
+        spec   = getarg(query, 'spec', {})
+        fields = getarg(query, 'fields', None)
+        if  not fields:
+            fields = None
+        query  = dict(spec=spec, fields=fields)
+        res    = self.rawcache.get_from_cache(query, idx, limit)
         for row in res:
             yield row
+        # Yield results for query hash
+#        spec = dict(spec={"das.qhash":qhash})
+#        res = self.rawcache.get_from_cache(spec)
+#        for row in res:
+#            yield row
