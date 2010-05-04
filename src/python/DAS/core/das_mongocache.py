@@ -5,13 +5,14 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.23 2009/10/20 15:08:54 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: das_mongocache.py,v 1.24 2009/10/21 13:45:06 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import time
 import types
+import itertools
 
 # DAS modules
 from DAS.utils.utils import getarg, dict_value, merge_dict
@@ -253,6 +254,7 @@ class DASMongocache(Cache):
         # remove from cache all expire docs
         self.col.remove({'das.expire': {'$lt' : int(time.time())}})
         spec    = getarg(query, 'spec', {})
+        fields  = getarg(query, 'fields', {})
         newspec = {}
         verspec = {} # verbose spec
         # enable loose constraints, use LIKE pattern
@@ -263,12 +265,16 @@ class DASMongocache(Cache):
                 val = re.compile(val.replace('*', '.*')) #replace value to regex
                 verspec[nkey] = val.pattern
             else:
-                verspec[nkey] = val
                 val = {'$ne': None} # non null key
+                verspec[nkey] = val
             newspec[nkey] = val
-        newspec['das.system'] = system
+        if  not newspec: # empty spec
+            newspec = {'query.fields': fields}
+            verspec = newspec
+        else:
+            newspec['das.system'] = system
         msg  = "DASMongocache::similar_queries, "
-        msg += "loose query: %s" % verspec
+        msg += "loose condition query: verspec=%s, newspec=%s" % (verspec, newspec)
         self.logger.info(msg)
         func = "function(obj,prev){ return true;}"
         res  = self.col.group(['query'], newspec, 0, reduce=func)
@@ -344,9 +350,27 @@ class DASMongocache(Cache):
 
     def update_cache(self, query, results, header):
         """
-        Insert results into cache. Query provides a hash key which
-        becomes a file name.
+        Insert results into cache.
         """
+# TODO: I introduced usage of generator, for that I renamed old
+#       update_cache in update_records and added new method update_cache
+#        gen = self.update_records(query, results, header)
+#        idx = 0
+#        while True:
+#            if  not self.col.insert(itertools.islice(gen, self.cache_size)):
+#                break
+#        lkeys      = header['lookup_keys']
+#        index_list = [(key, DESCENDING) for key in lkeys]
+#        if  index_list:
+#            try:
+#                self.col.ensure_index(index_list)
+#            except:
+#                pass
+#    def update_records(self, query, results, header):
+#        """
+#        Iterate over provided results, update records and yield them
+#        for final update_cache.
+#        """
         self.logger.info("DASMongocache::update_cache(%s) store to cache" \
                 % query)
         if  not results:
@@ -403,6 +427,7 @@ class DASMongocache(Cache):
                             self.col.insert(local_cache)
                             local_cache = []
 #                        self.col.insert(item)
+#                        yield item
                 else:
                     if  len(local_cache) < self.cache_size:
                         local_cache.append(item)
@@ -410,6 +435,7 @@ class DASMongocache(Cache):
                         self.col.insert(local_cache)
                         local_cache = []
 #                    self.col.insert(item)
+#                    yield item
                 if  index_list:
                     try:
                         self.col.ensure_index(index_list)
@@ -422,6 +448,7 @@ class DASMongocache(Cache):
                 # we will insert empty record to avoid consequentive
                 # calls to service who doesn't have data
                 self.col.insert(dict(das=dasheader))
+#                yield dict(das=dasheader)
         else:
             print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
