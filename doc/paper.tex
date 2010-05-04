@@ -262,31 +262,31 @@ storage, replication and fail-over features, but our choice in favor of
 MongoDB was obvious because its support of dynamic queries, 
 full indexies, including on inner objects and embedded arrays,
 and auto-sharding. Our prelimiary benchmarks shown that it can sustain
-the desired load and size for our meta-data information. We use MongoDB for
-the three main components: DAS cache, Mapping and Analytics databases. All of them
-will be discussed in forthcoming section.
+the desired load and size for our meta-data information. We use MongoDB as a back-end 
+for the three main components: Mapping, Analytics and DAS cache databases. 
 
 DAS Mapping DB holds mapping between data-service APIs and DAS keys. 
 Upon identification of APIs which will participate in DAS activity 
-we store to Mapping DB API name, input parameters, their type and accept 
+we store to Mapping DB the API name, input parameters, their type and accept 
 values as regular expression patterns as well as mapping between data-service 
 notations into DAS keys. This allows to map user input query parameters into
 data-service API metrics as well as map back data-service output into DAS names.
-For instance, the DBS system used $logical\_file\_name$ notation, while in PhEDEx
+For instance, the DBS system \cite{DBS}
+used {\it logical\_file\_name} notation, while in PhEDEx
 \cite{PhEDEx}
-the same entity was named as $lfn$. Since both of them were referred to
-logical file name, we map both notations into DAS key $file$.\footnote{We
-also deal with physical file names, but still used $file$ to refer to them in
-DAS notation, since simple regular expressions were used to identify $file$
+the same entity was named as {\it lfn}. Since both of them were referred to
+logical file name, we map both notations into DAS key {\it file}.\footnote{We
+also deal with physical file names, but still used {\it file} to refer to them in
+DAS notation, since simple regular expressions were used to identify {\it file}
 meaning from the provided value.}
 For each service we provide a mapping from its own data-format (JSON, XML, etc.) into
 common data-format used in DAS.\footnote{We used JSON as a DAS data format.}
 We also store a mapping between DAS keys and data-service API names to
 establish appropriate calls to data-service upon provided DAS query. For example,
-when user specifies $file$ in their DAS query, we invoke DBS listFiles and PhEDEx
+when user specifies {\it file} in their DAS query, we invoke DBS listFiles and PhEDEx
 fileReplicas APIs. 
 
-The DAS Analytics DB plays special role for DAS. It collects information
+The DAS Analytics DB plays special role. It collects information
 about user requests placed to the system. Each request was recorded. Upon its
 decomposition into set of selection keys and conditions we also record
 API name and API input parameters and keep updating their counter for repeated
@@ -295,11 +295,10 @@ strategy for most requested APIs.
 
 The DAS caching system was used to store data-service results and aggregated
 information in form of DAS records. As it shown in figure \ref{DAS_cache} 
-the DAS cache server has dual purpose.
-On one side it talks to DAS Analytics DB to trigger jobs for worker robots
-who update cache with most popular queries, on another side it talks to DAS
-cache back-end to either stored mapped results or merge them with 
-existing DAS objects in a cache. 
+the DAS cache server updates Analytics DB, requests and retrieve data from DAS cache
+and aggregate data over there. The independent set of daemons, DAS robots, are
+constantly monitor Analytics DB for most popular requests and pre-fetch most
+common data in DAS cache.
 
 Each user request placed to the system was parsed and set of selection
 and condition keys were identified. They were mapped into set of
@@ -329,21 +328,40 @@ Apart from previous DBS-QL syntax we decided to fully support free text-based qu
 All of them were transformed into MongoDB query syntax, who was used internally in
 DAS core layer. It represents a set of selection keys and conditions as a JSON document.
 For example, a query
-$dataset\,\,site=T1\_CH\_CERN$
+{\it dataset site=T1\_CH\_CERN}
 where transformed into 
-$\{"fields" : ["dataset"], "spec" : \{ "site" :"T1\_CH\_CERN"\}\}$.
+{\it \{"fields" : ["dataset"], "spec" : \{"site" : "T1\_CH\_CERN"\}\}}.
 Such syntax was perfect fit for us, since it allows us to store all queries
 as JSON documents into Analytics DB for further analysis. It is worthwhile to note that
 MongoDB query syntax is very reach. It supports advanced queries with 
 boolean expressions, conditional operators, regular expression, etc. providing
-a real power for end-user queries.
+a real power for our end-users.
 
 \subsection{Data-services and aggregation}
-DAS provided a pluggable system to add new CMS data-services. To do that we
-identify appropriate APIs, input and output parameters, data-service
+DAS provided a pluggable interface to add new CMS data-services. 
+Each data-service plugin consists of its DAS map and individual data parser. 
+The data-service DAS map consists of information about data-service APIs,
+input and output parameters, data-service
 format and their mapping to DAS keys as well as relation to other sub-systems. 
-This information was stored into DAS Mapping DB. A data-service plugin consists
-of its DAS map and individual data parser. The DAS Mapping DB becomes an authorative
+The information was stored into DAS Mapping DB. Below you can see a typical
+record of SiteDB \cite{SiteDB} data-service:
+\begin{verbatim}
+{"api": {"params": {"name": ""}, "name": "CMSNametoSE"}, 
+ "api2das": [{"pattern": "re.compile('^T[0-3]_')", 
+              "api_param": "name", 
+              "das_key": "site"}], 
+ "_id": "4ae1f8dfe2194e4581000014", 
+ "system": "sitedb", 
+ "daskeys": [{"pattern": "re.compile('^T[0-3]_')", 
+              "key": "site", 
+              "map": "site.name"}]}
+\end{verbatim}
+It contains information about API name and parameters, mapping between API input
+parameter and DAS key, CMS system name and set of DAS keys this API is covering.
+We also used regular expression patterns, evaluated by python during run time
+execution, to verify provided set of input paremters and DAS keys.
+
+The DAS Mapping DB becomes an authorative
 source of information about all data-services participating in DAS and their
 relationships. Based on this information we were able to retrieve appropriate data
 from different data-services, re-map them into DAS notations and
@@ -359,10 +377,35 @@ store results into DAS cache.
 Once data were retreived from data-services an additional step to aggregate
 matched objects in DAS cache were applied. For instance, both data-service outputs 
 contained a file name in them. We use it as a common key to merge records in DAS cache.
-This merged (aggregated) results represented a DAS data objects. Each DAS data
+This merged (aggregated) results represented DAS data objects. Each DAS data
 object contains a standard DAS header, which identify look-up time,
 request url, input parameters and API method as well as response version, expiration
-time and checksum of the output. 
+time and checksum of the output. Here is an example of individual DAS record:
+\begin{verbatim}
+{"_id": "4ae1e7ffe2194e4243000003", 
+ "site":[{"samname": "CERN-PROD", "name": "T1_CH_CERN"}, 
+         {"sitename": "CERN", "name": "T1_CH_CERN"}], 
+ "das": [{"qhash": ["ed2b73067794d443ed56756d9b94f7bc"], 
+          "ctime": 0.95439004898071289, "expire": 1256362175.7692671, 
+          "url": "https://cmsweb.cern.ch/sitedb/json/index/CMStoSAMName", 
+          "timestamp": 1256318975.7692671, "system": ["sitedb"], 
+          "api": ["CMStoSAMName"], "version": "", "selection_keys": []}, 
+         {"qhash": ["ed2b73067794d443ed56756d9b94f7bc"], 
+          "ctime": 1.2158100605010986, 
+          "api": ["CMStoSiteName"], 
+          "url": "https://cmsweb.cern.ch/sitedb/json/index/CMStoSiteName", 
+          "timestamp": 1256318974.7774379, "system": ["sitedb"], 
+          "expire": 1256362174.7774379, "version": "", "selection_keys": []}
+        ]
+}
+\end{verbatim}
+It represents aggregated DAS record between two SiteDB APIs, CMStoSAMName and
+CMStoSiteName, where API results are merged under {\it site} key. The information
+under {\it das} key shows DAS header, which contains sufficient amount of
+information about API name, location, execution time and lifetime of the data.
+Using this information was valuable contribution in debugging process of
+data-services themselves, e.g. identification of not-matched records, 
+latency studies, etc.
 
 We used REST model \cite{REST} for all data requests to DAS.
 It allows us to share core library and other components during development of 
@@ -370,10 +413,10 @@ various DAS clients, e.g. CLI, web interface, robots, etc. and hides
 complexity of access to individual data-services and security policies.
 For instance, to access on-line Run Summary information we were forced to use
 Grid certificates. Instead of propagating user certificate to data-service
-the DAS works as a proxy and use host certficiate to serve such requests.
+the DAS works as a proxy and used host certficiate to serve such requests.
 
 \section{Results\label{Results}}
-DAS was deployed plugins to work with the following CMS data-services:
+DAS was deployed to work with the following CMS data-services:
 \begin{itemize}
 \item DBS \cite{DBS}, Data Bookkeeping System which collect information
 about CMS meta-data;
@@ -385,25 +428,37 @@ future, and it keeps track of CMS personnel at each site, including the
 roles and duties they fulfill in the collaboration;
 \item RunSummary DB \cite{RunSummary} collects information about run and triggers
 conditions during data-taking;
-\item LumiDB \cite{LumiDB} collects information about Luminosity conditions;
-\item DQ \cite{DQ}, Data Quality data-service which collects information
-about detector conditions during data taking;
-\item Overview \cite{Overview}, collects information about CMS
-transfer rate, etc.;
+%\item LumiDB \cite{LumiDB} collects information about Luminosity conditions;
+%\item DQ \cite{DQ}, Data Quality data-service which collects information
+%about detector conditions during data taking;
+%\item Overview \cite{Overview}, collects information about CMS
+%transfer rate, etc.;
 \item Dashboard \cite{Dashboard} project for LHC experiments aims to 
 provide a single entry point to the monitoring data collected from the 
 distributed computing systems of the LHC virtual organization.
 \end{itemize}
 Each data-service has its own scope, size and lifetime. For instance the data
 in PhEDEx are transient due to constant migration of CMS data with daily DB size of
-around few tens of GBs. The DBS system were divided into dozen of individual DBs, 
-who has been used by different production teams for various bookkeeping tasks. Typical
-size of individual DBS instance was around of fwe GBs, with overall DBS size of
-around of 50 GBs.\footnote{This include table and index sizes.}
+around few tens of GBs. The DBS system were divided into dozen of individual instances, 
+who has been used by different production teams for various bookkeeping tasks.
+Figure \ref{db_size} shows current size of meta-data from aforementioned data-service.
+\begin{figure}[htb]
+\centering
+\includegraphics[width=100mm]{db_size.pdf}
+\caption{
+Database size of CMS data-services participating in DAS in November 2009, before
+data taking.
+}
+\label{db_size}
+\end{figure}
+%Typical
+%size of individual DBS instance was around of fwe GBs, with overall DBS size of
+%around of 50 GBs.\footnote{This include table and index sizes.}
 
-At the moment we don't have exact numbers for amount of data we will store to DAS,
-but based on test performed during CRAFT09 exercise we produced 0.3PB of data which
-translate into $\sim50$ GB of meta-data stored into DBS system. Based on this
+At the moment we don't have exact numbers for amount of data which will stored to DAS,
+but based on test performed during CRAFT09 \cite{CRAFT09}
+exercise we produced 0.3PB of data which
+translate into $\sim50$ GB of meta-data stored into DBS system. Therefore
 we can anticipate to collect $\sim500$GB of meta-data per year during data-taking period
 at LHC.
 %In CRAFT09 acquisition era, Tier-0 produced a total of 6.03
@@ -448,26 +503,28 @@ as number of aggregated records and left over from both systems.}
 We measured elapsed time as the following:
 \begin{itemize}
 \item[]
+{\it
 Elapsed time = retrieval time + parsing time + remapping time 
         + cache insertion/indexing time 
         + (aggregation time) + (output creation time)
+}
 \end{itemize}
-Here the retrieval time is a time required to access data from remote data-services,
-parsing time is a time required to read and parse received data, remapping time
+Here the {\it retrieval time} is a time required to access data from remote data-services,
+{\it parsing time} is a time required to read and parse received data, {\it remapping time}
 is a time to convert notations used by data-service to DAS ones for every object
-we parse, cache insertion and indexing time represents time spend to add objects into
-the DAS cache, aggregation time is required to merge objects into DAS records based
-on their common key (block name in this case) and output creation time 
+we parse, {\it cache insertion} and {\it indexing time} represents time spend to add objects into
+the DAS cache, {\it aggregation time} is required to merge objects into DAS records based
+on their common key (block name in this case) and {\it output creation time}
 is a time required to write DAS records to disk. Please note that last two
-components, aggregation and output creation time, were only applied to
-final DAS step and not to individual components.
+components, {\it aggregation} and {\it output creation time}, were only applied to
+final DAS step and not to individual DAS components.
 
 The individual DAS components (DBS and PhEDEx) shown roughly the same performance.
 For example, in case of PhEDEx the total time spent in DAS was 177 seconds, where
 majority of the time was spent on retrieval, 83 seconds, and parsing, 29 seconds.
-The remaining 65 seconds was spent on remapping, cache insertion, indexing. The
-numbers for DBS system were a like. As you can see from Table \ref{DAS_benchmark},
-the time spent to read DAS records (last column) from cache was quite
+The remaining 65 seconds was distributed among remapping, cache insertion, indexing. The
+numbers for DBS system were alike. As you can see from Table \ref{DAS_benchmark},
+the time spent to read DAS records (last column) from the cache was quite
 reasonable, roughly 2.5 seconds from both systems. While final time to
 get DAS records on disk was below 42 seconds. This was mostly due to I/O operations.
 
@@ -478,15 +535,16 @@ even though our measurements shown that it can still be speed up by factor of
 10 if we will use C++ DB driver.}
 
 \section{Summary}
-We presented new data aggregation service (DAS) developed for High-Energy experiment
-at LHC, CERN, Geneva, Switzerland. It was designed to providing caching and
+We presented new data aggregation service (DAS) developed for CMS High-Energy experiment
+at LHC, CERN, Geneva, Switzerland. It was designed to provide caching and
 aggregation layer on top of existing relational and non-relation data-service
-in mostly real time fashion. All the data were retrieved on demand basis,
-while a pre-fetch of most common queries is in our plans. The DAS system reach
-first is under commissioning phase right now and prelimiary performance studies
-shown it can accommodate needs of CMS experiment. The CMS experiment started to
+mostly in real time fashion. All the data were retrieved on demand basis,
+while data pre-fetching of most common queries is in our plans. The DAS system 
+is under commissioning phase right now and prelimiary performance studies
+show it can accommodate needs of CMS experiment as general purpose meta-data
+service. The CMS experiment is started to
 collect data from November 2009 and we expect to write about PB of data each
-year to tape. In addition the Monte-Carlo samples will be produced at this scale.
+year to tape. In addition, the Monte-Carlo samples will be produced at this scale.
 Based on test studies performed in CMS, it can translate to the order of
 $\sim500$GB of meta-data each year. The DAS should sustain such load and provide
 interface as data discovery service in CMS.
@@ -565,19 +623,22 @@ https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary
 \bibitem{SiteDB}
 https://cmsweb.cern.ch/sitedb/
 
-\bibitem{LumiDB}
-https://twiki.cern.ch/twiki/bin/view/CMS/CMS-DMWM-DBS-Luminosity
+%\bibitem{LumiDB}
+%https://twiki.cern.ch/twiki/bin/view/CMS/CMS-DMWM-DBS-Luminosity
 
-\bibitem{DQ}
-Data-Quality DB reference
+%\bibitem{DQ}
+%Data-Quality DB reference
 
-\bibitem{Overview}
-https://cmsweb.cern.ch/overview/
+%\bibitem{Overview}
+%https://cmsweb.cern.ch/overview/
 
 \bibitem{Dashboard}
 J. Andreeva, et. al,
 ``Experiment Dashboard – The Monitoring System for the LHC Experiments'',
 GMW’07, June 25, 2007, Monterey, California, USA.
+
+\bibitem{CRAFT09}
+https://twiki.cern.ch/twiki/bin/view/CMS/CRAFT09AnalysisInfo
 
 \bibitem{DBSearch}
 D. Konopnicki, O. Shmueli,
