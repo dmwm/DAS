@@ -4,8 +4,8 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.2 2009/03/10 20:57:23 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: monitor_service.py,v 1.3 2009/04/30 18:31:33 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -56,9 +56,12 @@ class MonitorService(DASAbstractService):
             url = self.url + '/' + api
             res = self.getdata(url, args)
             jsondict = eval(res)
-            items = (item for item in jsondict['data'])
-            data  = [{key: '%s' % str(d)} for d in items]
-#            data  = [{key: '%s : %s' % (k, v)} for k, v in items]
+            monitor_time = jsondict['series']
+            monitor_data = jsondict['data']
+            items = ({'time':t, 'data':d} for t, d in \
+                                zip(monitor_time, monitor_data))
+            data  = [{key: d} for d in items]
+#            data  = [{key: '%s' % str(d)} for d in items]
         # TODO: I need to see how to multiplex data for different keys
         return data
 
