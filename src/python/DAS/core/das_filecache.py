@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.12 2009/05/28 18:59:10 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_filecache.py,v 1.13 2009/05/30 19:00:44 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -230,9 +230,12 @@ class DASFilecache(Cache):
                     fdr = open(filename, 'rb')
                     if  limit:
                         for i in range(0, limit):
-                            res = marshal.load(fdr)
-                            if  i >= idx:
-                                yield res
+                            try:
+                                res = marshal.load(fdr)
+                                if  i >= idx:
+                                    yield res
+                            except EOFError, err:
+                                break
                     else:
                         while 1:
                             try:
