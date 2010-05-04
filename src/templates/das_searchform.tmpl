@@ -35,10 +35,6 @@ results/per page
 </form>
 <p></p>
 
-#if $msg
-$msg
-#end if
-
 #if $input
 <script type="application/javascript">
 //<![CDATA[
@@ -53,4 +49,8 @@ updateInput('$input');
 <!-- end of das_searchform.tmpl -->
 
 <div id="_response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
+
+#if $msg
+$msg
+#end if
 
