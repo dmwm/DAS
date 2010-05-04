@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.7 2009/09/16 20:32:34 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: utils.py,v 1.8 2009/10/13 18:06:19 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -135,7 +135,7 @@ def json2html(idict, pad="", short=False):
             sss += pad + """ <code class="key">"%s"</code>""" % key
             if type(val) is types.NoneType:
                 sss += """:<code class="null">None</code>"""
-            elif  type(val) is types.IntType or pat.match(val):
+            elif  type(val) is types.IntType or pat.match(str(val)):
                 sss += """:<code class="number">%s</code>""" % val
             else:
                 sss += """:<code class="string">"%s"</code>""" % val
