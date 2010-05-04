@@ -4,15 +4,15 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.3 2009/06/04 14:10:18 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: runsum_service.py,v 1.4 2009/06/09 14:07:24 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import ConfigParser
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator
+from DAS.utils.utils import map_validator, get_key_cert
 from DAS.services.runsum.runsum_parser import parser as runsum_parser
 from DAS.services.runsum.run_summary import get_run_summary
 from DAS.core.das_mapping import json2das, das2result
@@ -66,8 +66,7 @@ class RunSummaryService(DASAbstractService):
         params  = dict(self.params)
         for item in conditions:
             params[item['key'].upper()] = item['value']
-        key     = os.path.join(os.environ['HOME'], '.globus/newkey.pem')
-        cert    = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
+        key, cert = get_key_cert()
         debug   = 0
         if  self.verbose > 1:
             debug = 1
