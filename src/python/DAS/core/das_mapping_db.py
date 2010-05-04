@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.5 2009/09/29 20:48:11 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.6 2009/10/02 18:58:41 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -32,7 +32,7 @@ class DASMapping(object):
         self.dbname  = getarg(config, 'mapping_dbname', 'mapping')
         self.colname = 'db'
 
-        msg = "Init DAS mapping %s:%s@%s" \
+        msg = "DASMapping::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
         self.logger.info(msg)
         

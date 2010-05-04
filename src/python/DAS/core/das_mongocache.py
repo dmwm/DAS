@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.12 2009/10/02 15:04:05 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_mongocache.py,v 1.13 2009/10/02 18:59:10 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -74,7 +74,7 @@ class DASMongocache(Cache):
         self.logger  = config['logger']
         self.verbose = config['verbose']
 
-        msg = "Init mongocache %s:%s@%s" \
+        msg = "DASMongocache::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
         self.logger.info(msg)
 
