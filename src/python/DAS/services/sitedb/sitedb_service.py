@@ -4,14 +4,15 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.16 2009/11/20 00:58:32 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: sitedb_service.py,v 1.17 2009/11/25 18:22:38 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import types
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import add2dict, map_validator
+from DAS.utils.utils import row2das
 
 class SiteDBService(DASAbstractService):
     """
@@ -51,6 +52,11 @@ class SiteDBService(DASAbstractService):
         """
         Parser for SiteDB JSON data-services
         """
+        notationmap = self.notations()
+        notations = notationmap[''] # use api='', i.e. notations valid for all APIs
+        if  notationmap.has_key(api):
+            notations.update(notationmap[api])
+
         close = False
         if  type(source) is types.InstanceType:
             data = source.read()
@@ -83,15 +89,16 @@ class SiteDBService(DASAbstractService):
             else:
                 raise Exception('Not implemented yet')
             if  params:
-                for key, val in params.items():
-                    if  val:
-                        if  pat.match(val):
+                for ikey, ival in params.items():
+                    if  ival:
+                        if  pat.match(ival):
                             if  not row.has_key('cmsname'):
-                                row['cmsname'] = val
-                        if  val.find('.') != -1: # SE or CE
+                                row['cmsname'] = ival
+                        if  ival.find('.') != -1: # SE or CE
                             if  not row.has_key('se'):
-                                row['se'] = val
-#            self.row2das(self.name, "", row) # here we pass empty api=""
+                                row['se'] = ival
+            # convert row to DAS notations, use api=""
+            row2das(self.dasmapping.notation2das, self.name, "", row)
             yield {'site': row}
 
             if  close:
