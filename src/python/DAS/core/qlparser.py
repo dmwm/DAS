@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.25 2009/11/03 16:31:14 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: qlparser.py,v 1.26 2009/11/08 19:14:21 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -26,7 +26,7 @@ from DAS.utils.utils import getarg, genkey
 import DAS.utils.jsonwrapper as json
 
 DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
-                 'between', 'nin', 'in', 'last']
+                 ' between ', ' nin ', ' in ', ' last ']
 #                 ' not like ', ' like ', 
 #                 ' between ', ' not in ', ' in ', ' last ']
 MONGO_MAP = {
