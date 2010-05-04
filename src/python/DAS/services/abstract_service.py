@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.13 2009/05/18 01:40:11 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: abstract_service.py,v 1.14 2009/05/18 21:11:37 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -24,8 +24,8 @@ from DAS.utils.utils import cartesian_product
 from DAS.core.das_couchdb import DASCouchDB
 from DAS.core.das_filecache import DASFilecache
 from DAS.core.basemanager import BaseManager
-from DAS.core.das_mapping import jsonparser, das2api, das2result
-#from DAS.core.das_mapping import json2das, das2api, das2result, select_keys
+#from DAS.core.das_mapping import jsonparser, das2api, das2result
+from DAS.core.das_mapping import json2das, das2api, das2result
 from DAS.core.qlparser import QLLexer
 
 class DASAbstractService(object):
@@ -197,8 +197,6 @@ class DASAbstractService(object):
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
-        import time
-        time0 = time.time()
         msg = 'DASAbstractService::worker(%s, %s)' % (query, icond_dict)
         self.logger.info(msg)
 
@@ -260,8 +258,6 @@ class DASAbstractService(object):
                     args[key] = val
             return args
 
-        time1 = time.time()
-        print "working time0", time1-time0
         # check if all requested keys are covered by one API
         for api, aparams in self.map.items():
             if  set(selkeys) & set(aparams['keys']) == set(selkeys):
@@ -279,10 +275,7 @@ class DASAbstractService(object):
                     url = self.url # JAVA, e.g. http://host/Servlet
                 else: # if we have http://host/apiname?...
                     url = self.url + '/' + apiname
-                time2 = time.time()
                 res = self.getdata(url, args)
-                print "url time", time.time()-time2
-                time3 = time.time()
                 res = res.replace('null', '\"null\"')
 #                jsondict = eval(res)
                 try:
@@ -290,19 +283,15 @@ class DASAbstractService(object):
                 except:
                     jsondict = eval(res)
                     pass
-                print "eval time", time.time()-time3
 #                jsondict = self.adjust_result(api, jsondict)
                 if  self.verbose > 2:
                     print "\n### %s::%s returns" % (self.name, api)
                     print jsondict
                 if  jsondict.has_key('error'):
                     continue
-                time4 = time.time()
-                data = jsonparser(self.name, jsondict, keylist)
-#                data = json2das(self.name, jsondict, keylist)
-                print "jsonparser time", time.time()-time4
+#                data = jsonparser(self.name, jsondict, keylist)
+                data = json2das(self.name, jsondict, keylist, selkeys)
                 return data
-#                return select_keys(data, selkeys)
 
         # if one API doesn't cover sel keys, will call multiple APIs
         if  self.verbose > 2:
@@ -333,8 +322,8 @@ class DASAbstractService(object):
             if  self.verbose > 2:
                 print "\n### %s::%s returns" % (self.name, api)
                 print jsondict, keylist
-            data = jsonparser(self.name, jsondict, keylist)
-#            data = json2das(self.name, jsondict, keylist)
+#            data = jsonparser(self.name, jsondict, keylist)
+            data = [i for i in json2das(self.name, jsondict, keylist, selkeys)]
             resdict[api] = data
             first_row = data[0]
             keys = first_row.keys()
