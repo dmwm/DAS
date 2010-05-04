@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.13 2009/05/13 14:54:08 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: utils.py,v 1.14 2009/05/18 01:13:16 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -200,8 +200,30 @@ def results2couch(query, results, expire=600):
     tstamp = timestamp()
     resdict['timestamp'] = tstamp
     resdict['expire'] = tstamp + expire
-    resdict['results'] = results
+    if  type(results) is types.GeneratorType:
+        resdict['results'] = [res for res in results]
+    else:
+        resdict['results'] = results
     return resdict
+
+def genresults_gen(system, results, collect_list):
+    """
+    Generator of results for given system based on provided dict 
+    of 'results' and final set 'collect_list'.
+    The output rowdict in a form {'system':system_name, 'key':value}
+    """
+    rdict = {}
+    rdict['system'] = system
+    for key in collect_list:
+        rdict[key] = ""
+
+    for res in results:
+        rowdict = dict(rdict)
+        for idx in range(0, len(collect_list)):
+            key = collect_list[idx]
+            if  res.has_key(key):
+                rowdict[key] = res[key]
+        yield rowdict
 
 def genresults(system, results, collect_list):
     """
