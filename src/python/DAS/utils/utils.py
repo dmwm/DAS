@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.18 2009/06/09 14:07:24 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: utils.py,v 1.19 2009/06/12 14:37:55 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -73,6 +73,8 @@ def dump(ilist, idx=0):
     if  not reslist:
         print "No results found"
         return
+    # remove duplicates
+    reslist = [k for k, g in groupby(reslist)]
     try:
         keys = reslist[0].keys()
     except:
