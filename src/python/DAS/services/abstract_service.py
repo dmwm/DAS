@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.91 2010/04/13 15:14:37 valya Exp $"
-__version__ = "$Revision: 1.91 $"
+__revision__ = "$Id: abstract_service.py,v 1.92 2010/04/13 16:36:08 valya Exp $"
+__version__ = "$Revision: 1.92 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -176,10 +176,9 @@ class DASAbstractService(object):
         try:
             data = urllib2.urlopen(req)
         except urllib2.HTTPError, httperror:
-            msg = traceback.format_exc()
-            self.logger.error(msg)
             msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                         % (url, params, headers)
+            self.logger.error(msg + '\n' + traceback.format_exc())
             data = {'error': msg}
             try:
                 err  = httperror.read()
@@ -189,10 +188,9 @@ class DASAbstractService(object):
                 pass
             data = str(data)
         except:
-            msg = traceback.format_exc()
-            self.logger.error(msg)
             msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                         % (url, params, headers)
+            self.logger.error(msg + '\n' + traceback.format_exc())
             data = {'error': msg, 
                     'reason': 'Unable to invoke HTTP call to data-service'}
             data = str(data)
