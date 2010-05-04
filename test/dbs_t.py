@@ -19,8 +19,8 @@ class testDBS(unittest.TestCase):
 <result STORAGEELEMENT_SENAME='se' FILES_LOGICALFILENAME='test'/>
 """
         resultlist = parser(data)
-        expectlist = [{'STORAGEELEMENT_SENAME': 'se', 
-                       'FILES_LOGICALFILENAME': 'test'}]
+        expectlist = [{'site': 'se', 
+                       'file': 'test'}]
         self.assertEqual(expectlist, resultlist)
 
 #
