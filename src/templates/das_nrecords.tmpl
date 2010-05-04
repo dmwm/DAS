@@ -3,11 +3,10 @@
 
 <div id="results">
 
-<div align="left">
-<p>
-<table width="100%" class="normal">
+<div class="left">
+<table class="normal">
 <tr>
-<td align="left">
+<td class="left">
 Found $nrows results, showing
 #if not $limit
 all results
@@ -15,28 +14,30 @@ all results
 </tr>
 #else
 results
-<span id="results" name="results">
+<span id="nrecords">
 0-$limit
 </span>
 </td>
-<td align="right">
-<div id='paginator' name='paginator'> </div>
+<td class="right">
+<div id="paginator"> </div>
 </td>
 </tr>
 #end if
 </table>
+</div> <!-- end of class="left" -->
 <!-- end of das_nrecords.tmpl template -->
 
 </div> <!-- end of id="results" -->
 #if $limit
 <script type="application/javascript">
+//<![CDATA[
 function changeRange(page) {
     var limit = $limit
     var id = document.getElementById('startIdx');
     var startIdx = id.value;
     id.value = (page-1);
 
-    id = document.getElementById('results');
+    id = document.getElementById('nrecords');
     id.innerHTML = '' + (page-1)*limit + '-' + ((page-1)*limit+limit);
 
     hideRows();
@@ -47,7 +48,7 @@ function showRows(page) {
     var limit = $limit;
     var start = (page-1)*limit;
     var newlimit = start+limit;
-    for(i=start; i<newlimit; i++) {
+    for(var i=start; i<newlimit; i++) {
         var id = document.getElementById('row'+i);
         if (id) {
             id.className = "show";
@@ -117,5 +118,6 @@ function makePagination(startWith) {
 }
 showRows(1);
 makePagination(1);
+//]]>
 </script>
 #end if
