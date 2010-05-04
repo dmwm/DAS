@@ -1,7 +1,10 @@
 
 <!-- das_services.tmpl -->
 <div class="page">
-<b>DAS mapping:</b>
+<b>DAS mapping</b><br />
+DAS provides a mapping between query keys, e.g. block, site and 
+their representation inside of DAS records. Use this table to identify
+what particular DAS key means in concrete CMS sub-system.
 <div class="normal">
 #*
 #for service in $service_keys.keys()
@@ -21,7 +24,7 @@ keys
 *#
 <table class="daskeys">
 <tr>
-<th>DAS</th>
+<th>DAS keys\services</th>
 #set systems=$dasdict.keys()
 #for system in $systems
 <th>$system</th> 
@@ -88,7 +91,12 @@ $uikey
 
 <p></p>
 
-<b>Map/reduce functions</b>
+<b>Map/reduce functions</b><br />
+The following set of functions has been defined in DAS as map/reduce operation over
+DAS records. You can use them via pipes to your queries, e.g. 
+<pre>
+block=/a/b* | sum(block.replica.size)
+</pre>
 <div class="normal">
 <ul>
 #for row in $mapreduce
