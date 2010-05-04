@@ -6,8 +6,8 @@
 DAS cache server web configuration file
 """
 
-__revision__ = "$Id: das_cacheconfig.py,v 1.4 2009/06/04 18:30:28 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_cacheconfig.py,v 1.5 2009/06/08 19:15:48 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -48,7 +48,7 @@ active.rest.section_('model')
 active.rest.model.object = 'DAS.web.DASCacheModel'
 active.rest.model.templates = environ['WTBASE'] + '/templates/WMCore/WebTools/'
 active.rest.section_('formatter')
-active.rest.formatter.object = 'RESTFormatter'
+active.rest.formatter.object = 'DASRESTFormatter'
 active.rest.formatter.templates = '/templates/WMCore/WebTools/'
 #active.rest.logLevel = 'DEBUG'
 # DASCacheMgr settings:

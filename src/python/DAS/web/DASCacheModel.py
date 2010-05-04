@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.6 2009/06/03 20:00:17 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.7 2009/06/08 19:15:48 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -17,7 +17,8 @@ import traceback
 
 # WMCore/WebTools modules
 from WMCore.WebTools.RESTModel import RESTModel
-from WMCore.WebTools.Page import exposedasjson
+#from WMCore.WebTools.Page import exposedasjson
+from WMCore.WebTools.Page import exposejson
 
 # DAS modules
 from DAS.core.das_core import DASCore
@@ -89,7 +90,7 @@ class DASCacheModel(RESTModel):
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(self.cachemgr.worker, (worker, ))
 
-    @exposedasjson
+    @exposejson
     @checkargs
     def handle_get(self, *args, **kwargs):
         """
@@ -121,7 +122,7 @@ class DASCacheModel(RESTModel):
         self.debug(str(data))
         return data
 
-    @exposedasjson
+    @exposejson
     @checkargs
     def handle_post(self, *args, **kwargs):
         """
@@ -145,7 +146,7 @@ class DASCacheModel(RESTModel):
         self.debug(str(data))
         return data
 
-    @exposedasjson
+    @exposejson
     @checkargs
     def handle_put(self, *args, **kwargs):
         """
@@ -162,7 +163,7 @@ class DASCacheModel(RESTModel):
         self.debug(str(data))
         return data
 
-    @exposedasjson
+    @exposejson
     @checkargs
     def handle_delete(self, *args, **kwargs):
         """

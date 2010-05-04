@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.11 2009/06/03 20:00:17 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: DASSearch.py,v 1.12 2009/06/08 19:15:48 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -202,8 +202,10 @@ class DASSearch(TemplatedPage):
         path   = '/rest/json/GET'
 #        data   = json.loads(urllib2_request(url+path, params))
         result = self.decoder.decode(urllib2_request(url+path, params))
-        rdict  = json.loads(result)
-        data   = rdict['results']
+        if  type(result) is types.StringType:
+            data = json.loads(result)
+        else:
+            data = result
         titles = []
         res    = []
         form   = self.form(uinput=uinput)
@@ -220,8 +222,10 @@ class DASSearch(TemplatedPage):
             path   = '/rest/json/POST'
 #            data   = json.loads(urllib2_request(url+path, params))
             result = self.decoder.decode(urllib2_request(url+path, params))
-            rdict  = json.loads(result)
-            data   = rdict['results']
+            if  type(result) is types.StringType:
+                data = json.loads(result)
+            else:
+                data = result
             # TODO: place AJAX message which will try to retrieve results again
             msg    = data['status']
             form   = self.form(uinput=uinput, msg=msg)
@@ -340,7 +344,9 @@ class DASSearch(TemplatedPage):
         results = {'records':rows, 'recordsReturned': nrows,
                    'totalRecords': nrows, 'startIndex':0,
                    'sort':'true', 'dir':'asc'}
-        names   = {'titlelist':titles, 'results':results, 'form':form,
+        names   = {'titlelist':str(titles).replace("u'", "'"), 
+                   'results':str(results).replace("u'", "'"), 
+                   'form':form,
                    'coldefs':coldefs, 'nrows':nrows, 'rowsperpage':limit,
                    'tag':'mytag'}
         page    = self.templatepage('das_table', **names)
