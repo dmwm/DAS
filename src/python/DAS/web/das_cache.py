@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.4 2010/04/08 15:12:00 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_cache.py,v 1.5 2010/04/08 19:05:57 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -29,9 +29,6 @@ from DAS.utils.utils import getarg, genkey
 from DAS.web.tools import exposejson
 from DAS.web.das_webmanager import DASWebManager
 from DAS.utils.regex import web_arg_pattern
-
-if  sys.version_info < (2, 5):
-    raise Exception("DAS requires python 2.5 or greater")
 
 def checkargs(func):
     """Decorator to check arguments to REST server"""
@@ -166,7 +163,7 @@ class DASCacheService(DASWebManager):
         if  'logging' not in self.con.database_names():
             dbname = self.con['logging']
             options = {'capped':True, 'size': capped_size}
-            dbname.create_collection('db', options)
+            dbname.create_collection('db', **options)
             self.warning('Created logging.db, size=%s' % capped_size)
         self.col      = self.con['logging']['db']
         sleep         = cdict.get('sleep', 2)
@@ -197,7 +194,7 @@ class DASCacheService(DASWebManager):
         self.col.insert(doc)
 
     @checkargs
-    def records(self, **kwargs):
+    def records(self, *args, **kwargs):
         """
         HTTP GET request.
         Retrieve records from provided collection.
@@ -238,7 +235,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def status(self, **kwargs):
+    def status(self, *args, **kwargs):
         """
         HTTP GET request. Check status of the input query in DAS.
         """
@@ -257,7 +254,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def nresults(self, **kwargs):
+    def nresults(self, *args, **kwargs):
         """
         HTTP GET request. Ask DAS for total number of records
         for provided query.
@@ -276,7 +273,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def request(self, **kwargs):
+    def request(self, *args, **kwargs):
         """
         HTTP GET request.
         Retrieve results from DAS cache.
@@ -315,7 +312,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def create(self, **kwargs):
+    def create(self, *args, **kwargs):
         """
         HTTP POST request. 
         Requests the server to create a new resource
@@ -340,7 +337,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def replace(self, **kwargs):
+    def replace(self, *args, **kwargs):
         """
         HTTP PUT request.
         Requests the server to replace an existing
@@ -371,7 +368,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def delete(self, **kwargs):
+    def delete(self, *args, **kwargs):
         """
         HTTP DELETE request.
         Delete input query in DAS cache
