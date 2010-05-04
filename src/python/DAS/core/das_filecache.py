@@ -7,17 +7,19 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.7 2009/05/19 18:55:19 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_filecache.py,v 1.8 2009/05/19 21:11:36 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import types
-try:
-    import cPickle as pickle
-except:
-    import pickle
-    pass
+#try:
+#    import cPickle as pickle
+#except:
+#    import pickle
+#    pass
+import marshal
+
 import time
 
 from sqlalchemy import Table, Column, Integer, String
@@ -170,8 +172,11 @@ class DASFilecache(Cache):
                 msg = "found valid query in cache, key=%s" % key
                 self.logger.debug("DASFilecache::get_from_cache %s" % msg)
                 if  os.path.isfile(filename):
-                    fdr = open(filename, 'r')
-                    res = pickle.load(fdr)
+#                    fdr = open(filename, 'r')
+#                    res = pickle.load(fdr)
+#                    fdr.close()
+                    fdr = open(filename, 'rb')
+                    res = marshal.load(fdr)
                     fdr.close()
                     return res
             else:
@@ -207,8 +212,11 @@ class DASFilecache(Cache):
         except:
             pass
         filename = os.path.join(dir, key)
-        fdr = open(filename, 'w')
-        pickle.dump(results, fdr)
+#        fdr = open(filename, 'w')
+#        pickle.dump(results, fdr)
+#        fdr.close()
+        fdr = open(filename, 'wb')
+        marshal.dump(results, fdr)
         fdr.close()
         
         session  = self.session()
