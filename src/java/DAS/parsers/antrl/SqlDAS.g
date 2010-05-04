@@ -47,7 +47,7 @@ selectList	:kw=	gkw 		{kws.append(str($kw.text))} {validateKw($kw.text)}
  	kw=	gkw  		{kws.append(str($kw.text))} {validateKw($kw.text)}
  		)*;		 
 
-KW	: ('a' .. 'z' | '0' .. '9' | 'A' .. 'Z') ( 'a' .. 'z' | '0' .. '9'| 'A' .. 'Z' | '.' | '-' | '_' | ':' | '#' | '/' | '*' | '%' | '&')*;
+KW	: ('a' .. 'z' | '0' .. '9' | 'A' .. 'Z'| '-' | '_' | ':' | '#' | '/' | '*' | '%' ) ( 'a' .. 'z' | '0' .. '9'| 'A' .. 'Z' | '.' | '-' | '_' | ':' | '#' | '/' | '*' | '%' | '&')*;
 //gkw	: KW ( '('  KW  ')' )*; 
 gkw	: KW | (('count'|'sum') '('  KW  ')') ; 
 	
