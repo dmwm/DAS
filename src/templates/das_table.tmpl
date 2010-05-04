@@ -1,8 +1,7 @@
 
-$form
-
 <!-- das_table.tmpl -->
-<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.6.0/build/fonts/fonts-min.css" />
+#if $nrows and not $ajax
+
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.6.0/build/paginator/assets/skins/sam/paginator.css" />
 <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.6.0/build/datatable/assets/skins/sam/datatable.css" />
 <script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
@@ -11,7 +10,6 @@ $form
 <script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/paginator/paginator-min.js"></script>
 <script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/datasource/datasource-min.js"></script>
 <script type="text/javascript" src="http://yui.yahooapis.com/2.6.0/build/datatable/datatable-min.js"></script>
-
 
 <!--begin custom header content for this example-->
 <style type="text/css">
@@ -83,5 +81,6 @@ YAHOO.util.Event.addListener(window, "load", function() {
 ##$pages
 ##</div>
 
+#end if
 <!-- end of das_table.tmpl -->
 
