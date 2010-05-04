@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.82 2010/03/17 20:04:02 valya Exp $"
-__version__ = "$Revision: 1.82 $"
+__revision__ = "$Id: utils.py,v 1.83 2010/03/18 17:55:00 valya Exp $"
+__version__ = "$Revision: 1.83 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -993,13 +993,12 @@ def aggregator(results, expire):
     perform aggregation of records on the primary_key of the record.
     """
     record = results.next()
-    prim_key = record['das_primary_key']
-    record.pop('das_primary_key')
+    prim_key = record['das']['primary_key']
     record.pop('das')
     record.pop('_id')
     update = 1
     for row in results:
-        row_prim_key = row.pop('das_primary_key')
+        row_prim_key = row['das']['primary_key']
         row.pop('das')
         row.pop('_id')
         if  row_prim_key != prim_key:
