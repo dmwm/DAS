@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.6 2009/05/19 18:18:26 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_filecache.py,v 1.7 2009/05/19 18:55:19 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -150,16 +150,21 @@ class DASFilecache(Cache):
         key     = genkey(query)
         sysdir  = os.path.join(self.dir, self.get_system(query))
         session = self.session()
-        res     = session.query(Query).filter(Query.hash==key)
+        try: # transactions
+            res = session.query(Query).filter(Query.hash==key)
+            session.commit()
+        except:
+            session.rollback()
+            pass
         for qobj in res:
             valid = eval(qobj.expire) - time.time()
             timestring   = eval(qobj.create)
             creationdate = yyyymmdd(timestring)
             creationhour = hour(timestring)
-            datedir = os.path.join(sysdir, creationdate)
-            hourdir = os.path.join(datedir, creationhour)
-            dir     = hourdir
-            filename = os.path.join(dir, key)
+            datedir      = os.path.join(sysdir, creationdate)
+            hourdir      = os.path.join(datedir, creationhour)
+            dir          = hourdir
+            filename     = os.path.join(dir, key)
             self.logger.info("DASFilecache::get_from_cache %s" % filename)
             if  valid > 0:
                 msg = "found valid query in cache, key=%s" % key
@@ -175,8 +180,13 @@ class DASFilecache(Cache):
                 if  os.path.isfile(filename):
                     os.remove(filename)
                 clean_dirs(hourdir, datedir)
-                session.delete(qobj)
-                session.commit()
+                try: # session transactions
+                    session.delete(qobj)
+                    session.commit()
+                except:
+                    session.rollback()
+                    msg = "Unable to commit to DAS filecache DB"
+                    raise Exception(msg)
         return
 
     def update_cache(self, query, results, expire):
@@ -204,15 +214,20 @@ class DASFilecache(Cache):
         session  = self.session()
         create   = time.time()
         expire   = create+expire
-        try:
-            sobj = session.query(System).filter(System.name==system).one()
+        qobj     = Query(key, query, str(create), str(expire))
+        try: # session transactions
+            try:
+                sobj = session.query(System).filter(System.name==system).one()
+            except:
+                sobj = System(system)
+                pass
+            qobj.system = sobj
+            session.add(qobj)
+            session.commit()
         except:
-            sobj = System(system)
-            pass
-        qobj = Query(key, query, str(create), str(expire))
-        qobj.system = sobj
-        session.add(qobj)
-        session.commit()
+            session.rollback()
+            msg = "Unable to commit DAS filecache DB"
+            raise Exception(msg)
 
     def get_system(self, query):
         system = 'das'
