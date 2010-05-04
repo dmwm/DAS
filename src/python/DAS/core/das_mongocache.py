@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.32 2009/11/10 20:58:15 valya Exp $"
-__version__ = "$Revision: 1.32 $"
+__revision__ = "$Id: das_mongocache.py,v 1.33 2009/11/16 15:48:58 valya Exp $"
+__version__ = "$Revision: 1.33 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -425,7 +425,8 @@ class DASMongocache(Cache):
                 if  query_in_cache:
                     try:
                         entry = dict_value(item, prim_key)
-                        row = self.col.find_one({prim_key:entry})
+                        if  entry:
+                            row = self.col.find_one({prim_key:entry})
                     except:
                         row = None
                         pass
