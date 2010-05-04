@@ -51,6 +51,5 @@ notations : [
     {"notation":"files", "map":"nfiles", "api":""},
     {"notation":"events", "map":"nevents", "api":""},
     {"notation":"lfn", "map":"name", "api":""},
-    {"notation":"node", "map":"site", "api":""},
 ]
 
