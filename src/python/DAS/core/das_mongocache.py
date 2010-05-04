@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.13 2009/10/02 18:59:10 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_mongocache.py,v 1.14 2009/10/12 20:14:03 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -95,6 +95,7 @@ class DASMongocache(Cache):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
+        self.logger.info("DASMongocache::incache(%s)" % query)
         # remove from cache all expire docs
         self.col.remove({'das.expire': {'$lt' : int(time.time())}})
         spec   = getarg(query, 'spec', {})
@@ -111,6 +112,7 @@ class DASMongocache(Cache):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
+        self.logger.info("DASMongocache::nresults(%s)" % query)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
         return self.col.find(spec=spec, fields=fields).count()
