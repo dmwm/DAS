@@ -48,34 +48,44 @@ class testDASAnalyticsMgr(unittest.TestCase):
     def test_api(self):                          
         """test methods for api table"""
         self.mgr.create_db()
-        system = 'dbs'
-        self.mgr.add_system(system)
+        self.mgr.add_system('dbs')
+        self.mgr.add_system('phedex')
 
-        api = 'listBlocks'
-        params = {'apiversion':'DBS_2_0_8',
+        query = 'find block'
+        dbs_api = 'listBlocks'
+        dbs_params = {'apiversion':'DBS_2_0_8',
                   'block_name':'*', 'storage_element_name':'*',
                   'user_type':'NORMAL'}
-        self.mgr.add_api(system, api, params)
+        self.mgr.add_api(query, 'dbs', dbs_api, dbs_params)
+
+        phedex_api = 'blockReplicas'
+        phedex_params = {'node': '*', 'se': '*', 'block': '*'}
+        self.mgr.add_api(query, 'phedex', phedex_api, phedex_params)
 
         res = self.mgr.list_systems()
-        self.assertEqual([system], res)
+        self.assertEqual(['dbs', 'phedex'], res)
 
-        res = self.mgr.list_apis(system)
-        self.assertEqual([api], res)
+        res = self.mgr.list_apis('dbs')
+        self.assertEqual([dbs_api], res)
 
-        self.mgr.add_api(system, api, params)
-        res = self.mgr.api_counter(api)
+        self.mgr.add_api(query, 'dbs', dbs_api, dbs_params)
+        res = self.mgr.api_counter(dbs_api)
         self.assertEqual(2, res) # we invoke API twice, so should get 2
 
-        res = self.mgr.api_params(api)
-        self.assertEqual(params, res)
+        res = self.mgr.api_params(phedex_api)
+        self.assertEqual(phedex_params, res)
 
-        res = self.mgr.delete_api(api)
+        res = self.mgr.delete_api(dbs_api)
         self.assertEqual(True, res)
 
-        res = self.mgr.delete_system(system)
+        res = self.mgr.delete_api(phedex_api)
         self.assertEqual(True, res)
 
+        res = self.mgr.delete_system('dbs')
+        self.assertEqual(True, res)
+
+        res = self.mgr.delete_system('phedex')
+        self.assertEqual(True, res)
 #
 # main
 #
