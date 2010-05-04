@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.34 2009/09/18 14:06:29 valya Exp $"
-__version__ = "$Revision: 1.34 $"
+__revision__ = "$Id: das_core.py,v 1.35 2009/09/29 20:53:14 valya Exp $"
+__version__ = "$Revision: 1.35 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -21,8 +21,13 @@ import os
 import time
 import types
 import traceback
+try:
+    import json # since python 2.6
+except:
+    import simplejson as json # prior python 2.6
 
-from DAS.core.qlparser import QLParser
+#from DAS.core.qlparser import QLParser
+from DAS.core.qlparser import MongoParser, loose_constrains
 from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
@@ -167,9 +172,10 @@ class DASCore(object):
         [item for item in das_functions.__dict__.keys() if item.find('__') == -1]
 
         # init QL parser
-        srv_weights = dasconfig['srv_weights']
-        self.qlparser = QLParser(self.service_keys, self.service_parameters,
-                        self.das_functions, srv_weights)
+#        srv_weights = dasconfig['srv_weights']
+#        self.qlparser = QLParser(self.service_keys, self.service_parameters,
+#                        self.das_functions, srv_weights)
+        self.mongoparser = MongoParser(dasconfig)
         self.das_aggregation = {} # determine at run-time
         if  self.verbose:
             self.timer.record('DASCore.__init__')
@@ -252,26 +258,34 @@ class DASCore(object):
         """
         Get results either from cache or from explicit call
         """
+        if  type(query) is types.StringType: # DAS-QL
+            try:
+                query = json.loads(query)
+            except:
+                traceback.print_exc()
+                query = self.mongoparser.dasql2mongo(query)
         if  hasattr(self, 'cache'):
             if  self.cache.incache(query):
-                params = self.get_params(query)
-                for srv, queries in params['dasqueries'].items():
-                    for squery in queries:
-                        self.analytics.update(srv, squery)
+#                params = self.get_params(query)
+#                for srv, queries in params['dasqueries'].items():
+#                    for squery in queries:
+#                        self.analytics.update(srv, squery)
+                for srv, keys in self.qlparser.params(query)['services']:
+                    self.analytics.update(srv, query)
                 results = self.cache.get_from_cache(query, idx, limit)
             else:
                 # NOTE: the self.call returns generator, update_cache
                 # consume and iterate over its items. So if I need to
                 # re-use it, the update_cache will yeild them back
-#                results = self.call(query) 
-                results = self.call(self.get_params(query)) 
+                results = self.call(query) 
+#                results = self.call(self.get_params(query)) 
                 if  self.das_aggregation:
                     results = self.aggregation(results)
                 results = self.cache.update_cache(query, results, 
                                 expire=self.cache.limit)
         else:
-#            results = self.call(query)
-            results = self.call(self.get_params(query)) 
+            results = self.call(query)
+#            results = self.call(self.get_params(query)) 
             if  self.das_aggregation:
                 results = self.aggregation(results)
         return results
@@ -289,37 +303,6 @@ class DASCore(object):
             status = 0
         return status
 
-    def update_cache_v1(self, query, expire=600):
-        status = 0
-        if  hasattr(self, 'cache'):
-            try:
-                status = self.cache.incache(query)
-                if  status:
-                    self.logger.info('found in DAS cache')
-            except:
-                traceback.print_exc()
-                status = 0
-                pass
-            if  not status:
-                # NOTE: the self.call returns generator, update_cache
-                # consume and iterate over its items. So if I need to
-                # re-use it, the update_cache will yeild them back
-                self.logger.info('updating DAS cache')
-#                results = self.call(query) 
-                results = self.call(self.get_params(query)) 
-                if  self.das_aggregation:
-                    results = self.aggregation(results)
-                try:
-                    results = self.cache.update_cache(query, results, expire)
-                    # loop over results since it's generator
-                    for i in results:
-                        pass
-                    status = 1
-                except:
-                    status = 0
-                    pass
-        return status
-
     def remove_from_cache(self, query):
         """
         Delete in cache entries about input query
@@ -332,10 +315,11 @@ class DASCore(object):
         """
         Look-up input query if it exists in raw-cache.
         """
-        params = self.get_params(query) # does query parsing/adjustment
-        dasquery = params['dasqueries'].values()[0][0]
-        mongo_query = {'spec': {'das.query':dasquery}}
-        return self.rawcache.incache(query=mongo_query)
+#        params = self.get_params(query) # does query parsing/adjustment
+#        dasquery = params['dasqueries'].values()[0][0]
+#        mongo_query = {'spec': {'das.query':dasquery}}
+#        return self.rawcache.incache(query=mongo_query)
+        return self.rawcache.incache(query)
 
     def in_raw_cache_nresults(self, query):
         """
@@ -353,20 +337,21 @@ class DASCore(object):
 #        mongo_query = {'spec': {'das.query':dasquery}}
 #        return self.rawcache.nresults(query=mongo_query)
 
-    def get_params(self, uinput):
-        """
-        The purpose of this method is to parse input query and return
-        a parameter dict produced by QLParser
-        """
-        query = self.viewanalyzer(uinput)
-        self.logger.info("DASCore::get_query_params, user input '%s'" % uinput)
-        self.logger.info("DASCore::get_query_params, DAS query '%s'" % query)
-        params   = self.qlparser.params(query)
-        self.logger.debug('DASCore::call, QLParser results:\n %s' % params)
-        self.das_aggregation = params['functions']
-        return params
+#    def get_params(self, uinput):
+#        """
+#        The purpose of this method is to parse input query and return
+#        a parameter dict produced by QLParser
+#        """
+#        query = self.viewanalyzer(uinput)
+#        self.logger.info("DASCore::get_query_params, user input '%s'" % uinput)
+#        self.logger.info("DASCore::get_query_params, DAS query '%s'" % query)
+#        params   = self.qlparser.params(query)
+#        self.logger.debug('DASCore::call, QLParser results:\n %s' % params)
+#        self.das_aggregation = params['functions']
+#        return params
 
-    def call(self, params):
+#    def call(self, params):
+    def call(self, query):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
@@ -381,12 +366,13 @@ class DASCore(object):
         Input is param dict returned by QLParser. We use a dict since call method
         is generator. So the QLParser results can be used elsewhere outside of it.
         """
-        sellist  = params['selkeys']
-        ulist    = params['unique_keys']
-        services = params['unique_services']
-        dasqueries  = params['dasqueries']
-        query    = params['query']
-        self.logger.info('DASCore::call, QL parser results\n%s' % params)
+#        sellist  = params['selkeys']
+#        ulist    = params['unique_keys']
+#        services = params['unique_services']
+#        dasqueries  = params['dasqueries']
+#        query    = params['query']
+#        self.logger.info('DASCore::call, QL parser results\n%s' % params)
+        self.logger.info('DASCore::call, mongo query = %s' % query)
         # main loop, it goes over query dict in daslist. The daslist
         # contains subqueries (in a form of dict={system:subquery}) to
         # be executed by underlying systems. The number of entreis in daslist
@@ -400,20 +386,31 @@ class DASCore(object):
         # data-services to be called, based on provided selection keys and
         # conditions.
         #
-        if  not dasqueries.keys():
-            msg = 'Unable to find data-services for given query'
-            raise Exception(msg)
+        params = self.mongoparser.params(query)
+        services = params['services'].keys()
+        for srv in services:
+            self.logger.info('DASCore::call %s(%s)' % (srv, query))
+            if  self.verbose:
+                self.timer.record(srv)
+            getattr(getattr(self, srv), 'call')(query)
+            if  self.verbose:
+                self.timer.record(srv)
+            # Yield results for every sub-system, this leads to duplicates since
+            # mongo_query contains das.system, but I cannot avoid it since
+            # output of sub-system can differ for given das key.
+            res = self.rawcache.get_from_cache(loose_constrains(srv, query))
+            for row in res:
+                yield row
+
+    def old_code(self):
         for srv, queries in dasqueries.items():
             for squery in queries:
                 self.logger.info('DASCore::call %s(%s)' % (srv, squery))
                 if  self.verbose:
                     self.timer.record(srv)
-#                res = getattr(getattr(self, srv), 'call')(squery)
                 getattr(getattr(self, srv), 'call')(squery)
                 if  self.verbose:
                     self.timer.record(srv)
-#                for row in res:
-#                    yield row
             # Yield results for every sub-system, this leads to duplicates since
             # mongo_query contains das.system, but I cannot avoid it since
             # output of sub-system can differ for given das key.
