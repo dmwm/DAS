@@ -192,6 +192,23 @@ and desire to make cross-service queries force us to design and develop new
 Data Aggregation System.
 
 \section{Data Aggregation System\label{DAS}}
+The goal of the Data Aggregation System was to combine existing data-services
+under one umrella, utilizing their access rules, APIs, security policies, etc., and
+allowing users to perform queries against them. In contrast, approaches
+discussed in \cite{DBXplorer, QueryAnswer, FedDB} are
+enforced a publication step of data into a dedicated database 
+or central repositories \cite{iRODS}. Quite often it is required
+that data should be converted into uniform data formats in order enable
+aggregation, see \cite{OpenArchive}. In DAS architecture the data are provided
+by existing data-services and infrastructure, whose design, implementation and
+security policies are left up to their developers. Therefore DAS does not requires
+a data preservation and transaction capabilities. Instead DAS can be treated
+as proxy or caching layer where information retrieval (data) are triggered dynamically
+by user queries. Such infrastructure allows data sharing across different queries and
+data aggregation using appropriate mapping. Below we discuss details of
+DAS architecture.
+
+\subsection{DAS architecture}
 The design of the DAS system was based on previous studies of CMS Data 
 Bookkeeping System (DBS) \cite{DBS, DBS07}. We carefully analyzed user
 requests and queries placed into the DBS, their patterns, frequencies and latency. 
@@ -200,7 +217,7 @@ architecture and later, being re-factored as pure presentation layer on top of
 the DBS Query Language (DBS-QL) \cite{DBS-QL} with support of dynamic queries against
 DBS back-ends. The DBS-QL \cite{DBS-QL} syntax was based on SQL query language, where 
 we took away relations and details on underlying schema from end-users. 
-This was achieved by usaging Dijkstras shortest path algorithm 
+This was achieved by using Dijkstras shortest path algorithm 
 to establish necessary table joins based on provided information in user queries and
 knowledge of foreign key relationships from auto-loaded database schema.
 The DBS-QL keys exposed to end-users were choosen based on a jargon used by
@@ -245,7 +262,7 @@ population into DAS cache for most common query requests.
 \end{figure}
 
 \noindent
-Due to this set of requirements, we rule out the choice of RDMS as DAS back-ends
+Due to this set of requirements, we rule out the choice of RDMS as DAS back-end(s)
 for several reasons. We agreed to support dynamic queries, data
 aggregation on demand and pluggable data-services. Therefore a choice 
 of concrete schema for data storage was problematic. Moreover we didn't impose
@@ -655,6 +672,14 @@ CERN-LHCC-2004-035/G-083 (2004);
 A. Fanfani et. al., 
 ``Distributed Analysis in CMS'', 
 to be published in Journal of Grid Computing.
+
+\bibitem{iRODS}
+The Integrated Rule-Oriented Data System,
+http://www.irods.org/
+
+\bibitem{OpenArchive}
+Open Archives Initiative,
+http://www.openarchives.org/
 
 \bibitem{DBS} 
 A. Afaq, et. al.,
