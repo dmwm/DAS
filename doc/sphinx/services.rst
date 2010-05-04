@@ -20,30 +20,33 @@ appropriate url, mapping and service handler class.
 
 CMS services
 ------------
-Each CMS data service in DAS represented by its class. In addition we use
-two maps who are represneted in YAML format:
+Each CMS data-service is represented by its map and, optionally, by its plugin class.
+The data-service map contains description of the data-service, e.g. URL, URN, expire
+timestamp as well as API and notations maps.
 
-- API map to map API metrics into DAS. It contains the following items:
+- the API map relates DAS keys and API input parameters. It contains the following items:
 
-  - *api* which represents name of the API
-  - *params* to list API input parameters together with regex expression patterns
+  - *api* represents name of the API
+  - *params* is a list of API input parameters together with regex expression patterns
     accpeted by parameters
-  - *record* to represent DAS record. Each record has
+  - *record* represents DAS record. Each record has
 
-    - *daskeys* a list of DAS keys it represent
+    - *daskeys* is a list of DAS maps; each map relate user input das key
+      and its DAS record representation
 
-      - *key* a DAS key
-      - *map* a comma separated fields of DAS record, e.g. block.name
+      - *key* a DAS key used in DAS queries, e.g. *block*
+      - *map* a DAS record representation of the *key*, e.g. *block.name*
       - *pattern* a regex pattern for DAS key
 
-    - *api2das* map to map API output into DAS records
+    - *das2api* is a map between DAS key representation and API input parameter
 
-      - *api_param* is an API input parameter
-      - *das_key* a DAS key it represents, e.g. site
+      - *api_param* an API input parameter, e.g. *se*
+      - *das_key* a DAS key it represents, e.g. *site.se*
       - *pattern* a refex pattern for *api_param* 
 
-- Notation map which represents API notations
+- Notation map represents a mapping between data-service output and DAS records.
+  It is optional. 
 
-Please use these links: `API map <api_map>`_ and `API notation <notation>`_
+Please use these links :ref:`API map <api_map>` and :ref:`API notation <notation>`
 for concrete examples.
 
