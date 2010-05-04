@@ -107,13 +107,14 @@ Here is an example of such implementation
     def api(self, query):
         """My API implementation"""
         api     = self.map.keys()[0] # get API from internal map
+        url     = self.map[api]['url']
+        expire  = self.map[api]['expire']
         args    = dict(self.map[api]['params']) # get args from internal map
         time0   = time.time()
-        genrows = function(self.url, args)
+        dasrows = function(url, args) # get data and convert to DAS records
         ctime   = time.time() - time0
-        self.write_to_cache(query, api, self.url, args, genrows, ctime)
+        self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
 
 The hypotetical function call should contact data-service and retrieve,
 parse and yield data. Please note that we encourage to use 
 generator [Gen]_ in function implementation.
-
