@@ -17,8 +17,9 @@ class testCache(unittest.TestCase):
         """
         set up das core module
         """
-        self.dascache = Cache(debug=1)
-        self.das = DASCore()
+        debug = 0
+        self.das = DASCore(debug=debug)
+        self.dascache = Cache(self.das)
 
     def test_result(self):                          
         """test cache result method"""
