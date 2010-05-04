@@ -20,12 +20,12 @@ class testDBS(unittest.TestCase):
         apimap  = {
             "url": "https://a.b.com", "system": "sitedb", 
             "urn": "CMSNametoSE",
-            "format": "XML",
+            "format": "XML", "wild_card": "*",
             "params": {"name": ""}, 
             "expire": 3600, 
             "apitag": None,
             "daskeys": [{"map": "site.name", "key": "site", "pattern": ""}],
-            "api2das": [{"pattern": "", "das_key": "site", "api_param": "name"}], 
+            "das2api": [{"pattern": "", "das_key": "site", "api_param": "name"}], 
         }
         fdescr  = tempfile.NamedTemporaryFile()
         mapfile = fdescr.name
