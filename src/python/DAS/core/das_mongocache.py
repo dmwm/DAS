@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.14 2009/10/12 20:14:03 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_mongocache.py,v 1.15 2009/10/13 15:25:24 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -161,6 +161,11 @@ class DASMongocache(Cache):
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
             for item in results:
+                # TODO:
+                # the exception/error records should not go to cache
+                # instead we can place them elsewhere for further analysis
+                if  item.has_key('exception') or item.has_key('error'):
+                    continue
                 if  not trigger:
                     trigger = 1
                 item['das'] = dasheader
