@@ -27,6 +27,10 @@ class DASOptionParser:
                                           type="string", default=None, 
                                           dest="cache",
              help="specify which cache to clean, e.g. memcache or couch")
+        self.parser.add_option("-d", "--delete", action="store_true", 
+                                          default=None, 
+                                          dest="delete",
+             help="clean cache (delete/invalidate) all records in cache")
     def getOpt(self):
         """
         Returns parse list of options
@@ -46,6 +50,9 @@ if __name__ == '__main__':
     else:
         debug = 0
     DAS = DASCache(debug=debug)
-    results = DAS.clean_cache(cache=opts.cache)
+    if  opts.delete:
+        DAS.delete_cache(cache=opts.cache)
+    else:
+        DAS.clean_cache(cache=opts.cache)
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
     print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)

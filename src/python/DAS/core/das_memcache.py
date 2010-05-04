@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.2 2009/04/29 15:52:00 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_memcache.py,v 1.3 2009/05/15 14:58:37 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -76,7 +76,15 @@ class DASMemcache(Cache):
 
     def clean_cache(self):
         """
-        Clean cache
+        Clean expired docs in cache 
         """
         return
+
+    def delete(self):
+        """
+        Delete all results in cache
+        """
+        # Use flush_all, which
+        # expire all data currently in the memcache servers.
+        self.memcache.flush_all()
 
