@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.25 2009/12/08 15:41:13 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.26 2009/12/13 02:48:56 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -151,18 +151,24 @@ class DASCacheModel(RESTModel):
         dbhost        = self.dascore.dasconfig['mongocache_dbhost']
         dbport        = self.dascore.dasconfig['mongocache_dbport']
         self.con      = Connection(dbhost, dbport)
+        if  'logging' not in self.con.database_names():
+            db = self.con['logging']
+            size = cdict.get('capped_size', 100*1024*1024) # 100 MB
+            options = {'capped':True, 'size': size}
+            db.create_collection('db', options)
+            self.warning('Created logging.db, size=%s' % size)
         self.col      = self.con['logging']['db']
         sleep         = cdict.get('sleep', 2)
         verbose       = cdict.get('verbose', None)
-        iconfig       = {'sleep':sleep, 'verbose':verbose}
+        iconfig       = {'sleep':sleep, 'verbose':verbose, 
+                         'logger':self.dascore.logger}
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(self.cachemgr.worker, (worker, ))
 
-    def logdb(self):
+    def logdb(self, query):
         """
         Make entry in Logging DB
         """
-        query = cherrypy.request.params.get("query", None)
         qhash = genkey(query)
         headers = cherrypy.request.headers
         doc = dict(qhash=qhash, timestamp=time.time(),
@@ -184,10 +190,10 @@ class DASCacheModel(RESTModel):
         HTTP GET request. Ask DAS for total number of records
         for provided query.
         """
-        self.logdb()
         data = {'server_method':'nresults'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
+            self.logdb(query)
             query = self.dascore.mongoparser.requestquery(query)
             data.update({'status':'success'})
             if  hasattr(self.dascore, 'cache'):
@@ -215,10 +221,10 @@ class DASCacheModel(RESTModel):
         HTTP GET request.
         Retrieve results from DAS cache.
         """
-        self.logdb()
         data = {'server_method':'request'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
+            self.logdb(query)
             query = self.dascore.mongoparser.requestquery(query)
             idx   = getarg(kwargs, 'idx', 0)
             limit = getarg(kwargs, 'limit', 0)
@@ -271,10 +277,10 @@ class DASCacheModel(RESTModel):
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
-        self.logdb()
         data = {'server_method':'create'}
         if  kwargs.has_key('query'):
             query  = kwargs['query']
+            self.logdb(query)
             query  = self.dascore.mongoparser.requestquery(query)
             expire = getarg(kwargs, 'expire', 600)
             try:
@@ -297,10 +303,10 @@ class DASCacheModel(RESTModel):
         resource with the one enclosed in the request body.
         Replace existing query in DAS cache.
         """
-        self.logdb()
         data = {'server_method':'replace'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
+            self.logdb(query)
             query = self.dascore.mongoparser.requestquery(query)
             try:
                 self.dascore.remove_from_cache(query)
@@ -328,10 +334,10 @@ class DASCacheModel(RESTModel):
         HTTP DELETE request.
         Delete input query in DAS cache
         """
-        self.logdb()
         data = {'server_method':'delete'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
+            self.logdb(query)
             query = self.dascore.mongoparser.requestquery(query)
             data.update({'status':'requested', 'query':query})
             try:
