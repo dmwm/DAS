@@ -6,7 +6,7 @@ Unit test for DAS QL parser
 """
 
 import unittest
-from DAS.utils.utils import cartesian_product, dasheader, update_dasheader
+from DAS.utils.utils import cartesian_product, dasheader
 from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
@@ -53,12 +53,6 @@ class testUtils(unittest.TestCase):
         expect = ['dbs']
         header = dasheader('dbs', 'q1', 'api1', 'url1', 'args1', 'ct1', 10, 1)
         self.assertEqual(expect, header['das']['system'])
-
-        expect = ['dbs', 'phedex']
-        update_dasheader(header, 'phedex', 'q2', 'api2', 'url2', 'args2', 'ct2', 10, 1)
-        self.assertEqual(expect, header['das']['system'])
-        expect = {'api1':'args1', 'api2':'args2'}
-        self.assertEqual(expect, header['das']['params'])
 
     def test_cartesian_product(self):
         """Test cartesian product function"""
