@@ -6,8 +6,8 @@
 DAS cache server web configuration file
 """
 
-__revision__ = "$Id: das_cacheconfig.py,v 1.8 2009/07/08 14:07:38 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_cacheconfig.py,v 1.9 2009/12/13 02:51:07 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -55,9 +55,10 @@ active.rest.model.templates = environ['WTBASE'] + '/templates/WMCore/WebTools/'
 active.rest.section_('formatter')
 active.rest.formatter.object = 'DASRESTFormatter'
 active.rest.formatter.templates = '/templates/WMCore/WebTools/'
-#active.rest.logLevel = 'DEBUG'
+active.rest.logLevel = 'INFO'
 # DASCacheMgr settings:
 # sleep defines interval of checking cache queue
 # verbose defines level of logger
 active.rest.sleep = 1
 active.rest.verbose = 0
+active.rest.capped_size = 104857600 # 100 MB
