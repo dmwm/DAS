@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.3 2009/09/01 01:42:44 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_mongocache.py,v 1.4 2009/09/01 20:18:35 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -127,7 +127,6 @@ class DASMongocache(Cache):
             fields = query['fields']
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
-#                if  set(row.keys()) & set(fields) == set(fields):
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
                     yield row # only when row has all fields
             else:
@@ -149,8 +148,6 @@ class DASMongocache(Cache):
                 dasheader['selection_keys'] = header['selection_keys']
                 # find out if cache contains already doc with primary key
                 prim_key = header['primary_keys']
-#                item['primary_keys'] = prim_key
-#                dasheader['primary_keys'] = prim_key
                 item['das'] = dasheader
                 entry = dict_value(item, prim_key)
                 res = self.col.find_one({prim_key:entry})
@@ -159,13 +156,6 @@ class DASMongocache(Cache):
                     value = dict_value(row, prim_key)
                     if  value == entry: # we found a match in cache
                         mdict = merge_dict(item, row)
-#                        print '######################'
-#                        print "item", item
-#                        print 
-#                        print "res", res
-#                        print 
-#                        print "mdict", mdict
-#                        print 
                         del mdict['_id']
                         self.col.insert(mdict)
                         self.col.remove({'_id': res['_id']})
@@ -174,7 +164,7 @@ class DASMongocache(Cache):
                 else:
                     self.col.insert(item)
         else:
-            raise Exception('Provided results is not a list/generator types')
+            raise Exception('Provided results is not a list/generator type')
 #            system = header['das']['system']
 #            col = self.collections[system]
 #            col.insert(results)
