@@ -4,8 +4,18 @@ DAS Mapping DB
 ==============
 DAS Mapping DB holds information about all data-service APIs 
 which participate in DAS. It provides maps to convert from/to 
-DAS to/from API notations. Below you can find particular 
-examples of API metrics and API notations records in DAS Mapping DB:
+DAS to/from API notations:
+
+.. figure:: _images/das_mappings.png
+
+Two maps, daskeys and das2api serve transformation from input
+DAS keys used by end-user into DAS record key and API input parameter.
+The notation maps is used to adjust keys for API records. Basically
+it provides a way to transform API raw output into DAS records.
+Optional apitag map is used to instruct DAS which API tag to use for given
+DAS key.
+
+Below we provide a particular examples of CMS mapping records in DAS Mapping DB:
 
 - API metric example:
 
@@ -13,7 +23,7 @@ examples of API metrics and API notations records in DAS Mapping DB:
 .. doctest::
 
     {"api": {"params": {"node": "*", "se": "*", "block": "*"}, "name": "blockReplicas"}, 
-     "api2das": [
+     "das2api": [
          {"pattern": "re.compile('^T[0-3]_')", "api_param": "se", "das_key": "site"}, 
          {"pattern": "re.compile('([a-zA-Z0-9]+\\.){2}')", "api_param": "node", "das_key": "site"},        
          {"pattern": "", "api_param": "block", "das_key": "block"}
