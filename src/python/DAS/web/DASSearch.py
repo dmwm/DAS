@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.4 2009/04/30 18:32:53 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: DASSearch.py,v 1.5 2009/05/01 17:44:27 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -37,9 +37,22 @@ class DASSearch(TemplatedPage):
     def __init__(self, config):
         TemplatedPage.__init__(self, config)
         self.dasmgr = DASCache(mode='html', debug=1)
-        self.views  = ['xml', 'list', 'table', 'plain', 'json'] 
+        self.pageviews = ['xml', 'list', 'table', 'plain', 'json'] 
         self.cleantime = 60 # in seconds
         self.lastclean = time.time()
+
+        # TMP: I define a few useful views, this should be done
+        # elswhere (may be here, may be in external configuration,
+        # may be in couchdb
+        query = 'find dataset, count(file), sum(file.size)'
+        query = 'find dataset, dataset.createdate, dataset.createby, sum(block.size), sum(file.numevents), count(file)'
+        self.dasmgr.create_view('dataset', query)
+        query = 'find block.name, block.size, block.numfiles, block.numevents, block.status, block.createby, block.createdate, block.modby, block.moddate'
+        self.dasmgr.create_view('block', query)
+        query = 'find site, sum(block.numevents), sum(block.numfiles), sum(block.size)'
+        self.dasmgr.create_view('site', query)
+        query = 'find datatype, dataset, run.number, run.numevents, run.numlss, run.totlumi, run.store, run.starttime, run.endtime, run.createby, run.createdate, run.modby, run.moddate, count(file), sum(file.size), sum(file.numevents) where dataset = %s'
+        self.dasmgr.create_view('run', query)
 
 #    def clean_couch(self):
 #        """
@@ -92,6 +105,37 @@ class DASSearch(TemplatedPage):
         return self.page(page)
 
     @expose
+    def create_view(self, *args, **kwargs):
+        """
+        create DAS view.
+        """
+        msg   = ''
+        if  kwargs.has_key('name') and kwargs.has_key('query'):
+            name  = kwargs['name']
+            query = kwargs['query']
+            try:
+                self.dasmgr.create_view(name, query)
+                msg = "View '%s' has been created" % name
+            except Exception, e:
+                msg = "Fail to create view '%s' with query '%s'" \
+                % (name, query)
+                msg += '</br>Reason: <span class="box_blue">' 
+                msg += e.message + '</span>'
+                pass
+        views = self.dasmgr.get_view()
+        page  = self.templatepage('das_views', views=views, msg=msg)
+        return self.page(page)
+
+    @expose
+    def views(self, *args, **kwargs):
+        """
+        represent DAS views.
+        """
+        views = self.dasmgr.get_view()
+        page  = self.templatepage('das_views', views=views, msg='')
+        return self.page(page)
+
+    @expose
     def services(self, *args, **kwargs):
         """
         represent DAS services
@@ -113,8 +157,8 @@ class DASSearch(TemplatedPage):
         view = getarg(kwargs, 'view', 'table')
         if  args:
             return getattr(self, args[0][0])(args[1])
-        if  view not in self.views:
-            raise Exception("View '%s' is not supported" % view)
+        if  view not in self.pageviews:
+            raise Exception("Page view '%s' is not supported" % view)
         return getattr(self, '%sview' % view)(kwargs)
 
     @expose

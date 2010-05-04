@@ -1,4 +1,4 @@
-<!-- asearch_list.tmpl -->
+<!-- das_list.tmpl -->
 $form
 <div id="results">
 
@@ -36,7 +36,7 @@ results
 #end if
 <div id="row$idx" name="row$idx" class="$classname">
 ##<div id="row$idx" name="row$idx" class="hide">
-<hr class="line">
+<hr class="line" />
 #set row = $resultlist[$idx]
 #for key in $titlelist
 <b>$key</b>: $row[$key]
@@ -138,4 +138,4 @@ showRows(1);
 makePagination(1);
 </script>
 #end if
-<!-- end of asearch_list.tmpl -->
+<!-- end of das_list.tmpl -->
