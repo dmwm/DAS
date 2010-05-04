@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.71 2010/02/19 22:28:56 valya Exp $"
-__version__ = "$Revision: 1.71 $"
+__revision__ = "$Id: utils.py,v 1.72 2010/02/23 19:35:56 valya Exp $"
+__version__ = "$Revision: 1.72 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -49,6 +49,60 @@ class dict_of_none (dict):
     def __missing__ (self, key):
         """Assign missing key to None"""
         return None
+
+class dotdict(dict):
+    """
+    Access python dictionaries via dot notations, original code taken from
+    http://parand.com/say/index.php/2008/10/24/python-dot-notation-dictionary-access/
+    Class has been extended with helper method to use compound keys, e.g. a.b.c.
+    All extended method follow standard python dictionary naming conventions,
+    but has extra underscore in front of them to allow dict methods. A non
+    overlapping methods do not have extra underscore.
+    """
+    def __getattr__(self, attr):
+        obj = self.get(attr, {})
+        if  type(obj) is types.DictType:
+            return dotdict(obj)
+        return obj
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+    def _get(self, ckey):
+        """
+        Get value for provided compound key.
+        """
+        obj  = None
+        keys = ckey.split('.')
+        for key in keys:
+            if  key == keys[0]:
+                obj = self.get(key, None)
+            else:
+                obj = getattr(obj, key)
+            if  not obj:
+                return None
+            if  type(obj) is types.DictType:
+                obj = dotdict(obj)
+            elif type(obj) is types.ListType:
+                obj = obj[0]
+                if  type(obj) is types.DictType:
+                    obj = dotdict(obj)
+        return obj
+        
+    def _set(self, ikey, value):
+        """
+        Set value for provided compound key.
+        """
+        obj  = self
+        keys = ikey.split('.')
+        for idx in range(0, len(keys)):
+            key = keys[idx]
+            if  not obj.has_key(key):
+                ckey = '.'.join(keys[idx:])
+                nkey, nval = convert_dot_notation(ckey, value)
+                obj[nkey] = nval
+                return
+            obj  = obj[key]
+        obj[key] = value
 
 def dict_value(idict, prim_key):
     """
@@ -649,16 +703,6 @@ def sort_data(data, key, direction='asc'):
         tup_list.reverse()
     for pair in tup_list:
         yield data[pair[1]]
-
-class dotdict(dict):
-    """
-    Access python dictionaries via dot notations, code taken from
-    http://parand.com/say/index.php/2008/10/24/python-dot-notation-dictionary-access/
-    """
-    def __getattr__(self, attr):
-        return self.get(attr, None)
-    __setattr__= dict.__setitem__
-    __delattr__= dict.__delitem__
 
 def trace(source):
     """Trace a generator by printing items received"""
