@@ -129,7 +129,7 @@ using SQL syntax.
 
 To address those limitations an attempt to build a simple, intuitive and 
 flexible query language was introduced in \cite{DBS-QL}\footnote{A similar but less
-sophisticated approach was done in \cite{AMI}}.
+sophisticated approach was used in \cite{AMI}}.
 It represents a power of SQL while hiding underlying relational schema from 
 the end-users. As a results a human questions were intuitively mapped into 
 simple queries. For example, the question
@@ -392,11 +392,29 @@ If the superset was found a data were
 retrieved from the cache, otherwise a data-service APIs were
 invoked and the results were collected and aggregated inside of DAS cache.
 
+\subsection{DAS queries}
 Apart from previous DBS-QL syntax we decided to drop its syntax and allow users
-express their queries in a free text-based form. Such queries were transformed 
-into MongoDB query syntax, who was used internally in
-DAS core layer. It represents a set of selection keys and conditions as a JSON document.
-For example, a query
+express their queries in a free text-based form. Although we must clarify its
+meaning. We used a pre-defined set of keys known to DAS to describe common
+entities of our data. For example, {\it dataset, file, block, run, event}. Those
+names were used by our users in their daily work operations. So, by typing
+{\it file} we didn't perform a string matching to ``file'' string, but rather
+look-up all file objects in a DAS. Moreover each DAS key has a default attribute.
+For intance, for {\it dataset, block, file} the default attribute 
+was a {\it name}, while for {\it run} and {\it event} the default attribute was 
+a {\it number}. This allows to specify key-value pair as simple as possible, e.g.
+{\it run=123456}, which means run number 123456. At the same time a queyr 
+key, e.g. {\it site} meant to look-up all site objects. Such ability
+to use key-value pairs resolve ambiguity in object values. For instance,
+specifying a run number as {\it run=123456} instruct system to resolve
+data object with run equal to 123456 rather then other objects which may have
+123456 values, e.g. event number or file size. At the same time, to complement
+the stregth of the DAS we do plan to index data objects and add a keyword-based 
+search later.
+
+The free text-based queries were transformed into MongoDB query syntax, 
+who was used internally by DAS. It represents a set of selection 
+keys and conditions as a JSON document. For example, a query
 {\it dataset site=T1\_CH\_CERN}
 where transformed into 
 {\it \{"fields" : ["dataset"], "spec" : \{"site" : "T1\_CH\_CERN"\}\}}.
@@ -625,18 +643,21 @@ No. DE-AC02-07CH11359 with the United States Department of Energy.
 \section*{References}
 \begin{thebibliography}{9}
 \bibitem{DBXplorer}
-Sanjay Agrawal, Surajit Chaudhuri, Gautam Das: DBXplorer: A System for
-Keyword-Based Search over Relational Databases. ICDE 2002: 5-16
+S. Agrawal, S. Chaudhuri, G. Das,
+``DBXplorer: A System for Keyword-Based Search over Relational Databases'',
+ICDE 2002, pp. 5-16.
 
 \bibitem{QueryAnswer}
-Georgia Koutrika, Alkis Simitsis, Yannis E. Ioannidis: Pr\'{e}cis: The Essence of
-a Query Answer. ICDE 2006: 69-78
+G. Koutrika, A. Simitsis, Y. E. Ioannidis,
+``Pr\'{e}cis: The Essence of a Query Answer'',
+ICDE 2006, pp. 69-78.
 
-\bibitem{DBS-QL} V. Kuznetsov, D. Riley, A. Afaq, V. Sekhri, Y. Guo, L. Lueking,
-``The CMS DBS Query Language'', CHEP 2009
+\bibitem{DBS-QL} 
+V. Kuznetsov, D. Riley, A. Afaq, V. Sekhri, Y. Guo, L. Lueking,
+``The CMS DBS Query Language'', CHEP 2009.
 
 \bibitem{AMI}
-Altas AMI web portal:
+Altas AMI web portal,
 http://ami.in2p3.fr/opencms/opencms/AMI/www/Tutorial/AMIMediation.html
 
 \bibitem{FedDB}
@@ -644,25 +665,36 @@ L. Haas, E. Lin,
 ``IBM Federated Database Technology'', \\
 http://www.ibm.com/developerworks/data/library/techarticle/0203haas/0203haas.html
 
-\bibitem{CMS} CMS Collaboration R. Adolphi et al., The CMS experiment at the CERN LHC, JINST, 0803, S08004 (2008)
+\bibitem{CMS} 
+R. Adolphi et al., 
+``The CMS experiment at the CERN LHC'',
+JINST 0803, S08004 (2008).
 
 \bibitem{CMSDataModel} 
-.Grandi, D.Stickland, L.Taylor et al., The CMS Computing Model, CERN-LHCC-2004- 035/G-083 (2004);
-A. Fanfani et. al.,
-``Distributed Analysis in CMS'', to be published in Journal of Grid Computing.
+C. Grandi, D.Stickland, L.Taylor et al.,
+``The CMS Computing Model'',
+CERN-LHCC-2004-035/G-083 (2004);
+A. Fanfani et. al., 
+``Distributed Analysis in CMS'', 
+to be published in Journal of Grid Computing.
 
-\bibitem{DBS} A. Afaq, et. al. ``The CMS Dataset Bookkeeping Service'', CHEP 2007 
-J.Phys.Conf.Ser, 119, 072001 (2008)
+\bibitem{DBS} 
+A. Afaq, et. al.,
+``The CMS Dataset Bookkeeping Service'', 
+J. Phys. Conf. Ser, 119, 072001 (2008).
 
-\bibitem{DBS07} A. Dolgert, V. Kuznetsov, C. Jones, D. Riley, 
-``A multi-dimensional view on information retrieval of CMS data'', CHEP 2007
+\bibitem{DBS07} 
+A. Dolgert, V. Kuznetsov, C. Jones, D. Riley, 
+``A multi-dimensional view on information retrieval of CMS data'',
+Journal of Physics: Conference Series 119, 072013, (2008).
 
 \bibitem{DD} https://cmsweb.cern.ch/dbs\_discovery
 
 \bibitem{Arms}
-C. R. Arms, W. Y. Arms, ``Mixed Content and Mixed Metadata 
+C. R. Arms, W. Y. Arms,
+ ``Mixed Content and Mixed Metadata 
 Information Discovery in a Messy World'',
-chapter from ``Metadata in Practice'', ALA Editions, 2004
+chapter from ``Metadata in Practice'', ALA Editions, 2004.
 
 \bibitem{MySQL}
 http://www.mysql.com/
@@ -673,17 +705,20 @@ http://couchdb.apache.org/
 \bibitem{MongoDB}
 http://www.mongodb.org/
 
-\bibitem{REST}
-Fielding, Roy Thomas ``Architectural Styles and the Design of 
-Network-based Software Architectures'', Doctoral dissertation, 2000,
-University of California, Irvine
+%\bibitem{REST}
+%Fielding, Roy Thomas ``Architectural Styles and the Design of 
+%Network-based Software Architectures'', Doctoral dissertation, 2000,
+%University of California, Irvine
 
 \bibitem{PhEDEx}
 Rehn et. al.,
-``PhEDEx high-throughput data transfer management system'', CHEP06, Mumbai, India.
-R. Egeland et al., Data transfer infrastructure for CMS data taking, Proceedings of Science,
-PoS(ACAT08)033 (2008) ;
-L. Tuura et al., Scaling CMS data transfer system for LHC start-up, J.Phys.Conf.Ser, 119, 072030 (2008)
+``PhEDEx high-throughput data transfer management system'', CHEP 2006;
+R. Egeland et al., 
+``Data transfer infrastructure for CMS data taking'', 
+Proceedings of Science, PoS (ACAT08) 033 (2008);
+L. Tuura et al., 
+``Scaling CMS data transfer system for LHC start-up'', 
+J. Phys. Conf. Ser, 119, 072030 (2008).
 
 \bibitem{RunSummary}
 https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary
@@ -710,10 +745,10 @@ https://twiki.cern.ch/twiki/bin/view/CMS/CRAFT09AnalysisInfo
 
 \bibitem{Python} Python programming language, http://www.python.org
 
-\bibitem{DBSearch}
-D. Konopnicki, O. Shmueli,
-``Database-Inspired Search'', 
-Proc. of the 31st VLDB Conference, 2005.
+%\bibitem{DBSearch}
+%D. Konopnicki, O. Shmueli,
+%``Database-Inspired Search'', 
+%Proc. of the 31st VLDB Conference, 2005.
 \end{thebibliography}
 
 \end{document}
