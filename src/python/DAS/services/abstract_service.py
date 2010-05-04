@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.73 2010/02/17 16:58:59 valya Exp $"
-__version__ = "$Revision: 1.73 $"
+__revision__ = "$Id: abstract_service.py,v 1.74 2010/02/19 22:28:56 valya Exp $"
+__version__ = "$Revision: 1.74 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -18,7 +18,7 @@ import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
 from DAS.utils.utils import row2das, extract_http_error
-from DAS.utils.utils import xml_parser, json_parser
+from DAS.utils.utils import xml_parser, json_parser, make_headers
 from DAS.core.das_mongocache import compare_specs
 
 from pymongo import DESCENDING, ASCENDING
@@ -130,13 +130,15 @@ class DASAbstractService(object):
             encoded_data = urllib.urlencode(params, doseq=True)
         if  encoded_data:
             url = url + '?' + encoded_data
-        msg = 'DASAbstractService::%s::getdata, request url=%s' \
-                % (self.name, url)
+        if  not headers:
+            headers = {}
+        msg = 'DASAbstractService::%s::getdata, url=%s, headers=%s' \
+                % (self.name, url, headers)
+        self.logger.info("\n")
         self.logger.info(msg)
         req = urllib2.Request(url)
-        if  headers:
-            for key, val in headers.items():
-                req.add_header(key, val)
+        for key, val in headers.items():
+            req.add_header(key, val)
         if  self.verbose > 1:
             h=urllib2.HTTPHandler(debuglevel=1)
             opener = urllib2.build_opener(h)
@@ -375,15 +377,16 @@ class DASAbstractService(object):
         genrows = self.apimap(query)
         if  not genrows:
             return
-        for url, api, args, format, expire in genrows:
+        for url, api, args, dformat, expire in genrows:
             try:
                 mkey    = self.dasmapping.primary_mapkey(self.name, api)
                 args    = self.inspect_params(api, args)
                 args    = self.clean_params(api, args)
                 args    = self.patterns(api, args)
                 time0   = time.time()
-                data    = self.getdata(url, args)
-                rawrows = self.parser(format, data, api, args)
+                headers = make_headers(dformat)
+                data    = self.getdata(url, args, headers)
+                rawrows = self.parser(dformat, data, api, args)
                 dasrows = self.translator(api, rawrows)
                 ctime   = time.time() - time0
                 self.write_to_cache(query, expire, url, api, args, 
@@ -391,7 +394,7 @@ class DASAbstractService(object):
             except:
                 msg  = 'Fail to process: url=%s, api=%s, args=%s' \
                         % (url, api, args)
-                msg += traceback.format_exc()
+                msg += traceback.dformat_exc()
                 self.logger.info(msg)
 
     def apimap(self, query):
@@ -421,10 +424,16 @@ class DASAbstractService(object):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
             if  not found:
+                msg = "%s reject API %s, parameters don't match, args=%s" \
+                        % (self.name, api, args)
+                self.logger.info(msg)
                 continue
             # check that there is no "required" parameter left in args,
             # since such api will not work
             if 'required' in args.values():
+                msg = "%s reject API %s, parameter is required, args=%s" \
+                        % (self.name, api, args)
+                self.logger.info(msg)
                 continue
             # adjust pattern symbols in arguments
             if  wild != '*':
