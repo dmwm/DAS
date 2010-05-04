@@ -294,12 +294,12 @@ and organize information retrieval on demand.
 
 \section{CMS data model\label{DataModel}}
 The CMS, Compact Muon Solenoid, \cite{CMS} 
-is one of the two large general-purpose particle physics detectors built on 
+is one of the two particle physics detectors built on 
 the proton-proton Large Hadron Collider (LHC) at CERN in Switzerland and France. 
 It is designed to explore the frontier of the HEP and provide physicists
-the ability to look at conditions presented at the early stage of our Universe.
-More then 3000 physicists from 183 institutions representing almost 
-38 countries are involved in the design, construction and maintenance of the experiment.
+the ability to look at the conditions presented at the early stage of our Universe.
+More then 3000 physicists from 183 institutions representing 38 countries 
+are involved in the design, construction and maintenance of the experiment.
 
 The CMS distributed computing and data model \cite{CMSDataModel} 
 is designed to process
@@ -307,11 +307,11 @@ and efficiently manage a few PBs of data expected each year
 in CMS operation at LHC. The computing resources provided by members of CMS
 collaboration are geographically distributed, 
 interconnected via high throughput networks and operated by means 
-of Grid software. The model allows to cover broad variety of
+of the Grid software. The model allows to cover broad variety of
 hardware, mass and storage elements and configuration of the
 clusters. To accommodate efficient data processing CMS uses
 a multi-Tier distributed model, where specific tasks of data taking,
-processing, archival and distribution are assigned to each tier based
+e.g. processing, archival and distribution, are assigned to each tier based
 on CMS data model. For example, the Tier-0 center at CERN is responsible
 for archiving the data coming out from the detector, prompt first pass reconstruction
 and data distribution to Tier-1 centers, located around the world.
@@ -335,8 +335,8 @@ and data model.
 %up to the site managers. Therefore the CMS software were designed to support different
 %DB back-ends and provide tools for migrating data across them.
 
-Once such conglomerate of data-services starts operating an obvious
-question arise: how to find out desired information across multiple data-services
+Once such conglomerate of data-services starts operating the obvious
+question arises: how to find out desired information across multiple data-services
 in our distributed environment? Even though individual data-services were designed
 to answer specific questions about the data they serve, the ability to search and relate
 information among them was always a tedious human task. The growing amount of information
@@ -344,26 +344,24 @@ and desire to make cross-service queries force us to design and develop new
 Data Aggregation System.
 
 \section{Data Aggregation System\label{DAS}}
-The goal of the Data Aggregation System was to combine and
-aggregate meta-data from existing data-services
-under one umbrella, utilizing their access rules, APIs, security policies, etc., and
-allowing users to perform queries against them. In contrast, the approaches
+The goal of the Data Aggregation System was to fetch and aggregate meta-data 
+on demand from existing CMS data-services under one umbrella by using their APIs, 
+security policies, etc.
+In contrast, the approaches
 discussed in \cite{DBXplorer, QueryAnswer, FedDB} are
 enforced a publication step of data into a dedicated database 
-or central repositories \cite{iRODS}. Therefore, quite often it is required
-that data should be converted into uniform data formats in order enable
-aggregation, see \cite{OpenArchive}. In DAS architecture the data are provided
+or central repositories \cite{iRODS}. Therefore, quite often it was required
+that data should be converted into common data structure/format in order to enable
+aggregation, see \cite{OpenArchive}. In DAS the data are provided
 by existing data-services and infrastructure, whose implementation,
 data representation and security policies are left intact. Consequently,
 DAS does not require a data preservation and transaction capabilities. 
-Instead DAS can be treated
-as proxy or caching layer where information retrieval are triggered dynamically
-by user queries. Such infrastructure allows data sharing across different queries and
-data aggregation using appropriate mapping. Below we discuss in details the
-DAS architecture.
+Instead DAS can be treated as proxy or caching layer where information 
+retrieval and aggregation are triggered dynamically by user queries. 
+Below we discuss in details the DAS architecture.
 
 \subsection{DAS architecture}
-The design of the DAS system was based on previous studies of the CMS Data 
+The design of the DAS system was based on previous studies of CMS Data 
 Bookkeeping System (DBS) \cite{DBS, DBS07}. The DBS Data Discovery service
 \cite{DD} was based on DBS Query Language (DBS-QL) \cite{DBS-QL}. It provided
 a syntax similar to SQL, without specific knowledge of underlying DB schema.
@@ -386,7 +384,7 @@ and provide a basis for building DAS system.
 As was pointed out in \cite{Arms} a mixed content and 
 mixed meta-data and meta-data consistency should be considered as a whole in design 
 of the system to successful information discovery. 
-Starting from this ground we designed DAS system as an
+Starting from this ground we are designed DAS system as an
 additional layer on top of the existing data-services
 within CMS computing infrastructure by imposing the following set of requirements:
 \begin{itemize}
@@ -419,33 +417,30 @@ population into DAS cache for most common query requests.
 \end{figure}
 
 \noindent
-Based on this set we rule out the choice of RDMS as DAS back-end(s)
-for several reasons. We agreed to support dynamic queries, data
-aggregation on demand and pluggable data-services. Therefore a choice 
-of concrete schema for data storage was problematic. Moreover we didn't impose
-any transactions and data persistence in DAS. This allows us to look 
-for alternative IT solutions.
-Through the analysis of available options, such as a file-based and memory caches, 
+The choice of existing RDMS as DAS back-end(s) was ruled out for several reasons. 
+For instance, we didn't require any transactions and data persistency in DAS;
+a dynamically typing of stored meta-data objects was one of the requirements, etc.
+Those arguments forces us to look for alternative IT solutions.
+Through the careful analysis of available options, such as a file-based and in memory caches, 
 key-value databases, documented-oriented databases we made our choice in favor 
 of the last technology. Among them we evaluated CouchDB \cite{CouchDB} and 
-MongoDB \cite{MongoDB}. Both systems provide schema free document
-storage, replication and fail-over features, but our choice in favor of 
-MongoDB was obvious, due to its support of dynamic queries, 
+MongoDB \cite{MongoDB}. Both systems are ``schemaless'' databases providing
+arbitrary document structure storage, replication and fail-over features. 
+We made our decision in favor of MongoDB, due to its support of dynamic queries, 
 full indexes, including inner objects and embedded arrays,
 and auto-sharding. Our preliminary benchmarks shown that it can sustain
 the desired load and size of our meta-data information. We used 
-document-oriented database, MongoDB, as a back-end for the three 
+document-oriented database, MongoDB, as a back-end for three 
 main DAS components: Mapping, Analytics and DAS cache databases, 
 which will be discussed next. 
 
 The DAS architecture is shown in Fig. \ref{DAS_cache}. It consists of
 the core library with support of pluggable modules for data retrieval;
-caching layer to store data-service output and aggregate results;
+caching layer to store and aggregate results;
 request service to handle user queries;
-Mapping DB to keep information about data-service APIs, their
-notations and mapping to DAS;
-Analytics DB for query analysis and identification of pre-fetch 
-strategies.
+Mapping DB to keep information about data-service APIs, e.g.
+notations and mapping to DAS keys;
+Analytics DB for query analysis.
 
 \subsection{DAS core}
 The DAS core communicated with different data-services and retrieved
