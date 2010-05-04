@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.10 2009/06/17 15:18:04 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_couchcache.py,v 1.11 2009/06/17 15:20:25 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -48,14 +48,6 @@ class DASCouchcache(Cache):
         self.logger.info('Init couchcache %s' % self.uri)
 
         self.views = { 
-#            'query': {'map': """
-#function(doc) {
-#    if(doc.hash) {
-#        emit(doc.hash, doc.results);
-#    }
-#}"""
-#            },
-
             'query': {'map': """
 function(doc) {
     if(doc.hash) {
@@ -102,51 +94,6 @@ function(keys, values) {
 }"""
             },
 
-            'queries' : {'map': """
-function(doc) {
-    if (doc.query) {
-        emit(doc.query, doc.query);
-    }
-}""",
-                        'reduce': """
-/* http://mail-archives.apache.org/mod_mbox/couchdb-user/200903.mbox/browser */
-function(k,v,r) {
-        function unique_inplace(an_array) {
-                var first = 0;
-                var last = an_array.length;
-                // Find first non-unique pair
-                for(var firstb; (firstb = first) < last && ++first < last; ) {
-                        if(an_array[firstb] == an_array[first]) {
-                                // Start copying, skipping uniques
-                                for(; ++first < last; ) {
-                                        if (!(an_array[firstb] == an_array[first])) {
-                                                an_array[++firstb] = an_array[first];
-                                        }
-                                }
-                                // firstb is at the last element of the new array
-                                ++firstb;
-                                an_array.length = firstb;
-                                return;
-                        }
-                }
-        }
-
-        if(r) {
-                var arr=[];
-                for (var i=0; i<v.length; i++) {
-                        arr=arr.concat(v[i]);
-                }
-                arr=arr.sort();
-                unique_inplace(arr);
-                return(arr);
-        } else {
-                var arr=v.sort();
-                unique_inplace(arr);
-                return(arr);
-        }
-}
-"""
-            }
         }
 
     def connect(self, url):
