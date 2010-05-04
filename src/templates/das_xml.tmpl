@@ -1,0 +1,9 @@
+<results>
+#for row in $resultlist
+   <row>
+#for key, val in $row.items()
+     <$key>$val</$key>
+#end for
+   </row>
+#end for
+</results>
