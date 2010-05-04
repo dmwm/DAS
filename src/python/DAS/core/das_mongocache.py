@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.68 2010/03/01 19:23:30 valya Exp $"
-__version__ = "$Revision: 1.68 $"
+__revision__ = "$Id: das_mongocache.py,v 1.69 2010/03/03 18:52:55 valya Exp $"
+__version__ = "$Revision: 1.69 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -414,16 +414,20 @@ class DASMongocache(object):
         col = self.db[collection]
         msg = "DASMongocache::get_from_cache(%s, %s, %s, %s, %s, coll=%s)"\
                 % (query, idx, limit, skey, order, collection)
-        strquery = json.dumps(query)
         self.logger.info(msg)
+        # get aggregators and loose query for further processing
+        aggregators = query.get('aggregators', None)
+        strquery    = json.dumps(query)
+        query       = loose(query)
+        # adjust query id if it's requested
         if  adjust:
             query  = adjust_id(query)
             query, dquery = convert2pattern(query)
             self.logger.info("DASMongocache::get_from_cache, converted to %s"\
                     % dquery)
         idx    = int(idx)
-        spec   = getarg(query, 'spec', {})
-        fields = getarg(query, 'fields', None)
+        spec   = query.get('spec', {})
+        fields = query.get('fields', None)
 
         # look-up API query
         recapi = self.col.find_one({"query":strquery})
@@ -474,6 +478,15 @@ class DASMongocache(object):
             else:
                 counter += 1
                 yield row
+
+        # check if aggregator info is present in records
+        if  recapi and recapi.has_key('_id'):
+            spec = {'das_id':recapi['_id'], 'aggregator':{'$exists':True}}
+            res = self.col.find(spec)
+            for row in res:
+                counter += 1
+                yield row
+
         if  counter:
             msg = "DASMongocache::get_from_cache, yield %s record(s)"\
                     % counter
