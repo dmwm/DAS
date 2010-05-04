@@ -5,17 +5,14 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.18 2009/10/15 21:00:09 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: das_mongocache.py,v 1.19 2009/10/16 18:05:47 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import time
 import types
-try:
-    import json # since python 2.6
-except:
-    import simplejson as json # prior python 2.6
+import DAS.utils.jsonwrapper as json
 from itertools import groupby
 
 # DAS modules
@@ -70,11 +67,42 @@ def convert2pattern(query):
             verspec[key] = vcond
     return dict(spec=newspec, fields=fields), dict(spec=verspec, fields=fields)
 
-def compare_specs(query1, query2):
+def compare_dicts(input_dict, exist_dict):
+    """
+    Helper function for compare_specs. It compares key/val pairs of
+    Mongo dict conditions, e.g. {'$gt':10}. Return true if exist_dict
+    is superset of input_dict
+    """
+    for key, val in input_dict.items():
+        if  exist_dict.has_key(key):
+            vvv = exist_dict[key]
+        if  key == '$gt':
+            if  (type(val) is types.IntType or types(val) is types.FloatType)\
+                and \
+                (type(vvv) is types.IntType or types(vvv) is types.FloatType):
+                if  val > vvv:
+                    return True
+        elif key == '$lt':
+            if  (type(val) is types.IntType or types(val) is types.FloatType)\
+                and \
+                (type(vvv) is types.IntType or types(vvv) is types.FloatType):
+                if  val < vvv:
+                    return True
+        elif key == '$in':
+            if  type(val) is types.ListType and type(vvv) is types.ListType:
+                if  set(vvv) > set(val):
+                    return True
+        return False
+
+def compare_specs(input_query, exist_query):
     """
     Function to compare set of fields and specs of two input mongo
-    queries. We need to use it to identify if query2 is a subset of query1.
+    queries. Return True if results of exist_query are superset 
+    of resulst for input_query.
     """
+    # we use notation query2 is superset of query1
+    query1  = input_query
+    query2  = exist_query
     fields1 = getarg(query1, 'fields', None)
     if  not fields1:
         fields1 = []
@@ -85,22 +113,30 @@ def compare_specs(query1, query2):
         fields2 = []
     spec2   = getarg(query2, 'spec', {})
 
-    if  set(fields2) > set(fields1): # set2 is superset of set1
-        return False
+# I don't think that selection keys plays role in comparison
+# So I don't need this code, but will keep for a while just in case
+#    if  set(fields2) > set(fields1): # set2 is superset of set1
+#        return False
 
-    if  set(spec2.keys()) > set(spec1.keys()):
-        return False
+#    if  set(spec2.keys()) > set(spec1.keys()):
+#        return False
 
-    if  spec2.keys() != spec1.keys():
-        return False
+#    if  spec2.keys() != spec1.keys():
+#        return False
 
     for key, val1 in spec1.items():
         val2 = spec2[key]
-        val1 = val1.replace('*', '')
-        val2 = val2.replace('*', '')
-        if  val2.find(val1) != -1:
-            return True # only if val2 is sub-string of val1
-
+        if  (type(val1) is types.StringType or \
+                type(val1) is types.UnicodeType) and \
+            (type(val2) is types.StringType or \
+                type(val2) is types.UnicodeType):
+            if  val2.find('*') != -1:
+                val1 = val1.replace('*', '')
+                val2 = val2.replace('*', '')
+                if  val1.find(val2) != -1:
+                    return True # only if val2 is sub-string of val1
+        elif type(val1) is types.DictType and type(val2) is types.DictType:
+            return compare_dicts(val1, val2)
     return False
 
 def update_item(item, key, val):
@@ -194,16 +230,23 @@ class DASMongocache(Cache):
         msg  = "DASMongocache::similar_queries, "
         msg += "loose query: %s" % verspec
         self.logger.info(msg)
+        msg  = "DASMongocache::similar_queries, found query which cover this request: "
         for row in res:
             if  type(row['query']) is types.StringType or \
                 type(row['query']) is types.UnicodeType:
-                cond = json.loads(row['query'])
-                print "\n\n### Found cond", cond
+                existing_query = json.loads(row['query'])
+                if  compare_specs(query, existing_query):
+                    msg += str(existing_query)
+                    self.logger.info(msg)
+                    return True
             elif type(row['query']) is types.ListType:
                 gen = (k for k, g in groupby(row['query']))
                 for item in gen:
-                    cond = json.loads(item)
-                    print "\n\n### Found cond", cond
+                    existing_query = json.loads(item)
+                    if  compare_specs(query, existing_query):
+                        msg += str(existing_query)
+                        self.logger.info(msg)
+                        return True
             else:
                 raise TypeError('Unexpected type for query %s, %s' \
                 % (row['query'], type(row['query'])))
