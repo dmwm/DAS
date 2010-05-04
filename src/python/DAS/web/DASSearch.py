@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.12 2009/06/08 19:15:48 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: DASSearch.py,v 1.13 2009/06/29 19:19:11 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -14,6 +14,7 @@ import time
 import types
 import thread
 from cherrypy import expose
+import cherrypy
 try:
     # Python 2.6
     import json
@@ -36,6 +37,13 @@ import sys
 if sys.version_info < (2, 5):
     raise Exception("DAS requires python 2.5 or greater")
 
+def ajax_response(msg, tag="_response", element="object"):
+    """AJAX response wrapper"""
+    page  = """<ajax-response><response type="%s" id="%s">""" % (element, tag)
+    page += msg
+    page += "</response></ajax-response>"
+    print page
+    return page
 
 class DASSearch(TemplatedPage):
     """
@@ -45,12 +53,12 @@ class DASSearch(TemplatedPage):
         TemplatedPage.__init__(self, config)
         cdict          = self.config.dictionary_()
         self.cachesrv  = getarg(cdict, 'cache_server_url', 'http://localhost:8011')
-#        self.dasmgr = DASCore(mode='html', debug=1)
         self.dasmgr = DASCore()
         self.pageviews = ['xml', 'list', 'table', 'plain', 'json'] 
         self.cleantime = 60 # in seconds
         self.lastclean = time.time()
         self.decoder   = JSONDecoder()
+        self.counter = 0 # TMP stuff, see request, TODO: remove
 
         # TMP: I define a few useful views, this should be done
         # elswhere (may be here, may be in external configuration,
@@ -200,7 +208,6 @@ class DASSearch(TemplatedPage):
         limit  = getarg(kwargs, 'limit', 0)
         params = {'query':uinput, 'idx':idx, 'limit':limit}
         path   = '/rest/json/GET'
-#        data   = json.loads(urllib2_request(url+path, params))
         result = self.decoder.decode(urllib2_request(url+path, params))
         if  type(result) is types.StringType:
             data = json.loads(result)
@@ -220,7 +227,6 @@ class DASSearch(TemplatedPage):
         elif data['status'] == 'not found':
             # request data via POST
             path   = '/rest/json/POST'
-#            data   = json.loads(urllib2_request(url+path, params))
             result = self.decoder.decode(urllib2_request(url+path, params))
             if  type(result) is types.StringType:
                 data = json.loads(result)
@@ -303,13 +309,17 @@ class DASSearch(TemplatedPage):
         """
         time0   = time.time()
         titles, rows, form = self.result(kwargs)
-        ctime   = (time.time()-time0)
         nrows   = len(rows)
         limit   = getarg(kwargs, 'limit', nrows)
         names   = {'titlelist':titles, 'nrows':nrows, 'limit':limit,
-                   'resultlist': rows, 'form':form}
+                   'resultlist': rows}
         page    = self.templatepage('das_list', **names)
-        return self.page(page, ctime=ctime)
+        uinput  = getarg(kwargs, 'input', '')
+        form    = self.form(uinput=uinput)
+        ctime   = (time.time()-time0)
+        ajaxreq = getarg(kwargs, 'ajax', 0)
+        ajax    = self.templatepage('das_ajaxrequest', ajax=ajaxreq)
+        return self.page(form + ajax + page, ctime=ctime)
 
     @exposetext
     def plainview(self, kwargs):
@@ -346,12 +356,15 @@ class DASSearch(TemplatedPage):
                    'sort':'true', 'dir':'asc'}
         names   = {'titlelist':str(titles).replace("u'", "'"), 
                    'results':str(results).replace("u'", "'"), 
-                   'form':form,
                    'coldefs':coldefs, 'nrows':nrows, 'rowsperpage':limit,
                    'tag':'mytag'}
         page    = self.templatepage('das_table', **names)
+        uinput  = getarg(kwargs, 'input', '')
+        form    = self.form(uinput=uinput)
         ctime   = (time.time()-time0)
-        return self.page(page, ctime)
+        ajaxreq = getarg(kwargs, 'ajax', 0)
+        ajax    = self.templatepage('das_ajaxrequest', ajax=ajaxreq)
+        return self.page(form + ajax + page, ctime=ctime)
 
     @expose
     def default(self, *args, **kwargs):
@@ -359,3 +372,52 @@ class DASSearch(TemplatedPage):
         default method
         """
         return self.index(args, kwargs)
+
+    @expose
+    def request(self, **kwargs):
+        """
+        Place request to obtain status about given query
+        """
+        cherrypy.response.headers['Content-Type']='text/xml'
+        print "\n\n##### called request", kwargs, self.counter
+#        req = """<script type="text/javascript">setTimeout('ajaxRequest(\\'%s\\')', 3000)</script>"""\
+#                % 'test query'
+        img = """<img src="/dascontrollers/images/loading" alt="loading" />"""
+        req = """<script type="text/javascript">setTimeout('ajaxRequest()', 3000)</script>"""
+#        page = req
+#        page += "Got query, counter %s, %s" % (kwargs, self.counter)
+
+        uinput = getarg(kwargs, 'input', '')
+        view   = getarg(kwargs, 'view', 'table')
+        params = {'query':uinput, 'idx':0, 'limit':1}
+        path   = '/rest/json/GET'
+        url    = self.cachesrv
+        result = self.decoder.decode(urllib2_request(url+path, params))
+        print "\n +++ result", result, type(result)
+        if  type(result) is types.StringType:
+            data = json.loads(result)
+        else:
+            data = result
+        if  data['status'] == 'success':
+            page = """<script type="text/javascript">reload()</script>"""
+        elif data['status'] == 'in raw cache':
+            page = img + 'data found in raw cache'
+            page += req
+        elif data['status'] == 'requested':
+            page = img + 'data has been requested'
+            page += req
+        elif data['status'] == 'waiting in queue':
+            page = img + 'your request is waiting in queue'
+            page += req
+        elif data['status'] == 'not found':
+            page = 'data not in DAS yet, please retry'
+        else:
+            page = 'unknown status, %s' % urllib.urlencode(str(data))
+        
+#        if  self.counter == 5:
+#            page = "TEST DONE"
+#        self.counter += 1
+        print "##### page #####", page
+        page = ajax_response(page)
+        return page
+

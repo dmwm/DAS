@@ -13,15 +13,6 @@ form {
 label {display:block;}
 </style>
 
-#*
-<script text="type/javascript">
-function clearForm(tag) {
-   var id = document.getElementById(tag);
-   id.value="";
-   id.className="normal";
-}
-*#
-</script>
 <div align="center">
 <form action="/das/" method="get">
 <table class="normal">
@@ -49,15 +40,9 @@ results/per page
 </td>
 </tr>
 </table>
-#*
-#if $input
-<input type="text" size="80" name="input" id="input" value="$input"/>
-#else
-###<input type="text" size="80" name="input" id="input" value="QL expression, e.g. find dataset where site=T2_UK" onclick="javascript:clearForm('input')" class="inputtext" />
-#end if
-*#
 <input type="text" size="80" name="input" id="input" />
 <input type="submit" value="Search" />
+<input type="hidden" name="ajax" value="1" />
 <input type="reset" />
 
 </form>
@@ -76,4 +61,6 @@ updateInput('$input');
 </script>
 #end if
 <!-- end of das_searchform.tmpl -->
+
+<div id="_response"> <!-- we close this tag in das_bottom.tmpl -->
 

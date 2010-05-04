@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.11 2009/06/10 16:58:23 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_webconfig.py,v 1.12 2009/06/29 19:19:11 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -31,6 +31,7 @@ config.Webtools.port = 8212
 # used to hide service behind front-end
 config.Webtools.host = '127.0.0.1' 
 config.Webtools.application = 'DASWeb'
+
 # This is the config for the application
 config.component_('DASWeb')
 # Define the default location for templates for the app
@@ -61,20 +62,20 @@ active.section_('dascontrollers')
 # The class to load for this view/page
 active.dascontrollers.object = 'WMCore.WebTools.Controllers'
 # The configuration for this object - the location of css and js
-#active.dascontrollers.css = {
-#    'reset': environ['YUIHOME'] + '/reset/reset.css', 
-#    'cms_reset': environ['WTBASE'] + '/css/WMCore/WebTools/cms_reset.css', 
-#    'style': environ['WTBASE'] + '/css/WMCore/WebTools/style.css',
-#    'das': environ['DASHOME'] + '/web/css/das.css'
-#}
 active.dascontrollers.css = {
+#    'reset': environ['YUI_ROOT'] + '/build/reset/reset.css', 
     'cms_reset': environ['WMCORE_ROOT'] + '/src/css/WMCore/WebTools/cms_reset.css', 
     'das': environ['DAS_ROOT'] + '/src/css/das.css'
 }
 
-#active.dascontrollers.js = {}
 active.dascontrollers.js = {
-    'autopilot' : environ['DAS_ROOT'] + '/src/js/autopopulate.js'
+    'prototype' : environ['DAS_ROOT'] + '/src/js/prototype.js',
+    'rico' : environ['DAS_ROOT'] + '/src/js/rico.js',
+    'utils' : environ['DAS_ROOT'] + '/src/js/utils.js',
+    'ajax_utils' : environ['DAS_ROOT'] + '/src/js/ajax_utils.js',
+}
+active.dascontrollers.images = {
+    'loading' : environ['DAS_ROOT'] + '/src/images/loading.gif',
 }
 # These are pages in "maintenance mode" - to be completed
 maint = config.DASWeb.views.section_('maintenance')
