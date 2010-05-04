@@ -4,14 +4,15 @@
 """
 DAS mongocache manager.
 The DAS consists of several sub-systems:
+
     - DAS cache contains data records (output from data-services)
       and API records
     - DAS merge contains merged data records
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.59 2010/01/19 19:14:22 valya Exp $"
-__version__ = "$Revision: 1.59 $"
+__revision__ = "$Id: das_mongocache.py,v 1.60 2010/01/25 20:23:03 valya Exp $"
+__version__ = "$Revision: 1.60 $"
 __author__ = "Valentin Kuznetsov"
 
 import re

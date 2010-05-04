@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.24 2010/01/20 21:53:14 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: das_cli.py,v 1.25 2010/01/25 20:23:04 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -71,7 +71,10 @@ class DASOptionParser:
              help="specify sorting order, e.g. asc/desc")
         self.parser.add_option("--no-output", action="store_true", 
                                           dest="nooutput",
-             help="run DAS but don't print results")
+             help="run DAS workflow but don't print results")
+        self.parser.add_option("--no-results", action="store_true", 
+                                          dest="noresults",
+             help="run DAS workflow but don't write results into the cache")
     def getOpt(self):
         """
         Returns parse list of options
@@ -109,7 +112,7 @@ if __name__ == '__main__':
     t0 = time.time()
     query = opts.query
     debug = opts.verbose
-    DAS = DASCore(debug=debug)
+    DAS = DASCore(debug=debug, nores=opts.noresults)
     if  opts.hash:
         mongo_query = DAS.mongoparser.requestquery(query)
         loose_query_pat, loose_query = convert2pattern(mongo_query)

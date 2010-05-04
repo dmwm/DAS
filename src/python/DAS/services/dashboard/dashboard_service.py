@@ -100,10 +100,4 @@ class DashboardService(DASAbstractService):
         res = self.getdata(url, params, headers=self.headers)
         genrows = self.parser(res, api, args)
         ctime = time.time() - time0
-        header = dasheader(self.name, query, api, self.url, args,
-            ctime, self.expire, self.version())
-        header['lookup_keys'] = self.lookup_keys(api)
-        mongo_query = query
-        self.analytics.add_api(self.name, query, api, args)
-        self.localcache.update_cache(mongo_query, genrows, header)
-        return True
+        self.write_to_cache(query, api, url, args, genrows, ctime)
