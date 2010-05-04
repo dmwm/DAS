@@ -22,6 +22,15 @@ Below you can find concrete example of merged CMS records.
 DAS merge records
 -----------------
 
+DAS merge record represents aggregated results made by DAS upon
+user input query. Each query contains
+
+- das, an expiration timestamp, based on shortest expire timestamps of
+  corresponding :ref:`data records <das_cache_data_record>`
+- das_id, a list of corresponding _id's of :ref:`data records <das_cache_data_record>`
+  used for this aggregation
+- an aggregated data-service part, e.g. site.
+
 .. doctest::
 
     {u'_id': ObjectId('4b4f4cb4e2194e72b2000033'),
