@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.23 2009/12/14 16:56:42 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: das_cli.py,v 1.24 2010/01/20 21:53:14 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -96,6 +96,7 @@ def run(DAS, query, idx, limit, skey, sorder, nooutput, plain, debug):
         else:
             dump(results, idx)
     else:
+        query = DAS.adjust_query(query)
         results = DAS.call(query)
         print "\n### DAS.call returns", results
 #
