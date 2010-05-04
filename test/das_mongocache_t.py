@@ -6,6 +6,7 @@ Unit test for DAS mongocache class
 """
 
 import os
+import re
 import time
 import unittest
 
@@ -14,7 +15,7 @@ from pymongo.connection import Connection
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_mongocache import DASMongocache
-from DAS.core.das_mongocache import update_item
+from DAS.core.das_mongocache import update_item, convert2pattern, compare_specs
 
 class testDASMongocache(unittest.TestCase):
     """
@@ -51,6 +52,71 @@ class testDASMongocache(unittest.TestCase):
         # upon update we create a list of values for given key: block.name
         expect = {'test':1, 'block' : {'name' : ['/a/b/c#123']}}
         self.assertEqual(expect, row)
+
+    def test_compare_specs(self):
+        """
+        Test compare_specs funtion.
+        """
+        query1 = dict(fields=None, spec={'test':'site'})
+        query2 = dict(fields=None, spec={'test':'site_ch'})
+        result = compare_specs(query1, query2)
+        self.assertEqual(True, result)
+
+        query1 = dict(fields=None, spec={'test':'site_ch'})
+        query2 = dict(fields=None, spec={'test':'site'})
+        result = compare_specs(query1, query2)
+        self.assertEqual(False, result)
+
+        query1 = dict(fields=None, spec={'test':'site*'})
+        query2 = dict(fields=None, spec={'test':'site_ch'})
+        result = compare_specs(query1, query2)
+        self.assertEqual(True, result)
+
+        query1 = dict(fields=['site','block'], spec={'test':'site*'})
+        query2 = dict(fields=['site'], spec={'test':'site_ch'})
+        result = compare_specs(query1, query2)
+        self.assertEqual(True, result)
+
+        query1 = dict(fields=['site'], spec={'test':'site_ch'})
+        query2 = dict(fields=['site','block'], spec={'test':'site*'})
+        result = compare_specs(query1, query2)
+        self.assertEqual(False, result)
+
+        query1 = dict(fields=['site'], spec={'test':'site*'})
+        query2 = dict(fields=['site', 'block'], spec={'test':'site_ch'})
+        result = compare_specs(query1, query2)
+        self.assertEqual(False, result)
+
+    def test_convert2pattern(self):
+        """
+        Test how we convert mongo dict with patterns into spec
+        with compiled patterns
+        """
+        spec   = {'test': 'city'}
+        fields = None
+        query  = dict(spec=spec, fields=fields)
+        result, debug = convert2pattern(query)
+        self.assertEqual(query, result)
+
+        spec   = {'test': 'city*'}
+        fields = None
+        query  = dict(spec=spec, fields=fields)
+        pat    = re.compile('city.*')
+        expect = dict(spec={'test': pat}, fields=fields)
+        result, debug = convert2pattern(query)
+        self.assertEqual(expect, result)
+        expect = dict(spec={'test': 'city.*'}, fields=fields)
+        self.assertEqual(expect, debug)
+
+        spec   = {'test': {'name':'city*'}}
+        fields = None
+        query  = dict(spec=spec, fields=fields)
+        pat    = re.compile('city.*')
+        expect = dict(spec={'test': {'name':pat}}, fields=fields)
+        result, debug = convert2pattern(query)
+        self.assertEqual(expect, result)
+        expect = dict(spec={'test': {'name':'city.*'}}, fields=fields)
+        self.assertEqual(expect, debug)
 
 #    def test_result(self):                          
 #        """test DAS mongocache result method"""
