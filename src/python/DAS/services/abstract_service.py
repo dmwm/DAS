@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.54 2009/12/02 15:44:56 valya Exp $"
-__version__ = "$Revision: 1.54 $"
+__revision__ = "$Id: abstract_service.py,v 1.55 2009/12/07 18:40:48 valya Exp $"
+__version__ = "$Revision: 1.55 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -202,6 +202,8 @@ class DASAbstractService(object):
         """
         Filter provided apicall wrt existing apicall records in Analytics DB.
         """
+        spec = {'apicall.expire':{'$lt' : int(time.time())}}
+        self.analytics.col.remove(spec)
         spec = {'apicall.url':url, 'apicall.api':api}
         msg  = 'DBSAbstractService::pass_apicall, %s, API=%s, args=%s'\
         % (self.name, api, api_params)
