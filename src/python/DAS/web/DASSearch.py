@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.9 2009/05/29 18:29:48 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: DASSearch.py,v 1.10 2009/05/30 19:06:41 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -178,11 +178,11 @@ class DASSearch(TemplatedPage):
         return getattr(self, '%sview' % view)(kwargs)
 
     @expose
-    def form(self, uinput=None):
+    def form(self, uinput=None, msg=None):
         """
         provide input DAS search form
         """
-        page = self.templatepage('das_searchform', input=uinput)
+        page = self.templatepage('das_searchform', input=uinput, msg=msg)
         return page
 
     def result(self, kwargs):
@@ -198,7 +198,7 @@ class DASSearch(TemplatedPage):
         params = {'query':uinput, 'idx':idx, 'limit':limit}
         path   = '/rest/json/GET'
         data   = json.loads(urllib2_request(url+path, params))
-        titles = 'N/A'
+        titles = []
         res    = []
         form   = self.form(uinput=uinput)
         if  data['status'] == 'success':
@@ -213,6 +213,9 @@ class DASSearch(TemplatedPage):
             # request data via POST
             path   = '/rest/json/POST'
             data   = json.loads(urllib2_request(url+path, params))
+            # TODO: place AJAX message which will try to retrieve results again
+            msg    = data['status']
+            form   = self.form(uinput=uinput, msg=msg)
         return titles, res, form
         
     def result_v1(self, kwargs):
