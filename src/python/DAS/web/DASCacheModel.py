@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.5 2009/05/30 19:06:41 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.6 2009/06/03 20:00:17 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -17,6 +17,7 @@ import traceback
 
 # WMCore/WebTools modules
 from WMCore.WebTools.RESTModel import RESTModel
+from WMCore.WebTools.Page import exposedasjson
 
 # DAS modules
 from DAS.core.das_core import DASCore
@@ -43,6 +44,9 @@ def checkargs(func):
             return {'status':'fail', 'reason': msg}
         if  kwds.has_key('limit') and not pat.match(kwds['limit']):
             msg  = 'Unsupported value limit=%s' % (kwds['limit'])
+            return {'status':'fail', 'reason': msg}
+        if  kwds.has_key('expire') and not pat.match(kwds['expire']):
+            msg  = 'Unsupported value expire=%s' % (kwds['expire'])
             return {'status':'fail', 'reason': msg}
         pat  = re.compile('^find ')
         if  kwds.has_key('query') and not pat.match(kwds['query']):
@@ -85,6 +89,7 @@ class DASCacheModel(RESTModel):
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(self.cachemgr.worker, (worker, ))
 
+    @exposedasjson
     @checkargs
     def handle_get(self, *args, **kwargs):
         """
@@ -102,9 +107,9 @@ class DASCacheModel(RESTModel):
                 if  self.dascore.cache.incache(query):
                     res = self.dascore.cache.get_from_cache(query, idx, limit)
                     if  type(res) is types.GeneratorType:
-                        data['result'] = [i for i in res]
+                        data['data'] = [i for i in res]
                     else:
-                        data['result'] = res
+                        data['data'] = res
                     data['status'] = 'success'
                 else:
                     data['status'] = 'not found'
@@ -116,6 +121,7 @@ class DASCacheModel(RESTModel):
         self.debug(str(data))
         return data
 
+    @exposedasjson
     @checkargs
     def handle_post(self, *args, **kwargs):
         """
@@ -139,6 +145,7 @@ class DASCacheModel(RESTModel):
         self.debug(str(data))
         return data
 
+    @exposedasjson
     @checkargs
     def handle_put(self, *args, **kwargs):
         """
@@ -155,6 +162,7 @@ class DASCacheModel(RESTModel):
         self.debug(str(data))
         return data
 
+    @exposedasjson
     @checkargs
     def handle_delete(self, *args, **kwargs):
         """
