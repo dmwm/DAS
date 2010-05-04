@@ -52,7 +52,7 @@ class testQLParser(unittest.TestCase):
         """Test Mongo parser"""
         cond   = {'site.se':'a.b.c', 'block.name':'bla'}
         query  = dict(spec=cond, fields='block')
-        expect = ['sitedb', 'phedex', 'dbs', 'dbs3', 'phedex3']
+        expect = ['dbs3', 'phedex3']
         expect.sort()
         result = self.parser.services(query)
         result.sort()
@@ -76,14 +76,14 @@ class testQLParser(unittest.TestCase):
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
-        query = 'block site=a.b.c'
+        query = 'block site=T1_CH'
         expect = {'fields': None, 
-                  'spec': {'site.se': 'a.b.c', 'block.name':'*'}}
+                  'spec': {'site.name': 'T1_CH', 'block.name':'*'}}
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
         query = 'file,site block=bla'
-        expect = {'fields': None, 'spec': {'block.name': 'bla', 
+        expect = {'fields': None, 'spec': {'file.block.name': 'bla', 
                         'file.name':'*', 'site.name':'*', 'site.se':'*'}}
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
