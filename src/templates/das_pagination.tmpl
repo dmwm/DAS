@@ -1,26 +1,29 @@
 <!-- das_pagination.tmpl -->
 #import types
-<div id="div_results">
+<div id="results">
 
 <div align="left">
-<p>
 <table width="100%" class="normal">
 <tr>
 <td align="left">
-Found $nrows results, showing
+Showing
 #if not $limit
 all results
 </td>
 </tr>
 #else
-results
+<!--
 <span id="results" name="results">
+-->
+<span>
 #set total = $idx+$limit
 #if $total>$nrows
 #set total=$nrows
 #end if
-$idx-$total
+#set startidx=$idx+1
+$startidx-$total
 </span>
+of $nrows rows
 </td>
 <td align="right">
 <div id='paginator' name='paginator'> </div>
@@ -29,7 +32,6 @@ $idx-$total
 #end if
 </table>
 
-</p>
 
 $results
 </div> <!-- end of align="left" -->
