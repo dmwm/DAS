@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.51 2009/12/20 15:41:31 valya Exp $"
-__version__ = "$Revision: 1.51 $"
+__revision__ = "$Id: utils.py,v 1.52 2009/12/20 17:51:13 valya Exp $"
+__version__ = "$Revision: 1.52 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -694,7 +694,11 @@ def access(data, elem):
                             yield item
 
 def dict_helper(idict, notations):
-    """Create new dict for provided notations/dict"""
+    """
+    Create new dict for provided notations/dict. Perform implicit conversion
+    of data types, e.g. if we got '123', convert it to integer. The conversion
+    is done based on adjust_value function.
+    """
     try:
         from DAS.extensions.das_speed_utils import _dict_handler
         return _dict_handler(idict, notations)
