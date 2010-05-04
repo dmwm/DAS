@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.45 2010/03/05 18:05:13 valya Exp $"
-__version__ = "$Revision: 1.45 $"
+__revision__ = "$Id: DASSearch.py,v 1.46 2010/03/09 02:42:27 valya Exp $"
+__version__ = "$Revision: 1.46 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -35,12 +35,12 @@ from cherrypy.lib.static import serve_file
 #    from DAS.web.tools import exposedasjson, exposetext
 #    from DAS.web.tools import exposejson, exposedasplist
 
+# DAS modules
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import exposejson, exposedasplist
-
-# DAS modules
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_filters, das_operators
+from DAS.core.das_parser import parser
 from DAS.utils.utils import getarg, access
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.utils import urllib2_request, json2html, web_time
@@ -200,7 +200,12 @@ class DASSearch(DASWebManager):
                     input=uinput, entities=','.join(das_keys))
         # check provided input. If at least one word is not part of das_keys
         # return ambiguous template.
-        for word in uinput.split():
+        mongo_query = self.dasmgr.mongoparser.parse(uinput)
+        fields = mongo_query.get('fields', [])
+        if  not fields:
+            fields = []
+        spec   = mongo_query.get('spec', {})
+        for word in fields+spec.keys():
             found = 0
             for key in das_keys:
                 if  word.find(key) != -1:
@@ -506,19 +511,17 @@ class DASSearch(DASWebManager):
         page    = ""
         ndict   = {'nrows':total, 'limit':limit}
         page    = self.templatepage('das_nrecords', **ndict)
-        for nrecord in range(0, len(rows)):
-            row = rows[nrecord]
-            style = "white"
-            if  nrecord % 2:
-                style = "white"
-            else:
-                style = "blue" 
+#        for nrecord in range(0, len(rows)):
+#            row = rows[nrecord]
+#            style = "white"
+#            if  nrecord % 2:
+#                style = "white"
+#            else:
+#                style = "gray" 
         style = "white"
         for row in rows:
             id    = row['_id']
-#            rec   = '<a href="/das/records/%s">%s</a>, ' % (id, id)
             page += '<div class="%s"><hr class="line" />' % style
-#            page += '<b>Record</b> %s<br />' % rec
             gen   = self.convert2ui(row)
             for uikey, value in [k for k, g in groupby(gen)]:
                 page += "<b>%s</b>: %s<br />" % (uikey, value)
