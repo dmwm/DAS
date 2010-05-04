@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.22 2009/10/10 14:50:58 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: DASSearch.py,v 1.23 2009/10/13 18:11:05 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -66,6 +66,7 @@ class DASSearch(TemplatedPage):
         self.cachesrv  = getarg(cdict, 'cache_server_url', 'http://localhost:8011')
         self.dasmgr = DASCore()
         self.dasmapping = self.dasmgr.mapping
+        self.daslogger = self.dasmgr.logger
         self.pageviews = ['xml', 'list', 'table', 'plain', 'json', 'yuijson'] 
         self.cleantime = 60 # in seconds
         self.lastclean = time.time()
@@ -225,6 +226,11 @@ class DASSearch(TemplatedPage):
             data = result
         if  data['results']['status'] == 'success':
             return data['results']['nresults']
+        else:
+            msg = "nresults returns status not success: %s" \
+                        % str(data['results'])
+            self.daslogger.info(msg)
+            print "\n###" + msg
         self.send_request('POST', kwargs)
         return 0
 
@@ -320,12 +326,16 @@ class DASSearch(TemplatedPage):
                 for idx in range(0, len(item['system'])):
                     api    = item['api'][idx]
                     system = item['system'][idx]
-                    key    = item['selection_keys'][idx]
-                    data   = row[key]
-                    if  type(data) is types.ListType:
-                        data = data[jdx]
-                    if  type(data) is types.ListType:
-                        data = data[idx]
+                    try:
+                        key    = item['selection_keys'][idx]
+                        data   = row[key]
+                        if  type(data) is types.ListType:
+                            data = data[jdx]
+                        if  type(data) is types.ListType:
+                            data = data[idx]
+                    except:
+                        data = row
+                        key  = 'N/A'
                     pad = ""
                     jsoncode = {'jsoncode': json2html(data, pad)}
                     jsonhtml = self.templatepage('das_json', **jsoncode)
