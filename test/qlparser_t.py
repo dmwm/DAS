@@ -62,9 +62,9 @@ class testQLParser(unittest.TestCase):
         result = self.parser.params(query)
         self.assertEqual(expect, result)
 
-    def test_daslq2mongo(self):
+    def test_requestquery(self):
         """
-        Test das2l2mongo function.
+        Test requestquery function.
         """
         query = 'block site=T1_CH_CERN'
         expect = {'fields': ['block'], 
