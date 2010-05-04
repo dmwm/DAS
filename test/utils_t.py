@@ -82,6 +82,12 @@ class testUtils(unittest.TestCase):
 
     def test_dotdict(self):
         """Test dotdict class"""
+        res = {u'zip' : {u'code':u'14850'}}
+        ddict = dotdict(res)
+        ddict._set('zip.code', 14850)
+        expect = {u'zip' : {u'code':14850}}
+        self.assertEqual(expect, ddict)
+
         res = {'a':{'b':{'c':10}, 'd':10}}
         ddict = dotdict(res)
         ddict._set('x.y.z', 10)
