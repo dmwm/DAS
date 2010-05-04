@@ -48,16 +48,14 @@ Put your JSON MongoDB query here
 
 <hr class="line" />
 
+<div class="grayboxform">
 DAS query:
-<form action="$base/admin/query_info" method="get">
-<!--
-<form action="javascript:GetQueryInfo()">
--->
-<input type="text" size="80" name="dasquery" id="dasquery" />
-<input type="submit" value="Info" />
-<input type="reset" />
-</form>
-<div id="_queryinfo" name="_queryinfo" class="results"></div>
+<input type="text" size="80" id="dasquery" />
+<input type="submit" value="Info" onclick="javascript:ajaxQueryInfo()" />
+<input type="submit" value="Clear" onclick="javascript:ClearTag('_queryinfo')" />
+</div>
+<br />
+<div id="_queryinfo"></div>
 
 <div id="left">
 
@@ -80,7 +78,7 @@ DAS query:
 
 <div id="right">
 
-<div id="info" name="info" class="show">
+<div id="info" class="show">
 <h3>MongoDB info</h3>
 #for key, val in $mongo_info.items()
 <b>$key</b>: $val
@@ -88,7 +86,7 @@ DAS query:
 #end for
 </div> <!--end of id=info -->
 
-<div id="dasconfig" name="dasconfig" class="hide">
+<div id="dasconfig" class="hide">
 <h3>DAS configuration</h3>
 <pre>
 $dasconfig
@@ -96,7 +94,7 @@ $dasconfig
 </div> <!--end of id=dasconfig -->
 
 #for db in $ddict.keys()
-<div id="$db" name="$db" class="hide">
+<div id="$db" class="hide">
 <h3>Database: $db</h3>
 #for coll, info in $ddict[$db].items()
 <h4>Collection: $coll</h4>
@@ -117,7 +115,7 @@ $info[1]
 #else
 #set name=""
 #end if
-<tr class=$name>
+<tr class="$name">
 <td>$key</td>
 <td>$val</td>
 </tr>
@@ -136,6 +134,7 @@ $info[1]
 
 </div> <!-- end of container -->
 <script type="text/javascript">
+//<![CDATA[
 function HideAll() {
     HideTag('info');
     HideTag('dasconfig');
@@ -147,9 +146,19 @@ function CleanArea() {
     var area = document.getElementById('query');
     query.innerHTML="";
 }
+/*
 function GetQueryInfo() {
     var q = document.getElementById('dasquery');
     ajaxQueryInfo(q);
 }
+function ajaxQueryInfo() {
+    var q = document.getElementById('dasquery');
+    new Ajax.Updater('_queryinfo', '/das/admin/query_info',
+    { method: 'get' ,
+      parameters : {'dasquery':q.value},
+    });
+}
+*/
+//]]>
 </script>
 <!-- end of das_admin.tmpl -->
