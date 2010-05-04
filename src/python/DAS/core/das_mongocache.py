@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.30 2009/11/10 15:17:17 valya Exp $"
-__version__ = "$Revision: 1.30 $"
+__revision__ = "$Id: das_mongocache.py,v 1.31 2009/11/10 20:00:05 valya Exp $"
+__version__ = "$Revision: 1.31 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,6 +17,7 @@ import itertools
 # DAS modules
 from DAS.utils.utils import getarg, dict_value, merge_dict, genkey
 from DAS.core.cache import Cache
+import DAS.utils.jsonwrapper as json
 
 # monogo db modules
 from pymongo.connection import Connection
@@ -67,40 +68,22 @@ def loose(query):
         type(val) is types.StringType or type(val) is types.UnicodeType:
             if  val[-1] != '*':
                 val += '*' # add pattern
-#            val = re.compile(val.replace('*', '.*'))
         newspec[key] = val
     return dict(spec=newspec, fields=fields)
 
-def transform_keys(query, from_pat, to_pat):
+def encode_mongo_query(query):
     """
-    Tranform MongoDB query who has keys with pattern from_pat
-    into spec with keys of to_pat.
+    Mongo doesn't allow to store a dictionary w/ key having a dot '.', '$'
+    notaions, therefor we will use string representation in DB for the query.
     """
-    spec    = getarg(query, 'spec', {})
-    fields  = getarg(query, 'fields', None)
-    newspec = dict(spec)
-    for key in spec.keys():
-        if  key.find(from_pat) != -1:
-            newspec[key.replace(from_pat, to_pat)] = spec[key]
-            del newspec[key]
-    return dict(spec=newspec, fields=fields)
+    return json.dumps(query)
 
-def encode_mongo_keys(query):
+def decode_mongo_query(query):
     """
-    Mongo doesn't allow to store a dictionary w/ key having a dot '.'
-    For instance we can't store mongo queries themselves.
-    To avoid this limitation we will use encode_mongo_keys to convert
-    key.attr into key:attr, where simecolon we use as an example
-    of key attribute separator (SEP).
+    Perform opposite to encode_mongo_query action.
+    Restore query from a string.
     """
-    return transform_keys(query, DOT, SEP)
-
-def decode_mongo_keys(query):
-    """
-    Perform opposite to encode_mongo_keys action.
-    Restore key.attr from key:attr
-    """
-    return transform_keys(query, SEP, DOT)
+    return json.loads(query)
 
 def convert2pattern(query):
     """
@@ -310,7 +293,7 @@ class DASMongocache(Cache):
         msg  = "DASMongocache::similar_queries, "
         msg += "found query which cover this request: "
         for row in res:
-            existing_query = decode_mongo_keys(row['query'])
+            existing_query = decode_mongo_query(row['query'])
             if  compare_specs(query, existing_query):
                 msg += str(existing_query)
                 self.logger.info(msg)
@@ -412,11 +395,11 @@ class DASMongocache(Cache):
 
         # check presence of query in a cache regardless of the system
         # and insert it for this system
-        record = dict(query=encode_mongo_keys(query),
+        record = dict(query=encode_mongo_query(query),
                  das=dict(expire=dasheader['expire'], 
                         system=dasheader['system']))
         query_in_cache = False
-        spec = {'spec' : dict(query=encode_mongo_keys(query))}
+        spec = {'spec' : dict(query=encode_mongo_query(query))}
         if  self.incache(spec):
             query_in_cache = True
         self.col.insert(dict(record))
