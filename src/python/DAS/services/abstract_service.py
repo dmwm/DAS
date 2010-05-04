@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.87 2010/04/07 23:22:05 valya Exp $"
-__version__ = "$Revision: 1.87 $"
+__revision__ = "$Id: abstract_service.py,v 1.88 2010/04/08 00:37:03 valya Exp $"
+__version__ = "$Revision: 1.88 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -409,8 +409,9 @@ class DASAbstractService(object):
         row   = genrows.next()
         ddict = dotdict(row)
         keys2adjust = []
-        for key, val in spec.items():
-            if  not ddict._get(key) and key not in keys2adjust:
+        for key in spec.keys():
+            val = ddict._get(key)
+            if  spec[key] != val and key not in keys2adjust:
                 keys2adjust.append(key)
         msg   = "DASAbstractService::%s::set_misses, adjust keys %s"\
                 % (self.name, keys2adjust)
