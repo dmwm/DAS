@@ -1,0 +1,549 @@
+#!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=E1101,C0103,R0902
+"""
+Couch DB command line admin tool
+"""
+
+__revision__ = "$Id: ipy_profile_couch.py,v 1.1 2009/06/18 17:56:13 valya Exp $"
+__version__ = "$Revision: 1.1 $"
+__author__ = "Valentin Kuznetsov"
+
+# system modules
+import os
+import re
+import sys
+import types
+import inspect
+import traceback
+
+# ipython modules
+from   IPython import Release
+import IPython.ipapi
+
+#from DAS.utils.iprint import PrintManager
+
+import __main__
+
+class PrintManager:
+    def __init__(self):
+        self.term = TerminalController()
+
+    def print_red(self, msg):
+        """print message using red color"""
+        print self.msg_red(msg)
+
+    def print_green(self, msg):
+        """print message using blue color"""
+        print self.msg_green(msg)
+
+    def print_blue(self, msg):
+        """print message using blue color"""
+        print self.msg_blue(msg)
+
+    def msg_red(self, msg):
+        """yield message using red color"""
+        if  not msg:
+            msg = ''
+        return self.term.RED + msg + self.term.NORMAL
+
+    def msg_green(self, msg):
+        """yield message using green color"""
+        if  not msg:
+            msg = ''
+        return self.term.GREEN + msg + self.term.NORMAL
+
+    def msg_blue(self, msg):
+        """yield message using blue color"""
+        if  not msg:
+            msg = ''
+        return self.term.BLUE + msg + self.term.NORMAL
+#
+# http://code.activestate.com/recipes/475116/
+#
+class TerminalController:
+    """
+    A class that can be used to portably generate formatted output to
+    a terminal.  
+    
+    `TerminalController` defines a set of instance variables whose
+    values are initialized to the control sequence necessary to
+    perform a given action.  These can be simply included in normal
+    output to the terminal:
+
+        >>> term = TerminalController()
+        >>> print 'This is '+term.GREEN+'green'+term.NORMAL
+
+    Alternatively, the `render()` method can used, which replaces
+    '${action}' with the string required to perform 'action':
+
+        >>> term = TerminalController()
+        >>> print term.render('This is ${GREEN}green${NORMAL}')
+
+    If the terminal doesn't support a given action, then the value of
+    the corresponding instance variable will be set to ''.  As a
+    result, the above code will still work on terminals that do not
+    support color, except that their output will not be colored.
+    Also, this means that you can test whether the terminal supports a
+    given action by simply testing the truth value of the
+    corresponding instance variable:
+
+        >>> term = TerminalController()
+        >>> if term.CLEAR_SCREEN:
+        ...     print 'This terminal supports clearning the screen.'
+
+    Finally, if the width and height of the terminal are known, then
+    they will be stored in the `COLS` and `LINES` attributes.
+    """
+    # Cursor movement:
+    BOL = ''             #: Move the cursor to the beginning of the line
+    UP = ''              #: Move the cursor up one line
+    DOWN = ''            #: Move the cursor down one line
+    LEFT = ''            #: Move the cursor left one char
+    RIGHT = ''           #: Move the cursor right one char
+
+    # Deletion:
+    CLEAR_SCREEN = ''    #: Clear the screen and move to home position
+    CLEAR_EOL = ''       #: Clear to the end of the line.
+    CLEAR_BOL = ''       #: Clear to the beginning of the line.
+    CLEAR_EOS = ''       #: Clear to the end of the screen
+
+    # Output modes:
+    BOLD = ''            #: Turn on bold mode
+    BLINK = ''           #: Turn on blink mode
+    DIM = ''             #: Turn on half-bright mode
+    REVERSE = ''         #: Turn on reverse-video mode
+    NORMAL = ''          #: Turn off all modes
+
+    # Cursor display:
+    HIDE_CURSOR = ''     #: Make the cursor invisible
+    SHOW_CURSOR = ''     #: Make the cursor visible
+
+    # Terminal size:
+    COLS = None          #: Width of the terminal (None for unknown)
+    LINES = None         #: Height of the terminal (None for unknown)
+
+    # Foreground colors:
+    BLACK = BLUE = GREEN = CYAN = RED = MAGENTA = YELLOW = WHITE = ''
+    
+    # Background colors:
+    BG_BLACK = BG_BLUE = BG_GREEN = BG_CYAN = ''
+    BG_RED = BG_MAGENTA = BG_YELLOW = BG_WHITE = ''
+    
+    _STRING_CAPABILITIES = """
+    BOL=cr UP=cuu1 DOWN=cud1 LEFT=cub1 RIGHT=cuf1
+    CLEAR_SCREEN=clear CLEAR_EOL=el CLEAR_BOL=el1 CLEAR_EOS=ed BOLD=bold
+    BLINK=blink DIM=dim REVERSE=rev UNDERLINE=smul NORMAL=sgr0
+    HIDE_CURSOR=cinvis SHOW_CURSOR=cnorm""".split()
+    _COLORS = """BLACK BLUE GREEN CYAN RED MAGENTA YELLOW WHITE""".split()
+    _ANSICOLORS = "BLACK RED GREEN YELLOW BLUE MAGENTA CYAN WHITE".split()
+
+    def __init__(self, term_stream=sys.stdout):
+        """
+        Create a `TerminalController` and initialize its attributes
+        with appropriate values for the current terminal.
+        `term_stream` is the stream that will be used for terminal
+        output; if this stream is not a tty, then the terminal is
+        assumed to be a dumb terminal (i.e., have no capabilities).
+        """
+        # Curses isn't available on all platforms
+        try: import curses
+        except: return
+
+        # If the stream isn't a tty, then assume it has no capabilities.
+        if not term_stream.isatty(): return
+
+        # Check the terminal type.  If we fail, then assume that the
+        # terminal has no capabilities.
+        try: curses.setupterm()
+        except: return
+
+        # Look up numeric capabilities.
+        self.COLS = curses.tigetnum('cols')
+        self.LINES = curses.tigetnum('lines')
+        
+        # Look up string capabilities.
+        for capability in self._STRING_CAPABILITIES:
+            (attrib, cap_name) = capability.split('=')
+            setattr(self, attrib, self._tigetstr(cap_name) or '')
+
+        # Colors
+        set_fg = self._tigetstr('setf')
+        if set_fg:
+            for i,color in zip(range(len(self._COLORS)), self._COLORS):
+                setattr(self, color, curses.tparm(set_fg, i) or '')
+        set_fg_ansi = self._tigetstr('setaf')
+        if set_fg_ansi:
+            for i,color in zip(range(len(self._ANSICOLORS)), self._ANSICOLORS):
+                setattr(self, color, curses.tparm(set_fg_ansi, i) or '')
+        set_bg = self._tigetstr('setb')
+        if set_bg:
+            for i,color in zip(range(len(self._COLORS)), self._COLORS):
+                setattr(self, 'BG_'+color, curses.tparm(set_bg, i) or '')
+        set_bg_ansi = self._tigetstr('setab')
+        if set_bg_ansi:
+            for i,color in zip(range(len(self._ANSICOLORS)), self._ANSICOLORS):
+                setattr(self, 'BG_'+color, curses.tparm(set_bg_ansi, i) or '')
+
+    def _tigetstr(self, cap_name):
+        # String capabilities can include "delays" of the form "$<2>".
+        # For any modern terminal, we should be able to just ignore
+        # these, so strip them out.
+        import curses
+        cap = curses.tigetstr(cap_name) or ''
+        return re.sub(r'\$<\d+>[/*]?', '', cap)
+
+    def render(self, template):
+        """
+        Replace each $-substitutions in the given template string with
+        the corresponding terminal control string (if it's defined) or
+        '' (if it's not).
+        """
+        return re.sub(r'\$\$|\${\w+}', self._render_sub, template)
+
+    def _render_sub(self, match):
+        s = match.group()
+        if s == '$$': return s
+        else: return getattr(self, s[2:-1])
+
+#######################################################################
+#
+# load managers
+#
+try:
+    PM = PrintManager()
+except:
+    traceback.print_exc()
+
+def load_config(func_list=[]):
+    msg = """
+import os, re, sys, time, types, traceback, inspect
+import urllib, urllib2, httplib
+try:
+    import json # Python 2.6
+except:
+    import simplejson as json # prior 2.6 require simplejson
+from json import JSONDecoder, JSONEncoder
+try:
+    from path import path
+except ImportError:
+    pass
+try:
+    from ipipe import *
+except ImportError:
+    pass
+from DAS.utils.iprint import PrintManager
+
+# global variables
+URI="http://localhost:5984"
+DB="das"
+DESIGN="dasadmin"
+DEBUG=0
+"""
+    msg += "\n%s\n" % inspect.getsource(TerminalController)
+    msg += "\n%s\n" % inspect.getsource(PrintManager)
+    msg += "PM = PrintManager()"
+    for func in func_list:
+        msg += "\n%s\n" % inspect.getsource(func)
+    return msg
+
+def httplib_request(host, path, params, request='POST', debug=0):
+    """request method using provided HTTP request and httplib library"""
+    if  debug:
+        httplib.HTTPConnection.debuglevel = 1
+    if  type(params) is not types.StringType:
+        params = urllib.urlencode(params, doseq=True)
+    if  debug:
+        print "input parameters", params
+    headers = {"Content-type": "application/x-www-form-urlencoded",
+               "Accept": "text/plain"}
+    if  host.find('https://') != -1:
+        host = host.replace('https://', '')
+        conn = httplib.HTTPSConnection(host)
+    else:
+        host = host.replace('http://', '')
+        conn = httplib.HTTPConnection(host)
+    if  request == 'GET':
+        conn.request(request, path)
+    else:
+        conn.request(request, path, params, headers)
+    response = conn.getresponse()
+
+    if  response.reason != "OK":
+        print response.status, response.reason, response.read()
+        res = None
+    else:
+        res = response.read()
+    conn.close()
+    return res
+
+def print_data(data, lookup="value"):
+    """
+    Provides pretty print of json data based on lookup parameter
+    by default lookup=value. See couch db response for more info.
+    """
+    jsondict = json.loads(data)
+    PM.print_blue("Total %s documents" % len(jsondict['rows']))
+    maxl = 0
+    padding = ""
+    for row in jsondict['rows']:
+        values = row[lookup]
+        if  type(values) is types.DictType:
+            if  not padding:
+                for key in values.keys():
+                    if  len(key) > maxl:
+                        maxl = len(key)
+            for key, val in values.items():
+                padding = " "*(maxl-len(key))
+                print "%s%s: %s" % (padding, PM.msg_blue(key), val)
+            print
+        else:
+            print values
+
+def set_prompt(in1):
+    """Define shell prompt"""
+    if  in1.find('|\#>')!=-1:
+        in1 = in1.replace('|\#>', '').strip()
+    ip = __main__.__dict__['__IP'] 
+    prompt = getattr(ip.outputcache, 'prompt1') 
+    prompt.p_template = in1 + " |\#> "
+    prompt.set_p_str() 
+
+def couch_help(self, arg):
+    """
+    Provide simple help about available commands
+    """
+    global magic_list
+    msg  = "\nAvailable commands:\n"
+    for name, func in magic_list:
+        msg += "%s\n%s\n" % (PM.msg_blue(name), PM.msg_green(func.__doc__))
+    msg += "List of pre-defined variables to control your interactions "
+    msg += "with CouchDB:\n"
+    msg += PM.msg_green("    URI, DB, DESIGN, DEBUG\n")
+    print msg
+
+### MAGIC COMMANDS ###
+def db_info():
+    """
+    Provide information about Couch DB. Use DB parameter to setup
+    your couch DB name.
+    """
+    host  = URI
+    path  = '/%s' % DB
+    data  = httplib_request(host, path, {}, 'GET', DEBUG)
+    return json.loads(data)
+
+def couch_views():
+    """
+    List registered views in couch db.
+    """
+    qqq  = 'startkey=%22_design%2F%22&endkey=%22_design0%22'
+    host = URI
+    path = '/%s/_all_docs?%s' % (DB, qqq)
+    results = httplib_request(host, path, {}, 'GET', DEBUG)
+    designdocs = json.loads(results)
+    results    = {}
+    for item in designdocs['rows']:
+        doc   = item['key']
+        print PM.msg_blue("design: ") + doc
+        path  = '/%s/%s' % (DB, doc)
+        res   = httplib_request(host, path, {}, 'GET', DEBUG)
+        rdict = json.loads(res)
+        for view_name, view_dict in rdict['views'].items():
+            print PM.msg_blue("view name: ") + view_name
+            print PM.msg_blue("map:") 
+            print PM.msg_green(view_dict['map'])
+            if  view_dict.has_key('reduce'):
+                print PM.msg_blue("reduce:") 
+                print PM.msg_green(view_dict['reduce'])
+
+def create_view(view_dict):
+    """
+    Create couch db view. The db and design names are controlled via
+    DB and DESIGN shell parameters, respectively.
+    Parameters: <view_dict>
+    Example of the view:
+    {"view_name": {"map" : "function(doc) { if(doc.hash) {emit(1, doc.hash);}}" }}
+    """
+    # get existing views
+    host  = URI
+    path  = '/%s/_design/%s' % (DB, DESIGN)
+    data  = httplib_request(host, path, {}, 'GET', DEBUG)
+    jsondict = json.loads(data)
+    for view_name, view_def in view_dict.items():
+        jsondict['views'][view_name] = view_def
+
+    # update views
+    encoder = JSONEncoder()
+    params  = encoder.encode(jsondict)
+    request = 'PUT'
+    debug   = DEBUG
+    data    = httplib_request(host, path, params, request, debug)
+    return json.loads(data)
+
+def delete_view(view_name):
+    """
+    Delete couch db view. The db and design names are controlled via
+    DB and DESIGN shell parameters, respectively.
+    Parameters: <view_name>
+    """
+    # get existing views
+    host  = URI
+    path  = '/%s/_design/%s' % (DB, DESIGN)
+    data  = httplib_request(host, path, {}, 'GET', DEBUG)
+    jsondict = json.loads(data)
+
+    # delete requested view in view dict document
+    try:
+        del jsondict['views'][view_name]
+        # update view dict document in a couch
+        encoder = JSONEncoder()
+        params  = encoder.encode(jsondict)
+        request = 'PUT'
+        debug   = DEBUG
+        data    = httplib_request(host, path, params, request, debug)
+    except:
+        traceback.print_exc()
+
+def delete_all_views(design):
+    """
+    Delete all views in particular design document. 
+    The db and design names are controlled via
+    DB and DESIGN shell parameters, respectively.
+    Parameters: <design_name, e.g. dasadmin>
+    """
+    host  = URI
+    path  = '/%s/_design/%s' % (DB, design)
+    data  = httplib_request(host, path, {}, 'DELETE', DEBUG)
+    return json.loads(data)
+
+def create_db(db_name):
+    """
+    Create a new DB in couch.
+    Parameters: <db_name, e.g. das>
+    """
+    host  = URI
+    path  = '/%s' % db_name
+    data  = httplib_request(host, path, {}, 'PUT', DEBUG)
+    return json.loads(data)
+
+def delete_db(db_name):
+    """
+    Delete DB in couch. By default DAS database called das.
+    Parameters: <db_name, e.g. das>
+    """
+    host  = URI
+    path  = '/%s' % DB
+    data  = httplib_request(host, path, {}, 'DELETE', DEBUG)
+    return json.loads(data)
+
+def get_all_docs(idx=0, limit=0, pretty_print=False):
+    """
+    Retrieve all documents from CouchDB.
+    Parameters: <idx=0> <limit=0> <pretty_print=False>
+    """
+    host  = URI
+    path  = '/%s/_all_docs' % DB
+    kwds  = {}
+    if  idx:
+        kwds['skip'] = idx
+    if  limit:
+        kwds['limit'] = limit
+    data  = httplib_request(host, path, kwds, 'GET', DEBUG)
+    if  pretty_print:
+        print_data(data, lookup='id')
+    else:
+        return json.loads(data)
+
+def get_doc(id):
+    """
+    Retrieve document with given id from CouchDB.
+    Parameters: <id, e.g. 1323764f7a6af1b37b72119920cbaa08>
+    """
+    host  = URI
+    path  = '/%s/%s' % (DB, id)
+    kwds  = {}
+    data  = httplib_request(host, path, kwds, 'GET', DEBUG)
+    return json.loads(data)
+
+def load_module(arg):
+    """
+    Load custom admin module. Name it as <module>_ipython.py and place in 
+    your PYTHONPATH. Implement a <module>_load() function to load your stuff.
+    Parameters: <module>
+
+    Example:
+    def mycmd():
+        pass # do something here
+    def mymodule_load():
+        ip = IPython.ipapi.get()
+        ip.expose_magic('mycmd', mycmd)
+    """
+    # try to load custom modules
+    stm  = "from %s_ipython import %s_load\n" % (arg, arg)
+    stm += "%s_load()" % arg
+    obj  = compile(str(stm), '<string>', 'exec')
+    try:
+        eval(obj)
+    except:
+        traceback.print_exc()
+        pass
+    msg  = "Loaded %s module." % arg
+    msg += "Use " + PM.msg_blue("%s_help" %arg) + " if it's implemented"
+    print msg
+
+# keep magic list as global since it's used in couch_help
+magic_list = [
+        ('db_info', db_info),
+        ('couch_views', couch_views),
+        ('create_view', create_view),
+        ('delete_view', delete_view),
+        ('delete_all_views', delete_all_views),
+        ('get_all_docs', get_all_docs),
+        ('get_doc', get_doc),
+        ('create_db', create_db),
+        ('delete_db', delete_db),
+        ('load_module', load_module),
+]
+def main():
+    """
+    Main function which defint ipython behavior
+    """
+
+    # global IP API
+    ip = IPython.ipapi.get()
+
+    o = ip.options
+    ip.expose_magic('couch_help', couch_help)
+    # load commands and expose them to the shell
+    for m in magic_list:
+        ip.ex(inspect.getsource(m[1]))
+
+    # load configuration for couch-sh, supply a names of functions to
+    # be loaded
+    ip.ex(load_config([httplib_request, print_data]))
+    
+    # autocall to "full" mode (smart mode is default, I like full mode)
+    o.autocall = 2
+    
+    # Set dbsh prompt
+    o.prompt_in1 = 'couch-sh |\#> '
+    o.prompt_in2 = 'couch-sh> '
+    o.system_verbose = 0
+    
+    # define couch-sh banner
+    pyver  = sys.version.split('\n')[0]
+    ipyver = Release.version
+    msg    = "Welcome to couch-sh \n[python %s, ipython %s]\n%s\n" \
+            % (pyver, ipyver ,os.uname()[3])
+    msg   += "For couch-sh help use "
+    msg   += PM.msg_blue("couch_help")
+    msg   += ", for python help use help commands\n"
+    o.banner = msg
+    o.prompts_pad_left = "1"
+    # Remove all blank lines in between prompts, like a normal shell.
+    o.separate_in   = "0"
+    o.separate_out  = "0"
+    o.separate_out2 = "0"
+
+main()
