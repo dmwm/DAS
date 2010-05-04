@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.60 2010/02/24 21:32:46 valya Exp $"
-__version__ = "$Revision: 1.60 $"
+__revision__ = "$Id: das_core.py,v 1.61 2010/03/01 19:35:49 valya Exp $"
+__version__ = "$Revision: 1.61 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -24,7 +24,7 @@ import types
 import traceback
 import DAS.utils.jsonwrapper as json
 
-from DAS.core.qlparser import MongoParser
+from DAS.core.qlparser import MongoParser, DAS_OPERATORS
 #from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
@@ -67,6 +67,7 @@ class DASCore(object):
             self.verbose = verbose
         if  self.verbose:
             self.timer = DASTimer()
+        self.operators = [o.strip() for o in DAS_OPERATORS]
 
         # set noresults option
         self.noresults = False
@@ -285,9 +286,25 @@ class DASCore(object):
         """
         Get results either from cache or from explicit call
         """
-        query = self.adjust_query(query)
+        results = []
+        query   = self.adjust_query(query)
+        # check if we have any service which cover the query
+        # otherwise decompose it into list of queries
+        service_map = self.mongoparser.service_apis_map(mongo_query)
+        if  not service_map:
+            msg  = 'DASCore::result there is no single API to answer'
+            msg += 'input query, will decompose it ...'
+            self.logger.info(msg)
+            skeys = query['fields']
+            if  len(skeys) == 1: # no way we can proceed
+                return results
+            for key in skeys:
+                newquery = dict(fields=[key], spec=query['spec'])
+                self.call(newquery) # process query
+        else:
+            self.call(query) # process query
+
         # lookup provided query in a cache
-        self.call(query) 
         if  not self.noresults:
             results = self.get_from_cache(query, idx, limit, skey, sorder)
 #        if  self.das_aggregation:
