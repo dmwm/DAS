@@ -7,8 +7,8 @@ DAS mapping
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_mapping.py,v 1.13 2009/09/01 17:06:15 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_mapping.py,v 1.14 2009/09/01 20:21:57 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import re # we get regex pattern from DB and eval it in primary_key
@@ -46,32 +46,36 @@ class DASMapping(DASMappingMgr):
             filter(API2DAS.daskey_id==DASMap.daskey_id).\
             filter(API2DAS.system_id==System.id)
         if  api:
-            query = query.filter(Api.name==api)
+            query = session.query(Api, API2DAS, DASKey, System, DASMap).\
+                filter(DASMap.system_id==System.id).\
+                filter(DASMap.daskey_id==DASKey.id).\
+                filter(System.name==system).\
+                filter(DASKey.name==daskey).\
+                filter(Api.id==API2DAS.api_id).\
+                filter(Api.id==DASMap.api_id).\
+                filter(Api.name==api)
         primkeys = []
         for aobj, adas, dobj, sobj, dmap in query.all():
             pkey = dmap.primary_key
-            pat  = eval(adas.pattern)
-            if  value:
-                if  not pat.match(value): 
-                    # not match, since we already know value
-                    # and need to find key which provide other
-                    # information then value
+            if  value and adas.pattern:
+                pat  = eval(adas.pattern)
+                if  pat.match(value): 
                     if  pkey not in primkeys:
                         primkeys.append(pkey)
             else:
                 if  pkey not in primkeys:
                     primkeys.append(pkey)
-#        for row in query.all():
-#            pkey = row[-1].primary_key
-#            if  pkey not in primkeys:
-#                primkeys.append(pkey)
         if  len(primkeys) > 1:
             msg  = 'Ambigous primary keys: %s\n' % str(primkeys)
-            msg += 'system=%s, daskey=%s' % (system, daskey)
+            msg += 'system=%s, daskey=%s, api=%s, value=%s' \
+                % (system, daskey, api, value)
+            raise Exception(msg)
+        if  not primkeys:
+            msg = 'Unable to find primary key for '
+            msg += 'system=%s, daskey=%s, api=%s, value=%s' \
+                % (system, daskey, api, value)
             raise Exception(msg)
         return primkeys[0]
-#        row = query.one()
-#        return row[-1].primary_key
 
     def api2das(self, system, api_input_name):
         """
