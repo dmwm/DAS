@@ -5,16 +5,18 @@
 DAS Query Language parser.
 """
 
-__revision__ = "$Id: das_parser.py,v 1.5 2010/03/24 18:19:20 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_parser.py,v 1.6 2010/04/30 16:32:57 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import time
 import types
 import urllib
+from DAS.core.das_lexer import DASLexer
 from DAS.utils.utils import adjust_value
-from DAS.core.das_ql import das_filters, das_aggregators
+from DAS.core.das_ql import das_filters, das_aggregators, das_reserved
+from DAS.core.das_ql import das_special_keys
 from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
 from DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 from DAS.utils.regex import key_attrib_pattern
@@ -172,9 +174,17 @@ def parser(query, daskeys, operators):
     """
     Parser input DAS query and convert it into MongoDB one
     """
+    # get filters, aggregators and mapreduce function from input query
     filters, aggregators, mapreduce = get_filters(query)
     query  = add_spaces(query)
     query  = query.split("|")[0]
+
+    # apply DAS lexer to input query
+    daslex = DASLexer(daskeys)
+    daslex.build()
+    daslex.test(query)
+
+    # proceed with parsing of input query
     length = len(query)
     fields = []
     spec   = {}
@@ -228,11 +238,16 @@ def parser(query, daskeys, operators):
                         msg = "Unable to parse %s" % value
                         raise Exception(msg)
             else:
-                mongo_value = {MONGO_MAP[oper]:value}
+                if  oper == 'between' and type(value) is types.ListType:
+                    mongo_value = {"$gte":value[0], "$lte":value[-1]}
+                else:
+                    mongo_value = {MONGO_MAP[oper]:value}
             spec[das_word] = mongo_value
         else:
-            if  das_word and das_word not in fields:
-                fields.append(das_word.strip())
+            if  das_word:
+                strip_word = das_word.strip()
+                if strip_word not in fields and strip_word not in das_reserved():
+                    fields.append(strip_word)
         if  will_break:
             break
         count += 1
@@ -248,10 +263,29 @@ def parser(query, daskeys, operators):
     if  aggregators:
         mongo_query['aggregators'] = aggregators
     if  not mongo_query['fields'] and not mongo_query['spec']:
-        msg = 'Input query="%s" does not resolve into MongoDB one'\
-            % query.strip()
+        msg = das_parser_error(query, 0)
         raise Exception(msg)
+    if  mongo_query['spec'].keys():
+        found_keys = [key.split('.')[0] for key in mongo_query['spec'].keys()]
+        das_keys = [k for k in daskeys if k not in das_reserved()]
+        if  not set(found_keys) & set(das_keys):
+            err = 'None of the provided keys is DAS look-up key'
+            msg = das_parser_error(query, 0, err)
+            raise Exception(msg)
     return mongo_query
+
+def das_parser_error(query, pos, error=None):
+    """Produce pretty formatted message about invalid query"""
+    msg  = 'DAS parser: unable to parser input query\n'
+    msg += 'QUERY: %s\n' % query
+    msg += '-' * (len('QUERY: ') + pos) + '^' + '\n'
+    if  error:
+        msg += error
+    else:
+        msg += 'Unable to parse input query. '
+        msg += 'One of the following conditions fails:\n'
+        msg += 'No input DAS key found/unknown DAS key/illegal DAS operator'
+    return msg
 
 def decompose(query):
     """Extract selection keys and conditions from input query"""
@@ -276,8 +310,8 @@ class QLManager(object):
         self.map         = config['dasmapping']
         self.analytics   = config['dasanalytics']
         self.daskeysmap  = self.map.daskeys()
-        self.operators   = das_operators()
-        self.daskeys     = ['system', 'date'] # two reserved words
+        self.operators   = list(das_operators())
+        self.daskeys     = list(das_special_keys())
         for val in self.daskeysmap.values():
             for item in val:
                 self.daskeys.append(item)
