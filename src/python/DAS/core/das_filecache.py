@@ -7,18 +7,13 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.9 2009/05/20 14:21:52 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_filecache.py,v 1.10 2009/05/22 21:04:40 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import types
 import traceback
-#try:
-#    import cPickle as pickle
-#except:
-#    import pickle
-#    pass
 import marshal
 
 import time
@@ -32,7 +27,7 @@ from sqlalchemy.orm import sessionmaker
 
 # DAS modules
 from DAS.utils.utils import genkey
-from DAS.core.cache import Cache
+from DAS.core.cache import Cache, NoResults
 
 Base = declarative_base()
 class System(Base):
@@ -146,7 +141,34 @@ class DASFilecache(Cache):
         query_table = Query.__table__
         Base.metadata.create_all(self.engine)
 
-    def get_from_cache(self, query):
+    def incache(self, query):
+        """
+        Check if we have query results in cache, otherwise return null.
+        """
+        key     = genkey(query)
+        sysdir  = os.path.join(self.dir, self.get_system(query))
+        session = self.session()
+        try: # transactions
+            res = session.query(Query).filter(Query.hash==key)
+            session.commit()
+        except:
+            session.rollback()
+            traceback.print_exc()
+            return False
+        for qobj in res:
+            valid = eval(qobj.expire) - time.time()
+            timestring   = eval(qobj.create)
+            creationdate = yyyymmdd(timestring)
+            creationhour = hour(timestring)
+            datedir      = os.path.join(sysdir, creationdate)
+            hourdir      = os.path.join(datedir, creationhour)
+            dir          = hourdir
+            filename     = os.path.join(dir, key)
+            if  valid > 0 and os.path.isfile(filename):
+                return True
+        return False
+
+    def get_from_cache(self, query, idx=0, limit=None):
         """
         Retreieve results from cache, otherwise return null.
         """
@@ -174,13 +196,20 @@ class DASFilecache(Cache):
                 msg = "found valid query in cache, key=%s" % key
                 self.logger.debug("DASFilecache::get_from_cache %s" % msg)
                 if  os.path.isfile(filename):
-#                    fdr = open(filename, 'r')
-#                    res = pickle.load(fdr)
-#                    fdr.close()
                     fdr = open(filename, 'rb')
-                    res = marshal.load(fdr)
+                    if  limit:
+                        for i in range(0, limit):
+                            res = marshal.load(fdr)
+                            if  i >= idx:
+                                yield res
+                    else:
+                        while 1:
+                            try:
+                                res = marshal.load(fdr)
+                                yield res
+                            except EOFError, err:
+                                break
                     fdr.close()
-                    return res
             else:
                 msg = "found expired query in cache, key=%s" % key
                 self.logger.debug("DASFilecache::get_from_cache %s" % msg)
@@ -195,7 +224,6 @@ class DASFilecache(Cache):
                     traceback.print_exc()
                     msg = "Unable to commit to DAS filecache DB"
                     raise Exception(msg)
-        return
 
     def update_cache(self, query, results, expire):
         """
@@ -215,11 +243,15 @@ class DASFilecache(Cache):
         except:
             pass
         filename = os.path.join(dir, key)
-#        fdr = open(filename, 'w')
-#        pickle.dump(results, fdr)
-#        fdr.close()
         fdr = open(filename, 'wb')
-        marshal.dump(results, fdr)
+        if  type(results) is types.ListType or \
+            type(results) is types.GeneratorType:
+            for item in results:
+                marshal.dump(item, fdr)
+                yield item
+        else:
+            marshal.dump(results, fdr)
+            yield results
         fdr.close()
         
         session  = self.session()
@@ -262,4 +294,5 @@ class DASFilecache(Cache):
         Delete all results in cache
         dbname is unused parameter to match behavior of couchdb cache
         """
-        os.removedirs(self.dir)
+#        os.removedirs(self.dir)
+        os.system('rm -rf %s' % self.dir)

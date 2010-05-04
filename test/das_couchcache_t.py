@@ -31,11 +31,27 @@ class testDASCouchcache(unittest.TestCase):
         self.couchcache = DASCouchcache(self.config)
         query  = "find site where site=T2_UK"
         expire = 60
-        expect = [1,2,3,4]
-        record = {'test':[1,2,3,4]}
-        self.couchcache.update_cache(query, record, expire)
-        result = self.couchcache.get_from_cache(query)
-        result = result['test']
+        record = [{'test':i} for i in range(0, 10)]
+        expect = record
+        expect = self.couchcache.update_cache(query, record, expire)
+        expect = [i for i in expect]
+        result = [i for i in self.couchcache.get_from_cache(query)]
+        result.sort()
+        self.assertEqual(expect, result)
+
+    def test_pagination(self):                          
+        """test DAS couchdb cache result method using pagination"""
+        self.couchcache.delete_cache('das')
+        self.couchcache = DASCouchcache(self.config)
+        query  = "find site where site=T2_UK"
+        expire = 60
+        record = [{'test':i} for i in range(0, 10)]
+        expect = record
+        expect = self.couchcache.update_cache(query, record, expire)
+        expect = [i for i in expect]
+        idx    = 1
+        limit  = 3
+        result = [i for i in self.couchcache.get_from_cache(query, idx, limit)]
         result.sort()
         self.assertEqual(expect, result)
 #

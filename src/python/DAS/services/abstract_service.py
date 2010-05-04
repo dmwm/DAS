@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.15 2009/05/19 12:43:10 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: abstract_service.py,v 1.16 2009/05/22 21:04:40 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -21,10 +21,6 @@ except:
 
 from DAS.utils.utils import genresults
 from DAS.utils.utils import cartesian_product
-#from DAS.core.das_couchdb import DASCouchDB
-#from DAS.core.das_filecache import DASFilecache
-#from DAS.core.basemanager import BaseManager
-#from DAS.core.das_mapping import jsonparser, das2api, das2result
 from DAS.core.das_mapping import json2das, das2api, das2result
 from DAS.core.qlparser import QLLexer
 
@@ -53,10 +49,8 @@ class DASAbstractService(object):
         self._keys        = None # to be defined at run-time in self.keys
 
         # define internal couch DB manager to put 'raw' results into CouchDB
-#        mgr               = BaseManager(config)
-#        self.localcache       = DASCouchDB(mgr)
-#        self.localcache       = DASFilecache(mgr)
-        self.localcache   = config['rawcache']
+        if  config.has_key('rawcache') and config['rawcache']:
+            self.localcache   = config['rawcache']
 
     def keys(self):
         """
@@ -82,9 +76,11 @@ class DASAbstractService(object):
         # call couch cache to get results from it,
         # otherwise call data service as shown below.
         cquery = "%s %s" % (url, params)
-        res = self.localcache.get_from_cache(cquery)
-        if  res:
-            return res
+#        res = self.localcache.get_from_cache(cquery)
+#        if  res:
+#            return res
+        if  hasattr(self, 'localhost') and self.localcache.incache(cquery):
+            return self.localcache.get_from_cache(cquery)
 
         data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
         results = data.read()
@@ -97,7 +93,8 @@ class DASAbstractService(object):
 
         # store to couch 'raw' data coming out of concrete data service
         # will add 'query' and 'timestamp' for every row in results
-        self.localcache.update_cache(cquery, results, self.expire)
+        if  hasattr(self, 'localhost'):
+            results = self.localcache.update_cache(cquery, results, self.expire)
 
         return results
 
@@ -143,9 +140,11 @@ class DASAbstractService(object):
         # call couch cache to get results from it,
         # otherwise call data service as shown below.
         cquery = '%s @ %s' % (query, self.name)
-        res = self.localcache.get_from_cache(cquery)
-        if  res:
-            return res
+#        res = self.localcache.get_from_cache(cquery)
+#        if  res:
+#            return res
+        if  hasattr(self, 'localhost') and self.localcache.incache(cquery):
+            return self.localcache.get_from_cache(cquery)
 
         skeys = [key for key in collect_list if self.keys().count(key)]
         # add exception for DBS for aggregated functions
@@ -168,7 +167,8 @@ class DASAbstractService(object):
         results = genresults(self.name, res, collect_list)
         # store to couch 'raw' data coming out of concrete data service
         # will add 'query' and 'timestamp' for every row in results
-        self.localcache.update_cache(cquery, results, self.expire)
+        if  hasattr(self, 'localhost'):
+            results = self.localcache.update_cache(cquery, results, self.expire)
 
         return results
 
@@ -277,20 +277,19 @@ class DASAbstractService(object):
                 else: # if we have http://host/apiname?...
                     url = self.url + '/' + apiname
                 res = self.getdata(url, args)
+                if  type(res) is types.GeneratorType:
+                    res = [i for i in res][0]
                 res = res.replace('null', '\"null\"')
-#                jsondict = eval(res)
                 try:
                     jsondict = json.loads(res)
                 except:
                     jsondict = eval(res)
                     pass
-#                jsondict = self.adjust_result(api, jsondict)
                 if  self.verbose > 2:
                     print "\n### %s::%s returns" % (self.name, api)
                     print jsondict
                 if  jsondict.has_key('error'):
                     continue
-#                data = jsonparser(self.name, jsondict, keylist)
                 data = json2das(self.name, jsondict, keylist, selkeys)
                 return data
 
@@ -313,17 +312,17 @@ class DASAbstractService(object):
         for api, args in apidict.items():
             url = self.url + '/' + api
             res = self.getdata(url, args)
+            if  type(res) is types.GeneratorType:
+                res = [i for i in res][0]
             res = res.replace('null', '\"null\"')
             try:
                 jsondict = json.loads(res)
             except:
                 jsondict = eval(res)
                 pass
-#            jsondict = self.adjust_result(api, jsondict)
             if  self.verbose > 2:
                 print "\n### %s::%s returns" % (self.name, api)
                 print jsondict, keylist
-#            data = jsonparser(self.name, jsondict, keylist)
             data = [i for i in json2das(self.name, jsondict, keylist, selkeys)]
             resdict[api] = data
             first_row = data[0]

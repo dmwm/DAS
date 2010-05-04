@@ -5,12 +5,12 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.7 2009/05/19 17:24:12 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_cache.py,v 1.8 2009/05/22 21:04:40 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 # DAS modules
-from DAS.core.cache import Cache
+from DAS.core.cache import Cache, NoResults
 from DAS.core.das_memcache import DASMemcache
 from DAS.core.das_couchcache import DASCouchcache
 from DAS.core.das_filecache import DASFilecache
@@ -28,7 +28,20 @@ class DASCache(Cache):
         }
         self.logger.info('DASCache using servers = %s' % self.servers)
 
-    def get_from_cache(self, query):
+    def incache(self, query):
+        """
+        Retreieve results from cache, otherwise return null.
+        """
+        servers = self.servers.keys()
+        servers.sort()
+        for name in servers:
+            self.logger.info("DASCache::incache, using %s" % name)
+            srv = self.servers[name]
+            res = srv.incache(query)
+            if  res:
+                return res
+
+    def get_from_cache(self, query, idx=0, limit=None):
         """
         Retreieve results from cache, otherwise return null.
         """
@@ -37,7 +50,7 @@ class DASCache(Cache):
         for name in servers:
             self.logger.info("DASCache::get_from_cache, using %s" % name)
             srv = self.servers[name]
-            res = srv.get_from_cache(query)
+            res = srv.get_from_cache(query, idx, limit)
             if  res:
                 return res
 
@@ -50,7 +63,9 @@ class DASCache(Cache):
         for name in servers:
             self.logger.info("DASCache::update_cache, using %s" % name)
             srv = self.servers[name]
-            srv.update_cache(query, results, expire)
+            results = srv.update_cache(query, results, expire)
+        for item in results:
+            yield item
 
     def clean_cache(self, cache=None):
         """

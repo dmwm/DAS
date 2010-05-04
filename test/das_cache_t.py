@@ -41,12 +41,16 @@ class testDASCache(unittest.TestCase):
         query  = "find site where site=T2_UK"
         expire = 60
         expect = [1,2,3,4]
-        self.dascache.update_cache(query, expect, expire)
-        result = self.dascache.get_from_cache(query) 
+        expect = self.dascache.update_cache(query, expect, expire)
+        expect = [i for i in expect]
+        if  not expect:
+            assert expect == [1,2,3,4]
+        result = [i for i in self.dascache.get_from_cache(query)]
         result.sort()
         from itertools import groupby
         result = [k for k, g in groupby(result)]
         self.assertEqual(expect, result)
+        self.dascache.delete_cache()
 #
 # main
 #

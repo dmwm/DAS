@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.7 2009/05/19 12:43:11 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_config.py,v 1.8 2009/05/22 21:04:41 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -45,7 +45,8 @@ def das_readconfig(dasconfig=None):
     configdict['filecache_dir'] = config.get('filecache', 'dir', '')
     configdict['filecache_lifetime'] = config.getint('filecache', 'lifetime')
 
-    configdict['rawcache'] = config.get('das', 'rawcache', 'DASFilecache')
+    configdict['rawcache'] = config.get('das', 'rawcache', None)
+    configdict['hotcache'] = config.get('das', 'hotcache', None)
 
 #    systems = config.get('das', 'systems', 'dbs,sitedb,phedex').split(',')
     systems = config.get('das', 'systems', 
@@ -79,6 +80,7 @@ def das_writeconfig():
     config.set('das', 'systems', '%s' % systems)
     config.set('das', 'verbose', 1)
     config.set('das', 'rawcache', 'DASFilecache')
+    config.set('das', 'hotcache', 'DASMemcache')
 
     config.add_section('cache')
     config.set('cache', 'servers', '127.0.0.1:11211' )
