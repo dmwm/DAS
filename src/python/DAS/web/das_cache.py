@@ -5,12 +5,11 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.2 2010/03/19 17:25:48 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_cache.py,v 1.3 2010/04/06 20:42:20 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
-import re
 import sys
 import time
 import types
@@ -18,12 +17,9 @@ import thread
 import cherrypy
 import traceback
 
-from cherrypy import expose
-
 # monogo db modules
 from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
-from pymongo import DESCENDING, ASCENDING
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
@@ -106,7 +102,7 @@ def checkargs(func):
     wrapper.exposed = True
     return wrapper
 
-def worker(query, expire):
+def worker(query, expire=None):
     """
     Worker function which invoke DAS core to update cache for input query
     """
@@ -126,7 +122,7 @@ class DASCacheService(DASWebManager):
         DASWebManager.__init__(self, config)
         self.version = __version__
         self.methods = {}
-        self.methods['GET']= {
+        self.methods['GET'] = {
             'request':
                 {'args':['idx', 'limit', 'query', 'skey', 'order'],
                  'call': self.request, 'version':__version__},
@@ -140,13 +136,13 @@ class DASCacheService(DASWebManager):
                 {'args':['query'],
                  'call': self.status, 'version':__version__},
         }
-        self.methods['POST']= {'create':
+        self.methods['POST'] = {'create':
                 {'args':['query', 'expire'],
                  'call': self.create, 'version':__version__}}
-        self.methods['PUT']= {'replace':
+        self.methods['PUT'] = {'replace':
                 {'args':['query', 'expire'],
                  'call': self.replace, 'version':__version__}}
-        self.methods['DELETE']= {'delete':
+        self.methods['DELETE'] = {'delete':
                 {'args':['query'],
                  'call': self.delete, 'version':__version__}}
 
@@ -168,9 +164,9 @@ class DASCacheService(DASWebManager):
         capped_size   = self.dascore.dasconfig['mongocache_capped_size']
         self.con      = Connection(dbhost, dbport)
         if  'logging' not in self.con.database_names():
-            db = self.con['logging']
+            dbname = self.con['logging']
             options = {'capped':True, 'size': capped_size}
-            db.create_collection('db', options)
+            dbname.create_collection('db', options)
             self.warning('Created logging.db, size=%s' % capped_size)
         self.col      = self.con['logging']['db']
         sleep         = cdict.get('sleep', 2)
@@ -201,7 +197,7 @@ class DASCacheService(DASWebManager):
         self.col.insert(doc)
 
     @checkargs
-    def records(self, *args, **kwargs):
+    def records(self, **kwargs):
         """
         HTTP GET request.
         Retrieve records from provided collection.
@@ -242,7 +238,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def status(self, *args, **kwargs):
+    def status(self, **kwargs):
         """
         HTTP GET request. Check status of the input query in DAS.
         """
@@ -261,7 +257,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def nresults(self, *args, **kwargs):
+    def nresults(self, **kwargs):
         """
         HTTP GET request. Ask DAS for total number of records
         for provided query.
@@ -280,7 +276,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def request(self, *args, **kwargs):
+    def request(self, **kwargs):
         """
         HTTP GET request.
         Retrieve results from DAS cache.
@@ -319,7 +315,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def create(self, *args, **kwargs):
+    def create(self, **kwargs):
         """
         HTTP POST request. 
         Requests the server to create a new resource
@@ -344,7 +340,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def replace(self, *args, **kwargs):
+    def replace(self, **kwargs):
         """
         HTTP PUT request.
         Requests the server to replace an existing
@@ -375,7 +371,7 @@ class DASCacheService(DASWebManager):
         return data
 
     @checkargs
-    def delete(self, *args, **kwargs):
+    def delete(self, **kwargs):
         """
         HTTP DELETE request.
         Delete input query in DAS cache
@@ -405,7 +401,7 @@ class DASCacheService(DASWebManager):
         """
         request = cherrypy.request.method
         if  request not in self.methods.keys():
-            msg = "Usupported request '%s'" % requset
+            msg = "Unsupported request '%s'" % request
             return {'error': msg}
         method  = args[0]
         if  method not in self.methods[request].keys():
