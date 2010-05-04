@@ -94,6 +94,12 @@ class testUtils(unittest.TestCase):
         result = ddict._get('a.M.Z')
         self.assertEqual(expect, result)
 
+        res = {'a': {'b': {'c':1, 'd':2}}}
+        ddict = dotdict(res)
+        expect = {'a': {'b': {'c':1}}}
+        ddict._delete('a.b.d')
+        self.assertEqual(expect, ddict)
+
     def test_merge_dict(self):
         """Test merge_dict"""
         dict1  = {'block':{'name':'AAA', 'b':{'c':1}, 'size':2}, 'das':{'system':'dbs'}}
