@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.25 2009/10/23 19:35:08 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: das_mongocache.py,v 1.26 2009/11/03 16:30:00 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -20,10 +20,38 @@ from DAS.core.cache import Cache
 
 # monogo db modules
 from pymongo.connection import Connection
+from pymongo.objectid import ObjectId
 from pymongo import DESCENDING
 
 DOT = '.'
 SEP = '___'
+
+def adjust_id(query):
+    """
+    We need to adjust input query who has '_id' as a string to ObjectId
+    used in MongoDB.
+    """
+    spec = query['spec']
+    if  spec.has_key('_id'):
+        val = spec['_id']
+        if  type(val) is types.StringType:
+            newval = ObjectId(val)
+            spec['_id'] = newval
+        elif type(val) is types.UnicodeType:
+            newval = ObjectId(unicode.encode(val))
+            spec['_id'] = newval
+        elif type(val) is types.ListType:
+            newval = []
+            for item in val:
+                if  type(item) is types.StringType:
+                    newval.append(ObjectId(item))
+                elif type(item) is types.UnicodeType:
+                    newval.append(ObjectId(unicode.encode(item)))
+                else:
+                     raise Exception('Wrong type for id, %s=%s' % (item, type(item)))
+            spec['_id'] = newval
+        query['spec'] = spec
+    return query
 
 def loose(query):
     """
@@ -35,7 +63,8 @@ def loose(query):
     fields  = getarg(query, 'fields', None)
     newspec = {}
     for key, val in spec.items():
-        if  type(val) is types.StringType or type(val) is types.UnicodeType:
+        if  key != '_id' and \
+        type(val) is types.StringType or type(val) is types.UnicodeType:
             if  val[-1] != '*':
                 val += '*' # add pattern
 #            val = re.compile(val.replace('*', '.*'))
@@ -298,6 +327,7 @@ class DASMongocache(Cache):
         self.logger.info("DASMongocache::incache(%s)" % query)
         # remove from cache all expire docs
         self.col.remove({'das.expire': {'$lt' : int(time.time())}})
+        query  = adjust_id(query)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
         res    = self.col.find(spec=spec, fields=fields).count()
@@ -313,6 +343,7 @@ class DASMongocache(Cache):
         http://api.mongodb.org/python/
         """
         self.logger.info("DASMongocache::nresults(%s)" % query)
+        query  = adjust_id(query)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
         return self.col.find(spec=spec, fields=fields).count()
@@ -326,13 +357,14 @@ class DASMongocache(Cache):
         """
         self.logger.info("DASMongocache::get_from_cache(%s, %s, %s, %s, %s)"\
                 % (query, idx, limit, skey, order))
+        query  = adjust_id(query)
         query, dquery = convert2pattern(query)
         self.logger.info("DASMongocache::get_from_cache, converted to %s" \
                 % dquery)
         idx    = int(idx)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
-        spec.update({'query.spec':{'$exists':False}}) # exclude query records
+#        spec.update({'query.spec':{'$exists':False}}) # exclude query records
         if  limit:
             res = self.col.find(spec=spec, fields=fields)\
                 .skip(idx).limit(limit)
@@ -457,6 +489,7 @@ class DASMongocache(Cache):
         """
         Remove query from cache
         """
+        query  = adjust_id(query)
         self.col.remove(query)
 
     def clean_cache(self):
