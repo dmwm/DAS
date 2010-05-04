@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.61 2010/02/08 20:29:45 valya Exp $"
-__version__ = "$Revision: 1.61 $"
+__revision__ = "$Id: utils.py,v 1.62 2010/02/10 18:34:26 valya Exp $"
+__version__ = "$Revision: 1.62 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -664,6 +664,13 @@ def trace(source):
         print item
         yield item
 
+def splitter(record, key):
+    """
+    Split input record into a stream of records based on provided key.
+    A key can be supplied in a dotted form, e.g. block.replica.name
+    """
+    yield record
+
 def access(data, elem):
     """
     Access elements of the dict (data). The element can be supplied in dotted form, e.g.
@@ -698,6 +705,53 @@ def access(data, elem):
                         for item in result:
                             yield item
 
+def delete_elem(data, elem):
+    """
+    Delete provided elem (can be in form of compound key, e.g. block.name)
+    from data row.
+    """
+    keys = elem.split(".")
+    val  = data
+    try:
+        for key in keys[:-1]:
+            val = val[key]
+        if  val.has_key(keys[-1]):
+            del val[keys[-1]]
+    except:
+        pass
+
+def translate(notations, api, rec):
+    """
+    Translate given row to DAS notations according to provided notations
+    and api. Each entry in notations list is a form of
+
+    .. doctest::
+
+        {"notation":"site.resource.name", "map":"site.name", "api":""}
+    """
+    for row in notations:
+        count    = 0
+        notation = row['notation']
+        dasmap   = row['map']
+        api2use  = row['api']
+        if  not api2use or api2use == api:
+            record = dict(rec)
+            rows = access(rec, notation)
+            keys = dasmap.split(".")
+            keys.reverse()
+            for val in rows:
+                item, newval = convert_dot_notation(dasmap, val)
+                recval = record[item]
+                if  type(recval) is types.DictType:
+                    recval.update(newval)
+                else: 
+                    record[item] = newval
+                count += 1
+                delete_elem(record, notation)
+            yield record
+        if  not count:
+            yield rec
+
 def dict_helper(idict, notations):
     """
     Create new dict for provided notations/dict. Perform implicit conversion
@@ -713,7 +767,68 @@ def dict_helper(idict, notations):
             child_dict[notations.get(kkk, kkk)] = adjust_value(vvv)
         return child_dict
 
-def xml_parser(notations, source, prim_key, tags=[]):
+def xml_parser(source, prim_key, tags=[]):
+    """
+    XML parser based on ElementTree module. To reduce memory footprint for
+    large XML documents we use iterparse method to walk through provided
+    source descriptor (a .read()/close()-supporting file-like object 
+    containig XML source).
+
+    The provided prim_key defines a tag to capture, while supplementary
+    *tags* list defines additional tags which can be added to outgoing
+    result. For instance, file object shipped from PhEDEx is enclosed
+    into block one, so we want to capture block.name together with
+    file object.
+    """
+    notations = {}
+    sup       = {}
+    context   = ET.iterparse(source, events=("start", "end"))
+    root      = None
+    for item in context:
+        event, elem = item
+        if  event == "start" and root is None:
+            root = elem # the first element is root
+        row = {}
+        if  tags and not sup:
+            for tag in tags:
+                if  tag.find(".") != -1:
+                    atag, attr = tag.split(".")
+                    if  elem.tag == atag and elem.attrib.has_key(attr):
+                        att_value = elem.attrib[attr]
+                        if  type(att_value) is types.DictType:
+                            att_value = dict_helper(elem.attrib[attr], notations)
+                        if  type(att_value) is types.StringType:
+                            att_value = adjust_value(att_value)
+                        sup[atag] = {attr:att_value}
+                else:
+                    if  elem.tag == tag:
+                        sup[tag] = elem.attrib
+        key = elem.tag
+        if  key != prim_key or event == 'end':
+            elem.clear()
+            continue
+        row[key] = dict_helper(elem.attrib, notations)
+        row[key].update(sup)
+        for child in elem.getchildren():
+            child_key  = child.tag
+            child_dict = dict_helper(child.attrib, notations)
+
+            if  row[key].has_key(child_key):
+                val = row[key][child_key]
+                if  type(val) is types.ListType:
+                    val.append(child_dict)
+                    row[key][child_key] = val
+                else:
+                    row[key][child_key] = [val] + [child_dict]
+            else:
+                row[key][child_key] = child_dict
+            child.clear()
+        elem.clear()
+        yield row
+    root.clear()
+    source.close()
+
+def xml_parser_v2(notations, source, prim_key, tags=[]):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
     large XML documents we use iterparse method to walk through provided
@@ -735,12 +850,10 @@ def xml_parser(notations, source, prim_key, tags=[]):
             root = elem # the first element is root
         row = {}
         if  tags and not sup:
-            # TODO I need to check tag for via notations(tag, tag)
             for tag in tags:
                 if  tag.find(".") != -1:
                     atag, attr = tag.split(".")
                     if  elem.tag == atag and elem.attrib.has_key(attr):
-#                        sup[atag] = {attr:elem.attrib[attr]}
                         att_value = elem.attrib[attr]
                         if  type(att_value) is types.DictType:
                             att_value = dict_helper(elem.attrib[attr], notations)
@@ -755,7 +868,8 @@ def xml_parser(notations, source, prim_key, tags=[]):
             elem.clear()
             continue
         row[key] = dict_helper(elem.attrib, notations)
-        row.update(sup)
+#        row.update(sup)
+        row[key].update(sup)
         for child in elem.getchildren():
             child_key  = notations.get(child.tag, child.tag)
             child_dict = dict_helper(child.attrib, notations)
@@ -775,7 +889,7 @@ def xml_parser(notations, source, prim_key, tags=[]):
     root.clear()
     source.close()
 
-def xml_parser_old(notations, source, tags, add=None):
+def xml_parser_v1(notations, source, tags, add=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
     large XML documents we use iterparse method to walk through provided
@@ -885,6 +999,7 @@ def row2das(mapper, system, api, row):
             row.pop(key)
             nkey, nval = convert_dot_notation(newkey, val)
             row.update({nkey:nval})
+#            row[nkey] = nval
         if  type(val) is types.DictType:
             row2das(mapper, system, api, val)
         elif type(val) is types.ListType:
@@ -908,6 +1023,7 @@ def aggregator(results, expire):
         row.pop('das')
         row.pop('_id')
         if  row_prim_key != prim_key:
+            yield record
             prim_key = row_prim_key
             record = row
             continue
@@ -918,7 +1034,7 @@ def aggregator(results, expire):
             update = 1
         else:
             row.update({'das':{'expire':expire}})
-            yield row
+            yield record
             record = dict(row)
             update = 0
     if  update: # check if we did update for last row

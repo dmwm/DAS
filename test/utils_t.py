@@ -14,9 +14,8 @@ from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
-from DAS.utils.utils import convert_dot_notation
-
-#from DAS.utils.utils import xml_parser_new
+from DAS.utils.utils import convert_dot_notation, translate
+from DAS.utils.utils import delete_elem
 
 class testUtils(unittest.TestCase):
     """
@@ -420,12 +419,32 @@ class testUtils(unittest.TestCase):
         expect = "block", {"name":val}
         self.assertEqual(expect, result)
 
+    def test_delete_elem(self):
+        """Test delete_elem function"""
+        key = "site.resource_element.cms_name"
+        row = {"site":{"resource_element":{"size":1, "cms_name":"AA"}}}
+        delete_elem(row, key)
+        expect = {"site":{"resource_element":{"size":1}}}
+        self.assertEqual(expect, row)
+        
+    def test_translate(self):
+        """Test translate function"""
+        api = ""
+        row = {"site":{"resource_element":{"size":1, "cms_name":"AA"}}}
+        notations = [
+        {"notation": "site.resource_element.cms_name", "map": "site.name", "api": ""},
+        {"notation": "site.resource_pledge.cms_name", "map": "site.name", "api": ""},
+        {"notation": "admin.contacts.cms_name", "map":"site.name", "api":""}
+        ]       
+        res = translate(notations, api, row)
+        result = res.next()
+        expect = {"site":{"name":"AA", "resource_element":{"size":1}}}
+        self.assertEqual(expect, result)
+
     def test_xml_parser(self):
         """
         Test functionality of xml_parser
         """
-        notations = {}
-
         xmldata = """<?xml version='1.0' encoding='ISO-8859-1'?>
 <phedex attr="a">
 <block bytes="1">
@@ -440,15 +459,15 @@ class testUtils(unittest.TestCase):
         stream.write(xmldata)
         stream.close()
         stream = file(fname, 'r')
-        gen    = xml_parser(notations, stream, "block", [])
+        gen    = xml_parser(stream, "block", [])
         result = gen.next()
         expect = {'block': {'bytes': 1, 'file': {'size': 10}}}
         self.assertEqual(expect, result)
 
         stream = file(fname, 'r')
-        gen    = xml_parser(notations, stream, "file", ["block.bytes"])
+        gen    = xml_parser(stream, "file", ["block.bytes"])
         result = gen.next()
-        expect = {'block': {'bytes': 1}, 'file': {'size': 10}}
+        expect = {'file': {'block': {'bytes': 1}, 'size': 10}}
         self.assertEqual(expect, result)
 
 #
