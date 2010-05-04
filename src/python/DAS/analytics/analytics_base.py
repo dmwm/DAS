@@ -16,7 +16,7 @@ class DASAnalyticsBase(multiprocessing.Process):
                 }
     
     @classmethod
-    def merge_defaults(cls,config):
+    def merge_defaults(cls, config):
         """
         Merge the supplied config with the defaults in this class.
         """
@@ -32,7 +32,7 @@ class DASAnalyticsBase(multiprocessing.Process):
         """
         return True
     
-    def __init__(self,name,config,das_config,controller_pipe):
+    def __init__(self, name, config, das_config, controller_pipe):
         """
         Create a new analytic class. Subclasses should generally not override the details
         of this class, but use the configure() method (called at __init__ time).
@@ -56,27 +56,31 @@ class DASAnalyticsBase(multiprocessing.Process):
         self._stop = False
         self.configure(config)
     
-    def configure(self,config):
+    def configure(self, config):
         """
-        Stub for subclasses to perform any init-time configuration, before the main loop is entered.
+        Stub for subclasses to perform any init-time configuration, 
+        before the main loop is entered.
         """
         pass
         
     def analysis_start(self):
         """
-        Stub for subclasses to perform any actions when the main loop is first started.
+        Stub for subclasses to perform any actions when the main 
+        loop is first started.
         """
         pass
     
     def analysis_run(self):
         """
-        Stub for subclasses to perform the main analysis action. Should be called every 'interval' seconds.
+        Stub for subclasses to perform the main analysis action. 
+        Should be called every 'interval' seconds.
         """
         pass
     
     def run(self):
         """
-        Actual main loop. This should not be overridden (use analysis_run), as it handles receiving pipe messages,
+        Actual main loop. This should not be overridden (use analysis_run), 
+        as it handles receiving pipe messages,
         calling the analysis at correct intervals and exiting if necessary.
         """
         self.log(0,"started")
@@ -103,24 +107,29 @@ class DASAnalyticsBase(multiprocessing.Process):
             
             time.sleep(self.internal_interval)
             
-    def log(self,importance,message):
-        self._pipe.send({'type':'log','time':time.time(),'level':importance,'text':message,'src':self.name})
+    def log(self, importance, message):
+        """log the message"""
+        self._pipe.send({'type':'log', 'time':time.time(),
+                         'level':importance, 'text':message, 
+                         'src':self.name})
     
     def _pipe_handler(self):
         """
-        Poll the incoming pipe for messages, then pass them to functions named pipe_$msg.type if available.
-        Pass them to pipe_default otherwise. If those functions return a value, pass it back as a pipe message.
+        Poll the incoming pipe for messages, then pass them to 
+        functions named pipe_$msg.type if available.
+        Pass them to pipe_default otherwise. If those functions 
+        return a value, pass it back as a pipe message.
         """
         while self._pipe.poll():
             msg = self._pipe.recv()
-            if msg and isinstance(msg,dict):
-                msg['type'] = msg.get('type','default')
-                funcname = 'pipe_%s'%msg['type']
-                if hasattr(self,funcname):
-                    if callable(getattr(self,funcname)):
+            if msg and isinstance(msg, dict):
+                msg['type'] = msg.get('type', 'default')
+                funcname = 'pipe_%s' % msg['type']
+                if hasattr(self, funcname):
+                    if callable(getattr(self, funcname)):
                         retval = self.__dict__[funcname](msg)
-                        if not retval==None:
-                            if not isinstance(retval,dict):
+                        if not retval == None:
+                            if not isinstance(retval, dict):
                                 retval = {'data':retval}
                             retval['src'] = self.name
                             retval['type'] = msg['type']
@@ -130,42 +139,46 @@ class DASAnalyticsBase(multiprocessing.Process):
                 else:
                     self.pipe_default(msg)
             else:
-                self.log(1,'Invalid pipe msg: %s'%msg)
+                self.log(1,'Invalid pipe msg: %s' % msg)
     
-    def pipe_default(self,msg):
+    def pipe_default(self, msg):
         """
         Handle messages for which no specialist handler is available.
         """
-        self.log(1,'Attempted to call invalid pipe function "%s"'%msg['type'])
+        self.log(1, 'Attempted to call invalid pipe function "%s"'\
+                % msg['type'])
                 
-    def pipe_ping(self,msg):
+    def pipe_ping(self, msg):
         """
         Respond to heartbeats by replying with the same message.
         """
         return msg
     
-    def pipe_stats(self,msg):
+    def pipe_stats(self, msg):
         """
-        Provide any stats this analyser may collect. These should correspond to entries in self.statdesc.
+        Provide any stats this analyser may collect. 
+        These should correspond to entries in self.statdesc.
         """
         return {}
     
-    def pipe_stop(self,msg):
+    def pipe_stop(self, msg):
         """
-        Try and stop the analyser gracefully. Calls finalise and then stops the main loop.
+        Try and stop the analyser gracefully. 
+        Calls finalise and then stops the main loop.
         """
         self._stop = True
         self.finalise()
         
-    def pipe_started(self,msg):
+    def pipe_started(self, msg):
         """
         Report the time we started running at.
         """
         return self._time_started
     
-    def pipe_status(self,msg):
+    def pipe_status(self, msg):
         """
-        Reply with a quick status message. This should be overridden to provide informative responses.
+        Reply with a quick status message. 
+        This should be overridden to provide informative responses.
         """
         return "Still Alive"
     
