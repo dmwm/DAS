@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.17 2009/07/08 13:46:14 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: das_cache.py,v 1.18 2009/10/02 15:23:55 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -23,7 +23,7 @@ except:
 import logging
 
 # DAS modules
-from DAS.utils.utils import getarg
+from DAS.utils.utils import getarg, genkey
 from DAS.utils.logger import DASLogger
 from DAS.core.cache import Cache, NoResults
 from DAS.core.das_memcache import DASMemcache
@@ -130,6 +130,7 @@ class DASCacheMgr(object):
         sleep       = getarg(config, 'sleep', 2)
         verbose     = getarg(config, 'verbose', None)
         self.queue  = [] # keep track of waiting queries, (query, expire)
+        self.qmap   = {} # map of hash:query
         self.sleep  = sleep # in sec. to sleep at each iteration of worker
         self.logger = DASLogger(idir=logdir, name='DASCacheMgr', 
                 verbose=verbose)
@@ -141,10 +142,24 @@ class DASCacheMgr(object):
         """Add new query to the queue"""
         if  (query, expire) in self.queue:
             return "waiting in queue"
-        self.queue.append((query, expire))
+        qhash = genkey(str(query))
+        self.qmap[qhash] = query
+        self.queue.append((qhash, expire))
         if  not self.pool._pool:
             self.pool = multiprocessing.Pool(self.nprocs)
         return "requested"
+
+    def remove(self, key):
+        """Remove query from a queue"""
+        qhash = key[0] # key = (hash, expire), see add method
+        try:
+            self.queue.remove(key)
+        except:
+            pass
+        try:
+            del self.qmap[qhash]
+        except:
+            pass
 
     def worker(self, func):
         """
@@ -166,7 +181,9 @@ class DASCacheMgr(object):
                     break
                 try:
                     worker_proc[item] = '' # reserve worker process
-                    result = self.pool.apply_async(func, (item, ))
+                    query  = self.qmap[item[0]] # item=(hash, expire)
+                    expire = item[1]
+                    result = self.pool.apply_async(func, (query, expire))
                     worker_proc[item] = result # bind result with worker
                 except:
                     traceback.print_exc()
@@ -182,7 +199,7 @@ class DASCacheMgr(object):
                 if  proc.ready():
                     status = proc.get()
                     if  status:
-                        self.queue.remove(key)
+                        self.remove(key)
                         del worker_proc[key]
                     else:
                         orphans[key] = orphans.get(key, 0) + 1
@@ -190,10 +207,7 @@ class DASCacheMgr(object):
                 # if number of retries more then 2, discard request
 #                if  orphans.has_key(key) and orphans[key] > 2:
                 if  orphans.has_key(key):
-                    try:
-                        self.queue.remove(key)
-                    except:
-                        pass
+                    self.remove(key)
                     try:
                         del orphans[key]
                     except:
