@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.1 2009/05/18 01:17:16 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_filecache.py,v 1.2 2009/05/18 13:15:17 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -34,8 +34,8 @@ Base = declarative_base()
 class Query(Base):
     __tablename__ = 'query'
 
-#    id = Column(Integer, primary_key=True)
-    hash = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    hash = Column(String)
     name = Column(String)
     create = Column(String)
     expire = Column(String)
@@ -52,8 +52,8 @@ class Query(Base):
 
 def yyyymmdd(itime=None):
     if  itime:
-        return time.strftime("%Y%M%d",time.gmtime(itime))
-    return time.strftime("%Y%M%d",time.gmtime())
+        return time.strftime("%Y%m%d",time.gmtime(itime))
+    return time.strftime("%Y%m%d",time.gmtime())
 
 class DASFilecache(Cache):
     """
