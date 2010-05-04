@@ -20,6 +20,7 @@ except:
 # pymongo modules
 from pymongo.connection import Connection
 from pymongo import DESCENDING
+from pymongo.errors import InvalidStringData
 
 class RelOptionParser: 
     """
@@ -105,7 +106,7 @@ def inject(host, port, path, release, debug=0):
         if  name.find('__init__.py') != -1:
             continue
         if  debug:
-            print name
+            print "%s/%s" % (cdir, name)
         try:
             dot, system, subsystem, config = name.split('/')
         except:
@@ -115,7 +116,21 @@ def inject(host, port, path, release, debug=0):
         fdsc.close()
         record  = dict(system=system, subsystem=subsystem, 
                         config=config, content=content, hash=genkey(content))
-        collection.insert(record)
+        try:
+            collection.insert(record)
+        except InvalidStringData:
+            content = content.replace('\0', '')
+            record  = dict(system=system, subsystem=subsystem, 
+                        config=config, content=content, hash=genkey(content))
+            collection.insert(record)
+        except:
+            print "Fail to insert the following record:\n"
+            print "system", system
+            print "subsystem", subsystem
+            print "config", config
+            print "hash", hash
+            print "content", content
+            raise
         lkeys = ['system', 'subsystem', 'config', 'hash']
         index_list = [(key, DESCENDING) for key in lkeys]
         collection.ensure_index(index_list)
@@ -130,7 +145,7 @@ if __name__ == '__main__':
     optManager  = RelOptionParser()
     (opts, args) = optManager.getopt()
     if  not opts.release or not opts.path:
-        msg = "Usage: find_configs.py --release=<CMSSW_X_Y_Z> --path=/afs/cern.ch/cms/sw"
+        msg = "Please provide: --release=<CMSSW_X_Y_Z> --path=/afs/cern.ch/cms/sw"
         print msg
         sys.exit(1)
     inject(opts.host, opts.port, opts.path, opts.release, opts.verbose)
