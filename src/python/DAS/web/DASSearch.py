@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.24 2009/10/14 15:19:05 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: DASSearch.py,v 1.25 2009/10/23 19:43:03 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -14,6 +14,7 @@ import os
 import time
 import types
 import urllib
+from itertools import groupby
 from cherrypy import expose
 from cherrypy.lib.static import serve_file
 
@@ -34,7 +35,7 @@ from WMCore.WebTools.Page import exposejson, exposexml, exposedasplist
 
 # DAS modules
 from DAS.core.das_core import DASCore
-from DAS.utils.utils import getarg
+from DAS.utils.utils import getarg, access
 from DAS.web.utils import urllib2_request, json2html
 
 import sys
@@ -289,6 +290,19 @@ class DASSearch(TemplatedPage):
         rows = self.result(kwargs)
         return rows
 
+    def convert2ui(self, idict):
+        """
+        Convert input row (dict) into UI presentation
+        """
+        for key in idict.keys():
+            if  key == 'das' or key == '_id':
+                continue
+            for item in self.dasmapping.presentation(key):
+                daskey = item['das']
+                uikey  = item['ui']
+                for value in access(idict, daskey):
+                    yield uikey, value
+
     @expose
     def listview(self, kwargs):
         """
@@ -313,10 +327,11 @@ class DASSearch(TemplatedPage):
         page    = self.templatepage('das_nrecords', **ndict)
         for nrecord in range(0, len(rows)):
             row = rows[nrecord]
-            if  nrecord % 2:
-                style = "white"
-            else:
-                style = "blue" 
+            style = "white"
+#            if  nrecord % 2:
+#                style = "white"
+#            else:
+#                style = "blue" 
             page += '<div class="%s"><hr class="line" /><b>Record #%s</b><br />' % (style, nrecord)
             das = row['das']
             if  type(das) is types.DictType:
@@ -336,10 +351,15 @@ class DASSearch(TemplatedPage):
                     except:
                         data = row
                         key  = 'N/A'
+                    gen = self.convert2ui(data)
+                    for uikey, value in [k for k, g in groupby(gen)]:
+                        page += "<b>%s</b>: %s, " % (uikey, value)
                     pad = ""
+                    id = data['_id']
                     jsoncode = {'jsoncode': json2html(data, pad)}
                     jsonhtml = self.templatepage('das_json', **jsoncode)
-                    jsondict = dict(system=system, api=api, daskey=key, data=jsonhtml)
+                    jsondict = dict(system=system, api=api, daskey=key, 
+                                data=jsonhtml, id=id)
                     page += self.templatepage('das_row', **jsondict)
             page += '</div>'
         ctime   = (time.time()-time0)
