@@ -12,7 +12,8 @@ from distutils.errors import CCompilerError
 from distutils.errors import DistutilsPlatformError, DistutilsExecError
 from distutils.core import Extension
 from distutils.command.install import INSTALL_SCHEMES
-from subprocess import Popen, PIPE
+
+from DAS import version as das_version
 
 requirements = []
 try:
@@ -83,15 +84,7 @@ if "--no_ext" in sys.argv:
 else:
     features = {"c-ext": c_ext}
 
-try:
-    proc1        = Popen(['cvs', 'status', '-v', 'setup.py'], stdout=PIPE)
-    proc2        = Popen(['grep', 'revision'], stdin=proc1.stdout, stdout=PIPE)
-    proc3        = Popen(['grep', '-v', 'Repository'], stdin=proc2.stdout, stdout=PIPE)
-    proc4        = Popen(['grep', '-v', 'Working'], stdin=proc3.stdout, stdout=PIPE)
-    proc5        = Popen(['head', '-1'], stdin=proc4.stdout, stdout=PIPE)
-    version      = proc5.communicate()[0].split()[0]
-except:
-    version      = "1.0.0" # need to define it somehow
+version      = das_version
 name         = "DAS"
 description  = "CMS Data Aggregation System"
 readme       ="""
