@@ -39,6 +39,9 @@ class RelOptionParser:
         self.parser.add_option("--port", action="store", type="string", 
              default=27017, dest="port",
              help="specify MongoDB port number")
+        self.parser.add_option("--path", action="store", type="string", 
+             default="", dest="path",
+             help="specify path to CMS software area")
     def getopt(self):
         """
         Returns parse list of options
@@ -77,21 +80,21 @@ def connect(host, port):
     db = connection.configdb
     return db
 
-def inject(host, port, release, debug=0):
+def inject(host, port, path, release, debug=0):
     """
     Function to inject CMSSW configuration files into MongoDB located
     at provided host/port.
     """
     db = connect(host, port)
     collection = db[release]
-    if  not os.environ.has_key('CMS_PATH'):
-        msg = 'CMS_PATH environment is not set'
-        raise Exception(msg)
     if  not os.environ.has_key('SCRAM_ARCH'):
         msg = 'SCRAM_ARCH environment is not set'
         raise Exception(msg)
 
-    cdir = os.path.join(os.environ['CMS_PATH'], os.environ['SCRAM_ARCH'])
+    cdir = os.path.join(path, os.environ['SCRAM_ARCH'])
+    if  not os.path.isdir(cdir):
+        msg = "Path %s not found" % cdir
+        raise Exception(msg)
     cdir = os.path.join(cdir, 'cms')
     cdir = os.path.join(cdir, 'cmssw')
     cdir = os.path.join(cdir, release)
@@ -126,8 +129,8 @@ if __name__ == '__main__':
 
     optManager  = RelOptionParser()
     (opts, args) = optManager.getopt()
-    if  not opts.release:
-        msg = "Usage: find_configs.py --release <CMSSW_X_Y_Z>"
+    if  not opts.release or not opts.path:
+        msg = "Usage: find_configs.py --release=<CMSSW_X_Y_Z> --path=/afs/cern.ch/cms/sw"
         print msg
         sys.exit(1)
-    inject(opts.host, opts.port, opts.release, opts.verbose)
+    inject(opts.host, opts.port, opts.path, opts.release, opts.verbose)
