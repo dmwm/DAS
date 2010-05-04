@@ -15,6 +15,7 @@ from pymongo.connection import Connection
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_mongocache import DASMongocache, loose
+from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
 from DAS.core.das_mongocache import update_item, convert2pattern, compare_specs
 
 class testDASMongocache(unittest.TestCase):
@@ -34,6 +35,18 @@ class testDASMongocache(unittest.TestCase):
         connection = Connection("localhost", 27017)
         connection.drop_database('das') 
         self.dasmongocache = DASMongocache(config)
+
+    def test_encode_decode(self):
+        """Test encode/decode_query functions"""
+        query  = {'fields': None, 'spec': {'block.name':'aaa'}}
+        result = encode_mongo_query(query)
+        expect = decode_mongo_query(result)
+        self.assertEqual(expect, query)
+
+        query  = {'fields': ['block'], 'spec': {'block.size':{'$lt':10}}}
+        result = encode_mongo_query(query)
+        expect = decode_mongo_query(result)
+        self.assertEqual(expect, query)
 
     def test_loose(self):
         """Test loose function"""
@@ -204,6 +217,15 @@ class testDASMongocache(unittest.TestCase):
         self.assertEqual(expect, result)
         expect = dict(spec={'site.name':pat}, fields=fields)
         self.assertEqual(expect, debug)
+
+    def test_similar_queries(self):                          
+        """test similar_queries method of DASMongoscCache"""
+        query  = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
+        self.dasmongocache.col.insert(encode_mongo_query(query))
+        query  = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
+        result = self.dasmongocache.similar_queries(query)
+        self.assertEqual(True, result)
+        self.dasmongocache.delete_cache()
 
 #    def test_result(self):                          
 #        """test DAS mongocache result method"""
