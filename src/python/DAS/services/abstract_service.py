@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.31 2009/09/09 18:40:37 valya Exp $"
-__version__ = "$Revision: 1.31 $"
+__revision__ = "$Id: abstract_service.py,v 1.32 2009/09/11 13:26:56 valya Exp $"
+__version__ = "$Revision: 1.32 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -40,15 +40,16 @@ class DASAbstractService(object):
             self.url        = sdict['url']
             self.logger     = config['logger']
             self.dasmapping = config['dasmapping']
+            self.analytics  = config['dasanalytics']
         except:
             traceback.print_exc()
             print config
             raise Exception('fail to parse DAS config')
 
-        self.map          = {} # to be defined by data-service implementation
-        self.qllexer      = None # to be defined at run-time in self.worker
-        self._keys        = None # to be defined at run-time in self.keys
-        self._params      = None # to be defined at run-time in self.parameters
+        self.map       = {} # to be defined by data-service implementation
+        self.qllexer   = None # to be defined at run-time in self.worker
+        self._keys     = None # to be defined at run-time in self.keys
+        self._params   = None # to be defined at run-time in self.parameters
 
         msg = 'DASAbstractService::__init__ %s' % self.name
         self.logger.info(msg)
@@ -332,6 +333,7 @@ class DASAbstractService(object):
                 data    = self.getdata(url, args)
                 genrows = self.parser(api, data, args)
                 ctime   = time.time() - time0
+                self.analytics.add_api(query, self.name, api, args)
                 header  = dasheader(self.name, query, api, url, args, ctime,
                     self.expire, self.version())
                 header['lookup_keys'] = self.lookup_keys(api)

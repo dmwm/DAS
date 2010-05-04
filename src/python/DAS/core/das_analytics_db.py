@@ -7,8 +7,8 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.2 2009/09/10 19:21:20 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.3 2009/09/11 13:26:56 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -156,7 +156,12 @@ class DASAnalytics(object):
         """
         session = self.session()
         try:
-            sobj = session.query(System).filter(System.name==system).one()
+            try:
+                sobj = session.query(System).filter(System.name==system).one()
+            except:
+                sobj = System(system)
+                session.add(sobj)
+                session.commit()
             try:
                 aobj = session.query(Api).filter(Api.name==api).one()
             except:
