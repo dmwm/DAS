@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.7 2009/09/02 19:56:38 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: runsum_service.py,v 1.8 2009/09/14 20:35:48 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -74,6 +74,7 @@ class RunSummaryService(DASAbstractService):
             header['lookup_keys'] = self.lookup_keys(api)
             header['selection_keys'] = selkeys
             mongo_query = self.mongo_query_parser(query)
+            self.analytics.add_api(self.name, query, api, args)
             self.localcache.update_cache(mongo_query, genrows, header)
         except:
             msg = 'Fail to process: url=%s, api=%s, args=%s' \

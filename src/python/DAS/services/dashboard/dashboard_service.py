@@ -104,5 +104,6 @@ class DashboardService(DASAbstractService):
         header['lookup_keys'] = self.lookup_keys(api)
         header['selection_keys'] = selkeys
         mongo_query = self.mongo_query_parser(query)
+        self.analytics.add_api(self.name, query, api, args)
         self.localcache.update_cache(mongo_query, genrows, header)
         return True
