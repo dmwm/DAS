@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.19 2009/12/13 02:47:35 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: das_cache.py,v 1.20 2010/01/15 17:17:11 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -178,6 +178,8 @@ class DASCacheMgr(object):
                     break
                 try:
                     worker_proc[item] = '' # reserve worker process
+                    if  not self.qmap.has_key(item[0]):
+                        continue
                     query  = self.qmap[item[0]] # item=(hash, expire)
                     expire = item[1]
                     result = self.pool.apply_async(func, (query, expire))
@@ -193,6 +195,11 @@ class DASCacheMgr(object):
             time.sleep(self.sleep)
             for key in worker_proc.keys():
                 proc = worker_proc[key]
+                if  type(proc) is types.StringType:
+                    msg = "ERROR: process %s get result %s, but should AsyncResult"\
+                        % (key, proc)
+                    self.logger.error(msg)
+                    continue
                 if  proc.ready():
                     status = proc.get()
                     if  status:
