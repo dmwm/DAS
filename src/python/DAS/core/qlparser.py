@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.42 2010/02/26 15:20:16 valya Exp $"
-__version__ = "$Revision: 1.42 $"
+__revision__ = "$Id: qlparser.py,v 1.43 2010/03/01 19:33:58 valya Exp $"
+__version__ = "$Revision: 1.43 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -220,6 +220,45 @@ def findbracketobj(uinput, dbs_func=True):
             raise Exception(msg)
     return robj
         
+def fix_operator(query, pos, operators):
+    """Add spaces around DAS operators in a query"""
+    idx_pos  = len(query)
+    oper_pos = ""
+    pat = re.compile('^[a-z]+$')
+    for operator in operators:
+        if  pat.match(operator):
+            operator = ' %s ' % operator
+        idx = query[pos:].find(operator)
+        if  idx != -1 and idx < idx_pos:
+            idx_pos = idx
+            oper_pos = operator
+            break
+    if  idx_pos >= len(query):
+        return None, None
+    if  idx_pos != -1:
+        idx = idx_pos
+        oper = oper_pos
+        newpos = pos + idx + len(oper)
+        rest = query[pos+idx+len(oper):len(query)]
+        newquery = query[:pos+idx] + ' ' + oper + ' ' + rest
+        return newquery, newpos+2
+    return None, None
+
+def add_spaces(query, operators):
+    """Add spaces around DAS operators in input DAS query"""
+    pos   = 0
+    ccc   = 0
+    while True:
+        copy = query
+        query, pos = fix_operator(query, pos, operators)
+        if  not query:
+            query = copy
+            break
+        ccc += 1
+        if  ccc > 100: # just pre-caution to avoid infinitive loop
+            break
+    return query
+
 class MongoParser(object):
     """
     DAS Mongo query parser. 
@@ -227,13 +266,18 @@ class MongoParser(object):
     def __init__(self, config):
         self.map = config['dasmapping']
         self.analytics = config['dasanalytics']
-        self.daskeys = self.map.daskeys()
+        self.daskeysmap = self.map.daskeys()
         self.operators = DAS_OPERATORS
         self.filter = 'grep '
 
         if  not self.map.check_maps():
             msg = "No DAS maps found in MappingDB"
             raise Exception(msg)
+
+        self.daskeys = ['system', 'date'] # two reserved words
+        for val in self.daskeysmap.values():
+            for item in val:
+                self.daskeys.append(item)
 
     def decompose(self, query):
         """Extract selection keys and conditions from input query"""
@@ -246,6 +290,10 @@ class MongoParser(object):
         Query analyzer which form request query to DAS from a free text-based form.
         Return MongoDB request query.
         """
+        # strip operators while we will match words against them
+        operators = [o.strip() for o in self.operators]
+
+        # find out if input query contains filters/mapreduce functions
         mapreduce = []
         filters   = []
         pat = re.compile(r"^([a-z_]+\.?)+$") # match key.attrib
@@ -274,54 +322,23 @@ class MongoParser(object):
                 if  add_to_analytics:
                     self.analytics.add_query(query, mongo_query)
                 return mongo_query
+
+        # check input query and prepare it for processing
         findbracketobj(query) # check brackets in a query
         skeys = []
-        query = query.strip()
-        query = query.replace(",", " ")
-        def fix_operator(query, pos):
-            """Add spaces around DAS operators in a query"""
-            idx_pos  = len(query)
-            oper_pos = ""
-            for oper in self.operators:
-                idx = query[pos:len(query)].find(oper)
-                if  idx != -1 and idx < idx_pos and idx > pos:
-                    idx_pos = idx
-                    oper_pos = oper
-            if  idx_pos >= len(query):
-                return None, None
-            if  idx_pos != -1:
-                idx = idx_pos
-                oper = oper_pos
-                newpos = pos + idx + len(oper)
-                rest = query[pos+idx+len(oper):len(query)]
-                newquery = query[:pos+idx] + ' ' + oper + ' ' + rest
-                return newquery, newpos+2
-            return None, None
-        pos   = 0
-        ccc   = 0
-        while True:
-            copy = query
-            query, pos = fix_operator(query, pos)
-            if  not query:
-                query = copy
-                break
-            ccc += 1
-            if  ccc > 100: # just pre-caution to avoid infinitive loop
-                break
+        query = query.strip().replace(",", " ")
+        query = add_spaces(query, operators)
         slist = query.split()
         idx   = 0
-        daskeys = ['system', 'date'] # two reserved words
-        for val in self.daskeys.values():
-            for item in val:
-                daskeys.append(item)
+
+        # main loop, step over words in query expression and
+        # findout selection keys and conditions
         condlist = []
-        # strip operators while we will match words against them
-        operators = [o.strip() for o in self.operators]
         while True:
             if  idx >= len(slist):
                 break
             word = slist[idx].strip()
-            if  word in daskeys: # look-up for selection keys
+            if  word in self.daskeys: # look-up for selection keys
                 try:
                     next_word = slist[idx+1]
                     if  next_word not in operators and word not in skeys:
@@ -376,45 +393,38 @@ class MongoParser(object):
                     continue
                 key = prev_word
                 value = adjust_value(value)
+                if  key == 'date':
+                    cdict = dict(key=key, op=oper, value=value)
+                    condlist.append(cdict)
+                    continue
                 for system in self.map.list_systems():
                     for api, mapkey in self.map.find_mapkey(system, key):
                         prim_key = self.map.primary_key(system, api)
                         lkeys = self.map.lookup_keys(system, key, 
                                     api=api, value=value)
-                        add = False
-                        if  skeys:
-                            if  prim_key in skeys:
-                                add = True
-                        else:
-                            if  key == prim_key:
-                                add = True
-                        if  add:
-                            for nkey in lkeys:
-                                if  nkey != 'date':
-                                    cdict = dict(key=nkey, op=oper, value=value)
+#                        print "system", system, key, prim_key, lkeys
+                        for kkk in lkeys:
+                            cdict = dict(key=kkk, op=oper, value=value)
+                            if  skeys:
+                                if  prim_key in skeys:
+                                    if  cdict not in condlist:
+                                        condlist.append(cdict)
+                            else:
+                                if  prim_key == key:
                                     if  cdict not in condlist:
                                         condlist.append(cdict)
             else:
-                if  word not in skeys and word in daskeys:
+                if  word not in skeys and word in self.daskeys:
                     skeys.append(word)
             idx += 1
+#        print "\n### condlist", condlist
         spec = mongo_exp(condlist)
-        # loop over skeys and add '*' value for each key into spec
-        for key in skeys:
-            insert = 0
-            for system in self.map.list_systems():
-                try:
-                    mapkeys = self.map.find_mapkey(system, key)
-                    for urn, mapkey in mapkeys:
-                        entity = mapkey.split('.')[0]
-                        if  not spec.has_key(mapkey) and key == entity:
-                            spec[mapkey] = '*'
-                            insert = 1
-                except:
-                    pass
-            if  not insert:
-                spec[key] = '*'
-        mongo_query = dict(fields=None, spec=spec)
+#        print "### spec", spec
+        if  skeys:
+            fields = skeys
+        else:
+            fields = None
+        mongo_query = dict(fields=fields, spec=spec)
         # add mapreduce if it exists
         if  mapreduce:
             mongo_query['mapreduce'] = mapreduce
@@ -434,7 +444,7 @@ class MongoParser(object):
         slist = []
         # look-up services from Mapping DB
         for key in skeys + [i for i in cond.keys()]:
-            for service, keys in self.daskeys.items():
+            for service, keys in self.daskeysmap.items():
                 daskeys = self.map.find_daskey(service, key)
                 if  set(keys) & set(daskeys) and service not in slist:
                     slist.append(service)
