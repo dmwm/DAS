@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#pylint: disable-msg=C0301,C0103
+
+"""
+Set of tools to create CMSSW configuration DB using MongoDB back-end.
+"""
 
 # python modules
 import os
@@ -34,7 +39,7 @@ class RelOptionParser:
         self.parser.add_option("--port", action="store", type="string", 
              default=27017, dest="port",
              help="specify MongoDB port number")
-    def getOpt(self):
+    def getopt(self):
         """
         Returns parse list of options
         """
@@ -56,19 +61,27 @@ def genkey(query):
     return keyhash.hexdigest()
 
 def gen_find(filepat, top):
+    """
+    Find files which belong to provided pattern starting from top dir.
+    Equvalent of find UNIX command.
+    """
     for path, dirlist, filelist in os.walk(top, followlinks=True):
         for name in fnmatch.filter(filelist, filepat):
-            yield os.path.join(path,name)
+            yield os.path.join(path, name)
 
 def connect(host, port):
     """
     Connect to MongoDB database.
     """
-    connection = Connection("localhost", 27017)
+    connection = Connection(host, port)
     db = connection.configdb
     return db
 
 def inject(host, port, release, debug=0):
+    """
+    Function to inject CMSSW configuration files into MongoDB located
+    at provided host/port.
+    """
     db = connect(host, port)
     collection = db[release]
     if  not os.environ.has_key('CMS_PATH'):
@@ -112,9 +125,9 @@ if __name__ == '__main__':
         raise Exception("This script requires python 2.6 or greater")
 
     optManager  = RelOptionParser()
-    (opts, args) = optManager.getOpt()
+    (opts, args) = optManager.getopt()
     if  not opts.release:
-        mgs = "Usage: find_configs.py --release <CMSSW_X_Y_Z>"
+        msg = "Usage: find_configs.py --release <CMSSW_X_Y_Z>"
         print msg
         sys.exit(1)
     inject(opts.host, opts.port, opts.release, opts.verbose)

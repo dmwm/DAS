@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.33 2009/10/16 18:02:47 valya Exp $"
-__version__ = "$Revision: 1.33 $"
+__revision__ = "$Id: utils.py,v 1.34 2009/10/20 15:00:55 valya Exp $"
+__version__ = "$Revision: 1.34 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -65,7 +65,7 @@ def merge_dict(dict1, dict2):
     value into the list based on value type.
     """
     merged_dict = {}
-    for dictionary in [dict1, dict2]:
+    for dictionary in (dict1, dict2):
         for key, value in dictionary.items():
             dict_value = merged_dict.setdefault(key, [])
             if  type(value) is types.ListType:

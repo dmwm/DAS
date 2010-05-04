@@ -4,8 +4,8 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.7 2009/09/14 20:36:20 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: monitor_service.py,v 1.8 2009/10/20 15:00:54 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -25,11 +25,10 @@ class MonitorService(DASAbstractService):
         """
         An overview data-service worker.
         """
-        selkeys, cond = self.query_parser(query)
+        selkeys = query['fields']
         api  = self.map.keys()[0] # we have only one key
         args = dict(self.map[api]['params'])
         data = []
-        mongo_query = self.mongo_query_parser(query)
         keys = [key for key in self.map[api]['keys'] for api in self.map.keys()]
         for key in selkeys:
             if  key not in keys:
@@ -54,6 +53,6 @@ class MonitorService(DASAbstractService):
             header['lookup_keys'] = self.lookup_keys(api)
             header['selection_keys'] = selkeys
             self.analytics.add_api(self.name, query, api, args)
-            self.localcache.update_cache(mongo_query, data, header)
+            self.localcache.update_cache(query, data, header)
         return True
 
