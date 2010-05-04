@@ -6,8 +6,8 @@ DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.
 """
 
-__revision__ = "$Id: das_server.py,v 1.8 2010/04/05 20:15:24 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_server.py,v 1.9 2010/04/07 18:21:35 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -75,14 +75,15 @@ class Root(object):
 #            cpconfig.update({'tools.sessions.on': True,
 #                             'tools.sessions.name': 'oidconsumer_sid'})
 #            secconfig = self.config['security']
-#            tools.oid = OidConsumer(secconfig)
+#            oid_cons  = OidConsumer(secconfig)
+#            tools.oid = oid_cons
 #            cpconfig.update({'tools.oid.on': True})
 #            cpconfig.update({'tools.oid.role': secconfig.get('role', None)})
 #            cpconfig.update({'tools.oid.group': secconfig.get('group', None)})
 #            cpconfig.update({'tools.oid.site': secconfig.get('site', None)})
-#            tree.mount(tools.oid.defhandler, 
+#            tree.mount(oid_cons.defhandler, 
 #                secconfig.get('mount_point', '/das/auth'))
-#            self.auth = tools.oid.defhandler
+#            self.auth = oid_cons.defhandler
 
         log("loading config: %s" % cpconfig, 
                                    context=self.model, 
@@ -117,6 +118,8 @@ class Root(object):
         else:
             obj = DASWebManager({}) # pass empty config dict
             tree.mount(obj, '/')
+
+        print "### DAS servers ###\n", pformat(tree.apps)
         engine.start()
         if  blocking:
             engine.block()
