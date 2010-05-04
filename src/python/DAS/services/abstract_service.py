@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.38 2009/10/02 15:27:18 valya Exp $"
-__version__ = "$Revision: 1.38 $"
+__revision__ = "$Id: abstract_service.py,v 1.39 2009/10/02 19:02:21 valya Exp $"
+__version__ = "$Revision: 1.39 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -23,8 +23,6 @@ except:
 
 from DAS.utils.utils import dasheader, getarg, genkey
 from DAS.utils.utils import cartesian_product
-#from DAS.core.qlparser import QLLexer, mongo_exp
-from DAS.core.qlparser import MongoParser
 
 class DASAbstractService(object):
     """
@@ -35,13 +33,14 @@ class DASAbstractService(object):
     def __init__(self, name, config):
         self.name = name
         try:
-            sdict           = config[name]
-            self.verbose    = int(sdict['verbose'])
-            self.expire     = int(sdict['expire'])
-            self.url        = sdict['url']
-            self.logger     = config['logger']
-            self.dasmapping = config['dasmapping']
-            self.analytics  = config['dasanalytics']
+            sdict            = config[name]
+            self.verbose     = int(sdict['verbose'])
+            self.expire      = int(sdict['expire'])
+            self.url         = sdict['url']
+            self.logger      = config['logger']
+            self.dasmapping  = config['dasmapping']
+            self.analytics   = config['dasanalytics']
+            self.mongoparser = config['mongoparser']
         except:
             traceback.print_exc()
             print config
@@ -52,7 +51,6 @@ class DASAbstractService(object):
         self._keys     = None # to be defined at run-time in self.keys
         self._params   = None # to be defined at run-time in self.parameters
 
-        self.mongoparser = MongoParser(config)
         msg = 'DASAbstractService::__init__ %s' % self.name
         self.logger.info(msg)
         # define internal cache manager to put 'raw' results into cache
