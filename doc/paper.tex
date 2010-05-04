@@ -100,6 +100,7 @@ we provides a detailed description of underlying design and components
 used in DAS system. Our results are summarized in section \ref{Results}.
 
 \section{CMS data model\label{DataModel}}
+
 \section{Data Aggregation System\label{DAS}}
 Our goal was to create scalable and pluggable system for existing data-services
 within CMS computing infrastructure. We knew that all our data are delivered 
@@ -175,7 +176,7 @@ but also consider DAS itself as own sub-component, i.e. place queries against
 DAS content, rather then data-service one.
 
 \subsection{Query Language\label{DAS-QL}}
-Upon success of DBS-QL \ref{DBS-QL} we adopted its syntax to DAS with a few minor
+Upon success of DBS-QL \cite{DBS-QL} we adopted its syntax to DAS with a few minor
 changes. Here we briefly recall its syntax:
 \begin{equation}
 action\,\,\,
@@ -273,6 +274,27 @@ to use MongoDB due to its flexible and
 powerful querying syntax, which were easy to map into DAS QL expressions. 
 
 \section{Results\label{Results}}
+DAS was deployed with the following CMS data-services:
+\begin{itemize}
+\item DBS \cite{DBS}, Data Bookkeeping System which collect information
+about CMS meta-data;
+\item PhEDEx \cite{Phedex}, Physics Experiment Data Export project which
+provides the data placement and the file transfer system for the CMS experiment;
+\item RunSummary DB \cite{RunSummary} collects information about run and triggers
+conditions during data-taking;
+\item LumiDB \cite{LumiDB} collects information about Luminosity conditions;
+\item DQ \cite{DQ}, Data Quality data-service which collects infromation
+about detector conditions during data taking;
+\item Overview \cite{Overview}, collects information about CMS
+transfer rate, etc.;
+\item Dashboard \cite{Dashboard} project for LHC experiments aims to 
+provide a single entry point to the monitoring data collected from the 
+distributed computing systems of the LHC virtual organization.
+\end{itemize}
+Each data-service has its own scope, size and lifetime. For instance the data
+in Phedex are transient due to contant migration of CMS data. The DBS system
+were divided into dozen of individual DBs, whose size varied at the level of
+few tens of GBs.
 
 \section{Summary}
 
@@ -320,6 +342,28 @@ http://www.mongodb.org/
 Fielding, Roy Thomas ``Architectural Styles and the Design of 
 Network-based Software Architectures'', Doctoral dissertation, 2000,
 University of California, Irvine
+
+\bibitem{Phedex}
+Rehn et. al.,
+``PhEDEx high-throughput data transfer management system'', CHEP06, Mumbai, India.
+
+\bibitem{RunSummary}
+
+\bibitem{SiteDB}
+
+\bibitem{LumiDB}
+https://twiki.cern.ch/twiki/bin/view/CMS/CMS-DMWM-DBS-Luminosity
+
+\bibitem{DQ}
+
+\bibitem{Overview}
+https://cmsweb.cern.ch/overview/
+
+\bibitem{Dashboard}
+J. Andreeva, et. al,
+``Experiment Dashboard – The Monitoring System for the LHC Experiments'',
+GMW’07, June 25, 2007, Monterey, California, USA.
+
 
 \end{thebibliography}
 
