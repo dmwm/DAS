@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.17 2009/07/09 19:48:18 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: das_config.py,v 1.18 2009/07/14 15:58:46 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -51,6 +51,11 @@ def das_readconfig(dasconfig=None):
                 config.get('filecache', 'base_dir', '00')
     configdict['filecache_files_dir'] = \
                 int(config.get('filecache', 'files_dir', 100))
+    configdict['filecache_db_engine'] = \
+                config.get('filecache', 'db_engine', None)
+
+    configdict['views_engine'] = config.get('views', 'db_engine', None)
+    configdict['views_dir'] = config.get('views', 'dir', '')
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
     configdict['hotcache'] = config.get('das', 'hotcache', None)
@@ -100,10 +105,21 @@ def das_writeconfig():
     config.set('couch', 'cleantime', 2*60*60) # in seconds
 
     config.add_section('filecache')
-    config.set('filecache', 'dir', os.path.join(os.getcwd(), 'cache') )
+    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'cache')
+    dbfile = os.path.join(dbdir, 'das_filecache.db')
+    config.set('filecache', 'dir', dbdir)
     config.set('filecache', 'lifetime', 1*24*60*60) # in seconds
     config.set('filecache', 'base_dir', '00')
     config.set('filecache', 'files_dir', 100)
+    config.set('filecache', 'db_engine', 'sqlite:///%s' % dbfile)
+#    config.set('filecache', 'db_engine', \
+#                'mysql://%s:%s@localhost/DAS' % (login, pw))
+
+    config.add_section('views')
+    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'db')
+    dbfile = os.path.join(dbdir, 'das_views.db')
+    config.set('views', 'dir', dbdir)
+    config.set('views', 'db_engine', 'sqlite:///%s' % dbfile)
 
     config.add_section('dbs')
     config.set('dbs', 'expire', 1*60*60) # 1 hour, in seconds

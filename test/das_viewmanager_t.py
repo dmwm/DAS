@@ -7,6 +7,8 @@ Unit test for DAS view manager
 
 import unittest
 from DAS.core.das_viewmanager import DASViewManager
+from DAS.utils.das_config import das_readconfig
+from DAS.utils.logger import DASLogger
 
 class testDAS(unittest.TestCase):
     """
@@ -17,7 +19,21 @@ class testDAS(unittest.TestCase):
         """
         set up DAS core module
         """
-        self.view = DASViewManager()
+        debug    = 0
+        config   = das_readconfig()
+        logger   = DASLogger(verbose=debug, stdout=debug)
+        config['logger']  = logger
+        config['verbose'] = debug
+        self.db = 'test_views.db'
+        config['filecache_db_engine'] = 'sqlite:///%s' % self.db
+        self.view = DASViewManager(config)
+
+    def tearDown(self):
+        """Invoke after each test"""
+        try:
+            os.remove(self.db)
+        except:
+            pass
 
     def test_view1(self):                          
         """test DAS view creation"""

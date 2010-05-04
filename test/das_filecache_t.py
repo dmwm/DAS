@@ -31,6 +31,8 @@ class testDASFilecache(unittest.TestCase):
         config['logger']  = logger
         config['verbose'] = debug
         config['filecache_dir'] = self.dir
+        config['filecache_db_engine'] = 'sqlite:///%s/test_file_cache.db' \
+                % self.dir
         self.dasfilecache = DASFilecache(config)
 
     def test_create_dir(self):                          
