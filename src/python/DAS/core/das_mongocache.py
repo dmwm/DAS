@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.29 2009/11/10 03:20:39 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: das_mongocache.py,v 1.30 2009/11/10 15:17:17 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -422,23 +422,21 @@ class DASMongocache(Cache):
         self.col.insert(dict(record))
 
         # insert DAS records
-        lkeys      = header['lookup_keys']
-        index_list = [(key, DESCENDING) for key in lkeys]
-        prim_key   = lkeys[0] # TODO: what to do with multiple look-up keys
-        trigger    = 0
+        lkeys       = header['lookup_keys']
+        index_list  = [(key, DESCENDING) for key in lkeys]
+        prim_key    = lkeys[0] # TODO: what to do with multiple look-up keys
+        counter     = 0
+        merge_count = 0
         local_cache = [] # small cache to be used for bulk updates
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
             for item in results:
-                if  str(item).find("8b9a9715-afb3-4489-a08a-60d508520534") != -1:
-                    print "###found in", system, item
                 # TODO:
                 # the exception/error records should not go to cache
                 # instead we can place them elsewhere for further analysis
                 if  item.has_key('exception') or item.has_key('error'):
                     continue
-                if  not trigger:
-                    trigger = 1
+                counter += 1
                 item['das'] = dasheader
                 row = None
                 if  query_in_cache:
@@ -455,6 +453,7 @@ class DASMongocache(Cache):
                         del mdict['_id']
                         self.col.insert(mdict)
                         self.col.remove({'_id': row['_id']})
+                        merge_count += 1
                     else:
                         if  len(local_cache) < self.cache_size:
                             local_cache.append(item)
@@ -479,7 +478,7 @@ class DASMongocache(Cache):
             if  local_cache:
                 self.col.insert(local_cache)
                 local_cache = []
-            if  not trigger: # we got empty results
+            if  not counter: # we got empty results
                 # we will insert empty record to avoid consequentive
                 # calls to service who doesn't have data
                 self.col.insert(dict(das=dasheader))
@@ -487,6 +486,9 @@ class DASMongocache(Cache):
         else:
             print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
+        msg = "DASMongocache::update_cache, %s yield %s rows/%s merged" \
+                % (dasheader['system'], counter, merge_count)
+        self.logger.info(msg)
 
     def remove_from_cache(self, query):
         """
