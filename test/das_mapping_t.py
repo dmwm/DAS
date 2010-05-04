@@ -23,10 +23,10 @@ class testDASMapping(unittest.TestCase):
         debug    = 0
         self.db  = 'test_mapping.db'
         config   = das_readconfig()
-        logger   = DASLogger(verbose=debug, stdout=debug)
+        logger   = DASLogger(verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        config['mappingdb'] = dict(dbhost='localhost',
+        config['mappingdb'] = dict(dbhost='localhost', attempt=3,
                                 dbport=27017, dbname='test_mapping')
         self.mgr = DASMapping(config)
 

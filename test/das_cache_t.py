@@ -5,11 +5,11 @@
 Unit test for DAS cache module
 """
 
+import json
 import time
 import unittest
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
-from DAS.core.das_cache import DASCache
 from DAS.web.utils import urllib2_request
 
 class testDASCache(unittest.TestCase):
@@ -22,63 +22,56 @@ class testDASCache(unittest.TestCase):
         """
         debug    = 0
         config   = das_readconfig()
-        logger   = DASLogger(verbose=debug, stdout=debug)
+        logger   = DASLogger(verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        self.dascache = DASCache(config)
 
     def test_cachemgr(self):
         """test cacher server functionality"""
-        query   = 'find site where site=T2_UK'
+        headers = {"Accept": "application/json"}
+        query   = "ip=137.138.141.145 | grep ip.City"
         idx     = 0
         limit   = 10
         expire  = 60
         params  = {'query':query, 'idx':idx, 'limit':limit, 'expire':expire}
-        host    = 'http://localhost:8011'
+        host    = 'http://localhost:8211'
 
         # delete query
         request = 'DELETE'
-        path    = '/rest/json/%s' % request
-        data    = urllib2_request(host+path, params)
+        path    = '/rest/delete'
+        data    = urllib2_request(request, host+path, params)
         expect  = {"status":"success"}
-        self.assertEqual(expect, eval(data))
+        result  = json.loads(data)
+        self.assertEqual(expect["status"], result["status"])
         print "pass", path
         
         # get data
-        request = 'GET'
-        path    = '/rest/json/%s' % request
-        data    = urllib2_request(host+path, params)
-        expect  = {"status": "not found", "query": query, "limit": limit, "idx": idx}
-        self.assertEqual(expect, eval(data))
-        print "pass", path
+#        request = 'GET'
+#        path    = '/rest/request'
+#        data    = urllib2_request(request, host+path, params)
+#        expect  = {"status": "not found", "query": query, "limit": limit, "idx": idx}
+#        result  = json.loads(data)
+#        print "result", result
+#        self.assertEqual(expect["status"], result["status"])
+#        print "pass", path
 
-        # put request
-        request = 'PUT'
-        path    = '/rest/json/%s' % request
-        data    = urllib2_request(host+path, params)
+        # post request
+        headers = {"Accept": "application/json", "Content-type": "application/json"}
+        request = 'POST'
+        path    = '/rest/create'
+        data    = urllib2_request(request, host+path, params, headers)
         expect  = {"status": "requested", "query": query, "expire":expire}
-        self.assertEqual(expect, eval(data))
+        result  = json.loads(data)
+        self.assertEqual(expect["status"], result["status"])
         print "pass", path
-
-        time.sleep(3)
 
         # get data
         request = 'GET'
-        path    = '/rest/json/%s' % request
-        data    = urllib2_request(host+path, params)
-        result  = [{"system": "sitedb", "site": "gw-3.ccc.ucl.ac.uk"}, 
-                   {"system": "sitedb", "site": "gw-3.ccc.ucl.ac.uk"}, 
-                   {"system": "sitedb", "site": "srm.glite.ecdf.ed.ac.uk  "}, 
-                   {"system": "sitedb", "site": "srm.glite.ecdf.ed.ac.uk  "}, 
-                   {"system": "sitedb", "site": "heplnx204.pp.rl.ac.uk"}, 
-                   {"system": "sitedb", "site": "lcgse01.phy.bris.ac.uk"}, 
-                   {"system": "sitedb", "site": "gfe02.hep.ph.ic.ac.uk"}, 
-                   {"system": "sitedb", "site": "gfe02.hep.ph.ic.ac.uk"}, 
-                   {"system": "sitedb", "site": "dgc-grid-50.brunel.ac.uk"}, 
-                   {"system": "sitedb", "site": "dgc-grid-50.brunel.ac.uk"}]
-        expect  = {"status": "success", "result":result,
-                   "query": query, "limit": limit, "idx": idx}
-        self.assertEqual(expect, eval(data))
+        path    = '/rest/request'
+        data    = urllib2_request(request, host+path, params)
+        expect  = {"status": "success"}
+        result  = json.loads(data)
+        self.assertEqual(expect["status"], result["status"])
         print "pass", path
 
 #
