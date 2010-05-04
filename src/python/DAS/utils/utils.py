@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.68 2010/02/18 15:07:39 valya Exp $"
-__version__ = "$Revision: 1.68 $"
+__revision__ = "$Id: utils.py,v 1.69 2010/02/18 22:08:23 valya Exp $"
+__version__ = "$Revision: 1.69 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -1065,6 +1065,7 @@ def aggregator(results, expire):
             yield row
             record = dict(row)
             update = 0
+            continue
         if  val1 == val2:
             merge_dict(record, row)
             update = 1
