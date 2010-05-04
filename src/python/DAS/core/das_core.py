@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.38 2009/10/12 20:15:13 valya Exp $"
-__version__ = "$Revision: 1.38 $"
+__revision__ = "$Id: das_core.py,v 1.39 2009/10/12 21:02:02 valya Exp $"
+__version__ = "$Revision: 1.39 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -335,6 +335,9 @@ class DASCore(object):
             getattr(getattr(self, srv), 'call')(query)
             if  self.verbose:
                 self.timer.record(srv)
+        # to avoid mis-counting record due their merge we loop once
+        # more time over all services while extracting results from cache
+        for srv in services:
             # Yield results for every sub-system with loose conditions
             res = self.rawcache.get_from_cache(\
                 self.mongoparser.lookupquery(srv, query))
