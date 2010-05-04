@@ -112,6 +112,16 @@ class testDASMapping(unittest.TestCase):
         }
         res = self.mgr.servicemap(system, implementation='javaservlet')
         self.assertEqual(smap, res)
+
+    def test_presentation(self):                          
+        """test presentation method"""
+        self.mgr.create_db()
+        rec = {'presentation':{'block':['block.name', 'block.size'], 'size':['size.name']}}
+        self.mgr.add(rec)
+        expect = ['block.name', 'block.size']
+        result = self.mgr.presentation('block')
+        self.assertEqual(expect, result)
+
 #
 # main
 #
