@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.10 2009/05/28 19:58:40 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_config.py,v 1.11 2009/06/03 19:41:24 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -49,9 +49,8 @@ def das_readconfig(dasconfig=None):
     configdict['hotcache'] = config.get('das', 'hotcache', None)
     configdict['logdir'] = config.get('das', 'logdir', '/tmp')
 
-#    systems = config.get('das', 'systems', 'dbs,sitedb,phedex').split(',')
     systems = config.get('das', 'systems', 
-                'dbs,sitedb,phedex,monitor,lumidb').split(',')
+                'dbs,sitedb,phedex,monitor,lumidb,runsum').split(',')
     verbose = config.getint('das', 'verbose')
     configdict['systems'] = systems
     configdict['verbose'] = verbose
@@ -76,7 +75,7 @@ def das_writeconfig():
 
     config = ConfigParser.ConfigParser()
 
-    systems = 'dbs,sitedb,phedex,monitor,lumidb'
+    systems = 'dbs,sitedb,phedex,monitor,lumidb,runsum'
     config.add_section('das')
     config.set('das', 'systems', '%s' % systems)
     config.set('das', 'verbose', 1)
@@ -128,15 +127,15 @@ def das_writeconfig():
     config.set('lumidb', 'url', 
     'http://cmslumi.cern.ch/lumi/servlet/LumiServlet')
 
-#        config.add_section('runsum')
-#        config.set('runsum', 'verbose', 1)
-#        config.set('runsum', 'url', '')
+    config.add_section('runsum')
+    config.set('runsum', 'verbose', 1)
+    config.set('runsum', 'url', '')
+    config.set('lumidb', 'url', 
+    'https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary')
 
-#        maps = {'dbs,sitedb':'site', 'dbs,phedex':'block,site', 
-#                'dbs,runsum':'run', 'phedex,sitedb':'site'}
     maps = {'dbs,sitedb':'site', 'dbs,phedex':'block,site', 
-            'phedex,sitedb':'site', 'monitor,sitedb':'site',
-            'dbs,lumidb':'lumi,run'}
+            'phedex,sitedb':'site', 
+            'dbs,lumidb':'lumi,run', 'dbs,runsum':'run'}
     config.add_section('mapping')
     for key, val in maps.items():
         config.set('mapping', '%s' % key, '%s' % val)
