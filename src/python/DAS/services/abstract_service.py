@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.50 2009/11/20 15:48:46 valya Exp $"
-__version__ = "$Revision: 1.50 $"
+__revision__ = "$Id: abstract_service.py,v 1.51 2009/11/25 18:18:26 valya Exp $"
+__version__ = "$Revision: 1.51 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,7 +17,7 @@ import traceback
 import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
-from DAS.utils.utils import row2das
+#from DAS.utils.utils import row2das
 
 class DASAbstractService(object):
     """
@@ -41,10 +41,10 @@ class DASAbstractService(object):
             print config
             raise Exception('fail to parse DAS config')
 
-        self.map       = {} # to be defined by data-service implementation
-        self.qllexer   = None # to be defined at run-time in self.worker
-        self._keys     = None # to be defined at run-time in self.keys
-        self._params   = None # to be defined at run-time in self.parameters
+        self.map        = {}   # to be defined by data-service implementation
+        self._keys      = None # to be defined at run-time in self.keys
+        self._params    = None # to be defined at run-time in self.parameters
+        self._notations = {}   # to be defined at run-time in self.notations
 
         msg = 'DASAbstractService::__init__ %s' % self.name
         self.logger.info(msg)
@@ -88,6 +88,23 @@ class DASAbstractService(object):
                         srv_params.append(par)
         self._params = srv_params
         return srv_params
+
+    def notations(self):
+        """
+        Return a map of system notations.
+        """
+        if  self._notations:
+            return self._notations
+        for _, rows in self.dasmapping.notations(self.name).items():
+            for row in rows:
+                api = row['api']
+                name = row['das_name']
+                param = row['api_param']
+                if  self._notations.has_key(api):
+                    self._notations[api].update({param:name})
+                else:
+                    self._notations[api] = {param:name}
+        return self._notations
 
     def getdata(self, url, params, headers=None):
         """
@@ -157,13 +174,13 @@ class DASAbstractService(object):
         """
         pass
 
-    def data2das(self, gen, api):
-        """
-        Convert keys in resulted rows into DAS notations.
-        """
-        for row in gen:
-            row2das(self.dasmapping.notation2das, self.name, api, row)
-            yield row
+#    def data2das(self, gen, api):
+#        """
+#        Convert keys in resulted rows into DAS notations.
+#        """
+#        for row in gen:
+#            row2das(self.dasmapping.notation2das, self.name, api, row)
+#            yield row
 
     def lookup_keys(self, api):
         """
@@ -244,8 +261,9 @@ class DASAbstractService(object):
                 self.logger.info(msg)
                 time0   = time.time()
                 data    = self.getdata(url, args)
-                gen     = self.parser(data, api, args)
-                genrows = self.data2das(gen, api)
+#                gen     = self.parser(data, api, args)
+#                genrows = self.data2das(gen, api)
+                genrows = self.parser(data, api, args)
                 ctime   = time.time() - time0
                 self.analytics.add_api(self.name, query, api, args)
                 header  = dasheader(self.name, query, api, url, args, ctime,
