@@ -4,14 +4,14 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.14 2009/07/14 13:49:05 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_cli.py,v 1.15 2009/10/02 15:16:22 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
-from DAS.utils.utils import dump
+from DAS.utils.utils import dump, genkey
 
 import sys
 if sys.version_info < (2, 6):
@@ -33,6 +33,8 @@ class DASOptionParser:
         self.parser.add_option("-q", "--query", action="store", type="string", 
                                           default=False, dest="query",
              help="specify query for your request.")
+        self.parser.add_option("--hash", action="store_true", dest="hash",
+             help="look-up MongoDB-QL query and its hash")
         self.parser.add_option("--services", action="store_true", 
                                           dest="services",
              help="return a list of supported data services")
@@ -84,6 +86,12 @@ if __name__ == '__main__':
     query = opts.query
     debug = opts.verbose
     DAS = DASCore(debug=debug)
+    if  opts.hash:
+        mongo_query = DAS.mongoparser.dasql2mongo(query)
+        print "DAS-QL query:", query
+        print "Mongo query :", mongo_query
+        print "query hash  :", genkey(str(mongo_query))
+        sys.exit(0)
     sdict = DAS.keys()
     if  opts.services:
         msg = "DAS services:" 
