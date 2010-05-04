@@ -5,8 +5,8 @@
 DAS Query Language parser.
 """
 
-__revision__ = "$Id: das_parser.py,v 1.4 2010/03/19 17:25:49 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_parser.py,v 1.5 2010/03/24 18:19:20 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -72,6 +72,8 @@ def add_spaces(query):
     splitted_query = splitted_query.replace('! =', '!=')
     splitted_query = splitted_query.replace('< =', '<=')
     splitted_query = splitted_query.replace('> =', '>=')
+    if  splitted_query.find(' ') == -1: # single word
+        splitted_query += ' '
     return splitted_query
 
 def find_das_operator(query, pos=0):
@@ -179,7 +181,7 @@ def parser(query, daskeys, operators):
     pos    = 0
     value  = None
     will_break = 0
-    count =0 
+    count  = 0 
     while True:
         das_word, idx = find_das_word(daskeys, query, pos)
         if  idx == -1:
@@ -245,6 +247,10 @@ def parser(query, daskeys, operators):
         mongo_query['filters'] = filters
     if  aggregators:
         mongo_query['aggregators'] = aggregators
+    if  not mongo_query['fields'] and not mongo_query['spec']:
+        msg = 'Input query="%s" does not resolve into MongoDB one'\
+            % query.strip()
+        raise Exception(msg)
     return mongo_query
 
 def decompose(query):
@@ -290,7 +296,23 @@ class QLManager(object):
                 self.analytics.add_query(query, mongo_query)
             return mongo_query
         mongo_query = parser(query, self.daskeys, self.operators)
-        # convert DAS input keys into DAS selection keys
+        self.convert2skeys(mongo_query)
+        if  add_to_analytics:
+            self.analytics.add_query(query, mongo_query)
+        return mongo_query
+
+    def convert2skeys(self, mongo_query):
+        """
+        Convert DAS input keys into DAS selection keys.
+        """
+        if  not mongo_query['spec']:
+            for key in mongo_query['fields']:
+                for system in self.map.list_systems():
+                    mapkey = self.map.find_mapkey(system, key)
+                    if  mapkey:
+                        mongo_query['spec'][mapkey] = '*'
+            return
+
         for key in mongo_query['spec'].keys():
             for system in self.map.list_systems():
                 mapkey = self.map.find_mapkey(system, key)
@@ -299,10 +321,7 @@ class QLManager(object):
                     mongo_query['spec'][mapkey] = mongo_query['spec'][key]
                     del mongo_query['spec'][key]
                     continue
-        if  add_to_analytics:
-            self.analytics.add_query(query, mongo_query)
-        return mongo_query
-
+        
     def services(self, query):
         """Find out DAS services to use for provided query"""
         skeys, cond = decompose(query)
