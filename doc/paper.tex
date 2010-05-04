@@ -101,8 +101,23 @@ used in DAS system. Our results are summarized in section \ref{Results}.
 
 \section{CMS data model\label{DataModel}}
 \section{Data Aggregation System\label{DAS}}
-Data Aggregation System shown in Figure \ref{DAS_arch} and
-consists out of several components:
+Our goal was to create scalable and pluggable system for existing data-services
+within CMS computing infrastructure. We knew that all our data are delivered 
+via data-services who take care of their availability. Therefore, we treat 
+DAS as aggregation and cache service for existing data-services who should
+take care of the following:
+\begin{itemize}
+\item an individual data-service can have an own set of security policies;
+\item a dynamic nature of data-service APIs, due to continiously changing
+detector and software environments;
+\item a broad variety of data-formats;
+\item distributed nature of data-services;
+\item heterogeneous software environment.
+\item support flexible and intuitive Query Language (QL) to easy look-up our
+data;
+\item pluggable interface to existing and up-coming data-service APIs;
+\end{itemize}
+
 \begin{figure}[htb]
 \centering
 \includegraphics[width=150mm]{DAS_architecture.pdf}
@@ -112,6 +127,8 @@ DAS architecture.
 \label{DAS_arch}
 \end{figure}
 
+Based on this set of constrains and requirements we come up with the following
+DAS components, see Figure \ref{DAS_arch}:
 \begin{itemize}
 \item DAS core system which is support pluggable modules to retrieve data from
 CMS data-services, e.g. Data Bookkeeping System (DBS), data location service (Phedex),
@@ -119,13 +136,15 @@ etc.;
 \item DAS caching system which has dual purpose: to store ``raw'' results coming
 out from data-services, a raw-cache, and aggregated results produced by DAS core into
 hot-cache;
-\item DAS request service who collect and place into queue user requests
+\item DAS request service to handle user requests
 \item DAS mapping DB to store mapping between data-services and DAS notations and
 data-representation;
 \item DAS analytics DB to collect query statistics and establish pre-fetching 
 strategies.
 \end{itemize}
-We will discuss each of those components in more details in up-coming sub-sections.
+We will discuss individual components in more details in up-coming sub-sections.
+
+\subsection{Dealing with data-services}
 The DAS supports a pluggable approach to add a new CMS sub-system into a game by
 identifying appropriate APIs, input and output parameters and keys, data-service
 format and mapping between data-service, DAS and other sub-system. For instance,
@@ -150,7 +169,12 @@ object contains a standard DAS header, which identify look-up time,
 request url, API, parameters and method as well as response version, expiration
 time and checksum of the output. 
 
-\subsection{DAS Query Language}
+We designed DAS interface to be fully REST complaint \cite{REST}. It is not
+only simplify development of DAS clients (CLI, web interface, populator, etc.)
+but also consider DAS itself as own sub-component, i.e. place queries against
+DAS content, rather then data-service one.
+
+\subsection{Query Language\label{DAS-QL}}
 Upon success of DBS-QL \ref{DBS-QL} we adopted its syntax to DAS with a few minor
 changes. Here we briefly recall its syntax:
 \begin{equation}
@@ -180,7 +204,7 @@ $$
 which represents a natural language question: 
 {\it find files and runs located at T1\_CH\_CERN site}.
 
-\subsection{DAS Mapping DB}
+\subsection{Mapping}
 As been discussed above we used a DAS mapping DB to map data-service API into
 DAS as well as map provide a relations between different data-services.
 Upon identification of APIs which participate in DAS activity 
@@ -211,9 +235,8 @@ input parameters
 \item store and aggregate them into DAS raw-cache
 \end{itemize} 
 
-\subsection{DAS Analytics DB}
 
-\subsection{Caching system}
+\subsection{Caching system and Analytics}
 The DAS caching system was divided into two different caches: raw-cache and hot-cache.
 The purpose of raw-cache was to store results coming from data services for
 as long as specified in data-service response header. While the purpose of hot-cache
@@ -248,18 +271,6 @@ querying.} While, using CouchDB and MongoDB, we were able to store
 data-service output naturally as documents objects into DB. Finally we decided
 to use MongoDB due to its flexible and
 powerful querying syntax, which were easy to map into DAS QL expressions. 
-
-\subsection{REST interface}
-We designed DAS interface to be fully REST complaint \cite{REST}.
-All requests placed into DAS cache server were done via GET/PUT/POST/DELETE methods.
-DAS clients initiate their request via GET method. An appropriate message
-with either resulting data or their absense was send back to client.
-Clients were able to decided upon received message how to proceed, either
-request data via POST/PUT methods, DELETE data in cache or initiate another
-GET request. The REST complaince help us to treat our clients, user quyering
-DAS system via web browser, other CMS applications and command line tools
-in identical manner. Also, the implementation of pre-fetch populator
-tools become as easy and identical as any other clients.
 
 \section{Results\label{Results}}
 
