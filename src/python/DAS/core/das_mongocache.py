@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.33 2009/11/16 15:48:58 valya Exp $"
-__version__ = "$Revision: 1.33 $"
+__revision__ = "$Id: das_mongocache.py,v 1.34 2009/11/16 18:54:57 valya Exp $"
+__version__ = "$Revision: 1.34 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -365,27 +365,27 @@ class DASMongocache(Cache):
 
     def update_cache(self, query, results, header):
         """
-        Insert results into cache.
+        Insert results into cache. Use bulk insert controller by
+        self.cache_size. Upon completion ensure indexies.
         """
-# TODO: I introduced usage of generator, for that I renamed old
-#       update_cache in update_records and added new method update_cache
-#        gen = self.update_records(query, results, header)
-#        idx = 0
-#        while True:
-#            if  not self.col.insert(itertools.islice(gen, self.cache_size)):
-#                break
-#        lkeys      = header['lookup_keys']
-#        index_list = [(key, DESCENDING) for key in lkeys]
-#        if  index_list:
-#            try:
-#                self.col.ensure_index(index_list)
-#            except:
-#                pass
-#    def update_records(self, query, results, header):
-#        """
-#        Iterate over provided results, update records and yield them
-#        for final update_cache.
-#        """
+        gen = self.update_records(query, results, header)
+        idx = 0
+        while True:
+            if  not self.col.insert(itertools.islice(gen, self.cache_size)):
+                break
+        lkeys      = header['lookup_keys']
+        index_list = [(key, DESCENDING) for key in lkeys]
+        if  index_list:
+            try:
+                self.col.ensure_index(index_list)
+            except:
+                pass
+
+    def update_records(self, query, results, header):
+        """
+        Iterate over provided results, update records and yield them
+        to next level (update_cache)
+        """
         self.logger.info("DASMongocache::update_cache(%s) store to cache" \
                 % query)
         if  not results:
@@ -410,7 +410,6 @@ class DASMongocache(Cache):
         prim_key    = lkeys[0] # TODO: what to do with multiple look-up keys
         counter     = 0
         merge_count = 0
-        local_cache = [] # small cache to be used for bulk updates
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
             for item in results:
@@ -438,35 +437,15 @@ class DASMongocache(Cache):
                         self.col.insert(mdict)
                         self.col.remove({'_id': row['_id']})
                         merge_count += 1
+                        del mdict
                     else:
-                        if  len(local_cache) < self.cache_size:
-                            local_cache.append(item)
-                        else:
-                            self.col.insert(local_cache)
-                            local_cache = []
-#                        self.col.insert(item)
-#                        yield item
+                        yield item
                 else:
-                    if  len(local_cache) < self.cache_size:
-                        local_cache.append(item)
-                    else:
-                        self.col.insert(local_cache)
-                        local_cache = []
-#                    self.col.insert(item)
-#                    yield item
-                if  index_list:
-                    try:
-                        self.col.ensure_index(index_list)
-                    except:
-                        pass
-            if  local_cache:
-                self.col.insert(local_cache)
-                local_cache = []
+                    yield item
             if  not counter: # we got empty results
                 # we will insert empty record to avoid consequentive
                 # calls to service who doesn't have data
-                self.col.insert(dict(das=dasheader))
-#                yield dict(das=dasheader)
+                yield dict(das=dasheader)
         else:
             print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
