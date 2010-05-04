@@ -4,8 +4,8 @@
 """
 RunSummary service tools
 """
-__revision__ = "$Id: run_summary.py,v 1.6 2009/11/16 16:08:20 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: run_summary.py,v 1.7 2009/11/18 21:41:05 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import urllib2
@@ -59,6 +59,8 @@ def run_summary_url(url, params):
     paramstr = ''
     for key, val in params.items():
         if  type(val) is types.ListType:
+            paramstr += '%s=%s&' % (key, urllib.quote(val))
+        elif key.find('TIME') != -1:
             paramstr += '%s=%s&' % (key, urllib.quote(val))
         else:
             paramstr += '%s=%s&' % (key, val)
