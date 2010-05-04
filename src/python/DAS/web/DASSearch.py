@@ -5,14 +5,14 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.14 2009/06/30 19:46:56 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: DASSearch.py,v 1.15 2009/07/02 20:19:16 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
 import types
-import thread
+import urllib
 from cherrypy import expose
 import cherrypy
 try:
@@ -38,11 +38,19 @@ import sys
 if sys.version_info < (2, 5):
     raise Exception("DAS requires python 2.5 or greater")
 
-def ajax_response(msg, tag="_response", element="object"):
+def ajax_response_orig(msg, tag="_response", element="object"):
     """AJAX response wrapper"""
     page  = """<ajax-response><response type="%s" id="%s">""" % (element, tag)
     page += msg
     page += "</response></ajax-response>"
+    print page
+    return page
+
+def ajax_response(msg):
+    """AJAX response wrapper"""
+    page  = """<ajax-response>"""
+    page += "<div>" + msg + "</div>"
+    page += "</ajax-response>"
     print page
     return page
 
@@ -59,7 +67,7 @@ class DASSearch(TemplatedPage):
         self.cleantime = 60 # in seconds
         self.lastclean = time.time()
         self.decoder   = JSONDecoder()
-#        self.counter = 0 # TMP stuff, see request, TODO: remove
+        self.counter = 0 # TMP stuff, see request, TODO: remove
 
         # TMP: I define a few useful views, this should be done
         # elswhere (may be here, may be in external configuration,
@@ -94,13 +102,13 @@ class DASSearch(TemplatedPage):
         """
         return self.templatepage('das_top')
 
-    def bottom(self):
+    def bottom(self, response_div=True):
         """
         Define footer for all DAS web pages
         """
-        return self.templatepage('das_bottom')
+        return self.templatepage('das_bottom', div=response_div)
 
-    def page(self, content, ctime=None):
+    def page(self, content, ctime=None, response_div=True):
         """
         Define footer for all DAS web pages
         """
@@ -113,7 +121,7 @@ class DASSearch(TemplatedPage):
             srv += "%s, " % key
         srv = srv[:-2] # remove last comma
         page += self.templatepage('das_bottom', ctime=ctime, services=srv,
-                                                timestamp=timestamp)
+                                  timestamp=timestamp, div=response_div)
         return page
 
     @expose
@@ -122,7 +130,7 @@ class DASSearch(TemplatedPage):
         represent DAS FAQ.
         """
         page = self.templatepage('das_faq')
-        return self.page(page)
+        return self.page(page, response_div=False)
 
     @expose
     def help(self, *args, **kwargs):
@@ -130,7 +138,7 @@ class DASSearch(TemplatedPage):
         represent DAS help
         """
         page = self.templatepage('das_help')
-        return self.page(page)
+        return self.page(page, response_div=False)
 
     @expose
     def create_view(self, *args, **kwargs):
@@ -152,7 +160,7 @@ class DASSearch(TemplatedPage):
                 pass
         views = self.dasmgr.get_view()
         page  = self.templatepage('das_views', views=views, msg=msg)
-        return self.page(page)
+        return self.page(page, response_div=False)
 
     @expose
     def views(self, *args, **kwargs):
@@ -161,7 +169,7 @@ class DASSearch(TemplatedPage):
         """
         views = self.dasmgr.get_view()
         page  = self.templatepage('das_views', views=views, msg='')
-        return self.page(page)
+        return self.page(page, response_div=False)
 
     @expose
     def services(self, *args, **kwargs):
@@ -170,7 +178,7 @@ class DASSearch(TemplatedPage):
         """
         keys = self.dasmgr.keys()
         page = self.templatepage('das_services', service_keys=keys)
-        return self.page(page)
+        return self.page(page, response_div=False)
 
     @expose
     def index(self, *args, **kwargs):
@@ -218,9 +226,6 @@ class DASSearch(TemplatedPage):
         res    = []
         total  = 0
         form   = self.form(uinput=uinput)
-        print "### def result, kwargs", kwargs
-        print "### params", params
-        print "### data", data
         if  data['status'] == 'success':
             res    = data['data']
             titles = res[0].keys()
@@ -243,53 +248,6 @@ class DASSearch(TemplatedPage):
             form   = self.form(uinput=uinput, msg=msg)
         return titles, res, total, form
         
-    def result_v1(self, kwargs):
-        """
-        invoke DAS search call, parse results and return them to
-        web methods
-        """
-        # invoke cache cleaner if time since last clean exceed cleantime.
-        if  (time.time() - self.lastclean) > self.cleantime:
-            thread.start_new_thread(self.dasmgr.clean_cache, ('couch', ))
-            self.lastclean = time.time()
-
-        uinput  = getarg(kwargs, 'input', '')
-        format  = getarg(kwargs, 'format', '')
-        # NOTE: the current implementation of table UI, using YUI,
-        # is done in JavaScript, which by itself doesn't recognize
-        # a.c notations. So I replace a key in a dict from a.c form
-        # to a_dot_c one. If any value is a dict itself, for HTML
-        # format we take its string representation and replace 
-        # curle brackets with appropriate HTML symbols.
-        res     = []
-        idx     = 0
-        for item in self.dasmgr.result(uinput):
-            item['id'] = idx
-            if  format == 'html':
-                for key, val in item.items():
-                    if  type(val) is types.DictType:
-                        newval = str(val).replace('{', '&#123;')
-                        newval = newval.replace('}', '&#125;')
-                        item[key] = newval.replace("'", '')
-                    if  key.find('.') != -1:
-                        item[key.replace('.', '_dot_')] = item[key]
-                for key in item.keys():
-                    if  key.find('.') != -1:
-                        del(item[key])
-                    
-                res.append(item)
-            else:
-                res.append(item)
-            idx += 1
-
-#        res     = self.dasmgr.result(uinput)
-        titles  = res[0].keys()
-        titles.sort()
-        titles.remove('id')
-        titles  = ['id'] + titles
-        form    = self.form(uinput=uinput)
-        return titles, res, form
-
     @exposedasxml
     def xmlview(self, kwargs):
         """
@@ -385,7 +343,8 @@ class DASSearch(TemplatedPage):
         form    = self.form(uinput=uinput)
         ctime   = (time.time()-time0)
         ajax    = self.templatepage('das_ajaxrequest', ajax=ajaxreq)
-        return self.page(form + ajax + page, ctime=ctime)
+        page    = self.page(form + ajax + page, ctime=ctime)
+        return page
 
     @expose
     def default(self, *args, **kwargs):
@@ -399,15 +358,26 @@ class DASSearch(TemplatedPage):
         """
         Place request to obtain status about given query
         """
-        cherrypy.response.headers['Content-Type']='text/xml'
-#        req = """<script type="text/javascript">setTimeout('ajaxRequest(\\'%s\\')', 3000)</script>"""\
-#                % 'test query'
-        img = """<img src="/dascontrollers/images/loading" alt="loading" />"""
-        req = """<script type="text/javascript">setTimeout('ajaxRequest()', 3000)</script>"""
+        cherrypy.response.headers['Content-Type'] = 'text/xml'
+        img = """<img src="/dascontrollers/images/loading.gif" alt="loading" /> """
+        req = """<script type="application/javascript">setTimeout('ajaxRequest()', 3000)</script>"""
 #        page = req
 #        page += "Got query, counter %s, %s" % (kwargs, self.counter)
+        print "\n### request kwargs", kwargs, self.counter
+
+        def send_post(idict):
+            "Send POST request to server with provided parameters"
+            params = {'query':idict['query']}
+            url  = self.cachesrv
+            path = '/rest/json/POST' 
+            res  = self.decoder.decode(urllib2_request(url+path, params))
+        def set_header():
+            timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+            cherrypy.response.headers['Expire'] = timestamp
+            cherrypy.response.headers['Cache-control'] = 'no-cache'
 
         uinput = getarg(kwargs, 'input', '')
+        uinput = urllib.unquote_plus(uinput)
         view   = getarg(kwargs, 'view', 'table')
         params = {'query':uinput, 'idx':0, 'limit':1}
         path   = '/rest/json/GET'
@@ -418,26 +388,31 @@ class DASSearch(TemplatedPage):
         else:
             data  = result
         if  data['status'] == 'success':
-            page  = """<script type="text/javascript">reload()</script>"""
+            page  = """<script type="application/javascript">reload()</script>"""
         elif data['status'] == 'in raw cache':
             page  = img + 'data found in raw cache'
-            path  = '/rest/json/POST'
-            res   = self.decoder.decode(urllib2_request(url+path, params))
             page += req
+            send_post(params)
+            set_header()
         elif data['status'] == 'requested':
             page  = img + 'data has been requested'
             page += req
+            set_header()
         elif data['status'] == 'waiting in queue':
             page  = img + 'your request is waiting in queue'
             page += req
+            set_header()
         elif data['status'] == 'not found':
             page  = 'data not in DAS yet, please retry'
+            send_post(params)
+            set_header()
         else:
             page  = 'unknown status, %s' % urllib.urlencode(str(data))
-        
+#        
 #        if  self.counter == 5:
 #            page = "TEST DONE"
 #        self.counter += 1
         page = ajax_response(page)
+        print "\n### AJAX response",page
         return page
 

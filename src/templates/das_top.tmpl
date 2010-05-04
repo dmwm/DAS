@@ -1,18 +1,56 @@
 <!-- das_top.tmpl -->
-<link rel="stylesheet" type="text/css" href="/dascontrollers/css/das"/>
-<script type="text/javascript" src="/dascontrollers/js/prototype"></script>
-<script type="text/javascript" src="/dascontrollers/js/rico"></script>
-<script type="text/javascript" src="/dascontrollers/js/utils"></script>
-<script type="text/javascript" src="/dascontrollers/js/ajax_utils"></script>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head profile="http://www.w3.org/2005/11/profile">
+    <title>CMS Data Aggregation Service</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Language" content="en-us" />
+    <meta http-equiv="Content-Script-Type" content="application/javascript" />
+    <meta http-equiv="imagetoolbar" content="no" />
+    <meta name="author" content="Valentin Kuznetsov (vkuznet at gmail dot com)" />
+    <meta name="MSSmartTagsPreventParsing" content="true" />
+    <meta name="ROBOTS" content="ALL" />
+    <meta name="Copyright" content="(CC) 2009, CMS collaboration." />
+    <meta name="Rating" content="General" />
+
+    <link rel="icon" type="image/png" href="/dascontrollers/images/cms_logo.png" />
+
+    <link rel="stylesheet" type="text/css" href="/dascontrollers/css/das.css"/>
+
+    <script type="application/javascript" src="/dascontrollers/js/prototype.js"></script>
+    <script type="application/javascript" src="/dascontrollers/js/utils.js"></script>
+    <script type="application/javascript" src="/dascontrollers/js/ajax_utils.js"></script>
+
+    <!-- YUI stuff -->
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/paginator/assets/skins/sam/paginator.css" />
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.7.0/build/datatable/assets/skins/sam/datatable.css" />
+    <script type="application/javascript" src="http://yui.yahooapis.com/2.7.0/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+    <script type="application/javascript" src="http://yui.yahooapis.com/2.7.0/build/connection/connection-min.js"></script>
+    <script type="application/javascript" src="http://yui.yahooapis.com/2.7.0/build/json/json-min.js"></script>
+    <script type="application/javascript" src="http://yui.yahooapis.com/2.7.0/build/element/element-min.js"></script>
+    <script type="application/javascript" src="http://yui.yahooapis.com/2.7.0/build/paginator/paginator-min.js"></script>
+    <script type="application/javascript" src="http://yui.yahooapis.com/2.7.0/build/datasource/datasource-min.js"></script>
+    <script type="application/javascript" src="http://yui.yahooapis.com/2.7.0/build/datatable/datatable-min.js"></script>
+
+
+</head>
+<body>
 
 <div id="banner">
-<h3>Data Aggregation Service: 
-<a href="/das">home</a> |
+<table>
+<tr><td>
+<img src="/dascontrollers/images/cms_logo.jpg" alt="CMS" width="30" style="border:none" />
+</td><td>
+<h3>Data Aggregation Service (DAS): &nbsp;
+<a href="/das/">home</a> |
 <a href="/das/views">views</a> |
 <a href="/das/services">services</a> |
 <a href="/das/faq">FAQ</a>
 ##<a href="/das/help">help</a>
 </h3>
+</td></tr>
+</table>
 </div>
 <hr class="line" />
 <!-- end of das_top.tmpl -->

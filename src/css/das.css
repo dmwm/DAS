@@ -1,5 +1,7 @@
 body {
-    margin:0;
+/*    margin:0;*/
+    margin-left:20px;
+    margin-right:20px;
     padding:0;
     color:#000;
     background:#fff;
@@ -12,8 +14,13 @@ h3 {
     font-family: helvetica, arial, verdana, sans-serif;
     text-decoration: none;
 }
+.center_70 {
+/*    text-align: center;*/
+    width: 70%;
+    margin-left: 15%;
+    margin-right: 15%;
+}
 .page {
-/*    margin:5px;*/
     margin: 0;
     padding: .5em 0 .5em .5em;
 }
@@ -71,7 +78,7 @@ a:active {
 /*
  * various div settings
  */
-div#results
+.results
 {
     margin: 0;
     padding-left: 1em;
@@ -160,5 +167,34 @@ div#banner h3
     display: inline;
     color: black;
     background-color: white;
+}
+#wrap {
+        max-width:50em;
+        margin:2em auto;
+}
+form {
+        padding:1em;
+        border:1px solid #ccc;
+        background:#f8f8f8;
+}
+label {display:block;}
+.navcontainer ul
+{
+    margin: 0;
+    padding: 0;
+}
+
+.navcontainer li
+{
+    margin-top: 10px;
+    display: block;
+    color: #222222;
+    /*background-color: #CCC;*/
+    padding: 3px 3px 3px 7px;
+    text-decoration: none;
+    border-left: 5px solid #B3B3B3;
+    border-bottom: 1px dotted #B3B3B3;
+    font-weight: normal;
+    width:80%;
 }
 

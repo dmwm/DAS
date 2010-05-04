@@ -1,48 +1,32 @@
 
 <!-- das_faq.tmpl -->
-<style>
-#navcontainer ul
-{
-    margin: 0;
-    padding: 0;
-}
-
-#navcontainer li
-{
-    margin-top: 10px;
-    display: block;
-    color: #222222;
-    /*background-color: #CCC;*/
-    padding: 3px 3px 3px 7px;
-    text-decoration: none;
-    border-left: 5px solid #B3B3B3;
-    border-bottom: 1px dotted #B3B3B3;
-    font-weight: normal;
-    width:80%;
-}
-</style>
-
 <div class="page">
 <div class="normal">
 <h3>DAS general</h3>
 This section discuss what DAS means and general question about DAS
-<a href="javascript:showTag('architecture')">show</a> |
-<a href="javascript:hideTag('architecture')">hide</a>
+<a href="javascript:ShowTag('architecture')">show</a> |
+<a href="javascript:HideTag('architecture')">hide</a>
 <div id="architecture" class="hide">
 
-<div id="navcontainer">
+<div class="navcontainer">
 <ul>
 <li>
 What DAS stands for?
 </li>
+</ul>
+<p>
 Data Aggregation Service (DAS) is a CMS project which provide a common
 Query Language across multiple CMS data-services, such as DBS, Phedex, SiteDB, etc.
 It represents data in common JSON/XML-formats, provide Command Line Interface (CLI)
 along with reach web-based interface.
+</p>
 
+<ul>
 <li>
 How DAS know data relationship between CMS data-services?
 </li>
+</ul>
+<p>
 The various CMS data-services describe a particular domain of data. If we
 consider all data-services togther they represent all data we collect in our
 experiment. So, it's very common, that boundaries of one data-service are
@@ -52,49 +36,61 @@ dataset, blocks, files, runs. In Run Summary DB we store run specific
 information. Obviously, a run, is an entity common in two data-services.
 In DAS, such comonalities are taken into account and one or more entities
 used to relate one service with another.
+</p>
 
+<ul>
 <li>
 How DAS merge data between different data-services?
 </li>
+</ul>
+<p>
 Upon provided query, DAS consturcts unique set of keys (entities) based on
 selection criteria, conditions and inter-service relation keys. Then query with
 this set of keys send to data-services in questions and their results are
 merged based on cartesian product between returned data sets.
+</p>
 
-</ul>
 </div>
-
-
 </div>
 <hr class="line" />
 
 <h3>DAS queries</h3>
 This section discuss DAS Query Language
-<a href="javascript:showTag('dasql')">show</a> |
-<a href="javascript:hideTag('dasql')">hide</a>
+<a href="javascript:ShowTag('dasql')">show</a> |
+<a href="javascript:HideTag('dasql')">hide</a>
 <div id="dasql" class="hide">
-<div id="navcontainer">
+<div class="navcontainer">
 <ul>
 <li>
 How can I know which keys to use in DAS-QL
 </li>
+</ul>
+<p>
 The DAS-QL keys are defined by DAS data-services, e.g. DBS, Phedex.
 All keys defined in DBS-QL works in DAS-QL. For other servies please consult
 <a href="/services/">services</a> section of DAS web portal.
+</p>
 
+<ul>
 <li>
 Can I create query using keys from different data-services?
 </li>
+</ul>
+<div>
 The whole purpose of DAS was all about that. Yes, you can. Just use any combination
 of keys and provide your where clause conditions. For example,
 <div class="example">
 find dataset, admin, node where site=T2_UK
 </div>
 here we look-up dataset names, administrators and list of nodes for given site.
+</div>
 
+<ul>
 <li>
 Can use I use boolean expression in my queries and brackets?
 </li>
+</ul>
+<div>
 DAS-QL followed very closely of initial implementation of DBS-QL.
 Both boolean expressions and brackets are supported within a single query, for example
 <div class="example">
@@ -105,16 +101,20 @@ example the following query is NOT valid DAS query
 <div class="example">
 find a, b, c where d=1 and find x, y, z
 </div>
+</div>
 
+<ul>
 <li>Why the same query sometime takes a lot of time and sometime is almost
 instantaneous?
 </li>
+</ul>
+<p>
 DAS extensively uses cache to store long-live queries. If you query is not
 present in DAS cache its execution time depends on execution time of data-services
 involve in query look-up. Otherwise results retrieved from DAS cache and
 show up on a page instantaneously.
+</p>
 
-</ul>
 </div>
 </div>
 <hr class="line" />
@@ -124,15 +124,5 @@ show up on a page instantaneously.
 </div> <!-- end of class="normal" -->
 </div> <!-- end of class="page" -->
 
-<script type="text/javascript">
-function showTag(tag) {
-   var id = document.getElementById(tag);
-   id.className="show";
-}
-function hideTag(tag) {
-   var id = document.getElementById(tag);
-   id.className="hide";
-}
-</script>
 <!-- end of das_faq.tmpl -->
 

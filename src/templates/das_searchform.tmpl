@@ -1,23 +1,9 @@
 
 <!-- das_searchform.tmpl -->
-<style type="text/css">
-#wrap {
-        max-width:50em;
-        margin:2em auto;
-}
-form {
-        padding:1em;
-        border:1px solid #ccc;
-        background:#f8f8f8;
-}
-label {display:block;}
-</style>
-
-<div align="center">
 <form action="/das/" method="get">
-<table class="normal">
+<table>
 <tr>
-<td>
+<td class="right">
 data in
 <select name="view">
 <option value="table">table</option>
@@ -28,7 +14,7 @@ data in
 </select>
 format,
 </td>
-<td>
+<td class="left">
 <select name="limit">
 <option value="10">10</option>
 <option value="25">25</option>
@@ -40,27 +26,31 @@ results/per page
 </td>
 </tr>
 </table>
+<div>
 <input type="text" size="80" name="input" id="input" />
 <input type="submit" value="Search" />
 <input type="hidden" name="ajax" value="1" />
 <input type="reset" />
-
+</div>
 </form>
+<p></p>
 
 #if $msg
 $msg
 #end if
 
 #if $input
-<script text="type/javascript">
+<script type="application/javascript">
+//<![CDATA[
 function updateInput(val) {
    var id = document.getElementById('input');
    id.value=val;
 }
 updateInput('$input');
+//]]>
 </script>
 #end if
 <!-- end of das_searchform.tmpl -->
 
-<div id="_response"> <!-- we close this tag in das_bottom.tmpl -->
+<div id="_response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
 

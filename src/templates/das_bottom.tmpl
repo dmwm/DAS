@@ -1,17 +1,10 @@
 
+#if $div
 </div> <!-- end of _response tag -->
+#end if
 <!-- das_bottom.tmpl -->
 <hr class="line" />
-<div id="results">
-#*
-<div align="right" class="normal">
-#if $ctime
-#set ftime = "%5.3f"%$ctime
-DAS execution time: $ftime sec, 
-#end if
-$timestamp
-</div>
-*#
+<div class="results">
 <table width="100%" class="small">
 <tr>
 <td align="left">
@@ -24,6 +17,9 @@ Execution time: $ftime sec,
 #end if
 $timestamp
 </td>
+</tr>
 </table>
-</div>
+</div> <!-- end of id="results" -->
 <!-- end of das_bottom.tmpl -->
+</body>
+</html>

@@ -1,3 +1,8 @@
+
+/*
+ * General set of utilities used in DAS web interface
+ * Author: Valentin Kuznetsov, 2009
+ */
 var Updater=Class.create();
 Updater.prototype = {
     initialize: function(tab) {
@@ -27,8 +32,8 @@ function SearchForCode(text,begPattern,endPattern) {
     return foundCode;
 }
 function SearchForJSCode(text) {
-    var pattern1='<script type="text\/javascript">';
-    var pattern2='<script type=\'text\/javascript\'>';
+    var pattern1='<script type="application\/javascript">';
+    var pattern2='<script type=\'application\/javascript\'>';
     var end='<\/script>';
     var foundCode=SearchForCode(text,pattern1,end);
     foundCode=foundCode+SearchForCode(text,pattern2,end);
@@ -58,7 +63,7 @@ function ShowTag(tag) {
 }
 function wait() {
     var id=document.getElementById('_response');
-    id.innerHTML='<div><img src="/dascontrollers/images/loading" alt="loading" /> please wait</div>';
+    id.innerHTML='<div><img src="/dascontrollers/images/loading.gif" alt="loading" /> please wait</div>';
 }
 function load(url) {
     window.location.href=url;
@@ -80,12 +85,12 @@ function UrlParams() {
     var arr=url.split('&');
     var first = arr[0].split('?');
     arr[0]=first[1];
-    return arr;
+//    return arr;
 
-//    var options = {};
-//    for (var i=0; i<arr.length; i++) {
-//        var params = arr[i].split('=');
-//        options[params[0]] = params[1];
-//    }
-//    return options;
+    var options = {};
+    for (var i=0; i<arr.length; i++) {
+        var params = arr[i].split('=');
+        options[params[0]] = params[1];
+    }
+    return options;
 }
