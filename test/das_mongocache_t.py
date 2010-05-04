@@ -57,35 +57,75 @@ class testDASMongocache(unittest.TestCase):
         """
         Test compare_specs funtion.
         """
-        query1 = dict(fields=None, spec={'test':'site'})
-        query2 = dict(fields=None, spec={'test':'site_ch'})
-        result = compare_specs(query1, query2)
-        self.assertEqual(True, result)
+        input_query = dict(fields=None, spec={'test':'site'})
+        exist_query = dict(fields=None, spec={'test':'site_ch'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result) # no pattern
 
-        query1 = dict(fields=None, spec={'test':'site_ch'})
-        query2 = dict(fields=None, spec={'test':'site'})
-        result = compare_specs(query1, query2)
-        self.assertEqual(False, result)
+        input_query = dict(fields=None, spec={'test':'site_ch'})
+        exist_query = dict(fields=None, spec={'test':'site'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result) # no pattern
 
-        query1 = dict(fields=None, spec={'test':'site*'})
-        query2 = dict(fields=None, spec={'test':'site_ch'})
-        result = compare_specs(query1, query2)
-        self.assertEqual(True, result)
+        input_query = dict(fields=None, spec={'test':'site*'})
+        exist_query = dict(fields=None, spec={'test':'site_ch'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result) # exist_query is not a superset
 
-        query1 = dict(fields=['site','block'], spec={'test':'site*'})
-        query2 = dict(fields=['site'], spec={'test':'site_ch'})
-        result = compare_specs(query1, query2)
-        self.assertEqual(True, result)
+        input_query = dict(fields=None, spec={'test':'site_ch'})
+        exist_query = dict(fields=None, spec={'test':'site*'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result) # exist_query is a superset
 
-        query1 = dict(fields=['site'], spec={'test':'site_ch'})
-        query2 = dict(fields=['site','block'], spec={'test':'site*'})
-        result = compare_specs(query1, query2)
-        self.assertEqual(False, result)
+        input_query = dict(fields=['site','block'], spec={'test':'site*'})
+        exist_query = dict(fields=['site'], spec={'test':'site_ch'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result) # exist_query is not a superset
 
-        query1 = dict(fields=['site'], spec={'test':'site*'})
-        query2 = dict(fields=['site', 'block'], spec={'test':'site_ch'})
-        result = compare_specs(query1, query2)
-        self.assertEqual(False, result)
+        input_query = dict(fields=['site','block'], spec={'test':'site_ch'})
+        exist_query = dict(fields=['site'], spec={'test':'site*'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result) # exist_query is a superset
+
+        input_query = dict(fields=None, spec={'test':'T1_CH_*'})
+        exist_query = dict(fields=None, spec={'test':'T1_CH_CERN'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result) # exist_query is not a superset 
+
+        input_query = dict(fields=None, spec={'test':'T1_CH_CERN'})
+        exist_query = dict(fields=None, spec={'test':'T1_CH_*'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result) # exist_query is a superset
+
+        input_query = dict(fields=None, spec={'test':{'$gt':10}})
+        exist_query = dict(fields=None, spec={'test':{'$gt':11}})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result) # exist_query is not a superset 
+
+        input_query = dict(fields=None, spec={'test':{'$gt':10}})
+        exist_query = dict(fields=None, spec={'test':{'$gt':9}})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result) # exist_query is a superset 
+
+        input_query = dict(fields=None, spec={'test':{'$lt':10}})
+        exist_query = dict(fields=None, spec={'test':{'$lt':9}})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result) # exist_query is not a superset 
+
+        input_query = dict(fields=None, spec={'test':{'$lt':10}})
+        exist_query = dict(fields=None, spec={'test':{'$lt':11}})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result) # exist_query is a superset 
+
+        input_query = dict(fields=None, spec={'test':{'$in':[1,2,3]}})
+        exist_query = dict(fields=None, spec={'test':{'$in':[2,3]}})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result) # exist_query is not a superset 
+
+        input_query = dict(fields=None, spec={'test':{'$in':[2,3]}})
+        exist_query = dict(fields=None, spec={'test':{'$in':[1,2,3]}})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result) # exist_query is a superset 
 
     def test_convert2pattern(self):
         """
