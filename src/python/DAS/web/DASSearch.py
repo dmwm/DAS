@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.15 2009/07/02 20:19:16 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: DASSearch.py,v 1.16 2009/07/09 16:00:02 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -215,7 +215,11 @@ class DASSearch(TemplatedPage):
         format = getarg(kwargs, 'format', '')
         idx    = getarg(kwargs, 'idx', 0)
         limit  = getarg(kwargs, 'limit', 10)
-        params = {'query':uinput, 'idx':idx, 'limit':limit}
+        skey   = getarg(kwargs, 'sort', '')
+        sdir   = getarg(kwargs, 'dir', 'asc')
+#        params = {'query':uinput, 'idx':idx, 'limit':limit}
+        params = {'query':uinput, 'idx':idx, 'limit':limit, 
+                  'skey':skey, 'order':sdir}
         path   = '/rest/json/GET'
         result = self.decoder.decode(urllib2_request(url+path, params))
         if  type(result) is types.StringType:

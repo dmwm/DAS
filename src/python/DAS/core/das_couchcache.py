@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.13 2009/06/30 19:32:14 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_couchcache.py,v 1.14 2009/07/09 16:00:01 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -212,7 +212,7 @@ function(keys, values) {
             return True
         return False
 
-    def get_from_cache(self, query, idx=0, limit=0):
+    def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc'):
         """
         Retreieve results from cache, otherwise return null.
         """
