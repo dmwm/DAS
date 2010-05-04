@@ -5,12 +5,13 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.10 2009/10/15 15:03:15 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.11 2009/11/08 19:20:31 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import re
+import time
 import traceback
 
 # monogo db modules
@@ -32,6 +33,7 @@ class DASMapping(object):
         self.dbname  = getarg(config, 'mapping_dbname', 'mapping')
         self.colname = 'db'
         self.notationcache = {}
+        self.cache_expire  = 5*60 # 5 minutes 
 
         msg = "DASMapping::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
@@ -236,17 +238,20 @@ class DASMapping(object):
         just return it back.
         """
         if  self.notationcache.has_key((system, api_param)):
-            return self.notationcache[(system, api_param)]
+            api_param, expire = self.notationcache[(system, api_param)]
+            if  time.time() - expire < self.cache_expire:
+                return api_param
+            else:
+                del self.notationcache[(system, api_param)]
         query = {'system':system, 'notations.api_param':api_param}
         res = self.col.find_one(query)
         if  res:
             for row in res['notations']:
                 if  row['api_param'] == api_param:
                     value = row['das_name']
-                    self.notationcache[(system, api_param)] = value
+                    self.notationcache[(system, api_param)] = value, time.time()
                     return value
-#                    return row['das_name']
-        self.notationcache[(system, api_param)] = api_param
+        self.notationcache[(system, api_param)] = api_param, time.time()
         return api_param
 
     def api2daskey(self, system, api):
