@@ -5,12 +5,13 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.12 2010/01/05 19:35:06 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: utils.py,v 1.13 2010/01/06 21:16:52 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import types
+import time
 import httplib
 import urllib
 import urllib2
@@ -111,7 +112,7 @@ def json2html(idict, pad="", short=False):
             if  type(val) is types.ListType:
                 value = '['
                 counter = 0
-                lpad = ' '*len(' "das_id": [ ')
+                lpad = ' '*len(' "das_id": [')
                 for item in val:
                     value += """<a href="/das/records/%s">%s</a>, """ \
                         % (item, item)
@@ -168,3 +169,10 @@ def json2html(idict, pad="", short=False):
             sss += ""
     sss += newline + pad + '}'
     return sss
+
+def web_time():
+    """
+    Return time in format record in Cherrypy log.
+    """
+    # 2010-01-04 10:40:53,850
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time()))
