@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.28 2010/02/10 19:01:04 valya Exp $"
-__version__ = "$Revision: 1.28 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.29 2010/02/16 18:37:37 valya Exp $"
+__version__ = "$Revision: 1.29 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -425,4 +425,4 @@ class DASMapping(object):
             data = row['presentation']
             if  data.has_key(daskey):
                 return data[daskey]
-        return daskey
+        return [daskey]
