@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.34 2010/01/06 21:18:12 valya Exp $"
-__version__ = "$Revision: 1.34 $"
+__revision__ = "$Id: DASSearch.py,v 1.35 2010/01/07 21:29:02 valya Exp $"
+__version__ = "$Revision: 1.35 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -17,6 +17,8 @@ import types
 import urllib
 import cherrypy
 import traceback
+
+import yaml
 
 from itertools import groupby
 from cherrypy import expose
@@ -145,9 +147,15 @@ class DASSearch(TemplatedPage):
         Return DAS mapping record about provided API.
         """
         record = self.dasmgr.mapping.api_info(name)
-        jsoncode = {'jsoncode': json2html(record, "")}
-        page  = "<b>DAS mapping record</b>"
-        page += self.templatepage('das_json', **jsoncode)
+        show   = kwargs.get('show', 'json')
+        page   = "<b>DAS mapping record</b>"
+        if  show == 'json':
+            jsoncode = {'jsoncode': json2html(record, "")}
+            page += self.templatepage('das_json', **jsoncode)
+        else:
+            code  = yaml.dump(record, width=100, indent=4, 
+                        default_flow_style=False)
+            page += self.templatepage('das_code', code=code)
         return self.page(page, response_div=False)
 
     @expose
@@ -238,69 +246,83 @@ class DASSearch(TemplatedPage):
         """
         Retieve all records id's.
         """
-        recordid = None
-        format = ''
-        if  args:
-            recordid = args[0]
-            spec = {'_id':recordid}
-            fields = None
-            query = dict(fields=fields, spec=spec)
-            if  len(args) == 2:
-                format = args[1]
-        elif  kwargs and kwargs.has_key('_id'):
-            spec = {'_id': kwargs['_id']}
-            fields = None
-            query = dict(fields=fields, spec=spec)
-        else: # return all ids
-            query = dict(fields=None, spec={})
+        try:
+            recordid = None
+            format = ''
+            if  args:
+                recordid = args[0]
+                spec = {'_id':recordid}
+                fields = None
+                query = dict(fields=fields, spec=spec)
+                if  len(args) == 2:
+                    format = args[1]
+            elif  kwargs and kwargs.has_key('_id'):
+                spec = {'_id': kwargs['_id']}
+                fields = None
+                query = dict(fields=fields, spec=spec)
+            else: # return all ids
+                query = dict(fields=None, spec={})
 
-        nresults = self.nresults(query)
-        time0    = time.time()
-        url      = self.cachesrv
-        idx      = getarg(kwargs, 'idx', 0)
-        limit    = getarg(kwargs, 'limit', 10)
-        params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit}
-        path     = '/rest/request'
-        headers  = {"Accept": "application/json"}
-        data     = json.loads(
-        urllib2_request('GET', url+path, params, headers=headers))
-        if  type(data) is types.StringType:
-            result = json.loads(data)
-        else:
-            result = data
-        res = ""
-        if  result['status'] == 'success':
-            if  recordid: # we got id
-                for row in result['data']:
-                    jsoncode = {'jsoncode': json2html(row, "")}
-                    res += self.templatepage('das_json', **jsoncode)
+            nresults = self.nresults(query)
+            time0    = time.time()
+            url      = self.cachesrv
+            idx      = getarg(kwargs, 'idx', 0)
+            limit    = getarg(kwargs, 'limit', 10)
+            show     = getarg(kwargs, 'show', 'json')
+            params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit}
+            path     = '/rest/request'
+            headers  = {"Accept": "application/json"}
+            data     = json.loads(
+            urllib2_request('GET', url+path, params, headers=headers))
+            if  type(data) is types.StringType:
+                result = json.loads(data)
             else:
-                for row in result['data']:
-                    rid  = row['_id']
-                    del row['_id']
-                    record = dict(id=rid, daskeys=', '.join(row))
-                    res += self.templatepage('das_record', **record)
-        else:
-            res = result['status']
-        if  recordid:
-            if  format:
-                if  format == 'xml':
-                    return self.wrap2dasxml(result['data'])
-                elif  format == 'json':
-                    return self.wrap2dasjson(result['data'])
+                result = data
+            res = ""
+            if  result['status'] == 'success':
+                if  recordid: # we got id
+                    for row in result['data']:
+                        if  show == 'json':
+                            jsoncode = {'jsoncode': json2html(row, "")}
+                            res += self.templatepage('das_json', **jsoncode)
+                        else:
+                            code = yaml.dump(row, width=100, indent=4, 
+                                        default_flow_style=False)
+                            res += self.templatepage('das_code', code=code)
                 else:
-                    return self.error('Unsupported data format %s' % format)
-            page  = res
-        else:
-            url   = '/das/records?'
-            idict = dict(nrows=nresults, idx=idx, 
-                        limit=limit, results=res, url=url)
-            page  = self.templatepage('das_pagination', **idict)
+                    for row in result['data']:
+                        rid  = row['_id']
+                        del row['_id']
+                        record = dict(id=rid, daskeys=', '.join(row))
+                        res += self.templatepage('das_record', **record)
+            else:
+                res = result['status']
+            if  recordid:
+                if  format:
+                    if  format == 'xml':
+                        return self.wrap2dasxml(result['data'])
+                    elif  format == 'json':
+                        return self.wrap2dasjson(result['data'])
+                    else:
+                        return self.error('Unsupported data format %s' % format)
+                page  = res
+            else:
+                url   = '/das/records?'
+                idict = dict(nrows=nresults, idx=idx, 
+                            limit=limit, results=res, url=url)
+                page  = self.templatepage('das_pagination', **idict)
 
-        form    = self.form(uinput="")
-        ctime   = (time.time()-time0)
-        page = self.page(form + page, ctime=ctime)
-        return page
+            form    = self.form(uinput="")
+            ctime   = (time.time()-time0)
+            page = self.page(form + page, ctime=ctime)
+            return page
+        except:
+            self.daslogger.error(traceback.format_exc())
+            error  = "args: %s\nkwargs: %s\n" % (args, kwargs)
+            error += "Exception type: %s\nException value: %s\nTime: %s" \
+                        % (sys.exc_type, sys.exc_value, web_time())
+            error = error.replace("<", "").replace(">", "")
+            return self.error(error)
 
     def nresults(self, kwargs):
         """
@@ -410,6 +432,7 @@ class DASSearch(TemplatedPage):
         ajaxreq = getarg(kwargs, 'ajax', 0)
         uinput  = getarg(kwargs, 'input', '')
         limit   = getarg(kwargs, 'limit', 10)
+        show    = getarg(kwargs, 'show', 'json')
         form    = self.form(uinput=uinput)
         total   = self.nresults(kwargs)
         if  not total:
@@ -441,10 +464,17 @@ class DASSearch(TemplatedPage):
             for uikey, value in [k for k, g in groupby(gen)]:
                 page += "<b>%s</b>: %s, " % (uikey, value)
             pad   = ""
-            jsoncode = {'jsoncode': json2html(row, pad)}
-            jsonhtml = self.templatepage('das_json', **jsoncode)
-            jsondict = dict(data=jsonhtml, id=id)
-            page += self.templatepage('das_row', **jsondict)
+            if  show == 'json':
+                jsoncode = {'jsoncode': json2html(row, pad)}
+                jsonhtml = self.templatepage('das_json', **jsoncode)
+                jsondict = dict(data=jsonhtml, id=id)
+                page += self.templatepage('das_row', **jsondict)
+            else:
+                code  = yaml.dump(row, width=100, indent=4, 
+                                default_flow_style=False)
+                data  = self.templatepage('das_code', code=code)
+                datadict = {'data':data, 'id':id}
+                page += self.templatepage('das_row', **datadict)
             page += '</div>'
         ctime   = (time.time()-time0)
         return self.page(form + page, ctime=ctime)
