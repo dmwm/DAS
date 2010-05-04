@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.43 2009/11/24 15:58:56 valya Exp $"
-__version__ = "$Revision: 1.43 $"
+__revision__ = "$Id: utils.py,v 1.44 2009/11/25 18:17:05 valya Exp $"
+__version__ = "$Revision: 1.44 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -117,7 +117,10 @@ def merge_dict(dict1, dict2):
                     val.append(value)
                     merged_dict[key] = val
             else:
-                merged_dict[key] = [val] + [value]
+                if  type(value) is types.ListType:
+                    merged_dict[key] = [val] + value
+                else:
+                    merged_dict[key] = [val] + [value]
         else:
             merged_dict[key] = [value]
     return merged_dict
@@ -670,7 +673,7 @@ def access(data, elem):
                         for item in result:
                             yield item
 
-def xml_parser(source, tag, add=None):
+def xml_parser(notations, source, tag, add=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
     large XML documents we use iterparse method to walk through provided
@@ -695,18 +698,28 @@ def xml_parser(source, tag, add=None):
                     sup[add] = elem.attrib
         if  elem.tag != tag or event == 'end':
             continue
-        row[elem.tag] = dict(elem.attrib)
+        key = notations.get(elem.tag, elem.tag)
+        row[key] = dict(elem.attrib)
         row.update(sup)
         for child in elem.getchildren():
-            if  row[elem.tag].has_key(child.tag):
-                val = row[elem.tag][child.tag]
+            child_key  = notations.get(child.tag, child.tag)
+            # adjust child dictionary to DAS notations
+            child_dict = dict(child.attrib)
+            for kkk in child_dict.keys():
+                nkey = notations.get(kkk, kkk)
+                if  nkey != kkk:
+                    child_dict[nkey] = child_dict[kkk]
+                    del child_dict[kkk]
+
+            if  row[key].has_key(child_key):
+                val = row[key][child_key]
                 if  type(val) is types.ListType:
-                    val.append(dict(child.attrib))
-                    row[elem.tag][child.tag] = val
+                    val.append(child_dict)
+                    row[key][child_key] = val
                 else:
-                    row[elem.tag][child.tag] = [val] + [dict(child.attrib)]
+                    row[key][child_key] = [val] + [child_dict]
             else:
-                row[elem.tag][child.tag] = dict(child.attrib)
+                row[key][child_key] = child_dict
             child.clear()
         yield row
         elem.clear()
