@@ -24,43 +24,42 @@ in Python we use python YAML library. Here is an example of such configuration
 
     # SiteDB API mapping to DAS
     system : sitedb
-    url : "https://a.b.com/sitedb/api"
     format : JSON
     ---
-    api : 'CMSNametoAdmins'
+    urn : CMSNametoAdmins
+    url : "https://a.b.com/sitedb/api"
     expire : 3600 # optional DAS uses internal default value
     params : {'name':''}
-    record : {
-        'daskeys' : [{'key':'site', 'map':'site.name', 'pattern':''},
-                     {'key':'admin', 'map':'email', 'pattern':''}],
-        'api2das' : [
-                {'api_param':'name', 'das_key':'admin', 'pattern':""},
-        ]
-    }
+    daskeys : [
+        {'key':'site', 'map':'site.name', 'pattern':''},
+        {'key':'admin', 'map':'email', 'pattern':''}
+    ]
+    api2das : [
+            {'api_param':'name', 'das_key':'admin', 'pattern':""}
+    ]
     ---
     # next API
 
 The file provides:
 
 - system name
-- url of data-service
 - underlying data format used by this service for its meta-data
-- the list of apis, each api
+- the list of apis records, each record contains the following:
 
-  - contains a name
-  - its expiration timestamp (how long its data can live in DAS)
-  - set of parameters
-  - the record description, each record contains
-
-    - list of daskeys, where each key contains mapping within a record and
-      appropriate pattern
-    - list of API to DAS notations (if any); different API can yield
-      data in different notations, for instance, SSN and SocialSecurityNumber.
-      To accomodate this syntatic differences we use this mapping.
+  - urn name, DAS will use it as API name
+  - url of data-service
+  - expiration timestamp (how long its data can live in DAS)
+  - input parameters, provide a dictionary
+  - list of daskeys, where each key contains its name *key*, the
+    mapping within a DAS record, *map*, and appropriate pattern
+  - list of API to DAS notations (if any); different API can yield
+    data in different notations, for instance, SSN and SocialSecurityNumber.
+    To accomodate this syntatic differences we use this mapping.
 
 .. rubric:: Footnotes
 
-.. [#f1] This example demonstrates flexibility of YAML data-format and shows different representation styles.
+.. [#f1] This example demonstrates flexibility of YAML data-format 
+         and shows different representation styles.
 
 Add new service via API
 ----------------------- 
