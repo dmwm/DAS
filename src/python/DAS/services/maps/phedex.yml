@@ -1,57 +1,53 @@
 # PhEDEx API mapping to DAS
 system : phedex
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod"
 format : XML
 ---
-api : blockReplicas
+urn : blockReplicas
+url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
 expire : 3600
 params : {'se':'*', 'block':'*', 'node':'*'}
-record : {
-    'daskeys' : [{'key':'block', 'map':'block.name', 'pattern':''}],
-    'api2das' : [
-            {'api_param':'node', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
-            {'api_param':'node', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
-            {'api_param':'se', 'das_key':'site', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-            {'api_param':'se', 'das_key':'site.se', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-            {'api_param':'block', 'das_key':'block', 'pattern':""},
-    ]
-}
+daskeys : [{'key':'block', 'map':'block.name', 'pattern':''}]
+api2das : [
+        {'api_param':'node', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
+        {'api_param':'node', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
+        {'api_param':'se', 'das_key':'site', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+        {'api_param':'se', 'das_key':'site.se', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+        {'api_param':'block', 'das_key':'block', 'pattern':""},
+]
+
 ---
-api : fileReplicas
+urn : fileReplicas
+url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas"
 expire : 3600
 params : {'se':'*', 'block':'required', 'node':'*'}
-record : {
-    'daskeys' : [{'key':'file', 'map':'file.name', 'pattern':''}],
-    'api2das' : [
-            {'api_param':'node', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
-            {'api_param':'node', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
-            {'api_param':'se', 'das_key':'site', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-            {'api_param':'se', 'das_key':'site.se', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-    ]
-}
+daskeys : [{'key':'file', 'map':'file.name', 'pattern':''}]
+api2das : [
+        {'api_param':'node', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
+        {'api_param':'node', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
+        {'api_param':'se', 'das_key':'site', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+        {'api_param':'se', 'das_key':'site.se', 'pattern':"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+]
 ---
-api : nodes
+urn : nodes
+url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/nodes"
 expire : 3600
 params : {'node':'*', 'noempty':''}
-record : {
-    'daskeys' : [{'key':'site', 'map':'site.name', 'pattern':"re.compile('^T[0-3]_')"}],
-    'api2das' : [
-            {'api_param':'node', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
-            {'api_param':'node', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
-    ]
-}
+daskeys : [{'key':'site', 'map':'site.name', 'pattern':"re.compile('^T[0-3]_')"}]
+api2das : [
+        {'api_param':'node', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
+        {'api_param':'node', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
+]
 ---
-api : lfn2pfn
+urn : lfn2pfn
+url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/lfn2pfn"
 expire : 3600
 params : {'node':'required', 'lfn':'required', 'destination':'', 'protocol':'srmv2'}
-record : {
-    'daskeys' : [{'key':'pfn', 'map':'file.name', 'pattern':''}],
-    'api2das' : [
-            {'api_param':'node', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
-            {'api_param':'node', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
-            {'api_param':'lfn', 'das_key':'file', 'pattern':""},
-    ]
-}
+daskeys : [{'key':'pfn', 'map':'file.name', 'pattern':''}]
+api2das : [
+        {'api_param':'node', 'das_key':'site', 'pattern':"re.compile('^T[0-3]_')"},
+        {'api_param':'node', 'das_key':'site.name', 'pattern':"re.compile('^T[0-3]_')"},
+        {'api_param':'lfn', 'das_key':'file', 'pattern':""},
+]
 ---
 notations : [
     {'api_param':'time_create', 'das_name':'creation_time', 'api':''},
