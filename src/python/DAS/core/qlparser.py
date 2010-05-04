@@ -4,8 +4,8 @@
 """
 Query parser for DAS
 """
-__revision__ = "$Id: qlparser.py,v 1.2 2009/03/31 15:41:33 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: qlparser.py,v 1.3 2009/04/30 20:45:14 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 def antrlparser(uinput):
@@ -123,6 +123,8 @@ def findbracketobj(uinput):
     """
     Find out bracket object, e.g. ((test or test) or test)
     """
+    if  uinput.find('count(') != -1 or uinput.find('sum(') != -1:
+        return
     left = uinput.find('(')
     robj = ''
     if  left != -1:
