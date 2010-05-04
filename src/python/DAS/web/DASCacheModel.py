@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.34 2010/03/05 18:05:13 valya Exp $"
-__version__ = "$Revision: 1.34 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.35 2010/03/09 02:33:21 valya Exp $"
+__version__ = "$Revision: 1.35 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -215,6 +215,7 @@ class DASCacheModel(DASWebManager):
             data['status'] = 'fail'
             data['reason'] = 'no query is provided'
             return data
+        # input query in JSON format, we should decode it using json.
         query = json.loads(kwargs.get('query'))
         coll  = kwargs.get('collection', 'merge')
         idx   = getarg(kwargs, 'idx', 0)
@@ -253,7 +254,7 @@ class DASCacheModel(DASWebManager):
         if  kwargs.has_key('query'):
             query  = kwargs['query']
             self.logdb(query)
-            query  = self.dascore.mongoparser.requestquery(query)
+            query  = self.dascore.mongoparser.parse(query)
             status = self.dascore.get_status(query)
             if  not status:
                 status = 'no data' 
@@ -273,7 +274,7 @@ class DASCacheModel(DASWebManager):
         if  kwargs.has_key('query'):
             query = kwargs['query']
             self.logdb(query)
-            query = self.dascore.mongoparser.requestquery(query)
+            query = self.dascore.mongoparser.parse(query)
             data.update({'status':'success'})
             res = self.dascore.in_raw_cache_nresults(query)
             data.update({'status':'success', 'nresults':res})
@@ -292,7 +293,7 @@ class DASCacheModel(DASWebManager):
         if  kwargs.has_key('query'):
             query = kwargs['query']
             self.logdb(query)
-            query = self.dascore.mongoparser.requestquery(query)
+            query = self.dascore.mongoparser.parse(query)
             idx   = getarg(kwargs, 'idx', 0)
             limit = getarg(kwargs, 'limit', 0)
             skey  = getarg(kwargs, 'skey', '')
@@ -333,7 +334,7 @@ class DASCacheModel(DASWebManager):
         if  kwargs.has_key('query'):
             query  = kwargs['query']
             self.logdb(query)
-            query  = self.dascore.mongoparser.requestquery(query)
+            query  = self.dascore.mongoparser.parse(query)
             expire = getarg(kwargs, 'expire', 600)
             try:
                 status = self.cachemgr.add(query, expire)
@@ -358,7 +359,7 @@ class DASCacheModel(DASWebManager):
         if  kwargs.has_key('query'):
             query = kwargs['query']
             self.logdb(query)
-            query = self.dascore.mongoparser.requestquery(query)
+            query = self.dascore.mongoparser.parse(query)
             try:
                 self.dascore.remove_from_cache(query)
             except:
@@ -387,7 +388,7 @@ class DASCacheModel(DASWebManager):
         if  kwargs.has_key('query'):
             query = kwargs['query']
             self.logdb(query)
-            query = self.dascore.mongoparser.requestquery(query)
+            query = self.dascore.mongoparser.parse(query)
             data.update({'status':'requested', 'query':query})
             try:
                 self.dascore.remove_from_cache(query)
