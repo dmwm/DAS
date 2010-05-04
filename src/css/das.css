@@ -132,11 +132,20 @@ div#banner h3
 /*
  * Colorized output
  */
+.gray {
+    background-color: #F7F7F7;
+    padding-left: 10px;
+    padding-right: 10px;
+}
 .blue {
-    background-color: #EEF2FF;
+    background-color: #EFF1FF;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 .white {
     background-color: #FFF;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 .box {
     color: #0000FF;
