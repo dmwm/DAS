@@ -4,8 +4,8 @@
 """
 Data-provider map reader. Service maps are represented in YAML format.
 """
-__revision__ = "$Id: map_reader.py,v 1.5 2010/02/08 15:13:18 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: map_reader.py,v 1.6 2010/02/10 18:53:14 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import yaml
@@ -32,8 +32,9 @@ def read_service_map(filename, field="uri"):
                 params = metric['params']
                 urn    = metric['urn']
                 expire = metric.get('expire', 600) # default 10 minutes
+                apitag = metric.get('apitag', None)
                 record = dict(url=url, system=system, expire=expire,
-                                urn=urn, params=params,
+                                urn=urn, params=params, apitag=apitag,
                                 format=format, created=time.time())
                 if  metric.has_key('api2das'):
                     record['api2das'] = metric['api2das']
