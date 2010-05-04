@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.7 2009/04/29 15:50:51 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: abstract_service.py,v 1.8 2009/04/30 20:49:53 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -132,6 +132,15 @@ class DASAbstractService(object):
             return res
 
         skeys = [key for key in collect_list if self.keys().count(key)]
+        # add exception for DBS for aggregated functions
+        if  self.name == 'dbs':
+            for key in collect_list:
+                for agg in ['count', 'sum']:
+                    if  key.find('%s(' % agg) != -1:
+                        kkk = key.replace('%s(' % agg, '').replace(')', '')
+                        if  self.keys().count(kkk):
+                            skeys += [key]
+
         split = query.split(' where ')
         if  len(split) == 1:
             cond = ""
