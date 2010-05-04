@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.14 2009/12/21 16:09:58 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_webconfig.py,v 1.15 2010/01/20 21:56:52 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -19,6 +19,17 @@ from WMCore.Configuration import Configuration
 from os import environ
 
 config = Configuration()
+
+# This is the Security config the application will use
+config.component_('SecurityModule')
+config.SecurityModule.enabled = True
+config.SecurityModule.oid_server = 'http://localhost:8400/'
+config.SecurityModule.mount_point = 'das/auth'
+config.SecurityModule.handler = 'WMCore.WebTools.OidDefaultHandler'
+config.SecurityModule.session_name = 'SecurityModule'
+config.SecurityModule.store = 'filestore'
+#config.SecurityModule.store_path = environ['WMCORE_ROOT'] + '/src/security-store'
+config.SecurityModule.store_path = '/tmp'
 
 # This component has all the configuration of CherryPy
 config.component_('Webtools')

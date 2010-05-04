@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.37 2010/01/15 17:20:54 valya Exp $"
-__version__ = "$Revision: 1.37 $"
+__revision__ = "$Id: DASSearch.py,v 1.38 2010/01/20 21:56:52 valya Exp $"
+__version__ = "$Revision: 1.38 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -22,7 +22,7 @@ import yaml
 from pprint import pformat
 
 from itertools import groupby
-from cherrypy import expose
+from cherrypy import expose, tools
 from cherrypy.lib.static import serve_file
 
 # WMCore/WebTools modules
@@ -648,3 +648,11 @@ class DASSearch(TemplatedPage):
         page = ajax_response(page)
         return page
 
+    @expose
+    @tools.cernoid()
+    def secure(self, *args, **kwargs):
+        return "TEST secure page"
+
+    @expose
+    def auth(self, *args, **kwargs):
+        return "auth page"
