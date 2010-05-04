@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.46 2009/11/26 02:00:12 valya Exp $"
-__version__ = "$Revision: 1.46 $"
+__revision__ = "$Id: utils.py,v 1.47 2009/11/27 19:16:43 valya Exp $"
+__version__ = "$Revision: 1.47 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -696,6 +696,7 @@ def dict_helper(notations, idict):
         child_dict[notations.get(kkk, kkk)] = vvv
     return child_dict
 
+#def xml_parser(source, tag, add=None):
 def xml_parser(notations, source, tag, add=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
@@ -720,20 +721,18 @@ def xml_parser(notations, source, tag, add=None):
                 if  elem.tag == add:
                     sup[add] = elem.attrib
         if  elem.tag != tag or event == 'end':
+            elem.clear()
             continue
         key = notations.get(elem.tag, elem.tag)
-#        row[key] = dict(elem.attrib)
         row[key] = dict_helper(notations, elem.attrib)
+#        key = elem.tag
+#        row[key] = dict(elem.attrib)
         row.update(sup)
         for child in elem.getchildren():
             child_key  = notations.get(child.tag, child.tag)
             child_dict = dict_helper(notations, child.attrib)
+#            child_key  = child.tag
 #            child_dict = dict(child.attrib)
-#            for kkk in child_dict.keys():
-#                nkey = notations.get(kkk, kkk)
-#                if  nkey != kkk:
-#                    child_dict[nkey] = child_dict[kkk]
-#                    del child_dict[kkk]
 
             if  row[key].has_key(child_key):
                 val = row[key][child_key]
@@ -745,8 +744,8 @@ def xml_parser(notations, source, tag, add=None):
             else:
                 row[key][child_key] = child_dict
             child.clear()
-        yield row
         elem.clear()
+        yield row
     root.clear()
     source.close()
 

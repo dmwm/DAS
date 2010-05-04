@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.16 2009/11/25 18:22:38 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: phedex_service.py,v 1.17 2009/11/27 19:17:27 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -21,6 +21,14 @@ class PhedexService(DASAbstractService):
         DASAbstractService.__init__(self, 'phedex', config)
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
+        self.notationmap = self.notations()
+
+    def get_notations(self, api):
+        """Return notations used for given API"""
+        notations = dict(self.notationmap[''])
+        if  self.notationmap.has_key(api):
+            notations.update(self.notationmap[api])
+        return notations
 
     def clean_params(self, api, params):
         """
@@ -42,10 +50,7 @@ class PhedexService(DASAbstractService):
         """
         Phedex data-service parser.
         """
-        notationmap = self.notations()
-        notations = notationmap[''] # use api='', i.e. notations valid for all APIs
-        if  notationmap.has_key(api):
-            notations.update(notationmap[api])
+        notations = self.get_notations(api)
         add = None
         if  api == 'blockReplicas':
             tag = 'block'

@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.51 2009/11/25 18:18:26 valya Exp $"
-__version__ = "$Revision: 1.51 $"
+__revision__ = "$Id: abstract_service.py,v 1.52 2009/11/27 19:16:43 valya Exp $"
+__version__ = "$Revision: 1.52 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,7 +17,7 @@ import traceback
 import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
-#from DAS.utils.utils import row2das
+from DAS.utils.utils import row2das
 
 class DASAbstractService(object):
     """
@@ -174,13 +174,13 @@ class DASAbstractService(object):
         """
         pass
 
-#    def data2das(self, gen, api):
-#        """
-#        Convert keys in resulted rows into DAS notations.
-#        """
-#        for row in gen:
-#            row2das(self.dasmapping.notation2das, self.name, api, row)
-#            yield row
+    def data2das(self, gen, api):
+        """
+        Convert keys in resulted rows into DAS notations.
+        """
+        for row in gen:
+            row2das(self.dasmapping.notation2das, self.name, api, row)
+            yield row
 
     def lookup_keys(self, api):
         """
