@@ -7,8 +7,8 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.1 2009/09/09 20:59:38 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.2 2009/09/10 19:21:20 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -36,6 +36,21 @@ class System(Base):
     def __repr__(self):
         """String representation of System ORM object"""
         return "<System('%s')>" % self.name
+
+class Query(Base):
+    """Query ORM"""
+    __tablename__ = 'queries'
+    __table_args__ = {'mysql_engine':'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    query = Column(String(10), nullable=False, unique=True)
+
+    def __init__(self, query):
+        self.query = query
+
+    def __repr__(self):
+        """String representation of Query ORM object"""
+        return "<Query('%s')>" % self.query
 
 class Api(Base):
     """Api ORM"""
@@ -89,11 +104,13 @@ class ApiCounter(Base):
     system_id   = Column(Integer, ForeignKey('systems.id'))
     api_id      = Column(Integer, ForeignKey('apis.id'))
     param_id    = Column(Integer, ForeignKey('apiparams.id'))
+    query_id    = Column(Integer, ForeignKey('queries.id'))
     counter     = Column(Integer, nullable=False)
 
     system      = relation(System, order_by=System.id)
     api         = relation(Api, order_by=Api.id)
     param       = relation(ApiParam, order_by=ApiParam.id)
+    query       = relation(Query, order_by=Query.id)
 
     def __init__(self):
         self.counter = 1
@@ -132,9 +149,10 @@ class DASAnalytics(object):
         metadata = MetaData()
         Base.metadata.create_all(self.engine)
 
-    def add_api(self, system, api, args):
+    def add_api(self, query, system, api, args):
         """
-        Add API into analytics DB. Here args is a dict of API parameters.
+        Add API info to analytics DB. 
+        Here args is a dict of API parameters.
         """
         session = self.session()
         try:
@@ -145,6 +163,12 @@ class DASAnalytics(object):
                 aobj = Api(api)
                 aobj.system = sobj
                 session.add(aobj)
+                session.commit()
+            try:
+                qobj = session.query(Query).filter(Query.query==query).one()
+            except:
+                qobj = Query(query)
+                session.add(qobj)
                 session.commit()
             # add API arguments
             for key, val in args.items():
@@ -168,6 +192,7 @@ class DASAnalytics(object):
                     filter(ApiCounter.system_id==System.id).\
                     filter(ApiCounter.api_id==Api.id).\
                     filter(ApiCounter.param_id==pobj.id).\
+                    filter(ApiCounter.query_id==qobj.id).\
                     filter(ApiParam.param==key).\
                     filter(ApiParam.value==val).\
                     one()
@@ -176,8 +201,9 @@ class DASAnalytics(object):
                 except:
                     cobj = ApiCounter()
                     cobj.system = sobj
-                    cobj.api = aobj
-                    cobj.param = pobj
+                    cobj.api    = aobj
+                    cobj.param  = pobj
+                    cobj.query  = qobj
                 session.add(cobj)
                 session.commit()
             session.commit()
@@ -233,7 +259,7 @@ class DASAnalytics(object):
 
     def list_systems(self):
         """
-        List all DAS keys from analytics DB
+        List all DAS systems.
         """
         session = self.session()
         try:
@@ -244,9 +270,22 @@ class DASAnalytics(object):
             return []
         return [obj.name for obj in res]
 
+    def list_queries(self, system=None, api=None):
+        """
+        List all queries.
+        """
+        session = self.session()
+        try:
+            res = session.query(Query)
+            session.commit()
+        except: 
+            session.rollback()
+            return []
+        return [obj.query for obj in res]
+
     def list_apis(self, system):
         """
-        List all APIs from analytics DB
+        List all APIs.
         """
         session = self.session()
         try:
