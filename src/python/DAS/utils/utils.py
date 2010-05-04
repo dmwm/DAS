@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.42 2009/11/20 15:44:48 valya Exp $"
-__version__ = "$Revision: 1.42 $"
+__revision__ = "$Id: utils.py,v 1.43 2009/11/24 15:58:56 valya Exp $"
+__version__ = "$Revision: 1.43 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -713,17 +713,17 @@ def xml_parser(source, tag, add=None):
     root.clear()
     source.close()
 
-def json_parser(data):
+def json_parser(source):
     """
-    JSON parser based on json module. It accepts either data
+    JSON parser based on json module. It accepts either source
     descriptor with .read()-supported file-like object or
     data as a string object.
     """
-    if  type(obj) is types.InstanceType: # got data descriptor
-        jsondict = json.load(data)
+    if  type(source) is types.InstanceType: # got data descriptor
+        jsondict = json.load(source)
         data.close()
     else:
-        data = obj
+        data = source
         # to prevent unicode/ascii errors like
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
         if  type(data) is types.StringType:
