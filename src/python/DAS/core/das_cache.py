@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.9 2009/05/27 20:28:03 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_cache.py,v 1.10 2009/05/28 18:59:10 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -49,7 +49,7 @@ class DASCache(Cache):
             if  res:
                 return res
 
-    def get_from_cache(self, query, idx=0, limit=None):
+    def get_from_cache(self, query, idx=0, limit=0):
         """
         Retreieve results from cache, otherwise return null.
         """
@@ -122,11 +122,10 @@ class DASCacheMgr(object):
         logdir      = getarg(config, 'logdir', '/tmp')
         sleep       = getarg(config, 'sleep', 2)
         verbose     = getarg(config, 'verbose', None)
-        debug       = getarg(config, 'debug', None)
         self.queue  = [] # keep track of waiting queries, (query, expire)
         self.sleep  = sleep # in sec. to sleep at each iteration of worker
         self.logger = DASLogger(idir=logdir, name='DASCacheMgr', 
-                verbose=verbose, stdout=debug)
+                verbose=verbose)
 
     def add(self, query, expire):
         """Add new query to the queue"""
@@ -142,14 +141,19 @@ class DASCacheMgr(object):
         time.sleep(5) # sleep to allow main thread with DAS core take off
         msg = "start DASCacheMgr::worker with %s" % func
         self.logger.info(msg)
-#        print msg
-        nprocs = 2*processing.cpuCount()
-        pool   = processing.Pool(nprocs)
+        nprocs  = 2*processing.cpuCount()
+        pool    = processing.Pool(nprocs)
+        orphans = {} # map of orphans requests
+        def update(orphans, item):
+            """Update orphans dict"""
+            if  orphans.has_key(item):
+                orphans[item] = orphans[item] + 1
+            else:
+                orphans[item] = 1
         while True: 
             to_remove = {}
             msg = "waiting queue %s" % self.queue
             self.logger.debug(msg)
-#            print msg
             for item in self.queue:
                 try:
                     result = pool.apply_async(func, (item, ))
@@ -158,11 +162,11 @@ class DASCacheMgr(object):
                         break
                 except:
                     traceback.print_exc()
+                    update(orphans, item)
                     break
-                time.sleep(1) # separate processes
+                time.sleep(self.sleep) # separate processes
             msg = "will remove %s" % to_remove
             self.logger.debug(msg)
-#            print msg
             time.sleep(self.sleep)
             for key in to_remove.keys():
                 proc = to_remove[key]
@@ -170,6 +174,13 @@ class DASCacheMgr(object):
                     status = proc.get()
                     if  status:
                         self.queue.remove(key)
+                    else:
+                        update(orphans, item)
+                # check if we have this request in orphans maps
+                # if number of retries more then 2, discard request
+                if  orphans.has_key(key) and orphans[key] > 2:
+                    del orphans[key]
+                    self.queue.remove(key)
 
     def worker_v1(self, func):
         time.sleep(5) # sleep to allow main thread with DAS core take off

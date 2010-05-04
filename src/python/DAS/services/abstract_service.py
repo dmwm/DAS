@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.17 2009/05/27 20:28:03 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: abstract_service.py,v 1.18 2009/05/28 18:59:11 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -37,7 +37,6 @@ class DASAbstractService(object):
             self.verbose  = int(sdict['verbose'])
             self.expire   = int(sdict['expire'])
             self.url      = sdict['url']
-            self.mode     = config['mode']
             self.logger   = config['logger']
         except:
             traceback.print_exc()
@@ -71,7 +70,8 @@ class DASAbstractService(object):
         Invoke URL call and retrieve data from data-service.
         User provides a set of parameters passed to data-service URL.
         """
-        msg = 'DAS::%s getdata(%s, %s)' % (self.name, url, params)
+        msg = 'DASAbstractService::%s getdata(%s, %s)' \
+                % (self.name, url, params)
         self.logger.info(msg)
         # call couch cache to get results from it,
         # otherwise call data service as shown below.
@@ -89,7 +89,8 @@ class DASAbstractService(object):
         if  type(results) is types.StringType:
             results = unicode(results, errors='ignore')
 
-        self.logger.debug('DAS::%s results=%s' % (self.name, results))
+        self.logger.debug('DASAbstractService::%s results=%s' \
+                % (self.name, results))
 
         # store to couch 'raw' data coming out of concrete data service
         # will add 'query' and 'timestamp' for every row in results
@@ -104,8 +105,10 @@ class DASAbstractService(object):
         Data service api method, can be defined by data-service class.
         return a list of results with selected keys.
         """
-        self.logger.info('DAS::%s api(%s)' % (self.name, query))
-        msg = 'DAS::%s api uses cond_dict\n%s' % (self.name, str(cond_dict))
+        self.logger.info('DASAbstractService::%s api(%s)' \
+                % (self.name, query))
+        msg = 'DASAbstractService::%s api uses cond_dict\n%s' \
+                % (self.name, str(cond_dict))
         self.logger.debug(msg)
         results = self.worker(query, cond_dict)
         return results
@@ -136,7 +139,8 @@ class DASAbstractService(object):
         Invoke service API to execute given query.
         Return results as a collect list set.
         """
-        msg = 'DAS::%s call(%s, %s)' % (self.name, query, collect_list)
+        msg = 'DASAbstractService::%s call(%s, %s)' \
+                % (self.name, query, collect_list)
         self.logger.info(msg)
         # call couch cache to get results from it,
         # otherwise call data service as shown below.

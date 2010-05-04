@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.3 2009/05/22 21:04:40 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_couchcache.py,v 1.4 2009/05/28 18:59:10 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -187,10 +187,34 @@ function(k,v,r) {
         self.cdb = cdb
         return cdb
 
-    def get_from_cache(self, query, idx=0, limit=None):
+    def incache(self, query):
+        """
+        Check if query exists in cache
+        """
+        dbname = self.dbname
+        cdb = self.couchdb(dbname)
+        if  not cdb:
+            return
+        key  = genkey(query)
+        # TODO: check how to query 1 result, I copied the way from get_from_cache
+        skey = ["%s" % key, timestamp()]
+        options = {'startkey': skey}
+        results = cdb.loadview('dasviews', 'query', options)
+        try:
+            res = [row['value'] for row in results['rows']]
+        except:
+            traceback.print_exc()
+            return
+        if  res:
+            return True
+        return False
+
+    def get_from_cache(self, query, idx=0, limit=0):
         """
         Retreieve results from cache, otherwise return null.
         """
+        idx = int(idx)
+        limit = long(limit)
         dbname = self.dbname
         cdb = self.couchdb(dbname)
         if  not cdb:
@@ -242,6 +266,12 @@ function(k,v,r) {
             yield results
             cdb.queue(res)
         cdb.commit()
+
+    def remove_from_cache(self, query):
+        """
+        Delete query from cache
+        """
+        return
 
     def get_view(self, design, view, options={}):
         """

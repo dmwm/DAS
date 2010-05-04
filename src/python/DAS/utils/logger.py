@@ -6,8 +6,8 @@
 General purpose DAS logger class
 """
 
-__revision__ = "$Id: logger.py,v 1.2 2009/05/27 20:28:04 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: logger.py,v 1.3 2009/05/28 18:59:11 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -71,41 +71,37 @@ class DASLogger:
         Write given message to the logger at info logging level
         """
         self.logger.info(msg)
-        if  self.stdout:
-            print msg
-            print '### INFO ###', msg
+#        if  self.stdout:
+#            print '### INFO ###', msg
 
     def debug(self, msg):
         """
         Write given message to the logger at debug logging level
         """
         self.logger.debug(msg)
-        if  self.stdout and self.verbose > 1:
-            print msg
-            print '### DEBUG ###', msg
+#        if  self.stdout and self.verbose > 1:
+#            print '### DEBUG ###', msg
 
     def warning(self, msg):
         """
         Write given message to the logger at warning logging level
         """
         self.logger.warn(msg)
-        if  self.stdout:
-            print msg
-            print '### WARNING ###', msg
+#        if  self.stdout:
+#            print '### WARNING ###', msg
 
     def exception(self, msg):
         """
         Write given message to the logger at exception logging level
         """
         self.logger.error(msg)
-        if  self.stdout:
-            print msg
-            print '### EXCEPTION ###', msg
+#        if  self.stdout:
+#            print '### EXCEPTION ###', msg
 
     def critical(self, msg):
         """
         Write given message to the logger at critical logging level
         """
         self.logger.critical(msg)
-        if  self.stdout:
-            print '### CRITICAL ###', msg
+#        if  self.stdout:
+#            print '### CRITICAL ###', msg
