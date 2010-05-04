@@ -88,6 +88,22 @@ das2api : [
         {"das_key":"block.name", "api_param": "block_name", "pattern":""},
 ]
 ---
+urn: blocks2
+url : "http://localhost:8585/DBS/blocks/"
+expire : 3600
+params : {
+        'dataset':'*',
+}
+daskeys : [
+        {"key": "block", "map":"block.name", "pattern":""},
+        #{"key": "dataset", "map":"block.dataset.name", "pattern":""},
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"block.name", "api_param": "block_name", "pattern":""},
+]
+---
 urn: files
 url : "http://localhost:8585/DBS/files/"
 expire : 3600
@@ -96,11 +112,14 @@ params : {
 }
 daskeys : [
         {"key": "file", "map":"file.name", "pattern":""},
-        {"key": "dataset", "map":"file.dataset.name", "pattern":""},
+        #{"key": "dataset", "map":"file.dataset.name", "pattern":""},
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
 ]
 das2api : [
-        {"das_key":"file.dataset.name", "api_param":"dataset", "pattern":""},
-        {"das_key":"file.block.name", "api_param":"block_name", "pattern":""}
+        #{"das_key":"file.dataset.name", "api_param":"dataset", "pattern":""},
+        #{"das_key":"file.block.name", "api_param":"block_name", "pattern":""}
+        {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+        {"das_key":"block.name", "api_param":"block_name", "pattern":""}
 ]
 ---
 urn: files2
@@ -111,11 +130,12 @@ params : {
 }
 daskeys : [
         {"key": "file", "map":"file.name", "pattern":""},
-        {"key": "block", "map":"file.block.name", "pattern":""},
+        #{"key": "block", "map":"file.block.name", "pattern":""},
+        {"key": "block", "map":"block.name", "pattern":""},
 ]
 das2api : [
-        {"das_key":"file.dataset", "api_param":"dataset", "pattern":""},
-        {"das_key":"file.block.name", "api_param":"block_name", "pattern":""}
+        #{"das_key":"file.block.name", "api_param":"block_name", "pattern":""}
+        {"das_key":"block.name", "api_param":"block_name", "pattern":""}
 ]
 ---
 urn: fileparents
