@@ -5,12 +5,14 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.16 2009/07/08 13:40:54 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: das_config.py,v 1.17 2009/07/09 19:48:18 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import ConfigParser
+
+ACTIVE_SYSTEMS='dbs,sitedb,phedex,monitor,lumidb,runsum,dq,dashboard'
 
 def das_configfile():
     """
@@ -54,8 +56,7 @@ def das_readconfig(dasconfig=None):
     configdict['hotcache'] = config.get('das', 'hotcache', None)
     configdict['logdir'] = config.get('das', 'logdir', '/tmp')
 
-    systems = config.get('das', 'systems', 
-              'dbs,sitedb,phedex,monitor,lumidb,runsum,dq').split(',')
+    systems = config.get('das', 'systems', ACTIVE_SYSTEMS).split(',') 
     verbose = config.getint('das', 'verbose')
     configdict['systems'] = systems
     configdict['verbose'] = verbose
@@ -80,7 +81,7 @@ def das_writeconfig():
 
     config = ConfigParser.ConfigParser()
 
-    systems = 'dbs,sitedb,phedex,monitor,lumidb,runsum,dq'
+    systems = ACTIVE_SYSTEMS
     config.add_section('das')
     config.set('das', 'systems', '%s' % systems)
     config.set('das', 'verbose', 0)
@@ -145,6 +146,12 @@ def das_writeconfig():
     config.set('dq', 'verbose', 0)
     config.set('dq', 'url', 
     'http://cmssrv49.fnal.gov:8989/DQSrvcTEST/DQSrvcServlet')
+
+    config.add_section('dashboard')
+    config.set('dashboard', 'expire', 1*60*60) # 1 hour
+    config.set('dashboard', 'verbose', 0)
+    config.set('dashboard', 'url', 
+    'http://dashb-cms-job.cern.ch/dashboard/request.py')
 
     maps = {'dbs,sitedb':'site', 'dbs,phedex':'block,site', 
             'phedex,sitedb':'site', 

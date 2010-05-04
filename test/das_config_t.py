@@ -27,7 +27,8 @@ class testDASConfig(unittest.TestCase):
         readdict = das_readconfig()
         result   = readdict['systems']
         result.sort()
-        expect   = ['dbs', 'dq', 'phedex', 'sitedb', 'monitor', 'lumidb', 'runsum']
+        expect   = ['dbs', 'dq', 'phedex', 'sitedb', 'monitor', 
+                        'lumidb', 'runsum', 'dashboard']
         expect.sort()
         self.assertEqual(expect, result)
 #
