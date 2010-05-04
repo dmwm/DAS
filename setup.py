@@ -11,9 +11,7 @@ from distutils.command.build_ext import build_ext
 from distutils.errors import CCompilerError
 from distutils.errors import DistutilsPlatformError, DistutilsExecError
 from distutils.core import Extension
-
-readme = "DAS stands for Data Aggregation Service"
-version = "1.1.1" # need to define it somehow
+from distutils.command.install import INSTALL_SCHEMES
 
 requirements = []
 try:
@@ -27,6 +25,8 @@ try:
     import pymongo
 except ImportError:
     requirements.append("pymongo")
+
+required_python_version = '2.6'
 
 if sys.platform == 'win32' and sys.version_info > (2, 6):
    # 2.6's distutils.msvc9compiler can raise an IOError when failing to
@@ -82,35 +82,81 @@ if "--no_ext" in sys.argv:
 else:
     features = {"c-ext": c_ext}
 
-setup(
-    name="DAS",
-    version=version,
-    description="CMS Data Aggregation Service <https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService>",
-    long_description=readme,
-    author="Valentin Kuznetsov",
-    author_email="vkuznet@gmail.com",
-    url="https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService",
-    keywords=["CMS", "DAS", "WM"],
-    package_dir = {'DAS': 'src/python/DAS', 
-                   'core': 'src/python/DAS/core',
-                   'extensions': 'src/python/DAS/extensions',
-                   'services': 'src/python/DAS/services',
-                   'tools': 'src/python/DAS/tools',
-                   'utils': 'src/python/DAS/utils',
-                   'web': 'src/python/DAS/web'},
-    packages = find_packages('src/python/DAS'),
-    install_requires=requirements,
-    features=features,
-    license="CMS experiment software",
-#    test_suite="nose.collector",
-    classifiers=[
-        "Development Status :: 3 - Production/Beta",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: CMS/CERN Software License",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: POSIX",
-        "Programming Language :: Python",
-        "Topic :: Database"],
-    cmdclass={"build_ext": custom_build_ext}
-)
+
+version      = "1.0.0" # need to define it somehow
+name         = "DAS"
+description  = "CMS Data Aggregation System"
+readme       ="""
+DAS stands for Data Aggregation System
+<https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService>
+"""
+author       = "Valentin Kuznetsov",
+author_email = "vkuznet@gmail.com",
+scriptfiles  = filter(os.path.isfile, ['etc/das.cfg'])
+url          = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService",
+keywords     = ["DAS", "Aggregation", "Meta-data"]
+package_dir  = {'DAS': 'src/python/DAS', 
+               'core': 'src/python/DAS/core',
+               'extensions': 'src/python/DAS/extensions',
+               'services': 'src/python/DAS/services',
+               'tools': 'src/python/DAS/tools',
+               'utils': 'src/python/DAS/utils',
+               'web': 'src/python/DAS/web'}
+package_data = {
+    'src': ['python/DAS/services/maps/*.yml'],
+}
+#data_files   = [
+#    ('src/js', ['src/js/ajax_utils.js', 'src/js/prototype.js', 'src/js/utils.js']),
+#    ('css', ['src/css/*.css']),
+#    ('templates', ['src/templates/*.tmpl']),
+#]
+packages     = find_packages('src/python/DAS') 
+packages    += ['src/css', 'src/js', 'src/templates', 'etc', 'bin', 'test', 'doc']
+license      = "CMS experiment software"
+classifiers  = [
+    "Development Status :: 3 - Production/Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: CMS/CERN Software License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Programming Language :: Python",
+    "Topic :: Database"
+]
+
+def main():
+    if sys.version < required_python_version:
+        s = "I'm sorry, but %s %s requires Python %s or later."
+        print s % (name, version, required_python_version)
+        sys.exit(1)
+
+    # set default location for "data_files" to
+    # platform specific "site-packages" location
+    for scheme in INSTALL_SCHEMES.values():
+        scheme['data'] = scheme['purelib']
+
+    dist = setup(
+        name                 = name,
+        version              = version,
+        description          = description,
+        long_description     = readme,
+        keywords             = keywords,
+        package_dir          = package_dir,
+        packages             = packages,
+        package_data         = package_data,
+#        data_files           = data_files,
+        include_package_data = True,
+        install_requires     = requirements,
+#        scripts              = scriptfiles,
+        features             = features,
+        classifiers          = classifiers,
+        cmdclass             = {"build_ext": custom_build_ext},
+        author               = author,
+        author_email         = author_email,
+        url                  = url,
+        license              = license,
+    )
+
+if __name__ == "__main__":
+    main()
+
