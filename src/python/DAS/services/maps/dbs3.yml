@@ -65,6 +65,20 @@ api2das : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
+urn: outputconfigs
+url : "http://localhost:8585/DBS/outputconfigs/"
+expire : 3600
+params : {
+        "dataset":"required",
+}
+daskeys : [
+        {"key": "config", "map":"config", "pattern":""},
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+]
+api2das : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+]
+---
 urn: blocks
 url : "http://localhost:8585/DBS/blocks/"
 expire : 3600
@@ -163,4 +177,5 @@ notations : [
         {"notation": "file.event_count", "map": "file.nevents", "api": ""},
         {"notation": "run_num", "map": "run", "api": ""},
         {"notation": "lumi_section_num", "map": "lumi", "api": ""},
+        {"notation": "output_module_label", "map": "module_label", "api": ""},
 ]
