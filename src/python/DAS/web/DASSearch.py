@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.27 2009/12/14 15:41:34 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: DASSearch.py,v 1.28 2009/12/21 16:09:58 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -247,19 +247,19 @@ class DASSearch(TemplatedPage):
         else:
             data = result
         results = ""
-        if  data['results']['status'] == 'success':
+        if  data['status'] == 'success':
             if  recordid: # we got id
-                for row in data['results']['data']:
+                for row in data['data']:
                     jsoncode = {'jsoncode': json2html(row, "")}
                     results += self.templatepage('das_json', **jsoncode)
             else:
-                for row in data['results']['data']:
+                for row in data['data']:
                     rid  = row['_id']
                     del row['_id']
                     record = dict(id=rid, daskeys=', '.join(row))
                     results += self.templatepage('das_record', **record)
         else:
-            results = data['results']['status']
+            results = data['status']
         if  recordid:
             page  = results
         else:
@@ -288,11 +288,12 @@ class DASSearch(TemplatedPage):
             data = json.loads(result)
         else:
             data = result
-        if  data['results']['status'] == 'success':
-            return data['results']['nresults']
+        print "\n#### data", data
+        if  data['status'] == 'success':
+            return data['nresults']
         else:
             msg = "nresults returns status not success: %s" \
-                        % str(data['results'])
+                        % str(data)
             self.daslogger.info(msg)
             print "\n###" + msg
         self.send_request('POST', kwargs)
@@ -330,7 +331,6 @@ class DASSearch(TemplatedPage):
             data = json.loads(result)
         else:
             data = result
-        data   = data['results'] # DAS header contains results section
         if  data['status'] == 'success':
             res    = data['data']
         elif data['status'] == 'not found':
@@ -345,7 +345,8 @@ class DASSearch(TemplatedPage):
         rows = self.result(kwargs)
         return rows
 
-    @exposejson
+#    @exposejson
+    @exposedasjson
     def jsonview(self, kwargs):
         """
         provide DAS JSON
@@ -584,7 +585,6 @@ class DASSearch(TemplatedPage):
             data  = json.loads(result)
         else:
             data  = result
-        data = data['results'] # DAS output stored in results
         if  data['status'] == 'success':
             page  = """<script type="application/javascript">reload()</script>"""
         elif data['status'] == 'in raw cache':

@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.46 2009/12/15 19:42:09 valya Exp $"
-__version__ = "$Revision: 1.46 $"
+__revision__ = "$Id: das_mongocache.py,v 1.47 2009/12/21 16:09:57 valya Exp $"
+__version__ = "$Revision: 1.47 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -408,6 +408,11 @@ class DASMongocache(Cache):
             # TODO: use this if there is no das_son_manipulator
             obj_id = row['_id']
             row['_id'] = str(obj_id)
+            # DAS info stored via das_id, the records only contains
+            # {'das':{'expire':123}} to consistently manage delete operation
+            das = row['das']
+            if  not (type(das) is types.DictType and das.has_key('api')):
+                del row['das']
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
