@@ -6,8 +6,8 @@
 DAS Query Language lexer.
 """
 
-__revision__ = "$Id: das_lexer.py,v 1.1 2010/04/30 16:28:23 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_lexer.py,v 1.2 2010/04/30 16:54:02 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -53,7 +53,7 @@ class DASLexer(object):
             raise Exception(msg)
 
     def t_WORD(self, t):
-        r'[a-zA-Z/*][a-zA-Z_0-9/*]+|[0-9]+[dhm]'
+        r'[a-zA-Z/*][a-zA-Z_0-9/*]+|[0-9]+[dhm]|([0-9]{1,3}\.){3,3}[0-9]{1,3}'
         cond1 = t.value not in self.daskeys
         list1 = t.value.split()
         cond2 = set(list1) & set(self.daskeys)
