@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.28 2009/12/14 17:38:22 valya Exp $"
-__version__ = "$Revision: 1.28 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.29 2010/01/05 19:35:47 valya Exp $"
+__version__ = "$Revision: 1.29 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -134,6 +134,9 @@ class DASCacheModel(RESTModel):
             'nresults':
                 {'args':['query'],
                  'call': self.nresults, 'version':__version__},
+            'status':
+                {'args':['query'],
+                 'call': self.status, 'version':__version__},
         }
         self.methods['POST']= {'create':
                 {'args':['query', 'expire'],
@@ -183,6 +186,23 @@ class DASCacheModel(RESTModel):
 #        keys = ["qhash", "timestamp"] # can be adjusted later
 #        index_list = [(key, DESCENDING) for key in keys]
 #        self.col.ensure_index(index_list)
+
+    @checkargs
+    def status(self, *args, **kwargs):
+        """
+        HTTP GET request. Check status of the input query in DAS.
+        """
+        data = {'server_method':'status'}
+        if  kwargs.has_key('query'):
+            query = kwargs['query']
+            self.logdb(query)
+            query = self.dascore.mongoparser.requestquery(query)
+            data.update({'status':self.dascore.get_status(query)})
+        else:
+            data.update({'status': 'fail', 
+                    'reason': 'Unsupported keys %s' % kwargs.keys() })
+        self.debug(str(data))
+        return data
 
     @checkargs
     def nresults(self, *args, **kwargs):
