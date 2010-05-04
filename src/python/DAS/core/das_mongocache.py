@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.49 2009/12/22 15:34:00 valya Exp $"
-__version__ = "$Revision: 1.49 $"
+__revision__ = "$Id: das_mongocache.py,v 1.50 2009/12/22 17:30:07 valya Exp $"
+__version__ = "$Revision: 1.50 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -253,6 +253,7 @@ class DASMongocache(Cache):
         self.conn    = Connection(self.dbhost, self.dbport)
         self.db      = self.conn[self.dbname]
         self.col     = self.db[self.colname]
+        self.mrcol   = self.db['mapreduce']
 
 # Not ready yet
 #        self.add_manipulator()
@@ -427,16 +428,27 @@ class DASMongocache(Cache):
             else:
                 yield row
 
-    def map_reduce(self, fmap, freduce, spec=None):
+    def map_reduce(self, mapreduce, spec=None):
         """
         Perform map/reduce operation over DAS cache using provided
-        map/reduce functions and optional conditions.
+        mapreduce name and optional conditions.
         """
+        self.logger.info("DASMongocache::map_reduce(%s, %s)" \
+                % (mapreduce, spec))
+        record = self.mrcol.find_one({'name':mapreduce})
+        if  not record:
+            raise Exception("Map/reduce function '%s' not found" % mapreduce)
+        fmap = record['map']
+        freduce = record['reduce']
         if  spec:
-            result = self.col.map_reduce(Code(fmap), Code(freduce), query=spec)
+            result = self.col.map_reduce(Code(fmap), Code(freduce), 
+                        query=spec)
         else:
             result = self.col.map_reduce(Code(fmap), Code(freduce))
-        for row in result:
+        msg = "DASMongocache::map_reduce found %s records in %s collection" \
+                % (result.count(), result.name)
+        self.logger.info(msg)
+        for row in result.find():
             yield row
 
     def update_cache(self, query, results, header):

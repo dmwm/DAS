@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.48 2009/12/14 16:56:42 valya Exp $"
-__version__ = "$Revision: 1.48 $"
+__revision__ = "$Id: das_core.py,v 1.49 2009/12/22 17:30:07 valya Exp $"
+__version__ = "$Revision: 1.49 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -359,12 +359,17 @@ class DASCore(object):
         self.logger.info(msg)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
+        mapreduce = getarg(query, 'mapreduce', None)
         if  not fields:
             fields = None
-        query = dict(spec=spec, fields=fields)
-        res = self.rawcache.get_from_cache(loose(query), idx, limit, skey, sorder)
+        if  mapreduce:
+            res = self.rawcache.map_reduce(mapreduce, spec)
+        else:
+            query = dict(spec=spec, fields=fields)
+            res = self.rawcache.get_from_cache(loose(query), idx, limit, skey, sorder)
         for row in res:
             yield row
+
         # Yield results for query hash
 #        spec = dict(spec={"das.qhash":qhash})
 #        res = self.rawcache.get_from_cache(spec)
