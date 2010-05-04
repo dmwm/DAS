@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.4 2009/09/14 20:38:34 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.5 2009/09/29 20:48:11 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -82,6 +82,8 @@ class DASMapping(object):
         elif record.has_key('notations'):
             index = [('system', DESCENDING), 
                      ('notations.api_param', DESCENDING)]
+        elif record.has_key('presentation'):
+            index = []
         else:
             msg = 'Invalid record %s, no api/notations keys' % record
             raise Exception(msg)
@@ -95,6 +97,23 @@ class DASMapping(object):
         cond = { 'system' : { '$ne' : None } }
         gen  = (row['system'] for row in self.col.find(cond, ['system']))
         return gen2list(gen)
+
+    def daskeys(self):
+        """
+        Return a dict with all known DAS keys.
+        """
+        cond  = { 'system' : { '$ne' : None } }
+        gen   = (row['system'] for row in self.col.find(cond, ['system']))
+        kdict = {}
+        for system in gen:
+            query = {'system':system, 'api':{'$ne':None}}
+            keys  = []
+            for row in self.col.find(query):
+                for entry in row['daskeys']:
+                    if  entry['key'] not in keys:
+                        keys.append(entry['key'])
+            kdict[system] = keys
+        return kdict
 
     def list_apis(self, system=None):
         """
@@ -216,3 +235,15 @@ class DASMapping(object):
             else:
                 smap[api] = dict(keys=keys, params=params)
         return smap
+
+    def presentation(self, daskey):
+        """
+        Return web UI presentation keys for provided DAS keyword.
+        For example once asked for block we present block.name, block.size, etc.
+        """
+        query = {'presentation':{'$ne':None}}
+        for row in self.col.find(query):
+            data = row['presentation']
+            if  data.has_key(daskey):
+                return data[daskey]
+        return daskey
