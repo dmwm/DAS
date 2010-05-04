@@ -4,8 +4,8 @@ Code documentation
 .. toctree::
    :maxdepth: 4
 
-   core
-   web
-   services
-   utils
-   tools
+   core.rst
+   web.rst
+   services.rst
+   utils.rst
+   tools.rst

@@ -11,3 +11,4 @@ References
 .. [Mongodb] http://www.mongodb.org
 .. [Memcached] http://memcached.org
 .. [Couchdb] http://couchdb.apache.org
+.. [JSON] http://en.wikipedia.org/wiki/JSON
