@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.6 2009/10/02 18:58:41 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.7 2009/10/10 15:02:38 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -114,6 +114,30 @@ class DASMapping(object):
                         keys.append(entry['key'])
             kdict[system] = keys
         return kdict
+
+    def relational_keys(self, system1, system2):
+        """
+        Return a list of relational keys between provided systems
+        """
+        for system, keys in self.daskeys().items():
+            if  system == system1:
+                keys1 = keys
+            if  system == system2:
+                keys2 = keys
+        return list( set(keys1) & set(keys2) )
+
+    def find_system(self, key):
+        """
+        Return system name for provided DAS key.
+        """
+        cond = { 'daskeys.key' : key }
+        gen  = (row['system'] for row in self.col.find(cond, ['system']))
+        systems = []
+        for system in gen:
+            if  system not in systems:
+                systems.append(system)
+        systems.sort()
+        return systems
 
     def list_apis(self, system=None):
         """
