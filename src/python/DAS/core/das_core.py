@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.28 2009/09/01 01:42:44 valya Exp $"
-__version__ = "$Revision: 1.28 $"
+__revision__ = "$Id: das_core.py,v 1.29 2009/09/09 18:40:36 valya Exp $"
+__version__ = "$Revision: 1.29 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -75,6 +75,7 @@ class DASCore(object):
         self.viewmgr = DASViewManager(dasconfig)
 
         dasroot = os.environ['DAS_ROOT']
+        self.rawcache = None
         # load from configuration what will be used as a raw/cold cache
         if  dasconfig.has_key('rawcache') and dasconfig['rawcache']:
             klass   = dasconfig['rawcache']
@@ -86,6 +87,9 @@ class DASCore(object):
             setattr(self, 'rawcache', eval(klassobj))
             dasconfig['rawcache'] = self.rawcache
             self.logger.info('DASCore::__init__, rawcache=%s' % klass)
+        else:
+            msg = 'DAS configuration file does not provide rawcache'
+            raise Exception(msg)
 
         # load from configuration what will be used as a hot cache
         if  dasconfig.has_key('hotcache') and dasconfig['hotcache']:
@@ -301,25 +305,6 @@ class DASCore(object):
             if  self.cache.incache(query):
                 self.cache.remove_from_cache(query)
 
-#    def in_raw_cache(self, uinput):
-#        """
-#        Check if input query is presented in raw cache
-#        """
-#        query    = self.viewanalyzer(uinput)
-#        params   = self.qlparser.params(query)
-#        services = params['unique_services']
-#        daslist  = params['daslist']
-#        for qdict in daslist:
-#            for service in services:
-#                if  qdict.has_key(service):
-#                    squery = qdict[service]
-                    # raw cache uses "query @ service" syntax to store queries
-                    # see services/abstrace_service.py call method
-#                    qqq = '%s @ %s' % (squery, service)
-#                    if  self.rawcache.incache(qqq):
-#                        return True
-#        return False
-
     def get_params(self, uinput):
         """
         The purpose of this method is to parse input query and return
@@ -352,6 +337,7 @@ class DASCore(object):
         ulist    = params['unique_keys']
         services = params['unique_services']
         dasqueries  = params['dasqueries']
+        query    = params['query']
         self.logger.info('DASCore::call, QL parser results\n%s' % params)
         # main loop, it goes over query dict in daslist. The daslist
         # contains subqueries (in a form of dict={system:subquery}) to
@@ -366,13 +352,23 @@ class DASCore(object):
         # data-services to be called, based on provided selection keys and
         # conditions.
         #
+        if  not dasqueries.keys():
+            msg = 'Unable to find data-services for given query'
+            raise Exception(msg)
         for srv, queries in dasqueries.items():
             for squery in queries:
                 self.logger.info('DASCore::call %s(%s)' % (srv, squery))
                 if  self.verbose:
                     self.timer.record(srv)
-                res = getattr(getattr(self, srv), 'call')(squery)
+#                res = getattr(getattr(self, srv), 'call')(squery)
+                getattr(getattr(self, srv), 'call')(squery)
                 if  self.verbose:
                     self.timer.record(srv)
-                for row in res:
-                    yield row
+#                for row in res:
+#                    yield row
+        # use last used service to get mongo query
+        mongo_query = getattr(getattr(self, srv), 'mongo_query_parser')(query)
+        del mongo_query['spec']['das.system'] # I don't to specify a system
+        res = self.rawcache.get_from_cache(query=mongo_query)
+        for row in res:
+            yield row
