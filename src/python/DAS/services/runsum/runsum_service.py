@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.19 2010/02/02 19:55:21 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: runsum_service.py,v 1.20 2010/02/05 21:23:12 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -16,8 +16,7 @@ import traceback
 import xml.etree.cElementTree as ET
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, get_key_cert, dasheader
-from DAS.utils.utils import xml_parser, adjust_value
+from DAS.utils.utils import map_validator, get_key_cert, adjust_value
 from DAS.services.runsum.run_summary import get_run_summary
 
 def convert_datetime(sec):

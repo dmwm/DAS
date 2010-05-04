@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.19 2010/02/02 19:55:20 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: dbs_service.py,v 1.20 2010/02/05 21:23:13 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -36,16 +36,14 @@ class DBSService(DASAbstractService):
         DBS data-service parser.
         """
         notations = self.get_notations(api)
-        add = None
         if  api == 'listBlocks':
-            tag = 'block'
+            prim_key = 'block'
         elif api == 'listFiles':
-            tag = 'file'
+            prim_key = 'file'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
             raise Exception(msg)
-        gen = xml_parser(notations, source, tag, add)
-#        gen = xml_parser(source, tag, add)
+        gen = xml_parser(notations, source, prim_key)
         for row in gen:
             yield row
