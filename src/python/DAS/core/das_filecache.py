@@ -7,12 +7,13 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.8 2009/05/19 21:11:36 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_filecache.py,v 1.9 2009/05/20 14:21:52 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import types
+import traceback
 #try:
 #    import cPickle as pickle
 #except:
@@ -22,7 +23,7 @@ import marshal
 
 import time
 
-from sqlalchemy import Table, Column, Integer, String
+from sqlalchemy import Table, Column, Integer, String, Text
 from sqlalchemy import create_engine, MetaData, ForeignKey
 from sqlalchemy.orm import relation, backref
 from sqlalchemy.ext.declarative import declarative_base
@@ -37,7 +38,7 @@ Base = declarative_base()
 class System(Base):
     __tablename__ = 'systems'
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False, unique=True)
+    name = Column(String(10), nullable=False, unique=True)
 
     def __init__(self, name):
         self.name = name
@@ -49,10 +50,10 @@ class Query(Base):
     __tablename__ = 'queries'
 
     id = Column(Integer, primary_key=True)
-    hash = Column(String)
-    name = Column(String)
-    create = Column(String)
-    expire = Column(String)
+    hash = Column(String(32))
+    name = Column(Text)
+    create = Column(String(16))
+    expire = Column(String(16))
     system_id = Column(Integer, ForeignKey('systems.id'))
 
     system = relation(System, backref=backref('systems', order_by=id))
@@ -157,6 +158,7 @@ class DASFilecache(Cache):
             session.commit()
         except:
             session.rollback()
+            traceback.print_exc()
             pass
         for qobj in res:
             valid = eval(qobj.expire) - time.time()
@@ -190,6 +192,7 @@ class DASFilecache(Cache):
                     session.commit()
                 except:
                     session.rollback()
+                    traceback.print_exc()
                     msg = "Unable to commit to DAS filecache DB"
                     raise Exception(msg)
         return
@@ -234,6 +237,7 @@ class DASFilecache(Cache):
             session.commit()
         except:
             session.rollback()
+            traceback.print_exc()
             msg = "Unable to commit DAS filecache DB"
             raise Exception(msg)
 
