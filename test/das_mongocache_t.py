@@ -175,6 +175,26 @@ class testDASMongocache(unittest.TestCase):
         expect = dict(spec={'test': {'name':'city.*'}}, fields=fields)
         self.assertEqual(expect, debug)
 
+        spec   = {"site.name": "T1_FR*"}
+        fields = None
+        query  = dict(spec=spec, fields=fields)
+        pat    = re.compile('T1_FR.*')
+        expect = dict(spec={'site.name': pat}, fields=fields)
+        result, debug = convert2pattern(query)
+        self.assertEqual(expect, result)
+        expect = dict(spec={'site.name':'T1_FR.*'}, fields=fields)
+        self.assertEqual(expect, debug)
+
+        pat    = re.compile('T1_FR.*')
+        spec   = {"site.name": pat}
+        fields = None
+        query  = dict(spec=spec, fields=fields)
+        expect = dict(spec={'site.name': pat}, fields=fields)
+        result, debug = convert2pattern(query)
+        self.assertEqual(expect, result)
+        expect = dict(spec={'site.name':pat}, fields=fields)
+        self.assertEqual(expect, debug)
+
 #    def test_result(self):                          
 #        """test DAS mongocache result method"""
 #        query  = "find site where site=T3_CU"
