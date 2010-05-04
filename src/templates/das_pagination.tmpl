@@ -41,7 +41,7 @@ $results
 <script type="application/javascript">
 function changeRange(page) {
     var newidx = (page-1)*$limit;
-    var newurl = '$url' + 'idx=' + newidx  + '&limit=$limit';
+    var newurl = '$url' + '&idx=' + newidx  + '&limit=$limit';
     load(newurl);
 }
 #set npages = $nrows/$limit
