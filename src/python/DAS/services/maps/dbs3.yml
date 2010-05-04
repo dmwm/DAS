@@ -28,12 +28,15 @@ url : "http://localhost:8585/DBS/datasets/"
 expire : 3600
 params : {
         "dataset":"*",
+        "release_version":"*",
 }
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "release", "map":"release", "pattern":""},
 ]
 das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"release", "api_param": "release_version", "pattern":""},
 ]
 ---
 urn: datasetparents
@@ -63,7 +66,7 @@ das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
-urn: blocks
+urn: blocks_via_block
 url : "http://localhost:8585/DBS/blocks/"
 expire : 3600
 params : {
@@ -76,7 +79,7 @@ das2api : [
         {"das_key":"block.name", "api_param": "block_name", "pattern":""},
 ]
 ---
-urn: blocks2
+urn: blocks_via_dataset
 url : "http://localhost:8585/DBS/blocks/"
 expire : 3600
 params : {
@@ -90,7 +93,7 @@ das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
-urn: files
+urn: files_via_dataset
 url : "http://localhost:8585/DBS/files/"
 expire : 3600
 params : {
@@ -105,7 +108,7 @@ das2api : [
         {"das_key":"block.name", "api_param":"block_name", "pattern":""}
 ]
 ---
-urn: files2
+urn: files_via_block
 url : "http://localhost:8585/DBS/files/"
 expire : 3600
 params : {
@@ -143,6 +146,20 @@ daskeys : [
 ]
 das2api : [
         {"das_key":"file.name", "api_param":"logical_file_name", "pattern":""},
+]
+---
+urn: runs
+url : "http://localhost:8585/DBS/runs/"
+expire : 3600
+params : {
+        'dataset':'required',
+}
+daskeys : [
+        {"key": "file", "map":"file.name", "pattern":""},
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
 ]
 ---
 notations : [
