@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.20 2009/10/19 02:28:03 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: das_mongocache.py,v 1.21 2009/10/19 20:40:42 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -32,8 +32,9 @@ def loose(query):
     newspec = {}
     for key, val in spec.items():
         if  type(val) is types.StringType or type(val) is types.UnicodeType:
-            val = val + '.*'
-            val = re.compile(val.replace('*', '.*'))
+            if  val[-1] != '*':
+                val += '*' # add pattern
+#            val = re.compile(val.replace('*', '.*'))
         newspec[key] = val
     return dict(spec=newspec, fields=fields)
 
@@ -102,6 +103,9 @@ def convert2pattern(query):
                     cond[ckey] = cval
             newspec[key] = cond
             verspec[key] = vcond
+        else:
+            newspec[key] = val
+            verspec[key] = val
     return dict(spec=newspec, fields=fields), dict(spec=verspec, fields=fields)
 
 def compare_dicts(input_dict, exist_dict):
@@ -278,12 +282,7 @@ class DASMongocache(Cache):
         res  = self.col.group(['query'], newspec, 0, reduce=reduce)
         msg  = "DASMongocache::similar_queries, found query which cover this request: "
         for row in res:
-            print "\n\n### Found similar query condition", row
             existing_query = decode_mongo_keys(row['query'])
-            print "\nfrom string"
-            print "input_query", query
-            print "exist_query", existing_query
-            print "comparisoin", compare_specs(query, existing_query)
             if  compare_specs(query, existing_query):
                 msg += str(existing_query)
                 self.logger.info(msg)
@@ -420,6 +419,7 @@ class DASMongocache(Cache):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
+        print "\n\n#### call nresults", query
         self.logger.info("DASMongocache::nresults(%s)" % query)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
@@ -440,6 +440,7 @@ class DASMongocache(Cache):
         idx    = int(idx)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
+        spec.update({'query.spec':{'$exists':False}}) # exclude query records
         if  limit:
             res = self.col.find(spec=spec, fields=fields)\
                 .skip(idx).limit(limit)
