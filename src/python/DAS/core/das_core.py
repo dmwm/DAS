@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.42 2009/10/15 21:03:04 valya Exp $"
-__version__ = "$Revision: 1.42 $"
+__revision__ = "$Id: das_core.py,v 1.43 2009/10/16 18:02:48 valya Exp $"
+__version__ = "$Revision: 1.43 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -21,12 +21,8 @@ import os
 import time
 import types
 import traceback
-try:
-    import json # since python 2.6
-except:
-    import simplejson as json # prior python 2.6
+import DAS.utils.jsonwrapper as json
 
-#from DAS.core.qlparser import QLParser
 from DAS.core.qlparser import MongoParser
 #from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping_db import DASMapping

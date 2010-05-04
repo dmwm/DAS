@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.17 2009/10/13 18:13:30 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.18 2009/10/16 18:02:47 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -15,11 +15,7 @@ import types
 import thread
 import cherrypy
 import traceback
-try:
-    import json # starting in python version 2.6
-except:
-    # Prior to 2.6 requires simplejson
-    import simplejson as json # prior 2.6 require simplejson
+import DAS.utils.jsonwrapper as json
 
 # WMCore/WebTools modules
 from WMCore.WebTools.RESTModel import RESTModel

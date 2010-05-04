@@ -5,16 +5,13 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.32 2009/10/15 20:56:32 valya Exp $"
-__version__ = "$Revision: 1.32 $"
+__revision__ = "$Id: utils.py,v 1.33 2009/10/16 18:02:47 valya Exp $"
+__version__ = "$Revision: 1.33 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import re
-try:
-    import json # since python 2.6
-except:
-    import simplejson as json # prior python 2.6
+import DAS.utils.jsonwrapper as json
 try:
     # with python 2.5
     import hashlib
