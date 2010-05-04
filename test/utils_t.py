@@ -11,7 +11,7 @@ from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
-from DAS.utils.utils import json_parser, xml_parser
+from DAS.utils.utils import json_parser, xml_parser, dict_helper
 
 class testUtils(unittest.TestCase):
     """
@@ -45,6 +45,14 @@ class testUtils(unittest.TestCase):
         merge_dict(dict1, dict2)
         self.assertEqual(expect, dict1)
 
+    def test_dict_helper(self):
+        """Test dict_helper function"""
+        idict = {'test':'1', 'float':'1.1', 'another_int': '0', 'orig_int': 10, 'str': '2009 11.11'}
+        notations = {'test':'int'}
+        result = dict_helper(idict, notations)
+        expect = {'int': 1, 'float': 1.1, 'another_int': 0, 'orig_int': 10, 'str': '2009 11.11'}
+        self.assertEqual(expect, result)
+
     def test_dict_value(self):
         """Test dict_value"""
         dict = {'a':{'b':{'c':1}}, 'd':2}
@@ -69,11 +77,15 @@ class testUtils(unittest.TestCase):
         
     def test_adjust_value(self):
         """Test adjust_value"""
-        expect = "1"
+        expect = 0
+        result = adjust_value("0")
+        self.assertEqual(expect, result)
+
+        expect = 1
         result = adjust_value("1")
         self.assertEqual(expect, result)
 
-        expect = "1.1"
+        expect = 1.1
         result = adjust_value("1.1")
         self.assertEqual(expect, result)
 
