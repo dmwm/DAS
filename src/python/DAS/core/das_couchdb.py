@@ -5,13 +5,14 @@
 DAS couchdb wrapper. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchdb.py,v 1.6 2009/04/29 15:51:57 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_couchdb.py,v 1.7 2009/05/11 20:11:02 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 #from DAS.core.cmscouch import CouchServer, Database
-from WMCore.Database.CMSCouch import CouchServer, Database
+#from WMCore.Database.CMSCouch import CouchServer, Database
+from WMCore.Database.CMSCouch import CouchServer
 
 # DAS modules
 from DAS.utils.utils import genkey, timestamp, results2couch
@@ -281,13 +282,13 @@ function(k,v,r) {
         cdb.commit()  # bulk delete
         cdb.compact() # remove them permanently
         
-    def create_ft_index(self, db, name):
-        view = client.PermanentView(self.uri, name)
-        key = '_design/%s' % name
-        db[key] = { 'language': 'javascript',
-                    'ft_index': 
-"""function(doc) { 
-if(doc.body) index(doc.body); 
-if(doc.foo) property("foo", doc.foo);
-}"""
-                  }
+#    def create_ft_index(self, db, name):
+#        view = client.PermanentView(self.uri, name)
+#        key = '_design/%s' % name
+#        db[key] = { 'language': 'javascript',
+#                    'ft_index': 
+#"""function(doc) { 
+#if(doc.body) index(doc.body); 
+#if(doc.foo) property("foo", doc.foo);
+#}"""
+#                  }
