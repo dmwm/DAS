@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.34 2009/12/22 19:32:38 valya Exp $"
-__version__ = "$Revision: 1.34 $"
+__revision__ = "$Id: qlparser.py,v 1.35 2010/02/05 21:25:59 valya Exp $"
+__version__ = "$Revision: 1.35 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -236,7 +236,7 @@ class MongoParser(object):
         cond  = getarg(query, 'spec', {})
         return skeys, cond
 
-    def requestquery(self, query):
+    def requestquery(self, query, add_to_analytics=True):
         """
         Query analyzer which form request query to DAS from a free text-based form.
         Return MongoDB request query.
@@ -252,7 +252,8 @@ class MongoParser(object):
                 mongo_query = json.loads(query)
                 if  mongo_query.keys() != ['fields', 'spec']:
                     raise Exception("Invalid MongoDB query %s" % query)
-                self.analytics.add_query(query, mongo_query)
+                if  add_to_analytics:
+                    self.analytics.add_query(query, mongo_query)
                 return mongo_query
         findbracketobj(query) # check brackets in a query
         skeys = []
@@ -390,7 +391,8 @@ class MongoParser(object):
         # add mapreduce if it exists
         if  mapreduce:
             mongo_query['mapreduce'] = mapreduce
-        self.analytics.add_query(query, mongo_query)
+        if  add_to_analytics:
+            self.analytics.add_query(query, mongo_query)
         return mongo_query
 
     def services(self, query):
@@ -400,18 +402,32 @@ class MongoParser(object):
             skeys = []
         if  type(skeys) is types.StringType:
             skeys = [skeys]
-        sdict = {}
+        slist = []
         # look-up services from Mapping DB
-        for key in skeys + [i.split('.')[0] for i in cond.keys()]:
+        for key in skeys + [i for i in cond.keys()]:
             for service, keys in self.daskeys.items():
-                if  key in keys:
-                    if  sdict.has_key(service):
-                        vlist = sdict[service]
-                        if  key not in vlist:
-                            sdict[service] = vlist + [key]
-                    else:
-                        sdict[service] = [key]
-        return sdict
+                daskeys = self.map.find_daskey(service, key)
+                if  set(keys) & set(daskeys):
+                    slist.append(service)
+        return slist
+
+    def service_apis_map(self, query):
+        """
+        Find out which APIs correspond to provided query.
+        Return a map of found services and their apis.
+        """
+        skeys, cond = self.decompose(query)
+        if  not skeys:
+            skeys = []
+        if  type(skeys) is types.StringType:
+            skeys = [skeys]
+        adict = {}
+        # look-up APIs from Mapping DB
+        for mapkey in skeys + [i for i in cond.keys()]:
+            for service, keys in self.daskeys.items():
+                alist = self.map.find_apis(service, mapkey)
+                adict[service] = alist
+        return adict
 
     def params(self, query):
         """
