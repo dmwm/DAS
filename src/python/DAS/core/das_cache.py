@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.15 2009/06/10 15:52:27 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: das_cache.py,v 1.16 2009/06/23 18:13:45 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -151,34 +151,37 @@ class DASCacheMgr(object):
         time.sleep(5) # sleep to allow main thread with DAS core take off
         msg = "start DASCacheMgr::worker with %s" % func
         self.logger.info(msg)
-#        nprocs  = 2*multiprocessing.cpuCount()
-        nprocs  = 2*cpu_count()
-        pool    = multiprocessing.Pool(nprocs)
-        orphans = {} # map of orphans requests
+        nprocs    = 2*cpu_count()
+        pool      = multiprocessing.Pool(nprocs)
+        orphans   = {} # map of orphans requests
+        worker_proc = {}
         while True: 
-            to_remove = {}
             msg = "waiting queue %s" % self.queue
             self.logger.debug(msg)
             for item in self.queue:
+                if  worker_proc.has_key(item):
+                    continue # we already working on this
+                if  len(worker_proc.keys()) == nprocs:
+                    break
                 try:
+                    worker_proc[item] = '' # reserve worker process
                     result = pool.apply_async(func, (item, ))
-                    to_remove[item] = result
-                    if  len(to_remove.keys()) == nprocs:
-                        break
+                    worker_proc[item] = result # bind result with worker
                 except:
                     traceback.print_exc()
                     orphans[item] = orphans.get(item, 0) + 1
                     break
                 time.sleep(self.sleep) # separate processes
-            msg = "will remove %s" % to_remove
+            msg = "will remove %s" % worker_proc
             self.logger.debug(msg)
             time.sleep(self.sleep)
-            for key in to_remove.keys():
-                proc = to_remove[key]
+            for key in worker_proc.keys():
+                proc = worker_proc[key]
                 if  proc.ready():
                     status = proc.get()
                     if  status:
                         self.queue.remove(key)
+                        del worker_proc[key]
                     else:
                         orphans[item] = orphans.get(item, 0) + 1
                 # check if we have this request in orphans maps
@@ -186,3 +189,4 @@ class DASCacheMgr(object):
                 if  orphans.has_key(key) and orphans[key] > 2:
                     del orphans[key]
                     self.queue.remove(key)
+                    del worker_proc[key]
