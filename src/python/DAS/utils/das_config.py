@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.30 2009/11/16 15:47:54 valya Exp $"
-__version__ = "$Revision: 1.30 $"
+__revision__ = "$Id: das_config.py,v 1.31 2010/01/19 18:24:11 valya Exp $"
+__version__ = "$Revision: 1.31 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -37,9 +37,9 @@ def das_readconfig(dasconfig=None):
     config.read(dasconfig)
     configdict = {}
 
-    configdict['cache_servers'] = config.get('cache', 'servers', '')
-    configdict['cache_lifetime'] = config.getint('cache', 'lifetime')
-    configdict['cache_chunk_size'] = config.getint('cache', 'chunk_size')
+#    configdict['cache_servers'] = config.get('cache', 'servers', '')
+#    configdict['cache_lifetime'] = config.getint('cache', 'lifetime')
+#    configdict['cache_chunk_size'] = config.getint('cache', 'chunk_size')
 
 #    configdict['couch_servers'] = config.get('couch', 'servers', '')
 #    configdict['couch_lifetime'] = config.getint('couch', 'lifetime')
@@ -51,14 +51,14 @@ def das_readconfig(dasconfig=None):
     configdict['mongocache_bulkupdate_size'] = config.getint('mongocache', 'bulkupdate_size')
     configdict['mongocache_lifetime'] = config.getint('mongocache', 'lifetime')
 
-    configdict['filecache_dir'] = config.get('filecache', 'dir', '')
-    configdict['filecache_lifetime'] = config.getint('filecache', 'lifetime')
-    configdict['filecache_base_dir'] = \
-                config.get('filecache', 'base_dir', '00')
-    configdict['filecache_files_dir'] = \
-                int(config.get('filecache', 'files_dir', 100))
-    configdict['filecache_db_engine'] = \
-                config.get('filecache', 'db_engine', None)
+#    configdict['filecache_dir'] = config.get('filecache', 'dir', '')
+#    configdict['filecache_lifetime'] = config.getint('filecache', 'lifetime')
+#    configdict['filecache_base_dir'] = \
+#                config.get('filecache', 'base_dir', '00')
+#    configdict['filecache_files_dir'] = \
+#                int(config.get('filecache', 'files_dir', 100))
+#    configdict['filecache_db_engine'] = \
+#                config.get('filecache', 'db_engine', None)
 
 #    configdict['views_engine'] = config.get('views', 'db_engine', None)
 #    configdict['views_dir'] = config.get('views', 'dir', '')
@@ -72,10 +72,10 @@ def das_readconfig(dasconfig=None):
     configdict['analytics_dbname'] = config.get('analytics_db', 'dbname', 'analytics')
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
-    try:
-        configdict['hotcache'] = config.get('das', 'hotcache', None)
-    except:
-        configdict['hotcache'] = None
+#    try:
+#        configdict['hotcache'] = config.get('das', 'hotcache', None)
+#    except:
+#        configdict['hotcache'] = None
     configdict['logdir'] = config.get('das', 'logdir', '/tmp')
 
     systems = config.get('das', 'systems', ACTIVE_SYSTEMS).split(',') 
@@ -110,10 +110,10 @@ def das_writeconfig():
 #    config.set('das', 'hotcache', 'DASFilecache')
     config.set('das', 'logdir', '/tmp')
 
-    config.add_section('cache')
-    config.set('cache', 'servers', '127.0.0.1:11211' )
-    config.set('cache', 'lifetime', 5*60) # 5 minutes, in seconds
-    config.set('cache', 'chunk_size', 100) # no more then 100 docs/commit
+#    config.add_section('cache')
+#    config.set('cache', 'servers', '127.0.0.1:11211' )
+#    config.set('cache', 'lifetime', 5*60) # 5 minutes, in seconds
+#    config.set('cache', 'chunk_size', 100) # no more then 100 docs/commit
 
 #    config.add_section('couch')
 #    config.set('couch', 'servers', 'http://localhost:5984' )
@@ -127,14 +127,14 @@ def das_writeconfig():
     config.set('mongocache', 'dbname', 'das')
     config.set('mongocache', 'bulkupdate_size', 5000)
 
-    config.add_section('filecache')
-    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'cache')
-    dbfile = os.path.join(dbdir, 'das_filecache.db')
-    config.set('filecache', 'dir', dbdir)
-    config.set('filecache', 'lifetime', 1*24*60*60) # in seconds
-    config.set('filecache', 'base_dir', '00')
-    config.set('filecache', 'files_dir', 100)
-    config.set('filecache', 'db_engine', 'sqlite:///%s' % dbfile)
+#    config.add_section('filecache')
+#    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'cache')
+#    dbfile = os.path.join(dbdir, 'das_filecache.db')
+#    config.set('filecache', 'dir', dbdir)
+#    config.set('filecache', 'lifetime', 1*24*60*60) # in seconds
+#    config.set('filecache', 'base_dir', '00')
+#    config.set('filecache', 'files_dir', 100)
+#    config.set('filecache', 'db_engine', 'sqlite:///%s' % dbfile)
 #    config.set('filecache', 'db_engine', \
 #                'mysql://%s:%s@localhost/DAS' % (login, pw))
 
@@ -183,6 +183,7 @@ def das_writeconfig():
     config.set('sitedb', 'verbose', 0)
     config.set('sitedb', 'url', 
     'https://cmsweb.cern.ch/sitedb/json/index')
+#    'http://localhost:8010/sites')
 
     config.add_section('phedex')
     config.set('phedex', 'expire', 30*60) # 30 minutes
