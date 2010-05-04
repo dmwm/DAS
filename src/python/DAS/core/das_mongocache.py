@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.9 2009/09/11 19:02:04 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_mongocache.py,v 1.10 2009/09/16 20:34:51 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -98,6 +98,15 @@ class DASMongocache(Cache):
         if  res:
             return True
         return False
+
+    def nresults(self, query):
+        """
+        Return number of results for given query.
+        Please note, input parameter query means MongoDB query, please
+        consult MongoDB API for more details,
+        http://api.mongodb.org/python/
+        """
+        return self.col.find(**query).count()
 
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc'):
         """
