@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.19 2009/10/16 18:05:47 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: das_mongocache.py,v 1.20 2009/10/19 02:28:03 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -23,13 +23,50 @@ from DAS.core.cache import Cache
 from pymongo.connection import Connection
 from pymongo import DESCENDING
 
-#def mongo_query(query):
-#    """Take das input query and convert it into mongo DB one"""
-#    cond = query.split(' where ')[-1].split('=')
-#    if  len(cond) > 1:
-#        query_dict = {cond[0]: cond[1]}
-#        return query_dict
-#    return {}
+_dot = '.'
+_sep = '___'
+
+def loose(query):
+    spec    = getarg(query, 'spec', {})
+    fields  = getarg(query, 'fields', None)
+    newspec = {}
+    for key, val in spec.items():
+        if  type(val) is types.StringType or type(val) is types.UnicodeType:
+            val = val + '.*'
+            val = re.compile(val.replace('*', '.*'))
+        newspec[key] = val
+    return dict(spec=newspec, fields=fields)
+
+def transform_keys(query, from_pat, to_pat):
+    """
+    Tranform MongoDB query who has keys with pattern from_pat
+    into spec with keys of to_pat.
+    """
+    spec    = getarg(query, 'spec', {})
+    fields  = getarg(query, 'fields', None)
+    newspec = dict(spec)
+    for key in spec.keys():
+        if  key.find(from_pat) != -1:
+            newspec[key.replace(from_pat, to_pat)] = spec[key]
+            del newspec[key]
+    return dict(spec=newspec, fields=fields)
+
+def encode_mongo_keys(query):
+    """
+    Mongo doesn't allow to store a dictionary w/ key having a dot '.'
+    For instance we can't store mongo queries themselves.
+    To avoid this limitation we will use encode_mongo_keys to convert
+    key.attr into key:attr, where simecolon we use as an example
+    of key attribute separator (_sep).
+    """
+    return transform_keys(query, _dot, _sep)
+
+def decode_mongo_keys(query):
+    """
+    Perform opposite to encode_mongo_keys action.
+    Restore key.attr from key:attr
+    """
+    return transform_keys(query, _sep, _dot)
 
 def convert2pattern(query):
     """
@@ -113,10 +150,9 @@ def compare_specs(input_query, exist_query):
         fields2 = []
     spec2   = getarg(query2, 'spec', {})
 
-# I don't think that selection keys plays role in comparison
-# So I don't need this code, but will keep for a while just in case
-#    if  set(fields2) > set(fields1): # set2 is superset of set1
-#        return False
+    if  spec2 == {}: # empty conditions for existing query, look at sel. fields
+        if  set(fields2) > set(fields1): # set2 is superset of set1
+            return True
 
 #    if  set(spec2.keys()) > set(spec1.keys()):
 #        return False
@@ -125,7 +161,10 @@ def compare_specs(input_query, exist_query):
 #        return False
 
     for key, val1 in spec1.items():
-        val2 = spec2[key]
+        try:
+            val2 = spec2[key]
+        except:
+            continue
         if  (type(val1) is types.StringType or \
                 type(val1) is types.UnicodeType) and \
             (type(val2) is types.StringType or \
@@ -212,6 +251,55 @@ class DASMongocache(Cache):
         verspec = {} # verbose spec
         # enable loose constraints, use LIKE pattern
         for key, val in spec.items():
+            nkey = 'query.spec.%s' % key.replace(_dot, _sep) # see transform_keys
+            if  type(val) is types.StringType or type(val) is types.UnicodeType:
+                val = val[0] + '*'
+                val = re.compile(val.replace('*', '.*')) # replace value to regex
+                verspec[nkey] = val.pattern
+            else:
+                verspec[nkey] = val
+                val = {'$ne': None} # non null key
+            newspec[nkey] = val
+        newspec['das.system'] = system
+
+# TODO: using loose conditions is probably wrong approach, since some data-services
+# like SiteDB, doesn't store query parameters, so if I look-up SE's by providing
+# CMSName SiteDB API doesn't store CMSName, I store what I get from the query, e.g. T1_
+# But it is not sufficient to obtain queries with similary conditions.
+# Instead I need to find out a way to query similar conditions. For that I need
+# to store conditions as dicts, rather then string (for that I need to replace
+# dot '.' in a keys, site.name) and apply query here on conditions.
+# In this case I don't need  compare_specs since I will query on
+# superset of conditions.
+        msg  = "DASMongocache::similar_queries, "
+        msg += "loose query: %s" % verspec
+        self.logger.info(msg)
+        reduce = "function(obj,prev){ return true;}"
+        res  = self.col.group(['query'], newspec, 0, reduce=reduce)
+        msg  = "DASMongocache::similar_queries, found query which cover this request: "
+        for row in res:
+            print "\n\n### Found similar query condition", row
+            existing_query = decode_mongo_keys(row['query'])
+            print "\nfrom string"
+            print "input_query", query
+            print "exist_query", existing_query
+            print "comparisoin", compare_specs(query, existing_query)
+            if  compare_specs(query, existing_query):
+                msg += str(existing_query)
+                self.logger.info(msg)
+                return True
+        return False
+
+    def version_2(self):
+        self.logger.info("DASMongocache::similar_queries(%s)" % query)
+        # remove from cache all expire docs
+        self.col.remove({'das.expire': {'$lt' : int(time.time())}})
+        spec    = getarg(query, 'spec', {})
+        fields  = getarg(query, 'fields', None)
+        newspec = {}
+        verspec = {} # verbose spec
+        # enable loose constraints, use LIKE pattern
+        for key, val in spec.items():
             if  type(val) is types.StringType or type(val) is types.UnicodeType:
                 if  val[-1] != '*':
                     val = val + '*' # add * to value
@@ -235,6 +323,10 @@ class DASMongocache(Cache):
             if  type(row['query']) is types.StringType or \
                 type(row['query']) is types.UnicodeType:
                 existing_query = json.loads(row['query'])
+                print "\nfrom string"
+                print "input_query", query
+                print "exist_query", existing_query
+                print "comparisoin", compare_specs(query, existing_query)
                 if  compare_specs(query, existing_query):
                     msg += str(existing_query)
                     self.logger.info(msg)
@@ -243,6 +335,10 @@ class DASMongocache(Cache):
                 gen = (k for k, g in groupby(row['query']))
                 for item in gen:
                     existing_query = json.loads(item)
+                    print "\nfrom list"
+                    print "input_query", query
+                    print "exist_query", existing_query
+                    print "comparisoin", compare_specs(query, existing_query)
                     if  compare_specs(query, existing_query):
                         msg += str(existing_query)
                         self.logger.info(msg)
@@ -250,7 +346,6 @@ class DASMongocache(Cache):
             else:
                 raise TypeError('Unexpected type for query %s, %s' \
                 % (row['query'], type(row['query'])))
-            return True
         return False
 
 
@@ -370,11 +465,19 @@ class DASMongocache(Cache):
             return
         dasheader  = header['das']
         dasheader['selection_keys'] = header['selection_keys']
+
+        # insert query
+        record = dict(query=encode_mongo_keys(query),
+                 das=dict(expire=dasheader['expire'], 
+                        system=dasheader['system']))
+        self.col.insert(dict(record))
+
+        # insert DAS records
         lkeys      = header['lookup_keys']
         index_list = [(key, DESCENDING) for key in lkeys]
         prim_key   = lkeys[0] # TODO: what to do with multiple look-up keys
         trigger    = 0
-        str_query  = json.dumps(query)
+#        str_query  = json.dumps(query)
         buffer     = [] # small buffer to be used for bulk updates
 # This optimization is premature, since it leads to another problem of
 # cleaning expire records from DAS.
@@ -392,7 +495,7 @@ class DASMongocache(Cache):
                 if  not trigger:
                     trigger = 1
                 item['das'] = dasheader
-                item['query'] = str_query
+#                item['query'] = str_query
 #                item['dashash'] = dashash # see above the dashash
                 try:
                     entry = dict_value(item, prim_key)

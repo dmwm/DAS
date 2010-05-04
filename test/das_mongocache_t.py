@@ -14,7 +14,7 @@ from pymongo.connection import Connection
 
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
-from DAS.core.das_mongocache import DASMongocache
+from DAS.core.das_mongocache import DASMongocache, transform_keys
 from DAS.core.das_mongocache import update_item, convert2pattern, compare_specs
 
 class testDASMongocache(unittest.TestCase):
@@ -34,6 +34,13 @@ class testDASMongocache(unittest.TestCase):
         connection = Connection("localhost", 27017)
         connection.drop_database('das') 
         self.dasmongocache = DASMongocache(config)
+
+    def test_transform_keys(self):
+        """Test transform_keys function"""
+        query  = dict(fields=None, spec={'test.name':1, 'site.name':1})
+        expect = dict(fields=None, spec={'test:name':1, 'site:name':1})
+        result = transform_keys(query, '.', ':')
+        self.assertEqual(expect, result)
 
     def test_update_item(self):
         """test update_item method"""
@@ -57,6 +64,16 @@ class testDASMongocache(unittest.TestCase):
         """
         Test compare_specs funtion.
         """
+        input_query = dict(fields=None, spec={'test':'T1_CH_CERN'})
+        exist_query = dict(fields=['site'], spec={})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result) # exist_query is a superset
+
+        input_query = dict(fields=None, spec={'test':'T1_CH_CERN'})
+        exist_query = dict(fields=None, spec={'test':'T1_*'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result) # exist_query is a superset
+
         input_query = dict(fields=None, spec={'test':'site'})
         exist_query = dict(fields=None, spec={'test':'site_ch'})
         result = compare_specs(input_query, exist_query)
