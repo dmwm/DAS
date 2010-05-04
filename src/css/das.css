@@ -220,3 +220,23 @@ table.listing tbody.odd tr th, table.listing tbody.odd tr td {
   background: #fff;
 }
 
+/* DAS keys table */
+table.daskeys { 
+        border-spacing: 1px; 
+        border-width: 1px; 
+        border-style: solid solid solid solid;
+        border-color: gray gray gray gray;
+        background: #FFFFFF;
+        clear: both; 
+        width: 100%}
+table.daskeys th, table.daskeys td { padding: .2em .5em; }
+table.daskeys tbody tr th { background: #F0F0F0; text-align: center; }
+table.daskeys tbody tr td { background: #FFFFFF; }
+table.daskeys tbody tr.odd th, table.daskeys tbody tr.odd td,
+table.daskeys tbody.odd tr th, table.daskeys tbody.odd tr td {
+  background: #EEF2FF;
+}
+table.daskeys tbody tr.even th, table.daskeys tbody tr.even td,
+table.daskeys tbody.even tr th, table.daskeys tbody.even tr td {
+  background: #FFFFFF;
+}
