@@ -6,9 +6,9 @@ Unit test for DAS QL parser
 """
 
 import unittest
-from utils.utils import cartesian_product, query_params
-from utils.utils import genresults, transform_dict2list
-from utils.utils import sitename, add2dict
+from DAS.utils.utils import cartesian_product, query_params
+from DAS.utils.utils import genresults, transform_dict2list
+from DAS.utils.utils import sitename, add2dict
 
 class testUtils(unittest.TestCase):
     """

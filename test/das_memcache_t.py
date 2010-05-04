@@ -6,9 +6,9 @@ Unit test for DAS cache module
 """
 
 import unittest
-from utils.utils import genkey
-from core.das_memcache import DASMemcache
-from core.das_core import DASCore
+from DAS.utils.utils import genkey
+from DAS.core.das_memcache import DASMemcache
+from DAS.core.das_core import DASCore
 
 class testDASMemcache(unittest.TestCase):
     """
