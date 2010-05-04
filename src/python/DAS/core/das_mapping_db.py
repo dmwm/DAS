@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.33 2010/02/25 19:11:22 valya Exp $"
-__version__ = "$Revision: 1.33 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.34 2010/03/02 15:59:51 valya Exp $"
+__version__ = "$Revision: 1.34 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -240,8 +240,9 @@ class DASMapping(object):
                 urn = row['urn']
                 for key in row['daskeys']:
                     if  key.has_key('map') and key['key'] == das_key:
-                        mapkeys.append((urn, key['map']))
-        return mapkeys
+                        return key['map']
+#                        mapkeys.append((urn, key['map']))
+#        return mapkeys
 
     def find_apis(self, das_system, map_key):
         """

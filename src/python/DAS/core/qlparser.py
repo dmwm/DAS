@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.45 2010/03/02 01:34:01 valya Exp $"
-__version__ = "$Revision: 1.45 $"
+__revision__ = "$Id: qlparser.py,v 1.46 2010/03/02 15:59:51 valya Exp $"
+__version__ = "$Revision: 1.46 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -398,25 +398,23 @@ class MongoParser(object):
                     condlist.append(cdict)
                     continue
                 for system in self.map.list_systems():
-                    for api, mapkey in self.map.find_mapkey(system, key):
-                        prim_key = self.map.primary_key(system, api)
-                        lkeys = self.map.lookup_keys(system, key, 
-                                    api=api, value=value)
-#                        print "system", system, key, prim_key, lkeys
-                        for kkk in lkeys:
-                            cdict = dict(key=kkk, op=oper, value=value)
-                            if  skeys:
-                                if  prim_key in skeys:
-                                    if  cdict not in condlist:
-                                        condlist.append(cdict)
-                            else:
-                                if  prim_key == key:
-                                    if  cdict not in condlist:
-                                        condlist.append(cdict)
+                    mapkey = self.map.find_mapkey(system, key)
+                    if  mapkey:
+                        cdict = dict(key=mapkey, op=oper, value=value)
+                        if  cdict not in condlist:
+                            condlist.append(cdict)
             else:
                 if  word not in skeys and word in self.daskeys:
                     skeys.append(word)
             idx += 1
+        if  not condlist and skeys: # e.g. --query="dataset"
+            for key in skeys:
+                for system, daskeys in self.map.daskeys().items():
+                    if  key in daskeys:
+                        mapkey = self.map.find_mapkey(system, key)
+                        cdict = dict(key=mapkey, op="=", value="*")
+                        condlist.append(cdict)
+                        break
 #        print "\n### condlist", condlist
         spec = mongo_exp(condlist)
 #        print "### spec", spec
