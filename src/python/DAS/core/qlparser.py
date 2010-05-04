@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.38 2010/02/19 17:28:04 valya Exp $"
-__version__ = "$Revision: 1.38 $"
+__revision__ = "$Id: qlparser.py,v 1.39 2010/02/22 21:01:25 valya Exp $"
+__version__ = "$Revision: 1.39 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -229,6 +229,10 @@ class MongoParser(object):
         self.analytics = config['dasanalytics']
         self.daskeys = self.map.daskeys()
         self.operators = DAS_OPERATORS
+
+        if  not self.map.check_maps():
+            msg = "No DAS maps found in MappingDB"
+            raise Exception(msg)
 
     def decompose(self, query):
         """Extract selection keys and conditions from input query"""
