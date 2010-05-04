@@ -76,9 +76,7 @@ urn: blocks
 url : "http://localhost:8585/DBS/blocks/"
 expire : 3600
 params : {
-        'dataset':'*',
         'block_name':'*',
-#        'site_name':'*',
 }
 daskeys : [
         {"key": "block", "map":"block.name", "pattern":""},
@@ -95,7 +93,6 @@ params : {
         'dataset':'*',
 }
 daskeys : [
-        {"key": "block", "map":"block.name", "pattern":""},
         #{"key": "dataset", "map":"block.dataset.name", "pattern":""},
         {"key": "dataset", "map":"dataset.name", "pattern":""},
 ]
