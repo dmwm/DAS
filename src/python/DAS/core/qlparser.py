@@ -65,8 +65,8 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.11 2009/07/10 19:26:11 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: qlparser.py,v 1.12 2009/07/13 15:24:56 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -639,8 +639,10 @@ class QLParser(QLLexer):
         query = self.fix_reserved_keywords(query)
         skeys = unique_list(self.selkeys(query)) # selection keys
         akeys = unique_list(self.allkeys(query)) # all keys
-        ckeys = list(set(akeys) - set(skeys))    # condition keys
-        oneservice = None
+        ckeys = [row['key'] for row in self.conditions(query) \
+                    if type(row) is types.DictType] # condition keys
+        ckeys = unique_list(ckeys)
+
         services = self.services(query).keys()
         if  len(services) == 1: # all keys from one data-service
             uservices = services
@@ -649,6 +651,7 @@ class QLParser(QLLexer):
             return uservices, ulist, daslist
         else:
             uservices = [] # unique set of services for list of keys
+            onesrvcoverage = None
             for srv in services:
                 srv_keys = self.qlmap[srv]
                 srv_args = self.qlparams[srv]
@@ -660,9 +663,23 @@ class QLParser(QLLexer):
                         cond2 = set(srv_args) & set(ckeys)# params covers ckeys
                     if  cond1 and cond2:
                         uservices.append(srv)
+                        covlist1 = list(cond1)
+                        covlist1.sort()
+                        covlist2 = list(set(srv_args) & set(ckeys))
+                        covlist2.sort()
+                        if  covlist1 == skeys and covlist2 == ckeys:
+                            onesrvcoverage = srv
+                            break
                 else:
                     if  set(srv_keys) & set(skeys):# srv keys covers skeys
                         uservices.append(srv)
+                        onesrvcoverage = srv
+                        break
+
+        # one service can cover selection and parameter keys
+        if  onesrvcoverage:
+            uservices = [onesrvcoverage]
+
         if  not uservices:
             msg = 'Unable to find unique set of service out of %s' % services
             raise Exception(msg)
