@@ -12,8 +12,8 @@ import time
 import types
 import urllib
 import xml.etree.cElementTree as ET
-from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, dasheader
+from DAS.services.abstract_service import DASAbstractService, dasheader
+from DAS.utils.utils import map_validator
 
 def convert_datetime(sec):
     """Convert seconds since epoch to date format used in dashboard"""

@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.79 2010/03/03 19:09:37 valya Exp $"
-__version__ = "$Revision: 1.79 $"
+__revision__ = "$Id: abstract_service.py,v 1.80 2010/03/05 18:08:08 valya Exp $"
+__version__ = "$Revision: 1.80 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -16,14 +16,28 @@ import urllib2
 import traceback
 import DAS.utils.jsonwrapper as json
 
-from DAS.utils.utils import dasheader, getarg, genkey, dotdict
+from DAS.utils.utils import getarg, genkey, dotdict
 from DAS.utils.utils import row2das, extract_http_error, make_headers
 from DAS.utils.utils import xml_parser, json_parser, plist_parser
 from DAS.utils.utils import yield_rows
 from DAS.core.das_aggregators import das_func
-from DAS.core.das_mongocache import compare_specs
+from DAS.core.das_mongocache import compare_specs, encode_mongo_query
 
 from pymongo import DESCENDING, ASCENDING
+
+def dasheader(system, query, api, url, args, ctime, expire):
+    """
+    Return DAS header (dict) wrt DAS specifications, see
+    https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
+    """
+    timestamp = time.time()
+#    if  type(query) is types.DictType:
+#        query = json.dumps(query)
+    query = encode_mongo_query(query)
+    dasdict = dict(system=[system], timestamp=timestamp,
+                url=[url], ctime=[ctime], qhash=genkey(query), 
+                expire=timestamp+expire, api=[api], status="requested")
+    return dict(das=dasdict)
 
 class DASAbstractService(object):
     """
