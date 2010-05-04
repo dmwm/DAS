@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.7 2009/10/10 15:02:38 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.8 2009/10/13 14:03:01 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -255,9 +255,8 @@ class DASMapping(object):
                 keys.append(entry['key'])
             params = dict(row['api']['params'])
             if  implementation=='javaservlet':
-                smap[api] = dict(keys=keys, params=params, api=dict(api=api))
-            else:
-                smap[api] = dict(keys=keys, params=params)
+                params['api'] = api
+            smap[api] = dict(keys=keys, params=params)
         return smap
 
     def presentation(self, daskey):
