@@ -41,6 +41,11 @@ class testQLParser(unittest.TestCase):
 
     def test_fix_operator(self):
         """Test fix_operator function"""
+        query  = "data lat>1.1 lon<-1.1"
+        expect = "data lat > 1.1 lon < -1.1"
+        result = add_spaces(query, self.operators) 
+        self.assertEqual(expect, result)
+
         query  = "data latidue=1.1 longitude=-1.1"
         expect = "data latidue = 1.1 longitude = -1.1"
         result = add_spaces(query, self.operators) 
