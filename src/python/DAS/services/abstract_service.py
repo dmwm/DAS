@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.82 2010/03/09 15:06:20 valya Exp $"
-__version__ = "$Revision: 1.82 $"
+__revision__ = "$Id: abstract_service.py,v 1.83 2010/03/17 15:21:12 valya Exp $"
+__version__ = "$Revision: 1.83 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -365,8 +365,10 @@ class DASAbstractService(object):
         else:
             msg = 'Unsupported data format="%s", API="%s"' % (dformat, api)
             raise Exception(msg)
-        msg = "DASAbstractService::%s::parser, api=%s, format=%s yield %s rows" \
-                % (self.name, api, dformat, counter)
+        msg  = "DASAbstractService::%s::parser, api=%s, format=%s " \
+                % (self.name, api, dformat)
+        msg += "prim_key=%s yield %s rows" \
+                % (prim_key, counter)
         self.logger.info(msg)
 
     def translator(self, api, genrows):
