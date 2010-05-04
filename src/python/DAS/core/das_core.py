@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.21 2009/07/10 19:26:10 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: das_core.py,v 1.22 2009/07/10 21:03:54 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -28,6 +28,7 @@ from DAS.core.das_viewmanager import DASViewManager
 from DAS.utils.utils import cartesian_product
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
+import DAS.core.das_functions as das_functions
 
 class DASTimer(object):
     """
@@ -148,6 +149,7 @@ class DASCore(object):
                 'das_avg']
         self.qlparser = QLParser(self.service_keys, self.service_parameters,
                         self.das_functions)
+        self.das_aggregation = {} # determine at run-time
         if  self.verbose:
             self.timer.record('DASCore.__init__')
 
@@ -198,6 +200,17 @@ class DASCore(object):
             query = input
         return query
 
+    def aggregation(self, results):
+        """
+        Perform aggregation of information if DAS functions
+        is found.
+        """
+        if  self.das_aggregation:
+            print "will do aggregation", self.das_aggregation
+            for func, args in self.das_aggregation.items():
+                results = getattr(das_functions, func)(args, results)
+        return results
+
     def result(self, query, idx=0, limit=None):
         """
         Get results either from cache or from explicit call
@@ -209,11 +222,15 @@ class DASCore(object):
                 # NOTE: the self.call returns generator, update_cache
                 # consume and iterate over its items. So if I need to
                 # re-use it, the update_cache will yeild them back
-                results = self.call(query) 
+#                results = self.call(query) 
+                results = self.call(self.get_params(query)) 
+                results = self.aggregation(results)
                 results = self.cache.update_cache(query, results, 
                                 expire=self.cache.limit)
         else:
-            results = self.call(query)
+#            results = self.call(query)
+            results = self.call(self.get_params(query)) 
+            results = self.aggregation(results)
         return results
 
     def update_cache(self, query, expire=600):
@@ -235,7 +252,9 @@ class DASCore(object):
                 # consume and iterate over its items. So if I need to
                 # re-use it, the update_cache will yeild them back
                 self.logger.info('updating DAS cache')
-                results = self.call(query) 
+#                results = self.call(query) 
+                results = self.call(self.get_params(query)) 
+                results = self.aggregation(results)
                 try:
                     results = self.cache.update_cache(query, results, expire)
                     # loop over results since it's generator
@@ -274,7 +293,20 @@ class DASCore(object):
                         return True
         return False
 
-    def call(self, uinput):
+    def get_params(self, uinput):
+        """
+        The purpose of this method is to parse input query and return
+        a parameter dict produced by QLParser
+        """
+        query = self.viewanalyzer(uinput)
+        self.logger.info("DASCore::get_query_params, user input '%s'" % uinput)
+        self.logger.info("DASCore::get_query_params, DAS query '%s'" % query)
+        params   = self.qlparser.params(query)
+        self.das_aggregation = params['functions']
+        return params
+
+#    def call(self, uinput):
+    def call(self, params):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
@@ -286,11 +318,12 @@ class DASCore(object):
                 using cartesian product, and return result set back to the user
         Return a list of generators containing results for further processing.
         """
-        query = self.viewanalyzer(uinput)
-        self.logger.info("DASCore::call, user input '%s'" % uinput)
-        self.logger.info("DASCore::call, DAS query '%s'" % query)
+#        query = self.viewanalyzer(uinput)
+#        self.logger.info("DASCore::call, user input '%s'" % uinput)
+#        self.logger.info("DASCore::call, DAS query '%s'" % query)
 
-        params   = self.qlparser.params(query)
+#        params   = self.qlparser.params(query)
+#        self.das_aggregation = params['functions']
         sellist  = params['selkeys']
         ulist    = params['unique_keys']
         services = params['unique_services']
