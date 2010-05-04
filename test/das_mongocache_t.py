@@ -167,6 +167,16 @@ class testDASMongocache(unittest.TestCase):
         result = compare_specs(input_query, exist_query)
         self.assertEqual(False, result) # different set of spec keys
 
+        input_query = dict(fields=None, spec={'dataset.name':'/a/b/c*'})
+        exist_query = dict(fields=['conf'], spec={'dataset.name':'/a/b/c'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result)
+
+        input_query  = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
+        exist_query  = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result)
+
     def test_convert2pattern(self):
         """
         Test how we convert mongo dict with patterns into spec
@@ -221,10 +231,17 @@ class testDASMongocache(unittest.TestCase):
     def test_similar_queries(self):                          
         """test similar_queries method of DASMongoscCache"""
         query  = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
-        self.dasmongocache.col.insert(encode_mongo_query(query))
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
         query  = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
         result = self.dasmongocache.similar_queries(query)
         self.assertEqual(True, result)
+        self.dasmongocache.delete_cache()
+
+        query  = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
+        query  = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
+        result = self.dasmongocache.similar_queries(query)
+        self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
 #    def test_result(self):                          
