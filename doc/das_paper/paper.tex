@@ -209,18 +209,18 @@ RDMS systems, document oriented databases, blogs, twikies, file systems,
 customized applications, etc. Working in such an environment requires a lot 
 of expertise and demands a straightforward, simple
 way to look-up the desired information.
-A well-known solutions, e.g. data-services, are tighten to a specific data 
-sources and end-users are left with a manual task to bookkeep and 
-relate information from them.
+Well-known solutions, e.g. data-services, are tightly coupled to a specific data 
+sources and end-users are left with the manual tasks of bookkeeping and 
+relating the information from them.
 
-Here we present our work on Data Aggregation System (DAS) which provides
-ability to search and aggregate information across different 
-data-services. While designed for CMS High-Energy Physics 
+Here we present our work on the Data Aggregation System (DAS) which provides
+the ability to search and aggregate information across different 
+data-services. While designed for the CMS High-Energy Physics 
 experiment at LHC, the strategies and technology could be
 used elsewhere. 
 
 The rest of this paper is organized as follows. 
-In section \ref{RelatedWork} we discuss related work in a domain of 
+In section \ref{RelatedWork} we discuss related work in the domain of 
 keyword search over relational data sources.
 Section \ref{DataModel} breifly describes the Compact Muon Solenoid (CMS) experiment 
 and its data model. In section \ref{DAS} we present the architecture 
@@ -229,36 +229,36 @@ various components. Finally, our results are summarized in section \ref{Results}
 
 \section{Related Work\label{RelatedWork}}
 Even though the idea of keyword queries over the relational database
-is not knew it is still under discussion in computer science domain.
+is not new, it is still under discussion in computer science domain.
 A few alternative solutions have been proposed to address this issue
 in last several years. In \cite{DBXplorer} the conjunctive keyword queries,
 i.e. retrieval of documents that contain all query keywords, has
 been discussed. It requires that all keywords are matched in a row from a
 single table or joined tables. Authors of \cite{QueryAnswer} make a step forward
-and have evaluated information around matched values. The results were presented as
+and evaluate information around matched values. The results are presented as
 customized templates to end-users. 
 These and other related works, (see \cite{DBXplorer, QueryAnswer} 
 for more references), are based on an approach that builds some 
-kind of the graph over the underlying 
+kind of graph over the underlying 
 database and generates a new database out of the source database to perform the work.
-The proximity of the results in those techniques are mostly confined to a 
-text-based values stored in a database, since the usage of numerical ones 
-is mostly useless without knowledge of the context of the input value. 
+The proximity of the results in those techniques are mostly confined to 
+text-based values stored in a database, since numerical ones 
+are mostly useless without knowledge of the context of the input value. 
 For example, typing a value 100 in the search input field can lead to 
 plenty of inappropriate matches, e.g. row ids. In order to be
-answered correctly it requires an additional keyword to clarify its meaning, 
+answered correctly, an additional keyword is required to clarify its meaning, 
 which should be matched with particular entity (table.column) in the 
-underlying database. Therefore the logical questions, e.g.
+underlying database. Therefore logical questions, e.g.
 {\it find me the total number of files whose size more then 20 but less then 
 100} are hard to answer precisely using approaches outlined in \cite{DBXplorer, QueryAnswer}, 
-while it can be easily accomplished using SQL. 
+while they can be easily accomplished using SQL. 
 
 To address these limitations a keyword-based query language was introduced in \cite{DBS-QL}.
-It used a set of pre-defined keys mapped to an underlying schema and shortest path
+It used a set of pre-defined keys mapped to an underlying schema and a shortest path
 algorithm which employed foreign key constraints to build SQL queries. As a result
 the question
-{\it I'm looking for files who contain data taken on certain date and located at
-particular site} was represented as simply as \cite{DBS-QL}
+{\it I'm looking for files which contain data taken on a certain date and located at
+a particular site} was represented as simply as \cite{DBS-QL}
 \begin{verbatim}
 find file where date 2009-01-02 11:59 CET and site = T2
 \end{verbatim}
@@ -267,18 +267,18 @@ This solution represents a common use case in the HEP community and provides
 an intuitive mapping between the mental model of the end-users and 
 the underlying database schema.
 
-At the same time the data aggregation is commonly addressed in the context of
-federated databases, see for example \cite{FedDB}. The data from different 
+At the same time, data aggregation is commonly addressed in the context of
+federated data\-ba\-ses, see for example \cite{FedDB}. The data from different 
 RDMS systems are stored into the federated DB where SQL queries can be used to 
-search desired data. Apart from many internal obstacles, such as
+search for desired data. Apart from many internal obstacles, such as
 schema, domain and naming conflicts, it is external issues that are often
 a large barrier within a distributed, heterogeneous environment where
-different security policies are in place. At the end the usage of SQL and/or
+different security policies are in place. In the end the usage of SQL and/or
 any other Query Language is required to search for data.
 
 To avoid these limitations we resolved to build a keyword-search based system around
 existing data-services whose nature and access policies are in place and well understood.
-The key ingredients were the setup of the mapping and analytics services which provided
+The key ingredients are the mapping and analytics services which provide
 the necessary glue across existing API/notations and user queries. This approach 
 allows us to perform dynamic data aggregation across various data-services, achieve
 precise answers using keyword-based queries
@@ -300,7 +300,7 @@ collaboration are geographically distributed,
 interconnected via high throughput networks and operated by means 
 of various Grid software infrastructure. The model is designed to
 incorporate a broad variety of both mass data storage and data processing
-resources into a single coherent system. CMS uses
+resources into a single coherent system. CMS uses a
 multi-Tiered model, where specific tasks related to data taking such as
 processing, archival and distribution, are assigned to each tier based
 on the CMS data model. For example, the Tier-0 center at CERN is responsible
@@ -327,9 +327,9 @@ and desire to make cross-service queries led us to design and develop the new
 Data Aggregation System.
 
 \section{Data Aggregation System\label{DAS}}
-The goal of the Data Aggregation System (DAS) was to fetch and aggregate meta-data 
+The goal of the Data Aggregation System (DAS) is to fetch and aggregate meta-data 
 on demand from existing CMS data-services under one umbrella by using their APIs, 
-security policies, etc. In contrast, the approaches
+security policies, etc. By contrast, the approaches
 discussed in \cite{DBXplorer, QueryAnswer, FedDB}
 enforce a publication step of data into a dedicated database 
 or central repository \cite{iRODS}. Therefore, quite often it was required
@@ -337,27 +337,26 @@ that data should be converted into common data structure/format in order to enab
 aggregation, see \cite{OpenArchive}. In DAS the data are provided
 by existing data-services and infrastructure, whose implementation,
 data representation and security policies are left intact. Consequently,
-DAS does not require a data preservation and transaction capabilities. 
-Instead DAS can be treated as proxy or caching layer where information 
+DAS does not require data preservation and transaction capabilities. 
+Instead DAS can be treated as a proxy or caching layer where information 
 retrieval and aggregation are triggered dynamically by user queries. 
-Imaging, a user opens a browser and places a query, e.g.
+Imagine: a user opens a browser and places a query, e.g.
 {\it file block=abc}. The DAS system responds with aggregated infromation about files
-for provided set of conditions from all CMS data-services. Information
+for the provided set of conditions from all CMS data-services. Information
 is either retrieved from the DAS cache or fetched on-demand from relevant
-data-providers. Such system provides a uniform access to all meta-data in CMS 
-via simple, intuitive query interface. It neither enforces users to learn 
+data-providers. Such a system provides uniform access to all meta-data in CMS 
+via simple, intuitive query interface. It neither forces users to learn 
 the structure of CMS data-services
-%, their intefaces, data-formats and access policies
-or requires data-providers to agree on common data representation
-and requirement to have central meta-data repository.
+nor requires data-providers to agree on common data representations
+and the requirement to have central meta-data repository.
 
 %Below we discuss in details the DAS architecture.
 
 \subsection{DAS architecture}
-The design of the DAS system was based on previous studies of CMS Data 
+The design of the DAS system was based on previous studies of the CMS Data 
 Bookkeeping System (DBS) \cite{DBS, DBS07}. The DBS Data Discovery service
-\cite{DD} was based on DBS Query Language (DBS-QL) \cite{DBS-QL}. It provided
-a syntax similar to SQL, without specific knowledge of the underlying DB schema.
+\cite{DD} was based on the DBS Query Language (DBS-QL) \cite{DBS-QL}. It provided
+a syntax similar to SQL, without requiring specific knowledge of the underlying DB schema.
 Quick adoption and wide usage of DBS-QL in CMS gave us confidence in the chosen approach 
 and provided a basis for building the DAS system.
 
@@ -366,12 +365,13 @@ mixed meta-data and meta-data consistency
 of the underlying services needs to be carefully
 considered in the design of the system if it is to be a successful information 
 discovery service.
-Starting from this ground we are designed the DAS system as an
+Starting from here we designed the DAS system as an
 additional layer on top of the existing data-services
-within CMS computing infrastructure by imposing the following set of requirements:
-support a keyword based search queries with ability to use conditional operators;
-use existing heterogeneous software environment and distributed nature of the data-services;
-preserve access rules and security policies of individual data-services;
+within the CMS computing infrastructure by imposing the following set of requirements:
+support keyword based search queries with the ability to use conditional operators;
+use existing heterogeneous software environments and the
+distributed nature of the data-services;
+preserve the access rules and security policies of individual data-services;
 retrieve data on demand and aggregate them if necessary across
 multiple data-services;
 be transparent to data-services implementation and their data formats.
@@ -399,31 +399,30 @@ different DAS components, respectively.
 \label{DAS_cache}
 \end{figure}
 
-\noindent
-The choice of existing RDMS as DAS back-end(s) were ruled out for several reasons. 
+The choice of an existing RDMS as the DAS back-end(s) was ruled out for several reasons. 
 For instance, we didn't require any transactions and data persistency in DAS;
-a dynamically typing of stored meta-data objects was one of the requirements, etc.
+the dynamically typing of stored meta-data objects was one of the requirements, etc.
 Those arguments forced us to look for alternative IT solutions.
-Through the careful analysis of available options, such as a file-based and in memory caches, 
-key-value databases, documented-oriented databases we made our choice in favor 
+Through the careful analysis of available options, such as file-based and in memory caches, 
+key-value databases and documented-oriented databases, we made our choice in favor 
 of the last technology. Among them we evaluated CouchDB \cite{CouchDB} and 
-MongoDB \cite{MongoDB}. Both systems are ``schema-less'' databases providing
+MongoDB \cite{MongoDB}. Both are ``schema-less'' databases providing
 arbitrary document structure storage, replication and fail-over features. 
 We made our decision in favor of MongoDB, due to its support of dynamic queries, 
 full indexes, including inner objects and embedded arrays,
 and auto-sharding. Our preliminary benchmarks have shown that it can sustain
 the desired load and size capable of handling our meta-data information. We used 
-document-oriented database, MongoDB, as a back-end for three 
+the document-oriented database, MongoDB, as a back-end for three 
 main DAS components: Mapping, Analytics and DAS cache databases, 
 which will be discussed next. 
 
 The DAS architecture is shown in Fig. \ref{DAS_cache}. It consists of
 the core library with support of pluggable modules for data retrieval;
-caching layer to store and aggregate results into DAS Cache and DAS merge
-databases, respectively;
+the caching layer to store and aggregate results into DAS Cache and DAS merge
+databases, respectively; the
 request service to handle user queries;
-Mapping DB to keep information about data-service APIs, e.g.
-notations and mapping to DAS keys;
+the Mapping DB to keep information about data-service APIs, e.g.
+notations and mapping to DAS keys and the
 Analytics DB for query analysis.
 
 \subsection{DAS core\label{DAS_core}}
@@ -435,13 +434,13 @@ DAS cache server is done via the REST \cite{REST} interface.
 Each input query is recorded into the Analytics DB for further 
 analysis, and is decomposed into a set of conditions and/or selection keys.
 First the results are looked up in a cache and delivered to the requester
-if superset of input conditions is found in analytics DB.\footnote{It is important
-to note here that we didn't look-up results in a cache and rather
-compared input query condition set to the records in analytics DB 
-in order to understand if other API calls are covered the input request.}
+if a superset of the input conditions is found in analytics DB.\footnote{It is important
+to note here that we didn't look-up results in a cache, but rather
+compared the input query condition set to the records in the analytics DB 
+in order to understand if other API calls covered the input request.}
 Otherwise, the appropriate workflow, a set of API calls, is constructed
-for the execution engine. It invoked the API calls via data-service
-plug-ins and stored results into the cache. At this step we also
+for the execution engine. It invokes the API calls via the data-service
+plug-ins and stores the results into the cache. At this step we also
 performed necessary data aggregation for records with similar key-value
 pairs. The data-service plug-in implementations are similar and their 
 logic is largely abstracted, apart from a few extensions such as specific
@@ -462,22 +461,22 @@ into the Mapping DB. For example
 {"system": "phedex", "format": "XML", "urn": "fileReplicas",
  "url": "http://a.b.com/phedex/datasvc/xml/prod/fileReplicas", 
  "params": {"node": "*", "block": "required", "se": "*"}, 
- "api2das": [{"pattern": "", "das_key": "file.block.name", 
+ "das2api": [{"pattern": "", "das_key": "file.block.name", 
     "api_param": "block"}, {"pattern": "re.compile('^T[0-3]_')", 
     "das_key": "site", "api_param": "node"}], 
  "daskeys": [{"map": "file.name", "key": "file", "pattern": ""}, 
              {"map": "file.block.name", "key": "block", "pattern": ""}]}
 \end{verbatim}
-represents DAS mapping record.
+represents a DAS mapping record.
 This record can be read as following:
 the \verb+fileReplicas+ API (urn) provided by given url delivers data in
-XML data format and belongs to \verb+phedex+ system.
+XML data format and belongs to the \verb+phedex+ system.
 It accepts \verb+node+, \verb+block+ and \verb+se+ input parameters, shown in \verb+params+ part
-of the record. Each record has two maps: \verb+api2das+ for mapping api input parameters into
-DAS keys and \verb+daskeys+ for mapping input DAS keys into DAS record access keys.
+of the record. Each record has two maps: 
+\verb+daskeys+ for mapping input DAS keys into DAS record access keys and
+\verb+das2api+ for mapping DAS access keys into api input parameters.
 
-
-Therefore the Mapping DB identifies a set of pre-defined DAS keys, 
+The Mapping DB identifies a set of pre-defined DAS keys, 
 e.g. \verb+file, block+, etc., to be used by end-users in their queries.
 Each key is mapped onto set of API calls, whose output is retrieved,
 cached and aggregated as required. 
@@ -502,11 +501,11 @@ in a deterministic manner.
 
 \subsection{DAS caching system}
 The DAS caching system is used to dynamically fetch
-and aggregate data upon user requests. It consits of
-DAS cache and DAS merge independent databases. The former one is used to store
-the raw results coming out from data-services, while the later contains aggregated
-records. Each data record in DAS cache/merge DBs contains expiration timestamps 
-provided either by data-service itself or based on default values during 
+and aggregate data upon user requests. It consists of the
+DAS cache and the DAS merge independent databases. The former is used to store
+the raw results coming out from data-services, while the latter contains aggregated
+records. Each data record in the DAS cache/merge DBs contains expiration timestamps 
+provided either by the data-service itself or based on default values during 
 data-service registration.
 We use the following algorithm (code snippets are written in Python \cite{Python}):
 \begin{enumerate}[1.]
@@ -518,8 +517,8 @@ otherwise proceed to the next step.
 \begin{verbatim}
 apilist = [r for r in mapping_db(skeys, conds)]
 \end{verbatim}
-Here \verb+r+ represents a triplet \verb+url, api, args+ and 
-\verb+mappind_db+ defines translation between input query and data-service
+Here \verb+r+ represents a triplet \verb+url, api, args+, and 
+\verb+mappind_db+ defines the translation between the input query and the data-service
 APIs which can delivery the data.
 \item Iterate over APIs
 \begin{verbatim}
@@ -529,8 +528,8 @@ for url, api, args in apilist:
     for row in parser(get_data(url, api, args)):
         yield row
 \end{verbatim}
-Here \verb+superset_in_analytics+ checks if provided \verb+api, args+
-are subset of already registered in Analytics DB api call(s). The 
+Here \verb+superset_in_analytics+ checks if the provided \verb+api, args+
+are a subset of api call(s) already registered in the Analytics DB. The 
 \verb+get_data+ and \verb+parser+ are define methods to fetch and parse
 data, respectively.
 \item Perform aggregation by iterating over records from the previous step
@@ -545,13 +544,13 @@ else:
 The \verb+daskey+
 is a key which identifies the record defined in Mapping DB, e.g. \verb+file.name+
 for \verb+file+ record.
-We did use a bulk insert operations at this step to increase throughput. 
+Bulk insert operations are used at this step to increase throughput. 
 \item Get results from the cache
 \end{enumerate}
 %We also have an option to run independent set of daemons, DAS robots, who
 %monitor Analytics DB for most popular requests and pre-fetch the most
 %common data into the cache. 
-We can also automate populating the cache by running an 
+The cache population can be automated by running an
 independent set of daemons, DAS robots, which monitor the 
 Analytics DB for suitable requests (for example queries that are 
 popular, periodic in nature or expensive) and pre-fetch data into the cache. 
@@ -575,7 +574,7 @@ is associated with a \verb+block+ key who has the following attributes
 \verb+name+, \verb+size+, \verb+replica+. The set of attributes is based 
 on a set of meta-data information stored in a record, allowing
 for nested structures, e.g. \verb+block.replica.size+. Our users 
-are able to specify the context of their queries by using appropriate 
+are able to specify the context of their queries by using the appropriate 
 attribute(s). For example, a query for \verb+block+ represents a search for all
 block records rather then the ``block'' string, while the query
 \verb+block.name=abc*+ instructs the system to look-up appropriate blocks
@@ -583,12 +582,12 @@ with matching names. Numerical values, conditions and grouping are
 also easy to express, for example, a query
 of the form \verb+run > 10 and run < 100+ can be used to
 retrieve all run records for the given range of run numbers. 
-As a complement to the queries, we will also be adding a dynamic index
-of DAS records with a keyword-based search within record content later.
+As a complement to the queries, we will soon be adding a dynamic index
+of DAS records with a keyword-based search within record content.
 
-All input queries are transformed into the MongoDB query syntax who is itself
+All input queries are transformed into the MongoDB query syntax which is itself
 a JSON record. It contains a set of selection 
-keys (\verb+fields+) and conditions (\verb+spec+). For example, a query
+keys (\verb+fields+) and conditions (\verb+spec+). For example, the query
 \verb+dataset, file=abc, run > 10+
 is represented as
 \begin{verbatim}
@@ -603,7 +602,7 @@ is the authoritative source of information on the relationships between
 all the data services known to DAS.
 %became an authorative
 %source of information about all data-services participating in DAS.
-Based on the information stored in Mapping DB we are able to 
+Based on the information stored in the Mapping DB we are able to 
 retrieve appropriate data from different data-services, re-map them into 
 DAS notations and aggregate them on demand. For instance, the Data 
 Bookkeeping System (DBS) \cite{DBS} and data location system (PhEDEx) \cite{PhEDEx}
@@ -621,7 +620,7 @@ When a query for block meta-data is made, we are
 able to identify the appropriate set of 
 DBS and PhEDEx APIs, retrieve the raw data from the services, format it
 for DAS use and add the resulting information to the DAS cache. The records
-were merged (aggregated) based on identical key-value pairs, e.g.
+are merged (aggregated) based on identical key-value pairs, e.g.
 based on \verb+block.name+ key. Here is an example of such an aggregated record:
 \begin{verbatim}
 {"das_id": ["4b195404e2194e21c4000030", "4b1953fee2194e21c4000002"], 
@@ -636,12 +635,12 @@ The \verb+das_id+ indicates the records stored in the DAS Analytics DB,
 the \verb+block+ part represents the aggregated block meta-data information from DBS
 and PhEDEx and the \verb+das+ part contains expiration time stamps
 about how long the information is valid.
-Usage of this information was valuable contribution in debugging process of
+Usage of this information was a valuable contribution in debugging process of
 data-services themselves, e.g. identification of data-service inconsistencies, 
 latency studies, etc.
 
 \section{Results\label{Results}}
-In this section we discuss preliminary results achieved with DAS system
+In this section we discuss preliminary results achieved with the DAS system
 using different CMS data-services, see \cite{CMS, CMSDataModel}.
 
 %using the following CMS data-services:
@@ -662,9 +661,9 @@ using different CMS data-services, see \cite{CMS, CMSDataModel}.
 
 At the moment, the amount of meta-data stored in all services participating
 in DAS is around
-75 GB and 200 GB in tables and index sizes, respectively. We estimate to
-collect around 500 GB of meta-data each year during 
-normal CMS operations. The average query rate to DAS is expected to be at the 
+75 GB and 200 GB in tables and index sizes, respectively. We estimate 
+collecting around 500 GB of meta-data each year during 
+normal CMS operations. The average query rate to DAS is expected to be
 $\leq$10K requests a day.
 %In CRAFT09 acquisition era, Tier-0 produced a total of 6.03
 %billion events, 330TB in 32 datasets:
@@ -704,15 +703,15 @@ DAS total & JSON & 392635 & 238 sec & 2.05/50.7 sec \\
 \caption{Time required to fetch, parse and aggregate block information
 from DBS and PhEDEx systems. The last row shows aggregated results and 
 total time spent in all DAS components.
-The total number of DAS records are calculated as number of 
+The total number of DAS records are calculated as the number of 
 aggregated records plus left overs, the non-matched records from both systems. 
-The look-up time shown in last column represents query look-up 
+The look-up time shown in the last column represents the query look-up 
 time (2.05 sec) and time required to get all records written 
 to disk (50.7 sec).}
 \label{DAS_benchmark}
 \end{table*}
 
-The initial DAS implementation is done in Python language \cite{Python}.
+The initial DAS implementation is done in the Python language \cite{Python}.
 All tests are performed on a 64 bit Linux platform with
 1 CPU for the DAS server and 1 CPU for the MongoDB database server. 
 All tests are performed multiple times to avoid fluctuations. 
@@ -742,19 +741,19 @@ the same performance, although the time taken by the PhEDEx component is longer
 due to more complex records which leads to higher retrieval and parsing time. 
 As shown in Table \ref{DAS_benchmark},
 the look-up time spent to access individual components (last column) is quite
-reasonable, roughly 1 second for both systems. While the final time to
+reasonable, roughly 1 second for both systems. The final time to
 get DAS records on disk is about 50 seconds. This is mostly due to I/O and
-conversion operations between binary data format used by MongoDB, BSON, to DAS
-data format, JSON.
+conversion operations from the binary data format used by MongoDB, BSON, 
+to the DAS data format, JSON.
 
-The individual benchmarks of MongoDB have shown that it can deliver insert rate of
-20K docs/sec and provide look-up time of $10^-5$ sec per random document.
+The individual benchmarks of MongoDB have shown that it can deliver an insert rate of
+20K docs/sec and provide a look-up time of $10^{-5}$ sec per random document.
 The results of DAS stress tests have demonstrated that we can achieve a throughput of
 $\sim$6000 docs/sec for raw cache population, 
 %$\sim$6000 docs/sec for aggregation and 
 $\sim$7600 docs/sec for reading and writing DAS records to disk,
 which is suitable for our needs. 
-Please note, we have relatively small audience of users
+Please note, we have a relatively small audience of users
 who perform complex queries and get precise results, while search 
 engines are designed for a large number of users asking for imprecise, simple data.
 Since all tests were performed on a single CPU, further improvements from
@@ -765,36 +764,22 @@ python extensions for data intensive operations.
 \section{Future work}
 In the near future we plan to put DAS into production and confirm its scalability, 
 transparency and durability for various CMS data-services. 
-Our interests are plug-able interface for participating data-providers;
+Our interests are plug-able interface for participating data-providers,
 analytics framework and pre-fetch strategies as well as horizontal scaling of the
 system. Our goal is to sustain 1TB of meta-data per year. 
 In a long term, we would like to use DAS across various
-data-services in HEP community and other disciplines. Even though the DAS was developed
-for CMS HEP experiment, its architecture is transparent to participating 
+data-services in the HEP community and other disciplines. Even though DAS was developed
+for the CMS experiment, its architecture is transparent to participating 
 data-providers and meta-data content. Therefore the generalization of DAS is feasible.
 Such work has began under the umbrella of DISCOVER Research Service Group at 
-Cornell University \cite{DRSG} who expressed their interest to use DAS in other 
+Cornell University \cite{DRSG} which has expressed their interest to use DAS in other 
 scientific domains.
 
 \section{Summary}
-%We are presented a new data aggregation service (DAS) developed for CMS High-Energy experiment
-%at LHC, CERN, Geneva, Switzerland. It is designed to provide caching and
-%aggregation layer on top of the existing relational and non-relation data-services
-%mostly in real time fashion. All data are retrieved on demand basis,
-%while pre-fetching of most common queries is in our plans. We are developed a
-%prototype in Python which is under commissioning phase right now.
-%The performance studies of the DAS system are presented in this paper. 
-%The CMS experiment is started to collect its data in December of 2009 and 
-%we expect to accumulate a few PB of real data each year. 
-%In addition, the Monte-Carlo samples will be produced at this scale.
-%Based on test studies performed in CMS, we expect that total size of
-%meta-data produced each year by experiment will be of the order of
-%500GB. The DAS system should sustain such load and provide generic 
-%``data-discovery'' service for CMS experiment in years to come.
 In this paper we have presented a new data aggregation service (DAS) 
-developed for CMS High-Energy experiment at LHC, CERN, Geneva, Switzerland. 
-We have developed a prototype for DAS, which has been designed to provide 
-caching and aggregation layer on top of the existing relational and 
+developed for the CMS High-Energy experiment at LHC, CERN, Geneva, Switzerland. 
+We have developed a prototype for DAS, designed to provide 
+caching and aggregation layers on top of the existing relational and 
 non-relational data-services in a close to real time fashion. The data 
 is retrieved on demand, with pre-fetching of common queries, 
 determined from an extensive analytics database, also possible. 
