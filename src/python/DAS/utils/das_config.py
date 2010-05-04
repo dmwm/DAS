@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.15 2009/06/25 18:05:28 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: das_config.py,v 1.16 2009/07/08 13:40:54 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -45,6 +45,10 @@ def das_readconfig(dasconfig=None):
 
     configdict['filecache_dir'] = config.get('filecache', 'dir', '')
     configdict['filecache_lifetime'] = config.getint('filecache', 'lifetime')
+    configdict['filecache_base_dir'] = \
+                config.get('filecache', 'base_dir', '00')
+    configdict['filecache_files_dir'] = \
+                int(config.get('filecache', 'files_dir', 100))
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
     configdict['hotcache'] = config.get('das', 'hotcache', None)
@@ -97,6 +101,8 @@ def das_writeconfig():
     config.add_section('filecache')
     config.set('filecache', 'dir', os.path.join(os.getcwd(), 'cache') )
     config.set('filecache', 'lifetime', 1*24*60*60) # in seconds
+    config.set('filecache', 'base_dir', '00')
+    config.set('filecache', 'files_dir', 100)
 
     config.add_section('dbs')
     config.set('dbs', 'expire', 1*60*60) # 1 hour, in seconds
