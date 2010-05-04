@@ -4,8 +4,8 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.13 2009/11/16 16:08:06 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: phedex_service.py,v 1.14 2009/11/19 20:12:58 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -53,7 +53,8 @@ class PhedexService(DASAbstractService):
         elif api == 'lfn2pfn':
             tag = 'mapping'
         else:
-            msg = 'Unsupported %s API %s' % (self.name, api)
+            msg = 'PhedexService::parser, unsupported %s API %s' \
+                % (self.name, api)
             raise Exception(msg)
         gen = xml_parser(data_ptr, tag, add)
         for row in gen:
