@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.56 2010/02/02 20:17:20 valya Exp $"
-__version__ = "$Revision: 1.56 $"
+__revision__ = "$Id: das_core.py,v 1.57 2010/02/03 16:53:40 valya Exp $"
+__version__ = "$Revision: 1.57 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -143,10 +143,21 @@ class DASCore(object):
                 eval(obj) # load class def
                 klassobj = '%s(dasconfig)' % klass
                 setattr(self, name, eval(klassobj))
+            except IOError:
+                try:
+                    stm  = "from DAS.services.generic_service"
+                    stm += " import GenericService\n"
+                    obj = compile(str(stm), '<string>', 'exec')
+                    eval(obj) # load class def
+                    klassobj = 'GenericService("%s", dasconfig)' % name
+                    setattr(self, name, eval(klassobj))
+                except:
+                    traceback.print_exc()
+                    msg = "Unable to load %s data-service plugin" % name
+                    raise Exception(msg)
             except:
                 traceback.print_exc()
-                msg = "Unable to load %s plugin (%s_service.py)" \
-                % (name, name)
+                msg = "Unable to load %s data-service plugin" % name
                 raise Exception(msg)
 
         self.service_keys = {}
