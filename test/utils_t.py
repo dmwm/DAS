@@ -108,7 +108,7 @@ class testUtils(unittest.TestCase):
     def test_dasheader(self):
         """Test DAS header"""
         expect = ['dbs']
-        header = dasheader('dbs', 'q1', 'api1', 'url1', 'args1', 'ct1', 10, 1)
+        header = dasheader('dbs', 'q1', 'api1', 'url1', 'args1', 'ct1', 10)
         self.assertEqual(expect, header['das']['system'])
 
     def test_cartesian_product(self):
@@ -335,7 +335,10 @@ class testUtils(unittest.TestCase):
         smap   = {
                 'api1' : {
                         'keys': ['k1', 'k2'],
-                        'params' : {'p1': 1, 'p2': 2}
+                        'params' : {'p1': 1, 'p2': 2},
+                        'url' : 'http://a.b.com',
+                        'expire': 100,
+                        'format' : 'XML',
                 }
         }
         result = map_validator(smap)

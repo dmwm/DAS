@@ -6,6 +6,7 @@ Unit test for DAS config module
 """
 
 import os
+import types
 import unittest
 from DAS.utils.das_config import das_configfile, das_readconfig
 from DAS.utils.das_config import das_writeconfig
@@ -25,12 +26,7 @@ class testDASConfig(unittest.TestCase):
         """test read/write of configuration file"""
         das_writeconfig()
         readdict = das_readconfig()
-        result   = readdict['systems']
-        result.sort()
-        expect   = ['dbs', 'dq', 'phedex', 'sitedb', 'monitor', 
-                        'lumidb', 'runsum', 'dashboard']
-        expect.sort()
-        self.assertEqual(expect, result)
+        self.assertEqual(types.DictType, type(readdict))
 #
 # main
 #
