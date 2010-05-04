@@ -11,29 +11,29 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-from __future__ import with_statement
-
-__revision__ = "$Id: das_core.py,v 1.69 2010/03/17 20:31:46 valya Exp $"
-__version__ = "$Revision: 1.69 $"
+__revision__ = "$Id: das_core.py,v 1.70 2010/03/19 02:24:51 valya Exp $"
+__version__ = "$Revision: 1.70 $"
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import re
 import os
 import time
 import types
 import traceback
-import DAS.utils.jsonwrapper as json
 
+# DAS modules
 from DAS.core.das_ql import das_operators
 from DAS.core.das_parser import QLManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
-from DAS.core.das_mongocache import loose, convert2pattern
+from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg
 
-import DAS.core.das_functions as das_functions
+# DAS imports
+import DAS.utils.jsonwrapper as json
 
 class DASTimer(object):
     """
@@ -92,30 +92,18 @@ class DASCore(object):
         dasconfig['mongoparser'] = self.mongoparser
 
         dasroot = os.environ['DAS_ROOT']
-        self.rawcache = None
-        # load from configuration what will be used as a raw/cold cache
-        if  dasconfig.has_key('rawcache') and dasconfig['rawcache']:
-            klass   = dasconfig['rawcache']
-            name    = klass.lower().replace('das', 'das_')
-            stm     = "from DAS.core.%s import %s\n" % (name, klass)
-            obj     = compile(str(stm), '<string>', 'exec')
-            eval(obj) # load class def
-            klassobj = '%s(dasconfig)' % klass
-            setattr(self, 'rawcache', eval(klassobj))
-            dasconfig['rawcache'] = self.rawcache
-            self.logger.info('DASCore::__init__ rawcache=%s' % klass)
-        else:
-            msg = 'DAS configuration file does not provide rawcache'
-            raise Exception(msg)
 
-        self.systems = dasmapping.list_systems()
+        # init DAS cache
+        self.rawcache = DASMongocache(dasconfig)
+        dasconfig['rawcache'] = self.rawcache
 
         # plug-in architecture: loop over registered data-services in
         # dasconfig; load appropriate module/class; register data
         # service with DASCore.
+        self.systems = dasmapping.list_systems()
         for name in self.systems:
             try:
-                klass   = 'src/python/DAS/services/%s/%s_service.py'\
+                klass  = 'src/python/DAS/services/%s/%s_service.py'\
                     % (name, name)
                 srvfile = os.path.join(dasroot, klass)
                 with file(srvfile) as srvclass:
@@ -124,20 +112,16 @@ class DASCore(object):
                             klass = line.split('(DASAbstractService)')[0]
                             klass = klass.split('class ')[-1] 
                             break
-                stm = "from DAS.services.%s.%s_service import %s\n" \
-                    % (name, name, klass)
-                obj = compile(str(stm), '<string>', 'exec')
-                eval(obj) # load class def
-                klassobj = '%s(dasconfig)' % klass
-                setattr(self, name, eval(klassobj))
+                mname  = 'DAS.services.%s.%s_service' % (name, name)
+                module = __import__(mname, fromlist=[klass])
+                obj = getattr(module, klass)(dasconfig)
+                setattr(self, name, obj)
             except IOError:
                 try:
-                    stm  = "from DAS.services.generic_service"
-                    stm += " import GenericService\n"
-                    obj = compile(str(stm), '<string>', 'exec')
-                    eval(obj) # load class def
-                    klassobj = 'GenericService("%s", dasconfig)' % name
-                    setattr(self, name, eval(klassobj))
+                    mname  = 'DAS.services.generic_service'
+                    module = __import__(mname, fromlist=['GenericService'])
+                    obj    = module.GenericService(name, dasconfig)
+                    setattr(self, name, obj)
                 except:
                     traceback.print_exc()
                     msg = "Unable to load %s data-service plugin" % name
@@ -147,21 +131,15 @@ class DASCore(object):
                 msg = "Unable to load %s data-service plugin" % name
                 raise Exception(msg)
 
+        # loop over systems and get system keys, add mapping keys to final list
         self.service_keys = {}
         self.service_parameters = {}
-        # loop over systems and get system keys,
-        # add mapping keys to final list
         for name in self.systems: 
             skeys = getattr(self, name).keys()
             self.service_keys[getattr(self, name).name] = skeys
             sparams = getattr(self, name).parameters()
             self.service_parameters[getattr(self, name).name] = sparams
 
-        # find out names of function from agg module
-        self.das_functions = \
-        [item for item in das_functions.__dict__.keys() if item.find('__') == -1]
-
-        self.das_aggregation = {} # determine at run-time
         if  self.verbose:
             self.timer.record('DASCore.__init__')
         self.dasconfig = dasconfig
