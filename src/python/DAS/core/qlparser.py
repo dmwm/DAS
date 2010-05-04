@@ -65,15 +65,19 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.17 2009/09/09 18:31:38 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: qlparser.py,v 1.18 2009/09/29 20:51:03 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import time
 import types
+import traceback
+
 from itertools import groupby
 from DAS.utils.utils import oneway_permutations, unique_list, add2dict
+from DAS.utils.utils import getarg
+from DAS.core.das_mapping_db import DASMapping
 
 DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
                  ' not like ', ' like ', 
@@ -160,20 +164,6 @@ def query_params(query):
                     break
     return selkeys, params
 
-def antrlparser(uinput):
-    """
-    Parser based on ANTRL. It returns the following dict for
-    query = find dataset, run where site = T2
-    {'ORDERING': [], 
-     'FIND_KEYWORDS': ['dataset', 'run'], 
-     'ORDER_BY_KEYWORDS': [], 
-     'WHERE_CONSTRAINTS': [{'value': 'T2', 'key': 'site', 'op': '='}, {'bracket': 'T2'}]}
-    """
-    from Wrapper import Wrapper
-    parserobj = Wrapper()
-    tokens = parserobj.parseQuery(uinput)
-    return tokens
-
 def mergecond(icond):
     """
     For given condition list coming from QL parser create condition
@@ -226,22 +216,6 @@ def getnextcond(uinput):
         res = ' '.join(qlist[0:idx_or]), obj_or, \
               ' '.join(qlist[idx_or+1:len(qlist)])
     return res
-    
-#    obj_and = ' and '
-#    obj_or  = ' or '
-#    idx_and = uinput.find(obj_and)
-#    idx_or  = uinput.find(obj_or)
-#    if  idx_and == -1 and idx_or == -1:
-#        return None, None, uinput
-#    if  idx_and != -1 and idx_or != -1:
-#        if  idx_and < idx_or:
-#            return uinput[0:idx_and], obj_and, uinput[idx_and+len(obj_and):]
-#        else:
-#            return uinput[0:idx_or], obj_or, uinput[idx_or+len(obj_or):]
-#    if  idx_and != -1 and idx_or == -1:
-#        return uinput[0:idx_and], obj_and, uinput[idx_and+len(obj_and):]
-#    if  idx_and == -1 and idx_or != -1:
-#        return uinput[0:idx_or], obj_or, uinput[idx_or+len(obj_or):]
 
 def getconditions(uinput):
     """
@@ -464,7 +438,7 @@ class QLLexer(object):
                 olist.append((pos, oper))
 #                break
         olist.sort()
-        # now we have list of postition/operators pairs, let's find out
+        # now we have list of position/operators pairs, let's find out
         # which operator has least preferences, e.g we got expression
         # a=A=2&B<=2, in this case we find position for '=', '<' and '<='
         # so we must distinguish case of '<' and '<='
@@ -1004,4 +978,233 @@ class QLParser(QLLexer):
 #        print "conddict", conddict
 #        print "daslist", daslist
 #        return services, uservices, ulist, daslist
+
+class MongoParser(object):
+    """
+    DAS Mongo query parser. 
+    """
+    def __init__(self, config):
+        self.map = DASMapping(config)
+        self.daskeys = self.map.daskeys()
+        self.operators = DAS_OPERATORS
+
+    def decompose(self, query):
+        """Extract selection keys and conditions from input Mongo query"""
+        skeys = getarg(query, 'fields', [])
+        cond  = getarg(query, 'spec', {})
+        return skeys, cond
+
+    def services(self, query):
+        """Find out DAS services to use for provided query"""
+        skeys, cond = self.decompose(query)
+        if  type(skeys) is types.StringType:
+            skeys = [skeys]
+        sdict = {}
+        # look-up services from Mapping DB
+        for key in skeys + cond.keys():
+            for service, keys in self.daskeys.items():
+                if  key in keys:
+                    if  sdict.has_key(service):
+                        vlist = sdict[service]
+                        if  key not in vlist:
+                            sdict[service] = vlist + [key]
+                    else:
+                        sdict[service] = [key]
+        return sdict
+
+    def params(self, query):
+        """
+        Return dictionary of parameters to be used in DAS Core:
+        selection keys, conditions and services.
+        """
+        skeys, cond = self.decompose(query)
+        return dict(selkeys=skeys, conditions=cond, services=self.services(query))
+
+    def dasql2mongo(self, query):
+        """
+        Convert DAS QL expression into Mongo query
+        """
+        wsplit = query.split(' where ')
+        skeys  = wsplit[0].replace('find ', '').strip().split(',')
+        cond   = {}
+        if  len(wsplit) == 2:
+            condlist = []
+            for item in self.condition_parser(query):
+                if  type(item) is types.DictType:
+                    key = item['key']
+                    oper = item['op']
+                    value = item['value']
+                    for system in self.map.list_systems():
+                        try:
+                            lkeys = self.map.lookup_keys(system, key, 
+                                                         value=value)
+                            for nkey in lkeys:
+                                if  nkey != 'date':
+                                    cdict = dict(key=nkey, op=oper, value=value)
+                                    if  cdict not in condlist:
+                                        condlist.append(cdict)
+                        except:
+                            pass
+                else:
+                    condlist.append(item)
+            cond = mongo_exp(condlist)
+        return dict(spec=cond, fields=skeys)
+
+    def condition_parser(self, uinput):
+        """Parse condition in given query"""
+        uinput  = uinput.split(' order by ')[0]
+        sublist = uinput.split(' where ')
+        olist = []
+
+        ########## internal helper function
+        def add_to_list(cond, olist):
+            """Helper function to add condition to the list"""
+            if  not cond:
+                return
+            cond_dict = self.make_cond_dict(cond)
+            tot_lb = 0
+            tot_rb = 0
+            for key, val in cond_dict.items():
+                lbr = str(val).count('(')
+                rbr = str(val).count(')')
+                if  lbr: 
+                    val = val.replace('(', '')
+                    cond_dict[key] = val
+                if  rbr: 
+                    val = val.replace(')', '')
+                    cond_dict[key] = val
+                tot_lb += lbr
+                tot_rb += rbr
+            if  tot_lb:
+                for i in range(0, tot_lb):
+                    olist.append('(')
+            olist.append(cond_dict)
+            if  tot_rb:
+                for i in range(0, tot_rb):
+                    olist.append(')')
+        ########## end of internal function
+
+        if  len(sublist)>1:
+            substr = ' '.join(sublist[1:])
+            while 1:
+                cond, oper, rest = getnextcond(substr)
+                substr = rest
+                # parse cond to extract brackets and make triples (key, op, val)
+                add_to_list(cond, olist)
+                if  oper:
+                    olist.append(oper.strip())
+                if  not cond:
+                    break
+            add_to_list(rest, olist)
+        return olist
+
+    def make_cond_dict(self, exp):
+        """Output of provided expression make a dict key op value"""
+
+        # find operator whose position is closest to key
+        olist = []
+        for oper in self.operators:
+            pos = exp.find(oper)
+            if  pos != -1:
+                olist.append((pos, oper))
+#                break
+        olist.sort()
+        # now we have list of position/operators pairs, let's find out
+        # which operator has least preferences, e.g we got expression
+        # a=A=2&B<=2, in this case we find position for '=', '<' and '<='
+        # so we must distinguish case of '<' and '<='
+        nlist = []
+        for item in olist:
+            if  not nlist:
+                nlist.append(item)
+            else:
+                idx0  = nlist[0][0]
+                oper0 = nlist[0][1]
+                idx1  = item[0]
+                oper1 = item[1]
+                if  idx1 == idx0: # find out which oper has least preference
+                    oper1_pos = self.operators.index(oper1)
+                    oper0_pos = self.operators.index(oper0)
+                    if  oper1_pos < oper0_pos:
+                        nlist[0] = item
+        if  not olist:
+            return
+        oper = nlist[0][-1]
+#        oper = olist[0][-1]
+
+        # split expression into key op value and analyze the value
+        key, value = exp.split(oper, 1)
+        if  key.strip() == 'system':
+            if  value.strip() == 'all':
+                value = self.qlmap.keys()
+        if  key == 'date': # convert date into seconds since epoch
+            if  oper != ' last ': # we already converted date
+                pat = re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
+                if  pat.match(value): # we accept YYYYMMDD
+                    d = datetime.date(int(value[0:4]), # YYYY
+                                      int(value[4:6]), # MM
+                                      int(value[6:8])) # DD
+                    value = time.mktime(d.timetuple())
+                else:
+                    msg = 'Unacceptable date format'
+                    raise Exception(msg)
+        if  oper == ' in ' or oper == ' not in ':
+            value = value.strip()
+            if  value[0] != '(' and value[-1] != ')':
+                msg = "Value for '%s' operators not enclosed with brackets"\
+                    % oper 
+                raise Exception(msg)
+            value = [i.strip() for i in \
+                    value.replace('(', '').replace(')', '').split(',')]
+        if  oper == ' between ':
+            msg = "Unsupported syntax for value of between operator"
+            try:
+                value = value.split('and')
+                if  len(value) != 2:
+                    raise Exception(msg)
+            except:
+                raise Exception(msg)
+            value = [i.strip() for i in value]
+        if  oper == ' last ':
+            msg = "Unsupported syntax for value of between operator"
+            pat = re.compile('^[0-9][0-9](h|m)$')
+            if  not pat.match(value):
+                raise Exception(msg)
+            oper = ' = '
+            if  value.find('h') != -1:
+                hour = int(value.split('h')[0])
+                if  hour > 24:
+                    raise Exception('Wrong hour %s' % value)
+                date1 = time.time() - hour*60*60
+                date2 = time.time()
+            elif value.find('m') != -1:
+                minute = int(value.split('m')[0])
+                if  minute > 60:
+                    raise Exception('Wrong minutes %s' % value)
+                date1 = time.time() - minute*60
+                date2 = time.time()
+            else:
+                raise Exception('Unsupported value for last operator')
+            value = [date1, date2]
+        if  type(value) is types.StringType:
+            value = value.strip()
+            if  value and value[0]=='[' and value[-1]==']':
+                value = eval(value)
+        return {'key':key.strip(), 'op':oper.strip(), 'value':value}
+def loose_constrains(system, query):
+    """
+    In order to look-up records in cache DB, we need to loose
+    our constraints on input query. We look-up spec part of the query
+    and loose all constrains over there,
+    see MongoDB API, http://api.mongodb.org/python/
+    """
+    spec    = getarg(query, 'spec', {})
+    fields  = getarg(query, 'fields', None)
+    newspec = {}
+    for key, val in spec.items():
+        if  type(val) is types.StringType or type(val) is types.UnicodeType:
+            val = re.compile('.*%s.*' % val)
+        newspec[key] = val
+    newspec['das.system'] = system
+    return dict(spec=newspec, fields=fields)
 
