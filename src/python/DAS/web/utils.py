@@ -5,21 +5,38 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.5 2009/07/06 19:30:33 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: utils.py,v 1.6 2009/09/09 18:44:55 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 import httplib
 import urllib
 import urllib2
+try:
+    import json # since python 2.6
+except:
+    import simplejson as json # prior python 2.6
 
-def urllib2_request(url, params, debug=0):
+def urllib2_request(request, url, params, headers={}, debug=0):
     """request method using GET request from urllib2 library"""
+    debug = 1
+    if  request == 'GET' or request == 'DELETE':
+        encoded_data=urllib.urlencode(params, doseq=True)
+        url += '?%s' % encoded_data
+        req = UrlRequest(request, url=url, headers=headers)
+    else:
+        encoded_data=json.dumps(params)
+        req = UrlRequest(request, url=url, data=encoded_data, headers=headers)
     if  debug:
-        httplib.HTTPConnection.debuglevel = 1
-    res = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-    return res.read()
+        h=urllib2.HTTPHandler(debuglevel=1)
+        opener = urllib2.build_opener(h)
+    else:
+        opener = urllib2.build_opener()
+    fdesc = opener.open(req)
+    data = fdesc.read()
+    fdesc.close()
+    return data
 
 def httplib_request(host, path, params, request='POST', debug=0):
     """request method using provided HTTP request and httplib library"""
