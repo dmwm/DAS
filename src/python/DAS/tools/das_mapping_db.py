@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.2 2009/09/01 18:23:09 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.3 2009/09/01 20:17:02 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -224,7 +224,7 @@ if __name__ == '__main__':
     api = 'nodes'
     params = {'node':'*', 'noempty':''}
     daskeys = dict(site='site.name')
-    api2das = [('node', 'site', "re.compile('([a-zA-Z0-9]+\.){2}')")]
+    api2das = [('node', 'site', "re.compile('^T[0-3]_')")]
     mgr.add_api(system, api, params, daskeys, api2das)
     # lfn2pfn API
     api = 'lfn2pfn'
@@ -310,14 +310,17 @@ if __name__ == '__main__':
 
     # RunSummary
     system = 'runsum'
-    api = ''
-    params  = {'DB':'cms_omds_lb', 'FORMAT':'XML'}
-    daskeys = dict(run='runnumber', bfield='bfield', hlt='hlt')
-    api2das = []
+    api = 'runsum'
+    params  = {'DB':'cms_omds_lb', 'FORMAT':'XML', 'RUN':'required'}
+    daskeys = dict(run='run.runnumber')
+    api2das = [('RUN', 'run', "re.compile('[1-9][0-9]{4,5}')"),
+               ('RUN', 'run', "re.compile('[1-9][0-9]{4,5}')"),
+              ]
     mgr.add_api(system, api, params, daskeys, api2das)
 
     mgr.add_notation(system, 'bField', 'bfield')
     mgr.add_notation(system, 'hltKey', 'hlt')
+    mgr.add_notation(system, 'runNumber', 'runnumber')
 
     ##### END OF RunSummary
 
