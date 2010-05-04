@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.16 2010/01/15 17:20:54 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: utils.py,v 1.17 2010/02/13 02:25:14 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -32,10 +32,10 @@ def urllib2_request(request, url, params, headers={}, debug=0):
         opener = urllib2.build_opener(h)
     else:
         opener = urllib2.build_opener()
-    fdesc = opener.open(req)
-    data = fdesc.read()
+    fdesc  = opener.open(req)
+    result = fdesc.read()
     fdesc.close()
-    return data
+    return result
 
 def httplib_request(host, path, params, request='POST', debug=0):
     """request method using provided HTTP request and httplib library"""

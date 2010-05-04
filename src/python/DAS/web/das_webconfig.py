@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.17 2010/01/26 21:03:53 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: das_webconfig.py,v 1.18 2010/02/13 02:25:14 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -91,7 +91,7 @@ active.dascontrollers.js = {
 active.dascontrollers.images = {
     'loading.gif' : environ['DAS_ROOT'] + '/src/images/loading.gif',
     'cms_logo.jpg' : environ['DAS_ROOT'] + '/src/images/cms_logo.jpg',
-    'mongodb_logo.png' : environ['DAS_ROOT'] + '/src/images/logo-mongodb-onwhite.png',
+    'mongodb_logo.png' : environ['DAS_ROOT'] + '/src/images/mongodb_logo.png',
 }
 # These are pages in "maintenance mode" - to be completed
 maint = config.DASWeb.views.section_('maintenance')
