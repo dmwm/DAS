@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.26 2009/12/13 02:48:56 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.27 2009/12/13 15:44:17 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -180,9 +180,9 @@ class DASCacheModel(RESTModel):
                 hostname=cherrypy.request.remote.name,
                 port=cherrypy.request.remote.port)
         self.col.insert(doc)
-        keys = ["qhash", "timestamp"] # can be adjusted later
-        index_list = [(key, DESCENDING) for key in keys]
-        self.col.ensure_index(index_list)
+#        keys = ["qhash", "timestamp"] # can be adjusted later
+#        index_list = [(key, DESCENDING) for key in keys]
+#        self.col.ensure_index(index_list)
 
     @checkargs
     def nresults(self, *args, **kwargs):
