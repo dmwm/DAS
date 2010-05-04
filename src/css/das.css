@@ -25,11 +25,17 @@ h3 {
     padding: .5em 0 .5em .5em;
 }
 .normal  {
+    margin: 0;
+    padding: 0;
+    border-spacing: 0px;
     font-size: 14px;
     font-family: helvetica, arial, verdana, sans-serif;
     text-decoration: none;
 }
 .small  {
+    margin: 0;
+    padding: 0;
+    border-spacing: 0px;
     font-size: 13px;
     font-family: helvetica, arial, verdana, sans-serif;
     text-decoration: none;
