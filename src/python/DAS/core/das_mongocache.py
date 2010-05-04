@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.16 2009/10/15 00:24:45 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: das_mongocache.py,v 1.17 2009/10/15 15:58:25 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -17,7 +17,7 @@ except:
     import simplejson as json # prior python 2.6
 
 # DAS modules
-from DAS.utils.utils import getarg, dict_value, merge_dict
+from DAS.utils.utils import getarg, dict_value, merge_dict, genkey
 from DAS.core.cache import Cache
 
 # monogo db modules
@@ -160,6 +160,9 @@ class DASMongocache(Cache):
         prim_key   = lkeys[0] # TODO: what to do with multiple look-up keys
         trigger    = 0
         buffer     = [] # small buffer to be used for bulk updates
+        dashash    = genkey(str(dasheader))
+        if  not self.col.find_one({'dashash':dashash}):
+            self.col.insert(dict(dashash=dashash, dasheader=dasheader))
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
             for item in results:
@@ -170,7 +173,8 @@ class DASMongocache(Cache):
                     continue
                 if  not trigger:
                     trigger = 1
-                item['das'] = dasheader
+#                item['das'] = dasheader
+                item['dashash'] = dashash
                 try:
                     entry = dict_value(item, prim_key)
                     row = self.col.find_one({prim_key:entry})
