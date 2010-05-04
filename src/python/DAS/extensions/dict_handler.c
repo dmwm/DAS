@@ -21,7 +21,7 @@ static int rematch(const char *re, const char *s)
   
     result = regexec (&compiled, s, 1, &match, 0);
     regfree (&compiled);
-    printf("Match result %d %s \n", result, s);
+/*    printf("Match result=%d, input=%s, re=%s \n", result, s, re);*/
     return result; // 0 is True
 }
 /* 
@@ -48,16 +48,31 @@ _dict_handler(PyObject *self, PyObject *args)
     if (iter == NULL)
         return dict;
 
+    const char* cstr;
+    Py_ssize_t len;
+/*    PyObject_AsReadBuffer(dict, &cstr, &len);*/
+/*    printf("DIct object %s\n", cstr);*/
     while((item = PyIter_Next(iter))) {
         key = PyDict_GetItem(map, item);
         val = PyDict_GetItem(dict, item);
-        if  (rematch(pat_int, PyString_AsString(val)) == 0) {
-            res = PyInt_FromString(PyObject_AsString(val), NULL, 10);
-        } else if  (rematch(pat_float, PyString_AsString(val)) == 0) {
-            res = PyFloat_FromString(PyObject_AsString(val), NULL);
-        } else{
-            res = val;
+
+        if(PyObject_AsReadBuffer(val, &cstr, &len) == 0) {
+
+            if  (rematch(pat_int, cstr) == 0) {
+                res = PyInt_FromString(cstr, NULL, 10);
+            } else if  (rematch(pat_float, cstr) == 0) {
+                res = PyFloat_FromString(val, NULL);
+                if  (res == NULL)
+                    res = val;
+            } else{
+                res = val;
+            }
+
+        } else {
+            PyErr_SetString(PyExc_ValueError, "could not convert value to buffer");
+            break;
         }
+
         if  (key!= NULL) {
             PyDict_SetItem(data, key, res);
         } else {
