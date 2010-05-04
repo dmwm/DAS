@@ -72,7 +72,7 @@ although they do result in significant speed improvements.
 c_ext = Feature(
     "optional C extension",
     standard=True,
-    ext_modules=[Extension('extensions.das_speed_utils',
+    ext_modules=[Extension('DAS.extensions.das_speed_utils',
                            include_dirs=['extensions'],
                            sources=['src/python/DAS/extensions/dict_handler.c'])])
 
@@ -95,22 +95,12 @@ author_email = "vkuznet@gmail.com",
 scriptfiles  = filter(os.path.isfile, ['etc/das.cfg'])
 url          = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService",
 keywords     = ["DAS", "Aggregation", "Meta-data"]
-package_dir  = {'DAS': 'src/python/DAS', 
-               'core': 'src/python/DAS/core',
-               'extensions': 'src/python/DAS/extensions',
-               'services': 'src/python/DAS/services',
-               'tools': 'src/python/DAS/tools',
-               'utils': 'src/python/DAS/utils',
-               'web': 'src/python/DAS/web'}
+package_dir  = {'DAS': 'src/python/DAS'}
 package_data = {
-    'src': ['python/DAS/services/maps/*.yml'],
+    'src': ['python/DAS/services/maps/*.yml', 'python/DAS/web/css/*.css'],
 }
-#data_files   = [
-#    ('src/js', ['src/js/ajax_utils.js', 'src/js/prototype.js', 'src/js/utils.js']),
-#    ('css', ['src/css/*.css']),
-#    ('templates', ['src/templates/*.tmpl']),
-#]
-packages     = find_packages('src/python/DAS') 
+#packages     = find_packages('src/python/DAS') 
+packages     = find_packages('src/python/') 
 packages    += ['src/css', 'src/js', 'src/templates', 'etc', 'bin', 'test', 'doc']
 license      = "CMS experiment software"
 classifiers  = [
