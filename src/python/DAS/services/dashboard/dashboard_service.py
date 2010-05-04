@@ -66,14 +66,16 @@ class DashboardService(DASAbstractService):
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
-        api   = self.map.keys()[0] # we have only one key
-        args  = dict(self.map[api]['params'])
-        date1 = time.strftime("%Y-%m-%d %H:%M:%S", \
-                time.gmtime(time.time()-24*60*60))
-        date2 = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+        api    = self.map.keys()[0] # we have only one key
+        url    = self.map[api]['url']
+        expire = self.map[api]['expire']
+        args   = dict(self.map[api]['params'])
+        date1  = time.strftime("%Y-%m-%d %H:%M:%S", \
+                 time.gmtime(time.time()-24*60*60))
+        date2  = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
         args['date1'] = date1
         args['date2'] = date2
-        cond = query['spec']
+        cond   = query['spec']
         for key, value in cond.items():
             if  type(value) is not types.DictType: # we got equal condition
                 if  key == 'date':
@@ -93,11 +95,11 @@ class DashboardService(DASAbstractService):
                 msg = 'JobSummary does not support operator %s' % oper
                 raise Exception(msg)
 
-        url = self.url + '/' + api + '?%s' % urllib.urlencode(args)
+        url = url + '/' + api + '?%s' % urllib.urlencode(args)
 
         time0 = time.time()
         params = {} # all params are passed in url
         res = self.getdata(url, params, headers=self.headers)
         genrows = self.parser(res, api, args)
         ctime = time.time() - time0
-        self.write_to_cache(query, api, url, args, genrows, ctime)
+        self.write_to_cache(query, expire, url, api, args, genrows, ctime)

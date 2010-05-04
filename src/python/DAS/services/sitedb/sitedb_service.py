@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.18 2010/01/11 21:07:19 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: sitedb_service.py,v 1.19 2010/02/02 19:55:22 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -87,7 +87,7 @@ class SiteDBService(DASAbstractService):
         if  close:
             source.close()
 
-    def parser(self, source, api, params=None):
+    def parser(self, dformat, source, api, params=None):
         """
         Parser for SiteDB JSON data-services
         """

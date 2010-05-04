@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.63 2010/01/25 20:23:03 valya Exp $"
-__version__ = "$Revision: 1.63 $"
+__revision__ = "$Id: abstract_service.py,v 1.64 2010/02/02 19:55:20 valya Exp $"
+__version__ = "$Revision: 1.64 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -31,10 +31,7 @@ class DASAbstractService(object):
     def __init__(self, name, config):
         self.name = name
         try:
-            sdict            = config[name]
-            self.verbose     = int(sdict['verbose'])
-            self.expire      = int(sdict['expire'])
-            self.url         = sdict['url']
+            self.verbose     = config['verbose']
             self.logger      = config['logger']
             self.dasmapping  = config['dasmapping']
             self.analytics   = config['dasanalytics']
@@ -178,7 +175,7 @@ class DASAbstractService(object):
         # cache, so return at the end what we have in cache.
         result = self.api(query)
 
-    def write_to_cache(self, query, api, url, args, result, ctime):
+    def write_to_cache(self, query, expire, url, api, args, result, ctime):
         """
         Write provided result set into DAS cache. Update analytics
         db appropriately.
@@ -190,13 +187,13 @@ class DASAbstractService(object):
                 % self.name
         self.logger.info(msg)
         header  = dasheader(self.name, query, api, url, args, ctime,
-            self.expire, self.version())
+            expire)
         header['lookup_keys'] = self.lookup_keys(api)
         self.localcache.update_cache(query, result, header)
         msg  = 'DASAbstractService::%s cache has been updated,' \
                 % self.name
         self.logger.info(msg)
-        self.insert_apicall(url, api, args)
+        self.insert_apicall(expire, url, api, args)
 
     def adjust_params(self, args):
         """
@@ -213,7 +210,7 @@ class DASAbstractService(object):
             row2das(self.dasmapping.notation2das, self.name, api, row)
             yield row
 
-    def insert_apicall(self, url, api, api_params):
+    def insert_apicall(self, expire, url, api, api_params):
         """
         Remove obsolete apicall records and
         insert into Analytics DB provided information about API call.
@@ -221,7 +218,7 @@ class DASAbstractService(object):
         spec = {'apicall.expire':{'$lt' : int(time.time())}}
         self.analytics.col.remove(spec)
         doc  = dict(sytsem=self.name, url=url, api=api, api_params=api_params,
-                        expire=time.time()+self.expire)
+                        expire=time.time()+expire)
         self.analytics.col.insert(dict(apicall=doc))
         index_list = [('apicall.url', DESCENDING), ('apicall.api', DESCENDING)]
         self.analytics.col.ensure_index(index_list)
@@ -303,6 +300,39 @@ class DASAbstractService(object):
         """
         return args
 
+    def get_notations(self, api):
+        """Return notations used for given API"""
+        notationmap = self.notations()
+        notations = dict(notationmap['']) # notations applied to all APIs
+        if  notationmap.has_key(api): # overwrite the one for provided API
+            notations.update(notationmap[api])
+        return notations
+
+    def parser(self, format, data, api, args=None):
+        """
+        DAS data parser. It accepts:
+
+        - *format* is a data format, e.g. XML, JSON
+        - *data* is a data source, either file-like object or
+          actual data
+        - *api* is API name
+        - *args* API input parameters 
+        """
+        print "\n### CALL generic parser", format, api, args
+        notations = self.get_notations(api)
+        if  format.lower() == 'xml':
+            tags = self.dasmapping.api2daskey(self.name, api)
+            gen  = xml_parser(notations, data, tags)
+            for row in gen:
+                yield row
+        elif format.lower() == 'json':
+            gen = json_parser(data)
+            for row in gen:
+                yield row
+        else:
+            msg = 'Unsupported data format="%s", API="%s"' % (format, api)
+            raise Exception(msg)
+
     def api(self, query):
         """
         Data service api method, can be defined by data-service class.
@@ -313,7 +343,7 @@ class DASAbstractService(object):
         self.logger.info('DASAbstractService::%s::api(%s)' \
                 % (self.name, query))
         result = False
-        for url, api, args in self.apimap(query):
+        for url, api, args, format, expire in self.apimap(query):
             try:
                 args = self.inspect_params(api, args)
                 args = self.clean_params(api, args)
@@ -323,9 +353,10 @@ class DASAbstractService(object):
                 self.logger.info(msg)
                 time0   = time.time()
                 data    = self.getdata(url, args)
-                genrows = self.parser(data, api, args)
+                genrows = self.parser(format, data, api, args)
                 ctime   = time.time() - time0
-                self.write_to_cache(query, api, url, args, genrows, ctime)
+                self.write_to_cache(query, expire, url, api, args, 
+                        genrows, ctime)
             except:
                 msg  = 'Fail to process: url=%s, api=%s, args=%s' \
                         % (url, api, args)
@@ -342,10 +373,12 @@ class DASAbstractService(object):
         cond = getarg(query, 'spec', {})
         skeys = getarg(query, 'fields', [])
         for api, value in self.map.items():
+            expire = value['expire']
+            format = value['format']
             if  value['params'].has_key('api'):
-                url = self.url # JAVA, e.g. http://host/Servlet
+                url = value['url'] # JAVA, e.g. http://host/Servlet
             else: # if we have http://host/api?...
-                url = self.url + '/' + api
+                url = value['url'] + '/' + api
             args = value['params']
             if  skeys:
                 if  not set(value['keys']) & set(query['fields']):
@@ -374,4 +407,4 @@ class DASAbstractService(object):
             # check if analytics db has a similar API call
             if  not self.pass_apicall(url, api, args):
                 continue
-            yield url, api, args
+            yield url, api, args, format, expire

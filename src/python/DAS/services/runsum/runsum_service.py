@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.18 2010/01/25 20:23:03 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: runsum_service.py,v 1.19 2010/02/02 19:55:21 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -112,17 +112,19 @@ class RunSummaryService(DASAbstractService):
         try:
             time0   = time.time()
             api     = self.map.keys()[0] # we only register 1 API
-            msg = 'DASAbstractService::%s::getdata(%s, %s)' \
-                    % (self.name, self.url, args)
+            url     = self.map[api]['url']
+            expire  = self.map[api]['expire']
+            msg     = 'DASAbstractService::%s::getdata(%s, %s)' \
+                    % (self.name, url, args)
             self.logger.info(msg)
-            data    = get_run_summary(self.url, args, key, cert, debug)
+            data    = get_run_summary(url, args, key, cert, debug)
             genrows = self.parser(data, api)
             ctime   = time.time()-time0
-            self.write_to_cache(query, api, self.url, args, genrows, ctime)
+            self.write_to_cache(query, expire, url, api, args, genrows, ctime)
         except:
             traceback.print_exc()
             msg = 'Fail to process: url=%s, api=%s, args=%s' \
-                    % (self.url, api, args)
+                    % (url, api, args)
             self.logger.warning(msg)
 
     def parser(self, source, api):

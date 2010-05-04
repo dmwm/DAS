@@ -2,70 +2,46 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-Service map reader. Service maps represented in YAML format.
+Data-provider map reader. Service maps are represented in YAML format.
 """
-__revision__ = "$Id: map_reader.py,v 1.1 2010/01/07 16:57:58 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: map_reader.py,v 1.2 2010/02/02 19:55:20 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
-import os
 import yaml
+import time
 
-def path(system=''):
+def read_service_map(filename, field="api"):
     """
-    Return path with map location for provided system.
-    """
-    if  os.environ.has_key('DAS_ROOT'):
-        return os.path.join(os.environ['DAS_ROOT'], 
-                'src/python/DAS/services/%s' % system)
-    else:
-        raise EnvironmentError('DAS_ROOT environment is not set up')
-
-def readmap(system, mapfile):
-    """
-    Read system/api map file and construct DAS record for MappingDB.
+    Read service map file and construct DAS record for MappingDB.
     """
     record = {}
-    with open(mapfile, 'r') as apimap:
+    system = ''
+    url    = ''
+    format = ''
+    with open(filename, 'r') as apimap:
         for metric in yaml.load_all(apimap.read()):
-            params = metric['params']
-            api    = metric['api']
-            record = dict(system=system, api=dict(name=api, params=params))
-            record.update(metric['record'])
-            yield record
-
-def read_api_map(system):
-    """
-    Read api map from provided system.
-    """
-    for record in readmap(system, os.path.join(path(system), 'apis.yml')):
-        yield record
-
-def read_notation_map(system):
-    """
-    Read notation map for provided service.
-    """
-    record = {}
-    with open(os.path.join(path(system), 'notations.yml'), 'r') as notations:
-        record = yaml.load(notations.read())
-        record.update(dict(system=system))
-    return record
-
-def read_presentation_map():
-    """
-    Read UI presentation map.
-    """
-    record = {}
-    with open(os.path.join(path(), 'presentation.yml'), 'r') as pmap:
-        record = yaml.load(pmap.read())
-    return record
-
-if __name__ == '__main__':
-    services = ['dbs', 'phedex', 'sitedb', 'dq', 'runsum', 'dashboard', 'lumidb', 'monitor']
-    for srv in services:
-        print "\n#### %s ####" % srv
-        for rec in read_api_map(srv):
-            print rec
-        print read_notation_map(srv)
-    print read_presentation_map()
+            if  metric.has_key('system'):
+                system = metric['system']
+            if  metric.has_key('url'):
+                url = metric['url']
+            if  metric.has_key('format'):
+                format = metric['format']
+            if  field == 'api' and metric.has_key('api'):
+                params = metric['params']
+                api    = metric['api']
+                expire = metric.get('expire', 600) # default 10 minutes
+                record = dict(url=url, system=system, expire=expire,
+                                api=dict(name=api, params=params),
+                                format=format, created=time.time())
+                record.update(metric['record'])
+                yield record
+            if  field == 'notations' and metric.has_key('notations'):
+                record = dict(notations=metric['notations'],
+                                url=url, system=system, created=time.time())
+                yield record
+            if  field == 'presentation' and metric.has_key('presentation'):
+                record = dict(presentation=metric['presentation'],
+                                created=time.time())
+                yield record
 
