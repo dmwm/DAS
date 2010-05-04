@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.14 2009/06/04 14:09:26 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: das_filecache.py,v 1.15 2009/06/05 14:10:20 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -144,7 +144,7 @@ class DASFilecache(Cache):
         db_engine    = 'sqlite:///%s' % dbfile
 #        dbfile       = None
 #        db_engine    = 'mysql://xxx:yyy@localhost/DAS'
-        self.engine  = create_engine(db_engine, echo=verbose)
+        self.engine  = create_engine(db_engine, echo=False)
         self.session = sessionmaker(bind=self.engine)
         if  not dbfile:
             self.create_table()
@@ -171,7 +171,7 @@ class DASFilecache(Cache):
             res = sql_stm.one()
         except Exception, exp:
             msg = 'query=%s\n%s %s %s\n%s' % (query, sql_stm, key, curtime, exp)
-            self.logger.info(msg)
+            self.logger.debug(msg)
 #            print "\n### das_filecache:is_expired msg=", msg
             return False
         return True
@@ -192,7 +192,7 @@ class DASFilecache(Cache):
             res = sql_stm.one()
         except Exception, exp:
             msg = 'query=%s\n%s %s %s\n%s' % (query, sql_stm, key, curtime, exp)
-            self.logger.info(msg)
+            self.logger.debug(msg)
 #            print "\n### das_filecache:incache msg=", msg
             return False
         return True
@@ -211,7 +211,7 @@ class DASFilecache(Cache):
             session.commit()
         except:
             session.rollback()
-            traceback.print_exc()
+            self.logger.debug(traceback.format_exc())
             pass
         for qobj in res:
             valid = eval(qobj.expire) - time.time()
@@ -255,7 +255,7 @@ class DASFilecache(Cache):
                     session.commit()
                 except:
                     session.rollback()
-                    traceback.print_exc()
+                    self.logger.debug(traceback.format_exc())
                     msg = "Unable to commit to DAS filecache DB"
                     raise Exception(msg)
 
@@ -307,7 +307,7 @@ class DASFilecache(Cache):
             session.commit()
         except:
             session.rollback()
-            traceback.print_exc()
+            self.logger.debug(traceback.format_exc())
             msg = "Unable to commit DAS filecache DB"
             raise Exception(msg)
 
@@ -323,7 +323,7 @@ class DASFilecache(Cache):
             session.commit()
         except:
             session.rollback()
-            traceback.print_exc()
+            self.logger.debug(traceback.format_exc())
             return False
         return True
 
