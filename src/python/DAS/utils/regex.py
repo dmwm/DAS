@@ -6,8 +6,8 @@
 Regular expression patterns
 """
 
-__revision__ = "$Id: regex.py,v 1.2 2010/04/06 20:39:27 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: regex.py,v 1.3 2010/04/13 14:58:15 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -37,3 +37,5 @@ web_arg_pattern = \
     re.compile('^[+]?\d*$') # used in web form, e.g idx=0
 number_pattern = \
     re.compile('^[-]?[0-9][0-9\.]*$') # -123
+dataset_path = \
+    re.compile('/[a-zA-Z0-9\-]+/[a-zA-Z0-9\-]+')
