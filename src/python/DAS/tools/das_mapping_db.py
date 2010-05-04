@@ -4,14 +4,15 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.25 2010/02/16 18:37:01 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.26 2010/03/09 16:13:06 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
 from optparse import OptionParser
 from DAS.core.das_mapping_db import DASMapping
 from DAS.utils.logger import DASLogger
+from DAS.utils.das_config import das_readconfig
 from DAS.services.map_reader import read_service_map
 
 class DASOptionParser: 
@@ -64,7 +65,9 @@ if __name__ == '__main__':
     optManager  = DASOptionParser()
     (opts, args) = optManager.getOpt()
 
-    logger = DASLogger(verbose=opts.debug, stdout=opts.debug)
+    dasconfig = das_readconfig()
+    logdir = dasconfig['logdir']
+    logger = DASLogger(verbose=opts.debug, stdout=opts.debug, idir=logdir)
     config = dict(logger=logger, verbose=opts.debug,
         mapping_dbhost=opts.host, mapping_dbport=opts.port, 
         mapping_dbname=opts.db)
