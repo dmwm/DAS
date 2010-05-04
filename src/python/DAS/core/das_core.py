@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.64 2010/03/03 18:49:07 valya Exp $"
-__version__ = "$Revision: 1.64 $"
+__revision__ = "$Id: das_core.py,v 1.65 2010/03/04 15:43:36 valya Exp $"
+__version__ = "$Revision: 1.65 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -24,7 +24,8 @@ import types
 import traceback
 import DAS.utils.jsonwrapper as json
 
-from DAS.core.qlparser import MongoParser, DAS_OPERATORS
+from DAS.core.qlparser import MongoParser
+from DAS.core.das_ql import das_operators
 #from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
@@ -67,7 +68,7 @@ class DASCore(object):
             self.verbose = verbose
         if  self.verbose:
             self.timer = DASTimer()
-        self.operators = [o.strip() for o in DAS_OPERATORS]
+        self.operators = das_operators()
 
         # set noresults option
         self.noresults = False
@@ -341,7 +342,7 @@ class DASCore(object):
         query, dquery = convert2pattern(loose(query))
         return self.rawcache.nresults(query, collection='merge')
 
-    def call(self, query):
+    def call(self, query, user=None):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:

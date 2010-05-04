@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.47 2010/03/03 18:54:39 valya Exp $"
-__version__ = "$Revision: 1.47 $"
+__revision__ = "$Id: qlparser.py,v 1.48 2010/03/04 15:43:36 valya Exp $"
+__version__ = "$Revision: 1.48 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -20,23 +20,11 @@ import datetime
 
 from itertools import groupby
 from DAS.utils.utils import getarg, adjust_value
-from DAS.core.das_aggregators import das_aggregators
+from DAS.core.das_ql import das_aggregators, das_filters
+from DAS.core.das_ql import das_operators, mongo_operator
 
 import DAS.utils.jsonwrapper as json
 
-DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
-                 ' between ', ' nin ', ' in ', ' last ']
-#                 ' not like ', ' like ', 
-#                 ' between ', ' not in ', ' in ', ' last ']
-MONGO_MAP = {
-    '>':'$gt',
-    '<':'$lt',
-    '>=':'$gte',
-    '<=':'$lte',
-    'in':'$in',
-    '!=':'$ne',
-    'nin':'$nin',
-}
 def convert2date(value):
     """
     Convert input value to date range format expected by DAS.
@@ -96,19 +84,19 @@ def mongo_exp(cond_list, lookup=False):
                     val = existing_value['$in'] + [val]
                     mongo_dict[key] = {'$in' : val}
                 else:
-                    existing_value.update({MONGO_MAP[oper]:val})
+                    existing_value.update({mongo_operator(oper):val})
                     mongo_dict[key] = existing_value
             else:
                 val = [existing_value, val]
                 mongo_dict[key] = {'$in' : val}
         else:
-            if  MONGO_MAP.has_key(oper):
+            if  mongo_operator(oper):
                 if  mongo_dict.has_key(key):
                     mongo_value = mongo_dict[key]
-                    mongo_value[MONGO_MAP[oper]] = val
+                    mongo_value[mongo_operator(oper)] = val
                     mongo_dict[key] = mongo_value
                 else:
-                    mongo_dict[key] = {MONGO_MAP[oper] : val}
+                    mongo_dict[key] = {mongo_operator(oper) : val}
             elif oper == 'like':
                 if  lookup:
                     # for expressions: *val* use pattern .*val.*
@@ -290,11 +278,11 @@ class MongoParser(object):
     DAS Mongo query parser. 
     """
     def __init__(self, config):
-        self.map = config['dasmapping']
-        self.analytics = config['dasanalytics']
-        self.daskeysmap = self.map.daskeys()
-        self.operators = DAS_OPERATORS
-        self.filter = 'grep '
+        self.map         = config['dasmapping']
+        self.analytics   = config['dasanalytics']
+        self.daskeysmap  = self.map.daskeys()
+        self.operators   = das_operators()
+        self.filters     = ['%s ' % f for f in das_filters()]
         self.aggregators = das_aggregators()
 
         if  not self.map.check_maps():
@@ -331,8 +319,10 @@ class MongoParser(object):
                 query = split_results[0]
                 for item in split_results[1:]:
                     func = item.split("(")[0].strip()
-                    if  item.find(self.filter) != -1:
-                        for elem in item.replace(self.filter, '').split(','):
+                    for filter in self.filters:
+                        if  item.find(filter) == -1:
+                            continue
+                        for elem in item.replace(filter, '').split(','):
                             dasfilter = elem.strip()
                             if  not dasfilter:
                                 continue
@@ -341,7 +331,7 @@ class MongoParser(object):
                                 raise Exception(msg)
                             if  dasfilter not in filters:
                                 filters.append(dasfilter)
-                    elif func in self.aggregators:
+                    if func in self.aggregators:
                         aggregators = [agg for agg in get_aggregator(item)]
                     else:
                         mapreduce.append(item)
