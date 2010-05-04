@@ -17,12 +17,44 @@ from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser
-from DAS.utils.utils import dotdict, filter
+from DAS.utils.utils import dotdict, filter, aggregator
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_aggregator(self):
+        """Test aggregator function"""
+        # 1 row in results
+        das  = {'expire': 10}
+        row  = {'das_primary_key':'vk', 'run':10, 'das':1, '_id':1}
+        rows = (row for i in range(0,1))
+        result = [r for r in aggregator(rows, das['expire'])]
+        expect = [{'run': 10, 'das':das}]
+        self.assertEqual(result, expect)
+
+        # 2 rows with different values for common key
+        rows = []
+        row  = {'das_primary_key':'vk', 'run':1, 'das':1, '_id':1}
+        rows.append(row)
+        row  = {'das_primary_key':'vk', 'run':2, 'das':1, '_id':1}
+        rows.append(row)
+        res  = (r for r in rows)
+        result = [r for r in aggregator(res, das['expire'])]
+        expect = [{'run': 1, 'das':das}, {'run': 2, 'das':das}]
+        self.assertEqual(result, expect)
+
+        # 2 rows with common value for common key
+        rows = []
+        row  = {'das_primary_key':'run.a', 'run':{'a':1,'b':1}, 'das':1, '_id':1}
+        rows.append(row)
+        row  = {'das_primary_key':'run.a', 'run':{'a':1,'b':2}, 'das':1, '_id':1}
+        rows.append(row)
+        res  = (r for r in rows)
+        result = [r for r in aggregator(res, das['expire'])]
+        expect = [{'run': [{'a': 1, 'b': 1}, {'a': 1, 'b': 2}], 'das':das}]
+        self.assertEqual(result, expect)
+
     def test_filter(self):
         """Test filter function"""
         rows = []
