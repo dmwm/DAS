@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.29 2009/09/01 17:06:15 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: abstract_service.py,v 1.30 2009/09/02 19:56:37 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -261,12 +261,25 @@ class DASAbstractService(object):
                 key = item['key']
                 oper = item['op']
                 value = item['value']
-                nkey = self.dasmapping.primary_key(self.name, key, value=value)
+                try:
+                    lkeys = self.dasmapping.lookup_keys(self.name, key, 
+                                                        value=value)
+                    # TODO, until mongo support OR I can't do much, we may
+                    # have several lookup keys, e.g. site means block.se or
+                    # block.replica.se
+                    # So will use first one
+                    nkey = lkeys[0] 
+                except:
+                    print "##### TODO: I need to decide what to do"
+                    traceback.print_exc()
+                    nkey = None
                 if  not nkey:
                     nkey = key
-                if  oper == '=':
+                if  oper == '=' and type(value) is types.StringType:
                     value = re.compile('%s.*' % value)
-                cdict = dict(key=nkey, op=oper, value=value)
+                if  key != 'date': # we skip date for Mongo to look-up,
+                    # due to variety of return formats
+                    cdict = dict(key=nkey, op=oper, value=value)
                 condlist.append(cdict)
             else:
                 condlist.append(item)
@@ -277,19 +290,16 @@ class DASAbstractService(object):
         # we return spec and fields dict
         return dict(spec=cond_dict, fields=fields)
 
-    def primary_key(self, api):
+    def lookup_keys(self, api):
         """
-        Return primary key of data output for given data-service API.
+        Return look-up keys of data output for given data-service API.
         """
-#        return self.map[api]['primary_key']
-        # TODO: I'm not sure what to do with primary keys yet
-        # how many each API output will supply?
-        prim_keys = []
+        lkeys = []
         for key in self.map[api]['keys']:
-            pkey = self.dasmapping.primary_key(self.name, key, api=api)
-            if  pkey not in prim_keys:
-                prim_keys.append(pkey)
-        return prim_keys[0]
+            for lkey in self.dasmapping.lookup_keys(self.name, key, api=api):
+                if  lkey not in lkeys:
+                    lkeys.append(lkey)
+        return lkeys
 
     def clean_params(self, api, args):
         """
@@ -312,22 +322,28 @@ class DASAbstractService(object):
         mongo_query = self.mongo_query_parser(query)
         result = False
         for url, api, args in self.apimap(query):
-            args = self.clean_params(api, args)
-            msg  = 'DASAbstractService::%s::api found %s, %s' \
-                % (self.name, api, str(args))
-            self.logger.info(msg)
-            time0   = time.time()
-            data    = self.getdata(url, args)
-            genrows = self.parser(api, data, args)
-            ctime   = time.time() - time0
-            header  = dasheader(self.name, query, api, url, args, ctime,
-                self.expire, self.version())
-            header['primary_keys'] = self.primary_key(api)
-            header['selection_keys'] = selkeys
-            self.localcache.update_cache(mongo_query, genrows, header)
-            msg  = 'DASAbstractService::%s cache has been updated,' % self.name
-            self.logger.info(msg)
-            result = True
+            try:
+                args = self.clean_params(api, args)
+                msg  = 'DASAbstractService::%s::api found %s, %s' \
+                    % (self.name, api, str(args))
+                self.logger.info(msg)
+                time0   = time.time()
+                data    = self.getdata(url, args)
+                genrows = self.parser(api, data, args)
+                ctime   = time.time() - time0
+                header  = dasheader(self.name, query, api, url, args, ctime,
+                    self.expire, self.version())
+                header['lookup_keys'] = self.lookup_keys(api)
+                header['selection_keys'] = selkeys
+                self.localcache.update_cache(mongo_query, genrows, header)
+                msg  = 'DASAbstractService::%s cache has been updated,' \
+                        % self.name
+                self.logger.info(msg)
+                result = True
+            except:
+                msg = 'Fail to process: url=%s, api=%s, args=%s' \
+                        % (url, api, args)
+                self.logger.warning(msg)
         return result
 
     def apimap(self, query):

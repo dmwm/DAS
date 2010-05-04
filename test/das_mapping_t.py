@@ -56,10 +56,9 @@ class testDASMappingMgr(unittest.TestCase):
                   'block_name':'*', 'storage_element_name':'*',
                   'user_type':'NORMAL'}
         daskeys = dict(block='block.name')
-        api2das = [('block_name', 'block', ''),
+        api2das = [
                    ('block_name', 'block.name', ''),
-                   ('storage_element_name', 'site', ''),
-                   ('storage_element_name', 'site.se', ''),
+                   ('storage_element_name', 'block.site.se', ''),
                   ]
         self.mgr.add_api(system, api, params, daskeys, api2das)
 
@@ -70,10 +69,10 @@ class testDASMappingMgr(unittest.TestCase):
         self.assertEqual([api], res)
 
         res = self.mgr.list_daskeys(system)
-        self.assertEqual(['block'], res)
+        self.assertEqual(['block', 'block.name', 'block.site.se'], res)
 
         res = self.mgr.api_keys(api)
-        self.assertEqual(['block'], res)
+        self.assertEqual(['block', 'block.name', 'block.site.se'], res)
 
         res = self.mgr.api_params(api)
         self.assertEqual(params, res)
@@ -105,7 +104,7 @@ class testDASMappingMgr(unittest.TestCase):
         daskey = 'block'
         primkey = 'block.name'
         api_input = 'block_name'
-        res = self.mgr.primary_key(system, daskey)
+        res = self.mgr.lookup_key(system, daskey)
         self.assertEqual(primkey, res)
 
         value = ''

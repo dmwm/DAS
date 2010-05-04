@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.6 2009/09/01 20:18:04 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: runsum_service.py,v 1.7 2009/09/02 19:56:38 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -63,19 +63,22 @@ class RunSummaryService(DASAbstractService):
         debug   = 0
         if  self.verbose > 1:
             debug = 1
-        time0 = time.time()
-        data  = get_run_summary(self.url, params, key, cert, debug)
-        # similar to worker method, get all results, parse them and do
-        # mapping between returned keys to DAS ones
-        api = self.map.keys()[0] # we only register 1 API
-        genrows = self.parser(api, data, params)
-        ctime = time.time()-time0
-        header = dasheader(self.name, query, api, self.url, params,
-            ctime, self.expire, self.version())
-        header['primary_keys'] = self.primary_key(api)
-        header['selection_keys'] = selkeys
-        mongo_query = self.mongo_query_parser(query)
-        self.localcache.update_cache(mongo_query, genrows, header)
+        try:
+            time0 = time.time()
+            data  = get_run_summary(self.url, params, key, cert, debug)
+            api = self.map.keys()[0] # we only register 1 API
+            genrows = self.parser(api, data, params)
+            ctime = time.time()-time0
+            header = dasheader(self.name, query, api, self.url, params,
+                ctime, self.expire, self.version())
+            header['lookup_keys'] = self.lookup_keys(api)
+            header['selection_keys'] = selkeys
+            mongo_query = self.mongo_query_parser(query)
+            self.localcache.update_cache(mongo_query, genrows, header)
+        except:
+            msg = 'Fail to process: url=%s, api=%s, args=%s' \
+                    % (self.url, api, params)
+            self.logger.warning(msg)
         return True
 
     def parser(self, api, data, params=None):

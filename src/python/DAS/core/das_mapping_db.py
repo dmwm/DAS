@@ -7,8 +7,8 @@ DAS mapping DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_mapping_db.py,v 1.2 2009/09/01 20:20:30 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.3 2009/09/02 19:56:37 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -105,19 +105,19 @@ class DASMap(Base):
     system_id   = Column(Integer, ForeignKey('systems.id'))
     api_id      = Column(Integer, ForeignKey('apis.id'))
     daskey_id   = Column(Integer, ForeignKey('daskeys.id'))
-    primary_key = Column(String(30), nullable=False)
+    lookup_key = Column(String(30), nullable=False)
 
     system      = relation(System, order_by=System.id)
     api         = relation(Api, order_by=Api.id)
     daskey      = relation(DASKey, order_by=DASKey.id)
 
-    def __init__(self, primary_key):
-        self.primary_key = primary_key
+    def __init__(self, lookup_key):
+        self.lookup_key = lookup_key
 
     def __repr__(self):
         """String representation of DASMap ORM object"""
         return "<DASMap('%s', '%s, '%s', '%s')>" \
-        % (self.system, self.api, self.daskey, self.primary_key)
+        % (self.system, self.api, self.daskey, self.lookup_key)
 
 class API2DAS(Base):
     """API2DAS ORM"""
@@ -204,7 +204,7 @@ class DASMappingMgr(object):
         """
         Add API into mapping DB. Here args is a dict of API parameters;
         daskeys is a dict of DAS keys which this API will cover, it contains
-        daskey:primary_key map;
+        daskey:lookup_key map;
         api2das is a list of triplets: (param, daskey, pattern)
         """
         aobj = Api(api)
@@ -222,7 +222,7 @@ class DASMappingMgr(object):
                 session.add(apimapobj)
                 session.commit()
             # add DAS keys
-            for daskey, primkey in daskeys.items():
+            for daskey, lookup_key in daskeys.items():
                 try: # add new DAS key
                     kobj = session.query(DASKey).\
                         filter(DASKey.name==daskey).one()
@@ -231,7 +231,7 @@ class DASMappingMgr(object):
                     session.add(kobj)
                     session.commit()
                     pass
-                dasmap        = DASMap(primkey) 
+                dasmap        = DASMap(lookup_key) 
                 dasmap.api    = aobj
                 dasmap.system = sobj
                 dasmap.daskey = kobj
@@ -248,6 +248,12 @@ class DASMappingMgr(object):
                 except:
                     kobj = DASKey(daskey)
                     session.add(kobj)
+                    session.commit()
+                    dasmap        = DASMap(daskey) 
+                    dasmap.api    = aobj
+                    dasmap.system = sobj
+                    dasmap.daskey = kobj
+                    session.add(dasmap)
                     session.commit()
                     pass
                 pobj = session.query(APIMap).filter(APIMap.param==param).\

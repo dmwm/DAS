@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.4 2009/09/01 20:18:35 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_mongocache.py,v 1.5 2009/09/02 19:56:37 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -147,7 +147,8 @@ class DASMongocache(Cache):
                 dasheader = header['das']
                 dasheader['selection_keys'] = header['selection_keys']
                 # find out if cache contains already doc with primary key
-                prim_key = header['primary_keys']
+                lkeys = header['lookup_keys']
+                prim_key = lkeys[0] # TODO: what to do with multiple look-up keys
                 item['das'] = dasheader
                 entry = dict_value(item, prim_key)
                 res = self.col.find_one({prim_key:entry})
