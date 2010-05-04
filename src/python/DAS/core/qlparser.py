@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.32 2009/12/22 15:11:34 valya Exp $"
-__version__ = "$Revision: 1.32 $"
+__revision__ = "$Id: qlparser.py,v 1.33 2009/12/22 17:30:07 valya Exp $"
+__version__ = "$Revision: 1.33 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -241,7 +241,10 @@ class MongoParser(object):
         Query analyzer which form request query to DAS from a free text-based form.
         Return MongoDB request query.
         """
+        mapreduce = []
         if  query and type(query) is types.StringType:
+            if  query.find("|") != -1:
+                query, mapreduce = query.split("|")
             query = query.strip()
             if  query[0] == "{" and query[-1] == "}":
                 mongo_query = json.loads(query)
@@ -382,6 +385,9 @@ class MongoParser(object):
             if  not insert:
                 spec[key] = '*'
         mongo_query = dict(fields=None, spec=spec)
+        # add mapreduce if it exists
+        if  mapreduce:
+            mongo_query['mapreduce'] = mapreduce.strip()
         self.analytics.add_query(query, mongo_query)
         return mongo_query
 
