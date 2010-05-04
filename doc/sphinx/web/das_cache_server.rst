@@ -1,5 +1,5 @@
 DAS Cache Server
 ----------------
-.. automodule:: DAS.web.DASCacheModel
+.. automodule:: DAS.web.das_cache
    :members:
 

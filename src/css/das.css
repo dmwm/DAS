@@ -65,7 +65,8 @@ h3 {
     text-decoration: none;
     text-transform: none;
     color: #000000;
-    background-color: #FDFDD6;
+    background-color: #e4e4e4;
+/*    background-color: #ebe7fa;*/
     border: 1px dashed #B3B3B3;
     width: 80%;
 }
