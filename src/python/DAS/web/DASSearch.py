@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.42 2010/02/15 18:30:47 valya Exp $"
-__version__ = "$Revision: 1.42 $"
+__revision__ = "$Id: DASSearch.py,v 1.43 2010/03/01 18:56:45 valya Exp $"
+__version__ = "$Revision: 1.43 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -118,7 +118,7 @@ class DASSearch(DASWebManager):
         """
         represent DAS FAQ.
         """
-        page = self.templatepage('das_faq')
+        page = self.templatepage('das_faq', operators=self.dasmgr.operators)
         return self.page(page, response_div=False)
 
     @expose
