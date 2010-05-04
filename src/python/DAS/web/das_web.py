@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: das_web.py,v 1.1 2010/03/18 17:52:02 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_web.py,v 1.2 2010/03/25 15:01:32 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -22,15 +22,16 @@ import yaml
 from pprint import pformat
 
 from itertools import groupby
-from cherrypy import expose, tools
+from cherrypy import expose
+#from cherrypy import tools
 from cherrypy.lib.static import serve_file
 
 # DAS modules
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import exposejson, exposedasplist
 from DAS.core.das_core import DASCore
-from DAS.core.das_ql import das_aggregators, das_filters, das_operators
-from DAS.core.das_parser import parser
+from DAS.core.das_ql import das_aggregators, das_operators
+#from DAS.core.das_parser import parser
 from DAS.utils.utils import getarg, access
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.utils import urllib2_request, json2html, web_time
@@ -188,13 +189,18 @@ class DASWebService(DASWebManager):
         """
         Check provided input for valid DAS keys.
         """
-        error = self.templatepage('das_ambiguous',
+        error = self.templatepage('das_ambiguous', msg='', base=self.base,
                     input=uinput, entities=', '.join(self.daskeys))
         if  not uinput:
             return error
         # check provided input. If at least one word is not part of das_keys
         # return ambiguous template.
-        mongo_query = self.dasmgr.mongoparser.parse(uinput)
+        try:
+            mongo_query = self.dasmgr.mongoparser.parse(uinput)
+        except:
+            msg = sys.exc_info()[1]
+            return self.templatepage('das_ambiguous', msg=msg, base=self.base,
+                    input=uinput, entities=', '.join(self.daskeys))
         fields = mongo_query.get('fields', [])
         if  not fields:
             fields = []
@@ -219,13 +225,6 @@ class DASWebService(DASWebManager):
         """
         try:
             if  not args and not kwargs:
-#                msg  = self.templatepage('das_help', 
-#                        services    = ', '.join(self.dasmgr.keys()),
-#                        keywords    = ', '.join(self.dasmgr.das_keys()),
-#                        operators   = ', '.join(das_operators()),
-#                        aggregators = ', '.join(das_aggregators()),
-#                        filters     = ', '.join(das_filters()) 
-#                        )
                 page = self.form()
                 return self.page(page)
             uinput  = getarg(kwargs, 'input', '')
