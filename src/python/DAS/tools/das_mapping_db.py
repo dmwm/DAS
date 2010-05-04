@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.16 2009/12/01 15:13:50 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.17 2009/12/17 20:02:27 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -343,7 +343,8 @@ if __name__ == '__main__':
     params = {'name':''}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='admin', map='email', pattern='')],
+        'daskeys' : [dict(key='site', map='site.name', pattern=''),
+                     dict(key='admin', map='email', pattern='')],
         'api2das' : [
                 dict(api_param='name', das_key='admin', pattern=""),
         ]
@@ -354,7 +355,8 @@ if __name__ == '__main__':
     params = {'name':''}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='site', map='site.se', pattern="re.compile('([a-zA-Z0-9]+\.){2}')")],
+        'daskeys' : [dict(key='site', map='site.name', pattern=''),
+                dict(key='site', map='site.se', pattern="re.compile('([a-zA-Z0-9]+\.){2}')")],
         'api2das' : [
                 dict(api_param='name', das_key='site', pattern="re.compile('([a-zA-Z0-9]+\.){2}')"),
         ]
