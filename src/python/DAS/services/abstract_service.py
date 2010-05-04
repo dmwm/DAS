@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.55 2009/12/07 18:40:48 valya Exp $"
-__version__ = "$Revision: 1.55 $"
+__revision__ = "$Id: abstract_service.py,v 1.56 2009/12/11 16:37:56 valya Exp $"
+__version__ = "$Revision: 1.56 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -208,7 +208,9 @@ class DASAbstractService(object):
         msg  = 'DBSAbstractService::pass_apicall, %s, API=%s, args=%s'\
         % (self.name, api, api_params)
         for row in self.analytics.col.find(spec):
-            if  compare_specs(api_params, row['apicall']['api_params']):
+            input_query = dict(spec=api_params)
+            exist_query = dict(spec=row['apicall']['api_params'])
+            if  compare_specs(input_query, exists_query):
                 msg += '\nwill re-use existing api call with args=%s'\
                 % row['apicall']['api_params']
                 self.logger.info(msg)
