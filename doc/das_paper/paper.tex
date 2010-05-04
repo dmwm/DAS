@@ -140,20 +140,18 @@
 %% \address[label1]{<address>}
 %% \address[label2]{<address>}
 
-%\author[vkuznet]{Valentin Kuznetsov\corref{cor1}}
-\author[vkuznet]{Valentin Kuznetsov}
+\author[vkuznet]{Valentin Kuznetsov\corref{cor1}}
+%\author[vkuznet]{Valentin Kuznetsov}
 \address[vkuznet]{Cornell University, Ithaca, New York, USA}
-%\ead{vkuznet@gmail.com}
-
+\ead{vkuznet@gmail.com}
 \author[evans]{Dave Evans}
 \address[evans]{Fermilab, Batavia, Illinois, USA}
 %\ead{evansde@fnal.gov}
-
 \author[metson]{Simon Metson}
 \address[metson]{Bristol University, Bristol, UK}
 %\ead{s.metson@bristol.ac.uk}
 
-%\cortext[cor1]{Corresponding author}
+\cortext[cor1]{Corresponding author}
 
 \begin{abstract}
 Meta-data plays a significant role in large modern enterprises, 
@@ -625,10 +623,8 @@ based on \verb+block.name+ key. Here is an example of such an aggregated record:
 \begin{verbatim}
 {"das_id": ["4b195404e2194e21c4000030", "4b1953fee2194e21c4000002"], 
  "block": [{"name": "/a/b/c#123", "replica": [{"complete": "y", 
-            "subscribed": "n", "site": "T1_US_Buffer", "nfiles": "18", 
-            "se": "a.b.com", "size": "112694171838"}, {....}]},
-           {"name": "a/b/c#123", "nevents": "570200", 
-            "created_by": "USER_DN", "path": "/a/b/c", ...}],
+            "site": "T1_US", "nfiles": "18", "se": "a.b.com"}, {...}]},
+           {"name": "/a/b/c#123", "nevents": "570200", "path":"/a/b/c"}],
  "das": {"expire": 1259952908}}
 \end{verbatim}
 The \verb+das_id+ indicates the records stored in the DAS Analytics DB,
@@ -706,8 +702,8 @@ total time spent in all DAS components.
 The total number of DAS records are calculated as the number of 
 aggregated records plus left overs, the non-matched records from both systems. 
 The look-up time shown in the last column represents the query look-up 
-time (2.05 sec) and time required to get all records written 
-to disk (50.7 sec).}
+time (2.05s) and time required to get all records written 
+to disk (50.7s).}
 \label{DAS_benchmark}
 \end{table*}
 
