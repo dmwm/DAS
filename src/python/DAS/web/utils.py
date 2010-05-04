@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.13 2010/01/06 21:16:52 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: utils.py,v 1.14 2010/01/07 21:27:12 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -136,17 +136,18 @@ def json2html(idict, pad="", short=False):
                 ppp  = pad
             if  not nline:
                 ppp  = ''
-            for item in val:
+            for idx in range(0, len(val)):
+                item = val[idx]
                 if  type(item) is types.DictType:
                     sss += json2html(item, pad, short)
                 else:
                     if type(item) is types.NoneType:
                         sss += """%s<code class="null">None</code>""" % ppp
-                    elif  type(item) is types.IntType or pat.match(item):
+                    elif  type(item) is types.IntType or pat.match(str(item)):
                         sss += """%s<code class="number">%s</code>""" % (ppp, item)
                     else:
                         sss += """%s<code class="string">"%s"</code>""" % (ppp, item)
-                if  item != val[-1]:
+                if  idx < len(val) - 1:
                     sss += ',' + nline
             sss += ']'
             pad = orig_pad
