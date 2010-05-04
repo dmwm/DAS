@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.20 2009/12/07 20:54:34 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.21 2009/12/07 21:19:38 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -25,6 +25,7 @@ from WMCore.WebTools.Page import exposejson
 # DAS modules
 from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCacheMgr
+from DAS.utils.utils import getarg
 
 import sys
 if  sys.version_info < (2, 5):
@@ -187,10 +188,10 @@ class DASCacheModel(RESTModel):
         if  kwargs.has_key('query'):
             query = kwargs['query']
             query = self.dascore.mongoparser.requestquery(query)
-            idx   = kwargs.get('idx', 0)
-            limit = kwargs.get('limit', 0)
-            skey  = kwargs.get('skey', '')
-            order = kwargs.get('order', 'asc')
+            idx   = getarg(kwargs, 'idx', 0)
+            limit = getarg(kwargs, 'limit', 0)
+            skey  = getarg(kwargs, 'skey', '')
+            order = getarg(kwargs, 'order', 'asc')
             data.update({'status':'requested', 'idx':idx, 
                      'limit':limit, 'query':query,
                      'skey':skey, 'order':order})
@@ -242,7 +243,7 @@ class DASCacheModel(RESTModel):
         if  kwargs.has_key('query'):
             query  = kwargs['query']
             query  = self.dascore.mongoparser.requestquery(query)
-            expire = kwargs.get('expire', 600)
+            expire = getarg(kwargs, 'expire', 600)
             try:
                 status = self.cachemgr.add(query, expire)
                 data.update({'status':status, 'query':query, 'expire':expire})
@@ -275,7 +276,7 @@ class DASCacheModel(RESTModel):
                 data.update({'status':'fail', 'query':query, 'exception':msg})
                 self.debug(str(data))
                 return data
-            expire = kwargs.get('expire', 600)
+            expire = getarg(kwargs, 'expire', 600)
             try:
                 status = self.cachemgr.add(query, expire)
                 data.update({'status':status, 'query':query, 'expire':expire})
