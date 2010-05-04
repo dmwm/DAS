@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.60 2010/01/11 21:04:21 valya Exp $"
-__version__ = "$Revision: 1.60 $"
+__revision__ = "$Id: abstract_service.py,v 1.61 2010/01/15 17:10:32 valya Exp $"
+__version__ = "$Revision: 1.61 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -157,11 +157,11 @@ class DASAbstractService(object):
                 % (self.name, query)
         self.logger.info(msg)
 
-        # check the cache if there are records with given input query
+        # check the cache for records with given query/system
         qhash = genkey(query)
         dasquery = {'spec': {'das.qhash': qhash, 'das.system': self.name}, 
                     'fields': None}
-        if  self.localcache.incache(query=dasquery):
+        if  self.localcache.incache(query=dasquery, collection='cache'):
             self.analytics.update(self.name, query)
             return
         # check the cache contains records with similar queries
@@ -286,7 +286,8 @@ class DASAbstractService(object):
         """
         Data service api method, can be defined by data-service class.
         It parse input query and invoke appropriate data-service API
-        call. All results are store into localcache.
+        call. All results are stored into the DAS cache along with
+        api call inserted into Analytics DB.
         """
         self.logger.info('DASAbstractService::%s::api(%s)' \
                 % (self.name, query))
@@ -303,8 +304,6 @@ class DASAbstractService(object):
                 self.logger.info(msg)
                 time0   = time.time()
                 data    = self.getdata(url, args)
-#                gen     = self.parser(data, api, args)
-#                genrows = self.data2das(gen, api)
                 genrows = self.parser(data, api, args)
                 ctime   = time.time() - time0
                 self.analytics.add_api(self.name, query, api, args)
