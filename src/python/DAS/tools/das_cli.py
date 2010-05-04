@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.15 2009/10/02 15:16:22 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: das_cli.py,v 1.16 2009/10/12 20:08:19 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     debug = opts.verbose
     DAS = DASCore(debug=debug)
     if  opts.hash:
-        mongo_query = DAS.mongoparser.dasql2mongo(query)
+        mongo_query = DAS.mongoparser.requestquery(query)
         print "DAS-QL query:", query
         print "Mongo query :", mongo_query
         print "query hash  :", genkey(str(mongo_query))
