@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.81 2010/03/09 02:35:47 valya Exp $"
-__version__ = "$Revision: 1.81 $"
+__revision__ = "$Id: abstract_service.py,v 1.82 2010/03/09 15:06:20 valya Exp $"
+__version__ = "$Revision: 1.82 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -416,9 +416,14 @@ class DASAbstractService(object):
                     value = spec[key]
                     ckey  = "%s.%s" %(prim_key, key)
                     existing_value = ddict._get(ckey)
+# TODO: I don't know yet how to deal with values which are proximity of
+# input parameters. One way would be only to replace input parameters
+# who carry patterns with existing value of the field from the record
+# 
+#                    if  type(value) is types.StringType and \
+#                        value.find('*') != -1 and existing_value:
                     if  existing_value:
                         value = existing_value
-#                        ddict._delete(ckey)
                     ddict._set(key, value)
                 yield ddict
                 count += 1
