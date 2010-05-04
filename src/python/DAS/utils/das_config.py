@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.11 2009/06/03 19:41:24 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_config.py,v 1.12 2009/06/04 13:21:52 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -128,9 +128,10 @@ def das_writeconfig():
     'http://cmslumi.cern.ch/lumi/servlet/LumiServlet')
 
     config.add_section('runsum')
+    config.set('runsum', 'expire', 600)
     config.set('runsum', 'verbose', 1)
     config.set('runsum', 'url', '')
-    config.set('lumidb', 'url', 
+    config.set('runsum', 'url', 
     'https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary')
 
     maps = {'dbs,sitedb':'site', 'dbs,phedex':'block,site', 
