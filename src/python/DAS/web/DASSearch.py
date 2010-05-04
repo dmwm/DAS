@@ -5,19 +5,22 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.33 2010/01/06 19:47:03 valya Exp $"
-__version__ = "$Revision: 1.33 $"
+__revision__ = "$Id: DASSearch.py,v 1.34 2010/01/06 21:18:12 valya Exp $"
+__version__ = "$Revision: 1.34 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
+import sys
 import time
 import types
 import urllib
+import cherrypy
+import traceback
+
 from itertools import groupby
 from cherrypy import expose
 from cherrypy.lib.static import serve_file
-import cherrypy
 
 # WMCore/WebTools modules
 from WMCore.WebTools.Page import TemplatedPage
@@ -27,7 +30,7 @@ from WMCore.WebTools.Page import exposejson, exposedasplist
 # DAS modules
 from DAS.core.das_core import DASCore
 from DAS.utils.utils import getarg, access
-from DAS.web.utils import urllib2_request, json2html
+from DAS.web.utils import urllib2_request, json2html, web_time
 import DAS.utils.jsonwrapper as json
 
 import sys
@@ -181,19 +184,27 @@ class DASSearch(TemplatedPage):
         It uses das_searchform template for
         input form and yui_table for output Table widget.
         """
-        if  not args and not kwargs:
-            page = self.form()
-            return self.page(page)
-        uinput  = getarg(kwargs, 'input', '')
-        results = self.check_input(uinput)
-        if  results:
-            return self.page(self.form() + results)
-        view = getarg(kwargs, 'view', 'list')
-        if  args:
-            return getattr(self, args[0][0])(args[1])
-        if  view not in self.pageviews:
-            raise Exception("Page view '%s' is not supported" % view)
-        return getattr(self, '%sview' % view)(kwargs)
+        try:
+            if  not args and not kwargs:
+                page = self.form()
+                return self.page(page)
+            uinput  = getarg(kwargs, 'input', '')
+            results = self.check_input(uinput)
+            if  results:
+                return self.page(self.form() + results)
+            view = getarg(kwargs, 'view', 'list')
+            if  args:
+                return getattr(self, args[0][0])(args[1])
+            if  view not in self.pageviews:
+                raise Exception("Page view '%s' is not supported" % view)
+            return getattr(self, '%sview' % view)(kwargs)
+        except:
+            self.daslogger.error(traceback.format_exc())
+            error  = "args: %s\nkwargs: %s\n" % (args, kwargs)
+            error += "Exception type: %s\nException value: %s\nTime: %s" \
+                        % (sys.exc_type, sys.exc_value, web_time())
+            error = error.replace("<", "").replace(">", "")
+            return self.error(error)
 
     @expose
     def form(self, uinput=None, msg=None):
