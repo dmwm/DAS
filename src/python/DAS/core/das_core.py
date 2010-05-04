@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.63 2010/03/02 15:56:47 valya Exp $"
-__version__ = "$Revision: 1.63 $"
+__revision__ = "$Id: das_core.py,v 1.64 2010/03/03 18:49:07 valya Exp $"
+__version__ = "$Revision: 1.64 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -403,8 +403,7 @@ class DASCore(object):
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
         else:
-            query = dict(spec=spec, fields=fields)
             res = self.rawcache.get_from_cache(\
-                loose(query), idx, limit, skey, sorder, collection='merge')
+                query, idx, limit, skey, sorder, collection='merge')
         for row in res:
             yield row
