@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.29 2009/11/05 18:13:59 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: das_config.py,v 1.30 2009/11/16 15:47:54 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -188,7 +188,7 @@ def das_writeconfig():
     config.set('phedex', 'expire', 30*60) # 30 minutes
     config.set('phedex', 'verbose', 0)
     config.set('phedex', 'url', 
-    'https://cmsweb.cern.ch/phedex/datasvc/json/prod')
+    'http://cmsweb.cern.ch/phedex/datasvc/xml/prod')
 
     config.add_section('monitor')
     config.set('monitor', 'expire', 1*60*60) # 1 hour
