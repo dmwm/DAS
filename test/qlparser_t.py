@@ -6,10 +6,11 @@ Unit test for DAS QL parser
 """
 
 import unittest
-#from DAS.core.qlparser import antrlparser
 from DAS.core.qlparser import findbracketobj, mongo_exp
 from DAS.core.qlparser import getconditions, query_params
-from DAS.core.qlparser import QLParser
+from DAS.core.qlparser import QLParser, MongoParser
+from DAS.utils.logger import DASLogger
+from DAS.utils.das_config import das_readconfig
 
 class testQLParser(unittest.TestCase):
     """
@@ -23,13 +24,16 @@ class testQLParser(unittest.TestCase):
         self.i1 = "find dataset, run, bfield where site = T2 and admin=VK and storage=castor"
         self.i2 = "  find dataset, run where (run=1 or run=2) and storage=castor or site = T2"
 
-#    def testantrlparser(self):
-#        """test parser based on ANTRL"""
-#        q = "find dataset, run where site = T2"
-#        res = antrlparser(q)
-#        r = {'ORDERING': [], 'FIND_KEYWORDS': ['dataset', 'run'], 'ORDER_BY_KEYWORDS': [], 'WHERE_CONSTRAINTS': [{'value': 'T2', 'key': 'site', 'op': '='}, {'bracket': 'T2'}]}
-#        self.assertEqual(res, r)
-        
+        debug   = 0
+        config  = das_readconfig()
+        logger  = DASLogger(verbose=debug, stdout=debug)
+        config['logger']  = logger
+        config['verbose'] = debug
+        config['mapping_dbhost'] = 'localhost'
+        config['mapping_dbport'] = 27017
+        config['mapping_dbname'] = 'mapping'
+        self.parser = MongoParser(config)
+
     def testBracketObj(self):                          
         """test search for bracket objects"""
         testlist = [
@@ -39,6 +43,41 @@ class testQLParser(unittest.TestCase):
         for q, r in testlist:
             obj = findbracketobj(q)
             self.assertEqual(obj, r)
+
+    def test_parser(self):
+        """Test Mongo parser"""
+        query  = dict(spec={'site':'a.b.c', 'block':'bla'}, fields='block')
+        expect = {'sitedb': ['site'], 'dbs': ['block'], 
+                  'phedex': ['block', 'site'], 'dashboard': ['site']}
+        result = self.parser.services(query)
+        self.assertEqual(expect, result)
+
+        expect = {'services': {'sitedb': ['site'], 'dbs': ['block'], 
+                               'phedex': ['block', 'site'], 'dashboard': ['site']}, 
+                  'selkeys': 'block', 'conditions': {'site': 'a.b.c', 'block': 'bla'}}
+        result = self.parser.params(query)
+        self.assertEqual(expect, result)
+
+    def test_daslq2mongo(self):
+        """
+        Test das2l2mongo function.
+        """
+        query = 'find block where site=T1_CH_CERN'
+        expect = {'fields': ['block'], 
+                  'spec': {'site.name': 'T1_CH_CERN', 'jobsummary.site': 'T1_CH_CERN'}}
+        result = self.parser.dasql2mongo(query)
+        self.assertEqual(expect, result)
+
+        query = 'find block where site=a.b.c'
+        expect = {'fields': ['block'], 
+                  'spec': {'site.se': 'a.b.c', 'jobsummary.ce':'a.b.c'}}
+        result = self.parser.dasql2mongo(query)
+        self.assertEqual(expect, result)
+
+        query = 'find file,site where block=bla'
+        expect = {'fields': ['file', 'site'], 'spec': {'block.name': 'bla'}}
+        result = self.parser.dasql2mongo(query)
+        self.assertEqual(expect, result)
 
     def testFalseBracketObj(self):                          
         """false test for bracket objects"""
