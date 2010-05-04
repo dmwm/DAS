@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.27 2009/12/13 15:44:17 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.28 2009/12/14 17:38:22 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -153,7 +153,7 @@ class DASCacheModel(RESTModel):
         self.con      = Connection(dbhost, dbport)
         if  'logging' not in self.con.database_names():
             db = self.con['logging']
-            size = cdict.get('capped_size', 100*1024*1024) # 100 MB
+            size = cdict.get('capped_size', 10*1024*1024*1024) # 10 GB
             options = {'capped':True, 'size': size}
             db.create_collection('db', options)
             self.warning('Created logging.db, size=%s' % size)
