@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.23 2009/09/09 21:00:02 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: das_config.py,v 1.24 2009/09/11 15:58:10 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -41,9 +41,9 @@ def das_readconfig(dasconfig=None):
     configdict['cache_lifetime'] = config.getint('cache', 'lifetime')
     configdict['cache_chunk_size'] = config.getint('cache', 'chunk_size')
 
-    configdict['couch_servers'] = config.get('couch', 'servers', '')
-    configdict['couch_lifetime'] = config.getint('couch', 'lifetime')
-    configdict['couch_cleantime'] = config.getint('couch', 'cleantime')
+#    configdict['couch_servers'] = config.get('couch', 'servers', '')
+#    configdict['couch_lifetime'] = config.getint('couch', 'lifetime')
+#    configdict['couch_cleantime'] = config.getint('couch', 'cleantime')
 
     configdict['mongocache_dbhost'] = config.get('mongocache', 'dbhost', 'localhost')
     configdict['mongocache_dbport'] = int(config.get('mongocache', 'dbport', '27017'))
@@ -65,8 +65,9 @@ def das_readconfig(dasconfig=None):
     configdict['mapping_db_engine'] = config.get('mapping_db', 'db_engine', None)
     configdict['mapping_db_dir'] = config.get('mapping_db', 'dir', '')
 
-    configdict['analytics_db_engine'] = config.get('analytics_db', 'db_engine', None)
-    configdict['analytics_db_dir'] = config.get('analytics_db', 'dir', '')
+    configdict['analytics_dbhost'] = config.get('analytics', 'dbhost', 'localhost')
+    configdict['analytics_dbport'] = int(config.get('analytics', 'dbport', '27017'))
+    configdict['analytics_dbname'] = config.get('analytics', 'dbname', 'analytics')
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
     configdict['hotcache'] = config.get('das', 'hotcache', None)
@@ -121,10 +122,10 @@ def das_writeconfig():
     config.set('cache', 'lifetime', 5*60) # 5 minutes, in seconds
     config.set('cache', 'chunk_size', 100) # no more then 100 docs/commit
 
-    config.add_section('couch')
-    config.set('couch', 'servers', 'http://localhost:5984' )
-    config.set('couch', 'lifetime', 1*24*60*60) # in seconds
-    config.set('couch', 'cleantime', 2*60*60) # in seconds
+#    config.add_section('couch')
+#    config.set('couch', 'servers', 'http://localhost:5984' )
+#    config.set('couch', 'lifetime', 1*24*60*60) # in seconds
+#    config.set('couch', 'cleantime', 2*60*60) # in seconds
 
     config.add_section('mongocache')
     config.set('mongocache', 'lifetime', 1*24*60*60) # in seconds
@@ -155,11 +156,10 @@ def das_writeconfig():
     config.set('mapping_db', 'dir', dbdir)
     config.set('mapping_db', 'db_engine', 'sqlite:///%s' % dbfile)
 
-    config.add_section('analytics_db')
-    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'db')
-    dbfile = os.path.join(dbdir, 'das_analytics.db')
-    config.set('analytics_db', 'dir', dbdir)
-    config.set('analytics_db', 'db_engine', 'sqlite:///%s' % dbfile)
+    config.add_section('analytics')
+    config.set('analytics', 'dbhost', 'localhost')
+    config.set('analytics', 'dbport', '27017')
+    config.set('analytics', 'dbname', 'analytics')
 
     config.add_section('summary views')
     query  = 'find dataset, dataset.createdate, dataset.createby, '
