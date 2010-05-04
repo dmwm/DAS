@@ -9,8 +9,8 @@
 DAS MongoDB SON manipulator.
 """
 
-__revision__ = "$Id: das_son_manipulator.py,v 1.4 2010/04/06 20:40:47 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_son_manipulator.py,v 1.5 2010/04/13 13:33:19 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -24,21 +24,16 @@ class DAS_SONManipulator(SONManipulator):
         SONManipulator.__init__(self)
 
     def transform_incoming(self, son, collection):
-        """Manipulate an incoming SON object.
-
-        :Parameters:
-          - `son`: the SON object to be inserted into the database
-          - `collection`: the collection the object is being inserted into
+        """
+        Manipulate an incoming SON object.
         """
         if  self.will_copy():
             return SON(son)
         return son
 
     def transform_outgoing(self, son, collection):
-        """Manipulate an outgoing SON object.
-        :Parameters:
-          - `son`: the SON object being retrieved from the database
-          - `collection`: the collection this object was stored in
+        """
+        Manipulate an outgoing SON object.
         """
         if  self.will_copy():
             return SON(son)
