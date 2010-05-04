@@ -4,8 +4,8 @@
 """
 Data-provider map reader. Service maps are represented in YAML format.
 """
-__revision__ = "$Id: map_reader.py,v 1.8 2010/02/25 19:11:22 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: map_reader.py,v 1.9 2010/03/25 20:51:31 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import yaml
@@ -50,16 +50,35 @@ def read_service_map(filename, field="uri"):
                     msg = "map doesn't provide daskeys"
                     print metric
                     raise Exception(msg)
-                yield record
+                if  validator(record):
+                    yield record
             if  field == 'notations' and metric.has_key('notations'):
                 notations = metric['notations']
                 record = dict(notations=notations,
                                 system=system, created=time.time())
-                yield record
+                if  validator(record):
+                    yield record
             if  field == 'presentation' and metric.has_key('presentation'):
                 record = dict(presentation=metric['presentation'],
                                 created=time.time())
-                yield record
+                if  validator(record):
+                    yield record
         if  field == 'notations' and not notations and system: # no notations
             record = dict(notations=[], system=system, created=time.time())
-            yield record
+            if  validator(record):
+                yield record
+
+def validator(record):
+    """
+    DAS map validator
+    """
+    if  record.has_key('notations'):
+        must_have_keys = ['system', 'notations', 'created']
+    elif record.has_key('presentation'):
+        must_have_keys = ['presentation', 'created']
+    else:
+        must_have_keys = ['system', 'format', 'urn', 'url', 'expire', 
+                            'params', 'daskeys', 'created']
+    if  set(record.keys()) & set(must_have_keys) != set(must_have_keys):
+        return False
+    return True
