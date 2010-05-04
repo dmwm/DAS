@@ -497,7 +497,7 @@ e.g. \verb+site, file, run+, etc., to be used by end-users in their queries.
 Each key was mapped into set of APIs whose output was aggregated afterwards. 
 
 \subsection{DAS Analytics DB}
-The DAS Analytics DB was used to collect information
+The DAS Analytics DB collected information
 about user requests placed to the system. Each request was recorded. Upon its
 decomposition into set of selection keys and conditions we also recorded
 API name and input parameters into the Analytics DB and 
@@ -508,17 +508,19 @@ pre-fetch strategies for most common queries.
 \subsection{DAS caching system}
 The DAS caching system was used to dynamically fetch
 and aggregate data upon user requests. We used the following 
-algorithm:
+algorithm (code snippets are written in Python \cite{Python}):
 \begin{enumerate}[1.]
 \item Decompose query into set of conditions (\verb+conds+) 
-and selection keys (\verb+skeys+)
-\item Check cache for query hash, if found, look-up results from the cache
+and selection keys (\verb+skeys+).
+\item Check cache for query hash. If found, look-up results from the cache,
+otherwise proceed to the next step.
 \item Identify list of APIs which can serve requested data
 \begin{verbatim}
-apilist = [r(url, api, args) for r in mapping_db(skeys, conds)]
+apilist = [r for r in mapping_db(skeys, conds)]
 \end{verbatim}
-Here \verb+mappind_db+ defines translation between input query and data-service
-APIs which can delivery such data.
+Here \verb+r+ represents a triplet \verb+url, api, args+ and 
+\verb+mappind_db+ defines translation between input query and data-service
+APIs which can delivery the data.
 \item Iterate over APIs
 \begin{verbatim}
 for url, api, args in apilist:
@@ -527,7 +529,7 @@ for url, api, args in apilist:
     for row in parser(get_data(url, api, args)):
         yield row
 \end{verbatim}
-Here \verb+superset_in_analytics+ verifies if provided \verb+api, args+
+Here \verb+superset_in_analytics+ checks if provided \verb+api, args+
 are subset of already registered in Analytics DB api call(s). The 
 \verb+get_data+ and \verb+parser+ are define methods to fetch and parse
 data, respectively.
@@ -542,37 +544,14 @@ else:
    insert_into_cache(row)
 \end{verbatim}
 The \verb+primary_key+
-is a key which identify the record defined in Mapping DB, e.g. \verb+file.name+
+is a key which identifies the record defined in Mapping DB, e.g. \verb+file.name+
 for \verb+file+ record.
 We did use a bulk insert operations at this step to increase throughput. 
 \item Get results from the cache
 \end{enumerate}
-%The data was stored in a form of DAS records into the cache, while
-%queries were recorded into Analytics DB for further analysis.
 We also had an option to run independent set of daemons, DAS robots, who
 monitor Analytics DB for most popular requests and pre-fetch the most
 common data into DAS cache. 
-%The interesting part was being able
-%to identify the superset of api/args out of found one in an Analytics DB.
-
-%The DAS caching system was used to store data-service results and aggregated
-%information in form of DAS records. As it shown in figure \ref{DAS_cache} 
-%the DAS cache server updates Analytics DB, requests and retrieve data from DAS cache
-%and aggregate data over there. The independent set of daemons, DAS robots, were
-%constantly monitor Analytics DB for most popular requests and pre-fetch most
-%common data into DAS cache.
-
-%Each user request placed to the system was parsed and set of selection
-%and condition keys were identified. They were mapped into set of
-%data service APIs and their input parameters. DAS
-%cache was checked for a queries with a similar set of selection and condition
-%keys used earlier.\footnote{Since DAS didn't hold
-%any data by default we cannot rely on data being present in a cache.
-%Moreover if we look-up data first, we cannot tell if it was complete
-%set or not, since earlier queries may retrieve only portion of the requested data.}
-%If the superset was found a data were
-%retrieved from the cache, otherwise a data-service APIs were
-%invoked and the results were collected and aggregated inside of DAS cache.
 
 \subsection{DAS queries}
 Apart from the previous DBS-QL syntax we decided to drop its syntax and allow users
