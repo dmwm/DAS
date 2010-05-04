@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.2 2009/05/28 18:59:12 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.3 2009/05/28 19:58:40 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -95,7 +95,7 @@ class DASCacheModel(RESTModel):
         # ask for data from DAS cache, if no data found return None
         query = kwargs['query']
         idx   = getarg(kwargs, 'idx', 0)
-        limit = getarg(kwargs, 'limit', None)
+        limit = getarg(kwargs, 'limit', 0)
         data  = {'status':'requested', 'idx':idx, 'limit':limit, 'query':query}
         if  hasattr(self.dascore, 'cache'):
             if  self.dascore.cache.incache(query):
@@ -139,9 +139,9 @@ class DASCacheModel(RESTModel):
         resource with the one enclosed in the request body.
         Replace existing query in DAS cache.
         """
-        data = self.handle_delete(args, kwargs)
+        data = self.handle_delete(*args, **kwargs)
         if  data['status'] == 'success':
-            data = self.handle_post(args, kwargs)
+            data = self.handle_post(*args, **kwargs)
         else:
             data = {'status':'fail'}
         self.debug(str(data))

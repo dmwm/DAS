@@ -5,11 +5,12 @@
 Unit test for DAS cache module
 """
 
+import time
 import unittest
-from DAS.utils.utils import genkey
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_cache import DASCache
+from DAS.tools.das_cache_client import urllib2_request
 
 class testDASCache(unittest.TestCase):
     """
@@ -25,50 +26,61 @@ class testDASCache(unittest.TestCase):
         config['logger']  = logger
         config['verbose'] = debug
         self.dascache = DASCache(config)
-#        self.cachemgr = DASCacheMgr()
 
-    def test_key(self):                          
-        """test DAS cache key generator"""
-        query  = "find site where site=T2_UK"
-        result = genkey(query)
-        import md5
-        hash = md5.new()
-        hash.update(query)
-        expect = hash.hexdigest()
-        self.assertEqual(expect, result)
+    def test_cachemgr(self):
+        """test cacher server functionality"""
+        query   = 'find site where site=T2_UK'
+        idx     = 0
+        limit   = 10
+        expire  = 60
+        params  = {'query':query, 'idx':idx, 'limit':limit, 'expire':expire}
+        host    = 'http://localhost:8011'
 
-    def test_result(self):                          
-        """test DAS cache result method"""
-        query  = "find site where site=T2_UK"
-        expire = 60
-        expect = [1,2,3,4]
-        expect = self.dascache.update_cache(query, expect, expire)
-        expect = [i for i in expect]
-        if  not expect:
-            assert expect == [1,2,3,4]
-        result = [i for i in self.dascache.get_from_cache(query)]
-        result.sort()
-        from itertools import groupby
-        result = [k for k, g in groupby(result)]
-        self.assertEqual(expect, result)
-        self.dascache.delete_cache()
+        # delete query
+        request = 'DELETE'
+        path    = '/rest/json/%s' % request
+        data    = urllib2_request(host+path, params)
+        expect  = {"status":"success"}
+        self.assertEqual(expect, eval(data))
+        print "pass", path
+        
+        # get data
+        request = 'GET'
+        path    = '/rest/json/%s' % request
+        data    = urllib2_request(host+path, params)
+        expect  = {"status": "not found", "query": query, "limit": limit, "idx": idx}
+        self.assertEqual(expect, eval(data))
+        print "pass", path
 
-#    def test_cachemgr(self):
-#        """test DASCacheMgr class functionality"""
-#        cmgr = self.cachemgr
-#        def worker(item):
-#            """test worker"""
-#            print item
-#        thread.start_new_thread(cmgr.worker, (worker, ))
-#        for i in range(0, 10):
-#            query = 'find site where site=%s' % i
-#            cmgr.add(query, 10)
-#        time.sleep(2)
-#        for i in range(11, 20):
-#            query = 'find site where site=%s' % i
-#            cmgr.add(query, 10)
-#        time.sleep(10)
-#        print "the end"
+        # put request
+        request = 'PUT'
+        path    = '/rest/json/%s' % request
+        data    = urllib2_request(host+path, params)
+        expect  = {"status": "requested", "query": query, "expire":expire}
+        self.assertEqual(expect, eval(data))
+        print "pass", path
+
+        time.sleep(3)
+
+        # get data
+        request = 'GET'
+        path    = '/rest/json/%s' % request
+        data    = urllib2_request(host+path, params)
+        result  = [{"system": "sitedb", "site": "gw-3.ccc.ucl.ac.uk"}, 
+                   {"system": "sitedb", "site": "gw-3.ccc.ucl.ac.uk"}, 
+                   {"system": "sitedb", "site": "srm.glite.ecdf.ed.ac.uk  "}, 
+                   {"system": "sitedb", "site": "srm.glite.ecdf.ed.ac.uk  "}, 
+                   {"system": "sitedb", "site": "heplnx204.pp.rl.ac.uk"}, 
+                   {"system": "sitedb", "site": "lcgse01.phy.bris.ac.uk"}, 
+                   {"system": "sitedb", "site": "gfe02.hep.ph.ic.ac.uk"}, 
+                   {"system": "sitedb", "site": "gfe02.hep.ph.ic.ac.uk"}, 
+                   {"system": "sitedb", "site": "dgc-grid-50.brunel.ac.uk"}, 
+                   {"system": "sitedb", "site": "dgc-grid-50.brunel.ac.uk"}]
+        expect  = {"status": "success", "result":result,
+                   "query": query, "limit": limit, "idx": idx}
+        self.assertEqual(expect, eval(data))
+        print "pass", path
+
 #
 # main
 #

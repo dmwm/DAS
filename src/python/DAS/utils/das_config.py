@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.9 2009/05/27 20:28:04 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_config.py,v 1.10 2009/05/28 19:58:40 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -81,7 +81,8 @@ def das_writeconfig():
     config.set('das', 'systems', '%s' % systems)
     config.set('das', 'verbose', 1)
     config.set('das', 'rawcache', 'DASFilecache')
-    config.set('das', 'hotcache', 'DASMemcache')
+#    config.set('das', 'hotcache', 'DASMemcache')
+    config.set('das', 'hotcache', 'DASFilecache')
     config.set('das', 'logdir', '/tmp')
 
     config.add_section('cache')
