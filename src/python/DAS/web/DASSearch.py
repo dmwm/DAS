@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.17 2009/07/15 16:01:00 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: DASSearch.py,v 1.18 2009/09/09 18:48:41 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -30,7 +30,7 @@ except:
 # WMCore/WebTools modules
 from WMCore.WebTools.Page import TemplatedPage
 from WMCore.WebTools.Page import exposedasjson, exposedasxml, exposetext
-from WMCore.WebTools.Page import exposejson
+from WMCore.WebTools.Page import exposejson, exposexml, exposedasplist
 
 # DAS modules
 from DAS.core.das_core import DASCore
@@ -71,12 +71,6 @@ class DASSearch(TemplatedPage):
         self.lastclean = time.time()
         self.decoder   = JSONDecoder()
         self.counter = 0 # TMP stuff, see request, TODO: remove
-
-#    def clean_couch(self):
-#        """
-#        Clean couch DB
-#        """
-#        self.dasmgr.clean_cache('couch')
 
     def top(self):
         """
@@ -201,18 +195,19 @@ class DASSearch(TemplatedPage):
         invoke DAS search call, parse results and return them to
         web methods
         """
-        url    = self.cachesrv
-        uinput = getarg(kwargs, 'input', '')
-        format = getarg(kwargs, 'format', '')
-        idx    = getarg(kwargs, 'idx', 0)
-        limit  = getarg(kwargs, 'limit', 10)
-        skey   = getarg(kwargs, 'sort', '')
-        sdir   = getarg(kwargs, 'dir', 'asc')
-#        params = {'query':uinput, 'idx':idx, 'limit':limit}
-        params = {'query':uinput, 'idx':idx, 'limit':limit, 
+        url     = self.cachesrv
+        uinput  = getarg(kwargs, 'input', '')
+        format  = getarg(kwargs, 'format', '')
+        idx     = getarg(kwargs, 'idx', 0)
+        limit   = getarg(kwargs, 'limit', 10)
+        skey    = getarg(kwargs, 'sort', '')
+        sdir    = getarg(kwargs, 'dir', 'asc')
+        params  = {'query':uinput, 'idx':idx, 'limit':limit, 
                   'skey':skey, 'order':sdir}
-        path   = '/rest/json/GET'
-        result = self.decoder.decode(urllib2_request(url+path, params))
+        path    = '/rest/request'
+        headers = {"Accept": "application/json"}
+        result  = self.decoder.decode(
+        urllib2_request('GET', url+path, params, headers=headers))
         if  type(result) is types.StringType:
             data = json.loads(result)
         else:
@@ -221,44 +216,58 @@ class DASSearch(TemplatedPage):
         res    = []
         total  = 0
         form   = self.form(uinput=uinput)
+        data   = data['results'] # DAS header contains results section
+        print "\n### result", data
         if  data['status'] == 'success':
             res    = data['data']
+            resobj = []
+            for idict in data['data']:
+                del idict['das']
+#                del idict['id']
+                resobj.append(str(idict))
+            print "\n#### resobj", resobj
             titles = res[0].keys()
             titles.sort()
             if  'id' in titles:
                 titles.remove('id')
-            titles = ['id'] + titles
-            total  = data['nresults']
-            form   = self.form(uinput=uinput)
+            titles  = ['id'] + titles
+            total   = data['nresults']
+            form    = self.form(uinput=uinput)
         elif data['status'] == 'not found':
             # request data via POST
-            path   = '/rest/json/POST'
-            result = self.decoder.decode(urllib2_request(url+path, params))
+            path    = '/rest/create'
+            headers['Content-type'] = 'application/json'
+            result  = self.decoder.decode(
+            urllib2_request('POST', url+path, params, headers=headers))
             if  type(result) is types.StringType:
                 data = json.loads(result)
             else:
                 data = result
             # TODO: place AJAX message which will try to retrieve results again
-            msg    = data['status']
+            msg    = data['results']['status']
             form   = self.form(uinput=uinput, msg=msg)
         return titles, res, total, form
         
-    @exposedasxml
+#    @exposedasxml
+    @exposedasplist
     def xmlview(self, kwargs):
         """
         provide DAS XML
         """
         titles, rows, total, form = self.result(kwargs)
-        names = {'resultlist': rows}
-        page  = self.templatepage('das_xml', **names)
-        return page
+        return rows
+#        names = {'resultlist': rows}
+#        page  = self.templatepage('das_xml', **names)
+#        return page
 
-    @exposedasjson
+#    @exposedasjson
+    @exposejson
     def jsonview(self, kwargs):
         """
         provide DAS JSON
         """
         titles, rows, total, form = self.result(kwargs)
+        print "\n\n### DASSearch, JSON output", rows
         return rows
 
     @expose
@@ -364,24 +373,30 @@ class DASSearch(TemplatedPage):
             "Send POST request to server with provided parameters"
             params = {'query':idict['query']}
             url  = self.cachesrv
-            path = '/rest/json/POST' 
-            res  = self.decoder.decode(urllib2_request(url+path, params))
+            path = '/rest/create'
+            headers = {"Accept": "application/json", "Content-type":"application/json"} 
+            res  = self.decoder.decode(
+            urllib2_request('POST', url+path, params, headers=headers))
         def set_header():
+            "Set HTTP header parameters"
             timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
             cherrypy.response.headers['Expire'] = timestamp
             cherrypy.response.headers['Cache-control'] = 'no-cache'
 
-        uinput = getarg(kwargs, 'input', '')
-        uinput = urllib.unquote_plus(uinput)
-        view   = getarg(kwargs, 'view', 'table')
-        params = {'query':uinput, 'idx':0, 'limit':1}
-        path   = '/rest/json/GET'
-        url    = self.cachesrv
-        result = self.decoder.decode(urllib2_request(url+path, params))
+        uinput  = getarg(kwargs, 'input', '')
+        uinput  = urllib.unquote_plus(uinput)
+        view    = getarg(kwargs, 'view', 'table')
+        params  = {'query':uinput, 'idx':0, 'limit':1}
+        path    = '/rest/request'
+        url     = self.cachesrv
+        headers = {"Accept": "application/json"}
+        result  = self.decoder.decode(
+        urllib2_request('GET', url+path, params, headers=headers))
         if  type(result) is types.StringType:
             data  = json.loads(result)
         else:
             data  = result
+        data = data['results'] # DAS output stored in results
         if  data['status'] == 'success':
             page  = """<script type="application/javascript">reload()</script>"""
         elif data['status'] == 'in raw cache':
