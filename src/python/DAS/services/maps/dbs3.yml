@@ -1,22 +1,15 @@
 # DBS3 API mapping to DAS
 system : dbs3
 format : JSON
+#---
+#urn: acquisitioneras
+#url : "http://localhost:8585/DBS/acquisitioneras/"
+#expire : 3600
+#params : {}
+#daskeys : [
+#        {"key": "era", "map":"era", "pattern":""},
+#]
 ---
-urn: acquisitioneras
-url : "http://localhost:8585/DBS/acquisitioneras/"
-expire : 3600
-params : {}
-daskeys : [
-        {"key": "era", "map":"era", "pattern":""},
-]
----
-# Flow
-# input: primary_ds
-# converted into: primary_ds_name <== this is what we look-up, it is daskey
-# need to convert daskey into input parameter (done by das2api) 
-# primary_ds_name ==> primary_ds_name
-# what is missing is when das2api query api2das-mapping and this mapping doesn't exist
-#
 urn: primarydatasets
 url : "http://localhost:8585/DBS/primarydatasets/"
 expire : 3600
