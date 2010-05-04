@@ -11,8 +11,8 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.76 2010/05/03 19:14:06 valya Exp $"
-__version__ = "$Revision: 1.76 $"
+__revision__ = "$Id: das_core.py,v 1.77 2010/05/03 19:48:05 valya Exp $"
+__version__ = "$Revision: 1.77 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -256,12 +256,12 @@ class DASCore(object):
         query, dquery = convert2pattern(loose(query))
         return self.rawcache.incache(query, collection='merge')
 
-    def in_raw_cache_nresults(self, query):
+    def in_raw_cache_nresults(self, query, coll='merge'):
         """
         Return total number of results (count) for progived query.
         """
         query, dquery = convert2pattern(loose(query))
-        return self.rawcache.nresults(query, collection='merge')
+        return self.rawcache.nresults(query, collection=coll)
 
     def call(self, query, add_to_analytics=True):
         """
