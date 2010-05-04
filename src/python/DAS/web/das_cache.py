@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.36 2010/03/09 23:20:02 valya Exp $"
-__version__ = "$Revision: 1.36 $"
+__revision__ = "$Id: das_cache.py,v 1.1 2010/03/18 17:52:02 valya Exp $"
+__version__ = "$Revision: 1.1 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -17,30 +17,21 @@ import types
 import thread
 import cherrypy
 import traceback
-import DAS.utils.jsonwrapper as json
 
 from cherrypy import expose
-
-# DAS modules
-from DAS.core.das_core import DASCore
-from DAS.core.das_cache import DASCacheMgr
-from DAS.utils.utils import getarg, genkey
-
-#try:
-    # WMCore/WebTools modules
-#    from WMCore.WebTools.RESTModel import RESTModel
-#    from WMCore.WebTools.Page import exposejson
-#except:
-    # stand-alone version
-#    from DAS.web.tools import exposejson
-
-from DAS.web.tools import exposejson
-from DAS.web.das_webmanager import DASWebManager
 
 # monogo db modules
 from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
 from pymongo import DESCENDING, ASCENDING
+
+# DAS modules
+import DAS.utils.jsonwrapper as json
+from DAS.core.das_core import DASCore
+from DAS.core.das_cache import DASCacheMgr
+from DAS.utils.utils import getarg, genkey
+from DAS.web.tools import exposejson
+from DAS.web.das_webmanager import DASWebManager
 
 if  sys.version_info < (2, 5):
     raise Exception("DAS requires python 2.5 or greater")
@@ -122,9 +113,9 @@ def worker(query, expire):
     status  = dascore.call(query)
     return status
 
-class DASCacheModel(DASWebManager):
+class DASCacheService(DASWebManager):
     """
-    DASCacheModel represents DAS cache RESTful interface.
+    DASCacheService represents DAS cache RESTful interface.
     It supports POST/GET/DELETE/UPDATE methods who communicate with
     DAS caching systems. The input queries are placed into DAS cache
     queue and served via FIFO mechanism. 
@@ -179,7 +170,7 @@ class DASCacheModel(DASWebManager):
             db = self.con['logging']
             options = {'capped':True, 'size': capped_size}
             db.create_collection('db', options)
-            self.warning('Created logging.db, size=%s' % size)
+            self.warning('Created logging.db, size=%s' % capped_size)
         self.col      = self.con['logging']['db']
         sleep         = cdict.get('sleep', 2)
         verbose       = cdict.get('verbose', None)

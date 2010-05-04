@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.47 2010/03/10 01:19:56 valya Exp $"
-__version__ = "$Revision: 1.47 $"
+__revision__ = "$Id: das_web.py,v 1.1 2010/03/18 17:52:02 valya Exp $"
+__version__ = "$Revision: 1.1 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -24,16 +24,6 @@ from pprint import pformat
 from itertools import groupby
 from cherrypy import expose, tools
 from cherrypy.lib.static import serve_file
-
-#try:
-    # WMCore/WebTools modules
-#    from WMCore.WebTools.Page import TemplatedPage
-#    from WMCore.WebTools.Page import exposedasjson, exposetext
-#    from WMCore.WebTools.Page import exposejson, exposedasplist
-#except:
-    # stand-alone version
-#    from DAS.web.tools import exposedasjson, exposetext
-#    from DAS.web.tools import exposejson, exposedasplist
 
 # DAS modules
 from DAS.web.tools import exposedasjson, exposetext
@@ -65,9 +55,9 @@ def ajax_response(msg):
     page += "</ajax-response>"
     return page
 
-class DASSearch(DASWebManager):
+class DASWebService(DASWebManager):
     """
-    DAS web interface.
+    DAS web service interface.
     """
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
@@ -83,6 +73,8 @@ class DASSearch(DASWebManager):
                                 'http://localhost:8211')
             self.base     = '/das'
         self.dasmgr     = DASCore()
+        self.daskeys    = self.dasmgr.das_keys()
+        self.daskeys.sort()
         self.dasmapping = self.dasmgr.mapping
         self.daslogger  = self.dasmgr.logger
         self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 
@@ -196,11 +188,10 @@ class DASSearch(DASWebManager):
         """
         Check provided input for valid DAS keys.
         """
-        das_keys = self.dasmgr.das_keys()
-        das_keys.sort()
+        error = self.templatepage('das_ambiguous',
+                    input=uinput, entities=', '.join(self.daskeys))
         if  not uinput:
-            return self.templatepage('das_ambiguous', 
-                    input=uinput, entities=','.join(das_keys))
+            return error
         # check provided input. If at least one word is not part of das_keys
         # return ambiguous template.
         mongo_query = self.dasmgr.mongoparser.parse(uinput)
@@ -208,14 +199,15 @@ class DASSearch(DASWebManager):
         if  not fields:
             fields = []
         spec   = mongo_query.get('spec', {})
+        if  not fields+spec.keys():
+            return error
         for word in fields+spec.keys():
             found = 0
-            for key in das_keys:
+            for key in self.daskeys:
                 if  word.find(key) != -1:
                     found = 1
             if  not found:
-                return self.templatepage('das_ambiguous', 
-                        input=uinput, entities=', '.join(das_keys))
+                return error
         return
 
     @expose

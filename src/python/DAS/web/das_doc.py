@@ -3,11 +3,11 @@
 #pylint: disable-msg=W0613,W0622
 
 """
-DAS doc server class.
+DAS doc service class.
 """
 
-__revision__ = "$Id: das_doc.py,v 1.2 2010/03/15 02:44:09 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_doc.py,v 1.3 2010/03/18 17:52:02 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -30,9 +30,9 @@ def construct_filename(args):
             input += '/'
     return input
 
-class DocServer(object):
+class DASDocService(object):
     """
-    Documentation Server class. It uses static content of
+    DAS documentation service class. It uses static content of
     provided directory to serve sphinx documentation.
     All methods are defined with respect to default
     sphinx notations.
