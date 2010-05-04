@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.21 2010/02/08 15:14:12 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: dbs_service.py,v 1.22 2010/02/16 18:34:51 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -22,20 +22,11 @@ class DBSService(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.notationmap = self.notations()
-
-    def get_notations(self, api):
-        """Return notations used for given API"""
-        notations = dict(self.notationmap[''])
-        if  self.notationmap.has_key(api):
-            notations.update(self.notationmap[api])
-        return notations
 
     def parser(self, dformat, source, api, args=None):
         """
         DBS data-service parser.
         """
-        notations = self.get_notations(api)
         if  api == 'listBlocks':
             prim_key = 'block'
         elif api == 'listFiles':
@@ -44,6 +35,6 @@ class DBSService(DASAbstractService):
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
             raise Exception(msg)
-        gen = xml_parser(notations, source, prim_key)
+        gen = xml_parser(source, prim_key)
         for row in gen:
             yield row
