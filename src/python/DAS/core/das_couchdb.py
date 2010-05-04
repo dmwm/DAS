@@ -5,8 +5,8 @@
 DAS couchdb wrapper. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchdb.py,v 1.2 2009/03/16 15:28:50 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_couchdb.py,v 1.3 2009/03/18 19:19:30 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -16,6 +16,17 @@ from WMCore.Database.CMSCouch import CouchServer, Database
 # DAS modules
 from DAS.utils.utils import genkey, timestamp, results2couch
 from DAS.core.cache import Cache
+
+def create_views(db, design, views):
+    """
+    Create CouchDB views to look-up queries.
+    """
+    view = {}
+    view['_id'] = '_design/%s' % design
+    view['language'] = 'javascript' 
+    view['doctype'] = 'view'
+    view['views'] = views
+    db.commit(view)
 
 class DASCouchDB(Cache):
     """
@@ -32,16 +43,29 @@ class DASCouchDB(Cache):
         self.limit = self.dasmgr.couch_lifetime
         self.server = CouchServer(self.uri)
         self.dbname = "das"
-        self.design = "dasviews"
+        self.cdb    = None # cached couch DB handler
         self.logger.info('Init CouchDB %s' % self.uri)
 
-        self.views = { 'query': {'map': """
+        self.views = { 
+#            'query': {'map': """
+#function(doc) {
+#    if(doc.hash) {
+#        emit(doc.hash, doc.results);
+#    }
+#}"""
+#            },
+
+            'query': {'map': """
 function(doc) {
     if(doc.hash) {
         emit([doc.hash, doc.expire], doc.results);
     }
 }"""
             },
+        }
+
+        self.adminviews = { 
+
             'system' : {'map': """
 function(doc) {
     if(doc.results.system) {
@@ -49,6 +73,7 @@ function(doc) {
     }
 }"""
             },
+
             'cleaner' : {'map': """
 function(doc) {
     if(doc.expire) {
@@ -56,6 +81,7 @@ function(doc) {
     }
 }"""
             },
+
             'timer' : {'map': """
 function(doc) {
     if(doc.timestamp) {
@@ -63,12 +89,12 @@ function(doc) {
     }
 }"""
             },
+
             'queries' : {'map': """
 function(doc) {
     if (doc.query) {
-        emit(doc.query, doc);
+        emit(doc.query, doc.query);
     }
-}
 }""",
                         'reduce': """
 /* http://mail-archives.apache.org/mod_mbox/couchdb-user/200903.mbox/browser */
@@ -107,13 +133,9 @@ function(k,v,r) {
                 return(arr);
         }
 }
-
-
 """
             }
         }
-# for discussion about unique reduce, see
-# http://mail-archives.apache.org/mod_mbox/couchdb-user/200903.mbox/browser
 
     def dbinfo(self, dbname):
         """
@@ -125,10 +147,21 @@ function(k,v,r) {
         else:
             self.logger.warning("No '%s' found in couch db" % dbname)
 
+    def delete(self, dbname):
+        """
+        Delete couch db
+        """
+        cdb = self.couchdb(dbname)
+        if  cdb:
+            self.server.deleteDatabase(dbname)
+        return
+
     def couchdb(self, dbname):
         """
         look up db in couch db server, if found give it back to user
         """
+        if  self.cdb:
+            return self.cdb
         couch_db_list = []
         try:
             couch_db_list = self.server.listDatabases()
@@ -137,10 +170,12 @@ function(k,v,r) {
         if  dbname not in couch_db_list:
             self.logger.info("DASCouchDB::couchdb, create db %s" % dbname)
             cdb = self.server.createDatabase(dbname)
-            self.create_views(cdb)
+            create_views(cdb, 'dasviews', self.views)
+            create_views(cdb, 'dasadmin', self.adminviews)
         else:
             self.logger.info("DASCouchDB::couchdb, connect db %s" % dbname)
             cdb = self.server.connectDatabase(dbname)
+        self.cdb = cdb
         return cdb
 
     def get_from_cache(self, query):
@@ -152,10 +187,15 @@ function(k,v,r) {
         if  not cdb:
             return
         key  = genkey(query)
+
         skey = '["%s", %s ]' % (key, timestamp())
         ekey = '["%s", %s ]' % (key, 9999999999)
         options = {'startkey': skey, 'endkey': ekey}
-        results = cdb.loadview(self.design, 'query', options)
+        results = cdb.loadview('dasviews', 'query', options)
+
+#        options = {'key': '"%s"' % key}
+#        results = cdb.loadview(self.design, 'query', options)
+
         res = [row['value'] for row in results['rows']]
         if  res:
             self.logger.info("DASCouchDB::get_from_cache for %s" % query)
@@ -183,7 +223,7 @@ function(k,v,r) {
             cdb.queue(res)
         cdb.commit()
 
-    def get_view(self, view, options={}):
+    def get_view(self, design, view, options={}):
         """
         Retreieve results from cache based on provided CouchDB view
         """
@@ -191,23 +231,11 @@ function(k,v,r) {
         cdb = self.couchdb(dbname)
         if  not cdb:
             return
-        results = cdb.loadview(self.design, view, options)
+        results = cdb.loadview(design, view, options)
         res = [row['value'] for row in results['rows']]
         if  len(res) == 1:
             return res[0]
         return res
-
-    def create_views(self, db):
-        """
-        Create CouchDB views to look-up queries.
-        """
-        view = {}
-        view['_id'] = '_design/%s' % self.design
-        view['language'] = 'javascript' 
-        view['doctype'] = 'view'
-        view['views'] = self.views
-        self.logger.info("DASCouchDB::create_view_query %s" % view)
-        db.commit(view)
 
     def list_views(self):
         """

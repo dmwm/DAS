@@ -26,6 +26,9 @@ class DASOptionParser:
                                           type="int", default=0, 
                                           dest="verbose",
              help="verbose output")
+        self.parser.add_option("--delete", action="store", type="string", 
+                                          default=None, dest="delete",
+             help="delete couch DB")
         self.parser.add_option("--listviews", action="store_true", 
                                           dest="listviews",
              help="return a list of supported couch db views")
@@ -75,6 +78,13 @@ if __name__ == '__main__':
             print viewmap['map']
         sys.exit(0)
         
+    if  opts.delete:
+        print 
+        print "Delete '%s' couch DB" % opts.delete
+        print
+        DAS.delete(opts.delete)
+        sys.exit(0)
+        
     t1 = 0
     t2 = timestamp()
     if  opts.fromtime:
@@ -84,6 +94,7 @@ if __name__ == '__main__':
 
     options = {'group':'true'}
     view = 'timer'
+    design = 'dasviews'
     if  opts.query:
         key  = genkey(opts.query)
 #        skey = '["%s", %s ]' % (key, t1)
@@ -92,17 +103,22 @@ if __name__ == '__main__':
         ekey = '["%s", %s ]' % (key, 9999999999)
         options = {'startkey': skey, 'endkey': ekey}
         view = 'query'
+        design = 'dasviews'
     elif opts.system:
         key = '"%s"' % opts.system
         options = {'key' : key}
         view = 'system'
+        design = 'dasadmin'
     elif opts.queries:
         view = 'queries'
+        design = 'dasadmin'
     else:
         skey = '%s' % t1
         ekey = '%s' % t2
         options = {'startkey': skey, 'endkey': ekey}
-    results = DAS.get_view(view, options)
+        view = 'timer'
+        design = 'dasadmin'
+    results = DAS.get_view(design, view, options)
     if type(results) is types.ListType:
         for row in results:
             print row
