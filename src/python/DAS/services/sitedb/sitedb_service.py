@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.17 2009/11/25 18:22:38 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: sitedb_service.py,v 1.18 2010/01/11 21:07:19 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -13,6 +13,7 @@ import types
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import add2dict, map_validator
 from DAS.utils.utils import row2das
+import DAS.utils.jsonwrapper as json
 
 class SiteDBService(DASAbstractService):
     """
@@ -47,6 +48,44 @@ class SiteDBService(DASAbstractService):
                 if  val.find('*') != -1:
                     params[key] = val.replace('*', '')
         return params
+
+    def parser_new_sitedb_api(self, source, api, params=None):
+        """
+        Parser for SiteDB JSON data-services
+        """
+        notationmap = self.notations()
+        notations = notationmap[''] # use api='', i.e. notations valid for all APIs
+        if  notationmap.has_key(api):
+            notations.update(notationmap[api])
+
+        close = False
+        if  type(source) is types.InstanceType:
+            data = source.read()
+            close = True
+        else:
+            data = source
+
+        cache = {}
+        jsondict = json.loads(data)
+        for key in ['binds', 'sql']: # get rid of SiteDB internals
+            if  jsondict.has_key(key):
+                del jsondict[key]
+
+        pat = re.compile('T[0-9]_')
+        for key, val in jsondict.items():
+            if  type(val) is types.ListType:
+                for row in val:
+                    # convert row to DAS notations, use api=""
+                    row2das(self.dasmapping.notation2das, self.name, api, row)
+                    yield {'site': row}
+            elif type(val) is types.DictType:
+                row2das(self.dasmapping.notation2das, self.name, api, val)
+                yield {'site': val}
+            else:
+                raise "Unsupported type %s:%s" % (key, val)
+
+        if  close:
+            source.close()
 
     def parser(self, source, api, params=None):
         """
@@ -101,5 +140,5 @@ class SiteDBService(DASAbstractService):
             row2das(self.dasmapping.notation2das, self.name, "", row)
             yield {'site': row}
 
-            if  close:
-                source.close()
+        if  close:
+            source.close()
