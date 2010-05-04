@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.4 2009/03/31 16:21:18 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_webconfig.py,v 1.5 2009/04/07 19:41:17 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -32,7 +32,7 @@ config.component_('DASWeb')
 config.DASWeb.templates = environ['DAS_ROOT'] + '/src/templates'
 
 # Define the class that is the applications index
-#config.DASWeb.index = 'dassearch'
+#config.DASWeb.index = 'das'
 
 # Views are all pages 
 config.DASWeb.section_('views')
@@ -47,8 +47,8 @@ active.documentation.object = 'WMCore.WebTools.Documentation'
 # I could add a variable to the documenation object if I wanted to as follows:
 # active.documentation.foo = 'bar'
 
-active.section_('dassearch')
-active.dassearch.object = 'DAS.web.DASSearch'
+active.section_('das')
+active.das.object = 'DAS.web.DASSearch'
 
 # Controllers are standard way to return minified gzipped css and js
 active.section_('controllers')
