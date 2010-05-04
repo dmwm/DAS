@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.16 2009/06/23 18:13:45 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: das_cache.py,v 1.17 2009/07/08 13:46:14 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -133,12 +133,17 @@ class DASCacheMgr(object):
         self.sleep  = sleep # in sec. to sleep at each iteration of worker
         self.logger = DASLogger(idir=logdir, name='DASCacheMgr', 
                 verbose=verbose)
+        self.nprocs = 2*cpu_count()
+        self.pool   = multiprocessing.Pool(self.nprocs)
+        self.logger.info('Number of CPUs: %s' % self.nprocs)
 
     def add(self, query, expire):
         """Add new query to the queue"""
         if  (query, expire) in self.queue:
             return "waiting in queue"
         self.queue.append((query, expire))
+        if  not self.pool._pool:
+            self.pool = multiprocessing.Pool(self.nprocs)
         return "requested"
 
     def worker(self, func):
@@ -151,28 +156,25 @@ class DASCacheMgr(object):
         time.sleep(5) # sleep to allow main thread with DAS core take off
         msg = "start DASCacheMgr::worker with %s" % func
         self.logger.info(msg)
-        nprocs    = 2*cpu_count()
-        pool      = multiprocessing.Pool(nprocs)
-        orphans   = {} # map of orphans requests
-        worker_proc = {}
+        orphans     = {} # map of orphans requests
+        worker_proc = {} # map of workers {(queyry, lifetime): worker}
         while True: 
-            msg = "waiting queue %s" % self.queue
-            self.logger.debug(msg)
             for item in self.queue:
                 if  worker_proc.has_key(item):
                     continue # we already working on this
-                if  len(worker_proc.keys()) == nprocs:
+                if  len(worker_proc.keys()) == self.nprocs:
                     break
                 try:
                     worker_proc[item] = '' # reserve worker process
-                    result = pool.apply_async(func, (item, ))
+                    result = self.pool.apply_async(func, (item, ))
                     worker_proc[item] = result # bind result with worker
                 except:
                     traceback.print_exc()
                     orphans[item] = orphans.get(item, 0) + 1
                     break
                 time.sleep(self.sleep) # separate processes
-            msg = "will remove %s" % worker_proc
+            msg = "workers %s, in queue %s, orphans %s" \
+            % (len(worker_proc.keys()), len(self.queue), len(orphans.keys()))
             self.logger.debug(msg)
             time.sleep(self.sleep)
             for key in worker_proc.keys():
@@ -183,10 +185,20 @@ class DASCacheMgr(object):
                         self.queue.remove(key)
                         del worker_proc[key]
                     else:
-                        orphans[item] = orphans.get(item, 0) + 1
+                        orphans[key] = orphans.get(key, 0) + 1
                 # check if we have this request in orphans maps
                 # if number of retries more then 2, discard request
-                if  orphans.has_key(key) and orphans[key] > 2:
-                    del orphans[key]
-                    self.queue.remove(key)
-                    del worker_proc[key]
+#                if  orphans.has_key(key) and orphans[key] > 2:
+                if  orphans.has_key(key):
+                    try:
+                        self.queue.remove(key)
+                    except:
+                        pass
+                    try:
+                        del orphans[key]
+                    except:
+                        pass
+                    try:
+                        del worker_proc[key]
+                    except:
+                        pass
