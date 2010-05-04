@@ -17,11 +17,36 @@ from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser
+from DAS.utils.utils import dotdict
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_dotdict(self):
+        """Test dotdict class"""
+        res = {'a':{'b':{'c':10}, 'd':10}}
+        ddict = dotdict(res)
+        ddict._set('x.y.z', 10)
+        expect = {'a':{'b':{'c':10}, 'd':10}, 'x':{'y':{'z':10}}}
+        self.assertEqual(expect, ddict)
+
+        ddict._set('a.b.k.m', 10)
+        expect = {'a':{'b':{'c':10, 'k':{'m':10}}, 'd':10}, 'x':{'y':{'z':10}}}
+        self.assertEqual(expect, ddict)
+        expect = 10
+        result = ddict._get('a.b.k.m')
+        self.assertEqual(expect, result)
+
+        res = {'a':{'b':{'c':10}, 'd':[{'x':1}, {'x':2}]}}
+        ddict = dotdict(res)
+        expect = 1
+        result = ddict._get('a.d.x')
+        self.assertEqual(expect, result)
+        expect = None
+        result = ddict._get('a.M.Z')
+        self.assertEqual(expect, result)
+
     def test_merge_dict(self):
         """Test merge_dict"""
         dict1  = {'block':{'name':'AAA', 'b':{'c':1}, 'size':2}, 'das':{'system':'dbs'}}
