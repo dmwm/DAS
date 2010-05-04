@@ -5,22 +5,20 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.5 2009/09/02 19:56:37 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_mongocache.py,v 1.6 2009/09/02 20:57:11 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
-import os
 import time
 import types
-import traceback
 
 # DAS modules
-from DAS.utils.utils import genkey, getarg, sort_data
-from DAS.utils.utils import dict_value, merge_dict
+from DAS.utils.utils import getarg, dict_value, merge_dict
 from DAS.core.cache import Cache
 
 # monogo db modules
 from pymongo.connection import Connection
+import pymongo
 
 def mongo_query(query):
     """Take das input query and convert it into mongo DB one"""
@@ -123,7 +121,7 @@ class DASMongocache(Cache):
             res = self.col.find(**query)
         for obj in res:
             row = obj.to_dict()
-            del(row['_id']) # mongoDB add internal _id of the obj, we don't need it
+            del(row['_id']) #mongo add internal _id, we don't need it
             fields = query['fields']
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
@@ -141,14 +139,14 @@ class DASMongocache(Cache):
                 % query)
         if  not results:
             return
+        dasheader = header['das']
+        dasheader['selection_keys'] = header['selection_keys']
+        lkeys = header['lookup_keys']
+        index_list = [(key, pymongo.DESCENDING) for key in lkeys]
+        prim_key = lkeys[0] # TODO: what to do with multiple look-up keys
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
             for item in results:
-                dasheader = header['das']
-                dasheader['selection_keys'] = header['selection_keys']
-                # find out if cache contains already doc with primary key
-                lkeys = header['lookup_keys']
-                prim_key = lkeys[0] # TODO: what to do with multiple look-up keys
                 item['das'] = dasheader
                 entry = dict_value(item, prim_key)
                 res = self.col.find_one({prim_key:entry})
@@ -164,6 +162,11 @@ class DASMongocache(Cache):
                         self.col.insert(item)
                 else:
                     self.col.insert(item)
+                if  index_list:
+                    try:
+                        self.col.ensure_index(index_list)
+                    except:
+                        pass
         else:
             raise Exception('Provided results is not a list/generator type')
 #            system = header['das']['system']
