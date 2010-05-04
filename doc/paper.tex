@@ -318,7 +318,7 @@ Once such a conglomerate of data-services start operating the obvious
 question arises: how do we find the desired information across multiple data-services
 in our distributed environment? Even though the individual data-services were designed
 to answer specific questions about the data they serve, the ability to search and relate
-information among them was remains a tedious human task. The growing amount of information
+information among them remains a tedious human task. The growing amount of information
 and desire to make cross-service queries led us to design and develop the new
 Data Aggregation System.
 
@@ -411,22 +411,22 @@ The DAS core library is responsible for data retrieval on demand.
 It has the following components: input query validator and parser,
 query analyzer, workflow builder, execution engine and data-service 
 plug-ins. The communication between client (web server or CLI) and 
-DAS cache server was done via the REST \cite{REST} interface. 
-Each input query was recorded into the Analytics DB for further 
-analysis, and was decomposed into a set of conditions and/or selection keys.
-First the results were looked up in a cache and delivered to the requester
-if superset of input conditions was found in analytics DB.\footnote{It is important
+DAS cache server is done via the REST \cite{REST} interface. 
+Each input query is recorded into the Analytics DB for further 
+analysis, and is decomposed into a set of conditions and/or selection keys.
+First the results are looked up in a cache and delivered to the requester
+if superset of input conditions is found in analytics DB.\footnote{It is important
 to note here that we didn't look-up results in a cache and rather
 compared input query condition set to the records in analytics DB 
 in order to understand if other API calls are covered the input request.}
-Otherwise, the appropriate workflow, a set of API calls, was constructed
+Otherwise, the appropriate workflow, a set of API calls, is constructed
 for the execution engine. It invoked the API calls via data-service
 plug-ins and stored results into the cache. At this step we also
 performed necessary data aggregation for records with similar key-value
 pairs. The data-service plug-in implementations are similar and their 
 logic is largely abstracted, apart from a few extensions such as specific
 security modules for data-services accessible via private network.
-Finally, the results were retrieved from the cache and delivered to the user. 
+Finally, the results are retrieved from the cache and delivered to the user. 
 
 \subsection{DAS Mapping DB\label{MappingDB}}
 The Mapping DB is used to track services known to DAS and how DAS should interact with them.
@@ -675,13 +675,15 @@ System & Format & Records & Elapsed time & Elapsed time \\
 \hline
 DAS (DBS) & XML & 382396 & 63 sec & 0.98 sec \\
 DAS (PhEDEx) & XML & 186145/180439 & 164 sec & 0.98 sec \\
-DAS (aggregate) & JSON & 388108 & 234 sec & 2.05/50.7 sec \\
+DAS (total) & JSON & 388108 & 234 sec & 2.05/50.7 sec \\
 \hline
 \hline
 \end{tabular}
 \caption{Time required to fetch, parse and aggregate block information
 from DBS and PhEDEx systems. The PhEDEx
 system shows fetched (186145) and merged (180439) records. 
+The last row shows aggregated results and total time
+spent in all components (DBS+PhEDEx+aggregation).
 The total number of DAS records are calculated as number of 
 aggregated records plus left overs, the non-matched records from both systems. 
 The look-up time shown in last column represents query look-up 
@@ -734,10 +736,11 @@ data format, JSON.
 
 The results of the stress tests have shown that we can achieve a throughput of
 $\sim$6000 docs/sec for insertion, $\sim$1100 docs/sec for aggregation and 
-$\sim$7600 docs/sec for reading operations in DAS, which is suitable for our 
+$\sim$7600 docs/sec for reading and writing DAS records to disk,
+which is suitable for our 
 needs. Please note, we have relatively small audience of users
-who perform complex queries, while search engines designed for
-a large number of users asking for imprecise, simple data.
+who perform complex queries and get precise results, while search 
+engines are designed for a large number of users asking for imprecise, simple data.
 Since all tests were performed on a single CPU, further improvements from
 expanding to multiple CPUs are expected. In addition, more
 performance advantage can be gained by writing dedicated C/C++
