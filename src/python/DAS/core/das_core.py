@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.44 2009/10/19 02:28:03 valya Exp $"
-__version__ = "$Revision: 1.44 $"
+__revision__ = "$Id: das_core.py,v 1.45 2009/11/24 16:01:10 valya Exp $"
+__version__ = "$Revision: 1.45 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -234,7 +234,7 @@ class DASCore(object):
         else:
             yield agg_dict
 
-    def result(self, query, idx=0, limit=None):
+    def result(self, query, idx=0, limit=None, skey=None, sorder='asc'):
         """
         Get results either from cache or from explicit call
         """
@@ -260,18 +260,19 @@ class DASCore(object):
             if  self.cache.incache(query):
                 for srv, keys in self.qlparser.params(query)['services']:
                     self.analytics.update(srv, query)
-                results = self.cache.get_from_cache(query, idx, limit)
+                results = self.cache.\
+                get_from_cache(query, idx, limit, skey, sorder)
             else:
                 # NOTE: the self.call returns generator, update_cache
                 # consume and iterate over its items. So if I need to
                 # re-use it, the update_cache will yeild them back
-                results = self.call(query, idx, limit) 
+                results = self.call(query, idx, limit, skey, sorder) 
                 if  self.das_aggregation:
                     results = self.aggregation(results)
                 results = self.cache.update_cache(query, results, 
                                 expire=self.cache.limit)
         else:
-            results = self.call(query, idx, limit)
+            results = self.call(query, idx, limit, skey, sorder)
             if  self.das_aggregation:
                 results = self.aggregation(results)
         return results
@@ -309,7 +310,7 @@ class DASCore(object):
         """
         return self.rawcache.nresults(query)
 
-    def call(self, query, idx=0, limit=None):
+    def call(self, query, idx=0, limit=None, skey=None, sorder='asc'):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
@@ -321,6 +322,9 @@ class DASCore(object):
         Step 3. Look-up results from the cache.
         Return a list of generators containing results for further processing.
         """
+        msg = 'DASCore::call, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
+                % (query, idx, limit, skey, sorder)
+        self.logger.info(msg)
         params = self.mongoparser.params(query)
         services = params['services'].keys()
         self.logger.info('DASCore::call, services = %s' % services)
@@ -332,20 +336,12 @@ class DASCore(object):
             getattr(getattr(self, srv), 'call')(query)
             if  self.verbose:
                 self.timer.record(srv)
-        # to avoid mis-counting record due their merge we loop once
-        # more time over all services while extracting results from cache
-#        for srv in services:
-#            res = self.rawcache.get_from_cache(\
-#                self.mongoparser.lookupquery(srv, query))
-#            for row in res:
-#                yield row
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
         if  not fields:
             fields = None
-        query  = dict(spec=spec, fields=fields)
-#        res    = self.rawcache.get_from_cache(query, idx, limit)
-        res    = self.rawcache.get_from_cache(loose(query), idx, limit)
+        query = dict(spec=spec, fields=fields)
+        res = self.rawcache.get_from_cache(loose(query), idx, limit, skey, sorder)
         for row in res:
             yield row
         # Yield results for query hash
