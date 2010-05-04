@@ -35,11 +35,11 @@ url : "http://localhost:8585/DBS/datasets/"
 expire : 3600
 params : {
         "dataset":"*",
-        "datasetparent":"*",
-        "app_name":"*",
-        "version":"*",
-        "hash":"*",
-        "output_module_lavel":"*"
+#        "datasetparent":"*",
+#        "app_name":"*",
+#        "version":"*",
+#        "hash":"*",
+#        "output_module_lavel":"*"
 }
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
@@ -48,16 +48,49 @@ daskeys : [
         {"key": "tag", "map":"globaltag", "pattern":""},
         {"key": "c_section", "map":"xtcrosssection", "pattern":""},
 ]
+api2das : [
+        {"api_param": "dataset", "das_key":"dataset.name", "pattern":""},
+]
 ---
 urn: blocks
 url : "http://localhost:8585/DBS/blocks/"
 expire : 3600
-params : {}
+params : {
+        'dataset':'*',
+        'block':'*',
+        'site':'*',
+}
 daskeys : [
         {"key": "block", "map":"block.name", "pattern":""},
 ]
 ---
+urn: files
+url : "http://localhost:8585/DBS/files/"
+expire : 3600
+params : {
+        'dataset':'*',
+        'block':'*',
+        'app_name':'*',
+        'version':'*',
+        'hash':'*',
+        'output_module_lavel':'*',
+        'run':'*',
+        'runmin':'*',
+        'runmax':'*',
+}
+daskeys : [
+        {"key": "file", "map":"file.name", "pattern":""},
+]
+---
 notations : [
-        {"notation": "dataset", "map": "name", "api": ""},
-        {"notation": "primary_ds_name", "map": "name", "api": ""},
+        {"notation": "primary_ds_name", "map": "name", "api": "primarydatasets"},
+        {"notation": "primary_ds_name", "map": "primary_ds.name", "api": ""},
+        {"notation": "dataset", "map": "name", "api": "datasets"},
+        {"notation": "dataset", "map": "dataset.name", "api": ""},
+        {"notation": "block_name", "map": "name", "api": "blocks"},
+        {"notation": "block_name", "map": "block.name", "api": ""},
+        {"notation": "logical_file_name", "map": "name", "api": "files"},
+        {"notation": "logical_file_name", "map": "file.name", "api": ""},
+        {"notation": "file_type", "map": "type", "api": "files"},
+        {"notation": "file_type", "map": "file.type", "api": ""},
 ]
