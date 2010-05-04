@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.9 2009/04/29 19:56:49 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: utils.py,v 1.10 2009/05/07 00:49:55 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -43,7 +43,7 @@ def gen2list(results):
     reslist = [name for name, group in groupby(results)]
     return reslist
 
-def dump(reslist, limit=None):
+def dump(reslist, limit=None, selkeys=None):
     """
     Print items in provided generator
     """
@@ -53,7 +53,10 @@ def dump(reslist, limit=None):
     if  type(reslist) is not types.ListType:
         reslist = [reslist]
     try:
-        keys = reslist[0].keys()
+        if  selkeys:
+            keys = [i for i in reslist[0].keys() if selkeys.count(i)]
+        else:
+            keys = reslist[0].keys()
     except:
         traceback.print_exc()
         print "dump results fail, reslist", reslist
