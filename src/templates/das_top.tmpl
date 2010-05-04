@@ -14,19 +14,15 @@
     <meta name="Copyright" content="(CC) 2009, CMS collaboration." />
     <meta name="Rating" content="General" />
 
-    <link rel="icon" type="image/png" href="/dascontrollers/images/cms_logo.png" />
+    <link rel="icon" type="image/png" href="$base/images/cms_logo.png" />
 
-    <link rel="stylesheet" type="text/css" href="/dascontrollers/css/das.css"/>
+    <link rel="stylesheet" type="text/css" href="$base/css/das.css"/>
 
-    <script type="application/javascript" src="/dascontrollers/js/prototype.js"></script>
-    <script type="application/javascript" src="/dascontrollers/js/utils.js"></script>
-    <script type="application/javascript" src="/dascontrollers/js/ajax_utils.js"></script>
+    <script type="application/javascript" src="$base/js/prototype.js"></script>
+    <script type="application/javascript" src="$base/js/utils.js"></script>
+    <script type="application/javascript" src="$base/js/ajax_utils.js"></script>
 
     <!-- YUI stuff -->
-<!--
-    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/paginator/assets/skins/sam/paginator.css" />
-    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/datatable/assets/skins/sam/datatable.css" />
--->
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/fonts/fonts-min.css" />
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/2.8.0r4/build/container/assets/skins/sam/container.css" />
 
@@ -48,7 +44,7 @@
 <div id="banner">
 <table>
 <tr><td>
-<img src="/dascontrollers/images/cms_logo.jpg" alt="CMS" width="30" style="border:none" />
+<img src="$base/images/cms_logo.jpg" alt="CMS" width="30" style="border:none" />
 </td><td>
 <h3>Data Aggregation System (DAS):
 <a href="/das/">Home</a> |
@@ -74,5 +70,9 @@ top_tt4 = new YAHOO.widget.Tooltip("top_tt4",
     { context:"cli", text:"DAS Command Line Tool" });
 top_tt5 = new YAHOO.widget.Tooltip("top_tt5", 
     { context:"doc", text:"DAS Online Documentation" });
+function wait() {
+    var id=document.getElementById('_response');
+    id.innerHTML='<div><img src="$base/images/loading.gif" alt="loading" /> please wait</div>';
+}
 </script>
 <!-- end of das_top.tmpl -->

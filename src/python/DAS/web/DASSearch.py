@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.40 2010/01/26 21:03:53 valya Exp $"
-__version__ = "$Revision: 1.40 $"
+__revision__ = "$Id: DASSearch.py,v 1.41 2010/02/13 02:19:12 valya Exp $"
+__version__ = "$Revision: 1.41 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -67,12 +67,13 @@ class DASSearch(TemplatedPage):
         self.dasmapping = self.dasmgr.mapping
         self.daslogger  = self.dasmgr.logger
         self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 
+        self.base       = '/dascontrollers'
 
     def top(self):
         """
         Define masthead for all DAS web pages
         """
-        return self.templatepage('das_top')
+        return self.templatepage('das_top', base=self.base)
 
     def bottom(self, response_div=True):
         """
@@ -222,7 +223,8 @@ class DASSearch(TemplatedPage):
         """
         provide input DAS search form
         """
-        page = self.templatepage('das_searchform', input=uinput, msg=msg)
+        page = self.templatepage('das_searchform', input=uinput, msg=msg,
+                                        base=self.base)
         return page
 
     @expose
@@ -348,8 +350,8 @@ class DASSearch(TemplatedPage):
         else:
             msg = "nresults returns status: %s" % str(data)
             self.daslogger.info(msg)
-        self.send_request('POST', kwargs)
-        return 0
+#        self.send_request('POST', kwargs)
+        return -1
 
     def send_request(self, method, kwargs):
         "Send POST request to server with provided parameters"
@@ -437,14 +439,19 @@ class DASSearch(TemplatedPage):
         limit   = getarg(kwargs, 'limit', 10)
         show    = getarg(kwargs, 'show', 'json')
         form    = self.form(uinput=uinput)
-        total   = self.nresults(kwargs)
-        if  not total:
+        # self.status sends request to Cache Server
+        # Cache Server uses das_core to retrieve status
+        status  = self.status(input=uinput, ajax=0)
+        if  status == 'no data':
+            # no data in raw cache, send POST request
+            self.send_request('POST', kwargs)
             ctime   = (time.time()-time0)
 #            page    = self.templatepage('not_ready')
             page    = self.status(input=uinput)
             page    = self.page(form + page, ctime=ctime)
             return page
 
+        total   = self.nresults(kwargs)
         rows    = self.result(kwargs)
         nrows   = len(rows)
         page    = ""
@@ -507,7 +514,6 @@ class DASSearch(TemplatedPage):
         http://developer.yahoo.com/yui/examples/datatable/dt_dynamicdata.html
         """
         rows = self.result(kwargs)
-        print "\n\n#### yuijson", rows
         rowlist = []
         id = 0
         for row in rows:
@@ -528,13 +534,11 @@ class DASSearch(TemplatedPage):
                     if  type(data) is types.ListType:
                         data = data[idx]
                     # I need to extract from DAS object the values for UI keys
-                    print "corresponding data", data
                     for item in self.dasmapping.presentation(key):
                         daskey = item['das']
                         uiname = item['ui']
                         if  not resdict.has_key(uiname):
                             resdict[uiname] = ""
-                        print "daskey", daskey, uiname
                         # look at key attributes, which may be compound as well
                         # e.g. block.replica.se
                         if  type(data) is types.DictType:
@@ -551,7 +555,6 @@ class DASSearch(TemplatedPage):
                                     resdict[uiname] = res
                         except:
                             pass
-                        print "resdict", resdict
 #                    pad = ""
 #                    jsoncode = {'jsoncode': json2html(data, pad)}
 #                    jsonhtml = self.templatepage('das_json', **jsoncode)
@@ -567,7 +570,6 @@ class DASSearch(TemplatedPage):
                    'sort':'true', 'dir':'asc',
                    'pageSize': limit,
                    'records': rowlist}
-        print "\n\njsondict", jsondict
         return jsondict
 
     @expose
@@ -616,7 +618,6 @@ class DASSearch(TemplatedPage):
         """
         Place request to obtain status about given query
         """
-        cherrypy.response.headers['Content-Type'] = 'text/xml'
         img = '<img src="/dascontrollers/images/loading.gif" alt="loading"/>'
         req = """
         <script type="application/javascript">
@@ -629,22 +630,30 @@ class DASSearch(TemplatedPage):
             cherrypy.response.headers['Expire'] = tstamp
             cherrypy.response.headers['Cache-control'] = 'no-cache'
 
-        uinput  = getarg(kwargs, 'input', '')
+        uinput  = kwargs.get('input', '')
         uinput  = urllib.unquote_plus(uinput)
-        view    = getarg(kwargs, 'view', 'list')
+        ajax    = kwargs.get('ajax', 1)
+        view    = kwargs.get('view', 'list')
         params  = {'query':uinput}
         path    = '/rest/status'
         url     = self.cachesrv
         headers = {'Accept': 'application/json'}
         data    = json.loads(
         urllib2_request('GET', url+path, params, headers=headers))
-        if  data['status'] == 'ok':
-            page  = '<script type="application/javascript">reload()</script>'
+        if  ajax:
+            cherrypy.response.headers['Content-Type'] = 'text/xml'
+            if  data['status'] == 'ok':
+                page  = '<script type="application/javascript">reload()</script>'
+            else:
+                page  = img + ' ' + str(data['status']) + ', please wait...'
+                page += req
+                set_header()
+            page = ajax_response(page)
         else:
-            page  = img + ' ' + data['status'] + ', please wait...'
-            page += req
-            set_header()
-        page = ajax_response(page)
+            try:
+                page = data['status']
+            except:
+                page = traceback.format_exc()
         return page
 
 #    @expose

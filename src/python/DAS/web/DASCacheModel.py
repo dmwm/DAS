@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.30 2010/01/15 17:20:54 valya Exp $"
-__version__ = "$Revision: 1.30 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.31 2010/02/13 02:19:12 valya Exp $"
+__version__ = "$Revision: 1.31 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -234,10 +234,13 @@ class DASCacheModel(RESTModel):
         """
         data = {'server_method':'status'}
         if  kwargs.has_key('query'):
-            query = kwargs['query']
+            query  = kwargs['query']
             self.logdb(query)
-            query = self.dascore.mongoparser.requestquery(query)
-            data.update({'status':self.dascore.get_status(query)})
+            query  = self.dascore.mongoparser.requestquery(query)
+            status = self.dascore.get_status(query)
+            if  not status:
+                status = 'no data' 
+            data.update({'status':status})
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
@@ -255,13 +258,8 @@ class DASCacheModel(RESTModel):
             query = kwargs['query']
             self.logdb(query)
             query = self.dascore.mongoparser.requestquery(query)
-            data.update({'status':'success'})
             res = self.dascore.in_raw_cache_nresults(query)
-            if  res:
-                data['status'] = 'success'
-                data['nresults'] = res
-            else:
-                data['status'] = 'not found'
+            data.update({'status':'success', 'nresults':res})
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
