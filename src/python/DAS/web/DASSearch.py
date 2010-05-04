@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.18 2009/09/09 18:48:41 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: DASSearch.py,v 1.19 2009/09/16 20:37:18 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -35,7 +35,7 @@ from WMCore.WebTools.Page import exposejson, exposexml, exposedasplist
 # DAS modules
 from DAS.core.das_core import DASCore
 from DAS.utils.utils import getarg
-from DAS.web.utils import urllib2_request
+from DAS.web.utils import urllib2_request, json2html
 
 import sys
 if sys.version_info < (2, 5):
@@ -54,7 +54,6 @@ def ajax_response(msg):
     page  = """<ajax-response>"""
     page += "<div>" + msg + "</div>"
     page += "</ajax-response>"
-    print page
     return page
 
 class DASSearch(TemplatedPage):
@@ -190,11 +189,29 @@ class DASSearch(TemplatedPage):
         page = self.templatepage('das_searchform', input=uinput, msg=msg)
         return page
 
-    def result(self, kwargs):
+    def nresults(self, kwargs):
         """
         invoke DAS search call, parse results and return them to
         web methods
         """
+        url     = self.cachesrv
+        uinput  = getarg(kwargs, 'input', '')
+        params  = {'query':uinput}
+        path    = '/rest/nresults'
+        headers = {"Accept": "application/json"}
+        result  = self.decoder.decode(
+        urllib2_request('GET', url+path, params, headers=headers))
+        if  type(result) is types.StringType:
+            data = json.loads(result)
+        else:
+            data = result
+        if  data['results']['status'] == 'success':
+            return data['results']['nresults']
+        self.send_request('POST', kwargs)
+        return 0
+
+    def send_request(self, method, kwargs):
+        "Send POST request to server with provided parameters"
         url     = self.cachesrv
         uinput  = getarg(kwargs, 'input', '')
         format  = getarg(kwargs, 'format', '')
@@ -204,70 +221,48 @@ class DASSearch(TemplatedPage):
         sdir    = getarg(kwargs, 'dir', 'asc')
         params  = {'query':uinput, 'idx':idx, 'limit':limit, 
                   'skey':skey, 'order':sdir}
-        path    = '/rest/request'
-        headers = {"Accept": "application/json"}
-        result  = self.decoder.decode(
-        urllib2_request('GET', url+path, params, headers=headers))
+        if  method == 'POST':
+            path    = '/rest/create'
+        elif  method == 'GET':
+            path    = '/rest/request'
+        else:
+            raise Exception('Unsupported method %s' % method)
+        headers = {"Accept": "application/json", "Content-type":"application/json"} 
+        res     = self.decoder.decode(
+        urllib2_request(method, url+path, params, headers=headers))
+        return res
+
+    def result(self, kwargs):
+        """
+        invoke DAS search call, parse results and return them to
+        web methods
+        """
+        result  = self.send_request('GET', kwargs)
         if  type(result) is types.StringType:
             data = json.loads(result)
         else:
             data = result
-        titles = []
-        res    = []
-        total  = 0
-        form   = self.form(uinput=uinput)
         data   = data['results'] # DAS header contains results section
-        print "\n### result", data
         if  data['status'] == 'success':
             res    = data['data']
-            resobj = []
-            for idict in data['data']:
-                del idict['das']
-#                del idict['id']
-                resobj.append(str(idict))
-            print "\n#### resobj", resobj
-            titles = res[0].keys()
-            titles.sort()
-            if  'id' in titles:
-                titles.remove('id')
-            titles  = ['id'] + titles
-            total   = data['nresults']
-            form    = self.form(uinput=uinput)
         elif data['status'] == 'not found':
-            # request data via POST
-            path    = '/rest/create'
-            headers['Content-type'] = 'application/json'
-            result  = self.decoder.decode(
-            urllib2_request('POST', url+path, params, headers=headers))
-            if  type(result) is types.StringType:
-                data = json.loads(result)
-            else:
-                data = result
-            # TODO: place AJAX message which will try to retrieve results again
-            msg    = data['results']['status']
-            form   = self.form(uinput=uinput, msg=msg)
-        return titles, res, total, form
+            res  = []
+        return res
         
-#    @exposedasxml
     @exposedasplist
     def xmlview(self, kwargs):
         """
         provide DAS XML
         """
-        titles, rows, total, form = self.result(kwargs)
+        rows = self.result(kwargs)
         return rows
-#        names = {'resultlist': rows}
-#        page  = self.templatepage('das_xml', **names)
-#        return page
 
-#    @exposedasjson
     @exposejson
     def jsonview(self, kwargs):
         """
         provide DAS JSON
         """
-        titles, rows, total, form = self.result(kwargs)
-        print "\n\n### DASSearch, JSON output", rows
+        rows = self.result(kwargs)
         return rows
 
     @expose
@@ -276,25 +271,56 @@ class DASSearch(TemplatedPage):
         provide DAS list view
         """
         time0   = time.time()
-        titles, rows, total, form = self.result(kwargs)
-        nrows   = len(rows)
-        limit   = getarg(kwargs, 'limit', nrows)
-        names   = {'titlelist':titles, 'nrows':total, 'limit':limit,
-                   'resultlist': rows}
-        page    = self.templatepage('das_list', **names)
-        uinput  = getarg(kwargs, 'input', '')
-        form    = self.form(uinput=uinput)
-        ctime   = (time.time()-time0)
         ajaxreq = getarg(kwargs, 'ajax', 0)
-        ajax    = self.templatepage('das_ajaxrequest', ajax=ajaxreq)
-        return self.page(form + ajax + page, ctime=ctime)
+        uinput  = getarg(kwargs, 'input', '')
+        limit   = getarg(kwargs, 'limit', 10)
+        form    = self.form(uinput=uinput)
+        total   = self.nresults(kwargs)
+        if  not total:
+            ctime   = (time.time()-time0)
+            page    = 'DAS processing your request, please try in a few moments ...'
+            page    = self.page(form + page, ctime=ctime)
+            return page
+
+        rows    = self.result(kwargs)
+        nrows   = len(rows)
+        page    = ""
+        ndict   = {'nrows':total, 'limit':limit}
+        page    = self.templatepage('das_nrecords', **ndict)
+        for nrecord in range(0, len(rows)):
+            row = rows[nrecord]
+            if  nrecord % 2:
+                style = "white"
+            else:
+                style = "blue" 
+            page += '<div class="%s"><hr class="line" /><b>Record #%s</b><br />' % (style, nrecord)
+            das = row['das']
+            if  type(das) is types.DictType:
+                das = [das]
+            for jdx in range(0, len(das)):
+                item = das[jdx]
+                for idx in range(0, len(item['system'])):
+                    api    = item['api'][idx]
+                    system = item['system'][idx]
+                    key    = item['selection_keys'][idx]
+                    data   = row[key][jdx]
+                    if  type(data) is types.ListType:
+                        data = data[idx]
+                    pad = ""
+                    jsoncode = {'jsoncode': json2html(data, pad)}
+                    jsonhtml = self.templatepage('das_json', **jsoncode)
+                    jsondict = dict(system=system, api=api, daskey=key, data=jsonhtml)
+                    page += self.templatepage('das_row', **jsondict)
+            page += '</div>'
+        ctime   = (time.time()-time0)
+        return self.page(form + page, ctime=ctime)
 
     @exposetext
     def plainview(self, kwargs):
         """
         provide DAS plain view
         """
-        titles, rows, total, form = self.result(kwargs)
+        rows, total, form = self.result(kwargs)
         page = ""
         for item in rows:
             item  = str(item).replace('[','').replace(']','')
@@ -308,14 +334,37 @@ class DASSearch(TemplatedPage):
         widget, see
         http://developer.yahoo.com/yui/examples/datatable/dt_dynamicdata.html
         """
-        titles, rows, total, form = self.result(kwargs)
+        rows = self.result(kwargs)
+        rowlist = []
+        id = 0
+        for row in rows:
+            das = row['das']
+            if  type(das) is types.DictType:
+                das = [das]
+            for jdx in range(0, len(das)):
+                item = das[jdx]
+                for idx in range(0, len(item['system'])):
+                    api    = item['api'][idx]
+                    system = item['system'][idx]
+                    key    = item['selection_keys'][idx]
+                    data   = row[key][jdx]
+                    if  type(data) is types.ListType:
+                        data = data[idx]
+                    pad = ""
+                    jsoncode = {'jsoncode': json2html(data, pad)}
+                    jsonhtml = self.templatepage('das_json', **jsoncode)
+                    jsondict = {'id':id, 'system':system, 'api':api, key:jsonhtml}
+                    if  jsondict not in rowlist:
+                        rowlist.append(jsondict)
+                    id += 1
         idx      = getarg(kwargs, 'idx', 0)
         limit    = getarg(kwargs, 'limit', 10)
-        jsondict = {'recordsReturned': len(rows),
+        total    = len(rowlist) 
+        jsondict = {'recordsReturned': len(rowlist),
                    'totalRecords': total, 'startIndex':idx,
                    'sort':'true', 'dir':'asc',
                    'pageSize': limit,
-                   'records': rows}
+                   'records': rowlist}
         return jsondict
 
     @expose
@@ -324,30 +373,35 @@ class DASSearch(TemplatedPage):
         provide DAS table view
         """
         kwargs['format'] = 'html'
-        time0 = time.time()
-        titles, rows, total, form = self.result(kwargs)
+        uinput  = getarg(kwargs, 'input', '')
+        ajaxreq = getarg(kwargs, 'ajax', 0)
+        form    = self.form(uinput=uinput)
+        time0   = time.time()
+        total   = self.nresults(kwargs)
+        if  not total:
+            ctime   = (time.time()-time0)
+            form    = self.form(uinput)
+            page    = 'DAS processing your request, please try in a few moments ...'
+            page    = self.page(form + page, ctime=ctime)
+            return page
+
+        # find out which selection keys were used
+        selkeys = uinput.replace('find ', '').split(' where ')[0].split(',')
+        titles  = ["id", "system", "api"] + selkeys
         coldefs = ""
         for title in titles:
-            coldefs += "{key:'%s',label:'%s',sortable:true,resizeable:true}," \
+            coldefs += '{key:"%s",label:"%s",sortable:true,resizeable:true},' \
                         % (title, title)
         coldefs = "[%s]" % coldefs[:-1] # remove last comma
         coldefs = coldefs.replace("},{","},\n{")
-        nrows   = len(rows)
-        limit   = getarg(kwargs, 'limit', nrows)
-        uinput  = getarg(kwargs, 'input', '')
-        ajaxreq = getarg(kwargs, 'ajax', 0)
-        if  not limit: # if no limit provided we use full range
-            limit = nrows
-        names   = {'titlelist':str(titles).replace("u'", "'"), 
+        limit   = getarg(kwargs, 'limit', 10)
+        names   = {'titlelist':titles,
                    'coldefs':coldefs, 'rowsperpage':limit,
                    'total':total, 'tag':'mytag', 'ajax':ajaxreq,
-                   'input':uinput}
+                   'input':urllib.urlencode(dict(input=uinput))}
         page    = self.templatepage('das_table', **names)
-        uinput  = getarg(kwargs, 'input', '')
-        form    = self.form(uinput=uinput)
         ctime   = (time.time()-time0)
-        ajax    = self.templatepage('das_ajaxrequest', ajax=ajaxreq)
-        page    = self.page(form + ajax + page, ctime=ctime)
+        page    = self.page(form + page, ctime=ctime)
         return page
 
     @expose
@@ -365,9 +419,6 @@ class DASSearch(TemplatedPage):
         cherrypy.response.headers['Content-Type'] = 'text/xml'
         img = """<img src="/dascontrollers/images/loading.gif" alt="loading" /> """
         req = """<script type="application/javascript">setTimeout('ajaxRequest()', 3000)</script>"""
-#        page = req
-#        page += "Got query, counter %s, %s" % (kwargs, self.counter)
-        print "\n### request kwargs", kwargs, self.counter
 
         def send_post(idict):
             "Send POST request to server with provided parameters"
@@ -416,12 +467,12 @@ class DASSearch(TemplatedPage):
             page  = 'data not in DAS yet, please retry'
             send_post(params)
             set_header()
+        elif data['status'] == 'no cache':
+            page  = 'DAS server has no hotcache'
+            send_post(params)
+            set_header()
         else:
             page  = 'unknown status, %s' % urllib.urlencode(str(data))
-#        
-#        if  self.counter == 5:
-#            page = "TEST DONE"
-#        self.counter += 1
         page = ajax_response(page)
         print "\n### AJAX response",page
         return page
