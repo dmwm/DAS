@@ -137,22 +137,22 @@ DB back-ends and provide tools for migrating data across them.
 Once such conglomerate of data-services starts operating an obvious
 question arise: how to find out desired information across multiple data-services
 in our distributed environment? Even though individual data-services were designed
-to answer specific question about data they serve the ability to relate and search
+to answer specific questions about data they serve, the ability to relate and search
 information among them was human task. The growing amount of information
 and desire to make cross-service queries force us to design and develop a new
 type of system, the Data Aggregation System.
 
 \section{Data Aggregation System\label{DAS}}
 The design of DAS system was based on previous studies of CMS 
-data bookkeeping system (DBS) usage patterns \cite{DBS07}. We carefully analyzed user
+data bookkeeping system (DBS) usage patterns \cite{DBS, DBS07}. We carefully analyzed user
 queries placed to DBS, their patterns, frequencies and latency. As a result of this
 we created a data discovery service \cite{DD} which came through several iteration
-of UI. At the end the end-user interface was based on DBS Query Language \cite{DBS-QL}
+of UI. At the end the end-user interface was based on DBS Query Language (DBS-QL)\cite{DBS-QL}
 with broad variety of template for presentation layer. A quick adoption
-and wide spread of DBS QL give us confidence of choosen approach and QL syntax.
+and wide spread of DBS-QL give us confidence of choosen approach and QL syntax.
 
 Starting from those ground accomplishments we created DAS system as
-scalable and pluggable layer sitting on top of existing data-services
+scalable and pluggable layer sitting on top of the existing data-services
 within CMS computing infrastructure. Data availability were deligated to individual
 data-services. Therefore, we treat DAS as aggregation and cache service 
 with the following characteristics:
@@ -182,8 +182,8 @@ due to continuously changing detector and software environments;
 \caption{
 DAS architecture diagram. It consists of DAS cache server, mapping and analytics DBs.
 Once query was placed to DAS an associated
-data-service API was invoked, triggering in DAS cache population. Once data become
-available in DAS cache user were able to see the results. This so-called on demand
+data-service API was invoked, triggering DAS cache population. Once data become
+available in DAS cache user were able to see the results. This on demand
 query retrieval system, where data were retrieved and store into cache from
 back-end data service. We use DAS analytics DB to establish cache population
 for most common queries by using DAS robots.
@@ -385,11 +385,11 @@ Keyword-Based Search over Relational Databases. ICDE 2002: 5-16
 Georgia Koutrika, Alkis Simitsis, Yannis E. Ioannidis: Pr\'{e}cis: The Essence of
 a Query Answer. ICDE 2006: 69-78
 
-\bibitem{CMSDataModel} A. Fanfani et. al.,
-``Distributed Analysis in CMS'', to be published in Journal of Grid Computing.
-
 \bibitem{DBS-QL} V. Kuznetsov, D. Riley, A. Afaq, V. Sekhri, Y. Guo, L. Lueking,
 ``The CMS DBS Query Language'', CHEP 2009
+
+\bibitem{CMSDataModel} A. Fanfani et. al.,
+``Distributed Analysis in CMS'', to be published in Journal of Grid Computing.
 
 \bibitem{DBS} A. Afaq, et. al. ``The CMS Dataset Bookkeeping Service'', CHEP 2007 
 
