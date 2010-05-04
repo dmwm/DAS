@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.17 2009/11/24 16:01:10 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.18 2009/11/25 18:19:17 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -246,12 +246,14 @@ class DASMapping(object):
                 keys.append(row['daskeys']['map'])
         return keys
 
-    def notations(self):
+    def notations(self, system=None):
         """
         Return DAS notation map.
         """
         notationmap = {}
         spec = {'notations':{'$ne':None}}
+        if  system:
+            spec['system'] = system
         for item in self.col.find(spec):
             notationmap[item['system']] = item['notations']
         return notationmap
