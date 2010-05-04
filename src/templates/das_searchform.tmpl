@@ -1,0 +1,75 @@
+
+<!-- das_searchform.tmpl -->
+<style type="text/css">
+#wrap {
+        max-width:50em;
+        margin:2em auto;
+}
+form {
+        padding:1em;
+        border:1px solid #ccc;
+        background:#f8f8f8;
+}
+label {display:block;}
+</style>
+
+#*
+<script text="type/javascript">
+function clearForm(tag) {
+   var id = document.getElementById(tag);
+   id.value="";
+   id.className="normal";
+}
+*#
+</script>
+<div align="center">
+<form action="/dassearch" method="get">
+<table class="normal">
+<tr>
+<td>
+data in
+<select name="view">
+<option value="table">table</option>
+<option value="list">list</option>
+<option value="plain">plain</option>
+<option value="xml">xml</option>
+<option value="json">json</option>
+</select>
+format,
+</td>
+<td>
+<select name="limit">
+<option value="10">10</option>
+<option value="25">25</option>
+<option value="50">50</option>
+<option value="100">100</option>
+<option value="0">All</option>
+</select>
+results/per page
+</td>
+</tr>
+</table>
+#*
+#if $input
+<input type="text" size="80" name="input" id="input" value="$input"/>
+#else
+###<input type="text" size="80" name="input" id="input" value="QL expression, e.g. find dataset where site=T2_UK" onclick="javascript:clearForm('input')" class="inputtext" />
+#end if
+*#
+<input type="text" size="80" name="input" id="input" />
+<input type="submit" value="Search" />
+<input type="reset" />
+
+</form>
+
+#if $input
+<script text="type/javascript">
+function updateInput(val) {
+   var id = document.getElementById('input');
+   id.value=val;
+}
+updateInput('$input');
+</script>
+#end if
+<!-- end of das_searchform.tmpl -->
+

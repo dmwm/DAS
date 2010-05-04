@@ -1,0 +1,33 @@
+
+<!-- das_services.tmpl -->
+<div class="page">
+<div class="normal">
+#for service in $service_keys.keys()
+<hr class="line" />
+<h3>$service.upper() service</h3>
+keys 
+<a href="javascript:showTag('${service}keys')">show</a> |
+<a href="javascript:hideTag('${service}keys')">hide</a>
+<div id="${service}keys" class="hide">
+<ul>
+#for key in $service_keys[$service]
+<li>$key</li>
+#end for
+</ul>
+</div>
+#end for
+</div>
+</div>
+
+<script type="text/javascript">
+function showTag(tag) {
+   var id = document.getElementById(tag);
+   id.className="show";
+}
+function hideTag(tag) {
+   var id = document.getElementById(tag);
+   id.className="hide";
+}
+</script>
+<!-- end of das_services.tmpl -->
+
