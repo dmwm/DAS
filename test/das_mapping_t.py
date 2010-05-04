@@ -40,49 +40,53 @@ class testDASMapping(unittest.TestCase):
         self.mgr.create_db()
 
         apiversion = 'DBS_2_0_8'
+        url    = 'http://a.com'
+        format = 'JSON'
+        expire = 100
 
         api = 'listRuns'
-        params = { 'apiversion':apiversion, 'path' : 'required'}
-        rec = {'system' : 'dbs',
-            'api' : dict(name=api, params=params),
+        params = { 'apiversion':apiversion, 'path' : 'required', 'api':api}
+        rec = {'system' : 'dbs', 'urn':api, 'format':format, 'url':url,
+            'params': params, 'expire':expire,
             'daskeys' : [dict(key='run', map='run.run_number', pattern='')],
             'api2das' : [
                     dict(api_param='path', das_key='dataset', pattern=""),
             ]
         }
         self.mgr.add(rec)
-        res = self.mgr.check_daskey('dbs', 'run.bfield')
+        res = self.mgr.check_dasmap('dbs', api, 'run.bfield')
         self.assertEqual(False, res)
-        res = self.mgr.check_daskey('dbs', 'run.run_number')
+        res = self.mgr.check_dasmap('dbs', api, 'run.run_number')
         self.assertEqual(True, res)
-        smap = {api: {'keys': ['run'], 
+        smap = {api: {'url':url, 'expire':expire, 'keys': ['run'], 
+                'format': format,
                 'params': {'path': 'required', 'api': api, 
                            'apiversion': 'DBS_2_0_8'}
                      }
         }
 
-        rec = {'system':'dbs', 
-        'api': {'name':'listBlocks', 
-                'params' : {'apiversion': apiversion,
-                            'block_name':'*', 'storage_element_name':'*',
-                            'user_type':'NORMAL'}},
-         'daskeys': [
-                {'key':'block', 'map':'block.name', 'pattern':''},
-                ],
-         'api2das': [
-                {'api_param':'storage_element_name', 
-                 'das_key':'site', 
-                 'pattern':"re.compile('([a-zA-Z0-9]+\.){2}')"},
-                {'api_param':'storage_element_name', 
-                 'das_key':'site.se', 
-                 'pattern':"re.compile('([a-zA-Z0-9]+\.){2}')"},
-                {'api_param':'block_name', 
-                 'das_key':'block', 
-                 'pattern':""},
-                {'api_param':'block_name', 
-                 'das_key':'block.name', 
-                 'pattern':""},
-                ]
+        rec = {'system':'dbs', 'urn': 'listBlocks', 'format':format,
+          'url':url, 'expire': expire,
+          'params' : {'apiversion': apiversion, 'api': 'listBlocks',
+                      'block_name':'*', 'storage_element_name':'*',
+                      'user_type':'NORMAL'},
+          'daskeys': [
+                 {'key':'block', 'map':'block.name', 'pattern':''},
+                 ],
+          'api2das': [
+                 {'api_param':'storage_element_name', 
+                  'das_key':'site', 
+                  'pattern':"re.compile('([a-zA-Z0-9]+\.){2}')"},
+                 {'api_param':'storage_element_name', 
+                  'das_key':'site.se', 
+                  'pattern':"re.compile('([a-zA-Z0-9]+\.){2}')"},
+                 {'api_param':'block_name', 
+                  'das_key':'block', 
+                  'pattern':""},
+                 {'api_param':'block_name', 
+                  'das_key':'block.name', 
+                  'pattern':""},
+                 ]
         } 
         self.mgr.add(rec)
 
@@ -114,8 +118,8 @@ class testDASMapping(unittest.TestCase):
         # adding notations
         notations = {'system':system, 
             'notations':[
-                    {'api_param':'storage_element_name', 'das_name':'se', 'api':''},
-                    {'api_param':'number_of_events', 'das_name':'nevents', 'api':''},
+                    {'notation':'storage_element_name', 'map':'se', 'api':''},
+                    {'notation':'number_of_events', 'map':'nevents', 'api':''},
                         ]
         }
         self.mgr.add(notations)
@@ -128,13 +132,14 @@ class testDASMapping(unittest.TestCase):
         self.assertEqual([daskey], res)
 
         # build service map
-        smap.update({api: {'keys': ['block'], 
+        smap.update({api: {'url':url, 'expire':expire,
+                'keys': ['block'], 'format':format,
                 'params': {'storage_element_name': '*', 'api':api, 
                            'block_name': '*', 'user_type': 'NORMAL', 
                            'apiversion': 'DBS_2_0_8'}
                      }
         })
-        res = self.mgr.servicemap(system, implementation='javaservlet')
+        res = self.mgr.servicemap(system)
         self.assertEqual(smap, res)
 
     def test_presentation(self):                          

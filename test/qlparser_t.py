@@ -50,16 +50,20 @@ class testQLParser(unittest.TestCase):
 
     def test_parser(self):
         """Test Mongo parser"""
-        query  = dict(spec={'site':'a.b.c', 'block':'bla'}, fields='block')
-        expect = {'sitedb': ['site'], 'dbs': ['block'], 
-                  'phedex': ['block', 'site']}
+        cond   = {'site.se':'a.b.c', 'block.name':'bla'}
+        query  = dict(spec=cond, fields='block')
+        expect = ['sitedb', 'phedex', 'dbs', 'dbs3', 'phedex3']
+        expect.sort()
         result = self.parser.services(query)
+        result.sort()
         self.assertEqual(expect, result)
 
-        expect = {'services': {'sitedb': ['site'], 'dbs': ['block'], 
-                               'phedex': ['block', 'site']}, 
-                  'selkeys': 'block', 'conditions': {'site': 'a.b.c', 'block': 'bla'}}
+        expect = {'services': expect,
+                  'selkeys': 'block', 'conditions': cond}
         result = self.parser.params(query)
+        services = result['services']
+        services.sort()
+        result['services'] = services
         self.assertEqual(expect, result)
 
     def test_requestquery(self):
