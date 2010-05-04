@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.42 2009/11/26 02:00:13 valya Exp $"
-__version__ = "$Revision: 1.42 $"
+__revision__ = "$Id: das_mongocache.py,v 1.43 2009/12/02 14:38:58 valya Exp $"
+__version__ = "$Revision: 1.43 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -175,17 +175,11 @@ def compare_specs(input_query, exist_query):
         if  set(fields2) > set(fields1): # set2 is superset of set1
             return True
 
-#    if  set(spec2.keys()) > set(spec1.keys()):
-#        return False
-
-#    if  spec2.keys() != spec1.keys():
-#        return False
+    if  spec2.keys() != spec1.keys():
+        return False
 
     for key, val1 in spec1.items():
-        try:
-            val2 = spec2[key]
-        except:
-            continue
+        val2 = spec2[key]
         if  (type(val1) is types.StringType or \
                 type(val1) is types.UnicodeType) and \
             (type(val2) is types.StringType or \
@@ -193,11 +187,15 @@ def compare_specs(input_query, exist_query):
             if  val2.find('*') != -1:
                 val1 = val1.replace('*', '')
                 val2 = val2.replace('*', '')
-                if  val1.find(val2) != -1:
-                    return True # only if val2 is sub-string of val1
+                if  val1.find(val2) == -1:
+                    return False
+            else:
+                if  val1 != val2:
+                    return False
         elif type(val1) is types.DictType and type(val2) is types.DictType:
-            return compare_dicts(val1, val2)
-    return False
+            if  not compare_dicts(val1, val2):
+                return False
+    return True
 
 def update_item(item, key, val):
     """
@@ -290,7 +288,7 @@ class DASMongocache(Cache):
         verspec = {} # verbose spec
         # enable loose constraints, use LIKE pattern
         for key, val in spec.items():
-            nkey = 'query.spec.%s' % key.replace(DOT, SEP) # see transform_keys
+            nkey = 'query.spec.%s' % key.replace(DOT, SEP) 
             if  type(val) is types.StringType or type(val) is types.UnicodeType:
                 val = val[0] + '*'
                 val = re.compile(val.replace('*', '.*')) #replace value to regex
