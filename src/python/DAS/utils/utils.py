@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.49 2009/12/15 02:06:00 valya Exp $"
-__version__ = "$Revision: 1.49 $"
+__revision__ = "$Id: utils.py,v 1.50 2009/12/17 20:01:33 valya Exp $"
+__version__ = "$Revision: 1.50 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -786,3 +786,29 @@ def row2das(mapper, system, api, row):
                 if  type(item) is types.DictType:
                     row2das(mapper, system, api, item)
 
+def aggregator(results):
+    """
+    DAS aggregator which iterate over all records in results set and
+    perform aggregation of records on the primary_key of the record.
+    """
+    record = results.next()
+    record['_id'] = str(record['_id']) # _id is ObjectId, convert it to string
+    prim_key = record['primary_key']
+    del record['primary_key']
+    del record['das']
+    update = 0
+    for row in results:
+        row['_id'] = str(row['_id'])
+        del row['primary_key']
+        del row['das']
+        val1 = dict_value(record, prim_key)
+        val2 = dict_value(row, prim_key)
+        if  val1 == val2:
+            merge_dict(record, row)
+            update = 1
+        else:
+            yield record
+            record = dict(row)
+            update = 0
+    if  update: # check if we did update for last row
+        yield record
