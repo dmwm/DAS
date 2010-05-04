@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.9 2009/09/02 19:56:38 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: dbs_service.py,v 1.10 2009/10/13 14:03:33 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
@@ -25,6 +25,7 @@ class DBSService(DASAbstractService):
         DASAbstractService.__init__(self, 'dbs', config)
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name, 'javaservlet')
+        print "#####DBS", self.map
         map_validator(self.map)
 
     def transform_tag(self, system, tag, cache):
@@ -74,14 +75,4 @@ class DBSService(DASAbstractService):
                 self.child_info(self.name, row, item, cache)
                 newkey = self.transform_tag(self.name, item.tag, cache)
                 newrow = {newkey : row}
-# I'm not sure I'll need this anymore in DBS, let's keep for a while
-# this add input parameters into DBS output.
-                if  params:
-                    for key, val in params.items():
-                        if  val and val.find('*') == -1:
-                            nkey = self.dasmapping.notation2das(self.name, key)
-                            if  not newrow.has_key(nkey) and nkey not in self.reserved:
-                                newrow[nkey] = val
-#                print "\n\n### yield DBS row"
-#                print newrow
                 yield newrow
