@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.6 2009/05/29 18:29:48 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_webconfig.py,v 1.7 2009/06/04 18:30:28 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -24,7 +24,7 @@ config = Configuration()
 config.component_('Webtools')
 
 # This is the application
-config.Webtools.port = 8010
+config.Webtools.port = 8212
 config.Webtools.application = 'DASWeb'
 # This is the config for the application
 config.component_('DASWeb')

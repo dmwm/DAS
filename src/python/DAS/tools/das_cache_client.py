@@ -4,8 +4,8 @@
 """
 DAS cache client tools 
 """
-__revision__ = "$Id: das_cache_client.py,v 1.7 2009/06/04 18:01:37 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_cache_client.py,v 1.8 2009/06/04 18:30:28 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.web.utils import urllib2_request, httplib_request
@@ -35,7 +35,7 @@ class DASOptionParser:
                                default=False, dest="input",
              help="specify input for your request; the input should be in a form of dict")
         self.parser.add_option("--host", action="store", type="string", 
-                               default='http://localhost:8011', dest="host",
+                               default='http://localhost:8211', dest="host",
              help="specify host name, e.g. http://hostname:port")
         self.parser.add_option("--idx", action="store", type="int", 
                                default=0, dest="idx",
