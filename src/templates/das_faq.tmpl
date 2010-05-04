@@ -82,6 +82,26 @@ $operators
 
 <ul>
 <li>
+Can I select/aggregate certain fields in DAS records
+</li>
+</ul>
+<p>
+Yes, for that you can use pipe "|" in your query. For example
+<div class="example">
+file dataset=/a/b/c | grep file.name, file.size
+</div>
+You can also use the following list of aggregator functions
+<div class="example">
+$aggregators
+</div>
+For example
+<div class="example">
+file dataset=/a/b/c | sum(file.size)
+</div>
+</p>
+
+<ul>
+<li>
 What should I type in DAS web interface?
 </li>
 </ul>
