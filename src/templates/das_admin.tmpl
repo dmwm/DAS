@@ -2,6 +2,50 @@
 <!-- das_admin.tmpl -->
 <div id="container">
 
+#if len($msg)
+<pre>
+$msg
+</pre>
+#end if
+
+<form action="$base/admin/records" method="get">
+<table>
+<tr>
+<td class="right">
+db:
+<select id="database" name="database">
+#for db in $ddict.keys()
+#for coll, info in $ddict[$db].items()
+#if $coll!="system.indexes"
+<option value="$db.$coll">$db.$coll</option>
+#end if
+#end for
+#end for
+</select>
+</td>
+<td class="left">
+&#35; results/page:
+<select id="limit" name="limit">
+<option value="10">10</option>
+<option value="25">25</option>
+<option value="50">50</option>
+<option value="100">100</option>
+<option value="0">All</option>
+</select>
+</td>
+<td>
+<input type="submit" value="Search" />
+<input type="reset" />
+</td>
+</tr>
+</table>
+<div>
+<textarea rows="5" cols="100" name="query" id="query" onclick="javascript:CleanArea()">
+Put your JSON MongoDB query here
+</textarea>
+</div>
+</form>
+
 <div id="left">
 
 <div id="vmenu">
@@ -67,10 +111,14 @@ $info[1]
 </div> <!-- end of container -->
 <script type="text/javascript">
 function HideAll() {
-HideTag('info');
+    HideTag('info');
 #for db in $ddict.keys()
-HideTag('$db');
+    HideTag('$db');
 #end for
+}
+function CleanArea() {
+    var area = document.getElementById('query');
+    query.innerHTML="";
 }
 </script>
 <!-- end of das_admin.tmpl -->
