@@ -7,7 +7,12 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- V04_00_02
+
+  - bug fix for das_cacheserver
+
 - V04_00_01
+
   - minor tweaks to make CMS rpms
   - modifications for init scripts to be able to run in
     stand-alone mode
