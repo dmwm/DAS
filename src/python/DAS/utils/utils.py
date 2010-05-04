@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.38 2009/11/17 19:30:18 valya Exp $"
-__version__ = "$Revision: 1.38 $"
+__revision__ = "$Id: utils.py,v 1.39 2009/11/17 19:35:55 valya Exp $"
+__version__ = "$Revision: 1.39 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -45,7 +45,7 @@ class dict_of_none (dict):
         """Assign missing key to None"""
         return None
 
-def dict_value(dict, prim_key):
+def dict_value(idict, prim_key):
     """
     Find value in given dictionary for given primary key. The primary
     key can be composed one, e.g. a.b. If found value is a list type
@@ -53,7 +53,7 @@ def dict_value(dict, prim_key):
     """
     try:
         if  prim_key.find('.') != -1:
-            value = dict
+            value = idict
             for key in prim_key.split('.'):
                 if  type(value) is types.ListType:
                     value = value[0][key]
@@ -61,12 +61,27 @@ def dict_value(dict, prim_key):
                 else:
                     value = value[key]
         else:
-            value = dict[prim_key]
+            value = idict[prim_key]
         return value
     except:
         msg  = 'Unable to look-up key=%s\n' % prim_key
-        msg += 'dict=%s' % str(dict)
+        msg += 'dict=%s' % str(idict)
         raise Exception(msg)
+
+#    if  idict.has_key(prim_key):
+#        return idict[prim_key]
+#    try:
+#        value = dict(idict)
+#        for key in prim_key.split('.'):
+#            if  type(value) is types.ListType:
+#                value = value[0][key]
+#                break
+#            else:
+#                value = value[key]
+#    except:
+#        msg  = 'Unable to look-up key=%s\n' % prim_key
+#        msg += 'dict=%s' % str(dict)
+#        raise Exception(msg)
 
 def merge_dict(dict1, dict2):
     """
