@@ -14,6 +14,7 @@ References
 .. [Mongodb] http://www.mongodb.org, version 1.2.1
 .. [Pymongo] http://api.mongodb.org/python/, version 1.3
 .. [Cheetah] http://www.cheetahtemplate.org/, version 2.4.0
+.. [Cherrypy] http://www.cherrypy.org/, version 3.1.2
 .. [Sphinx] http://sphinx.pocoo.org/, version 0.6.4
 .. [IPython] http://ipython.scipy.org/, version 0.10
 .. [Memcached] http://memcached.org
