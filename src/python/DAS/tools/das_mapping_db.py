@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.21 2010/02/02 20:12:12 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.22 2010/02/03 16:46:48 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -32,8 +32,8 @@ class DASOptionParser:
              default="mapping" , dest="db", help="specify MongoDB db name")
         self.parser.add_option("--system", action="store", type="string",
              default=None , dest="system", help="specify DAS sub-system")
-        self.parser.add_option("--api-map", action="store", type="string",
-             default=None , dest="amap", help="specify api map file")
+        self.parser.add_option("--uri-map", action="store", type="string",
+             default=None , dest="umap", help="specify uri map file")
         self.parser.add_option("--notation-map", action="store", type="string",
              default=None , dest="nmap", help="specify notation map file")
         self.parser.add_option("--presentation-map", action="store", type="string",
@@ -81,8 +81,8 @@ if __name__ == '__main__':
         print keys
         sys.exit(0)
 
-    if  opts.amap:
-        for rec in read_service_map(opts.amap, field='api'):
+    if  opts.umap:
+        for rec in read_service_map(opts.umap, field='uri'):
             if  opts.debug:
                 print rec
             spec = dict(rec)

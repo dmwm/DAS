@@ -15,7 +15,7 @@ echo "Add API maps"
 for amap in `ls $dir/*.yml`
 do
     echo "Read API maps from $amap"
-    $cmd --api-map=$amap
+    $cmd --uri-map=$amap
     echo "Read notation map from $amap"
     $cmd --notation-map=$amap
     echo "Read presentation map from $amap"
