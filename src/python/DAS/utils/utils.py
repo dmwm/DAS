@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.65 2010/02/16 18:36:25 valya Exp $"
-__version__ = "$Revision: 1.65 $"
+__revision__ = "$Id: utils.py,v 1.66 2010/02/17 16:52:17 valya Exp $"
+__version__ = "$Revision: 1.66 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -514,7 +514,8 @@ def map_validator(smap):
     msg = 'Fail to validate data-service map %s' % smap
     if  type(smap.keys()) is not types.ListType:
         raise Exception(msg)
-    possible_keys = ['api', 'keys', 'params', 'url', 'expire', 'format']
+    possible_keys = ['api', 'keys', 'params', 'url', 'expire', 
+                        'format', 'wild_card']
     possible_keys.sort()
     for item in smap.values():
         if  type(item) is not types.DictType:
@@ -1029,8 +1030,17 @@ def aggregator(results, expire):
             prim_key = row_prim_key
             record = row
             continue
-        val1 = dict_value(record, prim_key)
-        val2 = dict_value(row, prim_key)
+        try:
+            val1 = dict_value(record, prim_key)
+        except:
+            continue
+        try:
+            val2 = dict_value(row, prim_key)
+        except:
+            row.update({'das':{'expire':expire}})
+            yield row
+            record = dict(row)
+            update = 0
         if  val1 == val2:
             merge_dict(record, row)
             update = 1
@@ -1052,9 +1062,11 @@ def extract_http_error(err):
     msg  = str(err)
     try:
         err = json.loads(err)
-        if  err.has_key('message') and \
-            err['message'].has_key('Exception'): # DBS3
-            msg = err['message']['Exception']
+        if  err.has_key('message'):
+            if  err['message'].has_key('Exception'): # DBS3
+                msg = err['message']['Exception']
+            if  err['message'].has_key('AssertionError'): # SiteDB
+                msg = err['message']['AssertionError']
     except:
         pass
     return msg
