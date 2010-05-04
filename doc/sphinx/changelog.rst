@@ -9,6 +9,8 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - V04_00_04
 
+  - choose to use flat-namespace for DAS QL keys in DAS queries
+  - added aggregator functions, such as sum/count, etc. as coroutines
   - added "grep" filer for DAS QL
   - extended dotdict class with _set/_get methods
   - re-wrote C-extension for dict_helper
