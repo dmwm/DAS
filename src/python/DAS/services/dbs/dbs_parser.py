@@ -4,8 +4,8 @@
 """
 DBS XML parser
 """
-__revision__ = "$Id: dbs_parser.py,v 1.4 2009/05/11 20:09:46 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: dbs_parser.py,v 1.5 2009/05/18 19:29:13 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 #from xml.dom.minidom import parseString
@@ -35,6 +35,24 @@ import elementtree.ElementTree as ET
 #    return olist
 
 def parser(data):
+    """
+    DBS XML parser, it returns a list of dict rows, e.g.
+    [{'file':value, 'run':value}, ...]
+    """
+    elem  = ET.fromstring(data)
+    for i in elem:
+        if  i.tag == 'results':
+            for j in i:
+                row = {}
+                for k in j.getchildren():
+                    name = k.tag
+                    if  name.find('_') != -1: # agg. function
+                        nlist = name.split('_')
+                        name  = '%s(%s)' % (nlist[0], nlist[1])
+                    row[name] = k.text
+                yield row
+
+def parser_list(data):
     """
     DBS XML parser, it returns a list of dict rows, e.g.
     [{'file':value, 'run':value}, ...]
