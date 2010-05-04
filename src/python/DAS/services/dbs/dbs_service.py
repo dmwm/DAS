@@ -4,13 +4,11 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.16 2009/11/20 01:00:56 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: dbs_service.py,v 1.17 2009/11/25 18:22:37 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
-#import xml.etree.cElementTree as ET
 import types
-import xml.etree.ElementTree as ET
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser
@@ -29,6 +27,10 @@ class DBSService(DASAbstractService):
         """
         DBS data-service parser.
         """
+        notationmap = self.notations()
+        notations = notationmap[''] # use api='', i.e. notations valid for all APIs
+        if  notationmap.has_key(api):
+            notations.update(notationmap[api])
         add = None
         if  api == 'listBlocks':
             tag = 'block'
@@ -38,6 +40,6 @@ class DBSService(DASAbstractService):
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
             raise Exception(msg)
-        gen = xml_parser(source, tag, add)
+        gen = xml_parser(notations, source, tag, add)
         for row in gen:
             yield row
