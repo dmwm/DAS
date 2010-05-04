@@ -31,10 +31,10 @@ class Wrapper:
 			raise msg
 
 #query = "find dataset where dataset = abc and (file = xyz or run like 12*) order by file, dataset desc"
-query = sys.argv[1]
-parserObj = Wrapper()
-tokens = parserObj.parseQuery(query)
-print 'FIND_KEYWORDS ', tokens['FIND_KEYWORDS']
-print 'WHERE_CONSTRAINTS ', tokens['WHERE_CONSTRAINTS']
-print 'ORDER_BY_KEYWORDS ', tokens['ORDER_BY_KEYWORDS']
-print 'ORDERING', tokens['ORDERING']
+#query = sys.argv[1]
+#parserObj = Wrapper()
+#tokens = parserObj.parseQuery(query)
+#print 'FIND_KEYWORDS ', tokens['FIND_KEYWORDS']
+#print 'WHERE_CONSTRAINTS ', tokens['WHERE_CONSTRAINTS']
+#print 'ORDER_BY_KEYWORDS ', tokens['ORDER_BY_KEYWORDS']
+#print 'ORDERING', tokens['ORDERING']
