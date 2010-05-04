@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Data Aggregation Service documentation build configuration file, created by
+# Data Aggregation System documentation build configuration file, created by
 # sphinx-quickstart on Mon Jan 25 10:20:09 2010.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -37,7 +37,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Data Aggregation Service'
+project = u'Data Aggregation System'
 copyright = u'2010, Valentin Kuznetsov'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -78,7 +78,7 @@ exclude_trees = []
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
-#show_authors = False
+show_authors = True
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -158,7 +158,7 @@ html_static_path = ['_static']
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'DataAggregationServicedoc'
+htmlhelp_basename = 'DataAggregationSystemdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -172,7 +172,7 @@ htmlhelp_basename = 'DataAggregationServicedoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'DataAggregationService.tex', u'Data Aggregation Service Documentation',
+  ('index', 'DataAggregationSystem.tex', u'Data Aggregation System Documentation',
    u'Valentin Kuznetsov', 'manual'),
 ]
 

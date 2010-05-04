@@ -1,7 +1,7 @@
 Introduction
 ============
 
-DAS stands for Data Aggregation Service. It is general purpose
+DAS stands for Data Aggregation System. It is general purpose
 framework to unify CMS data-services into a common layer used 
 by CMS physicists and production tools. It provides several
 features:
