@@ -11,8 +11,8 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.75 2010/04/15 18:08:18 valya Exp $"
-__version__ = "$Revision: 1.75 $"
+__revision__ = "$Id: das_core.py,v 1.76 2010/05/03 19:14:06 valya Exp $"
+__version__ = "$Revision: 1.76 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -148,7 +148,7 @@ class DASCore(object):
             self.service_parameters[getattr(self, name).name] = sparams
 
         if  self.verbose:
-            self.timer.record('DASCore.__init__')
+            self.timer.record('init')
         self.dasconfig = dasconfig
 
     def keys(self):
@@ -307,6 +307,7 @@ class DASCore(object):
         if  self.verbose:
             self.timer.record('merge')
         self.rawcache.update_das_record(query, 'ok')
+        self.rawcache.add_to_record(query, {'das.timer': self.timer.timer})
         return 1
 
     def get_from_cache(self, query, idx=0, limit=None, skey=None, sorder='asc'):
