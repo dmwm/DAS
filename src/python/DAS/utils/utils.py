@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.81 2010/03/09 15:04:09 valya Exp $"
-__version__ = "$Revision: 1.81 $"
+__revision__ = "$Id: utils.py,v 1.82 2010/03/17 20:04:02 valya Exp $"
+__version__ = "$Revision: 1.82 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -1003,7 +1003,7 @@ def aggregator(results, expire):
         row.pop('das')
         row.pop('_id')
         if  row_prim_key != prim_key:
-            record.update({'das':{'expire':expire}})
+            record.update({'das':{'expire':expire, 'primary_key':prim_key}})
             yield record
             prim_key = row_prim_key
             record = row
@@ -1011,7 +1011,7 @@ def aggregator(results, expire):
         try:
             val1 = dict_value(record, prim_key)
         except:
-            record.update({'das':{'expire':expire}})
+            record.update({'das':{'expire':expire, 'primary_key':prim_key}})
             yield record
             record = dict(row)
             update = 0
@@ -1019,7 +1019,7 @@ def aggregator(results, expire):
         try:
             val2 = dict_value(row, prim_key)
         except:
-            row.update({'das':{'expire':expire}})
+            row.update({'das':{'expire':expire, 'primary_key':prim_key}})
             yield row
             record = dict(row)
             update = 0
@@ -1028,15 +1028,15 @@ def aggregator(results, expire):
             merge_dict(record, row)
             update = 1
         else:
-            record.update({'das':{'expire':expire}})
+            record.update({'das':{'expire':expire, 'primary_key':prim_key}})
             yield record
             record = dict(row)
             update = 0
     if  update: # check if we did update for last row
-        record.update({'das':{'expire':expire}})
+        record.update({'das':{'expire':expire, 'primary_key':prim_key}})
         yield record
     else:
-        row.update({'das':{'expire':expire}})
+        row.update({'das':{'expire':expire, 'primary_key':row_prim_key}})
         yield row
 
 def extract_http_error(err):
