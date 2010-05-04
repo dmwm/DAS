@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.83 2010/03/17 15:21:12 valya Exp $"
-__version__ = "$Revision: 1.83 $"
+__revision__ = "$Id: abstract_service.py,v 1.84 2010/03/25 15:20:02 valya Exp $"
+__version__ = "$Revision: 1.84 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -426,6 +426,8 @@ class DASAbstractService(object):
 #                        value.find('*') != -1 and existing_value:
                     if  existing_value:
                         value = existing_value
+                    if  type(value) is types.DictType:
+                        value = str(value) # to avoid {'$gt':number'}
                     ddict._set(key, value)
                 yield ddict
                 count += 1
