@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.30 2010/02/17 17:01:26 valya Exp $"
-__version__ = "$Revision: 1.30 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.31 2010/02/22 20:59:04 valya Exp $"
+__version__ = "$Revision: 1.31 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -43,6 +43,10 @@ class DASMapping(object):
         self.notationcache = {}
         self.init_notationcache()
 
+        if  not self.check_db():
+            msg = "No DAS maps found in MappingDB"
+            raise Exception(msg)
+
     # ===============
     # Management APIs
     # ===============
@@ -71,6 +75,12 @@ class DASMapping(object):
         Delete mapping DB in MongoDB back-end.
         """
         self.conn.drop_database(self.dbname)
+
+    def check_db(self):
+        """
+        Check if there are records in Mapping DB
+        """
+        return self.col.find().count()
 
     def remove(self, spec):
         """
