@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.9 2009/10/13 15:21:07 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.10 2009/10/15 15:03:15 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -31,6 +31,7 @@ class DASMapping(object):
         self.dbport  = config['mapping_dbport']
         self.dbname  = getarg(config, 'mapping_dbname', 'mapping')
         self.colname = 'db'
+        self.notationcache = {}
 
         msg = "DASMapping::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
@@ -234,12 +235,18 @@ class DASMapping(object):
         run_number=run. In case when api_param is not presented in DB
         just return it back.
         """
+        if  self.notationcache.has_key((system, api_param)):
+            return self.notationcache[(system, api_param)]
         query = {'system':system, 'notations.api_param':api_param}
         res = self.col.find_one(query)
         if  res:
             for row in res['notations']:
                 if  row['api_param'] == api_param:
-                    return row['das_name']
+                    value = row['das_name']
+                    self.notationcache[(system, api_param)] = value
+                    return value
+#                    return row['das_name']
+        self.notationcache[(system, api_param)] = api_param
         return api_param
 
     def api2daskey(self, system, api):
