@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.27 2009/11/05 18:24:48 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: das_mongocache.py,v 1.28 2009/11/08 19:17:29 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -15,7 +15,7 @@ import types
 import itertools
 
 # DAS modules
-from DAS.utils.utils import getarg, dict_value, merge_dict
+from DAS.utils.utils import getarg, dict_value, merge_dict, genkey
 from DAS.core.cache import Cache
 
 # monogo db modules
@@ -410,6 +410,11 @@ class DASMongocache(Cache):
         dasheader  = header['das']
         dasheader['selection_keys'] = header['selection_keys']
 
+        # check first if we have any results in cache for this query
+        query_in_cache = False
+        if  self.incache(query):
+            query_in_cache = True
+
         # insert query
         record = dict(query=encode_mongo_keys(query),
                  das=dict(expire=dasheader['expire'], 
@@ -440,11 +445,13 @@ class DASMongocache(Cache):
                 item['das'] = dasheader
 #                item['query'] = str_query
 #                item['dashash'] = dashash # see above the dashash
-                try:
-                    entry = dict_value(item, prim_key)
-                    row = self.col.find_one({prim_key:entry})
-                except:
-                    row = None
+                row = None
+                if  query_in_cache:
+                    try:
+                        entry = dict_value(item, prim_key)
+                        row = self.col.find_one({prim_key:entry})
+                    except:
+                        row = None
                 if  row:
                     value = dict_value(row, prim_key)
                     if  value == entry: # we found a match in cache
