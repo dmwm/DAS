@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.4 2009/06/16 19:09:26 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: utils.py,v 1.5 2009/07/06 19:30:33 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -64,3 +64,19 @@ class UrlProxy(object):
     def get(self): 
         """Get URL data"""
         return self._url.read()
+
+class UrlRequest(urllib2.Request):
+    """
+    URL requestor class which supports all RESTful request methods.
+    It is based on urllib2.Request class and overwrite request method.
+    Usage: UrlRequest(method, url=url, data=data), where method is
+    GET, POST, PUT, DELETE.
+    """
+    def __init__(self, method, *args, **kwargs):
+        self._method = method
+        urllib2.Request.__init__(self, *args, **kwargs)
+
+    def get_method(self):
+        """Return request method"""
+        return self._method
+
