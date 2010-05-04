@@ -151,6 +151,20 @@ class testDASMapping(unittest.TestCase):
         result = self.mgr.presentation('block')
         self.assertEqual(expect, result)
 
+    def test_notations(self):                          
+        """test notations method"""
+        self.mgr.create_db()
+        system = "test"
+        rec = {'notations': [
+        {"notation": "site.resource_element.cms_name", "map": "site.name", "api": ""},
+        {"notation": "site.resource_pledge.cms_name", "map": "site.name", "api": ""},
+        {"notation": "admin.contacts.cms_name", "map":"site.name", "api":""}
+        ], "system": system}
+        self.mgr.add(rec)
+        expect = rec['notations']
+        result = self.mgr.notations(system)[system]
+        self.assertEqual(expect, result)
+
 #
 # main
 #
