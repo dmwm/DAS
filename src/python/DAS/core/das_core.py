@@ -5,8 +5,8 @@
 Define core class for Data Aggregation Service (DAS)
 """
 
-__revision__ = "$Id: das_core.py,v 1.4 2009/04/23 01:11:30 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_core.py,v 1.5 2009/04/29 15:49:22 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -223,16 +223,8 @@ class DASCore(object):
         """
         Wrap returning results into returning list
         """
-        results    = self.call(query)
-        resultlist = []
-        idx        = 1
-        for res in results:
-            item = dict(res)
-            item['id'] = idx
-            if  not resultlist.count(item):
-                resultlist.append(item)
-            idx += 1
-        return resultlist
+        res = [i for i in self.call(query)]
+        return res
 
     def json(self, query):
         """
@@ -335,6 +327,7 @@ class DASCore(object):
                 discard_services.append(service)
         for srv in discard_services:
             services.remove(srv)
+        self.logger.info('DASCore::call, unique set of services %s' % services)
 
         # call data-services to execute sub-queries
         # TODO: I need to cover the case when 
@@ -365,23 +358,38 @@ class DASCore(object):
         systems = rdict.keys()
         if  len(systems) == 1:
             return rdict[systems[0]]
+
         # find pairs who has relationships, e.g. (dbs, phedex),
         # and make cartesian product out of them based on found relation keys
-        reldict = {}
-        result = ""
-        for sys0 in systems:
-            for sys1 in systems:
-                rel_keys = self.relation_keys(sys0, sys1)
-                if  sys1 != sys0 and rel_keys:
-                    reldict[(sys0, sys1)] = rel_keys
-                    set0    = rdict[sys0]
-                    set1    = rdict[sys1]
-                    if  not result:
-                        result  = cartesian_product(set0, set1, rel_keys)
-                    else:
-                        result  = cartesian_product(result, set1, rel_keys)
-        finalset = gen2list(result)
-        return finalset
+
+        # NEW CODE using generators, I see speed up
+        list0 = rdict[systems[0]]
+        list1 = rdict[systems[1]]
+        idx  = 2
+        while 1:
+            product = cartesian_product(list0, list1)
+            if  idx >= len(systems):
+                break
+            list0 = [i for i in product] # may be I should do: list0 = product
+            list1 = rdict[systems[idx]]
+            idx += 1
+        return product
+        # OLD CODE via list
+#        reldict = {}
+#        result = ""
+#        for sys0 in systems:
+#            for sys1 in systems:
+#                rel_keys = self.relation_keys(sys0, sys1)
+#                if  sys1 != sys0 and rel_keys:
+#                    reldict[(sys0, sys1)] = rel_keys
+#                    set0    = rdict[sys0]
+#                    set1    = rdict[sys1]
+#                    if  not result:
+#                        result  = cartesian_product(set0, set1, rel_keys)
+#                    else:
+#                        result  = cartesian_product(result, set1, rel_keys)
+#        finalset = gen2list(result)
+#        return finalset
 
 #        set0    = rdict[systems[0]]
 #        set1    = rdict[systems[1]]
