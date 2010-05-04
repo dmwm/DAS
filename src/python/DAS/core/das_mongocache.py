@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.73 2010/03/24 18:20:44 valya Exp $"
-__version__ = "$Revision: 1.73 $"
+__revision__ = "$Id: das_mongocache.py,v 1.74 2010/03/24 18:37:40 valya Exp $"
+__version__ = "$Revision: 1.74 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -787,7 +787,13 @@ class DASMongocache(object):
         internal indexes.
         """
         self.col.remove({})
-        self.col.drop_indexes()
+        try: # in pymongo 1.5.1 drop of indexes with non-existsing DB doesn't work
+            self.col.drop_indexes()
+        except:
+            pass
         self.merge.remove({})
-        self.merge.drop_indexes()
+        try:
+            self.merge.drop_indexes()
+        except:
+            pass
 
