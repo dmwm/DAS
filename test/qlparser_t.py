@@ -9,6 +9,7 @@ import unittest
 from DAS.core.qlparser import findbracketobj, mongo_exp
 from DAS.core.qlparser import getconditions, add_spaces
 from DAS.core.qlparser import MongoParser, DAS_OPERATORS
+from DAS.core.qlparser import get_aggregator
 from DAS.utils.logger import DASLogger
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_mapping_db import DASMapping
@@ -38,6 +39,13 @@ class testQLParser(unittest.TestCase):
         config['dasanalytics'] = DASAnalytics(config)
         self.parser = MongoParser(config)
         self.operators = [o.strip() for o in DAS_OPERATORS]
+
+    def test_get_aggregator(self):
+        """Test get_aggregator function"""
+        expr   = "sum(block.size)"
+        expect = [("sum", "block.size")]
+        result = [pair for pair in get_aggregator(expr)]
+        self.assertEqual(expect, result)
 
     def test_fix_operator(self):
         """Test fix_operator function"""
