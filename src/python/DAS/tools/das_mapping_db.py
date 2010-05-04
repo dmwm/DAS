@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.17 2009/12/17 20:02:27 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.18 2010/01/05 19:25:20 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -593,7 +593,15 @@ if __name__ == '__main__':
                         {'das':'site.sitename', 'ui':'Site'},
                         {'das':'site.admin.email', 'ui':'Site Admin Email'},
                         {'das':'site.admin.title', 'ui':'Site Admin Role'},
-                        ]}
+                        ],
+                'monitor' : [
+                        {'das':'monitor.node', 'ui':'Phedex Node'},
+                        {'das':'monitor.rate', 'ui':'Transfer rate'},
+                        {'das':'monitor.country', 'ui':'Country'},
+                        {'das':'monitor.region', 'ui':'Region'},
+                        {'das':'monitor.time', 'ui':'Time interval'},
+                        ],
+             }
           }
     mgr.add(rec)
     ##### End of web UI mapping
