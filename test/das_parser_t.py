@@ -69,6 +69,9 @@ class testQLParser(unittest.TestCase):
         result = parser(query, self.daskeys, self.operators)
         self.assertEqual(expect, result)
 
+        query  = "lon=1 date= Sep 1 2010"
+        self.assertRaises(Exception, parser, (query, self.daskeys, self.operators))
+
 #
 # main
 #
