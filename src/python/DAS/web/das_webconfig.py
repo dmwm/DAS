@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.10 2009/06/09 18:16:06 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_webconfig.py,v 1.11 2009/06/10 16:58:23 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -57,23 +57,23 @@ active.das.object = 'DAS.web.DASSearch'
 active.das.cache_server_url = 'http://localhost:8211'
 
 # Controllers are standard way to return minified gzipped css and js
-active.section_('controllers')
+active.section_('dascontrollers')
 # The class to load for this view/page
-active.controllers.object = 'WMCore.WebTools.Controllers'
+active.dascontrollers.object = 'WMCore.WebTools.Controllers'
 # The configuration for this object - the location of css and js
-#active.controllers.css = {
+#active.dascontrollers.css = {
 #    'reset': environ['YUIHOME'] + '/reset/reset.css', 
 #    'cms_reset': environ['WTBASE'] + '/css/WMCore/WebTools/cms_reset.css', 
 #    'style': environ['WTBASE'] + '/css/WMCore/WebTools/style.css',
 #    'das': environ['DASHOME'] + '/web/css/das.css'
 #}
-active.controllers.css = {
+active.dascontrollers.css = {
     'cms_reset': environ['WMCORE_ROOT'] + '/src/css/WMCore/WebTools/cms_reset.css', 
     'das': environ['DAS_ROOT'] + '/src/css/das.css'
 }
 
-#active.controllers.js = {}
-active.controllers.js = {
+#active.dascontrollers.js = {}
+active.dascontrollers.js = {
     'autopilot' : environ['DAS_ROOT'] + '/src/js/autopopulate.js'
 }
 # These are pages in "maintenance mode" - to be completed
