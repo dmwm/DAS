@@ -1,6 +1,14 @@
 
 <!-- das_ambiguous.tmpl -->
 <div>
+#if $msg
+DAS parser error:
+<em>
+$msg
+</em>
+<br />
+<br />
+#end if
 Provided input
 <pre class="example">
 $input
@@ -16,5 +24,7 @@ Please use one of them with your input as
 <em class="box_blue">site=T1_CH_CERN</em>.
 </div>
 <br />
+For more with usage of DAS queries see appropriate section in a
+<a href="$base/faq">FAQ</a> page.
 <!-- end of das_ambiguous.tmpl -->
 
