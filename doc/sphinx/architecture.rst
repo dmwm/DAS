@@ -6,6 +6,8 @@ DAS architecture is based on several components:
 
      - analytics DB
      - mapping DB
+     - caching DB
+     - merging DB
      - logging DB
    - data-service plugins, each plugin contains
 
@@ -23,7 +25,7 @@ significantly improve responsiveness of the system and add
 multi-user support into DAS. The following 
 picture represents current DAS architecture:
 
-.. figure::  _images/das_architecture.jpg
+.. figure::  _images/das_architecture.png
    :align:   center
 
 It consists of DAS web server with RESTful interface, DAS cache server, 
