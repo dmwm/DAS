@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.1 2010/03/18 17:52:02 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_cache.py,v 1.2 2010/03/19 17:25:48 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -32,6 +32,7 @@ from DAS.core.das_cache import DASCacheMgr
 from DAS.utils.utils import getarg, genkey
 from DAS.web.tools import exposejson
 from DAS.web.das_webmanager import DASWebManager
+from DAS.utils.regex import web_arg_pattern
 
 if  sys.version_info < (2, 5):
     raise Exception("DAS requires python 2.5 or greater")
@@ -73,7 +74,7 @@ def checkargs(func):
 #                jsondict = json.loads(body, encoding='latin-1')
 #                for key, val in jsondict.items():
 #                    kwds[str(key)] = str(val)
-        pat  = re.compile('^[+]?\d*$')
+        pat = web_arg_pattern
         supported = ['query', 'idx', 'limit', 'expire', 'method', 
                      'skey', 'order', 'collection']
         if  not kwds:

@@ -5,26 +5,27 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.83 2010/03/18 17:55:00 valya Exp $"
-__version__ = "$Revision: 1.83 $"
+__revision__ = "$Id: utils.py,v 1.84 2010/03/19 17:25:49 valya Exp $"
+__version__ = "$Revision: 1.84 $"
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import os
 import re
-import DAS.utils.jsonwrapper as json
-try:
-    # with python 2.5
-    import hashlib
-except:
-    # prior python 2.5
-    import md5
 import time
 import types
-import traceback
-from itertools import groupby
-from pymongo.objectid import ObjectId
-import xml.etree.cElementTree as ET
+import hashlib
 import plistlib
+import traceback
+import xml.etree.cElementTree as ET
+from   itertools import groupby
+from   pymongo.objectid import ObjectId
+
+# DAS modules
+from   DAS.utils.regex import float_number_pattern, int_number_pattern
+from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
+from   DAS.utils.regex import se_pattern, site_pattern
+import DAS.utils.jsonwrapper as json
 
 def yield_rows(*args):
     """
@@ -44,8 +45,8 @@ def adjust_value(value):
     """
     Change null value to None.
     """
-    pat_float   = re.compile(r'(^[-]?\d+\.\d*$|^\d*\.{1,1}\d+$)')
-    pat_integer = re.compile(r'(^[0-9-]$|^[0-9-][0-9]*$)')
+    pat_float   = float_number_pattern
+    pat_integer = int_number_pattern
     if  type(value) is types.StringType:
         if  value == 'null' or value == '(null)':
             return None
@@ -253,11 +254,7 @@ def genkey(query):
     Generate a new key-hash for a given query. We use md5 hash for the
     query and key is just hex representation of this hash.
     """
-    try:
-        keyhash = hashlib.md5()
-    except:
-        # prior python 2.5
-        keyhash = md5.new()
+    keyhash = hashlib.md5()
     if  type(query) is types.DictType:
 #        if  query.has_key('spec') and query['spec'].has_key('_id'):
 #            val = query['spec']['_id']
@@ -539,10 +536,10 @@ def sitename(site):
     CMS name or SAM name, etc.
     """
     patlist = [
-               ('phedex', re.compile('^T[0-9]_[A-Z]+(_)[A-Z]+')),#T2_UK_NO
-               ('cms', re.compile('^T[0-9]_')), # T2_UK
-               ('se',  re.compile('[a-z]+(\.)[a-z]+(\.)')), # a.b.c
-               ('site', re.compile('^[A-Z]+')),
+               ('phedex', phedex_tier_pattern),#T2_UK_NO
+               ('cms', cms_tier_pattern), # T2_UK
+               ('se',  se_pattern), # a.b.c
+               ('site', site_pattern),
               ]
     for name, pat in patlist:
         if  pat.match(site):
