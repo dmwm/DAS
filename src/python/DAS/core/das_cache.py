@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s).
 """
 
-__revision__ = "$Id: das_cache.py,v 1.25 2010/04/13 16:37:10 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: das_cache.py,v 1.26 2010/04/13 17:05:12 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -46,6 +46,8 @@ class DASCacheMgr(object):
 
     def remove(self, qhash):
         """Remove query from a queue"""
+        self.logger.info("DASCacheMgr::remove, hash=%s, query=%s, queue size=%s" \
+                % (qhash, self.qmap[qhash], len(self.queue)))
         try:
             self.queue.remove(qhash)
         except:
@@ -54,8 +56,6 @@ class DASCacheMgr(object):
             del self.qmap[qhash]
         except:
             pass
-        self.logger.info("DASCacheMgr::remove, hash=%s, queue size=%s" \
-                % (qhash, len(self.queue)))
 
 def worker(query):
     """
@@ -101,6 +101,9 @@ def monitoring_worker(cachemgr, config):
                 traceback.print_exc()
                 orphans[item] = orphans.get(item, 0) + 1
                 break
+            msg = "add %s, workers %s, in queue %s, orphans %s" \
+            % (query, len(worker_proc.keys()), len(cachemgr.queue), len(orphans.keys()))
+            logger.debug(msg)
             time.sleep(sleep) # separate processes
         msg = "workers %s, in queue %s, orphans %s" \
         % (len(worker_proc.keys()), len(cachemgr.queue), len(orphans.keys()))
