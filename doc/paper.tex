@@ -462,7 +462,7 @@ logic was abstracted, while a few extentions were required, e.g. specific
 security modules for data-services accessible via private network.
 Finally, the results were retrieved from the cache and delivered to the user. 
 
-\subsection{DAS Mapping DB}
+\subsection{DAS Mapping DB\label{MappingDB}}
 The Mapping DB represents DAS {\it registration} service. It collects
 information about data-service APIs, translates API input/output
 parameters into DAS keys and contains mapping between DAS records
@@ -562,33 +562,34 @@ in DAS to describe common entities of our data. For example, \verb+dataset+,
 was based on the analysis of daily work operations of our users, see \cite{DBS07}.
 Each key represents a DAS record. Every record was stored into the cache
 in JSON format. Due to the ``schemaless'' nature of underlying back-end (MongoDB)
-we were able to store arbitrary structure of DAS records, e.g.
+we were able to store DAS records of arbitrary structure, e.g.
 dictionary, lists, key-value pairs, etc. Therefore every DAS key had a 
 set of attributes representing JSON structure. For instance a document
 \begin{verbatim}
-{'block': {'name':'abc', 'size': 1, 'replica': [...]}}
+{"block": {"name": "abc", "size": 1, "replica": [...]}}
 \end{verbatim}
-associated with a \verb+block+ key and therefore had the following attributes
-\verb+name+, \verb+size+, \verb+replica+. The set of attributes were based 
-on a set of meta-data information provided by data-services. Our users 
-where able to specify a context in their queries by using appropriate 
-attribute(s). For example, for query \verb+block+ we didn't perform a string 
-matching to the ``block'' string, but rather look-up a block records, while query
+associated with a \verb+block+ key who had the following attributes
+\verb+name+, \verb+size+, \verb+replica+. The set of attributes is based 
+on a set of meta-data information stored in a record and therefore
+a nested structures were allowed, e.g. \verb+block.replica.size+. Our users 
+where able to specify a context of their queries by using appropriate 
+attribute(s). For example, query \verb+block+ represents search for all
+block records rather then ``block'' string, while query
 \verb+block.name=abc*+ instructs the system to look-up appropriate blocks
 with matched names. The numerical values, conditions, groupping were
-easy to express too. For example, \verb+run > 10 and run < 100+ query 
+easy to express too, e.g. \verb+run > 10 and run < 100+ query 
 was used to get all run records for provided range of run numbers. 
-At the same time, to complement the strength of the queries, we do plan 
-to index dynamically DAS records and add a keyword-based 
-search later.
+To complement the strength of the queries, we do plan to index 
+dynamically DAS records and add a keyword-based 
+search within record content later.
 
-All input queries were transformed into MongoDB query syntax, 
-who was used internally in DAS. It represents a set of selection 
-keys and conditions as a JSON document. For example, a query
-\verb+dataset file=abc run>10+
-was transformed into 
+All input queries were transformed into MongoDB query syntax who is itself
+a JSON record. It contains a set of selection 
+keys (\verb+fields+) and conditions (\verb+spec+). For example, a query
+\verb+dataset, file=abc, run>10+
+was represented as
 \begin{verbatim}
-{"fields": {"dataset"], "spec": {"file": "abc", "run": {"$gt": 10}}}
+{"fields": ["dataset"], "spec": {"file": "abc", "run": {"$gt": 10}}}
 \end{verbatim}
 Therefore users queries were stored into Analytics DB similar to other DAS 
 records and used for further analysis.
@@ -599,18 +600,18 @@ records and used for further analysis.
 %a real power for our end-users.
 
 \subsection{Data-services and aggregation}
-As we outlined above the DAS Mapping DB became an authorative
+As was shown in section \ref{MappingDB} the DAS Mapping DB became an authorative
 source of information about all data-services participating in DAS.
 Based on the information stored in Mapping DB we were able to 
 retrieve appropriate data from different data-services, re-map them into 
 DAS notations and aggregate them on demand. For instance, the Data 
 Bookkeeping System (DBS) \cite{DBS} and data location system (PhEDEx) \cite{PhEDEx}
-provided information about CMS block meta-data. In former case, DBS 
+were provided information about CMS blocks. In former case, DBS 
 stored information about blocks and their relationships to other 
 physics objects, such as dataset and files, while PhEDEx kept
 information about its location and replicas. Upon a user request to 
 find a block meta-data, we were able to identify appropriate set of 
-DBS and PhEDEx APIs, retrieve data from them, re-format their output 
+DBS and PhEDEx APIs, retrieve data, re-format their output 
 into DAS notations and store results into DAS cache. The records
 were merged (aggregated) based on identical key-value pairs, e.g.
 based on \verb+block.name+ key. Here is an example of such aggregated record:
@@ -624,9 +625,9 @@ based on \verb+block.name+ key. Here is an example of such aggregated record:
             "created_by": "USER_DN", "path": "/a/b/c", ...}],
  "das": [{"expire": 1259952908}, {"expire": 1259954702}]}
 \end{verbatim}
-The \verb+das_id+ refers to api call records stored in Analytics DB,
-\verb+block+ represents an aggregation block meta-data information from DBS
-and PhEDEx systems and \verb+das+ contains their expiration time stamps.
+The \verb+das_id+ part refers to api call records stored in Analytics DB,
+the \verb+block+ part represents an aggregation block meta-data information from DBS
+and PhEDEx systems and the \verb+das+ part contains their expiration time stamps.
 Usage of this information was valuable contribution in debugging process of
 data-services themselves, e.g. identification of data-service inconsistencies, 
 latency studies, etc.
