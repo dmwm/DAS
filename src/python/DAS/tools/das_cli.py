@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.27 2010/03/09 02:36:20 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: das_cli.py,v 1.28 2010/04/05 19:10:45 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -43,6 +43,9 @@ class DASOptionParser:
         self.parser.add_option("--keys", action="store", 
                                           dest="service",
              help="return set of keys for given data service")
+        self.parser.add_option("--print-config", action="store_true", 
+                                          dest="dasconfig",
+             help="print current DAS configuration")
 #        self.parser.add_option("--view", action="store", 
 #                                          dest="view",
 #             help="return view definition in DAS, use --view=all to list all views")
@@ -163,6 +166,8 @@ if __name__ == '__main__':
             info.print_stats()
         else:
             run(DAS, query, idx, limit, skey, sorder, output, plain, debug)
+    elif opts.dasconfig:
+        print pformat(DAS.dasconfig)
     else:
         print
         print "DAS CLI interface, no actions found,"
