@@ -19,27 +19,20 @@ class testDBS(unittest.TestCase):
         """test read_service_map function"""
         apimap  = {
             "url": "https://a.b.com", "system": "sitedb", 
-            "api": "CMSNametoSE",
+            "urn": "CMSNametoSE",
             "format": "XML",
             "params": {"name": ""}, 
             "expire": 3600, 
-            "record" : {
-                "daskeys": [{"map": "site.name", "key": "site", "pattern": ""}],
-                "api2das": [{"pattern": "", "das_key": "site", "api_param": "name"}], 
-            }
+            "daskeys": [{"map": "site.name", "key": "site", "pattern": ""}],
+            "api2das": [{"pattern": "", "das_key": "site", "api_param": "name"}], 
         }
-        expect  = {'api2das': [{'pattern': '', 'api_param': 'name', 'das_key': 'site'}], 
-                'api': {'params': {'name': ''}, 'name': 'CMSNametoSE'}, 
-                'format': 'XML',
-                'expire': 3600, 'url': 'https://a.b.com', 'system': 'sitedb', 
-                'daskeys': [{'map': 'site.name', 'key': 'site', 'pattern': ''}]}
         fdescr  = tempfile.NamedTemporaryFile()
         mapfile = fdescr.name
         stream  = file(mapfile, 'w')
         yaml.dump(apimap, stream)
-        result  = [r for r in read_service_map(mapfile, field="api")][0]
+        result  = [r for r in read_service_map(mapfile)][0]
         result.pop('created')
-        self.assertEqual(expect, result)
+        self.assertEqual(apimap, result)
 
 #
 # main

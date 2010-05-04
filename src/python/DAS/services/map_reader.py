@@ -4,14 +4,14 @@
 """
 Data-provider map reader. Service maps are represented in YAML format.
 """
-__revision__ = "$Id: map_reader.py,v 1.2 2010/02/02 19:55:20 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: map_reader.py,v 1.3 2010/02/03 16:45:55 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import yaml
 import time
 
-def read_service_map(filename, field="api"):
+def read_service_map(filename, field="uri"):
     """
     Read service map file and construct DAS record for MappingDB.
     """
@@ -27,18 +27,27 @@ def read_service_map(filename, field="api"):
                 url = metric['url']
             if  metric.has_key('format'):
                 format = metric['format']
-            if  field == 'api' and metric.has_key('api'):
+            if  field == 'uri' and metric.has_key('urn'):
                 params = metric['params']
-                api    = metric['api']
+                urn    = metric['urn']
                 expire = metric.get('expire', 600) # default 10 minutes
                 record = dict(url=url, system=system, expire=expire,
-                                api=dict(name=api, params=params),
+                                urn=urn, params=params,
                                 format=format, created=time.time())
-                record.update(metric['record'])
+                if  metric.has_key('api2das'):
+                    record['api2das'] = metric['api2das']
+                else:
+                    record['api2das'] = []
+                if  metric.has_key('daskeys'):
+                    record['daskeys'] = metric['daskeys']
+                else:
+                    msg = "map doesn't provide daskeys"
+                    print metric
+                    raise Exception(msg)
                 yield record
             if  field == 'notations' and metric.has_key('notations'):
                 record = dict(notations=metric['notations'],
-                                url=url, system=system, created=time.time())
+                                system=system, created=time.time())
                 yield record
             if  field == 'presentation' and metric.has_key('presentation'):
                 record = dict(presentation=metric['presentation'],
