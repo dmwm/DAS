@@ -4,8 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.15 2009/11/19 20:12:58 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: dbs_service.py,v 1.16 2009/11/20 01:00:56 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 #import xml.etree.cElementTree as ET
@@ -25,7 +25,7 @@ class DBSService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name, 'javaservlet')
         map_validator(self.map)
 
-    def parser(self, data_ptr, api, args=None):
+    def parser(self, source, api, args=None):
         """
         DBS data-service parser.
         """
@@ -38,6 +38,6 @@ class DBSService(DASAbstractService):
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
             raise Exception(msg)
-        gen = xml_parser(data_ptr, tag, add)
+        gen = xml_parser(source, tag, add)
         for row in gen:
             yield row
