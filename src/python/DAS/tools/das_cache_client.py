@@ -4,8 +4,8 @@
 """
 DAS cache client tools 
 """
-__revision__ = "$Id: das_cache_client.py,v 1.12 2009/07/15 16:00:25 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_cache_client.py,v 1.13 2009/07/15 18:59:03 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import urllib2, urllib
@@ -99,9 +99,10 @@ if __name__ == '__main__':
         url += '?%s' % encoded_data
         req = UrlRequest(request, url=url)
     else:
-        encoded_data=urllib.urlencode(params, doseq=True)
-#        encoded_data=json.dumps(params)
-        req = UrlRequest(request, url=url, data=encoded_data)
+#        encoded_data=urllib.urlencode(params, doseq=True)
+        encoded_data=json.dumps(params)
+        headers={"Content-type": "application/json"}
+        req = UrlRequest(request, url=url, data=encoded_data, headers=headers)
 
     if  debug:
         h=urllib2.HTTPHandler(debuglevel=1)

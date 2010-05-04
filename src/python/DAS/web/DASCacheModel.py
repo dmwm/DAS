@@ -5,15 +5,21 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.10 2009/07/09 16:00:02 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.11 2009/07/15 18:59:03 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import re
 import types
 import thread
+import cherrypy
 import traceback
+try:
+    import json # starting in python version 2.6
+except:
+    # Prior to 2.6 requires simplejson
+    import simplejson as json # prior 2.6 require simplejson
 
 # WMCore/WebTools modules
 from WMCore.WebTools.RESTModel import RESTModel
@@ -33,7 +39,22 @@ def checkargs(func):
     """Decorator to check arguments to REST server"""
     def wrapper (self, *args, **kwds):
         """Wrapper for decorator"""
-        data = func (self, *args, **kwds)
+        # check request headers. If Content-type is set to JSON
+        # process the body request, extract JSON dict, convert it into
+        # set of parameters passed to HTTP method.
+        headers = cherrypy.request.headers
+        if  headers.has_key('Content-type'):
+            content = headers['Content-type']
+            if  content in ['application/json', 'text/json', 'text/x-json']:
+                body = cherrypy.request.body.read()
+                if  args and kwds:
+                    msg  = 'Misleading request.'
+                    msg += 'Headers: %s ' % headers
+                    msg += 'Parameters: %s, %s' % (args, kwds)
+                    return {'status':'fail', 'reason': msg}
+                jsondict = json.loads(body, encoding='latin-1')
+                for key, val in jsondict.items():
+                    kwds[str(key)] = str(val)
         pat  = re.compile('^[+]?\d*$')
         supported = ['query', 'idx', 'limit', 'expire', 'method', 
                      'skey', 'order']
@@ -41,13 +62,13 @@ def checkargs(func):
         if  keys:
             msg  = 'Unsupported keys: %s' % keys
             return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('idx') and not pat.match(kwds['idx']):
+        if  kwds.has_key('idx') and not pat.match(str(kwds['idx'])):
             msg  = 'Unsupported value idx=%s' % (kwds['idx'])
             return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('limit') and not pat.match(kwds['limit']):
+        if  kwds.has_key('limit') and not pat.match(str(kwds['limit'])):
             msg  = 'Unsupported value limit=%s' % (kwds['limit'])
             return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('expire') and not pat.match(kwds['expire']):
+        if  kwds.has_key('expire') and not pat.match(str(kwds['expire'])):
             msg  = 'Unsupported value expire=%s' % (kwds['expire'])
             return {'status':'fail', 'reason': msg}
         if  kwds.has_key('order'):
@@ -58,6 +79,7 @@ def checkargs(func):
         if  kwds.has_key('query') and not pat.match(kwds['query']):
             msg = 'Unsupported keyword query=%s' % kwds['query']
             return {'status':'fail', 'reason': msg}
+        data = func (self, *args, **kwds)
         return data
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
@@ -144,6 +166,7 @@ class DASCacheModel(RESTModel):
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
+        print "### handle_post", args, kwargs
         if  kwargs.has_key('query'):
             query  = kwargs['query']
             expire = getarg(kwargs, 'expire', 600)
