@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.35 2009/10/23 19:37:15 valya Exp $"
-__version__ = "$Revision: 1.35 $"
+__revision__ = "$Id: utils.py,v 1.36 2009/11/03 16:28:11 valya Exp $"
+__version__ = "$Revision: 1.36 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -22,6 +22,7 @@ import time
 import types
 import traceback
 from itertools import groupby
+from pymongo.objectid import ObjectId
 
 class dict_of_none (dict):
     """Define new dict type whose missing keys always assigned to None"""
@@ -113,6 +114,11 @@ def genkey(query):
         # prior python 2.5
         keyhash = md5.new()
     if  type(query) is types.DictType:
+        if  query.has_key('spec') and query['spec'].has_key('_id'):
+            val = query['spec']['_id']
+            if  isinstance(val, ObjectId):
+                val = val.url_encode()
+                query['spec']['_id'] = val
         query = json.dumps(query)
     keyhash.update(query)
     return keyhash.hexdigest()
