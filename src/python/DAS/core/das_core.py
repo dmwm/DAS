@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.68 2010/03/17 20:06:16 valya Exp $"
-__version__ = "$Revision: 1.68 $"
+__revision__ = "$Id: das_core.py,v 1.69 2010/03/17 20:31:46 valya Exp $"
+__version__ = "$Revision: 1.69 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -24,10 +24,8 @@ import types
 import traceback
 import DAS.utils.jsonwrapper as json
 
-#from DAS.core.qlparser import MongoParser
 from DAS.core.das_ql import das_operators
 from DAS.core.das_parser import QLManager
-#from DAS.core.das_viewmanager import DASViewManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_mongocache import loose, convert2pattern
@@ -90,11 +88,8 @@ class DASCore(object):
         self.analytics = DASAnalytics(dasconfig)
         dasconfig['dasanalytics'] = self.analytics
 
-#        self.mongoparser = MongoParser(dasconfig)
         self.mongoparser = QLManager(dasconfig)
         dasconfig['mongoparser'] = self.mongoparser
-
-#        self.viewmgr = DASViewManager(dasconfig)
 
         dasroot = os.environ['DAS_ROOT']
         self.rawcache = None
@@ -112,18 +107,6 @@ class DASCore(object):
         else:
             msg = 'DAS configuration file does not provide rawcache'
             raise Exception(msg)
-
-        # load from configuration what will be used as a hot cache
-#        if  dasconfig.has_key('hotcache') and dasconfig['hotcache']:
-#            klass   = dasconfig['hotcache']
-#            name    = klass.lower().replace('das', 'das_')
-#            stm     = "from DAS.core.%s import %s\n" % (name, klass)
-#            obj     = compile(str(stm), '<string>', 'exec')
-#            eval(obj) # load class def
-#            klassobj = '%s(dasconfig)' % klass
-#            setattr(self, 'hotcache', eval(klassobj))
-#            self.cache   = self.hotcache
-#            self.logger.info('DASCore::__init__ hotcache=%s' % klass)
 
         self.systems = dasmapping.list_systems()
 
