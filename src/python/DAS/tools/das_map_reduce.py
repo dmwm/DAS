@@ -8,6 +8,7 @@ __revision__ = "$Id"
 __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
+import os
 import sys
 import time
 import types
@@ -18,6 +19,9 @@ from DAS.utils.das_config import das_readconfig
 # monogo db modules
 from pymongo.connection import Connection
 from pymongo import DESCENDING
+
+# Cheetah template module
+from Cheetah.Template import Template
 
 class DASOptionParser: 
     """
@@ -53,6 +57,7 @@ class MapReduceMgr(object):
         self.port   = port
         self.conn   = Connection(host, port)
         self.mapreduce = self.conn['das']['mapreduce']
+        self.tmpldir   = os.path.join(os.environ['DAS_ROOT'], 'src/templates')
 
     def add_mapreduce(self, name, fmap, freduce):
         """
@@ -64,6 +69,27 @@ class MapReduceMgr(object):
             raise Exception('Map/reduce functions for %s already exists' % name)
         self.mapreduce.insert(dict(name=name, map=fmap, reduce=freduce))
         self.mapreduce.ensure_index([('name', DESCENDING)])
+
+    def gen_map_func(self, func_name, tag):
+        """
+        Generate map/reduct function for provided func name and tag
+        """
+        tmpl_file = "%s/mapreduce_map_%s.tmpl" % (self.tmpldir, func_name)
+        idict = {'tag':tag}
+        if os.path.exists(tmpl_file):
+            template = Template(file=tmpl_file, searchList=idict)
+            return template.respond()
+        return
+
+    def gen_reduce_func(self, func_name, idict=None):
+        """
+        Generate map/reduct function for provided func name and tag
+        """
+        tmpl_file = "%s/mapreduce_reduce_%s.tmpl" % (self.tmpldir, func_name)
+        if os.path.exists(tmpl_file):
+            template = Template(file=tmpl_file, searchList=idict)
+            return template.respond()
+        return
 
     def list_mapreduce(self, name=None):
         """
@@ -106,6 +132,22 @@ if __name__ == '__main__':
 
     # delete all existing records
     MGR.delete_mapreduce('*')
+
+    # add sum mapreduce functions
+    patterns_sum = ['block.replica.size', 'block.size']
+    for pat in patterns_sum:
+        MAP = MGR.gen_map_func('sum', pat)
+        REDUCE = MGR.gen_reduce_func('total', pat)
+        MGR.add_mapreduce('sum(%s)' % pat, MAP, REDUCE)
+
+    # add count mapreduce functions
+    patterns_count = ['block.replica.nfiles', 'block.nfiles']
+    for pat in patterns_count:
+        MAP = MGR.gen_map_func('count', pat)
+        REDUCE = MGR.gen_reduce_func('total', pat)
+        MGR.add_mapreduce('count(%s)' % pat, MAP, REDUCE)
+
+    sys.exit(0)
 
     # add sum(block.replica.size) map/reduce function
     MAP = """
@@ -150,5 +192,3 @@ function (key, values) {
 }
 """   
     MGR.add_mapreduce('sum(block.replica.size)', MAP, REDUCE)
-
-
