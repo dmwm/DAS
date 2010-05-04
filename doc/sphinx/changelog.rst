@@ -7,6 +7,11 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- V04_00_05
+
+  - move to stand-alone web server (remove WebTools dependency)
+  - adjust web UI
+
 - V04_00_04
 
   - choose to use flat-namespace for DAS QL keys in DAS queries
