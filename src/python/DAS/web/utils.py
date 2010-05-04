@@ -5,10 +5,11 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.6 2009/09/09 18:44:55 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: utils.py,v 1.7 2009/09/16 20:32:34 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
+import re
 import types
 import httplib
 import urllib
@@ -97,3 +98,50 @@ class UrlRequest(urllib2.Request):
         """Return request method"""
         return self._method
 
+def json2html(idict, pad="", short=False):
+    """
+    Convert input JSON into HTML code snippet.
+    """
+    newline = '\n'
+    if  short:
+        newline = ''
+        pad = ''
+    pat=re.compile('^[0-9][0-9\.]*$')
+    orig_pad = pad
+    sss = pad + '{' + newline
+    for key, val in idict.items():
+        if  type(val) is types.ListType:
+            sss += pad + """ <code class="key">"%s":</code>""" % key
+            sss += pad + '[' + newline
+            if  not short:
+                pad += " "*3
+            for item in val:
+                if  type(item) is types.DictType:
+                    sss += json2html(item, pad, short)
+                else:
+                    if type(item) is types.NoneType:
+                        sss += """%s<code class="null">None</code>""" % pad
+                    elif  type(item) is types.IntType or pat.match(item):
+                        sss += """%s<code class="number">%s</code>""" % (pad, item)
+                    else:
+                        sss += """%s<code class="string">"%s"</code>""" % (pad, item)
+                if  item != val[-1]:
+                    sss += ',' + newline
+            sss += ']'
+            pad = orig_pad
+        elif type(val) is types.DictType:
+            sss += json2html(val, pad, short)
+        else:
+            sss += pad + """ <code class="key">"%s"</code>""" % key
+            if type(val) is types.NoneType:
+                sss += """:<code class="null">None</code>"""
+            elif  type(val) is types.IntType or pat.match(val):
+                sss += """:<code class="number">%s</code>""" % val
+            else:
+                sss += """:<code class="string">"%s"</code>""" % val
+        if  key != idict.keys()[-1]:
+            sss += ',' + newline
+        else:
+            sss += ""
+    sss += newline + pad + '}'
+    return sss
