@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.9 2009/06/15 14:27:27 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_couchcache.py,v 1.10 2009/06/17 15:18:04 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -93,8 +93,12 @@ function(doc) {
             'all_queries' : {'map': """
 function(doc) {
     if (doc.query) {
-        emit(1, doc.query);
+        emit(doc.query, null);
     }
+}""",
+                        'reduce' : """
+function(keys, values) {
+   return null;
 }"""
             },
 
@@ -144,6 +148,14 @@ function(k,v,r) {
 """
             }
         }
+
+    def connect(self, url):
+        """
+        Connect to different Couch DB URL
+        """
+        self.uri    = url.replace('http://', '')
+        del self.server
+        self.server = CouchServer(self.uri)
 
     def create_view(self, dbname, design, view_dict):
         """
