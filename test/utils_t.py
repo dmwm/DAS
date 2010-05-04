@@ -6,16 +6,51 @@ Unit test for DAS QL parser
 """
 
 import unittest
-from DAS.utils.utils import cartesian_product
+from DAS.utils.utils import cartesian_product, dasheader, update_dasheader
 from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
+from DAS.utils.utils import dict_value, merge_dict
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_merge_dict(self):
+        """Test merge_dict"""
+        dict1 = {'block':{'name':'AAA', 'b':{'c':1}, 'size':2}, 'das':{'system':'dbs'}}
+        dict2 = {'block':{'name':'AAA', 'x':{'y':1}, 'z':1, 'size':2}, 'das':{'system':'phedex'}}
+        result = merge_dict(dict1, dict2)
+        expect = {'block': [{'b': {'c': 1}, 'name': 'AAA', 'size': 2}, 
+        {'x': {'y': 1}, 'z': 1, 'name': 'AAA', 'size': 2}], 
+        'das': [{'system': 'dbs'}, {'system': 'phedex'}]}
+        self.assertEqual(expect, result)
+
+    def test_dict_value(self):
+        """Test dict_value"""
+        dict = {'a':{'b':{'c':1}}, 'd':2}
+        result = dict_value(dict, 'a.b.c')
+        expect = 1
+        self.assertEqual(expect, result)
+
+        result = dict_value(dict, 'd')
+        expect = 2
+        self.assertEqual(expect, result)
+        
+    def test_dasheader(self):
+        """Test DAS header"""
+        expect = ['dbs']
+        header = dasheader('dbs', 'q1', 'api1', 'url1', 'args1', 'ct1', 10, 1)
+        self.assertEqual(expect, header['das']['system'])
+
+        expect = ['dbs', 'phedex']
+        update_dasheader(header, 'phedex', 'q2', 'api2', 'url2', 'args2', 'ct2', 10, 1)
+        self.assertEqual(expect, header['das']['system'])
+        expect = {'api1':'args1', 'api2':'args2'}
+        self.assertEqual(expect, header['das']['params'])
+
     def test_cartesian_product(self):
+        """Test cartesian product function"""
         list1 = [{'ds':1, 'site':2, 'admin':None, 'block':1}, 
                  {'ds':1, 'site':1, 'admin':None, 'block':1},
                  {'ds':2, 'site':1, 'admin':None, 'block':1},

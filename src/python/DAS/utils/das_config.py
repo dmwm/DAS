@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.21 2009/07/24 01:08:14 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: das_config.py,v 1.22 2009/09/01 01:42:47 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -45,7 +45,6 @@ def das_readconfig(dasconfig=None):
     configdict['couch_lifetime'] = config.getint('couch', 'lifetime')
     configdict['couch_cleantime'] = config.getint('couch', 'cleantime')
 
-    configdict['mongocache_dir'] = config.get('mongocache', 'dir', '')
     configdict['mongocache_dbhost'] = config.get('mongocache', 'dbhost', 'localhost')
     configdict['mongocache_dbport'] = int(config.get('mongocache', 'dbport', '27017'))
     configdict['mongocache_dbname'] = config.get('mongocache', 'dbname', 'das')
@@ -62,6 +61,9 @@ def das_readconfig(dasconfig=None):
 
     configdict['views_engine'] = config.get('views', 'db_engine', None)
     configdict['views_dir'] = config.get('views', 'dir', '')
+
+    configdict['mapping_db_engine'] = config.get('mapping_db', 'db_engine', None)
+    configdict['mapping_db_dir'] = config.get('mapping_db', 'dir', '')
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
     configdict['hotcache'] = config.get('das', 'hotcache', None)
@@ -106,7 +108,7 @@ def das_writeconfig():
     config.add_section('das')
     config.set('das', 'systems', '%s' % systems)
     config.set('das', 'verbose', 0)
-    config.set('das', 'rawcache', 'DASFilecache')
+    config.set('das', 'rawcache', 'DASMongocache')
 #    config.set('das', 'hotcache', 'DASMemcache')
     config.set('das', 'hotcache', 'DASFilecache')
     config.set('das', 'logdir', '/tmp')
@@ -122,7 +124,6 @@ def das_writeconfig():
     config.set('couch', 'cleantime', 2*60*60) # in seconds
 
     config.add_section('mongocache')
-    config.set('mongocache', 'dir', '/tmp/db')
     config.set('mongocache', 'lifetime', 1*24*60*60) # in seconds
     config.set('mongocache', 'dbhost', 'localhost')
     config.set('mongocache', 'dbport', '27017')
@@ -144,6 +145,12 @@ def das_writeconfig():
     dbfile = os.path.join(dbdir, 'das_views.db')
     config.set('views', 'dir', dbdir)
     config.set('views', 'db_engine', 'sqlite:///%s' % dbfile)
+
+    config.add_section('mapping_db')
+    dbdir  = os.path.join(os.environ['DAS_ROOT'], 'db')
+    dbfile = os.path.join(dbdir, 'das_mapping.db')
+    config.set('mapping_db', 'dir', dbdir)
+    config.set('mapping_db', 'db_engine', 'sqlite:///%s' % dbfile)
 
     config.add_section('summary views')
     query  = 'find dataset, dataset.createdate, dataset.createby, '

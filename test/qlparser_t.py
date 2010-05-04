@@ -90,12 +90,19 @@ class testQLParser(unittest.TestCase):
 
         q = "find runs where run>1 and run <= 200 "
         result = mongo_exp(ql.conditions(q))
-        expect = [{'run': {'$gt' : '1', '$lte' : '200'}}]
-        print "\nMOGNO", q, result, expect
+        expect = {'run': {'$gt' : '1', '$lte' : '200'}}
         self.assertEqual(result, expect)
 
-        q = "find runs where DQFlagList=Tracker_Global=GOOD&Tracker_Local1=1"
-        result = ql.params(q)
+        q = "find runs where dataset=/a/b/c and DQFlagList=Tracker_Global=GOOD&Tracker_Local1=1"
+        result = ql.params(q)['conditions']
+        expect = [{'value': '/a/b/c', 'key': 'dataset', 'op': '='}, 'and', 
+        {'value': 'Tracker_Global=GOOD&Tracker_Local1=1', 'key': 'DQFlagList', 'op': '='}]
+        self.assertEqual(result, expect)
+
+        q = "find runs where DQFlagList=Tracker_Global=GOOD&Tracker_Local1<=1"
+        result = ql.params(q)['conditions']
+        expect = [{'value': 'Tracker_Global=GOOD&Tracker_Local1<=1', 'key': 'DQFlagList', 'op': '='}]
+        self.assertEqual(result, expect)
 
         q = "find dataset where ((run=1 or run=2) or dataset=bla) and site=cern order by block"
         result = ql.selkeys(q)
@@ -127,21 +134,25 @@ class testQLParser(unittest.TestCase):
         q = "find phedex:block where block=bla"
         result = ql.params(q)
         expect = {'functions': {}, 'selkeys': ['block'], 
-                'unique_services': ['phedex'], 'order_by_list': [], 
-                'order_by_order': None, 'services': {'phedex': ['block']}, 
-                'daslist': [{'phedex': 'find block where block=bla'}], 
+                'unique_services': ['dbs', 'phedex'], 'order_by_list': [], 
+                'order_by_order': None, 
+                'services': {'phedex': ['block'], 'dbs': ['block']}, 
+                'dasqueries': {'phedex': ['find block where block = bla'],
+                               'dbs': ['find block where block = bla']}, 
                 'conditions': [{'value': 'bla', 'key': 'block', 'op': '='}], 
-                'allkeys': ['block'], 'unique_keys': ['block']}
+                'allkeys': ['block'], 'unique_keys': ['block', 'site']}
         self.assertEqual(result, expect)
 
         q = "find dbs:block where block=bla"
         result = ql.params(q)
         expect = {'functions': {}, 'selkeys': ['block'], 
-                'unique_services': ['dbs'], 'order_by_list': [], 
-                'order_by_order': None, 'services': {'dbs': ['block']}, 
-                'daslist': [{'dbs': 'find block where block=bla'}], 
+                'unique_services': ['dbs', 'phedex'], 'order_by_list': [], 
+                'dasqueries': {'dbs': ['find block where block = bla'], 
+                               'phedex': ['find block where block = bla']}, 
+                'order_by_order': None, 
+                'services': {'dbs': ['block'], 'phedex': ['block']}, 
                 'conditions': [{'value': 'bla', 'key': 'block', 'op': '='}], 
-                'allkeys': ['block'], 'unique_keys': ['block']}
+                'allkeys': ['block'], 'unique_keys': ['block', 'site']}
         self.assertEqual(result, expect)
 
         q = "find jobsummary where date last 25h"
@@ -155,39 +166,25 @@ class testQLParser(unittest.TestCase):
 
         q = "find dataset,admin,replica where site=123 or site=345 order by site desc"
         result = ql.params(q)
-        expect = {'order_by_list': ['site'], 
-                  'functions' : {},
+        expect = {'functions': {}, 
                   'selkeys': ['admin', 'dataset', 'replica'], 
                   'unique_services': ['dbs', 'phedex', 'sitedb'], 
+                  'order_by_list': ['site'], 
+                  'dasqueries': {'sitedb': ['find admin,dataset,replica where site = 123', 
+                                 'find admin,dataset,replica where site = 345'], 
+                        'dbs': ['find admin,dataset,replica where site = 123', 
+                                'find admin,dataset,replica where site = 345'], 
+                        'phedex': ['find admin,dataset,replica where site = 123', 
+                                'find admin,dataset,replica where site = 345']}, 
                   'order_by_order': 'desc', 
                   'services': {'sitedb': ['admin', 'site'], 
-                               'dbs': ['dataset', 'site'], 
-                               'phedex': ['replica', 'site'],
-                               'dashboard': ['site']}, 
-                  'daslist': [{'sitedb': 'find admin,dataset,replica,site,block where site = 123', 
-                               'dbs': 'find admin,dataset,replica,site,block where site = 123', 
-                               'phedex': 'find admin,dataset,replica,site,block where site = 123'}, 
-                              {'sitedb': 'find admin,dataset,replica,site,block where site = 345', 
-                               'dbs': 'find admin,dataset,replica,site,block where site = 345', 
-                               'phedex': 'find admin,dataset,replica,site,block where site = 345'}],
-                  'conditions': [{'value': '123', 'key': 'site', 'op': '='}, 
-                                 'or', 
-                                 {'value': '345', 'key': 'site', 'op': '='}], 
+                  'dbs': ['dataset', 'site'], 
+                  'phedex': ['replica', 'site'], 
+                  'dashboard': ['site']}, 
+                  'conditions': [{'value': '123', 'key': 'site', 'op': '='}, 'or', 
+                        {'value': '345', 'key': 'site', 'op': '='}], 
                   'allkeys': ['admin', 'dataset', 'replica', 'site'], 
-                  'unique_keys': ['admin', 'block', 'dataset', 'replica', 'site'],
-        }
-#        print "### expect"
-#        keys = expect.keys()
-#        keys.sort()
-#        for key in keys:
-#            print key, expect[key]
-#            print
-#        print "### result"
-#        keys = result.keys()
-#        keys.sort()
-#        for key in keys:
-#            print key, result[key]
-#            print
+                  'unique_keys': ['admin', 'block', 'dataset', 'replica', 'site']}
         self.assertEqual(result, expect)
 
 

@@ -1,104 +1,135 @@
 #!/usr/bin/env python
-#pylint: disable-msg=c0301,c0103
+#pylint: disable-msg=C0301,C0103
 
 """
-unit test for DAS mapping set of tools
+Unit test for DAS mappingdb class
 """
 
+import os
+import time
 import unittest
-from DAS.core.das_mapping import translate, jsonparser4key, json2das
-from DAS.core.das_mapping import das2api, result2das
+from DAS.utils.das_config import das_readconfig
+from DAS.utils.logger import DASLogger
+from DAS.core.das_mapping import DASMapping
 
-class testDASMapping(unittest.TestCase):
+class testDASMappingMgr(unittest.TestCase):
     """
-    A test class for the DAS mapping
+    A test class for the DAS mappingdb class
     """
-    def test_mapconfig(self): 
-        """test DAS translate routine"""
-        result = das2api('phedex', 'site')
-        expect = ['se']
-        self.assertEqual(expect, result)
+    def setUp(self):
+        """
+        set up DAS core module
+        """
+        debug    = 0
+        self.db  = 'test_mapping.db'
+        config   = das_readconfig()
+        logger   = DASLogger(verbose=debug, stdout=debug)
+        config['logger']  = logger
+        config['verbose'] = debug
+        config['mapping_db_engine'] = 'sqlite:///%s' % self.db
+        self.mgr = DASMapping(config)
 
-    def test_jsonparser4key(self): 
-        """test DAS jsonparser routine"""
-        rep1 = {'bytes':1, 'files':1, 'se':'T2'}
-        rep2 = {'bytes':1, 'files':1, 'se':'T3'}
-        rec1 = {'bytes':1, 'files':1, 'name':'ABC', 'replica':rep1}
-        rec2 = {'bytes':2, 'files':2, 'name':'CDE', 'replica':[rep1, rep2]}
-        jsondict = {'service': {'block': [rec1, rec2]},'timestamp':123}
-        result = [i for i in jsonparser4key(jsondict, 'block.name')]
-        expect = ['ABC', 'CDE']
-        self.assertEqual(expect, result)
+    def tearDown(self):
+        """Invoke after each test"""
+        try:
+            os.remove(self.db)
+        except:
+            pass
 
-        result = [i for i in jsonparser4key(jsondict, 'block.bytes')]
-        expect = [1, 2]
-        self.assertEqual(expect, result)
+    def test_system(self):                          
+        """test methods for system table"""
+        self.mgr.create_db()
+        self.mgr.add_system('dbs')
+        res = self.mgr.list_systems()
+        self.assertEqual(['dbs'], res)
+        res = self.mgr.delete_system('dbs')
+        self.assertEqual(True, res)
 
-        result = [i for i in jsonparser4key(jsondict, 'block.replica.se')]
-        expect = ['T2', ['T2', 'T3']]
-        self.assertEqual(expect, result)
+    def test_api(self):                          
+        """test methods for api table"""
+        self.mgr.create_db()
+        system = 'dbs'
+        self.mgr.add_system(system)
 
-    def test_json2das_sitedb(self): 
-        """test DAS json2das routine with site db data"""
-        jsondict = {'0': {'name': 'cmsrm-se01.roma1.infn.it'}}
-        keylist  = ['admin', 'name']
-        selkeys  = ['admin', 'site']
-        result   = [i for i in json2das('sitedb', jsondict, keylist, selkeys)]
-        result.sort()
-        # NOTE: sitedb uses site for many purposes, in this case
-        # the name maps to site.cename, site.sename, site.cmsname, site
-        expect   = [{'admin':'', 'site': 'cmsrm-se01.roma1.infn.it'}]
-        expect.sort()
-        self.assertEqual(expect, result)
+        api = 'listBlocks'
+        params = {'apiversion':'DBS_2_0_8',
+                  'block_name':'*', 'storage_element_name':'*',
+                  'user_type':'NORMAL'}
+        daskeys = dict(block='block.name')
+        api2das = [('block_name', 'block', ''),
+                   ('block_name', 'block.name', ''),
+                   ('storage_element_name', 'site', ''),
+                   ('storage_element_name', 'site.se', ''),
+                  ]
+        self.mgr.add_api(system, api, params, daskeys, api2das)
 
-    def test_json2das_sitedb_admin(self): 
-        """test DAS json2das routine with site db data for admins"""
-        jsondict = {'admin': [{'title': 'Data Manager', 'surname': 'Rahatlou', 
-                          'email': 'Shahram.Rahatlou@cern.ch', 'forename': 'Shahram'}, 
-                    {'title': 'Data Manager', 'surname': 'M.Barone (Red Baron)', 
-                          'email': 'luciano.barone@cern.ch', 'forename': 'Luciano'}]}
-        keylist  = ['admin', 'name']
-        selkeys  = ['admin', 'site']
-        result   = [i for i in json2das('sitedb', jsondict, keylist, selkeys)]
-        result.sort()
-        expect = [{'admin': {'forename': 'Shahram', 'surname': 'Rahatlou', 'email': 'Shahram.Rahatlou@cern.ch', 'title': 'Data Manager'}, 'site':''}, {'admin': {'forename': 'Luciano', 'surname': 'M.Barone (Red Baron)', 'email': 'luciano.barone@cern.ch', 'title': 'Data Manager'}, 'site': ''}]
-        expect.sort()
-        self.assertEqual(expect, result)
+        res = self.mgr.list_systems()
+        self.assertEqual([system], res)
 
-    def test_json2das(self): 
-        """test DAS json2das routine"""
-        rep1 = {'bytes':1, 'files':1, 'se':'T2'}
-        rep2 = {'bytes':1, 'files':1, 'se':'T3'}
-        rec1 = {'bytes':1, 'files':1, 'name':'ABC', 'replica':rep1}
-        rec2 = {'bytes':2, 'files':2, 'name':'CDE', 'replica':[rep1, rep2]}
-        jsondict = {'service': {'block': [rec1, rec2]},'timestamp':123}
-        keylist = ['block.name','block.bytes']
-        selkeys = ['block', 'block.size']
-        result = [i for i in json2das('phedex', jsondict, keylist, selkeys)]
-        result.sort()
-        expect = [{'block': 'ABC', 'block.size': 1}, 
-                  {'block': 'CDE', 'block.size': 2}]
-        expect.sort()
-        self.assertEqual(expect, result)
+        res = self.mgr.list_apis(system)
+        self.assertEqual([api], res)
 
-        keylist = ['block.name','block.replica.se']
-        selkeys = ['block', 'site']
-        result = [i for i in json2das('phedex', jsondict, keylist, selkeys)]
-        result.sort()
-        expect = [{'block': 'ABC', 'site': 'T2'}, 
-                  {'block': 'CDE', 'site': ['T2', 'T3']},
-                 ]
-        expect.sort()
-        self.assertEqual(expect, result)
+        res = self.mgr.list_daskeys(system)
+        self.assertEqual(['block'], res)
 
-#        json={'phedex': {'request_date': '2009-04-15 19:18:02 UTC', 'request_timestamp': 1239823082.5613501, 'call_time': '0.00937', 'instance': 'prod', 'request_call': 'blockReplicas', 'request_url': 'http://cmsweb.cern.ch:7001/phedex/datasvc/json/prod/blockReplicas', 'request_version': '1.3.1', 'block': [{'files': '4', 'name': '/Cosmics/CRUZET4_v1_CRZT210_V1_SuperPointing_v1/RECO#96c1b23f-1d88-4aa5-96ed-966a73a38c2d', 'bytes': '291825111', 'replica': [{'files': '4', 'node': 'T1_US_FNAL_Buffer', 'group': 'null', 'complete': 'y', 'time_create': '1219412876.0661', 'custodial': 'n', 'bytes': '291825111', 'time_update': '1229179156.51997', 'node_id': '9', 'se': 'cmssrm.fnal.gov'}, {'files': '4', 'node': 'T1_US_FNAL_MSS', 'group': 'null', 'complete': 'y', 'time_create': '1219413379.70068', 'custodial': 'y', 'bytes': '291825111', 'time_update': '1229179156.51997', 'node_id': '10', 'se': 'cmssrm.fnal.gov'}, {'files': '4', 'node': 'T2_CH_CAF', 'group': 'null', 'complete': 'y', 'time_create': '1219413630.40003', 'custodial': 'n', 'bytes': '291825111', 'time_update': '1229179156.51997', 'node_id': '501', 'se': 'caf.cern.ch'}], 'is_open': 'n', 'id': '426474'}]}}
-#        keylist = ['block.replica.complete', 'block.name', 'block.replica.se']
-#        selkeys = ['block.complete', 'block', 'site']
-#        result = json2das('phedex', json, keylist, selkeys)
-#        expect = [1]
-#        self.assertEqual(expect, result)
+        res = self.mgr.api_keys(api)
+        self.assertEqual(['block'], res)
+
+        res = self.mgr.api_params(api)
+        self.assertEqual(params, res)
+
+        res = self.mgr.delete_api(api)
+        self.assertEqual(True, res)
+
+        res = self.mgr.delete_system(system)
+        self.assertEqual(True, res)
+
+    def test_methods(self):                          
+        """test methods for api table"""
+        self.mgr.create_db()
+        system = 'dbs'
+        self.mgr.add_system(system)
+
+        api = 'listBlocks'
+        params = {'apiversion':'DBS_2_0_8',
+                  'block_name':'*', 'storage_element_name':'*',
+                  'user_type':'NORMAL'}
+        daskeys = dict(block='block.name')
+        api2das = [('block_name', 'block', ''),
+                   ('block_name', 'block.name', ''),
+                   ('storage_element_name', 'site', ''),
+                   ('storage_element_name', 'site.se', ''),
+                  ]
+        self.mgr.add_api(system, api, params, daskeys, api2das)
+
+        daskey = 'block'
+        primkey = 'block.name'
+        api_input = 'block_name'
+        res = self.mgr.primary_key(system, daskey)
+        self.assertEqual(primkey, res)
+
+        value = ''
+        res = self.mgr.das2api(system, daskey, value)
+        self.assertEqual([api_input], res)
+
+        res = self.mgr.api2das(system, api_input)
+        self.assertEqual([daskey, primkey], res)
+
+        api_param = 'number_of_events'
+        das_param = 'nevents'
+        self.mgr.add_notation(system, api_param, das_param)
+        res = self.mgr.notation2das(system, api_param)
+        self.assertEqual(das_param, res)
+
+        res = self.mgr.delete_api(api)
+        self.assertEqual(True, res)
+
+        res = self.mgr.delete_system(system)
+        self.assertEqual(True, res)
+
 #
 # main
 #
 if __name__ == '__main__':
     unittest.main()
+

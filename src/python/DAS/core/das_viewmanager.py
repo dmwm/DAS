@@ -5,8 +5,8 @@
 View manager class.
 """
 
-__revision__ = "$Id: das_viewmanager.py,v 1.6 2009/07/15 15:58:27 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_viewmanager.py,v 1.7 2009/09/01 01:42:44 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -48,7 +48,7 @@ class User(BASE):
     id          = Column(Integer, primary_key=True)
     login       = Column(Text, nullable=False, unique=True)
     fullname    = Column(Text, nullable=False, unique=True)
-    contact     = Column(Text, nullable=True, unique=True)
+    contact     = Column(Text, nullable=True)
     group_id    = Column(Integer, ForeignKey('groups.id'))
     group       = relation(Group, backref=backref('groups', order_by=id))
 
@@ -111,10 +111,10 @@ class DASViewManager(object):
         self.engine  = create_engine(dbengine, echo=False)
         self.session = sessionmaker(bind=self.engine)
         if  not dbfile:
-            self.create_table()
+            self.create_db()
         else: # sqlite case
             if  not os.path.isfile(dbfile):
-                self.create_table()
+                self.create_db()
         if  config.has_key('sum_views'):
             login = 'dascore'
             fullname = 'DAS'
@@ -124,10 +124,9 @@ class DASViewManager(object):
                 if  not existing_views.has_key(viewname):
                     self.create(viewname, viewdef, login, fullname, group)
 
-    def create_table(self):
+    def create_db(self):
         """Create DB tables based on ORM objects"""
         metadata = MetaData()
-#        table    = View.__table__
         BASE.metadata.create_all(self.engine)
 
     def create(self, viewname, query, 

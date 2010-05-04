@@ -1,0 +1,146 @@
+\documentclass[a4paper]{jpconf}
+\usepackage{graphicx}
+\begin{document}
+\title{The CMS Data Aggregation System}
+
+\author{Valentin Kuznetsov}
+\address{Cornell University, Ithaca, New York, USA}
+\ead{vkuznet@gmail.com}
+
+\author{Dave Evans}
+\address{Fermilab, Batavia, Illinois, USA}
+\ead{evansde@fnal.gov}
+
+\author{Simon Matson}
+\address{Bristol University, Bristol, UK}
+\ead{s.metson@bristol.ac.uk}
+
+
+%In a large modern enterprise, information is almost inevitably distributed among several database management systems. Despite considerable attention from the research community, relatively few commercial systems have attempted to address this issue. This article describes the technology that enables clients of IBM's federated database engine to access and integrate the data and specialized computational capabilities of a wide range of relational and non­relational data sources.
+
+\begin{abstract}
+A metadata plays significant role in a large modern enterprises, research experiments,
+digital libraries where it comes from different sources and distributed in a 
+variety of forms and digital formats. It is organized and managed by constantly
+evolving software using both relational and nonrelational data sources. There is
+a big demand to access information from multiple sources.
+Here we discuss a new data aggregation system which deliver and cache information 
+from different relational and nonrelational data sources on a concrete example 
+of large scale High-Energy physics experiment.
+\end{abstract}
+
+\newpage
+
+\section{Introduction}
+The CERN, the European Organization for Nuclear Research, plays a leading
+role in fundamental studies of physics. But apart from scientific community 
+it is known as a place where World Wide Web was born. At that time the 
+information look-up among hyperlinks represents a certain challenge for scientists.
+Today, the Large Hadron Collider (LHC) at CERN is marking a new era of High Energy
+Physics, promising to deliver a few PB of data each year. Scientists are
+facing another set of problems from distributed computing to multi-dimentional
+view on information retrieval. One of the aspect of such research is an efficient
+and at the same time precise look-up of produced meta-data, which comes in variety 
+of forms and digital formats. As was pointed out in \cite{Amr} a mixed content and 
+mixed metadata and metadata consistency should be considered as a whole in design 
+of the system to successful information discovery. 
+
+The CMS, the Compact Muon Solenoid experiment, operated at LHC,
+represents an heterogeneous environment of distributing computing, relational and
+nonrelational data sources where we face this problem. The computing resources
+are distributed among almost 40 countries, 183 institutions and more then 3000 physicists.
+Broad variety of RDMS systems at different data centers collect a various
+metadata information, including data location and transfer, detector conditions,
+calibrations constants, simulation information, etc. Moreover the development
+of those components were done in parallel by different group and technology
+tools. Therefore a wide spectrum of data services and
+data formats represents a problem of information discovery.
+
+\section{Related Work}
+Even though the idea of querying relation databases via keyword based search
+algorithm is not knew it is still under significant activity in computer
+sceince domain. A few
+alternative solutions has been proposed to address this issue. On one
+side, the federated DB \cite{FedDB} unify data coming from different
+RDMS into another DB where SQL queries can be placed to search desired
+data. While on another approaches of querying relational
+DB using keyword search algorithms has been proposed \cite{DBXplorer, QueryAnswer}.
+In former case, you still face with understanding the underlying schema and
+imposing relation condition in your query, while in another an exact match
+of provided keywords is expected. Even though in last case you can 
+intuitively explore information presented in databases, in some cases
+it is not enough. For example, how to deal with numbers? What number is represent?
+The row ID, the value of the field?
+
+
+Our users can be classified as proficient
+users who understand semantics of the problem and want precise answers
+for their queries, at the same time do not need or should not be worried
+about underlying schema of underlying databases. Moreover, some information
+can be represented in multiple DBs and our users want to place 
+queries across those DBs.
+
+In \cite{DBS-QL} a simple, intuitive and flexible query language was introduced 
+on top of the CMS data-bookkeeping system. It represented a power of SQL while
+hiding underlying relational schema from the end users. As a results
+a human questions were intuitively mapped into simple queries. For example,
+a question
+{\it I'm looking for files who contain data taken on certain date and located at
+particular site} was represented as simple as
+\begin{verbatim}
+find file where date 2009-01-02 11:59 CET and site = T2
+\end{verbatim}
+We wanted to expand this approach and apply such queries across multiple
+data services. Here we discuss a new system, the Data Aggregation System (DAS),
+developed in CMS collaboration to address this issue. We start with
+discussion of CMS data model and data-services. In section \ref{DAS}
+we provides a detailed description of underlying design and components
+used in this system. And represents results in section \ref{Results}.
+\section{CMS data model\label{DataModel}}
+\section{Data Aggregation System\label{DAS}}
+\section{Results\label{Results}}
+
+
+
+\section{Summary}
+
+\section{Acknowledgements}
+
+This work was supported by the National Science Foundation and Department of Energy of the United States of America. Fermilab is operated by Fermi Research Alliance, LLC under Contract
+No. DE-AC02-07CH11359 with the United States Department of Energy.
+
+\section*{References}
+\begin{thebibliography}{9}
+\bibitem{DBS} A. Afaq, et. al. ``The CMS Dataset Bookkeeping Service'', CHEP 2007 
+\bibitem{DBS07} A. Dolgert, V. Kuznetsov, C. Jones, D. Riley, 
+``A multi-dimensional view on information retrieval of CMS data'', CHEP 2007
+\bibitem{DD} https://cmsweb.cern.ch/dbs\_discovery
+
+\bibitem{Arms}
+C. R. Arms, W. Y. Arms, ``Mixed Content and Mixed Metadata 
+Information Discovery in a Messy World'',
+chapter from ``Metadata in Practice'', ALA Editions, 2004
+\bibitem{DBXplorer}
+Sanjay Agrawal, Surajit Chaudhuri, Gautam Das: DBXplorer: A System for
+Keyword-Based Search over Relational Databases. ICDE 2002: 5-16
+
+\bibitem{QueryAnswer}
+Georgia Koutrika, Alkis Simitsis, Yannis E. Ioannidis: Pr\'{e}cis: The Essence of
+a Query Answer. ICDE 2006: 69-78
+
+\bibitem{FedDB}
+L. Haas, E. Lin,
+``IBM Federated Database Technology'', \\
+http://www.ibm.com/developerworks/data/library/techarticle/0203haas/0203haas.html
+
+\bibitem{CouchDB}
+http://couchdb.apache.org/
+
+\bibitem{MongoDB}
+http://www.mongodb.org/
+
+\end{thebibliography}
+
+\end{document}
+
+

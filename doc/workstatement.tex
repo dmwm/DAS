@@ -1,0 +1,225 @@
+\documentclass[a4paper]{jpconf}
+\usepackage{graphicx}
+\begin{document}
+\title{The CMS Data Aggregation System}
+
+\author{Valentin Kuznetsov}
+\address{Cornell University, Ithaca, New York, USA}
+\ead{vkuznet@gmail.com}
+
+\begin{abstract}
+A metadata plays significant role in a large modern enterprises, research experiments,
+digital libraries where it comes from different sources and distributed in a 
+variety of forms and digital formats. It is organized and managed by constantly
+evolving software using both relational and nonrelational data sources. There is
+a big demand almost in any industry to access information from multiple 
+heterogeneous sources.
+
+The CMS experiment at CERN, represents a particular example where data discovery
+plays significant role in daily acitivities of physycists. 
+It is expected that starting 2009 it will collect around a few PB of data every 
+year of its operations. This reflects into
+several hundren of TB of metadata produced by experiment. 
+We propose to design and implement a new data aggregation system to search for
+data from different relational and non-relational data sources within CMS
+experiment environment.
+\end{abstract}
+
+\newpage
+
+\section{Introduction}
+The CMS experiment is one of the major experiments at CERN. It is expected
+that it will start collecting its data in late 2009. Apart from data management
+issue the data discovery will play significant role in any analysis and
+production workflow tools. In CMS many databases, both
+proprietary (ORACLE) and open-source (MySQL, Postgres, SQLite), are used
+to store different sort of meta-data. This includes data bookkeeping information,
+data location information, run summary information, data quality information,
+detector conditions, etc. The information is accessed in a form of
+various data-services and presented to the users in variety of data-formats.
+Such heterogeneous and distributed environment represents not only manageable
+issue, but also inefficient and cumbersome data look-up capabilities. It is desired
+to look-up information from more then one data-service and have uniform data
+representation across multiple data-services. As a goal we are targeting
+towards the Query Language which can be used to place queries across
+one or more data-services. Its benefits can be adopted to data-discovery and
+production workflow tools.
+%An efficient search over one or
+%multiple databases without explosure of underlying schema is a key 
+%ingredient of any activity in CMS, from production workflow tools to data analysis. 
+
+Traditionally RDMS provides a powerful Structured Query Language tool to
+query underlying DB. But it requires a full knowledge of DB schema as well
+as explicitly specifying relation information in a query. Such approach is
+used for creation of specific data-services or APIs which users can use,
+but doesn't provide a way for end-users to place a query against
+underlying DB. Recently we've been developed DBS-QL language \cite{DBSQL}
+which demonstrates that queries can be placed against single DB in
+flexible and intuitive way by end-users without any knowledge about
+underlying schema. So it becomes desired to extend
+this capability over other existing CMS DBs and have ability to
+place queries across multiple data-services.
+
+\section{Previous activity}
+Cornell group has been played a significant role in design and implementation of
+central CMS data bookkeeping system \cite{DBS}. 
+%After original workshop
+%hosted at Cornell in 2006 \cite{CornellWorkshop} we provided a roadmap 
+%document \cite{roadmap} with guidelines to CMS DBS system. 
+We also took a leading role in design and 
+development of DBS query language \cite{DBSQL, DBS07} and CMS data discovery
+service \cite{DD}.
+
+\section{Data Aggregation Service}
+Upon success of Data Discovery service \cite{DD} it was proposed
+to extend this activity to other data services. A new project called
+Data Aggregation Service was born, see \cite{DAS}. Under its unbrella
+all meta-data can be queried using DAS Query Language similar to
+DBS one \cite{DBSQL}. While such behavior is desired from  a user point of
+view, its implementation represents a ``hot'' research topic in
+Computer Science community, see \cite{Arms, DBXplorer, QueryAnswer, FedDB}.
+Even though success of Information Retrieval (IR) and RDMS systems
+are obvious, there is no a common way to utilize both sources of
+information via simple, intuitive keyword search. Such demand has
+been presented in various enterprise industries,
+including health care, medical, financial domains.
+While we cannot fully adopt keyword search (due to specific
+domain features, such as find data who has bfield 0.4 and runs with
+a specific data quality information), the adoption of DBS-QL
+seems very reasonable choice.
+
+%A keyword search over distributed relational and non-relational 
+%data sources represents a demand in various enterprise industries, 
+%including health care, medical, financial domains. 
+
+Upon preliminary studies, see \cite{DAS}, we explored a
+system based on combination of RDMS and object-oriented databases
+which will be capabable to provide desired requirements. Moreover,
+it can serve as a cache buffer for variety of CMS data-services
+and used by both production workflow tools and end-users.
+
+We propose to design and develop DAS system based on existing
+technologies, such as RDMS, IBM federated DB \cite{FedDB} or 
+document-oriented databases \cite{CouchDB, MongoDB}, within
+domain of CMS experiment and existing workflow APIs. Initially
+the following data-services will be cosidered to be participants in
+DAS system: data bookkeeping system, data location system, run summary, 
+dashboard, data quality and luminosity DBs.
+Each data-service will be gradualy added to DAS extending DAS
+QL and amount of data processed and cached by DAS. The system will
+undergoes to the analysis and testing, via DAS analytics, to address pre-fetching
+strategies and scalability issues.
+
+\section{Estimates}
+A design and guidelines of DAS system has been summarized on
+\cite{DAS} twiki page. Here we represent a main activities within
+DAS project.
+
+\begin{itemize}
+\item
+{\bf DAS core}: 1 FTE\\
+Design and implementation of DAS core system. It comprises of the following
+components:
+\begin{itemize}
+\item implementation of DAS request server
+\item implementation of DAS Mapping DB
+\item implementation of cache plugins, including hot and raw-caches, access
+to underlying caching layer, etc.
+\item implementation of data-service plugins, e.g. DBS plugin, phedex plugin, etc.
+\item implementation of data populator, pre-fetch strategies, etc.
+\item administrative toolkit
+\item stress and scalability testing
+\item unit tests for DAS components
+\end{itemize}
+
+\item
+{\bf Data-service components}: 0.5 FTE\\
+Work on plugable modules to access data-services,
+including DBS, Phedex, LumiDB, RunSummary, DQ services.
+This work mostly requires coordination between CMS project
+leaders, ensuring production of DAS compliant services and data formats or
+developing appropriate wrappers to existing legacy data-services. 
+It can be paralelized among data-service developers.
+
+\item
+{\bf DAS query language}: 0.2 FTE \\
+Design and implementation of DAS QL (Query Language);
+work on QL syntax and semantics, lexer, parser.
+We need to evaluate existing technologies, such as ANTRL or
+other lexer/parser tools. Design and implement DAS QL syntax and
+semantics; provide mapping between existing data-service APIs and
+DAS QL.
+
+\item
+{\bf Web interface}: 0.2-0.5 FTE \\
+Design and develop web interface for DAS discovery service.
+We need to follow CMS SLA guidelines \cite{SLA} on providing secure
+and integrated web service within existing CMS infrastructure
+on cmsweb site. We must use existing CMS webtools framework
+and infrastructure.
+
+\item
+{\bf DAS analytics}: 0.2-0.5 FTE \\
+Design and develop DAS analytics DB, based on analysis of
+common CMS queries to different data-services.
+This work includes studies of common CMS queries to
+various data-services, DBS, Phedex, RunSummary, etc. As a result
+a pre-fetch strategies to DAS should be provided.
+\end{itemize}
+
+\section{Hardware requirements}
+Initial prototype has been proven to utilize a multi-core technologies
+allowing to take a full power of existing hardware. In stress tests
+the 8-core machine, 2.33 GHz/core and 16GB of RAM has been
+used. We plan to use it as a DAS request/processing server. In addition
+we need to allocate significant disk space for caching purposes.
+For example, existing size of DBS system is 27 GB (tables) and 37 GB (index).
+So we should rely on a few TB of cache for DAS, possible extandable over
+time and load on a system.
+
+\section*{References}
+\begin{thebibliography}{9}
+\bibitem{DBSQL}  A. Afaq, V. Kuznetsov, L. Lueking, D. Riley, V. Sekhri,
+''The CMS Dataset Bookkeeping Service Query Language (DBSql)''
+To be published in CHEP 2009 procedings.
+%\bibitem{CornellWorkshop}
+%https://wiki.lepp.cornell.edu/hep/bin/view/DBSWorkshop/
+
+\bibitem{DBS} A. Afaq, et. al. ``The CMS Dataset Bookkeeping Service'', CHEP 2007 
+%\bibitem{roadmap} https://twiki.cern.ch/twiki/pub/CMS/DBS-TDR/roadmap.pdf
+\bibitem{DBS07} A. Dolgert, V. Kuznetsov, C. Jones, D. Riley, 
+``A multi-dimensional view on information retrieval of CMS data'', CHEP 2007
+\bibitem{DD} https://cmsweb.cern.ch/dbs\_discovery
+\bibitem{DAS} https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService
+\bibitem{Arms}
+C. R. Arms, W. Y. Arms, ``Mixed Content and Mixed Metadata 
+Information Discovery in a Messy World'',
+chapter from ``Metadata in Practice'', ALA Editions, 2004
+
+\bibitem{DBXplorer}
+Sanjay Agrawal, Surajit Chaudhuri, Gautam Das: DBXplorer: A System for
+Keyword-Based Search over Relational Databases. ICDE 2002: 5-16
+
+\bibitem{QueryAnswer}
+Georgia Koutrika, Alkis Simitsis, Yannis E. Ioannidis: Pr\'{e}cis: The Essence of
+a Query Answer. ICDE 2006: 69-78
+
+\bibitem{FedDB}
+L. Haas, E. Lin,
+``IBM Federated Database Technology'', \\
+http://www.ibm.com/developerworks/data/library/techarticle/0203haas/0203haas.html
+
+\bibitem{CouchDB}
+http://couchdb.apache.org/
+
+\bibitem{MongoDB}
+http://www.mongodb.org/
+
+\bibitem{SLA} 
+https://twiki.cern.ch/twiki/bin/view/CMS/DMWTServiceLevelAgreement
+
+\end{thebibliography}
+
+\end{document}
+
+

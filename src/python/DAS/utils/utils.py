@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.23 2009/07/22 20:40:11 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: utils.py,v 1.24 2009/09/01 01:42:47 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -28,6 +28,33 @@ class dict_of_none (dict):
         """Assign missing key to None"""
         return None
 
+def dict_value(dict, prim_key):
+    """
+    Find value in given dictionary for given primary key. The primary
+    key can be composed one, e.g. a.b.
+    """
+    try:
+        if  prim_key.find('.') != -1:
+            value = dict
+            for key in prim_key.split('.'):
+                value = value[key]
+        else:
+            value = dict[prim_key]
+        return value
+    except:
+        msg  = 'Unable to look-up key=%s\n' % prim_key
+        msg += 'dict=%s' % str(dict)
+        raise Exception(msg)
+def merge_dict(dict1, dict2):
+    """
+    Merge content of two dictionaries w/ default list value for keys.
+    """
+    merged_dict = {}
+    for dictionary in [dict1, dict2]:
+        for key, value in dictionary.items():
+            merged_dict.setdefault(key,[]).append(value) 
+    return merged_dict
+
 def splitlist(ilist, nentries):
     """
     Split input list into a list of lists with nentries
@@ -38,6 +65,40 @@ def splitlist(ilist, nentries):
         if  jdx > len(ilist):
             jdx = len(ilist)
         yield ilist[idx:jdx]
+
+def dasheader(system, query, api, url, args, ctime, expire, ver):
+    """
+    Return DAS header (dict) wrt DAS specifications, see
+    https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService
+    #DAS_data_service_compliance
+    """
+    timestamp = time.time()
+    dasdict = dict(system=[system], timestamp=timestamp,
+                url=url, ctime=ctime, query=[query],
+                params={api:args}, version=ver,
+                expire=timestamp+expire, api=[api])
+    return dict(das=dasdict)
+
+def update_dasheader(header, system, query, api, url, args, ctime, expire, ver):
+    """
+    Update existing dasheader in MognoDB
+    """
+    systems = header['das']['system']
+    apis = header['das']['api']
+    queries = header['das']['query']
+    params = header['das']['params']
+    if  system not in systems:
+        systems.append(system)
+        header['das']['system'] = systems
+    if  api not in apis:
+        apis.append(api)
+        header['das']['api'] = apis
+    if  query not in queries:
+        queries.append(query)
+        header['das']['query'] = queries
+    if  not params.has_key(api):
+        params[api] = args
+        header['das']['params'] = params
 
 def genkey(query):
     """
@@ -75,33 +136,43 @@ def dump(ilist, idx=0):
         return
     # remove duplicates
     reslist = [k for k, g in groupby(reslist)]
-    try:
-        keys = reslist[0].keys()
-    except:
-        traceback.print_exc()
-        print "dump results fail, reslist", reslist
-        raise Exception('Fail to dump output result list')
-    keys.sort()
-    try:
-        keys.remove('id')
-        keys = ['id']+keys
-    except:
-        pass
-    keysize = 0
-    for key in keys:
-        if  len(key) > keysize:
-            keysize = len(key)
-
-    idx  = 0
-    for res in reslist:
-        padding = " "*(keysize-len('id'))
-        if  not res.has_key('id'):
-            print "id%s : %s" % (padding, idx)
-        for key in keys:
-            padding = " "*(keysize-len(key))
-            print "%s%s : %s" % (key, padding, res[key])
+    idx = 0
+    for row in reslist:
+        print "id : %s" % idx
+        print row
         print
         idx += 1
+#    try:
+#        keys = reslist[0].keys()
+#    except:
+#        traceback.print_exc()
+#        print "dump results fail, reslist", reslist
+#        raise Exception('Fail to dump output result list')
+#    keys.sort()
+#    try:
+#        keys.remove('id')
+#        keys = ['id']+keys
+#    except:
+#        pass
+#    keysize = 0
+#    for key in keys:
+#        if  len(key) > keysize:
+#            keysize = len(key)
+
+#    idx  = 0
+#    for res in reslist:
+#        padding = " "*(keysize-len('id'))
+#        if  not res.has_key('id'):
+#            print "id%s : %s" % (padding, idx)
+#        for key in keys:
+#            padding = " "*(keysize-len(key))
+#            try:
+#                data = res[key]
+#            except:
+#                data = ''
+#            print "%s%s : %s" % (key, padding, data)
+#        print
+#        idx += 1
 
 def cartesian_product(ilist1, ilist2):
     """
@@ -334,7 +405,12 @@ def add2dict(idict, key, value):
         if  type(value) is types.ListType:
             idict[key] = val + value
         else:
-            idict[key].append(value)
+            val = idict[key]
+            if  type(val) is types.ListType:
+                idict[key].append(value)
+            else:
+                idict[key] = [val, value]
+#            idict[key].append(value)
     else:
         idict[key] = value
 #    idict.setdefault(key, []).append(value)

@@ -4,8 +4,8 @@
 """
 RunSummary XML parser
 """
-__revision__ = "$Id: runsum_parser.py,v 1.2 2009/06/04 14:10:18 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: runsum_parser.py,v 1.3 2009/09/01 01:42:47 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 try:
@@ -26,13 +26,18 @@ def parser(data):
             row = {}
             for j in i:
                 if  j.tag:
-                    row[j.tag] = j.text
+                    newkey = self.dasmapping.notation2das(system, j.tag)
+                    row[newkey] = j.text
+#                    row[j.tag] = j.text
                 nrow = {}
                 for k in j.getchildren():
                     if  k.tag:
-                        nrow[k.tag] = k.text
+                        nkey = self.dasmapping.notation2das(system, k.tag)
+                        nrow[nkey] = k.text
+#                        nrow[k.tag] = k.text
                 if  nrow:
-                    row[j.tag] = nrow
+                    row[newkey] = nrow
+#                    row[j.tag] = nrow
             yield row
 
 #

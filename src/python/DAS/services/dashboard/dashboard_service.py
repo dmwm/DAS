@@ -11,14 +11,18 @@ __author__ = "Valentin Kuznetsov"
 import time
 import types
 import urllib
+try:
+    # Python 2.5
+    import xml.etree.ElementTree as ET
+except:
+    # prior requires elementtree
+    import elementtree.ElementTree as ET
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator
-from DAS.services.dashboard.dashboard_parser import parser
-from DAS.core.das_mapping import jsonparser4key
+from DAS.utils.utils import map_validator, dasheader
 
 def convert_datetime(sec):
     """Convert seconds since epoch to date format used in dashboard"""
-    return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(sec))
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(sec))
 
 class DashboardService(DASAbstractService):
     """
@@ -27,30 +31,34 @@ class DashboardService(DASAbstractService):
     def __init__(self, config):
         DASAbstractService.__init__(self, 'dashboard', config)
         self.headers = {'Accept': 'text/xml'}
-        self.map = {
-            'jobsummary-plot-or-table' : {
-                'keys' : ['jobsummary'],
-                'params' : {
-                    'user': '',
-                    'site': '',
-                    'ce': '',
-                    'submissiontool': '',
-                    'dataset': '',
-                    'application': '',
-                    'rb': '',
-                    'activity': '',
-                    'grid': '',
-                    'date1': '',
-                    'date2': '',
-                    'jobtype': '',
-                    'tier': '',
-                    'check': 'submitted',
-                }
-            }
-        }
+        self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def api(self, query, cond_dict=None):
+    def parser(self, api, data, params=None):
+        """
+        Dashboard XML parser, it returns a list of dict rows, e.g.
+        [{'file':value, 'run':value}, ...]
+        """
+        try:
+            elem  = ET.fromstring(data)
+        except:
+            print "data='%s'" % data
+            raise Exception('Unable to parse dashboard output')
+        for i in elem:
+            if  i.tag == 'summaries':
+                for j in i:
+                    row = {}
+                    for k in j.getchildren():
+                        name = k.tag
+                        row[name] = k.text
+                    if  params:
+                        for key, val in params.items():
+                            if  not row.has_key(key):
+                                row[key] = val
+                    rowkey = self.map[api]['keys'][0]
+                    yield {rowkey : row}
+
+    def api(self, query):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
@@ -58,17 +66,18 @@ class DashboardService(DASAbstractService):
         selkeys, cond = self.query_parser(query)
         api   = self.map.keys()[0] # we have only one key
         args  = dict(self.map[api]['params'])
-        date1 = time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime(time.time()-24*60*60))
-        date2 = time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+        date1 = time.strftime("%Y-%m-%d %H:%M:%S", \
+                time.gmtime(time.time()-24*60*60))
+        date2 = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
         args['date1'] = date1
         args['date2'] = date2
         for cond_dict in cond:
             if  type(cond_dict) is not types.DictType:
                 continue # we got 'and' or 'or'
-            key = cond_dict['key']
-            op  = cond_dict['op']
+            key   = cond_dict['key']
+            oper  = cond_dict['op']
             value = cond_dict['value']
-            if  op == '=':
+            if  oper == '=':
                 if  key == 'date':
                     if  type(value) is not types.ListType \
                     and len(value) != 2:
@@ -81,19 +90,17 @@ class DashboardService(DASAbstractService):
                 else:
                     args[key] = value
             else:
-                msg = 'JobSummary does not support operator %s' % op
+                msg = 'JobSummary does not support operator %s' % oper
                 raise Exception(msg)
         url = self.url + '/' + api + '?%s' % urllib.urlencode(args)
-        res = self.getdata(url, {}, headers=self.headers)
-        data = [i for i in parser(res)]
-        for value in data:
-            row = {}
-            for key in selkeys:
-                entity = key.split('.')[0]
-                if  entity in self.keys():
-                    if  key.find('.') != -1: # we got key.attr
-                        value = jsonparser4key({entity:value}, key)
-                    row[key] = value
-                else:
-                    row[key] = ''
-            yield row
+
+        time0 = time.time()
+        params = {} # all params are passed in url
+        res = self.getdata(url, params, headers=self.headers)
+        genrows = self.parser(api, res, args)
+        ctime = time.time() - time0
+        header = dasheader(self.name, query, api, self.url, args,
+            ctime, self.expire, self.version())
+        mongo_query = self.mongo_query_parser(query)
+        self.localcache.update_cache(mongo_query, genrows, header)
+        return True
