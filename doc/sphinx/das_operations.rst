@@ -120,8 +120,8 @@ They are located at $DAS_ROOT/bin.
 - das_cacheclient is a CLI interface to DAS, it sends request to DAS cache server;
 - das_cacheserver is a DAS cache server init script;
 - das_cli is DAS stand-along CLI tool, it doesn't require neither cache or web DAS servers;
-- das_code_quality.sh is a bash script to check DAS code quality. It is based on
-  `pylint <http://pypi.python.org/pypi/pylint>`_ tool;
+- das_code_quality.sh is a bash script to check DAS code quality. It is based on pylint
+  tool, see [PYLINT]_.
 - das_config is a tool to create DAS configuration file;
 - das_docserver is DAS documentation server init script;
 - das_map is a tool to create DAS maps;

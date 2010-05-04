@@ -56,10 +56,7 @@ data in DAS, respectively. Below we outline all steps in DAS workflow:
 
 For more information please use 
 :ref:`DAS workflow <das_workflow>` page. 
-The DAS DBs are based on document-oriented database, see
-`MongoDB <http://www.mongodb.org>`_, 
+The DAS DBs are based on MongoDB document-oriented database, see [Mongodb]_,
 even though during design/evaluation process we considered 
-usage of other technologies, such as different flavor of RDMS, 
-`memcache <http://memcached.org/>`_, 
-key-value based data stores,
-`CouchDB <http://couchdb.apache.org/>`_, etc.
+usage of other technologies, such as different flavor of RDMS, memcached [Memcached]_,
+key-value based data stores, CouchDB [Couchdb]_, etc.
