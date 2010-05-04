@@ -4,11 +4,11 @@
 """
 DAS cache client tools 
 """
-__revision__ = "$Id: das_cache_client.py,v 1.11 2009/06/30 19:38:15 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_cache_client.py,v 1.12 2009/07/15 16:00:25 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
-from DAS.web.utils import urllib2_request, httplib_request
+import urllib2, urllib
 from optparse import OptionParser
 try:
     # Python 2.6
@@ -18,6 +18,21 @@ except:
     # Prior to 2.6 requires simplejson
     import simplejson as json
     from simplejson import JSONDecoder
+
+class UrlRequest(urllib2.Request):
+    """
+    URL requestor class which supports all RESTful request methods.
+    It is based on urllib2.Request class and overwrite request method.
+    Usage: UrlRequest(method, url=url, data=data), where method is
+    GET, POST, PUT, DELETE.
+    """
+    def __init__(self, method, *args, **kwargs):
+        self._method = method
+        urllib2.Request.__init__(self, *args, **kwargs)
+
+    def get_method(self):
+        """Return request method"""
+        return self._method
 
 class DASOptionParser: 
     """
@@ -43,9 +58,6 @@ class DASOptionParser:
         self.parser.add_option("--limit", action="store", type="int", 
                                default=10, dest="limit",
              help="number of returned results (results per page)")
-        self.parser.add_option("--lib", action="store", type="string", 
-                               default='urllib2', dest="lib",
-             help="specify which lib to use, httplib or urllib2 (default)")
         self.parser.add_option("--request", action="store", type="string", 
                                default='GET', dest="request",
              help="specify request type: GET (default), POST, PUT, DELETE")
@@ -79,14 +91,27 @@ if __name__ == '__main__':
         raise Exception(msg)
     path    = '/rest/%s/%s' % (opts.format.lower(), opts.request.upper())
 
-    if  opts.lib == 'urllib2':
-        if  host[-1] == '/':
-            host = host[:-1]
-        data = urllib2_request(host+path, params, debug)
-    elif opts.lib == 'httplib':
-        data = httplib_request(host, path, params, request, debug)
+    if  host.find('http://') == -1:
+        host = 'http://' + host
+    url = host + path
+    if  request == 'GET':
+        encoded_data=urllib.urlencode(params, doseq=True)
+        url += '?%s' % encoded_data
+        req = UrlRequest(request, url=url)
     else:
-        raise Exception('Unsupported lib %s' % opts.lib)
+        encoded_data=urllib.urlencode(params, doseq=True)
+#        encoded_data=json.dumps(params)
+        req = UrlRequest(request, url=url, data=encoded_data)
+
+    if  debug:
+        h=urllib2.HTTPHandler(debuglevel=1)
+        opener = urllib2.build_opener(h)
+    else:
+        opener = urllib2.build_opener()
+    fdesc = opener.open(req)
+    data = fdesc.read()
+    fdesc.close()
+
     if  opts.format == 'json' or opts.format == 'dasjson':
         decoder = JSONDecoder()
         print decoder.decode(data)
