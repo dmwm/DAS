@@ -30,7 +30,7 @@ except ImportError:
     requirements.append("pymongo")
 
 required_python_version = '2.6'
-required_pymongo_version = '1.5.2'
+required_pymongo_version = '1.6'
 
 if sys.platform == 'win32' and sys.version_info > (2, 6):
    # 2.6's distutils.msvc9compiler can raise an IOError when failing to
