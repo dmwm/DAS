@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.5 2010/04/08 19:05:57 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_cache.py,v 1.6 2010/04/13 15:04:52 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -17,6 +17,9 @@ import thread
 import cherrypy
 import traceback
 
+from Queue import Queue
+from threading import Thread
+
 # monogo db modules
 from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
@@ -24,7 +27,7 @@ from pymongo.objectid import ObjectId
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.core.das_core import DASCore
-from DAS.core.das_cache import DASCacheMgr
+from DAS.core.das_cache import DASCacheMgr, monitoring_worker
 from DAS.utils.utils import getarg, genkey
 from DAS.web.tools import exposejson
 from DAS.web.das_webmanager import DASWebManager
@@ -99,13 +102,25 @@ def checkargs(func):
     wrapper.exposed = True
     return wrapper
 
-def worker(query, expire=None):
+#def worker(query):
+#    """
+#    Worker function which invoke DAS core to update cache for input query
+#    """
+#    dascore = DASCore()
+#    status  = dascore.call(query)
+#    return status
+
+QUEUE = Queue()
+
+def worker():
     """
-    Worker function which invoke DAS core to update cache for input query
+    Worker function which invokes DAS core to update cache for input query
     """
     dascore = DASCore()
-    status  = dascore.call(query)
-    return status
+    while True:
+        query = QUEUE.get()
+        dascore.call(query)
+        QUEUE.task_done()
 
 class DASCacheService(DASWebManager):
     """
@@ -171,7 +186,18 @@ class DASCacheService(DASWebManager):
         iconfig       = {'sleep':sleep, 'verbose':verbose, 
                          'logger':self.dascore.logger}
         self.cachemgr = DASCacheMgr(iconfig)
-        thread.start_new_thread(self.cachemgr.worker, (worker, ))
+        thread.start_new_thread(monitoring_worker, (self.cachemgr, iconfig))
+#        thr = Thread(name="MonitorWorker", target=monitoring_worker, 
+#                        args=(self.cachemgr, iconfig))
+#        thr.daemon = True
+#        thr.start()
+
+#        num_worker_threads = 2
+#        for nproc in range(num_worker_threads):
+#             thr = Thread(target=worker)
+#             thr.setDaemon(True)
+#             thr.start()
+
         msg = 'DASCacheMode::init, host=%s, port=%s, capped_size=%s' \
                 % (dbhost, dbport, capped_size)
         self.dascore.logger.debug(msg)
@@ -290,7 +316,6 @@ class DASCacheService(DASWebManager):
             data.update({'status':'requested', 'idx':idx, 
                      'limit':limit, 'query':query,
                      'skey':skey, 'order':order})
-#            if  self.dascore.in_raw_cache(query):
             res = self.dascore.result(query, idx, limit)
             if  type(res) is types.GeneratorType:
                 result = []
@@ -304,8 +329,6 @@ class DASCacheService(DASWebManager):
                 tot = 1
             data['status'] = 'success'
             data['nresults'] = tot
-#            else:
-#                data['status'] = 'not found'
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
@@ -324,10 +347,11 @@ class DASCacheService(DASWebManager):
             query  = kwargs['query']
             self.logdb(query)
             query  = self.dascore.mongoparser.parse(query)
-            expire = getarg(kwargs, 'expire', 600)
+#            QUEUE.put(query)
+#            data.update({'status':'requested', 'query':query})
             try:
-                status = self.cachemgr.add(query, expire)
-                data.update({'status':status, 'query':query, 'expire':expire})
+                status = self.cachemgr.add(query)
+                data.update({'status':status, 'query':query})
             except:
                 data.update({'exception':traceback.format_exc(), 
                              'status':'fail'})
