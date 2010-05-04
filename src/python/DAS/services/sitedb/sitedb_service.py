@@ -4,8 +4,8 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.2 2009/03/10 20:57:23 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: sitedb_service.py,v 1.3 2009/04/13 19:00:41 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -71,18 +71,11 @@ class SiteDBService(DASAbstractService):
         """
         args = {'name':cmsname}
         jsondict = self.call_service_api('CMSNametoSE', args)
-        for value in jsondict.values():
-            return value['name']
-
-    def all_se(self):
-        """
-        Retrieve all registered SE from SiteDB
-        """
-        args = {'name':''}
-        jsondict = self.call_service_api('CMSNametoSE', args)
         selist = []
         for value in jsondict.values():
-            selist.append(value['name'])
+            se = value['name']
+            if  not selist.count(se):
+                selist.append(se)
         return selist
 
     def findapi(self, key, site):
@@ -156,7 +149,7 @@ class SiteDBService(DASAbstractService):
             sitelist = list(sitename)
         else:
             if  not sitename:
-                sitelist = self.all_se()
+                sitelist = self.cms2se()
             else:
                 sitelist = [sitename]
 
@@ -188,15 +181,24 @@ class SiteDBService(DASAbstractService):
         """
         Parse data from CMSNametoAdmins SiteDB API
         """
-        newrow = {}
-        data = []
+        newrow  = {}
+        data    = []
+        sites   = self.site2se(site)
         for val in jsondict.values():
             row = dict(newrow)
             res = '%s %s (%s)' % \
             (val['forename'], val['surname'], val['email'])
             row['admin'] = res
-            row['site'] = self.site2se(site)
-            data.append(row)
+            if  sites is types.StringType:
+                row['site'] = sites
+                if  not data.count(row):
+                    data.append(row)
+            else:
+                for se in sites:
+                    serow = dict(row)
+                    serow['site'] = se
+                    if  not data.count(serow):
+                        data.append(serow)
         return data
     
     def parser_common(self, key, jsondict, site, name='name'):
