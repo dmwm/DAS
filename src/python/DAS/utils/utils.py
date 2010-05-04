@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.30 2009/10/15 00:12:27 valya Exp $"
-__version__ = "$Revision: 1.30 $"
+__revision__ = "$Id: utils.py,v 1.31 2009/10/15 15:33:16 valya Exp $"
+__version__ = "$Revision: 1.31 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -580,4 +580,10 @@ class dotdict(dict):
         return self.get(attr, None)
     __setattr__= dict.__setitem__
     __delattr__= dict.__delitem__
+
+def trace(source):
+    """Trace a generator by printing items received"""
+    for item in source:
+        print item
+        yield item
 
