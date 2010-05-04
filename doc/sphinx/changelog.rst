@@ -7,6 +7,12 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- V04_00_07
+
+  - switch to use MongoDB 1.4
+  - added admin web interface; it shows basic db info and provide
+    ability to look-up records in any collection
+
 - V04_00_06
 
   - added support for proximity results
