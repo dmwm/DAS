@@ -7,8 +7,8 @@ DAS analytics DB
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.12 2009/10/10 14:47:15 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.13 2009/10/12 20:16:30 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -67,12 +67,13 @@ class DASAnalytics(object):
             mongoquery = json.dumps(mongoquery)
         msg = 'DASAnalytics::add_query("%s", %s)' % (dasquery, mongoquery)
         self.logger.info(msg)
+        dhash   = genkey(dasquery)
         qhash   = genkey(mongoquery)
-        record  = dict(dasquery=dasquery, mongoquery=mongoquery, qhash=qhash)
+        record  = dict(dasquery=dasquery, mongoquery=mongoquery, qhash=qhash, dhash=dhash)
         if  self.col.find({'qhash':qhash}).count():
             return
         self.col.insert(record)
-        index = [('qhash', DESCENDING)]
+        index = [('qhash', DESCENDING), ('dhash', DESCENDING)]
         self.col.ensure_index(index)
 
     def add_api(self, system, query, api, args):
