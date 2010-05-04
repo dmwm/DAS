@@ -16,7 +16,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% The '1p' and 'times' class options of elsarticle are used for Elsevier CRC
-\documentclass[1p,times]{elsarticle}
+\documentclass[3p,times]{elsarticle}
 
 %% The `ecrc' package must be called to make the CRC functionality available
 \usepackage{ecrc}
@@ -383,7 +383,8 @@ be transparent to data-services implementation and their data formats.
 %\end{itemize}
 \begin{figure}[htb]
 \centering
-\includegraphics[width=90mm]{DAS_Cache_and_Analytics.pdf}
+%\includegraphics[width=90mm]{DAS_Cache_and_Analytics.pdf}
+\includegraphics[width=140mm]{DAS_Cache_and_Analytics.pdf}
 \caption{
 The DAS architecture diagram. It consists of cache server,
 analytics, mapping and cache databases. The data in a cache can be shared
@@ -444,6 +445,17 @@ pairs. The data-service plug-in implementations are similar and their
 logic is largely abstracted, apart from a few extensions such as specific
 security modules for data-services accessible via private network.
 Finally, the results are retrieved from the cache and delivered to the user. 
+
+%In Fig. \cite{DAS_workflow} we show DAS workflow diagram.
+%\begin{figure}[htb]
+%\centering
+%\includegraphics[width=120mm]{DAS_workflow.pdf}
+%\caption{
+%The DAS workflow diagram.
+%}
+%\label{DAS_workflow}
+%\end{figure}
+%The input query is recorded into logging DB and parsed by the DAS parser.
 
 \subsection{DAS Mapping DB\label{MappingDB}}
 The Mapping DB is used to track services known to DAS and how DAS should interact with them.
