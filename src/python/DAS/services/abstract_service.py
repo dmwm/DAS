@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.59 2010/01/04 19:02:56 valya Exp $"
-__version__ = "$Revision: 1.59 $"
+__revision__ = "$Id: abstract_service.py,v 1.60 2010/01/11 21:04:21 valya Exp $"
+__version__ = "$Revision: 1.60 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -132,17 +132,20 @@ class DASAbstractService(object):
             encoded_data = json.dumps(params)
         else:
             encoded_data = urllib.urlencode(params, doseq=True)
+        if  encoded_data:
+            url = url + '?' + encoded_data
         req = urllib2.Request(url)
         if  headers:
             for key, val in headers.items():
                 req.add_header(key, val)
-        if  not encoded_data:
-            encoded_data = None
+#        if  not encoded_data:
+#            encoded_data = None
         if  self.verbose > 1:
             h=urllib2.HTTPHandler(debuglevel=1)
             opener = urllib2.build_opener(h)
             urllib2.install_opener(opener)
-        data = urllib2.urlopen(req, encoded_data)
+#        data = urllib2.urlopen(req, encoded_data)
+        data = urllib2.urlopen(req)
         return data
 
     def call(self, query):
