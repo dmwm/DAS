@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.65 2010/02/03 16:50:46 valya Exp $"
-__version__ = "$Revision: 1.65 $"
+__revision__ = "$Id: abstract_service.py,v 1.66 2010/02/03 20:48:38 valya Exp $"
+__version__ = "$Revision: 1.66 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -17,7 +17,8 @@ import traceback
 import DAS.utils.jsonwrapper as json
 
 from DAS.utils.utils import dasheader, getarg, genkey
-from DAS.utils.utils import row2das
+#from DAS.utils.utils import row2das
+from DAS.utils.utils import xml_parser, json_parser
 from DAS.core.das_mongocache import compare_specs
 
 from pymongo import DESCENDING, ASCENDING
@@ -303,6 +304,8 @@ class DASAbstractService(object):
     def get_notations(self, api):
         """Return notations used for given API"""
         notationmap = self.notations()
+        if  not notationmap:
+            return {}
         notations = dict(notationmap['']) # notations applied to all APIs
         if  notationmap.has_key(api): # overwrite the one for provided API
             notations.update(notationmap[api])
@@ -318,7 +321,6 @@ class DASAbstractService(object):
         - *api* is API name
         - *args* API input parameters 
         """
-        print "\n### CALL generic parser", format, api, args
         notations = self.get_notations(api)
         if  format.lower() == 'xml':
             tags = self.dasmapping.api2daskey(self.name, api)
@@ -328,7 +330,11 @@ class DASAbstractService(object):
         elif format.lower() == 'json':
             gen = json_parser(data)
             for row in gen:
-                yield row
+                if  type(row) is types.ListType:
+                    for item in row:
+                        yield item
+                else:
+                    yield row
         else:
             msg = 'Unsupported data format="%s", API="%s"' % (format, api)
             raise Exception(msg)
@@ -384,7 +390,7 @@ class DASAbstractService(object):
             if  skeys:
                 if  not set(value['keys']) & set(query['fields']):
                     continue
-            else:
+            elif args:
                 found = False
                 for key, val in cond.items():
                     entity = key.split('.')[0] # key either entity.attr or just entity
