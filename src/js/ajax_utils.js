@@ -5,3 +5,9 @@ function ajaxStatus() {
       evalScripts:true
     });
 }
+function ajaxQueryInfo(query) {
+    new Ajax.Updater('_query_info', '/das/admin/query_info', 
+    { method: 'get' ,
+      parameters : {'query':query},
+    });
+}
