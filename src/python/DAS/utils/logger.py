@@ -6,8 +6,8 @@
 General purpose DAS logger class
 """
 
-__revision__ = "$Id: logger.py,v 1.5 2009/06/10 20:31:22 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: logger.py,v 1.6 2009/11/16 15:44:52 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -110,7 +110,7 @@ class DASLogger:
         """
         self.logger.error(msg)
         if  self.stdout:
-            print 'ERROR ###', msg
+            print 'ERROR ', msg
 
     def info(self, msg):
         """
@@ -118,7 +118,7 @@ class DASLogger:
         """
         self.logger.info(msg)
         if  self.stdout:
-            print 'INFO  ###', msg
+            print 'INFO  ', msg
 
     def debug(self, msg):
         """
@@ -126,7 +126,7 @@ class DASLogger:
         """
         self.logger.debug(msg)
         if  self.stdout and self.verbose > 1:
-            print 'DEBUG ###', msg
+            print 'DEBUG ', msg
 
     def warning(self, msg):
         """
@@ -140,7 +140,7 @@ class DASLogger:
         """
         self.logger.error(msg)
         if  self.stdout:
-            print 'EXCPT ###', msg
+            print 'EXCPT ', msg
 
     def critical(self, msg):
         """
