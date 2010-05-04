@@ -57,7 +57,7 @@ class testDAS(unittest.TestCase):
         query = "find dataset, admin where site = T2_UK"
         result = self.das.findservices(query)
         result.sort()
-        expect = ['dbs', 'sitedb', 'phedex']
+        expect = ['dbs', 'monitor', 'sitedb', 'phedex']
         expect.sort()
         self.assertEqual(expect, result)
 
