@@ -65,8 +65,8 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.13 2009/07/22 20:40:10 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: qlparser.py,v 1.14 2009/08/07 03:21:41 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -78,6 +78,64 @@ from DAS.utils.utils import oneway_permutations, unique_list, add2dict
 DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
                  ' not like ', ' like ', 
                  ' between ', ' not in ', ' in ', ' last ']
+MONGO_MAP = {
+    '>':'$gt',
+    '<':'$lt',
+    '>=':'$gte',
+    '<=':'$lte',
+    'in':'$in',
+    '!=':'$ne',
+    'not in':'$nin',
+}
+
+def mongo_exp(cond_list):
+    """
+    Convert DAS expression into MongoDB syntax. As input we take
+    a dictionary of key, operator and value.
+    """
+    # TODO: for and brackets operators I can combine everything in a
+    # single dictionary. While if operator OR is met, I can return list of
+    # mongo_dicts for processing, since list represent list of OR'ed results
+    print "mongo_exp, input", cond_list
+    mongo_list = []
+    mongo_dict = {}
+    for cond in cond_list:
+        if  cond == '(' or cond == ')' or cond == 'and':
+            continue
+        if  cond == 'or':
+            mongo_list.append(mongo_dict)
+        key  = cond['key']
+        val  = cond['value']
+        oper = cond['op']
+        print "key, op, val", key, oper, val
+        if  MONGO_MAP.has_key(oper):
+            if  mongo_dict.has_key(key):
+                mongo_value = mongo_dict[key]
+                mongo_value[MONGO_MAP[oper]] = val
+                mongo_dict[key] = mongo_value
+            else:
+                mongo_dict[key] = {MONGO_MAP[oper] : val}
+        elif oper == 'like':
+            # for expressions: *val* use pattern .*val.*
+            pat = re.compile(val.replace('*', '.*'))
+            mongo_dict[key] = pat
+        elif oper == 'not like':
+            # TODO, reverse the following:
+            # for expressions: *val* use pattern .*val.*
+            pat = re.compile(val.replace('*', '.*'))
+            mongo_dict[key] = pat
+        elif oper == '=':
+            mongo_dict[key] = val
+        elif oper == 'between':
+            mongo_dict[key] = {'$in' : [i for i in range(val[0], val[1])]}
+        elif oper == 'last':
+            mongo_dict[key] = 'last operator'
+        else:
+            msg = 'Not supported operator %s' % oper
+            raise Exception(msg)
+        if  mongo_dict not in mongo_list:
+            mongo_list.append(mongo_dict)
+    return mongo_list
 
 # NOTE: I used this method originally, so will keep it around for a while
 # the rest of the code should use QLLexer.query_parser instead which
@@ -403,6 +461,7 @@ class QLLexer(object):
             pos = exp.find(oper)
             if  pos != -1:
                 olist.append((pos, oper))
+                break
         olist.sort()
         if  not olist:
             return

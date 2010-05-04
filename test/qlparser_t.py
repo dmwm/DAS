@@ -7,7 +7,7 @@ Unit test for DAS QL parser
 
 import unittest
 #from DAS.core.qlparser import antrlparser
-from DAS.core.qlparser import findbracketobj
+from DAS.core.qlparser import findbracketobj, mongo_exp
 from DAS.core.qlparser import getconditions, query_params
 from DAS.core.qlparser import QLParser
 
@@ -88,6 +88,12 @@ class testQLParser(unittest.TestCase):
 
         ql = QLParser(imap, params)
 
+        q = "find runs where run>1 and run <= 200 "
+        result = mongo_exp(ql.conditions(q))
+        expect = [{'run': {'$gt' : '1', '$lte' : '200'}}]
+        print "\nMOGNO", q, result, expect
+        self.assertEqual(result, expect)
+
         q = "find runs where DQFlagList=Tracker_Global=GOOD&Tracker_Local1=1"
         result = ql.params(q)
 
@@ -156,7 +162,8 @@ class testQLParser(unittest.TestCase):
                   'order_by_order': 'desc', 
                   'services': {'sitedb': ['admin', 'site'], 
                                'dbs': ['dataset', 'site'], 
-                               'phedex': ['replica', 'site']}, 
+                               'phedex': ['replica', 'site'],
+                               'dashboard': ['site']}, 
                   'daslist': [{'sitedb': 'find admin,dataset,replica,site,block where site = 123', 
                                'dbs': 'find admin,dataset,replica,site,block where site = 123', 
                                'phedex': 'find admin,dataset,replica,site,block where site = 123'}, 
