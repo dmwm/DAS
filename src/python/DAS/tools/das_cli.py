@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.17 2009/10/20 15:00:55 valya Exp $"
-__version__ = "$Revision: 1.17 $"
+__revision__ = "$Id: das_cli.py,v 1.18 2009/11/06 00:05:08 valya Exp $"
+__version__ = "$Revision: 1.18 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -75,6 +75,21 @@ def nooutput(input_results):
     """Just iterate over generator, but don't print it out"""
     for elem in input_results:
         pass
+
+def run(DAS, query, idx, limit, nooutput, plain, debug):
+    """
+    Execute DAS workflow for given set of parameters.
+    We use this function in main and in profiler.
+    """
+    results = DAS.result(query, idx, limit)
+    if  not nooutput:
+        if  plain:
+            for item in results:
+                print item
+        else:
+            dump(results, idx)
+    else:
+        nooutput(results)
 #
 # main
 #
@@ -109,52 +124,24 @@ if __name__ == '__main__':
         keys.sort()
         for key in keys:
             print key
-#    elif  opts.view:
-#        if  opts.view == 'all':
-#            view = None
-#        else:
-#            view = opts.view
-#        for name, query in DAS.get_view(view).items():
-#            print 'view name: %s' % name
-#            print 'DAS query: %s' % query
-#    elif  opts.createview:
-#        vlist = opts.createview.split(',')
-#        name  = vlist[0]
-#        query = ','.join(vlist[1:])
-#        print "Creating a view '%s' with query '%s'" % (name, query)
-#        DAS.create_view(name, query)
-#    elif  opts.updateview:
-#        vlist = opts.updateview.split(',')
-#        name  = vlist[0]
-#        query = ','.join(vlist[1:])
-#        print "Updating a view '%s' with query '%s'" % (name, query)
-#        DAS.update_view(name, query)
-#    elif  opts.deleteview:
-#        name = opts.deleteview
-#        DAS.delete_view(name)
-#        print "View '%s' has been deleted" % name
     elif query:
+
+        idx    = opts.idx
+        limit  = opts.limit
+        output = opts.nooutput
+        plain  = opts.plain
 
         if  opts.profile:
             import hotshot                   # Python profiler
             import hotshot.stats             # profiler statistics
-            print "Start DAS in profile mode"
             profiler = hotshot.Profile("profile.dat")
-            profiler.run("DAS.result(query)")
+            profiler.run("run(DAS,query,idx,limit,output,plain,debug)")
             profiler.close()
             stats = hotshot.stats.load("profile.dat")
             stats.sort_stats('time', 'calls')
             stats.print_stats()
         else:
-            results = DAS.result(query, opts.idx, opts.limit)
-            if  not opts.nooutput:
-                if  opts.plain:
-                    for item in results:
-                        print item
-                else:
-                    dump(results, opts.idx)
-            else:
-                nooutput(results)
+            run(DAS, query, idx, limit, output, plain, debug)
     else:
         print
         print "DAS CLI interface, no actions found,"
