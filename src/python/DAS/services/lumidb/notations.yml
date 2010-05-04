@@ -1,6 +1,0 @@
-notations : [
-    {'api_param':'run_number', 'das_name':'run', 'api':''},
-    {'api_param':'int_lumi', 'das_name':'intlumi', 'api':''},
-    {'api_param':'hlt_path', 'das_name':'trigpath', 'api':''},
-]
-

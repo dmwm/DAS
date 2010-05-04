@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-# setup environment
-#. `dirname $0`/setup.sh
-
-# run actual script
-chmod a+x $DAS_ROOT/src/python/DAS/tools/das_cache_client.py
-$DAS_ROOT/src/python/DAS/tools/das_cache_client.py "$@"
