@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.75 2010/03/01 18:53:25 valya Exp $"
-__version__ = "$Revision: 1.75 $"
+__revision__ = "$Id: utils.py,v 1.76 2010/03/02 03:38:13 valya Exp $"
+__version__ = "$Revision: 1.76 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -857,7 +857,11 @@ def xml_parser(source, prim_key, tags=[]):
         row[key].update(sup)
         for child in elem.getchildren():
             child_key  = child.tag
-            child_dict = dict_helper(child.attrib, notations)
+            child_data = child.attrib
+            if  not child_data:
+                child_dict = adjust_value(child.text)
+            else:
+                child_dict = dict_helper(child_data, notations)
 
             if  row[key].has_key(child_key):
                 val = row[key][child_key]
@@ -898,7 +902,6 @@ def json_parser(source):
             res  = data.replace('null', '\"null\"')
         else:
             res  = data
-        print "res", res, type(res)
         try:
             jsondict = json.loads(res)
         except:
