@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.52 2010/01/06 19:44:50 valya Exp $"
-__version__ = "$Revision: 1.52 $"
+__revision__ = "$Id: das_core.py,v 1.53 2010/01/15 17:14:46 valya Exp $"
+__version__ = "$Revision: 1.53 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -106,16 +106,16 @@ class DASCore(object):
             raise Exception(msg)
 
         # load from configuration what will be used as a hot cache
-        if  dasconfig.has_key('hotcache') and dasconfig['hotcache']:
-            klass   = dasconfig['hotcache']
-            name    = klass.lower().replace('das', 'das_')
-            stm     = "from DAS.core.%s import %s\n" % (name, klass)
-            obj     = compile(str(stm), '<string>', 'exec')
-            eval(obj) # load class def
-            klassobj = '%s(dasconfig)' % klass
-            setattr(self, 'hotcache', eval(klassobj))
-            self.cache   = self.hotcache
-            self.logger.info('DASCore::__init__ hotcache=%s' % klass)
+#        if  dasconfig.has_key('hotcache') and dasconfig['hotcache']:
+#            klass   = dasconfig['hotcache']
+#            name    = klass.lower().replace('das', 'das_')
+#            stm     = "from DAS.core.%s import %s\n" % (name, klass)
+#            obj     = compile(str(stm), '<string>', 'exec')
+#            eval(obj) # load class def
+#            klassobj = '%s(dasconfig)' % klass
+#            setattr(self, 'hotcache', eval(klassobj))
+#            self.cache   = self.hotcache
+#            self.logger.info('DASCore::__init__ hotcache=%s' % klass)
 
         # plug-in architecture: loop over registered data-services in
         # dasconfig; load appropriate module/class; register data
@@ -220,29 +220,29 @@ class DASCore(object):
 #            query = input
 #        return query
 
-    def aggregation(self, results):
-        """
-        Perform aggregation of information if DAS functions
-        is found.
-        """
-        results  = [i for i in results]
-        agg_dict = {}
-        for func, arg in self.das_aggregation.items():
-            agg  = getattr(das_functions, func)(arg, results)
-            for key, val in agg.items():
-                agg_dict[key] = val
-        first = results[0]
-        try:
-            del first['system'] # don't account as selection key
-        except:
-            pass
-        if  len(first.keys()) != len(agg_dict.keys()):
-            for row in results:
-                for key, val in agg_dict.items():
-                    row[key] = val
-                yield row
-        else:
-            yield agg_dict
+#    def aggregation(self, results):
+#        """
+#        Perform aggregation of information if DAS functions
+#        is found.
+#        """
+#        results  = [i for i in results]
+#        agg_dict = {}
+#        for func, arg in self.das_aggregation.items():
+#            agg  = getattr(das_functions, func)(arg, results)
+#            for key, val in agg.items():
+#                agg_dict[key] = val
+#        first = results[0]
+#        try:
+#            del first['system'] # don't account as selection key
+#        except:
+#            pass
+#        if  len(first.keys()) != len(agg_dict.keys()):
+#            for row in results:
+#                for key, val in agg_dict.items():
+#                    row[key] = val
+#                yield row
+#        else:
+#            yield agg_dict
 
     def adjust_query(self, query):
         # check that provided query is indeed in MongoDB format.
@@ -270,49 +270,17 @@ class DASCore(object):
         """
         query = self.adjust_query(query)
         # lookup provided query in a cache
-        if  hasattr(self, 'cache'):
-            if  self.cache.incache(query):
-                for srv, keys in self.qlparser.params(query)['services']:
-                    self.analytics.update(srv, query)
-                results = self.cache.\
-                get_from_cache(query, idx, limit, skey, sorder)
-            else:
-                # NOTE: the self.call returns generator, update_cache
-                # consume and iterate over its items. So if I need to
-                # re-use it, the update_cache will yeild them back
-                self.call(query) 
-                results = self.get_from_cache(query, idx, limit, skey, sorder)
-                if  self.das_aggregation:
-                    results = self.aggregation(results)
-                results = self.cache.update_cache(query, results, 
-                                expire=self.cache.limit)
-        else:
-            self.call(query) 
-            results = self.get_from_cache(query, idx, limit, skey, sorder)
-            if  self.das_aggregation:
-                results = self.aggregation(results)
+        self.call(query) 
+        results = self.get_from_cache(query, idx, limit, skey, sorder)
+#        if  self.das_aggregation:
+#            results = self.aggregation(results)
         return results
-
-#    def update_cache(self, query, expire=600):
-#        """
-#        Update cache with result of the query
-#        """
-#        try:
-#            genres = self.result(query)
-#            for row in genres:
-#                pass
-#            status = 1
-#        except:
-#            status = 0
-#        return status
 
     def remove_from_cache(self, query):
         """
         Delete in cache entries about input query
         """
-        if  hasattr(self, 'cache'):
-            if  self.cache.incache(query):
-                self.cache.remove_from_cache(query)
+        self.rawcache.remove_from_cache(query)
 
     def get_status(self, query):
         """
@@ -329,14 +297,14 @@ class DASCore(object):
         Look-up input query if it exists in raw-cache.
         """
         query, dquery = convert2pattern(loose(query))
-        return self.rawcache.incache(query)
+        return self.rawcache.incache(query, collection='merge')
 
     def in_raw_cache_nresults(self, query):
         """
         Look-up how manu records for given query exists in raw-cache.
         """
         query, dquery = convert2pattern(loose(query))
-        return self.rawcache.nresults(query)
+        return self.rawcache.nresults(query, collection='merge')
 
     def call(self, query):
         """
@@ -350,6 +318,9 @@ class DASCore(object):
         Return status 0/1 depending on success of the calls, can be
         used by workers on cache server.
         """
+        if  self.in_raw_cache(query):
+            return 1
+
         query = self.adjust_query(query)
         msg = 'DASCore::call, query=%s' % query
         self.logger.info(msg)
@@ -368,13 +339,19 @@ class DASCore(object):
         except:
             traceback.print_exc()
             return 0
+        self.rawcache.update_das_record(query, 'merging')
+        if  self.verbose:
+            self.timer.record('merge')
+        self.rawcache.merge_records(query)
+        if  self.verbose:
+            self.timer.record('merge')
         self.rawcache.update_das_record(query, 'ok')
         return 1
 
     def get_from_cache(self, query, idx=0, limit=None, skey=None, sorder='asc'):
         """
-        Look-up results from the cache.
-        Return a list of generators containing results for further processing.
+        Look-up results from the merge cache and yield them for
+        further processing.
         """
         msg = 'DASCore::get_from_cache, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
                 % (query, idx, limit, skey, sorder)
@@ -388,12 +365,7 @@ class DASCore(object):
             res = self.rawcache.map_reduce(mapreduce, spec)
         else:
             query = dict(spec=spec, fields=fields)
-            res = self.rawcache.get_from_cache(loose(query), idx, limit, skey, sorder)
+            res = self.rawcache.get_from_cache(\
+                loose(query), idx, limit, skey, sorder, collection='merge')
         for row in res:
             yield row
-
-        # Yield results for query hash
-#        spec = dict(spec={"das.qhash":qhash})
-#        res = self.rawcache.get_from_cache(spec)
-#        for row in res:
-#            yield row
