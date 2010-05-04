@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-# setup environment
-#. `dirname $0`/setup.sh
-
-# run actual script
-$DAS_ROOT/src/python/DAS/tools/das_cleaner.py "$@"
