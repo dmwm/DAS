@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.22 2010/01/26 21:02:04 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.23 2010/02/02 20:15:43 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -65,6 +65,12 @@ class DASMapping(object):
         """
         self.conn.drop_database(self.dbname)
 
+    def remove(self, spec):
+        """
+        Remove record in DAS Mapping DB for provided Mongo spec.
+        """
+        self.col.remove(spec)
+        
     def add(self, record):
         """
         Add new record into mapping DB. 
@@ -112,11 +118,13 @@ class DASMapping(object):
         gen  = (row['system'] for row in self.col.find(cond, ['system']))
         return gen2list(gen)
 
-    def daskeys(self):
+    def daskeys(self, das_system=None):
         """
         Return a dict with all known DAS keys.
         """
         cond  = { 'system' : { '$ne' : None } }
+        if  das_system:
+            cond  = { 'system' : das_system }
         gen   = (row['system'] for row in self.col.find(cond, ['system']))
         kdict = {}
         for system in gen:
@@ -304,19 +312,23 @@ class DASMapping(object):
         """
         Constructs data-service map, e.g.::
 
-        {api: {keys:[list of DAS keys], params: dict_of_api_params} }
+        {api: {keys:[list of DAS keys], params: args, url:url, format:ext} }
         """
         query = {'system':system, 'api':{'$ne':None}}
         smap = {}
         for row in self.col.find(query):
-            api = row['api']['name']
+            url  = row['url']
+            exp  = row['expire']
+            ext  = row['format']
+            api  = row['api']['name']
             keys = []
             for entry in row['daskeys']:
                 keys.append(entry['key'])
             params = dict(row['api']['params'])
             if  implementation=='javaservlet':
                 params['api'] = api
-            smap[api] = dict(keys=keys, params=params)
+            smap[api] = dict(keys=keys, params=params, url=url, expire=exp,
+                                format=ext)
         return smap
 
     def presentation(self, daskey):
