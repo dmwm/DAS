@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.12 2009/11/10 16:08:28 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: runsum_service.py,v 1.13 2009/11/10 20:03:49 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -72,9 +72,30 @@ class RunSummaryService(DASAbstractService):
                 else:
                     for param in self.dasmapping.das2api(self.name, key):
                         args[param] = value
+            elif key == 'run.run_number': # make exception
+                minrun = None
+                maxrun = None
+                for oper, val in value.items():
+                    if  oper == '$in':
+                        minrun = int(val[0])
+                        maxrun = int(val[-1])
+                    elif oper == '$lt':
+                        maxrun = int(val) - 1
+                    elif oper == '$lte':
+                        maxrun = int(val)
+                    elif oper == '$gt':
+                        minrun = int(val) + 1
+                    elif oper == '$gte':
+                        minrun = int(val)
+                    else:
+                        msg = 'RunSummary does not support operator %s' % oper
+                        raise Exception(msg)
+                args['RUN_BEGIN'] = minrun
+                args['RUN_END']   = maxrun
             else: # we got some operator, e.g. key :{'$in' : [1,2,3]}
                 # TODO: not sure how to deal with them right now, will throw
-                msg = 'RunSummary does not support operator %s' % oper
+                msg = 'RunSummary does not support value %s for key=%s' \
+                % (value, key)
                 raise Exception(msg)
         if  args == self.params: # no parameter is provided
             args['TIME_END'] = convert_datetime(time.time())
