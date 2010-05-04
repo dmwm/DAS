@@ -4,13 +4,14 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.6 2009/05/01 17:44:27 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_cli.py,v 1.7 2009/05/07 00:49:54 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
 from optparse import OptionParser
 #from DAS.core.das_core import DASCore
+from DAS.core.qlparser import getselectkeys
 from DAS.core.das_cache import DASCache
 from DAS.utils.utils import dump
 
@@ -133,12 +134,13 @@ if __name__ == '__main__':
             stats.sort_stats('time', 'calls')
             stats.print_stats()
         else:
+            selkeys = getselectkeys(query)
             results = DAS.result(query)
             if  opts.plain:
                 for item in results:
                     print item
             else:
-                dump(results, opts.limit)
+                dump(results, limit=opts.limit, selkeys=selkeys)
     else:
         print
         print "DAS CLI interface, no actions found,"
