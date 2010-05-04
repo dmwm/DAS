@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.85 2010/03/25 20:27:58 valya Exp $"
-__version__ = "$Revision: 1.85 $"
+__revision__ = "$Id: abstract_service.py,v 1.86 2010/04/01 19:57:22 valya Exp $"
+__version__ = "$Revision: 1.86 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -416,8 +416,7 @@ class DASAbstractService(object):
                 ddict = dotdict(row)
                 for key in keys2adjust:
                     value = spec[key]
-                    ckey  = "%s.%s" %(prim_key, key)
-                    existing_value = ddict._get(ckey)
+                    existing_value = ddict._get(key)
                     # the way to deal with proximity/patern/condition results
                     if  type(value) is types.StringType and \
                         value.find('*') != -1: # we got pattern
@@ -429,7 +428,8 @@ class DASAbstractService(object):
                             value = existing_value
                         else:
                             value = str(value) # to avoid {'$gt':number}
-                    elif value != existing_value: # we got proximity result
+                    elif existing_value and value != existing_value:\
+                        # we got proximity results
                         if  ddict.has_key('proximity'):
                             proximity = dotdict({key:existing_value})
                             ddict['proximity'].update(proximity)
