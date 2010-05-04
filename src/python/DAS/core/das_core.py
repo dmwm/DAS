@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.33 2009/09/16 20:34:28 valya Exp $"
-__version__ = "$Revision: 1.33 $"
+__revision__ = "$Id: das_core.py,v 1.34 2009/09/18 14:06:29 valya Exp $"
+__version__ = "$Revision: 1.34 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -51,10 +51,13 @@ class DASCore(object):
     service_keys = {'service':{list of keys]}
     service_maps = {('service1', 'service2'):'key'}
     """
-    def __init__(self, debug=None):
-        dasconfig    = das_readconfig()
-        verbose      = dasconfig['verbose']
-        self.stdout  = debug
+    def __init__(self, config=None, debug=None):
+        if  config:
+            dasconfig = config
+        else:
+            dasconfig = das_readconfig()
+        verbose       = dasconfig['verbose']
+        self.stdout   = debug
         if  type(debug) is types.IntType:
             self.verbose = debug
             dasconfig['verbose'] = debug
@@ -170,6 +173,7 @@ class DASCore(object):
         self.das_aggregation = {} # determine at run-time
         if  self.verbose:
             self.timer.record('DASCore.__init__')
+        self.dasconfig = dasconfig
 
     def keys(self):
         """
