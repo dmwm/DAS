@@ -4,15 +4,15 @@
 """
 SiteDB service
 """
-__revision__ = "$Id: sitedb_service.py,v 1.1 2009/03/09 19:43:34 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: sitedb_service.py,v 1.2 2009/03/10 20:57:23 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import types
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import query_params, cartesian_product
-from DAS.utils.utils import add2dict
+from DAS.utils.utils import add2dict, map_validator
 
 class SiteDBService(DASAbstractService):
     """
@@ -54,6 +54,7 @@ class SiteDBService(DASAbstractService):
                 'params' : {'cms_name':''}
             },
         }
+        map_validator(self.map)
 
     def se2cms(self, site_se):
         """

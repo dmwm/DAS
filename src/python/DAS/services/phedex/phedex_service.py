@@ -4,12 +4,12 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.1 2009/03/09 19:43:33 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: phedex_service.py,v 1.2 2009/03/10 20:57:23 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import query_params
+from DAS.utils.utils import query_params, map_validator
 
 class PhedexService(DASAbstractService):
     """
@@ -47,6 +47,7 @@ class PhedexService(DASAbstractService):
 #                'params' : {'node':''}
 #            },
         }
+        map_validator(self.map)
 
     def api(self, query, cond_dict=None):
         """
