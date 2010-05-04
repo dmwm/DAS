@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.69 2010/03/03 18:52:55 valya Exp $"
-__version__ = "$Revision: 1.69 $"
+__revision__ = "$Id: das_mongocache.py,v 1.70 2010/03/05 18:11:46 valya Exp $"
+__version__ = "$Revision: 1.70 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -80,19 +80,54 @@ def loose(query):
         newspec[key] = val
     return dict(spec=newspec, fields=fields)
 
+#def encode_mongo_query(query):
+#    """
+#    Mongo doesn't allow to store a dictionary w/ key having a dot '.', '$'
+#    notaions, therefor we will use string representation in DB for the query.
+#    """
+#    return json.dumps(query)
+
+#def decode_mongo_query(query):
+#    """
+#    Perform opposite to encode_mongo_query action.
+#    Restore query from a string.
+#    """
+#    return json.loads(query)
 def encode_mongo_query(query):
     """
-    Mongo doesn't allow to store a dictionary w/ key having a dot '.', '$'
-    notaions, therefor we will use string representation in DB for the query.
+    Encode mongo query into storage format. MongoDB does not allow storage of
+    dict with keys containing "." or MongoDB operators, e.g. $lt. So we
+    convert input mongo query spec into list of dicts whose "key"/"value"
+    are mongo query spec key/values. For example
+
+    .. doctest::
+
+        spec:{"block.name":"aaa"}
+
+        converted into
+
+        spec:[{"key":"block.name", "value":'"aaa"'}]
+
+    Conversion is done using JSON dumps method.
     """
-    return json.dumps(query)
+    return_query = dict(query)
+    speclist = []
+    for key, val in return_query.pop('spec').items():
+        val = json.dumps(val)
+        speclist.append({"key":key, "value":val})
+    return_query['spec'] = speclist
+    return return_query
 
 def decode_mongo_query(query):
     """
-    Perform opposite to encode_mongo_query action.
-    Restore query from a string.
+    Decode query from storage format into mongo format.
     """
-    return json.loads(query)
+    spec = {}
+    for item in query.pop('spec'):
+        val = json.loads(item['value'])
+        spec.update({item['key'] : val})
+    query['spec'] = spec
+    return query
 
 def convert2pattern(query):
     """
@@ -280,7 +315,33 @@ class DASMongocache(object):
         """
         return True
 
-    def similar_queries(self, system, query):
+    def similar_queries(self, query):
+        """
+        Check if we have query results in cache whose conditions are
+        superset of provided query. The method only works for single
+        key whose value is substring of value in input query.
+        For example, if cache contains records about T1 sites, 
+        then input query T1_CH_CERN is subset of results stored in cache.
+        """
+        self.logger.info("DASMongocache::similar_queries(%s)" % query)
+        spec    = query.get('spec', {})
+        fields  = query.get('fields', None)
+        if  spec.keys() != 1:
+            msg = 'DASMongocache::similar_queries, too many keys'
+            self.logger.info(msg)
+        key     = spec.keys()[0]
+        val     = spec[key]
+        cond    = {'spec.key': key}
+        for row in self.col.find(cond):
+            mongo_query = decode_mongo_query(row)
+            if  compare_specs(query, mongo_query):
+                return True
+#            value = mongo_query['spec'][key].replace('*', '')
+#            if  type(value) is types.StringType and val.count(value):
+#                return True
+        return False
+
+    def similar_queries_v1(self, system, query):
         """
         Check if we have query results in cache whose conditions are
         superset of provided query. For example, if cache contains records
@@ -336,7 +397,8 @@ class DASMongocache(object):
         """
         Retrieve DAS record for given query.
         """
-        return self.col.find_one({'das.qhash': genkey(query)})
+        enc_query = encode_mongo_query(query)
+        return self.col.find_one({'das.qhash': genkey(enc_query)})
 
     def update_das_record(self, query, status, header=None):
         """
@@ -417,8 +479,12 @@ class DASMongocache(object):
         self.logger.info(msg)
         # get aggregators and loose query for further processing
         aggregators = query.get('aggregators', None)
-        strquery    = json.dumps(query)
-        query       = loose(query)
+        if  query.has_key('spec') and query['spec'].has_key('_id'):
+            # we got {'_id': {'$in': [ObjectId('4b912ee7e2194e35b8000010')]}}
+            strquery = ""
+        else:
+            strquery = json.dumps(query)
+            query = loose(query)
         # adjust query id if it's requested
         if  adjust:
             query  = adjust_id(query)
