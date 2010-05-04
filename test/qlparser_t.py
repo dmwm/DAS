@@ -8,8 +8,8 @@ Unit test for DAS QL parser
 import unittest
 from DAS.core.qlparser import findbracketobj, mongo_exp
 from DAS.core.qlparser import getconditions, add_spaces
-from DAS.core.qlparser import MongoParser, DAS_OPERATORS
-from DAS.core.qlparser import get_aggregator
+from DAS.core.qlparser import MongoParser, get_aggregator
+from DAS.core.das_ql import DAS_OPERATORS
 from DAS.utils.logger import DASLogger
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_mapping_db import DASMapping
