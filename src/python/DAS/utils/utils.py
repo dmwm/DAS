@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.76 2010/03/02 03:38:13 valya Exp $"
-__version__ = "$Revision: 1.76 $"
+__revision__ = "$Id: utils.py,v 1.77 2010/03/02 20:01:12 valya Exp $"
+__version__ = "$Revision: 1.77 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -67,6 +67,19 @@ class dotdict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
+    def _delete(self, ckey):
+        """
+        Delete provided compound key from dot dictionary
+        """
+        obj  = self
+        keys = ckey.split('.')
+        for key in keys:
+            if  key == keys[-1]:
+                if  obj.has_key(key):
+                    del obj[key]
+            else:
+                obj = obj[key]
+        
     def _get(self, ckey):
         """
         Get value for provided compound key.
