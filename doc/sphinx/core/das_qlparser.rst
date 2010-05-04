@@ -1,5 +1,5 @@
-DAS qlparser
-------------
-.. automodule:: DAS.core.qlparser
+DAS parser
+----------
+.. automodule:: DAS.core.das_parser
    :members:
 
