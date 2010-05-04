@@ -94,24 +94,13 @@ def debug(self, arg):
         _pm.print_blue("Debug level is %s"%_debug.level)
 
 def das_help(self, arg):
-    cmdList = cmdDict.keys()
-    cmdList.sort()
-    sep = 0
-    for i in cmdList:
-        if  sep < len(str(i)): 
-            sep = len(str(i))
-    if  not arg:
-        msg  = "Available commands:\n"
-        for cmd in cmdList:
-            msg += "%s%s %s\n" % (_pm.msg_green(cmd), " "*abs(sep-len(cmd)), cmdDict[cmd])
-    else:
-        cmd = arg.strip()
-        if cmdDictExt.has_key(cmd):
-           msg = "\n%s: %s\n"%(_pm.msg_green(cmd),cmdDictExt[cmd])
-        elif cmdDict.has_key(cmd):
-           msg = "\n%s: %s\n"%(_pm.msg_green(cmd),cmdDict[cmd])
-        else:
-           msg = _pm.msg_red("\nSuch command is not available\n")
+    """
+    Provide simple help about available commands
+    """
+    global magic_list
+    msg  = "Available commands:\n"
+    for name, func in magic_list:
+        msg += "%s\n%s\n" % (_pm.msg_blue(name), _pm.msg_green(func.__doc__))
     print msg
 
 def plot(self, arg):
@@ -142,12 +131,23 @@ except:
     traceback.print_exc()
 
 def das_info(self, arg):
+    """
+    Provide db info
+    """
     return _couchmgr.dbinfo()
 
 def das_incache(self, arg):
+    """
+    Check if result for DAS query exists in couch db.
+    Parameters: <das query> 
+    """
     return _couchmgr.incache(arg)
 
 def das_get(self, arg):
+    """
+    Get results from couch for provided DAS query
+    Parameters: <das query> 
+    """
     try:
         args = eval(arg)
     except:
@@ -158,13 +158,77 @@ def das_get(self, arg):
         return _couchmgr.get_from_cache(query=args)
 
 def das_system(self, arg):
+    """
+    List known systems in couch
+    Parameters: <das sub-system, e.g. sitedb> 
+    """
     return _couchmgr.list_queries_in(arg)
 
 def das_between(self, arg):
+    """
+    Retrieve results from provided time stamp range
+    Parameters: <min_time, max_time>
+    Comments: times are seconds since epoch, max_time is optional. 
+    """
     alist = arg.split()
     if  len(alist) == 1:
         alist.append(9999999999)
     return _couchmgr.list_between(long(alist[0]), long(alist[1]))
+
+def couch_views(self, arg):
+    """
+    List registeted couch db views
+    """
+    res = _couchmgr.get_all_views()
+    for design, definitions in res.items():
+        print _pm.msg_blue("design: ") + design
+        for row in definitions:
+            for name, defdict in row.items():
+                print _pm.msg_blue("view name: ") + name
+                for key, val in defdict.items():
+                    _pm.print_blue(key + ":")
+                    _pm.print_green(val)
+
+def create_view(self, arg):
+    """
+    Create couch db view
+    Parameters: <db> <design> <view_dict>
+    """
+    alist = arg.split()
+    if  len(alist) != 3:
+        _pm.print_blue("Usage: create_view <db> <design> <view_dict>")
+    else:
+        return _couchmgr.create_view(alist[0], alist[1], alist[2])
+
+def delete_view(self, arg):
+    """
+    Delete couch db view
+    Parameters: <db> <design> <view_name>
+    """
+    alist = arg.split()
+    if  len(alist) != 3:
+        _pm.print_blue("Usage: delete_view <db> <design> <view_name>")
+    else:
+        return _couchmgr.delete_view(alist[0], alist[1], alist[2])
+
+def delete_db(self, arg):
+    """
+    Delete DB in couch.
+    Parameters: <db_name, e.g. das>
+    """
+    _couchmgr.delete_cache(arg)
+
+def delete_system(self, arg):
+    """
+    Delete docs for given system
+    Parameters: <db> <system, e.g. sitedb>
+    """
+    alist = arg.split()
+    if  len(alist) != 2:
+        _pm.print_blue("Usage: delete_system <db> <system, e.g. sitedb>")
+    else:
+        dbname, system = alist
+        _couchmgr.delete_cache(dbname, system)
 
 magic_list = [
         ('das_help', das_help), 
@@ -173,6 +237,10 @@ magic_list = [
         ('das_get', das_get),
         ('das_system', das_system),
         ('das_between', das_between),
+        ('couch_views', couch_views),
+        ('create_view', create_view),
+        ('delete_view', delete_view),
+        ('delete_db', delete_db),
 ]
 #
 # matplotlib

@@ -5,29 +5,26 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.7 2009/06/10 20:33:04 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_couchcache.py,v 1.8 2009/06/12 20:57:40 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 import traceback
+try:
+    # Python 2.6
+    import json
+except:
+    # Prior to 2.6 requires simplejson
+    import simplejson as json
+
 from WMCore.Database.CMSCouch import CouchServer
 
 # DAS modules
 from DAS.utils.utils import genkey, timestamp, results2couch
 from DAS.core.cache import Cache
 from DAS.utils.logger import DummyLogger
-
-def create_views(cdb, design, views):
-    """
-    Create Couchcache views to look-up queries.
-    """
-    view = {}
-    view['_id'] = '_design/%s' % design
-    view['language'] = 'javascript' 
-    view['doctype'] = 'view'
-    view['views'] = views
-    cdb.commit(view)
+from DAS.web.utils import urllib2_request, httplib_request
 
 class DASCouchcache(Cache):
     """
@@ -141,6 +138,29 @@ function(k,v,r) {
             }
         }
 
+    def create_view(self, dbname, design, view_dict):
+        """
+        Create new view in couch db.
+        """
+        cdb  = self.couchdb(dbname)
+        # check provided view_dict that it has all keys
+        for view, definition in view_dict.items():
+            if  type(definition) is not types.DictType:
+                msg = 'View "%s" has improper definition' % view
+                raise Exception(msg)
+            if  not definition.has_key('map'):
+                msg = 'View "%s" does not have map'
+                raise Exception(msg)
+        view = dict(_id='_design/%s' % design, language='javascript', 
+                        doctype='view', views=view_dict)
+        cdb.commit(view)
+
+    def delete_view(self, dbname, design, view_name):
+        """
+        Delete given view in couch db
+        """
+        print "Delete view", dbname, design, view_name
+
     def dbinfo(self, dbname='das'):
         """
         Provide couch db info
@@ -156,7 +176,8 @@ function(k,v,r) {
 
     def delete_cache(self, dbname=None, system=None):
         """
-        Delete couch db
+        Delete either couchh db (dbname) or particular docs
+        for provided system, e.g. all sitedb docs.
         """
         cdb = self.couchdb(dbname)
         if  cdb:
@@ -185,8 +206,8 @@ function(k,v,r) {
         if  dbname not in couch_db_list:
             self.logger.info("DASCouchcache::couchdb, create db %s" % dbname)
             cdb = self.server.createDatabase(dbname)
-            create_views(cdb, 'dasviews', self.views)
-            create_views(cdb, 'dasadmin', self.adminviews)
+            self.create_view(self.dbname, 'dasviews', self.views)
+            self.create_view(self.dbname, 'dasadmin', self.adminviews)
         else:
             self.logger.info("DASCouchcache::couchdb, connect db %s" % dbname)
             cdb = self.server.connectDatabase(dbname)
@@ -372,6 +393,47 @@ function(k,v,r) {
         if  len(res) == 1:
             return res[0]
         return res
+
+    def get_all_views(self, dbname=None):
+        """
+        Method to get all degined views in couch db. The couch db doesn't have
+        a clear way to extract view documents. Instead we need to ask for
+        _all_docs and provide proper start/end-keys. Once we retrieve
+        _design docs, we loop over them and get the doc of particular view, e.g
+        http://localhost:5984/das/_design/dasviews
+        """
+        if  not dbname:
+            dbname = self.dbname
+        qqq  = 'startkey=%22_design%2F%22&endkey=%22_design0%22'
+        host = 'http://' + self.uri
+        path = '/%s/_all_docs?%s' % (dbname, qqq)
+        kwds = {}
+        req  = 'GET'
+        debug   = 0
+        results = httplib_request(host, path, kwds, req, debug)
+        designdocs = json.loads(results)
+        results    = {}
+        for item in designdocs['rows']:
+            doc   = item['key']
+#            print "design:", doc
+            path  = '/%s/%s' % (dbname, doc)
+            res   = httplib_request(host, path, kwds, req, debug)
+            rdict = json.loads(res)
+            views = []
+            for view_name, view_dict in rdict['views'].items():
+#                print "  view:", view_name
+#                print "   map:", view_dict['map']
+                if  view_dict.has_key('reduce'):
+#                    print "reduce:", view_dict['reduce']
+                    rdef = view_dict['reduce']
+                    defrow = dict(map=view_dict['map'], 
+                                        reduce=view_dict['reduce'])
+                else:
+                    defrow = dict(map=view_dict['map'])
+                row = {'%s' % view_name : defrow}
+                views.append(row)
+            results[doc] = views
+        return results
 
 #    def create_ft_index(self, db, name):
 #        view = client.PermanentView(self.uri, name)
