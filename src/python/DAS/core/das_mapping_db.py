@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.12 2009/11/10 16:08:27 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.13 2009/11/17 17:35:20 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -33,7 +33,6 @@ class DASMapping(object):
         self.dbname  = getarg(config, 'mapping_dbname', 'mapping')
         self.colname = 'db'
         self.notationcache = {}
-        self.cache_expire  = 5*60 # 5 minutes 
 
         msg = "DASMapping::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
@@ -231,32 +230,48 @@ class DASMapping(object):
                         names.append(api_param)
         return names
 
+    def notations(self):
+        """
+        Return DAS notation map.
+        """
+        notationmap = {}
+        spec = {'notations':{'$ne':None}}
+        for item in self.col.find(spec):
+            notationmap[item['system']] = item['notations']
+        return notationmap
+
     def notation2das(self, system, api_param, api=""):
         """
         Translates data-service API parameter name into DAS name, e.g.
         run_number=run. In case when api_param is not presented in DB
         just return it back.
         """
+#        if  self.notationcache.has_key((system, api_param, api)):
+#            return self.notationcache[(system, api_param, api)]
+#        query = {'system':system, 'notations.api_param':api_param}
+#        res = self.col.find_one(query)
+#        if  res:
+#            for row in res['notations']:
+#                if  api and row['api'] and row['api'] != api:
+#                    continue
+#                if  row['api_param'] == api_param:
+#                    value = row['das_name']
+#                    self.notationcache[(system, api_param, api)] = value
+#                    return value
+#        self.notationcache[(system, api_param, api)] = api_param
+#        return api_param
         if  self.notationcache.has_key((system, api_param, api)):
-            api_param, expire = self.notationcache[(system, api_param, api)]
-            if  time.time() - expire < self.cache_expire:
-                return api_param
-            else:
-                del self.notationcache[(system, api_param, api)]
-        query = {'system':system, 'notations.api_param':api_param}
-        res = self.col.find_one(query)
-        if  res:
-            for row in res['notations']:
-                if  api and row['api'] and row['api'] != api:
-                    continue
-                if  row['api_param'] == api_param:
-                    value = row['das_name']
-                    self.notationcache[(system, api_param, api)] \
-                        = value, time.time()
-                    return value
-        self.notationcache[(system, api_param, api)] \
-                = api_param, time.time()
+            return self.notationcache[(system, api_param, api)]
+        for row in self.notationmap[system]:
+            if  api and row['api'] and row['api'] != api:
+                continue
+            if  row['api_param'] == api_param:
+                value = row['das_name']
+                self.notationcache[(system, api_param, api)] = value
+                return value
+        self.notationcache[(system, api_param, api)] = api_param
         return api_param
+
 
     def api2daskey(self, system, api):
         """
