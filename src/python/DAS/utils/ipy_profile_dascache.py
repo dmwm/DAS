@@ -143,10 +143,17 @@ def das_incache(self, arg):
     """
     return _couchmgr.incache(arg)
 
+def das_queries(self, arg):
+    """
+    Get queries which present currently in couch DB.
+    """
+    res = _couchmgr.get_all_queries()
+    return set(res)
+
 def das_get(self, arg):
     """
     Get results from couch for provided DAS query
-    Parameters: <das query> 
+    Parameters: <das query, find dataset where dataset=/a/b/c> 
     """
     try:
         args = eval(arg)
@@ -159,7 +166,7 @@ def das_get(self, arg):
 
 def das_system(self, arg):
     """
-    List known systems in couch
+    Retrieve results from cache for provided system, e.g. sitedb
     Parameters: <das sub-system, e.g. sitedb> 
     """
     return _couchmgr.list_queries_in(arg)
@@ -173,11 +180,14 @@ def das_between(self, arg):
     alist = arg.split()
     if  len(alist) == 1:
         alist.append(9999999999)
-    return _couchmgr.list_between(long(alist[0]), long(alist[1]))
+    if  not alist:
+        _pm.print_red("Usage: das_between <min_time> <max_time>")
+    else:
+        return _couchmgr.list_between(long(alist[0]), long(alist[1]))
 
 def couch_views(self, arg):
     """
-    List registeted couch db views
+    List registeted views in couch db.
     """
     res = _couchmgr.get_all_views()
     for design, definitions in res.items():
@@ -196,7 +206,7 @@ def create_view(self, arg):
     """
     alist = arg.split()
     if  len(alist) != 3:
-        _pm.print_blue("Usage: create_view <db> <design> <view_dict>")
+        _pm.print_red("Usage: create_view <db> <design> <view_dict>")
     else:
         return _couchmgr.create_view(alist[0], alist[1], alist[2])
 
@@ -207,25 +217,25 @@ def delete_view(self, arg):
     """
     alist = arg.split()
     if  len(alist) != 3:
-        _pm.print_blue("Usage: delete_view <db> <design> <view_name>")
+        _pm.print_red("Usage: delete_view <db> <design> <view_name>")
     else:
         return _couchmgr.delete_view(alist[0], alist[1], alist[2])
 
 def delete_db(self, arg):
     """
-    Delete DB in couch.
+    Delete DB in couch. By default DAS database called das
     Parameters: <db_name, e.g. das>
     """
     _couchmgr.delete_cache(arg)
 
 def delete_system(self, arg):
     """
-    Delete docs for given system
-    Parameters: <db> <system, e.g. sitedb>
+    Delete docs for given DAS sub-system
+    Parameters: <db> <das sub-system, e.g. sitedb>
     """
     alist = arg.split()
     if  len(alist) != 2:
-        _pm.print_blue("Usage: delete_system <db> <system, e.g. sitedb>")
+        _pm.print_red("Usage: delete_system <db> <system, e.g. sitedb>")
     else:
         dbname, system = alist
         _couchmgr.delete_cache(dbname, system)
@@ -236,6 +246,7 @@ magic_list = [
         ('das_incache', das_incache),
         ('das_get', das_get),
         ('das_system', das_system),
+        ('das_queries', das_queries),
         ('das_between', das_between),
         ('couch_views', couch_views),
         ('create_view', create_view),

@@ -5,8 +5,8 @@
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchcache.py,v 1.8 2009/06/12 20:57:40 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_couchcache.py,v 1.9 2009/06/15 14:27:27 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -87,6 +87,13 @@ function(doc) {
 function(doc) {
     if(doc.timestamp) {
         emit(doc.timestamp, doc);
+    }
+}"""
+            },
+            'all_queries' : {'map': """
+function(doc) {
+    if (doc.query) {
+        emit(1, doc.query);
     }
 }"""
             },
@@ -373,7 +380,7 @@ function(k,v,r) {
 
     def list_queries_in(self, system, idx=0, limit=0):
         """
-        Retreieve results from cache for provided system, e.g. sitedb
+        Retrieve results from cache for provided system, e.g. sitedb
         """
         idx = int(idx)
         limit = long(limit)
@@ -434,6 +441,28 @@ function(k,v,r) {
                 views.append(row)
             results[doc] = views
         return results
+
+    def get_all_queries(self, idx=0, limit=0):
+        """
+        Retreieve DAS queries from the cache.
+        """
+        idx = int(idx)
+        limit = long(limit)
+        dbname = self.dbname
+        cdb = self.couchdb(dbname)
+        if  not cdb:
+            return
+
+        options = {}
+        results = cdb.loadView('dasadmin', 'all_queries', options)
+        try:
+            res = [row['value'] for row in results['rows']]
+        except:
+            traceback.print_exc()
+            return
+        if  len(res) == 1:
+            return res[0]
+        return res
 
 #    def create_ft_index(self, db, name):
 #        view = client.PermanentView(self.uri, name)
