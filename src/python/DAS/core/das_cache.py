@@ -5,14 +5,11 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.1 2009/03/13 21:10:04 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_cache.py,v 1.2 2009/03/18 19:19:30 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
-#import types
-
 # DAS modules
-#from utils.utils import genkey
 from DAS.core.das_core import DASCore
 from DAS.core.cache import Cache
 from DAS.core.das_memcache import DASMemcache
