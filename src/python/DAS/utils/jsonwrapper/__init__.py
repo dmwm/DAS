@@ -7,8 +7,8 @@ So far we use simplejson (json) and cjson, other modules can be
 added in addition.
 """
 
-__revision__ = "$Id: __init__.py,v 1.1 2009/10/16 17:58:05 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: __init__.py,v 1.2 2009/12/07 18:41:49 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 __all__ = ['loads', 'dumps']
 
@@ -21,7 +21,7 @@ try:
 except:
     import simplejson as json # python 2.5 and earlier
 
-_module = "json"
+_module = "cjson"
 
 def loads(idict, **kwargs):
     """
@@ -30,7 +30,7 @@ def loads(idict, **kwargs):
     if  _module == 'json':
         return json.loads(idict, **kwargs)
     elif _module == 'cjson':
-        return cjson.decode(idict, **kwargs)
+        return cjson.decode(idict)
 def dumps(idict, **kwargs):
     """
     Based on default _module invoke appropriate JSON encoding API call
@@ -38,5 +38,5 @@ def dumps(idict, **kwargs):
     if  _module == 'json':
         return json.dumps(idict, **kwargs)
     elif _module == 'cjson':
-        return cjson.encode(idict, **kwargs)
+        return cjson.encode(idict)
 
