@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.15 2010/01/20 21:56:52 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: das_webconfig.py,v 1.16 2010/01/25 20:17:04 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -47,6 +47,9 @@ config.Webtools.application = 'DASWeb'
 config.component_('DASWeb')
 # Define the default location for templates for the app
 config.DASWeb.templates = environ['DAS_ROOT'] + '/src/templates'
+config.DASWeb.admin = 'vkuznet@gmail.com'
+config.DASWeb.title = 'DAS web server'
+config.DASWeb.description = 'DAS web server'
 
 # Define the class that is the applications index
 #config.DASWeb.index = 'das'
