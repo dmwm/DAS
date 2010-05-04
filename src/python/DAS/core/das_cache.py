@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s).
 """
 
-__revision__ = "$Id: das_cache.py,v 1.24 2010/04/13 15:04:52 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: das_cache.py,v 1.25 2010/04/13 16:37:10 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -61,8 +61,12 @@ def worker(query):
     """
     Invokes DAS core call to update the cache for provided query
     """
-    dascore = DASCore()
-    status  = dascore.call(query)
+    status = 1
+    try:
+        dascore = DASCore()
+        status  = dascore.call(query)
+    except:
+        traceback.print_exc()
     return status
 
 def monitoring_worker(cachemgr, config):
