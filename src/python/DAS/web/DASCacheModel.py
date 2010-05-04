@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.12 2009/09/01 01:42:48 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.13 2009/09/08 13:29:27 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -39,26 +39,43 @@ def checkargs(func):
     """Decorator to check arguments to REST server"""
     def wrapper (self, *args, **kwds):
         """Wrapper for decorator"""
-        # check request headers. If Content-type is set to JSON
-        # process the body request, extract JSON dict, convert it into
-        # set of parameters passed to HTTP method.
+        # check request headers. For methods POST/PUT
+        # we need to read request body to get parameters
         headers = cherrypy.request.headers
-        if  headers.has_key('Content-type'):
-            content = headers['Content-type']
-            if  content in ['application/json', 'text/json', 'text/x-json']:
-                body = cherrypy.request.body.read()
-                if  args and kwds:
-                    msg  = 'Misleading request.'
-                    msg += 'Headers: %s ' % headers
-                    msg += 'Parameters: %s, %s' % (args, kwds)
-                    return {'status':'fail', 'reason': msg}
-                jsondict = json.loads(body, encoding='latin-1')
-                for key, val in jsondict.items():
-                    kwds[str(key)] = str(val)
+        if  cherrypy.request.method == 'POST' or\
+            cherrypy.request.method == 'PUT':
+            body = cherrypy.request.body.read()
+            if  args and kwds:
+                msg  = 'Misleading request.\n'
+                msg += 'Request: %s\n' % cherrypy.request.method
+                msg += 'Headers: %s\n' % headers
+                msg += 'Parameters: args=%s, kwds=%s\n' % (args, kwds)
+                return {'status':'fail', 'reason': msg}
+            jsondict = json.loads(body, encoding='latin-1')
+            for key, val in jsondict.items():
+                kwds[str(key)] = str(val)
+
+#        headers = cherrypy.request.headers
+#        if  headers.has_key('Content-type'):
+#            content = headers['Content-type']
+#            cherrypy.response.headers['Content-type'] = content
+#            if  content in ['application/json', 'text/json', 'text/x-json']:
+#                body = cherrypy.request.body.read()
+#                if  args and kwds:
+#                    msg  = 'Misleading request.'
+#                    msg += 'Headers: %s ' % headers
+#                    msg += 'Parameters: %s, %s' % (args, kwds)
+#                    return {'status':'fail', 'reason': msg}
+#                jsondict = json.loads(body, encoding='latin-1')
+#                for key, val in jsondict.items():
+#                    kwds[str(key)] = str(val)
         pat  = re.compile('^[+]?\d*$')
         supported = ['query', 'idx', 'limit', 'expire', 'method', 
                      'skey', 'order']
-        keys = [i for i in kwds.keys() if i not in supported]
+        if  not kwds:
+            kwds = args[-1]
+        if  kwds:
+            keys = [i for i in kwds.keys() if i not in supported]
         if  keys:
             msg  = 'Unsupported keys: %s' % keys
             return {'status':'fail', 'reason': msg}
@@ -97,16 +114,31 @@ def worker(item):
 
 class DASCacheModel(RESTModel):
     """
-    Interface representing DAS cache. It is based on RESTfull model.
-    It supports POST/GET/DELETE/UPDATE methods who operates with
+    DASCacheModel class DAS cache interface. It is based on RESTfull model.
+    It supports POST/GET/DELETE/UPDATE method who operates with
     DAS caching systems. The input queries are placed into DAS cache
-    queue and served via FIFO. DAS cache retrieve results from 
-    appropriate data-service and place them into DAS cache back-end.
+    queue and served via FIFO. DAS cache retrieves results from 
+    appropriate data-service and places them into DAS cache back-end.
     All requests are placed into separate thread.
     """
     def __init__(self, config):
         # keep this line, it defines self.config which is used in WMCore
         self.config   = config 
+
+        RESTModel.__init__(self, config)
+        self.version = __version__
+        self.methods['GET']= {'request':
+                {'args':['idx', 'limit', 'query', 'skey', 'order'],
+                 'call': self.request, 'version':__version__}}
+        self.methods['POST']= {'create':
+                {'args':['query', 'expire'],
+                 'call': self.create, 'version':__version__}}
+        self.methods['PUT']= {'replace':
+                {'args':['query', 'expire'],
+                 'call': self.replace, 'version':__version__}}
+        self.methods['DELETE']= {'delete':
+                {'args':['query'],
+                 'call': self.delete, 'version':__version__}}
 
         # define config for DASCacheMgr
         cdict         = self.config.dictionary_()
@@ -117,23 +149,23 @@ class DASCacheModel(RESTModel):
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(self.cachemgr.worker, (worker, ))
 
-    @exposejson
     @checkargs
-    def handle_get(self, *args, **kwargs):
+    def request(self, *args, **kwargs):
         """
         HTTP GET request.
         Retrieve results from DAS cache.
         """
-        data = {}
+#        print "\n#### call request", args, kwargs
+        data = {'server_method':'request'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
             idx   = getarg(kwargs, 'idx', 0)
             limit = getarg(kwargs, 'limit', 0)
             skey  = getarg(kwargs, 'skey', '')
             order = getarg(kwargs, 'order', 'asc')
-            data  = {'status':'requested', 'idx':idx, 
+            data.update({'status':'requested', 'idx':idx, 
                      'limit':limit, 'query':query,
-                     'skey':skey, 'order':order}
+                     'skey':skey, 'order':order})
             if  hasattr(self.dascore, 'cache'):
                 if  self.dascore.cache.incache(query):
                     res = self.dascore.cache.\
@@ -152,73 +184,88 @@ class DASCacheModel(RESTModel):
             else:
                 data['status'] = 'no cache'
         else:
-            data = {'status': 'fail', 
-                    'reason': 'Unsupported keys %s' % kwargs.keys() }
+            data.update({'status': 'fail', 
+                    'reason': 'Unsupported keys %s' % kwargs.keys() })
         self.debug(str(data))
         return data
 
-    @exposejson
     @checkargs
-    def handle_post(self, *args, **kwargs):
+    def create(self, *args, **kwargs):
         """
         HTTP POST request. 
         Requests the server to create a new resource
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
-        print "### handle_post", args, kwargs
+#        print "\n### call create", args, kwargs
+        data = {'server_method':'create'}
         if  kwargs.has_key('query'):
             query  = kwargs['query']
             expire = getarg(kwargs, 'expire', 600)
             try:
                 status = self.cachemgr.add(query, expire)
-                data   = {'status':status, 'query':query, 'expire':expire}
+                data.update({'status':status, 'query':query, 'expire':expire})
             except:
-                data['exception'] = traceback.format_exc()
-                data['status'] = 'fail'
+                data.update({'exception':traceback.format_exc(), 
+                             'status':'fail'})
         else:
-            data = {'status': 'fail', 
-                    'reason': 'Unsupported keys %s' % kwargs.keys() }
+            data.update({'status': 'fail', 
+                    'reason': 'Unsupported keys %s' % kwargs.keys() })
         self.debug(str(data))
         return data
 
-    @exposejson
     @checkargs
-    def handle_put(self, *args, **kwargs):
+    def replace(self, *args, **kwargs):
         """
         HTTP PUT request.
         Requests the server to replace an existing
         resource with the one enclosed in the request body.
         Replace existing query in DAS cache.
         """
-        data = self.handle_delete(*args, **kwargs)
-        if  data['status'] == 'success':
-            data = self.handle_post(*args, **kwargs)
+#        print "\n\n### replace", args, kwargs
+        data = {'server_method':'replace'}
+        if  kwargs.has_key('query'):
+            query  = kwargs['query']
+            try:
+                self.dascore.remove_from_cache(query)
+            except:
+                msg  = traceback.format_exc()
+                data.update({'status':'fail', 'query':query, 'exception':msg})
+                self.debug(str(data))
+                return data
+            expire = getarg(kwargs, 'expire', 600)
+            try:
+                status = self.cachemgr.add(query, expire)
+                data.update({'status':status, 'query':query, 'expire':expire})
+            except:
+                data.update({'status':'fail', 'query':query,
+                        'exception':traceback.format_exc()})
         else:
-            data = {'status':'fail'}
+            data.update({'status': 'fail', 
+                    'reason': 'Unsupported keys %s' % kwargs.keys() })
         self.debug(str(data))
         return data
 
-    @exposejson
     @checkargs
-    def handle_delete(self, *args, **kwargs):
+    def delete(self, *args, **kwargs):
         """
         HTTP DELETE request.
         Delete input query in DAS cache
         """
-        data = {}
+#        print "\n\n### delete", args, kwargs
+        data = {'server_method':'delete'}
         if  kwargs.has_key('query'):
             query  = kwargs['query']
-            data   = {'status':'requested', 'query':query}
+            data.update({'status':'requested', 'query':query})
             try:
                 self.dascore.remove_from_cache(query)
-                data = {'status':'success'}
+                data.update({'status':'success'})
             except:
                 msg  = traceback.format_exc()
-                data = {'status':'fail', 'exception':msg}
+                data.update({'status':'fail', 'exception':msg})
         else:
-            data = {'status': 'fail', 
-                    'reason': 'Unsupported keys %s' % kwargs.keys() }
+            data.update({'status': 'fail', 
+                    'reason': 'Unsupported keys %s' % kwargs.keys() })
         self.debug(str(data))
         return data
 

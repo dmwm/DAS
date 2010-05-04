@@ -4,8 +4,8 @@
 """
 DAS cache client tools 
 """
-__revision__ = "$Id: das_cache_client.py,v 1.13 2009/07/15 18:59:03 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: das_cache_client.py,v 1.14 2009/09/08 13:29:26 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import urllib2, urllib
@@ -89,19 +89,36 @@ if __name__ == '__main__':
     else:
         msg = 'You need to provide either input dict or query.'
         raise Exception(msg)
-    path    = '/rest/%s/%s' % (opts.format.lower(), opts.request.upper())
+#    path    = '/rest/%s/%s' % (opts.format.lower(), opts.request.upper())
+    if  opts.request.lower() == 'post':
+        method = 'create'
+    elif opts.request.lower() == 'put':
+        method = 'replace'
+    elif opts.request.lower() == 'delete':
+        method = 'delete'
+    else:
+        method = 'request'
+    path = '/rest/%s' % method
 
     if  host.find('http://') == -1:
         host = 'http://' + host
     url = host + path
-    if  request == 'GET':
+
+    headers={"Accept": "application/json"}
+    format = opts.format.lower()
+    if  format == 'json' or format == 'dasjson':
+        headers={"Accept": "application/json"}
+    elif format == 'xml' or format == 'dasxml':
+        headers={"Accept": "application/xml"}
+    else:
+        headers={"Accept": "application/%s" % format}
+
+    if  request == 'GET' or request == 'DELETE':
         encoded_data=urllib.urlencode(params, doseq=True)
         url += '?%s' % encoded_data
-        req = UrlRequest(request, url=url)
+        req = UrlRequest(request, url=url, headers=headers)
     else:
-#        encoded_data=urllib.urlencode(params, doseq=True)
         encoded_data=json.dumps(params)
-        headers={"Content-type": "application/json"}
         req = UrlRequest(request, url=url, data=encoded_data, headers=headers)
 
     if  debug:
