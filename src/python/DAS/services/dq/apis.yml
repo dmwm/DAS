@@ -1,0 +1,19 @@
+api : 'listRuns4DQ'
+params : {'api': 'listRuns4DQ', 'DQFlagList': 'list', 'dataset': 'string'}
+record : { 
+    'daskeys' : [{'key':'dq', 'map':'dq', 'pattern':''},
+                 {'key':'dataset', 'map':'dataset.name', 'pattern':''}],
+    'api2das' : [
+            {'api_param':'DQFlagList', 'das_key':'dq', 'pattern':""},
+            {'api_param':'dataset', 'das_key':'dataset', 'pattern':''},
+            {'api_param':'dataset', 'das_key':'dataset.name', 'pattern':''},
+    ]
+}
+---
+api : 'listSubSystems'
+params : {'api': 'listSubSystems'}
+record : { 
+    'daskeys' : [{'key':'dqsystems', 'map':'dqsystems', 'pattern':''}],
+    'api2das' : []
+}
+

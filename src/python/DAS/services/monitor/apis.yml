@@ -1,0 +1,25 @@
+api : '/plotfairy/phedex/prod/link-rate:plot'
+params : {
+    'session': 'kkk777',
+    'version': '1224790775',
+    'span': 'hour',
+    'start': '',
+    'end': '1224792000',
+    'qty': 'destination',
+    'grouping': 'node',
+    'src-grouping': 'same',
+    'links': 'nomss',
+    'from': '',
+    'to': '',
+    'type': 'json',
+}
+record : { 
+    'daskeys' : [
+            {'key':'monitor', 'map':'monitor', 'pattern':''},
+    ],
+    'api2das' : [
+            {'api_param':'start', 'das_key':'date', 'pattern':""},
+            {'api_param':'end', 'das_key':'date', 'pattern':""},
+    ]
+}
+

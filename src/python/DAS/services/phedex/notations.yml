@@ -1,0 +1,11 @@
+notations : [
+    {'api_param':'time_create', 'das_name':'creation_time', 'api':''},
+    {'api_param':'time_update', 'das_name':'modification_time', 'api':''},
+    {'api_param':'bytes', 'das_name':'size', 'api':''},
+    {'api_param':'node', 'das_name':'site', 'api':''},
+    {'api_param':'files', 'das_name':'nfiles', 'api':''},
+    {'api_param':'events', 'das_name':'nevents', 'api':''},
+    {'api_param':'lfn', 'das_name':'name', 'api':''},
+    {'api_param':'node', 'das_name':'site', 'api':''},
+]
+
