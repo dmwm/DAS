@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.9 2009/10/12 20:07:42 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.10 2009/10/21 13:44:29 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -202,7 +202,7 @@ if __name__ == '__main__':
     params = {'apiversion':apiversion, 'path': 'required'}
     rec = {'system' : system, 
         'api' : dict(name=api, params=params),
-        'daskeys' : [dict(key='dataset', map='dataset.summary', pattern='')],
+        'daskeys' : [dict(key='dataset', map='dataset.name', pattern='')],
         'api2das' : [
                 dict(api_param='path', das_key='dataset', pattern=""),
         ]
@@ -228,14 +228,17 @@ if __name__ == '__main__':
         dict(api_param='last_modification_date', das_name='modification_time'),
         dict(api_param='app_family_name', das_name='name'),
         dict(api_param='app_executable_name', das_name='executable'),
-        dict(api_param='path', das_name='dataset'),
+        dict(api_param='path', das_name='name'),
         dict(api_param='storage_element', das_name='se'),
         dict(api_param='storage_element_name', das_name='se'),
         dict(api_param='number_of_files', das_name='nfiles'),
         dict(api_param='number_of_events', das_name='nevents'),
+        dict(api_param='number_of_blocks', das_name='nblocks'),
         dict(api_param='number_of_lumi_sections', das_name='nlumis'),
         dict(api_param='total_luminosity', das_name='totlumi'),
+        dict(api_param='total_size', das_name='size'),
         dict(api_param='lfn', das_name='name'),
+        dict(api_param='processed_dataset', das_name='dataset'),
     ]
     mgr.add(dict(system=system, notations=notations))
 
