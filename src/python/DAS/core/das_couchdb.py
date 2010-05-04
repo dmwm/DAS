@@ -5,8 +5,8 @@
 DAS couchdb wrapper. Communitate with DAS core and couchdb server(s)
 """
 
-__revision__ = "$Id: das_couchdb.py,v 1.1 2009/03/13 21:10:04 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_couchdb.py,v 1.2 2009/03/16 15:28:50 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -134,11 +134,12 @@ function(k,v,r) {
             couch_db_list = self.server.listDatabases()
         except:
             return None
-        if dbname not in couch_db_list:
-            self.logger.info("DASCouchDB::result, create db %s" % dbname)
+        if  dbname not in couch_db_list:
+            self.logger.info("DASCouchDB::couchdb, create db %s" % dbname)
             cdb = self.server.createDatabase(dbname)
             self.create_views(cdb)
         else:
+            self.logger.info("DASCouchDB::couchdb, connect db %s" % dbname)
             cdb = self.server.connectDatabase(dbname)
         return cdb
 
@@ -219,6 +220,7 @@ function(k,v,r) {
         """
         dbname = self.dbname
         cdb = self.couchdb(dbname)
+#        print "+++CALL das_couch::clean_cache", dbname, cdb
         if  not cdb:
             return
         skey = '%s' % 0
@@ -228,11 +230,10 @@ function(k,v,r) {
 
         ndocs = 0
         for doc in results['rows']:
-            print doc
             cdb.queuedelete(doc['value'])
             ndocs += 1
 
-        self.logger.debug("DASCouchDB::clean_couch, will remove %s doc's" \
+        self.logger.info("DASCouchDB::clean_couch, will remove %s doc's" \
             % ndocs )
 
         cdb.commit()  # bulk delete
