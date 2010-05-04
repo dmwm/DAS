@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.6 2009/04/21 22:06:15 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: utils.py,v 1.7 2009/04/29 15:46:55 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -14,6 +14,7 @@ import md5
 import time
 import types
 import traceback
+from itertools import groupby
 
 def splitlist(ilist, nentries):
     """
@@ -39,11 +40,13 @@ def gen2list(results):
     """
     Convert generator to a list discarding duplicates
     """
-    reslist = []
-    for res in results:
-        row = dict(res)
-        if  not reslist.count(row):
-            reslist.append(row)
+#    reslist = []
+#    for res in results:
+#        row = dict(res)
+#        if  not reslist.count(row):
+#            reslist.append(row)
+#    return reslist
+    reslist = [name for name, group in groupby(results)]
     return reslist
 
 def dump(reslist, limit=None):
@@ -62,8 +65,11 @@ def dump(reslist, limit=None):
         print "dump results fail, reslist", reslist
         raise Exception('Fail to dump output result list')
     keys.sort()
-    keys.remove('id')
-    keys = ['id']+keys
+    try:
+        keys.remove('id')
+        keys = ['id']+keys
+    except:
+        pass
     keysize = 0
     for key in keys:
         if  len(key) > keysize:
@@ -73,13 +79,125 @@ def dump(reslist, limit=None):
     for res in reslist:
         if  limit and idx >= limit:
             break
+        padding = " "*(keysize-len('id'))
+        print "id%s : %s" % (padding, idx)
         for key in keys:
             padding = " "*(keysize-len(key))
             print "%s%s : %s" % (key, padding, res[key])
         print
         idx += 1
 
-def cartesian_product(master_set, slave_set, rel_keys=None):
+def cartesian_product(list1, list2):
+    """
+    Create cartesian product between two provided sets w/ provided relation
+    keys (rel_keys). Provided sets should be in a form of 
+    [{'system':system_name, 'key':value'}, ...]
+    """
+    # find which list is largest
+    if  len(list1) >= len(list2):
+        master_list = list1
+        slave_list  = list2
+    else:
+        master_list = list2
+        slave_list  = list1
+
+    if  not slave_list:
+        for item in master_list:
+            yield item
+        return
+
+    # find relation keys between two dicts (rows) in lists
+    row1  = master_list[0]
+    keys1 = [k for k, v in row1.items() if v and k != 'system']
+    row2  = slave_list[0]
+    keys2 = [k for k, v in row2.items() if v and k != 'system']
+    rel_keys = list( set(keys1) & set(keys2) )
+    ins_keys = set(keys2) - set(rel_keys)
+    
+    # loop over largest list and insert
+    master_len = len(master_list)
+    for idx in range(0, master_len):
+        idict = master_list[idx]
+        update = 0
+        for jdx in range(0, len(slave_list)):
+            jdict = slave_list[jdx]
+            found = 0
+            for key in rel_keys:
+                if  idict[key] == jdict[key]:
+                    found += 1
+            if  found == len(rel_keys):
+                if  not jdx:
+                    update = 1
+                    for k in ins_keys:
+                        idict[k] = jdict[k]
+                    idict['system'] = '%s+%s' % \
+                        (idict['system'], jdict['system'])
+                    yield dict(idict)
+                else:
+                    row = dict(idict)
+                    for k in ins_keys:
+                        row[k] = jdict[k]
+                    row['system'] = '%s+%s' % \
+                        (row['system'], jdict['system'])
+                    yield row
+
+def cartesian_product_new_lst(list1, list2):
+    """
+    Create cartesian product between two provided sets w/ provided relation
+    keys (rel_keys). Provided sets should be in a form of 
+    [{'system':system_name, 'key':value'}, ...]
+    """
+    # find which list is largest
+    if  len(list1) >= len(list2):
+        master_list = list1
+        slave_list  = list2
+    else:
+        master_list = list2
+        slave_list  = list1
+
+    # find relation keys between two dicts (rows) in lists
+    row1  = master_list[0]
+    keys1 = [k for k, v in row1.items() if v]
+    row2  = slave_list[0]
+    keys2 = [k for k, v in row2.items() if v]
+    rel_keys = list( set(keys1) & set(keys2) )
+    ins_keys = set(keys2) - set(rel_keys)
+    
+    # loop over largest list and insert
+    master_len = len(master_list)
+    for idx in range(0, master_len):
+        idict = master_list[idx]
+        update = 0
+        for jdx in range(0, len(slave_list)):
+            jdict = slave_list[jdx]
+            found = 0
+            for key in rel_keys:
+                if  idict[key] == jdict[key]:
+                    found += 1
+            if  found == len(rel_keys):
+                if  not jdx:
+                    update = 1
+                    for k in ins_keys:
+                        idict[k] = jdict[k]
+                else:
+                    row = dict(idict)
+                    for k in ins_keys:
+                        row[k] = jdict[k]
+                    master_list.append(row)
+    # remove rows who didn't pass
+    key = list(ins_keys)[0]
+    end = len(master_list)
+    while 1:
+        count = 0
+        for row in master_list:
+            if  not row[key]:
+                master_list.remove(row)
+                break
+            count += 1
+        if  count == len(master_list):
+            break
+
+def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
     """
     Create cartesian product between two provided sets w/ provided relation
     keys (rel_keys). Provided sets should be in a form of 
