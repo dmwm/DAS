@@ -4,8 +4,8 @@
 """
 DBS XML parser
 """
-__revision__ = "$Id: dbs_parser.py,v 1.2 2009/04/23 01:11:31 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: dbs_parser.py,v 1.3 2009/04/30 20:46:24 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 from xml.dom.minidom import parseString
@@ -47,7 +47,11 @@ def parser(data):
             for j in i:
                 row = {}
                 for k in j.getchildren():
-                    row[k.tag] = k.text
+                    name = k.tag
+                    if  name.find('_') != -1: # agg. function
+                        nlist = name.split('_')
+                        name  = '%s(%s)' % (nlist[0], nlist[1])
+                    row[name] = k.text
                 olist.append(row)
     return olist
 
