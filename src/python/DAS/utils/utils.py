@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.85 2010/04/08 00:32:46 valya Exp $"
-__version__ = "$Revision: 1.85 $"
+__revision__ = "$Id: utils.py,v 1.86 2010/04/30 16:33:40 valya Exp $"
+__version__ = "$Revision: 1.86 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -26,6 +26,16 @@ from   DAS.utils.regex import float_number_pattern, int_number_pattern
 from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern
 import DAS.utils.jsonwrapper as json
+
+def expire_timestamp(expire):
+    """Return expire timestamp"""
+    timestamp = time.time()
+    # use Jan 1st, 2010 as a seed to check expire date
+    # prior 2010 DAS was not released in production
+    tup = (2010, 1, 1, 0, 0, 0, 0, 1, -1)
+    if  type(expire) is types.IntType or expire < time.mktime(tup):
+        expire = timestamp + expire
+    return expire
 
 def yield_rows(*args):
     """
