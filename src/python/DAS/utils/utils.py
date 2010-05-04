@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.44 2009/11/25 18:17:05 valya Exp $"
-__version__ = "$Revision: 1.44 $"
+__revision__ = "$Id: utils.py,v 1.45 2009/11/25 20:11:29 valya Exp $"
+__version__ = "$Revision: 1.45 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -673,6 +673,13 @@ def access(data, elem):
                         for item in result:
                             yield item
 
+def dict_helper(notations, idict):
+    """Create new dict for provided notations/dict"""
+    child_dict = {}
+    for kkk, vvv in idict.items():
+        child_dict[notations.get(kkk, kkk)] = vvv
+    return child_dict
+
 def xml_parser(notations, source, tag, add=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
@@ -699,17 +706,18 @@ def xml_parser(notations, source, tag, add=None):
         if  elem.tag != tag or event == 'end':
             continue
         key = notations.get(elem.tag, elem.tag)
-        row[key] = dict(elem.attrib)
+#        row[key] = dict(elem.attrib)
+        row[key] = dict_helper(notations, elem.attrib)
         row.update(sup)
         for child in elem.getchildren():
             child_key  = notations.get(child.tag, child.tag)
-            # adjust child dictionary to DAS notations
-            child_dict = dict(child.attrib)
-            for kkk in child_dict.keys():
-                nkey = notations.get(kkk, kkk)
-                if  nkey != kkk:
-                    child_dict[nkey] = child_dict[kkk]
-                    del child_dict[kkk]
+            child_dict = dict_helper(notations, child.attrib)
+#            child_dict = dict(child.attrib)
+#            for kkk in child_dict.keys():
+#                nkey = notations.get(kkk, kkk)
+#                if  nkey != kkk:
+#                    child_dict[nkey] = child_dict[kkk]
+#                    del child_dict[kkk]
 
             if  row[key].has_key(child_key):
                 val = row[key][child_key]
