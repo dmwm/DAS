@@ -4,17 +4,12 @@
 """
 DBS XML parser
 """
-__revision__ = "$Id: dbs_parser.py,v 1.7 2009/06/09 18:18:48 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: dbs_parser.py,v 1.8 2009/10/21 15:41:04 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 #from xml.dom.minidom import parseString
-try:
-    # Python 2.5
-    import xml.etree.ElementTree as ET
-except:
-    # prior requires elementtree
-    import elementtree.ElementTree as ET
+import xml.etree.cElementTree as ET
 
 #CDICT = {
 #'STORAGEELEMENT_SENAME':'site',

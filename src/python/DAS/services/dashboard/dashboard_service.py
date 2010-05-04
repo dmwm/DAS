@@ -11,12 +11,7 @@ __author__ = "Valentin Kuznetsov"
 import time
 import types
 import urllib
-try:
-    # Python 2.5
-    import xml.etree.ElementTree as ET
-except:
-    # prior requires elementtree
-    import elementtree.ElementTree as ET
+import xml.etree.cElementTree as ET
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, dasheader
 

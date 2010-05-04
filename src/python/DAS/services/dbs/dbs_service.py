@@ -4,18 +4,14 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.11 2009/10/13 14:05:00 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: dbs_service.py,v 1.12 2009/10/21 15:41:04 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
+
+import xml.etree.cElementTree as ET
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator
-try:
-    # Python 2.5
-    import xml.etree.ElementTree as ET
-except:
-    # prior requires elementtree
-    import elementtree.ElementTree as ET
 
 class DBSService(DASAbstractService):
     """

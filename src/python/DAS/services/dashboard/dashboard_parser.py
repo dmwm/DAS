@@ -8,12 +8,7 @@ __revision__ = "$Id"
 __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
-try:
-    # Python 2.5
-    import xml.etree.ElementTree as ET
-except:
-    # prior requires elementtree
-    import elementtree.ElementTree as ET
+import xml.etree.cElementTree as ET
 
 def parser(data):
     """

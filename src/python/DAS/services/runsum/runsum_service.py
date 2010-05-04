@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.10 2009/10/13 15:42:08 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: runsum_service.py,v 1.11 2009/10/21 15:41:04 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -13,12 +13,7 @@ import time
 import types
 import ConfigParser
 import traceback
-try:
-    # Python 2.5
-    import xml.etree.ElementTree as ET
-except:
-    # prior requires elementtree
-    import elementtree.ElementTree as ET
+import xml.etree.cElementTree as ET
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, get_key_cert, dasheader
