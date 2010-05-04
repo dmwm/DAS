@@ -40,6 +40,27 @@ class testDASMapping(unittest.TestCase):
         self.mgr.create_db()
 
         apiversion = 'DBS_2_0_8'
+
+        api = 'listRuns'
+        params = { 'apiversion':apiversion, 'path' : 'required'}
+        rec = {'system' : 'dbs',
+            'api' : dict(name=api, params=params),
+            'daskeys' : [dict(key='run', map='run.run_number', pattern='')],
+            'api2das' : [
+                    dict(api_param='path', das_key='dataset', pattern=""),
+            ]
+        }
+        self.mgr.add(rec)
+        res = self.mgr.check_daskey('dbs', 'run.bfield')
+        self.assertEqual(False, res)
+        res = self.mgr.check_daskey('dbs', 'run.run_number')
+        self.assertEqual(True, res)
+        smap = {api: {'keys': ['run'], 
+                'params': {'path': 'required', 'api': api, 
+                           'apiversion': 'DBS_2_0_8'}
+                     }
+        }
+
         rec = {'system':'dbs', 
         'api': {'name':'listBlocks', 
                 'params' : {'apiversion': apiversion,
@@ -65,6 +86,7 @@ class testDASMapping(unittest.TestCase):
         } 
         self.mgr.add(rec)
 
+
         system = 'dbs'
         api = 'listBlocks'
         daskey = 'block'
@@ -75,7 +97,9 @@ class testDASMapping(unittest.TestCase):
         self.assertEqual(['dbs'], res)
 
         res = self.mgr.list_apis()
-        self.assertEqual([api], res)
+#        self.assertEqual([api], res)
+        res.sort()
+        self.assertEqual(['listBlocks', 'listRuns'], res)
 
         res = self.mgr.lookup_keys(system, daskey)
         self.assertEqual([primkey], res)
@@ -104,12 +128,12 @@ class testDASMapping(unittest.TestCase):
         self.assertEqual([daskey], res)
 
         # build service map
-        smap = {api: {'keys': ['block'], 'api': {'api': api}, 
-                'params': {'storage_element_name': '*', 
+        smap.update({api: {'keys': ['block'], 
+                'params': {'storage_element_name': '*', 'api':api, 
                            'block_name': '*', 'user_type': 'NORMAL', 
                            'apiversion': 'DBS_2_0_8'}
                      }
-        }
+        })
         res = self.mgr.servicemap(system, implementation='javaservlet')
         self.assertEqual(smap, res)
 
