@@ -39,6 +39,11 @@ file : [
         {"das":"file.type", "ui":"File type"},
         {"das":"file.nevents", "ui":"Number of events"},
         ],
+tier : [
+        {"das":"tier.error", "ui":"Error"}, 
+        {"das":"tier.httperror", "ui":"Reason"}, 
+        {"das":"tier.name", "ui":"Tier name"}, 
+        ],
 site : [
         {"das":"site.error", "ui":"Error"}, 
         {"das":"site.httperror", "ui":"Reason"}, 
