@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.41 2009/11/25 19:17:15 valya Exp $"
-__version__ = "$Revision: 1.41 $"
+__revision__ = "$Id: das_mongocache.py,v 1.42 2009/11/26 02:00:13 valya Exp $"
+__version__ = "$Revision: 1.42 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -490,13 +490,17 @@ class DASMongocache(Cache):
                 if  row:
                     value = dict_value(row, prim_key)
                     if  value == entry: # we found a match in cache
-                        mdict = merge_dict(item, row)
-                        mdict.pop('_id')
-                        self.col.insert(mdict)
+#                        mdict = merge_dict(item, row)
+#                        mdict.pop('_id')
+#                        self.col.insert(mdict)
+                        merge_dict(item, row)
+                        item.pop('_id')
+                        self.col.insert(item)
                         obj_id = ObjectId(row['_id'])
                         self.col.remove({'_id': obj_id})
                         merge_count += 1
-                        del mdict
+                        item.clear()
+                        row.clear()
                     else:
                         yield item
                 else:

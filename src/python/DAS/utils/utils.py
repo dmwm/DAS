@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.45 2009/11/25 20:11:29 valya Exp $"
-__version__ = "$Revision: 1.45 $"
+__revision__ = "$Id: utils.py,v 1.46 2009/11/26 02:00:12 valya Exp $"
+__version__ = "$Revision: 1.46 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -106,24 +106,40 @@ def merge_dict(dict1, dict2):
 #            merged_dict[key] = dict_value
 #    return merged_dict
 
-    merged_dict = dict(dict1)
+#    merged_dict = dict(dict1)
+#    for key, value in dict2.items():
+#        if  merged_dict.has_key(key):
+#            val = merged_dict[key]
+#            if  type(val) is types.ListType:
+#                if  type(value) is types.ListType:
+#                    merged_dict[key] = val + value
+#                else:
+#                    val.append(value)
+#                    merged_dict[key] = val
+#            else:
+#                if  type(value) is types.ListType:
+#                    merged_dict[key] = [val] + value
+#                else:
+#                    merged_dict[key] = [val] + [value]
+#        else:
+#            merged_dict[key] = [value]
+#    return merged_dict
     for key, value in dict2.items():
-        if  merged_dict.has_key(key):
-            val = merged_dict[key]
+        if  dict1.has_key(key):
+            val = dict1[key]
             if  type(val) is types.ListType:
                 if  type(value) is types.ListType:
-                    merged_dict[key] = val + value
+                    dict1[key] = val + value
                 else:
                     val.append(value)
-                    merged_dict[key] = val
+                    dict1[key] = val
             else:
                 if  type(value) is types.ListType:
-                    merged_dict[key] = [val] + value
+                    dict1[key] = [val] + value
                 else:
-                    merged_dict[key] = [val] + [value]
+                    dict1[key] = [val] + [value]
         else:
-            merged_dict[key] = [value]
-    return merged_dict
+            dict1[key] = [value]
 
 def splitlist(ilist, nentries):
     """
