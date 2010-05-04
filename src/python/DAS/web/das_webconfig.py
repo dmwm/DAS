@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.18 2010/02/13 02:25:14 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: das_webconfig.py,v 1.19 2010/02/16 01:04:20 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -30,6 +30,7 @@ config.SecurityModule.session_name = 'SecurityModule'
 config.SecurityModule.store = 'filestore'
 #config.SecurityModule.store_path = environ['WMCORE_ROOT'] + '/src/security-store'
 config.SecurityModule.store_path = '/tmp'
+config.SecurityModule.use_decorators = False
 
 # This component has all the configuration of CherryPy
 config.component_('Webtools')
