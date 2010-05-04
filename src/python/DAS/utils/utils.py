@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.53 2010/01/04 19:01:51 valya Exp $"
-__version__ = "$Revision: 1.53 $"
+__revision__ = "$Id: utils.py,v 1.54 2010/01/05 16:38:18 valya Exp $"
+__version__ = "$Revision: 1.54 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -166,10 +166,8 @@ def dasheader(system, query, api, url, args, ctime, expire, ver):
     if  type(query) is types.DictType:
         query = json.dumps(query)
     dasdict = dict(system=[system], timestamp=timestamp,
-#                url=url, ctime=ctime, query=[str(query)],
-#                params={api:args}, version=ver,
-                url=url, ctime=ctime, qhash=[genkey(query)], version=ver,
-                expire=timestamp+expire, api=[api])
+                url=[url], ctime=[ctime], qhash=genkey(query), version=ver,
+                expire=timestamp+expire, api=[api], status="requested")
     return dict(das=dasdict)
 
 def genkey(query):
