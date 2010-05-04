@@ -5,8 +5,8 @@
 Print utilities
 """
 
-__revision__ = "$Id: iprint.py,v 1.1 2009/06/10 20:33:03 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: iprint.py,v 1.2 2009/06/12 20:58:40 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -31,11 +31,11 @@ class PrintManager:
 
     def msg_red(self, msg):
         """yield message using red color"""
-        return self.term.red + msg + self.term.NORMAL
+        return self.term.RED + msg + self.term.NORMAL
 
     def msg_green(self, msg):
         """yield message using green color"""
-        return self.term.green + msg + self.term.NORMAL
+        return self.term.GREEN + msg + self.term.NORMAL
 
     def msg_blue(self, msg):
         """yield message using blue color"""
