@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.59 2010/02/13 02:08:52 valya Exp $"
-__version__ = "$Revision: 1.59 $"
+__revision__ = "$Id: das_core.py,v 1.60 2010/02/24 21:32:46 valya Exp $"
+__version__ = "$Revision: 1.60 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -377,11 +377,10 @@ class DASCore(object):
         msg = 'DASCore::get_from_cache, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
                 % (query, idx, limit, skey, sorder)
         self.logger.info(msg)
-        spec   = getarg(query, 'spec', {})
-        fields = getarg(query, 'fields', None)
-        mapreduce = getarg(query, 'mapreduce', None)
-        if  not fields:
-            fields = None
+        spec      = query.get('spec', {})
+#        fields    = query.get('fields', None)
+        mapreduce = query.get('mapreduce', None)
+        fields    = query.get('filters', None)
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
         else:
