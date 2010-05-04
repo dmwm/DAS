@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.28 2009/10/02 15:29:31 valya Exp $"
-__version__ = "$Revision: 1.28 $"
+__revision__ = "$Id: utils.py,v 1.29 2009/10/12 20:07:06 valya Exp $"
+__version__ = "$Revision: 1.29 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -96,10 +96,12 @@ def dasheader(system, query, api, url, args, ctime, expire, ver):
     #DAS_data_service_compliance
     """
     timestamp = time.time()
+    if  type(query) is types.DictType:
+        query = json.dumps(query)
     dasdict = dict(system=[system], timestamp=timestamp,
 #                url=url, ctime=ctime, query=[str(query)],
 #                params={api:args}, version=ver,
-                url=url, ctime=ctime, qhash=[genkey(str(query))], version=ver,
+                url=url, ctime=ctime, qhash=[genkey(query)], version=ver,
                 expire=timestamp+expire, api=[api])
     return dict(das=dasdict)
 
@@ -124,6 +126,17 @@ def gen2list(results):
     reslist = [name for name, group in groupby(results)]
     return reslist
 
+def uniqify(ilist):
+    """
+    Make all entries in a list to be unique.
+    http://pyfaq.infogami.com/how-do-you-remove-duplicates-from-a-list
+    """
+    ilist.sort()
+    last = ilist[-1]
+    for i in range(len(ilist)-2, -1, -1):
+        if last==ilist[i]: del ilist[i]
+        else: last=ilist[i]
+
 def dump(ilist, idx=0):
     """
     Print items in provided generator
@@ -138,7 +151,9 @@ def dump(ilist, idx=0):
         print "No results found"
         return
     # remove duplicates
+    reslist.sort()
     reslist = [k for k, g in groupby(reslist)]
+#    uniqify(reslist)
     idx = 0
     for row in reslist:
         print "id : %s" % idx
@@ -148,37 +163,6 @@ def dump(ilist, idx=0):
             print row
         print
         idx += 1
-#    try:
-#        keys = reslist[0].keys()
-#    except:
-#        traceback.print_exc()
-#        print "dump results fail, reslist", reslist
-#        raise Exception('Fail to dump output result list')
-#    keys.sort()
-#    try:
-#        keys.remove('id')
-#        keys = ['id']+keys
-#    except:
-#        pass
-#    keysize = 0
-#    for key in keys:
-#        if  len(key) > keysize:
-#            keysize = len(key)
-
-#    idx  = 0
-#    for res in reslist:
-#        padding = " "*(keysize-len('id'))
-#        if  not res.has_key('id'):
-#            print "id%s : %s" % (padding, idx)
-#        for key in keys:
-#            padding = " "*(keysize-len(key))
-#            try:
-#                data = res[key]
-#            except:
-#                data = ''
-#            print "%s%s : %s" % (key, padding, data)
-#        print
-#        idx += 1
 
 def cartesian_product(ilist1, ilist2):
     """
