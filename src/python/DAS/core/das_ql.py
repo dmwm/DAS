@@ -6,24 +6,34 @@ DAS QL module include definition of DAS operators,
 filters, aggregators, etc.
 """
 
-__revision__ = "$Id: das_ql.py,v 1.2 2010/03/05 18:10:52 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_ql.py,v 1.3 2010/03/09 02:31:19 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import inspect
 from DAS.core.das_aggregators import ResultObject
 
-DAS_FILTERS = ['grep']
+DAS_FILTERS   = ['grep']
 DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
                  'between', 'nin', 'in', 'last']
-MONGO_MAP = {
-    '>':'$gt',
-    '<':'$lt',
-    '>=':'$gte',
-    '<=':'$lte',
-    'in':'$in',
-    '!=':'$ne',
-    'nin':'$nin',
+URL_MAP       = {
+    '!=' : '%21%3D',
+    '<=' : '%3C%3D',
+    '>=' : '%3E%3D',
+    '<'  : '%3C',
+    '>'  : '%3E',
+    '='  : '%3D',
+    ' '  : '%20'
+}
+MONGO_MAP     = {
+    '>'  : '$gt',
+    '<'  : '$lt',
+    '>=' : '$gte',
+    '<=' : '$lte',
+    'in' : '$in',
+    '!=' : '$ne',
+    'nin': '$nin',
+    'between':'$in',
 }
 def mongo_operator(das_operator):
     """
@@ -56,3 +66,4 @@ def das_aggregators():
             continue
         alist.append(name)
     return alist
+
