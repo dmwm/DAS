@@ -22,6 +22,15 @@ format,
 </select>
 results/per page,
 </td>
+<td class="right">
+show records in
+<select id="show" name="show">
+<option value="json">browseable</option>
+<option value="code">code</option>
+<option value="yaml">plain</option>
+</select>
+format,
+</td>
 </tr>
 </table>
 <div>
@@ -56,6 +65,10 @@ function updateInput() {
    var uview = gup('view');
    if  (uview) updateTag('view', uview);
    else updateTag('view', '');
+
+   var ushow = gup('show');
+   if  (ushow) updateTag('show', ushow);
+   else updateTag('show', '');
 }
 updateInput();
 //]]>
