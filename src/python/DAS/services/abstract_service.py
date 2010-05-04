@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.30 2009/09/02 19:56:37 valya Exp $"
-__version__ = "$Revision: 1.30 $"
+__revision__ = "$Id: abstract_service.py,v 1.31 2009/09/09 18:40:37 valya Exp $"
+__version__ = "$Revision: 1.31 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -164,21 +164,22 @@ class DASAbstractService(object):
         spec = mongo_query['spec'].keys() # we take all parameters
         spec.remove('das.system') # and check if conditions provided
         if  self.localcache.incache(query=mongo_query) and spec:
-            return self.localcache.get_from_cache(query=mongo_query)
+#            return self.localcache.get_from_cache(query=mongo_query)
+            return
         # check the cache if there are records with given input query
         dasquery = {'spec': {'das.query': query, 'das.system': self.name}, 
                     'fields': None}
         if  self.localcache.incache(query=dasquery):
-            return self.localcache.get_from_cache(query=dasquery)
+#            return self.localcache.get_from_cache(query=dasquery)
+            return
 
         # ask data-service api to get results, they'll be store them in
         # cache, so return at the end what we have in cache.
         result = self.api(query)
-        if  result:
-            return self.localcache.get_from_cache(query=mongo_query)
-        else:
-            return []
-#        return self.localcache.get_from_cache(query=dasquery)
+#        if  result:
+#            return self.localcache.get_from_cache(query=mongo_query)
+#        else:
+#            return []
 
     def adjust_params(self, args):
         """
@@ -341,9 +342,10 @@ class DASAbstractService(object):
                 self.logger.info(msg)
                 result = True
             except:
-                msg = 'Fail to process: url=%s, api=%s, args=%s' \
+                msg  = 'Fail to process: url=%s, api=%s, args=%s' \
                         % (url, api, args)
-                self.logger.warning(msg)
+                msg += traceback.format_exc()
+                self.logger.info(msg)
         return result
 
     def apimap(self, query):
