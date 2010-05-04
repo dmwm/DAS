@@ -6,8 +6,8 @@ DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.
 """
 
-__revision__ = "$Id: das_server.py,v 1.6 2010/03/19 02:22:21 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_server.py,v 1.7 2010/04/01 19:56:04 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -27,6 +27,7 @@ from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_web import DASWebService
 from DAS.web.das_cache import DASCacheService
 from DAS.web.das_doc import DASDocService
+from DAS.web.das_admin import DASAdminService
 
 class Root(object):
     """
@@ -127,6 +128,8 @@ class Root(object):
             cpconfig.update(conf)
             obj = DASDocService(sdir)
             tree.mount(obj, '/das/doc') # mount doc server
+            obj = DASAdminService(config)
+            tree.mount(obj, '/das/admin') # mount admint server
         else:
             obj = DASWebManager(config)
             tree.mount(obj, '/')
