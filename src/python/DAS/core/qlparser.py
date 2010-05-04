@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.20 2009/10/02 19:03:14 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: qlparser.py,v 1.21 2009/10/10 15:04:53 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -20,7 +20,7 @@ import traceback
 
 from itertools import groupby
 from DAS.utils.utils import oneway_permutations, unique_list, add2dict
-from DAS.utils.utils import getarg
+from DAS.utils.utils import getarg, genkey
 
 DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
                  ' not like ', ' like ', 
@@ -215,6 +215,73 @@ class MongoParser(object):
         skeys, cond = self.decompose(query)
         return dict(selkeys=skeys, conditions=cond, services=self.services(query))
 
+    def query_analyzer(self, query):
+        """
+        Analyze input DAS query and return a list of DAS queries to answer
+        the input question. For example:
+        find dataset where bfield=0.4
+        should be treated as 2 queries:
+        Q1: find run where bfield=0.4
+        Q2: find dataset where run in Q1
+        """
+        # get condition keys and find out appropriate sub-systems
+        findbracketobj(query) # check brackets in a query
+        wsplit = query.split(' where ')
+        skeys  = wsplit[0].replace('find ', '').strip().split(',')
+        if  len(wsplit) == 1: # no conditions
+            cond = ""
+        else:
+            cond = "where %s" % wsplit[1]
+        if  len(skeys) > 1:
+            msg  = "\nDAS does not work with multiple selection keys due to"
+            msg += "\ncomplexity of the system. But your request can be"
+            msg += "\naccomlpished by splitting your query as following:"
+            for key in skeys:
+                msg += "\nfind %s %s" % (key, cond)
+            raise Exception(msg)
+        if  len(wsplit) == 2:
+            condkeys = [item['key'] for item in self.condition_parser(query) \
+                        if type(item) is types.DictType]
+        else:
+            return [{genkey(query):query}]
+
+        queries = []
+        def qname(query):
+            """Generate query name"""
+            return "dasquery:%s" % genkey(query)
+
+        # get list of das systems for selection key
+        sel_systems = self.map.find_system(skeys[0])
+        msg  = "\nInput query:" + query
+        msg += "\nSelection keys:" + str(skeys) 
+        msg += " mapped systems:" + str(sel_systems)
+        msg += "\nCondition keys:" + str(condkeys)
+
+        # get list of system which are responsible for condtition keys
+        for key in condkeys:
+            con_systems = self.map.find_system(key)
+            msg += "\nCondition key: %s, mapped systems: %s" \
+                % (key, str(con_systems))
+            if  set(sel_systems) & set(con_systems): # there is overlap
+                query = "find %s %s" % (skeys[0], cond)
+                queries.append({genkey(query):query})
+            else:
+                for srv1 in sel_systems:
+                    for srv2 in con_systems:
+                        rel_keys = self.map.relational_keys(srv1, srv2)
+                        msg += "\nRelational_keys(%s, %s) => %s" \
+                        % (srv1, srv2, rel_keys) 
+                        for key in rel_keys:
+                            query = "find %s %s" % (key, cond)
+                            queries.append({genkey(query):query})
+                            query = "find %s where %s in (%s)" \
+                                % (skeys[0], key, qname(query))
+                            queries.append({genkey(query):query})
+        if  not queries:
+            err = "Unable to construct DAS queries out of provided query. Debug info:"
+            raise Exception(err + msg)
+        return queries
+        
     def dasql2mongo(self, query, lookup=False):
         """
         Convert DAS QL expression into Mongo query. It can map into several Mongo
@@ -223,6 +290,7 @@ class MongoParser(object):
         findbracketobj(query) # check brackets in a query
         wsplit = query.split(' where ')
         skeys  = wsplit[0].replace('find ', '').strip().split(',')
+        # convert provided conditinos into MongoDB form
         cond   = {}
         if  len(wsplit) == 2:
             condlist = []
@@ -251,7 +319,7 @@ class MongoParser(object):
                     msg += "\nfind a,b,c where y=1"
                     raise Exception(msg)
             cond = mongo_exp(condlist, lookup)
-            mongo_query = dict(spec=cond, fields=skeys + ['das'])
+            mongo_query = dict(spec=cond, fields=skeys)
             self.analytics.add_query(query, mongo_query)
             return mongo_query
         msg = "\nUnable to convert input DAS-QL expression '%s' into MongoDB query"\
@@ -408,6 +476,16 @@ class MongoParser(object):
         """
         spec    = getarg(query, 'spec', {})
         fields  = getarg(query, 'fields', None)
+        # convert selection keys into das notataions, e.g.
+        # bfield => run.bfield
+        daskeys = []
+        for key in fields:
+            try:
+                for nkey in self.map.lookup_keys(system, key):
+                    if  nkey not in daskeys:
+                        daskeys.append(nkey)
+            except:
+                pass
         newspec = {}
         for key, val in spec.items():
             ksplit = key.split('.') # split key into entity.attribute
@@ -417,5 +495,6 @@ class MongoParser(object):
                 val = re.compile('.*%s.*' % val)
             newspec[key] = val
         newspec['das.system'] = system
-        return dict(spec=newspec, fields=fields)
+#        return dict(spec=newspec, fields=fields)
+        return dict(spec=newspec, fields=daskeys + ['das'])
 
