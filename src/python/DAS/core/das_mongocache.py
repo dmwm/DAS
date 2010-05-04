@@ -5,28 +5,31 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.21 2009/10/19 20:40:42 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: das_mongocache.py,v 1.22 2009/10/20 15:00:38 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import time
 import types
-import DAS.utils.jsonwrapper as json
-from itertools import groupby
 
 # DAS modules
-from DAS.utils.utils import getarg, dict_value, merge_dict, genkey
+from DAS.utils.utils import getarg, dict_value, merge_dict
 from DAS.core.cache import Cache
 
 # monogo db modules
 from pymongo.connection import Connection
 from pymongo import DESCENDING
 
-_dot = '.'
-_sep = '___'
+DOT = '.'
+SEP = '___'
 
 def loose(query):
+    """
+    Construct loose query out of provided one. That means add a pattern '*' to
+    string type values for all conditions. We use this to look-up similar records
+    in DB.
+    """
     spec    = getarg(query, 'spec', {})
     fields  = getarg(query, 'fields', None)
     newspec = {}
@@ -58,16 +61,16 @@ def encode_mongo_keys(query):
     For instance we can't store mongo queries themselves.
     To avoid this limitation we will use encode_mongo_keys to convert
     key.attr into key:attr, where simecolon we use as an example
-    of key attribute separator (_sep).
+    of key attribute separator (SEP).
     """
-    return transform_keys(query, _dot, _sep)
+    return transform_keys(query, DOT, SEP)
 
 def decode_mongo_keys(query):
     """
     Perform opposite to encode_mongo_keys action.
     Restore key.attr from key:attr
     """
-    return transform_keys(query, _sep, _dot)
+    return transform_keys(query, SEP, DOT)
 
 def convert2pattern(query):
     """
@@ -118,15 +121,15 @@ def compare_dicts(input_dict, exist_dict):
         if  exist_dict.has_key(key):
             vvv = exist_dict[key]
         if  key == '$gt':
-            if  (type(val) is types.IntType or types(val) is types.FloatType)\
+            if  (type(val) is types.IntType or type(val) is types.FloatType)\
                 and \
-                (type(vvv) is types.IntType or types(vvv) is types.FloatType):
+                (type(vvv) is types.IntType or type(vvv) is types.FloatType):
                 if  val > vvv:
                     return True
         elif key == '$lt':
-            if  (type(val) is types.IntType or types(val) is types.FloatType)\
+            if  (type(val) is types.IntType or type(val) is types.FloatType)\
                 and \
-                (type(vvv) is types.IntType or types(vvv) is types.FloatType):
+                (type(vvv) is types.IntType or type(vvv) is types.FloatType):
                 if  val < vvv:
                     return True
         elif key == '$in':
@@ -231,7 +234,7 @@ class DASMongocache(Cache):
         self.conn    = Connection(self.dbhost, self.dbport)
         self.db      = self.conn[self.dbname]
         self.col     = self.db[self.colname]
-        self.buffer_size = 100 # TODO: I can pass it via config
+        self.cache_size = 100 # TODO: I can pass it via config
         
     def is_expired(self, query):
         """
@@ -250,149 +253,33 @@ class DASMongocache(Cache):
         # remove from cache all expire docs
         self.col.remove({'das.expire': {'$lt' : int(time.time())}})
         spec    = getarg(query, 'spec', {})
-        fields  = getarg(query, 'fields', None)
         newspec = {}
         verspec = {} # verbose spec
         # enable loose constraints, use LIKE pattern
         for key, val in spec.items():
-            nkey = 'query.spec.%s' % key.replace(_dot, _sep) # see transform_keys
+            nkey = 'query.spec.%s' % key.replace(DOT, SEP) # see transform_keys
             if  type(val) is types.StringType or type(val) is types.UnicodeType:
                 val = val[0] + '*'
-                val = re.compile(val.replace('*', '.*')) # replace value to regex
+                val = re.compile(val.replace('*', '.*')) #replace value to regex
                 verspec[nkey] = val.pattern
             else:
                 verspec[nkey] = val
                 val = {'$ne': None} # non null key
             newspec[nkey] = val
         newspec['das.system'] = system
-
-# TODO: using loose conditions is probably wrong approach, since some data-services
-# like SiteDB, doesn't store query parameters, so if I look-up SE's by providing
-# CMSName SiteDB API doesn't store CMSName, I store what I get from the query, e.g. T1_
-# But it is not sufficient to obtain queries with similary conditions.
-# Instead I need to find out a way to query similar conditions. For that I need
-# to store conditions as dicts, rather then string (for that I need to replace
-# dot '.' in a keys, site.name) and apply query here on conditions.
-# In this case I don't need  compare_specs since I will query on
-# superset of conditions.
         msg  = "DASMongocache::similar_queries, "
         msg += "loose query: %s" % verspec
         self.logger.info(msg)
-        reduce = "function(obj,prev){ return true;}"
-        res  = self.col.group(['query'], newspec, 0, reduce=reduce)
-        msg  = "DASMongocache::similar_queries, found query which cover this request: "
+        func = "function(obj,prev){ return true;}"
+        res  = self.col.group(['query'], newspec, 0, reduce=func)
+        msg  = "DASMongocache::similar_queries, "
+        msg += "found query which cover this request: "
         for row in res:
             existing_query = decode_mongo_keys(row['query'])
             if  compare_specs(query, existing_query):
                 msg += str(existing_query)
                 self.logger.info(msg)
                 return True
-        return False
-
-    def version_2(self):
-        self.logger.info("DASMongocache::similar_queries(%s)" % query)
-        # remove from cache all expire docs
-        self.col.remove({'das.expire': {'$lt' : int(time.time())}})
-        spec    = getarg(query, 'spec', {})
-        fields  = getarg(query, 'fields', None)
-        newspec = {}
-        verspec = {} # verbose spec
-        # enable loose constraints, use LIKE pattern
-        for key, val in spec.items():
-            if  type(val) is types.StringType or type(val) is types.UnicodeType:
-                if  val[-1] != '*':
-                    val = val + '*' # add * to value
-                val = re.compile(val.replace('*', '.*')) # replace value to regex
-                verspec[key] = val.pattern
-            else:
-                verspec[key] = val
-            newspec[key] = val
-        newspec['das.system'] = system
-        # now we need to look-up DAS queries and compare their conditions
-        # with current one. To do so, I invoke group method with reduce
-        # function to get DISTINCT list of queries for provided loose set 
-        # of conditions
-        reduce = "function(obj,prev){ return true;}"
-        res  = self.col.group(['query'], newspec, 0, reduce=reduce)
-        msg  = "DASMongocache::similar_queries, "
-        msg += "loose query: %s" % verspec
-        self.logger.info(msg)
-        msg  = "DASMongocache::similar_queries, found query which cover this request: "
-        for row in res:
-            if  type(row['query']) is types.StringType or \
-                type(row['query']) is types.UnicodeType:
-                existing_query = json.loads(row['query'])
-                print "\nfrom string"
-                print "input_query", query
-                print "exist_query", existing_query
-                print "comparisoin", compare_specs(query, existing_query)
-                if  compare_specs(query, existing_query):
-                    msg += str(existing_query)
-                    self.logger.info(msg)
-                    return True
-            elif type(row['query']) is types.ListType:
-                gen = (k for k, g in groupby(row['query']))
-                for item in gen:
-                    existing_query = json.loads(item)
-                    print "\nfrom list"
-                    print "input_query", query
-                    print "exist_query", existing_query
-                    print "comparisoin", compare_specs(query, existing_query)
-                    if  compare_specs(query, existing_query):
-                        msg += str(existing_query)
-                        self.logger.info(msg)
-                        return True
-            else:
-                raise TypeError('Unexpected type for query %s, %s' \
-                % (row['query'], type(row['query'])))
-        return False
-
-
-    def version1(self):
-        newspecdebug = {}
-        msg     = 'Unable to loose condition: '
-        for key, val in spec.items():
-            # string-value case, w* is superset of word*
-            if  type(val) is types.StringType or type(val) is types.UnicodeType:
-                if  val[-1] == '*':
-                    val = val[:-2] + '*'
-                else:
-                    val = val[:-1] + '*'
-                val = re.compile(val.replace('*', '.*'))
-                newspec[key] = val
-                newspecdebug[key] = val.pattern
-            elif type(val) is types.DictType: # e.g. run : {'$gt':10}
-                # $gt-operator case, run > 1 is superset of run > 10
-                # $lt-operator case, run < 11 is superset of run < 10
-                cond = {}
-                for ckey, cval in val.items():
-                    if  ckey == '$gt':
-                        if  type(cval) is types.IntType or \
-                            type(cval) is types.FloatType:
-                            cval -= 1
-                            cond[ckey] = cval
-                        else:
-                            msg = "key %s, value %s" % (ckey, cval)
-                            raise TypeError(msg)
-                    elif ckey == '$lt':
-                        if  type(cval) is types.IntType or \
-                            type(cval) is types.FloatType:
-                            cval += 1
-                            cond[ckey] = cval
-                        else:
-                            msg = "key %s, value %s" % (ckey, cval)
-                            raise TypeError(msg)
-                    cond[ckey] = cval
-                newspec[key] = cond
-                newspecdebug[key] = cond
-        newspec['das.system'] = system
-#        res  = self.col.find(spec=newspec, fields=fields).count()
-        res  = self.col.find(spec=newspec, fields=['das.query']).count()
-        msg  = "DASMongocache::similar_queries, "
-        msg += "loose query: %s, found results %s" % (newspecdebug, res)
-        self.logger.info(msg)
-        if  res:
-            return True
         return False
 
     def incache(self, query):
@@ -447,7 +334,7 @@ class DASMongocache(Cache):
         else:
             res = self.col.find(spec=spec, fields=fields)
         for row in res:
-            del(row['_id']) #mongo add internal _id, we don't need it (cannot JSON'ify)
+            del(row['_id']) #mongo add internal _id, cannot JSON'ify with it
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
@@ -478,8 +365,7 @@ class DASMongocache(Cache):
         index_list = [(key, DESCENDING) for key in lkeys]
         prim_key   = lkeys[0] # TODO: what to do with multiple look-up keys
         trigger    = 0
-#        str_query  = json.dumps(query)
-        buffer     = [] # small buffer to be used for bulk updates
+        cache      = [] # small cache to be used for bulk updates
 # This optimization is premature, since it leads to another problem of
 # cleaning expire records from DAS.
 #        dashash    = genkey(str(dasheader))
@@ -511,27 +397,27 @@ class DASMongocache(Cache):
                         self.col.insert(mdict)
                         self.col.remove({'_id': row['_id']})
                     else:
-                        if  len(buffer) < self.buffer_size:
-                            buffer.append(item)
+                        if  len(cache) < self.cache_size:
+                            cache.append(item)
                         else:
-                            self.col.insert(buffer)
-                            buffer = []
+                            self.col.insert(cache)
+                            cache = []
 #                        self.col.insert(item)
                 else:
-                    if  len(buffer) < self.buffer_size:
-                        buffer.append(item)
+                    if  len(cache) < self.cache_size:
+                        cache.append(item)
                     else:
-                        self.col.insert(buffer)
-                        buffer = []
+                        self.col.insert(cache)
+                        cache = []
 #                    self.col.insert(item)
                 if  index_list:
                     try:
                         self.col.ensure_index(index_list)
                     except:
                         pass
-            if  buffer:
-                self.col.insert(buffer)
-                buffer = []
+            if  cache:
+                self.col.insert(cache)
+                cache = []
             if  not trigger: # we got empty results
                 # we will insert empty record to avoid consequentive
                 # calls to service who doesn't have data

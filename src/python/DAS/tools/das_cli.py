@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.16 2009/10/12 20:08:19 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: das_cli.py,v 1.17 2009/10/20 15:00:55 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -41,18 +41,18 @@ class DASOptionParser:
         self.parser.add_option("--keys", action="store", 
                                           dest="service",
              help="return set of keys for given data service")
-        self.parser.add_option("--view", action="store", 
-                                          dest="view",
-             help="return view definition in DAS, use --view=all to list all views")
-        self.parser.add_option("--create-view", action="store", 
-                                          dest="createview",
-             help="create a new view in DAS, e.g. --create-view=name,query")
-        self.parser.add_option("--update-view", action="store", 
-                                          dest="updateview",
-             help="update a view in DAS, e.g. --update-view=name,query")
-        self.parser.add_option("--delete-view", action="store", 
-                                          dest="deleteview",
-             help="delete a view in DAS, e.g. --delete-view=name")
+#        self.parser.add_option("--view", action="store", 
+#                                          dest="view",
+#             help="return view definition in DAS, use --view=all to list all views")
+#        self.parser.add_option("--create-view", action="store", 
+#                                          dest="createview",
+#             help="create a new view in DAS, e.g. --create-view=name,query")
+#        self.parser.add_option("--update-view", action="store", 
+#                                          dest="updateview",
+#             help="update a view in DAS, e.g. --update-view=name,query")
+#        self.parser.add_option("--delete-view", action="store", 
+#                                          dest="deleteview",
+#             help="delete a view in DAS, e.g. --delete-view=name")
         self.parser.add_option("--no-format", action="store_true", 
                                           dest="plain",
              help="return unformatted output, useful for scripting")
@@ -71,10 +71,10 @@ class DASOptionParser:
         """
         return self.parser.parse_args()
 
-def nooutput(results):
+def nooutput(input_results):
     """Just iterate over generator, but don't print it out"""
-    for i in results:
-        a = 1
+    for elem in input_results:
+        pass
 #
 # main
 #
@@ -109,30 +109,30 @@ if __name__ == '__main__':
         keys.sort()
         for key in keys:
             print key
-    elif  opts.view:
-        if  opts.view == 'all':
-            view = None
-        else:
-            view = opts.view
-        for name, query in DAS.get_view(view).items():
-            print 'view name: %s' % name
-            print 'DAS query: %s' % query
-    elif  opts.createview:
-        vlist = opts.createview.split(',')
-        name  = vlist[0]
-        query = ','.join(vlist[1:])
-        print "Creating a view '%s' with query '%s'" % (name, query)
-        DAS.create_view(name, query)
-    elif  opts.updateview:
-        vlist = opts.updateview.split(',')
-        name  = vlist[0]
-        query = ','.join(vlist[1:])
-        print "Updating a view '%s' with query '%s'" % (name, query)
-        DAS.update_view(name, query)
-    elif  opts.deleteview:
-        name = opts.deleteview
-        DAS.delete_view(name)
-        print "View '%s' has been deleted" % name
+#    elif  opts.view:
+#        if  opts.view == 'all':
+#            view = None
+#        else:
+#            view = opts.view
+#        for name, query in DAS.get_view(view).items():
+#            print 'view name: %s' % name
+#            print 'DAS query: %s' % query
+#    elif  opts.createview:
+#        vlist = opts.createview.split(',')
+#        name  = vlist[0]
+#        query = ','.join(vlist[1:])
+#        print "Creating a view '%s' with query '%s'" % (name, query)
+#        DAS.create_view(name, query)
+#    elif  opts.updateview:
+#        vlist = opts.updateview.split(',')
+#        name  = vlist[0]
+#        query = ','.join(vlist[1:])
+#        print "Updating a view '%s' with query '%s'" % (name, query)
+#        DAS.update_view(name, query)
+#    elif  opts.deleteview:
+#        name = opts.deleteview
+#        DAS.delete_view(name)
+#        print "View '%s' has been deleted" % name
     elif query:
 
         if  opts.profile:
@@ -159,7 +159,7 @@ if __name__ == '__main__':
         print
         print "DAS CLI interface, no actions found,"
         print "please use --help for more options."
-    timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
+    timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
     if  debug:
         for key, val in DAS.timer.timer.items():
             if  len(val) > 1:
