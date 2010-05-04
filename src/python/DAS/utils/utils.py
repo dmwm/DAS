@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.8 2009/04/29 16:07:07 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: utils.py,v 1.9 2009/04/29 19:56:49 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -81,12 +81,20 @@ def dump(reslist, limit=None):
         print
         idx += 1
 
-def cartesian_product(list1, list2):
+def cartesian_product(ilist1, ilist2):
     """
-    Create cartesian product between two provided sets w/ provided relation
-    keys (rel_keys). Provided sets should be in a form of 
-    [{'system':system_name, 'key':value'}, ...]
+    Create cartesian product between two provided lists/generators
+    whose elements are dicts with identical keys, e.g.
+    {'system':system_name, 'key':value'}
     """
+    if  type(ilist1) is types.GeneratorType:
+        list1 = [i for i in ilist1]
+    else:
+        list1 = ilist1
+    if  type(ilist2) is types.GeneratorType:
+        list2 = [i for i in ilist2]
+    else:
+        list2 = ilist2
     # find which list is largest
     if  len(list1) >= len(list2):
         master_list = list1
@@ -124,15 +132,19 @@ def cartesian_product(list1, list2):
                     update = 1
                     for k in ins_keys:
                         idict[k] = jdict[k]
-                    idict['system'] = '%s+%s' % \
-                        (idict['system'], jdict['system'])
+                    if  idict.has_key('system') and \
+                        idict['system'].find(jdict['system']) == -1:
+                        idict['system'] = '%s+%s' % \
+                            (idict['system'], jdict['system'])
                     yield dict(idict)
                 else:
                     row = dict(idict)
                     for k in ins_keys:
                         row[k] = jdict[k]
-                    row['system'] = '%s+%s' % \
-                        (row['system'], jdict['system'])
+                    if  row.has_key('system') and \
+                        row['system'].find(jdict['system']) == -1:
+                        row['system'] = '%s+%s' % \
+                            (row['system'], jdict['system'])
                     yield row
 
 def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
