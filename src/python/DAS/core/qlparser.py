@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.37 2010/02/10 20:29:48 valya Exp $"
-__version__ = "$Revision: 1.37 $"
+__revision__ = "$Id: qlparser.py,v 1.38 2010/02/19 17:28:04 valya Exp $"
+__version__ = "$Revision: 1.38 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -454,19 +454,10 @@ class MongoParser(object):
                 maps = [r['map'] for r in daskeys]
                 if  set(mapkeys) & set(maps) == set(mapkeys): 
                     if  adict.has_key(srv):
-                        new_list = adict[service] + [api]
-                        adict[service] = list( set(new_list) )
+                        new_list = adict[srv] + [api]
+                        adict[srv] = list( set(new_list) )
                     else:
                         adict[srv] = [api]
-        # look-up APIs from Mapping DB
-#        for mapkey in skeys + [i for i in cond.keys()]:
-#            for service, keys in self.daskeys.items():
-#                alist = self.map.find_apis(service, mapkey)
-#                if  adict.has_key(service):
-#                    new_list = adict[service] + alist
-#                    adict[service] = list( set(new_list) )
-#                else:
-#                    adict[service] = alist
         return adict
 
     def params(self, query):
