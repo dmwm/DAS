@@ -5,6 +5,7 @@
 Unit test for DAS QL parser
 """
 
+import json
 import unittest
 import urllib2, urllib
 import tempfile
@@ -15,7 +16,7 @@ from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate
-from DAS.utils.utils import delete_elem
+from DAS.utils.utils import delete_elem, plist_parser
 
 class testUtils(unittest.TestCase):
     """
@@ -343,6 +344,7 @@ class testUtils(unittest.TestCase):
                         'url' : 'http://a.b.com',
                         'expire': 100,
                         'format' : 'XML',
+                        'wild_card': '*',
                 }
         }
         result = map_validator(smap)
@@ -468,6 +470,51 @@ class testUtils(unittest.TestCase):
         gen    = xml_parser(stream, "file", ["block.bytes"])
         result = gen.next()
         expect = {'file': {'block': {'bytes': 1}, 'size': 10}}
+        self.assertEqual(expect, result)
+
+    def test_json_parser(self):
+        """
+        Test functionality of json_parser
+        """
+        jsondata = {'beer': {'amstel':'good', 'guiness':'better'}}
+        fdesc  = tempfile.NamedTemporaryFile()
+        fname  = fdesc.name
+        stream = file(fname, 'w')
+        stream.write(json.dumps(jsondata))
+        stream.close()
+        stream = file(fname, 'r')
+        gen    = json_parser(stream)
+        result = gen.next()
+        expect = {'beer': {'amstel': 'good', 'guiness': 'better'}}
+        self.assertEqual(expect, result)
+
+    def test_plist_parser(self):
+        """
+        Test functionality of plist_parser
+        """
+        plistdata = """<?xml version='1.0' encoding='ISO-8859-1'?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>beer</key>
+        <dict>
+                <key>amstel</key>
+                <string>good</string>
+                <key>guiness</key>
+                <string>better</string>
+        </dict>
+</dict>
+</plist>
+"""
+        fdesc  = tempfile.NamedTemporaryFile()
+        fname  = fdesc.name
+        stream = file(fname, 'w')
+        stream.write(plistdata)
+        stream.close()
+        stream = file(fname, 'r')
+        gen    = plist_parser(stream)
+        result = gen.next()
+        expect = {'beer': {'amstel': 'good', 'guiness': 'better'}}
         self.assertEqual(expect, result)
 
 #

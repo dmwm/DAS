@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.67 2010/02/17 20:18:39 valya Exp $"
-__version__ = "$Revision: 1.67 $"
+__revision__ = "$Id: utils.py,v 1.68 2010/02/18 15:07:39 valya Exp $"
+__version__ = "$Revision: 1.68 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -24,6 +24,7 @@ import traceback
 from itertools import groupby
 from pymongo.objectid import ObjectId
 import xml.etree.cElementTree as ET
+import plistlib
 
 def adjust_value(value):
     """
@@ -949,7 +950,8 @@ def json_parser(source):
     descriptor with .read()-supported file-like object or
     data as a string object.
     """
-    if  type(source) is types.InstanceType: # got data descriptor
+    if  type(source) is types.InstanceType or\
+        type(source) is types.FileType: # got data descriptor
         try:
             jsondict = json.load(source)
         except:
@@ -963,13 +965,35 @@ def json_parser(source):
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
         if  type(data) is types.StringType:
             data = unicode(data, errors='ignore')
-            res = data.replace('null', '\"null\"')
+            res  = data.replace('null', '\"null\"')
+        else:
+            res  = data
+        print "res", res, type(res)
         try:
             jsondict = json.loads(res)
         except:
             jsondict = eval(res)
             pass
     yield jsondict
+
+def plist_parser(source):
+    """
+    Apple plist parser based on plistlib. It accepts either source
+    descriptor with .read()-supported file-like object or
+    data as a string object.
+    """
+    if  type(source) is types.InstanceType or\
+        type(source) is types.FileType: # got data descriptor
+        try:
+            data = source.read()
+        except:
+            traceback.print_exc()
+            source.close()
+            raise
+        source.close()
+    else:
+        data = source
+    yield plistlib.readPlistFromString(data)
 
 def convert_dot_notation(key, val):
     """
