@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.3 2009/03/12 20:54:07 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_webconfig.py,v 1.4 2009/03/31 16:21:18 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -24,6 +24,7 @@ config = Configuration()
 config.component_('Webtools')
 
 # This is the application
+config.Webtools.port = 8010
 config.Webtools.application = 'DASWeb'
 # This is the config for the application
 config.component_('DASWeb')
@@ -61,7 +62,7 @@ active.controllers.object = 'WMCore.WebTools.Controllers'
 #    'das': environ['DASHOME'] + '/web/css/das.css'
 #}
 active.controllers.css = {
-    'cms_reset': environ['WTBASE'] + '/css/WMCore/WebTools/cms_reset.css', 
+    'cms_reset': environ['WMCORE_ROOT'] + '/src/css/WMCore/WebTools/cms_reset.css', 
     'das': environ['DAS_ROOT'] + '/src/css/das.css'
 }
 
@@ -74,5 +75,5 @@ maint = config.DASWeb.views.section_('maintenance')
 
 active.section_('masthead')
 active.masthead.object = 'WMCore.WebTools.Masthead'
-active.masthead.templates = environ['WTBASE'] + '/templates/WMCore/WebTools/Masthead'
+active.masthead.templates = environ['WMCORE_ROOT'] + '/src/templates/WMCore/WebTools/Masthead'
 
