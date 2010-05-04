@@ -14,6 +14,15 @@ $cmd --clean
 echo "Add API maps"
 for amap in `ls $dir/*.yml`
 do
+    service=`echo $amap | awk '{z=split($0,a,"/"); split(a[z],b,"."); print b[1]}'`
+    res=""
+    if  [ -f "whitelist.txt" ]; then
+        res=`cat whitelist.txt | egrep "^$service$"`
+    fi
+    if  [ ! -z "$res" ]; then
+        echo "Skip service $service"
+        continue
+    fi
     echo "Read API maps from $amap"
     $cmd --uri-map=$amap
     echo "Read notation map from $amap"
