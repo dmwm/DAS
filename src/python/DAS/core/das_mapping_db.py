@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.24 2010/02/03 16:48:18 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.25 2010/02/04 21:27:14 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -48,8 +48,8 @@ class DASMapping(object):
         """
         for system, notations in self.notations().items():
             for row in notations:
-                key = system, row['api_param']
-                self.notationcache[key] = row['api'], row['das_name']
+                key = system, row['notation']
+                self.notationcache[key] = row['api'], row['map']
 
     def create_db(self):
         """
@@ -81,18 +81,25 @@ class DASMapping(object):
              system:dbs, 
              urn : listBlocks, 
              url : "http://a.b.com/api"
-             params:[{apiversion:1_2_2, test:"*"}, ...]
-             daskeys:[{key:block, map:block.name, pattern:pat}, ...]
-             api2das:[{api_param:se, das_key:site, 
-                       pattern:re.compile('^T[0-3]_')}, ...]
+             params : [
+                 {"apiversion":1_2_2, test:"*"}
+             ]
+             daskeys: [
+                 {"key" : "block", "map":"block.name", "pattern":""}
+             ]
+             api2das: [
+                 {"api_param":"se", "das_key":"site", 
+                       "pattern":"re.compile('^T[0-3]_')"}
+             ]
             }
 
         Example of notation record:
 
         .. doctest::
 
-            {system:dbs,
-             notations:[{api_param:storage_element_name, das_name:se},...]}
+             notations: [
+                 {"notation" : "storage_element_name", "map":"site", "api": ""},
+             ]
         """
         msg = 'DASMapping::add(%s)' % record
         self.logger.info(msg)
@@ -139,10 +146,10 @@ class DASMapping(object):
             kdict[system] = keys
         return kdict
 
-    def check_daskey(self, system, daskey):
-        """Check if provided system/daskey is valid combination"""
+    def check_daskey(self, system, urn, daskey):
+        """Check if provided system/urn/daskey is a valid combination"""
         entity = daskey.split('.')[0]
-        cond   = { 'system' : system, 'daskeys.key' : entity }
+        cond   = { 'system' : system, 'daskeys.key' : entity, 'urn': urn }
         gen    = (row['daskeys'] \
                 for row in self.col.find(cond, ['daskeys']))
         for maps in gen:
