@@ -4,8 +4,8 @@
 """
 DAS cache client tools 
 """
-__revision__ = "$Id: das_cache_client.py,v 1.9 2009/06/08 19:15:48 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_cache_client.py,v 1.10 2009/06/19 18:02:11 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.web.utils import urllib2_request, httplib_request
@@ -36,7 +36,7 @@ class DASOptionParser:
              help="specify input for your request; the input should be in a form of dict")
         self.parser.add_option("--host", action="store", type="string", 
                                default='http://localhost:8211', dest="host",
-             help="specify host name, e.g. http://hostname:port")
+             help="specify host name, default http://localhost:8211")
         self.parser.add_option("--idx", action="store", type="int", 
                                default=0, dest="idx",
              help="start index for returned result set, aka pagination, use w/ limit")
@@ -48,10 +48,10 @@ class DASOptionParser:
              help="specify which lib to use, httplib or urllib2 (default)")
         self.parser.add_option("--request", action="store", type="string", 
                                default='GET', dest="request",
-             help="specify request type: GET, POST, PUT, DELETE")
+             help="specify request type: GET (default), POST, PUT, DELETE")
         self.parser.add_option("--format", action="store", type="string", 
                                default='json', dest="format",
-             help="specify desired format output: JSON, XML, DASJSON, DASXML, PLIST")
+             help="specify desired format output: JSON (default), XML, DASJSON, DASXML, PLIST")
     def getOpt(self):
         """
         Returns parse list of options
