@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.23 2009/10/13 23:45:21 valya Exp $"
-__version__ = "$Revision: 1.23 $"
+__revision__ = "$Id: qlparser.py,v 1.24 2009/10/15 21:02:14 valya Exp $"
+__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -380,6 +380,7 @@ class MongoParser(object):
             newspec[key] = val
         newspec['das.system'] = system
         if  daskeys:
-            return dict(spec=newspec, fields=daskeys + ['das'])
+#            return dict(spec=newspec, fields=daskeys + ['das'])
+            return dict(spec=newspec, fields=daskeys)
         return dict(spec=newspec)
 
