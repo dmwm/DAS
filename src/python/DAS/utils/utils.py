@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.34 2009/10/20 15:00:55 valya Exp $"
-__version__ = "$Revision: 1.34 $"
+__revision__ = "$Id: utils.py,v 1.35 2009/10/23 19:37:15 valya Exp $"
+__version__ = "$Revision: 1.35 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -585,4 +585,36 @@ def trace(source):
     for item in source:
         print item
         yield item
+
+def access(data, elem):
+    """
+    Access elements of the dict (data). The element can be supplied in dotted form, e.g.
+    site.admin.title and code will search for {'site':[{'admin':[{'title'...}]}]}
+    """
+    if  elem.find('.') == -1:
+        key = elem
+        if  type(data) is types.DictType:
+            if  data.has_key(key):
+                yield data[key]
+        elif type(data) is types.ListType or type(data) is types.GeneratorType:
+            for item in data:
+                if  item.has_key(key):
+                    yield item[key]
+    else:
+        keylist = elem.split('.')
+        key  = keylist[0]
+        rkey = '.'.join(keylist[1:])
+        if  data.has_key(key):
+            res = data[key]
+            if  type(res) is types.DictType:
+                result = access(res, rkey)
+                if  type(result) is types.GeneratorType:
+                    for item in result:
+                        yield item
+            elif type(res) is types.ListType or types(res) is types.GeneratorType:
+                for row in res:
+                    result = access(row, rkey)
+                    if  type(result) is types.GeneratorType:
+                        for item in result:
+                            yield item
 
