@@ -2,24 +2,32 @@
 # to create uniform representation of meta-data
 presentation: {
 dataset : [
+        {"das":"dataset.error", "ui":"Error"}, 
+        {"das":"dataset.httperror", "ui":"Reason"}, 
         {"das":"dataset.name", "ui":"Dataset name"}, 
         {"das":"dataset.global_tag", "ui":"Tag"},
         {"das":"dataset.xtcrosssection", "ui":"Cross section"},
         {"das":"dataset.release_version", "ui":"Release"},
         ],
 block : [
+        {"das":"block.error", "ui":"Error"}, 
+        {"das":"block.httperror", "ui":"Reason"}, 
         {"das":"block.name", "ui":"Block name"}, 
         {"das":"block.size", "ui":"Block size"},
         {"das":"block.nevents", "ui":"Number of events"},
         {"das":"block.nfiles", "ui":"Number of files"},
         ],
 file : [
+        {"das":"file.error", "ui":"Error"}, 
+        {"das":"file.httperror", "ui":"Reason"}, 
         {"das":"file.name", "ui":"File name"}, 
         {"das":"file.size", "ui":"File size"},
         {"das":"file.type", "ui":"File type"},
         {"das":"file.nevents", "ui":"Number of events"},
         ],
 site : [
+        {"das":"site.error", "ui":"Error"}, 
+        {"das":"site.httperror", "ui":"Reason"}, 
         {"das":"site.name", "ui":"CMSName"}, 
         {"das":"site.se", "ui":"StorageElement"}, 
         {"das":"site.samname", "ui":"SAMName"}, 
