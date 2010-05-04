@@ -403,15 +403,12 @@ multiple data-services;
 \centering
 \includegraphics[width=100mm]{DAS_Cache_and_Analytics.pdf}
 \caption{
-The DAS architecture diagram. 
-Input query were placed into analytics DB and mapped into a set of
-data-service APIs and their parameters. If superset of the query has been
-found in DAS cache, the appropriate results were delivered back to the users.
-Otherwise a data-service APIs were invoked, triggering DAS cache population. 
-Once data become available and aggregated in DAS cache, users were able 
-to see the results. This on demand system was supplemented by DAS robots 
-(Unix daemons) who were consulting DAS analytics database to enable data 
-population into DAS cache for most common query requests.
+The DAS architecture diagram. It conists of cacher server,
+analytics and mapping databases. The data in a cache can be shared
+across multiple queries. The information retrieval is triggered
+on demand basis by invoking appropriate data-service APIs. The
+optional DAS robots (Unix daemons) can be used to pre-fetch
+the most populary query requests.
 }
 \label{DAS_cache}
 \end{figure}
@@ -443,13 +440,27 @@ notations and mapping to DAS keys;
 Analytics DB for query analysis.
 
 \subsection{DAS core}
-The DAS core communicated with different data-services and retrieved
-data on demand. This was done by invoking appropriate data-service plug-in(s)
-upon the user request. Each plug-in consists of DAS map, the
-data parser(s) to convert data-service output into DAS records
-and it was responsible for data-service API calls.
-The data-service plug-in contains a map about data-service APIs,
-input and output parameters and their mapping to DAS keys. For example
+The DAS core library was responsible for data retrieval on demand. 
+It had the following components: input query validator and parser,
+query analyzer, workflow builder, execution engine and data-service 
+plug-ins. The communication between client (web server or CLI) and 
+DAS cache server was done via the REST \cite{REST} interface. 
+%For each GET request we performed the following action.
+Each input query was recorded into Analytics DB for further 
+analysis. It was decomposed into the set of conditions and/or selection keys.
+First the results were looked up in a cache and delivered to the requestor
+if superset of input conditions was found in analytics DB.\footnote{It is important
+to note here that we didn't look-up results in a cache and rather
+compared input query condition set to the records in analytics DB 
+in order to understand if other API calls are covered the input request.}
+Otherwise, the appropriate workflow, a set of API calls, was constructed
+for the execution engine. It invoked the API calls via data-service
+plug-ins and store results into the cache. Finally, the results were
+retrieved from the cache and delivered to the user. 
+
+The mapping between user queries, the DAS keys used in a query, 
+and API names/parameters was stored in a Mapping DB. Such mapping was 
+used by data-service plug-ins. For example
 \begin{verbatim}
 {"api":{"params":{"name":""}, "name":"CMSNametoSE"}, "system":"sitedb",
  "api2das": [{"pattern": "re.compile('^T[0-3]_')", 
@@ -457,18 +468,12 @@ input and output parameters and their mapping to DAS keys. For example
  "daskeys": [{"pattern": "re.compile('^T[0-3]_')", 
               "key": "site", "map": "site.name"}]}
 \end{verbatim}
-This information was stored into DAS Mapping DB which we discuss next.
-
-Although the majority of data-service plug-ins looks alike
-and their logic was abstracted, including parsers, there were a few
-cases where special care was required, e.g. access to data-services 
-accessible via private network. Therefore, a way to propagate 
-user credentials was required, leading to specific plug-in implementation.
-
-%All user queries were written to Analytics DB for further analysis, while
-%mapping between data services were kept in Mapping DB. The data-service 
-%output were re-mapped into DAS notations and, if necessary, aggregated 
-%inside of the DAS cache.
+represents the mapping between \verb+site+ DAS keyword and
+\verb+CMSNametoSE+ API provided by SiteDB data-service (the data-service
+URLs were kept in the configuration file).
+The data-service plug-in implementation were similar and their logic was 
+abstracted, while a few extentions were required, e.g. specific 
+security modules for data-services accessible via private network.
 
 \subsection{DAS Mapping DB}
 The Mapping DB hold the mapping between data-service APIs and DAS keys exposed to
@@ -954,10 +959,10 @@ http://couchdb.apache.org/
 \bibitem{MongoDB}
 http://www.mongodb.org/
 
-%\bibitem{REST}
-%Fielding, Roy Thomas ``Architectural Styles and the Design of 
-%Network-based Software Architectures'', Doctoral dissertation, 2000,
-%University of California, Irvine
+\bibitem{REST}
+Fielding, Roy Thomas ``Architectural Styles and the Design of 
+Network-based Software Architectures'', Doctoral dissertation, 2000,
+University of California, Irvine
 
 \bibitem{PhEDEx}
 %Rehn et. al.,
