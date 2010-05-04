@@ -4,8 +4,8 @@
 """
 DQ data-service plugin.
 """
-__revision__ = "$Id: dq_service.py,v 1.6 2009/11/19 20:15:35 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: dq_service.py,v 1.7 2009/11/20 01:00:55 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -53,16 +53,16 @@ class DQService(DASAbstractService):
         for key, val in args.items():
             args[key] = param_parser(val)
 
-    def parser(self, data_ptr, api, params=None):
+    def parser(self, source, api, params=None):
         """
         Dashboard data-service parser.
         """
-        jsondict = json.load(data_ptr)
+        jsondict = json.load(source)
         for key in jsondict.keys():
             newkey = self.dasmapping.notation2das(self.name, key)
             if  newkey != key:
                 jsondict[newkey] = jsondict[key]
                 del jsondict[key]
         yield jsondict
-        data_ptr.close()
+        source.close()
 

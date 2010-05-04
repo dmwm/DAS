@@ -29,16 +29,16 @@ class DashboardService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def parser(self, data_ptr, api, params=None):
+    def parser(self, source, api, params=None):
         """
         Dashboard data-service parser.
         """
         close = False
-        if  type(data_ptr) is types.InstanceType:
-            data = data_ptr.read()
+        if  type(source) is types.InstanceType:
+            data = source.read()
             close = True
         else:
-            data = data_ptr
+            data = source
 
         try:
             elem  = ET.fromstring(data)
@@ -59,7 +59,7 @@ class DashboardService(DASAbstractService):
                     rowkey = self.map[api]['keys'][0]
                     yield {rowkey : row}
         if  close:
-            data_ptr.close()
+            source.close()
 
     def api(self, query):
         """
