@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.72 2010/03/18 17:55:01 valya Exp $"
-__version__ = "$Revision: 1.72 $"
+__revision__ = "$Id: das_mongocache.py,v 1.73 2010/03/24 18:20:44 valya Exp $"
+__version__ = "$Revision: 1.73 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -328,9 +328,10 @@ class DASMongocache(object):
         self.logger.info("DASMongocache::similar_queries %s" % query)
         spec    = query.get('spec', {})
         fields  = query.get('fields', None)
-        if  len(spec.keys()) != 1:
+        if  len(spec.keys()) > 1:
             msg = 'DASMongocache::similar_queries, too many keys'
             self.logger.info(msg)
+            return False
         key     = spec.keys()[0]
         val     = spec[key]
         cond    = {'query.spec.key': key}
