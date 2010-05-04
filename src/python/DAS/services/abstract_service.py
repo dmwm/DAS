@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.24 2009/06/26 19:07:52 valya Exp $"
-__version__ = "$Revision: 1.24 $"
+__revision__ = "$Id: abstract_service.py,v 1.25 2009/07/09 19:43:45 valya Exp $"
+__version__ = "$Revision: 1.25 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -68,7 +68,7 @@ class DASAbstractService(object):
         self._keys = srv_keys
         return srv_keys
 
-    def getdata(self, url, params, iface=None):
+    def getdata(self, url, params, iface=None, headers=None):
         """
         Invoke URL call and retrieve data from data-service.
         User provides a set of parameters passed to data-service URL.
@@ -93,7 +93,14 @@ class DASAbstractService(object):
             encoded_data = json.dumps(params)
         else:
             encoded_data = urllib.urlencode(params, doseq=True)
-        data = urllib2.urlopen(url, encoded_data)
+        req = urllib2.Request(url)
+        if  headers:
+            for key, val in headers.items():
+                req.add_header(key, val)
+        if  not encoded_data:
+            encoded_data = None
+        data = urllib2.urlopen(req, encoded_data)
+#        data = urllib2.urlopen(url, encoded_data)
         results = data.read()
         # to prevent unicode/ascii errors like
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
