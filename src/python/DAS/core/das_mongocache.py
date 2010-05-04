@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.22 2009/10/20 15:00:38 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: das_mongocache.py,v 1.23 2009/10/20 15:08:54 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -365,7 +365,7 @@ class DASMongocache(Cache):
         index_list = [(key, DESCENDING) for key in lkeys]
         prim_key   = lkeys[0] # TODO: what to do with multiple look-up keys
         trigger    = 0
-        cache      = [] # small cache to be used for bulk updates
+        local_cache = [] # small cache to be used for bulk updates
 # This optimization is premature, since it leads to another problem of
 # cleaning expire records from DAS.
 #        dashash    = genkey(str(dasheader))
@@ -397,27 +397,27 @@ class DASMongocache(Cache):
                         self.col.insert(mdict)
                         self.col.remove({'_id': row['_id']})
                     else:
-                        if  len(cache) < self.cache_size:
-                            cache.append(item)
+                        if  len(local_cache) < self.cache_size:
+                            local_cache.append(item)
                         else:
-                            self.col.insert(cache)
-                            cache = []
+                            self.col.insert(local_cache)
+                            local_cache = []
 #                        self.col.insert(item)
                 else:
-                    if  len(cache) < self.cache_size:
-                        cache.append(item)
+                    if  len(local_cache) < self.cache_size:
+                        local_cache.append(item)
                     else:
-                        self.col.insert(cache)
-                        cache = []
+                        self.col.insert(local_cache)
+                        local_cache = []
 #                    self.col.insert(item)
                 if  index_list:
                     try:
                         self.col.ensure_index(index_list)
                     except:
                         pass
-            if  cache:
-                self.col.insert(cache)
-                cache = []
+            if  local_cache:
+                self.col.insert(local_cache)
+                local_cache = []
             if  not trigger: # we got empty results
                 # we will insert empty record to avoid consequentive
                 # calls to service who doesn't have data
