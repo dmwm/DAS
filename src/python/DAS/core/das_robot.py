@@ -2,12 +2,12 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-DAS robot (populator) class. Code based on
+DAS robot base class. Code based on
 http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 """
 
-__revision__ = "$Id: das_robot.py,v 1.1 2009/09/18 14:08:11 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_robot.py,v 1.2 2009/09/18 14:35:33 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -25,20 +25,17 @@ class Robot(object):
     DAS Robot (daemon) class to fetch data from provided URL/API
     and store them into DAS cache.
     """
-    def __init__(self, query=None, sleep=600):
-        self.dascore     = DASCore()
-        config           = self.dascore.dasconfig
-        config['stdout'] = '/tmp/das-robot.txt'
-        config['stderr'] = '/tmp/das-robot.txt'
+    def __init__(self, config={}, query=None, sleep=600):
+        self.dascore = DASCore(config)
         logdir       = getarg(config, 'logdir', '/tmp')
         self.pidfile = os.path.join(logdir, 'robot-%s.pid' % genkey(query))
 
         if (hasattr(os, "devnull")):
-            devnull = os.devnull
+            devnull  = os.devnull
         else:
-            devnull = "/dev/null"
+            devnull  = "/dev/null"
 
-        self.stdin   = devnull
+        self.stdin   = devnull # we do not read from stdinput
         self.stdout  = getarg(config, 'stdout', devnull)
         self.stderr  = getarg(config, 'stderr', devnull)
         self.query   = query

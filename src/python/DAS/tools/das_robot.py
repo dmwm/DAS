@@ -4,8 +4,8 @@
 """
 DAS Robot
 """
-__revision__ = "$Id: das_robot.py,v 1.1 2009/09/18 14:08:12 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_robot.py,v 1.2 2009/09/18 14:35:54 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -14,6 +14,7 @@ if  sys.version_info < (2, 6):
 
 from optparse import OptionParser
 from DAS.core.das_robot import Robot
+from DAS.utils.das_config import das_readconfig
 
 class DASOptionParser: 
     """
@@ -23,10 +24,13 @@ class DASOptionParser:
         self.parser = OptionParser()
         self.parser.add_option("-q", "--query", action="store", type="string", 
                                           default=False, dest="query",
-             help="specify query for your request.")
+             help="specify query for your request")
         self.parser.add_option("-s", "--sleep", action="store", type="int", 
                                           default=600, dest="sleep",
              help="specify sleep time for DAS populator")
+        self.parser.add_option("-c", "--config", action="store", type="string", 
+                                          default=None, dest="config",
+             help="specify DAS configuration file to use for initialization")
         self.parser.add_option("--start", action="store_true", dest="start",
              help="start DAS populator")
         self.parser.add_option("--stop", action="store_true", dest="stop",
@@ -47,7 +51,11 @@ if __name__ == '__main__':
     optManager  = DASOptionParser()
     (opts, args) = optManager.getOpt()
 
-    robot = Robot(opts.query, opts.sleep)
+    if  opts.config:
+        dasconfig = das_readconfig(opts.config)
+    else:
+        dasconfig = {}
+    robot = Robot(config=dasconfig, query=opts.query, sleep=opts.sleep)
     if  opts.start:
         robot.start()
     elif opts.stop:
