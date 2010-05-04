@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.14 2010/01/07 21:27:12 valya Exp $"
-__version__ = "$Revision: 1.14 $"
+__revision__ = "$Id: utils.py,v 1.15 2010/01/11 21:08:12 valya Exp $"
+__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -100,6 +100,7 @@ def json2html(idict, pad="", short=False):
     """
     Convert input JSON into HTML code snippet.
     """
+    width = 100
     newline = '\n'
     if  short:
         newline = ''
@@ -113,11 +114,16 @@ def json2html(idict, pad="", short=False):
                 value = '['
                 counter = 0
                 lpad = ' '*len(' "das_id": [')
+                _width = len("'', ")
                 for item in val:
+                    _width += len(item)
+                    if  _width > width:
+                        value += '\n' + lpad
+                        _width = len("'', ")
                     value += """<a href="/das/records/%s">%s</a>, """ \
                         % (item, item)
-                    if  counter and counter % 2:
-                        value += '\n' + lpad
+#                    if  counter and counter % 2:
+#                        value += '\n' + lpad
                     counter += 1
                 value = value[:-2] + ']'
             else:
