@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# dbs_discovery This script runs CMS DBS Data Discovery service
+# CMS DAS cache server
 #
 # chkconfig: 345 05 95
 
