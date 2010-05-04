@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.10 2009/05/13 15:19:32 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: abstract_service.py,v 1.11 2009/05/15 14:19:59 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -234,11 +234,12 @@ class DASAbstractService(object):
                 keylist.append(item)
 
         apiname = ""
-        args = {}
+#        args = {}
         # check if all requested keys are covered by one API
         for api, aparams in self.map.items():
             if  set(selkeys) & set(aparams['keys']) == set(selkeys):
                 apiname = api
+                args = aparams['params']
                 for par in aparams['params']:
                     if  params.has_key(par):
                         args[par] = params[par]
@@ -253,7 +254,7 @@ class DASAbstractService(object):
                 res = self.getdata(url, args)
                 res = res.replace('null', '\"null\"')
                 jsondict = eval(res)
-                jsondict = self.adjust_result(api, jsondict)
+#                jsondict = self.adjust_result(api, jsondict)
                 if  self.verbose > 2:
                     print "\n### %s::%s returns" % (self.name, api)
                     print jsondict
@@ -263,11 +264,14 @@ class DASAbstractService(object):
                 return data
 
         # if one API doesn't cover sel keys, will call multiple APIs
+        if  self.verbose > 2:
+            print "\n#### call multiple APIs"
         apidict = {}
         for key in selkeys:
             for api, aparams in self.map.items():
                 if  aparams['keys'].count(key) and not apidict.has_key(api):
-                    args = {}
+#                    args = {}
+                    args = aparams['params']
                     for par in aparams['params']:
                         if  params.has_key(par):
                             args[par] = params[par]
@@ -279,7 +283,7 @@ class DASAbstractService(object):
             res = self.getdata(url, args)
             res = res.replace('null', '\"null\"')
             jsondict = eval(res)
-            jsondict = self.adjust_result(api, jsondict)
+#            jsondict = self.adjust_result(api, jsondict)
             if  self.verbose > 2:
                 print "\n### %s::%s returns" % (self.name, api)
                 print jsondict, keylist

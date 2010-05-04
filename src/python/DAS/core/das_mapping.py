@@ -5,8 +5,8 @@
 DAS mapping
 """
 
-__revision__ = "$Id: das_mapping.py,v 1.6 2009/05/13 15:19:32 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_mapping.py,v 1.7 2009/05/15 14:19:59 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -176,16 +176,19 @@ def jsonparser(system, jsondict, keylist):
                 row = dict(newrow)
                 for newkey in keydict[key]:
                     res = item[key]
-                    olist += [k for k in add_to_list(row, newkey, res)]
+                    olist += [k for k in add_to_list(row, newkey, res) if k not in olist]
         else:
             _olist = []
             for row, item in zip(olist, val):
                 for newkey in keydict[key]:
                     res = item[key]
-                    _olist = [k for k in add_to_list(row, newkey, res)]
+                    _olist = [k for k in add_to_list(row, newkey, res) if k not in _olist]
             for item in _olist:
                 if  item not in olist:
                     olist.append(item)
+#    olist.sort()
+#    from itertools import groupby
+#    olist = [k for k, g in groupby(olist)]
     return olist
 
 def jsonparser_v1(system, jsondict, keylist):
