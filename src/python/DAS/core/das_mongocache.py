@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.15 2009/10/13 15:25:24 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: das_mongocache.py,v 1.16 2009/10/15 00:24:45 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -81,6 +81,7 @@ class DASMongocache(Cache):
         self.conn    = Connection(self.dbhost, self.dbport)
         self.db      = self.conn[self.dbname]
         self.col     = self.db[self.colname]
+        self.buffer_size = 100 # TODO: I can pass it via config
         
     def is_expired(self, query):
         """
@@ -158,6 +159,7 @@ class DASMongocache(Cache):
         index_list = [(key, DESCENDING) for key in lkeys]
         prim_key   = lkeys[0] # TODO: what to do with multiple look-up keys
         trigger    = 0
+        buffer     = [] # small buffer to be used for bulk updates
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
             for item in results:
@@ -182,14 +184,27 @@ class DASMongocache(Cache):
                         self.col.insert(mdict)
                         self.col.remove({'_id': row['_id']})
                     else:
-                        self.col.insert(item)
+                        if  len(buffer) < self.buffer_size:
+                            buffer.append(item)
+                        else:
+                            self.col.insert(buffer)
+                            buffer = []
+#                        self.col.insert(item)
                 else:
-                    self.col.insert(item)
+                    if  len(buffer) < self.buffer_size:
+                        buffer.append(item)
+                    else:
+                        self.col.insert(buffer)
+                        buffer = []
+#                    self.col.insert(item)
                 if  index_list:
                     try:
                         self.col.ensure_index(index_list)
                     except:
                         pass
+            if  buffer:
+                self.col.insert(buffer)
+                buffer = []
             if  not trigger: # we got empty results
                 # we will insert empty record to avoid consequentive
                 # calls to service who doesn't have data
