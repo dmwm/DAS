@@ -5,25 +5,27 @@
 View manager class.
 """
 
-__revision__ = "$Id: das_viewmanager.py,v 1.4 2009/07/14 15:58:46 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_viewmanager.py,v 1.5 2009/07/15 14:23:29 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import os
+import traceback
+from datetime import datetime
 
+# SQLAlchemy modules
 from sqlalchemy import Column, Integer, String, Text, DateTime
-from sqlalchemy import create_engine, MetaData, ForeignKey, and_
+from sqlalchemy import create_engine, MetaData, ForeignKey
 from sqlalchemy.orm import relation, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm.exc import MultipleResultsFound
 
 # DAS modules
-from DAS.utils.utils import genkey, getarg, sort_data
+from DAS.utils.utils import genkey
 
-Base = declarative_base()
-class Group(Base):
+BASE = declarative_base()
+class Group(BASE):
     """Group ORM"""
     __tablename__  = 'groups'
     __table_args__ = {'mysql_engine':'InnoDB'}
@@ -38,7 +40,7 @@ class Group(Base):
         """String representation of Group ORM object"""
         return "<Group('%s')>" % self.name
 
-class User(Base):
+class User(BASE):
     """User ORM"""
     __tablename__  = 'users'
     __table_args__ = {'mysql_engine':'InnoDB'}
@@ -60,14 +62,14 @@ class User(Base):
         return "<User('%s', '%s', '%s')>" % \
                 (self.login, self.fullname, self.contact)
 
-class View(Base):
+class View(BASE):
     """View ORM"""
     __tablename__  = 'views'
     __table_args__ = {'mysql_engine':'InnoDB'}
 
     id         = Column(Integer, primary_key=True)
     hash       = Column(String(32), unique=True)
-    name       = Column(Text)
+    name       = Column(Text, unique=True)
     definition = Column(Text)
     datetime   = Column(DateTime(timezone='CEST'))
     user_id    = Column(Integer, ForeignKey('users.id'))
@@ -76,13 +78,20 @@ class View(Base):
     def __init__(self, ihash, iname, idef, idate):
         self.hash       = ihash
         self.name       = iname
-        self.definitino = idef
+        self.definition = idef
         self.datetime   = idate
 
     def __repr__(self):
         """String representation of View ORM object"""
         return "<View('%s', '%s','%s', '%s')>" \
-                % (self.hash, self.name, self.create, self.expire)
+                % (self.hash, self.name, self.definition, self.datetime)
+
+def strip_query(query):
+    """
+    Strip and remove conditions from the query. To be used as a
+    view definition
+    """
+    return query.strip().split(' where ')[0]
 
 class DASViewManager(object):
     """
@@ -92,6 +101,7 @@ class DASViewManager(object):
     def __init__(self, config):
         self.map = {} # should be replaced with persistent storage
         self.dir     = config['views_dir'] 
+        self.logger  = config['logger']
         if  not os.path.isdir(self.dir):
             os.mkdir(self.dir)
         dbengine     = config['views_engine'] 
@@ -109,49 +119,103 @@ class DASViewManager(object):
     def create_table(self):
         """Create DB tables based on ORM objects"""
         metadata = MetaData()
-        table    = View.__table__
-        Base.metadata.create_all(self.engine)
+#        table    = View.__table__
+        BASE.metadata.create_all(self.engine)
 
-    def create(self, name, query):
+    def create(self, viewname, query, 
+                login='nobody', fullname='N/A', group='users'):
         """
         create new view for given name and a query
         """
-        # TODO: query validation via DAS QL parser
-        if  self.map.has_key(name):
-            msg = "View '%s' already exists" % name
+        if  self.map.has_key(viewname):
+            msg = "View '%s' already exists" % viewname
             raise Exception(msg)
-        self.map[name] = query.strip().split(' where ')[0]
+        squery   = strip_query(query)
+
+        vobj     = View(genkey(squery), viewname, squery, datetime.today())
+        session  = self.session()
+        try: # session transactions
+            try:
+                uobj = session.query(User).filter(User.login==login).one()
+            except:
+                uobj = User(login, fullname, contact="")
+                session.add(uobj)
+                pass
+            try:
+                gobj = session.query(Group).filter(Group.name==group).one()
+            except:
+                gobj = Group(group)
+                session.add(gobj)
+                pass
+            vobj.user  = uobj
+            uobj.group = gobj
+            session.add(vobj)
+            session.commit()
+        except:
+            session.rollback()
+            self.logger.debug(traceback.format_exc())
+            traceback.print_exc()
+            msg = "Unable to commit DAS view DB"
+            raise Exception(msg)
 
     def delete(self, name):
         """
         delete existing view
         """
-        if  self.map.has_key(name):
-            del(self.map[name])
+        session  = self.session()
+        try: # session transactions
+            try:
+                view = session.query(View).filter(View.name==name).one()
+                session.delete(view) # it is not cascade delete
+            except:
+                pass
+            session.commit()
+        except:
+            session.rollback()
+            self.logger.debug(traceback.format_exc())
+            traceback.print_exc()
+            msg = "Unable to delete DAS view DB"
+            raise Exception(msg)
 
     def update(self, name, query):
         """
         update exising view with new given query
         """
-        if  self.map.has_key(name):
-            # TODO: we can add logic to keep track of updates here
-            self.delete(name)
-            self.create(name, query)
-        else:
-            raise Exception("View '%s', doesn't exists" % name)
-        
+        self.delete(name)
+        self.create(name, query)
 
     def get(self, name):
         """
         retrieve DAS query for given name
         """
-        if  not self.map.has_key(name):
-            raise Exception("View '%s', doesn't exists" % name)
-        return self.map[name]
+        session  = self.session()
+        view = None
+        try: # session transactions
+            view = session.query(View).filter(View.name==name).one()
+            session.commit()
+        except:
+            session.rollback()
+            self.logger.debug(traceback.format_exc())
+            msg = "Unable to look-up view '%s' in DB" % name
+            raise Exception(msg)
+        return view.definition
 
     def all(self):
         """
         retrieve all views
         """
-        return self.map
+        session  = self.session()
+        views = None
+        try: # session transactions
+            views = session.query(View).all()
+            session.commit()
+        except:
+            session.rollback()
+            self.logger.debug(traceback.format_exc())
+            msg = "Unable to look-up all views in DB"
+            raise Exception(msg)
+        viewdict = {}
+        for view in views:
+            viewdict[view.name] = view.definition
+        return viewdict
 
