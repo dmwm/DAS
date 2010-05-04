@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.48 2010/03/04 15:43:36 valya Exp $"
-__version__ = "$Revision: 1.48 $"
+__revision__ = "$Id: qlparser.py,v 1.1 2010/03/17 20:34:26 valya Exp $"
+__version__ = "$Revision: 1.1 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
