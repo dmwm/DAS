@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.39 2010/02/22 21:01:25 valya Exp $"
-__version__ = "$Revision: 1.39 $"
+__revision__ = "$Id: qlparser.py,v 1.40 2010/02/24 21:31:36 valya Exp $"
+__version__ = "$Revision: 1.40 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -229,6 +229,7 @@ class MongoParser(object):
         self.analytics = config['dasanalytics']
         self.daskeys = self.map.daskeys()
         self.operators = DAS_OPERATORS
+        self.filter = 'grep '
 
         if  not self.map.check_maps():
             msg = "No DAS maps found in MappingDB"
@@ -246,11 +247,25 @@ class MongoParser(object):
         Return MongoDB request query.
         """
         mapreduce = []
+        filters   = []
+        pat = re.compile(r"^([a-z]+\.?)+$") # match key.attrib
         if  query and type(query) is types.StringType:
             if  query.find("|") != -1:
                 split_results = query.split("|")
                 query = split_results[0]
-                mapreduce = [i.strip() for i in split_results[1:]]
+                for item in split_results[1:]:
+                    if  item.find(self.filter) != -1:
+                        for elem in item.replace(self.filter, '').split(','):
+                            filter = elem.strip()
+                            if  not filter:
+                                continue
+                            if  not pat.match(filter):
+                                msg = 'Incorrect filter: %s' % filter
+                                raise Exception(msg)
+                            filters.append(filter)
+                    else:
+                        mapreduce.append(item)
+#                mapreduce = [i.strip() for i in split_results[1:]]
             query = query.strip()
             if  query[0] == "{" and query[-1] == "}":
                 mongo_query = json.loads(query)
@@ -418,6 +433,8 @@ class MongoParser(object):
         # add mapreduce if it exists
         if  mapreduce:
             mongo_query['mapreduce'] = mapreduce
+        if  filters:
+            mongo_query['filters'] = filters
         if  add_to_analytics:
             self.analytics.add_query(query, mongo_query)
         return mongo_query
