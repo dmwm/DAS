@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.11 2009/10/21 19:14:23 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.12 2009/10/23 19:35:55 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -574,12 +574,16 @@ if __name__ == '__main__':
                 'block': [
                         {'das':'block.name', 'ui':'BlockName'}, 
                         {'das':'block.size', 'ui':'BlockSize'},
+                        {'das':'block.nevents', 'ui':'Number of events'},
+                        {'das':'block.nfiles', 'ui':'Number of files'},
                          ],
                 'site': [
                         {'das':'site.name', 'ui':'CMSName'}, 
                         {'das':'site.se', 'ui':'StorageElement'}, 
                         {'das':'site.samname', 'ui':'SAMName'}, 
-                        {'das':'site.sitename', 'ui':'Site'}
+                        {'das':'site.sitename', 'ui':'Site'},
+                        {'das':'site.admin.email', 'ui':'Site Admin Email'},
+                        {'das':'site.admin.title', 'ui':'Site Admin Role'},
                         ]}
           }
     mgr.add(rec)
