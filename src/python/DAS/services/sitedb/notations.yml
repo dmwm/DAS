@@ -1,4 +1,0 @@
-notations : [
-    {'api_param':'cmsname', 'das_name':'name', 'api':''},
-    {'api_param':'cms_name', 'das_name':'name', 'api':''},
-            ]
