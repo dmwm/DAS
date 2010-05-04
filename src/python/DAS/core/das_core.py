@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.30 2009/09/11 13:26:56 valya Exp $"
-__version__ = "$Revision: 1.30 $"
+__revision__ = "$Id: das_core.py,v 1.31 2009/09/11 18:43:13 valya Exp $"
+__version__ = "$Revision: 1.31 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -73,8 +73,8 @@ class DASCore(object):
         dasmapping = DASMapping(dasconfig)
         dasconfig['dasmapping'] = dasmapping
 
-        dasanalytics = DASAnalytics(dasconfig)
-        dasconfig['dasanalytics'] = dasanalytics
+        self.analytics = DASAnalytics(dasconfig)
+        dasconfig['dasanalytics'] = self.analytics
 
         self.viewmgr = DASViewManager(dasconfig)
 
@@ -249,6 +249,10 @@ class DASCore(object):
         """
         if  hasattr(self, 'cache'):
             if  self.cache.incache(query):
+                params = self.get_params(query)
+                for srv, queries in params['dasqueries'].items():
+                    for squery in queries:
+                        self.analytics.update(srv, squery)
                 results = self.cache.get_from_cache(query, idx, limit)
             else:
                 # NOTE: the self.call returns generator, update_cache
