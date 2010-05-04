@@ -10,7 +10,7 @@ import unittest
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_cache import DASCache
-from DAS.tools.das_cache_client import urllib2_request
+from DAS.web.utils import urllib2_request
 
 class testDASCache(unittest.TestCase):
     """

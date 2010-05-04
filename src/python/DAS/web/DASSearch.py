@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.8 2009/05/28 18:59:12 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: DASSearch.py,v 1.9 2009/05/29 18:29:48 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -14,6 +14,12 @@ import time
 import types
 import thread
 from cherrypy import expose
+try:
+    # Python 2.6
+    import json
+except:
+    # Prior to 2.6 requires simplejson
+    import simplejson as json
 
 # WMCore/WebTools modules
 from WMCore.WebTools.Page import TemplatedPage
@@ -22,6 +28,7 @@ from WMCore.WebTools.Page import exposedasjson, exposedasxml, exposetext
 # DAS modules
 from DAS.core.das_core import DASCore
 from DAS.utils.utils import getarg
+from DAS.web.utils import urllib2_request
 
 import sys
 if sys.version_info < (2, 5):
@@ -34,6 +41,8 @@ class DASSearch(TemplatedPage):
     """
     def __init__(self, config):
         TemplatedPage.__init__(self, config)
+        cdict          = self.config.dictionary_()
+        self.cachesrv  = getarg(cdict, 'cache_server_url', 'http://localhost:8011')
 #        self.dasmgr = DASCore(mode='html', debug=1)
         self.dasmgr = DASCore()
         self.pageviews = ['xml', 'list', 'table', 'plain', 'json'] 
@@ -177,6 +186,36 @@ class DASSearch(TemplatedPage):
         return page
 
     def result(self, kwargs):
+        """
+        invoke DAS search call, parse results and return them to
+        web methods
+        """
+        url    = self.cachesrv
+        uinput = getarg(kwargs, 'input', '')
+        format = getarg(kwargs, 'format', '')
+        idx    = getarg(kwargs, 'idx', 0)
+        limit  = getarg(kwargs, 'limit', 0)
+        params = {'query':uinput, 'idx':idx, 'limit':limit}
+        path   = '/rest/json/GET'
+        data   = json.loads(urllib2_request(url+path, params))
+        titles = 'N/A'
+        res    = []
+        form   = self.form(uinput=uinput)
+        if  data['status'] == 'success':
+            res    = data['result']
+            titles = res[0].keys()
+            titles.sort()
+            if  'id' in titles:
+                titles.remove('id')
+            titles = ['id'] + titles
+            form   = self.form(uinput=uinput)
+        elif data['status'] == 'not found':
+            # request data via POST
+            path   = '/rest/json/POST'
+            data   = json.loads(urllib2_request(url+path, params))
+        return titles, res, form
+        
+    def result_v1(self, kwargs):
         """
         invoke DAS search call, parse results and return them to
         web methods
