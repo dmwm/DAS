@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ ! -f $HOME/.ipython/ipy_profile_dascache.py ]; then
+     echo "No dascache ipython profile found."
+     echo "Please add ipy_profile_dascache.py into $HOME/.ipython"
+     echo "To obtain this file install DAS first"
+     echo "It is located at $DAS_ROOT/src/python/DAS/utils/"
+     exit 0
+fi
+ipython -p dascache
