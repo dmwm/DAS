@@ -63,7 +63,6 @@ class DashboardService(DASAbstractService):
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
-#        selkeys, cond = self.query_parser(query)
         api   = self.map.keys()[0] # we have only one key
         args  = dict(self.map[api]['params'])
         date1 = time.strftime("%Y-%m-%d %H:%M:%S", \
@@ -103,7 +102,6 @@ class DashboardService(DASAbstractService):
             ctime, self.expire, self.version())
         header['lookup_keys'] = self.lookup_keys(api)
         header['selection_keys'] = selkeys
-#        mongo_query = self.mongo_query_parser(query)
         mongo_query = query
         self.analytics.add_api(self.name, query, api, args)
         self.localcache.update_cache(mongo_query, genrows, header)
