@@ -6,6 +6,7 @@ Unit test for DAS QL parser
 """
 
 import unittest
+import urllib2, urllib
 from DAS.utils.utils import cartesian_product, dasheader
 from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
@@ -13,6 +14,8 @@ from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation
+
+#from DAS.utils.utils import xml_parser_new
 
 class testUtils(unittest.TestCase):
     """
@@ -427,14 +430,33 @@ class testUtils(unittest.TestCase):
         block = dataset + '#' + uid
         url = 'http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas'
         params = {'block':block}
-        import urllib2, urllib
+#        print
+#        print "Check Phedex"
+#        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
+#        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
+#        gen = xml_parser(notations, data, "block")
+#        for item in gen:
+#            print item
+
         print
-        print "Check Phedex"
+        print "Check Phedex blockReplicas with xml_parser_new"
         print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
         data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-        gen = xml_parser(notations, data, "block")
+        gen = xml_parser(notations, data, "block", [])
         for item in gen:
             print item
+
+        dataset = '/Njet_4j_160_200-alpgen/CMSSW_1_6_7-CSA07-1201630335/RECO'
+        uid = '04e2c867-3031-40a0-ac14-9fe57af33794'
+        block = dataset + '#' + uid
+        url = 'http://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas'
+        params = {'block':block, 'se':'*'}
+        print
+        print "Check Phedex fileReplicas with xml_parser_new"
+        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
+        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
+        gen = xml_parser(notations, data, "file", ["block.name"])
+        print gen.next() # print first element from generator
 
         params = {'storage_element_name': '*', 'block_name':block,
                   'api': 'listBlocks', 'user_type': 'NORMAL', 
