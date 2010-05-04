@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.57 2010/02/03 16:53:40 valya Exp $"
-__version__ = "$Revision: 1.57 $"
+__revision__ = "$Id: das_core.py,v 1.58 2010/02/05 21:27:35 valya Exp $"
+__version__ = "$Revision: 1.58 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -346,7 +346,7 @@ class DASCore(object):
         msg = 'DASCore::call, query=%s' % query
         self.logger.info(msg)
         params = self.mongoparser.params(query)
-        services = params['services'].keys()
+        services = params['services']
         self.logger.info('DASCore::call, services = %s' % services)
         qhash = genkey(query)
         try:
