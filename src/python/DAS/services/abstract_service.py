@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.64 2010/02/02 19:55:20 valya Exp $"
-__version__ = "$Revision: 1.64 $"
+__revision__ = "$Id: abstract_service.py,v 1.65 2010/02/03 16:50:46 valya Exp $"
+__version__ = "$Revision: 1.65 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -202,13 +202,13 @@ class DASAbstractService(object):
         """
         pass
 
-    def data2das(self, gen, api):
-        """
-        Convert keys in resulted rows into DAS notations.
-        """
-        for row in gen:
-            row2das(self.dasmapping.notation2das, self.name, api, row)
-            yield row
+#    def data2das(self, gen, api):
+#        """
+#        Convert keys in resulted rows into DAS notations.
+#        """
+#        for row in gen:
+#            row2das(self.dasmapping.notation2das, self.name, api, row)
+#            yield row
 
     def insert_apicall(self, expire, url, api, api_params):
         """
@@ -375,10 +375,11 @@ class DASAbstractService(object):
         for api, value in self.map.items():
             expire = value['expire']
             format = value['format']
-            if  value['params'].has_key('api'):
-                url = value['url'] # JAVA, e.g. http://host/Servlet
-            else: # if we have http://host/api?...
-                url = value['url'] + '/' + api
+            url    = value['url']
+#            if  value['params'].has_key('api'):
+#                url = value['url'] # JAVA, e.g. http://host/Servlet
+#            else: # if we have http://host/api?...
+#                url = value['url'] + '/' + api
             args = value['params']
             if  skeys:
                 if  not set(value['keys']) & set(query['fields']):
