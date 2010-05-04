@@ -5,14 +5,25 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.2 2009/03/10 20:41:40 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: utils.py,v 1.3 2009/04/07 19:28:40 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
 import md5
 import time
 import types
+
+def splitlist(ilist, nentries):
+    """
+    Split input list into a list of lists with nentries
+    """
+    for step in range(0, len(ilist), nentries):
+        idx = step
+        jdx = idx+nentries
+        if  jdx > len(ilist):
+            jdx = len(ilist)
+        yield ilist[idx:jdx]
 
 def genkey(query):
     """
