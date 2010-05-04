@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.58 2009/12/22 15:13:10 valya Exp $"
-__version__ = "$Revision: 1.58 $"
+__revision__ = "$Id: abstract_service.py,v 1.59 2010/01/04 19:02:56 valya Exp $"
+__version__ = "$Revision: 1.59 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -138,6 +138,10 @@ class DASAbstractService(object):
                 req.add_header(key, val)
         if  not encoded_data:
             encoded_data = None
+        if  self.verbose > 1:
+            h=urllib2.HTTPHandler(debuglevel=1)
+            opener = urllib2.build_opener(h)
+            urllib2.install_opener(opener)
         data = urllib2.urlopen(req, encoded_data)
         return data
 
