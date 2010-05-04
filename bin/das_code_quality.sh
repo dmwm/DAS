@@ -29,10 +29,11 @@ do
         echo '\E[47;32m'"\033[1mPASS\033[0m"
     else
         echo '\E[1;31m'"\033[1m$msg\033[0m"
-        fail_files = $fail_files+1
+        fail_files=$(($fail_files+1))
     fi
 done
 
 if [ $fail_files != 0 ]; then
+    echo "===== Total number of failures ====="
     echo '\E[1;31m'"\033[1mFAIL $fail_files times\033[0m"
 fi
