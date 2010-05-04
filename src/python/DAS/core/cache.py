@@ -5,8 +5,8 @@
 Abstract cache class.
 """
 
-__revision__ = "$Id: cache.py,v 1.8 2009/05/28 18:59:10 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: cache.py,v 1.9 2009/06/04 14:09:26 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 class NoResults(Exception):
@@ -71,10 +71,10 @@ class Cache(object):
         self.logger.info('Cache::clean_cache')
         return
 
-    def delete_cache(self, query, results, expire):
+    def delete_cache(self, dbname=None, system=None):
         """
         Delete results in cache. Must be implemented by child class.
         """
-        self.logger.info('Cache::delete_cache(%s,%s,%s)' \
-                % (query, results, expire))
+        self.logger.info('Cache::delete_cache(%s,%s)' \
+                % (dbname, system))
         return

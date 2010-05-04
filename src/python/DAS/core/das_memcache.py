@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.9 2009/05/28 18:59:10 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_memcache.py,v 1.10 2009/06/04 14:09:26 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -105,7 +105,7 @@ class DASMemcache(Cache):
         """
         return
 
-    def delete_cache(self, dbname=None):
+    def delete_cache(self, dbname=None, system=None):
         """
         Delete all results in cache
         dbname is unused parameter to match behavior of couchdb cache
