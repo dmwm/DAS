@@ -4,12 +4,12 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.12 2009/11/10 16:08:27 valya Exp $"
-__version__ = "$Revision: 1.12 $"
+__revision__ = "$Id: phedex_service.py,v 1.13 2009/11/16 16:08:06 valya Exp $"
+__version__ = "$Revision: 1.13 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator
+from DAS.utils.utils import map_validator, xml_parser
 import types
 import DAS.utils.jsonwrapper as json
 
@@ -38,40 +38,23 @@ class PhedexService(DASAbstractService):
         else:
             return params
 
-    def parser(self, api, data, params=None):
+    def parser(self, data_ptr, api, args):
         """
-        Phedex JSON parser. Phedex uses the following dict:
-        {'phedex': {'url':.., 'block':[]}
+        Phedex data-service parser.
         """
-        data  = json.loads(data)
-        if  data.has_key('phedex'):
-            data = data['phedex']
-            if  api == 'blockReplicas':
-                for block in data['block']:
-                    row = dict(block=block)
-                    self.row2das(self.name, api, row)
-                    yield row
-            elif api == 'fileReplicas':
-                for block in data['block']:
-                    fileinfo = block['file']
-                    del block['file']
-                    for file in fileinfo:
-                        row = dict(file=file, block=block)
-                        self.row2das(self.name, api, row)
-#                        print "\n\n#### yield phedex fileReplicas row"
-#                        print row
-                        yield row
-            elif api == 'nodes':
-                for node in data['node']:
-                    row = dict(site=node)
-                    self.row2das(self.name, api, row)
-                    yield row
-            elif api == 'lfn2pfn':
-                for item in data['mapping']:
-                    row = dict(file=item)
-                    self.row2das(self.name, api, row)
-                    yield row
-            else:
-                msg = 'Unsupported phedex API %s' % api
-                raise Exception(msg)
- 
+        add = None
+        if  api == 'blockReplicas':
+            tag = 'block'
+        elif api == 'fileReplicas':
+            tag = 'file'
+            add = 'block_name'
+        elif api == 'nodes':
+            tag = 'node'
+        elif api == 'lfn2pfn':
+            tag = 'mapping'
+        else:
+            msg = 'Unsupported %s API %s' % (self.name, api)
+            raise Exception(msg)
+        gen = xml_parser(data_ptr, tag, add)
+        for row in gen:
+            yield row

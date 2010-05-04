@@ -4,8 +4,8 @@
 """
 RunSummary service tools
 """
-__revision__ = "$Id: run_summary.py,v 1.5 2009/10/16 18:03:54 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: run_summary.py,v 1.6 2009/11/16 16:08:20 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import urllib2
@@ -108,9 +108,10 @@ def get_run_summary(url, params, key, cert, debug=0):
     url    = 'https://cmswbm.web.cern.ch/Shibboleth.sso/ADFS'
     params = urllib.urlencode(param_dict)
     fdesc  = opener.open(url, params)
-    data   = fdesc.read()
-    fdesc.close()
-    return data
+    return fdesc
+#    data   = fdesc.read()
+#    fdesc.close()
+#    return data
 
 #
 # main
@@ -122,4 +123,4 @@ if __name__ == '__main__':
     PARAMS = {'RUN':97029, 'DB':'cms_omds_lb', 'FORMAT':'XML'}
     URL    = 'https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary'
     DATA   = get_run_summary(URL, PARAMS, KEY, CERT, DEBUG)
-    print DATA
+    print DATA.read()

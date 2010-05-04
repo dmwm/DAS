@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.13 2009/11/10 20:03:49 valya Exp $"
-__version__ = "$Revision: 1.13 $"
+__revision__ = "$Id: runsum_service.py,v 1.14 2009/11/16 16:08:21 valya Exp $"
+__version__ = "$Revision: 1.14 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -13,10 +13,12 @@ import time
 import types
 import ConfigParser
 import traceback
-import xml.etree.cElementTree as ET
+#import xml.etree.cElementTree as ET
+import xml.etree.ElementTree as ET
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, get_key_cert, dasheader
+from DAS.utils.utils import xml_parser, adjust_value
 from DAS.services.runsum.run_summary import get_run_summary
 
 def convert_datetime(sec):
@@ -103,14 +105,17 @@ class RunSummaryService(DASAbstractService):
         key, cert = get_key_cert()
         debug   = 0
         if  self.verbose > 1:
-            debug = 1
+            debug   = 1
         try:
-            time0 = time.time()
-            data  = get_run_summary(self.url, args, key, cert, debug)
-            api = self.map.keys()[0] # we only register 1 API
-            genrows = self.parser(api, data, args)
-            ctime = time.time()-time0
-            header = dasheader(self.name, query, api, self.url, args,
+            time0   = time.time()
+            api     = self.map.keys()[0] # we only register 1 API
+            msg = 'DASAbstractService::%s::getdata(%s, %s)' \
+                    % (self.name, self.url, args)
+            self.logger.info(msg)
+            data    = get_run_summary(self.url, args, key, cert, debug)
+            genrows = self.parser(data, api)
+            ctime   = time.time()-time0
+            header  = dasheader(self.name, query, api, self.url, args,
                 ctime, self.expire, self.version())
             header['lookup_keys'] = self.lookup_keys(api)
             header['selection_keys'] = selkeys
@@ -124,30 +129,39 @@ class RunSummaryService(DASAbstractService):
             self.logger.warning(msg)
         return True
 
-    def parser(self, api, data, params=None):
+    def parser(self, data_ptr, api):
         """
-        RunSummary XML parser, it returns a list of dict rows, e.g.
-        [{'file':value, 'run':value}, ...]
+        RunSummary data-service parser.
         """
-        try:
-            elem  = ET.fromstring(data)
-        except:
-            print "data='%s'" % data
-            raise Exception('Unable to parse run summary output')
-        for i in elem:
-            if  i.tag == 'runInfo':
-                row = {}
-                for j in i:
-                    if  j.tag:
-                        newkey = self.dasmapping.notation2das\
-                                (self.name, j.tag, api)
-                        row[newkey] = j.text
-                    nrow = {}
-                    for k in j.getchildren():
-                        if  k.tag:
-                            nkey = self.dasmapping.notation2das\
-                                (self.name, k.tag, api)
-                            nrow[nkey] = k.text
-                    if  nrow:
-                        row[newkey] = nrow
-                yield {'run' : row}
+        row  = {}
+        hold = None
+        for item in ET.iterparse(data_ptr, ["start", "end"]):
+            end, elem = item
+            if  elem.tag == 'cmsdb':
+                continue
+            if  end == 'start' and elem.tag == 'runInfo':
+                continue
+            if  end == 'end' and elem.tag == 'runInfo':
+                yield dict(run=row)
+                row  = {}
+                elem.clear()
+            if  hold and end == 'end' and elem.tag == hold:
+                hold = None
+                continue
+            if  end == 'start':
+                sub = {}
+                children = elem.getchildren()
+                # I don't apply notation conversion to all children
+                # since those are not likely to overlap
+                if  children:
+                    for child in children:
+                        sub[child.tag] = adjust_value(child.text)
+                    row[elem.tag] = sub
+                    hold = elem.tag
+                else:
+                    if  not hold:
+                        nkey = self.dasmapping.notation2das\
+                            (self.name, elem.tag, api)
+                        row[nkey] = adjust_value(elem.text)
+#                        row[elem.tag] = elem.text
+        data_ptr.close()
