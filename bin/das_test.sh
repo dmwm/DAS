@@ -1,7 +1,4 @@
 #!/bin/sh
-#find $DAS_ROOT/test -name "*_t.py" | \
-#awk '{print "echo; echo \"running unit tests for "$0"\"; python "$0""}' | \
-#/bin/sh
 /bin/cp -f $DAS_ROOT/etc/das.cfg $DAS_ROOT/etc/das.cfg.copy
 tests=`find $DAS_ROOT/test -name "*_t.py"`
 for t in $tests
@@ -28,3 +25,4 @@ do
     fi
 done; 
 /bin/cp -f $DAS_ROOT/etc/das.cfg.copy $DAS_ROOT/etc/das.cfg
+
