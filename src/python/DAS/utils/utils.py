@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.77 2010/03/02 20:01:12 valya Exp $"
-__version__ = "$Revision: 1.77 $"
+__revision__ = "$Id: utils.py,v 1.78 2010/03/03 18:46:22 valya Exp $"
+__version__ = "$Revision: 1.78 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -25,6 +25,19 @@ from itertools import groupby
 from pymongo.objectid import ObjectId
 import xml.etree.cElementTree as ET
 import plistlib
+
+def yield_rows(input):
+    """
+    Yield rows from provided input.
+    """
+    if  type(input) is types.GeneratorType:
+        for row in input:
+            yield row
+    elif type(input) is types.ListType:
+        for row in input:
+            yield row
+    else:
+        yield input
 
 def adjust_value(value):
     """
@@ -116,6 +129,12 @@ class dotdict(dict):
                 return
             obj  = obj[key]
         obj[key] = value
+
+def dict_type(obj):
+    """
+    Return if provided object is type of dict or instance of dotdict class
+    """
+    return type(obj) is types.DictType or isinstance(obj, dotdict)
 
 def dict_value(idict, prim_key):
     """
