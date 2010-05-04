@@ -5,8 +5,8 @@
 Define core class for Data Aggregation Service (DAS)
 """
 
-__revision__ = "$Id: das_core.py,v 1.2 2009/04/07 20:05:58 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_core.py,v 1.3 2009/04/13 19:01:56 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -287,25 +287,24 @@ class DASCore(object):
         # selection keys of the query and inter-service relationships
         ulist   = list(sellist)
         
-        discard_services = []
         for service in services:
             if  service != self.dbs.name:
                 keys = self.relation_keys(self.dbs.name, service)
                 for key in keys:
-                    # I added query.find(key) to avoid situation
-                    # find dataset,admin where site=T2_UK
-                    # when phedex service is found and block,site
-                    # keys were added, once ANTRL parser in place
-                    # I don't need it anymore, but I'll need to 
-                    # modify this part based on ANTRL output.
-
-                    if  query.find(key) == -1:
-                        self.logger.info('DASCore::call, will discard %s' % srv)
-                        discard_services.append(service)
-                    else:
-                        if  not ulist.count(key):
-                            ulist.append(key)
+                    if  not ulist.count(key):
+                        ulist.append(key)
         self.logger.info('DASCore::call, unique set of keys %s' % ulist)
+
+        # I need one more loop to discard services which doesn't cover
+        # output selection list, e.g.
+        # find dataset, admin where site=T2_UK
+        # finds dbs, sitedb, phedex based on their relation keys
+        # but phedex doesn't need to be used since not selection keys
+        # from this service.
+        discard_services = []
+        for service in services:
+            if  not set(self.service_keys[service]) & set(sellist):
+                discard_services.append(service)
         for srv in discard_services:
             services.remove(srv)
 
