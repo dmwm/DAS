@@ -85,10 +85,10 @@ function ShowTag(tag) {
         id.className="show";
     }
 }
-function wait() {
-    var id=document.getElementById('_response');
-    id.innerHTML='<div><img src="/dascontrollers/images/loading.gif" alt="loading" /> please wait</div>';
-}
+//function wait() {
+//    var id=document.getElementById('_response');
+//    id.innerHTML='<div><img src="/dascontrollers/images/loading.gif" alt="loading" /> please wait</div>';
+//}
 function load(url) {
     window.location.href=url;
 }
@@ -119,6 +119,8 @@ function UrlParams() {
     return options;
 }
 function gup( name ) {
+    // see http://www.kamath.com/codelibrary/cl006_url.asp
+    var lsRegExp = /\+/g;
     // Courtesy of http://www.netlobo.com/url_query_string_javascript.html
     name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
     var regexS = "[\\?&]"+name+"=([^&#]*)";
@@ -128,5 +130,5 @@ function gup( name ) {
         return "";
     else
         // use unescape to properly show URL encoded input in search field form
-        return unescape(results[1]);
+        return unescape(String(results[1]).replace(lsRegExp, " "));
 }
