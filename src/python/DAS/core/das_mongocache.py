@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.11 2009/09/29 20:49:45 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_mongocache.py,v 1.12 2009/10/02 15:04:05 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -150,14 +150,17 @@ class DASMongocache(Cache):
                 % query)
         if  not results:
             return
-        dasheader = header['das']
+        dasheader  = header['das']
         dasheader['selection_keys'] = header['selection_keys']
-        lkeys = header['lookup_keys']
+        lkeys      = header['lookup_keys']
         index_list = [(key, DESCENDING) for key in lkeys]
-        prim_key = lkeys[0] # TODO: what to do with multiple look-up keys
+        prim_key   = lkeys[0] # TODO: what to do with multiple look-up keys
+        trigger    = 0
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
             for item in results:
+                if  not trigger:
+                    trigger = 1
                 item['das'] = dasheader
                 try:
                     entry = dict_value(item, prim_key)
@@ -180,6 +183,10 @@ class DASMongocache(Cache):
                         self.col.ensure_index(index_list)
                     except:
                         pass
+            if  not trigger: # we got empty results
+                # we will insert empty record to avoid consequentive
+                # calls to service who doesn't have data
+                self.col.insert(dict(das=dasheader))
         else:
             print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
