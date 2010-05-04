@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.27 2009/09/29 20:46:16 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: utils.py,v 1.28 2009/10/02 15:29:31 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -97,35 +97,15 @@ def dasheader(system, query, api, url, args, ctime, expire, ver):
     """
     timestamp = time.time()
     dasdict = dict(system=[system], timestamp=timestamp,
-                url=url, ctime=ctime, query=[str(query)],
-                params={api:args}, version=ver,
+#                url=url, ctime=ctime, query=[str(query)],
+#                params={api:args}, version=ver,
+                url=url, ctime=ctime, qhash=[genkey(str(query))], version=ver,
                 expire=timestamp+expire, api=[api])
     return dict(das=dasdict)
 
-def update_dasheader(header, system, query, api, url, args, ctime, expire, ver):
-    """
-    Update existing dasheader in MognoDB
-    """
-    systems = header['das']['system']
-    apis = header['das']['api']
-    queries = header['das']['query']
-    params = header['das']['params']
-    if  system not in systems:
-        systems.append(system)
-        header['das']['system'] = systems
-    if  api not in apis:
-        apis.append(api)
-        header['das']['api'] = apis
-    if  query not in queries:
-        queries.append(query)
-        header['das']['query'] = queries
-    if  not params.has_key(api):
-        params[api] = args
-        header['das']['params'] = params
-
 def genkey(query):
     """
-    Generate a new key for a given query. We use md5 hash for the
+    Generate a new key-hash for a given query. We use md5 hash for the
     query and key is just hex representation of this hash.
     """
     try:
@@ -599,4 +579,14 @@ def sort_data(data, key, direction='asc'):
         tup_list.reverse()
     for pair in tup_list:
         yield data[pair[1]]
+
+class dotdict(dict):
+    """
+    Access python dictionaries via dot notations, code taken from
+    http://parand.com/say/index.php/2008/10/24/python-dot-notation-dictionary-access/
+    """
+    def __getattr__(self, attr):
+        return self.get(attr, None)
+    __setattr__= dict.__setitem__
+    __delattr__= dict.__delitem__
 
