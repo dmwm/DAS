@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.22 2009/10/12 20:13:26 valya Exp $"
-__version__ = "$Revision: 1.22 $"
+__revision__ = "$Id: qlparser.py,v 1.23 2009/10/13 23:45:21 valya Exp $"
+__version__ = "$Revision: 1.23 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -358,6 +358,8 @@ class MongoParser(object):
         fields  = getarg(query, 'fields', None)
         # convert selection keys into das notataions, e.g.
         # bfield => run.bfield
+        # TODO: I may need to change this to return entity rather 
+        # then entity.attribute
         daskeys = []
         for key in fields:
             try:
@@ -372,7 +374,9 @@ class MongoParser(object):
             if  ksplit[0] not in self.daskeys[system]:
                 continue
             if  type(val) is types.StringType or type(val) is types.UnicodeType:
-                val = re.compile('.*%s.*' % val)
+                if  val.find('*') != -1:
+                    val = re.compile(val.replace('*', '.*'))
+#                val = re.compile('.*%s.*' % val)
             newspec[key] = val
         newspec['das.system'] = system
         if  daskeys:
