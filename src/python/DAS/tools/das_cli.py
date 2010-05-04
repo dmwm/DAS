@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.19 2009/11/08 19:07:15 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: das_cli.py,v 1.20 2009/11/16 20:53:10 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -71,7 +71,7 @@ class DASOptionParser:
         """
         return self.parser.parse_args()
 
-def nooutput(input_results):
+def iterate(input_results):
     """Just iterate over generator, but don't print it out"""
     for elem in input_results:
         pass
@@ -89,7 +89,7 @@ def run(DAS, query, idx, limit, nooutput, plain, debug):
         else:
             dump(results, idx)
     else:
-        nooutput(results)
+        iterate(results)
 #
 # main
 #
