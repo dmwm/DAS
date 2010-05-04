@@ -14,7 +14,7 @@ from pymongo.connection import Connection
 
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
-from DAS.core.das_mongocache import DASMongocache, transform_keys
+from DAS.core.das_mongocache import DASMongocache, transform_keys, loose
 from DAS.core.das_mongocache import update_item, convert2pattern, compare_specs
 
 class testDASMongocache(unittest.TestCase):
@@ -40,6 +40,13 @@ class testDASMongocache(unittest.TestCase):
         query  = dict(fields=None, spec={'test.name':1, 'site.name':1})
         expect = dict(fields=None, spec={'test:name':1, 'site:name':1})
         result = transform_keys(query, '.', ':')
+        self.assertEqual(expect, result)
+
+    def test_loose(self):
+        """Test loose function"""
+        query  = {'fields': ['block'], 'spec': {}}
+        result = loose(query)
+        expect = query
         self.assertEqual(expect, result)
 
     def test_update_item(self):
