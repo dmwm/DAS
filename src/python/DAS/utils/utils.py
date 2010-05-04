@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.31 2009/10/15 15:33:16 valya Exp $"
-__version__ = "$Revision: 1.31 $"
+__revision__ = "$Id: utils.py,v 1.32 2009/10/15 20:56:32 valya Exp $"
+__version__ = "$Revision: 1.32 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -115,7 +115,8 @@ def genkey(query):
     except:
         # prior python 2.5
         keyhash = md5.new()
-
+    if  type(query) is types.DictType:
+        query = json.dumps(query)
     keyhash.update(query)
     return keyhash.hexdigest()
 
@@ -126,16 +127,17 @@ def gen2list(results):
     reslist = [name for name, group in groupby(results)]
     return reslist
 
-def uniqify(ilist):
-    """
-    Make all entries in a list to be unique.
-    http://pyfaq.infogami.com/how-do-you-remove-duplicates-from-a-list
-    """
-    ilist.sort()
-    last = ilist[-1]
-    for i in range(len(ilist)-2, -1, -1):
-        if last==ilist[i]: del ilist[i]
-        else: last=ilist[i]
+# Does not work with list of two identical items
+#def uniqify(ilist):
+#    """
+#    Make all entries in a list to be unique.
+#    http://pyfaq.infogami.com/how-do-you-remove-duplicates-from-a-list
+#    """
+#    ilist.sort()
+#    last = ilist[-1]
+#    for i in range(len(ilist)-2, -1, -1):
+#        if last==ilist[i]: del ilist[i]
+#        else: last=ilist[i]
 
 def dump(ilist, idx=0):
     """
