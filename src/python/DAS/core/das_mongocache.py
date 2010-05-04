@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.39 2009/11/24 16:01:10 valya Exp $"
-__version__ = "$Revision: 1.39 $"
+__revision__ = "$Id: das_mongocache.py,v 1.40 2009/11/25 18:21:24 valya Exp $"
+__version__ = "$Revision: 1.40 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -250,7 +250,6 @@ class DASMongocache(Cache):
         self.db      = self.conn[self.dbname]
         self.col     = self.db[self.colname]
 
-        self.mapping = self.conn['mapping']['db']
 # Not ready yet
 #        self.add_manipulator()
         
@@ -285,8 +284,6 @@ class DASMongocache(Cache):
         in cache.
         """
         self.logger.info("DASMongocache::similar_queries(%s)" % query)
-        # remove from cache all expire docs
-        self.col.remove({'das.expire': {'$lt' : int(time.time())}})
         spec    = getarg(query, 'spec', {})
         fields  = getarg(query, 'fields', {})
         newspec = {}
@@ -322,6 +319,17 @@ class DASMongocache(Cache):
                 return True
         return False
 
+    def remove_expired(self):
+        """
+        Remove expired records from DAS cache.
+        """
+        spec   = {'das.expire' : {'$lt' : int(time.time())}}
+        fields = ['_id']
+        for row in self.col.find(spec, fields):
+            objid = row['_id'].url_encode()
+            self.col.remove({'das_id':objid})
+        self.col.remove(spec)
+
     def incache(self, query):
         """
         Check if we have query results in cache, otherwise return null.
@@ -330,8 +338,7 @@ class DASMongocache(Cache):
         http://api.mongodb.org/python/
         """
         self.logger.info("DASMongocache::incache(%s)" % query)
-        # remove from cache all expire docs
-        self.col.remove({'das.expire': {'$lt' : int(time.time())}})
+        self.remove_expired()
         query  = adjust_id(query)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
@@ -369,6 +376,8 @@ class DASMongocache(Cache):
         idx    = int(idx)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
+        if  fields:
+            fields += ['das_id'] # always extract das_id's
         skeys  = []
         if  skey:
             if  order == 'asc':
@@ -439,14 +448,18 @@ class DASMongocache(Cache):
 
         # check presence of query in a cache regardless of the system
         # and insert it for this system
-        record = dict(query=encode_mongo_query(query),
-                 das=dict(expire=dasheader['expire'], 
-                        system=dasheader['system']))
+#        record = dict(query=encode_mongo_query(query),
+#                 das=dict(expire=dasheader['expire'], 
+#                        system=dasheader['system']))
         query_in_cache = False
         spec = {'spec' : dict(query=encode_mongo_query(query))}
         if  self.incache(spec):
             query_in_cache = True
-        self.col.insert(dict(record))
+#        self.col.insert(dict(record))
+
+        # insert das record for this set of results
+        das_record = dict(das=dasheader, query=encode_mongo_query(query))
+        objid = self.col.insert(das_record)
 
         # insert DAS records
         lkeys       = header['lookup_keys']
@@ -462,7 +475,8 @@ class DASMongocache(Cache):
                 if  item.has_key('exception') or item.has_key('error'):
                     continue
                 counter += 1
-                item['das'] = dasheader
+#                item['das'] = dasheader
+                item['das_id'] = objid.url_encode()
                 row = None
                 if  query_in_cache:
                     try:
