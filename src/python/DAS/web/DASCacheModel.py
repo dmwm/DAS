@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.18 2009/10/16 18:02:47 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.19 2009/11/03 16:39:42 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -69,7 +69,9 @@ def checkargs(func):
         supported = ['query', 'idx', 'limit', 'expire', 'method', 
                      'skey', 'order']
         if  not kwds:
-            kwds = args[-1]
+            if  args:
+                kwds = args[-1]
+        keys = []
         if  kwds:
             keys = [i for i in kwds.keys() if i not in supported]
         if  keys:
@@ -214,7 +216,6 @@ class DASCacheModel(RESTModel):
                             if  item not in result:
                                 result.append(item)
                         data['data'] = result
-#                        data['data'] = [i for i in res]
                         tot = len(data['data'])
                     else:
                         data['data'] = res
