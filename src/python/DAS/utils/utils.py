@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.48 2009/12/14 15:40:42 valya Exp $"
-__version__ = "$Revision: 1.48 $"
+__revision__ = "$Id: utils.py,v 1.49 2009/12/15 02:06:00 valya Exp $"
+__version__ = "$Revision: 1.49 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -689,14 +689,17 @@ def access(data, elem):
                         for item in result:
                             yield item
 
-def dict_helper(notations, idict):
+def dict_helper(idict, notations):
     """Create new dict for provided notations/dict"""
-    child_dict = {}
-    for kkk, vvv in idict.items():
-        child_dict[notations.get(kkk, kkk)] = vvv
-    return child_dict
+    try:
+        from DAS.extensions.das_speed_utils import _dict_handler
+        return _dict_handler(idict, notations)
+    except:
+        child_dict = {}
+        for kkk, vvv in idict.items():
+            child_dict[notations.get(kkk, kkk)] = vvv
+        return child_dict
 
-#def xml_parser(source, tag, add=None):
 def xml_parser(notations, source, tag, add=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
@@ -724,15 +727,11 @@ def xml_parser(notations, source, tag, add=None):
             elem.clear()
             continue
         key = notations.get(elem.tag, elem.tag)
-        row[key] = dict_helper(notations, elem.attrib)
-#        key = elem.tag
-#        row[key] = dict(elem.attrib)
+        row[key] = dict_helper(elem.attrib, notations)
         row.update(sup)
         for child in elem.getchildren():
             child_key  = notations.get(child.tag, child.tag)
-            child_dict = dict_helper(notations, child.attrib)
-#            child_key  = child.tag
-#            child_dict = dict(child.attrib)
+            child_dict = dict_helper(child.attrib, notations)
 
             if  row[key].has_key(child_key):
                 val = row[key][child_key]
