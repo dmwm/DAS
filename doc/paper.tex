@@ -246,7 +246,7 @@ multiple data-services;
 \end{itemize}
 \begin{figure}[htb]
 \centering
-\includegraphics[width=150mm]{DAS_Cache_and_Analytics.pdf}
+\includegraphics[width=120mm]{DAS_Cache_and_Analytics.pdf}
 \caption{
 The DAS architecture diagram. 
 Input query where placed into analytics DB and mapped into set of
@@ -307,13 +307,11 @@ paremters and DAS keys.}:
 \begin{verbatim}
 {"api": {"params": {"name": ""}, "name": "CMSNametoSE"}, 
  "api2das": [{"pattern": "re.compile('^T[0-3]_')", 
-              "api_param": "name", 
-              "das_key": "site"}], 
+              "api_param": "name", "das_key": "site"}], 
  "_id": "4ae1f8dfe2194e4581000014", 
  "system": "sitedb", 
  "daskeys": [{"pattern": "re.compile('^T[0-3]_')", 
-              "key": "site", 
-              "map": "site.name"}]}
+              "key": "site", "map": "site.name"}]}
 \end{verbatim}
 Although the majority of data-services looks alike
 and their logic was abstracted, including parsers, there were a few
@@ -368,24 +366,63 @@ This allows to keep track of frequency of API calls and establish
 pre-fetch strategies for most common queries.
 
 \subsection{DAS caching system}
-The DAS caching system was used to store data-service results and aggregated
-information in form of DAS records. As it shown in figure \ref{DAS_cache} 
-the DAS cache server updates Analytics DB, requests and retrieve data from DAS cache
-and aggregate data over there. The independent set of daemons, DAS robots, were
-constantly monitor Analytics DB for most popular requests and pre-fetch most
-common data into DAS cache.
+The DAS caching system was used to dynamically fetch
+and aggregate data upon user requests. We used the following 
+algorithm:
+\begin{description}
+\item[  1.] Decompose query into set of conditions ($conds$) 
+and selection keys ($skeys$)
+\item[  2.] Check cache for query hash, if found: look-up results from cache
+\item[  3.] Identify list of APIs which can serve requested data
+\begin{verbatim}
+apilist = [r(url, api, args) for r in mapping_db(skeys, conds)]
+\end{verbatim}
+\item[  4.] Iterate over APIs
+\begin{verbatim}
+for url, api, args in apilist:
+    if  superset_in_analytics_found(api, args):
+        continue
+    for row in parser(get_data(url, api, args)):
+        yield row
+\end{verbatim}
+\item[  5.] Perform aggrgation by iterating over the previos step
+\begin{verbatim}
+if cache_has(row.match_key):
+   existing_record = get_from_cache(row.match_key)
+   merge(row, existing_record)
+   insert_into_cache(row)
+   delete_from_cache(existing_record)
+else:
+   insert_into_cache(row)
+\end{verbatim}
+\item[  6.] Get results from the cache
+\end{description}
+The data was stored in a form of DAS records into the cache, while
+queries were recorded into Analytics DB for further analysis. We
+also had an option to run independent set of daemons, DAS robots, who
+monitor Analytics DB for most popular requests and pre-fetch the most
+common data into DAS cache. 
+%The interesting part was being able
+%to identify the superset of api/args out of found one in an Analytics DB.
 
-Each user request placed to the system was parsed and set of selection
-and condition keys were identified. They were mapped into set of
-data service APIs and their input parameters. DAS
-cache was checked for a queries with a similar set of selection and condition
-keys used earlier.\footnote{Since DAS didn't hold
-any data by default we cannot rely on data being present in a cache.
-Moreover if we look-up data first, we cannot tell if it was complete
-set or not, since earlier queries may retrieve only portion of the requested data.}
-If the superset was found a data were
-retrieved from the cache, otherwise a data-service APIs were
-invoked and the results were collected and aggregated inside of DAS cache.
+%The DAS caching system was used to store data-service results and aggregated
+%information in form of DAS records. As it shown in figure \ref{DAS_cache} 
+%the DAS cache server updates Analytics DB, requests and retrieve data from DAS cache
+%and aggregate data over there. The independent set of daemons, DAS robots, were
+%constantly monitor Analytics DB for most popular requests and pre-fetch most
+%common data into DAS cache.
+
+%Each user request placed to the system was parsed and set of selection
+%and condition keys were identified. They were mapped into set of
+%data service APIs and their input parameters. DAS
+%cache was checked for a queries with a similar set of selection and condition
+%keys used earlier.\footnote{Since DAS didn't hold
+%any data by default we cannot rely on data being present in a cache.
+%Moreover if we look-up data first, we cannot tell if it was complete
+%set or not, since earlier queries may retrieve only portion of the requested data.}
+%If the superset was found a data were
+%retrieved from the cache, otherwise a data-service APIs were
+%invoked and the results were collected and aggregated inside of DAS cache.
 
 \subsection{DAS queries}
 Apart from previous DBS-QL syntax we decided to drop its syntax and allow users
@@ -398,7 +435,7 @@ look-up all file objects in a DAS. Moreover each DAS key has a default attribute
 For intance, for {\it dataset, block, file} the default attribute 
 was a {\it name}, while for {\it run} and {\it event} the default attribute was 
 a {\it number}. This allows to specify key-value pair as simple as possible, e.g.
-{\it run=123456}, which means run number 123456. At the same time a queyr 
+{\it run=123456}, which means run number 123456. At the same time a query 
 key, e.g. {\it site} meant to look-up all site objects. Such ability
 to use key-value pairs resolve ambiguity in object values. For instance,
 specifying a run number as {\it run=123456} instruct system to resolve
@@ -497,19 +534,36 @@ migration of CMS data; the DBS system were divided into dozen
 of individual instances with own size and lifetime, who has been used by different production 
 teams for various bookkeeping tasks; the RunSummary data-service
 operates on private network accessible at CMS online operation center.
-Figure \ref{db_size} shows the current size of meta-data from aforementioned 
+Table \ref{db_size} shows the current size of meta-data from aforementioned 
 data-services.
-\begin{figure}[htb]
+%\begin{figure}[htb]
+%\centering
+%\includegraphics[width=100mm]{db_size.pdf}
+%\caption{
+%Current size of meta-data for CMS data-services participated in DAS, before
+%official data-taking. 
+%}
+%\label{db_size}
+%\end{figure}
+
+\begin{table*}[hbt]
 \centering
-\includegraphics[width=100mm]{db_size.pdf}
+\begin{tabular}{llllll}\hline
+\hline
+
+Size of  & Dashboard & DBS & PhEDEx & SiteDB & RunSummary \\
+\hline
+tables (GB) & 40.8  & 28.0 & 5.5 & 0.006 & 0.9 \\
+indexies (GB) & 135.9 & 57.2 & 12.6 & 0.004 & 2.7 \\
+\hline
+\hline
+\end{tabular}
 \caption{
 Current size of meta-data for CMS data-services participated in DAS, before
 official data-taking. 
-%We anticipate to collect $\sim$500GB of meta-data
-%per year during normal LHC operations.
 }
 \label{db_size}
-\end{figure}
+\end{table*}
 
 At the moment we don't have exact numbers for amount of data which will stored 
 in those data-service and therefor accessible in DAS. Although we project to
