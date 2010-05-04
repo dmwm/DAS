@@ -26,9 +26,8 @@ class testDASAnalytics(unittest.TestCase):
         logger   = DASLogger(verbose=debug, stdout=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        config['analytics_dbhost'] = 'localhost'
-        config['analytics_dbport'] = 27017
-        config['analytics_dbname'] = 'test_analytics'
+        config['analyticsdb'] = dict(dbhost='localhost', 
+                                dbport=27017, dbname='test_analytics')
         self.mgr = DASAnalytics(config)
 
     def tearDown(self):
@@ -37,6 +36,7 @@ class testDASAnalytics(unittest.TestCase):
 
     def test_api(self):                          
         """test methods for api table"""
+        self.mgr.delete_db()
         self.mgr.create_db()
 
         query = 'find block'

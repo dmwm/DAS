@@ -26,9 +26,8 @@ class testDASMapping(unittest.TestCase):
         logger   = DASLogger(verbose=debug, stdout=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        config['mapping_dbhost'] = 'localhost'
-        config['mapping_dbport'] = 27017
-        config['mapping_dbname'] = 'test_mapping'
+        config['mappingdb'] = dict(dbhost='localhost',
+                                dbport=27017, dbname='test_mapping')
         self.mgr = DASMapping(config)
 
     def tearDown(self):
@@ -37,6 +36,7 @@ class testDASMapping(unittest.TestCase):
 
     def test_api(self):                          
         """test methods for api table"""
+        self.mgr.delete_db()
         self.mgr.create_db()
 
         apiversion = 'DBS_2_0_8'
