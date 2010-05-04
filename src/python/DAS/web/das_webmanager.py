@@ -6,8 +6,8 @@ DAS web server.
 """
 
 __license__ = "GPL"
-__revision__ = "$Id: das_webmanager.py,v 1.1 2010/02/15 18:30:47 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_webmanager.py,v 1.2 2010/03/05 18:01:43 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 __email__ = "vkuznet@gmail.com"
 
@@ -22,10 +22,11 @@ from cherrypy import expose, response, tools
 from cherrypy.lib.static import serve_file
 from cherrypy import config as cherryconf
 
-try:
-    from WMCore.WebTools.Page import exposecss, exposejs, TemplatedPage
-except:
-    from DAS.web.tools import exposecss, exposejs, TemplatedPage
+#try:
+#    from WMCore.WebTools.Page import exposecss, exposejs, TemplatedPage
+#except:
+#    from DAS.web.tools import exposecss, exposejs, TemplatedPage
+from DAS.web.tools import exposecss, exposejs, TemplatedPage
 
 class DASWebManager(TemplatedPage):
     """
