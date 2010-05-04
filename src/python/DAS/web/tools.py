@@ -6,8 +6,8 @@ Web tools.
 """
 
 __license__ = "GPL"
-__revision__ = "$Id: tools.py,v 1.4 2010/03/15 02:44:09 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: tools.py,v 1.5 2010/04/07 18:19:31 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 __email__ = "vkuznet@gmail.com"
 
@@ -99,6 +99,24 @@ class TemplatedPage(Page):
         else:
             self.warning("%s not found at %s" % (ifile, self.templatedir))
             return "Template %s not known" % ifile
+
+def auth(func):
+    """CherryPy expose auth decorator"""
+    @expose
+    def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
+        headers = cherrypy.request.headers
+        if  cherrypy.request.method == 'POST' or\
+            cherrypy.request.method == 'PUT':
+            body = cherrypy.request.body.read()
+        print "\n### auth::header", headers
+        redirect_to = 'http://localhost:8400/'
+        raise cherrypy.HTTPRedirect(redirect_to)
+        raise cherrpypy.HTTPError(401, 'You are not authorized to access \
+                this resource')
+        data = func (self, *args, **kwds)
+        return data
+    return wrapper
 
 def exposexml (func):
     """CherryPy expose XML decorator"""
