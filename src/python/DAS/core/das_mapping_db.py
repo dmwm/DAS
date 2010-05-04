@@ -5,13 +5,14 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.27 2010/02/08 15:11:13 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.28 2010/02/10 19:01:04 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
 import re
 import time
+import types
 import traceback
 
 # monogo db modules
@@ -19,7 +20,7 @@ from pymongo.connection import Connection
 from pymongo import DESCENDING
 
 # DAS modules
-from DAS.utils.utils import getarg, gen2list
+from DAS.utils.utils import getarg, gen2list, access
 
 class DASMapping(object):
     """
@@ -52,7 +53,10 @@ class DASMapping(object):
         for system, notations in self.notations().items():
             for row in notations:
                 key = system, row['notation']
-                self.notationcache[key] = row['api'], row['map']
+                if  self.notationcache.has_key(key):
+                    self.notationcache[key] += [ (row['api'], row['map']) ]
+                else:
+                    self.notationcache[key] = [ (row['api'], row['map']) ]
 
     def create_db(self):
         """
@@ -194,6 +198,18 @@ class DASMapping(object):
                     if  dkey.has_key('key'):
                         return dkey['key']
         
+    def primary_mapkey(self, das_system, urn):
+        """
+        Return DAS primary map key for provided system and urn
+        """
+        cond = {'system':das_system, 'urn':urn}
+        mapkeys = self.col.find(cond, ['daskeys.map'])
+        for row in mapkeys:
+            if  row and row.has_key('daskeys'):
+                for mkey in row['daskeys']:
+                    if  mkey.has_key('map'):
+                        return mkey['map']
+        
     def find_daskey(self, das_system, map_key):
         """
         Find das key for given system and map key.
@@ -206,6 +222,20 @@ class DASMapping(object):
                     if  dkey.has_key('key'):
                         daskeys.append(dkey['key'])
         return daskeys
+
+    def find_mapkey(self, das_system, das_key):
+        """
+        Find map key for given system and das key.
+        """
+        cond  = { 'system' : das_system, 'daskeys.key': das_key }
+        mapkeys = []
+        for row in self.col.find(cond, ['daskeys', 'urn']):
+            if  row and row.has_key('daskeys'):
+                urn = row['urn']
+                for key in row['daskeys']:
+                    if  key.has_key('map') and key['key'] == das_key:
+                        mapkeys.append((urn, key['map']))
+        return mapkeys
 
     def find_apis(self, das_system, map_key):
         """
@@ -326,14 +356,19 @@ class DASMapping(object):
         """
         if  not self.notationcache:
             self.init_notationcache()
+        name = api_param
         if  self.notationcache.has_key((system, api_param)):
-            _api, das_name = self.notationcache[(system, api_param)]
-            if  _api:
-                if  _api == api:
-                    return das_name
-            else: # valid for all API names
-                return das_name
-        return api_param
+            for item in self.notationcache[(system, api_param)]:
+                _api, das_name = item
+                if  _api:
+                    if  _api == api:
+                        name = das_name
+                        break
+                else: # valid for all API names
+                    name = das_name
+#        print "\n# notation2das srv=%s, arg=%s, api=%s, new=%s" \
+#                % ( system, api_param, api, name )
+        return name
 
     def api2daskey(self, system, api):
         """
@@ -345,6 +380,16 @@ class DASMapping(object):
             for entry in row['daskeys']:
                 keys.append(entry['key'])
         return keys
+
+    def apitag(self, system, api):
+        """
+        Return apitag if it exists for given api name.
+        """
+        spec = {'system':system, 'urn': api}
+        res  = self.col.find_one(spec)
+        if  res.has_key('apitag') and res['apitag']:
+            return res['apitag']
+        return None
 
     def servicemap(self, system):
         """
