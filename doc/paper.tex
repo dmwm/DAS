@@ -15,33 +15,15 @@
 \address{Bristol University, Bristol, UK}
 \ead{s.metson@bristol.ac.uk}
 
-
-%In a large modern enterprise, information is almost inevitably distributed among several database management systems. Despite considerable attention from the research community, relatively few commercial systems have attempted to address this issue. This article describes the technology that enables clients of IBM's federated database engine to access and integrate the data and specialized computational capabilities of a wide range of relational and non­relational data sources.
-
 \begin{abstract}
-%A meta-data plays significant role in a large modern enterprises, research experiments,
-%digital libraries where it comes from different sources and distributed in a 
-%variety of forms and digital formats. It is organized and managed by constantly
-%evolving software using both relational and non-relational data sources. There is
-%a big demand to enable information discovery from multiple sources.
-%Here we discuss a new data aggregation system which consume and deliver information 
-%from different relational and non-relational data sources on a concrete example 
-%of large scale, distributed system of CMS physics experiment at LHC.
-
-Meta-data plays signiﬁcant role in a large modern enterprises, 
-research experiments and digital libraries where it comes from different 
+Meta-data plays signiﬁcant role in large modern enterprises, 
+research experiments and digital libraries where it comes from a different 
 sources and distributed in a variety of forms and digital formats. 
 It is organized and managed by constantly evolving software using 
 both relational and non-relational data sources. Even though we can apply
 information retrieval approach to non-relation data sources,
 we can't do so for relational ones, where information can be accessed via
 pre-established set of data-services.
-%Even though we can access it via set of data-services, twikies, blogs, etc.,
-%the information discovery across them is still a manual task.
-% which prevent
-%information discovery
-%there is no coherent way for information discovery from different sources
-%in heterogeneous, distributed environment with different security policies enforced.
 
 Here we discuss a new data aggregation system which consumes, 
 indexes and delivers information from different relational and 
@@ -53,7 +35,7 @@ allowing end-users to place dynamic queries, get precise answers and
 trigger information retrieval on demand. Such close to real-time system 
 based on studies  of use cases of the CMS particle physics experiment at 
 the LHC where we used a large scale, distributed computing system 
-to motivate the work.
+to motivate this work.
 
 \end{abstract}
 
@@ -66,19 +48,15 @@ many innovations in the area of computer science were developed, e.g. World Wide
 Today, the Large Hadron Collider (LHC) at CERN is marking a new era of High Energy
 Physics (HEP), promising to deliver a few PB of data each year. 
 At this scale the ``information discovery'' within heterogeneous, distributed 
-environment become a key ingredient of successful data analysis in HEP.
-%scientists are facing with a new set of problems in an area of
-%``information discovery'' within heterogeneous, distributed environment.
+environment becomes a key ingredient of successful data analysis in HEP.
 The data and associated meta-data are produced in variety of forms and digital formats.
 They are stored and retrieved from relational and non-releational data-sources, such as 
-RDMS systems, document oriented databases, blogs, twikies, file systems and
+RDMS systems, document oriented databases, blogs, twikies, file systems,
 customized applications, etc. 
-%Its access is restricted by broad variety of security 
-%policies enforced by individual sites and community in general.
-Working in such environment requires a lot of expertise and our users
-(in this case physicists) are always looking for simple, intuitive and flexible
+Working in such environment requires a lot of expertise and our users, physicists, 
+are always looking for simple, intuitive and flexible
 tool(s) to look-up their desired data. A well-known solutions, such as data-services
-and search engines tighted to a specific data sources and end-users are left 
+and search engines are tighted to a specific data sources and end-users are left 
 with a manual task to bookkeep and relatate information from them.
 
 Here we present a work on Data Aggregation System (DAS) designed for
@@ -105,31 +83,31 @@ is not knew it is still under discussion in computer science domain.
 A few alternative solutions has been proposed to address this issue
 in last several years. In \cite{DBXplorer} the conjunctive keyword queries,
 i.e. retrieval of only documents that contain all query keywords, has
-been discussed. It requires that all keywords are matched in a row from
-single table or joined tables. While \cite{QueryAnswer} make a step forward
+been discussed. It requires that all keywords are matched in a row from a
+single table or joined tables. Authors of \cite{QueryAnswer} made a step forward
 by considering information around matched values and presents customized answers to
-end-users over the generated new database. Those and other works\footnote{
-For more information about
-keyword based search over relational databases we redirect users to reference in
-\cite{DBXplorer, QueryAnswer}.} 
+end-users over the generated new database. These and other related 
+works\footnote{For more information about keyword based search over relational 
+databases we redirect users to references in \cite{DBXplorer, QueryAnswer}.} 
 are based on some kind of the graph over the underlying database and
 moreover use a generated database out of the pristine one.
 The proximity of the results in those techniques 
-are mostly confined to the text-based values stored in a database, since the
-keyword based search with numerical values 
-need the precise knowledge of the related entity in a schema. For example, typing
-100 can lead to inappropriate matches, such as row ids, and in order to be
-answered correctly it requires additional keyword, clarifying its context, 
+are mostly confined to the text-based values stored in a database, since 
+usage of numerical values in the input search field is mostly useless without 
+knowledge of the context of the value. For example, typing a value 100 
+in the search input field leads to plenty of inappropriate matches, 
+such as row ids, and in order to be
+answered correctly requires additional keyword, clarifying its meaning, 
 which should be matched with particular
 entity (table.column) in the underlying database.
-Therefore such approaches cannot be used to answer the logical questions, such as  
+Therefore to answer presicely the logical questions, such as  
 {\it find me total number of files whose size more then 20 but less then 
-100 taken from january to february of 2009} which can be easily accomplished
+100} would be hard or almost impossible using keyword search techniques discussed 
+in \cite{DBXplorer, QueryAnswer}, while it can be easily accomplished
 using SQL syntax. 
 
 To address those limitations an attempt to build a simple, intuitive and 
-flexible query language was introduced in \cite{DBS-QL}\footnote{A similar but less
-sophisticated approach was used in \cite{AMI}}.
+flexible query language was introduced in \cite{DBS-QL}.
 It represents a power of SQL while hiding underlying relational schema from 
 the end-users. As a results a human questions were intuitively mapped into 
 simple queries. For example, the question
@@ -139,24 +117,24 @@ particular site} was represented as simple as \cite{DBS-QL}
 find file where date 2009-01-02 11:59 CET and site = T2
 \end{verbatim}
 This solution represents a common use cases within HEP community and provide
-intuitive mapping between mental model of end-users and underlying database back-end.
+intuitive mapping between mental model of end-users and underlying database schema.
 
 At the same time the data aggregation is commonly addressed in the context of
 federated databases, see for example \cite{FedDB}. It unifies data coming 
-from different RDMS systems into federated DB where SQL queries can be placed to 
-search desired data. Even though it would be interesting to apply technique 
+from different RDMS systems into the federated DB where SQL queries can be placed to 
+search for desired data. Even though it would be interesting to apply technique 
 discussed in \cite{DBS-QL} to a federated database it still requires 
 an access to the underlying database schema. This obviously creates a problem
-working in distributed heterogeneous environment where different security policies
+in distributed heterogeneous environment where different security policies
 are in place.
 
 To avoid those limitations we decided to build a keyword-search based system around
 existing data-services whose nature and access policies are defined by developers.
 Keeping in mind that meta-data can come in different forms and data formats
-we used a document-oriented database back-end with full support of query language.
+we used a document-oriented database back-end with full support of the query language.
 The key ingredients were the setup of the mapping and analytics services which provide
 necessary glue across existing API/notations and user queries. This approach 
-allows us to perform the data aggregation across various data-services, achieve
+allows us to perform the dynamic data aggregation across various data-services, achieve
 precise answers using keyword-based queries
 and organize information retrieval on demand.
 %to store meta-data information 
@@ -169,8 +147,8 @@ and organize information retrieval on demand.
 The CMS, Compact Muon Solenoid, \cite{CMS} 
 is one of the two large general-purpose particle physics detectors built on 
 the proton-proton Large Hadron Collider (LHC) at CERN in Switzerland and France. 
-It is designed to explore the frontier of High Energy Physics and provide physicists
-ability to look at conditions presented at early stage of our Universe.
+It is designed to explore the frontier of the High Energy Physics and provide physicists
+ability to look at conditions presented at the early stage of our Universe.
 More then 3000 physicists from 183 institutions reprepresenting almost 
 38 countries are involved in the design, construction and maintenance of the experiment.
 
@@ -656,9 +634,9 @@ ICDE 2006, pp. 69-78.
 V. Kuznetsov, D. Riley, A. Afaq, V. Sekhri, Y. Guo, L. Lueking,
 ``The CMS DBS Query Language'', CHEP 2009.
 
-\bibitem{AMI}
-Altas AMI web portal,
-http://ami.in2p3.fr/opencms/opencms/AMI/www/Tutorial/AMIMediation.html
+%\bibitem{AMI}
+%Altas AMI web portal,
+%http://ami.in2p3.fr/opencms/opencms/AMI/www/Tutorial/AMIMediation.html
 
 \bibitem{FedDB}
 L. Haas, E. Lin,
