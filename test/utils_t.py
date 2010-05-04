@@ -35,8 +35,8 @@ class testUtils(unittest.TestCase):
     def test_aggregator(self):
         """Test aggregator function"""
         # 1 row in results
-        das  = {'expire': 10}
-        row  = {'das_primary_key':'vk', 'run':10, 'das':1, '_id':1}
+        das  = {'expire': 10, 'primary_key':'vk'}
+        row  = {'run':10, 'das':das, '_id':1}
         rows = (row for i in range(0,1))
         result = [r for r in aggregator(rows, das['expire'])]
         expect = [{'run': 10, 'das':das}]
@@ -44,9 +44,9 @@ class testUtils(unittest.TestCase):
 
         # 2 rows with different values for common key
         rows = []
-        row  = {'das_primary_key':'vk', 'run':1, 'das':1, '_id':1}
+        row  = {'run':1, 'das':das, '_id':1}
         rows.append(row)
-        row  = {'das_primary_key':'vk', 'run':2, 'das':1, '_id':1}
+        row  = {'run':2, 'das':das, '_id':1}
         rows.append(row)
         res  = (r for r in rows)
         result = [r for r in aggregator(res, das['expire'])]
@@ -54,10 +54,11 @@ class testUtils(unittest.TestCase):
         self.assertEqual(result, expect)
 
         # 2 rows with common value for common key
+        das  = {'expire': 10, 'primary_key':'run.a'}
         rows = []
-        row  = {'das_primary_key':'run.a', 'run':{'a':1,'b':1}, 'das':1, '_id':1}
+        row  = {'run':{'a':1,'b':1}, 'das':das, '_id':1}
         rows.append(row)
-        row  = {'das_primary_key':'run.a', 'run':{'a':1,'b':2}, 'das':1, '_id':1}
+        row  = {'run':{'a':1,'b':2}, 'das':das, '_id':1}
         rows.append(row)
         res  = (r for r in rows)
         result = [r for r in aggregator(res, das['expire'])]

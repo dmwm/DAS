@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.71 2010/03/17 20:07:31 valya Exp $"
-__version__ = "$Revision: 1.71 $"
+__revision__ = "$Id: das_mongocache.py,v 1.72 2010/03/18 17:55:01 valya Exp $"
+__version__ = "$Revision: 1.72 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -661,7 +661,7 @@ class DASMongocache(object):
         for pkey in lookup_keys:
             skey = [(pkey, DESCENDING)]
             # lookup all service records
-            spec = {'das_id': {'$in': id_list}, 'das_primary_key': pkey}
+            spec = {'das_id': {'$in': id_list}, 'das.primary_key': pkey}
             if  self.verbose:
                 nrec = self.col.find(spec).sort(skey).count()
                 msg  = "DASMongocache::merge_records, merging %s records"\
@@ -741,9 +741,8 @@ class DASMongocache(object):
                 if  item.has_key('exception') or item.has_key('error'):
                     continue
                 counter += 1
-                item['das'] = dict(expire=dasheader['expire'])
+                item['das'] = dict(expire=dasheader['expire'], primary_key=prim_key)
                 item['das_id'] = str(objid)
-                item['das_primary_key'] = prim_key
                 yield item
         else:
             print "\n\n ### results = ", str(results)
