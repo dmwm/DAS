@@ -4,19 +4,28 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.11 2009/05/15 14:19:59 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: abstract_service.py,v 1.12 2009/05/18 01:17:16 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
 import urllib
 import urllib2
 import traceback
+try:
+    # Python 2.6
+    import json
+except:
+    # Prior to 2.6 requires simplejson
+    import simplejson as json
+
 from DAS.utils.utils import genresults
 from DAS.utils.utils import cartesian_product
 from DAS.core.das_couchdb import DASCouchDB
+from DAS.core.das_filecache import DASFilecache
 from DAS.core.basemanager import BaseManager
 from DAS.core.das_mapping import jsonparser, das2api, das2result
+#from DAS.core.das_mapping import json2das, das2api, das2result, select_keys
 from DAS.core.qlparser import QLLexer
 
 class DASAbstractService(object):
@@ -45,7 +54,8 @@ class DASAbstractService(object):
 
         # define internal couch DB manager to put 'raw' results into CouchDB
         mgr               = BaseManager(config)
-        self._couch       = DASCouchDB(mgr)
+#        self.localcache       = DASCouchDB(mgr)
+        self.localcache       = DASFilecache(mgr)
 
     def keys(self):
         """
@@ -71,7 +81,7 @@ class DASAbstractService(object):
         # call couch cache to get results from it,
         # otherwise call data service as shown below.
         cquery = "%s %s" % (url, params)
-        res = self._couch.get_from_cache(cquery)
+        res = self.localcache.get_from_cache(cquery)
         if  res:
             return res
 
@@ -86,7 +96,7 @@ class DASAbstractService(object):
 
         # store to couch 'raw' data coming out of concrete data service
         # will add 'query' and 'timestamp' for every row in results
-        self._couch.update_cache(cquery, results, self.expire)
+        self.localcache.update_cache(cquery, results, self.expire)
 
         return results
 
@@ -132,7 +142,7 @@ class DASAbstractService(object):
         # call couch cache to get results from it,
         # otherwise call data service as shown below.
         cquery = '%s @ %s' % (query, self.name)
-        res = self._couch.get_from_cache(cquery)
+        res = self.localcache.get_from_cache(cquery)
         if  res:
             return res
 
@@ -157,7 +167,7 @@ class DASAbstractService(object):
         results = genresults(self.name, res, collect_list)
         # store to couch 'raw' data coming out of concrete data service
         # will add 'query' and 'timestamp' for every row in results
-        self._couch.update_cache(cquery, results, self.expire)
+        self.localcache.update_cache(cquery, results, self.expire)
 
         return results
 
@@ -187,6 +197,8 @@ class DASAbstractService(object):
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
+        import time
+        time0 = time.time()
         msg = 'DASAbstractService::worker(%s, %s)' % (query, icond_dict)
         self.logger.info(msg)
 
@@ -235,11 +247,27 @@ class DASAbstractService(object):
 
         apiname = ""
 #        args = {}
+        def get_args(params):
+            """
+            Create a dict of arguments passed to API out of required and
+            default ones
+            """
+            args = {}
+            for key, val in params.items():
+                if  val == 'required':
+                    args[key] = ''
+                elif val: # default
+                    args[key] = val
+            return args
+
+        time1 = time.time()
+        print "working time0", time1-time0
         # check if all requested keys are covered by one API
         for api, aparams in self.map.items():
             if  set(selkeys) & set(aparams['keys']) == set(selkeys):
                 apiname = api
-                args = aparams['params']
+#                args = aparams['params']
+                args = get_args(aparams['params'])
                 for par in aparams['params']:
                     if  params.has_key(par):
                         args[par] = params[par]
@@ -251,17 +279,26 @@ class DASAbstractService(object):
                     url = self.url # JAVA, e.g. http://host/Servlet
                 else: # if we have http://host/apiname?...
                     url = self.url + '/' + apiname
+                time2 = time.time()
                 res = self.getdata(url, args)
+                print "url time", time.time()-time2
+                time3 = time.time()
                 res = res.replace('null', '\"null\"')
                 jsondict = eval(res)
+#                jsondict = json.loads(res)
+                print "eval time", time.time()-time3
 #                jsondict = self.adjust_result(api, jsondict)
                 if  self.verbose > 2:
                     print "\n### %s::%s returns" % (self.name, api)
                     print jsondict
                 if  jsondict.has_key('error'):
                     continue
+                time4 = time.time()
                 data = jsonparser(self.name, jsondict, keylist)
+#                data = json2das(self.name, jsondict, keylist)
+                print "jsonparser time", time.time()-time4
                 return data
+#                return select_keys(data, selkeys)
 
         # if one API doesn't cover sel keys, will call multiple APIs
         if  self.verbose > 2:
@@ -271,7 +308,8 @@ class DASAbstractService(object):
             for api, aparams in self.map.items():
                 if  aparams['keys'].count(key) and not apidict.has_key(api):
 #                    args = {}
-                    args = aparams['params']
+#                    args = aparams['params']
+                    args = get_args(aparams['params'])
                     for par in aparams['params']:
                         if  params.has_key(par):
                             args[par] = params[par]
@@ -283,11 +321,13 @@ class DASAbstractService(object):
             res = self.getdata(url, args)
             res = res.replace('null', '\"null\"')
             jsondict = eval(res)
+#            jsondict = json.loads(res)
 #            jsondict = self.adjust_result(api, jsondict)
             if  self.verbose > 2:
                 print "\n### %s::%s returns" % (self.name, api)
                 print jsondict, keylist
             data = jsonparser(self.name, jsondict, keylist)
+#            data = json2das(self.name, jsondict, keylist)
             resdict[api] = data
             first_row = data[0]
             keys = first_row.keys()

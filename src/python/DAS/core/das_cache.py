@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s)
 """
 
-__revision__ = "$Id: das_cache.py,v 1.4 2009/05/15 15:12:22 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_cache.py,v 1.5 2009/05/18 01:17:16 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 # DAS modules
@@ -14,6 +14,7 @@ from DAS.core.das_core import DASCore
 from DAS.core.cache import Cache
 from DAS.core.das_memcache import DASMemcache
 from DAS.core.das_couchdb import DASCouchDB
+from DAS.core.das_filecache import DASFilecache
 
 class DASCache(Cache):
     """
@@ -23,9 +24,13 @@ class DASCache(Cache):
     def __init__(self, mode=None, debug=None):
         mgr = DASCore(mode, debug)
         Cache.__init__(self, mgr)
-        self.servers = { 'memcache' : DASMemcache(mgr) }
-        couchdb = DASCouchDB(mgr)
-        self.servers['couch'] = couchdb
+        self.servers = {'memcache': DASMemcache(mgr),
+                        'couch': DASCouchDB(mgr),
+                        'filecache': DASFilecache(mgr),
+        }
+#        self.servers = { 'memcache' : DASMemcache(mgr) }
+#        couchdb = DASCouchDB(mgr)
+#        self.servers['couch'] = couchdb
         self.logger.info('DASCache using servers = %s' % self.servers)
 
     def get_from_cache(self, query):

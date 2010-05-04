@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.11 2009/05/13 15:18:02 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_core.py,v 1.12 2009/05/18 01:17:16 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -82,6 +82,8 @@ class DASCore(object):
         self.cache_lifetime = dasconfig['cache_lifetime']
         self.couch_servers  = dasconfig['couch_servers']
         self.couch_lifetime = dasconfig['couch_lifetime']
+        self.filecache_dir  = dasconfig['filecache_dir']
+        self.filecache_lifetime = dasconfig['filecache_lifetime']
 
         # plug-in architecture: loop over registered data-services in
         # dasconfig; load appropriate module/class; register data
