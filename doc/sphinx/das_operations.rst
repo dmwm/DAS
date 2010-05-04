@@ -30,6 +30,14 @@ In order to start each of server you need to setup your environment, see
     cd /data/projects/das/ # change accordingly
     source setup.sh
 
+Setting up DAS maps
+-------------------
+Each data-service is registered with DAS via its DAS map. All maps are located
+in $DAS_ROOT/src/python/DAS/services/maps area. We provide a single admin script
+to install available maps. It is located in $DAS_ROOT/bin/ area which should be
+in your path once your setup your environment *source setup.sh*. Then you can simply
+call *das_map* and it will isntall all available maps into Mapping DB.
+
 Apache redirect rules
 ---------------------
 
