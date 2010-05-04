@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.89 2010/04/09 13:51:22 valya Exp $"
-__version__ = "$Revision: 1.89 $"
+__revision__ = "$Id: abstract_service.py,v 1.90 2010/04/09 19:44:58 valya Exp $"
+__version__ = "$Revision: 1.90 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -131,6 +131,8 @@ class DASAbstractService(object):
         by data-service parsers to provide uniform JSON representation
         for further processing.
         """
+        host = url.replace('http://', '').split('/')[0]
+
         input_params = params
         # if necessary the data-service implementation will adjust parameters,
         # for instance, DQ need to parse the following input
@@ -152,6 +154,19 @@ class DASAbstractService(object):
                 % (self.name, url, headers)
         self.logger.info("\n")
         self.logger.info(msg)
+
+# using MacPorts python 2.6 cause python to die when using das cache server
+# (multiprocessing/urllib2)
+# see http://trac.macports.org/ticket/24421
+# while using httplib library everything work fine
+#        import httplib
+#        path = url.replace('http://%s'%host, '')
+#        self.logger.info('\n### host=%s, path=%s' % (host, path))
+#        conn = httplib.HTTPConnection(host)
+#        conn.request('GET', path)
+#        res  = conn.getresponse()
+#        data = res.read()
+
         req = urllib2.Request(url)
         for key, val in headers.items():
             req.add_header(key, val)
