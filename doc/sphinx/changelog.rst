@@ -9,7 +9,8 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - V04_00_07
 
-  - switch to use MongoDB 1.4
+  - switch to pymongo 1.5.2
+  - switch to MongoDB 1.4
   - added admin web interface; it shows basic db info and provide
     ability to look-up records in any collection
 
