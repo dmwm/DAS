@@ -65,8 +65,8 @@ find intlumi,dataset where site=T2_UK or hlt=OK
  'unique_keys': ['dataset', 'intlumi', 'lumi', 'run']}
 """
 
-__revision__ = "$Id: qlparser.py,v 1.18 2009/09/29 20:51:03 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: qlparser.py,v 1.19 2009/10/02 14:57:35 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -78,6 +78,7 @@ from itertools import groupby
 from DAS.utils.utils import oneway_permutations, unique_list, add2dict
 from DAS.utils.utils import getarg
 from DAS.core.das_mapping_db import DASMapping
+from DAS.core.das_analytics_db import DASAnalytics
 
 DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
                  ' not like ', ' like ', 
@@ -92,7 +93,7 @@ MONGO_MAP = {
     'not in':'$nin',
 }
 
-def mongo_exp(cond_list):
+def mongo_exp(cond_list, lookup=False):
     """
     Convert DAS expression into MongoDB syntax. As input we take
     a dictionary of key, operator and value.
@@ -100,46 +101,53 @@ def mongo_exp(cond_list):
     # TODO: for and brackets operators I can combine everything in a
     # single dictionary. While if operator OR is met, I can return list of
     # mongo_dicts for processing, since list represent list of OR'ed results
-#    print "mongo_exp, input", cond_list
-    mongo_list = []
     mongo_dict = {}
     for cond in cond_list:
         if  cond == '(' or cond == ')' or cond == 'and':
             continue
-        if  cond == 'or':
-            mongo_list.append(mongo_dict)
         key  = cond['key']
         val  = cond['value']
         oper = cond['op']
-#        print "key, op, val", key, oper, val
-        if  MONGO_MAP.has_key(oper):
-            if  mongo_dict.has_key(key):
-                mongo_value = mongo_dict[key]
-                mongo_value[MONGO_MAP[oper]] = val
-                mongo_dict[key] = mongo_value
+        if  type(val) is types.StringType and val.find('%') != -1:
+            val = val.replace('%', '*')
+        if  mongo_dict.has_key(key):
+            existing_value = mongo_dict[key]
+            if  type(existing_value) is types.DictType:
+                val = existing_value['$all'] + [val]
             else:
-                mongo_dict[key] = {MONGO_MAP[oper] : val}
-        elif oper == 'like':
-            # for expressions: *val* use pattern .*val.*
-            pat = re.compile(val.replace('*', '.*'))
-            mongo_dict[key] = pat
-        elif oper == 'not like':
-            # TODO, reverse the following:
-            # for expressions: *val* use pattern .*val.*
-            pat = re.compile(val.replace('*', '.*'))
-            mongo_dict[key] = pat
-        elif oper == '=':
-            mongo_dict[key] = val
-        elif oper == 'between':
-            mongo_dict[key] = {'$in' : [i for i in range(val[0], val[1])]}
-        elif oper == 'last':
-            mongo_dict[key] = 'last operator'
+                val = [existing_value, val]
+            mongo_dict[key] = {'$all' : val}
         else:
-            msg = 'Not supported operator %s' % oper
-            raise Exception(msg)
-#        if  mongo_dict not in mongo_list:
-#            mongo_list.append(mongo_dict)
-#    return mongo_list
+            if  MONGO_MAP.has_key(oper):
+                if  mongo_dict.has_key(key):
+                    mongo_value = mongo_dict[key]
+                    mongo_value[MONGO_MAP[oper]] = val
+                    mongo_dict[key] = mongo_value
+                else:
+                    mongo_dict[key] = {MONGO_MAP[oper] : val}
+            elif oper == 'like':
+                if  lookup:
+                    # for expressions: *val* use pattern .*val.*
+                    pat = re.compile(val.replace('*', '.*'))
+                    mongo_dict[key] = pat
+                else:
+                    mongo_dict[key] = val
+            elif oper == 'not like':
+                # TODO, reverse the following:
+                msg = 'Operator not like is not supported yet'
+                raise Exception(msg)
+                # for expressions: *val* use pattern .*val.*
+#                pat = re.compile(val.replace('*', '.*'))
+#                mongo_dict[key] = pat
+            elif oper == '=':
+                mongo_dict[key] = val
+            elif oper == 'between':
+                mongo_dict[key] = {'$in' : [i for i in range(val[0], val[1])]}
+            elif oper == 'last':
+                mongo_dict[key] = 'last operator'
+            else:
+                msg = 'Not supported operator %s' % oper
+                raise Exception(msg)
     return mongo_dict
 
 # NOTE: I used this method originally, so will keep it around for a while
@@ -987,6 +995,7 @@ class MongoParser(object):
         self.map = DASMapping(config)
         self.daskeys = self.map.daskeys()
         self.operators = DAS_OPERATORS
+        self.analytics = DASAnalytics(config)
 
     def decompose(self, query):
         """Extract selection keys and conditions from input Mongo query"""
@@ -1020,10 +1029,12 @@ class MongoParser(object):
         skeys, cond = self.decompose(query)
         return dict(selkeys=skeys, conditions=cond, services=self.services(query))
 
-    def dasql2mongo(self, query):
+    def dasql2mongo(self, query, lookup=False):
         """
-        Convert DAS QL expression into Mongo query
+        Convert DAS QL expression into Mongo query. It can map into several Mongo
+        queries. We will return a dict of {system:mongo_query}.
         """
+        findbracketobj(query) # check brackets in a query
         wsplit = query.split(' where ')
         skeys  = wsplit[0].replace('find ', '').strip().split(',')
         cond   = {}
@@ -1045,10 +1056,21 @@ class MongoParser(object):
                                         condlist.append(cdict)
                         except:
                             pass
-                else:
-                    condlist.append(item)
-            cond = mongo_exp(condlist)
-        return dict(spec=cond, fields=skeys)
+                elif  type(item) is types.StringType and item.strip() == 'or':
+                    msg  = "\nDAS currently do not support OR operator."
+                    msg += "\nAny OR'ing operation can be split into multiple DAS queries,"
+                    msg += "\nfind a,b,c where x=1 or y=2 is equivalent to 2 queries:\n"
+                    msg += "\nfind a,b,c where x=1"
+                    msg += "\nand"
+                    msg += "\nfind a,b,c where y=1"
+                    raise Exception(msg)
+            cond = mongo_exp(condlist, lookup)
+            mongo_query = dict(spec=cond, fields=skeys + ['das'])
+            self.analytics.add_query(query, mongo_query)
+            return mongo_query
+        msg = "\nUnable to convert input DAS-QL expression '%s' into MongoDB query"\
+                % query
+        raise Exception(msg)
 
     def condition_parser(self, uinput):
         """Parse condition in given query"""
@@ -1130,7 +1152,6 @@ class MongoParser(object):
         if  not olist:
             return
         oper = nlist[0][-1]
-#        oper = olist[0][-1]
 
         # split expression into key op value and analyze the value
         key, value = exp.split(oper, 1)
@@ -1191,20 +1212,24 @@ class MongoParser(object):
             if  value and value[0]=='[' and value[-1]==']':
                 value = eval(value)
         return {'key':key.strip(), 'op':oper.strip(), 'value':value}
-def loose_constrains(system, query):
-    """
-    In order to look-up records in cache DB, we need to loose
-    our constraints on input query. We look-up spec part of the query
-    and loose all constrains over there,
-    see MongoDB API, http://api.mongodb.org/python/
-    """
-    spec    = getarg(query, 'spec', {})
-    fields  = getarg(query, 'fields', None)
-    newspec = {}
-    for key, val in spec.items():
-        if  type(val) is types.StringType or type(val) is types.UnicodeType:
-            val = re.compile('.*%s.*' % val)
-        newspec[key] = val
-    newspec['das.system'] = system
-    return dict(spec=newspec, fields=fields)
+
+    def lookupquery(self, system, query):
+        """
+        In order to look-up records in cache DB, we need to loose
+        our constraints on input query. We look-up spec part of the query
+        and loose all constrains over there,
+        see MongoDB API, http://api.mongodb.org/python/
+        """
+        spec    = getarg(query, 'spec', {})
+        fields  = getarg(query, 'fields', None)
+        newspec = {}
+        for key, val in spec.items():
+            ksplit = key.split('.') # split key into entity.attribute
+            if  ksplit[0] not in self.daskeys[system]:
+                continue
+            if  type(val) is types.StringType or type(val) is types.UnicodeType:
+                val = re.compile('.*%s.*' % val)
+            newspec[key] = val
+        newspec['das.system'] = system
+        return dict(spec=newspec, fields=fields)
 
