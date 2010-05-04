@@ -637,8 +637,8 @@ using the following CMS data-services:
 \begin{itemize}
 \item Data Bookkeeping System, DBS \cite{DBS}, the CMS meta-data service;
 \item Physics Experiment Data Export, PhEDEx \cite {PhEDEx}, the 
-CMS file transfer system;
-\item SiteDB \cite{SiteDB}, the CMS site resources data-service;
+CMS data location and file transfer system;
+\item SiteDB \cite{SiteDB}, the CMS site resources;
 \item RunSummary \cite{RunSummary}, the CMS run and trigger data-service;
 %\item LumiDB \cite{LumiDB} collects information about Luminosity conditions;
 %\item DQ \cite{DQ}, Data Quality data-service which collects information
@@ -648,12 +648,13 @@ CMS file transfer system;
 \item Dashboard \cite{Dashboard}, the LHC virtual organization
 monitoring data-service portal;
 \end{itemize}
-Each data-service has its own scope, size and peculiar properties. 
-For instance, the data in PhEDEx are transient due to constant 
-migration of CMS data; the DBS system were divided into dozen 
-of individual instances with own size and lifetime, who has been used by different production 
-teams for various bookkeeping tasks; the RunSummary data-service
-operates on private network accessible at CMS online operation center.
+Each data-service had its own scope, size and peculiar properties. 
+For instance, the data in PhEDEx were transient due to constant 
+migration of CMS data; the DBS system was divided into dozen 
+of individual services (instances) with own size and lifetime 
+used by different production teams for various bookkeeping tasks; 
+the RunSummary data-service operated on private network accessible 
+at CMS online operation center.
 %Table \ref{db_size} shows the current size of meta-data from aforementioned 
 %data-services.
 %\begin{figure}[htb]
@@ -684,12 +685,10 @@ operates on private network accessible at CMS online operation center.
 %}
 %\label{db_size}
 %\end{table*}
-At the moment, the amount of meta-data stored in all services is equal to
-$\sim$75 GB and $\sim$200 GB in tables and index sizes, respectively. While 
-we estimate to accumulate $\sim$500 GB of the meta-data each year during 
+At the moment, the amount of meta-data stored in all services is around
+75 GB and 200 GB in tables and index sizes, respectively. Although we estimate 
+$\sim$500 GB of the meta-data each year during 
 normal CMS operation at LHC.
-%\footnote{This number is based on tests 
-%performed in CMS during Cosmic Run at Full Tesla (CRAFT) data taking \cite{CRAFT09}.}
 %In CRAFT09 acquisition era, Tier-0 produced a total of 6.03
 %billion events, 330TB in 32 datasets:
 %AlCa/Calibration RAW: 926 million events, 29TB
@@ -705,7 +704,7 @@ normal CMS operation at LHC.
 % 0.3PB - 50GB meta-data in DBS
 % 3PB/y - x GB
 
-To test DAS performance we measured elapsed time and CPU/RAM utilization
+To test DAS performance we were measured elapsed time and CPU/RAM utilization
 required to collect and aggregate information from different
 data-services. Table \ref{DAS_benchmark} summarizes the biggest 
 contributors so far, the block meta-data information provided by DBS and 
@@ -729,9 +728,9 @@ from DBS and PhEDEx systems. In the case of PhEDEx
 system we show total number of fetched records 186145 together with
 number of records merged in DAS 180439. The total number of DAS records 
 were calculated as number of aggregated records plus left overs,
-the non-matched records from both systems. The look-up time is presented in
-last column, where for DAS it shows as query look-up time (2.05 sec) 
-and time to get all records to disk (50.7 sec).}
+the non-matched records from both systems. The look-up time shown in
+last column represents query look-up time (2.05 sec) and time required
+to get all records written to disk (50.7 sec).}
 \label{DAS_benchmark}
 \end{table*}
 
@@ -751,10 +750,10 @@ Elapsed time = retrieval time + parsing time + re-mapping time
         + (aggregation time) + (output creation time)
 }
 \end{itemize}
-Here the {\it retrieval time} is a time required to access data from remote data-service,
+Here {\it retrieval time} is a time required to access data from data-service,
 {\it parsing time} is a time required to read and parse received data, {\it re-mapping time}
 is a time required to convert data-service meta-data to DAS records for every object
-we parse, {\it cache insertion} and {\it indexing time} represents time spent on DAS 
+we parse, {\it cache insertion} and {\it indexing time} represent time spent on DAS 
 cache back-end, {\it aggregation time} is required to merge objects into DAS records based
 on their common key (\verb+block.name+ in this case) and {\it output creation time}
 is a time required to write DAS records to disk. Please note that last two
@@ -773,22 +772,24 @@ one of the sub-system, either DBS or PhEDEx, depending on insertion order.
 
 The individual tests of DAS components (DBS and PhEDEx) shown roughly 
 the same performance. Although the time of PhEDEx component was bigger 
-due to longer retrieval and parsing time.
-The time of PhEDEx component shown in Table \ref{DAS_benchmark} is divided 
-among retrieval and parsing, $\sim$110 sec, and merging steps, $\sim$50 sec,
-respectively. As shown in Table \ref{DAS_benchmark},
+due to longer retrieval and parsing time as well as time spent
+during aggregation step.
+%The time of PhEDEx component shown in Table \ref{DAS_benchmark} is divided 
+%among retrieval and parsing, $\sim$110 sec, and merging steps, $\sim$50 sec,
+%respectively. 
+As shown in Table \ref{DAS_benchmark},
 the look-up time spent to access individual components (last column) was quite
-reasonable, roughly 1 second for both systems. While final time to
+reasonable, roughly 1 second for both systems. While the final time to
 get DAS records on disk was about 50 seconds. This was mostly due to I/O and
 conversion operations between binary data format used by MongoDB, BSON, to DAS
 data format, JSON.
 
-Based on results of stress tests we measured that we can achieve throughput of
+Based on the results of stress tests we measured that we can achieve throughput of
 $\sim$6000 docs/sec for insertion, $\sim$1100 docs/sec for aggregation and 
 $\sim$7600 docs/sec for 
 reading operations in DAS, which are suitable for our needs. Since all 
 operations were performed on a single CPU a further improvements are expected. 
-Also, a necessary tuning can be done by using C++ driver instead of python one.
+Also, a necessary tuning can be done by using C/C++ driver instead of python one.
 
 \section{Summary}
 We presented a new data aggregation service (DAS) developed for CMS High-Energy experiment
@@ -796,8 +797,8 @@ at LHC, CERN, Geneva, Switzerland. It was designed to provide caching and
 aggregation layer on top of the existing relational and non-relation data-services
 mostly in real time fashion. All of the data were retrieved on demand basis,
 while data pre-fetching of most common queries is in our plans. We developed
-prototype in python for DAS system which is under commissioning phase right now 
-and presented performance studies in this paper. 
+prototype in python for DAS system which is under commissioning phase right now.
+The performance studies of DAS system are presented in this paper. 
 The CMS experiment is started to collect its data in December of 2009 and 
 we expect to accumulate a few PB of real data each year. 
 In addition, the Monte-Carlo samples will be produced at this scale.
