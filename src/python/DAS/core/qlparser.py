@@ -9,8 +9,8 @@ tests integrity of DAS-QL queries, conversion routine from DAS-QL
 syntax to MongoDB one.
 """
 
-__revision__ = "$Id: qlparser.py,v 1.40 2010/02/24 21:31:36 valya Exp $"
-__version__ = "$Revision: 1.40 $"
+__revision__ = "$Id: qlparser.py,v 1.41 2010/02/25 17:43:44 valya Exp $"
+__version__ = "$Revision: 1.41 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -324,7 +324,7 @@ class MongoParser(object):
             if  word in daskeys: # look-up for selection keys
                 try:
                     next_word = slist[idx+1]
-                    if  next_word not in self.operators and word not in skeys:
+                    if  next_word not in operators and word not in skeys:
                         skeys.append(word)
                 except:
                     pass
@@ -394,18 +394,8 @@ class MongoParser(object):
                                     cdict = dict(key=nkey, op=oper, value=value)
                                     if  cdict not in condlist:
                                         condlist.append(cdict)
-#                    try:
-#                        lkeys = self.map.lookup_keys(system, key, 
-#                                                     value=value)
-#                        for nkey in lkeys:
-#                            if  nkey != 'date':
-#                                cdict = dict(key=nkey, op=oper, value=value)
-#                                if  cdict not in condlist:
-#                                    condlist.append(cdict)
-#                    except:
-#                        pass
             else:
-                if  word not in skeys:
+                if  word not in skeys and word in daskeys:
                     skeys.append(word)
             idx += 1
         spec = mongo_exp(condlist)
@@ -420,11 +410,6 @@ class MongoParser(object):
                         if  not spec.has_key(mapkey) and key == entity:
                             spec[mapkey] = '*'
                             insert = 1
-#                    lkeys = self.map.lookup_keys(system, key)
-#                    for nkey in lkeys:
-#                        if  not spec.has_key(nkey):
-#                            spec[nkey] = '*'
-#                            insert = 1
                 except:
                     pass
             if  not insert:
