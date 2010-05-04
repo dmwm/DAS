@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.51 2009/12/22 19:13:25 valya Exp $"
-__version__ = "$Revision: 1.51 $"
+__revision__ = "$Id: das_mongocache.py,v 1.52 2009/12/22 19:26:29 valya Exp $"
+__version__ = "$Revision: 1.52 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -428,14 +428,20 @@ class DASMongocache(Cache):
             else:
                 yield row
 
-    def map_reduce(self, mrlist, spec=None):
+    def map_reduce(self, mr_input, spec=None):
         """
         Wrapper around _map_reduce to allow sequential map/reduce
-        operations, e.g. map/reduce out of map/reduce. Provided conditions
-        are only applied to first iteration.
+        operations, e.g. map/reduce out of map/reduce. 
+
+        mr_input is either alias name or list of alias names for
+        map/reduce functions.
+        spec is optional MongoDB query which is applied to first
+        iteration of map/reduce functions.
         """
-        if  type(mrlist) is not types.ListType:
-            mrlist = [mrlist]
+        if  type(mr_input) is not types.ListType:
+            mrlist = [mr_input]
+        else:
+            mrlist = mr_input
         coll = self.col # make pointer to original collection
         for mapreduce in mrlist:
             if  mapreduce == mrlist[0]:
@@ -462,7 +468,7 @@ class DASMongocache(Cache):
             result = coll.map_reduce(Code(fmap), Code(freduce), query=spec)
         else:
             result = coll.map_reduce(Code(fmap), Code(freduce))
-        msg = "DASMongocache::map_reduce found %s records in %s collection" \
+        msg = "DASMongocache::map_reduce found %s records in %s" \
                 % (result.count(), result.name)
         self.logger.info(msg)
         self.logger.debug(fmap)
