@@ -7,8 +7,8 @@ Unit test for DAS QL parser
 
 import unittest
 from DAS.core.qlparser import findbracketobj, mongo_exp
-from DAS.core.qlparser import getconditions
-from DAS.core.qlparser import MongoParser
+from DAS.core.qlparser import getconditions, add_spaces
+from DAS.core.qlparser import MongoParser, DAS_OPERATORS
 from DAS.utils.logger import DASLogger
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_mapping_db import DASMapping
@@ -37,6 +37,24 @@ class testQLParser(unittest.TestCase):
         config['dasmapping'] = DASMapping(config)
         config['dasanalytics'] = DASAnalytics(config)
         self.parser = MongoParser(config)
+        self.operators = [o.strip() for o in DAS_OPERATORS]
+
+    def test_fix_operator(self):
+        """Test fix_operator function"""
+        query  = "data latidue=1.1 longitude=-1.1"
+        expect = "data latidue = 1.1 longitude = -1.1"
+        result = add_spaces(query, self.operators) 
+        self.assertEqual(expect, result)
+
+        query  = "data lat=1.1 lon=-1.1"
+        expect = "data lat = 1.1 lon = -1.1"
+        result = add_spaces(query, self.operators) 
+        self.assertEqual(expect, result)
+
+        query  = "file dataset=/Wgamma/Winter09/RECO | grep file.name, file.size"
+        expect = "file dataset = /Wgamma/Winter09/RECO | grep file.name, file.size"
+        result = add_spaces(query, self.operators) 
+        self.assertEqual(expect, result)
 
     def testBracketObj(self):                          
         """test search for bracket objects"""
@@ -48,43 +66,24 @@ class testQLParser(unittest.TestCase):
             obj = findbracketobj(q)
             self.assertEqual(obj, r)
 
-    def test_parser(self):
-        """Test Mongo parser"""
-        cond   = {'site.se':'a.b.c', 'block.name':'bla'}
-        query  = dict(spec=cond, fields='block')
-        expect = ['dbs3', 'phedex3']
-        expect.sort()
-        result = self.parser.services(query)
-        result.sort()
-        self.assertEqual(expect, result)
-
-        expect = {'services': expect,
-                  'selkeys': 'block', 'conditions': cond}
-        result = self.parser.params(query)
-        services = result['services']
-        services.sort()
-        result['services'] = services
-        self.assertEqual(expect, result)
-
     def test_requestquery(self):
         """
         Test requestquery function.
         """
         query = 'block site=T1_CH_CERN'
-        expect = {'fields': None, 
-                  'spec': {'site.name': 'T1_CH_CERN', 'block.name':'*'}}
+        expect = {'fields': ['block'], 
+                  'spec': {'site.name': 'T1_CH_CERN'}}
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
         query = 'block site=T1_CH'
-        expect = {'fields': None, 
-                  'spec': {'site.name': 'T1_CH', 'block.name':'*'}}
+        expect = {'fields': ['block'], 
+                  'spec': {'site.name': 'T1_CH'}}
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
         query = 'file,site block=bla'
-        expect = {'fields': None, 'spec': {'file.block.name': 'bla', 
-                        'file.name':'*', 'site.name':'*', 'site.se':'*'}}
+        expect = {'fields': ['file', 'site'], 'spec': {'block.name': 'bla'}} 
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
