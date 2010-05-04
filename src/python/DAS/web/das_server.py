@@ -4,8 +4,8 @@ DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.
 """
 
-__revision__ = "$Id: das_server.py,v 1.1 2010/02/15 18:30:47 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_server.py,v 1.2 2010/03/09 02:27:15 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -95,16 +95,13 @@ class Root(object):
         self.configure()
         config = {} # can be something to consider
         if  self.model == 'cache_server':
-            obj = DASCacheModel(config)
+            obj = DASCacheModel(config) # mount cache server
             tree.mount(obj, '/')
         elif self.model == 'web_server':
             obj = DASSearch(config)
-            tree.mount(obj, '/das')
-        elif self.model == 'doc_server':
+            tree.mount(obj, '/das') # mount web server
             dir = os.environ['DAS_ROOT'] + '/doc/build/html'
-            mimes = ['text/css', 'application/javascript', 'text/javascript']
-            static_dict = { 'tools.gzip.on':True,
-                            'tools.gzip.mime_types':mimes,
+            static_dict = { 
                             'tools.staticdir.on':True,
                             'tools.staticdir.dir':dir,
             }
@@ -113,7 +110,7 @@ class Root(object):
             }
             cpconfig.update(conf)
             obj = DocServer(dir)
-            tree.mount(obj, '/das/doc')
+            tree.mount(obj, '/das/doc') # mount doc server
         else:
             obj = DASWebManager(config)
             tree.mount(obj, '/')
@@ -134,8 +131,6 @@ if __name__ == "__main__":
         help="start DAS cache server, default port 8211")
     parser.add_option("--web-server", action="store_true", dest="web_server",
         help="start DAS web server, default port 8212")
-    parser.add_option("--doc-server", action="store_true", dest="doc_server",
-        help="start DAS doc server, default port 8210")
     parser.add_option("-p", "--port", dest="port", default=False,
         help="specify port number")
     opts, args = parser.parse_args()
@@ -155,9 +150,6 @@ if __name__ == "__main__":
     elif opts.web_server:
         model = "web_server"
         config['port'] = 8212
-    elif opts.doc_server:
-        model = "doc_server"
-        config['port'] = 8210
     else:
         print "Please specify which DAS server you want to start, see --help"
         sys.exit(1)
