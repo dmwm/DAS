@@ -5,12 +5,13 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.21 2009/12/07 21:19:38 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.22 2009/12/08 15:16:20 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import re
+import time
 import types
 import thread
 import cherrypy
@@ -25,7 +26,12 @@ from WMCore.WebTools.Page import exposejson
 # DAS modules
 from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCacheMgr
-from DAS.utils.utils import getarg
+from DAS.utils.utils import getarg, genkey
+
+# monogo db modules
+from pymongo.connection import Connection
+from pymongo.objectid import ObjectId
+from pymongo import DESCENDING, ASCENDING
 
 import sys
 if  sys.version_info < (2, 5):
@@ -142,11 +148,33 @@ class DASCacheModel(RESTModel):
         # define config for DASCacheMgr
         cdict         = self.config.dictionary_()
         self.dascore  = DASCore()
+        dbhost        = self.dascore.dasconfig['mongocache_dbhost']
+        dbport        = self.dascore.dasconfig['mongocache_dbport']
+        self.con      = Connection(dbhost, dbport)
+        self.col      = self.con['logging']['db']
         sleep         = cdict.get('sleep', 2)
         verbose       = cdict.get('verbose', None)
         iconfig       = {'sleep':sleep, 'verbose':verbose}
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(self.cachemgr.worker, (worker, ))
+
+    def logdb(self):
+        """
+        Make entry in Logging DB
+        """
+        query = cherrypy.request.params.get("query", None)
+        qhash = genkey(query)
+        doc = dict(query=query, qhash=qhash, timestamp=time.time(),
+                method=cherrypy.request.method,
+                path=cherrypy.request.path_info,
+                args=cherrypy.request.params,
+                ip=cherrypy.request.remote.ip, 
+                hostname=cherrypy.request.remote.name,
+                port=cherrypy.request.remote.port)
+        self.col.insert(doc)
+        keys = ["qhash", "timestamp"] # can be adjusted later
+        index_list = [(key, DESCENDING) for key in keys]
+        self.col.ensure_index(index_list)
 
     @checkargs
     def nresults(self, *args, **kwargs):
@@ -154,6 +182,7 @@ class DASCacheModel(RESTModel):
         HTTP GET request. Ask DAS for total number of records
         for provided query.
         """
+        self.logdb()
         data = {'server_method':'nresults'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
@@ -184,6 +213,7 @@ class DASCacheModel(RESTModel):
         HTTP GET request.
         Retrieve results from DAS cache.
         """
+        self.logdb()
         data = {'server_method':'request'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
@@ -239,6 +269,7 @@ class DASCacheModel(RESTModel):
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
+        self.logdb()
         data = {'server_method':'create'}
         if  kwargs.has_key('query'):
             query  = kwargs['query']
@@ -264,7 +295,7 @@ class DASCacheModel(RESTModel):
         resource with the one enclosed in the request body.
         Replace existing query in DAS cache.
         """
-#        print "\n\n### replace", args, kwargs
+        self.logdb()
         data = {'server_method':'replace'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
@@ -295,7 +326,7 @@ class DASCacheModel(RESTModel):
         HTTP DELETE request.
         Delete input query in DAS cache
         """
-#        print "\n\n### delete", args, kwargs
+        self.logdb()
         data = {'server_method':'delete'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
