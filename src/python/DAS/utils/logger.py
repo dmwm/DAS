@@ -6,8 +6,8 @@
 General purpose DAS logger class
 """
 
-__revision__ = "$Id: logger.py,v 1.8 2010/01/06 21:16:00 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: logger.py,v 1.9 2010/04/09 19:43:56 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -111,6 +111,7 @@ class DASLogger:
         """
         if  not msg:
             msg = "No message"
+        msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.error(msg)
         if  self.stdout:
@@ -122,6 +123,7 @@ class DASLogger:
         """
         if  not msg:
             msg = "No message"
+        msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.info(msg)
         if  self.stdout:
@@ -133,6 +135,7 @@ class DASLogger:
         """
         if  not msg:
             msg = "No message"
+        msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.debug(msg)
         if  self.stdout and self.verbose > 1:
@@ -144,6 +147,7 @@ class DASLogger:
         """
         if  not msg:
             msg = "No message"
+        msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.warn(msg)
 
@@ -153,6 +157,7 @@ class DASLogger:
         """
         if  not msg:
             msg = "No message"
+        msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.error(msg)
         if  self.stdout:
@@ -164,6 +169,7 @@ class DASLogger:
         """
         if  not msg:
             msg = "No message"
+        msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.critical(msg)
 
