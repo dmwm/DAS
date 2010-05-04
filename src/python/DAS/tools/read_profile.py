@@ -4,16 +4,22 @@
 """
 Read profile.dat file and dump its content
 """
-__revision__ = "$Id: read_profile.py,v 1.1 2009/03/18 19:17:49 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: read_profile.py,v 1.2 2010/01/19 18:45:37 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
-import hotshot.stats             # profiler statistics
+import cProfile # python profiler
+import pstats   # profiler statistics
 from optparse import OptionParser
 
-def profiler(fname):
-    stats = hotshot.stats.load(fname)
-    stats.sort_stats('time', 'calls')
+def profiler(fname, sort=None, strip=False):
+    stats = pstats.Stats(fname)
+    if  sort:
+        stats.sort_stats(sort)
+    else:
+        stats.sort_stats('time', 'calls')
+    if  strip:
+        stats.strip_dirs()
     stats.print_stats()
 
 class MyOptionParser: 
@@ -23,9 +29,14 @@ class MyOptionParser:
     def __init__(self):
         self.parser = OptionParser()
         self.parser.add_option("-f", "--file", action="store", 
-                                          type="string", default="profile.dat", 
-                                          dest="file",
+             type="string", default="profile.dat", dest="file",
              help="specify input file which contains profile data")
+        self.parser.add_option("-s", "--sort", action="store", 
+             type="string", default="time", dest="sort",
+             help="specify sorting, e.g. time, calls, cumulative, file")
+        self.parser.add_option("--srip", action="store_true", 
+             default="False", dest="strip",
+             help="strip leading path from file names")
     def getOpt(self):
         """
         Returns parse list of options
@@ -38,7 +49,4 @@ class MyOptionParser:
 if __name__ == '__main__':
     optManager  = MyOptionParser()
     (opts, args) = optManager.getOpt()
-    
-    fname = opts.file
-    profiler(fname)
-
+    profiler(opts.file, opts.sort, opts.strip)
