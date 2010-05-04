@@ -498,9 +498,9 @@ at LHC.
 % 0.3PB - 50GB meta-data in DBS
 % 3PB/y - x GB
 
-We did preliminary studies of DAS performance based on information stored
-in 2 systems, DBS and PhEDEx and benchmark time required to collect and 
-aggregate block objects information from both system, see Table \ref{DAS_benchmark}.
+Preliminary results of DAS performance are shown in Table \ref{DAS_benchmark}.
+We benchmark time required to collect and aggregate block object information
+from DBS and PhEDEx CMS data-services.
 
 \begin{table*}[hbt]
 \centering
@@ -510,23 +510,22 @@ aggregate block objects information from both system, see Table \ref{DAS_benchma
 System & Format & Size & Records & Elapsed time & Elapsed time \\
 & & & & no cached data & w/ cached data \\
 \hline
-DAS (DBS) & XML & 187MB & 346820 & 165 sec & 2.53 sec \\
-DAS (PhEDEx) & JSON & 164MB & 230035 & 177 sec & 2.42 sec \\
-DAS (aggregate) & JSON & 357MB & 348866 & 386 sec & 41.7 sec \\
+DAS (DBS) & XML & 187MB & 368716 & 53 sec & 0.92 sec \\
+DAS (PhEDEx) & XML & 164MB & 175884/170131 & 160 sec & 0.94 sec \\
+DAS (aggregate) & JSON & 357MB & 374468 & 256 sec & 44.8 sec \\
 \hline
 \hline
 \end{tabular}
-\caption{DAS benchmark results. 
-We are measured a time to fetch, parse and aggregate block information
-from DBS and PhEDEx systems via their APIs. In both cases a full block 
-table content, 347K and 230K records, respectively, were used to populate
-DAS cache. The total number of DAS records were calculated
-as number of aggregated records plus left over, non-matched records,
+\caption{Time required to fetch, parse and aggregate block information
+from DBS and PhEDEx systems via their APIs. In the case of PhEDEx
+system we show total number of fetched records 175884 together with
+number of records merged in DAS 170131. The total number of DAS records 
+were calculated as number of aggregated records plus left over, non-matched records,
 from both systems.}
 \label{DAS_benchmark}
 \end{table*}
 
-We measured elapsed time of this operation as the following:
+Elapsed time measured during this test consist of the following componenets:
 \begin{itemize}
 \item[]
 {\it
@@ -545,23 +544,32 @@ is a time required to write DAS records to disk. Please note that last two
 components, {\it aggregation} and {\it output creation time}, were only applied to
 final DAS step and not to time spent in individual data-services.
 
-The individual DAS components (DBS and PhEDEx) shown roughly the same performance.
-For example, in case of PhEDEx the total time spent in DAS was 177 seconds, where
-majority of the time was spent on retrieval, 83 seconds, and parsing, 29 seconds.
-The remaining 65 seconds was distributed among remapping, cache insertion, indexing. The
-numbers for DBS system were alike. As you can see from Table \ref{DAS_benchmark},
-the time spent to read DAS records (last column) from the cache was quite
-reasonable, roughly 2.5 seconds from both systems. While final time to
-get DAS records on disk was below 42 seconds. This was mostly due to I/O operations.
-All operations were performed on a single CPU core and obviously can be
-paralelized in a future.
+%DAS execution time (phedex) 160.606897116 sec
+%DAS execution time (dbs) 52.5349619389 sec
+%DAS execution time 256.0670228 sec, Sat, 28 Nov 2009 15:46:39 GMT
+%
+%DAS execution time (phedex) 0.952513933182 sec
+%DAS execution time (dbs) 0.951184034348 sec
+%DAS execution time 44.7982931137 sec, Sat, 28 Nov 2009 15:52:11 GMT
 
-Based on this results we measured that we can achieve 900 docs/sec rate
-for inserting/aggregating data in DAS cache and 8500 docs/sec for reading 
-DAS records back, which is suitable for our
+The individual DAS components (DBS and PhEDEx) shown roughly the same performance.
+Although the time of PhEDEx component was divided among: retrieval + parsing 
+time $\sim$110 sec and merging step $\sim$50 sec.
+
+As you can see from Table \ref{DAS_benchmark},
+the time spent to read DAS records (last column) from the cache was quite
+reasonable, roughly 1 second for both systems. While final time to
+get DAS records on disk was about 45 seconds. This was mostly due to I/O and
+conversion between binary data format used in database (BSON) to JSON.
+All operations were performed on a single CPU core and obviously can be done
+in parallel.
+
+Based on this results we measured that we can achieve 7000 docs/sec rate
+for insertion, 3400 docs/sec for aggregation and 8500 docs/sec for reading operation
+in DAS, which is suitable for our 
 needs.\footnote{We've been satisfied with such performance,
-even though our measurements shown that it can still be speed up by factor of
-10 if we will use C++ DB driver instead of python one used in this prototype system.}
+even though our measurements shown that it still can be speed up by few times
+using C++ DB driver instead of python one used in this prototype system.}
 
 \section{Summary}
 We presented new data aggregation service (DAS) developed for CMS High-Energy experiment
