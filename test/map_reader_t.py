@@ -23,6 +23,7 @@ class testDBS(unittest.TestCase):
             "format": "XML",
             "params": {"name": ""}, 
             "expire": 3600, 
+            "apitag": None,
             "daskeys": [{"map": "site.name", "key": "site", "pattern": ""}],
             "api2das": [{"pattern": "", "das_key": "site", "api_param": "name"}], 
         }
