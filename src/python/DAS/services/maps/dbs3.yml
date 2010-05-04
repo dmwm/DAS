@@ -52,6 +52,19 @@ api2das : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
+urn: datasetparents
+url : "http://localhost:8585/DBS/datasetparents/"
+expire : 3600
+params : {
+        "dataset":"required",
+}
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+]
+api2das : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+]
+---
 urn: blocks
 url : "http://localhost:8585/DBS/blocks/"
 expire : 3600
@@ -98,6 +111,32 @@ api2das : [
         {"das_key":"file.block.name", "api_param":"block_name", "pattern":""}
 ]
 ---
+urn: fileparents
+url : "http://localhost:8585/DBS/fileparents/"
+expire : 3600
+params : {
+        'logical_file_name':'required',
+}
+daskeys : [
+        {"key": "file", "map":"file.name", "pattern":""},
+]
+api2das : [
+        {"das_key":"file.name", "api_param":"logical_file_name", "pattern":""},
+]
+---
+urn: filelumis
+url : "http://localhost:8585/DBS/filelumis/"
+expire : 3600
+params : {
+        'logical_file_name':'required',
+}
+daskeys : [
+        {"key": "file", "map":"file.name", "pattern":""},
+]
+api2das : [
+        {"das_key":"file.name", "api_param":"logical_file_name", "pattern":""},
+]
+---
 notations : [
         {"notation": "primary_ds_name", "map": "name", "api": "primarydatasets"},
         {"notation": "primary_ds_name", "map": "primary_ds.name", "api": ""},
@@ -109,6 +148,8 @@ notations : [
         {"notation": "block_size", "map": "block.size", "api": ""},
         {"notation": "logical_file_name", "map": "name", "api": "files"},
         {"notation": "logical_file_name", "map": "name", "api": "files2"},
+        {"notation": "logical_file_name", "map": "name", "api": "fileparents"},
+        {"notation": "logical_file_name", "map": "name", "api": "filelumis"},
         {"notation": "file.logical_file_name", "map": "file.name", "api": ""},
         {"notation": "file_type", "map": "type", "api": "files"},
         {"notation": "file_type", "map": "type", "api": "files2"},
@@ -120,4 +161,6 @@ notations : [
         {"notation": "event_count", "map": "nevents", "api": "files"},
         {"notation": "event_count", "map": "nevents", "api": "files2"},
         {"notation": "file.event_count", "map": "file.nevents", "api": ""},
+        {"notation": "run_num", "map": "run", "api": ""},
+        {"notation": "lumi_section_num", "map": "lumi", "api": ""},
 ]
