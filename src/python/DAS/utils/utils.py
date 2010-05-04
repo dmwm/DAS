@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.36 2009/11/03 16:28:11 valya Exp $"
-__version__ = "$Revision: 1.36 $"
+__revision__ = "$Id: utils.py,v 1.37 2009/11/16 15:46:49 valya Exp $"
+__version__ = "$Revision: 1.37 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -23,6 +23,21 @@ import types
 import traceback
 from itertools import groupby
 from pymongo.objectid import ObjectId
+import xml.etree.ElementTree as ET
+
+def adjust_value(value):
+    """
+    Change null value to None.
+    """
+#    pat_float   = re.compile(r'(^\d+\.\d*$|^\d*\.{1,1}\d+$)')
+#    pat_integer = re.compile(r'(^[1-9]$|^[1-9][0-9]*$)')
+    if  type(value) is types.StringType:
+        if  value == 'null' or value == '(null)':
+            return None
+        else:
+            return value
+    else:
+        return value
 
 class dict_of_none (dict):
     """Define new dict type whose missing keys always assigned to None"""
@@ -623,4 +638,65 @@ def access(data, elem):
                     if  type(result) is types.GeneratorType:
                         for item in result:
                             yield item
+
+def xml_parser(data_ptr, tag, add=None):
+    """
+    XML parser based on ElementTree module. To reduce memory footprint for
+    large XML documents we use iterparse method to walk through provided
+    data_ptr descriptor (a .read()/close()-supporting file-like object 
+    containig XML data_ptr).
+    """
+    sup = {}
+    for item in ET.iterparse(data_ptr, ["start", "end"]):
+        end, elem = item
+        row = {}
+        if  add and not sup:
+            if  add.find("_") != -1:
+                atag, attr = add.split("_")
+                if  elem.tag == atag and elem.attrib.has_key(attr):
+                    sup[add] = elem.attrib[attr]
+            else:
+                if  elem.tag == add:
+                    sup[add] = elem.attrib
+        if  elem.tag != tag or end == 'end':
+            continue
+        row[elem.tag] = dict(elem.attrib)
+        row.update(sup)
+        for child in elem.getchildren():
+            if  row[elem.tag].has_key(child.tag):
+                val = row[elem.tag][child.tag]
+                if  type(val) is types.ListType:
+                    val.append(dict(child.attrib))
+                    row[elem.tag][child.tag] = val
+                else:
+                    row[elem.tag][child.tag] = [val] + [dict(child.attrib)]
+            else:
+                row[elem.tag][child.tag] = dict(child.attrib)
+            child.clear()
+        elem.clear()
+        yield row
+    data_ptr.close()
+
+def json_parser(data):
+    """
+    JSON parser based on json module. It accepts either data
+    descriptor with .read()-supported file-like object or
+    data as a string object.
+    """
+    if  type(obj) is types.InstanceType: # got data descriptor
+        jsondict = json.load(data)
+        data.close()
+    else:
+        data = obj
+        # to prevent unicode/ascii errors like
+        # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
+        if  type(data) is types.StringType:
+            data = unicode(data, errors='ignore')
+        res = data.replace('null', '\"null\"')
+        try:
+            jsondict = json.loads(res)
+        except:
+            jsondict = eval(res)
+            pass
+    yield jsondict
 

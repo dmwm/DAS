@@ -10,7 +10,8 @@ from DAS.utils.utils import cartesian_product, dasheader
 from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
-from DAS.utils.utils import dict_value, merge_dict
+from DAS.utils.utils import dict_value, merge_dict, adjust_value
+from DAS.utils.utils import json_parser, xml_parser
 
 class testUtils(unittest.TestCase):
     """
@@ -48,6 +49,28 @@ class testUtils(unittest.TestCase):
         expect = {'a': [{'c': 1, 'b': 1}, {'c': 2, 'b': 2}, {'b': 1, 'e': 1}]}
         self.assertEqual(expect, result)
         
+    def test_adjust_value(self):
+        """Test adjust_value"""
+        expect = 1
+        result = adjust_value("1")
+        self.assertEqual(expect, result)
+
+        expect = 1.1
+        result = adjust_value("1.1")
+        self.assertEqual(expect, result)
+
+        expect = '2009.05.19 17:41:25'
+        result = adjust_value("2009.05.19 17:41:25")
+        self.assertEqual(expect, result)
+
+        expect = None
+        result = adjust_value("null")
+        self.assertEqual(expect, result)
+
+        expect = None
+        result = adjust_value("(null)")
+        self.assertEqual(expect, result)
+
     def test_dasheader(self):
         """Test DAS header"""
         expect = ['dbs']
@@ -341,6 +364,54 @@ class testUtils(unittest.TestCase):
         ]
         self.assertEqual(expect, sorted_data)
 
+    def test_xml_parser(self):
+        """
+        Test functionality of xml_parser
+        """
+        dataset = '/Njet_4j_160_200-alpgen/CMSSW_1_6_7-CSA07-1201630335/RECO'
+        uid = '04e2c867-3031-40a0-ac14-9fe57af33794'
+        block = dataset + '#' + uid
+        url = 'http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas'
+        params = {'block':block}
+        import urllib2, urllib
+        print
+        print "Check Phedex"
+        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
+        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
+        gen = xml_parser(data, "block")
+        for item in gen:
+            print item
+
+        params = {'storage_element_name': '*', 'block_name':block,
+                  'api': 'listBlocks', 'user_type': 'NORMAL', 
+                  'apiversion': 'DBS_2_0_8'}
+        print
+        print "Check DBS"
+        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
+        url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
+        gen = xml_parser(data, "block")
+        for item in gen:
+            print item
+
+#        params = {'run_number': '', 'data_tier_list': '', 
+#                  'analysis_dataset_name': '', 'processed_dataset': '', 
+#                  'detail': 'True', 'apiversion': 'DBS_2_0_8', 
+#                  'retrive_list': '', 'block_name': block,
+#                  'api': 'listFiles', 'pattern_lfn': '', 
+#                  'path': '', 'primary_dataset': '', 'other_detail': 'True'}
+#        print
+#        print "Check DBS"
+#        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
+#        url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+#        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
+#        gen = xml_parser(data, "file")
+#        for item in gen:
+#            print item
+
+        result = None
+        expect = None
+        self.assertEqual(expect, result)
 #
 # main
 #
