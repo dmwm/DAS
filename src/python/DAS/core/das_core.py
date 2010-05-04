@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.45 2009/11/24 16:01:10 valya Exp $"
-__version__ = "$Revision: 1.45 $"
+__revision__ = "$Id: das_core.py,v 1.46 2009/12/07 20:54:34 valya Exp $"
+__version__ = "$Revision: 1.46 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -266,29 +266,31 @@ class DASCore(object):
                 # NOTE: the self.call returns generator, update_cache
                 # consume and iterate over its items. So if I need to
                 # re-use it, the update_cache will yeild them back
-                results = self.call(query, idx, limit, skey, sorder) 
+                self.call(query) 
+                results = self.get_from_cache(query, idx, limit, skey, sorder)
                 if  self.das_aggregation:
                     results = self.aggregation(results)
                 results = self.cache.update_cache(query, results, 
                                 expire=self.cache.limit)
         else:
-            results = self.call(query, idx, limit, skey, sorder)
+            self.call(query) 
+            results = self.get_from_cache(query, idx, limit, skey, sorder)
             if  self.das_aggregation:
                 results = self.aggregation(results)
         return results
 
-    def update_cache(self, query, expire=600):
-        """
-        Update cache with result of the query
-        """
-        try:
-            genres = self.result(query)
-            for row in genres:
-                pass
-            status = 1
-        except:
-            status = 0
-        return status
+#    def update_cache(self, query, expire=600):
+#        """
+#        Update cache with result of the query
+#        """
+#        try:
+#            genres = self.result(query)
+#            for row in genres:
+#                pass
+#            status = 1
+#        except:
+#            status = 0
+#        return status
 
     def remove_from_cache(self, query):
         """
@@ -302,15 +304,15 @@ class DASCore(object):
         """
         Look-up input query if it exists in raw-cache.
         """
-        return self.rawcache.incache(query)
+        return self.rawcache.incache(loose(query))
 
     def in_raw_cache_nresults(self, query):
         """
         Look-up how manu records for given query exists in raw-cache.
         """
-        return self.rawcache.nresults(query)
+        return self.rawcache.nresults(loose(query))
 
-    def call(self, query, idx=0, limit=None, skey=None, sorder='asc'):
+    def call(self, query):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
@@ -319,23 +321,35 @@ class DASCore(object):
         Step 2. construct workflow and execute data-service calls with found
                 sub-queries. At this step individual data-services invoke
                 store results into DAS cache.
-        Step 3. Look-up results from the cache.
-        Return a list of generators containing results for further processing.
+        Return status 0/1 depending on success of the calls, can be
+        used by workers on cache server.
         """
-        msg = 'DASCore::call, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
-                % (query, idx, limit, skey, sorder)
+        msg = 'DASCore::call, query=%s' % query
         self.logger.info(msg)
         params = self.mongoparser.params(query)
         services = params['services'].keys()
         self.logger.info('DASCore::call, services = %s' % services)
         qhash = genkey(query)
-        for srv in services:
-            self.logger.info('DASCore::call %s(%s)' % (srv, query))
-            if  self.verbose:
-                self.timer.record(srv)
-            getattr(getattr(self, srv), 'call')(query)
-            if  self.verbose:
-                self.timer.record(srv)
+        try:
+            for srv in services:
+                self.logger.info('DASCore::call %s(%s)' % (srv, query))
+                if  self.verbose:
+                    self.timer.record(srv)
+                getattr(getattr(self, srv), 'call')(query)
+                if  self.verbose:
+                    self.timer.record(srv)
+        except:
+            return 0
+        return 1
+
+    def get_from_cache(self, query, idx=0, limit=None, skey=None, sorder='asc'):
+        """
+        Look-up results from the cache.
+        Return a list of generators containing results for further processing.
+        """
+        msg = 'DASCore::get_from_cache, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
+                % (query, idx, limit, skey, sorder)
+        self.logger.info(msg)
         spec   = getarg(query, 'spec', {})
         fields = getarg(query, 'fields', None)
         if  not fields:
