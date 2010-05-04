@@ -1,6 +1,10 @@
 How to add new data-service
 ===========================
 
+**IMPORTANT:**
+code is under re-factoring to use a pluggable interface via
+registration service.
+
 DAS supports pluggable architecture, so adding a new CMS data-service
 should be a trivial procedure. To do so we need to create a new class
 inherited from :class:`DAS.services.abstract_service.DASAbstractService`.
@@ -33,7 +37,7 @@ Here is an example of such implementation
 
 The hypotetical function call should contact data-service and retrieve,
 parse and yield data. Please note that we encourage to use 
-generator [Ref]_ in function implementation.
+generator [Gen]_ in function implementation.
 
-.. [Ref] http://www.dabeaz.com/generators/
+.. [Gen] http://www.dabeaz.com/generators/
 
