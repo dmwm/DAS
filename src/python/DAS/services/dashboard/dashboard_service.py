@@ -73,7 +73,6 @@ class DashboardService(DASAbstractService):
         date2 = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
         args['date1'] = date1
         args['date2'] = date2
-        selkeys = query['fields']
         cond = query['spec']
         for key, value in cond.items():
             if  type(value) is not types.DictType: # we got equal condition
@@ -104,7 +103,6 @@ class DashboardService(DASAbstractService):
         header = dasheader(self.name, query, api, self.url, args,
             ctime, self.expire, self.version())
         header['lookup_keys'] = self.lookup_keys(api)
-        header['selection_keys'] = selkeys
         mongo_query = query
         self.analytics.add_api(self.name, query, api, args)
         self.localcache.update_cache(mongo_query, genrows, header)
