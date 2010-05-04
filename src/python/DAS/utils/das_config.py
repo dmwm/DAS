@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.37 2010/04/14 16:58:48 valya Exp $"
-__version__ = "$Revision: 1.37 $"
+__revision__ = "$Id: das_config.py,v 1.38 2010/04/14 20:30:30 valya Exp $"
+__version__ = "$Revision: 1.38 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -60,7 +60,6 @@ def das_readconfig(dasconfig=None):
     configdict['analyticsdb'] = analytics
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
-    configdict['logdir'] = config.get('das', 'logdir', '/tmp')
 
     cache_server = {}
     cache_server['port'] = config.getint('cache_server', 'port')
@@ -94,6 +93,9 @@ def das_readconfig(dasconfig=None):
     configdict['security'] = security
 
     verbose = config.getint('das', 'verbose')
+    logformat = config.get('das', 'logformat',
+        '%(levelname)s %(message)s')
+    configdict['logformat'] = logformat
     configdict['verbose'] = verbose
     return configdict
 
@@ -107,7 +109,9 @@ def das_writeconfig():
     config.add_section('das')
     config.set('das', 'verbose', 0)
     config.set('das', 'rawcache', 'DASMongocache')
-    config.set('das', 'logdir', '/tmp')
+    config.set('das', 'logformat', '%(levelname)s %(message)s')
+#    config.set('das', 'logformat', 
+#                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     config.add_section('mongodb')
     config.set('mongodb', 'lifetime', 1*24*60*60) # in seconds
