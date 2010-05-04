@@ -99,7 +99,7 @@ class DashboardService(DASAbstractService):
         time0 = time.time()
         params = {} # all params are passed in url
         res = self.getdata(url, params, headers=self.headers)
-        genrows = self.parser(api, res, args)
+        genrows = self.parser(res, api, args)
         ctime = time.time() - time0
         header = dasheader(self.name, query, api, self.url, args,
             ctime, self.expire, self.version())
