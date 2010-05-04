@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.5 2009/05/19 17:24:12 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_filecache.py,v 1.6 2009/05/19 18:18:26 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -82,7 +82,7 @@ def clean_dirs(hourdir, datedir):
             os.rmdir(hourdir)
             break
     # if there are empty dirs in creationdate area, remove them
-    for root, dirs, files in datedir:
+    for root, dirs, files in os.walk(datedir):
         for dirname in dirs:
             try:
                 os.rmdir(dirname)
