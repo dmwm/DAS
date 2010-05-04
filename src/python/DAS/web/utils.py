@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.1 2009/05/29 18:29:48 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: utils.py,v 1.2 2009/06/02 00:48:24 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 import httplib
@@ -46,3 +46,10 @@ def httplib_request(host, path, params, request='POST', debug=0):
         return res
     conn.close()
 
+class UrlProxy(object): 
+    def __init__(self, location): 
+        self._url = urlopen(location) 
+    def headers(self): 
+        return dict(self._url.headers.items()) 
+    def get(self): 
+        return self._url.read()
