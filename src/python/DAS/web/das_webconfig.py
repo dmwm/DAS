@@ -6,8 +6,8 @@
 DAS web configuration file
 """
 
-__revision__ = "$Id: das_webconfig.py,v 1.19 2010/02/16 01:04:20 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: das_webconfig.py,v 1.20 2010/02/16 20:11:45 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -21,16 +21,15 @@ from os import environ
 config = Configuration()
 
 # This is the Security config the application will use
-config.component_('SecurityModule')
-config.SecurityModule.enabled = True
-config.SecurityModule.oid_server = 'http://localhost:8400/'
-config.SecurityModule.mount_point = 'das/auth'
-config.SecurityModule.handler = 'WMCore.WebTools.OidDefaultHandler'
-config.SecurityModule.session_name = 'SecurityModule'
-config.SecurityModule.store = 'filestore'
-#config.SecurityModule.store_path = environ['WMCORE_ROOT'] + '/src/security-store'
-config.SecurityModule.store_path = '/tmp'
-config.SecurityModule.use_decorators = False
+#config.component_('SecurityModule')
+#config.SecurityModule.enabled = True
+#config.SecurityModule.oid_server = 'http://localhost:8400/'
+#config.SecurityModule.mount_point = 'das/auth'
+#config.SecurityModule.handler = 'WMCore.WebTools.OidDefaultHandler'
+#config.SecurityModule.session_name = 'SecurityModule'
+#config.SecurityModule.store = 'filestore'
+#config.SecurityModule.store_path = '/tmp'
+#config.SecurityModule.use_decorators = False
 
 # This component has all the configuration of CherryPy
 config.component_('Webtools')
@@ -38,10 +37,10 @@ config.component_('Webtools')
 # This is the application
 config.Webtools.port = 8212
 # INADDR_ANY: listen on all interfaces (be visible outside of localhost)
-#config.Webtools.host = '0.0.0.0' 
+config.Webtools.host = '0.0.0.0' 
 # listen only to localhost, do not allow connection outside of it, this can be
 # used to hide service behind front-end
-config.Webtools.host = '127.0.0.1' 
+#config.Webtools.host = '127.0.0.1' 
 config.Webtools.application = 'DASWeb'
 
 # This is the config for the application
