@@ -5,8 +5,8 @@
 DAS mongocache wrapper.
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.40 2009/11/25 18:21:24 valya Exp $"
-__version__ = "$Revision: 1.40 $"
+__revision__ = "$Id: das_mongocache.py,v 1.41 2009/11/25 19:17:15 valya Exp $"
+__version__ = "$Revision: 1.41 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -324,10 +324,10 @@ class DASMongocache(Cache):
         Remove expired records from DAS cache.
         """
         spec   = {'das.expire' : {'$lt' : int(time.time())}}
-        fields = ['_id']
-        for row in self.col.find(spec, fields):
-            objid = row['_id'].url_encode()
-            self.col.remove({'das_id':objid})
+#        fields = ['_id']
+#        for row in self.col.find(spec, fields):
+#            objid = row['_id'].url_encode()
+#            self.col.remove({'das_id':objid})
         self.col.remove(spec)
 
     def incache(self, query):
@@ -476,6 +476,7 @@ class DASMongocache(Cache):
                     continue
                 counter += 1
 #                item['das'] = dasheader
+                item['das'] = dict(expire=dasheader['expire'])
                 item['das_id'] = objid.url_encode()
                 row = None
                 if  query_in_cache:
