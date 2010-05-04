@@ -5,8 +5,8 @@
 DAS memcache wrapper. Communitate with DAS core and memcache server(s)
 """
 
-__revision__ = "$Id: das_memcache.py,v 1.8 2009/05/22 21:04:40 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_memcache.py,v 1.9 2009/05/28 18:59:10 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import memcache
@@ -42,10 +42,22 @@ class DASMemcache(Cache):
 
         self.logger.info("Init memcache %s" % cachelist)
 
-    def get_from_cache(self, query, idx=0, limit=None):
+    def incache(self, query):
+        """
+        Check if query exists in cache.
+        """
+        key = genkey(query)
+        res = self.memcache.get(key)
+        if  res and type(res) is types.IntType:
+            return True
+        return False
+
+    def get_from_cache(self, query, idx=0, limit=0):
         """
         Retreieve results from cache, otherwise return null.
         """
+        idx = int(idx)
+        limit = long(limit)
         key = genkey(query)
         res = self.memcache.get(key)
         if  res and type(res) is types.IntType:
@@ -80,6 +92,12 @@ class DASMemcache(Cache):
             yield row
         self.memcache.set_multi(rowdict, time=self.limit, key_prefix=key)
         self.memcache.set(key, rowid, expire)
+
+    def remove_from_cache(self, query):
+        """
+        Delete query from cache
+        """
+        return
 
     def clean_cache(self):
         """

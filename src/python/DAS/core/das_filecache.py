@@ -7,8 +7,8 @@ DAS filecache wrapper.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_filecache.py,v 1.11 2009/05/27 20:28:03 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: das_filecache.py,v 1.12 2009/05/28 18:59:10 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -23,7 +23,8 @@ from sqlalchemy import create_engine, MetaData, ForeignKey, and_
 from sqlalchemy.orm import relation, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import MultipleResultsFound
 
 # DAS modules
 from DAS.utils.utils import genkey
@@ -144,7 +145,7 @@ class DASFilecache(Cache):
 #        dbfile       = None
 #        db_engine    = 'mysql://xxx:yyy@localhost/DAS'
         self.engine  = create_engine(db_engine, echo=verbose)
-        self.session = sessionmaker(bind=self.engine, autocommit=True)
+        self.session = sessionmaker(bind=self.engine)
         if  not dbfile:
             self.create_table()
         else: # sqlite case
@@ -157,48 +158,54 @@ class DASFilecache(Cache):
         query_table = Query.__table__
         Base.metadata.create_all(self.engine)
 
+    def is_expired(self, query):
+        """
+        Check if we have query result is expired in cache.
+        """
+        key     = genkey(query)
+        curtime = time.time()
+        session = self.session()
+        sql_stm = session.query(Query).filter(and_(Query.hash==key, \
+            Query.expire < '%s' % curtime ))
+        try:
+            res = sql_stm.one()
+        except Exception, exp:
+            msg = 'query=%s\n%s %s %s\n%s' % (query, sql_stm, key, curtime, exp)
+            self.logger.info(msg)
+#            print "\n### das_filecache:is_expired msg=", msg
+            return False
+        return True
+
     def incache(self, query):
         """
         Check if we have query results in cache, otherwise return null.
         """
-        key     = genkey(query)
-        sysdir  = os.path.join(self.dir, self.get_system(query))
-        session = self.session()
-        session.begin()
-        try: # transactions
-#            res = session.query(Query).filter(Query.hash==key)
-            res = session.query(Query).filter(and_(Query.hash==key, \
-                Query.expire > '%s' % time.time() ))
-            session.commit()
-        except:
-            session.rollback()
-            traceback.print_exc()
+        if  self.is_expired(query):
+            self.remove_from_cache(query)
             return False
-        found = 0
-        if  res.first():
-            found = 1
-        return found
-#        for qobj in res:
-#            valid = eval(qobj.expire) - time.time()
-#            timestring   = eval(qobj.create)
-#            creationdate = yyyymmdd(timestring)
-#            creationhour = hour(timestring)
-#            datedir      = os.path.join(sysdir, creationdate)
-#            hourdir      = os.path.join(datedir, creationhour)
-#            dir          = hourdir
-#            filename     = os.path.join(dir, key)
-#            if  valid > 0 and os.path.isfile(filename):
-#                return True
-#        return False
+        key     = genkey(query)
+        curtime = time.time()
+        session = self.session()
+        sql_stm = session.query(Query).filter(and_(Query.hash==key, \
+            Query.expire > '%s' % time.time() ))
+        try:
+            res = sql_stm.one()
+        except Exception, exp:
+            msg = 'query=%s\n%s %s %s\n%s' % (query, sql_stm, key, curtime, exp)
+            self.logger.info(msg)
+#            print "\n### das_filecache:incache msg=", msg
+            return False
+        return True
 
-    def get_from_cache(self, query, idx=0, limit=None):
+    def get_from_cache(self, query, idx=0, limit=0):
         """
         Retreieve results from cache, otherwise return null.
         """
+        idx     = int(idx)
+        limit   = long(limit)
         key     = genkey(query)
         sysdir  = os.path.join(self.dir, self.get_system(query))
         session = self.session()
-        session.begin()
         try: # transactions
             res = session.query(Query).filter(Query.hash==key)
             session.commit()
@@ -240,7 +247,6 @@ class DASFilecache(Cache):
                 if  os.path.isfile(filename):
                     os.remove(filename)
                 clean_dirs(hourdir, datedir)
-                session.begin()
                 try: # session transactions
                     session.delete(qobj)
                     session.commit()
@@ -286,7 +292,6 @@ class DASFilecache(Cache):
         expire   = create+expire
         qobj     = Query(key, query, str(create), str(expire))
         session  = self.session()
-        session.begin()
         try: # session transactions
             try:
                 sobj = session.query(System).filter(System.name==system).one()
@@ -302,6 +307,22 @@ class DASFilecache(Cache):
             traceback.print_exc()
             msg = "Unable to commit DAS filecache DB"
             raise Exception(msg)
+
+    def remove_from_cache(self, query):
+        """
+        Remove query from cache
+        """
+        key     = genkey(query)
+        session = self.session()
+        try: # transactions
+            res = session.query(Query).filter(Query.hash==key).one()
+            session.delete(res)
+            session.commit()
+        except:
+            session.rollback()
+            traceback.print_exc()
+            return False
+        return True
 
     def get_system(self, query):
         """Look-up system used for given query"""

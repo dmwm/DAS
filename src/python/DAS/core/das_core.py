@@ -12,8 +12,8 @@ combine them together for presentation layer (CLI or WEB).
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.15 2009/05/27 20:28:03 valya Exp $"
-__version__ = "$Revision: 1.15 $"
+__revision__ = "$Id: das_core.py,v 1.16 2009/05/28 18:59:10 valya Exp $"
+__version__ = "$Revision: 1.16 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -49,12 +49,9 @@ class DASCore(object):
     service_keys = {'service':{list of keys]}
     service_maps = {('service1', 'service2'):'key'}
     """
-    def __init__(self, mode=None, debug=None):
-        self.timer = DASTimer()
+    def __init__(self, debug=None):
         dasconfig    = das_readconfig()
-        self.mode    = mode # used to distinguish html vs cli 
-        dasconfig['mode'] = mode
-        verbose = dasconfig['verbose']
+        verbose      = dasconfig['verbose']
         self.stdout  = debug
         if  type(debug) is types.IntType:
             self.verbose = debug
@@ -64,6 +61,8 @@ class DASCore(object):
                 sysdict['verbose'] = debug
         else:
             self.verbose = verbose
+        if  self.verbose:
+            self.timer = DASTimer()
 
         logdir = dasconfig['logdir']
         self.logger = DASLogger(idir=logdir, verbose=self.verbose, stdout=debug)
@@ -131,7 +130,8 @@ class DASCore(object):
                     skeys += [s for s in val if not skeys.count(s)]
             self.service_keys[getattr(self, name).name] = skeys
         self.qlparser = QLParser(self.service_keys)
-        self.timer.record('DASCore.__init__')
+        if  self.verbose:
+            self.timer.record('DASCore.__init__')
 
     def keys(self):
         """
@@ -207,18 +207,19 @@ class DASCore(object):
         """
         status = 0
         if  hasattr(self, 'cache'):
-            found = 0
             try:
-                found = self.cache.incache(query)
-                status = 1
+                status = self.cache.incache(query)
+                if  status:
+                    self.logger.info('found in DAS cache')
             except:
                 traceback.print_exc()
-            print "\n===> core:update_cache, incache", found
-            if  not found:
+                status = 0
+                pass
+            if  not status:
                 # NOTE: the self.call returns generator, update_cache
                 # consume and iterate over its items. So if I need to
                 # re-use it, the update_cache will yeild them back
-                print "\n===> core:update_cache, invoke call", query, expire
+                self.logger.info('updating DAS cache')
                 results = self.call(query) 
                 try:
                     results = self.cache.update_cache(query, results, expire)
@@ -231,13 +232,13 @@ class DASCore(object):
                     pass
         return status
 
-    def delete_from_cache(self, query, expire=600):
+    def remove_from_cache(self, query):
         """
         Delete in cache entries about input query
         """
         if  hasattr(self, 'cache'):
             if  self.cache.incache(query):
-                print "core:delete_from_cache", query
+                self.cache.remove_from_cache(query)
 
     def json(self, query):
         """
@@ -301,7 +302,8 @@ class DASCore(object):
             self.logger.info('DASCore::call, qdict = %s' % str(qdict))
             rdict = {}
             for service in services:
-                self.timer.record(service)
+                if  self.verbose:
+                    self.timer.record(service)
                 # find if we already run one service whose results
                 # can be used in current one
                 cond_dict = self.find_cond_dict(service, rdict)
@@ -315,7 +317,8 @@ class DASCore(object):
                     res = getattr(getattr(self, service), 'call')\
                                     (qqq, ulist, cond_dict)
                     rdict[service] = res
-                self.timer.record(service)
+                if  self.verbose:
+                    self.timer.record(service)
             # if result dict contains only single result set just return it
             systems = rdict.keys()
             if  len(systems) == 1:

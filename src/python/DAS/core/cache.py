@@ -5,8 +5,8 @@
 Abstract cache class.
 """
 
-__revision__ = "$Id: cache.py,v 1.7 2009/05/27 20:28:03 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: cache.py,v 1.8 2009/05/28 18:59:10 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 class NoResults(Exception):
@@ -33,7 +33,14 @@ class Cache(object):
         self.logger.info('Cache::incache(%s)' % query)
         return
 
-    def get_from_cache(self, query, idx=0, limit=None):
+    def is_expired(self, query):
+        """
+        Check if query result is expired in cache
+        """
+        self.logger.info('Cache::is_expired(%s)' % query)
+        return
+
+    def get_from_cache(self, query, idx=0, limit=0):
         """
         Retreieve results from cache. Must be implemented by child class
         """
@@ -49,12 +56,19 @@ class Cache(object):
                 % (query, results, expire))
         return
 
-    def clean_cache(self, query, results, expire):
+    def remove_from_cache(self, query):
         """
-        Clean expired results in cache. Must be implemented by child class.
+        Remove query from cache. Must be implemented by child class
         """
-        self.logger.info('Cache::clean_cache(%s,%s,%s)' \
-                % (query, results, expire))
+        self.logger.info('Cache::remove_from_cache(%s)' \
+                % (query, ))
+        return
+
+    def clean_cache(self):
+        """
+        Clean expired queries in cache. Must be implemented by child class.
+        """
+        self.logger.info('Cache::clean_cache')
         return
 
     def delete_cache(self, query, results, expire):

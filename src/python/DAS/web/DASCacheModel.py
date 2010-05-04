@@ -5,12 +5,13 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.1 2009/05/27 20:28:05 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.2 2009/05/28 18:59:12 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import re
+import types
 import thread
 import traceback
 
@@ -58,7 +59,7 @@ def worker(item):
     """
     Worker function which invoke DAS core to update cache for input query
     """
-    dascore = DASCore(debug=0)
+    dascore = DASCore()
     query, expire = item
     status  = dascore.update_cache(query, expire)
     return status
@@ -78,11 +79,10 @@ class DASCacheModel(RESTModel):
 
         # define config for DASCacheMgr
         cdict         = self.config.dictionary_()
-        self.dascore  = DASCore(debug=0)
+        self.dascore  = DASCore()
         sleep         = getarg(cdict, 'sleep', 2)
         verbose       = getarg(cdict, 'verbose', None)
-        debug         = getarg(cdict, 'debug', None)
-        iconfig       = {'sleep':sleep, 'verbose':verbose, 'debug':debug}
+        iconfig       = {'sleep':sleep, 'verbose':verbose}
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(self.cachemgr.worker, (worker, ))
 
@@ -96,10 +96,19 @@ class DASCacheModel(RESTModel):
         query = kwargs['query']
         idx   = getarg(kwargs, 'idx', 0)
         limit = getarg(kwargs, 'limit', None)
-        data  = {}
+        data  = {'status':'requested', 'idx':idx, 'limit':limit, 'query':query}
         if  hasattr(self.dascore, 'cache'):
             if  self.dascore.cache.incache(query):
-                data = self.dascore.cache.get_from_cache(query, idx, limit)
+                res = self.dascore.cache.get_from_cache(query, idx, limit)
+                if  type(res) is types.GeneratorType:
+                    data['result'] = [i for i in res]
+                else:
+                    data['result'] = res
+                data['status'] = 'success'
+            else:
+                data['status'] = 'not found'
+        else:
+            data['status'] = 'no cache'
         self.debug(str(data))
         return data
 
@@ -111,14 +120,14 @@ class DASCacheModel(RESTModel):
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
-        data = 'unknown'
+        query  = kwargs['query']
+        expire = getarg(kwargs, 'expire', 600)
+        data   = {'status':'requested', 'query':query, 'expire':expire}
         try:
-            query = kwargs['query']
-            expire = getarg(kwargs, 'expire', 600)
             self.cachemgr.add(query, expire)
-            data = 'success'
         except:
-            traceback.print_exc()
+            data['exception'] = traceback.format_exc()
+            data['status'] = 'fail'
         self.debug(str(data))
         return data
 
@@ -145,13 +154,13 @@ class DASCacheModel(RESTModel):
         Delete input query in DAS cache
         """
         query  = kwargs['query']
-        data   = {'status':None}
+        data   = {'status':'requested', 'query':query}
         try:
-            self.dascore.delete_from_cache(query)
+            self.dascore.remove_from_cache(query)
             data = {'status':'success'}
         except:
             msg  = traceback.format_exc()
-            data = {'status':'fail, %s' % msg}
+            data = {'status':'fail', 'exception':msg}
         self.debug(str(data))
         return data
 

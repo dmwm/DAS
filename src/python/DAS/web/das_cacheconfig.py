@@ -6,8 +6,8 @@
 DAS cache server web configuration file
 """
 
-__revision__ = "$Id: das_cacheconfig.py,v 1.1 2009/05/27 20:28:05 valya Exp $"
-__version__ = "$Revision: 1.1 $"
+__revision__ = "$Id: das_cacheconfig.py,v 1.2 2009/05/28 18:59:12 valya Exp $"
+__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
 #
@@ -56,5 +56,4 @@ active.rest.formatter.templates = '/templates/WMCore/WebTools/'
 # verbose defines level of logger
 # debug defines stdout printouts
 active.rest.sleep = 2
-active.rest.verbose = 1
-active.rest.debug = 1
+active.rest.verbose = 0
