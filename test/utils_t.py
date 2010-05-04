@@ -9,6 +9,7 @@ import unittest
 from DAS.utils.utils import cartesian_product, query_params
 from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
+from DAS.utils.utils import splitlist
 
 class testUtils(unittest.TestCase):
     """
@@ -233,6 +234,17 @@ class testUtils(unittest.TestCase):
         smap['newkey'] = 1
         self.assertRaises(Exception, map_validator, smap)
 
+    def test_splitlist(self):
+        """
+        test splitlist utility
+        """
+        ilist = [i for i in range(0, 10)]
+        llist = [i for i in splitlist(ilist, 3)]
+        expect = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+        self.assertEqual(expect, llist)
+        expect = [[i for i in range(0,10)]]
+        llist = [i for i in splitlist(ilist, 10)]
+        self.assertEqual(expect, llist)
 #
 # main
 #
