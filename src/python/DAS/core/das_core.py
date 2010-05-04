@@ -13,8 +13,8 @@ It performs the following tasks:
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_core.py,v 1.65 2010/03/04 15:43:36 valya Exp $"
-__version__ = "$Revision: 1.65 $"
+__revision__ = "$Id: das_core.py,v 1.66 2010/03/05 18:12:55 valya Exp $"
+__version__ = "$Revision: 1.66 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -197,73 +197,7 @@ class DASCore(object):
                 _keys.append(key)
         return _keys
 
-#    def plot(self, query):
-#        """Plot data for requested query"""
-#        results = self.result(query)
-#        for item in results:
-#            print item
-#        return
-
-#    def get_view(self, name=None):
-#        """return DAS view"""
-#        if  name:
-#            return self.viewmgr.get(name)
-#        return self.viewmgr.all()
-
-#    def create_view(self, name, query, 
-#                        login='nobody', fullname='N/A', group='users'):
-#        """create DAS view"""
-#        return self.viewmgr.create(name, query)
-
-#    def update_view(self, name, query):
-#        """update DAS view"""
-#        return self.viewmgr.update(name, query)
-
-#    def delete_view(self, name):
-#        """delete DAS view"""
-#        return self.viewmgr.delete(name)
-
-#    def viewanalyzer(self, input):
-#        """
-#        Simple parser input and look-up if it's view or DAS query
-#        """
-#        pat = re.compile('^view')
-#        if  pat.match(input):
-#            qlist = input.replace('view ', '').strip().split()
-#            name  = qlist[0]
-#            cond  = ''
-#            if  len(qlist) > 1:
-#                cond = ' '.join(qlist[1:])
-#            query = self.viewmgr.get(name) + ' ' + cond
-#        else:
-#            query = input
-#        return query
-
-#    def aggregation(self, results):
-#        """
-#        Perform aggregation of information if DAS functions
-#        is found.
-#        """
-#        results  = [i for i in results]
-#        agg_dict = {}
-#        for func, arg in self.das_aggregation.items():
-#            agg  = getattr(das_functions, func)(arg, results)
-#            for key, val in agg.items():
-#                agg_dict[key] = val
-#        first = results[0]
-#        try:
-#            del first['system'] # don't account as selection key
-#        except:
-#            pass
-#        if  len(first.keys()) != len(agg_dict.keys()):
-#            for row in results:
-#                for key, val in agg_dict.items():
-#                    row[key] = val
-#                yield row
-#        else:
-#            yield agg_dict
-
-    def adjust_query(self, query):
+    def adjust_query(self, query, add_to_analytics=True):
         """Check that provided query is indeed in MongoDB format"""
         err = '\nDASCore::result unable to load the input query=%s' % query
         if  type(query) is types.StringType: # DAS-QL
@@ -271,7 +205,8 @@ class DASCore(object):
                 query = json.loads(query)
             except:
                 try:
-                    query = self.mongoparser.requestquery(query)
+                    query = self.mongoparser.requestquery(query, 
+                                add_to_analytics)
                 except:
                     traceback.print_exc()
                     raise Exception(err)
@@ -308,8 +243,6 @@ class DASCore(object):
         # lookup provided query in a cache
         if  not self.noresults:
             results = self.get_from_cache(query, idx, limit, skey, sorder)
-#        if  self.das_aggregation:
-#            results = self.aggregation(results)
         return results
 
     def remove_from_cache(self, query):
@@ -342,7 +275,7 @@ class DASCore(object):
         query, dquery = convert2pattern(loose(query))
         return self.rawcache.nresults(query, collection='merge')
 
-    def call(self, query, user=None):
+    def call(self, query, add_to_analytics=True):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
@@ -360,7 +293,7 @@ class DASCore(object):
         if  self.in_raw_cache(query):
             return 1
 
-        query = self.adjust_query(query)
+        query = self.adjust_query(query, add_to_analytics)
         msg = 'DASCore::call, query=%s' % query
         self.logger.info(msg)
         params = self.mongoparser.params(query)
