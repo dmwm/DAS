@@ -22,9 +22,9 @@ params : {
 daskeys : [
         {"key":"monitor", "map":"monitor", "pattern":""},
 ]
-api2das : [
-        {"api_param":"start", "das_key":"date", "pattern":""},
-        {"api_param":"end", "das_key":"date", "pattern":""},
+das2api : [
+        {"das_key":"date", "api_param":"start", "pattern":""},
+        {"das_key":"date", "api_param":"end", "pattern":""},
 ]
 ---
 notations : [

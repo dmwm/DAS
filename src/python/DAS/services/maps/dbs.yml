@@ -6,36 +6,36 @@ urn : listBlocks
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
-         "api":"listBlocks", "apiversion": "DBS_2_0_8", "block_name":"*",
-         "storage_elemennt_name": "*", "user_type":"NORMAL"
+     "api":"listBlocks", "apiversion": "DBS_2_0_8", "block_name":"*",
+     "storage_elemennt_name": "*", "user_type":"NORMAL"
 }
 daskeys : [
-        {"key":"block", "map":"block.name", "pattern":""}
+    {"key":"block", "map":"block.name", "pattern":""}
 ]
-api2das : [
-        {"api_param":"block_name", "das_key":"block.name", "pattern":""},
-        {"api_param":"storage_element_name", "das_key":"site.name", 
-         "pattern":"re.compile('^T[0-3]_')"},
-        {"api_param":"storage_element_name", "das_key":"site.se", 
-         "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"}
+das2api : [
+    {"das_key":"block.name", "api_param":"block_name", "pattern":""},
+    {"das_key":"site.name", "api_param":"storage_element_name",
+     "pattern":"re.compile('^T[0-3]_')"},
+    {"das_key":"site.se", "api_param":"storage_element_name",
+     "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"}
 ]
 ---
 urn : listFiles
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params: {
-   "api" : "listFiles", "apiversion" : "DBS_2_0_8", "path" : "",
-   "primary_dataset": "", "processed_dataset" : "", "data_tier_list" : "",
-   "analysis_dataset_name" : "", "block_name" : "", "other_details" : True,
-   "run_number" : "", "pattern_lfn": "", "detail" : True, "retrive_list" : "" }
+    "api" : "listFiles", "apiversion" : "DBS_2_0_8", "path" : "",
+    "primary_dataset": "", "processed_dataset" : "", "data_tier_list" : "",
+    "analysis_dataset_name" : "", "block_name" : "", "other_details" : True,
+    "run_number" : "", "pattern_lfn": "", "detail" : True, "retrive_list" : "" }
 daskeys : [
         {"key": "file", "map": "file.name", "pattern":""}
 ]
-api2das : [
-        {"api_param": "path", "das_key": "dataset", "pattern":""},
-        {"api_param": "block_name", "das_key": "block.name", "pattern":""},
-        {"api_param": "run_number", "das_key": "run", "pattern":""},
-        {"api_param": "pattern_lfn", "das_key": "file.name", "pattern":""},
+das2api : [
+        {"das_key": "dataset", "api_param": "path", "pattern":""},
+        {"das_key": "block.name", "api_param": "block_name", "pattern":""},
+        {"das_key": "run", "api_param": "run_number", "pattern":""},
+        {"das_key": "file.name", "api_param": "pattern_lfn", "pattern":""},
 ]
 ---
 notations : [
