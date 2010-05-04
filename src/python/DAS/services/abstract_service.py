@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.80 2010/03/05 18:08:08 valya Exp $"
-__version__ = "$Revision: 1.80 $"
+__revision__ = "$Id: abstract_service.py,v 1.81 2010/03/09 02:35:47 valya Exp $"
+__version__ = "$Revision: 1.81 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -52,7 +52,7 @@ class DASAbstractService(object):
             self.logger      = config['logger']
             self.dasmapping  = config['dasmapping']
             self.analytics   = config['dasanalytics']
-            self.mongoparser = config['mongoparser']
+#            self.mongoparser = config['mongoparser']
             self.write2cache = config.get('write_cache', True)
         except:
             traceback.print_exc()
