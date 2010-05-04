@@ -4,8 +4,8 @@
 """
 Data-provider map reader. Service maps are represented in YAML format.
 """
-__revision__ = "$Id: map_reader.py,v 1.3 2010/02/03 16:45:55 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: map_reader.py,v 1.4 2010/02/03 20:46:21 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 import yaml
@@ -19,6 +19,7 @@ def read_service_map(filename, field="uri"):
     system = ''
     url    = ''
     format = ''
+    notations = ''
     with open(filename, 'r') as apimap:
         for metric in yaml.load_all(apimap.read()):
             if  metric.has_key('system'):
@@ -46,11 +47,14 @@ def read_service_map(filename, field="uri"):
                     raise Exception(msg)
                 yield record
             if  field == 'notations' and metric.has_key('notations'):
-                record = dict(notations=metric['notations'],
+                notations = metric['notations']
+                record = dict(notations=notations,
                                 system=system, created=time.time())
                 yield record
             if  field == 'presentation' and metric.has_key('presentation'):
                 record = dict(presentation=metric['presentation'],
                                 created=time.time())
                 yield record
-
+        if  field == 'notations' and not notations: # no notations
+            record = dict(notations=[], system=system, created=time.time())
+            yield record
