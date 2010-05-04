@@ -83,6 +83,11 @@ class testQLParser(unittest.TestCase):
         result = self.parser.requestquery(query)
         self.assertEqual(expect, result)
 
+        query = '{"fields": null, "spec": {"_id": "4aeef071e2194e3794000007"}}'
+        expect = {'fields': None, 'spec': {'_id': '4aeef071e2194e3794000007'}}
+        result = self.parser.requestquery(query)
+        self.assertEqual(expect, result)
+
     def testFalseBracketObj(self):                          
         """false test for bracket objects"""
         q = "test (test1 (test2 or test3)"
