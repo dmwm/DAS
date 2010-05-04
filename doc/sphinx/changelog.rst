@@ -7,6 +7,12 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- V0.4.10
+
+  - added AJAX interface for DAS query look-up in admin interface
+  - bug fix in core to get status of similar queries
+  - validate web pages against XHTML 1.0, using http://validator.w3.org/check
+
 - V0.4.9
 
   - update admin interface (added query info)
