@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.46 2009/11/10 16:08:27 valya Exp $"
-__version__ = "$Revision: 1.46 $"
+__revision__ = "$Id: abstract_service.py,v 1.47 2009/11/10 20:02:39 valya Exp $"
+__version__ = "$Revision: 1.47 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -229,6 +229,35 @@ class DASAbstractService(object):
                     lkeys.append(lkey)
         return lkeys
 
+    def inspect_params(self, api, args):
+        """
+        Perform API parameter inspection. Check if API accept a range
+        of parameters, etc.
+        """
+        for key, value in args.items():
+            if  type(value) is types.DictType:
+                minval = None
+                maxval = None
+                for oper, val in value.items():
+                    if  oper == '$in':
+                        minval = int(val[0])
+                        maxval = int(val[-1])
+                    elif oper == '$lt':
+                        maxval = int(val) - 1
+                    elif oper == '$lte':
+                        maxval = int(val)
+                    elif oper == '$gt':
+                        minval = int(val) + 1
+                    elif oper == '$gte':
+                        minval = int(val)
+                    else:
+                        msg  = 'DASAbstractService::inspect_params, API=%s'\
+                                % api
+                        msg += ' does not support operator %s' % oper
+                        raise Exception(msg)
+                args[key] = range(minval, maxval)
+        return args
+
     def clean_params(self, api, args):
         """
         For some data-services it's easier to call API with parameters
@@ -260,6 +289,7 @@ class DASAbstractService(object):
         result = False
         for url, api, args in self.apimap(query):
             try:
+                args = self.inspect_params(api, args)
                 args = self.clean_params(api, args)
                 args = self.patterns(api, args)
                 msg  = 'DASAbstractService::%s::api found %s, %s' \
