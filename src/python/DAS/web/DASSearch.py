@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASSearch.py,v 1.25 2009/10/23 19:43:03 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: DASSearch.py,v 1.26 2009/11/03 16:33:33 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -37,6 +37,7 @@ from WMCore.WebTools.Page import exposejson, exposexml, exposedasplist
 from DAS.core.das_core import DASCore
 from DAS.utils.utils import getarg, access
 from DAS.web.utils import urllib2_request, json2html
+import DAS.utils.jsonwrapper as json
 
 import sys
 if sys.version_info < (2, 5):
@@ -207,6 +208,62 @@ class DASSearch(TemplatedPage):
         provide input DAS search form
         """
         page = self.templatepage('das_searchform', input=uinput, msg=msg)
+        return page
+
+    @expose
+    def records(self, *args, **kwargs):
+        """
+        Retieve all records id's.
+        """
+#        msg = "Call get, args="+str(args)+", kwargs="+str(kwargs)
+#        print "\n###", msg
+        recordid = None
+        if  args:
+            recordid = args[0]
+            spec = {'_id':recordid}
+            fields = None
+            query = dict(fields=fields, spec=spec)
+        else: # return all ids
+            query = dict(fields=None, spec={})
+
+        nresults = self.nresults(query)
+        time0    = time.time()
+        url      = self.cachesrv
+        idx      = getarg(kwargs, 'idx', 0)
+        limit    = getarg(kwargs, 'limit', 10)
+        params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit}
+        path     = '/rest/request'
+        headers  = {"Accept": "application/json"}
+        result   = self.decoder.decode(
+        urllib2_request('GET', url+path, params, headers=headers))
+        if  type(result) is types.StringType:
+            data = json.loads(result)
+        else:
+            data = result
+        results = ""
+        if  data['results']['status'] == 'success':
+            if  recordid: # we got id
+                for row in data['results']['data']:
+                    jsoncode = {'jsoncode': json2html(row, "")}
+                    results += self.templatepage('das_json', **jsoncode)
+            else:
+                for row in data['results']['data']:
+                    rid  = row['_id']
+                    del row['_id']
+                    record = dict(id=rid, daskeys=', '.join(row))
+                    results += self.templatepage('das_record', **record)
+        else:
+            results = data['results']['status']
+        if  recordid:
+            page  = results
+        else:
+            url   = '/das/records?'
+            idict = dict(nrows=nresults, idx=idx, limit=limit, results=results, url=url)
+            page  = self.templatepage('das_pagination', **idict)
+
+        form    = self.form(uinput="")
+        ctime   = (time.time()-time0)
+        page = self.page(form + page, ctime=ctime)
         return page
 
     def nresults(self, kwargs):
