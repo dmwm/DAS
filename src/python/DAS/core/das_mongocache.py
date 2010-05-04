@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.81 2010/04/15 19:03:41 valya Exp $"
-__version__ = "$Revision: 1.81 $"
+__revision__ = "$Id: das_mongocache.py,v 1.82 2010/04/30 16:37:55 valya Exp $"
+__version__ = "$Revision: 1.82 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -31,6 +31,7 @@ from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
 from pymongo.code import Code
 from pymongo import DESCENDING, ASCENDING
+from pymongo.errors import InvalidOperation
 
 DOT = '.'
 SEP = '___'
@@ -356,7 +357,8 @@ class DASMongocache(object):
         cond    = {'query.spec.key': {'$in' : spec.keys()}}
         for row in self.col.find(cond):
             mongo_query = decode_mongo_query(row['query'])
-            if  compare_specs(query, mongo_query):
+            if  mongo_query['spec'] == query['spec'] or \
+                compare_specs(query, mongo_query):
                 self.logger.info("%s, True" % msg)
                 return True
         self.logger.info("%s, False" % msg)
@@ -708,15 +710,22 @@ class DASMongocache(object):
                 pass
             # insert all records into das.merge using bulk insert
             size = self.cache_size
-            while True:
-                if  not self.merge.insert(itertools.islice(gen, size)):
-                    break
+            try:
+                while True:
+                    if  not self.merge.insert(itertools.islice(gen, size)):
+                        break
+            except InvalidOperation:
+                pass
 
     def update_cache(self, query, results, header):
         """
         Insert results into cache. Use bulk insert controller by
         self.cache_size. Upon completion ensure indexies.
         """
+        # update query record in DAS cache
+        self.update_query(query, header)
+
+        # update results records in DAS cache
         lkeys      = header['lookup_keys']
         index_list = [(key, DESCENDING) for key in lkeys]
         if  index_list:
@@ -726,19 +735,20 @@ class DASMongocache(object):
                 pass
         gen = self.update_records(query, results, header)
         # bulk insert
-        while True:
-            if  not self.col.insert(itertools.islice(gen, self.cache_size)):
-                break
+        try:
+            while True:
+                if  not self.col.insert(itertools.islice(gen, self.cache_size)):
+                    break
+        except InvalidOperation:
+            pass
 
-    def update_records(self, query, results, header):
+    def update_query(self, query, header):
         """
-        Iterate over provided results, update records and yield them
-        to next level (update_cache)
+        Update query in DAS cache.
         """
-        self.logger.info("DASMongocache::update_cache(%s) store to cache" \
-                % query)
-        if  not results:
-            return
+        msg = "DASMongocache::update_query, query=%s, header=%s" \
+                % (query, header)
+        self.logger.info(msg)
         dasheader  = header['das']
         lkeys      = header['lookup_keys']
 
@@ -759,6 +769,22 @@ class DASMongocache(object):
                          ]
             self.col.ensure_index(index_list)
 
+    def update_records(self, query, results, header):
+        """
+        Iterate over provided results, update records and yield them
+        to next level (update_cache)
+        """
+        self.logger.info("DASMongocache::update_cache(%s) store to cache" \
+                % query)
+        if  not results:
+            return
+        dasheader  = header['das']
+        lkeys      = header['lookup_keys']
+        # get API record id
+        enc_query  = encode_mongo_query(query)
+        spec   = {'spec' : dict(query=enc_query)}
+        record = self.col.find_one({'query':enc_query}, fields=['_id'])
+        objid  = record['_id']
         # insert DAS records
         prim_key   = lkeys[0] # what to do with multiple look-up keys
         counter    = 0
