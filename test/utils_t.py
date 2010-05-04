@@ -7,6 +7,7 @@ Unit test for DAS QL parser
 
 import unittest
 import urllib2, urllib
+import tempfile
 from DAS.utils.utils import cartesian_product, dasheader
 from DAS.utils.utils import genresults, transform_dict2list
 from DAS.utils.utils import sitename, add2dict, map_validator
@@ -425,69 +426,31 @@ class testUtils(unittest.TestCase):
         """
         notations = {}
 
-        dataset = '/Njet_4j_160_200-alpgen/CMSSW_1_6_7-CSA07-1201630335/RECO'
-        uid = '04e2c867-3031-40a0-ac14-9fe57af33794'
-        block = dataset + '#' + uid
-        url = 'http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas'
-        params = {'block':block}
-#        print
-#        print "Check Phedex"
-#        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
-#        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-#        gen = xml_parser(notations, data, "block")
-#        for item in gen:
-#            print item
-
-        print
-        print "Check Phedex blockReplicas with xml_parser_new"
-        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
-        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-        gen = xml_parser(notations, data, "block", [])
-        for item in gen:
-            print item
-
-        dataset = '/Njet_4j_160_200-alpgen/CMSSW_1_6_7-CSA07-1201630335/RECO'
-        uid = '04e2c867-3031-40a0-ac14-9fe57af33794'
-        block = dataset + '#' + uid
-        url = 'http://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas'
-        params = {'block':block, 'se':'*'}
-        print
-        print "Check Phedex fileReplicas with xml_parser_new"
-        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
-        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-        gen = xml_parser(notations, data, "file", ["block.name"])
-        print gen.next() # print first element from generator
-
-        params = {'storage_element_name': '*', 'block_name':block,
-                  'api': 'listBlocks', 'user_type': 'NORMAL', 
-                  'apiversion': 'DBS_2_0_8'}
-        print
-        print "Check DBS"
-        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
-        url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
-        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-        gen = xml_parser(notations, data, "block")
-        for item in gen:
-            print item
-
-#        params = {'run_number': '', 'data_tier_list': '', 
-#                  'analysis_dataset_name': '', 'processed_dataset': '', 
-#                  'detail': 'True', 'apiversion': 'DBS_2_0_8', 
-#                  'retrive_list': '', 'block_name': block,
-#                  'api': 'listFiles', 'pattern_lfn': '', 
-#                  'path': '', 'primary_dataset': '', 'other_detail': 'True'}
-#        print
-#        print "Check DBS"
-#        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
-#        url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
-#        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-#        gen = xml_parser(notations, data, "file")
-#        for item in gen:
-#            print item
-
-        result = None
-        expect = None
+        xmldata = """<?xml version='1.0' encoding='ISO-8859-1'?>
+<phedex attr="a">
+<block bytes="1">
+<file size="10">
+</file>
+</block>
+</phedex>
+"""
+        fdesc  = tempfile.NamedTemporaryFile()
+        fname  = fdesc.name
+        stream = file(fname, 'w')
+        stream.write(xmldata)
+        stream.close()
+        stream = file(fname, 'r')
+        gen    = xml_parser(notations, stream, "block", [])
+        result = gen.next()
+        expect = {'block': {'bytes': 1, 'file': {'size': 10}}}
         self.assertEqual(expect, result)
+
+        stream = file(fname, 'r')
+        gen    = xml_parser(notations, stream, "file", ["block.bytes"])
+        result = gen.next()
+        expect = {'block': {'bytes': 1}, 'file': {'size': 10}}
+        self.assertEqual(expect, result)
+
 #
 # main
 #
