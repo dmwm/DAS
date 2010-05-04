@@ -4,8 +4,8 @@
 """
 DAS cache client tools 
 """
-__revision__ = "$Id: das_cache_client.py,v 1.8 2009/06/04 18:30:28 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_cache_client.py,v 1.9 2009/06/08 19:15:48 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.web.utils import urllib2_request, httplib_request
@@ -51,7 +51,7 @@ class DASOptionParser:
              help="specify request type: GET, POST, PUT, DELETE")
         self.parser.add_option("--format", action="store", type="string", 
                                default='json', dest="format",
-             help="specify desired format output: JSON, XML")
+             help="specify desired format output: JSON, XML, DASJSON, DASXML, PLIST")
     def getOpt(self):
         """
         Returns parse list of options
@@ -84,5 +84,8 @@ if __name__ == '__main__':
         data = httplib_request(host, path, params, request, debug)
     else:
         raise Exception('Unsupported lib %s' % opts.lib)
-    decoder = JSONDecoder()
-    print decoder.decode(data)
+    if  opts.format == 'json' or opts.format == 'dasjson':
+        decoder = JSONDecoder()
+        print decoder.decode(data)
+    else:
+        print data
