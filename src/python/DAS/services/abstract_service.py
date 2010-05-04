@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.32 2009/09/11 13:26:56 valya Exp $"
-__version__ = "$Revision: 1.32 $"
+__revision__ = "$Id: abstract_service.py,v 1.33 2009/09/11 16:00:50 valya Exp $"
+__version__ = "$Revision: 1.33 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -166,12 +166,14 @@ class DASAbstractService(object):
         spec.remove('das.system') # and check if conditions provided
         if  self.localcache.incache(query=mongo_query) and spec:
 #            return self.localcache.get_from_cache(query=mongo_query)
+            self.analytics.update(query)
             return
         # check the cache if there are records with given input query
         dasquery = {'spec': {'das.query': query, 'das.system': self.name}, 
                     'fields': None}
         if  self.localcache.incache(query=dasquery):
 #            return self.localcache.get_from_cache(query=dasquery)
+            self.analytics.update(query)
             return
 
         # ask data-service api to get results, they'll be store them in
