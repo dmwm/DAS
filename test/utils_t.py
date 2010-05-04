@@ -19,12 +19,30 @@ class testUtils(unittest.TestCase):
     """
     def test_merge_dict(self):
         """Test merge_dict"""
-        dict1 = {'block':{'name':'AAA', 'b':{'c':1}, 'size':2}, 'das':{'system':'dbs'}}
-        dict2 = {'block':{'name':'AAA', 'x':{'y':1}, 'z':1, 'size':2}, 'das':{'system':'phedex'}}
+        dict1  = {'block':{'name':'AAA', 'b':{'c':1}, 'size':2}, 'das':{'system':'dbs'}}
+        dict2  = {'block':{'name':'AAA', 'x':{'y':1}, 'z':1, 'size':2}, 'das':{'system':'phedex'}}
         result = merge_dict(dict1, dict2)
         expect = {'block': [{'b': {'c': 1}, 'name': 'AAA', 'size': 2}, 
         {'x': {'y': 1}, 'z': 1, 'name': 'AAA', 'size': 2}], 
         'das': [{'system': 'dbs'}, {'system': 'phedex'}]}
+        self.assertEqual(expect, result)
+
+        dict1  = {'test':[1,2]}
+        dict2  = {'test':3}
+        expect = {'test':[1,2,3]}
+        result = merge_dict(dict1, dict2)
+        self.assertEqual(expect, result)
+
+        dict1  = {'test':[1,2]}
+        dict2  = {'test':[3,4]}
+        expect = {'test':[1,2,3,4]}
+        result = merge_dict(dict1, dict2)
+        self.assertEqual(expect, result)
+
+        dict1  = {'test':1}
+        dict2  = {'test':[2,3]}
+        expect = {'test':[1,2,3]}
+        result = merge_dict(dict1, dict2)
         self.assertEqual(expect, result)
 
     def test_dict_value(self):
@@ -368,6 +386,8 @@ class testUtils(unittest.TestCase):
         """
         Test functionality of xml_parser
         """
+        notations = {}
+
         dataset = '/Njet_4j_160_200-alpgen/CMSSW_1_6_7-CSA07-1201630335/RECO'
         uid = '04e2c867-3031-40a0-ac14-9fe57af33794'
         block = dataset + '#' + uid
@@ -378,7 +398,7 @@ class testUtils(unittest.TestCase):
         print "Check Phedex"
         print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
         data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-        gen = xml_parser(data, "block")
+        gen = xml_parser(notations, data, "block")
         for item in gen:
             print item
 
@@ -390,7 +410,7 @@ class testUtils(unittest.TestCase):
         print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
         url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
         data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-        gen = xml_parser(data, "block")
+        gen = xml_parser(notations, data, "block")
         for item in gen:
             print item
 
@@ -405,7 +425,7 @@ class testUtils(unittest.TestCase):
 #        print "%s?%s" % (url, urllib.urlencode(params, doseq=True))
 #        url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
 #        data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
-#        gen = xml_parser(data, "file")
+#        gen = xml_parser(notations, data, "file")
 #        for item in gen:
 #            print item
 
