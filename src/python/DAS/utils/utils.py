@@ -5,8 +5,8 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.37 2009/11/16 15:46:49 valya Exp $"
-__version__ = "$Revision: 1.37 $"
+__revision__ = "$Id: utils.py,v 1.38 2009/11/17 19:30:18 valya Exp $"
+__version__ = "$Revision: 1.38 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -80,15 +80,31 @@ def merge_dict(dict1, dict2):
     where I changed append(value) on merging lists or adding new
     value into the list based on value type.
     """
-    merged_dict = {}
-    for dictionary in (dict1, dict2):
-        for key, value in dictionary.items():
-            dict_value = merged_dict.setdefault(key, [])
-            if  type(value) is types.ListType:
-                dict_value += value
+#    merged_dict = {}
+#    for dictionary in (dict1, dict2):
+#        for key, value in dictionary.items():
+#            dict_value = merged_dict.setdefault(key, [])
+#            if  type(value) is types.ListType:
+#                dict_value += value
+#            else:
+#                dict_value += [value]
+#            merged_dict[key] = dict_value
+#    return merged_dict
+
+    merged_dict = dict(dict1)
+    for key, value in dict2.items():
+        if  merged_dict.has_key(key):
+            val = merged_dict[key]
+            if  type(val) is types.ListType:
+                if  type(value) is types.ListType:
+                    merged_dict[key] = val + value
+                else:
+                    val.append(value)
+                    merged_dict[key] = val
             else:
-                dict_value += [value]
-            merged_dict[key] = dict_value
+                merged_dict[key] = [val] + [value]
+        else:
+            merged_dict[key] = [value]
     return merged_dict
 
 def splitlist(ilist, nentries):
