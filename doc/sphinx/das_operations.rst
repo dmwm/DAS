@@ -18,9 +18,9 @@ Please refer to :ref:`DAS CMS operations <cms_operations>` section for deploymen
 
 By CMS conventions DAS uses the following ports
 
+- 8210 for DAS documentation server
 - 8211 for DAS cache server
 - 8212 for DAS web server
-- 8213 for DAS documentation server
 
 In order to start each of server you need to setup your environment, see
 :ref:`setup.sh <setup.sh>` file. For that use the following steps:
@@ -57,7 +57,7 @@ Rules for SSL rewrites:
 
 .. doctest::
 
-    RewriteRule ^/das/doc(/.*)?$ http://127.0.0.1:8213/das/doc/$1 [P,L]
+    RewriteRule ^/das/doc(/.*)?$ http://127.0.0.1:8210/das/doc/$1 [P,L]
     RewriteRule ^/das(/.*)?$ http://127.0.0.1:8212/das/$1 [P,L]
     RewriteRule ^/dascontrollers(/.*)?$ http://127.0.0.1:8212/dascontrollers/$1 [P,L]
 
