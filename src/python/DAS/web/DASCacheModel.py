@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.16 2009/10/12 20:19:11 valya Exp $"
-__version__ = "$Revision: 1.16 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.17 2009/10/13 18:13:30 valya Exp $"
+__version__ = "$Revision: 1.17 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -92,10 +92,6 @@ def checkargs(func):
             if  kwds['order'] not in ['asc', 'desc']:
                 msg  = 'Unsupported value order=%s' % (kwds['order'])
                 return {'status':'fail', 'reason': msg}
-        pat  = re.compile('^find ')
-        if  kwds.has_key('query') and not pat.match(kwds['query']):
-            msg = 'Unsupported keyword query=%s' % kwds['query']
-            return {'status':'fail', 'reason': msg}
         data = func (self, *args, **kwds)
         return data
     wrapper.__doc__ = func.__doc__
