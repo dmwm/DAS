@@ -2,11 +2,11 @@
 <!-- das_faq.tmpl -->
 <div class="page">
 <div class="normal">
-<h3>DAS general</h3>
+<h3>General question about DAS</h3>
 This section discuss what DAS means and general question about DAS
 <a href="javascript:ShowTag('architecture')">show</a> |
 <a href="javascript:HideTag('architecture')">hide</a>
-<div id="architecture" class="hide">
+<div id="architecture" class="">
 
 <div class="navcontainer">
 <ul>
@@ -15,8 +15,9 @@ What DAS stands for?
 </li>
 </ul>
 <p>
-Data Aggregation Service (DAS) is a CMS project which provide a common
-Query Language across multiple CMS data-services, such as DBS, Phedex, SiteDB, etc.
+Data Aggregation Service (DAS) is a CMS project which provide an access
+to CMS data-services, such as DBS, Phedex, SiteDB, etc., using free text-based
+search syntax (a la Google).
 It represents data in common JSON/XML-formats, provide Command Line Interface (CLI)
 along with reach web-based interface.
 </p>
@@ -33,7 +34,7 @@ experiment. So, it's very common, that boundaries of one data-service are
 overlap with another. A typical example is DBS and Run Summary DB.
 In DBS we store processing information about our data, such as
 dataset, blocks, files, runs. In Run Summary DB we store run specific
-information. Obviously, a run, is an entity common in two data-services.
+information. Obviously, a run, is a common entity between two data-services.
 In DAS, such comonalities are taken into account and one or more entities
 used to relate one service with another.
 </p>
@@ -44,10 +45,11 @@ How DAS merge data between different data-services?
 </li>
 </ul>
 <p>
-Upon provided query, DAS consturcts unique set of keys (entities) based on
-selection criteria, conditions and inter-service relation keys. Then query with
-this set of keys send to data-services in questions and their results are
-merged based on cartesian product between returned data sets.
+Upon provided query, DAS interface invokes appropriate data-service APIs,
+change their output to DAS notations and merge on common keys. For example,
+when user ask about block, DBS and PhEDEx APIs are invoked. Both return block
+information, where block name is a common key between two outputs. Using this
+knowledge we merge their output into one DAS record.
 </p>
 
 </div>
@@ -55,71 +57,134 @@ merged based on cartesian product between returned data sets.
 <hr class="line" />
 
 <h3>DAS queries</h3>
-This section discuss DAS Query Language
+This section discuss how to use DAS queries
 <a href="javascript:ShowTag('dasql')">show</a> |
 <a href="javascript:HideTag('dasql')">hide</a>
-<div id="dasql" class="hide">
+<div id="dasql" class="">
 <div class="navcontainer">
 <ul>
 <li>
-How can I know which keys to use in DAS-QL
+How can I know what to type in DAS web interface?
 </li>
 </ul>
 <p>
-The DAS-QL keys are defined by DAS data-services, e.g. DBS, Phedex.
-All keys defined in DBS-QL works in DAS-QL. For other servies please consult
+DAS uses free text-based search queries, so use your common knowledge about
+CMS data, e.g. dataset, block, run. Just type one of those in input field and
+you'll invoke DAS query. For complete list of DAS keys use 
 <a href="/services/">services</a> section of DAS web portal.
 </p>
 
 <ul>
 <li>
-Can I create query using keys from different data-services?
-</li>
-</ul>
-<div>
-The whole purpose of DAS was all about that. Yes, you can. Just use any combination
-of keys and provide your where clause conditions. For example,
-<div class="example">
-find dataset, admin, node where site=T2_UK
-</div>
-here we look-up dataset names, administrators and list of nodes for given site.
-</div>
-
-<ul>
-<li>
-Can use I use boolean expression in my queries and brackets?
-</li>
-</ul>
-<div>
-DAS-QL followed very closely of initial implementation of DBS-QL.
-Both boolean expressions and brackets are supported within a single query, for example
-<div class="example">
-find dataset where (run=111 or run=222) or site=srm.cern.ch
-</div>
-but we don't support boolean expression/bracket across multiple queries, for
-example the following query is NOT valid DAS query
-<div class="example">
-find a, b, c where d=1 and find x, y, z
-</div>
-</div>
-
-<ul>
-<li>Why the same query sometime takes a lot of time and sometime is almost
-instantaneous?
+Can I type conditions?
 </li>
 </ul>
 <p>
-DAS extensively uses cache to store long-live queries. If you query is not
-present in DAS cache its execution time depends on execution time of data-services
-involve in query look-up. Otherwise results retrieved from DAS cache and
-show up on a page instantaneously.
+Yes you can, use your DAS key to form a condition, e.g.
+<div class="example">
+site=T1_CH_CERN
+</div>
+</p>
+
+<ul>
+<li>
+What about multiple conditions?
+</li>
+</ul>
+<p>
+Just type them, e.g.
+<div class="example">
+site=T1_CH_CERN block=/a/b/c
+</div>
+</p>
+
+<ul>
+<li>
+Can I specify multiple keys?
+</li>
+</ul>
+<p>
+Yes you can, e.g.
+<div class="example">
+site block
+</div>
+This will cause to find out all DAS records with "site" and "block"
+</p>
+
+<ul>
+<li>
+Why my data appear instantaneously sometimes and sometime I see the following message:
+DAS processing your request, please try in a few moments, more?
+</li>
+</ul>
+<p>
+DAS doesn't hold any data, instead it retrieves data from data-services and
+place them in cache. So, when you see such message it means data were not
+presented in DAS cache and DAS sent request to appropriate data-services.
+You just need to check again your request in a moment and your data will
+be fetched.
 </p>
 
 </div>
 </div>
 <hr class="line" />
 
-<h3>DAS ???</h3>
+<h3>DAS records</h3>
+This section discuss question abotu DAS records
+<a href="javascript:ShowTag('dasql')">show</a> |
+<a href="javascript:HideTag('dasql')">hide</a>
+<div id="dasql" class="">
+<div class="navcontainer">
+
+<ul>
+<li>
+What is DAS record?
+</li>
+</ul>
+<p>
+DAS record represent aggregated information about particular entity, e.g. site,
+combined from results of different CMS data-services. For instance, the block
+information is stored in both DBS and PhEDEx data-service. In DAS this information
+is aggregated and stored as a single record. For example, here is typical DAS record:
+<div class="example">
+<pre>
+{"site": [{"samname": "CERN-PROD", "name": "T1_CH_CERN"}, 
+          {"sitename": "CERN", "name": "T1_CH_CERN"}], 
+"das": [{"qhash": ["ed2b73067794d443ed56756d9b94f7bc"], 
+         "ctime": 1.0070757865905762, 
+         "expire": 1255575966.287806, 
+         "url": "https://cmsweb.cern.ch/sitedb/json/index/CMStoSAMName", 
+         "timestamp": 1255532766.287806, 
+         "system": ["sitedb"], 
+         "api": ["CMStoSAMName"], 
+         "version": "", "selection_keys": []}, 
+        {"qhash": ["ed2b73067794d443ed56756d9b94f7bc"], 
+         "ctime": 0.99179697036743164, 
+         "api": ["CMStoSiteName"], 
+         "url": "https://cmsweb.cern.ch/sitedb/json/index/CMStoSiteName", 
+         "timestamp": 1255532765.2356441, 
+         "system": ["sitedb"], 
+         "expire": 1255575965.2356441, 
+         "version": "", "selection_keys": []}
+       ]
+}
+</pre>
+</div>
+</p>
+
+<ul>
+<li>
+What "das" key represents in DAS record?
+</li>
+</ul>
+<p>
+It represents DAS meta-data, the query hash, call execution time, API names, URL of data-service,
+the underlying CMS system, expiration time of the record, its version, etc.
+</p>
+
+</div>
+</div>
+<hr class="line" />
 
 </div> <!-- end of class="normal" -->
 </div> <!-- end of class="page" -->
