@@ -1,20 +1,20 @@
 
 <!-- das_ambiguous.tmpl -->
-<div>
-#if $msg
-DAS parser error:
-<em>
+<div> <!-- main div -->
+Provided input is ambiguous, reason:
+<pre>
 $msg
-</em>
-<br />
-<br />
-#end if
-Provided input
-<pre class="example">
-$input
 </pre>
-is ambiguous. DAS knows about the following keywords:
+DAS keywords 
+<a href="javascript:ShowTag('das_keywords')">show</a> | 
+<a href="javascript:HideTag('das_keywords')">hide</a>,
+DAS operators
+<a href="javascript:ShowTag('das_operators')">show</a> | 
+<a href="javascript:HideTag('das_operators')">hide</a>.
+For more information please use <a href="$base/faq">FAQ</a> page.
 <p />
+<div id="das_keywords" class="hide">
+<b>DAS keywords:</b>
 <em class="box_blue">
 $entities.
 </em>
@@ -23,8 +23,12 @@ Please use one of them with your input as
 <em>key=value</em> pair, e.g.
 <em class="box_blue">site=T1_CH_CERN</em>.
 </div>
-<br />
-For more with usage of DAS queries see appropriate section in a
-<a href="$base/faq">FAQ</a> page.
+<div id="das_operators" class="hide">
+<b>DAS Operators:</b>
+<em class="box_blue">
+$operators.
+</em>
+</div>
+</div> <!-- end of main div -->
 <!-- end of das_ambiguous.tmpl -->
 
