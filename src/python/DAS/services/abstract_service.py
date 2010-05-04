@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.21 2009/06/19 18:01:11 valya Exp $"
-__version__ = "$Revision: 1.21 $"
+__revision__ = "$Id: abstract_service.py,v 1.22 2009/06/22 16:08:23 valya Exp $"
+__version__ = "$Revision: 1.22 $"
 __author__ = "Valentin Kuznetsov"
 
 import types
@@ -78,12 +78,9 @@ class DASAbstractService(object):
         self.logger.info(msg)
         # call couch cache to get results from it,
         # otherwise call data service as shown below.
-        cquery = "%s %s" % (url, params)
-#        res = self.localcache.get_from_cache(cquery)
-#        if  res:
-#            return res
-        if  hasattr(self, 'localcache') and self.localcache.incache(cquery):
-            return self.localcache.get_from_cache(cquery)
+#        cquery = "%s %s" % (url, params)
+#        if  hasattr(self, 'localcache') and self.localcache.incache(cquery):
+#            return self.localcache.get_from_cache(cquery)
 
         data = urllib2.urlopen(url, urllib.urlencode(params, doseq=True))
         results = data.read()
@@ -97,9 +94,9 @@ class DASAbstractService(object):
 
         # store to couch 'raw' data coming out of concrete data service
         # will add 'query' and 'timestamp' for every row in results
-        if  hasattr(self, 'localcache'):
-            self.logger.debug('DASAbstractService::getdata updating localcache')
-            results = self.localcache.update_cache(cquery, results, self.expire)
+#        if  hasattr(self, 'localcache'):
+#            self.logger.debug('DASAbstractService::getdata updating localcache')
+#            results = self.localcache.update_cache(cquery, results, self.expire)
 
         return results
 
