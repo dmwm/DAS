@@ -5,8 +5,8 @@
 DAS cache RESTfull model, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: DASCacheModel.py,v 1.3 2009/05/28 19:58:40 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: DASCacheModel.py,v 1.4 2009/05/29 17:21:52 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -33,22 +33,21 @@ def checkargs(func):
         """Wrapper for decorator"""
         data = func (self, *args, **kwds)
         pat  = re.compile('^[+]?\d*$')
-        keys = [i for i in kwds.keys() \
-                    if i != 'query' and i != 'idx' \
-                        and i != 'limit' and i != 'expire']
+        supported = ['query', 'idx', 'limit', 'expire', 'method']
+        keys = [i for i in kwds.keys() if i not in supported]
         if  keys:
             msg  = 'Unsupported keys: %s' % keys
-            raise Exception(msg)
-        if  not pat.match(kwds['idx']):
+            return {'status':'fail', 'reason': msg}
+        if  kwds.has_key('idx') and not pat.match(kwds['idx']):
             msg  = 'Unsupported value idx=%s' % (kwds['idx'])
-            raise Exception(msg)
-        if  not pat.match(kwds['limit']):
+            return {'status':'fail', 'reason': msg}
+        if  kwds.has_key('limit') and not pat.match(kwds['limit']):
             msg  = 'Unsupported value limit=%s' % (kwds['limit'])
-            raise Exception(msg)
+            return {'status':'fail', 'reason': msg}
         pat  = re.compile('^find ')
-        if  not pat.match(kwds['query']):
+        if  kwds.has_key('query') and not pat.match(kwds['query']):
             msg = 'Unsupported keyword query=%s' % kwds['query']
-            raise Exception(msg)
+            return {'status':'fail', 'reason': msg}
         return data
     wrapper.__doc__ = func.__doc__
     wrapper.__name__ = func.__name__
@@ -92,23 +91,28 @@ class DASCacheModel(RESTModel):
         HTTP GET request.
         Retrieve results from DAS cache.
         """
-        # ask for data from DAS cache, if no data found return None
-        query = kwargs['query']
-        idx   = getarg(kwargs, 'idx', 0)
-        limit = getarg(kwargs, 'limit', 0)
-        data  = {'status':'requested', 'idx':idx, 'limit':limit, 'query':query}
-        if  hasattr(self.dascore, 'cache'):
-            if  self.dascore.cache.incache(query):
-                res = self.dascore.cache.get_from_cache(query, idx, limit)
-                if  type(res) is types.GeneratorType:
-                    data['result'] = [i for i in res]
+        data = {}
+        if  kwargs.has_key('query'):
+            query = kwargs['query']
+            idx   = getarg(kwargs, 'idx', 0)
+            limit = getarg(kwargs, 'limit', 0)
+            data  = {'status':'requested', 'idx':idx, 
+                     'limit':limit, 'query':query}
+            if  hasattr(self.dascore, 'cache'):
+                if  self.dascore.cache.incache(query):
+                    res = self.dascore.cache.get_from_cache(query, idx, limit)
+                    if  type(res) is types.GeneratorType:
+                        data['result'] = [i for i in res]
+                    else:
+                        data['result'] = res
+                    data['status'] = 'success'
                 else:
-                    data['result'] = res
-                data['status'] = 'success'
+                    data['status'] = 'not found'
             else:
-                data['status'] = 'not found'
+                data['status'] = 'no cache'
         else:
-            data['status'] = 'no cache'
+            data = {'status': 'fail', 
+                    'reason': 'Unsupported keys %s' % kwargs.keys() }
         self.debug(str(data))
         return data
 
@@ -120,14 +124,18 @@ class DASCacheModel(RESTModel):
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
-        query  = kwargs['query']
-        expire = getarg(kwargs, 'expire', 600)
-        data   = {'status':'requested', 'query':query, 'expire':expire}
-        try:
-            self.cachemgr.add(query, expire)
-        except:
-            data['exception'] = traceback.format_exc()
-            data['status'] = 'fail'
+        if  kwargs.has_key('query'):
+            query  = kwargs['query']
+            expire = getarg(kwargs, 'expire', 600)
+            data   = {'status':'requested', 'query':query, 'expire':expire}
+            try:
+                self.cachemgr.add(query, expire)
+            except:
+                data['exception'] = traceback.format_exc()
+                data['status'] = 'fail'
+        else:
+            data = {'status': 'fail', 
+                    'reason': 'Unsupported keys %s' % kwargs.keys() }
         self.debug(str(data))
         return data
 
@@ -153,14 +161,19 @@ class DASCacheModel(RESTModel):
         HTTP DELETE request.
         Delete input query in DAS cache
         """
-        query  = kwargs['query']
-        data   = {'status':'requested', 'query':query}
-        try:
-            self.dascore.remove_from_cache(query)
-            data = {'status':'success'}
-        except:
-            msg  = traceback.format_exc()
-            data = {'status':'fail', 'exception':msg}
+        data = {}
+        if  kwargs.has_key('query'):
+            query  = kwargs['query']
+            data   = {'status':'requested', 'query':query}
+            try:
+                self.dascore.remove_from_cache(query)
+                data = {'status':'success'}
+            except:
+                msg  = traceback.format_exc()
+                data = {'status':'fail', 'exception':msg}
+        else:
+            data = {'status': 'fail', 
+                    'reason': 'Unsupported keys %s' % kwargs.keys() }
         self.debug(str(data))
         return data
 
