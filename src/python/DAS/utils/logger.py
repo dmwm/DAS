@@ -6,8 +6,8 @@
 General purpose DAS logger class
 """
 
-__revision__ = "$Id: logger.py,v 1.11 2010/04/14 17:49:34 valya Exp $"
-__version__ = "$Revision: 1.11 $"
+__revision__ = "$Id: logger.py,v 1.12 2010/04/14 20:29:59 valya Exp $"
+__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -61,27 +61,33 @@ class DASLogger(object):
     """
     DAS base logger class
     """
-    def __init__(self, idir='/tmp', name="DAS", verbose=0):
+    def __init__(self, logfile=None, verbose=0, name='DAS',
+                 format='%(name)s %(levelname)s %(message)s'):
         self.verbose  = verbose
+        self.logfile  = logfile
         self.name     = name
-        self.dir      = idir
         self.logger   = logging.getLogger(self.name)
         self.loglevel = logging.INFO
         self.addr     = repr(self).split()[-1]
-        logging.basicConfig()
+        if  logfile:
+            self.dir, _  = os.path.split(logfile)
+            self.logname = 'DAS'
+            try:
+                if  not os.path.isdir(self.dir):
+                    os.makedirs(self.dir)
+                if  not os.path.isfile(self.logname):
+                    fds = open(self.logname, 'a')
+                    fds.close()
+            except:
+                msg = "Not enough permissions to create %s"\
+                       % self.logfile 
+                raise Exception(msg)
+            logging.basicConfig(filename=logfile, level=self.loglevel,
+                        format=format)
+        else:
+            logging.basicConfig(level=self.loglevel, format=format)
         self.level(verbose)
 
-#        self.logname  = os.path.join(self.dir, '%s.log' % name) 
-#        try:
-#            if  not os.path.isdir(self.dir):
-#                os.makedirs(self.dir)
-#            if  not os.path.isfile(self.logname):
-#                f = open(self.logname, 'a')
-#                f.close()
-#        except:
-#            msg = "Not enough permissions to create a DAS log file in '%s'"\
-#                   % self.dir
-#            raise msg
 #        hdlr = logging.handlers.TimedRotatingFileHandler( \
 #                  self.logname, 'midnight', 1, 7 )
 #        hdlr = logging.StreamHandler()
@@ -99,68 +105,58 @@ class DASLogger(object):
         self.verbose = level
         if  level == 1:
             self.loglevel = logging.INFO
-        elif level >= 2:
+        elif level == 2:
             self.loglevel = logging.DEBUG
-        else:
+        elif level >= 2:
             self.loglevel = logging.NOTSET
+        else:
+            self.loglevel = logging.ERROR
         self.logger.setLevel(self.loglevel)
 
-    def error(self, msg):
+    def error(self, msg='N/A'):
         """
         Write given message to the logger at error logging level
         """
-        if  not msg:
-            msg = "No message"
         msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.error(msg)
 
-    def info(self, msg):
+    def info(self, msg='N/A'):
         """
         Write given message to the logger at info logging level
         """
-        if  not msg:
-            msg = "No message"
         msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.info(msg)
 
-    def debug(self, msg):
+    def debug(self, msg='N/A'):
         """
         Write given message to the logger at debug logging level
         """
-        if  not msg:
-            msg = "No message"
         msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.debug(msg)
 
-    def warning(self, msg):
+    def warning(self, msg='N/A'):
         """
         Write given message to the logger at warning logging level
         """
-        if  not msg:
-            msg = "No message"
         msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.warn(msg)
 
-    def exception(self, msg):
+    def exception(self, msg='N/A'):
         """
         Write given message to the logger at exception logging level
         """
-        if  not msg:
-            msg = "No message"
         msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.error(msg)
 
-    def critical(self, msg):
+    def critical(self, msg='N/A'):
         """
         Write given message to the logger at critical logging level
         """
-        if  not msg:
-            msg = "No message"
         msg = str(msg)
         msg = self.addr + ' ' + msg
         self.logger.critical(msg)
