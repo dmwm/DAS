@@ -159,7 +159,7 @@ sources and distributed in a variety of forms and digital formats.
 It is organized and managed by constantly evolving software using 
 both relational and non-relational data sources. Even though we can apply
 information retrieval approach to non-relation data sources,
-we can't do so for relational ones, where information can be accessed via
+we can't do so for relational ones, where information is accessed via
 pre-established set of data-services.
 
 Here we discuss a new data aggregation system which consumes, 
@@ -171,13 +171,13 @@ under the new system. The aggregated information being collected from various so
 allowing end-users to place dynamic queries, get precise answers and 
 trigger information retrieval on demand. Such close to real-time system 
 based on studies  of use cases of the CMS particle physics experiment at 
-the LHC where we used a large scale, distributed computing system 
+the LHC where we used a large scale, distributed computing environment 
 to motivate this work.
 \end{abstract}
 
 \begin{keyword}
 %% keywords here, in the form: keyword \sep keyword
-Meta-data\sep data aggregation\sep HEP.
+Meta-data\sep data aggregation\sep information discovery\sep HEP.
 
 %% PACS codes here, in the form: \PACS code \sep code
 
@@ -243,7 +243,7 @@ works, see \cite{DBXplorer, QueryAnswer} for more references,
 are based on some kind of the graph over the underlying database and
 use a generated database out of pristine one to perform the work.
 The proximity of the results in those techniques 
-are mostly confined to the text-based values stored in a database, since 
+are mostly confined to a text-based values stored in a database, since 
 usage of numerical values in the input search field is mostly useless without 
 knowledge of the context of the value. For example, typing a value 100 
 in the search input field leads to plenty of inappropriate matches, 
@@ -260,7 +260,7 @@ To address those limitations an attempt to build a simple, intuitive and
 flexible query language was introduced in \cite{DBS-QL}.
 It represents a power of SQL while hiding underlying relational schema from 
 the end-users. As a results a human questions were intuitively mapped into 
-simple queries. For example, the question
+simple queries. For instance, the question
 {\it I'm looking for files who contain data taken on certain date and located at
 particular site} was represented as simple as \cite{DBS-QL}
 \begin{verbatim}
@@ -271,11 +271,11 @@ intuitive mapping between mental model of end-users and underlying database sche
 
 At the same time the data aggregation is commonly addressed in the context of
 federated databases, see for example \cite{FedDB}. It unifies data coming 
-from different RDMS systems into the federated DB where SQL queries can be user to 
+from different RDMS systems into the federated DB where SQL queries can be used to 
 search desired data. Even though it would be interesting to apply technique 
 discussed in \cite{DBS-QL} to a federated DB it still requires 
 an access to the underlying database schema. This obviously creates a problem
-in distributed heterogeneous environment where different security policies
+in distributed, heterogeneous environment where different security policies
 are in place.
 
 To avoid those limitations we decided to build a keyword-search based system around
@@ -315,16 +315,16 @@ a multi-Tier distributed model, where specific tasks of data taking,
 processing, archival and distribution are assigned to each tier based
 on CMS data model. For example, the Tier-0 center at CERN is responsible
 for archiving the data coming out from the detector, prompt first pass reconstruction
-and data distribution to 7 Tier-1 centers, located around the world.
+and data distribution to Tier-1 centers, located around the world.
 %The 7 Tier-1 centers
 %located in France, Germany, Ialy, Spain, Taiwan, United Kingdom and United States
 %keep a portion (copy) of the data delivered by Tier-0 for further processing.
 They provide storage and CPU power for high priority analysis jobs.
-The 50+ Tier-2 centers
+The Tier-2 centers
 %, located at more then 50 sites around the world,
 are dedicated for user analysis tasks and production of simulated data.
 
-A broad variety of data-services being designed and developed to
+A broad variety of data-services have being designed and developed to
 maintain detector and production operations, including detector
 conditions databases, data location and bookkeeping services,
 data transfer and job monitoring tasks. Even though majority of them
@@ -345,28 +345,29 @@ and desire to make cross-service queries force us to design and develop new
 Data Aggregation System.
 
 \section{Data Aggregation System\label{DAS}}
-The goal of the Data Aggregation System was to combine existing data-services
+The goal of the Data Aggregation System was to combine and
+aggregate data from existing data-services
 under one umrella, utilizing their access rules, APIs, security policies, etc., and
 allowing users to perform queries against them. In contrast, the approaches
 discussed in \cite{DBXplorer, QueryAnswer, FedDB} are
 enforced a publication step of data into a dedicated database 
-or central repositories \cite{iRODS}. Quite often it is required
+or central repositories \cite{iRODS}. Therefore, quite often it is required
 that data should be converted into uniform data formats in order enable
 aggregation, see \cite{OpenArchive}. In DAS architecture the data are provided
-by existing data-services and infrastructure, whose design, implementation and
-security policies are left up to their developers. Therefore DAS does not require
-a data preservation and transaction capabilities. Instead DAS can be treated
+by existing data-services and infrastructure, whose implementation,
+data representation and security policies are left intact. Consequently,
+DAS does not require a data preservation and transaction capabilities. 
+Instead DAS can be treated
 as proxy or caching layer where information retrieval are triggered dynamically
 by user queries. Such infrastructure allows data sharing across different queries and
 data aggregation using appropriate mapping. Below we discuss in details the
 DAS architecture.
 
 \subsection{DAS architecture}
-The design of the DAS system was based on previous studies of CMS Data 
-Bookkeeping System (DBS) \cite{DBS, DBS07}. Teh DBS Data Discovery service
-\cite{DD} was based on DBS Query Language (DBS-QL) \cite{DBS-QL}. It provides
-ability to place queries, similar to SQL, without specific knowledge of 
-underlying DB schema.
+The design of the DAS system was based on previous studies of the CMS Data 
+Bookkeeping System (DBS) \cite{DBS, DBS07}. The DBS Data Discovery service
+\cite{DD} was based on DBS Query Language (DBS-QL) \cite{DBS-QL}. It provided
+a syntax similar to SQL, without specific knowledge of underlying DB schema.
 %We carefully analyzed user
 %requests and queries placed into the DBS, their patterns, frequencies and latency. 
 %As a result we created a data discovery service \cite{DD}. Originally it used MVC
@@ -390,15 +391,15 @@ Starting from this ground we designed DAS system as an
 additional layer on top of the existing data-services
 within CMS computing infrastructure by imposing the following set of requirements:
 \begin{itemize}
-\item support of keyword based search queries with ability to use condition operators;
-\item pluggable interface to existing and up-coming data-service APIs;
-\item support heterogeneous software environment and distributed nature of the data-services;
-\item preserve security policies of individual data-services;
+\item support a keyword based search queries with ability to use condition operators;
+%\item pluggable interface to existing and up-coming data-service APIs;
+\item use existing heterogeneous software environment and distributed nature of the data-services;
+\item preserve access rules and security policies of individual data-services;
 %\item be flexible to adjust to dynamic nature of data-service APIs, 
 %due to continuously changing detector and software environments;
 \item retrieve data on demand and aggregate them if necessary across
 multiple data-services;
-\item be transparent to data-services implementations and their data formats;
+\item be transparent to data-services implementation and their data formats;
 %\item support legacy data-services, applications and APIs.
 \end{itemize}
 \begin{figure}[htb]
@@ -406,11 +407,11 @@ multiple data-services;
 \includegraphics[width=100mm]{DAS_Cache_and_Analytics.pdf}
 \caption{
 The DAS architecture diagram. 
-Input query where placed into analytics DB and mapped into set of
+Input query were placed into analytics DB and mapped into a set of
 data-service APIs and their parameters. If superset of the query has been
-found in DAS cache, the appropriate results were delivered back to users.
+found in DAS cache, the appropriate results were delivered back to the users.
 Otherwise a data-service APIs were invoked, triggering DAS cache population. 
-Once data become available and aggregated in DAS cache users were able 
+Once data become available and aggregated in DAS cache, users were able 
 to see the results. This on demand system was supplemented by DAS robots 
 (unix daemons) who were consulting DAS analytics database to enable data 
 population into DAS cache for most common query requests.
@@ -439,8 +440,8 @@ main DAS components: Mapping, Analytics and DAS cache databases,
 which will be discussed next. 
 
 The DAS architecture is shown in Fig. \ref{DAS_cache}. It consists of
-core library with support of pluggable modules for data retrieval;
-caching layer to store data-service output and aggregated results;
+the core library with support of pluggable modules for data retrieval;
+caching layer to store data-service output and aggregate results;
 request service to handle user queries;
 Mapping DB to keep information about data-service APIs, their
 notations and mapping to DAS;
@@ -448,19 +449,13 @@ Analytics DB for query analysis and identification of pre-fetch
 strategies.
 
 \subsection{DAS core}
-The DAS core communicates with different data-services and retrieves
-data on demand. This was done by invoking appropriate data-service plugin
+The DAS core communicated with different data-services and retrieved
+data on demand. This was done by invoking appropriate data-service plugin(s)
 upon the user request. Each plugin consists of DAS map, the
 data parser(s) to convert data-service output into DAS records
 and it was responsible for data-service API calls.
-The data-service DAS map contains information about data-service APIs,
-input and output parameters and their mapping to DAS keys. 
-This information was stored into DAS Mapping DB which we discuss next.
-Below you can see a typical DAS Mapping DB record for CMS
-SiteDB data-service \cite{SiteDB}:
-%\footnote{We used regular expression 
-%patterns, evaluated during run time, to validate provided set of input 
-%paremters and DAS keys.}:
+The data-service plugin contains a map about data-service APIs,
+input and output parameters and their mapping to DAS keys. For example
 \begin{verbatim}
 {"api":{"params":{"name":""}, "name":"CMSNametoSE"}, "system":"sitedb",
  "api2das": [{"pattern": "re.compile('^T[0-3]_')", 
@@ -468,12 +463,13 @@ SiteDB data-service \cite{SiteDB}:
  "daskeys": [{"pattern": "re.compile('^T[0-3]_')", 
               "key": "site", "map": "site.name"}]}
 \end{verbatim}
-Although the majority of data-services looks alike
+This information was stored into DAS Mapping DB which we discuss next.
+
+Although the majority of data-service plugins looks alike
 and their logic was abstracted, including parsers, there were a few
-cases where special care was required. For instance,
-to deal with data-services which were only accessible via private network.
-Therefore, a way to propagate user credentials was required, leading
-to specific plugin implementation.
+cases where special care was required, e.g. access to data-services 
+accessible via private network. Therefore, a way to propagate 
+user credentials was required, leading to specific plugin implementation.
 
 %All user queries were written to Analytics DB for further analysis, while
 %mapping between data services were kept in Mapping DB. The data-service 
@@ -481,16 +477,16 @@ to specific plugin implementation.
 %inside of the DAS cache.
 
 \subsection{DAS Mapping DB}
-DAS Mapping DB holded the mapping between data-service APIs and DAS keys exposed to
+The Mapping DB holded the mapping between data-service APIs and DAS keys exposed to
 the users. It created a necessary glue between data-services and identifies
 how their data can be related to each other. Basically Mapping DB was positioned 
 as a {\it registration} service with ability to translate notations among data-services.
 Upon identification of APIs which will participate in DAS activity 
 we stored their names, input parameters, together with their type and accept 
-values as regular expression patterns into the Mapping DB. 
+values, as regular expression patterns, into the Mapping DB. 
 Also we stored the mapping between data-service notations and DAS keys. 
 For instance, the CMS DBS system \cite{DBS}
-used \verb+logical_file_name+ notation to identify the name of the
+used a \verb+logical_file_name+ notation to identify the name of the
 logical file, while the same entity was called \verb+lfn+ 
 in CMS PhEDEx system \cite{PhEDEx}.
 Since both of them were referred to the logical file name, 
@@ -507,7 +503,7 @@ Under the hood, the appropriate data-service APIs were looked up along with appr
 parameters to answer those questions. In aforementioned example, 
 usage of \verb+file+ in DAS query cause a call of DBS 
 \verb+listFiles+ and PhEDEx \verb+fileReplicas+ APIs, respectively.
-This approach gave power to end-users to express the meaning of their queries, especially
+This approach gave ability to end-users to express the meaning of their queries, especially
 when they deal with numbers, and achieve accuracy of results. 
 For instance, users were able to type \verb+run > 10 and run < 100+
 to specify a range of run numbers to be looked up in DAS cache. At the same time
@@ -528,9 +524,9 @@ The DAS caching system was used to dynamically fetch
 and aggregate data upon user requests. We used the following 
 algorithm:
 \begin{enumerate}[1.]
-\item Decompose query into set of conditions ($conds$) 
-and selection keys ($skeys$)
-\item Check cache for query hash, if found: look-up results from the cache
+\item Decompose query into set of conditions (\verb+conds+) 
+and selection keys (\verb+skeys+)
+\item Check cache for query hash, if found, look-up results from the cache
 \item Identify list of APIs which can serve requested data
 \begin{verbatim}
 apilist = [r(url, api, args) for r in mapping_db(skeys, conds)]
@@ -545,7 +541,7 @@ for url, api, args in apilist:
     for row in parser(get_data(url, api, args)):
         yield row
 \end{verbatim}
-Here \verb+superset_in_analytics+ identifies if provided \verb+api, args+
+Here \verb+superset_in_analytics+ verifies if provided \verb+api, args+
 are subset of already registered in Analytics DB api call(s). The 
 \verb+get_data+ and \verb+parser+ are define methods to fetch and parse
 data, respectively.
@@ -559,9 +555,10 @@ if cache_has(row.primary_key):
 else:
    insert_into_cache(row)
 \end{verbatim}
-We did use a bulk insert operations to increase throughput. The \verb+primary_key+
+The \verb+primary_key+
 is a key which identify the record defined in Mapping DB, e.g. \verb+file.name+
 for \verb+file+ record.
+We did use a bulk insert operations at this step to increase throughput. 
 \item Get results from the cache
 \end{enumerate}
 %The data was stored in a form of DAS records into the cache, while
@@ -592,7 +589,7 @@ common data into DAS cache.
 %invoked and the results were collected and aggregated inside of DAS cache.
 
 \subsection{DAS queries}
-Apart from previous DBS-QL syntax we decided to drop its syntax and allow users
+Apart from the previous DBS-QL syntax we decided to drop its syntax and allow users
 express their queries in a free text-based form. Although we must clarify its
 meaning. We used a pre-defined set of keys registered in DAS to describe common
 entities of our data. For example, \verb+dataset+, 
