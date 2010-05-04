@@ -194,7 +194,7 @@ Meta-data\sep data aggregation\sep information discovery\sep HEP.
 %% main text
 \section{Introduction}
 The European Organization for Nuclear Research, known as CERN, plays a leading
-role in fundamental studies of physics. But it is also known as a place where
+role in fundamental studies of physics. It is also known as a place where
 many innovations in the area of computer science were developed, e.g. World Wide Web.
 Today, the Large Hadron Collider (LHC) at CERN is marking a new era of High Energy
 Physics (HEP), promising to deliver a few PB of data each year. 
@@ -203,22 +203,21 @@ environment becomes a key ingredient of successful data analysis.
 The data and associated meta-data are produced in variety of forms and digital formats.
 They are stored and retrieved from relational and non-relational data-sources, such as 
 RDMS systems, document oriented databases, blogs, twikies, file systems,
-customized applications, etc. 
-Working in such environment requires a lot of expertise and our users, physicists, 
-are always looking for simple, intuitive and flexible
-tool(s) to look-up their desired data. A well-known solutions, such as data-services
-and search engines are tighten to a specific data sources and end-users are left 
-with a manual task to bookkeep and relate information from them.
+customized applications, etc. Working in such environment requires a lot 
+of expertise and easy way to look-up desired information is always a necessity.
+A well-known solutions, e.g. data-services, are tighten to a specific data 
+sources and end-users are left with a manual task to bookkeep and 
+relate information from them.
 
-Here we present a work on Data Aggregation System (DAS) designed for
-CMS High-Energy Experiment at LHC which provides
-ability to query, search and aggregate information from different 
-data-services and trigger information retrieval on demand.
+Here we present a work on Data Aggregation System (DAS) which provides
+ability to search and aggregate information across different 
+data-services. While it was designed for CMS High-Energy Physics 
+experiment at LHC, it can be applied elsewhere. 
 
 The rest of this paper is organized as following. 
 In section \ref{RelatedWork} we discuss related work in a domain of 
 keyword search over relational data sources.
-Section \ref{DataModel} describes CMS experiment and its data model. In section
+Section \ref{DataModel} describes the CMS experiment and its data model. In section
 \ref{DAS} we present architecture of the DAS system, including discussion of its
 various components. Finally, our results are summarized in section \ref{Results}.
 
@@ -235,54 +234,55 @@ A few alternative solutions has been proposed to address this issue
 in last several years. In \cite{DBXplorer} the conjunctive keyword queries,
 i.e. retrieval of documents that contain all query keywords, has
 been discussed. It requires that all keywords are matched in a row from a
-single table or joined tables. Authors of \cite{QueryAnswer} made a step forward
-by considering information around matched values and presents customized answers to
-end-users over the generated new database. These and other related 
-works, see \cite{DBXplorer, QueryAnswer} for more references,
-are based on some kind of the graph over the underlying database and
-use a generated database out of pristine one to perform the work.
-The proximity of the results in those techniques 
-are mostly confined to a text-based values stored in a database, since 
-usage of numerical values in the input search field is mostly useless without 
-knowledge of the context of the value. For example, typing a value 100 
-in the search input field leads to plenty of inappropriate matches, 
-such as row ids, and in order to be
-answered correctly requires additional keyword, clarifying its meaning, 
-which should be matched with particular
-entity (table.column) in the underlying database.
-Therefore to answer precisely the logical questions, such as  
+single table or joined tables. Authors of \cite{QueryAnswer} are made a step forward
+and evaluated information around matched values. The results were presented as
+customized templates to end-users. 
+These and other related works, see \cite{DBXplorer, QueryAnswer} 
+for more references, are based on some kind of the graph over the underlying 
+database and generated a new database out of pristine one to perform the work.
+The proximity of the results in those techniques are mostly confined to a 
+text-based values stored in a database, since the usage of numerical ones 
+is mostly useless without knowledge of the context of the input value. 
+For example, typing a value 100 in the search input field can lead to 
+plenty of inappropriate matches, e.g. row ids. In order to be
+answered correctly it requires additional keyword, clarifying its meaning, 
+which should be matched with particular entity (table.column) in the 
+underlying database. Therefore the logical questions, e.g.
 {\it find me total number of files whose size more then 20 but less then 
-100} would be hard or almost impossible in \cite{DBXplorer, QueryAnswer}, 
-while it can be easily accomplished using SQL syntax. 
+100} are hard to answer precisely using approaches outlined in \cite{DBXplorer, QueryAnswer}, 
+while it can be easily accomplished using SQL. 
 
-To address those limitations an attempt to build a simple, intuitive and 
-flexible query language was introduced in \cite{DBS-QL}.
-It represents a power of SQL while hiding underlying relational schema from 
-the end-users. As a results a human questions were intuitively mapped into 
-simple queries. For instance, the question
+To address those limitations a keyword-based query language was introduced in \cite{DBS-QL}.
+It used a set of pre-defined keys mapped to underlying schema and shortest path
+algorithm which employed a foreign key constrains to build SQL queries. As a result
+the question
 {\it I'm looking for files who contain data taken on certain date and located at
 particular site} was represented as simple as \cite{DBS-QL}
 \begin{verbatim}
 find file where date 2009-01-02 11:59 CET and site = T2
 \end{verbatim}
-This solution represents a common use cases within HEP community and provide
-intuitive mapping between mental model of end-users and underlying database schema.
+without specifying any relational details.
+This solution represents a common use case in HEP community and provides
+an intuitive mapping between mental model of the end-users and 
+underlying database schema.
 
 At the same time the data aggregation is commonly addressed in the context of
-federated databases, see for example \cite{FedDB}. It unifies data coming 
-from different RDMS systems into the federated DB where SQL queries can be used to 
-search desired data. Even though it would be interesting to apply technique 
-discussed in \cite{DBS-QL} to a federated DB it still requires 
-an access to the underlying database schema. This obviously creates a problem
-in distributed, heterogeneous environment where different security policies
-are in place.
+federated databases, see for example \cite{FedDB}. The data from different 
+RDMS systems are stored into the federated DB where SQL queries can be used to 
+search desired data. Apart from many internal obstacles, e.g.
+schema, domain and naming conflicts, the external ones are often
+a barrier to work with in distributed, heterogeneous environment where
+different security policies are in place. At the end an usage of SQL and/or
+any other Query Language will be required to search for data.
+%Even though it would be interesting to apply technique 
+%discussed in \cite{DBS-QL} to a federated DB it still requires 
+%an access to the underlying database schema.
 
 To avoid those limitations we decided to build a keyword-search based system around
-existing data-services whose nature and access policies are defined by developers.
-Keeping in mind that meta-data can come in different forms and data formats,
-we used a document-oriented database back-end with full support of the query language.
-The key ingredients were the setup of the mapping and analytics services which provide
-necessary glue across existing API/notations and user queries. This approach 
+existing data-services whose nature and access policies are intact.
+%The information retrieval were triggered on demand and stored into the cache.
+The key ingredients were the setup of the mapping and analytics services which provided
+a necessary glue across existing API/notations and user queries. This approach 
 allows us to perform dynamic data aggregation across various data-services, achieve
 precise answers using keyword-based queries
 and organize information retrieval on demand.
