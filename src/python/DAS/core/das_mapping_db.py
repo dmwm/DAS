@@ -5,8 +5,8 @@
 DAS mapping DB
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.8 2009/10/13 14:03:01 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.9 2009/10/13 15:21:07 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -114,6 +114,18 @@ class DASMapping(object):
                         keys.append(entry['key'])
             kdict[system] = keys
         return kdict
+
+    def check_daskey(self, system, daskey):
+        """Check if provided system/daskey is valid combination"""
+        entity = daskey.split('.')[0]
+        cond   = { 'system' : system, 'daskeys.key' : entity }
+        gen    = (row['daskeys'] \
+                for row in self.col.find(cond, ['daskeys']))
+        for maps in gen:
+            for imap in maps:
+                if  daskey == imap['key'] or daskey == imap['map']:
+                    return True
+        return False
 
     def relational_keys(self, system1, system2):
         """
