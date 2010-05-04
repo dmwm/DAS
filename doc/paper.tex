@@ -462,53 +462,47 @@ and {\it CMStoSiteName}, with API results merged under the {\it site} key.
 %to serve such requests on behalf of the users.
 
 \section{Results\label{Results}}
-DAS was deployed to work with the following CMS data-services:
+In this section we discuss preliminary restults achieved with DAS system
+using the following CMS data-services:
 \begin{itemize}
-\item DBS \cite{DBS}, Data Bookkeeping System, which collect information
-about CMS meta-data;
-\item PhEDEx \cite{PhEDEx}, Physics Experiment Data Export project, which
-provides the data placement and the file transfer system for the CMS experiment;
-\item SiteDB \cite{SiteDB} which 
-records the CMS resources at the site, the resources pledged for the 
-future, and it keeps track of CMS personnel at each site, including the 
-roles and duties they fulfill in the collaboration;
-\item RunSummary DB \cite{RunSummary} which collects information about run and triggers
-conditions during data-taking;
+\item Data Bookkeeping System, DBS \cite{DBS}, the CMS meta-data service;
+\item Physics Experiment Data Export, PhEDEx \cite {PhEDEx}, the 
+CMS file transfer system and data-service;
+\item SiteDB \cite{SiteDB}, the CMS site resources data-service;
+\item RunSummary \cite{RunSummary}, the CMS run and trigger data-service;
 %\item LumiDB \cite{LumiDB} collects information about Luminosity conditions;
 %\item DQ \cite{DQ}, Data Quality data-service which collects information
 %about detector conditions during data taking;
 %\item Overview \cite{Overview}, collects information about CMS
 %transfer rate, etc.;
-\item Dashboard \cite{Dashboard} which monitors data collected from the 
-distributed computing systems of the CMS experiment and LHC virtual organization
-in general.
+\item Dashboard \cite{Dashboard}, the LHC virtual organization
+monitoring data-service portal;
 \end{itemize}
-Each data-service has its own scope, size and lifetime. For instance the data
-in PhEDEx are transient due to constant migration of CMS data, 
-the DBS system were divided into dozen of individual instances, 
-who has been used by different production teams for various bookkeeping tasks.
-Figure \ref{db_size} shows current size of meta-data from aforementioned data-services.
+Each data-service has its own scope, size and peculiar properties. 
+For instance, the data in PhEDEx are transient due to constant 
+migration of CMS data; the DBS system were divided into dozen 
+of individual instances with own size and lifetime, who has been used by different production 
+teams for various bookkeeping tasks; the RunSummary data-service
+operates on private network accessible at CMS online operation center.
+Figure \ref{db_size} shows the current size of meta-data from aforementioned 
+data-services.
 \begin{figure}[htb]
 \centering
 \includegraphics[width=100mm]{db_size.pdf}
 \caption{
 Current size of meta-data for CMS data-services participated in DAS, before
-official data-taking. We anticipate to collect $\sim$500GB of meta-data
-per year once LHC starts operating.
+official data-taking. 
+%We anticipate to collect $\sim$500GB of meta-data
+%per year during normal LHC operations.
 }
 \label{db_size}
 \end{figure}
-%Typical
-%size of individual DBS instance was around of fwe GBs, with overall DBS size of
-%around of 50 GBs.\footnote{This include table and index sizes.}
 
-At the moment we don't have exact numbers for amount of data which will stored to DAS,
-but based on test performed during 
-Cosmic Run at Full Tesla (CRAFT) data taking \cite{CRAFT09}
-exercise we produced 0.3PB of data which
-translate into $\sim50$ GB of meta-data stored in DBS system. Therefore
-we can anticipate to collect $\sim500$GB of meta-data per year during data-taking period
-at LHC.
+At the moment we don't have exact numbers for amount of data which will stored 
+in those data-service and therefor accessible in DAS. Although we project to
+accumulate of the order of 500 GB of meta-data per year during normal LHC and CMS
+operations.\footnote{This number is based on tests 
+performed in CMS during Cosmic Run at Full Tesla (CRAFT) data taking \cite{CRAFT09}.}
 %In CRAFT09 acquisition era, Tier-0 produced a total of 6.03
 %billion events, 330TB in 32 datasets:
 %AlCa/Calibration RAW: 926 million events, 29TB
@@ -524,9 +518,10 @@ at LHC.
 % 0.3PB - 50GB meta-data in DBS
 % 3PB/y - x GB
 
-Preliminary results of DAS performance are shown in Table \ref{DAS_benchmark}.
-We benchmark time required to collect and aggregate block object information
-from DBS and PhEDEx CMS data-services.
+To test DAS performance we measured elapsed time and CPU/RAM utilization
+required to collect and aggregate block object information from DBS and 
+PhEDEx CMS data-services. Preliminary results of those measurements can
+be found in Table \ref{DAS_benchmark}. 
 
 \begin{table*}[hbt]
 \centering
@@ -551,7 +546,13 @@ from both systems.}
 \label{DAS_benchmark}
 \end{table*}
 
-Elapsed time measured during this test consist of the following componenets:
+Please note that initial DAS implementation was done in Python \cite{Python}
+and all tests were performed on x64 Linux platform with 16GB of RAM where
+1 CPU was used by DAS server and 1 CPU by MongoDB database server. The CPU utilization
+of DAS server was 67\% in average and RAM usage was below 35MB for
+all tests. All tests were performed multiple times to avoid fluctuations. 
+The elapsed time measured during those tests consists of the 
+following componenets:
 \begin{itemize}
 \item[]
 {\it
@@ -562,13 +563,14 @@ Elapsed time = retrieval time + parsing time + re-mapping time
 \end{itemize}
 Here the {\it retrieval time} is a time required to access data from remote data-service,
 {\it parsing time} is a time required to read and parse received data, {\it re-mapping time}
-is a time to convert notations used by data-service to DAS ones for every object
+is a time required to convert notations used by data-service to DAS ones for every object
 we parse, {\it cache insertion} and {\it indexing time} represents time spend to add objects into
 the DAS cache, {\it aggregation time} is required to merge objects into DAS records based
 on their common key (block name in this case) and {\it output creation time}
 is a time required to write DAS records to disk. Please note that last two
 components, {\it aggregation} and {\it output creation time}, were only applied to
-final DAS step and not to time spent in individual data-services.
+the one of the sub-system (either DBS or PhEDEx) since the first one was injected into
+fresh database, while the second required the merging step.
 
 %DAS execution time (phedex) 160.606897116 sec
 %DAS execution time (dbs) 52.5349619389 sec
@@ -578,36 +580,36 @@ final DAS step and not to time spent in individual data-services.
 %DAS execution time (dbs) 0.951184034348 sec
 %DAS execution time 44.7982931137 sec, Sat, 28 Nov 2009 15:52:11 GMT
 
-The individual DAS components (DBS and PhEDEx) shown roughly the same performance.
-Although the time of PhEDEx component was divided among: retrieval + parsing 
-time $\sim$110 sec and merging step $\sim$50 sec.
+The individual tests of DAS components (DBS and PhEDEx) shown roughly 
+the same performance. Although the time of PhEDEx component was bigger 
+due to longer retrieval and parsing time.
+The time of PhEDEx component shown in Table \ref{DAS_benchmark} divided 
+among: retrieval + parsing time $\sim$110 sec and merging step $\sim$50 sec.
 
 As you can see from Table \ref{DAS_benchmark},
-the time spent to read DAS records (last column) from the cache was quite
+the time spent to access individual components (last column) was quite
 reasonable, roughly 1 second for both systems. While final time to
 get DAS records on disk was about 45 seconds. This was mostly due to I/O and
-conversion between binary data format used in database (BSON) to JSON.
-All operations were performed on a single CPU core and obviously can be done
-in parallel.
+conversion between binary data format used by MongoDB, BSON, to DAS
+data format, JSON.
 
 Based on this results we measured that we can achieve 7000 docs/sec rate
 for insertion, 3400 docs/sec for aggregation and 8500 docs/sec for reading operation
-in DAS, which is suitable for our 
-needs.\footnote{We were satisfied with performance of the DAS prototype,
-even though it throughput can be increased by few times
-using C++ DB driver instead of python one used in this system.}
+in DAS, which is suitable for our needs. Since all operations were performed 
+on a single CPU core a further improvements are expected. Also, a necesarry
+tuning can be done by using native C++ MongoDB driver instead of python one.
 
 \section{Summary}
-We presented new data aggregation service (DAS) developed for CMS High-Energy experiment
+We presented a new data aggregation service (DAS) developed for CMS High-Energy experiment
 at LHC, CERN, Geneva, Switzerland. It was designed to provide caching and
 aggregation layer on top of the existing relational and non-relation data-services
-mostly in real time fashion. All the data were retrieved on demand basis,
+mostly in real time fashion. All of the data were retrieved on demand basis,
 while data pre-fetching of most common queries is in our plans. We developed
 prototype in python for DAS system which is under commissioning phase right now 
 and performed performance studies shown in this paper. 
-The CMS experiment is started to
-collect data from November 2009 and we expect to write about PB of data each
-year to tape. In addition, the Monte-Carlo samples will be produced at this scale.
+The CMS experiment is started to collect its data in December of 2009 and 
+we expect to accumulate a few PB of real data each year to tape. 
+In addition, the Monte-Carlo samples will be produced at this scale.
 Based on test studies performed in CMS, we expect that total size of
 meta-data produced by experiment each year will be of the order of
 $\sim500$GB. The DAS should sustain such load and will provide generic 
@@ -615,7 +617,9 @@ $\sim500$GB. The DAS should sustain such load and will provide generic
 
 \section{Acknowledgments}
 
-This work was supported by the National Science Foundation and Department of Energy of the United States of America. Fermilab is operated by Fermi Research Alliance, LLC under Contract
+This work was supported by the National Science Foundation and 
+Department of Energy of the United States of America. 
+Fermilab is operated by Fermi Research Alliance, LLC under Contract
 No. DE-AC02-07CH11359 with the United States Department of Energy.
 
 \section*{References}
@@ -703,6 +707,8 @@ GMW’07, June 25, 2007, Monterey, California, USA.
 
 \bibitem{CRAFT09}
 https://twiki.cern.ch/twiki/bin/view/CMS/CRAFT09AnalysisInfo
+
+\bibitem{Python} Python programming language, http://www.python.org
 
 \bibitem{DBSearch}
 D. Konopnicki, O. Shmueli,
