@@ -26,9 +26,9 @@ params : {
 daskeys : [
         {"key": "primary_ds", "map":"primary_ds.name", "pattern":""},
 ]
-#api2das : [
-#        {"api_param": "primary_ds_name", "das_key":"primary_ds", "pattern":""},
-#]
+api2das : [
+        {"das_key":"primary_ds.name", "api_param": "primary_ds_name", "pattern":""},
+]
 ---
 urn: datasets
 url : "http://localhost:8585/DBS/datasets/"
@@ -37,7 +37,7 @@ params : {
         "dataset":"*",
 #        "datasetparent":"*",
 #        "app_name":"*",
-#        "version":"*",
+#        "release_version":"*",
 #        "hash":"*",
 #        "output_module_lavel":"*"
 }
@@ -49,7 +49,7 @@ daskeys : [
         {"key": "c_section", "map":"xtcrosssection", "pattern":""},
 ]
 api2das : [
-        {"api_param": "dataset", "das_key":"dataset.name", "pattern":""},
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
 urn: blocks
@@ -57,29 +57,45 @@ url : "http://localhost:8585/DBS/blocks/"
 expire : 3600
 params : {
         'dataset':'*',
-        'block':'*',
-        'site':'*',
+        'block_name':'*',
+#        'site_name':'*',
 }
 daskeys : [
         {"key": "block", "map":"block.name", "pattern":""},
+]
+api2das : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"block.name", "api_param": "block_name", "pattern":""},
 ]
 ---
 urn: files
 url : "http://localhost:8585/DBS/files/"
 expire : 3600
 params : {
-        'dataset':'*',
-        'block':'*',
-        'app_name':'*',
-        'version':'*',
-        'hash':'*',
-        'output_module_lavel':'*',
-        'run':'*',
-        'runmin':'*',
-        'runmax':'*',
+        'dataset':'required',
 }
 daskeys : [
         {"key": "file", "map":"file.name", "pattern":""},
+        {"key": "dataset", "map":"file.dataset.name", "pattern":""},
+]
+api2das : [
+        {"das_key":"file.dataset.name", "api_param":"dataset", "pattern":""},
+        {"das_key":"file.block.name", "api_param":"block_name", "pattern":""}
+]
+---
+urn: files2
+url : "http://localhost:8585/DBS/files/"
+expire : 3600
+params : {
+        'block_name':'required',
+}
+daskeys : [
+        {"key": "file", "map":"file.name", "pattern":""},
+        {"key": "block", "map":"file.block.name", "pattern":""},
+]
+api2das : [
+        {"das_key":"file.dataset", "api_param":"dataset", "pattern":""},
+        {"das_key":"file.block.name", "api_param":"block_name", "pattern":""}
 ]
 ---
 notations : [
@@ -89,8 +105,14 @@ notations : [
         {"notation": "dataset", "map": "dataset.name", "api": ""},
         {"notation": "block_name", "map": "name", "api": "blocks"},
         {"notation": "block_name", "map": "block.name", "api": ""},
+        {"notation": "block_size", "map": "size", "api": "blocks"},
+        {"notation": "block_size", "map": "block.size", "api": ""},
         {"notation": "logical_file_name", "map": "name", "api": "files"},
-        {"notation": "logical_file_name", "map": "file.name", "api": ""},
+        {"notation": "logical_file_name", "map": "name", "api": "files2"},
+        {"notation": "file.logical_file_name", "map": "file.name", "api": ""},
         {"notation": "file_type", "map": "type", "api": "files"},
-        {"notation": "file_type", "map": "file.type", "api": ""},
+        {"notation": "file.file_type", "map": "file.type", "api": ""},
+        {"notation": "file.block_name", "map": "file.block.name", "api": ""},
+        {"notation": "file_size", "map": "size", "api": "files"},
+        {"notation": "file.file_size", "map": "file.size", "api": ""},
 ]
