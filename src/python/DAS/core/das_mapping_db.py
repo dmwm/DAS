@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.25 2010/02/04 21:27:14 valya Exp $"
-__version__ = "$Revision: 1.25 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.26 2010/02/05 21:29:56 valya Exp $"
+__version__ = "$Revision: 1.26 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -42,6 +42,9 @@ class DASMapping(object):
         self.notationcache = {}
         self.init_notationcache()
 
+    # ===============
+    # Management APIs
+    # ===============
     def init_notationcache(self):
         """
         Initialize notation cache by reading notations.
@@ -119,6 +122,9 @@ class DASMapping(object):
         if  index:
             self.col.ensure_index(index)
 
+    # ==================
+    # Informational APIs
+    # ==================
     def list_systems(self):
         """
         List all DAS systems.
@@ -126,6 +132,33 @@ class DASMapping(object):
         cond = { 'system' : { '$ne' : None } }
         gen  = (row['system'] for row in self.col.find(cond, ['system']))
         return gen2list(gen)
+
+    def list_apis(self, system=None):
+        """
+        List all APIs.
+        """
+        cond = { 'urn' : { '$ne' : None } }
+        if  system:
+            cond['system'] = system
+        gen  = (row['urn'] for row in self.col.find(cond, ['urn']))
+        return gen2list(gen)
+
+    def api_info(self, api_name):
+        """
+        Return full API info record.
+        """
+        return self.col.find_one({'urn':api_name})
+
+    def relational_keys(self, system1, system2):
+        """
+        Return a list of relational keys between provided systems
+        """
+        for system, keys in self.daskeys().items():
+            if  system == system1:
+                keys1 = keys
+            if  system == system2:
+                keys2 = keys
+        return list( set(keys1) & set(keys2) )
 
     def daskeys(self, das_system=None):
         """
@@ -146,28 +179,53 @@ class DASMapping(object):
             kdict[system] = keys
         return kdict
 
-    def check_daskey(self, system, urn, daskey):
-        """Check if provided system/urn/daskey is a valid combination"""
-        entity = daskey.split('.')[0]
-        cond   = { 'system' : system, 'daskeys.key' : entity, 'urn': urn }
-        gen    = (row['daskeys'] \
-                for row in self.col.find(cond, ['daskeys']))
-        for maps in gen:
-            for imap in maps:
-                if  daskey == imap['key'] or daskey == imap['map']:
-                    return True
-        return False
+    # ============
+    # Look-up APIs
+    # ============
+    def primary_key(self, das_system, urn):
+        """
+        Return DAS primary key for provided system and urn
+        """
+        cond = {'system':das_system, 'urn':urn}
+        daskeys = self.col.find(cond, ['daskeys.key'])
+        for row in daskeys:
+            if  row and row.has_key('daskeys'):
+                for dkey in row['daskeys']:
+                    if  dkey.has_key('key'):
+                        return dkey['key']
+        
+    def find_daskey(self, das_system, map_key):
+        """
+        Find das key for given system and map key.
+        """
+        cond  = { 'system' : das_system, 'daskeys.map': map_key }
+        daskeys = []
+        for row in self.col.find(cond, ['daskeys.key']):
+            if  row and row.has_key('daskeys'):
+                for dkey in row['daskeys']:
+                    if  dkey.has_key('key'):
+                        daskeys.append(dkey['key'])
+        return daskeys
 
-    def relational_keys(self, system1, system2):
+    def find_apis(self, das_system, map_key):
         """
-        Return a list of relational keys between provided systems
+        Find list of apis which correspond to provided
+        system and das map key.
         """
-        for system, keys in self.daskeys().items():
-            if  system == system1:
-                keys1 = keys
-            if  system == system2:
-                keys2 = keys
-        return list( set(keys1) & set(keys2) )
+        cond  = { 'system' : das_system, 'daskeys.map': map_key }
+        apilist = []
+        for row in self.col.find(cond, ['urn']):
+            if  row.has_key('urn') and row['urn'] not in apilist:
+                apilist.append(row['urn'])
+        return apilist
+
+    def check_dasmap(self, system, urn, das_map):
+        """
+        Check if provided system/urn/das_map is a valid combination
+        in mapping db.
+        """
+        cond   = { 'system' : system, 'daskeys.map' : das_map, 'urn': urn }
+        return self.col.find(cond).count()
 
     def find_system(self, key):
         """
@@ -181,22 +239,6 @@ class DASMapping(object):
                 systems.append(system)
         systems.sort()
         return systems
-
-    def list_apis(self, system=None):
-        """
-        List all APIs.
-        """
-        cond = { 'urn' : { '$ne' : None } }
-        if  system:
-            cond['system'] = system
-        gen  = (row['urn'] for row in self.col.find(cond, ['urn']))
-        return gen2list(gen)
-
-    def api_info(self, api_name):
-        """
-        Return full API info record.
-        """
-        return self.col.find_one({'urn':api_name})
 
     def lookup_keys(self, system, daskey, api=None, value=None):
         """
@@ -264,23 +306,11 @@ class DASMapping(object):
                         names.append(api_param)
         return names
 
-    def sort_keys(self, daskey):
-        """
-        Translates DAS QL key into data-service API input parameter
-        """
-        query = {'daskeys.key': daskey}
-        keys  = []
-        for row in self.col.find(query, ['daskeys.map']):
-            if  row['daskeys']['map'] not in keys:
-                keys.append(row['daskeys']['map'])
-        return keys
-
     def notations(self, system=None):
         """
         Return DAS notation map.
         """
         notationmap = {}
-#        spec = {'notations':{'$ne':None}}
         spec = {'notations':{'$exists':True}}
         if  system:
             spec['system'] = system
