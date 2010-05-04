@@ -4,8 +4,8 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.36 2009/09/21 15:28:12 valya Exp $"
-__version__ = "$Revision: 1.36 $"
+__revision__ = "$Id: abstract_service.py,v 1.37 2009/09/29 20:53:14 valya Exp $"
+__version__ = "$Revision: 1.37 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -21,9 +21,10 @@ except:
     # Prior to 2.6 requires simplejson
     import simplejson as json
 
-from DAS.utils.utils import dasheader
+from DAS.utils.utils import dasheader, getarg
 from DAS.utils.utils import cartesian_product
-from DAS.core.qlparser import QLLexer, mongo_exp
+#from DAS.core.qlparser import QLLexer, mongo_exp
+from DAS.core.qlparser import MongoParser, loose_constrains
 
 class DASAbstractService(object):
     """
@@ -51,6 +52,7 @@ class DASAbstractService(object):
         self._keys     = None # to be defined at run-time in self.keys
         self._params   = None # to be defined at run-time in self.parameters
 
+        self.mongoparser = MongoParser(config)
         msg = 'DASAbstractService::__init__ %s' % self.name
         self.logger.info(msg)
         # define internal cache manager to put 'raw' results into cache
@@ -157,14 +159,18 @@ class DASAbstractService(object):
         msg = 'DASAbstractService::%s::call(%s)' \
                 % (self.name, query)
         self.logger.info(msg)
-        mongo_query = self.mongo_query_parser(query)
-        msg = 'DASAbstractService::%s mongo_query=%s' % (self.name, mongo_query)
+        mongo_query = loose_constrains(self.name, query)
+#        mongo_query = self.mongo_query_parser(query)
+        msg = 'DASAbstractService::%s mongo_query=%s' \
+                % (self.name, mongo_query)
         self.logger.info(msg)
 
         # check the cache if there are records with given parameters
-        spec = mongo_query['spec'].keys() # we take all parameters
-        spec.remove('das.system') # and check if conditions provided
-        if  self.localcache.incache(query=mongo_query) and spec:
+#        spec = mongo_query['spec'].keys() # we take all parameters
+#        spec.remove('das.system') # and check if conditions provided
+#        if  self.localcache.incache(query=mongo_query) and spec:
+#        mongo_query['spec']['das.system'] = self.name
+        if  self.localcache.incache(query=mongo_query):
             self.analytics.update(self.name, query)
             return
         # check the cache if there are records with given input query
@@ -223,24 +229,24 @@ class DASAbstractService(object):
                     jsondict[newkey] = val
         yield jsondict
 
-    def query_parser(self, query):
-        """
-        Init QLLexer and parse input query.
-        """
-        if  not self.qllexer:
-            imap = {self.name:self.keys()}
-            params = {self.name:self.parameters()}
-            self.qllexer = QLLexer(imap, params)
+#    def query_parser(self, query):
+#        """
+#        Init QLLexer and parse input query.
+#        """
+#        if  not self.qllexer:
+#            imap = {self.name:self.keys()}
+#            params = {self.name:self.parameters()}
+#            self.qllexer = QLLexer(imap, params)
 
-        selkeys = self.qllexer.selkeys(query)
-        conditions = self.qllexer.conditions(query)
-        msg = 'DASAbstractService::query_parser, selkeys %s' % selkeys
-        self.logger.debug(msg)
-        msg = 'DASAbstractService::query_parser, conditions %s' % conditions
-        self.logger.debug(msg)
-        return selkeys, conditions
+#        selkeys = self.qllexer.selkeys(query)
+#        conditions = self.qllexer.conditions(query)
+#        msg = 'DASAbstractService::query_parser, selkeys %s' % selkeys
+#        self.logger.debug(msg)
+#        msg = 'DASAbstractService::query_parser, conditions %s' % conditions
+#        self.logger.debug(msg)
+#        return selkeys, conditions
 
-    def mongo_query_parser(self, query):
+    def mongo_query_parser_v1(self, query):
         """
         Init QLLexer and transform input query into MongoDB syntax
         """
@@ -316,8 +322,10 @@ class DASAbstractService(object):
         """
         self.logger.info('DASAbstractService::%s::api(%s)' \
                 % (self.name, query))
-        selkeys, conditions = self.query_parser(query)
-        mongo_query = self.mongo_query_parser(query)
+#        selkeys, conditions = self.query_parser(query)
+#        mongo_query = self.mongo_query_parser(query)
+        selkeys, cond = self.mongoparser.decompose(query)
+        mongo_query = query
         result = False
         for url, api, args in self.apimap(query):
             try:
@@ -353,6 +361,23 @@ class DASAbstractService(object):
         data services interface (JSON, XML, etc.)
         In a long term we can store this results into API db.
         """
+        for api, value in self.map.items():
+            if  not set(value['keys']) & set(query['fields']):
+                continue
+            if  value['params'].has_key('api'):
+                url = self.url # JAVA, e.g. http://host/Servlet
+            else: # if we have http://host/api?...
+                url = self.url + '/' + api
+            args = value['params']
+            # TODO: I need to look-up what condition is provided, query['spec']
+            # and decide if I need to substitute values for args. The query['spec']
+            # can contain {key:val} where val may be in mongo form of list, patterns, etc.
+#            for key, val in args.items():
+#                if  query['spec'].has_key(key):
+#                    args[key] = query['spec'][key]
+            yield url, api, args
+        
+    def apimap_v1(self, query):
         selkeys, conditions = self.query_parser(query)
 
         # loop over conditions and create input params dict which will
