@@ -4,9 +4,9 @@
 #. `dirname $0`/setup.sh
 
 # run actual script
-chmod a+x $DAS_ROOT/src/python/DAS/web/das_doc_server.py
+chmod a+x $DAS_ROOT/src/python/DAS/web/das_server.py
 #$DAS_ROOT/src/python/DAS/web/das_doc_server.py "$@"
-cmd="$DAS_ROOT/src/python/DAS/web/das_doc_server.py"
+cmd="$DAS_ROOT/src/python/DAS/web/das_server.py --doc-server"
 
 if [ -z $DAS_ROOT ]; then
    echo "The DAS_ROOT environment is not set"
@@ -15,7 +15,7 @@ fi
 
 RETVAL=$?
 
-pid=`ps auxwww | grep das_doc_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
 echo $pid
 
 case "$1" in

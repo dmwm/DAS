@@ -4,11 +4,13 @@
 #
 # chkconfig: 345 05 95
 
+ver="cms"
 if [ -z ${WMCORE_ROOT} ]; then
    echo "The WMCORE_ROOT environment is not set"
-   exit 1
+   echo "Will switch to stand-alone mode"
+   export WTBASE=$WMCORE_ROOT/src
+   ver="stand_alone"
 fi
-export WTBASE=$WMCORE_ROOT/src
 if [ -z $DAS_ROOT ]; then
    echo "The DAS_ROOT environment is not set"
    exit 1
@@ -16,8 +18,13 @@ fi
 
 RETVAL=$?
 
+if [ ${ver} == "stand_alone" ]; then
+cmd="$DAS_ROOT/src/python/DAS/web/das_server.py --web-server"
+pid=`ps auxwwwww | grep das_server | grep web-server | grep -v grep | awk '{print $2}'`
+else
 cmd="$WMCORE_ROOT/src/python/WMCore/WebTools/Root.py --ini=$DAS_ROOT/src/python/DAS/web/das_webconfig.py"
-pid=`ps auxw | grep das_webconfig | grep -v grep | awk '{print $2}'`
+pid=`ps auxwwwww | grep das_webconfig | grep -v grep | awk '{print $2}'`
+fi
 
 case "$1" in
  stdout)
