@@ -5,8 +5,8 @@
 DAS mapping
 """
 
-__revision__ = "$Id: das_mapping.py,v 1.8 2009/05/18 21:11:35 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_mapping.py,v 1.9 2009/06/03 19:45:52 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -97,6 +97,14 @@ def translate(cname, system, name):
 
 # NEW json2das/jsonparser implementation
 def json2das(system, input, keylist, selkeys):
+    """
+    Convert rows from provided input dict (input) into DAS rows
+    using system name , e.g. phedex, dbs, etc., data-service
+    output keys (keylist) and selection key (selkeys) from DAS QL.
+    """
+    # NOTE: the input dict should be in a form of
+    # {'system':{result_dict}} as phedex or
+    # {'1':{result dict}, } as sitedb
     for row in jsonparser(input, keylist):
         for key in keylist:
             found = 0
@@ -115,6 +123,10 @@ def json2das(system, input, keylist, selkeys):
             yield row
 
 def json2das_zip(row):
+    """
+    Analyze input row and if key value is a list, expand it in a list
+    of rows with the same keys.
+    """
     longest = 0
     for val in row.values():
         if  type(val) is types.ListType:
@@ -133,6 +145,9 @@ def json2das_zip(row):
             yield newrow
 
 def jsonparser(input, keylist):
+    """
+    Yields rows from provided input dict (input) and key list (keylist)
+    """
     row = {}
     for key in keylist:
         gen = jsonparser4key(input, key)
@@ -155,6 +170,9 @@ def jsonparser(input, keylist):
             yield row
 
 def jsonparser4key(jsondict, ikey):
+    """
+    Yield value for provided key from given jsondict
+    """
     if  type(jsondict) is not types.DictType:
         return
     if  ikey.count('.'): # composed key
