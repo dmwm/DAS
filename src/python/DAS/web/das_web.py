@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: das_web.py,v 1.2 2010/03/25 15:01:32 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__revision__ = "$Id: das_web.py,v 1.3 2010/04/15 19:04:34 valya Exp $"
+__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -516,6 +516,10 @@ class DASWebService(DASWebManager):
         for row in rows:
             id    = row['_id']
             page += '<div class="%s"><hr class="line" />' % style
+            if  row.has_key('das'):
+                if  row['das'].has_key('primary_key'):
+                    pkey  = row['das']['primary_key']
+                    page += '<b>DAS key:</b> %s<br />' % pkey.split('.')[0]
             gen   = self.convert2ui(row)
             for uikey, value in [k for k, g in groupby(gen)]:
                 page += "<b>%s</b>: %s<br />" % (uikey, value)
