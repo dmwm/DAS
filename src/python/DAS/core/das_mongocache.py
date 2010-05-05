@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.78 2010/04/14 16:56:28 valya Exp $"
-__version__ = "$Revision: 1.78 $"
+__revision__ = "$Id: das_mongocache.py,v 1.79 2010/04/14 20:32:39 valya Exp $"
+__version__ = "$Revision: 1.79 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -327,7 +327,7 @@ class DASMongocache(object):
         self.db.add_son_manipulator(das_son_manipulator)
         msg = "DASMongocache::__init__, DAS_SONManipulator %s" \
         % das_son_manipulator
-        self.logger.info(msg)
+        self.logger.debug(msg)
 
     def is_expired(self, query):
         """
