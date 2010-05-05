@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.7 2010/04/14 18:00:25 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_cache.py,v 1.8 2010/04/14 20:31:36 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -41,7 +41,10 @@ def checkargs(func):
         headers = cherrypy.request.headers
         if  cherrypy.request.method == 'POST' or\
             cherrypy.request.method == 'PUT':
-            body = cherrypy.request.body.read()
+            try:
+                body = cherrypy.request.body.read()
+            except:
+                body = None
             if  args and kwds:
                 msg  = 'Misleading request.\n'
                 msg += 'Request: %s\n' % cherrypy.request.method
@@ -149,14 +152,20 @@ class DASCacheService(DASWebManager):
         self.col      = self.con['logging']['db']
         sleep         = dasconfig.get('sleep', 2)
         verbose       = dasconfig.get('verbose', 0)
+        logfile       = dasconfig.get('logfile', None)
+#        logformat       = dasconfig.get('logformat')
+#        logformat     = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        logformat     = '%(levelname)s - %(message)s'
         nprocs        = dasconfig['cache_server']['n_worker_threads']
-        logger        = DASLogger(verbose=verbose)
-        iconfig       = {'sleep':sleep, 'verbose':verbose, 'nprocs':nprocs}
+        logger        = DASLogger(logfile=logfile, verbose=verbose, 
+                        name='DASCacheServer', format=logformat)
+        iconfig       = {'sleep':sleep, 'verbose':verbose, 'nprocs':nprocs,
+                        'logfile':logfile}
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(thread_monitor, (self.cachemgr, iconfig))
 
         self.dascore  = DASCore(logger=logger)
-        msg = 'DASCacheMode::init, host=%s, port=%s, capped_size=%s' \
+        msg = 'DASCacheService::init, host=%s, port=%s, capped_size=%s' \
                 % (dbhost, dbport, capped_size)
         self.dascore.logger.debug(msg)
         print msg
