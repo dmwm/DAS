@@ -11,8 +11,8 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.73 2010/04/14 20:34:03 valya Exp $"
-__version__ = "$Revision: 1.73 $"
+__revision__ = "$Id: das_core.py,v 1.74 2010/04/15 16:16:02 valya Exp $"
+__version__ = "$Revision: 1.74 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -222,10 +222,25 @@ class DASCore(object):
         """
         self.rawcache.remove_from_cache(query)
 
+    def bare_query(self, iquery):
+        """
+        Remove from provided query filters/mapreduce, etc. and leave
+        only bare query.
+        """
+        query = dict(iquery)
+        for key in query.keys():
+            if  key not in ['spec', 'fields']:
+                del query[key]
+        msg = 'DASCore::bare_query, input query=%s, output query =%s' \
+                % (iquery, query)
+        self.logger.debug(msg)
+        return query
+
     def get_status(self, query):
         """
         Look-up status of provided query in a cache.
         """
+        query  = self.bare_query(query)
         status = 0
         record = self.rawcache.das_record(query)
         if  record:
