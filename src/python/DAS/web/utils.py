@@ -5,8 +5,8 @@
 Set of useful utilities used by DAS web applications
 """
 
-__revision__ = "$Id: utils.py,v 1.19 2010/03/19 17:25:48 valya Exp $"
-__version__ = "$Revision: 1.19 $"
+__revision__ = "$Id: utils.py,v 1.20 2010/04/14 20:29:25 valya Exp $"
+__version__ = "$Revision: 1.20 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -20,7 +20,6 @@ from DAS.utils.regex import number_pattern
 
 def urllib2_request(request, url, params, headers={}, debug=0):
     """request method using GET request from urllib2 library"""
-    debug = 1
     if  request == 'GET' or request == 'DELETE':
         encoded_data=urllib.urlencode(params, doseq=True)
         url += '?%s' % encoded_data
