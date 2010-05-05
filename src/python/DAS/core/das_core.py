@@ -11,8 +11,8 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.77 2010/05/03 19:48:05 valya Exp $"
-__version__ = "$Revision: 1.77 $"
+__revision__ = "$Id: das_core.py,v 1.78 2010/05/04 13:23:51 valya Exp $"
+__version__ = "$Revision: 1.78 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -65,8 +65,7 @@ class DASCore(object):
             dasconfig['verbose'] = debug
         else:
             self.verbose = verbose
-        if  self.verbose:
-            self.timer = DASTimer()
+        self.timer = DASTimer()
         self.operators = das_operators()
 
         # set noresults option
