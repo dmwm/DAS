@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: das_web.py,v 1.5 2010/04/30 16:42:10 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_web.py,v 1.6 2010/05/03 19:49:33 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -291,13 +291,13 @@ class DASWebService(DASWebManager):
             else: # return all ids
                 query = dict(fields=None, spec={})
 
-            nresults = self.nresults(query)
             time0    = time.time()
             url      = self.cachesrv
             idx      = getarg(kwargs, 'idx', 0)
             limit    = getarg(kwargs, 'limit', 10)
             show     = getarg(kwargs, 'show', 'json')
             coll     = getarg(kwargs, 'collection', 'merge')
+            nresults = self.nresults({'input':json.dumps(query), 'collection':coll})
 #            params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit}
 #            path     = '/rest/request'
             params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit, 
@@ -365,8 +365,9 @@ class DASWebService(DASWebManager):
         web methods
         """
         url     = self.cachesrv
-        uinput  = getarg(kwargs, 'input', '')
-        params  = {'query':uinput}
+        uinput  = kwargs.get('input', '')
+        coll    = kwargs.get('collection', 'merge')
+        params  = {'query':uinput, 'collection': coll}
         path    = '/rest/nresults'
         headers = {"Accept": "application/json"}
         try:
