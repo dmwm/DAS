@@ -2,3 +2,5 @@ recursive-include src/templates *.tmpl
 recursive-include src/css *.css
 recursive-include src/js *.js
 recursive-include doc *
+recursive-include bin *
+recursive-include etc das.cfg
