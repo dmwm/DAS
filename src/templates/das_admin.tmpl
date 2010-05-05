@@ -46,6 +46,19 @@ Put your JSON MongoDB query here
 </div>
 </form>
 
+<hr class="line" />
+
+DAS query:
+<form action="$base/admin/query_info" method="get">
+<!--
+<form action="javascript:GetQueryInfo()">
+-->
+<input type="text" size="80" name="dasquery" id="dasquery" />
+<input type="submit" value="Info" />
+<input type="reset" />
+</form>
+<div id="_queryinfo" name="_queryinfo" class="results"></div>
+
 <div id="left">
 
 <div id="vmenu">
@@ -133,6 +146,10 @@ function HideAll() {
 function CleanArea() {
     var area = document.getElementById('query');
     query.innerHTML="";
+}
+function GetQueryInfo() {
+    var q = document.getElementById('dasquery');
+    ajaxQueryInfo(q);
 }
 </script>
 <!-- end of das_admin.tmpl -->
