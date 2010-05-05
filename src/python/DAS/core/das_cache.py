@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s).
 """
 
-__revision__ = "$Id: das_cache.py,v 1.29 2010/04/14 20:34:41 valya Exp $"
-__version__ = "$Revision: 1.29 $"
+__revision__ = "$Id: das_cache.py,v 1.30 2010/04/15 18:05:53 valya Exp $"
+__version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -163,6 +163,7 @@ def thread_monitor(cachemgr, config):
     time.sleep(2) # sleep to allow main thread with DAS core take off
     logger.info("started with %s threads" % nprocs)
     while True: 
+        time.sleep(2)
         for item in cachemgr.queue:
             if  mypool.full():
                 logger.debug("### ThreadPool is full")
