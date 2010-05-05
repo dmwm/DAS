@@ -5,8 +5,8 @@
 DAS mapping DB module
 """
 
-__revision__ = "$Id: das_mapping_db.py,v 1.35 2010/04/05 19:11:44 valya Exp $"
-__version__ = "$Revision: 1.35 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.36 2010/04/14 16:56:28 valya Exp $"
+__version__ = "$Revision: 1.36 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -16,11 +16,12 @@ import types
 import traceback
 
 # monogo db modules
-from pymongo.connection import Connection
+#from pymongo.connection import Connection
 from pymongo import DESCENDING
 
 # DAS modules
 from DAS.utils.utils import gen2list, access
+from DAS.core.das_mongocache import make_connection
 
 class DASMapping(object):
     """
@@ -32,6 +33,7 @@ class DASMapping(object):
         self.dbhost  = config['mappingdb']['dbhost']
         self.dbport  = config['mappingdb']['dbport']
         self.dbname  = config['mappingdb'].get('dbname', 'mapping')
+        self.attempt = config['mappingdb']['attempt']
         self.colname = 'db'
 
         msg = "DASMapping::__init__ %s:%s@%s" \
@@ -62,9 +64,10 @@ class DASMapping(object):
         """
         Establish connection to MongoDB back-end and create DB.
         """
-        self.conn    = Connection(self.dbhost, self.dbport)
-        self.db      = self.conn[self.dbname]
-        self.col     = self.db[self.colname]
+#        self.conn = Connection(self.dbhost, self.dbport)
+        self.conn = make_connection(self.dbhost, self.dbport, self.attempt)
+        self.db   = self.conn[self.dbname]
+        self.col  = self.db[self.colname]
 
     def delete_db(self):
         """

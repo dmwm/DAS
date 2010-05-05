@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.77 2010/04/07 21:02:46 valya Exp $"
-__version__ = "$Revision: 1.77 $"
+__revision__ = "$Id: das_mongocache.py,v 1.78 2010/04/14 16:56:28 valya Exp $"
+__version__ = "$Revision: 1.78 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -275,6 +275,23 @@ def update_item(item, key, val):
                 newdict = {kkk : newdict}
         item[kkk] = newdict
 
+def make_connection(dbhost, dbport, attempt):
+    """
+    Safely make connection to MongoDB.
+    """
+    if  not attempt or attempt < 0:
+        msg = 'Unable to make connection to MongoDB after %s attempts' % attempt
+        raise Exception(msg)
+    try:
+        conn = Connection(dbhost, dbport)
+    except pymongo.errors.AutoReconnect:
+        attempt -= 1
+        make_connection(dbhost, dbport, attempt)
+    except pymongo.errors.ConnectionFailure:
+        attempt -= 1
+        make_connection(dbhost, dbport, attempt)
+    return conn
+
 class DASMongocache(object):
     """
     DAS cache based MongoDB. 
@@ -283,6 +300,7 @@ class DASMongocache(object):
         self.dbhost  = config['mongodb']['dbhost']
         self.dbport  = config['mongodb']['dbport']
         self.limit   = config['mongodb']['lifetime']
+        self.attempt = config['mongodb']['attempt']
         self.cache_size = config['mongodb']['bulkupdate_size']
         self.dbname  = config['mongodb'].get('dbname', 'das')
         self.logger  = config['logger']
@@ -292,7 +310,7 @@ class DASMongocache(object):
         % (self.dbhost, self.dbport, self.dbname)
         self.logger.info(msg)
 
-        self.conn    = Connection(self.dbhost, self.dbport)
+        self.conn    = make_connection(self.dbhost, self.dbport, self.attempt)
         self.db      = self.conn[self.dbname]
         self.col     = self.db['cache']
         self.mrcol   = self.db['mapreduce']

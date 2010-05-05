@@ -7,20 +7,20 @@ DAS analytics DB module.
 
 from __future__ import with_statement
 
-__revision__ = "$Id: das_analytics_db.py,v 1.18 2010/04/07 19:04:22 valya Exp $"
-__version__ = "$Revision: 1.18 $"
+__revision__ = "$Id: das_analytics_db.py,v 1.19 2010/04/14 16:56:28 valya Exp $"
+__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import types
 
 # monogo db modules
-from pymongo.connection import Connection
+#from pymongo.connection import Connection
 from pymongo import DESCENDING
 
 # DAS modules
 from DAS.utils.utils import gen2list, genkey
-from DAS.core.das_mongocache import encode_mongo_query
+from DAS.core.das_mongocache import encode_mongo_query, make_connection
 
 class DASAnalytics(object):
     """
@@ -29,6 +29,7 @@ class DASAnalytics(object):
     def __init__(self, config):
         self.logger  = config['logger']
         self.verbose = config['verbose']
+        self.attempt = config['analyticsdb']['attempt']
         self.dbhost  = config['analyticsdb']['dbhost']
         self.dbport  = config['analyticsdb']['dbport']
         self.dbname  = config['analyticsdb'].\
@@ -44,9 +45,10 @@ class DASAnalytics(object):
         """
         Create analytics DB in MongoDB back-end.
         """
-        self.conn    = Connection(self.dbhost, self.dbport)
-        database     = self.conn[self.dbname]
-        self.col     = database[self.colname]
+#        self.conn    = Connection(self.dbhost, self.dbport)
+        self.conn = make_connection(self.dbhost, self.dbport, self.attempt)
+        database  = self.conn[self.dbname]
+        self.col  = database[self.colname]
 
     def delete_db(self):
         """
