@@ -11,8 +11,8 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.79 2010/05/04 18:04:52 valya Exp $"
-__version__ = "$Revision: 1.79 $"
+__revision__ = "$Id: das_core.py,v 1.80 2010/05/04 21:13:39 valya Exp $"
+__version__ = "$Revision: 1.80 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -146,8 +146,7 @@ class DASCore(object):
             sparams = getattr(self, name).parameters()
             self.service_parameters[getattr(self, name).name] = sparams
 
-        if  self.verbose:
-            self.timer.record('init')
+        self.timer.record('init')
         self.dasconfig = dasconfig
 
     def keys(self):
@@ -293,20 +292,16 @@ class DASCore(object):
         try:
             for srv in services:
                 self.logger.info('DASCore::call %s(%s)' % (srv, query))
-                if  self.verbose:
-                    self.timer.record(srv)
+                self.timer.record(srv)
                 getattr(getattr(self, srv), 'call')(query)
-                if  self.verbose:
-                    self.timer.record(srv)
+                self.timer.record(srv)
         except:
             traceback.print_exc()
             return 0
         self.rawcache.update_das_record(query, 'merging')
-        if  self.verbose:
-            self.timer.record('merge')
+        self.timer.record('merge')
         self.rawcache.merge_records(query)
-        if  self.verbose:
-            self.timer.record('merge')
+        self.timer.record('merge')
         self.rawcache.update_das_record(query, 'ok')
         self.rawcache.add_to_record(query, {'das.timer': self.timer.timer})
         return 1
