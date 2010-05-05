@@ -4,10 +4,11 @@
 """
 Abstract interface for DAS service
 """
-__revision__ = "$Id: abstract_service.py,v 1.92 2010/04/13 16:36:08 valya Exp $"
-__version__ = "$Revision: 1.92 $"
+__revision__ = "$Id: abstract_service.py,v 1.93 2010/04/14 19:26:04 valya Exp $"
+__version__ = "$Revision: 1.93 $"
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import re
 import time
 import types
@@ -16,14 +17,16 @@ import urllib2
 import traceback
 import DAS.utils.jsonwrapper as json
 
+# MongoDB modules
+from pymongo import DESCENDING
+
+# DAS modules
 from DAS.utils.utils import getarg, genkey, dotdict
 from DAS.utils.utils import row2das, extract_http_error, make_headers
 from DAS.utils.utils import xml_parser, json_parser, plist_parser
 from DAS.utils.utils import yield_rows
 from DAS.core.das_aggregators import das_func
 from DAS.core.das_mongocache import compare_specs, encode_mongo_query
-
-from pymongo import DESCENDING, ASCENDING
 
 def dasheader(system, query, api, url, args, ctime, expire):
     """
