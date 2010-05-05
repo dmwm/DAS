@@ -117,7 +117,7 @@ url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
      "api":"listBlocks", "apiversion": "DBS_2_0_9", 
-     "path":"", "block_name":"*",
+     "path":"required", "block_name":"*",
      "storage_elemennt_name": "*", "user_type":"NORMAL"
 }
 daskeys : [
