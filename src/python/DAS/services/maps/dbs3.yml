@@ -165,6 +165,8 @@ das2api : [
 notations : [
         {"notation": "primary_ds_name", "map": "name", "api": "primarydatasets"},
         {"notation": "primary_ds_name", "map": "primary_ds.name", "api": ""},
+        {"notation": "primary_ds_type", "map": "type", "api": "primarydatasets"},
+        {"notation": "primary_ds_type", "map": "primary_ds.type", "api": ""},
         {"notation": "dataset", "map": "name", "api": "datasets"},
         {"notation": "dataset", "map": "dataset.name", "api": ""},
         {"notation": "block_name", "map": "name", "api": "blocks"},

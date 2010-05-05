@@ -9,6 +9,12 @@ city    : [
         {"das":"city.Placemark.ExtendedData.LatLonBox.north", "ui":"Location north"}, 
         {"das":"city.Placemark.ExtendedData.LatLonBox.south", "ui":"Location south"}, 
         ],
+primary_ds : [
+        {"das":"primary_ds.name", "ui":"Name"}, 
+        {"das":"primary_ds.primary_ds_type", "ui":"Type"},
+        {"das":"primary_ds.type", "ui":"Type"},
+        {"das":"primary_ds.create_by", "ui":"Created by:"}, 
+        ],
 dataset : [
         {"das":"dataset.error", "ui":"Error"}, 
         {"das":"dataset.httperror", "ui":"Reason"}, 
@@ -50,5 +56,10 @@ monitor : [
         {"das":"monitor.region", "ui":"Region"},
         {"das":"monitor.time", "ui":"Time interval"},
         ],
+ip : [
+        {"das":"ip.City", "ui":"City"},
+        {"das":"ip.CountryName", "ui":"Country"},
+        {"das":"ip.Latitude", "ui":"Latitude"},
+        {"das":"ip.Longitude", "ui":"Longitude"},
+        ],
 }
-
