@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.80 2010/04/15 18:08:18 valya Exp $"
-__version__ = "$Revision: 1.80 $"
+__revision__ = "$Id: das_mongocache.py,v 1.81 2010/04/15 19:03:41 valya Exp $"
+__version__ = "$Revision: 1.81 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -529,7 +529,7 @@ class DASMongocache(object):
 
         # look-up raw record
         if  fields:
-            fields += ['das_id'] # always extract das_id's
+            fields += ['das_id', 'das'] # always extract das_id's
         skeys  = []
         if  skey:
             if  order == 'asc':
@@ -561,10 +561,10 @@ class DASMongocache(object):
         for row in res:
             # DAS info is stored via das_id, the records only contains
             # {'das':{'expire':123}} to consistently manage delete operation
-            if  row.has_key('das'):
-                das = row['das']
-                if  not (type(das) is types.DictType and das.has_key('api')):
-                    del row['das']
+#            if  row.has_key('das'):
+#                das = row['das']
+#                if  not (type(das) is types.DictType and das.has_key('api')):
+#                    del row['das']
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
