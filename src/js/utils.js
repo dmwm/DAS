@@ -132,3 +132,7 @@ function gup( name ) {
         // use unescape to properly show URL encoded input in search field form
         return unescape(String(results[1]).replace(lsRegExp, " "));
 }
+function place_img(tag, img, txt) {
+    var id=document.getElementById(tag);
+    id.innerHTML='<div><img src="'+img+'" alt="loading" />'+txt+'</div>';
+}

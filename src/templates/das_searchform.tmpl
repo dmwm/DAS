@@ -1,6 +1,6 @@
 
 <!-- das_searchform.tmpl -->
-<form action="/das/" method="get">
+<form action="$base" method="get">
 <table>
 <tr>
 <td class="right">
@@ -19,7 +19,9 @@ format,
 <option value="25">25</option>
 <option value="50">50</option>
 <option value="100">100</option>
+<!--
 <option value="0">All</option>
+-->
 </select>
 results/per page,
 </td>
@@ -49,9 +51,7 @@ format,
 -->
 
 <script type="application/javascript">
-//<![CDATA[
 updateInput();
-//]]>
 </script>
 <!-- end of das_searchform.tmpl -->
 
