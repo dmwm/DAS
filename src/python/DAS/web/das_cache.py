@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.10 2010/05/03 19:49:22 valya Exp $"
-__version__ = "$Revision: 1.10 $"
+__revision__ = "$Id: das_cache.py,v 1.11 2010/05/04 18:03:23 valya Exp $"
+__version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -311,7 +311,7 @@ class DASCacheService(DASWebManager):
         Creates new entry in DAS cache for provided query.
         """
         if  len(self.cachemgr.queue) > self.qlimit:
-            msg = 'CacheMgr queu is full, current size %s. ' \
+            msg = 'CacheMgr queue is full, current size %s. ' \
                 % len(self.cachemgr.queue)
             msg += 'Please try in a few moments.'
             data.update({'status': 'fail', 'reason': msg})
