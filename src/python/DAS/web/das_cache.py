@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.9 2010/04/15 18:03:04 valya Exp $"
-__version__ = "$Revision: 1.9 $"
+__revision__ = "$Id: das_cache.py,v 1.10 2010/05/03 19:49:22 valya Exp $"
+__version__ = "$Revision: 1.10 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -255,10 +255,11 @@ class DASCacheService(DASWebManager):
         data = {'server_method':'nresults'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
+            coll  = kwargs.get('collection', 'merge')
             self.logdb(query)
             query = self.dascore.mongoparser.parse(query)
             data.update({'status':'success'})
-            res = self.dascore.in_raw_cache_nresults(query)
+            res = self.dascore.in_raw_cache_nresults(query, coll)
             data.update({'status':'success', 'nresults':res})
         else:
             data.update({'status': 'fail', 
