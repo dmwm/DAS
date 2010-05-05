@@ -11,8 +11,8 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.71 2010/04/13 14:59:20 valya Exp $"
-__version__ = "$Revision: 1.71 $"
+__revision__ = "$Id: das_core.py,v 1.72 2010/04/14 17:37:53 valya Exp $"
+__version__ = "$Revision: 1.72 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -77,7 +77,7 @@ class DASCore(object):
 
         if  not logger:
             logdir = dasconfig['logdir']
-            self.logger = DASLogger(idir=logdir, verbose=self.verbose, stdout=debug)
+            self.logger = DASLogger(idir=logdir, verbose=self.verbose)
         else:
             self.logger = logger
         dasconfig['logger'] = self.logger
