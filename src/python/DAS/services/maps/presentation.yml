@@ -39,10 +39,26 @@ file : [
         {"das":"file.type", "ui":"File type"},
         {"das":"file.nevents", "ui":"Number of events"},
         ],
+run : [
+        {"das":"run.run_number", "ui":"Run number"}, 
+        {"das":"run.bfield", "ui":"Magnetic Field"}, 
+        {"das":"run.sequence", "ui":"Sequence"}, 
+        {"das":"run.l1Rate", "ui":"Level 1 rate"}, 
+        {"das":"run.key", "ui":"Run type"}, 
+        {"das":"run.triggers", "ui":"Number of triggers"}, 
+        {"das":"run.CROSSINGS_PER_ORBIT", "ui":"Crossing/orbit"}, 
+        ],
 tier : [
         {"das":"tier.error", "ui":"Error"}, 
         {"das":"tier.httperror", "ui":"Reason"}, 
         {"das":"tier.name", "ui":"Tier name"}, 
+        ],
+release: [
+        {"das":"release.error", "ui":"Error"}, 
+        {"das":"release.httperror", "ui":"Reason"}, 
+        {"das":"release.name", "ui":"Release name"}, 
+        {"das":"release.algorithm.executable", "ui":"Executable"}, 
+        {"das":"release.algorithm.name", "ui":"Algorithm name"}, 
         ],
 site : [
         {"das":"site.error", "ui":"Error"}, 

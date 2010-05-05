@@ -5,7 +5,7 @@ format : XML
 urn : blockReplicas
 url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
 expire : 3600
-params : {"se":"*", "block":"*", "node":"*"}
+params : {"se":"*", "block":"required", "node":"*"}
 daskeys : [
         {"key":"block", "map":"block.name", "pattern":""},
         {"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]_')"},
