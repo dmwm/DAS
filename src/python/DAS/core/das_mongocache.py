@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.85 2010/05/03 18:31:23 valya Exp $"
-__version__ = "$Revision: 1.85 $"
+__revision__ = "$Id: das_mongocache.py,v 1.86 2010/05/03 19:14:06 valya Exp $"
+__version__ = "$Revision: 1.86 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -451,6 +451,13 @@ class DASMongocache(object):
         """
         enc_query = encode_mongo_query(query)
         return self.col.find_one({'das.qhash': genkey(enc_query)})
+
+    def add_to_record(self, query, info):
+        """
+        Add to existing DAS record provided info
+        """
+        enc_query = encode_mongo_query(query)
+        self.col.update({'query': enc_query}, {'$set': info}, upsert=True)
 
     def update_das_record(self, query, status, header=None):
         """
