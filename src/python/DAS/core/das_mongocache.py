@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.82 2010/04/30 16:37:55 valya Exp $"
-__version__ = "$Revision: 1.82 $"
+__revision__ = "$Id: das_mongocache.py,v 1.83 2010/05/03 15:41:06 valya Exp $"
+__version__ = "$Revision: 1.83 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -189,11 +189,23 @@ def compare_dicts(input_dict, exist_dict):
                 (type(vvv) is types.IntType or type(vvv) is types.FloatType):
                 if  val > vvv:
                     return True
+        elif  key == '$gte':
+            if  (type(val) is types.IntType or type(val) is types.FloatType)\
+                and \
+                (type(vvv) is types.IntType or type(vvv) is types.FloatType):
+                if  val >= vvv:
+                    return True
         elif key == '$lt':
             if  (type(val) is types.IntType or type(val) is types.FloatType)\
                 and \
                 (type(vvv) is types.IntType or type(vvv) is types.FloatType):
                 if  val < vvv:
+                    return True
+        elif key == '$lte':
+            if  (type(val) is types.IntType or type(val) is types.FloatType)\
+                and \
+                (type(vvv) is types.IntType or type(vvv) is types.FloatType):
+                if  val <= vvv:
                     return True
         elif key == '$in':
             if  type(val) is types.ListType and type(vvv) is types.ListType:
@@ -229,7 +241,10 @@ def compare_specs(input_query, exist_query):
 
     for key, val1 in spec1.items():
         val2 = spec2[key]
-        if  (type(val1) is types.StringType or \
+        if  type(val1) != type(val2) and type(val1) is not types.DictType\
+            and type(val2) is not types.DictType:
+            return False
+        elif  (type(val1) is types.StringType or \
                 type(val1) is types.UnicodeType) and \
             (type(val2) is types.StringType or \
                 type(val2) is types.UnicodeType):
@@ -246,6 +261,12 @@ def compare_specs(input_query, exist_query):
         elif type(val1) is types.DictType and type(val2) is types.DictType:
             if  not compare_dicts(val1, val2):
                 return False
+        elif type(val2) is types.DictType and type(val1) is types.IntType:
+            if  val1 in val2.values():
+                return True
+            return False
+        else:
+            return False
     return True
 
 def update_item(item, key, val):
