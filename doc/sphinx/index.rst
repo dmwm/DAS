@@ -26,6 +26,7 @@ Contents:
    das_logging.rst
    code.rst
    new_service.rst
+   das_config.rst
    cms_operations.rst
    das_operations.rst
    benchmark.rst
