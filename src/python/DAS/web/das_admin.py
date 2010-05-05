@@ -6,8 +6,8 @@
 DAS admin service class.
 """
 
-__revision__ = "$Id: das_admin.py,v 1.8 2010/05/04 20:25:23 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_admin.py,v 1.9 2010/05/04 21:12:19 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -83,12 +83,17 @@ class DASAdminService(DASWebManager):
             except:
                 msg = 'ERROR: no db collection is found in your request'
                 return self.index(msg=error(msg))
-        try:
-            query = json.loads(query)
-        except:
-            msg = 'ERROR: fail to validate input query="%s" as JSON document'\
-                % query
-            return self.index(msg=error(msg))
+        if  query:
+            query = query.replace('\n', '')
+            try:
+                query = json.loads(query)
+            except:
+                traceback.print_exc()
+                msg = 'ERROR: fail to validate input query="%s" as JSON document'\
+                    % query
+                return self.index(msg=error(msg))
+        else:
+            query = {}
         idx   = int(idx)
         limit = int(limit)
         recs  = self.conn[database][collection].find(query).\
