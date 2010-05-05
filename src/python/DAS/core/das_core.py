@@ -11,8 +11,8 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.74 2010/04/15 16:16:02 valya Exp $"
-__version__ = "$Revision: 1.74 $"
+__revision__ = "$Id: das_core.py,v 1.75 2010/04/15 18:08:18 valya Exp $"
+__version__ = "$Revision: 1.75 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -240,9 +240,11 @@ class DASCore(object):
         """
         Look-up status of provided query in a cache.
         """
+        iquery = dict(query)
         query  = self.bare_query(query)
         status = 0
-        record = self.rawcache.das_record(query)
+#        record = self.rawcache.das_record(query)
+        record = self.rawcache.find_spec(query)
         if  record:
             status = record['das']['status']
         return status
