@@ -30,6 +30,7 @@ except ImportError:
     requirements.append("pymongo")
 
 required_python_version = '2.6'
+required_pymongo_version = '1.5.2'
 
 if sys.platform == 'win32' and sys.version_info > (2, 6):
    # 2.6's distutils.msvc9compiler can raise an IOError when failing to
@@ -120,6 +121,11 @@ def main():
     if sys.version < required_python_version:
         s = "I'm sorry, but %s %s requires Python %s or later."
         print s % (name, version, required_python_version)
+        sys.exit(1)
+
+    if  pymongo.version < required_pymongo_version:
+        s = "I'm sorry, but %s %s required pymongo %s or later."
+        print s % (name, version, required_pymongo_version)
         sys.exit(1)
 
     # set default location for "data_files" to
