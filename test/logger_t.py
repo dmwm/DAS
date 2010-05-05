@@ -17,98 +17,71 @@ class testDASLogger(unittest.TestCase):
         """
         set up DAS core module
         """
-        debug = 0
-        self.logfile = '/tmp/das.log'
-        self.daslogger = DASLogger()
+        self.verbose = 1
+        self.logfile = '/tmp/das_test.log'
+        format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        self.daslogger = DASLogger(logfile=self.logfile, 
+                verbose=self.verbose, format=format)
 
-    def remove(self):
+    def tearDown(self):
         """
-        Removes DAS log file
+        clean-up
         """
         if  os.path.isfile(self.logfile):
             os.remove(self.logfile)
-        self.daslogger = DASLogger()
 
     def logcontent(self):
         """
         Return DAS log content
         """
-        lines = open(self.logfile, 'r').read()
+        lines = open(self.logfile, 'r').readlines()[-1].replace('\n', '')
         return lines
 
     def test_logger(self):                          
         """test DAS logger methods"""
-        self.remove()
-        self.daslogger.info('test')
-        result = self.logcontent()
-        expect = ''
-        self.assertEqual(expect, result)
-
-        self.remove()
-        self.daslogger.level(0)
-        self.daslogger.info('test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = ''
-        self.assertEqual(expect, result)
-
-        self.remove()
         self.daslogger.level(1)
         self.daslogger.info('test')
         result = self.logcontent().split()[2:]
         self.assertEqual('INFO', result[3])
         self.assertEqual('test', result[-1])
 
-        self.remove()
         self.daslogger.level(2)
         self.daslogger.info('test')
         result = self.logcontent().split()[2:]
         self.assertEqual('INFO', result[3])
         self.assertEqual('test', result[-1])
 
-        self.remove()
-        self.daslogger.level(1)
-        self.daslogger.debug('test')
-        result = ' '.join(self.logcontent().split()[2:])
-        expect = ''
-        self.assertEqual(expect, result)
-
-        self.remove()
         self.daslogger.level(2)
         self.daslogger.debug('test')
         result = self.logcontent().split()[2:]
         self.assertEqual('DEBUG', result[3])
         self.assertEqual('test', result[-1])
 
-        self.remove()
         self.daslogger.level(0)
         self.daslogger.error('error test')
         result = self.logcontent().split()[2:]
         self.assertEqual('ERROR', result[3])
         self.assertEqual('test', result[-1])
 
-        self.remove()
         self.daslogger.level(2)
         self.daslogger.error('error test')
         result = self.logcontent().split()[2:]
         self.assertEqual('ERROR', result[3])
         self.assertEqual('test', result[-1])
 
-        self.remove()
-        self.daslogger.level(0)
+        self.daslogger.level(1)
         self.daslogger.warning('test')
         result = self.logcontent().split()[2:]
         self.assertEqual('WARNING', result[3])
         self.assertEqual('test', result[-1])
 
-        self.remove()
-        self.daslogger.level(0)
+        self.daslogger.level(1)
         self.daslogger.exception('test')
         result = self.logcontent().split()[2:]
         self.assertEqual('ERROR', result[3])
         self.assertEqual('test', result[-1])
 
-        self.remove()
-        self.daslogger.level(0)
+        self.daslogger.level(1)
         self.daslogger.critical('test')
         result = self.logcontent().split()[2:]
         self.assertEqual('CRITICAL', result[3])

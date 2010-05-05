@@ -28,7 +28,7 @@ class testDASMongocache(unittest.TestCase):
         """
         debug    = 0
         config   = das_readconfig()
-        logger   = DASLogger(verbose=debug, stdout=debug)
+        logger   = DASLogger(verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
 
