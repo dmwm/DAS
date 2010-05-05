@@ -40,14 +40,14 @@ class DASTimer(object):
     DAS timer class keeps track of execution time.
     """
     def __init__(self):
-        self.timer = {'init':[time.time()]}
+        self.timer = {'init':time.time()}
     def record(self, tag):
         """Record time for given tag"""
         if  self.timer.has_key(tag):
             time0 = self.timer[tag]
-            self.timer[tag] = time0 + [time.time()]
+            self.timer[tag] = time.time() - time0
         else:
-            self.timer[tag] = [time.time()]
+            self.timer[tag] = time.time()
 
 class DASCore(object):
     """

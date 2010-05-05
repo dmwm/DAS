@@ -175,8 +175,7 @@ if __name__ == '__main__':
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
     if  debug:
         for key, val in DAS.timer.timer.items():
-            if  len(val) > 1:
-                print "DAS execution time (%s) %s sec" % (key, val[-1] - val[0])
+            print "DAS execution time (%s) %s sec" % (key, val)
     print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)
 
 
