@@ -39,8 +39,13 @@ class testQLParser(unittest.TestCase):
         result = parser(query, self.daskeys, self.operators)
         self.assertEqual(expect, result)
 
-        query  = "lat=1 file between [1,2]"
+        query  = "lat=1 file in [1,2]"
         expect = {'fields':None, 'spec':{'lat':1,'file':{'$in':[1,2]}}}
+        result = parser(query, self.daskeys, self.operators)
+        self.assertEqual(expect, result)
+
+        query  = "lat=1 file between [1,2]"
+        expect = {'fields':None, 'spec':{'lat':1,'file':{'$lte': 2, '$gte': 1}}}
         result = parser(query, self.daskeys, self.operators)
         self.assertEqual(expect, result)
 
