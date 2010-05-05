@@ -6,13 +6,14 @@
 DAS admin service class.
 """
 
-__revision__ = "$Id: das_admin.py,v 1.7 2010/04/30 16:43:13 valya Exp $"
-__version__ = "$Revision: 1.7 $"
+__revision__ = "$Id: das_admin.py,v 1.8 2010/05/04 20:25:23 valya Exp $"
+__version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import json
 import urllib
+import traceback
 from pprint import pformat
 
 # cherrypy modules
@@ -115,28 +116,30 @@ class DASAdminService(DASWebManager):
         return self.page(page)
 
     @expose
-    def query_info(self, query, **kwargs):
+    def query_info(self, dasquery, **kwargs):
         """
         Provide information about DAS query, similary to --hash option
         in DAS CLI interface
         """
-#        print "\n### query_info", query
-#        response.headers['Content-Type'] = 'text/xml'
-        mongo_query = self.das.mongoparser.parse(query, add_to_analytics=False)
-        service_map = self.das.mongoparser.service_apis_map(mongo_query)
-        enc_query   = encode_mongo_query(mongo_query)
-        loose_query_pat, loose_query = convert2pattern(mongo_query)
-        idict = dict(query=urllib.quote(query),
-                mongo_query=urllib.quote(mongo_query),
-                loose_query=urllib.quote(loose_query),
-                enc_query=urllib.quote(enc_query),
-                enc_query_hash=genkey(enc_query),
-                service_map=urllib.quote(pformat(service_map)))
-        page = self.templatepage('das_query_info', **idict)
-#        page = ajax_response(page)
-#        print "query_info page", page
-#        return page
-        return self.page(page)
+        query = dasquery
+        response.headers['Content-Type'] = 'text/xml'
+        try:
+            mongo_query = self.das.mongoparser.parse(query, add_to_analytics=False)
+            service_map = self.das.mongoparser.service_apis_map(mongo_query)
+            enc_query   = encode_mongo_query(mongo_query)
+            loose_query_pat, loose_query = convert2pattern(mongo_query)
+            idict = dict(query=query,
+                    mongo_query=mongo_query,
+                    loose_query=loose_query,
+                    enc_query=enc_query,
+                    enc_query_hash=genkey(enc_query),
+                    service_map=pformat(service_map))
+            page = self.templatepage('das_query_info', **idict)
+        except:
+            page = "<pre>" + traceback.format_exc() + "</pre>"
+        page = ajax_response(page)
+        return page
+#        return self.page(page)
 
     def mapping(self, **kwargs):
         mappingdb = self.conn['mapping']['db']

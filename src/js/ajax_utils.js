@@ -5,9 +5,10 @@ function ajaxStatus() {
       evalScripts:true
     });
 }
-function ajaxQueryInfo(query) {
-    new Ajax.Updater('_query_info', '/das/admin/query_info', 
+function ajaxQueryInfo() {
+    var q = document.getElementById('dasquery');
+    new Ajax.Updater('_queryinfo', '/das/admin/query_info', 
     { method: 'get' ,
-      parameters : {'query':query},
+      parameters : {'dasquery':q.value},
     });
 }
