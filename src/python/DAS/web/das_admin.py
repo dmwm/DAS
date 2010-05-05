@@ -6,8 +6,8 @@
 DAS admin service class.
 """
 
-__revision__ = "$Id: das_admin.py,v 1.5 2010/04/13 15:17:53 valya Exp $"
-__version__ = "$Revision: 1.5 $"
+__revision__ = "$Id: das_admin.py,v 1.6 2010/04/15 20:16:15 valya Exp $"
+__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -97,8 +97,11 @@ class DASAdminService(DASWebManager):
             jsondict = dict(data=jsonhtml, id=rec_id, rec_id=rec_id)
             page += self.templatepage('das_row', **jsondict)
             page += '</div>'
-        url = '%s/admin/records?database=%s&collection=%s' \
-                % (self.base, database, collection)
+        iquery = query
+        if  not iquery:
+            iquery = {}
+        url = '%s/admin/records?database=%s&collection=%s&query=%s' \
+                % (self.base, database, collection, iquery)
         nresults = self.conn[database][collection].find(query).count()
         idict = dict(nrows=nresults, idx=idx, 
                     limit=limit, results=page, url=url)
