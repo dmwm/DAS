@@ -4,8 +4,8 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.27 2010/04/05 19:14:30 valya Exp $"
-__version__ = "$Revision: 1.27 $"
+__revision__ = "$Id: das_mapping_db.py,v 1.28 2010/04/14 20:39:13 valya Exp $"
+__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -66,10 +66,10 @@ if __name__ == '__main__':
     (opts, args) = optManager.getOpt()
 
     dasconfig = das_readconfig()
-    logdir    = dasconfig['logdir']
-    logger    = DASLogger(verbose=opts.debug, stdout=opts.debug, idir=logdir)
-    mappingdb = dict(dbhost=opts.host, dbport=opts.port, dbname=opts.db)
-    config    = dict(logger=logger, verbose=opts.debug, mappingdb=mappingdb)
+    logfile   = dasconfig.get('logfile', None)
+    logger    = DASLogger(logfile=logfile, verbose=opts.debug)
+    mappingdb = dict(dbhost=opts.host, dbport=opts.port, dbname=opts.db, attempt=3)
+    config    = dict(logger=logger, verbose=opts.debug, mappingdb=mappingdb, attempt=3)
 
     mgr = DASMapping(config)
 
