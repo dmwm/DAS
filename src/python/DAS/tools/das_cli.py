@@ -106,6 +106,7 @@ def run(DAS, query, idx, limit, skey, sorder, nooutput, plain, debug):
         query = DAS.adjust_query(query)
         results = DAS.call(query)
         print "\n### DAS.call returns", results
+
 #
 # main
 #
@@ -174,7 +175,12 @@ if __name__ == '__main__':
         print "please use --help for more options."
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
     if  debug:
-        for key, val in DAS.timer.timer.items():
+        ival  = DAS.timer.timer.pop('init')
+        mval  = DAS.timer.timer.pop('merge')
+        slist = DAS.timer.timer.items()
+        slist.sort()
+        timer_list = [('init', ival)] + slist + [('merge', mval)] 
+        for key, val in timer_list:
             print "DAS execution time (%s) %s sec" % (key, val)
     print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)
 
