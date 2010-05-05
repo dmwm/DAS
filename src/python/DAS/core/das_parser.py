@@ -5,8 +5,8 @@
 DAS Query Language parser.
 """
 
-__revision__ = "$Id: das_parser.py,v 1.6 2010/04/30 16:32:57 valya Exp $"
-__version__ = "$Revision: 1.6 $"
+__revision__ = "$Id: das_parser.py,v 1.7 2010/05/03 19:47:25 valya Exp $"
+__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -20,6 +20,7 @@ from DAS.core.das_ql import das_special_keys
 from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
 from DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 from DAS.utils.regex import key_attrib_pattern
+import DAS.utils.jsonwrapper as json
 
 def convert2date(value):
     """
