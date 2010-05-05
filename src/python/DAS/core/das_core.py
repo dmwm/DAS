@@ -11,8 +11,8 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.72 2010/04/14 17:37:53 valya Exp $"
-__version__ = "$Revision: 1.72 $"
+__revision__ = "$Id: das_core.py,v 1.73 2010/04/14 20:34:03 valya Exp $"
+__version__ = "$Revision: 1.73 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -75,11 +75,15 @@ class DASCore(object):
             dasconfig['write_cache'] = True
             self.noresults = nores
 
+        logfile = dasconfig.get('logfile', None)
+        logformat = dasconfig.get('logformat')
         if  not logger:
-            logdir = dasconfig['logdir']
-            self.logger = DASLogger(idir=logdir, verbose=self.verbose)
+            self.logger = DASLogger(logfile=logfile, verbose=self.verbose,
+                name='DAS', format=logformat)
         else:
             self.logger = logger
+        dasconfig['logfile'] = logfile
+        dasconfig['logformat'] = logformat
         dasconfig['logger'] = self.logger
 
         # define Mapping/Analytics/Parser in this order since Parser depends
