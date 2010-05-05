@@ -14,6 +14,11 @@ shown below:
 
 .. doctest::
 
+    [das]                    # DAS core configuration
+    logformat = %(levelname)s %(message)s # DAS logger format, python logging module
+    rawcache = DASMongocache # class name for raw cache
+    verbose = 0              # verbosity level, 0 means lowest
+
     [cache_server]           # DAS Cache server configuration parameters
     thread_pool = 30         # number of threads for CherryPy
     socket_queue_size = 15   # queue size for requests while server is busy
@@ -21,6 +26,8 @@ shown below:
     host = 0.0.0.0           # host IP, the 0.0.0.0 means visible everywhere
     log_screen = True        # print log to stdout
     port = 8211              # server port
+    queue_limit = 100        # CacheManager queue limit (number of pending
+                             # POST requests the server can process).
 
     [web_server]             # DAS web server configruation parameters
     thread_pool = 30         # number of threads for CherryPy
@@ -49,11 +56,6 @@ shown below:
     dbhost = localhost       # MongoDB host name
     dbname = mapping         # MongoDB database name
     attempt = 3              # number of attempts to connect to MongoDB
-
-    [das]                    # DAS core configuration
-    logformat = %(levelname)s %(message)s # DAS logger format
-    rawcache = DASMongocache # class name for raw cache
-    verbose = 0              # verbosity level, 0 means lowest
 
     [security]               # DAS security configuration parameters
     mount_point = /das/auth  # mount point for authentication
