@@ -5,8 +5,8 @@
 DAS cache wrapper. Communitate with DAS core and cache server(s).
 """
 
-__revision__ = "$Id: das_cache.py,v 1.26 2010/04/13 17:05:12 valya Exp $"
-__version__ = "$Revision: 1.26 $"
+__revision__ = "$Id: das_cache.py,v 1.27 2010/04/14 17:55:55 valya Exp $"
+__version__ = "$Revision: 1.27 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -18,6 +18,8 @@ from   multiprocessing import cpu_count
 # DAS modules
 from DAS.utils.utils import genkey
 from DAS.core.das_core import DASCore
+from DAS.utils.logger import DASLogger, DummyLogger
+from DAS.utils.threadpool import ThreadPool
 
 class DASCacheMgr(object):
     """
@@ -29,7 +31,7 @@ class DASCacheMgr(object):
         """
         Initialize DAS cache manager.
         """
-        self.logger = config['logger']
+        self.logger = DASLogger(verbose=config.get('verbose', 0))
         self.queue  = [] # keep track of waiting queries
         self.qmap   = {} # map of hash:query
 
@@ -57,19 +59,21 @@ class DASCacheMgr(object):
         except:
             pass
 
-def worker(query):
+def worker(query, verbose=None):
     """
     Invokes DAS core call to update the cache for provided query
     """
-    status = 1
+#    logger = DASLogger(verbose=verbose)
+    logger = DummyLogger()
+    status = 0
     try:
-        dascore = DASCore()
+        dascore = DASCore(logger=logger, nores=True)
         status  = dascore.call(query)
     except:
         traceback.print_exc()
     return status
 
-def monitoring_worker(cachemgr, config):
+def multiprocess_monitor(cachemgr, config):
     """
     Monitoring worker. Must run in separate thread. It uses infinitive
     loop to watch internal queue. Once query has been added it pops
@@ -77,11 +81,12 @@ def monitoring_worker(cachemgr, config):
     processes equal to 2*N-cores on a system.
     """
     sleep    = int(config.get('sleep', 2))
-    logger   = config['logger']
+    verbose  = int(config.get('verbose', 0))
+    logger   = DASLogger(verbose=verbose)
     nprocs   = 2*cpu_count()
     mypool   = multiprocessing.Pool(nprocs)
     time.sleep(5) # sleep to allow main thread with DAS core take off
-    logger.info("DASCacheMgr::worker started with %s processes" % nprocs)
+    logger.info("monitoring_worker started with %s processes" % nprocs)
     orphans     = {} # map of orphans requests
     worker_proc = {} # map of workers {(queyry, lifetime): worker}
     while True: 
@@ -95,17 +100,17 @@ def monitoring_worker(cachemgr, config):
                 if  not cachemgr.qmap.has_key(item):
                     continue
                 query  = cachemgr.qmap[item]
-                result = mypool.apply_async(worker, (query, ))
+                result = mypool.apply_async(worker, (query, verbose))
                 worker_proc[item] = result # bind result with worker
             except:
                 traceback.print_exc()
                 orphans[item] = orphans.get(item, 0) + 1
                 break
-            msg = "add %s, workers %s, in queue %s, orphans %s" \
+            msg = "monitoring_worker add %s, workers %s, in queue %s, orphans %s" \
             % (query, len(worker_proc.keys()), len(cachemgr.queue), len(orphans.keys()))
             logger.debug(msg)
             time.sleep(sleep) # separate processes
-        msg = "workers %s, in queue %s, orphans %s" \
+        msg = "# workers %s, in queue %s, orphans %s" \
         % (len(worker_proc.keys()), len(cachemgr.queue), len(orphans.keys()))
         logger.debug(msg)
         time.sleep(sleep)
@@ -135,3 +140,27 @@ def monitoring_worker(cachemgr, config):
                     del worker_proc[key]
                 except:
                     pass
+
+def thread_monitor(cachemgr, config):
+    """
+    Monitoring worker. Must run in separate thread. It uses infinitive
+    loop to watch internal queue. Once query has been added it pops
+    up it for processing by external function.
+    """
+    sleep    = config.get('sleep')
+    verbose  = config.get('verbose')
+    nprocs   = config.get('nprocs')
+    mypool   = ThreadPool(nprocs)
+    logger   = DASLogger(verbose=verbose)
+    time.sleep(2) # sleep to allow main thread with DAS core take off
+    logger.info("monitoring_worker started with %s threads" % nprocs)
+    while True: 
+        for item in cachemgr.queue:
+            if  mypool.full():
+                logger.debug("### ThreadPool is full")
+                time.sleep(sleep)
+                continue
+            query  = cachemgr.qmap[item]
+            logger.debug("Add new task: query=%s, qhash=%s" % (query, item))
+            mypool.add_task(worker, query, verbose)
+            cachemgr.remove(item)
