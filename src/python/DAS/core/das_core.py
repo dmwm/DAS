@@ -11,8 +11,8 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.78 2010/05/04 13:23:51 valya Exp $"
-__version__ = "$Revision: 1.78 $"
+__revision__ = "$Id: das_core.py,v 1.79 2010/05/04 18:04:52 valya Exp $"
+__version__ = "$Revision: 1.79 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -241,6 +241,8 @@ class DASCore(object):
         """
         iquery = dict(query)
         query  = self.bare_query(query)
+        if  self.rawcache.similar_queries(query) and self.in_raw_cache(query):
+            return 'ok' # self.call set status ok for processed queries
         status = 0
 #        record = self.rawcache.das_record(query)
         record = self.rawcache.find_spec(query)
