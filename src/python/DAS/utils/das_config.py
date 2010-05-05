@@ -5,8 +5,8 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.36 2010/04/13 20:28:25 valya Exp $"
-__version__ = "$Revision: 1.36 $"
+__revision__ = "$Id: das_config.py,v 1.37 2010/04/14 16:58:48 valya Exp $"
+__version__ = "$Revision: 1.37 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -37,8 +37,9 @@ def das_readconfig(dasconfig=None):
 
     mongodb = {}
     mongodb['dbhost'] = config.get('mongodb', 'dbhost', 'localhost')
-    mongodb['dbport'] = int(config.get('mongodb', 'dbport', '27017'))
+    mongodb['dbport'] = int(config.get('mongodb', 'dbport', 27017))
     mongodb['dbname'] = config.get('mongodb', 'dbname', 'das')
+    mongodb['attempt'] = config.get('mongodb', 'attempt', 3)
     mongodb['bulkupdate_size'] = config.getint('mongodb', 'bulkupdate_size')
     mongodb['capped_size'] = config.getint('mongodb', 'capped_size')
     mongodb['lifetime'] = config.getint('mongodb', 'lifetime')
@@ -46,14 +47,16 @@ def das_readconfig(dasconfig=None):
 
     mapping = {}
     mapping['dbhost'] = config.get('mapping_db', 'dbhost', 'localhost')
-    mapping['dbport'] = int(config.get('mapping_db', 'dbport', '27017'))
+    mapping['dbport'] = int(config.get('mapping_db', 'dbport', 27017))
     mapping['dbname'] = config.get('mapping_db', 'dbname', 'mapping')
+    mapping['attempt'] = config.get('mapping_db', 'attempt', 3)
     configdict['mappingdb'] = mapping
 
     analytics = {}
     analytics['dbhost'] = config.get('analytics_db', 'dbhost', 'localhost')
-    analytics['dbport'] = int(config.get('analytics_db', 'dbport', '27017'))
+    analytics['dbport'] = int(config.get('analytics_db', 'dbport', 27017))
     analytics['dbname'] = config.get('analytics_db', 'dbname', 'analytics')
+    analytics['attempt'] = config.get('analytics_db', 'attempt', 3)
     configdict['analyticsdb'] = analytics
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
@@ -109,20 +112,23 @@ def das_writeconfig():
     config.add_section('mongodb')
     config.set('mongodb', 'lifetime', 1*24*60*60) # in seconds
     config.set('mongodb', 'dbhost', 'localhost')
-    config.set('mongodb', 'dbport', '27017')
+    config.set('mongodb', 'dbport', 27017)
     config.set('mongodb', 'dbname', 'das')
     config.set('mongodb', 'bulkupdate_size', 5000)
+    config.set('mongodb', 'attempt', 3) # # of attempts to connect to db
     config.set('mongodb', 'capped_size', 100*1024*1024) # 100MB
 
     config.add_section('mapping_db')
     config.set('mapping_db', 'dbhost', 'localhost')
-    config.set('mapping_db', 'dbport', '27017')
+    config.set('mapping_db', 'dbport', 27017)
     config.set('mapping_db', 'dbname', 'mapping')
+    config.set('mapping_db', 'attempt', 3) # of attempts to connect to db
 
     config.add_section('analytics_db')
     config.set('analytics_db', 'dbhost', 'localhost')
-    config.set('analytics_db', 'dbport', '27017')
+    config.set('analytics_db', 'dbport', 27017)
     config.set('analytics_db', 'dbname', 'analytics')
+    config.set('analytics_db', 'attempt', 3) # of attempts to connect to db
 
     config.add_section('cache_server')
     config.set('cache_server', 'port', 8211)
