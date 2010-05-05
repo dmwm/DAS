@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: das_web.py,v 1.3 2010/04/15 19:04:34 valya Exp $"
-__version__ = "$Revision: 1.3 $"
+__revision__ = "$Id: das_web.py,v 1.4 2010/04/15 20:16:58 valya Exp $"
+__version__ = "$Revision: 1.4 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -481,6 +481,7 @@ class DASWebService(DASWebManager):
         time0   = time.time()
         ajaxreq = getarg(kwargs, 'ajax', 0)
         uinput  = getarg(kwargs, 'input', '')
+        idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
         show    = getarg(kwargs, 'show', 'json')
         form    = self.form(uinput=uinput)
@@ -503,15 +504,8 @@ class DASWebService(DASWebManager):
         rows    = self.result(kwargs)
         nrows   = len(rows)
         page    = ""
-        ndict   = {'nrows':total, 'limit':limit}
-        page    = self.templatepage('das_nrecords', **ndict)
-#        for nrecord in range(0, len(rows)):
-#            row = rows[nrecord]
-#            style = "white"
-#            if  nrecord % 2:
-#                style = "white"
-#            else:
-#                style = "gray" 
+#        ndict   = {'nrows':total, 'limit':limit}
+#        page    = self.templatepage('das_nrecords', **ndict)
         style = "white"
         for row in rows:
             id    = row['_id']
@@ -541,7 +535,12 @@ class DASWebService(DASWebManager):
                 datadict = {'data':data, 'id':id, rec_id:id}
                 page += self.templatepage('das_row', **datadict)
             page += '</div>'
-        ctime   = (time.time()-time0)
+        ctime = (time.time()-time0)
+        url   = "%s/?view=list&show=%s&input=%s&ajax=%s" \
+        % (self.base, show, uinput, ajaxreq)
+        idict = dict(nrows=total, idx=idx,
+                    limit=limit, results=page, url=url)
+        page  = self.templatepage('das_pagination', **idict)
         return self.page(form + page, ctime=ctime)
 
     @exposetext
