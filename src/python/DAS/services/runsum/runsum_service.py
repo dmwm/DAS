@@ -4,8 +4,8 @@
 """
 RunSummary service
 """
-__revision__ = "$Id: runsum_service.py,v 1.20 2010/02/05 21:23:12 valya Exp $"
-__version__ = "$Revision: 1.20 $"
+__revision__ = "$Id: runsum_service.py,v 1.21 2010/05/03 14:59:13 valya Exp $"
+__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -71,7 +71,7 @@ class RunSummaryService(DASAbstractService):
                 else:
                     for param in self.dasmapping.das2api(self.name, key):
                         args[param] = value
-            elif key == 'run.run_number': # make exception
+            elif key == 'run.number' or key == 'run.run_number': # make exception
                 minrun = None
                 maxrun = None
                 for oper, val in value.items():
