@@ -5,8 +5,8 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: das_web.py,v 1.4 2010/04/15 20:16:58 valya Exp $"
-__version__ = "$Revision: 1.4 $"
+__revision__ = "$Id: das_web.py,v 1.5 2010/04/30 16:42:10 valya Exp $"
+__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -34,27 +34,12 @@ from DAS.core.das_ql import das_aggregators, das_operators
 #from DAS.core.das_parser import parser
 from DAS.utils.utils import getarg, access
 from DAS.web.das_webmanager import DASWebManager
-from DAS.web.utils import urllib2_request, json2html, web_time
+from DAS.web.utils import urllib2_request, json2html, web_time, ajax_response
 
 import DAS.utils.jsonwrapper as json
 
 if sys.version_info < (2, 5):
     raise Exception("DAS requires python 2.5 or greater")
-
-def ajax_response_orig(msg, tag="_response", element="object"):
-    """AJAX response wrapper"""
-    page  = """<ajax-response><response type="%s" id="%s">""" % (element, tag)
-    page += msg
-    page += "</response></ajax-response>"
-    print page
-    return page
-
-def ajax_response(msg):
-    """AJAX response wrapper"""
-    page  = """<ajax-response>"""
-    page += "<div>" + msg + "</div>"
-    page += "</ajax-response>"
-    return page
 
 class DASWebService(DASWebManager):
     """
@@ -189,18 +174,20 @@ class DASWebService(DASWebManager):
         """
         Check provided input for valid DAS keys.
         """
-        error = self.templatepage('das_ambiguous', msg='', base=self.base,
-                    input=uinput, entities=', '.join(self.daskeys))
+        def helper(myinput, msg):
+            """Helper function which provide error template"""
+            return self.templatepage('das_ambiguous', msg=msg, base=self.base,
+                        input=myinput, entities=', '.join(self.daskeys),
+                        operators=', '.join(das_operators()))
         if  not uinput:
-            return error
+            return helper(uinput, 'No input query')
         # check provided input. If at least one word is not part of das_keys
         # return ambiguous template.
         try:
             mongo_query = self.dasmgr.mongoparser.parse(uinput)
         except:
             msg = sys.exc_info()[1]
-            return self.templatepage('das_ambiguous', msg=msg, base=self.base,
-                    input=uinput, entities=', '.join(self.daskeys))
+            return helper(uinput, msg)
         fields = mongo_query.get('fields', [])
         if  not fields:
             fields = []
