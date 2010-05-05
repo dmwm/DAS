@@ -5,8 +5,8 @@
 DAS cache RESTfull model class.
 """
 
-__revision__ = "$Id: das_cache.py,v 1.8 2010/04/14 20:31:36 valya Exp $"
-__version__ = "$Revision: 1.8 $"
+__revision__ = "$Id: das_cache.py,v 1.9 2010/04/15 18:03:04 valya Exp $"
+__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -145,15 +145,15 @@ class DASCacheService(DASWebManager):
         capped_size   = dasconfig['mongodb']['capped_size']
         self.con      = Connection(dbhost, dbport)
         if  'logging' not in self.con.database_names():
-            dbname = self.con['logging']
-            options = {'capped':True, 'size': capped_size}
+            dbname    = self.con['logging']
+            options   = {'capped':True, 'size': capped_size}
             dbname.create_collection('db', **options)
             self.warning('Created logging.db, size=%s' % capped_size)
         self.col      = self.con['logging']['db']
         sleep         = dasconfig.get('sleep', 2)
         verbose       = dasconfig.get('verbose', 0)
         logfile       = dasconfig.get('logfile', None)
-#        logformat       = dasconfig.get('logformat')
+        self.qlimit   = dasconfig['cache_server']['queue_limit'] 
 #        logformat     = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         logformat     = '%(levelname)s - %(message)s'
         nprocs        = dasconfig['cache_server']['n_worker_threads']
@@ -309,6 +309,13 @@ class DASCacheService(DASWebManager):
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
+        if  len(self.cachemgr.queue) > self.qlimit:
+            msg = 'CacheMgr queu is full, current size %s. ' \
+                % len(self.cachemgr.queue)
+            msg += 'Please try in a few moments.'
+            data.update({'status': 'fail', 'reason': msg})
+            return data
+            
         data = {'server_method':'create'}
         if  kwargs.has_key('query'):
             query  = kwargs['query']
