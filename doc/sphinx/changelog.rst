@@ -9,6 +9,10 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.4.8
 
+  - fix pagination
+  - display DAS key for all records on the web to avoid overlap w/
+    records coming out from multiple data-providers (better visibility)
+  - protect DASCacheMgr with queue_limit configurable via das.cfg
   - found that multiprocess is unrealiable (crash on MacOSX w/ python
     version from macports); some processes become zombies. Therefore
     switch to ThreadPool for DAS cache POST requests
