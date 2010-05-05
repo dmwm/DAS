@@ -11,8 +11,8 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.84 2010/05/03 18:22:50 valya Exp $"
-__version__ = "$Revision: 1.84 $"
+__revision__ = "$Id: das_mongocache.py,v 1.85 2010/05/03 18:31:23 valya Exp $"
+__version__ = "$Revision: 1.85 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
@@ -518,9 +518,10 @@ class DASMongocache(object):
         # loop over fields, since user interesting to see only results for
         # provided fields. Update spec to check that given field exists
         # in a query
-        for field in fields:
-            if  not spec.has_key(field):
-                spec.update({field:{'$exists':True}})
+        if  fields:
+            for field in fields:
+                if  not spec.has_key(field):
+                    spec.update({field:{'$exists':True}})
         return col.find(spec=spec).count()
 #        return col.find(spec=spec, fields=fields).count()
 
