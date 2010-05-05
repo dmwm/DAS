@@ -231,6 +231,11 @@ div#banner h3
         max-width:50em;
         margin:2em auto;
 }
+.grayboxform {
+        padding:1em;
+        border:1px solid #ccc;
+        background:#f8f8f8;
+}
 form {
         padding:1em;
         border:1px solid #ccc;
