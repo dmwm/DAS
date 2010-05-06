@@ -7,8 +7,16 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
-- V0.4.10
+- 0.4.10
 
+  - improve DAS admin interface:
+
+    - show and hide various tasks
+    - DAS tasks (query db, clean db, das queries)
+
+  - allow to use multiple aggregators at the same time, e.g.
+    site=T1_* | count(site.id), sum(site.id), avg(site.id)
+  - enable aggregators in DAS core
   - migrated from CVS to SVN/GIT
   - added AJAX interface for DAS query look-up in admin interface
   - bug fix in core to get status of similar queries
