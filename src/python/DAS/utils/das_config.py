@@ -151,6 +151,8 @@ def das_writeconfig():
     config.set('web_server', 'thread_pool', 30)
     config.set('web_server', 'log_screen', True)
     config.set('web_server', 'socket_queue_size', 15)
+    config.set('web_server', 'cache_server_url', 'http://localhost:8211')
+    config.set('web_server', 'url_base', '/das')
 
     config.add_section('security')
     config.set('security', 'role', '')
