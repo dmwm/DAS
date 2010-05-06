@@ -125,6 +125,8 @@ def json2html(idict, pad=""):
             else:
                 value = "<a href=\"/das/records/%s?collection=cache\">%s</a>"\
                         % (val, val)
+                if  len(str(val)) < 3: # aggregator's ids
+                    value = val
             sss += pad + """ <code class="key">"%s": </code>%s""" % (key, value)
         elif  type(val) is types.ListType:
             if  len(val) == 1:
