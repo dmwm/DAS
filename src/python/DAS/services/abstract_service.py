@@ -237,22 +237,9 @@ class DASAbstractService(object):
             expire)
         header['lookup_keys'] = self.lookup_keys(api)
 
-        # check for aggregators, if found perform the action
-        aggregators = query.get('aggregators', None)
-        if  aggregators:
-            for func, val in aggregators:
-                # TODO: I need to reproduce generator from result
-                # each time in a loop, since result is a generator
-                # copy generator code can be found at
-                # http://www.fiber-space.de/generator_tools/doc/generator_tools.html
-                # but I fair to use it now
-                res = das_func(func, val, result)
-                if  res:
-                    result = {'function':'%s(%s)' % (func,val), 'result':res}
-                    result = dict(aggregator=result)
-                self.localcache.update_cache(query, yield_rows(result), header)
-        else:
-            self.localcache.update_cache(query, result, header)
+        # update the cache
+        self.localcache.update_cache(query, result, header)
+
         msg  = 'DASAbstractService::%s cache has been updated,' \
                 % self.name
         self.logger.info(msg)
