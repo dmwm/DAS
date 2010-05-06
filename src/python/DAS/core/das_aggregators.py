@@ -47,9 +47,9 @@ class ResultObject(object):
             self.result = 99999999999
         if  value < self.result:
             self.result = value
-#    def avg(self, value):
-#        """Average function for this object"""
-#        pass
+    def avg(self, value):
+        """Average function for this object"""
+        pass
 #    def median(self, value):
 #        """Median function for this object"""
 #        pass
