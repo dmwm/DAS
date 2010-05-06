@@ -47,17 +47,9 @@ class DASWebService(DASWebManager):
     """
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
-        try:
-            # try what is supplied from WebTools framework
-            cdict         = self.config.dictionary_()
-            self.cachesrv = cdict.get('cache_server_url', 
-                                'http://localhost:8211')
-            self.base     = '/dascontrollers'
-        except:
-            # stand-alone version
-            self.cachesrv = config.get('cache_server_url',
-                                'http://localhost:8211')
-            self.base     = '/das'
+        self.cachesrv   = config.get('cache_server_url',
+                            'http://localhost:8211')
+        self.base       = config.get('url_base', '/das')
         self.dasmgr     = DASCore()
         self.daskeys    = self.dasmgr.das_keys()
         self.daskeys.sort()
@@ -658,8 +650,8 @@ class DASWebService(DASWebManager):
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         req  = """
         <script type="application/javascript">
-        setTimeout('ajaxStatus()',3000)
-        </script>"""
+        setTimeout('ajaxStatus("%s")',3000)
+        </script>""" % self.base
 
         def set_header():
             "Set HTTP header parameters"
