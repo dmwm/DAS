@@ -516,10 +516,9 @@ class DASMongocache(object):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        col = self.db[collection]
-        self.logger.info("DASMongocache::nresults(%s, coll=%s)" \
-                % (query, collection))
+        col    = self.db[collection]
         query  = adjust_id(query)
+        query, dquery = convert2pattern(query)
         spec   = query.get('spec', {})
         fields = query.get('fields', None)
         # loop over fields, since user interesting to see only results for
@@ -529,8 +528,9 @@ class DASMongocache(object):
             for field in fields:
                 if  not spec.has_key(field):
                     spec.update({field:{'$exists':True}})
+        self.logger.info("DASMongocache::nresults(%s, coll=%s) spec=%s" \
+                % (query, collection, spec))
         return col.find(spec=spec).count()
-#        return col.find(spec=spec, fields=fields).count()
 
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc', 
                         collection='merge', adjust=True):
