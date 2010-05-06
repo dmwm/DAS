@@ -335,6 +335,7 @@ class DASCore(object):
             res = self.rawcache.map_reduce(mapreduce, spec)
         elif aggregators:
             res = []
+            _id = 0
             for func, key in aggregators:
                 rows = self.rawcache.get_from_cache(query, collection='merge')
                 if  func == 'avg':
@@ -345,7 +346,8 @@ class DASCore(object):
                         data = float(das_func('sum', key, rows))/nres
                 else:
                     data = das_func(func, key, rows)
-                res += [{'function': func, 'key': key, 'result': data}]
+                res += [{'_id':_id, 'function': func, 'key': key, 'result': data}]
+                _id += 1
         else:
             res = self.rawcache.get_from_cache(\
                 query, idx, limit, skey, sorder, collection='merge')
