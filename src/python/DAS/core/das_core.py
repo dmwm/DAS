@@ -28,6 +28,7 @@ from DAS.core.das_parser import QLManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
+from DAS.core.das_aggregators import das_func
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg
@@ -325,14 +326,30 @@ class DASCore(object):
                         prim_keys.append(prim_key)
             if  prim_keys:
                 query['spec'].update({"das.primary_key": {"$in":prim_keys}})
-        mapreduce = query.get('mapreduce', None)
-        filters   = query.get('filters', None)
+        aggregators = query.get('aggregators', None)
+        mapreduce   = query.get('mapreduce', None)
+        filters     = query.get('filters', None)
         if  filters:
             query['fields'] = filters
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
+        elif aggregators:
+            res = []
+            for func, key in aggregators:
+                rows = self.rawcache.get_from_cache(query, collection='merge')
+                if  func == 'avg':
+                    nres = self.rawcache.nresults(query, collection='merge')
+                    if  not nres:
+                        data = 'N/A'
+                    else:
+                        data = float(das_func('sum', key, rows))/nres
+                else:
+                    data = das_func(func, key, rows)
+                res += [{'function': func, 'key': key, 'result': data}]
         else:
             res = self.rawcache.get_from_cache(\
                 query, idx, limit, skey, sorder, collection='merge')
+        # check if we have aggregators, if so loop over aggregators list
+        # get func and key to pass to aggregator function
         for row in res:
             yield row
