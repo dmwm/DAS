@@ -146,6 +146,22 @@ class DASAdminService(DASWebManager):
         return page
 #        return self.page(page)
 
+    @expose
+    def clean(self, dbcoll, **kwargs):
+        """Clean DAS cache for provided dbcoll parameter"""
+        response.headers['Content-Type'] = 'text/xml'
+        try:
+            db, coll = dbcoll.split('.')
+            nrec1 = self.conn[db][coll].count()
+            self.conn[db][coll].remove({})
+            nrec2 = self.conn[db][coll].count()
+            status = 'Clean %s.%s, # records: %s -> %s'\
+                % (db, coll, nrec1, nrec2)
+        except:
+            status = 'ERROR: %s' % traceback.format_exc()
+        page = ajax_response(status)
+        return page
+
     def mapping(self, **kwargs):
         mappingdb = self.conn['mapping']['db']
         return "mapping page"
