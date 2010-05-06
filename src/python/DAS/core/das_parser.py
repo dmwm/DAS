@@ -118,11 +118,11 @@ def get_aggregator(input):
     """
     count = 0
     for item in input.split(","):
-        if  count:
-            msg  = "Current implementation does not support multiple"
-            msg += " aggregator functions. Please use only"
-            msg += " one at a time."
-            raise Exception(msg)
+#        if  count:
+#            msg  = "Current implementation does not support multiple"
+#            msg += " aggregator functions. Please use only"
+#            msg += " one at a time."
+#            raise Exception(msg)
         if  item.count("(") != item.count(")"):
             msg = "Not equal number of open/closed brackets %s" % item
             raise Exception(msg)
