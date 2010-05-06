@@ -175,8 +175,14 @@ if __name__ == '__main__':
         print "please use --help for more options."
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
     if  debug:
-        ival  = DAS.timer.timer.pop('init')
-        mval  = DAS.timer.timer.pop('merge')
+        try:
+            ival  = DAS.timer.timer.pop('init')
+        except:
+            ival = 'N/A'
+        try:
+            mval  = DAS.timer.timer.pop('merge')
+        except:
+            mval = 'N/A'
         slist = DAS.timer.timer.items()
         slist.sort()
         timer_list = [('init', ival)] + slist + [('merge', mval)] 
