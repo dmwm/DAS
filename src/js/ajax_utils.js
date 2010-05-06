@@ -1,14 +1,21 @@
-function ajaxStatus() {
-    new Ajax.Updater('_response', '/das/status', 
+function ajaxStatus(base) {
+    new Ajax.Updater('_response', base+'/status', 
     { method: 'get' ,
       parameters : UrlParams(),
       evalScripts:true
     });
 }
-function ajaxQueryInfo() {
+function ajaxQueryInfo(base) {
     var q = document.getElementById('dasquery');
-    new Ajax.Updater('_queryinfo', '/das/admin/query_info', 
+    new Ajax.Updater('_queryinfo', base+'/admin/query_info', 
     { method: 'get' ,
       parameters : {'dasquery':q.value},
+    });
+}
+function ajaxCleanInfo(base) {
+    var q = document.getElementById('dbcoll');
+    new Ajax.Updater('_cleaninfo', base+'/admin/clean', 
+    { method: 'get' ,
+      parameters : {'dbcoll':q.value},
     });
 }
