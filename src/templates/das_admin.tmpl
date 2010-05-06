@@ -8,6 +8,27 @@ $msg
 </pre>
 #end if
 
+<h3 class="sectionhead">Database tasks</h3>
+<ul>
+<li>
+Query DB via MongoDB queries:
+<a href="javascript:ShowTag('query_db')">show</a> |
+<a href="javascript:HideTag('query_db')">hide</a>
+</li>
+<li>
+Clean DB/DAS cache(s):
+<a href="javascript:ShowTag('clean_db')">show</a> |
+<a href="javascript:HideTag('clean_db')">hide</a>
+</li>
+<li>
+Look-up DAS query meaning:
+<a href="javascript:ShowTag('das_query')">show</a> |
+<a href="javascript:HideTag('das_query')">hide</a>
+</li>
+</ul>
+
+<div id="query_db" class="hide">
+<hr class="line" />
 <form action="$base/admin/records" method="get">
 <table>
 <tr>
@@ -40,22 +61,46 @@ db:
 </tr>
 </table>
 <div>
-<textarea rows="5" cols="100" name="query" id="query" onclick="javascript:CleanArea()">
+<textarea rows="5" cols="50" name="query" id="query" onclick="javascript:CleanArea()">
 Put your JSON MongoDB query here
 </textarea>
 </div>
 </form>
 
-<hr class="line" />
+</div> <!-- end of query_db -->
 
+<div id="clean_db" class="hide">
+<hr class="line" />
+<div class="grayboxform">
+db:
+<select id="dbcoll" name="dbcoll">
+#for db in $ddict.keys()
+#for coll, info in $ddict[$db].items()
+#if $coll!="system.indexes"
+<option value="$db.$coll">$db.$coll</option>
+#end if
+#end for
+#end for
+</select>
+<input type="submit" value="Clean" onclick="javascript:ajaxCleanInfo('$base')" />
+</div>
+<br />
+<div id="_cleaninfo"></div>
+</div> <!-- end of clean_db -->
+
+<div id="das_query" class="hide">
+<hr class="line" />
 <div class="grayboxform">
 DAS query:
 <input type="text" size="80" id="dasquery" />
-<input type="submit" value="Info" onclick="javascript:ajaxQueryInfo()" />
+<input type="submit" value="Info" onclick="javascript:ajaxQueryInfo('$base')" />
 <input type="submit" value="Clear" onclick="javascript:ClearTag('_queryinfo')" />
 </div>
 <br />
 <div id="_queryinfo"></div>
+</div> <!-- end of das_query -->
+
+<hr class="line" />
 
 <div id="left">
 
