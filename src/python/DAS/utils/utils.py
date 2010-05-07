@@ -997,18 +997,27 @@ def row2das(mapper, system, api, row):
 
 def aggregator(results, expire):
     """
-    DAS aggregator which iterate over all records in results set and
+    High-level API, DAS aggregator function.
+    """
+    for rec in aggregator_helper(results, expire):
+        das_id = rec.pop('das_id')
+        rec['das_id'] = list(set(das_id))
+        _ids = rec.pop('_id')
+        rec['cache_id'] = _ids
+        yield rec
+
+def aggregator_helper(results, expire):
+    """
+    DAS aggregator helper which iterates over all records in results set and
     perform aggregation of records on the primary_key of the record.
     """
     record = results.next()
     prim_key = record['das']['primary_key']
     record.pop('das')
-    record.pop('_id')
     update = 1
     for row in results:
         row_prim_key = row['das']['primary_key']
         row.pop('das')
-        row.pop('_id')
         if  row_prim_key != prim_key:
             record.update({'das':{'expire':expire, 'primary_key':prim_key}})
             yield record
