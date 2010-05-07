@@ -48,9 +48,6 @@ class DASLexer(object):
         r'[a-z_]+' # in DAS we use only lower case keywords
         if  t.value in self.daskeys or t.value in das_reserved():
             return t
-        else:
-            msg = "Unknown DAS key: %s" % t.value
-            raise Exception(msg)
 
     def t_WORD(self, t):
         r'[a-zA-Z/*][a-zA-Z_0-9/*]+|[0-9]+[dhm]|([0-9]{1,3}\.){3,3}[0-9]{1,3}'
@@ -110,11 +107,10 @@ class DASLexer(object):
                         pos = tok.lexpos + int(obj)
                 msg = das_lexer_error(data, pos, error)
                 raise Exception(msg)
-#                raise
-            if  not tok:
-                break
             if  self.verbose:
                 print tok
+            if  not tok:
+                break
 
     def input(self, data):
         """Lexer input method"""
@@ -131,17 +127,30 @@ def test():
     # Build the lexer
     lexer = DASLexer(DAS_KEYS, verbose=1)
     lexer.build()
+
     print "build lexer", lexer, lexer.tokens
+
+    query = "site"
+    print "test lexer:", query
+    lexer.test(query)
+
+    query = "site=test"
+    print "test lexer:", query
+    lexer.test(query)
+
     query = "lat"
     print "test lexer:", query
     lexer.test(query)
+
     print
     query = "lat=2 lon=2"
     print "test lexer:", query
     lexer.test(query)
+
     query = "date=2010010112"
     print "test lexer:", query
     lexer.test(query)
+
     print
     query = "lat=2 bla"
     print "test lexer:", query
@@ -149,6 +158,7 @@ def test():
         lexer.test(query)
     except Exception, _:
         traceback.print_exc()
+
     print
     query = "lat=2 lon>1"
     print "test lexer:", query
@@ -156,14 +166,16 @@ def test():
         lexer.test(query)
     except Exception, _:
         traceback.print_exc()
+
     print
     query = "site = New York"
-    lexer.test(query)
     print "test lexer:", query
+    lexer.test(query)
+
     print
     query = "date last 24h"
-    lexer.test(query)
     print "test lexer:", query
+    lexer.test(query)
     print
 
 if  __name__ == '__main__':
