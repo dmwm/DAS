@@ -9,10 +9,15 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.4.10
 
+  - added new mapping for Phedex APIs
+  - work on aggregator to allow merged records to have reference to
+    their parent records in DAS cache, name them as cache_id
   - improve DAS admin interface:
 
     - show and hide various tasks
     - DAS tasks (query db, clean db, das queries)
+    - Add digest authentication to admin interface, based on
+      cherrypy.tools.digest_auth
 
   - allow to use multiple aggregators at the same time, e.g.
     site=T1_* | count(site.id), sum(site.id), avg(site.id)
