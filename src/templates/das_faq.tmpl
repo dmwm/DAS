@@ -98,6 +98,10 @@ For example
 <div class="example">
 file dataset=/a/b/c | sum(file.size)
 </div>
+or you can combine filters and aggregators together, for instance
+<div class="example">
+file dataset=/a/b/c | grep file.name, file.size | sum(file.size), count(file.name)
+</div>
 </p>
 
 <ul>
