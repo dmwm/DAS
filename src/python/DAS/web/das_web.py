@@ -441,7 +441,7 @@ class DASWebService(DASWebManager):
         Convert input row (dict) into UI presentation
         """
         for key in idict.keys():
-            if  key == 'das' or key == '_id' or key == 'das_id':
+            if  key == 'das' or key.find('_id') != -1:
                 continue
             for item in self.dasmapping.presentation(key):
                 try:
