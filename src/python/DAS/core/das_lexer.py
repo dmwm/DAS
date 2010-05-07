@@ -34,6 +34,7 @@ class DASLexer(object):
         'DASKEY',
         'NUMBER',
         'SPACE',
+        'COMMA',
         'LIST',
         'RESERVED',
         'WORD',
@@ -41,6 +42,7 @@ class DASLexer(object):
 
     # Regular expression rules for simple tokens
     t_SPACE    = r'\ '
+    t_COMMA    = r'\,'
     t_LIST     = r'\[\d+,\s*\d+\]'
     t_RESERVED = r'|'.join(das_reserved())
 
