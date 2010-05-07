@@ -81,6 +81,9 @@ def das_readconfig(dasconfig=None):
     web_server['log_screen'] = config.get('web_server', 'log_screen')
     web_server['socket_queue_size'] = \
                 config.get('web_server', 'socket_queue_size')
+    web_server['url_base'] = config.get('web_server', 'url_base')
+    web_server['cache_server_url'] = \
+                config.get('web_server', 'cache_server_url')
     configdict['web_server'] = web_server
 
     security = {}
