@@ -106,7 +106,7 @@ def json2html(idict, pad=""):
     orig_pad = pad
     sss = pad + '{' + newline
     for key, val in idict.items():
-        if  key == '_id' or key == 'das_id':
+        if  key == '_id' or key == 'das_id' or key == 'cache_id':
             if  type(val) is types.ListType:
                 value = '['
                 counter = 0
