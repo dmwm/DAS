@@ -27,6 +27,7 @@ from cherrypy import expose
 from cherrypy.lib.static import serve_file
 
 # DAS modules
+import DAS
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import exposejson, exposedasplist
 from DAS.core.das_core import DASCore
@@ -70,7 +71,8 @@ class DASWebService(DASWebManager):
         """
         Define footer for all DAS web pages
         """
-        return self.templatepage('das_bottom', div=response_div)
+        return self.templatepage('das_bottom', div=response_div,
+                version=DAS.version)
 
     def page(self, content, ctime=None, response_div=True):
         """
@@ -85,6 +87,7 @@ class DASWebService(DASWebManager):
             srv += "%s, " % key
         srv = srv[:-2] # remove last comma
         page += self.templatepage('das_bottom', ctime=ctime, services=srv,
+                                  version=DAS.version,
                                   timestamp=timestamp, div=response_div)
         return page
 
