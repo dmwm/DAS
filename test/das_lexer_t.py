@@ -23,6 +23,11 @@ class testDASConfig(unittest.TestCase):
 
     def testDASLexer_positive(self):
         """test DAS lexer, positive test"""
+        query  = "site=test"
+        result = self.daslexer.test(query)
+        expect = None
+        self.assertEqual(result, expect)
+
         query  = "file=/test* site=T1_CH_CERN"
         result = self.daslexer.test(query)
         expect = None
