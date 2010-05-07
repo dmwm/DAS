@@ -35,6 +35,12 @@ class PhedexService(DASAbstractService):
             tags = 'block.name'
         elif api == 'nodes':
             prim_key = 'node'
+        elif api == 'nodeusage':
+            prim_key = 'node'
+        elif api == 'groups':
+            prim_key = 'group'
+        elif api == 'groupusage':
+            prim_key = 'node'
         elif api == 'lfn2pfn':
             prim_key = 'mapping'
         else:
