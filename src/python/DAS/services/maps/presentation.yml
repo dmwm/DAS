@@ -78,6 +78,13 @@ monitor : [
         {"das":"monitor.region", "ui":"Region"},
         {"das":"monitor.time", "ui":"Time interval"},
         ],
+group : [
+        {"das":"group.name", "ui":"Group name"},
+        {"das":"group.node_files", "ui":"# of files archived on this node"},
+        {"das":"group.dest_files", "ui":"# of approved files for this group"},
+        {"das":"group.dest_bytes", "ui":"# of approved bytes for this group"},
+        {"das":"group.node_bytes", "ui":"# of bytes archived on this node"},
+        ],
 ip : [
         {"das":"ip.City", "ui":"City"},
         {"das":"ip.CountryName", "ui":"Country"},
