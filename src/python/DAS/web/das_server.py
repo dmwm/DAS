@@ -19,7 +19,7 @@ from pprint import pformat
 from optparse import OptionParser
 
 # CherryPy modules
-from cherrypy import log, tree, engine, tools
+from cherrypy import log, tree, engine
 from cherrypy import config as cpconfig
 
 # DAS modules
@@ -29,6 +29,15 @@ from DAS.web.das_web import DASWebService
 from DAS.web.das_cache import DASCacheService
 from DAS.web.das_doc import DASDocService
 from DAS.web.das_admin import DASAdminService
+
+def auth_user(username):
+    """Return user pwd for given name"""
+    filename = os.path.join(os.environ['DAS_ROOT'], 'auth.ini')
+    with open(filename, 'r') as pfile:
+        for line in pfile.readlines():
+            user, pwd = line.split(':')
+            if  user == username:
+                return pwd.replace('\n', '')
 
 class Root(object):
     """
@@ -93,14 +102,18 @@ class Root(object):
     def start(self, blocking=True):
         """Configure and start the server."""
         self.configure()
+        url_base = self.config['web_server']['url_base']
         if  self.model == 'cache_server':
             config = self.config.get('cache_server', {})
             obj = DASCacheService(config) # mount cache server
             tree.mount(obj, '/')
         elif self.model == 'web_server':
+            # web server
             config = self.config.get('web_server', {})
             obj = DASWebService(config)
-            tree.mount(obj, '/das') # mount web server
+            tree.mount(obj, url_base) # mount web server
+
+            # doc server
             sdir = os.environ['DAS_ROOT'] + '/doc/build/html'
             static_dict = { 
                             'tools.staticdir.on':True,
@@ -111,10 +124,19 @@ class Root(object):
             }
             cpconfig.update(conf)
             obj = DASDocService(sdir)
-            tree.mount(obj, '/das/doc') # mount doc server
+            tree.mount(obj, url_base + '/doc') # mount doc server
+
+            # admin server
             config = self.config.get('admin_server', {})
             obj = DASAdminService(config)
-            tree.mount(obj, '/das/admin') # mount admint server
+            url = url_base + '/admin'
+            adminconf = {'/' : {
+                        'tools.digest_auth.on':True,
+                        'tools.digest_auth.realm': 'DAS admin',
+                        'tools.digest_auth.users': auth_user,
+                        }
+            }
+            tree.mount(obj, url, config=adminconf) # mount admint server
         else:
             obj = DASWebManager({}) # pass empty config dict
             tree.mount(obj, '/')
