@@ -1006,7 +1006,9 @@ def aggregator(results, expire):
         else:
             rec['das_id'] = [das_id]
         _ids = rec.pop('_id')
-        rec['cache_id'] = _ids
+        if  type(_ids) is not types.ListType:
+            _ids = [_ids]
+        rec['cache_id'] = list(set(_ids))
         yield rec
 
 def aggregator_helper(results, expire):
