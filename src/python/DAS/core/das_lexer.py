@@ -52,7 +52,7 @@ class DASLexer(object):
             return t
 
     def t_WORD(self, t):
-        r'[a-zA-Z/*][a-zA-Z_0-9/*]+|[0-9]+[dhm]|([0-9]{1,3}\.){3,3}[0-9]{1,3}'
+        r'[a-zA-Z/*][a-zA-Z_0-9/*\-#]+|[0-9]+[dhm]|([0-9]{1,3}\.){3,3}[0-9]{1,3}'
         cond1 = t.value not in self.daskeys
         list1 = t.value.split()
         cond2 = set(list1) & set(self.daskeys)
