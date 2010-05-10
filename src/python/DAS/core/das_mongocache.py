@@ -567,7 +567,7 @@ class DASMongocache(object):
 
         # look-up raw record
         if  fields:
-            fields += ['das_id', 'das'] # always extract das_id's
+            fields += ['das_id', 'das', 'cache_id'] # be sure to extract those fields
         skeys  = []
         if  skey:
             if  order == 'asc':
