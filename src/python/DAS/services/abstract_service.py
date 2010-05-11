@@ -312,7 +312,7 @@ class DASAbstractService(object):
             for lkey in self.dasmapping.lookup_keys(self.name, key, api=api):
                 if  lkey not in lkeys:
                     lkeys.append(lkey)
-        return lkeys
+        return [{api:lkeys}]
 
     def inspect_params(self, api, args):
         """
