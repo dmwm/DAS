@@ -715,7 +715,9 @@ class DASMongocache(object):
         # get all API records for given DAS query
         records = self.col.find({'query':encode_mongo_query(query)})
         for row in records:
-            lkeys = row['das']['lookup_keys']
+#            lkeys = row['das']['lookup_keys']
+            rec   = [k for i in row['das']['lookup_keys'] for k in i.values()]
+            lkeys = list(set(k for i in rec for k in i))
             for key in lkeys:
                 if  key not in lookup_keys:
                     lookup_keys.append(key)
@@ -762,7 +764,9 @@ class DASMongocache(object):
         self.update_query(query, header)
 
         # update results records in DAS cache
-        lkeys      = header['lookup_keys']
+#        lkeys      = header['lookup_keys']
+        rec   = [k for i in header['lookup_keys'] for k in i.values()]
+        lkeys = list(set(k for i in rec for k in i))
         index_list = [(key, DESCENDING) for key in lkeys]
         if  index_list:
             try:
@@ -815,12 +819,14 @@ class DASMongocache(object):
         if  not results:
             return
         dasheader  = header['das']
-        lkeys      = header['lookup_keys']
+#        lkeys      = header['lookup_keys']
+        rec        = [k for i in header['lookup_keys'] for k in i.values()]
+        lkeys      = list(set(k for i in rec for k in i))
         # get API record id
         enc_query  = encode_mongo_query(query)
-        spec   = {'spec' : dict(query=enc_query)}
-        record = self.col.find_one({'query':enc_query}, fields=['_id'])
-        objid  = record['_id']
+        spec       = {'spec' : dict(query=enc_query)}
+        record     = self.col.find_one({'query':enc_query}, fields=['_id'])
+        objid      = record['_id']
         # insert DAS records
         prim_key   = lkeys[0] # what to do with multiple look-up keys
         counter    = 0
