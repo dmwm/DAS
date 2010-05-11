@@ -7,6 +7,10 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- 0.4.11
+
+  - fix problem with id references for web interface
+
 - 0.4.10
 
   - added new mapping for Phedex APIs
