@@ -3,4 +3,6 @@ recursive-include src/css *.css
 recursive-include src/js *.js
 recursive-include doc *
 recursive-include bin *
+recursive-include src/python/DAS/services/maps *
 recursive-include etc das.cfg
+include *.py
