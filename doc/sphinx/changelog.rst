@@ -10,6 +10,7 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 - 0.4.11
 
   - fix problem with id references for web interface
+  - fix problem with None passed into spec during parsing step
 
 - 0.4.10
 
