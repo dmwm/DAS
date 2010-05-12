@@ -243,7 +243,8 @@ def parser(query, daskeys, operators):
                     mongo_value = {"$gte":value[0], "$lte":value[-1]}
                 else:
                     mongo_value = {MONGO_MAP[oper]:value}
-            spec[das_word] = mongo_value
+            if  das_word and das_word in daskeys:
+                spec[das_word] = mongo_value
         else:
             if  das_word:
                 strip_word = das_word.strip()
