@@ -9,6 +9,7 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.4.11
 
+  - added cmsswconfigs data-service
   - work on xml_parser to make it recursive. Now it can handle nested
     children.
   - Fix problem with multiple look-up keys/API, by using api:lookup_keys
