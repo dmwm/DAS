@@ -828,7 +828,8 @@ class DASMongocache(object):
         record     = self.col.find_one({'query':enc_query}, fields=['_id'])
         objid      = record['_id']
         # insert DAS records
-        prim_key   = lkeys[0] # what to do with multiple look-up keys
+#        prim_key   = lkeys[0] # what to do with multiple look-up keys
+        prim_key   = rec[0][0] # use rec instead of lkeys which re-order items
         counter    = 0
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
