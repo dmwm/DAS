@@ -9,6 +9,12 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.4.11
 
+  - work on xml_parser to make it recursive. Now it can handle nested
+    children.
+  - Fix problem with multiple look-up keys/API, by using api:lookup_keys
+    dict. This had impact on storage of this information within das part
+    of the record. Adjust code to handle it properly
+  - added map for Tier0 monitoring data-service
   - fix problem with id references for web interface
   - fix problem with None passed into spec during parsing step
 
