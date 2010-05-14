@@ -5,22 +5,27 @@
 Set of tools to create CMSSW configuration DB using MongoDB back-end.
 """
 
-# python modules
+# system modules
 import os
 import sys
+import time
 import fnmatch
+import hashlib
+
 from optparse import OptionParser
-try:
-    # with python 2.5
-    import hashlib
-except:
-    # prior python 2.5
-    import md5
+from operator import itemgetter
+from heapq import nlargest
 
 # pymongo modules
 from pymongo.connection import Connection
 from pymongo import DESCENDING
 from pymongo.errors import InvalidStringData
+
+from DAS.services.cmsswconfigs.base import CMSSWConfig
+
+# mongo additions
+from DAS.utils import mongosearch
+import mongoengine
 
 class RelOptionParser: 
     """
@@ -49,18 +54,12 @@ class RelOptionParser:
         """
         return self.parser.parse_args()
 
-
 def genkey(query):
     """
     Generate a new key-hash for a given query. We use md5 hash for the
     query and key is just hex representation of this hash.
     """
-    try:
-        keyhash = hashlib.md5()
-    except:
-        # prior python 2.5
-        keyhash = md5.new()
-
+    keyhash = hashlib.md5()
     keyhash.update(query)
     return keyhash.hexdigest()
 
@@ -81,13 +80,21 @@ def connect(host, port):
     db = connection.configdb
     return db
 
+def delete(host, port, release):
+    """
+    Delete given relase from configdb
+    """
+    db = connect(host, port)
+    db.drop_collection(release)
+    db.drop_collection('%sindex' % release)
+
 def inject(host, port, path, release, debug=0):
     """
     Function to inject CMSSW configuration files into MongoDB located
     at provided host/port.
     """
-    db = connect(host, port)
-    collection = db[release]
+#    db = connect(host, port)
+#    collection = db[release]
     if  not os.environ.has_key('SCRAM_ARCH'):
         msg = 'SCRAM_ARCH environment is not set'
         raise Exception(msg)
@@ -102,6 +109,14 @@ def inject(host, port, path, release, debug=0):
     cdir = os.path.join(cdir, 'python')
     os.chdir(cdir)
 
+    # Use Mongosearch/index
+    mongoengine.connect('configdb')
+    config_obj = CMSSWConfig
+    config_obj._meta['collection'] = release
+    # Create an index for the blog post and add the fields to be indexed
+    index = mongosearch.SearchIndex(config_obj, use_term_index=False)
+    index.add_field('content', html=False)
+
     for name in gen_find("*.py", "./"):
         if  name.find('__init__.py') != -1:
             continue
@@ -114,26 +129,40 @@ def inject(host, port, path, release, debug=0):
         fdsc = open(name, 'r')
         content = fdsc.read()
         fdsc.close()
-        record  = dict(system=system, subsystem=subsystem, 
-                        config=config, content=content, hash=genkey(content))
-        try:
-            collection.insert(record)
-        except InvalidStringData:
-            content = content.replace('\0', '')
-            record  = dict(system=system, subsystem=subsystem, 
-                        config=config, content=content, hash=genkey(content))
-            collection.insert(record)
-        except:
-            print "Fail to insert the following record:\n"
-            print "system", system
-            print "subsystem", subsystem
-            print "config", config
-            print "hash", hash
-            print "content", content
-            raise
-        lkeys = ['system', 'subsystem', 'config', 'hash']
-        index_list = [(key, DESCENDING) for key in lkeys]
-        collection.ensure_index(index_list)
+
+        content = content.replace('\0', '')
+        obj = CMSSWConfig(name=config, content=content, 
+                system=system, subsystem=subsystem, hash=genkey(content))
+        obj.save()
+
+    # Index the collection
+    print "Generating index ..."
+    t0 = time.time()
+    index.generate_index()
+    print 'Indexing took %s seconds' % (time.time() - t0)
+
+#        record  = dict(system=system, subsystem=subsystem, 
+#                        config=config, content=content, hash=genkey(content))
+#        try:
+#            res = collection.insert(record)
+#            print "res record", res
+#        except InvalidStringData:
+#            content = content.replace('\0', '')
+#            record  = dict(system=system, subsystem=subsystem, 
+#                        config=config, content=content, hash=genkey(content))
+#            collection.insert(record)
+#        except:
+#            print "Fail to insert the following record:\n"
+#            print "system", system
+#            print "subsystem", subsystem
+#            print "config", config
+#            print "hash", hash
+#            print "content", content
+#            raise
+#    lkeys = ['system', 'subsystem', 'config', 'hash']
+#    index_list = [(key, DESCENDING) for key in lkeys]
+#    collection.ensure_index(index_list)
+
 #
 # MAIN
 #
@@ -148,4 +177,6 @@ if __name__ == '__main__':
         msg = "Please provide: --release=<CMSSW_X_Y_Z> --path=/afs/cern.ch/cms/sw"
         print msg
         sys.exit(1)
+    delete(opts.host, opts.port, opts.release)
     inject(opts.host, opts.port, opts.path, opts.release, opts.verbose)
+
