@@ -48,6 +48,9 @@ class RelOptionParser:
         self.parser.add_option("--path", action="store", type="string", 
              default="", dest="path",
              help="specify path to CMS software area")
+        self.parser.add_option("--delete", action="store", type="string", 
+             default="", dest="delete",
+             help="delete entry about release in MongoDB")
     def getopt(self):
         """
         Returns parse list of options
@@ -88,13 +91,21 @@ def delete(host, port, release):
     db.drop_collection(release)
     db.drop_collection('%sindex' % release)
 
+def check(host, port, release):
+    """
+    Check if given release exists in MongoDB
+    """
+    db = connect(host, port)
+    for coll in db.collection_names():
+        if  coll == release:
+            return True
+    return False
+
 def inject(host, port, path, release, debug=0):
     """
     Function to inject CMSSW configuration files into MongoDB located
     at provided host/port.
     """
-#    db = connect(host, port)
-#    collection = db[release]
     if  not os.environ.has_key('SCRAM_ARCH'):
         msg = 'SCRAM_ARCH environment is not set'
         raise Exception(msg)
@@ -177,6 +188,14 @@ if __name__ == '__main__':
         msg = "Please provide: --release=<CMSSW_X_Y_Z> --path=/afs/cern.ch/cms/sw"
         print msg
         sys.exit(1)
-    delete(opts.host, opts.port, opts.release)
-    inject(opts.host, opts.port, opts.path, opts.release, opts.verbose)
+    if  opts.delete:
+        if  not opts.release:
+            msg = "Please provide: --release=<CMSSW_X_Y_Z>"
+            print msg
+            sys.exit(1)
+        delete(opts.host, opts.port, opts.release)
+    if  check(opts.host, opts.port, opts.release):
+        print "Relase %s already exists in DB" % opts.release
+    else:
+        inject(opts.host, opts.port, opts.path, opts.release, opts.verbose)
 
