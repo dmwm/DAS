@@ -572,6 +572,41 @@ class testUtils(unittest.TestCase):
         expect = {'file': {'block': {'bytes': 1}, 'size': 10}}
         self.assertEqual(expect, result)
 
+    def test_xml_parser_2(self):
+        """
+        Test functionality of xml_parser
+        """
+        xmldata = """<?xml version='1.0' encoding='ISO-8859-1'?>
+<RUNS>
+<RUN id="751084">
+<LUMI>
+<NUMBER>1</NUMBER>
+<PROP>avx</PROP>
+<TEST>
+<FOO>1</FOO>
+<BOO>2</BOO>
+</TEST>
+</LUMI>
+</RUN>
+</RUNS>
+"""
+        fdesc  = tempfile.NamedTemporaryFile()
+        fname  = fdesc.name
+        stream = file(fname, 'w')
+        stream.write(xmldata)
+        stream.close()
+        stream = file(fname, 'r')
+        gen    = xml_parser(stream, "RUNS", [])
+        result = gen.next()
+        expect = {'RUNS': {'RUN': {'id': 751084.0, 
+                                   'LUMI': {'TEST': {'FOO': 1, 'BOO': 2},
+                                            'NUMBER': 1, 
+                                            'PROP': 'avx'}
+                                  }
+                          }
+                 }
+        self.assertEqual(expect, result)
+
     def test_json_parser(self):
         """
         Test functionality of json_parser
