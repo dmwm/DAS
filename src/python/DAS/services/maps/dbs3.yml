@@ -190,7 +190,7 @@ notations : [
         {"notation": "event_count", "map": "nevents", "api": "files"},
         {"notation": "event_count", "map": "nevents", "api": "files2"},
         {"notation": "file.event_count", "map": "file.nevents", "api": ""},
-        {"notation": "run_num", "map": "run", "api": ""},
+        {"notation": "run_num", "map": "run.run_number", "api": ""},
         {"notation": "lumi_section_num", "map": "lumi", "api": ""},
         {"notation": "output_module_label", "map": "module_label", "api": ""},
 ]

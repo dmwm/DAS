@@ -74,7 +74,7 @@ params : {
      "api":"listRuns", "apiversion": "DBS_2_0_9", "path":"*",
 }
 daskeys : [
-    {"key":"run", "map":"run.number", "pattern":""},
+    {"key":"run", "map":"run.run_number", "pattern":""},
     {"key":"dataset", "map":"dataset.name", "pattern":""},
 ]
 das2api : [
@@ -161,7 +161,7 @@ params: {
     "run_number" : "", "pattern_lfn": "", "detail" : True, "retrive_list" : "" }
 daskeys : [
         {"key": "file", "map": "file.name", "pattern": ""},
-        {"key": "run", "map": "run.number", "pattern": ""},
+        {"key": "run", "map": "run.run_number", "pattern": ""},
         {"key": "dataset", "map": "dataset.name", "pattern": ""},
         {"key": "block", "map": "block.name", "pattern": ""},
 ]
@@ -169,6 +169,7 @@ das2api : [
         {"das_key": "dataset", "api_param": "path", "pattern":""},
         {"das_key": "block.name", "api_param": "block_name", "pattern":""},
         {"das_key": "run", "api_param": "run_number", "pattern":""},
+        {"das_key": "run.run_number", "api_param": "run_number", "pattern":""},
         {"das_key": "file.name", "api_param": "pattern_lfn", "pattern":""},
 ]
 ---
