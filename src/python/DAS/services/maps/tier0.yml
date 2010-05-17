@@ -5,7 +5,7 @@ format : JSON
 urn : express_config
 #url : "http://vocms52.cern.ch:8889/tier0/express_config?stream=Express&run=135284"
 url : "http://localhost:8889/tier0/express_config"
-expire : 86400
+expire : 300
 params : {"run": "required", "stream": "Express"}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},
@@ -17,7 +17,7 @@ das2api : [
 ---
 urn : reco_config
 url : "http://localhost:8889/tier0/reco_config"
-expire : 86400
+expire : 300
 params : {"run": "required", "dataset": ""}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},
@@ -30,7 +30,7 @@ das2api : [
 ---
 urn : runsbystatus
 url : "http://localhost:8889/tier0/runsbystatus"
-expire : 86400
+expire : 300
 params : {"run_status": "required"}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},
@@ -45,7 +45,7 @@ das2api : [
 ---
 urn : runsbyrecostatus
 url : "http://localhost:8889/tier0/runsbyrecostatus"
-expire : 86400
+expire : 300
 params : {"reco_status": "required"}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},
