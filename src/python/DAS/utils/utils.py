@@ -1142,6 +1142,8 @@ def make_headers(data_format):
     headers = {}
     if  data_format.lower() == 'json':
         headers.update({'Accept':'text/json;application/json'})
+    elif  data_format.lower() == 'dasjson':
+        headers.update({'Accept':'text/json+das;text/json;application/json'})
     elif data_format.lower() == 'xml':
         headers.update({'Accept':'text/xml;application/xml'})
     return headers
