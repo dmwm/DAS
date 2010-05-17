@@ -19,13 +19,14 @@ import DAS.utils.jsonwrapper as json
 
 # MongoDB modules
 from pymongo import DESCENDING
+from pymongo.objectid import ObjectId
 
 # DAS modules
 from DAS.utils.utils import getarg, genkey, dotdict
 from DAS.utils.utils import row2das, extract_http_error, make_headers
 from DAS.utils.utils import xml_parser, json_parser, plist_parser
 from DAS.utils.utils import yield_rows, expire_timestamp
-from DAS.core.das_aggregators import das_func
+#from DAS.core.das_aggregators import das_func
 from DAS.core.das_mongocache import compare_specs, encode_mongo_query
 
 def dasheader(system, query, api, url, args, ctime, expire):
@@ -230,8 +231,9 @@ class DASAbstractService(object):
         if  not self.write2cache:
             return
         self.analytics.add_api(self.name, query, api, args)
-        msg  = 'DASAbstractService::%s Analytics DB has been updated,' \
+        msg  = 'DASAbstractService::%s::add_api added to Analytics DB' \
                 % self.name
+        msg += ' query=%s, api=%s, args=%s' % (query, api, args)
         self.logger.info(msg)
         header  = dasheader(self.name, query, api, url, args, ctime,
             expire)
@@ -240,10 +242,14 @@ class DASAbstractService(object):
         # update the cache
         self.localcache.update_cache(query, result, header)
 
-        msg  = 'DASAbstractService::%s cache has been updated,' \
+        msg  = 'DASAbstractService::%s cache has been updated,\n' \
                 % self.name
         self.logger.info(msg)
-        self.insert_apicall(query, url, api, args, header['das']['expire'])
+
+        # check that apicall record is present in analytics DB
+        spec  = {'apicall.qhash': genkey(encode_mongo_query(query))}
+        if  not self.analytics.col.find_one(spec):
+            self.insert_apicall(query, url, api, args, expire)
 
     def adjust_params(self, args):
         """
@@ -252,11 +258,28 @@ class DASAbstractService(object):
         """
         pass
 
+    def update_apicall(self, query, das_dict):
+        """
+        Update apicall record with provided DAS dict.
+        """
+        msg    = 'DBSAbstractService::update_apicall, query=%s, das_dict=%s'\
+                % (query, das_dict)
+        self.logger.info(msg)
+        spec   = {'apicall.qhash':genkey(encode_mongo_query(query))} 
+        record = self.analytics.col.find_one(spec)
+        self.analytics.col.update({'_id':ObjectId(record['_id'])},
+            {'$set':{'dasapi':das_dict,
+                     'apicall.expire':das_dict['response_expires']}})
+
     def insert_apicall(self, query, url, api, api_params, expire):
         """
         Remove obsolete apicall records and
         insert into Analytics DB provided information about API call.
         """
+        msg    = 'DBSAbstractService::insert_apicall, query=%s, url=%s,'\
+                % (query, url)
+        msg   += 'api=%s, args=%s, expire=%s' % (api, api_params, expire)
+        self.logger.info(msg)
         expire = expire_timestamp(expire)
         query = encode_mongo_query(query)
         spec = {'apicall.expire':{'$lt' : int(time.time())}}
@@ -359,15 +382,19 @@ class DASAbstractService(object):
             notations.update(notationmap[api])
         return notations
 
-    def parser(self, dformat, data, api):
+    def parser(self, query, dformat, data, api):
         """
-        DAS data parser. It accepts:
+        DAS data parser. Input parameters:
 
+        - *query* input DAS query
         - *dformat* is a data format, e.g. XML, JSON
         - *data* is a data source, either file-like object or
           actual data
         - *api* is API name
         """
+        msg  = "DASAbstractService::%s::parser, api=%s, format=%s " \
+                % (self.name, api, dformat)
+        self.logger.info(msg)
         prim_key  = self.dasmapping.primary_key(self.name, api)
         notations = self.get_notations(api)
         apitag    = self.dasmapping.apitag(self.name, api)
@@ -378,9 +405,16 @@ class DASAbstractService(object):
             for row in gen:
                 counter += 1
                 yield row
-        elif dformat.lower() == 'json':
+        elif dformat.lower() == 'json' or dformat.lower() == 'dasjson':
             gen  = json_parser(data)
+            das_dict = {}
             for row in gen:
+                if  dformat.lower() == 'dasjson':
+                    for key, val in row.items():
+                        if  key != 'results':
+                            das_dict[key] = val
+                    row = row['results']
+                    self.update_apicall(query, das_dict)
                 if  apitag and row.has_key(apitag):
                     row = row[apitag]
                 if  type(row) is types.ListType:
@@ -507,9 +541,10 @@ class DASAbstractService(object):
                 mkey    = self.dasmapping.primary_mapkey(self.name, api)
                 args    = self.inspect_params(api, args)
                 time0   = time.time()
+                self.insert_apicall(query, url, api, args, expire)
                 headers = make_headers(dformat)
                 data    = self.getdata(url, args, headers)
-                rawrows = self.parser(dformat, data, api)
+                rawrows = self.parser(query, dformat, data, api)
                 dasrows = self.translator(api, rawrows)
                 dasrows = self.set_misses(query, api, dasrows)
                 ctime   = time.time() - time0

@@ -337,6 +337,7 @@ class DASMongocache(object):
         self.col     = self.db['cache']
         self.mrcol   = self.db['mapreduce']
         self.merge   = self.db['merge']
+        self.analytics = config['dasanalytics']
 
         self.add_manipulator()
         
@@ -760,8 +761,8 @@ class DASMongocache(object):
         Insert results into cache. Use bulk insert controller by
         self.cache_size. Upon completion ensure indexies.
         """
-        # update query record in DAS cache
-        self.update_query(query, header)
+        # insert/check query record in DAS cache
+        self.insert_query_record(query, header)
 
         # update results records in DAS cache
 #        lkeys      = header['lookup_keys']
@@ -782,24 +783,20 @@ class DASMongocache(object):
         except InvalidOperation:
             pass
 
-    def update_query(self, query, header):
+    def insert_query_record(self, query, header):
         """
-        Update query in DAS cache.
+        Insert query record into DAS cache.
         """
-        msg = "DASMongocache::update_query, query=%s, header=%s" \
-                % (query, header)
-        self.logger.info(msg)
         dasheader  = header['das']
         lkeys      = header['lookup_keys']
 
         # check presence of API record in a cache
         enc_query = encode_mongo_query(query)
         spec = {'spec' : dict(query=enc_query)}
-        if  self.incache(spec, collection='cache'):
-            record = self.col.find_one({'query':enc_query}, fields=['_id'])
-            objid  = record['_id']
-        else:
-            # insert query record for this set of results
+        if  not self.incache(spec, collection='cache'):
+            msg = "DASMongocache::insert_query_record, query=%s, header=%s" \
+                    % (query, header)
+            self.logger.info(msg)
             q_record = dict(das=dasheader, query=encode_mongo_query(query))
             q_record['das']['lookup_keys'] = lkeys
             objid  = self.col.insert(q_record)
@@ -819,11 +816,13 @@ class DASMongocache(object):
         if  not results:
             return
         dasheader  = header['das']
+        expire     = dasheader['expire']
 #        lkeys      = header['lookup_keys']
         rec        = [k for i in header['lookup_keys'] for k in i.values()]
         lkeys      = list(set(k for i in rec for k in i))
         # get API record id
         enc_query  = encode_mongo_query(query)
+        qhash      = genkey(enc_query)
         spec       = {'spec' : dict(query=enc_query)}
         record     = self.col.find_one({'query':enc_query}, fields=['_id'])
         objid      = record['_id']
@@ -834,13 +833,26 @@ class DASMongocache(object):
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
             for item in results:
+                if  not counter:
+                    # get expire timestamp from apicall record
+                    spec   = {'apicall.qhash':qhash}
+                    record = self.analytics.col.find_one(spec)
+                    if  not record:
+                        msg  = 'DASMongocache::update_records, '
+                        msg += 'no apicall records found in analytics db'
+                        raise Exception(msg)
+                    expire = record['apicall']['expire']
+                    # update query record with new expire timestamp
+                    self.col.update({'das.qhash':qhash}, 
+                    {'$set': {'das.expire':expire}})
+
                 # TODO:
                 # the exception/error records should not go to cache
                 # instead we can place them elsewhere for further analysis
                 if  item.has_key('exception') or item.has_key('error'):
                     continue
                 counter += 1
-                item['das'] = dict(expire=dasheader['expire'], primary_key=prim_key)
+                item['das'] = dict(expire=expire, primary_key=prim_key)
                 item['das_id'] = str(objid)
                 yield item
         else:
