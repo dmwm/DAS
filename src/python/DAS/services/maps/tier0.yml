@@ -1,6 +1,6 @@
 # Tier0 monitoring API mapping to DAS
 system : tier0
-format : JSON
+format : DASJSON
 ---
 urn : express_config
 #url : "http://vocms52.cern.ch:8889/tier0/express_config?stream=Express&run=135284"
