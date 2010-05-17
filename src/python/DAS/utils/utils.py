@@ -16,6 +16,7 @@ import time
 import types
 import hashlib
 import plistlib
+import calendar
 import traceback
 import xml.etree.cElementTree as ET
 from   itertools import groupby
@@ -26,6 +27,17 @@ from   DAS.utils.regex import float_number_pattern, int_number_pattern
 from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern
 import DAS.utils.jsonwrapper as json
+
+def get_http_expires(data):
+    """
+    Return HTTP Expires value in seconds since epoch.
+    If it is not set, None value is returned.
+    """
+    expire = data.info().getheader('Expires')
+    if  expire:
+        expire = calendar.timegm( \
+        time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z') )
+    return expire
 
 def expire_timestamp(expire):
     """Return expire timestamp"""
