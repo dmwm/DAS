@@ -9,6 +9,8 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.4.11
 
+  - adjust abstract data-service and mongocache to use DAS compliant
+    header if it is supplied by DAS compliant API, e.g. Tier0.
   - added cmsswconfigs data-service
   - work on xml_parser to make it recursive. Now it can handle nested
     children.
