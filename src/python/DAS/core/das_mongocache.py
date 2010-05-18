@@ -369,13 +369,6 @@ class DASMongocache(object):
         msg = "DASMongocache::similar_queries %s" % query
         spec    = query.get('spec', {})
         fields  = query.get('fields', None)
-#        if  len(spec.keys()) > 1:
-#            msg = 'DASMongocache::similar_queries, too many keys'
-#            self.logger.info(msg)
-#            return False
-#        key     = spec.keys()[0]
-#        val     = spec[key]
-#        cond    = {'query.spec.key': key}
         cond    = {'query.spec.key': {'$in' : spec.keys()}}
         for row in self.col.find(cond):
             mongo_query = decode_mongo_query(row['query'])
@@ -384,50 +377,6 @@ class DASMongocache(object):
                 self.logger.info("%s, True" % msg)
                 return True
         self.logger.info("%s, False" % msg)
-        return False
-
-    def similar_queries_v1(self, system, query):
-        """
-        Check if we have query results in cache whose conditions are
-        superset of provided query. For example, if cache contains records
-        about T1 sites, then input query T1_CH_CERN is subset of results stored
-        in cache.
-        """
-        self.logger.info("DASMongocache::similar_queries(%s)" % query)
-        spec    = query.get('spec', {})
-        fields  = query.get('fields', {})
-        newspec = {}
-        verspec = {} # verbose spec
-        # enable loose constraints, use LIKE pattern
-        for key, val in spec.items():
-            nkey = 'query.spec.%s' % key.replace(DOT, SEP) 
-            if  type(val) is types.StringType or type(val) is types.UnicodeType:
-                val = val[0] + '*'
-                val = re.compile(val.replace('*', '.*')) #replace value to regex
-                verspec[nkey] = val.pattern
-            else:
-                val = {'$ne': None} # non null key
-                verspec[nkey] = val
-            newspec[nkey] = val
-        if  not newspec: # empty spec
-            newspec = {'query.fields': fields}
-            verspec = newspec
-        else:
-            newspec['das.system'] = system
-        msg  = "DASMongocache::similar_queries, "
-        msg += "loose condition query: verspec=%s, newspec=%s" \
-                % (verspec, newspec)
-        self.logger.info(msg)
-        func = "function(obj,prev){ return true;}"
-        res  = self.col.group(['query'], newspec, 0, reduce=func)
-        msg  = "DASMongocache::similar_queries, "
-        msg += "found query which cover this request: "
-        for row in res:
-            existing_query = decode_mongo_query(row['query'])
-            if  compare_specs(query, existing_query):
-                msg += str(existing_query)
-                self.logger.info(msg)
-                return True
         return False
 
     def remove_expired(self, collection):
@@ -716,12 +665,12 @@ class DASMongocache(object):
         # get all API records for given DAS query
         records = self.col.find({'query':encode_mongo_query(query)})
         for row in records:
-#            lkeys = row['das']['lookup_keys']
             rec   = [k for i in row['das']['lookup_keys'] for k in i.values()]
             lkeys = list(set(k for i in rec for k in i))
             for key in lkeys:
                 if  key not in lookup_keys:
                     lookup_keys.append(key)
+            # find smallest expire timestamp to be used by aggregator
             if  row['das']['expire'] < expire:
                 expire = row['das']['expire']
             if  row['_id'] not in id_list:
@@ -765,7 +714,6 @@ class DASMongocache(object):
         self.insert_query_record(query, header)
 
         # update results records in DAS cache
-#        lkeys      = header['lookup_keys']
         rec   = [k for i in header['lookup_keys'] for k in i.values()]
         lkeys = list(set(k for i in rec for k in i))
         index_list = [(key, DESCENDING) for key in lkeys]
@@ -817,7 +765,6 @@ class DASMongocache(object):
             return
         dasheader  = header['das']
         expire     = dasheader['expire']
-#        lkeys      = header['lookup_keys']
         rec        = [k for i in header['lookup_keys'] for k in i.values()]
         lkeys      = list(set(k for i in rec for k in i))
         # get API record id
@@ -827,8 +774,7 @@ class DASMongocache(object):
         record     = self.col.find_one({'query':enc_query}, fields=['_id'])
         objid      = record['_id']
         # insert DAS records
-#        prim_key   = lkeys[0] # what to do with multiple look-up keys
-        prim_key   = rec[0][0] # use rec instead of lkeys which re-order items
+        prim_key   = rec[0][0] # use rec instead of lkeys[0] which re-order items
         counter    = 0
         if  type(results) is types.ListType or \
             type(results) is types.GeneratorType:
