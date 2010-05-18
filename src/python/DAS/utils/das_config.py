@@ -49,14 +49,16 @@ def das_readconfig(dasconfig=None):
     mapping['dbhost'] = config.get('mapping_db', 'dbhost', 'localhost')
     mapping['dbport'] = int(config.get('mapping_db', 'dbport', 27017))
     mapping['dbname'] = config.get('mapping_db', 'dbname', 'mapping')
-    mapping['attempt'] = config.get('mapping_db', 'attempt', 3)
+    mapping['collname'] = config.get('mapping_db', 'collname', 'db')
+    mapping['attempt']  = config.get('mapping_db', 'attempt', 3)
     configdict['mappingdb'] = mapping
 
     analytics = {}
     analytics['dbhost'] = config.get('analytics_db', 'dbhost', 'localhost')
     analytics['dbport'] = int(config.get('analytics_db', 'dbport', 27017))
     analytics['dbname'] = config.get('analytics_db', 'dbname', 'analytics')
-    analytics['attempt'] = config.get('analytics_db', 'attempt', 3)
+    analytics['collname'] = config.get('analytics_db', 'collname', 'db')
+    analytics['attempt']  = config.get('analytics_db', 'attempt', 3)
     configdict['analyticsdb'] = analytics
 
     configdict['rawcache'] = config.get('das', 'rawcache', None)
@@ -131,12 +133,14 @@ def das_writeconfig():
     config.set('mapping_db', 'dbhost', 'localhost')
     config.set('mapping_db', 'dbport', 27017)
     config.set('mapping_db', 'dbname', 'mapping')
+    config.set('mapping_db', 'collname', 'db')
     config.set('mapping_db', 'attempt', 3) # of attempts to connect to db
 
     config.add_section('analytics_db')
     config.set('analytics_db', 'dbhost', 'localhost')
     config.set('analytics_db', 'dbport', 27017)
     config.set('analytics_db', 'dbname', 'analytics')
+    config.set('analytics_db', 'collname', 'db')
     config.set('analytics_db', 'attempt', 3) # of attempts to connect to db
 
     config.add_section('cache_server')
