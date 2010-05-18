@@ -24,5 +24,4 @@ do
         /bin/sh
     fi
 done; 
-/bin/cp -f $DAS_ROOT/etc/das.cfg.copy $DAS_ROOT/etc/das.cfg
-
+/bin/mv -f $DAS_ROOT/etc/das.cfg.copy $DAS_ROOT/etc/das.cfg
