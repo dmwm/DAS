@@ -26,6 +26,7 @@ from cherrypy import config as cherryconf
 #    from WMCore.WebTools.Page import exposecss, exposejs, TemplatedPage
 #except:
 #    from DAS.web.tools import exposecss, exposejs, TemplatedPage
+import DAS
 from DAS.web.tools import exposecss, exposejs, TemplatedPage
 
 def set_headers(itype, size=0):
@@ -101,7 +102,7 @@ class DASWebManager(TemplatedPage):
         timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
         ctime = 0
         return self.templatepage('das_bottom', div="", services="",
-                timestamp=timestamp, ctime=ctime)
+                timestamp=timestamp, ctime=ctime, version=DAS.version)
 
     def page(self, content):
         """
