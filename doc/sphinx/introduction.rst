@@ -50,7 +50,8 @@ Below we list all dependencies clarifying their role for DAS
   see [YUI]_;
 - *elementtree* and its *cElementTree* counterpart is used as generic XML parser in DAS,
   both implementations are part of python 2.5 and above;
-- *MongoDB* a document-oriented database, the DAS DB back-ends, see [Mongodb]_;
+- *MongoDB* a document-oriented database, the DAS DB back-ends, see [Mongodb]_
+  and [MongodbOverview]_;
 - *pymongo* a MongoDB python driver, see [Pymongo]_;
 - *yaml* a human-readable data serialization format, a python YAML library is 
   used for DAS maps and server configurations, see [YAML]_;

@@ -12,6 +12,7 @@ References
    http://pyyaml.org/wiki/PyYAMLDocumentation, version PyYAML-3.08
 .. [PYLINT] http://pypi.python.org/pypi/pylint
 .. [Mongodb] http://www.mongodb.org, version 1.4.1
+.. [MongodbOverview] http://www.paperplanes.de/2010/2/25/notes_on_mongodb.html
 .. [Pymongo] http://api.mongodb.org/python/, version 1.6
 .. [Cheetah] http://www.cheetahtemplate.org/, version 2.4.0
 .. [Cherrypy] http://www.cherrypy.org/, version 3.1.2
