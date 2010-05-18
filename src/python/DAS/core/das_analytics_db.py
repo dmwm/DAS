@@ -34,7 +34,8 @@ class DASAnalytics(object):
         self.dbport  = config['analyticsdb']['dbport']
         self.dbname  = config['analyticsdb'].\
                         get('analytics_dbname', 'analytics')
-        self.colname = 'db'
+        self.colname = config['analyticsdb'].\
+                        get('analytics_collname', 'db')
 
         msg = "DASAnalytics::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
