@@ -337,7 +337,11 @@ class DASMongocache(object):
         self.col     = self.db['cache']
         self.mrcol   = self.db['mapreduce']
         self.merge   = self.db['merge']
-        self.analytics = config['dasanalytics']
+
+        # get analytics db handler
+        analyticsdb    = config['analyticsdb'].get('analytics_dbname', 'analytics') 
+        collection     = config['analyticsdb'].get('analytics_collname', 'db') 
+        self.analytics = self.conn[analyticsdb][collection]
 
         self.add_manipulator()
         
@@ -782,10 +786,11 @@ class DASMongocache(object):
                 if  not counter:
                     # get expire timestamp from apicall record
                     spec   = {'apicall.qhash':qhash}
-                    record = self.analytics.col.find_one(spec)
+                    record = self.analytics.find_one(spec)
                     if  not record:
                         msg  = 'DASMongocache::update_records, '
                         msg += 'no apicall records found in analytics db'
+                        msg += '\nspec=%s, record=%s' % (spec, record)
                         raise Exception(msg)
                     expire = record['apicall']['expire']
                     # update query record with new expire timestamp
