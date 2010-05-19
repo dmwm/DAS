@@ -195,7 +195,7 @@ if __name__ == '__main__':
             sys.exit(1)
         delete(opts.host, opts.port, opts.release)
     if  check(opts.host, opts.port, opts.release):
-        print "Relase %s already exists in DB" % opts.release
+        print "Release %s is already in DB" % opts.release
     else:
         inject(opts.host, opts.port, opts.path, opts.release, opts.verbose)
 
