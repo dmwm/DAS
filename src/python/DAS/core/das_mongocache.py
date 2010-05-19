@@ -31,7 +31,7 @@ from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
 from pymongo.code import Code
 from pymongo import DESCENDING, ASCENDING
-from pymongo.errors import InvalidOperation
+from pymongo.errors import InvalidOperation, AutoReconnect, ConnectionFailure
 
 DOT = '.'
 SEP = '___'
@@ -306,10 +306,10 @@ def make_connection(dbhost, dbport, attempt):
         raise Exception(msg)
     try:
         conn = Connection(dbhost, dbport)
-    except pymongo.errors.AutoReconnect:
+    except AutoReconnect:
         attempt -= 1
         make_connection(dbhost, dbport, attempt)
-    except pymongo.errors.ConnectionFailure:
+    except ConnectionFailure:
         attempt -= 1
         make_connection(dbhost, dbport, attempt)
     return conn
