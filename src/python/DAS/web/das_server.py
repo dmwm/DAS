@@ -33,6 +33,8 @@ from DAS.web.das_admin import DASAdminService
 def auth_user(username):
     """Return user pwd for given name"""
     filename = os.path.join(os.environ['DAS_ROOT'], 'auth.ini')
+    if  not os.path.isfile(filename):
+        return False
     with open(filename, 'r') as pfile:
         for line in pfile.readlines():
             user, pwd = line.split(':')
