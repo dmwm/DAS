@@ -23,7 +23,18 @@ fi
 RETVAL=$?
 
 pid=`ps auxwww | grep das_server.py | grep "server=$server" | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
-echo $pid
+#echo $pid
+
+function das_server_status()
+{
+    pid=`ps auxwww | grep das_server.py | grep "server=$server" | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+    if [ ! -z "${pid}" ]; then
+        echo $"DAS $server is running, pid=${pid}"
+        ps -f -wwww -p ${pid}
+    else
+        echo $"DAS $server is not running"
+    fi
+}
 
 case "$2" in
  stdout)
@@ -41,21 +52,18 @@ case "$2" in
         fi
         echo $"Restart DAS $server..."
         nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
+        das_server_status
         ;;
  start)
         if [ ! -z "${pid}" ]; then
           kill -9 ${pid}
         fi
+        echo $"Start DAS $server..."
         nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
+        das_server_status
         ;;
  status)
-        if [ ! -z "${pid}" ]; then
-          echo $"DAS $server is running, pid=${pid}"
-          ps -f -wwww -p ${pid}
-          exit 0
-        fi
-        echo $"DAS $server is stopped"
-        exit 3
+        das_server_status
         ;;
  stop)
         if [ ! -z "${pid}" ]; then
