@@ -43,6 +43,11 @@ class testDASConfig(unittest.TestCase):
         expect = None
         self.assertEqual(result, expect)
 
+        query  = "lat=-2.2 lon=2.1"
+        result = self.daslexer.test(query)
+        expect = None
+        self.assertEqual(result, expect)
+
         query  = "lat=2,lon=2"
         result = self.daslexer.test(query)
         expect = None

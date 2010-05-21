@@ -14,6 +14,7 @@ import sys
 import types
 import ply.lex as lex
 from DAS.core.das_ql import das_reserved
+from DAS.utils.regex import float_number_pattern, int_number_pattern
 
 def das_lexer_error(query, pos, error):
     """Produce pretty formatted message about invalid query"""
@@ -32,6 +33,7 @@ class DASLexer(object):
 
     tokens = [
         'DASKEY',
+        'FLOAT_NUMBER',
         'NUMBER',
         'SPACE',
         'COMMA',
@@ -62,9 +64,15 @@ class DASLexer(object):
             msg = "Unknown DAS key value: %s" % t.value
             raise Exception(msg)
 
+#        r'-?\d+'
     def t_NUMBER(self, t):
-        r'-?\d+'
+        r'-?\d+$'
         t.value = int(t.value)
+        return t
+
+    def t_FLOAT_NUMBER(self, t):
+        r'[-+]?\d+\.?\d*'
+        t.value = float(t.value)
         return t
 
     def t_DATE(self, t):
@@ -146,6 +154,11 @@ def test():
 
     print
     query = "lat=2 lon=2"
+    print "test lexer:", query
+    lexer.test(query)
+
+    print
+    query = "lat=-2.2 lon=2.1"
     print "test lexer:", query
     lexer.test(query)
 
