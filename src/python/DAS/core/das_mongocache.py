@@ -387,8 +387,14 @@ class DASMongocache(object):
         """
         Remove expired records from DAS cache.
         """
+        timestamp = int(time.time())
         col  = self.db[collection]
-        spec = {'das.expire' : {'$lt' : int(time.time())}}
+        spec = {'das.expire' : {'$lt' : timestamp}}
+        if  self.verbose:
+            nrec = col.find(spec).count()
+            msg  = "DASMongocache::remove_expired, will remove %s records" % nrec
+            msg += ", localtime=%s" % timestamp
+            self.logger.info(msg)
         col.remove(spec)
 
     def find_spec(self, query):
