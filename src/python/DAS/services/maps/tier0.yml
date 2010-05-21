@@ -9,6 +9,7 @@ expire : 300
 params : {"run": "required", "stream": "Express"}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},
+        {"key":"stream", "map":"stream", "pattern":""},
 ]
 das2api : [
         {"das_key":"run","api_param":"run", "pattern":"re.compile('[1-9][0-9]{4,5}')"},
@@ -49,10 +50,14 @@ expire : 300
 params : {"reco_status": "required"}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},
-        {"key":"reco_status", "map":"reco_status", "pattern":"re.compile('0|1"},
+        {"key":"reco_status", "map":"reco_status", "pattern":"re.compile('0|1')"},
+]
+das2api : [
+        {"das_key":"reco_status","api_param":"reco_status", "pattern":"re.compile('0|1')"},
 ]
 ---
 notations : [
     {"notation":"run", "map":"run_number", "api":"express_config"},
+    {"notation":"run", "map":"run_number", "api":"reco_config"},
     {"notation":"run_id", "map":"run_number", "api":""},
 ]
