@@ -69,9 +69,10 @@ class DASLogger(object):
         self.logger   = logging.getLogger(self.name)
         self.loglevel = logging.INFO
         self.addr     = repr(self).split()[-1]
+        self.logname  = name
         if  logfile:
             self.dir, _  = os.path.split(logfile)
-            self.logname = 'DAS'
+            self.logname = logfile
             try:
                 if  not os.path.isdir(self.dir):
                     os.makedirs(self.dir)
@@ -82,21 +83,21 @@ class DASLogger(object):
                 msg = "Not enough permissions to create %s"\
                        % self.logfile 
                 raise Exception(msg)
-            logging.basicConfig(filename=logfile, level=self.loglevel,
-                        format=format)
-        else:
-            logging.basicConfig(level=self.loglevel, format=format)
-        self.level(verbose)
-
-#        hdlr = logging.handlers.TimedRotatingFileHandler( \
-#                  self.logname, 'midnight', 1, 7 )
-#        hdlr = logging.StreamHandler()
-#        formatter = logging.Formatter( \
-#                  '%(asctime)s - %(name)s - %(levelname)s - %(message)s' )
-#        hdlr.setFormatter( formatter )
-#        self.logger.addHandler(hdlr)
+#            logging.basicConfig(filename=logfile, level=self.loglevel,
+#                        format=format)
+#        else:
+#            logging.basicConfig(level=self.loglevel, format=format)
 #        self.level(verbose)
-#        set_cherrypy_logger(hdlr, self.verbose)
+
+        hdlr = logging.handlers.TimedRotatingFileHandler( \
+                  self.logname, 'midnight', 1, 7 )
+#        hdlr = logging.StreamHandler()
+        formatter = logging.Formatter( \
+                  '%(asctime)s - %(name)s - %(levelname)s - %(message)s' )
+        hdlr.setFormatter( formatter )
+        self.logger.addHandler(hdlr)
+        self.level(verbose)
+        set_cherrypy_logger(hdlr, self.verbose)
 
     def level(self, level):
         """
