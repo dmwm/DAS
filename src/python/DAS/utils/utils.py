@@ -27,6 +27,14 @@ from   DAS.utils.regex import float_number_pattern, int_number_pattern
 from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern
 import DAS.utils.jsonwrapper as json
+from   base64 import b64encode, b32encode
+
+def encode4admin(user, pwd):
+    """Encode user:pwd pair"""
+    hash_u, hash_p = (b32encode(user), b64encode(pwd))
+    if  hash_u.find(":") != -1 or hash_p.find(":") != -1:
+        raise Exception("Either username or password contains :")
+    return "%s:%s" % (hash_u, hash_p)
 
 def get_http_expires(data):
     """
