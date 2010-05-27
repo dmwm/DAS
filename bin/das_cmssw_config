@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+dir=/mnt/disk1/cmssw/
+dir=/afs/cern.ch/cms/sw
+SCRAM_ARCH=slc5_amd64_gcc434
+
+# run actual script
+cmd=`ls $dir/$SCRAM_ARCH/cms/cmssw/ | egrep '^CMSSW_*' | sed "s,/,,g"`
+for release in $cmd
+do
+    echo "Trying $release ..."
+    echo "$DAS_ROOT/src/python/DAS/tools/cmssw_config_db.py --path=$dir --release=$release"
+    $DAS_ROOT/src/python/DAS/tools/cmssw_config_db.py --path=$dir --release=$release
+done
+
