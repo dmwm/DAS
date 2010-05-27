@@ -20,7 +20,8 @@ last_time_pattern = \
 date_yyyymmdd_pattern = \
     re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
 key_attrib_pattern = \
-    re.compile(r"^([a-zA-Z_]+\.?)+$") # match key.attrib
+    re.compile(r"^([a-zA-Z_]+\.?)+(=[a-zA-Z0-9]*)?$") # match key.attrib
+#    re.compile(r"^([a-zA-Z_]+\.?)+$") # match key.attrib
 cms_tier_pattern = \
     re.compile('T[0-9]_') # T1_CH_CERN
 float_number_pattern = \
