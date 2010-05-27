@@ -2,6 +2,8 @@
 <!-- das_faq.tmpl -->
 <div class="page">
 <div class="normal">
+
+<!-- BEGIN NEW SECTION -->
 <h3>General questions about DAS</h3>
 <a href="javascript:ShowTag('architecture')">show</a> |
 <a href="javascript:HideTag('architecture')">hide</a> this section.
@@ -61,7 +63,9 @@ knowledge DAS merges their output into a single DAS record.
 </div>
 </div>
 <hr class="line" />
+<!-- END OF SECTION -->
 
+<!-- BEGIN NEW SECTION -->
 <h3>DAS queries</h3>
 <a href="javascript:ShowTag('dasql')">show</a> |
 <a href="javascript:HideTag('dasql')">hide</a> this section
@@ -193,7 +197,9 @@ to messages appearing next to the spining wheel.
 </div>
 </div>
 <hr class="line" />
+<!-- END OF SECTION -->
 
+<!-- BEGIN NEW SECTION -->
 <h3>DAS records</h3>
 <a href="javascript:ShowTag('dasrecords')">show</a> |
 <a href="javascript:HideTag('dasrecords')">hide</a> this section
@@ -270,9 +276,87 @@ we simply drop this header from shown records.
 
 </div>
 </div>
-<!-- LAST RECORD DOES NOT NEED THIS
 <hr class="line" />
--->
+<!-- END OF SECTION -->
+
+<!-- BEGIN NEW SECTION -->
+<h3>CMS queries</h3>
+<a href="javascript:ShowTag('cmsqueries')">show</a> |
+<a href="javascript:HideTag('cmsqueries')">hide</a> this section
+<div id="cmsqueries" class="hide">
+<div class="navcontainer">
+
+<p>
+Here is an un-complete set of queries support in DAS
+
+<p>
+Queries to get Site information
+<div class="example">
+<pre>
+site=T1_CH_CERN
+site=T1_*
+site=T1_* | grep site.name
+site=T1_* | grep site.se
+</pre>
+</div>
+</p>
+
+
+<p>
+Queries to get run information
+<div class="example">
+<pre>
+run=20853
+run=20853 | grep run.components
+run in [20853,20859]
+run between [20853,20859]
+run between [20853,20859] | grep run.run_number
+</pre>
+</div>
+</p>
+
+<p>
+DBS-like queries
+<div class="example">
+<pre>
+primary_ds
+dataset | grep dataset.name
+block dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER
+block dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER | sum(block.size)
+file dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER
+file dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER | grep file.name, file.size
+release=CMSSW_2_0_8
+release=CMSSW_2_0_8 | grep release.name, release.algorithm.executable, release.algorithm.name
+</pre>
+</div>
+</p>
+
+<p>
+Queries to search CMSSW configuration files based on provided
+release name and some search keywords. Please note to use multiple keywords
+please use quotes:
+<div class="example">
+<pre>
+config release=CMSSW_3_6_0 search="track ckfTrackCandidates"
+</pre>
+</div>
+</p>
+
+<p>
+Miscellaneous queries:
+<div class="example">
+<pre>
+monitor
+jobsummary
+ip=137.138.141.145 | grep ip.City
+</pre>
+</div>
+</p>
+
+</div>
+</div>
+<!-- END OF SECTION -->
+
 
 </div> <!-- end of class="normal" -->
 </div> <!-- end of class="page" -->
