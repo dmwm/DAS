@@ -9,6 +9,17 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.4.12
 
+  - change value of verbose/debug options in all cli tools to be 0, instead
+    of None, since it's type suppose to be int
+  - add new example section to web FAQ
+  - re-define logger/logformat in debug mode; the logger is used
+    StreamHandler in this mode, while logformat doesn't use time stamp.
+    This is usefull for DAS CLI mode, when --verbose=1 flag is used.
+  - add "word1 word2" pattern to t_WORD for das_lexer, it's going to
+    be used by searching keywords in cmsswconfig service and can be
+    potentially used elsewhere to support multiple keywords per
+    single DAS key
+  - fix bug with apicall which should preceed update_cache
   - add simple enc/dec schema for DAS admin authentication
   - add logger configuration into das.cfg
   - separate logger streams into das.log, das_web.log and das_cache.log
