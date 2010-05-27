@@ -99,10 +99,13 @@ def das_readconfig(dasconfig=None):
     security['store_path'] = config.get('security', 'store_path')
     configdict['security'] = security
 
-    verbose = config.getint('das', 'verbose')
+    verbose   = config.getint('das', 'verbose')
+    logfile   = config.get('das', 'logfile', None)
     logformat = config.get('das', 'logformat',
         '%(levelname)s %(message)s')
     configdict['logformat'] = logformat
+    if  logfile:
+        configdict['logfile'] = logfile
     configdict['verbose'] = verbose
     return configdict
 
@@ -117,6 +120,7 @@ def das_writeconfig():
     config.set('das', 'verbose', 0)
     config.set('das', 'rawcache', 'DASMongocache')
     config.set('das', 'logformat', '%(levelname)s %(message)s')
+    config.set('das', 'logfile', '/tmp/DAS.log')
 #    config.set('das', 'logformat', 
 #                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
