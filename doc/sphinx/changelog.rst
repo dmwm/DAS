@@ -9,6 +9,7 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.4.12
 
+  - added unique filter
   - change value of verbose/debug options in all cli tools to be 0, instead
     of None, since it's type suppose to be int
   - add new example section to web FAQ
