@@ -13,7 +13,7 @@ __author__ = "Valentin Kuznetsov"
 import inspect
 from DAS.core.das_aggregators import ResultObject
 
-DAS_FILTERS   = ['grep']
+DAS_FILTERS   = ['grep', 'unique']
 DAS_OPERATORS = ['=', 'between', 'in', 'last']
 #DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
 #                 'between', 'nin', 'in', 'last']
