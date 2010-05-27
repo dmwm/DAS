@@ -95,8 +95,9 @@ class DASLogger(object):
                       self.logname, 'midnight', 1, 7 )
         else:
             hdlr = logging.StreamHandler()
-        formatter = logging.Formatter( \
-                  '%(asctime)s - %(name)s - %(levelname)s - %(message)s' )
+        formatter = logging.Formatter(format)
+#        formatter = logging.Formatter( \
+#                  '%(asctime)s - %(name)s - %(levelname)s - %(message)s' )
         hdlr.setFormatter( formatter )
         self.logger.addHandler(hdlr)
         self.level(verbose)
