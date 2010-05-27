@@ -17,7 +17,7 @@ from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate
-from DAS.utils.utils import delete_elem, plist_parser
+from DAS.utils.utils import delete_elem, plist_parser, unique_filter
 from DAS.utils.utils import dotdict, filter, aggregator, yield_rows
 
 class testUtils(unittest.TestCase):
@@ -30,6 +30,23 @@ class testUtils(unittest.TestCase):
         rows   = (r for r in range(2,5))
         expect = [1,2,3,4]
         result = [r for r in yield_rows(val, rows)]
+        self.assertEqual(result, expect)
+
+    def test_unique_filter(self):
+        """Test unique_filter filter"""
+        rows = [{'k':1}, {'r':1}, {'r':1}]
+        result = [r for r in unique_filter(rows)]
+        expect = [{'k':1}, {'r':1}]
+        self.assertEqual(result, expect)
+
+        rows = [{'k':1}, {'k':1}, {'r':1}]
+        result = [r for r in unique_filter(rows)]
+        expect = [{'k':1}, {'r':1}]
+        self.assertEqual(result, expect)
+
+        rows = [{'k':1, '_id':1}, {'k':1, '_id':2}, {'r':1}]
+        result = [r for r in unique_filter(rows)]
+        expect = [{'k':1, '_id':1}, {'r':1}]
         self.assertEqual(result, expect)
 
     def test_aggregator(self):
