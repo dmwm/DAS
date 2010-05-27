@@ -36,6 +36,7 @@ from DAS.core.das_ql import das_aggregators, das_operators
 from DAS.utils.utils import getarg, access
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.utils import urllib2_request, json2html, web_time, ajax_response
+from DAS.utils.logger import DASLogger, set_cherrypy_logger
 
 import DAS.utils.jsonwrapper as json
 
@@ -55,11 +56,13 @@ class DASWebService(DASWebManager):
         self.daskeys    = self.dasmgr.das_keys()
         self.daskeys.sort()
         self.dasmapping = self.dasmgr.mapping
-        self.daslogger  = self.dasmgr.logger
+        logfile  = config.get('logfile')
+        loglevel = int(config.get('loglevel'))
+        self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
+        set_cherrypy_logger(self.logger.handler, loglevel)
         self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 
         msg = "DASSearch::init is started with base=%s" % self.base
-        self.daslogger.debug(msg)
-        print msg
+        self.logger.info(msg)
 
     def top(self):
         """
@@ -235,7 +238,7 @@ class DASWebService(DASWebManager):
         """
         Generate standard error message.
         """
-        self.daslogger.error(traceback.format_exc())
+        self.logger.error(traceback.format_exc())
         error  = "My request to DAS is failed\n\n"
         error += "Input parameters:\n"
         for key, val in kwargs.items():
@@ -303,7 +306,7 @@ class DASWebService(DASWebManager):
                 data = urllib2_request('GET', url+path, params, headers=headers)
                 result = json.loads(data)
             except:
-                self.daslogger.error(traceback.format_exc())
+                self.logger.error(traceback.format_exc())
                 result = {'status':'fail', 'reason':traceback.format_exc()}
             res = ""
             if  result['status'] == 'success':
@@ -369,13 +372,13 @@ class DASWebService(DASWebManager):
             data = urllib2_request('GET', url+path, params, headers=headers)
             record = json.loads(data)
         except:
-            self.daslogger.error(traceback.format_exc())
+            self.logger.error(traceback.format_exc())
             record = {'status':'fail', 'reason':traceback.format_exc()}
         if  record['status'] == 'success':
             return record['nresults']
         else:
             msg = "nresults returns status: %s" % str(record)
-            self.daslogger.info(msg)
+            self.logger.info(msg)
         return -1
 
     def send_request(self, method, kwargs):
@@ -401,7 +404,7 @@ class DASWebService(DASWebManager):
             data = urllib2_request(method, url+path, params, headers=headers)
             result = json.loads(data)
         except:
-            self.daslogger.error(traceback.format_exc())
+            self.logger.error(traceback.format_exc())
             result = {'status':'fail', 'reason':traceback.format_exc()}
         return result
 
@@ -674,7 +677,7 @@ class DASWebService(DASWebManager):
             res  = urllib2_request('GET', url+path, params, headers=headers)
             data = json.loads(res)
         except:
-            self.daslogger.error(traceback.format_exc())
+            self.logger.error(traceback.format_exc())
             data = {'status':'fail'}
         if  ajax:
             cherrypy.response.headers['Content-Type'] = 'text/xml'

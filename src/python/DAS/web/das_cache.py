@@ -26,7 +26,7 @@ import DAS.utils.jsonwrapper as json
 from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCacheMgr, thread_monitor
 from DAS.utils.utils import getarg, genkey
-from DAS.utils.logger import DASLogger
+from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.web.tools import exposejson
 from DAS.web.das_webmanager import DASWebManager
@@ -151,24 +151,26 @@ class DASCacheService(DASWebManager):
             self.warning('Created logging.db, size=%s' % capped_size)
         self.col      = self.con['logging']['db']
         sleep         = dasconfig.get('sleep', 2)
-        verbose       = dasconfig.get('verbose', 0)
-        logfile       = dasconfig.get('logfile', None)
+        verbose       = int(config.get('loglevel'))
+        logfile       = config.get('logfile')
         self.qlimit   = dasconfig['cache_server']['queue_limit'] 
-#        logformat     = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         logformat     = '%(levelname)s - %(message)s'
         nprocs        = dasconfig['cache_server']['n_worker_threads']
         logger        = DASLogger(logfile=logfile, verbose=verbose, 
                         name='DASCacheServer', format=logformat)
+        self.logger   = logger
+        set_cherrypy_logger(self.logger.handler, verbose)
         iconfig       = {'sleep':sleep, 'verbose':verbose, 'nprocs':nprocs,
                         'logfile':logfile}
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(thread_monitor, (self.cachemgr, iconfig))
 
-        self.dascore  = DASCore(logger=logger)
+        self.dascore  = DASCore()
         msg = 'DASCacheService::init, host=%s, port=%s, capped_size=%s' \
                 % (dbhost, dbport, capped_size)
-        self.dascore.logger.debug(msg)
-        print msg
+#        self.dascore.logger.debug(msg)
+#        print msg
+        self.logger.info(msg)
 
     def logdb(self, query):
         """
@@ -192,6 +194,8 @@ class DASCacheService(DASWebManager):
         HTTP GET request.
         Retrieve records from provided collection.
         """
+        msg = 'records(%s, %s)' % (args, kwargs)
+        self.logger.info(msg)
         data  = {'server_method':'request'}
         if  not kwargs.has_key('query'):
             data['status'] = 'fail'
@@ -232,6 +236,8 @@ class DASCacheService(DASWebManager):
         """
         HTTP GET request. Check status of the input query in DAS.
         """
+        msg = 'status(%s, %s)' % (args, kwargs)
+        self.logger.info(msg)
         data = {'server_method':'status'}
         if  kwargs.has_key('query'):
             query  = kwargs['query']
@@ -252,6 +258,8 @@ class DASCacheService(DASWebManager):
         HTTP GET request. Ask DAS for total number of records
         for provided query.
         """
+        msg = 'nresults(%s, %s)' % (args, kwargs)
+        self.logger.info(msg)
         data = {'server_method':'nresults'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
@@ -272,6 +280,8 @@ class DASCacheService(DASWebManager):
         HTTP GET request.
         Retrieve results from DAS cache.
         """
+        msg = 'request(%s, %s)' % (args, kwargs)
+        self.logger.info(msg)
         data = {'server_method':'request'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
@@ -310,6 +320,8 @@ class DASCacheService(DASWebManager):
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
+        msg = 'create(%s, %s)' % (args, kwargs)
+        self.logger.info(msg)
         if  len(self.cachemgr.queue) > self.qlimit:
             msg = 'CacheMgr queue is full, current size %s. ' \
                 % len(self.cachemgr.queue)
@@ -341,6 +353,8 @@ class DASCacheService(DASWebManager):
         resource with the one enclosed in the request body.
         Replace existing query in DAS cache.
         """
+        msg = 'replace(%s, %s)' % (args, kwargs)
+        self.logger.info(msg)
         data = {'server_method':'replace'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
@@ -370,6 +384,8 @@ class DASCacheService(DASWebManager):
         HTTP DELETE request.
         Delete input query in DAS cache
         """
+        msg = 'delete(%s, %s)' % (args, kwargs)
+        self.logger.info(msg)
         data = {'server_method':'delete'}
         if  kwargs.has_key('query'):
             query = kwargs['query']
@@ -393,6 +409,8 @@ class DASCacheService(DASWebManager):
         RESTful interface. We use args tuple as access method(s), e.g.
         args = ('method',) and kwargs to represent input parameters.
         """
+        msg = 'rest(%s, %s)' % (args, kwargs)
+        self.logger.info(msg)
         request = cherrypy.request.method
         if  request not in self.methods.keys():
             msg = "Unsupported request '%s'" % request
