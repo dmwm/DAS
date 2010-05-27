@@ -22,7 +22,7 @@ class DASOptionParser:
     def __init__(self):
         self.parser = OptionParser()
         self.parser.add_option("-v", "--verbose", action="store", 
-                                          type="int", default=None, 
+                                          type="int", default=0, 
                                           dest="debug",
              help="verbose output")
         self.parser.add_option("--host", action="store", type="string",

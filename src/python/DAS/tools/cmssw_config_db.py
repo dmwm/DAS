@@ -34,7 +34,7 @@ class RelOptionParser:
     def __init__(self):
         self.parser = OptionParser()
         self.parser.add_option("-v", "--verbose", action="store", 
-                    type="int", default=None, dest="verbose",
+                    type="int", default=0, dest="verbose",
              help="verbose output")
         self.parser.add_option("--release", action="store", type="string", 
                                           default=False, dest="release",

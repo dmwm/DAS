@@ -26,7 +26,7 @@ class DASOptionParser:
     def __init__(self):
         self.parser = OptionParser()
         self.parser.add_option("-v", "--verbose", action="store", 
-                                          type="int", default=None, 
+                                          type="int", default=0, 
                                           dest="verbose",
              help="verbose output")
         self.parser.add_option("--profile", action="store_true", 
