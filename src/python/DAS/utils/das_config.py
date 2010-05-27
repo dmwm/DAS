@@ -122,10 +122,9 @@ def das_writeconfig():
     config.add_section('das')
     config.set('das', 'verbose', 0)
     config.set('das', 'rawcache', 'DASMongocache')
-    config.set('das', 'logformat', '%(levelname)s %(message)s')
     config.set('das', 'logfile', '/tmp/das.log')
-#    config.set('das', 'logformat', 
-#                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    config.set('das', 'logformat', 
+                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     config.add_section('mongodb')
     config.set('mongodb', 'lifetime', 1*24*60*60) # in seconds
