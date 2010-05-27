@@ -1122,6 +1122,35 @@ def aggregator_helper(results, expire):
         row.update({'das':{'expire':expire, 'primary_key':row_prim_key}})
         yield row
 
+def unique_filter(rows):
+    """
+    Unique filter drop duplicate rows.
+    """
+    old_row = {}
+    for row in rows:
+        row_data = dict(row)
+        try:
+            del row_data['_id']
+            del row_data['das']
+            del row_data['das_id']
+            del row_data['cache_id']
+        except:
+            pass
+        old_data = dict(old_row)
+        try:
+            del old_data['_id']
+            del old_data['das']
+            del old_data['das_id']
+            del old_data['cache_id']
+        except:
+            pass
+        if  row_data == old_data:
+            continue
+        if  old_row:
+            yield old_row
+        old_row = row
+    yield row
+
 def extract_http_error(err):
     """
     Upon urllib failure the data-service can send HTTPError message.
