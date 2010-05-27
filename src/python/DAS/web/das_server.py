@@ -29,6 +29,7 @@ from DAS.web.das_web import DASWebService
 from DAS.web.das_cache import DASCacheService
 from DAS.web.das_doc import DASDocService
 from DAS.web.das_admin import DASAdminService
+from base64 import b64decode, b32decode
 
 def auth_user(username):
     """Return user pwd for given name"""
@@ -37,9 +38,12 @@ def auth_user(username):
         return False
     with open(filename, 'r') as pfile:
         for line in pfile.readlines():
+            line = line.replace('\n', '')
             user, pwd = line.split(':')
+            user = b32decode(user)
+            pwd  = b64decode(pwd)
             if  user == username:
-                return pwd.replace('\n', '')
+                return pwd
 
 class Root(object):
     """
