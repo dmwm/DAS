@@ -181,6 +181,7 @@ def compare_dicts(input_dict, exist_dict):
     is superset of input_dict
     """
     for key, val in input_dict.items():
+        vvv = None
         if  exist_dict.has_key(key):
             vvv = exist_dict[key]
         if  key == '$gt':
