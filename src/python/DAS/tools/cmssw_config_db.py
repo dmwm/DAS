@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#pylint: disable-msg=C0301,C0103
+#pylint: disable-msg=C0301,C0103,E1101
 
 """
 Set of tools to create CMSSW configuration DB using MongoDB back-end.
@@ -13,13 +13,13 @@ import fnmatch
 import hashlib
 
 from optparse import OptionParser
-from operator import itemgetter
-from heapq import nlargest
+#from operator import itemgetter
+#from heapq import nlargest
 
 # pymongo modules
 from pymongo.connection import Connection
-from pymongo import DESCENDING
-from pymongo.errors import InvalidStringData
+#from pymongo import DESCENDING
+#from pymongo.errors import InvalidStringData
 
 from DAS.services.cmsswconfigs.base import CMSSWConfig
 
@@ -71,7 +71,7 @@ def gen_find(filepat, top):
     Find files which belong to provided pattern starting from top dir.
     Equvalent of find UNIX command.
     """
-    for path, dirlist, filelist in os.walk(top, followlinks=True):
+    for path, _, filelist in os.walk(top, followlinks=True):
         for name in fnmatch.filter(filelist, filepat):
             yield os.path.join(path, name)
 
@@ -101,7 +101,8 @@ def check(host, port, release):
             return True
     return False
 
-def inject(host, port, path, release, debug=0):
+#def inject(host, port, path, release, debug=0):
+def inject(path, release, debug=0):
     """
     Function to inject CMSSW configuration files into MongoDB located
     at provided host/port.
@@ -134,7 +135,7 @@ def inject(host, port, path, release, debug=0):
         if  debug:
             print "%s/%s" % (cdir, name)
         try:
-            dot, system, subsystem, config = name.split('/')
+            _, system, subsystem, config = name.split('/')
         except:
             continue
         fdsc = open(name, 'r')
@@ -148,9 +149,9 @@ def inject(host, port, path, release, debug=0):
 
     # Index the collection
     print "Generating index ..."
-    t0 = time.time()
+    time0 = time.time()
     index.generate_index()
-    print 'Indexing took %s seconds' % (time.time() - t0)
+    print 'Indexing took %s seconds' % (time.time() - time0)
 
 #        record  = dict(system=system, subsystem=subsystem, 
 #                        config=config, content=content, hash=genkey(content))
@@ -197,5 +198,6 @@ if __name__ == '__main__':
     if  check(opts.host, opts.port, opts.release):
         print "Release %s is already in DB" % opts.release
     else:
-        inject(opts.host, opts.port, opts.path, opts.release, opts.verbose)
+        inject(opts.path, opts.release, opts.verbose)
+#        inject(opts.host, opts.port, opts.path, opts.release, opts.verbose)
 

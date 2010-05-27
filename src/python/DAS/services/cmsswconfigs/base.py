@@ -10,7 +10,6 @@ __version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
-import os
 import time
 
 from operator import itemgetter
@@ -31,6 +30,9 @@ class CMSSWConfig(mongoengine.Document):
     hash      = mongoengine.fields.StringField()
 
 class MongoQuery(object):
+    """
+    Class which query configdb collections.
+    """
     def __init__(self, release, logger=None):
         self.release = release
         mongoengine.connect('configdb')
@@ -40,11 +42,14 @@ class MongoQuery(object):
         self.logger = logger
 
     def query(self, query):
+        """
+        Execute query over results in collection.
+        """
         # Query the collection
-        t0 = time.time()
+        time0 = time.time()
         results = self.index.search(query)
         top_matches = nlargest(10, results.iteritems(), itemgetter(1))
-        time_taken = time.time() - t0
+        time_taken = time.time() - time0
         if  self.logger:
             msg = 'MongoQuery: querying took %s seconds' % time_taken
             self.logger.debug(msg)
