@@ -153,7 +153,7 @@ def get_filters(query):
             func = item.split("(")[0].strip()
             found_filter = 0
             for filter in ['%s ' % f for f in das_filters()]:
-                if  item.find(filter) == -1:
+                if  item.find(filter.strip()) == -1:
                     continue
                 for elem in item.replace(filter, '').split(','):
                     dasfilter = elem.strip()
