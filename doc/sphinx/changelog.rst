@@ -9,6 +9,9 @@ map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.4.12
 
+  - add simple enc/dec schema for DAS admin authentication
+  - add logger configuration into das.cfg
+  - separate logger streams into das.log, das_web.log and das_cache.log
   - das_lexer supports floats
   - Add ability for filter to select specific values, e.g.
     run=123 | grep PD=MinBias
