@@ -74,6 +74,8 @@ def das_readconfig(dasconfig=None):
                 config.get('cache_server', 'socket_queue_size')
     cache_server['n_worker_threads'] = \
                 config.getint('cache_server', 'n_worker_threads')
+    cache_server['logfile'] = config.get('cache_server', 'logfile')
+    cache_server['loglevel'] = config.get('cache_server', 'loglevel')
     configdict['cache_server'] = cache_server
 
     web_server = {}
@@ -86,23 +88,24 @@ def das_readconfig(dasconfig=None):
     web_server['url_base'] = config.get('web_server', 'url_base')
     web_server['cache_server_url'] = \
                 config.get('web_server', 'cache_server_url')
+    web_server['logfile'] = config.get('web_server', 'logfile')
+    web_server['loglevel'] = config.get('web_server', 'loglevel')
     configdict['web_server'] = web_server
 
-    security = {}
-    security['role'] = config.get('security', 'role')
-    security['group'] = config.get('security', 'group')
-    security['site'] = config.get('security', 'site')
-    security['mount_point'] = config.get('security', 'mount_point')
-    security['enabled'] = config.get('security', 'enabled')
-    security['oid_server'] = config.get('security', 'oid_server')
-    security['session_name'] = config.get('security', 'session_name')
-    security['store_path'] = config.get('security', 'store_path')
-    configdict['security'] = security
+#    security = {}
+#    security['role'] = config.get('security', 'role')
+#    security['group'] = config.get('security', 'group')
+#    security['site'] = config.get('security', 'site')
+#    security['mount_point'] = config.get('security', 'mount_point')
+#    security['enabled'] = config.get('security', 'enabled')
+#    security['oid_server'] = config.get('security', 'oid_server')
+#    security['session_name'] = config.get('security', 'session_name')
+#    security['store_path'] = config.get('security', 'store_path')
+#    configdict['security'] = security
 
     verbose   = config.getint('das', 'verbose')
     logfile   = config.get('das', 'logfile', None)
-    logformat = config.get('das', 'logformat',
-        '%(levelname)s %(message)s')
+    logformat = config.get('das', 'logformat', '%(levelname)s %(message)s')
     configdict['logformat'] = logformat
     if  logfile:
         configdict['logfile'] = logfile
@@ -120,7 +123,7 @@ def das_writeconfig():
     config.set('das', 'verbose', 0)
     config.set('das', 'rawcache', 'DASMongocache')
     config.set('das', 'logformat', '%(levelname)s %(message)s')
-    config.set('das', 'logfile', '/tmp/DAS.log')
+    config.set('das', 'logfile', '/tmp/das.log')
 #    config.set('das', 'logformat', 
 #                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -155,6 +158,8 @@ def das_writeconfig():
     config.set('cache_server', 'socket_queue_size', 15)
     config.set('cache_server', 'n_worker_threads', 4)
     config.set('cache_server', 'queue_limit', 100)
+    config.set('cache_server', 'logfile', '/tmp/das_cache.log')
+    config.set('cache_server', 'loglevel', 0)
 
     config.add_section('web_server')
     config.set('web_server', 'port', 8212)
@@ -164,16 +169,18 @@ def das_writeconfig():
     config.set('web_server', 'socket_queue_size', 15)
     config.set('web_server', 'cache_server_url', 'http://localhost:8211')
     config.set('web_server', 'url_base', '/das')
+    config.set('web_server', 'logfile', '/tmp/das_web.log')
+    config.set('web_server', 'loglevel', 0)
 
-    config.add_section('security')
-    config.set('security', 'role', '')
-    config.set('security', 'group', 'das')
-    config.set('security', 'site', '')
-    config.set('security', 'mount_point', '/das/auth')
-    config.set('security', 'enabled', True)
-    config.set('security', 'oid_server', 'http://localhost:8400')
-    config.set('security', 'session_name', 'DAS Security Module')
-    config.set('security', 'store_path', '/tmp')
+#    config.add_section('security')
+#    config.set('security', 'role', '')
+#    config.set('security', 'group', 'das')
+#    config.set('security', 'site', '')
+#    config.set('security', 'mount_point', '/das/auth')
+#    config.set('security', 'enabled', True)
+#    config.set('security', 'oid_server', 'http://localhost:8400')
+#    config.set('security', 'session_name', 'DAS Security Module')
+#    config.set('security', 'store_path', '/tmp')
 
     dasconfig = das_configfile()
     config.write(open(dasconfig, 'wb'))
