@@ -76,6 +76,8 @@ class DASCore(object):
             self.noresults = nores
 
         logfile = dasconfig.get('logfile', None)
+        if  debug:
+            logfile = None # I want stdout printouts in debug mode
         logformat = dasconfig.get('logformat')
         if  not logger:
             self.logger = DASLogger(logfile=logfile, verbose=self.verbose,
