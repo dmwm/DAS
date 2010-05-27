@@ -169,7 +169,7 @@ class DASCore(object):
 
     def adjust_query(self, query, add_to_analytics=True):
         """Check that provided query is indeed in MongoDB format"""
-        err = '\nDASCore::result unable to load the input query=%s' % query
+        err = '\nDASCore::result unable to load the input query: "%s"' % query
         if  type(query) is types.StringType: # DAS-QL
             try:
                 query = json.loads(query)
@@ -330,7 +330,20 @@ class DASCore(object):
         mapreduce   = query.get('mapreduce', None)
         filters     = query.get('filters', None)
         if  filters:
-            query['fields'] = filters
+            fields  = query['fields']
+            if  not fields or type(fields) is not types.ListType:
+                fields = []
+            for filter in filters:
+                if  filter.find('=') != -1:
+                    key, val = filter.split('=')
+                    query['spec'][key.strip()] = val.strip()
+                else:
+                    if  filter not in fields:
+                        fields.append(filter)
+            if  fields:
+                query['fields'] = fields
+
+#            query['fields'] = filters
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
         elif aggregators:
