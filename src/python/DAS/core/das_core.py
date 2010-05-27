@@ -76,9 +76,10 @@ class DASCore(object):
             self.noresults = nores
 
         logfile = dasconfig.get('logfile', None)
+        logformat = dasconfig.get('logformat')
         if  debug:
             logfile = None # I want stdout printouts in debug mode
-        logformat = dasconfig.get('logformat')
+            logformat = '%(message)s'
         if  not logger:
             self.logger = DASLogger(logfile=logfile, verbose=self.verbose,
                 name='DAS', format=logformat)
