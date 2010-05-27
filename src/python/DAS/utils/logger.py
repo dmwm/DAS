@@ -13,6 +13,7 @@ __author__ = "Valentin Kuznetsov"
 import os
 import logging
 import logging.handlers
+import cherrypy
 
 class DummyLogger(object):
     """
@@ -63,7 +64,7 @@ class DASLogger(object):
     """
     def __init__(self, logfile=None, verbose=0, name='DAS',
                  format='%(name)s %(levelname)s %(message)s'):
-        self.verbose  = verbose
+        self.verbose  = int(verbose)
         self.logfile  = logfile
         self.name     = name
         self.logger   = logging.getLogger(self.name)
@@ -89,15 +90,17 @@ class DASLogger(object):
 #            logging.basicConfig(level=self.loglevel, format=format)
 #        self.level(verbose)
 
-        hdlr = logging.handlers.TimedRotatingFileHandler( \
-                  self.logname, 'midnight', 1, 7 )
-#        hdlr = logging.StreamHandler()
+        if  self.logfile:
+            hdlr = logging.handlers.TimedRotatingFileHandler( \
+                      self.logname, 'midnight', 1, 7 )
+        else:
+            hdlr = logging.StreamHandler()
         formatter = logging.Formatter( \
                   '%(asctime)s - %(name)s - %(levelname)s - %(message)s' )
         hdlr.setFormatter( formatter )
         self.logger.addHandler(hdlr)
         self.level(verbose)
-        set_cherrypy_logger(hdlr, self.verbose)
+        self.handler = hdlr
 
     def level(self, level):
         """
@@ -169,4 +172,22 @@ def set_cherrypy_logger(hdlr, level):
 
     logging.getLogger('cherrypy.error').addHandler(hdlr)
     logging.getLogger('cherrypy.access').addHandler(hdlr)
+
+#    log = cherrypy.log
+#    log.error_log.addHandler(hdlr)
+#    log.access_log.addHandler(hdlr)
+#    hdlr.setLevel(level)
+#    log.screen = False # disable printout of cherrypy msg's on a screen
+    # change cherrypy logger time() method to return empty string
+    # since my handler already have timestamp in it so instead of having
+    # 2010-05-26 14:11:34,873 - cherrypy.error - INFO - [26/May/2010:14:11:34] ENGINE
+    # we get
+    # 2010-05-26 14:11:34,873 - cherrypy.error - INFO -  ENGINE
+#    log.time = empty_str 
+#    log.access_log_format = \
+#        '%(h)s %(l)s %(u)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+
+def empty_str():
+    """Return empty string"""
+    return ('')
 
