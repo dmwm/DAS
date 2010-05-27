@@ -239,17 +239,17 @@ class DASAbstractService(object):
             expire)
         header['lookup_keys'] = self.lookup_keys(api)
 
+        # check that apicall record is present in analytics DB
+        spec  = {'apicall.qhash': genkey(encode_mongo_query(query))}
+        if  not self.analytics.col.find_one(spec):
+            self.insert_apicall(query, url, api, args, expire)
+
         # update the cache
         self.localcache.update_cache(query, result, header)
 
         msg  = 'DASAbstractService::%s cache has been updated,\n' \
                 % self.name
         self.logger.info(msg)
-
-        # check that apicall record is present in analytics DB
-        spec  = {'apicall.qhash': genkey(encode_mongo_query(query))}
-        if  not self.analytics.col.find_one(spec):
-            self.insert_apicall(query, url, api, args, expire)
 
     def adjust_params(self, args):
         """
