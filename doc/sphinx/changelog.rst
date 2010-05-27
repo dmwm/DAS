@@ -7,6 +7,15 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- 0.4.12
+
+  - das_lexer supports floats
+  - Add ability for filter to select specific values, e.g.
+    run=123 | grep PD=MinBias
+    right now only equal condition is working, in future may
+    extend into support of other operators
+  - add CMSSW release indexer
+
 - 0.4.11
 
   - adjust abstract data-service and mongocache to use DAS compliant
