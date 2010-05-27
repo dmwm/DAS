@@ -194,6 +194,31 @@ designed to provide you as much feedback as possible, please pay attention
 to messages appearing next to the spining wheel.
 </p>
 
+<ul>
+<li>
+Why I see duplicate results and how to avoid them?
+</li>
+</ul>
+<p>
+Indeed, in some cases, the duplicates can appear in DAS. For instance if
+you'll use two consequentive queries:
+<div class="example">
+<pre>
+run between [20853,20859]
+run in [20853,20859]
+</pre>
+</div>
+you'll see that runs are duplicate. It happens because input queries are
+different while back-end API used the same set of parameters. Since DAS queries
+are different their hashes will be different too, which leads to two different
+API calls, who will create different records in DAS with different expiration
+timestamps. To avoid this issue you can simple apply <em>unique</em>
+filter as following:
+<pre class="example">
+run in [20853,20859] | unique
+</pre>
+</p>
+
 </div>
 </div>
 <hr class="line" />
@@ -311,6 +336,7 @@ run=20853 | grep run.components
 run in [20853,20859]
 run between [20853,20859]
 run between [20853,20859] | grep run.run_number
+run between [20853,20859] | grep run.run_number | unique
 </pre>
 </div>
 </p>
