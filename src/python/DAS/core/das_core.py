@@ -31,7 +31,7 @@ from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
 from DAS.core.das_aggregators import das_func
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
-from DAS.utils.utils import genkey, getarg
+from DAS.utils.utils import genkey, getarg, unique_filter
 
 # DAS imports
 import DAS.utils.jsonwrapper as json
@@ -332,11 +332,15 @@ class DASCore(object):
         aggregators = query.get('aggregators', None)
         mapreduce   = query.get('mapreduce', None)
         filters     = query.get('filters', None)
+        unique      = False
         if  filters:
             fields  = query['fields']
             if  not fields or type(fields) is not types.ListType:
                 fields = []
             for filter in filters:
+                if  filter == 'unique':
+                    unique = True
+                    continue
                 if  filter.find('=') != -1:
                     key, val = filter.split('=')
                     query['spec'][key.strip()] = val.strip()
@@ -367,7 +371,10 @@ class DASCore(object):
         else:
             res = self.rawcache.get_from_cache(\
                 query, idx, limit, skey, sorder, collection='merge')
-        # check if we have aggregators, if so loop over aggregators list
-        # get func and key to pass to aggregator function
-        for row in res:
-            yield row
+        # check if we have unique filter
+        if  unique:
+            for row in unique_filter(res):
+                yield row
+        else:
+            for row in res:
+                yield row
