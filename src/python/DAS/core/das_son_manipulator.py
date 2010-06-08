@@ -40,5 +40,11 @@ class DAS_SONManipulator(SONManipulator):
         if  type(son) is types.DictType and son.has_key('_id'):
             obj_id = son['_id']
             son['_id'] = str(obj_id)
+        if  type(son) is types.DictType and son.has_key('cache_id'):
+            objcache_id = son['cache_id']
+            son['cache_id'] = str(objcache_id)
+        if  type(son) is types.DictType and son.has_key('das_id'):
+            objdas_id = son['das_id']
+            son['das_id'] = str(objdas_id)
         return son
 
