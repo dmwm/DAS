@@ -22,7 +22,7 @@ class MonitorService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def parser(self, dformat, source, args):
+    def parser(self, query, dformat, source, args):
         """
         Data parser for Monitor service.
         """
@@ -65,7 +65,7 @@ class MonitorService(DASAbstractService):
             time0 = time.time()
             res = self.getdata(url, args)
             try:
-                genrows = self.parser(dformat, res, args)
+                genrows = self.parser(query, dformat, res, args)
             except:
                 traceback.print_exc()
             ctime = time.time() - time0

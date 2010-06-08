@@ -23,7 +23,7 @@ class PhedexService(DASAbstractService):
         map_validator(self.map)
         self.notationmap = self.notations()
 
-    def parser(self, dformat, source, api):
+    def parser(self, query, dformat, source, api):
         """
         Phedex data-service parser.
         """

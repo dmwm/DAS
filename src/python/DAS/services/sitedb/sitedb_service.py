@@ -25,7 +25,7 @@ class SiteDBService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def parser(self, dformat, source, api):
+    def parser(self, query, dformat, source, api):
         """
         Parser for SiteDB JSON data-services
         """
