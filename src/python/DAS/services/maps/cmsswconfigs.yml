@@ -5,7 +5,7 @@ format : JSON
 urn : cmssw_configs
 url : "http://localhost:8889/cmsswconfigs/express_config"
 expire : 86400
-params : {"release": "required", "query": ""}
+params : {"release": "required", "query": "required"}
 daskeys : [
         {"key":"config", "map":"config", "pattern":""},
         {"key":"release", "map":"release.name", "pattern":""},
