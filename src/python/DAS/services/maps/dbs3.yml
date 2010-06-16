@@ -29,14 +29,17 @@ expire : 3600
 params : {
         "dataset":"*",
         "release_version":"*",
+        "run_num":"*",
 }
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
         {"key": "release", "map":"release", "pattern":""},
+        {"key": "run", "map":"run.run_number", "pattern":""},
 ]
 das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
         {"das_key":"release", "api_param": "release_version", "pattern":""},
+        {"das_key":"run.run_number", "api_param": "run_num", "pattern":""},
 ]
 ---
 urn: datasetparents
@@ -46,6 +49,21 @@ params : {
         "dataset":"required",
 }
 daskeys : [
+        {"key": "parent", "map":"parent.name", "pattern":""},
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+]
+---
+urn: datasetchildren
+url : "http://localhost:8585/DBS/datasetchildren/"
+expire : 3600
+params : {
+        "dataset":"required",
+}
+daskeys : [
+        {"key": "child", "map":"child.name", "pattern":""},
         {"key": "dataset", "map":"dataset.name", "pattern":""},
 ]
 das2api : [
@@ -105,7 +123,23 @@ daskeys : [
 ]
 das2api : [
         {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
-        {"das_key":"block.name", "api_param":"block_name", "pattern":""}
+]
+---
+urn: files_via_dataset_and_run
+url : "http://localhost:8585/DBS/files/"
+expire : 3600
+params : {
+        'dataset':'required',
+        'minrun':'required',
+}
+daskeys : [
+        {"key": "file", "map":"file.name", "pattern":""},
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "run", "map":"run.run_number", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+        {"das_key":"run.run_number", "api_param":"minrun", "pattern":""}
 ]
 ---
 urn: files_via_block
@@ -129,6 +163,21 @@ params : {
         'logical_file_name':'required',
 }
 daskeys : [
+        {"key": "parent", "map":"parent.name", "pattern":""},
+        {"key": "file", "map":"file.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"file.name", "api_param":"logical_file_name", "pattern":""},
+]
+---
+urn: filechildren
+url : "http://localhost:8585/DBS/filechildren/"
+expire : 3600
+params : {
+        'logical_file_name':'required',
+}
+daskeys : [
+        {"key": "child", "map":"child.name", "pattern":""},
         {"key": "file", "map":"file.name", "pattern":""},
 ]
 das2api : [
