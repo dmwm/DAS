@@ -7,8 +7,8 @@ Shell mode for MongoDB based on IPython and pymongo
 Start ipython in shell mode by invoking "ipython -p mongo"
 """
 
-__revision__   = "$Id: ipy_profile_mongo.py,v 1.1 2010/01/19 19:08:06 valya Exp $"
-__version__    = "$Revision: 1.1 $"
+__revision__   = "$Id: ipy_profile_mongo.py,v 1.4 2009/06/24 14:05:14 valya Exp $"
+__version__    = "$Revision: 1.4 $"
 __author__     = "Valentin Kuznetsov"
 __license__    = "GPL"
 __version__    = "1.0.1"
@@ -84,18 +84,21 @@ def das_clean():
     IP.user_ns['db'] = IP.user_ns['connection'][dbname]
     IP.user_ns['collection'] = IP.user_ns['connection'][dbname][col]
     collection.remove({})
+    collection.drop_indexes()
     # clean das.merge
     dbname = 'das'
     col = 'merge'
     IP.user_ns['db'] = IP.user_ns['connection'][dbname]
     IP.user_ns['collection'] = IP.user_ns['connection'][dbname][col]
     collection.remove({})
+    collection.drop_indexes()
     # clean das.cache
     dbname = 'das'
     col = 'cache'
     IP.user_ns['db'] = IP.user_ns['connection'][dbname]
     IP.user_ns['collection'] = IP.user_ns['connection'][dbname][col]
     collection.remove({})
+    collection.drop_indexes()
     set_prompt('das.cache')
 
 def clean(dict={}):
@@ -223,7 +226,7 @@ def mongohelp(self, arg):
     """
     Help for ipy_profile_mongo.
     """
-    magic_list = ['use', 'show', 'connect']
+    magic_list = [('use', use), ('show', show), ('connect', connect)]
     msg  = "\nAvailable commands:\n"
     for name, func in magic_list:
         msg += "%s\n%s\n" % (PM.blue(name), PM.green(func.__doc__))
