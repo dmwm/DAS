@@ -64,6 +64,17 @@ class DASWebService(DASWebManager):
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
 
+    @expose
+    def redirect(self, *args, **kwargs):
+        """
+        Represent DAS redirect page
+        """
+        msg  = kwargs.get('reason', '')
+        if  msg:
+            msg = 'Reason: ' + msg
+        page = self.templatepage('das_redirect', msg=msg)
+        return self.page(page, response_div=False)
+
     def top(self):
         """
         Define masthead for all DAS web pages
