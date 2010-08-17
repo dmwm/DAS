@@ -1,0 +1,209 @@
+
+<!-- das_expert.tmpl -->
+<div id="container">
+
+#if len($msg)
+<pre>
+$msg
+</pre>
+#end if
+
+<h3 class="sectionhead">Database tasks</h3>
+<ul>
+<li>
+Query DB via MongoDB queries:
+<a href="javascript:ShowTag('query_db')">show</a> |
+<a href="javascript:HideTag('query_db')">hide</a>
+</li>
+<li>
+Clean DB/DAS cache(s):
+<a href="javascript:ShowTag('clean_db')">show</a> |
+<a href="javascript:HideTag('clean_db')">hide</a>
+</li>
+<li>
+Look-up DAS query meaning:
+<a href="javascript:ShowTag('das_query')">show</a> |
+<a href="javascript:HideTag('das_query')">hide</a>
+</li>
+</ul>
+
+<div id="query_db" class="hide">
+<hr class="line" />
+<form action="$base/expert/records" method="get">
+<table>
+<tr>
+<td class="right">
+db:
+<select id="database" name="database">
+#for db in $ddict.keys()
+#for coll, info in $ddict[$db].items()
+#if $coll!="system.indexes"
+<option value="$db.$coll">$db.$coll</option>
+#end if
+#end for
+#end for
+</select>
+</td>
+<td class="left">
+&#35; results/page:
+<select id="limit" name="limit">
+<option value="10">10</option>
+<option value="25">25</option>
+<option value="50">50</option>
+<option value="100">100</option>
+<option value="0">All</option>
+</select>
+</td>
+<td>
+<input type="submit" value="Search" />
+<input type="reset" />
+</td>
+</tr>
+</table>
+<div>
+<textarea rows="5" cols="50" name="query" id="query" onclick="javascript:CleanArea()">
+Put your JSON MongoDB query here
+</textarea>
+</div>
+</form>
+
+</div> <!-- end of query_db -->
+
+<div id="clean_db" class="hide">
+<hr class="line" />
+<div class="grayboxform">
+db:
+<select id="dbcoll" name="dbcoll">
+#for db in $ddict.keys()
+#for coll, info in $ddict[$db].items()
+#if $coll!="system.indexes"
+<option value="$db.$coll">$db.$coll</option>
+#end if
+#end for
+#end for
+</select>
+<input type="submit" value="Clean" onclick="javascript:ajaxCleanInfo('$base')" />
+</div>
+<br />
+<div id="_cleaninfo"></div>
+</div> <!-- end of clean_db -->
+
+<div id="das_query" class="hide">
+<hr class="line" />
+<div class="grayboxform">
+DAS query:
+<input type="text" size="80" id="dasquery" />
+<input type="submit" value="Info" onclick="javascript:ajaxQueryInfo('$base')" />
+<input type="submit" value="Clear" onclick="javascript:ClearTag('_queryinfo')" />
+</div>
+<br />
+<div id="_queryinfo"></div>
+</div> <!-- end of das_query -->
+
+<hr class="line" />
+
+<div id="left">
+
+<div id="vmenu">
+<h3 class="sectionhead">Info</h3>
+<ul>
+<li><a href="javascript:HideAll();ShowTag('info')">MongoDB</a></li>
+<li><a href="javascript:HideAll();ShowTag('dasconfig')">DAS config</a></li>
+</ul>
+
+<h3 class="sectionhead">Databases</h3>
+<ul>
+#for db in $ddict.keys()
+<li><a href="javascript:HideAll();ShowTag('$db')">$db</a></li>
+#end for
+</ul>
+</div>
+
+</div> <!-- end of left -->
+
+<div id="right">
+
+<div id="info" class="show">
+<h3>MongoDB info</h3>
+#for key, val in $mongo_info.items()
+<b>$key</b>: $val
+<br />
+#end for
+</div> <!--end of id=info -->
+
+<div id="dasconfig" class="hide">
+<h3>DAS configuration</h3>
+<pre>
+$dasconfig
+</pre>
+</div> <!--end of id=dasconfig -->
+
+#for db in $ddict.keys()
+<div id="$db" class="hide">
+<h3>Database: $db</h3>
+#for coll, info in $ddict[$db].items()
+<h4>Collection: $coll</h4>
+number of documents $info[0], collection
+<a href="$base/expert/records?database=$db&amp;collection=$coll">records</a>,
+collection info
+<pre>
+$info[1]
+</pre>
+#set index_dict=$info[2]
+#if $index_dict.keys()
+<table class="daskeys">
+<tr><th>Index name</th><th>Index definition</th></tr>
+#set counter=0
+#for key, val in $index_dict.items()
+#if $counter%2
+#set name="odd"
+#else
+#set name=""
+#end if
+<tr class="$name">
+<td>$key</td>
+<td>$val</td>
+</tr>
+#set counter=$counter+1
+#end for
+</table>
+#end if
+
+#end for
+</div> <!-- end of class hide -->
+#end for
+
+</div> <!-- end of right -->
+
+<div class="clearer"></div>
+
+</div> <!-- end of container -->
+<script type="text/javascript">
+//<![CDATA[
+function HideAll() {
+    HideTag('info');
+    HideTag('dasconfig');
+#for db in $ddict.keys()
+    HideTag('$db');
+#end for
+}
+function CleanArea() {
+    var area = document.getElementById('query');
+    area.innerHTML="";
+}
+/*
+function GetQueryInfo() {
+    var q = document.getElementById('dasquery');
+    ajaxQueryInfo(q);
+}
+function ajaxQueryInfo() {
+    var q = document.getElementById('dasquery');
+    new Ajax.Updater('_queryinfo', '/das/expert/query_info',
+    { method: 'get' ,
+      parameters : {'dasquery':q.value},
+    });
+}
+*/
+//]]>
+</script>
+<!-- end of das_expert.tmpl -->
