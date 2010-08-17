@@ -43,7 +43,7 @@ class testDASCore(unittest.TestCase):
         result = self.das.get_from_cache(query)
         result = [r for r in result][0]
         result = dotdict(result)._get('city.Placemark.address')
-        expect = 'Ithaca, NY, USA'
+        expect = 'Ithaca, NY 14850, USA'
         self.assertEqual(expect, result)
 
     def testAggregators(self):
