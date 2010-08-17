@@ -28,7 +28,7 @@ from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_web import DASWebService
 from DAS.web.das_cache import DASCacheService
 from DAS.web.das_doc import DASDocService
-from DAS.web.das_admin import DASAdminService
+from DAS.web.das_expert import DASExpertService
 from base64 import b64decode, b32decode
 
 def auth_user(username):
@@ -138,17 +138,11 @@ class Root(object):
             obj = DASDocService(sdir)
             tree.mount(obj, url_base + '/doc') # mount doc server
 
-            # admin server
-            config = self.config.get('admin_server', {})
-            obj = DASAdminService(config)
-            url = url_base + '/admin'
-            adminconf = {'/' : {
-                        'tools.digest_auth.on':True,
-                        'tools.digest_auth.realm': 'DAS admin',
-                        'tools.digest_auth.users': auth_user,
-                        }
-            }
-            tree.mount(obj, url, config=adminconf) # mount admint server
+            # expert server
+            config = self.config.get('expert_server', {})
+            obj = DASExpertService(config)
+            url = url_base + '/expert'
+            tree.mount(obj, url) # mount expert server
         else:
             obj = DASWebManager({}) # pass empty config dict
             tree.mount(obj, '/')
