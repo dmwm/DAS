@@ -29,8 +29,30 @@ def das_readconfig(dasconfig=None):
     Read DAS configuration file and store DAS parameters into returning
     dictionary.
     """
+    configdict = {}
+    # read first CMS python configuration file
+    # if not fall back to standard python cfg file
+    try:
+        from DAS.utils.das_cms_config import das_read_cms_config
+#        print "Reading DAS CMS configuration..."
+        cmsconfig = dasconfig
+        if  not cmsconfig:
+            cmsconfig = 'config/das_cms.py'
+        configdict = das_read_cms_config(cmsconfig)
+    except Exception, ex:
+#        print 'Fail to read DAS CMS configuration,', str(ex)
+#        print "Reading DAS configuration..."
+        configdict = das_read_cfg(dasconfig)
+    return configdict
+
+def das_read_cfg(dasconfig=None):
+    """
+    Read DAS configuration file and store DAS parameters into returning
+    dictionary.
+    """
     if  not dasconfig:
         dasconfig = das_configfile()
+#    print "Read DAS config from %s" % dasconfig
     config = ConfigParser.ConfigParser()
     config.read(dasconfig)
     configdict = {}
