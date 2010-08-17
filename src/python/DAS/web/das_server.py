@@ -60,6 +60,11 @@ class Root(object):
         cpconfig["server.environment"] = config.get("environment", "production")
         cpconfig["server.thread_pool"] = int(config.get("thread_pool", 30))
         cpconfig["server.socket_port"] = int(config.get("port", 8080))
+
+#        cpconfig["server.socket_port"] = int(config.get("port", 8443))
+#        cpconfig["server.ssl_certificate"] = 'ssl/server.crt'
+#        cpconfig["server.ssl_private_key"] = 'ssl/server.key'
+
         cpconfig["server.socket_host"] = config.get("host", "0.0.0.0")
         cpconfig["server.socket_queue_size"] = \
                 int(config.get("socket_queue_size", 15))
@@ -81,6 +86,7 @@ class Root(object):
                           'tools.etags.on':True,
                           'tools.etags.autotags':True,
                           'tools.encode.on': True,
+                          'tools.proxy.on': True,
                           'tools.gzip.on': True
                           })
 
