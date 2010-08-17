@@ -24,27 +24,6 @@ def das_configfile():
     else:
         raise EnvironmentError('DAS_ROOT environment is not set up')
 
-def das_readconfig(dasconfig=None):
-    """
-    Read DAS configuration file and store DAS parameters into returning
-    dictionary.
-    """
-    configdict = {}
-    # read first CMS python configuration file
-    # if not fall back to standard python cfg file
-    try:
-        from DAS.utils.das_cms_config import das_read_cms_config
-#        print "Reading DAS CMS configuration..."
-        cmsconfig = dasconfig
-        if  not cmsconfig:
-            cmsconfig = 'config/das_cms.py'
-        configdict = das_read_cms_config(cmsconfig)
-    except Exception, ex:
-#        print 'Fail to read DAS CMS configuration,', str(ex)
-#        print "Reading DAS configuration..."
-        configdict = das_read_cfg(dasconfig)
-    return configdict
-
 def das_read_cfg(dasconfig=None):
     """
     Read DAS configuration file and store DAS parameters into returning
@@ -52,7 +31,7 @@ def das_read_cfg(dasconfig=None):
     """
     if  not dasconfig:
         dasconfig = das_configfile()
-#    print "Read DAS config from %s" % dasconfig
+    print "Reading DAS configuration from %s file..." % dasconfig
     config = ConfigParser.ConfigParser()
     config.read(dasconfig)
     configdict = {}
@@ -206,3 +185,47 @@ def das_writeconfig():
     dasconfig = das_configfile()
     config.write(open(dasconfig, 'wb'))
     return dasconfig
+
+def das_readconfig_helper(dasconfig=None):
+    """
+    Read DAS configuration file and store DAS parameters into returning
+    dictionary.
+    """
+    configdict = {}
+    # read first CMS python configuration file
+    # if not fall back to standard python cfg file
+    try:
+        from DAS.utils.das_cms_config import das_read_cms_config
+        print "Reading DAS CMS configuration..."
+        cmsconfig = dasconfig
+        if  not cmsconfig:
+            cmsconfig = 'config/das_cms.py'
+        configdict = das_read_cms_config(cmsconfig)
+    except Exception, ex:
+        print 'Unable to locate DAS CMS configuration,', str(ex)
+        configdict = das_read_cfg(dasconfig)
+    return configdict
+
+class _DASConfigSingleton(object):
+    """
+    DAS configuration singleton class. It reads DAS configuration using
+    das_readconfig_helper function which itself reads it from either
+    CMS python configuration file or cfg.
+    Code based on suggestion found here:
+    http://code.activestate.com/recipes/52558-the-singleton-pattern-implemented-with-python/
+    """
+    def __init__(self):
+        self.das_config  = das_readconfig_helper()
+    def config(self):
+        """Return DAS config"""
+        return self.das_config
+
+# ensure unique name for singleton object
+DAS_CONFIG_SINGLETON = _DASConfigSingleton()
+
+def das_readconfig():
+    """
+    Return DAS configuration
+    """
+    return DAS_CONFIG_SINGLETON.config()
+
