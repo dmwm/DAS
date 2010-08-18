@@ -5,7 +5,6 @@
 
 dir=$DAS_ROOT/src/python/DAS/services/maps
 cmd=$DAS_ROOT/src/python/DAS/tools/das_mapping_db.py
-chmod a+x $cmd
 
 # run actual script
 echo "Clean DAS Mapping DB"

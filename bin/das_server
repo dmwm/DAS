@@ -12,7 +12,6 @@ fi
 server="$1"
 
 # run actual script
-chmod a+x $DAS_ROOT/src/python/DAS/web/das_server.py
 cmd="$DAS_ROOT/src/python/DAS/web/das_server.py --server=$server"
 
 if [ -z $DAS_ROOT ]; then
