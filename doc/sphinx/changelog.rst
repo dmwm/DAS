@@ -7,6 +7,13 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- 0.4.13 - 0.4.17
+  - adjustment to CMS environment and SLA requirements
+  - ability to read both cfg and CMS python configuration files
+  - replacement of Admin to Expert interface and new authentication scheme
+    via DN (user certificates) passed by front-end
+  - new mongodb admin.dns collection
+
 - 0.4.12
 
   - added unique filter
