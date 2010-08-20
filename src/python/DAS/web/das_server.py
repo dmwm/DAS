@@ -39,7 +39,7 @@ class Root(object):
         self.model  = model
         self.config = config
         self.auth   = None
-        self.pid_path = '/tmp'
+        self.pid    = None
         
     def configure(self):
         """Configure server, CherryPy and the rest."""
@@ -47,7 +47,7 @@ class Root(object):
         cpconfig["server.environment"] = config.get("environment", "production")
         cpconfig["server.thread_pool"] = int(config.get("thread_pool", 30))
         cpconfig["server.socket_port"] = int(config.get("port", 8080))
-        self.pid_path = config.get('pid_path', '/tmp')
+        self.pid = config.get('pid', '/tmp/das_%s.pid' % self.model)
 
 #        cpconfig["server.socket_port"] = int(config.get("port", 8443))
 #        cpconfig["server.ssl_certificate"] = 'ssl/server.crt'
@@ -135,14 +135,15 @@ class Root(object):
             obj = DASWebManager({}) # pass empty config dict
             tree.mount(obj, '/')
 
-        print "### DAS servers ###\n", pformat(tree.apps)
-        pid = PIDFile(engine, "%s/das_%s.pid" % (self.pid_path, self.model))
+        print "### %s, PID=%s" % (self.model, self.pid)
+        print pformat(tree.apps)
+        pid = PIDFile(engine, self.pid)
         pid.subscribe()
 
         engine.start()
         if  blocking:
             engine.block()
-            
+
 #    def stop(self):
 #        """Stop the server."""
 #        engine.exit()
