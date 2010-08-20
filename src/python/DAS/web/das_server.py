@@ -29,21 +29,7 @@ from DAS.web.das_web import DASWebService
 from DAS.web.das_cache import DASCacheService
 from DAS.web.das_doc import DASDocService
 from DAS.web.das_expert import DASExpertService
-from base64 import b64decode, b32decode
-
-def auth_user(username):
-    """Return user pwd for given name"""
-    filename = os.path.join(os.environ['DAS_ROOT'], 'auth.ini')
-    if  not os.path.isfile(filename):
-        return False
-    with open(filename, 'r') as pfile:
-        for line in pfile.readlines():
-            line = line.replace('\n', '')
-            user, pwd = line.split(':')
-            user = b32decode(user)
-            pwd  = b64decode(pwd)
-            if  user == username:
-                return pwd
+from cherrypy.process.plugins import PIDFile
 
 class Root(object):
     """
@@ -53,6 +39,7 @@ class Root(object):
         self.model  = model
         self.config = config
         self.auth   = None
+        self.pid_path = '/tmp'
         
     def configure(self):
         """Configure server, CherryPy and the rest."""
@@ -60,6 +47,7 @@ class Root(object):
         cpconfig["server.environment"] = config.get("environment", "production")
         cpconfig["server.thread_pool"] = int(config.get("thread_pool", 30))
         cpconfig["server.socket_port"] = int(config.get("port", 8080))
+        self.pid_path = config.get('pid_path', '/tmp')
 
 #        cpconfig["server.socket_port"] = int(config.get("port", 8443))
 #        cpconfig["server.ssl_certificate"] = 'ssl/server.crt'
@@ -148,6 +136,9 @@ class Root(object):
             tree.mount(obj, '/')
 
         print "### DAS servers ###\n", pformat(tree.apps)
+        pid = PIDFile(engine, "%s/das_%s.pid" % (self.pid_path, self.model))
+        pid.subscribe()
+
         engine.start()
         if  blocking:
             engine.block()
