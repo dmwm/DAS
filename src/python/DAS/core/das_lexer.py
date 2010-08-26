@@ -54,7 +54,7 @@ class DASLexer(object):
             return t
 
     def t_WORD(self, t):
-        r'[a-zA-Z/*][a-zA-Z_0-9/*\-#]+|[0-9]+[dhm]|([0-9]{1,3}\.){3,3}[0-9]{1,3}|"[a-zA-Z_0-9/*\-#]+\s[a-zA-Z_0-9/*\-#]+"'
+        r'[a-zA-Z/*][a-zA-Z_0-9/*\-#\.]+|[0-9]+[dhm]|([0-9]{1,3}\.){3,3}[0-9]{1,3}|"[a-zA-Z_0-9/*\-#]+\s[a-zA-Z_0-9/*\-#]+"'
         cond1 = t.value not in self.daskeys
         list1 = t.value.split()
         cond2 = set(list1) & set(self.daskeys)
@@ -189,6 +189,12 @@ def test():
 
     print
     query = "date last 24h"
+    print "test lexer:", query
+    lexer.test(query)
+    print
+
+    print
+    query = "file=/test.root"
     print "test lexer:", query
     lexer.test(query)
     print
