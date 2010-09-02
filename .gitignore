@@ -14,3 +14,4 @@ setup.sh
 auth.ini
 .project
 .pydevproject
+.settings
