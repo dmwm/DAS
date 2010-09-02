@@ -18,9 +18,10 @@ import time
 # monogo db modules
 #from pymongo.connection import Connection
 from pymongo import DESCENDING
+from pymongo.objectid import ObjectId
 
 # DAS modules
-from DAS.utils.utils import gen2list, genkey
+from DAS.utils.utils import gen2list, genkey, expire_timestamp
 from DAS.core.das_mongocache import encode_mongo_query, make_connection
 
 class DASAnalytics(object):
@@ -144,6 +145,42 @@ class DASAnalytics(object):
         index = [('system', DESCENDING), ('dasquery', DESCENDING),
                  ('api.name', DESCENDING), ('qhash', DESCENDING) ]
         self.col.ensure_index(index)
+        
+    def insert_apicall(self, system, query, url, api, api_params, expire):
+        """
+        Remove obsolete apicall records and
+        insert into Analytics DB provided information about API call.
+        Moved from AbstractService.
+        """
+        msg    = 'DBSAnalytics::insert_apicall, query=%s, url=%s,'\
+                % (query, url)
+        msg   += 'api=%s, args=%s, expire=%s' % (api, api_params, expire)
+        self.logger.info(msg)
+        expire = expire_timestamp(expire)
+        query = encode_mongo_query(query)
+        self.remove_expired()
+        doc  = dict(system=system, url=url, api=api, api_params=api_params,
+                        qhash=genkey(query), expire=expire)
+        self.col.insert(dict(apicall=doc))
+        index_list = [('apicall.url', DESCENDING), 
+                      ('apicall.api', DESCENDING),
+                      ('qhash', DESCENDING),
+                     ]
+        self.col.ensure_index(index_list)
+        
+    def update_apicall(self, query, das_dict):
+        """
+        Update apicall record with provided DAS dict.
+        Moved from AbstractService
+        """
+        msg    = 'DBSAnalytics::update_apicall, query=%s, das_dict=%s'\
+                % (query, das_dict)
+        self.logger.info(msg)
+        spec   = {'apicall.qhash':genkey(encode_mongo_query(query))} 
+        record = self.col.find_one(spec)
+        self.col.update({'_id':ObjectId(record['_id'])},
+            {'$set':{'dasapi':das_dict,
+                     'apicall.expire':das_dict['response_expires']}})
 
     def update(self, system, query):
         """
@@ -187,6 +224,18 @@ class DASAnalytics(object):
         gen  = (row['api']['name'] for row in \
                 self.col.find(cond, ['api.name']))
         return gen2list(gen)
+    
+    def list_apicalls(self, qhash=None, api=None, url=None):
+        "Replace ad-hoc calls in AbstractService"
+        cond = {}
+        if qhash:
+            cond['apicall.qhash'] = qhash
+        if api:
+            cond['apicall.api'] = api
+        if url:
+            cond['apicall.url'] = url
+        
+        return list(self.col.find(cond))
 
     def api_params(self, api):
         """

@@ -240,9 +240,10 @@ class DASAbstractService(object):
         header['lookup_keys'] = self.lookup_keys(api)
 
         # check that apicall record is present in analytics DB
-        spec  = {'apicall.qhash': genkey(encode_mongo_query(query))}
-        if  not self.analytics.col.find_one(spec):
-            self.insert_apicall(query, url, api, args, expire)
+        qhash = genkey(encode_mongo_query(query))
+        if not self.analytics.list_apicalls(qhash=qhash):
+            self.analytics.insert_apicall(self.name, query, 
+                                          url, api, args, expire)
 
         # update the cache
         self.localcache.update_cache(query, result, header)
@@ -258,49 +259,14 @@ class DASAbstractService(object):
         """
         pass
 
-    def update_apicall(self, query, das_dict):
-        """
-        Update apicall record with provided DAS dict.
-        """
-        msg    = 'DBSAbstractService::update_apicall, query=%s, das_dict=%s'\
-                % (query, das_dict)
-        self.logger.info(msg)
-        spec   = {'apicall.qhash':genkey(encode_mongo_query(query))} 
-        record = self.analytics.col.find_one(spec)
-        self.analytics.col.update({'_id':ObjectId(record['_id'])},
-            {'$set':{'dasapi':das_dict,
-                     'apicall.expire':das_dict['response_expires']}})
-
-    def insert_apicall(self, query, url, api, api_params, expire):
-        """
-        Remove obsolete apicall records and
-        insert into Analytics DB provided information about API call.
-        """
-        msg    = 'DBSAbstractService::insert_apicall, query=%s, url=%s,'\
-                % (query, url)
-        msg   += 'api=%s, args=%s, expire=%s' % (api, api_params, expire)
-        self.logger.info(msg)
-        expire = expire_timestamp(expire)
-        query = encode_mongo_query(query)
-        self.analytics.remove_expired()
-        doc  = dict(system=self.name, url=url, api=api, api_params=api_params,
-                        qhash=genkey(query), expire=expire)
-        self.analytics.col.insert(dict(apicall=doc))
-        index_list = [('apicall.url', DESCENDING), 
-                      ('apicall.api', DESCENDING),
-                      ('qhash', DESCENDING),
-                     ]
-        self.analytics.col.ensure_index(index_list)
-
     def pass_apicall(self, query, url, api, api_params):
         """
         Filter provided apicall wrt existing apicall records in Analytics DB.
         """
         self.analytics.remove_expired()
-        spec = {'apicall.url':url, 'apicall.api':api}
         msg  = 'DBSAbstractService::pass_apicall, %s, API=%s, args=%s'\
         % (self.name, api, api_params)
-        for row in self.analytics.col.find(spec):
+        for row in self.analytics.list_apicalls(url=url, api=api):
             input_query = {'spec':api_params}
             exist_query = {'spec':row['apicall']['api_params']}
             if  compare_specs(input_query, exist_query):
@@ -412,7 +378,7 @@ class DASAbstractService(object):
                         if  key != 'results':
                             das_dict[key] = val
                     row = row['results']
-                    self.update_apicall(query, das_dict)
+                    self.analytics.update_apicall(query, das_dict)
                 if  apitag and row.has_key(apitag):
                     row = row[apitag]
                 if  type(row) is types.ListType:
@@ -539,7 +505,8 @@ class DASAbstractService(object):
                 mkey    = self.dasmapping.primary_mapkey(self.name, api)
                 args    = self.inspect_params(api, args)
                 time0   = time.time()
-                self.insert_apicall(query, url, api, args, expire)
+                self.analytics.insert_apicall(self.name, query, url, 
+                                              api, args, expire)
                 headers = make_headers(dformat)
                 data    = self.getdata(url, args, headers)
                 rawrows = self.parser(query, dformat, data, api)
