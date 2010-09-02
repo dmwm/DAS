@@ -32,6 +32,8 @@ def das_read_cms_config(filename):
     verbose   = configdict['das'].get('verbose', 0)
     logfile   = configdict['das'].get('logfile', None)
     logformat = configdict['das'].get('logformat', '%(levelname)s %(message)s')
+    services  = configdict['das'].get('services', [])
+    configdict['services']  = services
     configdict['logformat'] = logformat
     if  logfile:
         configdict['logfile'] = logfile

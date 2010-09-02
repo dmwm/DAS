@@ -62,8 +62,6 @@ def das_read_cfg(dasconfig=None):
     analytics['attempt']  = config.get('analytics_db', 'attempt', 3)
     configdict['analyticsdb'] = analytics
 
-    configdict['rawcache'] = config.get('das', 'rawcache', None)
-
     cache_server = {}
     cache_server['port'] = config.getint('cache_server', 'port')
     cache_server['host'] = config.get('cache_server', 'host')
@@ -107,6 +105,10 @@ def das_read_cfg(dasconfig=None):
     verbose   = config.getint('das', 'verbose')
     logfile   = config.get('das', 'logfile', None)
     logformat = config.get('das', 'logformat', '%(levelname)s %(message)s')
+    services  = config.get('das', 'services', []).split(',')
+    # store services, logformat, verbose separately, since used in different
+    # tools without other config parameters
+    configdict['services']  = services
     configdict['logformat'] = logformat
     if  logfile:
         configdict['logfile'] = logfile
@@ -122,10 +124,13 @@ def das_writeconfig():
 
     config.add_section('das')
     config.set('das', 'verbose', 0)
-    config.set('das', 'rawcache', 'DASMongocache')
     config.set('das', 'logfile', '/tmp/das.log')
     config.set('das', 'logformat', 
                 '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # list of generic services, for CMS specific ones, please use 
+    # DAS CMS python configuration
+    services = ['ip_service', 'google_maps', 'postalcode']
+    config.set('das', 'services', services)
 
     config.add_section('mongodb')
     config.set('mongodb', 'lifetime', 1*24*60*60) # in seconds
