@@ -70,6 +70,9 @@ class DASOptionParser:
         self.parser.add_option("--spammer", action="store", type="string", 
                                default='None', dest="spammer",
              help="specify query spammer file, which includes list of queries")
+        self.parser.add_option("--method", action="store", type="string", 
+                               default='request', dest="method",
+             help="specify DAS cache server method to use, default is request")
     def getOpt(self):
         """
         Returns parse list of options
@@ -92,14 +95,14 @@ def urlrequest(url, headers):
     else:
         print response
 
-def spammer(query_file, host):
+def spammer(query_file, host, method='request'):
     """
     Spammer function which consume provided query file which contains
     list of DAS queries and host name. Individual queries are processes
     simultaneously, faking N client access to DAS cache server,
     hosted at given host name.
     """
-    path     = '/rest/request'
+    path     = '/rest/%s' % method
     if  host.find('http://') == -1:
         host = 'http://' + host
     headers  = {'Accept': 'application/json'}
@@ -109,11 +112,12 @@ def spammer(query_file, host):
         for line in qfile.readlines():
             query  = line.replace('\n', '') 
             params = {'query':query, 'idx':idx, 'limit':limit}
+            if  method == 'testmongo':
+                params['collection'] = 'logging.db'
             encoded_data = urllib.urlencode(params, doseq=True)
             url  = host + path + '?%s' % encoded_data
             proc = Process(target=urlrequest, args=(url, headers))
             proc.start()
-#            proc.join()
 
 #
 # main
@@ -124,7 +128,7 @@ if __name__ == '__main__':
 
     host    = opts.host
     if  opts.spammer:
-        spammer(opts.spammer, host)
+        spammer(opts.spammer, host, opts.method)
         sys.exit(0)
 
     debug   = opts.verbose
