@@ -282,8 +282,7 @@ class DASAbstractService(object):
         self.logger.info(msg)
         expire = expire_timestamp(expire)
         query = encode_mongo_query(query)
-        spec = {'apicall.expire':{'$lt' : int(time.time())}}
-        self.analytics.col.remove(spec)
+        self.analytics.remove_expired()
         doc  = dict(sytsem=self.name, url=url, api=api, api_params=api_params,
                         qhash=genkey(query), expire=expire)
         self.analytics.col.insert(dict(apicall=doc))
@@ -297,8 +296,7 @@ class DASAbstractService(object):
         """
         Filter provided apicall wrt existing apicall records in Analytics DB.
         """
-        spec = {'apicall.expire':{'$lt' : int(time.time())}}
-        self.analytics.col.remove(spec)
+        self.analytics.remove_expired()
         spec = {'apicall.url':url, 'apicall.api':api}
         msg  = 'DBSAbstractService::pass_apicall, %s, API=%s, args=%s'\
         % (self.name, api, api_params)

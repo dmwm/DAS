@@ -13,6 +13,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import types
+import time
 
 # monogo db modules
 #from pymongo.connection import Connection
@@ -74,6 +75,11 @@ class DASAnalytics(object):
         self.col.insert(record)
         index = [('qhash', DESCENDING), ('dhash', DESCENDING)]
         self.col.ensure_index(index)
+
+    def remove_expired(self):
+        "Moved from AbstractService"
+        spec = {'apicall.expire':{'$lt' : int(time.time())}}
+        self.col.remove(spec)
 
     def add_summary(self, identifier, start, finish, **payload):
         """
