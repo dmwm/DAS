@@ -12,3 +12,5 @@ whitelist.txt
 mylib
 setup.sh
 auth.ini
+.project
+.pydevproject
