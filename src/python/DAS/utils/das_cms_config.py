@@ -38,7 +38,7 @@ def das_read_cms_config(filename):
     if  logfile:
         configdict['logfile'] = logfile
     configdict['verbose'] = verbose
-
+    configdict['das'] = dict(verbose=verbose, logfile=logfile, logformat=logformat, services=services)
     return configdict
 
 if  __name__ == '__main__':

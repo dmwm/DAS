@@ -113,6 +113,7 @@ def das_read_cfg(dasconfig=None):
     if  logfile:
         configdict['logfile'] = logfile
     configdict['verbose'] = verbose
+    configdict['das'] = dict(verbose=verbose, logfile=logfile, logformat=logformat, services=services)
     return configdict
 
 def das_writeconfig():
