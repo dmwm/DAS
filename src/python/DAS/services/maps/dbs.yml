@@ -252,8 +252,8 @@ notations : [
     {"notation":"processed_dataset", "map":"dataset", "api":""},
     {"notation":"data_tier", "map":"tier", "api":""},
     {"notation":"path", "map":"dataset", "api":"listBlocks"},
+    {"notation":"path.dataset_path", "map":"name", "api":""},
+    {"notation":"name.dataset_path", "map":"name", "api":""},
     {"notation":"path", "map":"name", "api":""},
     {"notation":"primary_name", "map":"name", "api":""},
 ]
-
-
