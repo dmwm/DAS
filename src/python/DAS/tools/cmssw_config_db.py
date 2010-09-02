@@ -46,11 +46,17 @@ class RelOptionParser:
              default=27017, dest="port",
              help="specify MongoDB port number")
         self.parser.add_option("--path", action="store", type="string", 
-             default="", dest="path",
+             default=os.environ.get('VO_CMS_SW_DIR',None), dest="path",
              help="specify path to CMS software area")
-        self.parser.add_option("--delete", action="store", type="string", 
-             default="", dest="delete",
+        self.parser.add_option("--delete", action="store_true",  
+             default=False, dest="delete",
              help="delete entry about release in MongoDB")
+        self.parser.add_option("--check", action="store_true",
+             default=False, dest="check", 
+             help="check if release exists in DB")
+        self.parser.add_option("--list", action="store_true",
+             default=False, dest="list",
+             help="list releases in DB.")
     def getopt(self):
         """
         Returns parse list of options
@@ -101,12 +107,24 @@ def check(host, port, release):
             return True
     return False
 
+def releases(host, port):
+    db = connect(host, port)
+    names = db.collection_names() 
+    return filter(lambda x: x.startswith('CMSSW') and not x.endswith('index'),
+                  names)
+
 #def inject(host, port, path, release, debug=0):
 def inject(path, release, debug=0):
     """
     Function to inject CMSSW configuration files into MongoDB located
     at provided host/port.
     """
+    
+    content_translate = '?????????\t\n??\r??'+\
+                        ''.join(['?']*16+\
+                                [chr(i) for i in range(32,128)]+\
+                                ['?']*128)
+    
     if  not os.environ.has_key('SCRAM_ARCH'):
         msg = 'SCRAM_ARCH environment is not set'
         raise Exception(msg)
@@ -129,6 +147,10 @@ def inject(path, release, debug=0):
     index = mongosearch.SearchIndex(config_obj, use_term_index=False)
     index.add_field('content', html=False)
 
+    print "Searching %s for configurations." % (cdir)
+    time0 = time.time()
+    filecount = 0
+
     for name in gen_find("*.py", "./"):
         if  name.find('__init__.py') != -1:
             continue
@@ -138,9 +160,15 @@ def inject(path, release, debug=0):
             _, system, subsystem, config = name.split('/')
         except:
             continue
+        
+        filecount += 1
+        
         fdsc = open(name, 'r')
         content = fdsc.read()
         fdsc.close()
+        
+        #content = content.encode("utf_8") #ensure the encoding is utf8
+        content = content.translate(content_translate)
 
         content = content.replace('\0', '')
         obj = CMSSWConfig(name=config, content=content, 
@@ -148,6 +176,8 @@ def inject(path, release, debug=0):
         obj.save()
 
     # Index the collection
+    print 'Search and insert %s files took %s seconds' % (filecount, 
+                                                          time.time() - time0)
     print "Generating index ..."
     time0 = time.time()
     index.generate_index()
@@ -185,19 +215,34 @@ if __name__ == '__main__':
 
     optManager  = RelOptionParser()
     (opts, args) = optManager.getopt()
-    if  not opts.release or not opts.path:
-        msg = "Please provide: --release=<CMSSW_X_Y_Z> --path=/afs/cern.ch/cms/sw"
-        print msg
-        sys.exit(1)
-    if  opts.delete:
-        if  not opts.release:
-            msg = "Please provide: --release=<CMSSW_X_Y_Z>"
-            print msg
+    if opts.list:
+        print "Listing releases in DB."
+        for release in releases(opts.host, opts.port):
+            print " - %s" % release
+    elif opts.delete and opts.release:
+        print "Attempting to delete %s" % opts.release
+        if check(opts.host, opts.port, opts.release):
+            delete(opts.host, opts.port, opts.release)
+            print "Done."
+        else:
+            print "Release does not exist, exiting."
             sys.exit(1)
-        delete(opts.host, opts.port, opts.release)
-    if  check(opts.host, opts.port, opts.release):
-        print "Release %s is already in DB" % opts.release
+    elif opts.check and opts.release:
+        print "Checking if release %s exists in DB" % opts.release
+        if check(opts.host, opts.port, opts.release):
+            print "Release exists."
+        else:
+            print "Release does not exist."
+            sys.exit(1)
+    elif opts.release and opts.path:
+        print "Attempting to insert %s from %s" % (opts.release, opts.path)
+        if check(opts.host, opts.port, opts.release):
+            print "Release already exists, delete before attempting to reinsert."
+            sys.exit(1)
+        else:
+            inject(opts.path, opts.release, opts.verbose)
+            print "Done."
     else:
-        inject(opts.path, opts.release, opts.verbose)
-#        inject(opts.host, opts.port, opts.path, opts.release, opts.verbose)
+        print "Please specify either:\n\t--path and --release\n\t--release and --delete\n\t--release and --check\n\t--list."
+        sys.exit(1)
 
