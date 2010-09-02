@@ -69,16 +69,23 @@ class DASAnalytics(object):
         self.logger.info(msg)
         dhash   = genkey(dasquery)
         qhash   = genkey(mongoquery)
+
         record  = dict(dasquery=dasquery, mongoquery=mongoquery, 
-                        qhash=qhash, dhash=dhash)
-        if  self.col.find({'qhash':qhash}).count():
-            return
+                        qhash=qhash, dhash=dhash, time=time.time())
+        #if  self.col.find({'qhash':qhash}).count():
+        #    return #we want multiple records for a given qhash?
+                    #otherwise we have no way of recording frequent
+                    #similar queries.
+                    #alternatively, a lightweight record of inserted at
+                    #each invocation?
         self.col.insert(record)
-        index = [('qhash', DESCENDING), ('dhash', DESCENDING)]
+        index = [('qhash', DESCENDING), 
+                 ('dhash', DESCENDING),
+                 ('time', DESCENDING)]
         self.col.ensure_index(index)
 
     def remove_expired(self):
-        "Moved from AbstractService"
+        "Moved from AbstractService -  remove old apicall records"
         spec = {'apicall.expire':{'$lt' : int(time.time())}}
         self.col.remove(spec)
 
@@ -202,17 +209,30 @@ class DASAnalytics(object):
         gen  = (row['system'] for row in self.col.find(cond, ['system']))
         return gen2list(gen)
 
-    def list_queries(self, system=None, api=None):
+    def list_queries(self, qhash=None, dhash=None, query_regex=None,
+                     key=None, after=None, before=None,):
         """
-        List all queries.
+        List inserted queries based on many criteria.
         """
-        cond = { 'query' : { '$ne' : None } }
-        if  system:
-            cond['system'] = system
-        if  api:
-            cond['api.name'] = api
-        gen  = (row['query'] for row in self.col.find(cond, ['query']))
-        return gen2list(gen)
+        cond = {}
+        if qhash:
+            cond['qhash'] = qhash
+        if dhash:
+            cond['dhash'] = dhash
+        if query_regex:
+            cond['dasquery'] = {'$regex':query_regex}
+        if key:
+            cond['mongoquery.spec'] = {'$elemMatch' : {'key': key}}
+        if before and after:
+            cond['time'] = {'$gt': after, '$lt': before}
+        elif after:
+            cond['time'] = {'$gt': after}
+        elif before:
+            cond['time'] = {'$lt': before}
+        
+        return self.col.find(cond)
+            
+        
 
     def list_apis(self, system=None):
         """
