@@ -120,6 +120,12 @@ class DASCacheService(DASWebManager):
             'request':
                 {'args':['idx', 'limit', 'query', 'skey', 'order'],
                  'call': self.request, 'version':__version__},
+            'test':
+                {'args':['idx', 'limit', 'query', 'skey', 'order'],
+                 'call': self.test, 'version':__version__},
+            'testmongo':
+                {'args':['idx', 'limit', 'query', 'skey', 'order', 'collection'],
+                 'call': self.testmongo, 'version':__version__},
             'nresults':
                 {'args':['query'],
                  'call': self.nresults, 'version':__version__},
@@ -277,6 +283,53 @@ class DASCacheService(DASWebManager):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
+        data['ctime'] = time.time() - time0
+        return data
+
+    @checkargs
+    def test(self, *args, **kwargs):
+        """
+        HTTP GET test method. Should be used by external tools for
+        performance measurements. Return a dict with ctime.
+        """
+        time0 = time.time()
+        data  = {'server_method':'request'}
+        if  kwargs.has_key('query'):
+            query = kwargs['query']
+            idx   = getarg(kwargs, 'idx', 0)
+            limit = getarg(kwargs, 'limit', 0)
+            skey  = getarg(kwargs, 'skey', '')
+            order = getarg(kwargs, 'order', 'asc')
+            data.update({'status':'ok', 'idx':idx, 
+                     'limit':limit, 'query':query,
+                     'skey':skey, 'order':order})
+            if  kwargs.has_key('mongo'):
+                self.logdb(query)
+        data['ctime'] = time.time() - time0
+        return data
+
+    @checkargs
+    def testmongo(self, *args, **kwargs):
+        """
+        HTTP GET testmongo method. Should be used by external tools for
+        performance measurements. Return a dict with ctime.
+        """
+        time0 = time.time()
+        data  = {'server_method':'request'}
+        if  kwargs.has_key('query'):
+            query = kwargs['query']
+            self.logdb(query)
+            idx   = getarg(kwargs, 'idx', 0)
+            limit = getarg(kwargs, 'limit', 0)
+            skey  = getarg(kwargs, 'skey', '')
+            order = getarg(kwargs, 'order', 'asc')
+            collection = kwargs.get('collection', 'logging.db')
+            dbname, colname = collection.split('.')
+            coll = self.con[dbname][colname]
+            res  = [r for r in coll.find().skip(idx).limit(limit)]
+            data.update({'status':'ok', 'idx':idx, 
+                     'limit':limit, 'query':query, 'nresults': len(res),
+                     'skey':skey, 'order':order, 'collection': collection})
         data['ctime'] = time.time() - time0
         return data
 
