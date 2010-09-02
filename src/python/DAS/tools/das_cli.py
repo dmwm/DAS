@@ -103,7 +103,6 @@ def run(DAS, query, idx, limit, skey, sorder, nooutput, plain, debug):
         else:
             dump(results, idx)
     else:
-        query = DAS.adjust_query(query)
         results = DAS.call(query)
         print "\n### DAS.call returns", results
 
