@@ -26,8 +26,47 @@ from   pymongo.objectid import ObjectId
 from   DAS.utils.regex import float_number_pattern, int_number_pattern
 from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern
+from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 import DAS.utils.jsonwrapper as json
 from   base64 import b64encode, b32encode
+
+def convert2date(value):
+    """
+    Convert input value to date range format expected by DAS.
+    """
+    msg = "Unsupported syntax for value of last operator"
+    pat = last_time_pattern
+    if  not pat.match(value):
+        raise Exception(msg)
+    oper = ' = '
+    if  value.find('h') != -1:
+        hour = int(value.split('h')[0])
+        if  hour > 24:
+            raise Exception('Wrong hour %s' % value)
+        date1 = time.time() - hour*60*60
+        date2 = time.time()
+    elif value.find('m') != -1:
+        minute = int(value.split('m')[0])
+        if  minute > 60:
+            raise Exception('Wrong minutes %s' % value)
+        date1 = time.time() - minute*60
+        date2 = time.time()
+    else:
+        raise Exception('Unsupported value for last operator')
+    value = [long(date1), long(date2)]
+    return value
+
+def das_dateformat(value):
+    """Check if provided value in expected DAS date format."""
+    pat = date_yyyymmdd_pattern
+    if  pat.match(value): # we accept YYYYMMDD
+        ddd = datetime.date(int(value[0:4]), # YYYY
+                            int(value[4:6]), # MM
+                            int(value[6:8])) # DD
+        return time.mktime(ddd.timetuple())
+    else:
+        msg = 'Unacceptable date format'
+        raise Exception(msg)
 
 def encode4admin(user, pwd):
     """Encode user:pwd pair"""

@@ -14,51 +14,13 @@ import time
 import types
 import urllib
 from DAS.core.das_lexer import DASLexer
-from DAS.utils.utils import adjust_value
 from DAS.core.das_ql import das_filters, das_aggregators, das_reserved
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
-from DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
+from DAS.core.das_ply import DASPLY, ply2mongo
+from DAS.utils.utils import adjust_value, convert2date, das_dateformat
 from DAS.utils.regex import key_attrib_pattern
 import DAS.utils.jsonwrapper as json
-
-def convert2date(value):
-    """
-    Convert input value to date range format expected by DAS.
-    """
-    msg = "Unsupported syntax for value of last operator"
-    pat = last_time_pattern
-    if  not pat.match(value):
-        raise Exception(msg)
-    oper = ' = '
-    if  value.find('h') != -1:
-        hour = int(value.split('h')[0])
-        if  hour > 24:
-            raise Exception('Wrong hour %s' % value)
-        date1 = time.time() - hour*60*60
-        date2 = time.time()
-    elif value.find('m') != -1:
-        minute = int(value.split('m')[0])
-        if  minute > 60:
-            raise Exception('Wrong minutes %s' % value)
-        date1 = time.time() - minute*60
-        date2 = time.time()
-    else:
-        raise Exception('Unsupported value for last operator')
-    value = [long(date1), long(date2)]
-    return value
-
-def das_dateformat(value):
-    """Check if provided value in expected DAS date format."""
-    pat = date_yyyymmdd_pattern
-    if  pat.match(value): # we accept YYYYMMDD
-        ddd = datetime.date(int(value[0:4]), # YYYY
-                            int(value[4:6]), # MM
-                            int(value[6:8])) # DD
-        return time.mktime(ddd.timetuple())
-    else:
-        msg = 'Unacceptable date format'
-        raise Exception(msg)
 
 def add_spaces(query):
     """Add spaces around DAS operators in input DAS query"""
@@ -318,6 +280,8 @@ class QLManager(object):
         for val in self.daskeysmap.values():
             for item in val:
                 self.daskeys.append(item)
+        print self.daskeys
+        self.dasply = DASPLY(self.daskeys)
 
     def parse(self, query, add_to_analytics=True):
         """
@@ -333,9 +297,22 @@ class QLManager(object):
                 self.analytics.add_query(query, mongo_query)
             return mongo_query
         mongo_query = parser(query, self.daskeys, self.operators)
+#        print "### vk parser ", mongo_query
+#        print "### ply parser", self.mongo_query(query)
+#        mongo_query = self.mongo_query(query)
         self.convert2skeys(mongo_query)
         if  add_to_analytics:
             self.analytics.add_query(query, mongo_query)
+        return mongo_query
+
+    def mongo_query(self, query):
+        """
+        Return mongo query for provided input query
+        """
+        yacc_args = {'debug':0}
+        self.dasply.build(**yacc_args)
+        ply_query   = self.dasply.parser.parse(query)
+        mongo_query = ply2mongo(ply_query)
         return mongo_query
 
     def convert2skeys(self, mongo_query):
