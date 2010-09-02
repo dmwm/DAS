@@ -7,6 +7,7 @@ from DAS.core.das_core import DASCore
 from DAS.utils.das_config import das_readconfig
 
 class Task(object):
+    "Representation of a repeatedly-run task with access to DAS"
     def __init__(self, name, classname, 
                  interval, kwargs, only_once=False, 
                  max_runs=None, only_before=None):
@@ -25,6 +26,7 @@ class Task(object):
         self.retries = 0
     
     def get_dict(self):
+        "Get a dict representing this task for the web interface"
         return {'name': self.name,
                 'classname': self.classname,
                 'interval': self.interval,
@@ -65,7 +67,8 @@ class Task(object):
                             self.classname, 
                             self.kwargs, 
                             self.run_count - 1,
-                            das_config)
+                            das_config,
+                            self.interval)
 
 
 
@@ -75,17 +78,22 @@ class RunnableTask(object):
     This object is spawned by a task object, to be pickled and 
     passed to a worker process to actually run.
     
+    This object is created when the task is added to the worker
+    pool (apply_async), which will normally result in immediate
+    execution.
+    
     The actual implementation class is not imported until the
     worker process starts running.
     """
     def __init__(self, name, classname, kwargs, 
-                 index, das_config):
+                 index, das_config, interval):
         self.classname = classname
         self.kwargs = copy.deepcopy(kwargs)
         self.name = name
         self.index = index
         self.taskid = str(uuid.uuid4())
         self.das_config = das_config
+        self.interval = interval
 
     def get_task_id(self):
         "Get a string identifying this task."
@@ -114,9 +122,10 @@ class RunnableTask(object):
         config = das_readconfig(self.das_config)
         
         self.kwargs.update({'logger':childlogger, 
-                            'taskid': taskid, 
-                            'name':self.name,
-                            'index':self.index,
+                            'taskid': taskid, #task uuid
+                            'name':self.name, #task title
+                            'index':self.index, # #runs of this task
+                            'interval':self.interval, #desired frequency
                             'DAS':DASCore(config, logger=daslogger)})
         
         try:
@@ -152,6 +161,6 @@ class RunnableTask(object):
                                                                             
     def _load_class(self):
         "Load the class this task will run."
-        module = __import__('tasks.%s' % self.classname, 
+        module = __import__('DAS.analytics.tasks.%s' % self.classname, 
                             fromlist=[self.classname])
         return getattr(module, self.classname)
