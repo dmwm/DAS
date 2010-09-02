@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+$DAS_ROOT/src/python/DAS/analytics/analytics_controller.py "$@"
