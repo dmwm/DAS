@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# usage: das_map [blacklist=blacklist.txt] [whitelist=whitelist.txt]
+
 # setup environment
 #. `dirname $0`/setup.sh
 
@@ -10,17 +12,44 @@ cmd=$DAS_ROOT/src/python/DAS/tools/das_mapping_db.py
 echo "Clean DAS Mapping DB"
 $cmd --clean
 
+blacklist="blacklist.txt"
+whitelist="whitelist.txt"
+
+if  [ ! -z "$1" ]; then
+	blacklist=$1
+fi
+if  [ ! -z "$2" ]; then
+	whitelist=$2
+fi
+
+if  [ -f "$blacklist" ]; then
+	echo "Using blacklist $blacklist : BEGIN"
+	cat $blacklist
+	echo "END blacklist"
+fi
+if  [ -f "$whitelist" ]; then
+	echo "Using whitelist $whitelist : BEGIN"
+	cat $whitelist
+	echo "END whitelist"
+fi
+
 echo "Add API maps"
 for amap in `ls $dir/*.yml`
 do
     service=`echo $amap | awk '{z=split($0,a,"/"); split(a[z],b,"."); print b[1]}'`
-    res=""
-    if  [ -f "whitelist.txt" ]; then
-        res=`cat whitelist.txt | egrep "^$service$"`
+    if  [ -f "$blacklist" ]; then
+        res=`cat $blacklist | egrep "^$service$"`
+        if  [ ! -z "$res" ]; then
+        	echo "[BLACKLIST] Skipping $service"
+        	continue
+        fi
     fi
-    if  [ ! -z "$res" ]; then
-        echo "Skip service $service"
-        continue
+    if  [ -f "$whitelist" ]; then
+    	res=`cat $whitelist | egrep "$service$"`
+    	if  [ ! -n "$res" ]; then
+    		echo "[WHITELIST] Skipping $service"
+    		continue
+    	fi
     fi
     echo "Read API maps from $amap"
     $cmd --uri-map=$amap
