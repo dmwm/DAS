@@ -283,7 +283,7 @@ class DASAbstractService(object):
         expire = expire_timestamp(expire)
         query = encode_mongo_query(query)
         self.analytics.remove_expired()
-        doc  = dict(sytsem=self.name, url=url, api=api, api_params=api_params,
+        doc  = dict(system=self.name, url=url, api=api, api_params=api_params,
                         qhash=genkey(query), expire=expire)
         self.analytics.col.insert(dict(apicall=doc))
         index_list = [('apicall.url', DESCENDING), 
