@@ -28,13 +28,14 @@ class DASMapping(object):
     This class manages DAS mapping DB.
     """
     def __init__(self, config):
-        self.logger  = config['logger']
-        self.verbose = config['verbose']
-        self.dbhost  = config['mappingdb']['dbhost']
-        self.dbport  = config['mappingdb']['dbport']
-        self.dbname  = config['mappingdb'].get('dbname', 'mapping')
-        self.attempt = config['mappingdb']['attempt']
-        self.colname = config['mappingdb'].get('collname', 'db')
+        self.logger   = config['logger']
+        self.verbose  = config['verbose']
+        self.services = config['services']
+        self.dbhost   = config['mappingdb']['dbhost']
+        self.dbport   = config['mappingdb']['dbport']
+        self.dbname   = config['mappingdb'].get('dbname', 'mapping')
+        self.attempt  = config['mappingdb']['attempt']
+        self.colname  = config['mappingdb'].get('collname', 'db')
 
         msg = "DASMapping::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
@@ -144,7 +145,8 @@ class DASMapping(object):
         """
         cond = { 'system' : { '$ne' : None } }
         gen  = (row['system'] for row in self.col.find(cond, ['system']))
-        return gen2list(gen)
+        return list( set(gen2list(gen)) & set(self.services) )
+#        return gen2list(gen)
 
     def list_apis(self, system=None):
         """
