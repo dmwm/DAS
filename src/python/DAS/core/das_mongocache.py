@@ -19,6 +19,7 @@ import re
 import time
 import types
 import itertools
+import random
 
 # DAS modules
 from DAS.utils.utils import genkey
@@ -301,6 +302,9 @@ def update_item(item, key, val):
 def make_connection(dbhost, dbport, attempt):
     """
     Safely make connection to MongoDB.
+    
+    Waits 5-10 seconds after a connection failure
+    before retrying.
     """
     if  not attempt or attempt < 0:
         msg = 'Unable to make connection to MongoDB after %s attempts' % attempt
@@ -309,9 +313,11 @@ def make_connection(dbhost, dbport, attempt):
         conn = Connection(dbhost, dbport)
     except AutoReconnect:
         attempt -= 1
+        time.sleep(5 + 5 * random.random())
         make_connection(dbhost, dbport, attempt)
     except ConnectionFailure:
         attempt -= 1
+        time.sleep(5 + 5 * random.random())
         make_connection(dbhost, dbport, attempt)
     return conn
 
