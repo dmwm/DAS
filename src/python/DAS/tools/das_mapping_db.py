@@ -66,10 +66,11 @@ if __name__ == '__main__':
     (opts, args) = optManager.getOpt()
 
     dasconfig = das_readconfig()
-    logfile   = dasconfig.get('logfile', None)
+    logfile   = dasconfig['das'].get('logfile', None)
     logger    = DASLogger(logfile=logfile, verbose=opts.debug)
     mappingdb = dict(dbhost=opts.host, dbport=opts.port, dbname=opts.db, attempt=3)
-    config    = dict(logger=logger, verbose=opts.debug, mappingdb=mappingdb, attempt=3)
+    config    = dict(logger=logger, verbose=opts.debug, mappingdb=mappingdb,
+                attempt=3, services=dasconfig['das'].get('services', []))
 
     mgr = DASMapping(config)
 
