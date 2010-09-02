@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+
+"""
+DAS Query Language parser based on PLY.
+"""
+
+__revision__ = "$Id: $"
+__version__ = "$Revision: $"
+__author__ = "Gordon Ball"
+
 import ply.lex
 import ply.yacc
 
@@ -16,6 +27,7 @@ class DASPLY(object):
         'OPERATORLIST',
         'WORD',
         'NUMBER',
+        'FLOAT_NUMBER',
         'DATE',
         'SPACE'
     ]
@@ -28,9 +40,23 @@ class DASPLY(object):
     t_RSQUARE = r'\]'
     t_LPAREN = r'\('
     t_RPAREN = r'\)'
+
+#    def t_NUMBER(self, t):
+#        r'-?\d+$'
+#        t.value = int(t.value)
+#        return t
+
+#    def t_FLOAT_NUMBER(self, t):
+#        r'[-+]?\d+\.?\d*'
+#        t.value = float(t.value)
+#        return t
+
     def t_NUMBER(self, t):
         r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?'
-        t.value = float(t.value)
+        if  t.value.find('.') != -1:
+            t.value = float(t.value)
+        else:
+            t.value = int(t.value)
         return t
 
     def t_DATE(self, t):
@@ -38,8 +64,9 @@ class DASPLY(object):
         t.value = int(t.value)
         return t
 
+#        r'''[a-zA-Z/*][a-zA-Z_0-9/*\-#.]+|["'][a-zA-Z_0-9/*\-#. ]+["']'''
     def t_WORD(self, t):
-        r'''[a-zA-Z/*][a-zA-Z_0-9/*\-#.]+|["'][a-zA-Z_0-9/*\-#. ]+["']'''
+        r'[a-zA-Z/*][a-zA-Z_0-9/*\-#\.]+|[0-9]+[dhm]|([0-9]{1,3}\.){3,3}[0-9]{1,3}|"[a-zA-Z_0-9/*\-#]+\s[a-zA-Z_0-9/*\-#]+"'
         if t.value[0] in ('"',"'") and t.value[-1] in ('"',"'"):
             t.value = t.value[1:-1]
         elif t.value in ('grep', 'unique'):
@@ -120,11 +147,52 @@ class DASPLY(object):
         self.lexer = ply.lex.lex(module=self, **kwargs)
         self.parser = ply.yacc.yacc(module=self, **kwargs)
         
+def ply2mongo(query):
+    """
+    DAS-QL query  : file block=123 | grep file.size
+    PLY query     : {'keys': [('keyop', 'file', None, None), 
+                              ('keyop', 'block', '=', 123.0)], 
+                     'pipe': [('filter', 'grep', ['file.size'])]}
+    Mongo query   : {'fields': [u'file'], 
+                     'spec': {u'block.name': 123}, 'filters': ['file.size']}
+    """
+    mongodict = {}
+    if  query.has_key('pipe'):
+        for filter, name, args in query['pipe']:
+            if  filter == 'filter' and name == 'grep':
+                mongodict['filters'] = args
+    fields = []
+    spec   = {}
+    for keyop, name, oper, val in query['keys']:
+        dasname = name # FIXME I need to look-up dasname from the map
+        if  oper and val: # real condition
+            value = val
+            if  oper == 'in':
+                value = {'$in' : list(val[1:])}
+        else: # selection field
+            fields.append(name)
+            value = '*'
+        if  spec.has_key(dasname):
+            exist_value = spec[dasname]
+            if  type(exist_value) is types.ListType:
+                array = [r for r in exist_value] + [value]
+            else:
+                array = [exist_value, value]
+        else:
+            spec[dasname] = value
+    mongodict['spec'] = spec
+    if  fields:
+        mongodict['fields'] = fields
+    else:
+        mongodict['fields'] = None
+    return mongodict
+
 if __name__=='__main__':
-    p = DASPLY()
-    p.build()
+    dasply = DASPLY()
+    dasply.build()
     queries = [
     "dataset file=/abc/def epoch in [123,456] | grep file.name, file.age | unique | sum(file.size),max(file.size)",
+    "file block=123 | grep file.size",
     "site=T1_CH_CERN",
     "monitor",
     "jobsummary",
@@ -140,14 +208,15 @@ if __name__=='__main__':
     "run=20853",
     "run in [20853,20859]",
     "release=CMSSW_2_0_8",
-
     "latitude=42 longitude=-77",
-    "zip=14850",
-    "city=Ithaca",
-    "ip=137.138.141.145 | grep ip.City",
     "dataset | grep dataset.name",
+    "city=Ithaca",
+    "zip=14850",
+    "ip=137.138.141.145 | grep ip.City",
     ]
     for query in queries:
+        ply_query = dasply.parser.parse(query)
         print
         print query
-        print p.parser.parse(query)
+        print ply_query
+        print ply2mongo(ply_query)
