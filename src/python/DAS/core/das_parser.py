@@ -311,6 +311,7 @@ class QLManager(object):
             raise Exception(msg)
         self.map         = config['dasmapping']
         self.analytics   = config['dasanalytics']
+        self.dasservices = config['services']
         self.daskeysmap  = self.map.daskeys()
         self.operators   = list(das_operators())
         self.daskeys     = list(das_special_keys())
@@ -369,6 +370,8 @@ class QLManager(object):
         # look-up services from Mapping DB
         for key in skeys + [i for i in cond.keys()]:
             for service, keys in self.daskeysmap.items():
+                if  service not in self.dasservices:
+                    continue
                 daskeys = self.map.find_daskey(service, key)
                 if  set(keys) & set(daskeys) and service not in slist:
                     slist.append(service)
