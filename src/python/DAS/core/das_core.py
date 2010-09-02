@@ -282,11 +282,17 @@ class DASCore(object):
         Return status 0/1 depending on success of the calls, can be
         used by workers on cache server.
         """
+        # adjust query first, since rawcache.similar_queries
+        # expects a mongo query (this could be a string)
+        # this also guarantees the query in question hits
+        # analytics
+        query = self.adjust_query(query, add_to_analytics)
+        
         if  self.rawcache.similar_queries(query):
             if  self.in_raw_cache(query):
                 return 1
 
-        query = self.adjust_query(query, add_to_analytics)
+        
         msg = 'DASCore::call, query=%s' % query
         self.logger.info(msg)
         params = self.mongoparser.params(query)
