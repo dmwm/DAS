@@ -194,6 +194,7 @@ class DASCacheService(DASWebManager):
         HTTP GET request.
         Retrieve records from provided collection.
         """
+        time0 = time.time()
         msg = 'records(%s, %s)' % (args, kwargs)
         self.logger.info(msg)
         data  = {'server_method':'request'}
@@ -229,6 +230,7 @@ class DASCacheService(DASWebManager):
             self.debug(traceback.format_exc())
             data['status'] = 'fail'
             data['reason'] =  sys.exc_type
+        data['ctime'] = time.time() - time0
         return data
 
     @checkargs
@@ -236,6 +238,7 @@ class DASCacheService(DASWebManager):
         """
         HTTP GET request. Check status of the input query in DAS.
         """
+        time0 = time.time()
         msg = 'status(%s, %s)' % (args, kwargs)
         self.logger.info(msg)
         data = {'server_method':'status'}
@@ -250,6 +253,7 @@ class DASCacheService(DASWebManager):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
+        data['ctime'] = time.time() - time0
         return data
 
     @checkargs
@@ -258,6 +262,7 @@ class DASCacheService(DASWebManager):
         HTTP GET request. Ask DAS for total number of records
         for provided query.
         """
+        time0 = time.time()
         msg = 'nresults(%s, %s)' % (args, kwargs)
         self.logger.info(msg)
         data = {'server_method':'nresults'}
@@ -272,6 +277,7 @@ class DASCacheService(DASWebManager):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
+        data['ctime'] = time.time() - time0
         return data
 
     @checkargs
@@ -280,6 +286,7 @@ class DASCacheService(DASWebManager):
         HTTP GET request.
         Retrieve results from DAS cache.
         """
+        time0 = time.time()
         msg = 'request(%s, %s)' % (args, kwargs)
         self.logger.info(msg)
         data = {'server_method':'request'}
@@ -310,6 +317,7 @@ class DASCacheService(DASWebManager):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
+        data['ctime'] = time.time() - time0
         return data
 
     @checkargs
@@ -320,6 +328,7 @@ class DASCacheService(DASWebManager):
         using the data enclosed in the request body.
         Creates new entry in DAS cache for provided query.
         """
+        time0 = time.time()
         msg = 'create(%s, %s)' % (args, kwargs)
         self.logger.info(msg)
         if  len(self.cachemgr.queue) > self.qlimit:
@@ -343,6 +352,7 @@ class DASCacheService(DASWebManager):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
+        data['ctime'] = time.time() - time0
         return data
 
     @checkargs
@@ -353,6 +363,7 @@ class DASCacheService(DASWebManager):
         resource with the one enclosed in the request body.
         Replace existing query in DAS cache.
         """
+        time0 = time.time()
         msg = 'replace(%s, %s)' % (args, kwargs)
         self.logger.info(msg)
         data = {'server_method':'replace'}
@@ -376,6 +387,7 @@ class DASCacheService(DASWebManager):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
+        data['ctime'] = time.time() - time0
         return data
 
     @checkargs
@@ -384,6 +396,7 @@ class DASCacheService(DASWebManager):
         HTTP DELETE request.
         Delete input query in DAS cache
         """
+        time0 = time.time()
         msg = 'delete(%s, %s)' % (args, kwargs)
         self.logger.info(msg)
         data = {'server_method':'delete'}
@@ -401,6 +414,7 @@ class DASCacheService(DASWebManager):
         else:
             data.update({'status': 'fail', 
                     'reason': 'Unsupported keys %s' % kwargs.keys() })
+        data['ctime'] = time.time() - time0
         return data
 
     @exposejson
