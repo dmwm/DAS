@@ -75,6 +75,41 @@ class DASAnalytics(object):
         index = [('qhash', DESCENDING), ('dhash', DESCENDING)]
         self.col.ensure_index(index)
 
+    def add_summary(self, identifier, start, finish, **payload):
+        """
+        Add an analyzer summary, with given analyzer identifier,
+        start and finish times and payload.
+        
+        It is intended that a summary document is deposited on
+        each run of an analyzer (if desirable) and is thereafter
+        immutable.
+        """
+        msg = 'DASAnalytics::add_summary(%s, %s->%s, %s)'
+        self.logger.info(msg, identifier, start, finish, payload)
+        
+        record = {'analyzer':identifier,
+                  'start': start,
+                  'finish': finish}
+        payload.update(record) #ensure key fields are set correctly
+        self.col.insert(payload)
+        # ensure summary items are indexed for quick extract
+        self.col.ensure_index([('analyzer', DESCENDING)])
+        
+
+    def get_summary(self, identifier, after=None, before=None, **query):
+        """
+        Retrieve a summary document for a given analyzer-identifier,
+        optionally specifying a time range.
+        """
+        cond = {'analyzer': identifier}
+        if after:
+            cond['finish'] = {'$gt': after}
+        if before:
+            cond['start'] = {'$lt': before}
+        if query:
+            cond.update(query)
+        return list(self.col.find(cond))
+
     def add_api(self, system, query, api, args):
         """
         Add API info to analytics DB. 
