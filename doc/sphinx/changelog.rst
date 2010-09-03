@@ -7,6 +7,21 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- 0.5.0
+  - based on Gordon' series of patches the following changes has been
+    implemented:
+
+    - new analytics package, which keeps track of all input queries
+    - new DAS PLY parser/lexer to confirm DAS QL
+    - added new queryspammer tool
+
+  - added spammer into DAS cache client, to perform benchmarking of
+    DAS cache server
+  - added a few method to DAS cache server for perfomance measurements
+    of bare CherryPy, CherryPy+MongoDB, CherryPy+MongoDB+DAS
+  - remove white/back list in favor of explicit configuration of
+    DAS services via DAS configuration systems (both das.cfg and das_cms.py)
+
 - 0.4.13 - 0.4.18
   - adjustment to CMS environment and SLA requirements
   - ability to read both cfg and CMS python configuration files
