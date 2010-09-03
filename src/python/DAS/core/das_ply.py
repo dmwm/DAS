@@ -48,11 +48,11 @@ class DASPLY(object):
         'WORD',
         'NUMBER',
         'DATE',
-        'SPACE',
+#        'SPACE',
 #        'MAPREDUCE',
     ]
 
-    t_SPACE    = r'\ '
+#    t_SPACE    = r'\ '
     t_PIPE = r'\|'
     t_COMMA    = r'\,'
 #    t_MAPREDUCE = r'NEVER MATCH ME'
