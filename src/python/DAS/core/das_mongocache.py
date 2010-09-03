@@ -692,6 +692,11 @@ class DASMongocache(object):
                 expire = row['das']['expire']
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
+        # ensure index on das.expire
+        try:
+            self.merge.ensure_index(['das.expire', ASCENDING])
+        except:
+            pass
         for pkey in lookup_keys:
             skey = [(pkey, DESCENDING)]
             # lookup all service records
@@ -733,7 +738,8 @@ class DASMongocache(object):
         # update results records in DAS cache
         rec   = [k for i in header['lookup_keys'] for k in i.values()]
         lkeys = list(set(k for i in rec for k in i))
-        index_list = [(key, DESCENDING) for key in lkeys]
+        index_list = [(key, DESCENDING) for key in lkeys] + \
+                        [('das.expire', ASCENDING)]
         if  index_list:
             try:
                 self.col.ensure_index(index_list)
@@ -766,6 +772,7 @@ class DASMongocache(object):
             q_record['das']['lookup_keys'] = lkeys
             objid  = self.col.insert(q_record)
             index_list = [('das.qhash', DESCENDING), 
+                          ('das.expire', ASCENDING),
                           ('query', DESCENDING),
                           ('query.spec', DESCENDING),
                          ]
