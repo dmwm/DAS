@@ -21,6 +21,7 @@ map is represented data-service URI (URL, input parameters, API, etc.).
     of bare CherryPy, CherryPy+MongoDB, CherryPy+MongoDB+DAS
   - remove white/back list in favor of explicit configuration of
     DAS services via DAS configuration systems (both das.cfg and das_cms.py)
+  - added index on das.expire
 
 - 0.4.13 - 0.4.18
   - adjustment to CMS environment and SLA requirements
