@@ -19,7 +19,7 @@ class testDASPLY(unittest.TestCase):
         """
         set up DAS core module
         """
-        self.debug = 1
+        self.debug = 0
         daskeys = ['dataset', 'file', 'block', 'run', 'site', 
                    'latitude', 'longitude', 'city', 'ip', 'date', 'system', 'zip']
         self.dasply = DASPLY(daskeys, self.debug)
