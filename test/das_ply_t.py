@@ -22,7 +22,11 @@ class testDASPLY(unittest.TestCase):
         self.debug = 0
         daskeys = ['dataset', 'file', 'block', 'run', 'site', 
                    'latitude', 'longitude', 'city', 'ip', 'date', 'system', 'zip']
+
         self.dasply = DASPLY(daskeys, self.debug)
+        args = {'debug':self.debug, 'errorlog' : ply.yacc.NullLogger()}
+        self.dasply.build(**args)
+
         self.queries = {}
 
         query = "city=Ithaca"
@@ -86,8 +90,6 @@ class testDASPLY(unittest.TestCase):
 
     def test_lexer(self):
         """Test DAS PLY lexer"""
-        args = {'debug':self.debug, 'errorlog' : ply.yacc.NullLogger()}
-        self.dasply.build(**args)
         for query, expect in self.queries.items():
             if  self.debug:
                 print "\n%s" % query
@@ -95,8 +97,6 @@ class testDASPLY(unittest.TestCase):
 
     def test_parser(self):
         """Test DAS PLY parser"""
-        args = {'debug':self.debug, 'errorlog' : ply.yacc.NullLogger()}
-        self.dasply.build(**args)
         for query, expect in self.queries.items():
             try:
                 ply_query = self.dasply.parser.parse(query)
