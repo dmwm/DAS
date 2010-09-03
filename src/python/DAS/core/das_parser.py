@@ -281,6 +281,8 @@ class QLManager(object):
             for item in val:
                 self.daskeys.append(item)
         self.dasply = DASPLY(self.daskeys)
+        yacc_args = {'debug':0}
+        self.dasply.build(**yacc_args)
 
     def parse(self, query, add_to_analytics=True):
         """
@@ -308,8 +310,6 @@ class QLManager(object):
         """
         Return mongo query for provided input query
         """
-        yacc_args = {'debug':0}
-        self.dasply.build(**yacc_args)
         ply_query   = self.dasply.parser.parse(query)
         mongo_query = ply2mongo(ply_query)
         return mongo_query
