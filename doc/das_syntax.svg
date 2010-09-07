@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.47 r22583"
-   sodipodi:docname="das_syntax.pdf">
+   sodipodi:docname="das_syntax.svg">
   <defs
      id="defs4">
     <inkscape:perspective
@@ -466,9 +466,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.70710678"
+     inkscape:zoom="2"
      inkscape:cx="460.32672"
-     inkscape:cy="437.64746"
+     inkscape:cy="131.37329"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -500,7 +500,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -1881,12 +1881,12 @@
        sodipodi:rx="15.125"
        sodipodi:ry="15.125"
        d="m 305.25,134.21948 a 15.125,15.125 0 1 1 -30.25,0 15.125,15.125 0 1 1 30.25,0 z"
-       transform="matrix(1.1404959,0,0,1.1404959,107.37533,703.01071)" />
+       transform="matrix(1.1404959,0,0,1.1404959,57.880793,702.73658)" />
     <flowRoot
        xml:space="preserve"
        id="flowRoot3705-6-0"
        style="font-size:20px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       transform="matrix(1.1981279,0,0,1,88.209053,718.39078)"><flowRegion
+       transform="matrix(1.1981279,0,0,1,38.714516,718.11665)"><flowRegion
          id="flowRegion3707-4-4"><rect
            id="rect3709-0-8"
            width="25.25"
@@ -1937,7 +1937,7 @@
        sodipodi:rx="22.875"
        sodipodi:ry="22.875"
        d="m 301,106.71948 a 22.875,22.875 0 0 1 -22.875,22.875"
-       transform="matrix(0,0.89617511,-0.89617498,0,493.13933,745.11346)"
+       transform="matrix(0,0.89617511,-0.89617498,0,548.63933,745.11347)"
        sodipodi:start="0"
        sodipodi:end="1.5707963"
        sodipodi:open="true" />
@@ -1950,7 +1950,7 @@
        sodipodi:rx="22.875"
        sodipodi:ry="22.875"
        d="m 301,106.71948 a 22.875,22.875 0 0 1 -22.875,22.875"
-       transform="matrix(0,-0.89617511,-0.89617498,0,493.13933,1124.6109)"
+       transform="matrix(0,-0.89617511,-0.89617498,0,548.63933,1124.6109)"
        sodipodi:start="0"
        sodipodi:end="1.5707963"
        sodipodi:open="true" />
@@ -1984,7 +1984,7 @@
        style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none"
        id="rect2828-9-7-6-3"
        width="5"
-       height="485.00003"
+       height="425"
        x="1012.3622"
        y="-875"
        ry="2.5"
@@ -2026,7 +2026,7 @@
        id="rect2828-9-2-8-8-1-65-2"
        width="5"
        height="125"
-       x="375"
+       x="430"
        y="872.36218"
        ry="2.5"
        rx="2.5" />
