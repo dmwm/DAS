@@ -11,8 +11,8 @@ __author__ = "Valentin Kuznetsov"
 import sys
 import urllib
 import urllib2
-from multiprocessing import Process
-from optparse import OptionParser
+from   multiprocessing import Process
+from   optparse import OptionParser
 try:
     # Python 2.6
     import json
