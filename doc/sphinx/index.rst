@@ -18,6 +18,7 @@ Contents:
    introduction.rst
    architecture.rst
    workflow.rst
+   das_ql.rst
    das_records.rst
    mapping.rst
    analytics.rst

@@ -8,8 +8,9 @@ to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.5.0
-  - based on Gordon' series of patches the following changes has been
-    implemented:
+
+  - based on Gordon series of patches the following changes has been
+    implemented
 
     - new analytics package, which keeps track of all input queries
     - new DAS PLY parser/lexer to confirm DAS QL
@@ -22,8 +23,10 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - remove white/back list in favor of explicit configuration of
     DAS services via DAS configuration systems (both das.cfg and das_cms.py)
   - added index on das.expire
+  - update DAS documentation (proof-reading, DAS QL section, etc.)
 
-- 0.4.13 - 0.4.18
+- 0.4.13 till 0.4.18
+
   - adjustment to CMS environment and SLA requirements
   - ability to read both cfg and CMS python configuration files
   - replacement of Admin to Expert interface and new authentication scheme
