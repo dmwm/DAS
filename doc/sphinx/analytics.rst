@@ -11,12 +11,18 @@ Analytics DB records
 query records
 +++++++++++++
 
-The query record is a persistent record which contains the following keys:
+A query record is produced each time a user sends a query to DAS, 
+either by the CLI or the web interface. The record is created when 
+DASCore::adjust_query is called (providing add_to_analytics is enabled):
 
 - dasquery, input DAS query
 - dhash, md5 hash of dasquery
 - mongoquery, DAS query using MongoDB syntax
 - qhash, md5 hash of mongoquery
+- time, timestamp query was made
+
+It is possible for these records to be identical except for the timestamp.
+The time parameter is wanted for analytics, but could alternatively be stored as an array attached to an otherwise unique record, if necessary in future.
 
 Here is an example of query record
 
@@ -26,13 +32,14 @@ Here is an example of query record
      u'dasquery': u'site = T1_CH_CERN',
      u'dhash': u'7f0a8d3f0e44f35b72f504fcb77482b7',
      u'mongoquery': u'{"fields": null, "spec": {"site.name": "T1_CH_CERN"}}',
-     u'qhash': u'5e0dbc2a8e523e0ca401a42a8868f139'}
+     u'qhash': u'5e0dbc2a8e523e0ca401a42a8868f139',
+     u'time': 123456789.0}
 
 api records
 +++++++++++
 
-A non-persistent API records are used to keep track of API calls within DAS.
-Each record contain:
+Non-persistent API records are used to keep track of API calls within DAS.
+Each record contains:
 
 - apicall, a dictionary of API parameters
 
@@ -41,7 +48,7 @@ Each record contain:
   - expire, expiration timestamp for API call
   - system, name of data-service
   - url, the URL of the invoked data-service, please note it may or may not
-    contain api in it.
+    be a full URL to the relevant api (which may be part of the query parameters).
 
 Here is an example of API record
 
@@ -51,12 +58,14 @@ Here is an example of API record
      u'apicall': {u'api': u'CMStoSiteName',
                   u'api_params': {u'name': u'T1_CH_CERN'},
                   u'expire': 1263531376.068213,
-                  u'sytsem': u'sitedb',
+                  u'system': u'sitedb',
                   u'url': u'https://cmsweb.cern.ch/sitedb/json/index/CMStoSiteName'}}
 
 These records are used by DAS to check availability of meta-data provided by
 this API call. So if user placed a request which can be covered by any API records
 whose parameters are superset of input query, we look-up this by using API records.
+
+These records are deleted from analytics DB once apicall.expire passes.
 
 api counter records
 +++++++++++++++++++

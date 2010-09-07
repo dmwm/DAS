@@ -1,13 +1,13 @@
 DAS benchmark
 =============
 
-We profile using vocms67 machine who has the following specs:
+DAS is profiled using vocms67, with the following specification:
 
 - 8 core, Intel Xeon CPU @ 2.33GHz, cache size 6144 KB
 - 16 GB of RAM
-- 2.6.18-164.11.1.el5 #1 SMP Wed Jan 20 12:36:24 CET 2010 x86_64 x86_64 x86_64 GNU/Linux
+- Kernel 2.6.18-164.11.1.el5 #1 SMP Wed Jan 20 12:36:24 CET 2010 x86_64 x86_64 x86_64 GNU/Linux
 
-The DAS benchmarking is done using the following query
+The DAS benchmarking is performed using the following query
 
 .. doctest::
 
@@ -29,7 +29,7 @@ Latest results are shown below:
     DAS execution time (merge) 62.8879590034 sec
     DAS execution time 241.767010927 sec, Wed, 20 Jan 2010 15:54:33 GMT
 
-Here is top contributors into elapsed time
+The largest contributors to execution time are
 
 .. doctest::
 

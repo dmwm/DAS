@@ -3,10 +3,10 @@
 DAS data objects
 ================
 
-DAS needs to deal with variety of different data object representations.
-For instance, data-provides can send back to DAS a meta-data in different
-data formats, such as XML, JSON, etc. The document structure is not known
-to DAS a-priory. Therefore it needs to treat them as data objects. Here
+DAS needs to deal with a variety of different data object representations.
+Data from providers may have both different formats (eg XML, JSON), and
+different ways of storing hierarchical information. The structure of response
+data is not known to DAS a-priori. Therefore it needs to treat them as data objects. Here
 we define what it means for DAS and provide examples of DAS data objects
 or DAS records.
 

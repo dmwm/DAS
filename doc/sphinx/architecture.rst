@@ -17,46 +17,50 @@ DAS architecture is based on several components:
    - cache server
    - client web server
 
-Last two components, cache and client servers, are optional.
-The code itself can work without cache/client servers by using
-CLI tool which uses core librarys. But their existence allow 
-to introduce DAS pre-fetch strategies, DAS robots, which can
-significantly improve responsiveness of the system and add
-multi-user support into DAS. The following 
-picture represents current DAS architecture:
+The last two components, cache and client servers, are optional.
+The code itself can work without cache/client servers with the 
+CLI tool which uses core libraries. But their existence allows 
+the introduction of DAS pre-fetch strategies, DAS robots, which 
+can significantly improve responsiveness of the system and add
+multi-user support into DAS. The following picture represents 
+current DAS architecture:
 
 .. figure::  _images/das_architecture.png
    :align:   center
 
-It consists of DAS web server with RESTful interface, DAS cache server, 
-DAS Analytics/Mapping/Cache DBs and optional DAS robots 
-(for queries pre-fetching). The DAS cache server utilizes threading 
-technologies to consume and work on several requests at the same time. 
-All queries are written to DAS Analytics DB. A mapping between 
-data-service notations and DAS is stored in DAS Mapping DB. 
+It consists of DAS web server with RESTful interface, DAS
+cache server, DAS Analytics/Mapping/Cache DBs and DAS robots 
+(for pre-fetching queries). The DAS cache server uses multithreading
+to consume and work on several user requests at the same time. 
+All queries are written to the DAS Analytics DB. A mapping between 
+data-service and DAS notations is stored in the DAS Mapping DB. 
 Communication with end-users is done via set of REST calls. 
-User can pose GET/POST/DELETE requests to get/request or delete 
-data in DAS, respectively. Below we outline all steps in DAS workflow:
+User can make GET/POST/DELETE requests to fetch or delete 
+data in DAS, respectively. The DAS workflow can be summarised as:
 
-- DAS cache-server receives query from the client (either DAS web server or DAS CLI)
-- It parses input query and extract information about selection key(s) 
-  and condition(s) and maps them to corresponding data-services
-- It records query into DAS Analytics DB
-- It checks DAS cache for existing data
+- DAS cache-server receives a query from the client (either DAS web server or DAS CLI)
+- The input query is parsed and the selection key(s) and condition(s) 
+  identified and mapped to the appropriate data-services
+- The query is added to the DAS Analytics DB
+- The DAS cache is checked for existing data
 
-  - if not available:
+  - if available
 
-    - it submits request to necessary data-services
-    - It transform data-service output into DAS records and store them into DAS cache
-    - it return DAS document with message that data is requested
+    - Data is retrieved from the cache
 
-  - if data is available in DAS cache
+  - otherwise:
 
-    - It retrieves data from DAS cache and return them to the client
+    - The necessary data services are queried
+    - The results are parsed, transformed and inserted into the DAS cache
+    - The user receives a message that the data is being located
+    
+- The data is formatted and returned to the user
 
-For more information please use 
+  
+
+For more information please see the 
 :ref:`DAS workflow <das_workflow>` page. 
-The DAS DBs are based on MongoDB document-oriented database, see [Mongodb]_,
-even though during design/evaluation process we considered 
-usage of other technologies, such as different flavor of RDMS, memcached [Memcached]_,
-key-value based data stores, CouchDB [Couchdb]_, etc.
+The DAS DBs use the MongoDB document-oriented database (see [Mongodb]_),
+although during design/evaluation process we considered 
+a number of other technologies, such as different RDMS flavors, memcached [Memcached]_ and
+other key-value based data stores (eg CouchDB [Couchdb]_), etc.

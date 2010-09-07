@@ -1,7 +1,7 @@
 DAS logging DB
 ==============
-DAS logging DB holds information about all requests made to DAS. All records are stored
-`capped collection <http://www.mongodb.org/display/DOCS/Capped+Collections>`_ of Mongo DB.
+The DAS logging DB holds information about all requests made to DAS. All records are stored in a
+`capped collection <http://www.mongodb.org/display/DOCS/Capped+Collections>`_ of MongoDB.
 Capped collections are fixed sized collections that have a very high performance auto-LRU 
 age-out feature (age out is based on insertion order) and  maintain insertion order for 
 the objects in the collection.

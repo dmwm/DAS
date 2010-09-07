@@ -1,12 +1,12 @@
 DAS raw cache
 =============
-DAS raw cache holds all *raw* data-service outputs converted into DAS records.
+The DAS raw cache holds all *raw* data-service output, converted into uniform DAS records.
 
 DAS cache records
 -----------------
 
-DAS cache keeps data-services meta-data in a form of DAS records.
-Each data-service output has been converted into DAS records according to
+The DAS cache keeps metadata for the data-services in a form of DAS record.
+Each data-service output is converted into a DAS record according to
 :ref:`DAS mapping <das_mapping>`.
 
 .. _das_cache_data_record:
@@ -14,10 +14,10 @@ Each data-service output has been converted into DAS records according to
 data records
 ++++++++++++
 
-Each data record contains data-service meta-data. Its structure is unknown
-a-priory to DAS. Since DAS operates with JSON almost any data structure
-can be stored into DAS, e.g. dictionaries, lists, strings, numerals, etc.
-The only fields DAS appends to it are:
+Each data record contains data-service meta-data. The structure of the data
+service response is a-priori unknown to DAS. Since DAS operates with `JSON <http://json.org>`_
+almost any data structure can be stored into DAS, e.g. dictionaries, lists, 
+strings, numerals, etc. The only fields DAS appends to the record are:
 
 - das, contains DAS expiration timestamp
 - das_id, refers to query2apis data record
@@ -38,7 +38,7 @@ For example, here is a data record from `SiteDB <https://cmsweb.cern.ch/sitedb/>
 query2apis records
 ++++++++++++++++++
 
-This type of DAS records contain information about underlying API calls
+This type of DAS record contains information about underlying API calls
 made by DAS upon provided user query. It contains the following keys
 
 - das, a dictionary of DAS operations

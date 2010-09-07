@@ -1,28 +1,28 @@
 DAS merge cache
 ===============
-DAS merge cache is used to keep merged (aggregated) meta-data information
-from multiple data-service outputs. For example if service A and service B
-returns documents
+The DAS merge cache is used to keep merged (aggregated) information
+from multiple data-service responses. For example, if service A and 
+service B return documents
 
 .. doctest::
 
    {'service':'A', 'foo':1, 'boo':[1,2,3]}
    {'service':'B', 'foo':1, 'data': {'test':1}}
 
-the DAS will merge those documents based on common key, *foo* and
-resulting merged (aggregated) document will be in the following form:
+the DAS will merge those documents based on the common key, *foo* and
+resulting merged (aggregated) document will be of the following form:
 
 .. doctest::
 
    {'service':['A','B'], 'foo':1, 'boo':[1,2,3], 'data':{'test':1}}
 
-But of course DAS provide more then just merging the document content.
-Below you can find concrete example of merged CMS records.
+But of course DAS provides much more then just merging the document content.
+Below are more concrete example of merged CMS records.
 
 DAS merge records
 -----------------
 
-DAS merge record represents aggregated results made by DAS upon
+DAS merge records represent aggregated results made by DAS upon
 user input query. Each query contains
 
 - das, an expiration timestamp, based on shortest expire timestamps of

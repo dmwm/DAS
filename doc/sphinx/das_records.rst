@@ -6,12 +6,13 @@ DAS records
 
    data_objects.rst
 
-The DAS records represents meta-data in [JSON]_ data format. It is very lightweight
-to represent almost any data structure via values, dictionaries, lists. By itself,
-the JSON is native JavaScript data format and it is a dictionary data type in python.
-The DAS records is just collection of meta-data supplied by data-providers which
-participate in DAS. DAS wraps each meta-data with auxilary information such as
-internal id, reference das id to other DAS records, and DAS header. The DAS header
+DAS records represent meta-data in [JSON]_ data format. This is a lightweight, near
+universal format which can represent complex, nested structures via values, dictionaries, 
+lists. JSON is a native JavaScript data format (JavaScript Object Notation), and
+is represented by the dictionary type in python.
+A DAS record is just a collection of data supplied by data-services which
+participate in DAS. DAS wraps each data-service record with auxiliary meta-data such as
+internal ID, references to other DAS records, and a DAS header. The DAS header
 contains information about underlying API calls made to data-provider. For example:
 
 .. doctest::
