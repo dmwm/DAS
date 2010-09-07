@@ -1,39 +1,45 @@
 
 <!-- not_ready.tmpl -->
-DAS processing your request, please try in a few moments,
+DAS is processing your request, please try again in a few moments,
 <a href="javascript:ShowTag('why')">more</a>
 <br/>
 <div class="hide" id="why">
 <hr class="line" />
-<b>Why I don't see my data immeadiately?</b> 
-DAS doesn't hold any data, if data are not
-staged into DAS cache your request will 
-be requested to appropriate CMS data service.
-Upon data-retrieval and processing DAS cache
-will be updated and your data will become
-visible for everybody.
+<b>Why I don't see my data immediately?</b> 
+DAS doesn't hold any data. If the requested data
+isn't already in the DAS cache your data
+needs to be requested from the appropriate CMS data service(s).
+Once they have responded and the data has been transformed the
+cache will be updated and your data will become
+available (and available to anyone else with the same query).
 
-Please note, we use pre-fetch strategy to
-get data for most popular queries.
+We attempt to pre-populate the DAS cache with the data needed
+for the most popular queries.
 
-You may invoke the same query as many times
-as you want, but only one request will be processed.
+You may invoke the same query as many times as you want, 
+without causing extra load to DAS; queries are identified
+by a hash and only one process will answer a given query at once.
 So it is safe to hit <em>Search button many times</em>
-or reload the page without adding load on DAS server.
+or reload the page without hammering the DAS server.
 <br/>
 <br/>
-<b>Can I improve situation to get my data as fast as possible?</b>
-DAS records all user queries to internal DB. The pre-fetch robots
-are use this statistics to organize pre-fetching of data. So there is
-no need to do any special intervention.
+<b>What can I do to get my data quicker?</b>
+If your query included either no conditions or very general conditions,
+much more data will have to be fetched. If possible, use queries like
+<b>site=T1_CERN_CH</b> instead of <b>site=T*</b> or just <b>site</b>.
+
+All queries made to DAS are analysed to try and optimise the pre-population
+strategy, so a query you use often should after some time be already
+calculated for you.
 <br/>
 <br/>
-<b>My query does not show in reasonable amoung of time, what should I do?</b>
-Typically, DAS fetch data quite quickly. But, of course, the amount of
-data depends on provided query. For loose query conditions, the number of
-data fetched from data-service can be big. If you feel that DAS is not
-responding or does take too much time to process, please contact us
-and we can investigate this problem.
+<b>What should I do if the query hasn't completed in a reasonable amount of time?</b>
+Typically, DAS fetches data quite quickly. But, of course, the amount of
+data required depends on your query. For very loose query conditions, the volume of
+data required from the data-services can become huge, which will delay
+your query accordingly. If DAS is still not responding or takes
+silly amounts of time to process, please contact us and we can investigate 
+this problem.
 </div>
 <!-- end of not_ready.tmpl -->
 

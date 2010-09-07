@@ -12,52 +12,56 @@
 <div class="navcontainer">
 <ul>
 <li>
-What DAS stands for?
+What does DAS stand for?
 </li>
 </ul>
 <p>
-The Data Aggregation Service (DAS) is CMS project which provides access
-to CMS data-services, such as DBS, Phedex, SiteDB, etc., using free text-based
-keyword search syntax. It supersedes the 
+The Data Aggregation Service (DAS) is a CMS project which provides access
+to participating CMS data-services (such as DBS, Phedex, SiteDB, etc), 
+using a simple, flexible query language. It supersedes the 
 <a href="http://cmsweb.cern.ch/dbs_discovery">
 Data Discovery</a> service.
-It represents data from all data-services in common 
+It represents data from all data-services in a common 
 JSON/XML-format, provides 
 <a href="/das/cli">
-Command Line Interface (CLI)
+a Command Line Interface (CLI)
 </a>
-along with reach web-based interface.
+and a web-based interface.
 </p>
 
 <ul>
 <li>
-How DAS knows data relationship between CMS data-services?
+How does DAS know the relationship between objects from different CMS data-services?
 </li>
 </ul>
 <p>
-The various CMS data-services collect information about particular domain of CMS
-data operations, e.g. Phedex holds information about data location. If we
-consider all data-services together they represent a complete set of meta-data in our
-experiment. So, it's very common, that boundaries of one data-service are
-overlap with another. A typical example is DBS and Run Summary DB.
+The various CMS data-services each collect information about a particular domain of CMS
+operations, e.g. PhEDEx holds information about data location and DBS holds information
+about what those data files contain. If we consider all the data-services together
+they represent a complete set of meta-data for our experiment. 
+In almost every case there are overlaps between the information provided by each, and often
+that is the information we most need to know. A typical example is DBS and Run Summary DB.
 In DBS we store processing information about our data, such as
-dataset, blocks, files, runs. In Run Summary DB we store run specific
-information. Obviously, a run, is a common entity between two data-services.
-In DAS, such comonalities are taken into account and one or more entities are
+dataset, blocks, files, runs. In the Run Summary DB we store run specific
+information about each run. Obviously, the common entity between these two services
+is the "run". In DAS, such commonalities are taken into account and one or more keys are
 used to relate one service with another.
 </p>
 
 <ul>
 <li>
-How DAS aggregates data between different data-services?
+How does DAS aggregate data between different data-services?
 </li>
 </ul>
 <p>
-Upon provided query, DAS invokes appropriate data-service APIs,
-changing their output to DAS notations and merge data on common keys. For example,
-when user ask about a block, DBS and PhEDEx APIs are invoked. Both return block
-information, where block name is a common key between two outputs. Using this
-knowledge DAS merges their output into a single DAS record.
+When a user queries DAS, it analyses the query to find all data services holding
+relevant data, and then invokes the appropriate data-service APIs.
+The responses from each data service are transformed into a common DAS notation,
+and records from different services containing identified common keys are merged.
+For example, if a user queries for a block name, DBS and PhEDEx APIs are both invoked. 
+DBS returns information about the dataset the block belongs to, whereas PhEDEx returns
+information about the file's physical characteristics and current locations. These
+records are merged and the user sees a single document about each block.
 </p>
 
 </div>
@@ -74,7 +78,7 @@ knowledge DAS merges their output into a single DAS record.
 
 <ul>
 <li>
-Which operators are supported in DAS
+Which operators does DAS support?
 </li>
 </ul>
 <p>
@@ -86,7 +90,7 @@ $operators
 
 <ul>
 <li>
-Can I select/aggregate certain fields in DAS records
+Can I select/aggregate certain fields in DAS records?
 </li>
 </ul>
 <p>
@@ -94,6 +98,7 @@ Yes, for that you can use pipe "|" in your query. For example
 <div class="example">
 file dataset=/a/b/c | grep file.name, file.size
 </div>
+will strip out all fields except for file.name and file.size in the result.
 You can also use the following list of aggregate functions
 <div class="example">
 $aggregators
@@ -102,7 +107,8 @@ For example
 <div class="example">
 file dataset=/a/b/c | sum(file.size)
 </div>
-or you can combine filters and aggregators together, for instance
+will return a single record showing the total file size of all files in that dataset. 
+You can also combine filters and aggregators together, for instance
 <div class="example">
 file dataset=/a/b/c | grep file.name, file.size | sum(file.size), count(file.name)
 </div>
@@ -110,7 +116,7 @@ file dataset=/a/b/c | grep file.name, file.size | sum(file.size), count(file.nam
 
 <ul>
 <li>
-What should I type in DAS web interface?
+What should I type in the DAS web interface?
 </li>
 </ul>
 <p>
@@ -119,24 +125,28 @@ CMS data, e.g. dataset, block, run. If you're not sure which DAS keys to use,
 please see <a href="/das/services">Services</a> DAS section.
 
 <br />
-Please note, <b>it is wise</b> to use conditions to make your query and DAS run faster. 
+Please note that using conditions will make your query a lot faster. A completely wildcard
+query like *block* (equivalent to *block=**) will require huge amounts of data to be fetched
+before any aggregation or filter steps you have specified run. 
 </p>
 
 <ul>
 <li>
-Can I use conditions?
+How do I use conditions?
 </li>
 </ul>
 <p>
-Yes you can, use your DAS key to form a condition, e.g.
+Add an equals sign after the DAS key to specify a condition, e.g.
 <div class="example">
 site=T1_CH_CERN
 </div>
+Note that you can use wildcards in most conditions, and multiple conditions.
+In future there may also be operators other than just = available.
 </p>
 
 <ul>
 <li>
-Can I combine conditions and/or specify multiple DAS keys?
+How do I combine conditions or specify multiple DAS keys?
 </li>
 </ul>
 <p>
@@ -153,17 +163,17 @@ are equivalent.
 
 <ul>
 <li>
-Does DAS supports AND and OR operations?
+Does DAS support logical operators for multiple conditions?
 </li>
 </ul>
 <p>
-Right now DAS only support AND operations. We do plan to extend its syntax
-to support OR operator in nearby future.
+Right now DAS treats multiple conditions as an AND operation. 
+We do plan to extend the syntax to support at least the OR operator in the near future.
 </p>
 
 <ul>
 <li>
-DAS records are too large to read, can I filter some fields?
+How do I limit the output to only the fields I want to see?
 </li>
 </ul>
 <p>
@@ -171,49 +181,51 @@ DAS supports a simple grep operation. For example
 <div class="example">
 site=T1_CH_CERN | grep site.name
 </div>
+will filter out all fields except for site.name.
 You can also provide multiple fields to the grep filter, e.g.
 <div class="example">
 block=/a/b/c#123 | grep block.name, block.size
 </div>
-Please note, that multiple grep operators, e.g. 
+Please note that multiple grep operators, e.g. 
 <em>... | grep something | grep something_else</em>
 are not supported. The DAS grep function
-is not equivalent to UNIX grep, it serves mostly as a filter for given record.
+is not equivalent to UNIX grep.
 </p>
 
 <ul>
 <li>
-Why there is an latency in DAS queries?
+Why is there a delay before responses to DAS queries?
 </li>
 </ul>
 <p>
-DAS doesn't hold any data, instead it retrieves data from data-services and
-place them into the cache. Therefore, when you place your query 
-DAS sends request to the appropriate data-services. DAS web interface is
-designed to provide you as much feedback as possible, please pay attention
-to messages appearing next to the spining wheel.
+DAS doesn't hold any data you request (unless someone has already requested it),
+instead it has to retrieve data from each relevant data-services and
+place them into its cache, transform and finally merge the data before
+responding to you. The DAS web interface is designed to provide you as much
+feedback as possible, please pay attention to messages appearing next 
+to the spinning wheel.
 </p>
 
 <ul>
 <li>
-Why I see duplicate results and how to avoid them?
+Why do I see duplicate results and how to avoid them?
 </li>
 </ul>
 <p>
-Indeed, in some cases, the duplicates can appear in DAS. For instance if
-you'll use two consequentive queries:
+Indeed, in some cases, duplicates can appear in DAS. For instance if
+you perform two consecutive queries:
 <div class="example">
 <pre>
 run between [20853,20859]
 run in [20853,20859]
 </pre>
 </div>
-you'll see that runs are duplicate. It happens because input queries are
+you'll see runs that are duplicate. This happens because input queries are
 different while back-end API used the same set of parameters. Since DAS queries
 are different their hashes will be different too, which leads to two different
 API calls, who will create different records in DAS with different expiration
-timestamps. To avoid this issue you can simple apply <em>unique</em>
-filter as following:
+timestamps. To avoid this issue you can simple apply the <em>unique</em>
+filter to the output, like:
 <pre class="example">
 run in [20853,20859] | unique
 </pre>
@@ -237,10 +249,10 @@ What is a DAS record?
 </li>
 </ul>
 <p>
-A DAS record represents aggregated information about particular entity, e.g. site,
-combined from the results of different CMS data-services. For instance, the block
-information is stored in both DBS and PhEDEx data-service. In DAS this information
-is aggregated and stored as a single record. For example, here is typical DAS record:
+A DAS record represents aggregated information about a particular entity, e.g. site,
+block, run, from the results of different CMS data-services. For instance, the block
+information is stored in both DBS and PhEDEx data-services. In DAS this information
+is aggregated and stored as a single record. For example, here is a typical DAS record:
 <div class="example">
 <pre>
 {
@@ -254,9 +266,9 @@ is aggregated and stored as a single record. For example, here is typical DAS re
    {
     "admin": {
        "title": "Site Admin",
-       "surname": "Kreuzer",
-       "email": "Peter.Kreuzer@cern.ch",
-       "forename": "Peter"
+       "surname": "...",
+       "email": "...",
+       "forename": "..."
       },
     "name": "T1_CH_CERN"
    }]
@@ -267,33 +279,33 @@ is aggregated and stored as a single record. For example, here is typical DAS re
 
 <ul>
 <li>
-What <b>das_id</b> and <b>id</b> keys represent in DAS record?
+What do the <b>das_id</b> and <b>id</b> keys represent in a DAS record?
 </li>
 </ul>
 <p>
-The <b>id</b> represents unique identifier of DAS record, while
+The <b>id</b> is a unique identifier of DAS record in the DAS database, while
 <b>das_id</b> refers to the DAS records which contain information about
-URL, api and their parameters used to fetch this data.
+URL, api and the parameters used to fetch this data.
 </p>
 
 <ul>
 <li>
-Do you support other data-formats?
+Which data formats are supported?
 </li>
 </ul>
 <p>
-In DAS we support XML, JSON and HTML presentations of CMS meta-data.
+In DAS we provide XML, JSON and HTML representations of CMS meta-data.
 To use another data-format just use appropriate option from drop-down menu
-in your search field.
+on the search page.
 </p>
 
 <ul>
 <li>
-Why DAS XML/JSON records contain additional header?
+Why do DAS XML/JSON records contain an additional header?
 </li>
 </ul>
 <p>
-All DAS records are represented accorging to DAS data-specification, see this 
+All DAS records are represented according to DAS data-specification, see this 
 <a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService">link</a> 
 to read more about it. For simplicity and readability of DAS records in HTML view
 we simply drop this header from shown records.
