@@ -13,36 +13,37 @@ DAS services
    services/runsummary
    services/monitor
 
-DAS operates with provided list of data-services. It can be
-any type of service, e.g. web service, database, data-service.
+DAS operates using a provided list of data-services and their definitions.
+The nature of these services is unimportant provided that they provide a
+some form of API which DAS can call and aggregate the data returned.
 Each service needs to be registered in DAS by providing
-appropriate url, mapping and service handler class.
+an appropriate configuration file and (optionally) a service handler class..
 
 CMS services
 ------------
-Each CMS data-service is represented by its map and, optionally, by its plugin class.
-The data-service map contains description of the data-service, e.g. URL, URN, expire
-timestamp as well as API and notations maps.
+Each CMS data-service is represented by a mapping and, optionally, by a plugin class.
+The data-service map contains description of the data-service, e.g. URL, URN, expiry
+timeout as well as API and notations maps.
 
 - the API map relates DAS keys and API input parameters. It contains the following items:
 
-  - *api* represents name of the API
-  - *params* is a list of API input parameters together with regex expression patterns
-    accpeted by parameters
+  - *api*, name of the API
+  - *params*, a list of API input parameters together with regex patterns
+    accepted to check the format of or identify ambiguous values. 
   - *record* represents DAS record. Each record has
 
-    - *daskeys* is a list of DAS maps; each map relate user input das key
-      and its DAS record representation
+    - *daskeys*, a list of DAS maps; each map relates keys in the user query to
+      the appropriate DAS representation
 
-      - *key* a DAS key used in DAS queries, e.g. *block*
-      - *map* a DAS record representation of the *key*, e.g. *block.name*
-      - *pattern* a regex pattern for DAS key
+      - *key*, a DAS key used in DAS queries, e.g. *block*
+      - *map*, a DAS record representation of the *key*, e.g. *block.name*
+      - *pattern*, a regex pattern for DAS key
 
-    - *das2api* is a map between DAS key representation and API input parameter
+    - *das2api*, is a map between DAS key representations and API input parameters
 
-      - *api_param* an API input parameter, e.g. *se*
-      - *das_key* a DAS key it represents, e.g. *site.se*
-      - *pattern* a refex pattern for *api_param* 
+      - *api_param*, an API input parameter, e.g. *se*
+      - *das_key*, a DAS key it represents, e.g. *site.se*
+      - *pattern*, a regex pattern for *api_param* 
 
 - Notation map represents a mapping between data-service output and DAS records.
   It is optional. 

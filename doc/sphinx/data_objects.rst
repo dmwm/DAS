@@ -12,25 +12,24 @@ or DAS records.
 
 There are basically two types of data objects: flat and hierarchical ones.
 
-- Flat objects represents meta-data in a flat structure, for instance
+- Flat
 
 .. doctest::
 
    {"dataset":"abc", size:1, "location":"CERN"}
 
-- Hierarchical objects represents meta-data in hierarchical structure, for
-  instance
+- Hierarchical
 
 .. doctest::
 
    {"dataset": {"name":"abc", size:1, "location":"CERN"}}
 
-The former one has disadvantage of not being able to tell what this object
-represents. This is not the case of last one. It is clear in that case
-that data object represents *dataset* object. While everything comes with
-cost. The hierarchical data objects can be very nested which introduce
-load on parsing them. In DAS we store objects in hierarchical structure, but
-try to minimize its nest-ness. Therefore it allows to talk about key/attributes
-of the object in a natural way. Also this simplify their aggregation. For instance,
-if two data-providers ship information about files and file objects contain
-*name* attribute, it will be trivial to merge objects based on *name* value.
+The first has the disadvantage of not being able to easily tell what this object
+represents, whereas this is not the case for the latter. It is clear in that case
+that the object principally represents a *dataset*. However, all good things come
+with a cost; the hierarchical structures are much more expensive to parse,
+both in python and MongoDB. In DAS we store objects in hierarchical structures, but
+try to minimize the nesting depth. This allows us to talk about the key/attributes
+of the object in a more natural way, and simplifies their aggregation. For instance,
+if two different data-providers serve information about files and file objects containing
+the *name* attribute, it will be trivial to merge the objects based on the *name* value.

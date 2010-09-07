@@ -1,24 +1,24 @@
 How to add new data-service
 ===========================
-DAS supports pluggable architecture, so adding a new CMS data-service
-should be a trivial procedure. Here we discuss two different ways
+DAS has pluggable architecture, so adding a new CMS data-service
+should be a relatively easy procedure. Here we discuss two different ways
 to add a new service into DAS. 
 
 Plug and play interface
 -----------------------
 This work is in progress. 
 
-A new data-service can register with DAS by providing its URI/API
-configuration. This configuration includes the data-service URL,
-the data format it provides, the optional expiration timestamp for
-its data, the API name and its parameters and optional mapping into
+A new data-service can register with DAS by providing a file describing
+the interface and available APIs. This configuration includes the data-service URL,
+the data format provided, an optional expiration timestamp for
+the data, the API name, necessary parameters and optional mapping onto
 DAS keys.
 
-A new DAS interface will allow to add this information via simple 
-configuration file. The data-service configuration
-files should be presented in [YAML]_ data-format. Since DAS is written
-in Python we use python YAML library. Here is an example of such configuration
-[#f1]_
+A new DAS interface will allow this information to be added
+via a simple configuration file. The data-service configuration
+files should be presented in [YAML]_ data-format. 
+
+An example configuration follows [#f1]_:
 
 .. doctest::
 
@@ -55,8 +55,8 @@ in Python we use python YAML library. Here is an example of such configuration
             {'notation':'site_name', 'map': 'site.name', 'api': ''}
     ]
 
-The syntax contains key:value pairs, where value can be in a 
-form of string, list or dictionary. Pound sign (#) defines a 
+The syntax consists of key:value pairs, where value can be in a 
+form of string, list or dictionary. Hash sign (#) defines a 
 comment, the three dashes (---) defines the record separator. 
 Each record starts with definition of system and data format 
 provided by data-service. 
@@ -70,7 +70,7 @@ provided by data-service.
 Those definitions will be applied to each API defined later in 
 a map file. 
 The API section followed after the record separator and should define: 
-*urn, url, expire, params and daskeys* keys. 
+*urn*, *url*, *expire*, *params* and *daskeys*. 
 
 .. doctest::
 
@@ -82,17 +82,19 @@ The API section followed after the record separator and should define:
    params: {} # dictionary of data-service input parameters
    daskeys: [{}, {}] # list of dictionaries for DAS key maps
 
-- the *urn* is API name or identifier (it can be any name different from 
+- the *urn* is the API name or identifier (any name different from the 
   API name itself) and used solely inside of DAS
 - the *url* defines the data-service URL
 - the *params* are data-service input parameters
 - the *daskeys* is a list of maps between data-service input parameters 
   and DAS internal key representation. For instance when we 
-  say *site* we may mean site CMS name or site SE/CE name. 
+  say *site* we might mean site CMS name or site SE/CE name. 
   So the DAS key will be *site* while DAS internal key 
   representation may be *site.name* or *site.sename*. So, each entry in
   *daskeys* list is defined as the following dictionary:
-  {'key':value, 'map':value, 'pattern':''}
+  {'key':value, 'map':value, 'pattern':''}, where pattern is a
+  regular expression which can be used to differentiate between different
+  arguments where they have different structures. 
 - the (optional) *das2api* map defines mapping between DAS internal 
   key and data-service input parameter. For instance, *site.name* 
   DAS key can be mapping into _name_ data-service input parameter. 
@@ -118,7 +120,8 @@ The next API record can be followed by the next record separator, e.g.
 
 At the end of DAS map there is an optional *notation* mapping, 
 which defines data-service output mapping back into DAS internal 
-key representation. 
+key representation (including converting from flat to hierarchical
+structures if necessary).
 
 .. doctest::
 
@@ -148,7 +151,7 @@ To summarize, the YAML map file provides
     mapping within a DAS record, *map*, and appropriate pattern
   - list of API to DAS notations (if any); different API can yield
     data in different notations, for instance, siteName and site_name.
-    To accomodate this syntatic differences we use this mapping.
+    To accommodate these syntactic differences we use this mapping.
 
 - notation mapping between data-service provider output and DAS
 
@@ -161,7 +164,7 @@ Add new service via API
 ----------------------- 
 You can manually add new service by extending 
 :class:`DAS.services.abstract_service.DASAbstractService` and
-overriding its *api* method.
+overriding the *api* method.
 
 To do so we need to create a new class
 inherited from :class:`DAS.services.abstract_service.DASAbstractService`.
@@ -179,7 +182,7 @@ inherited from :class:`DAS.services.abstract_service.DASAbstractService`.
  
 optionally the class can override .. function:: def api(self, query)
 method of :class:`DAS.services.abstract_service.DASAbstractService`
-Here is an example of such implementation
+Here is an example of such an implementation
 
 .. doctest::
 
@@ -194,6 +197,6 @@ Here is an example of such implementation
         ctime   = time.time() - time0
         self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
 
-The hypotetical function call should contact data-service and retrieve,
-parse and yield data. Please note that we encourage to use 
-generator [Gen]_ in function implementation.
+The hypothetical function call should contact the data-service and fetch,
+parse and yield data. Please note that we encourage the use of 
+python generators [Gen]_ in function implementations.

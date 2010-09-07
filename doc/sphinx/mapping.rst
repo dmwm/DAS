@@ -2,20 +2,22 @@
 
 DAS Mapping DB
 ==============
-DAS Mapping DB holds information about all data-service APIs 
-which participate in DAS. It provides maps to convert from/to 
-DAS to/from API notations:
+The DAS Mapping DB holds information about all the data-service APIs 
+which are used by DAS, and the necessary mappings to convert between
+DAS and API notations.
 
 .. figure:: _images/das_mappings.png
 
-Two maps, daskeys and das2api serve transformation from input
-DAS keys used by end-user into DAS record key and API input parameter.
-The notation maps is used to adjust keys for API records. Basically
-it provides a way to transform API raw output into DAS records.
-Optional apitag map is used to instruct DAS which API tag to use for given
-DAS key.
+- The daskeys mapping is used to transform keys entered by a user into 
+  the keys that DAS uses internally to identify data in the cache.
+- The das2api mapping converts between internal DAS keys and the names
+  required by the data service query.
+- The notation map transforms the keys in the data service response
+  into the appropriate DAS equivalents.
+- The optional apitag map is used to instruct DAS of which API tag should
+  be attached to a given DAS key.    
 
-Below we provide a particular examples of CMS mapping records in DAS Mapping DB:
+Below we provide an example of CMS mapping records in DAS Mapping DB:
 
 - API metric example:
 
@@ -55,4 +57,5 @@ Below we provide a particular examples of CMS mapping records in DAS Mapping DB:
 Please note, each data-service must provide its mapping records in 
 `YAML <http://en.wikipedia.org/wiki/Yaml>`_ data-format. The records shown
 above are the ones stored into DAS storage back-end, while concrete mapping
-can use any YAML representation, e.g. ascii.
+can use any YAML representation, e.g. ascii. (Note that YAML is a superset
+of JSON, so pure JSON files could be used).
