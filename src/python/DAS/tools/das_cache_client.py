@@ -118,6 +118,7 @@ def spammer(query_file, host, method='request'):
             url  = host + path + '?%s' % encoded_data
             proc = Process(target=urlrequest, args=(url, headers))
             proc.start()
+#            print(proc, proc.is_alive())
 
 #
 # main
