@@ -16,3 +16,4 @@ auth.ini
 .project
 .pydevproject
 .settings
+src/python/ply/parsetab.py

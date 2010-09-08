@@ -9,6 +9,7 @@ __revision__ = "$Id: $"
 __version__ = "$Revision: $"
 __author__ = "Gordon Ball and Valentin Kuznetsov"
 
+import os
 import sys
 import types
 import ply.lex
@@ -26,11 +27,19 @@ def lexer_error(query, pos, error):
     return msg
 
 class DASPLY(object):
-    def __init__(self, daskeys, verbose=None):
+    def __init__(self, daskeys, verbose=0):
         self.daskeys = daskeys
         self.verbose = verbose
         self.lexer   = None # defined at run time using self.build()
         self.parser  = None # defined at run time using self.build()
+
+        if  not os.environ.has_key('DAS_ROOT'):
+            msg = 'Unable to locate DAS_ROOT environment'
+            raise Exception(msg)
+        self.parsertab_dir = os.path.join(os.environ['DAS_ROOT'], 'src/python/ply')
+        if  not os.path.isdir(self.parsertab_dir):
+            msg = 'Directory $DAS_ROOT/src/python/ply does not exists'
+            raise Exception(msg)
 
     tokens = [
         'DASKEY',
@@ -233,7 +242,8 @@ class DASPLY(object):
     def build(self, **kwargs):
         """Dynamic lexer/parser builder"""
         self.lexer  = ply.lex.lex(module=self, **kwargs)
-        self.parser = ply.yacc.yacc(module=self, **kwargs)
+        self.parser = ply.yacc.yacc(module=self, outputdir=self.parsertab_dir, 
+                        debug=self.verbose, **kwargs)
         
 def ply2mongo(query):
     """

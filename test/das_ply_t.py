@@ -24,7 +24,8 @@ class testDASPLY(unittest.TestCase):
                    'latitude', 'longitude', 'city', 'ip', 'date', 'system', 'zip']
 
         self.dasply = DASPLY(daskeys, self.debug)
-        args = {'debug':self.debug, 'errorlog' : ply.yacc.NullLogger()}
+#        args = {'debug':self.debug, 'errorlog' : ply.yacc.NullLogger()}
+        args = {'errorlog' : ply.yacc.NullLogger()}
         self.dasply.build(**args)
 
         self.queries = {}
