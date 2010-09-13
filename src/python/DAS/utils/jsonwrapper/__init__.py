@@ -47,5 +47,14 @@ def dumps(idict, **kwargs):
     if  _module == 'json':
         return json.dumps(idict, **kwargs)
     elif _module == 'cjson':
-        return cjson.encode(idict)
+        try:
+            data = cjson.encode(idict)
+            return data
+        except:
+            try: 
+                data = json.dumps(idict, **kwargs)
+                return data
+            except:
+                msg = 'Unable to ecode %s' % idict
+                raise Exception(msg)
 
