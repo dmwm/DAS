@@ -16,25 +16,25 @@ wild_card: "%"
 #das2api :
 #    - api_param : name
 #      das_key : site
-#      pattern : "re.compile('^T[0-3]')"
+#      pattern : "^T[0-3]"
 ##### This was commented out
 #        - api_param : name
 #          das_key : site
-#          pattern : "re.compile('([a-zA-Z0-9]+\\.){2}')"
+#          pattern : "([a-zA-Z0-9]+\\.){2}"
 --- 
 urn : resource_element
 url : "http://localhost:8010/sites/resource_element"
 expire : 3600
 params : { "name" : "T%", "type" : "%" }
 daskeys : [
-#        {"key": "site", "map": "site.name", "pattern": "re.compile('^T[0-3]')"},
+#        {"key": "site", "map": "site.name", "pattern": "^T[0-3]"},
         {"key": "resource_element", "map": "site.resource_element.cms_name", 
-                "pattern": "re.compile('^T[0-3]')"},
+                "pattern": "^T[0-3]"},
 ]
 das2api : [
         {"das_key":"resource_element.cms_name", "api_param":"name", 
-                   "pattern":"re.compile('^T[0-3]')"},
-#        {"das_key":"site.name", "api_param":"name", "pattern":"re.compile('^T[0-3]')"},
+                   "pattern":"^T[0-3]"},
+#        {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
 #        {"das_key":"site.type", "api_param":"type", "pattern":""}
 ]
 --- 
@@ -43,14 +43,14 @@ url : "http://localhost:8010/sites/resource_pledge"
 expire : 3600
 params :  {"name":"T%"}
 daskeys : [
-#        {"key": "site", "map": "site.name", "pattern": "re.compile('^T[0-3]')"},
+#        {"key": "site", "map": "site.name", "pattern": "^T[0-3]"},
         {"key":"resource_pledge", "map":"site.resource_pledge.cms_name", 
-         "pattern":"re.compile('^T[0-3]')"},
+         "pattern":"^T[0-3]"},
 ]
 das2api : [
         {"das_key":"resource_pledge.cms_name", "api_param":"name", 
-                   "pattern":"re.compile('^T[0-3]')"}
-#        {"das_key":"site.name", "api_param":"name", "pattern":"re.compile('^T[0-3]')"},
+                   "pattern":"^T[0-3]"}
+#        {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
 ]
 #---
 # NOT READY
@@ -68,7 +68,7 @@ das2api : [
 #    das2api :
 #        - api_param : name
 #          das_key : site
-#          pattern : "re.compile('^T[0-3]')"
+#          pattern : "^T[0-3]"
 #---
 #urn : links
 #url : "http://localhost:8010/sites/links"
@@ -78,7 +78,7 @@ das2api : [
 #        {"key":"url", "map":"site.url", "pattern":""}
 #]
 #das2api : [
-#        {"das_key":"site.name", "api_param":"name", "pattern":"re.compile('^T[0-3]')"}
+#        {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"}
 #]
 #---
 #NOT READY
@@ -95,7 +95,7 @@ das2api : [
 #    das2api :
 #        - api_param : name
 #          das_key : site
-#          pattern : "re.compile('^T[0-3]')"
+#          pattern : "^T[0-3]"
 ---
 urn : contacts
 url : "http://localhost:8010/sites/contacts"
@@ -103,16 +103,16 @@ expire : 3600
 params : {"name":"T%"}
 daskeys : [
         {"key":"admin", "map":"site.admin", 
-         "pattern":'re.compile("[A-Z0-9._%-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}", re.IGNORECASE)'},
+         "pattern":"[A-Z0-9._%-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}"},
 #        {"key":"role", "map":"site.role", "pattern":""},
 #        {"key":"phone", "map":"site.phone", "pattern":""},
 #        {"key":"surname", "map":"site.surname", "pattern":""},
-#        {"key":"name", "map":"admin.contacts.cms_name", "pattern":"re.compile('^T[0-3]')"},
-        {"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]')"},
+#        {"key":"name", "map":"admin.contacts.cms_name", "pattern":"^T[0-3]"},
+        {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
 ]
 das2api : [
-        {"das_key":"site.name", "api_param":"name", "pattern":"re.compile('^T[0-3]')"}
-#        {"das_key":"admin.contacts.name", "api_param":"name", "pattern":"re.compile('^T[0-3]')"}
+        {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"}
+#        {"das_key":"admin.contacts.name", "api_param":"name", "pattern":"^T[0-3]"}
 ]
 #---
 # NOT READY
@@ -129,7 +129,7 @@ das2api : [
 #    das2api :
 #        - api_param : name
 #          das_key : site
-#          pattern : "re.compile('^T[0-3]')"
+#          pattern : "^T[0-3]"
 ---
 # list API provides information about given name, e.g. T1_CH
 # output includes site_name, url, country, usage, cms_name
@@ -139,12 +139,12 @@ expire : 3600
 params : {"name":"T%", "scheme":"cms_name"}
 apitag : sitelist
 daskeys : [
-        {"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]')"},
+        {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
         #{"key":"country", "map":"site.country", "pattern":""},
         #{"key":"url", "map":"site.url", "pattern":""},
 ]
 das2api : [
-        {"das_key":"site.name", "api_param":"name", "pattern":"re.compile('^T[0-3]')"}
+        {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"}
 ]
 #---
 #urn : software
@@ -159,7 +159,7 @@ das2api : [
 #das2api :
 #    - api_param : name
 #      das_key : site
-#      pattern : "re.compile('^T[0-3]')"
+#      pattern : "^T[0-3]"
 ---
 notations : [
         {"notation": "cms_name", "map":"name", "api":"list"},

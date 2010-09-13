@@ -12,8 +12,8 @@ daskeys : [
         {"key":"stream", "map":"stream", "pattern":""},
 ]
 das2api : [
-        {"das_key":"run","api_param":"run", "pattern":"re.compile('[1-9][0-9]{4,5}')"},
-        {"das_key":"run.run_number","api_param":"run", "pattern":"re.compile('[1-9][0-9]{4,5}')"},
+        {"das_key":"run","api_param":"run", "pattern":"[1-9][0-9]{4,5}"},
+        {"das_key":"run.run_number","api_param":"run", "pattern":"[1-9][0-9]{4,5}"},
 ]
 ---
 urn : reco_config
@@ -25,7 +25,7 @@ daskeys : [
         {"key":"primary_ds", "map":"primary_dataset.name", "pattern":""},
 ]
 das2api : [
-        {"das_key":"run.run_number","api_param":"run", "pattern":"re.compile('[1-9][0-9]{4,5}')"},
+        {"das_key":"run.run_number","api_param":"run", "pattern":"[1-9][0-9]{4,5}"},
         {"das_key":"primary_dataset.name","api_param":"dataset", "pattern":""},
 ]
 ---
@@ -36,12 +36,12 @@ params : {"run_status": "required"}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},
         {"key":"run_status", "map":"run_status", 
-         "pattern":"re.compile('^CloseOut[a-zA-Z]*$|^Complete$"},
+         "pattern":"^CloseOut[a-zA-Z]*$|^Complete$"},
 ]
 das2api : [
-        {"das_key":"run.run_number","api_param":"run", "pattern":"re.compile('[1-9][0-9]{4,5}')"},
+        {"das_key":"run.run_number","api_param":"run", "pattern":"[1-9][0-9]{4,5}"},
         {"das_key":"run_status","api_param":"run_status", 
-         "pattern":"re.compile('^CloseOut[a-zA-Z]*$|^Complete$"},
+         "pattern":"^CloseOut[a-zA-Z]*$|^Complete$"},
 ]
 ---
 urn : runsbyrecostatus
@@ -50,10 +50,10 @@ expire : 300
 params : {"reco_status": "required"}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},
-        {"key":"reco_status", "map":"reco_status", "pattern":"re.compile('0|1')"},
+        {"key":"reco_status", "map":"reco_status", "pattern":"0|1"},
 ]
 das2api : [
-        {"das_key":"reco_status","api_param":"reco_status", "pattern":"re.compile('0|1')"},
+        {"das_key":"reco_status","api_param":"reco_status", "pattern":"0|1"},
 ]
 ---
 notations : [

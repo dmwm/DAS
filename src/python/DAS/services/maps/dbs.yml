@@ -123,15 +123,15 @@ params : {
 daskeys : [
     {"key":"block", "map":"block.name", "pattern":""},
     {"key":"dataset", "map":"dataset.name", "pattern":""},
-    {"key":"site", "map":"site.name", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+    {"key":"site", "map":"site.name", "pattern":"([a-zA-Z0-9]+\\.){2}"},
 ]
 das2api : [
     {"das_key":"block.name", "api_param":"block_name", "pattern":""},
     {"das_key":"dataset.name", "api_param":"path", "pattern":""},
     {"das_key":"site.name", "api_param":"storage_element_name",
-     "pattern":"re.compile('^T[0-3]_')"},
+     "pattern":"^T[0-3]_"},
     {"das_key":"site.se", "api_param":"storage_element_name",
-     "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"}
+     "pattern":"([a-zA-Z0-9]+\\.){2}"}
 ]
 ---
 urn : listBlockProvenance
@@ -148,7 +148,7 @@ daskeys : [
 das2api : [
     {"das_key":"block.name", "api_param":"block_name", "pattern":""},
     {"das_key":"relationship", "api_param":"parent_or_child", 
-     "pattern":"re.compile('(PARENT|CHILD)')"},
+     "pattern":"(PARENT|CHILD)"},
 ]
 ---
 urn : listFiles

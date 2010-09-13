@@ -9,12 +9,12 @@ daskeys : [
         {"key":"person", "map":"person.name", "pattern":""},
         {"key":"name", "map":"person.name", "pattern":""},
         {"key":"surname", "map":"person.name", "pattern":""},
-        {"key":"phone", "map":"person.phone", "pattern":"re.compile([1-9]{5})"},
+        {"key":"phone", "map":"person.phone", "pattern":"[1-9]{5}"},
         {"key":"login", "map":"person.login", "pattern":""}
         
 ]
 das2api : [
         {"das_key":"person.name","api_param":"name", "pattern":""},
-        {"das_key":"person.phone","api_param":"phone", "pattern":"re.compile([1-9]{5})"},
+        {"das_key":"person.phone","api_param":"phone", "pattern":"[1-9]{5}"},
         {"das_key":"person.login","api_param":"login","pattern":""}
 ]

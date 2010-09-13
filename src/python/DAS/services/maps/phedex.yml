@@ -8,13 +8,13 @@ expire : 3600
 params : {"se":"*", "block":"required", "node":"*"}
 daskeys : [
         {"key":"block", "map":"block.name", "pattern":""},
-        {"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]_')"},
-        {"key":"site", "map":"site.se", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+        {"key":"site", "map":"site.name", "pattern":"^T[0-3]_"},
+        {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9]+\\.){2}"},
 ]
 das2api : [
         {"das_key":"block.name", "api_param":"block", "pattern":""},
-        {"das_key":"site.name", "api_param":"node", "pattern":"re.compile('^T[0-3]_')"},
-        {"das_key":"site.se", "api_param":"se", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+        {"das_key":"site.name", "api_param":"node", "pattern":"^T[0-3]_"},
+        {"das_key":"site.se", "api_param":"se", "pattern":"([a-zA-Z0-9]+\\.){2}"},
 ]
 ---
 urn : fileReplicas
@@ -29,30 +29,30 @@ daskeys : [
 das2api : [
         {"das_key":"block.name", "api_param":"block", "pattern":""},
         #{"das_key":"file.block.name", "api_param":"block", "pattern":""},
-        {"das_key":"site", "api_param":"node", "pattern":"re.compile('^T[0-3]_')"},
-        {"das_key":"site.name", "api_param":"node", "pattern":"re.compile('^T[0-3]_')"},
-        {"das_key":"site", "api_param":"se", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-        {"das_key":"site.se", "api_param":"se", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+        {"das_key":"site", "api_param":"node", "pattern":"^T[0-3]_"},
+        {"das_key":"site.name", "api_param":"node", "pattern":"^T[0-3]_"},
+        {"das_key":"site", "api_param":"se", "pattern":"([a-zA-Z0-9]+\\.){2}"},
+        {"das_key":"site.se", "api_param":"se", "pattern":"([a-zA-Z0-9]+\\.){2}"},
 ]
 ---
 urn : nodes
 url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/nodes"
 expire : 3600
 params : {"node":"*", "noempty":""}
-daskeys : [{"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]_')"}]
+daskeys : [{"key":"site", "map":"site.name", "pattern":"^T[0-3]_"}]
 das2api : [
-        {"das_key":"site", "api_param":"node", "pattern":"re.compile('^T[0-3]_')"},
-        {"das_key":"site.name", "api_param":"node", "pattern":"re.compile('^T[0-3]_')"},
+        {"das_key":"site", "api_param":"node", "pattern":"^T[0-3]_"},
+        {"das_key":"site.name", "api_param":"node", "pattern":"^T[0-3]_"},
 ]
 ---
 urn : nodeusage
 url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/nodeusage"
 expire : 3600
 params : {"node":"*"}
-daskeys : [{"key":"site", "map":"site.name", "pattern":"re.compile('^T[0-3]_')"}]
+daskeys : [{"key":"site", "map":"site.name", "pattern":"^T[0-3]_"}]
 das2api : [
-        {"das_key":"site", "api_param":"node", "pattern":"re.compile('^T[0-3]_')"},
-        {"das_key":"site.name", "api_param":"node", "pattern":"re.compile('^T[0-3]_')"},
+        {"das_key":"site", "api_param":"node", "pattern":"^T[0-3]_"},
+        {"das_key":"site.name", "api_param":"node", "pattern":"^T[0-3]_"},
 ]
 ---
 urn : groups
@@ -71,10 +71,10 @@ expire : 3600
 params : {"node":"*", "se": "*", "group":"*"}
 daskeys : [{"key":"node", "map":"node.name", "pattern":""}]
 das2api : [
-        {"das_key":"site", "api_param":"node", "pattern":"re.compile('^T[0-3]_')"},
-        {"das_key":"site.name", "api_param":"node", "pattern":"re.compile('^T[0-3]_')"},
-        {"das_key":"site", "api_param":"se", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
-        {"das_key":"site.se", "api_param":"se", "pattern":"re.compile('([a-zA-Z0-9]+\\.){2}')"},
+        {"das_key":"site", "api_param":"node", "pattern":"^T[0-3]_"},
+        {"das_key":"site.name", "api_param":"node", "pattern":"^T[0-3]_"},
+        {"das_key":"site", "api_param":"se", "pattern":"([a-zA-Z0-9]+\\.){2}"},
+        {"das_key":"site.se", "api_param":"se", "pattern":"([a-zA-Z0-9]+\\.){2}"},
         {"das_key":"group", "api_param":"group", "pattern":""},
         {"das_key":"group.name", "api_param":"group", "pattern":""},
 ]
