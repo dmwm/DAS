@@ -682,7 +682,12 @@ class DASMongocache(object):
         # get all API records for given DAS query
         records = self.col.find({'query':encode_mongo_query(query)})
         for row in records:
-            rec   = [k for i in row['das']['lookup_keys'] for k in i.values()]
+            try:
+                rec   = [k for i in row['das']['lookup_keys'] for k in i.values()]
+            except:
+                traceback.print_exc()
+                print "Fail with record:", row
+                continue
             lkeys = list(set(k for i in rec for k in i))
             for key in lkeys:
                 if  key not in lookup_keys:
