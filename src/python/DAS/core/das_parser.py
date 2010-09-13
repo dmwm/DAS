@@ -324,10 +324,10 @@ class QLManager(object):
                     if  mapkey:
                         mongo_query['spec'][mapkey] = '*'
             return
-
-        for key in mongo_query['spec'].keys():
+        spec = mongo_query['spec']
+        for key, val in spec.items():
             for system in self.map.list_systems():
-                mapkey = self.map.find_mapkey(system, key)
+                mapkey = self.map.find_mapkey(system, key, val)
                 if  mapkey and mapkey != key and \
                     mongo_query['spec'].has_key(key):
                     mongo_query['spec'][mapkey] = mongo_query['spec'][key]
@@ -347,7 +347,8 @@ class QLManager(object):
             for service, keys in self.daskeysmap.items():
                 if  service not in self.dasservices:
                     continue
-                daskeys = self.map.find_daskey(service, key)
+                value = cond.get(key, None)
+                daskeys = self.map.find_daskey(service, key, value)
                 if  set(keys) & set(daskeys) and service not in slist:
                     slist.append(service)
         return slist
@@ -364,7 +365,7 @@ class QLManager(object):
             skeys = [skeys]
         adict = {}
         mapkeys = [key for key in cond.keys()]
-        services = [srv for srv in self.map.list_systems()]
+        services = self.services(query)
         for srv in services:
             alist = self.map.list_apis(srv)
             for api in alist:
