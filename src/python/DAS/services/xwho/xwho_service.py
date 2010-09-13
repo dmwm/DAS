@@ -22,26 +22,28 @@ class XWhoService(DASAbstractService):
         self.re_find_phone = re.compile(r'<b>Tel:</b>([0-9 ]+)')
     
     def api(self, query):
+        """API implementation"""
         api = 'people' #this is the only API provided
         url = self.map[api]['url']
         expire = self.map[api]['expire']
         fakeargs = dict(self.map[api]['params'])
         realargs = {}
         
-        name = query['spec'].get('person.name',None)
+        name = query['spec'].get('person.name', None)
         if name: 
-            fakeargs['name']=name
-            realargs['-notag']=name
-        phone = query['spec'].get('person.phone',None)
+            fakeargs['name'] = name
+            realargs['-notag'] = name
+        phone = query['spec'].get('person.phone', None)
         if phone: 
-            fakeargs['phone']=phone
-            realargs['-phone']=phone
-        login = query['spec'].get('person.login',None)
+            fakeargs['phone'] = phone
+            realargs['-phone'] = phone
+        login = query['spec'].get('person.login', None)
         if login:
-            fakeargs['login']=login
-            realargs['-loginid']=login
+            fakeargs['login'] = login
+            realargs['-loginid'] = login
         
-        self.logger.info("XWhoService::api(%s), name=%s, phone=%s, login=%s"%(query, name, phone, login))
+        self.logger.info("XWhoService::api(%s), name=%s, phone=%s, login=%s"\
+                %(query, name, phone, login))
         
         start_time = time.time()
         try:
@@ -61,11 +63,12 @@ class XWhoService(DASAbstractService):
         
     
     def xwho_parser(self, raw):
-        
+        """ service parser"""
         for match in self.re_summary_ids.findall(raw):
             ccid = int(match)
             person = {'ccid':ccid}
-            person_raw = urllib2.urlopen(self.map['people']['url']+'/'+str(ccid), timeout=60).read()
+            person_raw = urllib2.urlopen(\
+                self.map['people']['url']+'/'+str(ccid), timeout=60).read()
             
             name_match = self.re_find_name.search(person_raw)
             if name_match:

@@ -18,11 +18,13 @@ class Filter(object):
         else:
             return arg
     def filter(self, arg):
+        """Filter method"""
         return arg
 
 class WordRearrangeFilter(Filter):
     "Switches two adjacent words"
     def filter(self, arg):
+        """Filter method"""
         words = arg.split(' ')
         index = random.randint(0, len(words)-2)
         words[index] = (words[index], words[index+1])
@@ -33,6 +35,7 @@ class WordRearrangeFilter(Filter):
 class RandomSpacesFilter(Filter):
     "Either doubles or removes a space"
     def filter(self, arg):
+        """Filter method"""
         space_index = [i for i in range(len(arg)) if arg[i] == ' ']
         if len(space_index)>0:
             index = random.choice(space_index)
@@ -46,6 +49,7 @@ class RandomSpacesFilter(Filter):
 class WrongQuotationFilter(Filter):
     "Swaps single and double quotes"
     def filter(self, arg):
+        """Filter method"""
         quote_index = [i for i in range(len(arg)) if arg[i] in ('"',"'")]
         if len(quote_index)>0:
             index = random.choice(quote_index)
@@ -59,11 +63,13 @@ class WrongQuotationFilter(Filter):
 class TruncationFilter(Filter):
     "Cuts off the last few characters"
     def filter(self, arg):
+        """Filter method"""
         return arg[:-random.randint(1, 8)]
 
 class BadSpellingFilter(Filter):
     "Switches alphabetic characters"
     def filter(self, arg):
+        """Filter method"""
         char_index = [i for i in range(len(arg)) if arg[i] in string.letters]
         if len(char_index)>0:
             index = random.choice(char_index)

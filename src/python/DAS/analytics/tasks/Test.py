@@ -1,3 +1,7 @@
+"""
+DAS Analytics task test class
+"""
+
 import random
 import time
 

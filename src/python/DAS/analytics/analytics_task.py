@@ -1,3 +1,10 @@
+#-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=C0301
+
+"""
+Task class for analytics.
+"""
+
 import time
 import logging
 import uuid
@@ -108,14 +115,14 @@ class RunnableTask(object):
         
         try:
             klass = self._load_class()
-        except Exception, e:
+        except Exception, exp:
             logger.error('Task "%s" (%s) failed to load class "%s", aborting.',
                          self.name, taskid, self.classname)
-            return {'taskid':taskid, 'success': False, 'error': e, 
+            return {'taskid':taskid, 'success': False, 'error': exp, 
                     'start_time':start_time, 'finish_time':start_time,
                     'name':self.name, 'index':self.index}
-        childlogger = logging.getLogger("DASAnalytics.%s"%self.classname)
-        daslogger = logging.getLogger("DASAnalytics.%s.DAS"%self.classname)
+        childlogger = logging.getLogger("DASAnalytics.%s" % self.classname)
+        daslogger = logging.getLogger("DASAnalytics.%s.DAS" % self.classname)
         
         #we probably need to add a DASCore instance here too.
         
@@ -130,19 +137,19 @@ class RunnableTask(object):
         
         try:
             instance = klass(**self.kwargs)
-        except Exception, e:
+        except Exception, exp:
             logger.error('Task "%s" (%s) failed to instantiate, aborting. Error was %s',
-                         self.name, taskid, str(e))
-            return {'taskid':taskid, 'success': False, 'error': e, 
+                         self.name, taskid, str(exp))
+            return {'taskid':taskid, 'success': False, 'error': exp, 
                     'start_time':start_time, 'finish_time':start_time,
                     'name':self.name, 'index':self.index}
         try:
             result = instance()
-        except Exception, e:
+        except Exception, exp:
             finish_time = time.time() #we might have run for some time by now
             logger.error('Task "%s" (%s) failed during run, aborting. Error was %s',
-                         self.name, taskid, str(e))
-            return {'taskid':taskid, 'success': False, 'error': e,
+                         self.name, taskid, str(exp))
+            return {'taskid':taskid, 'success': False, 'error': exp,
                     'start_time':start_time, 'finish_time':finish_time,
                     'name':self.name, 'index':self.index}
         

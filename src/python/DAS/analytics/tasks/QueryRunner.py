@@ -1,3 +1,6 @@
+"""
+Query Runner class
+"""
 
 class QueryRunner(object):
     "Replaces das_robot"

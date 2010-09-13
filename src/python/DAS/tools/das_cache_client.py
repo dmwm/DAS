@@ -156,26 +156,26 @@ if __name__ == '__main__':
         host = 'http://' + host
     url = host + path
 
-    headers={"Accept": "application/json"}
-    format = opts.format.lower()
+    headers = {"Accept": "application/json"}
+    format  = opts.format.lower()
     if  format == 'json' or format == 'dasjson':
-        headers={"Accept": "application/json"}
+        headers = {"Accept": "application/json"}
     elif format == 'xml' or format == 'dasxml':
-        headers={"Accept": "application/xml"}
+        headers = {"Accept": "application/xml"}
     else:
-        headers={"Accept": "application/%s" % format}
+        headers = {"Accept": "application/%s" % format}
 
     if  request == 'GET' or request == 'DELETE':
-        encoded_data=urllib.urlencode(params, doseq=True)
+        encoded_data = urllib.urlencode(params, doseq=True)
         url += '?%s' % encoded_data
         req = UrlRequest(request, url=url, headers=headers)
     else:
         headers['Content-type'] = 'application/json'
-        encoded_data=json.dumps(params)
+        encoded_data = json.dumps(params)
         req = UrlRequest(request, url=url, data=encoded_data, headers=headers)
 
     if  debug:
-        h=urllib2.HTTPHandler(debuglevel=1)
+        h = urllib2.HTTPHandler(debuglevel=1)
         opener = urllib2.build_opener(h)
     else:
         opener = urllib2.build_opener()
