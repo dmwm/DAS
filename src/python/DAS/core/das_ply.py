@@ -37,6 +37,7 @@ class DASPLY(object):
         self.lexer   = None # defined at run time using self.build()
         self.parser  = None # defined at run time using self.build()
 
+        self.dassystems = ['sitedb', 'phedex']
         if  not os.environ.has_key('DAS_ROOT'):
             msg = 'Unable to locate DAS_ROOT environment'
             raise Exception(msg)
@@ -51,7 +52,6 @@ class DASPLY(object):
         'IPADDR',
         'PIPE',
         'AGGREGATOR',
-        'RESERVED',
         'FILTER',
         'COMMA',
         'LSQUARE',
@@ -59,14 +59,12 @@ class DASPLY(object):
         'LPAREN',
         'RPAREN',
         'OPERATOR',
-        'WORD',
+        'VALUE',
         'NUMBER',
         'DATE',
-#        'SPACE',
 #        'MAPREDUCE',
     ]
 
-#    t_SPACE    = r'\ '
     t_PIPE = r'\|'
     t_COMMA    = r'\,'
 #    t_MAPREDUCE = r'NEVER MATCH ME'
@@ -92,15 +90,12 @@ class DASPLY(object):
         r'sum|min|max|avg|count'
         return t
 
-    def t_RESERVED(self, t):
-        r'date|system'
-        return t
-
     def t_DASKEY(self, t):
         r'[a-z_]+(\.[a-zA-Z_]+)*'
         # in DAS we use only lower case for keys, while lower/upper for attr
-        if  t.value.split('.')[0] in self.daskeys:
-            return t
+#        if  t.value.split('.')[0] in self.daskeys:
+#            return t
+        return t
 
     def t_IPADDR(self, t):
         r'([0-9]{1,3}\.){3,3}[0-9]{1,3}'
@@ -122,7 +117,7 @@ class DASPLY(object):
             t.value = int(t.value)
         return t
 
-    def t_WORD(self, t):
+    def t_VALUE(self, t):
         r'[a-zA-Z/*][a-zA-Z_0-9/*\-#\.]+|([0-9]{1,3}\.){3,3}[0-9]{1,3}|"[a-zA-Z_0-9/*\-#]+\s[a-zA-Z_0-9/*\-#]+"'
         cond1 = t.value not in self.daskeys
         list1 = t.value.split()
@@ -174,12 +169,15 @@ class DASPLY(object):
         """pipelist : pipefunc"""
         p[0] = [p[1]]
 
+    # lexer logic, we can have daskey=value, but due to ambiguity of daskey
+    # defition it is allowed to have <daskey>=<daskey> where second <daskey>
+    # can be a simple workd, e.g. system=sitedb
     def p_keyop0(self, p):
-        """keyop : DASKEY OPERATOR WORD
+        """keyop : DASKEY OPERATOR VALUE
+                 | DASKEY OPERATOR DASKEY
                  | DASKEY OPERATOR NUMBER
                  | DASKEY OPERATOR IPADDR
                  | DASKEY OPERATOR DATE
-                 | RESERVED OPERATOR DATE
                  | DASKEY OPERATOR array"""
         p[0] = ('keyop', p[1], p[2], p[3])
 
