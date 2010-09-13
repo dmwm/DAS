@@ -25,7 +25,7 @@ echo "Run pylint with $thr/10 threashold level, exit immediate=$immediate"
 echo
 
 #files=`find $DASHOME -name "*.py" | grep -v ipy_profile_mongo`
-files=`find $DASHOME -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config`
+files=`find $DASHOME -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py`
 fail_files=0
 for f in $files
 do
