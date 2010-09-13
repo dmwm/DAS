@@ -42,9 +42,11 @@ class DAS_SONManipulator(SONManipulator):
             son['_id'] = str(obj_id)
         if  type(son) is types.DictType and son.has_key('cache_id'):
             objcache_id = son['cache_id']
-            son['cache_id'] = str(objcache_id)
+            if  type(objcache_id) is not types.ListType:
+                son['cache_id'] = str(objcache_id)
         if  type(son) is types.DictType and son.has_key('das_id'):
             objdas_id = son['das_id']
-            son['das_id'] = str(objdas_id)
+            if  type(objdas_id) is not types.ListType:
+                son['das_id'] = str(objdas_id)
         return son
 
