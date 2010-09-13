@@ -446,6 +446,7 @@ class DASMongocache(object):
             else:
                 self.col.update({'_id':ObjectId(record['_id'])}, 
                     {'$pushAll':{'das.api':header['das']['api'], 
+                                 'das.urn':header['das']['api'],
                                  'das.system':header['das']['system'], 
                                  'das.url':header['das']['url'],
                                  'das.ctime':header['das']['ctime'],

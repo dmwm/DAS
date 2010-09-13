@@ -37,7 +37,7 @@ def dasheader(system, query, api, url, args, ctime, expire):
     query   = encode_mongo_query(query)
     dasdict = dict(system=[system], timestamp=time.time(),
                 url=[url], ctime=[ctime], qhash=genkey(query), 
-                expire=expire_timestamp(expire), 
+                expire=expire_timestamp(expire), urn=[api],
                 api=[api], status="requested")
     return dict(das=dasdict)
 
