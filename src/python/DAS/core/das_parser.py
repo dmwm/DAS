@@ -277,11 +277,12 @@ class QLManager(object):
         self.daskeysmap  = self.map.daskeys()
         self.operators   = list(das_operators())
         self.daskeys     = list(das_special_keys())
+        self.verbose     = config.get('verbose', 0)
+        self.logger      = config['logger']
         for val in self.daskeysmap.values():
             for item in val:
                 self.daskeys.append(item)
-        self.dasply = DASPLY(self.daskeys, verbose=0)
-        self.dasply.build()
+        self.dasply = DASPLY(self.daskeys, self.verbose)
 
     def parse(self, query, add_to_analytics=True):
         """
@@ -296,10 +297,10 @@ class QLManager(object):
             if  add_to_analytics:
                 self.analytics.add_query(query, mongo_query)
             return mongo_query
-        mongo_query = parser(query, self.daskeys, self.operators)
+#        mongo_query = parser(query, self.daskeys, self.operators)
 #        print "### vk parser ", mongo_query
 #        print "### ply parser", self.mongo_query(query)
-#        mongo_query = self.mongo_query(query)
+        mongo_query = self.mongo_query(query)
         self.convert2skeys(mongo_query)
         if  add_to_analytics:
             self.analytics.add_query(query, mongo_query)
@@ -309,6 +310,13 @@ class QLManager(object):
         """
         Return mongo query for provided input query
         """
+        # NOTE: somehow I need to keep build call just before using
+        # PLY parser, otherwise it fails to parse.
+        self.dasply.build()
+        if  self.verbose:
+            msg = "QLManager::mongo_query, input query='%s'" % query
+            self.logger.debug(msg)
+            self.dasply.test_lexer(query)
         ply_query   = self.dasply.parser.parse(query)
         mongo_query = ply2mongo(ply_query)
         return mongo_query
@@ -351,6 +359,12 @@ class QLManager(object):
                 daskeys = self.map.find_daskey(service, key, value)
                 if  set(keys) & set(daskeys) and service not in slist:
                     slist.append(service)
+        # look-up special key condition
+        if  cond.has_key('system'):
+            requested_system = cond['system']
+            if  type(requested_system) is types.StringType:
+                requested_system = [requested_system]
+            return list( set(slist) & set(requested_system) )
         return slist
 
     def service_apis_map(self, query):
@@ -364,7 +378,8 @@ class QLManager(object):
         if  type(skeys) is types.StringType:
             skeys = [skeys]
         adict = {}
-        mapkeys = [key for key in cond.keys()]
+#        mapkeys = [key for key in cond.keys()]
+        mapkeys = [key for key in cond.keys() if key not in das_special_keys()]
         services = self.services(query)
         for srv in services:
             alist = self.map.list_apis(srv)
