@@ -90,10 +90,7 @@ def urlrequest(url, headers):
     fdesc.close()
     decoder  = JSONDecoder()
     response = decoder.decode(data)
-    if  response.has_key('ctime'):
-        print "response time", response['ctime']
-    else:
-        print response
+    print response
 
 def spammer(query_file, host, method='request'):
     """
