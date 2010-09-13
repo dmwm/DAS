@@ -538,7 +538,7 @@ class DASAbstractService(object):
             found  = False
             for key, val in cond.items():
                 # check if keys from conditions are accepted by API.
-                if  self.dasmapping.check_dasmap(self.name, api, key):
+                if  self.dasmapping.check_dasmap(self.name, api, key, val):
                     # need to convert key (which is daskeys.map) into
                     # input api parameter
                     found = True
