@@ -52,6 +52,14 @@ class DASAnalytics(object):
         self.conn = make_connection(self.dbhost, self.dbport, self.attempt)
         database  = self.conn[self.dbname]
         self.col  = database[self.colname]
+#        self.conn = Connection(self.dbhost, self.dbport)
+#        if  self.dbname not in self.conn.database_names():
+#            capped_size = 104857600
+#            options   = {'capped':True, 'size': capped_size}
+#            database  = self.conn[self.dbname]
+#            database.create_collection('self.colname', **options)
+#            print "####CREATE CAPPED ANALYTICS"
+#        self.col  = self.conn[self.dbname][self.colname] 
 
     def delete_db(self):
         """
