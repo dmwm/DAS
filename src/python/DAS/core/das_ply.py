@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=C0103,C0301,R0201
 
 """
 DAS Query Language parser based on PLY.
@@ -14,9 +15,9 @@ import sys
 import types
 import ply.lex
 import ply.yacc
-from   DAS.core.das_ql import das_reserved
+#from   DAS.core.das_ql import das_reserved
 from   DAS.utils.utils import convert2date
-from   DAS.utils.regex import float_number_pattern, int_number_pattern
+#from   DAS.utils.regex import float_number_pattern, int_number_pattern
 
 def lexer_error(query, pos, error):
     """Produce pretty formatted message about invalid query"""
@@ -27,6 +28,9 @@ def lexer_error(query, pos, error):
     return msg
 
 class DASPLY(object):
+    """
+    DAS QL parser based on PLY lexer/parser.
+    """
     def __init__(self, daskeys, verbose=0):
         self.daskeys = daskeys
         self.verbose = verbose
@@ -36,7 +40,8 @@ class DASPLY(object):
         if  not os.environ.has_key('DAS_ROOT'):
             msg = 'Unable to locate DAS_ROOT environment'
             raise Exception(msg)
-        self.parsertab_dir = os.path.join(os.environ['DAS_ROOT'], 'src/python/ply')
+        self.parsertab_dir = os.path.join(os.environ['DAS_ROOT'], \
+                'src/python/ply')
         if  not os.path.isdir(self.parsertab_dir):
             msg = 'Directory $DAS_ROOT/src/python/ply does not exists'
             raise Exception(msg)
@@ -84,7 +89,7 @@ class DASPLY(object):
         return t
 
     def t_AGGREGATOR(self, t):
-        r'sum|min|max|avg'
+        r'sum|min|max|avg|count'
         return t
 
     def t_RESERVED(self, t):
@@ -92,7 +97,8 @@ class DASPLY(object):
         return t
 
     def t_DASKEY(self, t):
-        r'[a-z_]+(\.[a-zA-Z_]+)?' # in DAS we use only lower case keywords
+        r'[a-z_]+(\.[a-zA-Z_]+)*'
+        # in DAS we use only lower case for keys, while lower/upper for attr
         if  t.value.split('.')[0] in self.daskeys:
             return t
 
@@ -247,18 +253,26 @@ class DASPLY(object):
         
 def ply2mongo(query):
     """
-    DAS-QL query  : file block=123 | grep file.size
+    DAS-QL query  : file block=123 | grep file.size | sum(file.size)
     PLY query     : {'keys': [('keyop', 'file', None, None), 
-                              ('keyop', 'block', '=', 123.0)], 
-                     'pipe': [('filter', 'grep', ['file.size'])]}
+                              ('keyop', 'block', '=', 123)], 
+                     'pipe': [('filter', 'grep', ['file.size']), 
+                              ('aggregators', ('aggregator', 'sum', 'file.size'))]}
     Mongo query   : {'fields': [u'file'], 
-                     'spec': {u'block.name': 123}, 'filters': ['file.size']}
+                     'spec': {u'block.name': 123}, 'filters': ['file.size'],
+                     'aggregators': [('sum', 'file.size')]}
     """
     mongodict = {}
     if  query.has_key('pipe'):
-        for filter, name, args in query['pipe']:
-            if  filter == 'filter' and name == 'grep':
-                mongodict['filters'] = args
+#        for filter, name, args in query['pipe']:
+        for item in query['pipe']:
+            if  item[0] == 'filter':
+                dasfilter, name, args = item
+                if  dasfilter == 'filter' and name == 'grep':
+                    mongodict['filters'] = args
+            if  item[0] == 'aggregators':
+                aggs = [(k[1], k[2]) for k in item[1:]]
+                mongodict['aggregators'] = aggs
     fields = []
     spec   = {}
     for keyop, name, oper, val in query['keys']:
