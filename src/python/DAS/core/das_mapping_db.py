@@ -221,23 +221,36 @@ class DASMapping(object):
                     if  mkey.has_key('map'):
                         return mkey['map']
         
-    def find_daskey(self, das_system, map_key):
+    def find_daskey(self, das_system, map_key, value=None):
         """
         Find das key for given system and map key.
         """
+        msg   = 'DASMapping::find_daskeys, '
         cond  = { 'system' : das_system, 'daskeys.map': map_key }
         daskeys = []
-        for row in self.col.find(cond, ['daskeys.key']):
+        for row in self.col.find(cond, ['daskeys']):
             if  row and row.has_key('daskeys'):
                 for dkey in row['daskeys']:
                     if  dkey.has_key('key'):
-                        daskeys.append(dkey['key'])
+                        if  value:
+                            if  dkey.has_key('pattern') and dkey['pattern']:
+                                pat = re.compile(dkey['pattern'])
+                                if  pat.match(value):
+                                    daskeys.append(dkey['key'])
+                                else:
+                                    msg += 'mismatch: %s, key=%s, value=%s'\
+                                            % (das_system, map_key, value)
+                                    msg += ', pattern=%s' % dkey['pattern']
+                                    self.logger.info(msg)
+                        else:
+                            daskeys.append(dkey['key'])
         return daskeys
 
-    def find_mapkey(self, das_system, das_key):
+    def find_mapkey(self, das_system, das_key, value=None):
         """
         Find map key for given system and das key.
         """
+        msg   = 'DASMapping::find_mapkey, '
         cond  = { 'system' : das_system, 'daskeys.key': das_key }
         mapkeys = []
         for row in self.col.find(cond, ['daskeys', 'urn']):
@@ -245,6 +258,14 @@ class DASMapping(object):
                 urn = row['urn']
                 for key in row['daskeys']:
                     if  key.has_key('map') and key['key'] == das_key:
+                        if  value and key['pattern']:
+                            pat = re.compile(key['pattern'])
+                            if  not pat.match(value):
+                                msg += 'mismatch: %s, key=%s, value=%s'\
+                                        % (das_system, das_key, value)
+                                msg += ', pattern=%s' % key['pattern']
+                                self.logger.info(msg)
+                                continue
                         return key['map']
 #                        mapkeys.append((urn, key['map']))
 #        return mapkeys
@@ -261,13 +282,22 @@ class DASMapping(object):
                 apilist.append(row['urn'])
         return apilist
 
-    def check_dasmap(self, system, urn, das_map):
+    def check_dasmap(self, system, urn, das_map, value=None):
         """
         Check if provided system/urn/das_map is a valid combination
-        in mapping db.
+        in mapping db. If value for das_map key is provided we verify
+        it against pattern in DB.
         """
-        cond   = { 'system' : system, 'daskeys.map' : das_map, 'urn': urn }
-        return self.col.find(cond).count()
+        if  not value:
+            cond   = { 'system' : system, 'daskeys.map' : das_map, 'urn': urn }
+            return self.col.find(cond).count()
+        cond = { 'system' : system, 'daskeys.map' : das_map, 'urn': urn }
+        for row in self.col.find(cond, ['daskeys.pattern']):
+            for item in row['daskeys']:
+                pat = re.compile(item['pattern'])
+                if  pat.match(value):
+                    return True
+        return False
 
     def find_system(self, key):
         """
@@ -298,7 +328,7 @@ class DASMapping(object):
                 else:
                     continue
                 if  value and kdict['pattern']:
-                    pat = eval(kdict['pattern'])
+                    pat = re.compile(kdict['pattern'])
                     if  pat.match(value): 
                         if  lkey not in lookupkeys:
                             lookupkeys.append(lkey)
@@ -339,7 +369,7 @@ class DASMapping(object):
                 if  row['das_key'] != daskey:
                     continue
                 if  value and row['pattern']:
-                    pat = eval(row['pattern'])
+                    pat = re.compile(row['pattern'])
                     if  pat.match(value):
                         if  api_param not in names:
                             names.append(api_param)
