@@ -567,7 +567,7 @@ class DASAbstractService(object):
             if  not self.pass_apicall(query, url, api, args):
                 continue
             msg  = "DASAbstractService::apimap yield "
-            msg += "system %s, url=%s, api=%s, args=%s, format=%s, " \
+            msg += "system ***%s***, url=%s, api=%s, args=%s, format=%s, " \
                 % (self.name, url, api, args, format)
             msg += "expire=%s, wild_card=%s" \
                 % (expire, wild)
