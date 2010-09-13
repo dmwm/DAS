@@ -30,6 +30,12 @@ class testDASPLY(unittest.TestCase):
 
         self.queries = {}
 
+        query = "zip=10000 | grep zip.Placemark.address | count(zip.Placemark.address)"
+        mongo = {'fields': None, 'spec': {'zip': 10000}, 
+                 'filters': ['zip.Placemark.address'],
+                 'aggregators': [('count', 'zip.Placemark.address')] }
+        self.queries[query] = mongo
+
         query = "city=Ithaca"
         mongo = {'fields': None, 'spec': {'city': 'Ithaca'}}
         self.queries[query] = mongo
@@ -66,8 +72,9 @@ class testDASPLY(unittest.TestCase):
         mongo = {'fields': None, 'spec': {'run': {'$gte': 20853, '$lte': 20859}}}
         self.queries[query] = mongo
 
-        query = "file block=123 | grep file.size"
-        mongo = {'fields': ['file'], 'spec': {'block': 123}, 'filters': ['file.size']}
+        query = "file block=123 | grep file.size | sum(file.size)"
+        mongo = {'fields': ['file'], 'spec': {'block': 123}, 'filters': ['file.size'],
+                 'aggregators': [('sum', 'file.size')]}
         self.queries[query] = mongo
 
         query = "block=/a/b/RECO#9f5c396b-b6a1"
@@ -85,7 +92,9 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "dataset file=/a/b run in [1,2] | grep file.name, file.age | unique | sum(file.size),max(file.size)"
-        mongo = {'fields': ['dataset'], 'spec': {'run': {'$in': [1, 2]}, 'file': '/a/b'}, 'filters': ['file.name', 'file.age']}
+        mongo = {'fields': ['dataset'], 'spec': {'run': {'$in': [1, 2]}, 'file': '/a/b'}, 
+                 'filters': ['file.name', 'file.age'],
+                 'aggregators': [('sum', 'file.size'), ('max', 'file.size')]}
         self.queries[query] = mongo
 
 
