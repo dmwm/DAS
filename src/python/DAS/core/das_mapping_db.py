@@ -233,15 +233,18 @@ class DASMapping(object):
                 for dkey in row['daskeys']:
                     if  dkey.has_key('key'):
                         if  value:
-                            if  dkey.has_key('pattern') and dkey['pattern']:
-                                pat = re.compile(dkey['pattern'])
-                                if  pat.match(value):
+                            pval = dkey.get('pattern', '')
+                            if  pval:
+                                pat = re.compile(pval)
+                                if  pat.match(str(value)):
                                     daskeys.append(dkey['key'])
                                 else:
                                     msg += 'mismatch: %s, key=%s, value=%s'\
                                             % (das_system, map_key, value)
-                                    msg += ', pattern=%s' % dkey['pattern']
+                                    msg += ', pattern=%s' % pval
                                     self.logger.info(msg)
+                            else:
+                                daskeys.append(dkey['key'])
                         else:
                             daskeys.append(dkey['key'])
         return daskeys
@@ -258,9 +261,10 @@ class DASMapping(object):
                 urn = row['urn']
                 for key in row['daskeys']:
                     if  key.has_key('map') and key['key'] == das_key:
-                        if  value and key['pattern']:
-                            pat = re.compile(key['pattern'])
-                            if  not pat.match(value):
+                        if  value:
+                            pval = key.get('pattern', '')
+                            pat = re.compile(pval)
+                            if  not pat.match(str(value)):
                                 msg += 'mismatch: %s, key=%s, value=%s'\
                                         % (das_system, das_key, value)
                                 msg += ', pattern=%s' % key['pattern']
@@ -295,7 +299,7 @@ class DASMapping(object):
         for row in self.col.find(cond, ['daskeys.pattern']):
             for item in row['daskeys']:
                 pat = re.compile(item['pattern'])
-                if  pat.match(value):
+                if  pat.match(str(value)):
                     return True
         return False
 
@@ -329,7 +333,7 @@ class DASMapping(object):
                     continue
                 if  value and kdict['pattern']:
                     pat = re.compile(kdict['pattern'])
-                    if  pat.match(value): 
+                    if  pat.match(str(value)): 
                         if  lkey not in lookupkeys:
                             lookupkeys.append(lkey)
                 else:
@@ -370,7 +374,7 @@ class DASMapping(object):
                     continue
                 if  value and row['pattern']:
                     pat = re.compile(row['pattern'])
-                    if  pat.match(value):
+                    if  pat.match(str(value)):
                         if  api_param not in names:
                             names.append(api_param)
                 else:
