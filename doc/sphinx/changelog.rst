@@ -7,7 +7,7 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
-- 0.5.0
+- 0.5.0 till 0.5.1
 
   - based on Gordon series of patches the following changes has been
     implemented
@@ -25,6 +25,7 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - added index on das.expire
   - fixed issue with SON manipulator (conversion to str for das_id, cache_id)
   - enable checks for DAS key value patterns
+  - added URN's to query record
   - updated DAS documentation (proof-reading, DAS QL section, etc.)
 
 - 0.4.13 till 0.4.18
