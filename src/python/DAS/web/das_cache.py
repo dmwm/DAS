@@ -10,6 +10,7 @@ __version__ = "$Revision: 1.11 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import re
 import sys
 import time
 import types
@@ -315,18 +316,26 @@ class DASCacheService(DASWebManager):
         performance measurements. Return a dict with ctime.
         """
         time0 = time.time()
-        data  = {'server_method':'request'}
+        data  = {'server_method':'testmongo'}
         if  kwargs.has_key('query'):
-            query = kwargs['query']
+            query = kwargs.get('query', {})
+            spec  = query
+            if  type(query) is types.StringType and \
+                query.find('=') != -1:
+                key, val = query.split('=')
+                if  val.find('*') != -1:
+                    pat = re.compile(val.replace('*', '.*'))
+                    val = pat
+                spec = {key: val}
             self.logdb(query)
             idx   = getarg(kwargs, 'idx', 0)
-            limit = getarg(kwargs, 'limit', 0)
+            limit = getarg(kwargs, 'limit', 1)
             skey  = getarg(kwargs, 'skey', '')
             order = getarg(kwargs, 'order', 'asc')
-            collection = kwargs.get('collection', 'logging.db')
+            collection = kwargs.get('collection', 'das.cache')
             dbname, colname = collection.split('.')
             coll = self.con[dbname][colname]
-            res  = [r for r in coll.find().skip(idx).limit(limit)]
+            res  = [r for r in coll.find(spec).skip(idx).limit(limit)]
             data.update({'status':'ok', 'idx':idx, 
                      'limit':limit, 'query':query, 'nresults': len(res),
                      'skey':skey, 'order':order, 'collection': collection})
