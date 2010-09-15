@@ -22,8 +22,7 @@ import itertools
 import random
 
 # DAS modules
-from DAS.utils.utils import genkey
-from DAS.utils.utils import aggregator
+from DAS.utils.utils import genkey, convert_dot_notation, aggregator
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 import DAS.utils.jsonwrapper as json
 
@@ -703,6 +702,7 @@ class DASMongocache(object):
             self.merge.create_index([('das.expire', ASCENDING)])
         except:
             pass
+        inserted = 0
         for pkey in lookup_keys:
             skey = [(pkey, DESCENDING)]
             # lookup all service records
@@ -729,9 +729,23 @@ class DASMongocache(object):
             try:
                 while True:
                     if  not self.merge.insert(itertools.islice(gen, size)):
+                        inserted = 1
                         break
             except InvalidOperation:
                 pass
+        if  not inserted: # we didn't merge anything
+            empty_record = {'das':{'expire':expire, 'primary_key':lookup_keys}, 
+                            'cache_id':[], 'das_id': id_list}
+            spec = query['spec']
+            if  type(spec) is types.DictType:
+                spec = [spec]
+            for key, val in query['spec'].items():
+                if  key.find('.') == -1:
+                    empty_record[key] = []
+                else: # it is compound key, e.g. site.name
+                    newkey, newval = convert_dot_notation(key, val)
+                    empty_record[newkey] = newval
+            self.merge.insert(empty_record)
 
     def update_cache(self, query, results, header):
         """
