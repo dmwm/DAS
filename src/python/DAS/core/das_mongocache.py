@@ -741,11 +741,12 @@ class DASMongocache(object):
         # insert/check query record in DAS cache
         self.insert_query_record(query, header)
 
-        # create index on das.expire
-        try:
-            self.col.create_index([('das.expire', ASCENDING)])
-        except:
-            pass
+        # create index on special keys
+        for specialkey in ['das.expire', 'query.spec.key', 'das_id']:
+            try:
+                self.merge.create_index([(specialkey, ASCENDING)])
+            except:
+                pass
 
         # update results records in DAS cache
         rec   = [k for i in header['lookup_keys'] for k in i.values()]
