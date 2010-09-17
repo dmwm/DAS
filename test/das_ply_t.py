@@ -20,10 +20,12 @@ class testDASPLY(unittest.TestCase):
         set up DAS core module
         """
         self.debug = 0
+        dassystems = ['dbs', 'sitedb', 'phedex', 'google_maps', 
+                      'postalcode', 'ip_services']
         daskeys = ['dataset', 'file', 'block', 'run', 'site', 
                    'latitude', 'longitude', 'city', 'ip', 'date', 'system', 'zip']
 
-        self.dasply = DASPLY(daskeys, self.debug)
+        self.dasply = DASPLY(daskeys, dassystems, verbose=self.debug)
 #        args = {'debug':self.debug, 'errorlog' : ply.yacc.NullLogger()}
         args = {'errorlog' : ply.yacc.NullLogger()}
         self.dasply.build(**args)
@@ -100,7 +102,37 @@ class testDASPLY(unittest.TestCase):
                  'filters': ['file.name', 'file.age'],
                  'aggregators': [('sum', 'file.size'), ('max', 'file.size')]}
         self.queries[query] = mongo
-
+        
+        query = "city = camelCase"
+        mongo = {'fields': None, 'spec':{'city': 'camelCase'}}
+        self.queries[query] = mongo
+        
+        query = "city = lowercase"
+        mongo = {'fields': None, 'spec':{'city': 'lowercase'}}
+        self.queries[query] = mongo
+        
+        query = "city = 'two words'"
+        mongo = {'fields': None, 'spec':{'city': 'two words'}}
+        self.queries[query] = mongo
+        
+        query = 'city = "two words"'
+        mongo = {'fields': None, 'spec':{'city': 'two words'}}
+        self.queries[query] = mongo
+        
+        #query=DASKEY
+        query = 'city = dataset'
+        mongo = {'fields': None, 'spec':{'city': 'dataset'}}
+        self.queries[query] = mongo
+        
+        #query=DASKEYtext
+        query = 'city = datasetPostfix'
+        mongo = {'fields': None, 'spec':{'city': 'datasetPostfix'}}
+        self.queries[query] = mongo
+        
+        #query=OPERATORtext (I don't expect query=OPERATOR to ever work)
+        query = 'city = betweenPostfix'
+        mongo = {'fields': None, 'spec':{'city': 'betweenPostfix'}}
+        self.queries[query] = mongo
 
     def test_lexer(self):
         """Test DAS PLY lexer"""
@@ -115,6 +147,7 @@ class testDASPLY(unittest.TestCase):
             try:
                 ply_query = self.dasply.parser.parse(query)
             except:
+                self.dasply.parser.parse(query, debug=1)
                 print "Input query:", query
                 raise
             if  self.debug:

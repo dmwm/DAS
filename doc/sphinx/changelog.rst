@@ -26,6 +26,9 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - fixed issue with SON manipulator (conversion to str for das_id, cache_id)
   - enable checks for DAS key value patterns
   - added URN's to query record
+  - added empty records into DAS merge to prevent cases when no results
+    aggregated for user request
+  - various speed-up enhancements (missing indexes, empty records, etc.)
   - updated DAS documentation (proof-reading, DAS QL section, etc.)
 
 - 0.4.13 till 0.4.18

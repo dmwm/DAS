@@ -15,9 +15,11 @@ import sys
 import types
 import ply.lex
 import ply.yacc
-#from   DAS.core.das_ql import das_reserved
+import re
+
 from   DAS.utils.utils import convert2date
-#from   DAS.utils.regex import float_number_pattern, int_number_pattern
+from   DAS.core.das_ql import das_filters, das_operators
+from   DAS.core.das_ql import das_aggregators
 
 def lexer_error(query, pos, error):
     """Produce pretty formatted message about invalid query"""
@@ -31,13 +33,15 @@ class DASPLY(object):
     """
     DAS QL parser based on PLY lexer/parser.
     """
-    def __init__(self, daskeys, verbose=0):
+    def __init__(self, daskeys, dassystems,
+                 operators=None, filters=None,
+                 aggregators=None, verbose=0):
         self.daskeys = daskeys
         self.verbose = verbose
         self.lexer   = None # defined at run time using self.build()
         self.parser  = None # defined at run time using self.build()
 
-        self.dassystems = ['sitedb', 'phedex']
+        self.dassystems = dassystems
         if  not os.environ.has_key('DAS_ROOT'):
             msg = 'Unable to locate DAS_ROOT environment'
             raise Exception(msg)
@@ -46,6 +50,22 @@ class DASPLY(object):
         if  not os.path.isdir(self.parsertab_dir):
             msg = 'Directory $DAS_ROOT/src/python/ply does not exists'
             raise Exception(msg)
+        
+        # test if we have been given a list of desired operators/filters
+        # /aggregators, if not get the lists from das_ql
+        operators = operators if operators else das_operators()
+        filters = filters if filters else das_filters()
+        aggregators = aggregators if aggregators else das_aggregators()
+        
+        # build a map of token->token.type which we can use in the
+        # enlarged VALUE rule
+        self.tokenmap = {}
+        for o in operators:
+            self.tokenmap[o] = 'OPERATOR'
+        for f in filters:
+            self.tokenmap[f] = 'FILTER'
+        for a in aggregators:
+            self.tokenmap[a] = 'AGGREGATOR'
 
     tokens = [
         'DASKEY',
@@ -65,6 +85,7 @@ class DASPLY(object):
 #        'MAPREDUCE',
     ]
 
+    t_OPERATOR = r'='
     t_PIPE = r'\|'
     t_COMMA    = r'\,'
 #    t_MAPREDUCE = r'NEVER MATCH ME'
@@ -78,25 +99,7 @@ class DASPLY(object):
 ### !!!IMPORTANT!!!
 ### PLEASE NOTE the order of functions in a file regulates the order of regex
 ### which will be applied during lexer step
-    def t_FILTER(self, t):
-        r'grep|unique'
-        return t
-
-    def t_OPERATOR(self, t):
-        r'=|in|between|last'
-        return t
-
-    def t_AGGREGATOR(self, t):
-        r'sum|min|max|avg|count'
-        return t
-
-    def t_DASKEY(self, t):
-        r'[a-z_]+(\.[a-zA-Z_]+)*'
-        # in DAS we use only lower case for keys, while lower/upper for attr
-#        if  t.value.split('.')[0] in self.daskeys:
-#            return t
-        return t
-
+    
     def t_IPADDR(self, t):
         r'([0-9]{1,3}\.){3,3}[0-9]{1,3}'
         return t
@@ -118,15 +121,31 @@ class DASPLY(object):
         return t
 
     def t_VALUE(self, t):
-        r'[a-zA-Z/*][a-zA-Z_0-9/*\-#\.]+|([0-9]{1,3}\.){3,3}[0-9]{1,3}|"[a-zA-Z_0-9/*\-#]+\s[a-zA-Z_0-9/*\-#]+"'
-        cond1 = t.value not in self.daskeys
-        list1 = t.value.split()
-        cond2 = set(list1) & set(self.daskeys)
-        if  cond1 and not cond2:
+        r'''[a-zA-Z/*][a-zA-Z_0-9/*\-#\.]+|'.*?'|".*?"'''
+        # test for a filter/aggregator/operator
+        if t.value in self.tokenmap:
+            #change the token type to the appropriate one
+            #eg, FILTER
+            t.type = self.tokenmap[t.value]
             return t
-        else:
-            msg = "Unknown DAS key value: %s" % t.value
-            raise Exception(msg)
+        #test for a DASKEY
+        # DASKEY if
+        # 1. lowercase word without dots in self.daskeys
+        if t.value in self.daskeys:
+            t.type = 'DASKEY'
+            return t
+        # 2. lowercase.AnyCase(.AnyCase...)
+        if re.match(r'[a-z_]+(\.[a-zA-Z_]+)+', t.value):
+            t.type = 'DASKEY'
+            return t
+        
+        # strip quotation marks, if included
+        # anything in quotation marks can't have been a
+        # operator/filter/aggregator/DASKEY
+        if t.value[0] in ("'", '"'):
+            t.value = t.value[1:-1]
+        
+        # it's probably just a plain old string
         return t
 
     def test_lexer(self, data):
@@ -273,7 +292,7 @@ def ply2mongo(query):
                 mongodict['aggregators'] = aggs
     fields = []
     spec   = {}
-    for keyop, name, oper, val in query['keys']:
+    for _, name, oper, val in query['keys']:
         dasname = name 
         if  oper and val: # real condition
             value = val
@@ -294,6 +313,7 @@ def ply2mongo(query):
                 array = [r for r in exist_value] + [value]
             else:
                 array = [exist_value, value]
+            spec[dasname] = array
         else:
             spec[dasname] = value
     if  fields:
