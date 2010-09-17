@@ -147,7 +147,7 @@ def convert2pattern(query):
                     val = {'$exists':True}
                     verspec[key] = val
                 else:
-                    val = re.compile(val.replace('*', '.*'))
+                    val = re.compile("^%s" % val.replace('*', '.*'))
                     verspec[key] = val.pattern
             else:
                 verspec[key] = val
@@ -159,7 +159,7 @@ def convert2pattern(query):
                 if  type(cval) is types.StringType or \
                     type(cval) is types.UnicodeType:
                     if  cval.find('*') != -1:
-                        cval = re.compile(cval.replace('*', '.*'))
+                        cval = re.compile("^%s" % cval.replace('*', '.*'))
                         vcond[ckey] = cval.pattern
                     else:
                         vcond[ckey] = cval

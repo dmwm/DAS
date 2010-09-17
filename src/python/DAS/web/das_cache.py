@@ -324,7 +324,7 @@ class DASCacheService(DASWebManager):
                 query.find('=') != -1:
                 key, val = query.split('=')
                 if  val.find('*') != -1:
-                    pat = re.compile(val.replace('*', '.*'))
+                    pat = re.compile("^%s" % val.replace('*', '.*'))
                     val = pat
                 spec = {key: val}
             self.logdb(query)
