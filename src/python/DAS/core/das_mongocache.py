@@ -734,7 +734,8 @@ class DASMongocache(object):
             except InvalidOperation:
                 pass
         if  not inserted: # we didn't merge anything
-            empty_record = {'das':{'expire':expire, 'primary_key':lookup_keys}, 
+            empty_record = {'das':{'expire':expire, 'primary_key':lookup_keys,
+                                   'empty_record': 'true'}, 
                             'cache_id':[], 'das_id': id_list}
             spec = query['spec']
             if  type(spec) is types.DictType:
