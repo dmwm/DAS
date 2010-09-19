@@ -28,9 +28,12 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - added URN's to query record
   - added empty records into DAS merge to prevent cases when no results
     aggregated for user request
+
+    - empty records are filtered by web interface
+
   - fixed regex expression for DAS QL pattern, see 
     http://groups.google.com/group/mongodb-user/browse_thread/thread/8507223a70de7d51
-  - various speed-up enhancements (missing indexes, empty records, etc.)
+  - various speed-up enhancements (missing indexes, empty records, regex bug, etc.)
   - updated DAS documentation (proof-reading, DAS QL section, etc.)
 
 - 0.4.13 till 0.4.18
