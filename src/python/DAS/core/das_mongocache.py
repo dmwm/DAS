@@ -757,9 +757,14 @@ class DASMongocache(object):
         self.insert_query_record(query, header)
 
         # create index on special keys
-        for specialkey in ['das.expire', 'query.spec.key', 'das_id']:
+        for specialkey in ['das.expire', 'das_id']:
             try:
                 self.merge.create_index([(specialkey, ASCENDING)])
+            except:
+                pass
+        for specialkey in ['das.expire', 'query.spec.key', 'das_id']:
+            try:
+                self.col.create_index([(specialkey, ASCENDING)])
             except:
                 pass
 
