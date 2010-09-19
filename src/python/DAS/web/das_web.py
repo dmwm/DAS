@@ -508,6 +508,8 @@ class DASWebService(DASWebManager):
             id    = row['_id']
             page += '<div class="%s"><hr class="line" />' % style
             if  row.has_key('das'):
+                if  row['das'].has_key('empty_record'):
+                    continue
                 if  row['das'].has_key('primary_key'):
                     pkey  = row['das']['primary_key']
                     page += '<b>DAS key:</b> %s<br />' % pkey.split('.')[0]
