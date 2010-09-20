@@ -23,6 +23,7 @@ import random
 
 # DAS modules
 from DAS.utils.utils import genkey, convert_dot_notation, aggregator
+from DAS.utils.utils import adjust_mongo_keyvalue
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 import DAS.utils.jsonwrapper as json
 
@@ -745,7 +746,7 @@ class DASMongocache(object):
                     empty_record[key] = []
                 else: # it is compound key, e.g. site.name
                     newkey, newval = convert_dot_notation(key, val)
-                    empty_record[newkey] = newval
+                    empty_record[newkey] = adjust_mongo_keyvalue(newval)
             self.merge.insert(empty_record)
 
     def update_cache(self, query, results, header):
