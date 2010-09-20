@@ -19,6 +19,7 @@ from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser, unique_filter
 from DAS.utils.utils import dotdict, filter, aggregator, yield_rows
+from DAS.utils.utils import adjust_mongo_keyvalue
 
 class testUtils(unittest.TestCase):
     """
@@ -31,6 +32,16 @@ class testUtils(unittest.TestCase):
         expect = [1,2,3,4]
         result = [r for r in yield_rows(val, rows)]
         self.assertEqual(result, expect)
+
+    def test_adjust_mongo_keyvalue(self):
+        """Test adjust_mongo_keyvalue function"""
+        rec = {'test': {'$in': [1,2]}, 'foo': {'$gte':1, '$lte':2}}
+        result = adjust_mongo_keyvalue(rec)
+        expect = {'test': [1,2], 'foo':[1,2]}
+        self.assertEqual(result, expect)
+
+        rec = {'foo': {'$gte':1}} # missing '$lte'
+        self.assertRaises(Exception, adjust_mongo_keyvalue, rec)
 
     def test_unique_filter(self):
         """Test unique_filter filter"""
