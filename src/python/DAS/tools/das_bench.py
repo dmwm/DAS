@@ -8,6 +8,7 @@ import copy
 import math
 import types
 import string
+import random
 import urllib
 import urllib2
 import traceback
@@ -31,7 +32,7 @@ class NClientsOptionParser:
         self.parser.add_option("--accept", action="store", type="string", 
                                default="application/json", dest="accept",
              help="specify URL Accept header, default application/json")
-        self.parser.add_option("--idx-bound", action="store", type="string", 
+        self.parser.add_option("--idx-bound", action="store", type="long", 
                                default=0, dest="idx",
              help="specify index bound, by default it is 0")
         self.parser.add_option("--logname", action="store", type="string", 
@@ -146,7 +147,6 @@ def runjob(nclients, host, method, params, headers, idx, limit,
     where logname is an optional parameter with default as spammer.
     """
     stream     = open('%s%s.log' % (logname, nclients), 'w')
-    idx        = random_index(idx)
     processes  = []
     for item in range(0, nclients):
         if  dasquery:
@@ -155,7 +155,7 @@ def runjob(nclients, host, method, params, headers, idx, limit,
                 query  = '%s=/%s*' % (dasquery, gen_passwd(1, string.letters))
             else:
                 query  = dasquery
-            params = {'query':query, 'idx':idx, 'limit':limit} 
+            params = {'query':query, 'idx':random_index(idx), 'limit':limit} 
             if  method == '/rest/testmongo':
                 params['collection'] = 'das.merge'
             ###
