@@ -30,10 +30,14 @@ map is represented data-service URI (URL, input parameters, API, etc.).
     aggregated for user request
 
     - empty records are filtered by web interface
+    - values for empty records are adjusted to avoid presence of special $ key,
+      e.g. we cannot store to MongoDB records with {'$in': [1,2]}
 
+  - new das_bench tool
   - fixed regex expression for DAS QL pattern, see 
     http://groups.google.com/group/mongodb-user/browse_thread/thread/8507223a70de7d51
   - various speed-up enhancements (missing indexes, empty records, regex bug, etc.)
+  - added new RunRegistry CMS data-service
   - updated DAS documentation (proof-reading, DAS QL section, etc.)
 
 - 0.4.13 till 0.4.18
