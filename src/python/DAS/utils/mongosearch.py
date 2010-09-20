@@ -31,7 +31,7 @@ from itertools import groupby
 from operator import itemgetter
 from math import log
 
-import lxml.html
+#import lxml.html
 from Stemmer import Stemmer
 from mongoengine.document import Document, EmbeddedDocument
 from mongoengine import fields
@@ -166,7 +166,9 @@ class SearchIndex(object):
     def _prepare_html(self, html):
         """Strips tags, entities, etc, then tokenizes and stems content.
         """
-        text = lxml.html.fromstring(html).text_content()
+#        text = lxml.html.fromstring(html).text_content()
+        # TODO: in CMS we don't use lxml parser, so need to parse html somehow
+        text = html
         return self._prepare_text(text)
 
     def _prepare_text(self, text):
