@@ -128,6 +128,29 @@ def adjust_value(value):
     else:
         return value
 
+def adjust_mongo_keyvalue(value):
+    """
+    This function can be used to adjust values of MongoDB queries, which
+    are represented via $in, $lte, $gte keys
+    """
+    newdict = value
+    if  type(value) is types.DictType:
+        newdict = {}
+        for key, val in value.items():
+            newval = val
+            if  type(val) is types.DictType:
+                arr = []
+                for kkk, vvv in val.items():
+                    if  kkk == '$in':
+                        newval = vvv
+                    elif  kkk == '$lte' or kkk == '$gte':
+                        newval = [val['$gte'], val['$lte']]
+                    else:
+                        msg = 'Unsupported key-value %s' % val
+                        raise Exception(msg)
+                    newdict[key] = newval
+    return newdict
+
 class dict_of_none (dict):
     """Define new dict type whose missing keys always assigned to None"""
     def __missing__ (self, key):
