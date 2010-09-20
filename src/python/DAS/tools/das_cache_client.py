@@ -8,10 +8,8 @@ __revision__ = "$Id: das_cache_client.py,v 1.15 2009/09/09 18:43:05 valya Exp $"
 __version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
-import sys
 import urllib
 import urllib2
-from   multiprocessing import Process
 from   optparse import OptionParser
 try:
     # Python 2.6
@@ -54,7 +52,7 @@ class DASOptionParser:
              help="specify input for your request; the input should be in a form of dict")
         self.parser.add_option("--host", action="store", type="string", 
                                default='http://localhost:8211', dest="host",
-             help="specify host name, default http://localhost:8211")
+             help="specify host name of DAS cache server, default http://localhost:8211")
         self.parser.add_option("--idx", action="store", type="int", 
                                default=0, dest="idx",
              help="start index for returned result set, aka pagination, use w/ limit")
@@ -66,57 +64,12 @@ class DASOptionParser:
              help="specify request type: GET (default), POST, PUT, DELETE")
         self.parser.add_option("--format", action="store", type="string", 
                                default='json', dest="format",
-             help="specify desired format output: JSON (default), XML, DASJSON, DASXML, PLIST")
-        self.parser.add_option("--spammer", action="store", type="string", 
-                               default='None', dest="spammer",
-             help="specify query spammer file, which includes list of queries")
-        self.parser.add_option("--method", action="store", type="string", 
-                               default='request', dest="method",
-             help="specify DAS cache server method to use, default is request")
+             help="specify output data format: JSON (default), XML, DASJSON, DASXML, PLIST")
     def getOpt(self):
         """
         Returns parse list of options
         """
         return self.parser.parse_args()
-
-def urlrequest(url, headers):
-    """
-    URL request function
-    """
-    req      = UrlRequest('GET', url=url, headers=headers)
-    opener   = urllib2.build_opener()
-    fdesc    = opener.open(req)
-    data     = fdesc.read()
-    fdesc.close()
-    decoder  = JSONDecoder()
-    response = decoder.decode(data)
-    print response
-
-def spammer(query_file, host, method='request'):
-    """
-    Spammer function which consume provided query file which contains
-    list of DAS queries and host name. Individual queries are processes
-    simultaneously, faking N client access to DAS cache server,
-    hosted at given host name.
-    """
-    path     = '/rest/%s' % method
-    if  host.find('http://') == -1:
-        host = 'http://' + host
-    headers  = {'Accept': 'application/json'}
-    idx      = 0
-    limit    = 1
-    with open(query_file) as qfile:
-        for line in qfile.readlines():
-            query  = line.replace('\n', '') 
-            params = {'query':query, 'idx':idx, 'limit':limit}
-            if  method == 'testmongo':
-                params['collection'] = 'logging.db'
-            encoded_data = urllib.urlencode(params, doseq=True)
-            url  = host + path + '?%s' % encoded_data
-            proc = Process(target=urlrequest, args=(url, headers))
-            proc.start()
-#            print(proc, proc.is_alive())
-
 #
 # main
 #
@@ -125,10 +78,6 @@ if __name__ == '__main__':
     (opts, args) = optManager.getOpt()
 
     host    = opts.host
-    if  opts.spammer:
-        spammer(opts.spammer, host, opts.method)
-        sys.exit(0)
-
     debug   = opts.verbose
     request = opts.request
     query   = opts.query
@@ -141,7 +90,6 @@ if __name__ == '__main__':
     else:
         msg = 'You need to provide either input dict or query.'
         raise Exception(msg)
-#    path    = '/rest/%s/%s' % (opts.format.lower(), opts.request.upper())
     if  opts.request.lower() == 'post':
         method = 'create'
     elif opts.request.lower() == 'put':
