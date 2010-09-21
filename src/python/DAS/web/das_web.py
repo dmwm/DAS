@@ -525,13 +525,13 @@ class DASWebService(DASWebManager):
             elif show == 'code':
                 code  = pformat(row, indent=1, width=100)
                 data  = self.templatepage('das_code', code=code)
-                datadict = {'data':data, 'id':id, rec_id:id}
+                datadict = {'data':data, 'id':id, 'rec_id':id}
                 page += self.templatepage('das_row', **datadict)
             else:
                 code  = yaml.dump(row, width=100, indent=4, 
                                 default_flow_style=False)
                 data  = self.templatepage('das_code', code=code)
-                datadict = {'data':data, 'id':id, rec_id:id}
+                datadict = {'data':data, 'id':id, 'rec_id':id}
                 page += self.templatepage('das_row', **datadict)
             page += '</div>'
         ctime = (time.time()-time0)
