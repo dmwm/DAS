@@ -39,6 +39,8 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - various speed-up enhancements (missing indexes, empty records, regex bug, etc.)
   - added new RunRegistry CMS data-service
   - updated DAS documentation (proof-reading, DAS QL section, etc.)
+  - remove src/python/ply to avoid overlap with system defaul ply and added
+    src/python/parser to keep parsertab.py around
 
 - 0.4.13 till 0.4.18
 
