@@ -191,34 +191,34 @@ class testDASMongocache(unittest.TestCase):
         spec   = {'test': 'city*'}
         fields = None
         query  = dict(spec=spec, fields=fields)
-        pat    = re.compile('city.*')
+        pat    = re.compile('^city.*')
         expect = dict(spec={'test': pat}, fields=fields)
         result, debug = convert2pattern(query)
         self.assertEqual(expect, result)
-        expect = dict(spec={'test': 'city.*'}, fields=fields)
+        expect = dict(spec={'test': '^city.*'}, fields=fields)
         self.assertEqual(expect, debug)
 
         spec   = {'test': {'name':'city*'}}
         fields = None
         query  = dict(spec=spec, fields=fields)
-        pat    = re.compile('city.*')
+        pat    = re.compile('^city.*')
         expect = dict(spec={'test': {'name':pat}}, fields=fields)
         result, debug = convert2pattern(query)
         self.assertEqual(expect, result)
-        expect = dict(spec={'test': {'name':'city.*'}}, fields=fields)
+        expect = dict(spec={'test': {'name':'^city.*'}}, fields=fields)
         self.assertEqual(expect, debug)
 
         spec   = {"site.name": "T1_FR*"}
         fields = None
         query  = dict(spec=spec, fields=fields)
-        pat    = re.compile('T1_FR.*')
+        pat    = re.compile('^T1_FR.*')
         expect = dict(spec={'site.name': pat}, fields=fields)
         result, debug = convert2pattern(query)
         self.assertEqual(expect, result)
-        expect = dict(spec={'site.name':'T1_FR.*'}, fields=fields)
+        expect = dict(spec={'site.name':'^T1_FR.*'}, fields=fields)
         self.assertEqual(expect, debug)
 
-        pat    = re.compile('T1_FR.*')
+        pat    = re.compile('^T1_FR.*')
         spec   = {"site.name": pat}
         fields = None
         query  = dict(spec=spec, fields=fields)
