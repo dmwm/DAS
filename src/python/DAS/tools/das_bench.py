@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+"""
+DAS benchmark tool
+"""
+
 import os
 import re
-import sys
-import time
 import copy
 import math
 import types
@@ -12,12 +14,16 @@ import random
 import urllib
 import urllib2
 import traceback
-import subprocess
 
 from   json import JSONDecoder
 from   random import Random
 from   optparse import OptionParser
 from   multiprocessing import Process
+
+try:
+    import matplotlib.pyplot as plt
+except:
+    pass
 
 class NClientsOptionParser: 
     """client option parser"""
@@ -37,7 +43,8 @@ class NClientsOptionParser:
              help="specify index bound, by default it is 0")
         self.parser.add_option("--logname", action="store", type="string", 
                                default='spammer', dest="logname",
-             help="specify log name prefix where results of N client test will be stored")
+        help="specify log name prefix where results of N client \
+                test will be stored")
         self.parser.add_option("--nclients", action="store", type="int", 
                                default=10, dest="nclients",
              help="specify max number of clients")
@@ -46,28 +53,31 @@ class NClientsOptionParser:
              help="specify DAS query to test, e.g. dataset")
         self.parser.add_option("--pdf", action="store", type="string", 
                                default="results.pdf", dest="pdf",
-             help="specify name of PDF file for matplotlib output, default is results.pdf")
-    def getOpt(self):
+        help="specify name of PDF file for matplotlib output, \
+                default is results.pdf")
+    def get_opt(self):
         """Returns parse list of options"""
         return self.parser.parse_args()
 
 ### Natural sorting utilities
-def try_int(s):
+def try_int(sss):
     "Convert to integer if possible."
-    try: return int(s)
-    except: return s
+    try:
+        return int(sss)
+    except:
+        return sss
 
-def natsort_key(s):
+def natsort_key(sss):
     "Used internally to get a tuple by which s is sorted."
-    return map(try_int, re.findall(r'(\d+|\D+)', s))
+    return map(try_int, re.findall(r'(\d+|\D+)', sss))
 
-def natcmp(a, b):
+def natcmp(aaa, bbb):
     "Natural string comparison, case sensitive."
-    return cmp(natsort_key(a), natsort_key(b))
+    return cmp(natsort_key(aaa), natsort_key(bbb))
 
-def natcasecmp(a, b):
+def natcasecmp(aaa, bbb):
     "Natural string comparison, ignores case."
-    return natcmp(a.lower(), b.lower())
+    return natcmp(aaa.lower(), bbb.lower())
 
 def natsort(seq, cmp=natcmp):
     "In-place natural string sort."
@@ -112,8 +122,8 @@ def urlrequest(stream, url, headers, debug=0):
         print "Input for urlrequest", url, headers, debug
     req      = UrlRequest('GET', url=url, headers=headers)
     if  debug:
-        h=urllib2.HTTPHandler(debuglevel=1)
-        opener   = urllib2.build_opener(h)
+        hdlr     = urllib2.HTTPHandler(debuglevel=1)
+        opener   = urllib2.build_opener(hdlr)
     else:
         opener   = urllib2.build_opener()
     fdesc    = opener.open(req)
@@ -125,7 +135,7 @@ def urlrequest(stream, url, headers, debug=0):
         stream.write(str(response) + '\n')
     stream.flush()
 
-def spammer(stream, host, method, params={}, headers={'Accept': 'application/json'}, debug=0):
+def spammer(stream, host, method, params, headers, debug=0):
     """Spammer function"""
     path     = method
     if  host.find('http://') == -1:
@@ -148,7 +158,7 @@ def runjob(nclients, host, method, params, headers, idx, limit,
     """
     stream     = open('%s%s.log' % (logname, nclients), 'w')
     processes  = []
-    for item in range(0, nclients):
+    for _ in range(0, nclients):
         if  dasquery:
             ### REPLACE THIS PART with your set of parameter
             if  dasquery.find('=') == -1:
@@ -170,24 +180,6 @@ def runjob(nclients, host, method, params, headers, idx, limit,
                 break
     stream.close()
 
-def runjob_v1(nclients):
-    """
-    Generate random queries for provided nclients and run job
-    das_cacheclient with them
-    """
-    filename = 'q%s.txt' % nclients
-    with open(filename, 'w') as query_file:
-        for item in range(0, nclients):
-            query = 'dataset=/%s*\n' % gen_passwd(1, string.letters)
-            query_file.write(query)
-    cmd   = 'das_cacheclient --spammer=%s > q%s.log' % (filename, nclients)
-    try:
-        retcode = subprocess.call(cmd, shell=True)
-        if retcode < 0:
-            print >> sys.stderr, "Child was terminated by signal", -retcode
-    except OSError, exp:
-        print >> sys.stderr, "Execution failed:", exp
-
 def avg_std(input_file):
     """Calculate average and standard deviation"""
     count = 0
@@ -201,7 +193,8 @@ def avg_std(input_file):
             try:
                 data = eval(line.replace('\n', ''))
             except:
-                print "In file '%s' fail to process line='%s'" % (input_file, line)
+                print "In file '%s' fail to process line='%s'" \
+                        % (input_file, line)
                 traceback.print_exc()
                 continue
             if  data.has_key('ctime'):
@@ -209,15 +202,6 @@ def avg_std(input_file):
                 sum   += res
                 count += 1
                 arr.append(res)
-#        for line in input_data.readlines():
-#            try:
-#                res    = float(line.replace('\n', '').split()[-1])
-#            except:
-#                print "In file '%s' fail to process line='%s'" % (input_file, line)
-#                continue
-#            sum   += res
-#            count += 1
-#            arr.append(res)
     if  count:
         mean = sum/count
         std2 = 0
@@ -228,7 +212,7 @@ def avg_std(input_file):
         msg = 'Unable to count results'
         raise Exception(msg)
 
-def make_plot(xxx, yyy, std=[], name='das_cache.pdf', 
+def make_plot(xxx, yyy, std=None, name='das_cache.pdf', 
               xlabel='Number of clients', ylabel='Time/request (sec)',
               yscale=None):
     """Make standard plot time vs nclients using matplotlib"""
@@ -244,12 +228,12 @@ def make_plot(xxx, yyy, std=[], name='das_cache.pdf',
     plt.savefig(name, format='pdf', transparent=True)
     plt.close()
 
-if __name__ == '__main__':
-    
-    optManager   = NClientsOptionParser()
-    (opts, args) = optManager.getOpt()
+def main():
+    """Main routine"""
+    mgr = NClientsOptionParser()
+    (opts, args) = mgr.get_opt()
 
-    url      = opts.url.replace('?', ';').replace('&amp;', ';').replace('&', ';')
+    url = opts.url.replace('?', ';').replace('&amp;', ';').replace('&', ';')
     logname  = opts.logname
     dasquery = opts.dasquery
     idx      = opts.idx
@@ -271,9 +255,9 @@ if __name__ == '__main__':
         params[key] = val
 
     # do clean-up
-    for file in os.listdir('.'):
-        if  file.find('.log') != -1 and file.find(logname) != -1:
-            os.remove(file)
+    for filename in os.listdir('.'):
+        if  filename.find('.log') != -1 and filename.find(logname) != -1:
+            os.remove(filename)
 
     # perform action
     array = []
@@ -294,23 +278,25 @@ if __name__ == '__main__':
 
     # analyze results
     file_list = []
-    for file in os.listdir('.'):
-        if  file.find('.log') != -1:
-            file_list.append(file)
+    for filename in os.listdir('.'):
+        if  filename.find('.log') != -1:
+            file_list.append(filename)
     xxx = []
     yyy = []
     std = []
     for file in natsorted(file_list):
-        name, ext = file.split('.')
+        name, _ = file.split('.')
         xxx.append(int(name.split(logname)[-1]))
         mean, std2 = avg_std(file)
         yyy.append(mean)
         std.append(std2)
     try:
-        import matplotlib.pyplot as plt
         make_plot(xxx, yyy, std, opts.pdf)
     except:
         print "xxx =", xxx
         print "yyy =", yyy
         print "std =", std
+
+if __name__ == '__main__':
+    main()
 
