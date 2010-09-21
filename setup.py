@@ -98,13 +98,13 @@ author_email = "vkuznet@gmail.com",
 scriptfiles  = filter(os.path.isfile, ['etc/das.cfg'])
 url          = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService",
 keywords     = ["DAS", "Aggregation", "Meta-data"]
-package_dir  = {'DAS': 'src/python/DAS', 'ply': 'src/python/ply'}
+package_dir  = {'DAS': 'src/python/DAS'}
 package_data = {
     'src': ['python/DAS/services/maps/*.yml', 'python/DAS/web/css/*.css'],
 }
 #packages     = find_packages('src/python/DAS') 
 packages     = find_packages('src/python/') 
-packages    += ['src/css', 'src/js', 'src/templates', 'etc', 'bin', 'test', 'doc']
+packages    += ['src/css', 'src/js', 'src/templates', 'src/python/parser', 'etc', 'bin', 'test', 'doc']
 license      = "CMS experiment software"
 classifiers  = [
     "Development Status :: 3 - Production/Beta",

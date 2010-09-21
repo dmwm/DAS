@@ -46,9 +46,9 @@ class DASPLY(object):
             msg = 'Unable to locate DAS_ROOT environment'
             raise Exception(msg)
         self.parsertab_dir = os.path.join(os.environ['DAS_ROOT'], \
-                'src/python/ply')
+                'src/python/parser')
         if  not os.path.isdir(self.parsertab_dir):
-            msg = 'Directory $DAS_ROOT/src/python/ply does not exists'
+            msg = 'Directory $DAS_ROOT/src/python/parser does not exists'
             raise Exception(msg)
         
         # test if we have been given a list of desired operators/filters
