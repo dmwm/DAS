@@ -202,14 +202,16 @@ class DASWebService(DASWebManager):
             fields = []
         spec   = mongo_query.get('spec', {})
         if  not fields+spec.keys():
-            return error
+            msg = 'Provided input does not resolve into valid set of keys'
+            return helper(uinput, msg)
         for word in fields+spec.keys():
             found = 0
             for key in self.daskeys:
                 if  word.find(key) != -1:
                     found = 1
             if  not found:
-                return error
+                msg = 'Provided input does not contain valid DAS key'
+                return helper(uinput, msg)
         return
 
     @expose
