@@ -7,7 +7,7 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
-- 0.5.0 till 0.5.1
+- 0.5.0 till 0.5.2
 
   - based on Gordon series of patches the following changes has been
     implemented
