@@ -28,6 +28,7 @@ from DAS.utils.utils import xml_parser, json_parser, plist_parser
 from DAS.utils.utils import yield_rows, expire_timestamp
 #from DAS.core.das_aggregators import das_func
 from DAS.core.das_mongocache import compare_specs, encode_mongo_query
+from DAS.utils.das_timer import das_timer
 
 def dasheader(system, query, api, url, args, ctime, expire):
     """
@@ -132,6 +133,12 @@ class DASAbstractService(object):
         by data-service parsers to provide uniform JSON representation
         for further processing.
         """
+        if  self.name == 'dq':
+            timer_key = '%s %s' % (self.name, url)
+        else:
+            timer_key = '%s %s?%s' \
+                % (self.name, url, urllib.urlencode(params, doseq=True))
+        das_timer(timer_key, self.verbose)
         host = url.replace('http://', '').split('/')[0]
 
         input_params = params
@@ -172,8 +179,8 @@ class DASAbstractService(object):
         for key, val in headers.items():
             req.add_header(key, val)
         if  self.verbose > 1:
-            handler=urllib2.HTTPHandler(debuglevel=1)
-            opener = urllib2.build_opener(handler)
+            handler = urllib2.HTTPHandler(debuglevel=1)
+            opener  = urllib2.build_opener(handler)
             urllib2.install_opener(opener)
         try:
             data = urllib2.urlopen(req)
@@ -196,6 +203,7 @@ class DASAbstractService(object):
             data = {'error': msg, 
                     'reason': 'Unable to invoke HTTP call to data-service'}
             data = str(data)
+        das_timer(timer_key, self.verbose)
         return data
 
     def call(self, query):

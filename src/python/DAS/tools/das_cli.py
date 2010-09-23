@@ -14,6 +14,7 @@ from optparse import OptionParser
 from DAS.core.das_core import DASCore
 from DAS.core.das_mongocache import convert2pattern, encode_mongo_query
 from DAS.utils.utils import dump, genkey
+from DAS.utils.das_timer import get_das_timer
 
 import sys
 if sys.version_info < (2, 6):
@@ -173,20 +174,17 @@ if __name__ == '__main__':
         print "DAS CLI interface, no actions found,"
         print "please use --help for more options."
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+    timer = get_das_timer()
     if  debug:
-        try:
-            ival  = DAS.timer.timer.pop('init')
-        except:
-            ival = 'N/A'
-        try:
-            mval  = DAS.timer.timer.pop('merge')
-        except:
-            mval = 'N/A'
-        slist = DAS.timer.timer.items()
-        slist.sort()
-        timer_list = [('init', ival)] + slist + [('merge', mval)] 
-        for key, val in timer_list:
-            print "DAS execution time (%s) %s sec" % (key, val)
+        timelist = []
+        for hash, timerdict in timer.items():
+            counter = timerdict['counter']
+            tag = timerdict['tag']
+            exetime = timerdict['time']
+            timelist.append((counter, tag, exetime))
+        timelist.sort()
+        for _, tag, exetime in timelist:
+            print "DAS execution time (%s) %s sec" % (tag, exetime)
     print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)
 
 

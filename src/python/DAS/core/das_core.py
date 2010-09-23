@@ -32,23 +32,10 @@ from DAS.core.das_aggregators import das_func
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg, unique_filter
+from DAS.utils.das_timer import das_timer, get_das_timer
 
 # DAS imports
 import DAS.utils.jsonwrapper as json
-
-class DASTimer(object):
-    """
-    DAS timer class keeps track of execution time.
-    """
-    def __init__(self):
-        self.timer = {'init':time.time()}
-    def record(self, tag):
-        """Record time for given tag"""
-        if  self.timer.has_key(tag):
-            time0 = self.timer[tag]
-            self.timer[tag] = time.time() - time0
-        else:
-            self.timer[tag] = time.time()
 
 class DASCore(object):
     """
@@ -66,7 +53,7 @@ class DASCore(object):
             dasconfig['verbose'] = debug
         else:
             self.verbose = verbose
-        self.timer = DASTimer()
+        das_timer('DASCore::init', self.verbose)
         self.operators = das_operators()
 
         # set noresults option
@@ -150,8 +137,8 @@ class DASCore(object):
             sparams = getattr(self, name).parameters()
             self.service_parameters[getattr(self, name).name] = sparams
 
-        self.timer.record('init')
         self.dasconfig = dasconfig
+        das_timer('DASCore::init', self.verbose)
 
     def keys(self):
         """
@@ -282,6 +269,7 @@ class DASCore(object):
         Return status 0/1 depending on success of the calls, can be
         used by workers on cache server.
         """
+        das_timer('DASCore::call', self.verbose)
         # adjust query first, since rawcache.similar_queries
         # expects a mongo query (this could be a string)
         # this also guarantees the query in question hits
@@ -290,6 +278,7 @@ class DASCore(object):
         
         if  self.rawcache.similar_queries(query):
             if  self.in_raw_cache(query):
+                das_timer('DASCore::call', self.verbose)
                 return 1
 
         
@@ -302,18 +291,19 @@ class DASCore(object):
         try:
             for srv in services:
                 self.logger.info('DASCore::call %s(%s)' % (srv, query))
-                self.timer.record(srv)
+                das_timer(srv, self.verbose)
                 getattr(getattr(self, srv), 'call')(query)
-                self.timer.record(srv)
+                das_timer(srv, self.verbose)
         except:
             traceback.print_exc()
             return 0
         self.rawcache.update_das_record(query, 'merging')
-        self.timer.record('merge')
+        das_timer('merge', self.verbose)
         self.rawcache.merge_records(query)
-        self.timer.record('merge')
+        das_timer('merge', self.verbose)
         self.rawcache.update_das_record(query, 'ok')
-        self.rawcache.add_to_record(query, {'das.timer': self.timer.timer})
+        self.rawcache.add_to_record(query, {'das.timer': get_das_timer()})
+        das_timer('DASCore::call', self.verbose)
         return 1
 
     def get_from_cache(self, query, idx=0, limit=None, skey=None, sorder='asc'):
@@ -321,6 +311,7 @@ class DASCore(object):
         Look-up results from the merge cache and yield them for
         further processing.
         """
+        das_timer('DASCore::get_from_cache', self.verbose)
         msg = 'DASCore::get_from_cache, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
                 % (query, idx, limit, skey, sorder)
         self.logger.info(msg)
@@ -384,3 +375,4 @@ class DASCore(object):
         else:
             for row in res:
                 yield row
+        das_timer('DASCore::get_from_cache', self.verbose)
