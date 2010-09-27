@@ -960,36 +960,18 @@ def xml_parser(source, prim_key, tags=[]):
                     if  elem.tag == tag:
                         sup[tag] = elem.attrib
         key = elem.tag
-        if  key != prim_key or event == 'end':
-            elem.clear()
+        if  key != prim_key:
             continue
         row[key] = dict_helper(elem.attrib, notations)
         row[key].update(sup)
-        get_children(elem, row, key, notations)
-#        for child in elem.getchildren():
-#            child_key  = child.tag
-#            child_data = child.attrib
-#            if  not child_data:
-#                child_dict = adjust_value(child.text)
-#            else:
-#                child_dict = dict_helper(child_data, notations)
-
-#            if  row[key].has_key(child_key):
-#                val = row[key][child_key]
-#                if  type(val) is types.ListType:
-#                    val.append(child_dict)
-#                    row[key][child_key] = val
-#                else:
-#                    row[key][child_key] = [val] + [child_dict]
-#            else:
-#                row[key][child_key] = child_dict
-#            child.clear()
-#        elem.clear()
-        yield row
+        get_children(elem, event, row, key, notations)
+        if  event == 'end':
+            elem.clear()
+            yield row
     root.clear()
     source.close()
 
-def get_children(elem, row, key, notations):
+def get_children(elem, event, row, key, notations):
     """
     xml_parser helper function. It gets recursively information about
     children for given element tag. Information is stored into provided
@@ -1021,14 +1003,14 @@ def get_children(elem, row, key, notations):
                     newdict = {child_key: child_dict}
                 else:
                     newdict = {child_key: {}}
-                get_children(child, newdict, child_key, notations) 
+                get_children(child, event, newdict, child_key, notations) 
                 row[key][child_key] = newdict[child_key]
             else:
                 if  type(row[key]) is not types.DictType:
                     row[key] = {}
                 row[key][child_key] = child_dict
-        child.clear()
-    elem.clear()
+        if  event == 'end':
+            child.clear()
 
 def json_parser(source):
     """
