@@ -73,7 +73,8 @@ class RunRegistryService(DASAbstractService):
         msg = "DASAbstractService:RunRegistry, query=%s" % _query
         self.logger.info(msg)
         time0   = time.time()
-        genrows = worker(url, _query)
+        rawrows = worker(url, _query)
+        genrows = self.translator(api, rawrows)
         ctime   = time.time() - time0
         self.write_to_cache(query, expire, url, api, args, genrows, ctime)
 #

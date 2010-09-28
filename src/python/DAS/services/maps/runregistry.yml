@@ -10,3 +10,10 @@ daskeys : [
     {"key":"run","map":"run.run_number","pattern":""},
     {"key":"date","map":"runStartTime","pattern":""},
 ]
+---
+notations : [
+    {"notation":"bField", "map":"bfield", "api":""},
+    {"notation":"hltKey", "map":"hlt", "api":""},
+    {"notation":"runNumber", "map":"run_number", "api":""},
+    {"notation":"run", "map":"run_number", "api":""},
+]
