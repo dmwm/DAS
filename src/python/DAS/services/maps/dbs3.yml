@@ -4,7 +4,7 @@ format : JSON
 #---
 #urn: acquisitioneras
 #url : "http://vocms09:8585/DBSG/acquisitioneras/"
-#expire : 3600
+#expire : 900
 #params : {}
 #daskeys : [
 #        {"key": "era", "map":"era", "pattern":""},
@@ -12,7 +12,7 @@ format : JSON
 ---
 urn: primarydatasets
 url : "http://vocms09:8585/DBSG/primarydatasets/"
-expire : 3600
+expire : 900
 params : {
         "primary_ds_name":"*",
 }
@@ -25,7 +25,7 @@ das2api : [
 ---
 urn: datasets
 url : "http://vocms09:8585/DBSG/datasets/"
-expire : 3600
+expire : 900
 params : {
         "dataset":"*",
         "release_version":"*",
@@ -44,7 +44,7 @@ das2api : [
 ---
 urn: datasetparents
 url : "http://vocms09:8585/DBSG/datasetparents/"
-expire : 3600
+expire : 900
 params : {
         "dataset":"required",
 }
@@ -58,7 +58,7 @@ das2api : [
 ---
 urn: datasetchildren
 url : "http://vocms09:8585/DBSG/datasetchildren/"
-expire : 3600
+expire : 900
 params : {
         "dataset":"required",
 }
@@ -72,7 +72,7 @@ das2api : [
 ---
 urn: outputconfigs
 url : "http://vocms09:8585/DBSG/outputconfigs/"
-expire : 3600
+expire : 900
 params : {
         "dataset":"required",
 }
@@ -86,7 +86,7 @@ das2api : [
 ---
 urn: blocks_via_block
 url : "http://vocms09:8585/DBSG/blocks/"
-expire : 3600
+expire : 900
 params : {
         'block_name':'*',
 }
@@ -99,7 +99,7 @@ das2api : [
 ---
 urn: blocks_via_dataset
 url : "http://vocms09:8585/DBSG/blocks/"
-expire : 3600
+expire : 900
 params : {
         'dataset':'*',
 }
@@ -113,7 +113,7 @@ das2api : [
 ---
 urn: files_via_dataset
 url : "http://vocms09:8585/DBSG/files/"
-expire : 3600
+expire : 900
 params : {
         'dataset':'required',
 }
@@ -127,7 +127,7 @@ das2api : [
 ---
 urn: files_via_dataset_and_run
 url : "http://vocms09:8585/DBSG/files/"
-expire : 3600
+expire : 900
 params : {
         'dataset':'required',
         'minrun':'required',
@@ -144,7 +144,7 @@ das2api : [
 ---
 urn: files_via_block
 url : "http://vocms09:8585/DBSG/files/"
-expire : 3600
+expire : 900
 params : {
         'block_name':'required',
 }
@@ -158,7 +158,7 @@ das2api : [
 ---
 urn: fileparents
 url : "http://vocms09:8585/DBSG/fileparents/"
-expire : 3600
+expire : 900
 params : {
         'logical_file_name':'required',
 }
@@ -172,7 +172,7 @@ das2api : [
 ---
 urn: filechildren
 url : "http://vocms09:8585/DBSG/filechildren/"
-expire : 3600
+expire : 900
 params : {
         'logical_file_name':'required',
 }
@@ -186,7 +186,7 @@ das2api : [
 ---
 urn: filelumis
 url : "http://vocms09:8585/DBSG/filelumis/"
-expire : 3600
+expire : 900
 params : {
         'logical_file_name':'required',
 }
@@ -199,7 +199,7 @@ das2api : [
 ---
 urn: runs
 url : "http://vocms09:8585/DBSG/runs/"
-expire : 3600
+expire : 900
 params : {
         'dataset':'required',
 }

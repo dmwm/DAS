@@ -1,27 +1,12 @@
 
 <!-- das_services.tmpl -->
+#import urllib
 <div class="page">
 <b>DAS mapping</b><br />
 DAS provides a mapping between query keys, e.g. block, site and 
 their representation in DAS records. Use this table to identify
 what a given DAS key will be transformed to when querying relevant CMS data services.
 <div class="normal">
-#*
-#for service in $service_keys.keys()
-<hr class="line" />
-<h3>$service.upper() service</h3>
-keys 
-<a href="javascript:ShowTag('${service}keys')">show</a> |
-<a href="javascript:HideTag('${service}keys')">hide</a>
-<div id="${service}keys" class="hide">
-<ul>
-#for key in $service_keys[$service]
-<li>$key</li>
-#end for
-</ul>
-</div>
-#end for
-*#
 <table class="daskeys">
 <tr>
 <th>DAS keys\services</th>
@@ -80,9 +65,9 @@ $uikey
 #silent $apilist.sort()
 <td>
 #for api in $apilist[:-1]
-<a href="/das/api?name=$api">$api</a>, <br /> 
+<a href="/das/api?name=$urllib.quote_plus($api)">$api</a>, <br /> 
 #end for
-<a href="/das/api?name=$apilist[-1]">$apilist[-1]</a>
+<a href="/das/api?name=$urllib.quote_plus($apilist[-1])">$apilist[-1]</a>
 </td>
 #end for
 </tr>

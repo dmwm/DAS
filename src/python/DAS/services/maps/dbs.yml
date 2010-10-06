@@ -4,7 +4,7 @@ format : XML
 ---
 urn : listPrimaryDatasets
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listPrimaryDatasets", "apiversion": "DBS_2_0_9", "pattern":"*",
 }
@@ -17,7 +17,7 @@ das2api : [
 ---
 urn : listProcessedDatasets
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listProcessedDatasets", "apiversion": "DBS_2_0_9", 
      "primary_datatset_name_pattern":"*",
@@ -40,7 +40,7 @@ das2api : [
 ---
 urn : listDatasetSummary
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listDatasetSummary", "apiversion": "DBS_2_0_9", "path": "required",
 }
@@ -53,7 +53,7 @@ das2api : [
 ---
 urn : listAlgorithms
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listAlgorithms", "apiversion": "DBS_2_0_9", 
      "app_version": "*",
@@ -69,7 +69,7 @@ das2api : [
 ---
 urn : listRuns
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listRuns", "apiversion": "DBS_2_0_9", "path":"*",
 }
@@ -83,7 +83,7 @@ das2api : [
 ---
 urn : listTiers
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listTiers", "apiversion": "DBS_2_0_9", "path":"*",
 }
@@ -97,7 +97,7 @@ das2api : [
 ---
 urn : listDatasetParents
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listDatasetParents", "apiversion": "DBS_2_0_9", "path": "*",
 }
@@ -110,11 +110,11 @@ das2api : [
 #---
 #urn : 
 #url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-#expire : 3600
+#expire : 900
 ---
 urn : listBlocks
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listBlocks", "apiversion": "DBS_2_0_9", 
      "path":"required", "block_name":"*",
@@ -136,7 +136,7 @@ das2api : [
 ---
 urn : listBlockProvenance
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listBlockProvenance", "apiversion": "DBS_2_0_9", "block_name":"*",
      "parent_or_child": "PARENT"
@@ -153,7 +153,7 @@ das2api : [
 ---
 urn : listFiles
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params: {
     "api" : "listFiles", "apiversion" : "DBS_2_0_9", "path" : "",
     "primary_dataset": "", "processed_dataset" : "", "data_tier_list" : "",
@@ -175,7 +175,7 @@ das2api : [
 ---
 urn : listFileParents
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listFileParents", "apiversion": "DBS_2_0_9", "lfn":"required",
 }
@@ -188,7 +188,7 @@ das2api : [
 ---
 urn : listFileLumis
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listFileLumis", "apiversion": "DBS_2_0_9", "lfn":"required",
 }
@@ -202,7 +202,7 @@ das2api : [
 ---
 urn : listLFNs
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listLFNs", "apiversion": "DBS_2_0_9", 
      "path":"", "pattern_meta_data":"",
@@ -217,7 +217,7 @@ das2api : [
 ---
 urn : listFileProcQuality
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
+expire : 900
 params : {
      "api":"listFileProcQuality", "apiversion": "DBS_2_0_9", 
      "path":"required", "lfn":"required",

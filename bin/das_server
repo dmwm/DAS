@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # setup environment
 #. `dirname $0`/setup.sh

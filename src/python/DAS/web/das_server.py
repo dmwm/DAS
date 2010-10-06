@@ -43,6 +43,8 @@ class Root(object):
     def configure(self):
         """Configure server, CherryPy and the rest."""
         config = self.config[self.model]
+        cpconfig["engine.autoreload_on"] = False
+
         cpconfig["server.environment"] = config.get("environment", "production")
         cpconfig["server.thread_pool"] = int(config.get("thread_pool", 30))
         cpconfig["server.socket_port"] = int(config.get("port", 8080))
@@ -54,12 +56,12 @@ class Root(object):
 
         cpconfig["server.socket_host"] = config.get("host", "0.0.0.0")
         cpconfig["server.socket_queue_size"] = \
-                int(config.get("socket_queue_size", 15))
+                int(config.get("socket_queue_size", 100))
         cpconfig["tools.expires.secs"] = int(config.get("expires", 300))
         cpconfig["log.screen"] = bool(config.get("log_screen", True))
         cpconfig["log.access_file"] = config.get("access_log_file", None)
         cpconfig["log.error_file"] = config.get("error_log_file", None)
-        #cpconfig.update ({'request.show_tracebacks': False})
+        cpconfig['request.show_tracebacks'] = False
         #cpconfig.update ({'request.error_response': self.handle_error})
         #cpconfig.update ({'tools.proxy.on': True})
         #cpconfig.update ({'proxy.tool.base': '%s:%s' 

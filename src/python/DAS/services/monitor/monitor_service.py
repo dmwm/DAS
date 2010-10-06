@@ -12,6 +12,7 @@ import time
 import traceback
 from DAS.services.abstract_service import DASAbstractService, dasheader
 from DAS.utils.utils import map_validator
+import DAS.utils.jsonwrapper as json
 
 class MonitorService(DASAbstractService):
     """
@@ -28,7 +29,15 @@ class MonitorService(DASAbstractService):
         """
         data = source.read()
         source.close()
-        row  = eval(data)
+#        row  = eval(data)
+        try:
+            row  = json.loads(data)
+        except:
+            msg  = "MonitorService::parser,"
+            msg += " WARNING, fail to JSON'ify data:\n%s" % data
+            self.logger.warning(msg)
+#            traceback.print_exc()
+            row  = eval(data, { "__builtins__": None }, {})
         monitor_time = row['series']
         monitor_data = row['data']
         items = ({'time':list(t), 'data':d} for t, d in \

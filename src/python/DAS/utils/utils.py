@@ -68,13 +68,6 @@ def das_dateformat(value):
         msg = 'Unacceptable date format'
         raise Exception(msg)
 
-def encode4admin(user, pwd):
-    """Encode user:pwd pair"""
-    hash_u, hash_p = (b32encode(user), b64encode(pwd))
-    if  hash_u.find(":") != -1 or hash_p.find(":") != -1:
-        raise Exception("Either username or password contains :")
-    return "%s:%s" % (hash_u, hash_p)
-
 def get_http_expires(data):
     """
     Return HTTP Expires value in seconds since epoch.
@@ -87,7 +80,14 @@ def get_http_expires(data):
     return expire
 
 def expire_timestamp(expire):
-    """Return expire timestamp"""
+    """
+    Return expire timestamp. The input parameter expire can be in a form of
+    integer or HTTP header string.
+    """
+    # check if we provided with HTTP header string
+    if  type(expire) is types.StringType and \
+        expire.find(',') != -1 and expire.find(':') != -1:
+        return time.mktime(time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z'))
     timestamp = time.time()
     # use Jan 1st, 2010 as a seed to check expire date
     # prior 2010 DAS was not released in production
@@ -1012,7 +1012,7 @@ def get_children(elem, event, row, key, notations):
         if  event == 'end':
             child.clear()
 
-def json_parser(source):
+def json_parser(source, logger=None):
     """
     JSON parser based on json module. It accepts either source
     descriptor with .read()-supported file-like object or
@@ -1039,8 +1039,16 @@ def json_parser(source):
         try:
             jsondict = json.loads(res)
         except:
-            jsondict = eval(res)
+            msg  = "json_parser, WARNING: fail to JSON'ify data:"
+            msg += "\n%s\ndata type %s" % (res, type(res))
+            if  logger:
+                logger.warining(msg)
+            else:
+                print msg
+            jsondict = eval(res, { "__builtins__": None }, {})
             pass
+#            traceback.print_exc()
+#            raise
     yield jsondict
 
 def plist_parser(source):
@@ -1238,3 +1246,4 @@ def filter(rows, filters):
         flist = [(f,ddict._get(f)) for f in filters]
         for iter in flist:
             yield iter
+

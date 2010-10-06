@@ -6,6 +6,7 @@ Unit test for DAS QL parser
 """
 
 import json
+import time
 import unittest
 import urllib2, urllib
 import tempfile
@@ -19,12 +20,28 @@ from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser, unique_filter
 from DAS.utils.utils import dotdict, filter, aggregator, yield_rows
-from DAS.utils.utils import adjust_mongo_keyvalue
+from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_expire_timestamp(self):
+        """Test expire_timestamp function"""
+        result = expire_timestamp('Mon, 04 Oct 2010 18:57:42 GMT')
+        expect = 1286236662
+        self.assertEqual(result, expect)
+
+        tstamp = time.time() + 10000
+        result = expire_timestamp(tstamp)
+        expect = tstamp
+        self.assertEqual(result, expect)
+
+        tstamp = long(time.time() + 10)
+        result = long(expire_timestamp(10))
+        expect = tstamp
+        self.assertEqual(result, expect)
+
     def test_yield_rows(self):
         """Test yield_rows function"""
         val    = 1

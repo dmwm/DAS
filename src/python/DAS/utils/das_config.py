@@ -102,6 +102,7 @@ def das_read_cfg(dasconfig=None):
 #    security['store_path'] = config.get('security', 'store_path')
 #    configdict['security'] = security
 
+    parserdir = config.get('das', 'parserdir', '/tmp')
     verbose   = config.getint('das', 'verbose')
     logfile   = config.get('das', 'logfile', None)
     logformat = config.get('das', 'logformat', '%(levelname)s %(message)s')
@@ -113,7 +114,8 @@ def das_read_cfg(dasconfig=None):
     if  logfile:
         configdict['logfile'] = logfile
     configdict['verbose'] = verbose
-    configdict['das'] = dict(verbose=verbose, logfile=logfile, logformat=logformat, services=services)
+    configdict['das'] = dict(verbose=verbose, parserdir=parserdir,
+                logfile=logfile, logformat=logformat, services=services)
     return configdict
 
 def das_writeconfig():
@@ -126,6 +128,7 @@ def das_writeconfig():
     config.add_section('das')
     config.set('das', 'verbose', 0)
     config.set('das', 'logfile', '/tmp/das.log')
+    config.set('das', 'parserdir', '/tmp')
     config.set('das', 'logformat', 
                 '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     # list of generic services, for CMS specific ones, please use 
@@ -161,7 +164,7 @@ def das_writeconfig():
     config.set('cache_server', 'host', '0.0.0.0')
     config.set('cache_server', 'thread_pool', 30)
     config.set('cache_server', 'log_screen', True)
-    config.set('cache_server', 'socket_queue_size', 15)
+    config.set('cache_server', 'socket_queue_size', 100)
     config.set('cache_server', 'n_worker_threads', 4)
     config.set('cache_server', 'queue_limit', 100)
     config.set('cache_server', 'logfile', '/tmp/das_cache.log')
@@ -172,7 +175,7 @@ def das_writeconfig():
     config.set('web_server', 'host', '0.0.0.0')
     config.set('web_server', 'thread_pool', 30)
     config.set('web_server', 'log_screen', True)
-    config.set('web_server', 'socket_queue_size', 15)
+    config.set('web_server', 'socket_queue_size', 100)
     config.set('web_server', 'cache_server_url', 'http://localhost:8211')
     config.set('web_server', 'url_base', '/das')
     config.set('web_server', 'logfile', '/tmp/das_web.log')

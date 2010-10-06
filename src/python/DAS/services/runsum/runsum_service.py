@@ -23,19 +23,6 @@ def convert_datetime(sec):
     """Convert seconds since epoch to date format used in RunSummary"""
     return time.strftime("%Y.%m.%d %H:%M:%S", time.gmtime(sec))
 
-def runsum_keys():
-    """Retrieve run summary keys directly from dasmap.cfg file"""
-    if  os.environ.has_key('DAS_ROOT'):
-        dasconfig = os.path.join(os.environ['DAS_ROOT'], 'etc/dasmap.cfg')
-        if  not os.path.isfile(dasconfig):
-            raise EnvironmentError('No DAS mapconfig file %s found' % dasconfig)
-    else:
-        raise EnvironmentError('DAS_ROOT environment is not set up')
-    config = ConfigParser.ConfigParser()
-    config.read(dasconfig)
-    keys = config.options('runsum')
-    return keys
-
 class RunSummaryService(DASAbstractService):
     """
     Helper class to provide RunSummary service
@@ -164,5 +151,6 @@ class RunSummaryService(DASAbstractService):
                         nkey = self.dasmapping.notation2das\
                             (self.name, elem.tag, api)
                         row[nkey] = adjust_value(elem.text)
-        root.clear()
+        if  root:
+            root.clear()
         source.close()

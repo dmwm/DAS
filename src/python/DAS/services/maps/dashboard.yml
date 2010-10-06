@@ -4,7 +4,7 @@ format : XML
 ---
 urn: "jobsummary-plot-or-table"
 url : "http://dashb-cms-job.cern.ch/dashboard/request.py/jobsummary-plot-or-table"
-expire : 3600
+expire : 600
 params : {
     "user": "",
     "site": "",

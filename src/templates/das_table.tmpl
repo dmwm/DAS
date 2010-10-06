@@ -2,7 +2,7 @@
 <!-- das_table.tmpl -->
 ####if $total and not $ajax
 #if $total
-
+#import urllib
 <!--begin custom header content for this example-->
 <div class="yui-skin-sam">
 
@@ -60,9 +60,9 @@ YAHOO.example.DynamicData = function() {
             var idx = (oState.pagination) ? oState.pagination.recordOffset : 0;
 
             // parameters used in DAS
-            var dasparams = "input=$input&limit=$rowsperpage&idx=" + idx;
+            var dasparams = "input=$urllib.quote_plus($input)&limit=$urllib.quote_plus($rowsperpage)&idx=" + $urllib.quote_plus(idx);
             // Build the request
-            return dasparams + "&sort=" + sort + "&dir=" + dir;
+            return dasparams + "&sort=" + $urllib.quote_plus(sort) + "&dir=" + $urllib.quote_plus(dir);
         },
         validator: YAHOO.lang.isFunction
     });

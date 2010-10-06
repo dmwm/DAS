@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # run actual script
-$DAS_ROOT/src/python/DAS/tools/queryspammer/queryspammer.py "$@"
+$DAS_ROOT/src/python/DAS/tools/queryspammer/queryspammer.py ${1+"$@"}

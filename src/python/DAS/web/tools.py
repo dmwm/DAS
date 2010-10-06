@@ -118,33 +118,33 @@ def auth(func):
         return data
     return wrapper
 
-def exposexml (func):
-    """CherryPy expose XML decorator"""
-    @expose
-    def wrapper (self, *args, **kwds):
-        """Decorator wrapper"""
-        data = func (self, *args, **kwds)
-        if  type(data) is types.ListType:
-            results = data
-        else:
-            results = [data]
-        cherrypy.response.headers['Content-Type'] = "application/xml"
-        return self.templatepage('das_xml', resultlist = results)
-    return wrapper
+#def exposexml (func):
+#    """CherryPy expose XML decorator"""
+#    @expose
+#    def wrapper (self, *args, **kwds):
+#        """Decorator wrapper"""
+#        data = func (self, *args, **kwds)
+#        if  type(data) is types.ListType:
+#            results = data
+#        else:
+#            results = [data]
+#        cherrypy.response.headers['Content-Type'] = "application/xml"
+#        return self.templatepage('das_xml', resultlist = results)
+#    return wrapper
 
-def exposeplist (func):
-    """
-    Return data in XML plist format, 
-    see http://docs.python.org/library/plistlib.html#module-plistlib
-    """
-    @expose
-    def wrapper (self, *args, **kwds):
-        """Decorator wrapper"""
-        data_struct = func(self, *args, **kwds)
-        plist_str = plistlib.writePlistToString(data_struct)
-        cherrypy.response.headers['Content-Type'] = "application/xml+plist"
-        return plist_str
-    return wrapper
+#def exposeplist (func):
+#    """
+#    Return data in XML plist format, 
+#    see http://docs.python.org/library/plistlib.html#module-plistlib
+#    """
+#    @expose
+#    def wrapper (self, *args, **kwds):
+#        """Decorator wrapper"""
+#        data_struct = func(self, *args, **kwds)
+#        plist_str = plistlib.writePlistToString(data_struct)
+#        cherrypy.response.headers['Content-Type'] = "application/xml+plist"
+#        return plist_str
+#    return wrapper
 
 def exposetext (func):
     """CherryPy expose Text decorator"""

@@ -24,8 +24,9 @@ class testDASPLY(unittest.TestCase):
                       'postalcode', 'ip_services']
         daskeys = ['dataset', 'file', 'block', 'run', 'site', 
                    'latitude', 'longitude', 'city', 'ip', 'date', 'system', 'zip']
+        parserdir = '/tmp'
 
-        self.dasply = DASPLY(daskeys, dassystems, verbose=self.debug)
+        self.dasply = DASPLY(parserdir, daskeys, dassystems, verbose=self.debug)
 #        args = {'debug':self.debug, 'errorlog' : ply.yacc.NullLogger()}
         args = {'errorlog' : ply.yacc.NullLogger()}
         self.dasply.build(**args)

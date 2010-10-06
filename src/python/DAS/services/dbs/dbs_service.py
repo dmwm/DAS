@@ -63,9 +63,11 @@ class DBSService(DASAbstractService):
         for row in gen:
             if  row.has_key('algorithm'):
                 del row['algorithm']['ps_content']
-            if  row.has_key('processed_dataset') and row['processed_dataset'].has_key('path') \
-                and row['processed_dataset']['path'].has_key('dataset_path'):
-                path = row['processed_dataset']['path']['dataset_path']
-                del row['processed_dataset']['path']
-                row['processed_dataset']['name'] = path
+            if  row.has_key('processed_dataset') and \
+                row['processed_dataset'].has_key('path'):
+                    if  type(row['processed_dataset']['path']) is types.DictType\
+                    and row['processed_dataset']['path'].has_key('dataset_path'):
+                        path = row['processed_dataset']['path']['dataset_path']
+                        del row['processed_dataset']['path']
+                        row['processed_dataset']['name'] = path
             yield row

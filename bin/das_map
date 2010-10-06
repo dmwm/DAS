@@ -1,11 +1,15 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # usage: das_map
 
 # setup environment
 #. `dirname $0`/setup.sh
 
-dir=$DAS_ROOT/src/python/DAS/services/maps
+if  [ `hostname -d` == "cern.ch" ]
+    dir=/data/projects/das/config/maps
+else
+    dir=$DAS_ROOT/src/python/DAS/services/maps
+fi
 cmd=$DAS_ROOT/src/python/DAS/tools/das_mapping_db.py
 
 # run actual script

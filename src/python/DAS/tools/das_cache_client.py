@@ -8,6 +8,7 @@ __revision__ = "$Id: das_cache_client.py,v 1.15 2009/09/09 18:43:05 valya Exp $"
 __version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
+import json
 import urllib
 import urllib2
 from   optparse import OptionParser
@@ -84,7 +85,7 @@ if __name__ == '__main__':
     idx     = opts.idx
     limit   = opts.limit
     if  opts.input:
-        params = eval(opts.input)
+        params = json.loads(opts.input)
     elif opts.query:
         params = {'query':query, 'idx':idx, 'limit':limit}
     else:

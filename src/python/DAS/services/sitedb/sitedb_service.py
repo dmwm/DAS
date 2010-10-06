@@ -10,10 +10,12 @@ __author__ = "Valentin Kuznetsov"
 
 import re
 import types
-from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import add2dict, map_validator
-from DAS.utils.utils import row2das
-from DAS.utils.regex import cms_tier_pattern
+import traceback
+
+from   DAS.services.abstract_service import DASAbstractService
+from   DAS.utils.utils import add2dict, map_validator
+from   DAS.utils.utils import row2das
+from   DAS.utils.regex import cms_tier_pattern
 import DAS.utils.jsonwrapper as json
 
 class SiteDBService(DASAbstractService):
@@ -38,7 +40,12 @@ class SiteDBService(DASAbstractService):
         try:
             jsondict = json.loads(data)
         except:
-            jsondict = eval(data)
+            msg  = "SiteDBService::parser,"
+            msg += "WARNING, fail to JSON'ify data:\n%s" % data
+            self.logger.warning(msg)
+            jsondict = eval(data, { "__builtins__": None }, {})
+#            traceback.print_exc()
+#            raise
         pat = cms_tier_pattern
         for key, val in jsondict.items():
             if  api == 'CMSNametoAdmins':

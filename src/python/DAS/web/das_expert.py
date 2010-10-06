@@ -37,6 +37,44 @@ def error(msg):
     err = '<div class="box_red">%s</div>' % msg
     return err
 
+def checkargs(func):
+    """Decorator to check arguments to REST server"""
+    def wrapper (self, *args, **kwds):
+        """Wrapper for decorator"""
+        pat = web_arg_pattern
+        supported = ['idx', 'limit', 'collection', 'database', 'query',
+                     'dasquery', 'dbcoll', 'msg']
+        if  not kwds:
+            if  args:
+                kwds = args[-1]
+        keys = []
+        if  kwds:
+            keys = [i for i in kwds.keys() if i not in supported]
+        if  keys:
+            msg  = 'Unsupported keys: %s' % keys
+            return msg
+        if  kwds.has_key('idx') and not pat.match(str(kwds['idx'])):
+            msg  = 'Unsupported value idx=%s' % (kwds['idx'])
+            return msg
+        if  kwds.has_key('limit') and not pat.match(str(kwds['limit'])):
+            msg  = 'Unsupported value limit=%s' % (kwds['limit'])
+            return msg
+        if  kwds.has_key('collection'):
+            if  kwds['collection'] not in ['cache', 'merge', 'db', 'dns']:
+                msg  = 'Unsupported value collection=%s' % (kwds['collection'])
+                return msg
+        if  kwds.has_key('database'):
+            if  kwds['database'] not in \
+                ['das', 'analytics', 'admin', 'logging', 'mapping']:
+                msg  = 'Unsupported value database=%s' % (kwds['database'])
+                return msg
+        data = func (self, *args, **kwds)
+        return data
+    wrapper.__doc__ = func.__doc__
+    wrapper.__name__ = func.__name__
+    wrapper.exposed = True
+    return wrapper
+
 def check_dn(func):
     """CherryPy expose decorator which check user DN's"""
     @expose
@@ -196,13 +234,4 @@ class DASExpertService(DASWebManager):
     @expose
     def analytics(self, **kwargs):
         return "analytics page"
-
-#    @expose
-#    @auth
-#    def secure(self, *args, **kwargs):
-#        return "TEST secure page"
-
-#    @expose
-#    def auth(self, *args, **kwargs):
-#        return "auth page"
 

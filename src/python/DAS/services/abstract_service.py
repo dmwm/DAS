@@ -378,7 +378,7 @@ class DASAbstractService(object):
                 counter += 1
                 yield row
         elif dformat.lower() == 'json' or dformat.lower() == 'dasjson':
-            gen  = json_parser(data)
+            gen  = json_parser(data, self.logger)
             das_dict = {}
             for row in gen:
                 if  dformat.lower() == 'dasjson':
@@ -517,6 +517,11 @@ class DASAbstractService(object):
                                               api, args, expire)
                 headers = make_headers(dformat)
                 data    = self.getdata(url, args, headers)
+                try: # get HTTP header and look for Expires
+                    e_time = data.info().__dict__['dict']['expires']
+                    expire = expire_timestamp(e_time)
+                except:
+                    pass
                 rawrows = self.parser(query, dformat, data, api)
                 dasrows = self.translator(api, rawrows)
                 dasrows = self.set_misses(query, api, dasrows)

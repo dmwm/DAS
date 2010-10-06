@@ -29,6 +29,7 @@ def das_read_cms_config(filename):
     configdict['das'] = config.section_('das').dictionary_()
 
     configdict['rawcache'] = configdict['das'].get('rawcache', None)
+    parserdir = configdict['das'].get('parserdir', '/tmp')
     verbose   = configdict['das'].get('verbose', 0)
     logfile   = configdict['das'].get('logfile', None)
     logformat = configdict['das'].get('logformat', '%(levelname)s %(message)s')
@@ -38,7 +39,8 @@ def das_read_cms_config(filename):
     if  logfile:
         configdict['logfile'] = logfile
     configdict['verbose'] = verbose
-    configdict['das'] = dict(verbose=verbose, logfile=logfile, logformat=logformat, services=services)
+    configdict['das'] = dict(verbose=verbose, parserdir=parserdir,
+                logfile=logfile, logformat=logformat, services=services)
     return configdict
 
 if  __name__ == '__main__':

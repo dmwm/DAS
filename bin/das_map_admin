@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # setup environment
 #. `dirname $0`/setup.sh
 
 cmd=$DAS_ROOT/src/python/DAS/tools/das_mapping_db.py
-$cmd "$@"
+$cmd ${1+"$@"}

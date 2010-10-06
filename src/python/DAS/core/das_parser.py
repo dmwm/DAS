@@ -282,7 +282,8 @@ class QLManager(object):
         for val in self.daskeysmap.values():
             for item in val:
                 self.daskeys.append(item)
-        self.dasply = DASPLY(self.daskeys, self.dasservices, 
+        parserdir   = config['das']['parserdir']
+        self.dasply = DASPLY(parserdir, self.daskeys, self.dasservices, 
                 verbose=self.verbose)
 
     def parse(self, query, add_to_analytics=True):

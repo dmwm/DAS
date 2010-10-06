@@ -7,6 +7,36 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
+- 0.5.3
+
+  - Clean-up %post and do not package docs over there
+  - All names in bin are adjusted to one schema: das_<task>.
+  - All scripts in bin are changed to use /bin/sh or 
+    /bin/bash and use ${1+"$@"} instead of "$@"
+  - bin area has been clean-up, e.g. das_doc, dassh is removed, etc.
+  - Remove runsum_keys in runsum_service.py since it is obsolete code
+  - Fix issue w/ root.close() for runsum_service.py (parser function)
+  - Remove session from plotfairy
+  - Remove encode4admin
+  - Add urllib.quote(param) for das_services.tmpl and das_tables.tmpl
+  - fix #446
+  - das_jsontable.tmpl is removed since it's obsolete and no one is using it.
+  - Remove das_help.tmpl and /das/help since it is obsolete
+  - Remove das_admin.py since it is obsolete
+  - Reviewed decorator in web/tools.py and commented out unused decorators, 
+    exposexml, exposeplist. I want to keep them around upon they become relevant for DAS long terms.
+  - Fix issue with wrap2das methods and made them internal.
+  - Add checkargs decorator to validate input parameters for das_web
+  - Change socket_queue_size to 100
+  - Set engine.autoreload_on=False, request.show_tracebacks=False.
+    Verified that server runs in production mode by default.
+  - Add parameters validation for das_web/das_expert.
+  - fix #493, allow relocation of PLY parsertab.py
+  - fix #494, allow usage of HTTP Expires if data-services provide that
+  - change eval(x) into eval(x, { "__builtins__": None }, {}) for those cases
+    when fail to use json.load(x). Some data-service are not fully compliant
+    and the issue with them need to be resolved at their end.
+
 - 0.5.0 till 0.5.2
 
   - based on Gordon series of patches the following changes has been

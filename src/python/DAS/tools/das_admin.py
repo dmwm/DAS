@@ -10,6 +10,7 @@ __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
 import sys
+import json
 import time
 import types
 import traceback
@@ -147,8 +148,12 @@ class DASMongoDB(object):
         """
         Retrieve DAS records
         """
-        spec = eval(spec)
-        fields = eval(fields)
+#        spec = eval(spec)
+#        fields = eval(fields)
+        # provided spec is a str representation of a dict
+        spec   = json.loads(spec)
+        # provided fields are in a form of "[bla, bla]"
+        fields = fields.replace('[', '').replace(']', '').split(',')
         if  not fields:
             fields = None
         if  not db:

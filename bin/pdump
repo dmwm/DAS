@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # setup environment
 #. `dirname $0`/setup.sh
 
 # run actual script
-$DAS_ROOT/src/python/DAS/tools/read_profile.py "$@"
+$DAS_ROOT/src/python/DAS/tools/read_profile.py ${1+"$@"}

@@ -4,7 +4,7 @@ format : XML
 ---
 urn : "runsum"
 url : "https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary"
-expire : 86400
+expire : 3600
 params  : {"DB":"cms_omds_lb", "FORMAT":"XML", "RUN":"required"}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},

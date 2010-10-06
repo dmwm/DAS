@@ -33,7 +33,7 @@ class DASPLY(object):
     """
     DAS QL parser based on PLY lexer/parser.
     """
-    def __init__(self, daskeys, dassystems,
+    def __init__(self, parserdir, daskeys, dassystems,
                  operators=None, filters=None,
                  aggregators=None, verbose=0):
         self.daskeys = daskeys
@@ -42,13 +42,9 @@ class DASPLY(object):
         self.parser  = None # defined at run time using self.build()
 
         self.dassystems = dassystems
-        if  not os.environ.has_key('DAS_ROOT'):
-            msg = 'Unable to locate DAS_ROOT environment'
-            raise Exception(msg)
-        self.parsertab_dir = os.path.join(os.environ['DAS_ROOT'], \
-                'src/python/parser')
+        self.parsertab_dir = parserdir
         if  not os.path.isdir(self.parsertab_dir):
-            msg = 'Directory $DAS_ROOT/src/python/parser does not exists'
+            msg = 'Directory %s does not exists' % self.parsertab_dir
             raise Exception(msg)
         
         # test if we have been given a list of desired operators/filters
