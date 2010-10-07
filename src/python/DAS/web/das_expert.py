@@ -106,8 +106,8 @@ class DASExpertService(DASWebManager):
         DASWebManager.__init__(self, config)
         self.base   = '/das'
         das_config  = das_readconfig()
-        self.dbhost = das_config['mongodb'].get('dbhost')
-        self.dbport = das_config['mongodb'].get('dbport')
+        self.dbhost = das_config['mongodb']['dbhost']
+        self.dbport = das_config['mongodb']['dbport']
         self.conn   = Connection(self.dbhost, self.dbport)
         self.dasconfig = das_config
         self.das    = DASCore(debug=0, nores=True)

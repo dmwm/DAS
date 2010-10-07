@@ -8,8 +8,7 @@ Unit test for DAS config module
 import os
 import types
 import unittest
-from DAS.utils.das_config import das_configfile, das_readconfig
-from DAS.utils.das_config import das_writeconfig
+from DAS.utils.das_config import das_configfile, das_readconfig, write_configparser
 
 class testDASConfig(unittest.TestCase):
     """
@@ -24,7 +23,8 @@ class testDASConfig(unittest.TestCase):
         
     def testConfig(self):                          
         """test read/write of configuration file"""
-        das_writeconfig()
+        dasconfig = das_configfile()
+        write_configparser(dasconfig, True)
         readdict = das_readconfig()
         self.assertEqual(types.DictType, type(readdict))
 #

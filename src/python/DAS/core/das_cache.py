@@ -31,8 +31,8 @@ class DASCacheMgr(object):
         """
         Initialize DAS cache manager.
         """
-        logfile = config.get('logfile', None)
-        verbose = config.get('verbose', 0)
+        logfile = config['logfile']
+        verbose = config['verbose']
         name    = 'DASCacheMgr'
         self.logger = DASLogger(logfile=logfile, verbose=verbose, name=name)
         self.queue  = [] # keep track of waiting queries

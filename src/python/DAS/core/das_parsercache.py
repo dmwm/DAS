@@ -19,14 +19,14 @@ class DASParserDB(object):
     Caching layer for the PLY parser.
     """
     def __init__(self, config):
-        self.verbose = config['verbose']
-        self.logger = config['logger']
-        self.dbhost = config['parserdb']['dbhost']
-        self.dbport = config['parserdb']['dbport']
-        self.dbname = config['parserdb'].get('dbname', 'parser')
-        self.attempts = config['parserdb'].get('attempt', 3)
-        self.sizecap = config['parserdb'].get('sizecap', 1048576 * 5)
-        self.colname = config['parserdb'].get('collname', 'db')
+        self.verbose  = config['verbose']
+        self.logger   = config['logger']
+        self.dbhost   = config['parserdb']['dbhost']
+        self.dbport   = config['parserdb']['dbport']
+        self.dbname   = config['parserdb']['dbname']
+        self.attempts = config['parserdb']['attempt']
+        self.sizecap  = config['parserdb']['sizecap']
+        self.colname  = config['parserdb']['collname']
         
         msg = "DASParserCache::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)

@@ -27,7 +27,7 @@ class testDASMapping(unittest.TestCase):
         config['logger']  = logger
         config['verbose'] = debug
         config['mappingdb'] = dict(dbhost='localhost', attempt=3,
-                                dbport=27017, dbname='test_mapping')
+            dbport=27017, dbname='test_mapping', collname='db')
         self.mgr = DASMapping(config)
 
     def tearDown(self):

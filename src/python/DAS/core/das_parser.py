@@ -279,7 +279,7 @@ class QLManager(object):
         self.daskeysmap  = self.map.daskeys()
         self.operators   = list(das_operators())
         self.daskeys     = list(das_special_keys())
-        self.verbose     = config.get('verbose', 0)
+        self.verbose     = config['verbose']
         self.logger      = config['logger']
         for val in self.daskeysmap.values():
             for item in val:

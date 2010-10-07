@@ -1042,7 +1042,7 @@ def json_parser(source, logger=None):
             msg  = "json_parser, WARNING: fail to JSON'ify data:"
             msg += "\n%s\ndata type %s" % (res, type(res))
             if  logger:
-                logger.warining(msg)
+                logger.warning(msg)
             else:
                 print msg
             jsondict = eval(res, { "__builtins__": None }, {})

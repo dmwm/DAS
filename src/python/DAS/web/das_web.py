@@ -103,15 +103,14 @@ class DASWebService(DASWebManager):
     """
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
-        self.cachesrv   = config.get('cache_server_url',
-                            'http://localhost:8211')
-        self.base       = config.get('url_base', '/das')
+        self.cachesrv   = config['cache_server_url']
+        self.base       = config['url_base']
         self.dasmgr     = DASCore()
         self.daskeys    = self.dasmgr.das_keys()
         self.daskeys.sort()
         self.dasmapping = self.dasmgr.mapping
-        logfile  = config.get('logfile')
-        loglevel = int(config.get('loglevel'))
+        logfile  = config['logfile']
+        loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
         self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 

@@ -33,9 +33,9 @@ class DASMapping(object):
         self.services = config['services']
         self.dbhost   = config['mappingdb']['dbhost']
         self.dbport   = config['mappingdb']['dbport']
-        self.dbname   = config['mappingdb'].get('dbname', 'mapping')
+        self.dbname   = config['mappingdb']['dbname']
         self.attempt  = config['mappingdb']['attempt']
-        self.colname  = config['mappingdb'].get('collname', 'db')
+        self.colname  = config['mappingdb']['collname']
 
         msg = "DASMapping::__init__ %s:%s@%s" \
         % (self.dbhost, self.dbport, self.dbname)
