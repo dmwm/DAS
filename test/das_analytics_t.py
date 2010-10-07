@@ -27,7 +27,7 @@ class testDASAnalytics(unittest.TestCase):
         config['logger']  = logger
         config['verbose'] = debug
         config['analyticsdb'] = dict(dbhost='localhost', attempt=3,
-                                dbport=27017, dbname='test_analytics')
+                dbport=27017, dbname='test_analytics', collname='db')
         self.mgr = DASAnalytics(config)
 
     def tearDown(self):
