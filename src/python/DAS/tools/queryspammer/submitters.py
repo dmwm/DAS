@@ -8,6 +8,7 @@ import time
 
 try:
     from DAS.core.das_core import DASCore
+    from DAS.core.das_ply import DASPLY, ply2mongo
     HAVE_DAS = True
 except ImportError:
     HAVE_DAS = False
@@ -127,7 +128,36 @@ class DASSubmitter(Submitter):
                                  self.limit, 
                                  self.skey, 
                                  self.sorder)
-        return 'READ %d' % len(result)
+        count = 0
+        for row in result:
+            count += 1
+        return 'READ %d' % count
+
+class PLYSubmitter(Submitter):
+    """
+    Submits queries to the DAS PLY yacc/lexx parser to check validity
+    (no further submission is done).
+    """
+    def __init__(self, producer, **kwargs):
+        assert HAVE_DAS
+        core = DASCore()
+        mapping = core.mapping
+        allkeys = []
+        for system, keys in core.mapping.daskeys().items():
+            allkeys.extend(keys)
+        allkeys = list(set(allkeys))
+        self.DASPLY = DASPLY(allkeys)
+        self.DASPLY.build()
+        Submitter.__init__(self, producer, **kwargs)
+    def submit(self, query):
+        print "RAW: ",query
+        ply = self.DASPLY.parser.parse(query)
+        print "PLY: ",ply
+        mongo = ply2mongo(ply)
+        print "MONGO: ",mongo
+        return True
+        
+    
 
 def list_submitters():
     "List all available submitter classes"

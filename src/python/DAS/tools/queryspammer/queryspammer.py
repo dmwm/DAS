@@ -135,8 +135,11 @@ if __name__ == '__main__':
         LOG.warning("Failed to convert submitter-args to dictionary")
         options.submit_args = {}
 
+    if producer_list:
+        data = random_data.get_random_data()
+
     LOG.info("Loading producer classes")
-    producer_classes = [(get_class('producers', name)(), prob) 
+    producer_classes = [(get_class('producers', name)(data), prob) 
                         for (name, prob) in producer_list]
     LOG.info("Loading filter classes")
     filter_classes = [get_class('filters', name)(prob) 
@@ -144,10 +147,10 @@ if __name__ == '__main__':
     LOG.info("Loading submitter class")
     submitter_class = get_class('submitters', options.submitter)
 
+    if producer_classes:
 
-
-    LOG.info("Creating QuerySpammer")
-    spammer = QuerySpammer(producer_classes, 
+        LOG.info("Creating QuerySpammer")
+        spammer = QuerySpammer(producer_classes, 
                            filter_classes, 
                            submitter_class, 
                            **{'workers':options.workers,
@@ -156,6 +159,8 @@ if __name__ == '__main__':
                               'delay':options.delay,
                               'mode':options.mode,
                               'submit_args':options.submit_args})
-    spammer.run()
+        spammer.run()
+    else:
+        LOG.info("Must specify >0 producers to run")
     
     

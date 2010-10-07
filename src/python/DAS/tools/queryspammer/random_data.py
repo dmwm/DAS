@@ -11,9 +11,21 @@ LOG = multiprocessing.get_logger()
 
 class WeightedDistribution:
     """
-    Expects a dictionary of "result"->"probability" pairs. Probalities will be normalised to one.
+    Expects a dictionary of "result"->"probability" pairs. Probabilities will be normalised to one.
     If result is callable, then return result()
     """
+    @staticmethod
+    def power_dist(items, power=1.5):
+        """
+        Generate a weighted distribution, by sorting the items
+        randomly then assigning weights from a linear range
+        raised to the given power (default 1.5).
+        ie, weights 1**1.5, 2**1.5, ... n**1.5
+        """
+        random.shuffle(items)
+        values = dict([(i,(j+1)**power) for i,  j in zip(items, range(len(items)))])
+        return WeightedDistribution(values)
+    
     def __init__(self, values):
         if isinstance(values, dict):
             total = float(sum(values.values()))
@@ -74,17 +86,20 @@ class RandomData(object):
         LOG.info('Fetching blocks')
         blocks = []
         base_url = 'http://cmsweb.cern.ch/phedex/datasvc/json/prod/blockreplicas?'
-        for node in [random.choice(self._node) for i in range(10)]:
-            LOG.info('Fetching blocks node=%s' % node)
-            url = base_url + 'node=%s' % node
-            blocks += [b['name'] for b in \
-                json.load(urllib.urlopen(url))['phedex']['block']]
+        for node in [random.choice(self._node) for i in range(16)]:
+            if node[1] in ('2','3'):
+                LOG.info('Fetching blocks node=%s' % node)
+                url = base_url + 'node=%s' % node
+                blocks += [b['name'] for b in \
+                           json.load(urllib.urlopen(url))['phedex']['block']]
         self._block = list(set(blocks))
         self._dataset = list(set([b.split('#')[0] for b in self._block]))
+        self._primary_ds = list(set([d[1:].split('/')[0] 
+                                     for d in self._dataset]))
         LOG.info('Fetching files')
         files = []
         base_url = 'http://cmsweb.cern.ch/phedex/datasvc/json/prod/filereplicas?'
-        for dataset in [random.choice(self._dataset) for i in range(10)]:
+        for dataset in [random.choice(self._dataset) for i in range(16)]:
             LOG.info('Fetching files dataset=%s' % dataset)
             url = base_url + 'dataset=%s' % dataset
             for block in json.load(urllib.urlopen(url))['phedex']['block']:
@@ -93,7 +108,7 @@ class RandomData(object):
         LOG.info('Fetching SEs')
         ses = []
         base_url = 'http://cmsweb.cern.ch/sitedb/json/index/CMSNametoSE?'
-        for node in [random.choice(self._node) for i in range(10)]:
+        for node in [random.choice(self._node) for i in range(16)]:
             LOG.info('Fetching SE(s) for node=%s' % node)
             url = base_url + 'name=%s' % node
             ses += [se['name'] for se in json.loads(\
@@ -102,7 +117,7 @@ class RandomData(object):
         LOG.info('Fetching CEs')
         ces = []
         base_url = 'http://cmsweb.cern.ch/sitedb/json/index/CMSNametoCE?'
-        for node in [random.choice(self._node) for i in range(10)]:
+        for node in [random.choice(self._node) for i in range(16)]:
             LOG.info('Fetching CE(s) for node=%s' % node)
             url = base_url + 'name=%s' % node
             ces += [se['name'] for se in json.loads(\
@@ -123,7 +138,34 @@ class RandomData(object):
                 'CMSSW_3_7_0_patch1', 'CMSSW_3_6_2', 'CMSSW_3_7_0_patch2', 
                 'CMSSW_3_6_3', 'CMSSW_3_6_1_patch5', 'CMSSW_3_7_0_patch3', 
                 'CMSSW_3_7_0_patch4', 'CMSSW_3_6_3_patch1']
+        
+        self.keygen = {
+                        'block': ('block',),
+                        'run': ('run_number',),
+                        'site': ('se', 'ce', 'node'),
+                        'file': ('file',),
+                        'dataset': ('dataset',),
+                        'release': ('release',),
+                        'city': ('city_name',),
+                        'zip': ('zip_code',),
+                        'ip': ('ip',),
+                        'parent': ('dataset',),
+                        'group': ('group',),
+                        'primary_ds': ('primary_ds',),       
+                       } #direct references are unpickleable, apparently
 
+    def has_key(self, key):
+        return key in self.keygen
+    
+    def get_random(self, key):
+        if self.has_key(key):
+            generator = random.choice(self.keygen[key])
+            return getattr(self, generator)()
+        return None
+    
+    def get_keys(self):
+        return self.keygen.keys()
+    
     def node(self):
         """Return a node"""
         return random.choice(self._node)
@@ -172,27 +214,33 @@ class RandomData(object):
                                 random.randint(0, 255), 
                                 random.randint(0, 255))
      
-RANDOMDATA = None
+    def primary_ds(self):
+        """Return a primary dataset name""" 
+        return random.choice(self._primary_ds)
 
-LOG.info("Looking for random data")
-if os.path.exists('random_data.pkl'):
-    picklefile = open('random_data.pkl', 'rb')
-    time_create, data = pickle.load(picklefile)
-    picklefile.close()
-    if time.time() - time_create < 86400*7:
-        LOG.info("Loading from random_data.pkl")
-        RANDOMDATA = data
-    else:
-        LOG.info("Generating fresh random data - file old")
-        RANDOMDATA = RandomData() 
-        picklefile = open('random_data.pkl', 'wb')
-        pickle.dump((time.time(), RANDOMDATA), picklefile, 2)
+def get_random_data():
+    
+    LOG.info("Looking for random data")
+    if os.path.exists('random_data.pkl'):
+        picklefile = open('random_data.pkl', 'rb')
+        time_create, data = pickle.load(picklefile)
         picklefile.close()
-else:
-    LOG.info("Generating fresh random data - file not found")
-    RANDOMDATA = RandomData()
-    picklefile = open('random_data.pkl', 'wb')
-    pickle.dump((time.time(), RANDOMDATA), picklefile, 2)
-    picklefile.close()
+        if time.time() - time_create < 86400*7:
+            LOG.info("Loading from random_data.pkl")
+            return data
+        else:
+            LOG.info("Generating fresh random data - file old")
+            data = RandomData() 
+            picklefile = open('random_data.pkl', 'wb')
+            pickle.dump((time.time(), data), picklefile, 2)
+            picklefile.close()
+            return data
+    else:
+        LOG.info("Generating fresh random data - file not found")
+        data = RandomData()
+        picklefile = open('random_data.pkl', 'wb')
+        pickle.dump((time.time(), data), picklefile, 2)
+        picklefile.close()
+        return data
     
        
