@@ -20,6 +20,8 @@ from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
 from DAS.core.das_ply import DASPLY, ply2mongo
 from DAS.utils.utils import adjust_value, convert2date, das_dateformat
 from DAS.utils.regex import key_attrib_pattern
+from DAS.core.das_parsercache import DASParserDB, PARSERCACHE_NOTFOUND
+from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
 import DAS.utils.jsonwrapper as json
 
 def add_spaces(query):
@@ -286,6 +288,10 @@ class QLManager(object):
         self.dasply = DASPLY(parserdir, self.daskeys, self.dasservices, 
                 verbose=self.verbose)
 
+        self.enabledb = config['parserdb']['enable']
+        if  self.enabledb:
+            self.parserdb = DASParserDB(config)
+
     def parse(self, query, add_to_analytics=True):
         """
         Parse input query and return query in MongoDB form.
@@ -319,8 +325,23 @@ class QLManager(object):
             msg = "QLManager::mongo_query, input query='%s'" % query
             self.logger.debug(msg)
             self.dasply.test_lexer(query)
-        ply_query   = self.dasply.parser.parse(query)
-        mongo_query = ply2mongo(ply_query)
+        if  self.enabledb:
+            status, value = self.parserdb.lookup_query(query)
+            if status == PARSERCACHE_VALID:
+                mongo_query = value
+            elif status == PARSERCACHE_INVALID:
+                raise Exception(value)
+            else:
+                try:
+                    ply_query = self.dasply.parser.parse(query)
+                    mongo_query = ply2mongo(ply_query)
+                    self.parserdb.insert_valid_query(query, mongo_query)
+                except Exception, e:
+                    self.parserdb.insert_invalid_query(query, e.msg)
+                    raise
+        else:
+            ply_query   = self.dasply.parser.parse(query)
+            mongo_query = ply2mongo(ply_query)
         return mongo_query
 
     def convert2skeys(self, mongo_query):

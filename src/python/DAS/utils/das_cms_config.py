@@ -27,6 +27,7 @@ def das_read_cms_config(filename):
     configdict['analyticsdb'] = config.section_('analyticsdb').dictionary_()
     configdict['mappingdb'] = config.section_('mappingdb').dictionary_()
     configdict['das'] = config.section_('das').dictionary_()
+    configdict['parserdb'] = config.section_('parserdb').dictionary_()
 
     configdict['rawcache'] = configdict['das'].get('rawcache', None)
     parserdir = configdict['das'].get('parserdir', '/tmp')

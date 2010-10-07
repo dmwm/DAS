@@ -59,9 +59,19 @@ def das_read_cfg(dasconfig=None):
     analytics['dbport'] = int(config.get('analytics_db', 'dbport', 27017))
     analytics['dbname'] = config.get('analytics_db', 'dbname', 'analytics')
     analytics['collname'] = config.get('analytics_db', 'collname', 'db')
-    analytics['attempt']  = config.get('analytics_db', 'attempt', 3)
+    analytics['attempt']  = int(config.get('analytics_db', 'attempt', 3))
     configdict['analyticsdb'] = analytics
 
+    parserdb = {}
+    parserdb['dbhost'] = config.get('parser_db', 'dbhost', 'localhost')
+    parserdb['dbport'] = int(config.get('parser_db', 'dbport', 27017))
+    parserdb['dbname'] = config.get('parser_db', 'dbname', 'parser')
+    parserdb['collname'] = config.get('parser_db', 'collname', 'db')
+    parserdb['attempt'] = int(config.get('parser_db', 'attempt', 3))
+    parserdb['enable'] = bool(config.get('parser_db', 'enable', True))
+    parserdb['sizecap'] = int(config.get('parser_db', 'sizecap', 1048576*5))
+    configdict['parserdb'] = parserdb
+ 
     cache_server = {}
     cache_server['port'] = config.getint('cache_server', 'port')
     cache_server['host'] = config.get('cache_server', 'host')
@@ -180,6 +190,15 @@ def das_writeconfig():
     config.set('web_server', 'url_base', '/das')
     config.set('web_server', 'logfile', '/tmp/das_web.log')
     config.set('web_server', 'loglevel', 0)
+
+    config.add_section('parser_db')
+    config.set('parser_db', 'dbhost', 'localhost')
+    config.set('parser_db', 'dbport', 27017)
+    config.set('parser_db', 'dbname', 'parser')
+    config.set('parser_db', 'collname', 'db')
+    config.set('parser_db', 'attempt', 3)
+    config.set('parser_db', 'sizecap', 1048576*5)
+    config.set('parser_db', 'enable', True)
 
 #    config.add_section('security')
 #    config.set('security', 'role', '')
