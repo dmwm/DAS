@@ -21,7 +21,7 @@ from pymongo import DESCENDING
 from pymongo.objectid import ObjectId
 
 # DAS modules
-from DAS.utils.utils import getarg, genkey, dotdict
+from DAS.utils.utils import getarg, genkey, DotDict
 from DAS.utils.utils import row2das, extract_http_error, make_headers
 from DAS.utils.utils import xml_parser, json_parser, plist_parser
 from DAS.utils.utils import yield_rows, expire_timestamp
@@ -442,7 +442,7 @@ class DASAbstractService(object):
         spec  = query['spec']
         skeys = spec.keys()
         row   = genrows.next()
-        ddict = dotdict(row)
+        ddict = DotDict(row)
         keys2adjust = []
         for key in spec.keys():
             val = ddict._get(key)
@@ -455,7 +455,7 @@ class DASAbstractService(object):
         if  keys2adjust:
             # adjust of the rows
             for row in yield_rows(row, genrows):
-                ddict = dotdict(row)
+                ddict = DotDict(row)
                 for key in keys2adjust:
                     value = spec[key]
                     existing_value = ddict._get(key)
@@ -473,10 +473,10 @@ class DASAbstractService(object):
                     elif existing_value and value != existing_value:\
                         # we got proximity results
                         if  ddict.has_key('proximity'):
-                            proximity = dotdict({key:existing_value})
+                            proximity = DotDict({key:existing_value})
                             ddict['proximity'].update(proximity)
                         else:
-                            proximity = dotdict({})
+                            proximity = DotDict({})
                             proximity._set(key, existing_value)
                             ddict['proximity'] = proximity
                     else:

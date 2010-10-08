@@ -13,7 +13,7 @@ from pymongo.connection import Connection
 
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_core import DASCore
-from DAS.utils.utils import dotdict
+from DAS.utils.utils import DotDict
 
 class testDASCore(unittest.TestCase):
     """
@@ -42,7 +42,7 @@ class testDASCore(unittest.TestCase):
         query  = self.das.adjust_query(query)
         result = self.das.get_from_cache(query)
         result = [r for r in result][0]
-        result = dotdict(result)._get('city.Placemark.address')
+        result = DotDict(result)._get('city.Placemark.address')
 #        expect = 'Ithaca, NY 14850, USA'
         expect = 'Ithaca'
         self.assertEqual(expect, result.split(',')[0])
@@ -72,7 +72,7 @@ class testDASCore(unittest.TestCase):
         query  = self.das.adjust_query(query)
         result = self.das.get_from_cache(query)
         result = [r for r in result][0]
-        result = dotdict(result)._get('ip.City')
+        result = DotDict(result)._get('ip.City')
         expect = 'Geneva'
         self.assertEqual(expect, result)
 

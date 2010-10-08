@@ -19,7 +19,7 @@ from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser, unique_filter
-from DAS.utils.utils import dotdict, filter, aggregator, yield_rows
+from DAS.utils.utils import DotDict, filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 
 class testUtils(unittest.TestCase):
@@ -124,19 +124,19 @@ class testUtils(unittest.TestCase):
             expect.append(('file.size',i))
             expect.append(('file.evts',i**2))
         filters = ['file.size', 'file.evts']
-        result = [r for r in filter(rows, filters)]
+        result = [r for r in filter_with_filters(rows, filters)]
         self.assertEqual(expect, result)
 
-    def test_dotdict(self):
-        """Test dotdict class"""
+    def test_DotDict(self):
+        """Test DotDict class"""
         res = {u'zip' : {u'code':u'14850'}}
-        ddict = dotdict(res)
+        ddict = DotDict(res)
         ddict._set('zip.code', 14850)
         expect = {u'zip' : {u'code':14850}}
         self.assertEqual(expect, ddict)
 
         res = {'a':{'b':{'c':10}, 'd':10}}
-        ddict = dotdict(res)
+        ddict = DotDict(res)
         ddict._set('x.y.z', 10)
         expect = {'a':{'b':{'c':10}, 'd':10}, 'x':{'y':{'z':10}}}
         self.assertEqual(expect, ddict)
@@ -149,7 +149,7 @@ class testUtils(unittest.TestCase):
         self.assertEqual(expect, result)
 
         res = {'a':{'b':{'c':10}, 'd':[{'x':1}, {'x':2}]}}
-        ddict = dotdict(res)
+        ddict = DotDict(res)
         expect = 1
         result = ddict._get('a.d.x')
         self.assertEqual(expect, result)
@@ -158,7 +158,7 @@ class testUtils(unittest.TestCase):
         self.assertEqual(expect, result)
 
         res = {'a': {'b': {'c':1, 'd':2}}}
-        ddict = dotdict(res)
+        ddict = DotDict(res)
         expect = {'a': {'b': {'c':1}}}
         ddict._delete('a.b.d')
         self.assertEqual(expect, ddict)

@@ -7,7 +7,7 @@ Unit test for DAS aggregators
 
 import unittest
 from DAS.core.das_aggregators import das_func
-from DAS.utils.utils import dotdict
+from DAS.utils.utils import DotDict
 
 class testQLParser(unittest.TestCase):
     """
@@ -38,7 +38,7 @@ class testQLParser(unittest.TestCase):
         self.assertEqual(expect, result)
 
         expect = 20
-        drows  = [dotdict(row) for row in rows]
+        drows  = [DotDict(row) for row in rows]
         result = das_func('max', 'block.replica.size', drows)
         self.assertEqual(expect, result)
 #

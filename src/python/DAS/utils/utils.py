@@ -11,17 +11,15 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
-import re
 import time
-import types
 from   types import GeneratorType, InstanceType
 import hashlib
 import plistlib
 import calendar
+import datetime
 import traceback
 import xml.etree.cElementTree as ET
 from   itertools import groupby
-from   pymongo.objectid import ObjectId
 
 # DAS modules
 from   DAS.utils.regex import float_number_pattern, int_number_pattern
@@ -29,7 +27,6 @@ from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 import DAS.utils.jsonwrapper as json
-from   base64 import b64encode, b32encode
 
 def convert2date(value):
     """
@@ -39,7 +36,6 @@ def convert2date(value):
     pat = last_time_pattern
     if  not pat.match(value):
         raise Exception(msg)
-    oper = ' = '
     if  value.find('h') != -1:
         hour = int(value.split('h')[0])
         if  hour > 24:
@@ -89,27 +85,27 @@ def expire_timestamp(expire):
     if  isinstance(expire, str) and \
         expire.find(',') != -1 and expire.find(':') != -1:
         return time.mktime(time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z'))
-    timestamp = time.time()
+    tstamp = time.time()
     # use Jan 1st, 2010 as a seed to check expire date
     # prior 2010 DAS was not released in production
     tup = (2010, 1, 1, 0, 0, 0, 0, 1, -1)
     if  isinstance(expire, int) or expire < time.mktime(tup):
-        expire = timestamp + expire
+        expire = tstamp + expire
     return expire
 
 def yield_rows(*args):
     """
     Yield rows from provided input.
     """
-    for input in args:
-        if  isinstance(input, GeneratorType):
-            for row in input:
+    for iarg in args:
+        if  isinstance(iarg, GeneratorType):
+            for row in iarg:
                 yield row
-        elif isinstance(input, list):
-            for row in input:
+        elif isinstance(iarg, list):
+            for row in iarg:
                 yield row
         else:
-            yield input
+            yield iarg
 
 def adjust_value(value):
     """
@@ -140,7 +136,6 @@ def adjust_mongo_keyvalue(value):
         for key, val in value.items():
             newval = val
             if  isinstance(val, dict):
-                arr = []
                 for kkk, vvv in val.items():
                     if  kkk == '$in':
                         newval = vvv
@@ -158,7 +153,7 @@ class dict_of_none (dict):
         """Assign missing key to None"""
         return None
 
-class dotdict(dict):
+class DotDict(dict):
     """
     Access python dictionaries via dot notations, original code taken from
     http://parand.com/say/index.php/2008/10/24/python-dot-notation-dictionary-access/
@@ -170,7 +165,7 @@ class dotdict(dict):
     def __getattr__(self, attr):
         obj = self.get(attr, {})
         if  isinstance(obj, dict):
-            return dotdict(obj)
+            return DotDict(obj)
         return obj
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
@@ -202,11 +197,11 @@ class dotdict(dict):
             if  not obj and obj != 0:
                 return None
             if  isinstance(obj, dict):
-                obj = dotdict(obj)
+                obj = DotDict(obj)
             elif isinstance(obj, list):
                 obj = obj[0]
                 if  isinstance(obj, dict):
-                    obj = dotdict(obj)
+                    obj = DotDict(obj)
         return obj
         
     def _set(self, ikey, value):
@@ -228,9 +223,9 @@ class dotdict(dict):
 
 def dict_type(obj):
     """
-    Return if provided object is type of dict or instance of dotdict class
+    Return if provided object is type of dict or instance of DotDict class
     """
-    return isinstance(obj, dict) or isinstance(obj, dotdict)
+    return isinstance(obj, dict) or isinstance(obj, DotDict)
 
 def dict_value(idict, prim_key):
     """
@@ -314,7 +309,7 @@ def gen2list(results):
     """
     Convert generator to a list discarding duplicates
     """
-    reslist = [name for name, group in groupby(results)]
+    reslist = [name for name, _ in groupby(results)]
     return reslist
 
 def dump(ilist, idx=0):
@@ -380,7 +375,6 @@ def cartesian_product(ilist1, ilist2):
     master_len = len(master_list)
     for idx in range(0, master_len):
         idict = master_list[idx]
-        update = 0
         for jdx in range(0, len(slave_list)):
             jdict = slave_list[jdx]
             found = 0
@@ -389,7 +383,6 @@ def cartesian_product(ilist1, ilist2):
                     found += 1
             if  found == len(rel_keys):
                 if  not jdx:
-                    update = 1
                     for k in ins_keys:
                         idict[k] = jdict[k]
                     if  idict.has_key('system') and \
@@ -416,7 +409,6 @@ def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
     """
     reslist = []
     # define non-null keys from result sets,
-    notnullkeys = []
     for irow in master_set:
         row = dict(irow)
         for irow_match in slave_set:
@@ -440,6 +432,7 @@ def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
     return reslist
 
 def timestamp():
+    """Generate timestamp"""
     return int(str(time.time()).split('.')[0])
         
 def results2couch(query, results, expire=600):
@@ -517,22 +510,22 @@ def transform_dict2list(indict):
     """
     foundlist = 0
     row  = {}
-    for k, v in indict.items():
-        row[k] = None
-        if  isinstance(v, list):
-            if  foundlist and foundlist != len(v):
+    for kkk, vvv in indict.items():
+        row[kkk] = None
+        if  isinstance(vvv, list):
+            if  foundlist and foundlist != len(vvv):
                 raise Exception('Input dict contains multi-sized lists')
-            foundlist = len(v)
+            foundlist = len(vvv)
 
     olist = []
     if  foundlist:
-        for i in range(0, foundlist):
+        for idx in range(0, foundlist):
             newrow = dict(row)
-            for k, v in indict.items():
-                if  isinstance(v, list):
-                    newrow[k] = v[i]
+            for kkk, vvv in indict.items():
+                if  isinstance(vvv, list):
+                    newrow[kkk] = vvv[idx]
                 else:
-                    newrow[k] = v
+                    newrow[kkk] = vvv
             olist.append(newrow)
     return olist
 
@@ -624,29 +617,29 @@ def map_validator(smap):
         if  not isinstance(item['params'], dict):
             raise Exception(msg)
 
-def permutations(iterable, r=None):
+def permutations(iterable, rrr=None):
     """
     permutations('ABCD', 2) --> AB AC AD BA BC BD CA CB CD DA DB DC
     permutations(range(3)) --> 012 021 102 120 201 210
     """
     pool = tuple(iterable)
-    n = len(pool)
-    r = n if r is None else r
-    if r > n:
+    nnn = len(pool)
+    rrr = nnn if rrr is None else rrr
+    if  rrr > nnn:
         return
-    indices = range(n)
-    cycles = range(n, n-r, -1)
-    yield tuple(pool[i] for i in indices[:r])
-    while n:
-        for i in reversed(range(r)):
-            cycles[i] -= 1
-            if cycles[i] == 0:
-                indices[i:] = indices[i+1:] + indices[i:i+1]
-                cycles[i] = n - i
+    indices = range(nnn)
+    cycles = range(nnn, nnn-rrr, -1)
+    yield tuple(pool[i] for i in indices[:rrr])
+    while nnn:
+        for idx in reversed(range(rrr)):
+            cycles[idx] -= 1
+            if cycles[idx] == 0:
+                indices[idx:] = indices[idx+1:] + indices[idx:idx+1]
+                cycles[idx] = nnn - idx
             else:
-                j = cycles[i]
-                indices[i], indices[-j] = indices[-j], indices[i]
-                yield tuple(pool[i] for i in indices[:r])
+                jdx = cycles[idx]
+                indices[idx], indices[-jdx] = indices[-jdx], indices[idx]
+                yield tuple(pool[i] for i in indices[:rrr])
                 break
         else:
             return
@@ -670,7 +663,7 @@ def unique_list(ilist):
     Return sorted unique list out of provided one.
     """
     ilist.sort()
-    tmplist = [k for k, g in groupby(ilist)]
+    tmplist = [k for k, _ in groupby(ilist)]
     tmplist.sort()
     return tmplist
 
@@ -740,13 +733,6 @@ def trace(source):
     for item in source:
         print item
         yield item
-
-def splitter(record, key):
-    """
-    Split input record into a stream of records based on provided key.
-    A key can be supplied in a dotted form, e.g. block.replica.name
-    """
-    yield record
 
 def access(data, elem):
     """
@@ -844,7 +830,7 @@ def dict_helper(idict, notations):
             child_dict[notations.get(kkk, kkk)] = adjust_value(vvv)
         return child_dict
 
-def xml_parser(source, prim_key, tags=[]):
+def xml_parser(source, prim_key, tags=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
     large XML documents we use iterparse method to walk through provided
@@ -873,7 +859,8 @@ def xml_parser(source, prim_key, tags=[]):
                     if  elem.tag == atag and elem.attrib.has_key(attr):
                         att_value = elem.attrib[attr]
                         if  isinstance(att_value, dict):
-                            att_value = dict_helper(elem.attrib[attr], notations)
+                            att_value = \
+                                dict_helper(elem.attrib[attr], notations)
                         if  isinstance(att_value, str):
                             att_value = adjust_value(att_value)
                         sup[atag] = {attr:att_value}
@@ -967,7 +954,6 @@ def json_parser(source, logger=None):
             else:
                 print msg
             jsondict = eval(res, { "__builtins__": None }, {})
-            pass
     yield jsondict
 
 def plist_parser(source):
@@ -1000,6 +986,7 @@ def convert_dot_notation(key, val):
         return key, val
     split_list.reverse()
     newval = val
+    item = None
     for item in split_list:
         if  item == split_list[-1]:
             return item, newval
@@ -1052,6 +1039,7 @@ def aggregator_helper(results, expire):
     prim_key = record['das']['primary_key']
     record.pop('das')
     update = 1
+    row = {}
     for row in results:
         row_prim_key = row['das']['primary_key']
         row.pop('das')
@@ -1097,6 +1085,7 @@ def unique_filter(rows):
     Unique filter drop duplicate rows.
     """
     old_row = {}
+    row = None
     for row in rows:
         row_data = dict(row)
         try:
@@ -1155,13 +1144,13 @@ def make_headers(data_format):
         headers.update({'Accept':'text/xml;application/xml'})
     return headers
 
-def filter(rows, filters):
+def filter_with_filters(rows, filters):
     """
     Filter given rows with provided set of filters.
     """
     for row in rows:
-        ddict = dotdict(row)
-        flist = [(f,ddict._get(f)) for f in filters]
-        for iter in flist:
-            yield iter
+        ddict = DotDict(row)
+        flist = [(f, ddict._get(f)) for f in filters]
+        for idx in flist:
+            yield idx
 
