@@ -9,7 +9,7 @@ __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
-import types
+from   types import InstanceType
 import traceback
 
 from   DAS.services.abstract_service import DASAbstractService
@@ -31,7 +31,7 @@ class SiteDBService(DASAbstractService):
         """
         Parser for SiteDB JSON data-services
         """
-        if  type(source) is types.InstanceType:
+        if  isinstance(source, InstanceType):
             data = source.read()
             source.close()
         else:
@@ -44,14 +44,10 @@ class SiteDBService(DASAbstractService):
             msg += "WARNING, fail to JSON'ify data:\n%s" % data
             self.logger.warning(msg)
             jsondict = eval(data, { "__builtins__": None }, {})
-#            traceback.print_exc()
-#            raise
         pat = cms_tier_pattern
         for key, val in jsondict.items():
             if  api == 'CMSNametoAdmins':
                 row = {'admin':val}
-#            elif api == 'CEtoCMSName':
-#                row = {'name': val['name']}
             elif api == 'SEtoCMSName':
                 row = {'name': val['name']}
             elif api == 'CMStoSAMName':
@@ -62,8 +58,6 @@ class SiteDBService(DASAbstractService):
                 row = {'ce': val['name']}
             elif api == 'CMSNametoSE':
                 row = {'se': val['name']}
-#            elif api == 'CMSNametoPhEDExNode':
-#                row = {'node': val['phedex_node']}
             elif api == 'SiteStatus':
                 row = val
             else:

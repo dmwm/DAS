@@ -12,7 +12,6 @@ __revision__ = "$Id: das_aggregators.py,v 1.3 2010/03/05 18:08:23 valya Exp $"
 __version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
-import types
 from DAS.utils.utils import dict_type
 
 class ResultObject(object):
@@ -68,8 +67,6 @@ def decomposer(idict, target):
     Receive input dict and pass its key,value pairs further to the target.
     """
     try:
-#        for key, val in idict.items():
-#            target.send({key:val})
         target.send(idict)
     except StopIteration:
         pass
@@ -84,7 +81,7 @@ def selector(key, target):
                 target.send(row[key])
             except StopIteration:
                 pass
-    elif type(row) is types.ListType:
+    elif isinstance(row, list):
         for item in row:
             if  dict_type(item) and item.has_key(key):
                 try:

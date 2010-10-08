@@ -50,10 +50,6 @@ class Root(object):
         cpconfig["server.socket_port"] = int(config.get("port", 8080))
         self.pid = config.get('pid', '/tmp/das_%s.pid' % self.model)
 
-#        cpconfig["server.socket_port"] = int(config.get("port", 8443))
-#        cpconfig["server.ssl_certificate"] = 'ssl/server.crt'
-#        cpconfig["server.ssl_private_key"] = 'ssl/server.key'
-
         cpconfig["server.socket_host"] = config.get("host", "0.0.0.0")
         cpconfig["server.socket_queue_size"] = \
                 int(config.get("socket_queue_size", 100))
@@ -62,10 +58,6 @@ class Root(object):
         cpconfig["log.access_file"] = config.get("access_log_file", None)
         cpconfig["log.error_file"] = config.get("error_log_file", None)
         cpconfig['request.show_tracebacks'] = False
-        #cpconfig.update ({'request.error_response': self.handle_error})
-        #cpconfig.update ({'tools.proxy.on': True})
-        #cpconfig.update ({'proxy.tool.base': '%s:%s' 
-#                                % (socket.gethostname(), opts.port)})
         log.error_log.setLevel(config.get("error_log_level", logging.DEBUG))
         log.access_log.setLevel(config.get("access_log_level", logging.DEBUG))
 
@@ -78,22 +70,6 @@ class Root(object):
                           'tools.proxy.on': True,
                           'tools.gzip.on': True
                           })
-
-        # Security module
-#        if  self.config.has_key('security'):
-#            from oidservice.oid_consumer import OidConsumer
-#            cpconfig.update({'tools.sessions.on': True,
-#                             'tools.sessions.name': 'oidconsumer_sid'})
-#            secconfig = self.config['security']
-#            oid_cons  = OidConsumer(secconfig)
-#            tools.oid = oid_cons
-#            cpconfig.update({'tools.oid.on': True})
-#            cpconfig.update({'tools.oid.role': secconfig.get('role', None)})
-#            cpconfig.update({'tools.oid.group': secconfig.get('group', None)})
-#            cpconfig.update({'tools.oid.site': secconfig.get('site', None)})
-#            tree.mount(oid_cons.defhandler, 
-#                secconfig.get('mount_point', '/das/auth'))
-#            self.auth = oid_cons.defhandler
 
         log("loading config: %s" % cpconfig, 
                                    context=self.model, 
@@ -130,11 +106,6 @@ class Root(object):
         engine.start()
         if  blocking:
             engine.block()
-
-#    def stop(self):
-#        """Stop the server."""
-#        engine.exit()
-#        engine.stop()
         
 def main():
     """

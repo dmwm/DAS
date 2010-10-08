@@ -22,7 +22,6 @@ import sys
 import textwrap
 import inspect
 import traceback
-import types
 
 # ipython modules
 from   IPython import Release
@@ -143,18 +142,18 @@ def print_res(dict={}, fields=None):
 def print_dict(idict):
     sys.stdout.write(PM.red("{"))
     for key, val in idict.items():
-        if  type(val) is types.ListType:
+        if  isinstance(val, list):
             sys.stdout.write( "'%s':" % PM.blue(key) )
             sys.stdout.write( PM.purple('[') )
             for item in val:
-                if  type(item) is types.DictType:
+                if  isinstance(item, dict):
                     print_dict(item)
                 else:
                     sys.stdout.write( "'%s'" % item )
                 if  item != val[-1]:
                     sys.stdout.write(", ")
             sys.stdout.write(PM.purple(']'))
-        elif type(val) is types.DictType:
+        elif isinstance(val, dict):
             print_dict(val)
         else:
             sys.stdout.write( "'%s':'%s'" % (PM.blue(key), val) )
@@ -271,7 +270,6 @@ except:
 from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
 import sys
-import types
 import traceback
 from   IPython import Release
 import IPython.ipapi

@@ -12,7 +12,6 @@ __author__ = "Valentin Kuznetsov"
 import sys
 import json
 import time
-import types
 import traceback
 from optparse import OptionParser
 from DAS.utils.das_config import das_readconfig
@@ -67,18 +66,18 @@ def print_dict(idict):
     """
     sys.stdout.write(PM.red("{"))
     for key, val in idict.items():
-        if  type(val) is types.ListType:
+        if  isinstance(val, list):
             sys.stdout.write( "'%s':" % PM.blue(key) )
             sys.stdout.write( PM.purple('[') )
             for item in val:
-                if  type(item) is types.DictType:
+                if  isinstance(item, dict):
                     print_dict(item)
                 else:
                     sys.stdout.write( "'%s'" % item )
                 if  item != val[-1]:
                     sys.stdout.write(", ")
             sys.stdout.write(PM.purple(']'))
-        elif type(val) is types.DictType:
+        elif isinstance(val, dict):
             print_dict(val)
         else:
             sys.stdout.write( "'%s':'%s'" % (PM.blue(key), val) )
@@ -148,8 +147,6 @@ class DASMongoDB(object):
         """
         Retrieve DAS records
         """
-#        spec = eval(spec)
-#        fields = eval(fields)
         # provided spec is a str representation of a dict
         spec   = json.loads(spec)
         # provided fields are in a form of "[bla, bla]"

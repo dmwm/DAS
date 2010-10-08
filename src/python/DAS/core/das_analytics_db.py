@@ -12,7 +12,6 @@ __version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
-import types
 import time
 
 # monogo db modules
@@ -69,7 +68,7 @@ class DASAnalytics(object):
         """
         Add DAS-QL/MongoDB-QL queries into analytics.
         """
-        if  type(mongoquery) is types.DictType:
+        if  isinstance(mongoquery, dict):
             mongoquery = encode_mongo_query(mongoquery)
         msg = 'DASAnalytics::add_query("%s", %s)' % (dasquery, mongoquery)
         self.logger.info(msg)
@@ -136,7 +135,7 @@ class DASAnalytics(object):
         Here args is a dict of API parameters.
         """
         orig_query = query
-        if  type(query) is types.DictType:
+        if  isinstance(query, dict):
             query = encode_mongo_query(query)
         msg = 'DASAnalytics::add_api(%s, %s, %s, %s)' \
         % (system, query, api, args)
@@ -199,7 +198,7 @@ class DASAnalytics(object):
         """
         Update records for given system/query.
         """
-        if  type(query) is types.DictType:
+        if  isinstance(query, dict):
             query = encode_mongo_query(query)
         msg = 'DASAnalytics::update(%s, %s)' % (system, query)
         self.logger.info(msg)

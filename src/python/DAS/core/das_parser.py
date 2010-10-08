@@ -11,7 +11,6 @@ __author__ = "Valentin Kuznetsov"
 
 import re
 import time
-import types
 import urllib
 from DAS.core.das_lexer import DASLexer
 from DAS.core.das_ql import das_filters, das_aggregators, das_reserved
@@ -82,11 +81,6 @@ def get_aggregator(input):
     """
     count = 0
     for item in input.split(","):
-#        if  count:
-#            msg  = "Current implementation does not support multiple"
-#            msg += " aggregator functions. Please use only"
-#            msg += " one at a time."
-#            raise Exception(msg)
         if  item.count("(") != item.count(")"):
             msg = "Not equal number of open/closed brackets %s" % item
             raise Exception(msg)
@@ -183,7 +177,7 @@ def parser(query, daskeys, operators):
                 das_word = das_word.strip()
             if  oper:
                 oper = oper.strip()
-            if  type(value) is types.StringType and value[0] == '[' and\
+            if  isinstance(value, str) and value[0] == '[' and\
                 value[-1] == ']':
                 value = value.replace('[','').replace(']','')
                 value = [adjust_value(i) for i in value.split(',')]
@@ -192,9 +186,9 @@ def parser(query, daskeys, operators):
             elif oper == 'last':
                 mongo_value = convert2date(value)
             elif das_word == 'date' and oper != 'last':
-                if  type(value) is types.StringType:
+                if  isinstance(value, str):
                     value = [das_dateformat(value), time.time()]
-                elif type(value) is types.ListType:
+                elif isinstance(value, list):
                     try:
                         value1 = das_dateformat(value[0])
                         value2 = das_dateformat(value[1])
@@ -203,7 +197,7 @@ def parser(query, daskeys, operators):
                         msg = "Unable to parse %s" % value
                         raise Exception(msg)
             else:
-                if  oper == 'between' and type(value) is types.ListType:
+                if  oper == 'between' and isinstance(value, list):
                     mongo_value = {"$gte":value[0], "$lte":value[-1]}
                 else:
                     mongo_value = {MONGO_MAP[oper]:value}
@@ -297,7 +291,7 @@ class QLManager(object):
         Parse input query and return query in MongoDB form.
         Optionally parsed query can be written into analytics DB.
         """
-        if  query and type(query) is types.StringType and \
+        if  query and isinstance(query, str) and \
             query[0] == "{" and query[-1] == "}":
             mongo_query = json.loads(query)
             if  mongo_query.keys() != ['fields', 'spec']:
@@ -305,9 +299,6 @@ class QLManager(object):
             if  add_to_analytics:
                 self.analytics.add_query(query, mongo_query)
             return mongo_query
-#        mongo_query = parser(query, self.daskeys, self.operators)
-#        print "### vk parser ", mongo_query
-#        print "### ply parser", self.mongo_query(query)
         mongo_query = self.mongo_query(query)
         self.convert2skeys(mongo_query)
         if  add_to_analytics:
@@ -370,7 +361,7 @@ class QLManager(object):
         skeys, cond = decompose(query)
         if  not skeys:
             skeys = []
-        if  type(skeys) is types.StringType:
+        if  isinstance(skeys, str):
             skeys = [skeys]
         slist = []
         # look-up services from Mapping DB
@@ -385,7 +376,7 @@ class QLManager(object):
         # look-up special key condition
         if  cond.has_key('system'):
             requested_system = cond['system']
-            if  type(requested_system) is types.StringType:
+            if  isinstance(requested_system, str):
                 requested_system = [requested_system]
             return list( set(slist) & set(requested_system) )
         return slist
@@ -398,10 +389,9 @@ class QLManager(object):
         skeys, cond = decompose(query)
         if  not skeys:
             skeys = []
-        if  type(skeys) is types.StringType:
+        if  isinstance(skeys, str):
             skeys = [skeys]
         adict = {}
-#        mapkeys = [key for key in cond.keys()]
         mapkeys = [key for key in cond.keys() if key not in das_special_keys()]
         services = self.services(query)
         for srv in services:

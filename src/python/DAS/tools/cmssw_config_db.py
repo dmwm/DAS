@@ -13,13 +13,9 @@ import fnmatch
 import hashlib
 
 from optparse import OptionParser
-#from operator import itemgetter
-#from heapq import nlargest
 
 # pymongo modules
 from pymongo.connection import Connection
-#from pymongo import DESCENDING
-#from pymongo.errors import InvalidStringData
 
 from DAS.services.cmsswconfigs.base import CMSSWConfig
 
@@ -113,7 +109,6 @@ def releases(host, port):
     return filter(lambda x: x.startswith('CMSSW') and not x.endswith('index'),
                   names)
 
-#def inject(host, port, path, release, debug=0):
 def inject(path, release, debug=0):
     """
     Function to inject CMSSW configuration files into MongoDB located
@@ -182,28 +177,6 @@ def inject(path, release, debug=0):
     time0 = time.time()
     index.generate_index()
     print 'Indexing took %s seconds' % (time.time() - time0)
-
-#        record  = dict(system=system, subsystem=subsystem, 
-#                        config=config, content=content, hash=genkey(content))
-#        try:
-#            res = collection.insert(record)
-#            print "res record", res
-#        except InvalidStringData:
-#            content = content.replace('\0', '')
-#            record  = dict(system=system, subsystem=subsystem, 
-#                        config=config, content=content, hash=genkey(content))
-#            collection.insert(record)
-#        except:
-#            print "Fail to insert the following record:\n"
-#            print "system", system
-#            print "subsystem", subsystem
-#            print "config", config
-#            print "hash", hash
-#            print "content", content
-#            raise
-#    lkeys = ['system', 'subsystem', 'config', 'hash']
-#    index_list = [(key, DESCENDING) for key in lkeys]
-#    collection.ensure_index(index_list)
 
 #
 # MAIN

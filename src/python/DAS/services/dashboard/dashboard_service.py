@@ -9,7 +9,7 @@ __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
 import time
-import types
+from   types import InstanceType
 import urllib
 import xml.etree.cElementTree as ET
 from DAS.services.abstract_service import DASAbstractService, dasheader
@@ -34,7 +34,7 @@ class DashboardService(DASAbstractService):
         Dashboard data-service parser.
         """
         close = False
-        if  type(source) is types.InstanceType:
+        if  isinstance(source, InstanceType):
             data = source.read()
             close = True
         else:
@@ -77,10 +77,9 @@ class DashboardService(DASAbstractService):
         args['date2'] = date2
         cond   = query['spec']
         for key, value in cond.items():
-            if  type(value) is not types.DictType: # we got equal condition
+            if  isinstance(value, dict): # we got equal condition
                 if  key == 'date':
-                    if  type(value) is not types.ListType \
-                    and len(value) != 2:
+                    if  isinstance(value, list) and len(value) != 2:
                         msg  = 'Dashboard service requires 2 time stamps.'
                         msg += 'Please use either date last XXh format or'
                         msg += 'date in YYYYMMDD-YYYYMMDD'

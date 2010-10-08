@@ -8,8 +8,6 @@ __revision__ = "$Id: dbs_service.py,v 1.24 2010/04/09 19:41:23 valya Exp $"
 __version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
-import types
-
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser
 
@@ -65,7 +63,7 @@ class DBSService(DASAbstractService):
                 del row['algorithm']['ps_content']
             if  row.has_key('processed_dataset') and \
                 row['processed_dataset'].has_key('path'):
-                    if  type(row['processed_dataset']['path']) is types.DictType\
+                    if  isinstance(row['processed_dataset']['path'], dict) \
                     and row['processed_dataset']['path'].has_key('dataset_path'):
                         path = row['processed_dataset']['path']['dataset_path']
                         del row['processed_dataset']['path']

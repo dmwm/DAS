@@ -6,8 +6,6 @@ urn: "plot"
 url : "https://cmsweb.cern.ch/overview/plotfairy/phedex/prod/link-rate:plot"
 expire : 300
 params : {
-    #"session": "kkk777",
-    "version": "1224790775",
     "span": "hour",
     "start": "",
     "end": "1224792000",

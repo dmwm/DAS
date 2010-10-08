@@ -8,7 +8,6 @@ import os
 import re
 import copy
 import math
-import types
 import string
 import random
 import urllib
@@ -131,7 +130,7 @@ def urlrequest(stream, url, headers, debug=0):
     fdesc.close()
     decoder  = JSONDecoder()
     response = decoder.decode(data)
-    if  type(response) is types.DictType:
+    if  isinstance(response, dict):
         stream.write(str(response) + '\n')
     stream.flush()
 

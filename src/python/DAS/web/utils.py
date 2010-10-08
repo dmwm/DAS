@@ -11,6 +11,7 @@ __author__ = "Valentin Kuznetsov"
 
 import re
 import types
+from   types import NoneType
 import time
 import httplib
 import urllib
@@ -41,7 +42,7 @@ def httplib_request(host, path, params, request='POST', debug=0):
     """request method using provided HTTP request and httplib library"""
     if  debug:
         httplib.HTTPConnection.debuglevel = 1
-    if  type(params) is not types.StringType:
+    if  not isinstance(params, str):
         params = urllib.urlencode(params, doseq=True)
     if  debug:
         print "input parameters", params
@@ -107,7 +108,7 @@ def json2html(idict, pad=""):
     sss = pad + '{' + newline
     for key, val in idict.items():
         if  key == 'das_id' or key == 'cache_id':
-            if  type(val) is types.ListType:
+            if  isinstance(val, list):
                 value = '['
                 counter = 0
                 lpad = ' '*len(' "das_id": [')
@@ -128,7 +129,7 @@ def json2html(idict, pad=""):
                 if  len(str(val)) < 3: # aggregator's ids
                     value = val
             sss += pad + """ <code class="key">"%s": </code>%s""" % (key, value)
-        elif  type(val) is types.ListType:
+        elif isinstance(val, list):
             if  len(val) == 1:
                 nline = ''
             else:
@@ -141,12 +142,12 @@ def json2html(idict, pad=""):
                 ppp  = ''
             for idx in range(0, len(val)):
                 item = val[idx]
-                if  type(item) is types.DictType:
+                if  isinstance(item, dict):
                     sss += json2html(item, pad)
                 else:
-                    if type(item) is types.NoneType:
+                    if  isinstance(item, NoneType):
                         sss += """%s<code class="null">None</code>""" % ppp
-                    elif  type(item) is types.IntType or pat.match(str(item)):
+                    elif  isinstance(item, int) or pat.match(str(item)):
                         sss += """%s<code class="number">%s</code>""" % (ppp, item)
                     else:
                         sss += """%s<code class="string">"%s"</code>""" % (ppp, item)
@@ -154,17 +155,17 @@ def json2html(idict, pad=""):
                     sss += ',' + nline
             sss += ']'
             pad = orig_pad
-        elif type(val) is types.DictType:
+        elif isinstance(val, dict):
             sss += pad + """ <code class="key">"%s"</code>: """ % key
             pad += ' '*3
             sss += json2html(val, pad)[len(pad):] # don't account for first pad
             pad  = pad[:-3]
         else:
             sss += pad + """ <code class="key">"%s"</code>""" % key
-            if type(val) is types.NoneType:
+            if  isinstance(val, NoneType):
                 sss += """: <code class="null">None</code>"""
-            elif  type(val) is types.IntType or \
-                (type(val) is types.StringType and pat.match(str(val))):
+            elif isinstance(val, int) or \
+                (isinstance(val, str) and pat.match(str(val))):
                 sss += """: <code class="number">%s</code>""" % val
             else:
                 sss += """: <code class="string">"%s"</code>""" % val

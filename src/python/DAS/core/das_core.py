@@ -19,7 +19,6 @@ __author__ = "Valentin Kuznetsov"
 import re
 import os
 import time
-import types
 import traceback
 
 # DAS modules
@@ -48,7 +47,7 @@ class DASCore(object):
             dasconfig = das_readconfig()
         verbose       = dasconfig['verbose']
         self.stdout   = debug
-        if  type(debug) is types.IntType:
+        if  isinstance(debug, int):
             self.verbose = debug
             dasconfig['verbose'] = debug
         else:
@@ -160,7 +159,7 @@ class DASCore(object):
     def adjust_query(self, query, add_to_analytics=True):
         """Check that provided query is indeed in MongoDB format"""
         err = '\nDASCore::result unable to load the input query: "%s"' % query
-        if  type(query) is types.StringType: # DAS-QL
+        if  isinstance(query, str): # DAS-QL
             try:
                 query = json.loads(query)
             except:
@@ -171,7 +170,7 @@ class DASCore(object):
                     traceback.print_exc()
                     raise Exception(err)
         err = '\nDASCore::result query not in MongoDB format, %s' % query
-        if  type(query) is not types.DictType:
+        if  not isinstance(query, dict):
             raise Exception(err)
         else:
             if  not query.has_key('fields') and not query.has_key('spec'):
@@ -332,7 +331,7 @@ class DASCore(object):
         unique      = False
         if  filters:
             fields  = query['fields']
-            if  not fields or type(fields) is not types.ListType:
+            if  not fields or not isinstance(fields, list):
                 fields = []
             for filter in filters:
                 if  filter == 'unique':

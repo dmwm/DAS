@@ -82,7 +82,6 @@ def check_dn(func):
         """Decorator wrapper"""
         redirect = True
         headers = request.headers
-#        print "\n### Request headers", headers
         conn = db_connection()
         database = conn['admin']
         coll = database['dns']
@@ -208,7 +207,6 @@ class DASExpertService(DASWebManager):
             page = "<pre>" + traceback.format_exc() + "</pre>"
         page = ajax_response(page)
         return page
-#        return self.page(page)
 
     @expose
     @check_dn

@@ -16,7 +16,6 @@ import types
 import traceback
 
 # monogo db modules
-#from pymongo.connection import Connection
 from pymongo import DESCENDING
 
 # DAS modules
@@ -65,7 +64,6 @@ class DASMapping(object):
         """
         Establish connection to MongoDB back-end and create DB.
         """
-#        self.conn = Connection(self.dbhost, self.dbport)
         self.conn = make_connection(self.dbhost, self.dbport, self.attempt)
         self.db   = self.conn[self.dbname]
         self.col  = self.db[self.colname]
@@ -146,7 +144,6 @@ class DASMapping(object):
         cond = { 'system' : { '$ne' : None } }
         gen  = (row['system'] for row in self.col.find(cond, ['system']))
         return list( set(gen2list(gen)) & set(self.services) )
-#        return gen2list(gen)
 
     def list_apis(self, system=None):
         """
@@ -271,8 +268,6 @@ class DASMapping(object):
                                 self.logger.info(msg)
                                 continue
                         return key['map']
-#                        mapkeys.append((urn, key['map']))
-#        return mapkeys
 
     def find_apis(self, das_system, map_key):
         """
@@ -412,8 +407,6 @@ class DASMapping(object):
                         break
                 else: # valid for all API names
                     name = das_name
-#        print "\n# notation2das srv=%s, arg=%s, api=%s, new=%s" \
-#                % ( system, api_param, api, name )
         return name
 
     def api2daskey(self, system, api):

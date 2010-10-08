@@ -11,7 +11,6 @@ __version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
-import types
 import ply.lex as lex
 from DAS.core.das_ql import das_reserved
 from DAS.utils.regex import float_number_pattern, int_number_pattern
@@ -111,7 +110,7 @@ class DASLexer(object):
                     pos = 0
                 else:
                     obj = tok.value
-                    if  type(obj) is types.StringType:
+                    if  isinstance(obj, str):
                         pos = tok.lexpos + len(tok.value)
                     else:
                         pos = tok.lexpos + int(obj)

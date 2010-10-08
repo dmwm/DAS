@@ -30,7 +30,7 @@ class DASOptionParser:
         self.parser.add_option("--port", action="store", type="int",
              default=27017 , dest="port", help="specify MongoDB port number")
         self.parser.add_option("--db", action="store", type="string",
-             default="mapping" , dest="db", help="specify MongoDB db name")
+             default="mapping.db" , dest="db", help="specify MongoDB db name")
         self.parser.add_option("--system", action="store", type="string",
              default=None , dest="system", help="specify DAS sub-system")
         self.parser.add_option("--uri-map", action="store", type="string",
@@ -68,7 +68,9 @@ if __name__ == '__main__':
     dasconfig = das_readconfig()
     logfile   = dasconfig['das'].get('logfile', None)
     logger    = DASLogger(logfile=logfile, verbose=opts.debug)
-    mappingdb = dict(dbhost=opts.host, dbport=opts.port, dbname=opts.db, attempt=3)
+    dbname, colname = opts.db.split('.')
+    mappingdb = dict(dbhost=opts.host, dbport=opts.port, 
+                dbname=dbname, collname=colname, attempt=3)
     config    = dict(logger=logger, verbose=opts.debug, mappingdb=mappingdb,
                 attempt=3, services=dasconfig['das'].get('services', []))
 

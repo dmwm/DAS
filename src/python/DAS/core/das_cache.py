@@ -10,7 +10,6 @@ __version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
-import types
 import traceback
 import multiprocessing 
 from   multiprocessing import cpu_count
@@ -122,7 +121,7 @@ def multiprocess_monitor(cachemgr, config):
         time.sleep(sleep)
         for key in worker_proc.keys():
             proc = worker_proc[key]
-            if  type(proc) is types.StringType:
+            if  isinstance(proc, str):
                 msg = "ERROR: process %s get result %s, but should AsyncResult"\
                     % (key, proc)
                 logger.error(msg)

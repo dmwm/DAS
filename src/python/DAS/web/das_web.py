@@ -13,7 +13,6 @@ __author__ = "Valentin Kuznetsov"
 import os
 import sys
 import time
-import types
 import urllib
 import cherrypy
 import traceback
@@ -23,7 +22,6 @@ from pprint import pformat
 
 from itertools import groupby
 from cherrypy import expose
-#from cherrypy import tools
 from cherrypy.lib.static import serve_file
 from json import JSONEncoder
 
@@ -375,8 +373,6 @@ class DASWebService(DASWebManager):
             show     = getarg(kwargs, 'show', 'json')
             coll     = getarg(kwargs, 'collection', 'merge')
             nresults = self.nresults({'input':json.dumps(query), 'collection':coll})
-#            params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit}
-#            path     = '/rest/request'
             params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit, 
                         'collection':coll}
             path     = '/rest/records'
@@ -494,7 +490,7 @@ class DASWebService(DASWebManager):
         """
         result  = self.send_request('GET', kwargs)
         res = []
-        if  type(result) is types.StringType:
+        if  isinstance(result, str):
             data = json.loads(result)
         else:
             data = result
@@ -558,7 +554,6 @@ class DASWebService(DASWebManager):
             # no data in raw cache, send POST request
             self.send_request('POST', kwargs)
             ctime = (time.time()-time0)
-#            page    = self.templatepage('not_ready')
             page  = self.status(input=uinput)
             page  = self.page(form + page, ctime=ctime)
             return page
@@ -570,9 +565,7 @@ class DASWebService(DASWebManager):
         rows    = self.result(kwargs)
         nrows   = len(rows)
         page    = ""
-#        ndict   = {'nrows':total, 'limit':limit}
-#        page    = self.templatepage('das_nrecords', **ndict)
-        style = "white"
+        style   = "white"
         for row in rows:
             id    = row['_id']
             page += '<div class="%s"><hr class="line" />' % style
@@ -637,7 +630,7 @@ class DASWebService(DASWebManager):
         id = 0
         for row in rows:
             das = row['das']
-            if  type(das) is types.DictType:
+            if  isinstance(das, dict):
                 das = [das]
             resdict = {}
             for jdx in range(0, len(das)):
@@ -648,9 +641,7 @@ class DASWebService(DASWebManager):
                     system = item['system'][idx]
                     key    = item['selection_keys'][idx]
                     data   = row[key]
-                    if  type(data) is types.ListType:
-                        data = data[jdx]
-                    if  type(data) is types.ListType:
+                    if  isinstance(data, list):
                         data = data[idx]
                     # I need to extract from DAS object the values for UI keys
                     for item in self.dasmapping.presentation(key):
@@ -660,9 +651,9 @@ class DASWebService(DASWebManager):
                             resdict[uiname] = ""
                         # look at key attributes, which may be compound as well
                         # e.g. block.replica.se
-                        if  type(data) is types.DictType:
+                        if  isinstance(data, dict):
                             result = dict(data)
-                        elif type(data) is types.ListType:
+                        elif isinstance(data, list):
                             result = list(data)
                         else:
                             result = data
@@ -674,10 +665,6 @@ class DASWebService(DASWebManager):
                                     resdict[uiname] = res
                         except:
                             pass
-#                    pad = ""
-#                    jsoncode = {'jsoncode': json2html(data, pad)}
-#                    jsonhtml = self.templatepage('das_json', **jsoncode)
-#                    jsondict = {'id':id, 'system':system, 'api':api, key:jsonhtml}
             if  resdict not in rowlist:
                 rowlist.append(resdict)
             id += 1
@@ -785,12 +772,3 @@ class DASWebService(DASWebManager):
             except:
                 page = traceback.format_exc()
         return page
-
-#    @expose
-#    @tools.cernoid()
-#    def secure(self, *args, **kwargs):
-#        return "TEST secure page"
-
-#    @expose
-#    def auth(self, *args, **kwargs):
-#        return "auth page"

@@ -9,7 +9,6 @@ __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
 import time
-import types
 import xmlrpclib
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
@@ -52,10 +51,10 @@ class RunRegistryService(DASAbstractService):
         _query  = ""
         for key, val in query['spec'].items():
             if  key == 'run.run_number':
-                if  type(val) is types.IntType:
+                if  isinstance(val, int):
                     _query += "{runNumber} >= %s and {runNumber} <= %s" \
                                 % (val, val)
-                elif type(val) is types.DictType:
+                elif isinstance(val, dict):
                     minrun = 0
                     maxrun = 0
                     for kkk, vvv in val.items():

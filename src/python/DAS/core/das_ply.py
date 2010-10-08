@@ -12,7 +12,6 @@ __author__ = "Gordon Ball and Valentin Kuznetsov"
 
 import os
 import sys
-import types
 import ply.lex
 import ply.yacc
 import re
@@ -277,7 +276,6 @@ def ply2mongo(query):
     """
     mongodict = {}
     if  query.has_key('pipe'):
-#        for filter, name, args in query['pipe']:
         for item in query['pipe']:
             if  item[0] == 'filter':
                 dasfilter, name, args = item
@@ -305,7 +303,7 @@ def ply2mongo(query):
             value = '*'
         if  spec.has_key(dasname):
             exist_value = spec[dasname]
-            if  type(exist_value) is types.ListType:
+            if  isinstance(exist_value, list):
                 array = [r for r in exist_value] + [value]
             else:
                 array = [exist_value, value]

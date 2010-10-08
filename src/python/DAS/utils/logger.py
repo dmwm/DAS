@@ -84,20 +84,12 @@ class DASLogger(object):
                 msg = "Not enough permissions to create %s"\
                        % self.logfile 
                 raise Exception(msg)
-#            logging.basicConfig(filename=logfile, level=self.loglevel,
-#                        format=format)
-#        else:
-#            logging.basicConfig(level=self.loglevel, format=format)
-#        self.level(verbose)
-
         if  self.logfile:
             hdlr = logging.handlers.TimedRotatingFileHandler( \
                       self.logname, 'midnight', 1, 7 )
         else:
             hdlr = logging.StreamHandler()
         formatter = logging.Formatter(format)
-#        formatter = logging.Formatter( \
-#                  '%(asctime)s - %(name)s - %(levelname)s - %(message)s' )
         hdlr.setFormatter( formatter )
         self.logger.addHandler(hdlr)
         self.level(verbose)
@@ -173,20 +165,6 @@ def set_cherrypy_logger(hdlr, level):
 
     logging.getLogger('cherrypy.error').addHandler(hdlr)
     logging.getLogger('cherrypy.access').addHandler(hdlr)
-
-#    log = cherrypy.log
-#    log.error_log.addHandler(hdlr)
-#    log.access_log.addHandler(hdlr)
-#    hdlr.setLevel(level)
-#    log.screen = False # disable printout of cherrypy msg's on a screen
-    # change cherrypy logger time() method to return empty string
-    # since my handler already have timestamp in it so instead of having
-    # 2010-05-26 14:11:34,873 - cherrypy.error - INFO - [26/May/2010:14:11:34] ENGINE
-    # we get
-    # 2010-05-26 14:11:34,873 - cherrypy.error - INFO -  ENGINE
-#    log.time = empty_str 
-#    log.access_log_format = \
-#        '%(h)s %(l)s %(u)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 def empty_str():
     """Return empty string"""

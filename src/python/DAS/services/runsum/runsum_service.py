@@ -10,14 +10,30 @@ __author__ = "Valentin Kuznetsov"
 
 import os
 import time
-import types
 import ConfigParser
 import traceback
 import xml.etree.cElementTree as ET
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, get_key_cert, adjust_value
-from DAS.services.runsum.run_summary import get_run_summary
+#from DAS.services.runsum.run_summary import get_run_summary
+from DAS.utils.cern_sso_auth import get_data
+
+def run_summary_url(url, params):
+    """Construct Run Summary URL from provided parameters"""
+    if  url[-1] == '/':
+        url = url[:-1]
+    if  url[-1] == '?':
+        url = url[:-1]
+    paramstr = ''
+    for key, val in params.items():
+        if  isinstance(val, list):
+            paramstr += '%s=%s&' % (key, urllib.quote(val))
+        elif key.find('TIME') != -1:
+            paramstr += '%s=%s&' % (key, urllib.quote(val))
+        else:
+            paramstr += '%s=%s&' % (key, val)
+    return url + '?' + paramstr[:-1]
 
 def convert_datetime(sec):
     """Convert seconds since epoch to date format used in RunSummary"""
@@ -45,10 +61,9 @@ class RunSummaryService(DASAbstractService):
         cond = query['spec']
         args = dict(self.params)
         for key, value in cond.items():
-            if  type(value) is not types.DictType: # we got equal condition
+            if  isinstance(value, dict): # we got equal condition
                 if  key == 'date':
-                    if  type(value) is not types.ListType \
-                    and len(value) != 2:
+                    if  isinstance(value, list) and len(value) != 2:
                         msg  = 'RunSummary service requires 2 time stamps.'
                         msg += 'Please use either date last XXh format or'
                         msg += 'date in YYYYMMDD-YYYYMMDD'
@@ -103,7 +118,8 @@ class RunSummaryService(DASAbstractService):
             msg     = 'DASAbstractService::%s::getdata(%s, %s)' \
                     % (self.name, url, args)
             self.logger.info(msg)
-            data    = get_run_summary(url, args, key, cert, debug)
+#            data    = get_run_summary(url, args, key, cert, debug)
+            data    = get_data(run_summary_url(url, args), key, cert, debug)
             genrows = self.parser(data, api)
             ctime   = time.time()-time0
             self.write_to_cache(query, expire, url, api, args, genrows, ctime)

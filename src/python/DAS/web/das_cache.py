@@ -13,7 +13,7 @@ __author__ = "Valentin Kuznetsov"
 import re
 import sys
 import time
-import types
+from   types import GeneratorType
 import thread
 import cherrypy
 import traceback
@@ -59,20 +59,6 @@ def checkargs(func):
             for key, val in jsondict.items():
                 kwds[str(key)] = str(val)
 
-#        headers = cherrypy.request.headers
-#        if  headers.has_key('Content-type'):
-#            content = headers['Content-type']
-#            cherrypy.response.headers['Content-type'] = content
-#            if  content in ['application/json', 'text/json', 'text/x-json']:
-#                body = cherrypy.request.body.read()
-#                if  args and kwds:
-#                    msg  = 'Misleading request.'
-#                    msg += 'Headers: %s ' % headers
-#                    msg += 'Parameters: %s, %s' % (args, kwds)
-#                    return {'status':'fail', 'reason': msg}
-#                jsondict = json.loads(body, encoding='latin-1')
-#                for key, val in jsondict.items():
-#                    kwds[str(key)] = str(val)
         pat = web_arg_pattern
         supported = ['query', 'idx', 'limit', 'expire', 'method', 
                      'skey', 'order', 'collection']
@@ -175,8 +161,6 @@ class DASCacheService(DASWebManager):
         self.dascore  = DASCore()
         msg = 'DASCacheService::init, host=%s, port=%s, capped_size=%s' \
                 % (dbhost, dbport, capped_size)
-#        self.dascore.logger.debug(msg)
-#        print msg
         self.logger.info(msg)
 
     def logdb(self, query):
@@ -220,9 +204,9 @@ class DASCacheService(DASWebManager):
         if  query['spec'].has_key('_id'):
             recid = query['spec']['_id']
             ids   = []
-            if  type(recid) is types.StringType:
+            if  isinstance(recid, str):
                 ids = [ObjectId(recid)]
-            elif type(recid) is types.ListType:
+            elif isinstance(recid, list):
                 ids = [ObjectId(r) for r in recid]
             spec = {'spec':{'_id':{'$in':ids}}}
         else: # look-up all records
@@ -320,8 +304,7 @@ class DASCacheService(DASWebManager):
         if  kwargs.has_key('query'):
             query = kwargs.get('query', {})
             spec  = query
-            if  type(query) is types.StringType and \
-                query.find('=') != -1:
+            if  isinstance(query, str) and query.find('=') != -1:
                 key, val = query.split('=')
                 if  val.find('*') != -1:
                     pat = re.compile("^%s" % val.replace('*', '.*'))
@@ -364,7 +347,7 @@ class DASCacheService(DASWebManager):
                      'limit':limit, 'query':query,
                      'skey':skey, 'order':order})
             res = self.dascore.result(query, idx, limit)
-            if  type(res) is types.GeneratorType:
+            if  isinstance(res, GeneratorType):
                 result = []
                 for item in res:
                     if  item not in result:

@@ -47,18 +47,6 @@ class DASOptionParser:
         self.parser.add_option("--print-config", action="store_true", 
                                           dest="dasconfig",
              help="print current DAS configuration")
-#        self.parser.add_option("--view", action="store", 
-#                                          dest="view",
-#             help="return view definition in DAS, use --view=all to list all views")
-#        self.parser.add_option("--create-view", action="store", 
-#                                          dest="createview",
-#             help="create a new view in DAS, e.g. --create-view=name,query")
-#        self.parser.add_option("--update-view", action="store", 
-#                                          dest="updateview",
-#             help="update a view in DAS, e.g. --update-view=name,query")
-#        self.parser.add_option("--delete-view", action="store", 
-#                                          dest="deleteview",
-#             help="delete a view in DAS, e.g. --delete-view=name")
         self.parser.add_option("--no-format", action="store_true", 
                                           dest="plain",
              help="return unformatted output, useful for scripting")
@@ -175,6 +163,7 @@ if __name__ == '__main__':
         print "please use --help for more options."
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
     timer = get_das_timer()
+    print "\nDAS execution time:\n"
     if  debug:
         timelist = []
         for hash, timerdict in timer.items():
@@ -184,7 +173,5 @@ if __name__ == '__main__':
             timelist.append((counter, tag, exetime))
         timelist.sort()
         for _, tag, exetime in timelist:
-            print "DAS execution time (%s) %s sec" % (tag, exetime)
-    print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)
-
-
+            print "%s %s sec" % (tag, round(exetime, 2))
+    print "Total %s sec, %s" % (round(time.time()-t0, 2), timestamp)

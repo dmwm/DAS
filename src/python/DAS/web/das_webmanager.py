@@ -190,17 +190,6 @@ class DASWebManager(TemplatedPage):
             self.cache[idx] = data
         return self.cache[idx] 
     
-#    @exposejs
-#    def yui(self, *args, **kwargs):
-#        """
-#        cat together the specified YUI files. args[0] should be the YUI version,
-#        and the scripts should be specified in the kwargs s=scriptname
-#        """
-#        cherryconf.update ({'tools.encode.on': True, 'tools.gzip.on': True})
-#        version = args[0]
-#        scripts = self.makelist(kwargs['s'])
-        
-        
     def check_scripts(self, scripts, map):
         """
         Check a script is known to the map and that the script actually exists   

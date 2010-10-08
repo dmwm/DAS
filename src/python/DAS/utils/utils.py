@@ -14,6 +14,7 @@ import os
 import re
 import time
 import types
+from   types import GeneratorType, InstanceType
 import hashlib
 import plistlib
 import calendar
@@ -85,14 +86,14 @@ def expire_timestamp(expire):
     integer or HTTP header string.
     """
     # check if we provided with HTTP header string
-    if  type(expire) is types.StringType and \
+    if  isinstance(expire, str) and \
         expire.find(',') != -1 and expire.find(':') != -1:
         return time.mktime(time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z'))
     timestamp = time.time()
     # use Jan 1st, 2010 as a seed to check expire date
     # prior 2010 DAS was not released in production
     tup = (2010, 1, 1, 0, 0, 0, 0, 1, -1)
-    if  type(expire) is types.IntType or expire < time.mktime(tup):
+    if  isinstance(expire, int) or expire < time.mktime(tup):
         expire = timestamp + expire
     return expire
 
@@ -101,10 +102,10 @@ def yield_rows(*args):
     Yield rows from provided input.
     """
     for input in args:
-        if  type(input) is types.GeneratorType:
+        if  isinstance(input, GeneratorType):
             for row in input:
                 yield row
-        elif type(input) is types.ListType:
+        elif isinstance(input, list):
             for row in input:
                 yield row
         else:
@@ -116,7 +117,7 @@ def adjust_value(value):
     """
     pat_float   = float_number_pattern
     pat_integer = int_number_pattern
-    if  type(value) is types.StringType:
+    if  isinstance(value, str):
         if  value == 'null' or value == '(null)':
             return None
         elif pat_float.match(value):
@@ -134,11 +135,11 @@ def adjust_mongo_keyvalue(value):
     are represented via $in, $lte, $gte keys
     """
     newdict = value
-    if  type(value) is types.DictType:
+    if  isinstance(value, dict):
         newdict = {}
         for key, val in value.items():
             newval = val
-            if  type(val) is types.DictType:
+            if  isinstance(val, dict):
                 arr = []
                 for kkk, vvv in val.items():
                     if  kkk == '$in':
@@ -168,7 +169,7 @@ class dotdict(dict):
     """
     def __getattr__(self, attr):
         obj = self.get(attr, {})
-        if  type(obj) is types.DictType:
+        if  isinstance(obj, dict):
             return dotdict(obj)
         return obj
     __setattr__ = dict.__setitem__
@@ -200,11 +201,11 @@ class dotdict(dict):
                 obj = getattr(obj, key)
             if  not obj and obj != 0:
                 return None
-            if  type(obj) is types.DictType:
+            if  isinstance(obj, dict):
                 obj = dotdict(obj)
-            elif type(obj) is types.ListType:
+            elif isinstance(obj, list):
                 obj = obj[0]
-                if  type(obj) is types.DictType:
+                if  isinstance(obj, dict):
                     obj = dotdict(obj)
         return obj
         
@@ -229,7 +230,7 @@ def dict_type(obj):
     """
     Return if provided object is type of dict or instance of dotdict class
     """
-    return type(obj) is types.DictType or isinstance(obj, dotdict)
+    return isinstance(obj, dict) or isinstance(obj, dotdict)
 
 def dict_value(idict, prim_key):
     """
@@ -241,7 +242,7 @@ def dict_value(idict, prim_key):
         if  prim_key.find('.') != -1:
             value = idict
             for key in prim_key.split('.'):
-                if  type(value) is types.ListType:
+                if  isinstance(value, list):
                     value = value[0][key]
                     break
                 else:
@@ -253,21 +254,6 @@ def dict_value(idict, prim_key):
         msg  = 'Unable to look-up key=%s\n' % prim_key
         msg += 'dict=%s' % str(idict)
         raise Exception(msg)
-
-#    if  idict.has_key(prim_key):
-#        return idict[prim_key]
-#    try:
-#        value = dict(idict)
-#        for key in prim_key.split('.'):
-#            if  type(value) is types.ListType:
-#                value = value[0][key]
-#                break
-#            else:
-#                value = value[key]
-#    except:
-#        msg  = 'Unable to look-up key=%s\n' % prim_key
-#        msg += 'dict=%s' % str(dict)
-#        raise Exception(msg)
 
 def merge_dict(dict1, dict2):
     """
@@ -285,46 +271,17 @@ def merge_dict(dict1, dict2):
     where I changed append(value) on merging lists or adding new
     value into the list based on value type.
     """
-#    merged_dict = {}
-#    for dictionary in (dict1, dict2):
-#        for key, value in dictionary.items():
-#            dict_value = merged_dict.setdefault(key, [])
-#            if  type(value) is types.ListType:
-#                dict_value += value
-#            else:
-#                dict_value += [value]
-#            merged_dict[key] = dict_value
-#    return merged_dict
-
-#    merged_dict = dict(dict1)
-#    for key, value in dict2.items():
-#        if  merged_dict.has_key(key):
-#            val = merged_dict[key]
-#            if  type(val) is types.ListType:
-#                if  type(value) is types.ListType:
-#                    merged_dict[key] = val + value
-#                else:
-#                    val.append(value)
-#                    merged_dict[key] = val
-#            else:
-#                if  type(value) is types.ListType:
-#                    merged_dict[key] = [val] + value
-#                else:
-#                    merged_dict[key] = [val] + [value]
-#        else:
-#            merged_dict[key] = [value]
-#    return merged_dict
     for key, value in dict2.items():
         if  dict1.has_key(key):
             val = dict1[key]
-            if  type(val) is types.ListType:
-                if  type(value) is types.ListType:
+            if  isinstance(val, list):
+                if  isinstance(value, list):
                     dict1[key] = val + value
                 else:
                     val.append(value)
                     dict1[key] = val
             else:
-                if  type(value) is types.ListType:
+                if  isinstance(value, list):
                     dict1[key] = [val] + value
                 else:
                     dict1[key] = [val] + [value]
@@ -348,12 +305,7 @@ def genkey(query):
     query and key is just hex representation of this hash.
     """
     keyhash = hashlib.md5()
-    if  type(query) is types.DictType:
-#        if  query.has_key('spec') and query['spec'].has_key('_id'):
-#            val = query['spec']['_id']
-#            if  isinstance(val, ObjectId):
-#                val = str(val)
-#                query['spec']['_id'] = val
+    if  isinstance(query, dict):
         query = json.dumps(query)
     keyhash.update(query)
     return keyhash.hexdigest()
@@ -365,36 +317,13 @@ def gen2list(results):
     reslist = [name for name, group in groupby(results)]
     return reslist
 
-# Does not work with list of two identical items
-#def uniqify(ilist):
-#    """
-#    Make all entries in a list to be unique.
-#    http://pyfaq.infogami.com/how-do-you-remove-duplicates-from-a-list
-#    """
-#    ilist.sort()
-#    last = ilist[-1]
-#    for i in range(len(ilist)-2, -1, -1):
-#        if last==ilist[i]: del ilist[i]
-#        else: last=ilist[i]
-
 def dump(ilist, idx=0):
     """
     Print items in provided generator
     """
-#    if  type(ilist) is types.GeneratorType:
-#        reslist = [i for i in ilist]
-#    elif type(ilist) is not types.ListType:
-#        reslist = [ilist]
-#    else:
-#        reslist = ilist
-#    if  not reslist:
-#        print "No results found"
-#        return
-#    reslist.sort()
-#    reslist = [k for k, g in groupby(reslist)]
-    if  type(ilist) is types.GeneratorType:
+    if  isinstance(ilist, GeneratorType):
         reslist = ilist
-    elif type(ilist) is not types.ListType:
+    elif not isinstance(ilist, list):
         reslist = [ilist]
     else:
         reslist = ilist
@@ -404,7 +333,7 @@ def dump(ilist, idx=0):
     idx = 0
     for row in reslist:
         print "id : %s" % idx
-        if  type(row) is types.DictType:
+        if  isinstance(row, dict):
             print json.dumps(row)
         else:
             print row
@@ -418,11 +347,11 @@ def cartesian_product(ilist1, ilist2):
 
         {'system':system_name, 'key':value'}
     """
-    if  type(ilist1) is types.GeneratorType:
+    if  isinstance(ilist1, GeneratorType):
         list1 = [i for i in ilist1]
     else:
         list1 = ilist1
-    if  type(ilist2) is types.GeneratorType:
+    if  isinstance(ilist2, GeneratorType):
         list2 = [i for i in ilist2]
     else:
         list2 = ilist2
@@ -488,8 +417,6 @@ def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
     reslist = []
     # define non-null keys from result sets,
     notnullkeys = []
-#    print "master", master_set
-#    print "slave", slave_set
     for irow in master_set:
         row = dict(irow)
         for irow_match in slave_set:
@@ -500,9 +427,6 @@ def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
                     match += 1
             if  match != len(rel_keys): # not all keys are matched
                 continue
-#            print "match"
-#            print row
-#            print row_match
             newrow = dict(row)
             for k, val in row_match.items():
                 if  val:
@@ -529,13 +453,13 @@ def results2couch(query, results, expire=600):
     tstamp = timestamp()
     resdict['timestamp'] = tstamp
     resdict['expire'] = tstamp + expire
-    if  type(results) is types.GeneratorType:
+    if  isinstance(results, GeneratorType):
         resdict['results'] = [res for res in results]
     else:
         resdict['results'] = results
     return resdict
 
-# TODO: I can use genresults generator implementation only if
+# NOTE: I can use genresults generator implementation only if
 # I'll solve the problem with das_core.py:find_cond_dict since it's used
 # to read results from first data-service and pass found relative keys
 # to other data-service. At this point iteration from genresults will
@@ -595,7 +519,7 @@ def transform_dict2list(indict):
     row  = {}
     for k, v in indict.items():
         row[k] = None
-        if  type(v) is types.ListType:
+        if  isinstance(v, list):
             if  foundlist and foundlist != len(v):
                 raise Exception('Input dict contains multi-sized lists')
             foundlist = len(v)
@@ -605,7 +529,7 @@ def transform_dict2list(indict):
         for i in range(0, foundlist):
             newrow = dict(row)
             for k, v in indict.items():
-                if  type(v) is types.ListType:
+                if  isinstance(v, list):
                     newrow[k] = v[i]
                 else:
                     newrow[k] = v
@@ -619,7 +543,7 @@ def getarg(kwargs, key, default):
     arg = default
     if  kwargs.has_key(key):
         arg = kwargs[key]
-        if  type(default) is types.IntType:
+        if  isinstance(default, int):
             arg = int(arg)
     return arg
 
@@ -644,20 +568,18 @@ def add2dict(idict, key, value):
     """
     if  idict.has_key(key):
         val = idict[key]
-        if  type(val) is not types.ListType:
+        if  not isinstance(val, list):
             val = [val]
-        if  type(value) is types.ListType:
+        if  isinstance(value, list):
             idict[key] = val + value
         else:
             val = idict[key]
-            if  type(val) is types.ListType:
+            if  isinstance(val, list):
                 idict[key].append(value)
             else:
                 idict[key] = [val, value]
-#            idict[key].append(value)
     else:
         idict[key] = value
-#    idict.setdefault(key, []).append(value)
 
 def map_validator(smap):
     """
@@ -677,13 +599,13 @@ def map_validator(smap):
         }
     """
     msg = 'Fail to validate data-service map %s' % smap
-    if  type(smap.keys()) is not types.ListType:
+    if  not isinstance(smap.keys(), list):
         raise Exception(msg)
     possible_keys = ['api', 'keys', 'params', 'url', 'expire', 
                         'format', 'wild_card']
     possible_keys.sort()
     for item in smap.values():
-        if  type(item) is not types.DictType:
+        if  not isinstance(item, dict):
             raise Exception(msg)
         keys = item.keys()
         keys.sort()
@@ -697,9 +619,9 @@ def map_validator(smap):
                 raise Exception(msg)
         else:
             raise Exception(msg)
-        if  type(item['keys']) is not types.ListType:
+        if  not isinstance(item['keys'], list):
             raise Exception(msg)
-        if  type(item['params']) is not types.DictType:
+        if  not isinstance(item['params'], dict):
             raise Exception(msg)
 
 def permutations(iterable, r=None):
@@ -748,7 +670,6 @@ def unique_list(ilist):
     Return sorted unique list out of provided one.
     """
     ilist.sort()
-#    return [k for k, g in groupby(ilist)]
     tmplist = [k for k, g in groupby(ilist)]
     tmplist.sort()
     return tmplist
@@ -836,10 +757,10 @@ def access(data, elem):
     """
     if  elem.find('.') == -1:
         key = elem
-        if  type(data) is types.DictType:
+        if  isinstance(data, dict):
             if  data.has_key(key):
                 yield data[key]
-        elif type(data) is types.ListType or type(data) is types.GeneratorType:
+        elif isinstance(data, list) or isinstance(data, GeneratorType):
             for item in data:
                 if  item.has_key(key):
                     yield item[key]
@@ -849,15 +770,15 @@ def access(data, elem):
         rkey = '.'.join(keylist[1:])
         if  data.has_key(key):
             res = data[key]
-            if  type(res) is types.DictType:
+            if  isinstance(res, dict):
                 result = access(res, rkey)
-                if  type(result) is types.GeneratorType:
+                if  isinstance(result, GeneratorType):
                     for item in result:
                         yield item
-            elif type(res) is types.ListType or types(res) is types.GeneratorType:
+            elif isinstance(res, list) or isinstance(res, GeneratorType):
                 for row in res:
                     result = access(row, rkey)
-                    if  type(result) is types.GeneratorType:
+                    if  isinstance(result, GeneratorType):
                         for item in result:
                             yield item
 
@@ -898,7 +819,7 @@ def translate(notations, api, rec):
             for val in rows:
                 item, newval = convert_dot_notation(dasmap, val)
                 recval = record[item]
-                if  type(recval) is types.DictType:
+                if  isinstance(recval, dict):
                     recval.update(newval)
                 else: 
                     record[item] = newval
@@ -951,9 +872,9 @@ def xml_parser(source, prim_key, tags=[]):
                     atag, attr = tag.split(".")
                     if  elem.tag == atag and elem.attrib.has_key(attr):
                         att_value = elem.attrib[attr]
-                        if  type(att_value) is types.DictType:
+                        if  isinstance(att_value, dict):
                             att_value = dict_helper(elem.attrib[attr], notations)
-                        if  type(att_value) is types.StringType:
+                        if  isinstance(att_value, str):
                             att_value = adjust_value(att_value)
                         sup[atag] = {attr:att_value}
                 else:
@@ -986,9 +907,9 @@ def get_children(elem, event, row, key, notations):
         else:
             child_dict = dict_helper(child_data, notations)
 
-        if  type(row[key]) is types.DictType and row[key].has_key(child_key):
+        if  isinstance(row[key], dict) and row[key].has_key(child_key):
             val = row[key][child_key]
-            if  type(val) is types.ListType:
+            if  isinstance(val, list):
                 val.append(child_dict)
                 row[key][child_key] = val
             else:
@@ -999,14 +920,14 @@ def get_children(elem, event, row, key, notations):
                     row[key][child_key] = child_dict
                 else:
                     row[key][child_key] = {}
-                if  type(child_dict) is types.DictType:
+                if  isinstance(child_dict, dict):
                     newdict = {child_key: child_dict}
                 else:
                     newdict = {child_key: {}}
                 get_children(child, event, newdict, child_key, notations) 
                 row[key][child_key] = newdict[child_key]
             else:
-                if  type(row[key]) is not types.DictType:
+                if  not isinstance(row[key], dict):
                     row[key] = {}
                 row[key][child_key] = child_dict
         if  event == 'end':
@@ -1018,8 +939,8 @@ def json_parser(source, logger=None):
     descriptor with .read()-supported file-like object or
     data as a string object.
     """
-    if  type(source) is types.InstanceType or\
-        type(source) is types.FileType: # got data descriptor
+    if  isinstance(source, InstanceType) or isinstance(source, file):
+        # got data descriptor
         try:
             jsondict = json.load(source)
         except:
@@ -1031,7 +952,7 @@ def json_parser(source, logger=None):
         data = source
         # to prevent unicode/ascii errors like
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
-        if  type(data) is types.StringType:
+        if  isinstance(data, str):
             data = unicode(data, errors='ignore')
             res  = data.replace('null', '\"null\"')
         else:
@@ -1047,8 +968,6 @@ def json_parser(source, logger=None):
                 print msg
             jsondict = eval(res, { "__builtins__": None }, {})
             pass
-#            traceback.print_exc()
-#            raise
     yield jsondict
 
 def plist_parser(source):
@@ -1057,8 +976,8 @@ def plist_parser(source):
     descriptor with .read()-supported file-like object or
     data as a string object.
     """
-    if  type(source) is types.InstanceType or\
-        type(source) is types.FileType: # got data descriptor
+    if  isinstance(source, InstanceType) or isinstance(source, file):
+        # got data descriptor
         try:
             data = source.read()
         except:
@@ -1093,7 +1012,7 @@ def row2das(mapper, system, api, row):
     If compound key found, e.g. block.replica.name, it will
     be converted into appropriate dict, e.g. {'block':{'replica':{'name':val}}
     """
-    if  type(row) is not types.DictType:
+    if  not isinstance(row, dict):
         return
     for key, val in row.items():
         newkey = mapper(system, key, api)
@@ -1101,12 +1020,11 @@ def row2das(mapper, system, api, row):
             row.pop(key)
             nkey, nval = convert_dot_notation(newkey, val)
             row.update({nkey:nval})
-#            row[nkey] = nval
-        if  type(val) is types.DictType:
+        if  isinstance(val, dict):
             row2das(mapper, system, api, val)
-        elif type(val) is types.ListType:
+        elif isinstance(val, list):
             for item in val:
-                if  type(item) is types.DictType:
+                if  isinstance(item, dict):
                     row2das(mapper, system, api, item)
 
 def aggregator(results, expire):
@@ -1115,12 +1033,12 @@ def aggregator(results, expire):
     """
     for rec in aggregator_helper(results, expire):
         das_id = rec.pop('das_id')
-        if  type(das_id) is types.ListType:
+        if  isinstance(das_id, list):
             rec['das_id'] = list(set(das_id))
         else:
             rec['das_id'] = [das_id]
         _ids = rec.pop('_id')
-        if  type(_ids) is not types.ListType:
+        if  not isinstance(_ids, list):
             _ids = [_ids]
         rec['cache_id'] = list(set(_ids))
         yield rec
@@ -1214,7 +1132,7 @@ def extract_http_error(err):
         err = json.loads(err)
         if  err.has_key('message'):
             value = err['message']
-            if  type(value) is types.DictType:
+            if  isinstance(value, dict):
                 msg = ''
                 for key, val in value.items():
                     msg += '%s: %s. ' % (key, val)

@@ -11,7 +11,6 @@ __author__ = "Valentin Kuznetsov"
 # system modules
 import re
 import time
-import types
 import urllib
 import urllib2
 import traceback
@@ -315,7 +314,7 @@ class DASAbstractService(object):
         of parameters, etc.
         """
         for key, value in args.items():
-            if  type(value) is types.DictType:
+            if  isinstance(value, dict):
                 minval = None
                 maxval = None
                 for oper, val in value.items():
@@ -389,7 +388,7 @@ class DASAbstractService(object):
                     self.analytics.update_apicall(query, das_dict)
                 if  apitag and row.has_key(apitag):
                     row = row[apitag]
-                if  type(row) is types.ListType:
+                if  isinstance(row, list):
                     for item in row:
                         if  item.has_key(prim_key):
                             counter += 1
@@ -461,12 +460,12 @@ class DASAbstractService(object):
                     value = spec[key]
                     existing_value = ddict._get(key)
                     # the way to deal with proximity/patern/condition results
-                    if  type(value) is types.StringType and \
+                    if  isinstance(value, str) and \
                         value.find('*') != -1: # we got pattern
                         if  existing_value:
                             value = existing_value
-                    elif type(value) is types.DictType or \
-                        type(value) is types.ListType: # we got condition
+                    elif isinstance(value, dict) or \
+                        isinstance(value, list): # we got condition
                         if  existing_value:
                             value = existing_value
                         else:
@@ -573,7 +572,7 @@ class DASAbstractService(object):
             # adjust pattern symbols in arguments
             if  wild != '*':
                 for key, val in args.items():
-                    if  type(val) is types.StringType:
+                    if  isinstance(val, str):
                         val   = val.replace('*', wild)
                     args[key] = val
             # check if analytics db has a similar API call

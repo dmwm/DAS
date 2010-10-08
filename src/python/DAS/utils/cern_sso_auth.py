@@ -2,10 +2,9 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-RunSummary service tools
+CERN SSO toolkit. Provides get_data method which allow
+to get data begind CERN SSO protected site.
 """
-__revision__ = "$Id: run_summary.py,v 1.7 2009/11/18 21:41:05 valya Exp $"
-__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
 import urllib2
@@ -16,7 +15,6 @@ import time
 def timestamp():
     """Construct timestamp used by Shibboleth"""
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
 
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     """
@@ -42,24 +40,11 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
                                                 cert_file=self.cert)
         return httplib.HTTPSConnection(host)
 
-def run_summary_url(url, params):
-    """Construct Run Summary URL from provided parameters"""
-    if  url[-1] == '/':
-        url = url[:-1]
-    if  url[-1] == '?':
-        url = url[:-1]
-    paramstr = ''
-    for key, val in params.items():
-        if  isinstance(val, list):
-            paramstr += '%s=%s&' % (key, urllib.quote(val))
-        elif key.find('TIME') != -1:
-            paramstr += '%s=%s&' % (key, urllib.quote(val))
-        else:
-            paramstr += '%s=%s&' % (key, val)
-    return url + '?' + paramstr[:-1]
-
-def get_run_summary(url, params, key, cert, debug=0):
-    """Main routine to get information from Run Summary data service"""
+def get_data(url, key, cert, debug=0):
+    """
+    Main routine to get data from data service behind CERN SSO.
+    Return file-like descriptor object (similar to open).
+    """
     # setup HTTP handlers
     cookie_handler = urllib2.HTTPCookieProcessor()
     https_handler  = HTTPSClientAuthHandler(key, cert, debug)
@@ -68,7 +53,7 @@ def get_run_summary(url, params, key, cert, debug=0):
 
     # send request to RunSummary, it set the _shibstate_ cookie which 
     # will be used for redirection
-    fdesc  = opener.open(run_summary_url(url, params))
+    fdesc  = opener.open(url)
     data   = fdesc.read()
     fdesc.close()
 
@@ -103,18 +88,3 @@ def get_run_summary(url, params, key, cert, debug=0):
     params = urllib.urlencode(param_dict)
     fdesc  = opener.open(url, params)
     return fdesc
-#    data   = fdesc.read()
-#    fdesc.close()
-#    return data
-
-#
-# main
-#
-if __name__ == '__main__':
-    DEBUG  = 1
-    KEY    = '/Users/vk/.globus/userkey.pem'
-    CERT   = '/Users/vk/.globus/usercert.pem'
-    PARAMS = {'RUN':97029, 'DB':'cms_omds_lb', 'FORMAT':'XML'}
-    URL    = 'https://cmswbm.web.cern.ch/cmswbm/cmsdb/servlet/RunSummary'
-    DATA   = get_run_summary(URL, PARAMS, KEY, CERT, DEBUG)
-    print DATA.read()

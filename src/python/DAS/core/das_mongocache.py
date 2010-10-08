@@ -17,7 +17,7 @@ __author__ = "Valentin Kuznetsov"
 
 import re
 import time
-import types
+from   types import GeneratorType
 import random
 import itertools
 import traceback
@@ -46,18 +46,18 @@ def adjust_id(query):
     spec = query['spec']
     if  spec.has_key('_id'):
         val = spec['_id']
-        if  type(val) is types.StringType:
+        if  isinstance(val, str):
             newval = ObjectId(val)
             spec['_id'] = newval
-        elif type(val) is types.UnicodeType:
+        elif isinstance(val, unicode):
             newval = ObjectId(unicode.encode(val))
             spec['_id'] = newval
-        elif type(val) is types.ListType:
+        elif isinstance(val, list):
             newval = []
             for item in val:
-                if  type(item) is types.StringType:
+                if  isinstance(item, str):
                     newval.append(ObjectId(item))
-                elif type(item) is types.UnicodeType:
+                elif isinstance(item, unicode):
                     newval.append(ObjectId(unicode.encode(item)))
                 else:
                     raise Exception('Wrong type for id, %s=%s' \
@@ -77,25 +77,12 @@ def loose(query):
     newspec = {}
     for key, val in spec.items():
         if  key != '_id' and \
-        type(val) is types.StringType or type(val) is types.UnicodeType:
+        isinstance(val, str) or isinstance(val, unicode):
             if  val[-1] != '*':
                 val += '*' # add pattern
         newspec[key] = val
     return dict(spec=newspec, fields=fields)
 
-#def encode_mongo_query(query):
-#    """
-#    Mongo doesn't allow to store a dictionary w/ key having a dot '.', '$'
-#    notaions, therefor we will use string representation in DB for the query.
-#    """
-#    return json.dumps(query)
-
-#def decode_mongo_query(query):
-#    """
-#    Perform opposite to encode_mongo_query action.
-#    Restore query from a string.
-#    """
-#    return json.loads(query)
 def encode_mongo_query(query):
     """
     Encode mongo query into storage format. MongoDB does not allow storage of
@@ -143,7 +130,7 @@ def convert2pattern(query):
     newspec = {}
     verspec = {}
     for key, val in spec.items():
-        if  type(val) is types.StringType or type(val) is types.UnicodeType:
+        if  isinstance(val, str) or isinstance(val, unicode):
             if  val.find('*') != -1:
                 if  val == '*':
                     val = {'$exists':True}
@@ -154,12 +141,11 @@ def convert2pattern(query):
             else:
                 verspec[key] = val
             newspec[key] = val
-        elif type(val) is types.DictType:
+        elif isinstance(val, dict):
             cond  = {}
             vcond = {}
             for ckey, cval in val.items():
-                if  type(cval) is types.StringType or \
-                    type(cval) is types.UnicodeType:
+                if  isinstance(cval, str) or isinstance(cval, unicode):
                     if  cval.find('*') != -1:
                         cval = re.compile("^%s" % cval.replace('*', '.*'))
                         vcond[ckey] = cval.pattern
@@ -186,32 +172,22 @@ def compare_dicts(input_dict, exist_dict):
         vvv = None
         if  exist_dict.has_key(key):
             vvv = exist_dict[key]
+        cond = (isinstance(val, int) or isinstance(val, float)) and \
+               (isinstance(vvv, int) or isinstance(vvv, float))
         if  key == '$gt':
-            if  (type(val) is types.IntType or type(val) is types.FloatType)\
-                and \
-                (type(vvv) is types.IntType or type(vvv) is types.FloatType):
-                if  val > vvv:
-                    return True
+            if  cond and val > vvv:
+                return True
         elif  key == '$gte':
-            if  (type(val) is types.IntType or type(val) is types.FloatType)\
-                and \
-                (type(vvv) is types.IntType or type(vvv) is types.FloatType):
-                if  val >= vvv:
-                    return True
+            if  cond and val >= vvv:
+                return True
         elif key == '$lt':
-            if  (type(val) is types.IntType or type(val) is types.FloatType)\
-                and \
-                (type(vvv) is types.IntType or type(vvv) is types.FloatType):
-                if  val < vvv:
-                    return True
+            if  cond and val < vvv:
+                return True
         elif key == '$lte':
-            if  (type(val) is types.IntType or type(val) is types.FloatType)\
-                and \
-                (type(vvv) is types.IntType or type(vvv) is types.FloatType):
-                if  val <= vvv:
-                    return True
+            if  cond and val <= vvv:
+                return True
         elif key == '$in':
-            if  type(val) is types.ListType and type(vvv) is types.ListType:
+            if  isinstance(val, list) and isinstance(vvv, list):
                 if  set(vvv) > set(val):
                     return True
         return False
@@ -244,13 +220,11 @@ def compare_specs(input_query, exist_query):
 
     for key, val1 in spec1.items():
         val2 = spec2[key]
-        if  type(val1) != type(val2) and type(val1) is not types.DictType\
-            and type(val2) is not types.DictType:
+        if  type(val1) != type(val2) and not isinstance(val1, dict)\
+            and not isinstance(val2, dict):
             return False
-        elif  (type(val1) is types.StringType or \
-                type(val1) is types.UnicodeType) and \
-            (type(val2) is types.StringType or \
-                type(val2) is types.UnicodeType):
+        elif (isinstance(val1, str) or isinstance(val1, unicode)) and \
+             (isinstance(val2, str) or isinstnace(val2, unicode)):
             if  val2.find('*') != -1:
                 val1 = val1.replace('*', '')
                 val2 = val2.replace('*', '')
@@ -261,10 +235,10 @@ def compare_specs(input_query, exist_query):
                 val2 = val2.replace('*', '')
                 if  val1 != val2:
                     return False
-        elif type(val1) is types.DictType and type(val2) is types.DictType:
+        elif isinstance(val1, dict) and isinstance(val2, dict):
             if  not compare_dicts(val1, val2):
                 return False
-        elif type(val2) is types.DictType and type(val1) is types.IntType:
+        elif isinstance(val2, dict) and isinstance(val1, int):
             if  val1 in val2.values():
                 return True
             return False
@@ -280,7 +254,7 @@ def update_item(item, key, val):
     The value here can be in form of MongoDB condition
     dictionary, e.g. {key : {'$gte':value}}
     """
-    if  type(val) is not types.DictType:
+    if  not isinstance(val, dict):
         value = val
     else:
         value = val.values()
@@ -341,14 +315,16 @@ class DASMongocache(object):
         self.logger.info(msg)
 
         self.conn    = make_connection(self.dbhost, self.dbport, self.attempt)
-        self.db      = self.conn[self.dbname]
-        self.col     = self.db['cache']
-        self.mrcol   = self.db['mapreduce']
-        self.merge   = self.db['merge']
+        self.mdb     = self.conn[self.dbname]
+        self.col     = self.mdb['cache']
+        self.mrcol   = self.mdb['mapreduce']
+        self.merge   = self.mdb['merge']
 
         # get analytics db handler
-        analyticsdb    = config['analyticsdb'].get('analytics_dbname', 'analytics') 
-        collection     = config['analyticsdb'].get('analytics_collname', 'db') 
+        analyticsdb    = config['analyticsdb'].\
+                get('analytics_dbname', 'analytics') 
+        collection     = config['analyticsdb'].\
+                get('analytics_collname', 'db') 
         self.analytics = self.conn[analyticsdb][collection]
 
         self.add_manipulator()
@@ -359,16 +335,10 @@ class DASMongocache(object):
         conversion of inserted data into DAS cache.
         """
         das_son_manipulator = DAS_SONManipulator()
-        self.db.add_son_manipulator(das_son_manipulator)
+        self.mdb.add_son_manipulator(das_son_manipulator)
         msg = "DASMongocache::__init__, DAS_SONManipulator %s" \
         % das_son_manipulator
         self.logger.debug(msg)
-
-    def is_expired(self, query):
-        """
-        Check if we have query result is expired in cache.
-        """
-        return True
 
     def similar_queries(self, query):
         """
@@ -396,11 +366,12 @@ class DASMongocache(object):
         Remove expired records from DAS cache.
         """
         timestamp = int(time.time())
-        col  = self.db[collection]
+        col  = self.mdb[collection]
         spec = {'das.expire' : {'$lt' : timestamp}}
         if  self.verbose:
             nrec = col.find(spec).count()
-            msg  = "DASMongocache::remove_expired, will remove %s records" % nrec
+            msg  = "DASMongocache::remove_expired, will remove %s records"\
+                 % nrec
             msg += ", localtime=%s" % timestamp
             self.logger.info(msg)
         col.remove(spec)
@@ -465,7 +436,7 @@ class DASMongocache(object):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        col    = self.db[collection]
+        col    = self.mdb[collection]
         self.remove_expired(collection)
         query  = adjust_id(query)
         spec   = query.get('spec', {})
@@ -485,7 +456,7 @@ class DASMongocache(object):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        col    = self.db[collection]
+        col    = self.mdb[collection]
         query  = adjust_id(query)
         query, dquery = convert2pattern(query)
         spec   = query.get('spec', {})
@@ -509,7 +480,7 @@ class DASMongocache(object):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        col = self.db[collection]
+        col = self.mdb[collection]
         msg = "DASMongocache::get_from_cache(%s, %s, %s, %s, %s, coll=%s)"\
                 % (query, idx, limit, skey, order, collection)
         self.logger.info(msg)
@@ -535,8 +506,8 @@ class DASMongocache(object):
         recapi = self.col.find_one({"query":strquery})
 
         # look-up raw record
-        if  fields:
-            fields += ['das_id', 'das', 'cache_id'] # be sure to extract those fields
+        if  fields: # be sure to extract those fields
+            fields += ['das_id', 'das', 'cache_id']
         skeys  = []
         if  skey:
             if  order == 'asc':
@@ -566,12 +537,6 @@ class DASMongocache(object):
             yield row
         counter = 0
         for row in res:
-            # DAS info is stored via das_id, the records only contains
-            # {'das':{'expire':123}} to consistently manage delete operation
-#            if  row.has_key('das'):
-#                das = row['das']
-#                if  not (type(das) is types.DictType and das.has_key('api')):
-#                    del row['das']
             if  fields:
                 fkeys = [k.split('.')[0] for k in fields]
                 if  set(row.keys()) & set(fkeys) == set(fkeys):
@@ -619,11 +584,11 @@ class DASMongocache(object):
         spec is optional MongoDB query which is applied to first
         iteration of map/reduce functions.
         """
-        if  type(mr_input) is not types.ListType:
+        if  not isinstance(mr_input, list):
             mrlist = [mr_input]
         else:
             mrlist = mr_input
-        coll = self.db[collection]
+        coll = self.mdb[collection]
         for mapreduce in mrlist:
             if  mapreduce == mrlist[0]:
                 cond = spec
@@ -685,7 +650,8 @@ class DASMongocache(object):
         records = self.col.find({'query':encode_mongo_query(query)})
         for row in records:
             try:
-                rec   = [k for i in row['das']['lookup_keys'] for k in i.values()]
+                rec   = \
+                [k for i in row['das']['lookup_keys'] for k in i.values()]
             except:
                 traceback.print_exc()
                 print "Fail with record:", row
@@ -740,7 +706,7 @@ class DASMongocache(object):
                                    'empty_record': 'true'}, 
                             'cache_id':[], 'das_id': id_list}
             spec = query['spec']
-            if  type(spec) is types.DictType:
+            if  isinstance(spec, dict):
                 spec = [spec]
             for key, val in query['spec'].items():
                 if  key.find('.') == -1:
@@ -832,10 +798,9 @@ class DASMongocache(object):
         record     = self.col.find_one({'query':enc_query}, fields=['_id'])
         objid      = record['_id']
         # insert DAS records
-        prim_key   = rec[0][0] # use rec instead of lkeys[0] which re-order items
+        prim_key   = rec[0][0]#use rec instead of lkeys[0] which re-order items
         counter    = 0
-        if  type(results) is types.ListType or \
-            type(results) is types.GeneratorType:
+        if  isinstance(results, list) or isinstance(results, GeneratorType):
             for item in results:
                 if  not counter:
                     # get expire timestamp from apicall record
@@ -902,7 +867,7 @@ class DASMongocache(object):
         internal indexes.
         """
         self.col.remove({})
-        try: # in pymongo 1.5.1 drop of indexes with non-existsing DB doesn't work
+        try: 
             self.col.drop_indexes()
         except:
             pass
