@@ -16,7 +16,6 @@ import xml.etree.cElementTree as ET
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, get_key_cert, adjust_value
-#from DAS.services.runsum.run_summary import get_run_summary
 from DAS.utils.cern_sso_auth import get_data
 
 def run_summary_url(url, params):
@@ -118,7 +117,6 @@ class RunSummaryService(DASAbstractService):
             msg     = 'DASAbstractService::%s::getdata(%s, %s)' \
                     % (self.name, url, args)
             self.logger.info(msg)
-#            data    = get_run_summary(url, args, key, cert, debug)
             data    = get_data(run_summary_url(url, args), key, cert, debug)
             genrows = self.parser(data, api)
             ctime   = time.time()-time0
