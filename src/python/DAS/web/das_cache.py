@@ -19,13 +19,13 @@ import cherrypy
 import traceback
 
 # monogo db modules
-from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCacheMgr, thread_monitor
+from DAS.utils.das_db import db_connection
 from DAS.utils.utils import getarg, genkey
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
@@ -136,7 +136,7 @@ class DASCacheService(DASWebManager):
         dbhost        = dasconfig['mongodb']['dbhost']
         dbport        = dasconfig['mongodb']['dbport']
         capped_size   = dasconfig['mongodb']['capped_size']
-        self.con      = Connection(dbhost, dbport)
+        self.con      = db_connection(dbhost, dbport)
         if  'logging' not in self.con.database_names():
             dbname    = self.con['logging']
             options   = {'capped':True, 'size': capped_size}
@@ -159,8 +159,9 @@ class DASCacheService(DASWebManager):
         thread.start_new_thread(thread_monitor, (self.cachemgr, iconfig))
 
         self.dascore  = DASCore()
-        msg = 'DASCacheService::init, host=%s, port=%s, capped_size=%s' \
+        msg  = 'DASCacheService::init, host=%s, port=%s, capped_size=%s' \
                 % (dbhost, dbport, capped_size)
+        msg += ' Connection %s' % self.con.__dict__
         self.logger.info(msg)
 
     def logdb(self, query):

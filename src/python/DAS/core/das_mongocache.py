@@ -26,6 +26,7 @@ import traceback
 from DAS.utils.utils import genkey, convert_dot_notation, aggregator
 from DAS.utils.utils import adjust_mongo_keyvalue
 from DAS.core.das_son_manipulator import DAS_SONManipulator
+from DAS.utils.das_db import db_connection
 import DAS.utils.jsonwrapper as json
 
 # monogo db modules
@@ -274,27 +275,27 @@ def update_item(item, key, val):
                 newdict = {kkk : newdict}
         item[kkk] = newdict
 
-def make_connection(dbhost, dbport, attempt):
-    """
-    Safely make connection to MongoDB.
-    
-    Waits 5-10 seconds after a connection failure
-    before retrying.
-    """
-    if  not attempt or attempt < 0:
-        msg = 'Unable to make connection to MongoDB after %s attempts' % attempt
-        raise Exception(msg)
-    try:
-        conn = Connection(dbhost, dbport)
-    except AutoReconnect:
-        attempt -= 1
-        time.sleep(5 + 5 * random.random())
-        make_connection(dbhost, dbport, attempt)
-    except ConnectionFailure:
-        attempt -= 1
-        time.sleep(5 + 5 * random.random())
-        make_connection(dbhost, dbport, attempt)
-    return conn
+#def make_connection(dbhost, dbport, attempt):
+#    """
+#    Safely make connection to MongoDB.
+#    
+#    Waits 5-10 seconds after a connection failure
+#    before retrying.
+#    """
+#    if  not attempt or attempt < 0:
+#        msg = 'Unable to make connection to MongoDB after %s attempts' % attempt
+#        raise Exception(msg)
+#    try:
+#        conn = Connection(dbhost, dbport)
+#    except AutoReconnect:
+#        attempt -= 1
+#        time.sleep(5 + 5 * random.random())
+#        make_connection(dbhost, dbport, attempt)
+#    except ConnectionFailure:
+#        attempt -= 1
+#        time.sleep(5 + 5 * random.random())
+#        make_connection(dbhost, dbport, attempt)
+#    return conn
 
 class DASMongocache(object):
     """
@@ -310,15 +311,15 @@ class DASMongocache(object):
         self.logger  = config['logger']
         self.verbose = config['verbose']
 
-        msg = "DASMongocache::__init__ %s:%s@%s" \
-        % (self.dbhost, self.dbport, self.dbname)
-        self.logger.info(msg)
-
-        self.conn    = make_connection(self.dbhost, self.dbport, self.attempt)
+        self.conn    = db_connection(self.dbhost, self.dbport)
         self.mdb     = self.conn[self.dbname]
         self.col     = self.mdb['cache']
         self.mrcol   = self.mdb['mapreduce']
         self.merge   = self.mdb['merge']
+
+        msg = "DASMongocache::__init__ %s:%s@%s, Connection %s" \
+        % (self.dbhost, self.dbport, self.dbname, self.conn.__dict__)
+        self.logger.info(msg)
 
         # get analytics db handler
         analyticsdb    = config['analyticsdb'].\

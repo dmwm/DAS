@@ -15,13 +15,13 @@ __author__ = "Valentin Kuznetsov"
 import time
 
 # monogo db modules
-#from pymongo.connection import Connection
 from pymongo import DESCENDING
 from pymongo.objectid import ObjectId
 
 # DAS modules
 from DAS.utils.utils import gen2list, genkey, expire_timestamp
-from DAS.core.das_mongocache import encode_mongo_query, make_connection
+from DAS.core.das_mongocache import encode_mongo_query
+from DAS.utils.das_db import db_connection
 
 class DASAnalytics(object):
     """
@@ -45,11 +45,9 @@ class DASAnalytics(object):
         """
         Create analytics DB in MongoDB back-end.
         """
-#        self.conn    = Connection(self.dbhost, self.dbport)
-        self.conn = make_connection(self.dbhost, self.dbport, self.attempt)
+        self.conn = db_connection(self.dbhost, self.dbport)
         database  = self.conn[self.dbname]
         self.col  = database[self.colname]
-#        self.conn = Connection(self.dbhost, self.dbport)
 #        if  self.dbname not in self.conn.database_names():
 #            capped_size = 104857600
 #            options   = {'capped':True, 'size': capped_size}

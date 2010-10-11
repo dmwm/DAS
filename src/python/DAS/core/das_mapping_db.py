@@ -20,7 +20,7 @@ from pymongo import DESCENDING
 
 # DAS modules
 from DAS.utils.utils import gen2list, access
-from DAS.core.das_mongocache import make_connection
+from DAS.utils.das_db import db_connection
 
 class DASMapping(object):
     """
@@ -64,7 +64,7 @@ class DASMapping(object):
         """
         Establish connection to MongoDB back-end and create DB.
         """
-        self.conn = make_connection(self.dbhost, self.dbport, self.attempt)
+        self.conn = db_connection(self.dbhost, self.dbport)
         self.db   = self.conn[self.dbname]
         self.col  = self.db[self.colname]
 

@@ -19,18 +19,14 @@ from pprint import pformat
 # cherrypy modules
 from cherrypy import expose, response, request, HTTPRedirect
 
-# monogo db modules
-from pymongo.connection import Connection
-
 # DAS modules
 from DAS.utils.das_config import das_readconfig
-from DAS.web.das_webmanager import DASWebManager
-from DAS.web.utils import json2html, ajax_response
-
-from DAS.core.das_core import DASCore
-from DAS.core.das_mongocache import convert2pattern, encode_mongo_query
 from DAS.utils.utils import genkey
 from DAS.utils.das_db import db_connection
+from DAS.core.das_core import DASCore
+from DAS.core.das_mongocache import convert2pattern, encode_mongo_query
+from DAS.web.das_webmanager import DASWebManager
+from DAS.web.utils import json2html, ajax_response
 
 def error(msg):
     """Put message in red box"""
@@ -82,7 +78,10 @@ def check_dn(func):
         """Decorator wrapper"""
         redirect = True
         headers = request.headers
-        conn = db_connection()
+        dasconfig = das_readconfig()
+        dbhost = dasconfig['mongodb']['dbhost']
+        dbport = dasconfig['mongodb']['dbport']
+        conn = db_connection(dbhost, dbport)
         database = conn['admin']
         coll = database['dns']
         dn = headers.get('Ssl-Client-S-Dn', None)
@@ -107,9 +106,12 @@ class DASExpertService(DASWebManager):
         das_config  = das_readconfig()
         self.dbhost = das_config['mongodb']['dbhost']
         self.dbport = das_config['mongodb']['dbport']
-        self.conn   = Connection(self.dbhost, self.dbport)
+#        self.conn   = Connection(self.dbhost, self.dbport)
+        self.conn   = db_connection()
         self.dasconfig = das_config
         self.das    = DASCore(debug=0, nores=True)
+#        msg = 'DASExpertService, Connection %s' % self.conn.__dict__
+#        self.logger.info(msg)
 
     @expose
     @check_dn

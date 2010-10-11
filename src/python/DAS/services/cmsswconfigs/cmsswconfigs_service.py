@@ -16,8 +16,8 @@ import xml.etree.cElementTree as ET
 from DAS.services.abstract_service import DASAbstractService, dasheader
 from DAS.utils.utils import map_validator
 from DAS.services.cmsswconfigs.base import MongoQuery
+from DAS.utils.das_db import db_connection
 
-from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
 
 class CMSSWConfigsService(DASAbstractService):
@@ -31,9 +31,9 @@ class CMSSWConfigsService(DASAbstractService):
         map_validator(self.map)
 
         # specify access to DB
-        dbhost    = config.get('dbhost', 'localhost')
-        dbport    = config.get('dbport', 27017)
-        self.conn = Connection(dbhost, dbport)
+        dbhost    = config.get('dbhost')
+        dbport    = config.get('dbport')
+        self.conn = db_connection(dbhost, dbport)
         database  = self.conn['configdb']
         self.managers = {}
         for release in database.collection_names():

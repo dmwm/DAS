@@ -8,7 +8,7 @@ DAS Parser DB manager
 __author__ = "Gordon Ball"
 
 from DAS.utils.utils import genkey
-from DAS.core.das_mongocache import make_connection
+from DAS.utils.das_db import db_connection
 
 PARSERCACHE_NOTFOUND = 5
 PARSERCACHE_INVALID = 17
@@ -39,7 +39,9 @@ class DASParserDB(object):
         """
         Create db collection
         """
-        conn = make_connection(self.dbhost, self.dbport, self.attempts)
+        conn = db_connection(self.dbhost, self.dbport)
+        msg  = 'DASParserCache, Connection %s' % conn.__dict__
+        self.logger.info(msg)
         dbn  = conn[self.dbname]
         if self.colname not in dbn.collection_names() and self.sizecap > 0:
             dbn.create_collection(self.colname, capped=True, size=self.sizecap)
