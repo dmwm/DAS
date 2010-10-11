@@ -36,6 +36,17 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - change eval(x) into eval(x, { "__builtins__": None }, {}) for those cases
     when fail to use json.load(x). Some data-service are not fully compliant
     and the issue with them need to be resolved at their end.
+  - Use singleton class for Connection to reduce number of ESTABLISHED connections
+    seeing on server. For details see 
+    http://groups.google.com/group/mongodb-user/browse_thread/thread/67d77a62059568d7#
+    https://svnweb.cern.ch/trac/CMSDMWM/ticket/529
+  - use isinstance instead of types.typeXXX
+  - make generic cern_sso_auth.py to authenticate with CERN SSO system
+  - make das_map to accept external map dir parameter which specify locations
+    of DAS maps
+  - fix queryspammer to handle generators; add weights
+  - unify DAS configuration via das_option
+  - Remove das docs from RPM, will run it stand-alone elsewhere
 
 - 0.5.0 till 0.5.2
 
