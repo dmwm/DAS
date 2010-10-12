@@ -48,39 +48,53 @@ def minify(content):
     content = content.replace('  ', ' ')
     return content
 
+def update_map(emap, mapdir, entry):
+    """Update entry map for given entry and mapdir"""
+    if  not emap.has_key():
+        emap[entry] = mapdir + entry
+
+def parse_args(params):
+    """
+    Return list of arguments for provided set, where elements in a set
+    can be in a form of file1_and_file2_and_file3
+    """
+    return [arg for s in params for arg in s.split('_and_')]
+
 class DASWebManager(TemplatedPage):
     """
     DAS web manager.
     """
     def __init__(self, config):
         TemplatedPage.__init__(self, config)
-        self.base = '' # defines base path for HREF in templates
-        imgdir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'images')
-        if  not os.path.isdir(imgdir):
-            imgdir = os.environ['DAS_ROOT'] + '/src/images'
-        cssdir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'css')
-        if  not os.path.isdir(cssdir):
-            cssdir = os.environ['DAS_ROOT'] + '/src/css'
-        jsdir  = '%s/%s' % (__file__.rsplit('/', 1)[0], 'js')
-        if  not os.path.isdir(jsdir):
-            jsdir = os.environ['DAS_ROOT'] + '/src/js'
-        self.cssmap   = {
-            'das.css': cssdir + '/das.css',
-            'prettify.css': cssdir + '/prettify.css',
-        }
-        self.jsmap    = {
-            'utils.js': jsdir + '/utils.js',
-            'ajax_utils.js': jsdir + '/ajax_utils.js',
-            'prototype.js': jsdir + '/prototype.js',
-            'prettify.js': jsdir + '/prettify.js',
-            'rico.js': jsdir + '/rico.js',
-        }
-        self.imagemap = {
-            'loading.gif': imgdir + '/loading.gif',
-            'cms_logo.jpg': imgdir + '/cms_logo.jpg',
-            'cms_logo.png': imgdir + '/cms_logo.png',
-            'mongodb_logo.png': imgdir + '/mongodb_logo.png',
-        }
+        self.base   = '' # defines base path for HREF in templates
+        self.imgdir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'images')
+        if  not os.path.isdir(self.imgdir):
+            self.imgdir = os.environ['DAS_ROOT'] + '/src/images'
+        self.cssdir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'css')
+        if  not os.path.isdir(self.cssdir):
+            self.cssdir = os.environ['DAS_ROOT'] + '/src/css'
+        self.jsdir  = '%s/%s' % (__file__.rsplit('/', 1)[0], 'js')
+        if  not os.path.isdir(self.jsdir):
+            self.jsdir = os.environ['DAS_ROOT'] + '/src/js'
+        if  not os.environ.has_key('YUI_ROOT'):
+            msg = ''
+            raise Exception(msg)
+        self.yuidir = os.environ['YUI_ROOT']
+
+        # To be filled at run time
+        self.cssmap = {}
+        self.jsmap  = {}
+        self.imgmap = {}
+        self.yuimap = {}
+
+        # Update CherryPy configuration
+        mime_types  = ['text/css']
+        mime_types += ['application/javascript', 'text/javascript',
+                       'application/x-javascript', 'text/x-javascript']
+        cherryconf.update({'tools.encode.on': True, 
+                           'tools.gzip.on': True,
+                           'tools.gzip.mime_types': mime_types,
+                          })
         self.cache    = {}
 
     @expose
@@ -93,7 +107,7 @@ class DASWebManager(TemplatedPage):
         """
         Provide masthead for all web pages
         """
-        return self.templatepage('das_top', base=self.base)
+        return self.templatepage('das_top', base=self.base, yui=self.yuidir)
 
     def bottom(self):
         """
@@ -118,91 +132,87 @@ class DASWebManager(TemplatedPage):
         """
         Serve static images.
         """
+        args = list(args)
+        scripts = self.check_scripts(args, self.imgmap, self.imgdir)
         mime_types = ['*/*', 'image/gif', 'image/png', 
                       'image/jpg', 'image/jpeg']
         accepts = cherrypy.request.headers.elements('Accept')
         for accept in accepts:
             if  accept.value in mime_types and len(args) == 1 \
-                and self.imagemap.has_key(args[0]):
-                image = self.imagemap[args[0]]
+                and self.imgmap.has_key(args[0]):
+                image = self.imgmap[args[0]]
                 # use image extension to pass correct content type
                 ctype = 'image/%s' % image.split('.')[-1]
                 cherrypy.response.headers['Content-type'] = ctype
                 return serve_file(image, content_type=ctype)
 
     @exposecss
+    @exposejs
+    @tools.gzip()
+    def yui(self, *args, **kwargs):
+        """
+        Serve YUI library. YUI files has disperse directory structure, so
+        input args can be in a form of (build, container, container.js)
+        which corresponds to a single YUI JS file
+        build/container/container.js
+        """
+        args = ['/'.join(args)] # preserve YUI dir structure
+        scripts = self.check_scripts(args, self.yuimap, self.yuidir)
+        return self.serve_files(args, scripts, self.yuimap)
+        
+    @exposecss
     @tools.gzip()
     def css(self, *args, **kwargs):
         """
         Cat together the specified css files and return a single css include.
-        Get css by calling: /controllers/css/file1/file2/file3
+        Multiple files can be supplied in a form of file1&file2&file3
         """
-        mime_types = ['text/css']
-        cherryconf.update({'tools.encode.on': True, 
-                           'tools.gzip.on': True,
-                           'tools.gzip.mime_types': mime_types,
-                          })
-        
-        args = list(args)
-        scripts = self.check_scripts(args, self.cssmap)
-        idx = "-".join(scripts)
-        
-        if  idx not in self.cache.keys():
-            data = '@CHARSET "UTF-8";'
-            for script in args:
-                if  self.cssmap.has_key(script):
-                    path = os.path.join(sys.path[0], self.cssmap[script])
-                    path = os.path.normpath(path)
-                    ifile = open(path)
-                    data = "\n".join ([data, ifile.read().\
-                        replace('@CHARSET "UTF-8";', '')])
-                    ifile.close()
-            set_headers ("text/css")
-            self.cache[idx] = minify(data)
-        return self.cache[idx] 
+        args = parse_args(args)
+        scripts = self.check_scripts(args, self.cssmap, self.cssdir)
+        return self.serve_files(args, scripts, self.cssmap, 'css', True)
         
     @exposejs
     @tools.gzip()
     def js(self, *args, **kwargs):
         """
         Cat together the specified js files and return a single js include.
-        Get js by calling: /controllers/js/file1/file2/file3
+        Multiple files can be supplied in a form of file1&file2&file3
         """
-        mime_types = ['application/javascript', 'text/javascript',
-                      'application/x-javascript', 'text/x-javascript']
-        cherryconf.update({'tools.gzip.on': True,
-                           'tools.gzip.mime_types': mime_types,
-                           'tools.encode.on': True,
-                          })
-        
-        args = list(args)
-        scripts = self.check_scripts(args, self.jsmap)
+        args = parse_args(args)
+        scripts = self.check_scripts(args, self.jsmap, self.jsdir)
+        return self.serve_files(args, scripts, self.jsmap)
+
+    def serve_files(self, args, scripts, _map, datatype='', minimize=False):
+        """
+        Return asked set of files for JS, YUI, CSS.
+        """
         idx = "-".join(scripts)
-        
         if  idx not in self.cache.keys():
             data = ''
+            if  datatype == 'css':
+                data = '@CHARSET "UTF-8";'
             for script in args:
-                path = os.path.join(sys.path[0], self.jsmap[script])
+                path = os.path.join(sys.path[0], _map[script])
                 path = os.path.normpath(path)
                 ifile = open(path)
-                data = "\n".join ([data, ifile.read()])
+                data = "\n".join ([data, ifile.read().\
+                    replace('@CHARSET "UTF-8";', '')])
                 ifile.close()
-            self.cache[idx] = data
+            if  datatype == 'css':
+                set_headers("text/css")
+            if  minimize:
+                self.cache[idx] = minify(data)
+            else:
+                self.cache[idx] = data
         return self.cache[idx] 
     
-    def check_scripts(self, scripts, map):
+    def check_scripts(self, scripts, map, path):
         """
         Check a script is known to the map and that the script actually exists   
         """           
         for script in scripts:
-            if script not in map.keys():
-                self.warning("%s not known" % script)
-                scripts.remove(script)
-            else:
-                path = os.path.join(sys.path[0], map[script])
-                path = os.path.normpath(path)
-                if not os.path.exists(path):
-                    self.warning("%s not found at %s" % (script, path))
-                    scripts.remove(script)
+            if  script not in map.keys():
+                spath = os.path.normpath(os.path.join(path, script))
+                if  os.path.isfile(spath):
+                    map.update({script: spath})
         return scripts
-    

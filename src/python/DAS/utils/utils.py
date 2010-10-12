@@ -1028,6 +1028,7 @@ def aggregator(results, expire):
         if  not isinstance(_ids, list):
             _ids = [_ids]
         rec['cache_id'] = list(set(_ids))
+        rec['das']['empty_record'] = 0
         yield rec
 
 def aggregator_helper(results, expire):

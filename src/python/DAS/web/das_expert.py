@@ -17,59 +17,26 @@ import traceback
 from pprint import pformat
 
 # cherrypy modules
-from cherrypy import expose, response, request, HTTPRedirect
+from cherrypy import expose, response, request, HTTPRedirect, HTTPError
 
 # DAS modules
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.utils import genkey
 from DAS.utils.das_db import db_connection
+from DAS.utils.regex import web_arg_pattern
 from DAS.core.das_core import DASCore
 from DAS.core.das_mongocache import convert2pattern, encode_mongo_query
 from DAS.web.das_webmanager import DASWebManager
-from DAS.web.utils import json2html, ajax_response
+from DAS.web.utils import json2html, ajax_response, checkargs
+from DAS.web.das_codes import web_code
+
+DAS_EXPERT_INPUTS = ['idx', 'limit', 'collection', 'database', 'query',
+             'dasquery', 'dbcoll', 'msg']
 
 def error(msg):
     """Put message in red box"""
     err = '<div class="box_red">%s</div>' % msg
     return err
-
-def checkargs(func):
-    """Decorator to check arguments to REST server"""
-    def wrapper (self, *args, **kwds):
-        """Wrapper for decorator"""
-        pat = web_arg_pattern
-        supported = ['idx', 'limit', 'collection', 'database', 'query',
-                     'dasquery', 'dbcoll', 'msg']
-        if  not kwds:
-            if  args:
-                kwds = args[-1]
-        keys = []
-        if  kwds:
-            keys = [i for i in kwds.keys() if i not in supported]
-        if  keys:
-            msg  = 'Unsupported keys: %s' % keys
-            return msg
-        if  kwds.has_key('idx') and not pat.match(str(kwds['idx'])):
-            msg  = 'Unsupported value idx=%s' % (kwds['idx'])
-            return msg
-        if  kwds.has_key('limit') and not pat.match(str(kwds['limit'])):
-            msg  = 'Unsupported value limit=%s' % (kwds['limit'])
-            return msg
-        if  kwds.has_key('collection'):
-            if  kwds['collection'] not in ['cache', 'merge', 'db', 'dns']:
-                msg  = 'Unsupported value collection=%s' % (kwds['collection'])
-                return msg
-        if  kwds.has_key('database'):
-            if  kwds['database'] not in \
-                ['das', 'analytics', 'admin', 'logging', 'mapping']:
-                msg  = 'Unsupported value database=%s' % (kwds['database'])
-                return msg
-        data = func (self, *args, **kwds)
-        return data
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
-    return wrapper
 
 def check_dn(func):
     """CherryPy expose decorator which check user DN's"""
@@ -106,14 +73,14 @@ class DASExpertService(DASWebManager):
         das_config  = das_readconfig()
         self.dbhost = das_config['mongodb']['dbhost']
         self.dbport = das_config['mongodb']['dbport']
-#        self.conn   = Connection(self.dbhost, self.dbport)
-        self.conn   = db_connection()
+        self.conn   = db_connection(self.dbhost, self.dbport)
         self.dasconfig = das_config
         self.das    = DASCore(debug=0, nores=True)
 #        msg = 'DASExpertService, Connection %s' % self.conn.__dict__
 #        self.logger.info(msg)
 
     @expose
+    @checkargs(DAS_EXPERT_INPUTS)
     @check_dn
     def index(self, **kwargs):
         """Serve default index.html web page"""
@@ -137,6 +104,7 @@ class DASExpertService(DASWebManager):
         return self.page(info)
 
     @expose
+    @checkargs(DAS_EXPERT_INPUTS)
     @check_dn
     def records(self, database, collection=None, query=None, idx=0, limit=10, 
                 **kwargs):
@@ -185,6 +153,7 @@ class DASExpertService(DASWebManager):
         return self.page(page)
 
     @expose
+    @checkargs(DAS_EXPERT_INPUTS)
     @check_dn
     def query_info(self, dasquery, **kwargs):
         """
@@ -211,6 +180,7 @@ class DASExpertService(DASWebManager):
         return page
 
     @expose
+    @checkargs(DAS_EXPERT_INPUTS)
     @check_dn
     def clean(self, dbcoll, **kwargs):
         """Clean DAS cache for provided dbcoll parameter"""
@@ -227,11 +197,11 @@ class DASExpertService(DASWebManager):
         page = ajax_response(status)
         return page
 
-    def mapping(self, **kwargs):
-        mappingdb = self.conn['mapping']['db']
-        return "mapping page"
+#    def mapping(self, **kwargs):
+#        mappingdb = self.conn['mapping']['db']
+#        return "mapping page"
 
-    @expose
-    def analytics(self, **kwargs):
-        return "analytics page"
+#    @expose
+#    def analytics(self, **kwargs):
+#        return "analytics page"
 

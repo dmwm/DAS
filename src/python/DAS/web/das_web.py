@@ -14,6 +14,7 @@ import os
 import sys
 import time
 import urllib
+import urllib2
 import cherrypy
 import traceback
 
@@ -27,73 +28,21 @@ from json import JSONEncoder
 
 # DAS modules
 import DAS
-from DAS.web.tools import exposedasjson, exposetext
-from DAS.web.tools import exposejson, exposedasplist
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators
 from DAS.utils.utils import getarg, access
-from DAS.web.das_webmanager import DASWebManager
-from DAS.web.utils import urllib2_request, json2html, web_time, ajax_response
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
-from DAS.utils.regex import web_arg_pattern
+from DAS.web.utils import urllib2_request, json2html, web_time
+from DAS.web.utils import ajax_response, checkargs, get_ecode
+from DAS.web.tools import exposedasjson, exposetext
+from DAS.web.tools import exposejson, exposedasplist
+from DAS.web.das_webmanager import DASWebManager
+from DAS.web.das_codes import web_code
 
 import DAS.utils.jsonwrapper as json
 
-def checkargs(func):
-    """Decorator to check arguments to REST server"""
-    def wrapper (self, *args, **kwds):
-        """Wrapper for decorator"""
-        pat = web_arg_pattern
-        supported = ['input', 'idx', 'limit', 'show', 'collection', 
-                     'format', 'sort', 'dir', 'ajax', 'view', 'method']
-        if  not kwds:
-            if  args:
-                kwds = args[-1]
-        keys = []
-        if  kwds:
-            keys = [i for i in kwds.keys() if i not in supported]
-        if  keys:
-            msg  = 'Unsupported keys: %s' % keys
-            return msg
-        if  kwds.has_key('idx') and not pat.match(str(kwds['idx'])):
-            msg  = 'Unsupported value idx=%s' % (kwds['idx'])
-            return msg
-        if  kwds.has_key('limit') and not pat.match(str(kwds['limit'])):
-            msg  = 'Unsupported value limit=%s' % (kwds['limit'])
-            return msg
-        if  kwds.has_key('ajax') and not pat.match(str(kwds['ajax'])):
-            msg  = 'Unsupported value ajax=%s' % (kwds['ajax'])
-            return msg
-        if  kwds.has_key('method'):
-            if  kwds['method'] not in ['GET', 'PUT', 'DELETE', 'POST']:
-                msg  = 'Unsupported value method=%s' % (kwds['method'])
-                return msg
-        if  kwds.has_key('dir'):
-            if  kwds['dir'] not in ['asc', 'desc']:
-                msg  = 'Unsupported value dir=%s' % (kwds['dir'])
-                return msg
-        if  kwds.has_key('view'):
-            if  kwds['view'] not in ['list', 'xml', 'json']:
-                msg  = 'Unsupported value view=%s' % (kwds['view'])
-                return msg
-        if  kwds.has_key('collection'):
-            if  kwds['collection'] not in ['cache', 'merge']:
-                msg  = 'Unsupported value collection=%s' % (kwds['collection'])
-                return msg
-        if  kwds.has_key('ajax'):
-            if  str(kwds['ajax']) not in ['0', '1']:
-                msg  = 'Unsupported value ajax=%s' % (kwds['ajax'])
-                return msg
-        if  kwds.has_key('show'):
-            if  kwds['show'] not in ['json', 'code', 'yaml']:
-                msg  = 'Unsupported value show=%s' % (kwds['show'])
-                return msg
-        data = func (self, *args, **kwds)
-        return data
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
-    return wrapper
+DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 
+                  'format', 'sort', 'dir', 'ajax', 'view', 'method']
 
 class DASWebService(DASWebManager):
     """
@@ -116,7 +65,7 @@ class DASWebService(DASWebManager):
         self.logger.info(msg)
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def redirect(self, *args, **kwargs):
         """
         Represent DAS redirect page
@@ -126,12 +75,6 @@ class DASWebService(DASWebManager):
             msg = 'Reason: ' + msg
         page = self.templatepage('das_redirect', msg=msg)
         return self.page(page, response_div=False)
-
-    def top(self):
-        """
-        Define masthead for all DAS web pages
-        """
-        return self.templatepage('das_top', base=self.base)
 
     def bottom(self, response_div=True):
         """
@@ -158,7 +101,7 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def faq(self, *args, **kwargs):
         """
         represent DAS FAQ.
@@ -169,7 +112,7 @@ class DASWebService(DASWebManager):
         return self.page(page, response_div=False)
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def cli(self, *args, **kwargs):
         """
         Serve DAS CLI file download.
@@ -179,7 +122,7 @@ class DASWebService(DASWebManager):
         return serve_file(clifile, content_type='text/plain')
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def services(self, *args, **kwargs):
         """
         represent DAS services
@@ -202,7 +145,7 @@ class DASWebService(DASWebManager):
         return self.page(page, response_div=False)
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def api(self, name, **kwargs):
         """
         Return DAS mapping record about provided API.
@@ -223,7 +166,7 @@ class DASWebService(DASWebManager):
         return self.page(page, response_div=False)
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def default(self, *args, **kwargs):
         """
         Default method.
@@ -266,7 +209,7 @@ class DASWebService(DASWebManager):
         return
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def index(self, *args, **kwargs):
         """
         represents DAS web interface. 
@@ -291,7 +234,7 @@ class DASWebService(DASWebManager):
             return self.error(self.gen_error_msg(kwargs))
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def form(self, input=None, msg=None):
         """
         provide input DAS search form
@@ -344,7 +287,7 @@ class DASWebService(DASWebManager):
         return plist_str
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def records(self, *args, **kwargs):
         """
         Retieve all records id's.
@@ -380,6 +323,10 @@ class DASWebService(DASWebManager):
             try:
                 data = urllib2_request('GET', url+path, params, headers=headers)
                 result = json.loads(data)
+            except urllib2.HTTPError, httperror:
+                err = get_ecode(httperror.read())
+                self.logger.error(err)
+                result = {'status':'fail', 'reason': err}
             except:
                 self.logger.error(traceback.format_exc())
                 result = {'status':'fail', 'reason':traceback.format_exc()}
@@ -423,7 +370,10 @@ class DASWebService(DASWebManager):
                 url   = '/das/records?'
                 idict = dict(nrows=nresults, idx=idx, 
                             limit=limit, results=res, url=url)
-                page  = self.templatepage('das_pagination', **idict)
+                if  nresults:
+                    page = self.templatepage('das_pagination', **idict)
+                else:
+                    page = 'No results found'
 
             form    = self.form(input="")
             ctime   = (time.time()-time0)
@@ -446,6 +396,10 @@ class DASWebService(DASWebManager):
         try:
             data = urllib2_request('GET', url+path, params, headers=headers)
             record = json.loads(data)
+        except urllib2.HTTPError, httperror:
+            err = get_ecode(httperror.read())
+            self.logger.error(err)
+            record = {'status':'fail', 'reason': err}
         except:
             self.logger.error(traceback.format_exc())
             record = {'status':'fail', 'reason':traceback.format_exc()}
@@ -478,6 +432,10 @@ class DASWebService(DASWebManager):
         try:
             data = urllib2_request(method, url+path, params, headers=headers)
             result = json.loads(data)
+        except urllib2.HTTPError, httperror:
+            err = get_ecode(httperror.read())
+            self.logger.error(err)
+            result = {'status':'fail', 'reason': err}
         except:
             self.logger.error(traceback.format_exc())
             result = {'status':'fail', 'reason':traceback.format_exc()}
@@ -531,7 +489,7 @@ class DASWebService(DASWebManager):
                     yield key, idict[key]
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def listview(self, **kwargs):
         """
         provide DAS list view
@@ -549,7 +507,7 @@ class DASWebService(DASWebManager):
         form    = self.form(input=uinput)
         # self.status sends request to Cache Server
         # Cache Server uses das_core to retrieve status
-        status  = self.status(input=uinput, ajax=0)
+        status  = self.status(input=uinput, ajax='0')
         if  status == 'no data':
             # no data in raw cache, send POST request
             self.send_request('POST', kwargs)
@@ -570,8 +528,6 @@ class DASWebService(DASWebManager):
             id    = row['_id']
             page += '<div class="%s"><hr class="line" />' % style
             if  row.has_key('das'):
-                if  row['das'].has_key('empty_record'):
-                    continue
                 if  row['das'].has_key('primary_key'):
                     pkey  = row['das']['primary_key']
                     page += '<b>DAS key:</b> %s<br />' % pkey.split('.')[0]
@@ -601,11 +557,14 @@ class DASWebService(DASWebManager):
         % (self.base, show, uinput, ajaxreq)
         idict = dict(nrows=total, idx=idx,
                     limit=limit, results=page, url=url)
-        page  = self.templatepage('das_pagination', **idict)
+        if  total:
+            page = self.templatepage('das_pagination', **idict)
+        else:
+            page = 'No results found'
         return self.page(form + page, ctime=ctime)
 
     @exposetext
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def plainview(self, kwargs):
         """
         provide DAS plain view
@@ -618,7 +577,7 @@ class DASWebService(DASWebManager):
         return page
 
     @exposejson
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def yuijson(self, **kwargs):
         """
         Provide JSON in YUI compatible format to be used in DynamicData table
@@ -679,7 +638,7 @@ class DASWebService(DASWebManager):
         return jsondict
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def tableview(self, **kwargs):
         """
         provide DAS table view
@@ -721,7 +680,7 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
-    @checkargs
+    @checkargs(DAS_WEB_INPUTS)
     def status(self, **kwargs):
         """
         Place request to obtain status about given query
@@ -749,10 +708,14 @@ class DASWebService(DASWebManager):
         try:
             res  = urllib2_request('GET', url+path, params, headers=headers)
             data = json.loads(res)
+        except urllib2.HTTPError, httperror:
+            err = get_ecode(httperror.read())
+            self.logger.error(err)
+            data = {'status':'fail', 'reason': err}
         except:
             self.logger.error(traceback.format_exc())
             data = {'status':'fail'}
-        if  ajax:
+        if  int(ajax):
             cherrypy.response.headers['Content-Type'] = 'text/xml'
             if  data['status'] == 'ok':
                 page  = '<script type="application/javascript">reload()</script>'

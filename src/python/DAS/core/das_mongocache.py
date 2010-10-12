@@ -225,7 +225,7 @@ def compare_specs(input_query, exist_query):
             and not isinstance(val2, dict):
             return False
         elif (isinstance(val1, str) or isinstance(val1, unicode)) and \
-             (isinstance(val2, str) or isinstnace(val2, unicode)):
+             (isinstance(val2, str) or isinstance(val2, unicode)):
             if  val2.find('*') != -1:
                 val1 = val1.replace('*', '')
                 val2 = val2.replace('*', '')
@@ -462,6 +462,9 @@ class DASMongocache(object):
         query, dquery = convert2pattern(query)
         spec   = query.get('spec', {})
         fields = query.get('fields', None)
+        # always look-up non-empty records
+        spec.update({"das.empty_record":0})
+
         # loop over fields, since user interesting to see only results for
         # provided fields. Update spec to check that given field exists
         # in a query
@@ -503,6 +506,9 @@ class DASMongocache(object):
         spec   = query.get('spec', {})
         fields = query.get('fields', None)
 
+        # always look-up non-empty records
+        spec.update({'das.empty_record':0})
+
         # look-up API query
         recapi = self.col.find_one({"query":strquery})
 
@@ -523,15 +529,19 @@ class DASMongocache(object):
         try:
             if  limit:
                 if  skeys:
+                    print "CALLED w limit and skey", spec, fields
                     res = col.find(spec=spec, fields=fields)\
                         .sort(skeys).skip(idx).limit(limit)
                 else:
+                    print "CALLED w limit", spec, fields
                     res = col.find(spec=spec, fields=fields)\
                         .skip(idx).limit(limit)
             else:
                 if  skeys:
+                    print "CALLED w/o limit and w skey", spec, fields
                     res = col.find(spec=spec, fields=fields).sort(skeys)
                 else:
+                    print "CALLED w/o limit", spec, fields
                     res = col.find(spec=spec, fields=fields)
         except Exception as exp:
             row = {'exception': exp}
@@ -669,6 +679,7 @@ class DASMongocache(object):
         # create index on das.expire
         try:
             self.merge.create_index([('das.expire', ASCENDING)])
+            self.merge.create_index([('das.empty_record', DESCENDING)])
         except:
             pass
         inserted = 0
@@ -704,7 +715,7 @@ class DASMongocache(object):
                 pass
         if  not inserted: # we didn't merge anything
             empty_record = {'das':{'expire':expire, 'primary_key':lookup_keys,
-                                   'empty_record': 'true'}, 
+                                   'empty_record': 1}, 
                             'cache_id':[], 'das_id': id_list}
             spec = query['spec']
             if  isinstance(spec, dict):

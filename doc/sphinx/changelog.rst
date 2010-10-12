@@ -47,6 +47,13 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - fix queryspammer to handle generators; add weights
   - unify DAS configuration via das_option
   - Remove das docs from RPM, will run it stand-alone elsewhere
+  - Move checkargs into DAS.web.utils; reuse this decorator for all DAS servers
+    to sanitize input arguments; added new unit test for it
+  - Introduce DAS server codes, they resides in DAS.web.das_codes
+  - Change DAS server behavior to return HTTPError. The passed message contains
+    DAS server error code.
+  - fix #525, #542.
+  - fix issue with counting of empty records, #455
 
 - 0.5.0 till 0.5.2
 

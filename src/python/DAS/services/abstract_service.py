@@ -460,8 +460,8 @@ class DASAbstractService(object):
                     value = spec[key]
                     existing_value = ddict._get(key)
                     # the way to deal with proximity/patern/condition results
-                    if  isinstance(value, str) and \
-                        value.find('*') != -1: # we got pattern
+                    if  (isinstance(value, str) or isinstance(value, unicode))\
+                        and value.find('*') != -1: # we got pattern
                         if  existing_value:
                             value = existing_value
                     elif isinstance(value, dict) or \

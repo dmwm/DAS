@@ -16,6 +16,7 @@ import time
 from   types import GeneratorType
 import thread
 import cherrypy
+from   cherrypy import HTTPError, expose
 import traceback
 
 # monogo db modules
@@ -29,67 +30,14 @@ from DAS.utils.das_db import db_connection
 from DAS.utils.utils import getarg, genkey
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
+from DAS.utils.regex import web_arg_pattern
 from DAS.web.tools import exposejson
 from DAS.web.das_webmanager import DASWebManager
-from DAS.utils.regex import web_arg_pattern
+from DAS.web.das_codes import web_code
+from DAS.web.utils import checkargs
 
-def checkargs(func):
-    """Decorator to check arguments to REST server"""
-    def wrapper (self, *args, **kwds):
-        """Wrapper for decorator"""
-        # check request headers. For methods POST/PUT
-        # we need to read request body to get parameters
-        headers = cherrypy.request.headers
-        if  cherrypy.request.method == 'POST' or\
-            cherrypy.request.method == 'PUT':
-            try:
-                body = cherrypy.request.body.read()
-            except:
-                body = None
-            if  args and kwds:
-                msg  = 'Misleading request.\n'
-                msg += 'Request: %s\n' % cherrypy.request.method
-                msg += 'Headers: %s\n' % headers
-                msg += 'Parameters: args=%s, kwds=%s\n' % (args, kwds)
-                return {'status':'fail', 'reason': msg}
-            if  body:
-                jsondict = json.loads(body, encoding='latin-1')
-            else:
-                jsondict = kwds
-            for key, val in jsondict.items():
-                kwds[str(key)] = str(val)
-
-        pat = web_arg_pattern
-        supported = ['query', 'idx', 'limit', 'expire', 'method', 
-                     'skey', 'order', 'collection']
-        if  not kwds:
-            if  args:
-                kwds = args[-1]
-        keys = []
-        if  kwds:
-            keys = [i for i in kwds.keys() if i not in supported]
-        if  keys:
-            msg  = 'Unsupported keys: %s' % keys
-            return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('idx') and not pat.match(str(kwds['idx'])):
-            msg  = 'Unsupported value idx=%s' % (kwds['idx'])
-            return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('limit') and not pat.match(str(kwds['limit'])):
-            msg  = 'Unsupported value limit=%s' % (kwds['limit'])
-            return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('expire') and not pat.match(str(kwds['expire'])):
-            msg  = 'Unsupported value expire=%s' % (kwds['expire'])
-            return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('order'):
-            if  kwds['order'] not in ['asc', 'desc']:
-                msg  = 'Unsupported value order=%s' % (kwds['order'])
-                return {'status':'fail', 'reason': msg}
-        data = func (self, *args, **kwds)
-        return data
-    wrapper.__doc__ = func.__doc__
-    wrapper.__name__ = func.__name__
-    wrapper.exposed = True
-    return wrapper
+DAS_CACHE_INPUTS = ['query', 'idx', 'limit', 'expire', 'method', 
+             'skey', 'order', 'collection']
 
 class DASCacheService(DASWebManager):
     """
@@ -180,7 +128,8 @@ class DASCacheService(DASWebManager):
                 port=cherrypy.request.remote.port)
         self.col.insert(doc)
 
-    @checkargs
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
     def records(self, *args, **kwargs):
         """
         HTTP GET request.
@@ -191,9 +140,8 @@ class DASCacheService(DASWebManager):
         self.logger.info(msg)
         data  = {'server_method':'request'}
         if  not kwargs.has_key('query'):
-            data['status'] = 'fail'
-            data['reason'] = 'no query is provided'
-            return data
+            code = web_code('Invalid query')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
         # input query in JSON format, we should decode it using json.
         query = json.loads(kwargs.get('query'))
         coll  = kwargs.get('collection', 'merge')
@@ -219,13 +167,14 @@ class DASCacheService(DASWebManager):
             data['status'] = 'success'
             data['data']   = [r for r in gen]
         except:
-            self.debug(traceback.format_exc())
-            data['status'] = 'fail'
-            data['reason'] =  sys.exc_type
+            self.logger.error(traceback.format_exc())
+            code = web_code('Exception')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
         return data
 
-    @checkargs
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
     def status(self, *args, **kwargs):
         """
         HTTP GET request. Check status of the input query in DAS.
@@ -243,12 +192,13 @@ class DASCacheService(DASWebManager):
                 status = 'no data' 
             data.update({'status':status})
         else:
-            data.update({'status': 'fail', 
-                    'reason': 'Unsupported keys %s' % kwargs.keys() })
+            code = web_code('Invalid query')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
         return data
 
-    @checkargs
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
     def nresults(self, *args, **kwargs):
         """
         HTTP GET request. Ask DAS for total number of records
@@ -267,12 +217,13 @@ class DASCacheService(DASWebManager):
             res = self.dascore.in_raw_cache_nresults(query, coll)
             data.update({'status':'success', 'nresults':res})
         else:
-            data.update({'status': 'fail', 
-                    'reason': 'Unsupported keys %s' % kwargs.keys() })
+            code = web_code('Invalid query')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
         return data
 
-    @checkargs
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
     def test(self, *args, **kwargs):
         """
         HTTP GET test method. Should be used by external tools for
@@ -294,7 +245,8 @@ class DASCacheService(DASWebManager):
         data['ctime'] = time.time() - time0
         return data
 
-    @checkargs
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
     def testmongo(self, *args, **kwargs):
         """
         HTTP GET testmongo method. Should be used by external tools for
@@ -326,7 +278,8 @@ class DASCacheService(DASWebManager):
         data['ctime'] = time.time() - time0
         return data
 
-    @checkargs
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
     def request(self, *args, **kwargs):
         """
         HTTP GET request.
@@ -361,12 +314,13 @@ class DASCacheService(DASWebManager):
             data['status'] = 'success'
             data['nresults'] = tot
         else:
-            data.update({'status': 'fail', 
-                    'reason': 'Unsupported keys %s' % kwargs.keys() })
+            code = web_code('Invalid query')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
         return data
 
-    @checkargs
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
     def create(self, *args, **kwargs):
         """
         HTTP POST request. 
@@ -393,15 +347,17 @@ class DASCacheService(DASWebManager):
                 status = self.cachemgr.add(query)
                 data.update({'status':status, 'query':query})
             except:
-                data.update({'exception':traceback.format_exc(), 
-                             'status':'fail'})
+                self.logger.error(traceback.format_exc())
+                code = web_code('Exception')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
         else:
-            data.update({'status': 'fail', 
-                    'reason': 'Unsupported keys %s' % kwargs.keys() })
+            code = web_code('Invalid query')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
         return data
 
-    @checkargs
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
     def replace(self, *args, **kwargs):
         """
         HTTP PUT request.
@@ -420,23 +376,25 @@ class DASCacheService(DASWebManager):
             try:
                 self.dascore.remove_from_cache(query)
             except:
-                msg  = traceback.format_exc()
-                data.update({'status':'fail', 'query':query, 'exception':msg})
-                return data
+                self.logger.error(traceback.format_exc())
+                code = web_code('Exception')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
             expire = getarg(kwargs, 'expire', 600)
             try:
                 status = self.cachemgr.add(query, expire)
                 data.update({'status':status, 'query':query, 'expire':expire})
             except:
-                data.update({'status':'fail', 'query':query,
-                        'exception':traceback.format_exc()})
+                self.logger.error(traceback.format_exc())
+                code = web_code('Excepion')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
         else:
-            data.update({'status': 'fail', 
-                    'reason': 'Unsupported keys %s' % kwargs.keys() })
+            code = web_code('Invalid query')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
         return data
 
-    @checkargs
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
     def delete(self, *args, **kwargs):
         """
         HTTP DELETE request.
@@ -455,14 +413,16 @@ class DASCacheService(DASWebManager):
                 self.dascore.remove_from_cache(query)
                 data.update({'status':'success'})
             except:
-                msg  = traceback.format_exc()
-                data.update({'status':'fail', 'exception':msg})
+                self.logger.error(traceback.format_exc())
+                code = web_code('Exception')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
         else:
-            data.update({'status': 'fail', 
-                    'reason': 'Unsupported keys %s' % kwargs.keys() })
+            code = web_code('Invalid query')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
         return data
 
+    @expose
     @exposejson
     def rest(self, *args, **kwargs):
         """

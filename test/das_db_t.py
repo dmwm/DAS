@@ -2,7 +2,7 @@
 #pylint: disable-msg=C0301,C0103
 
 """
-Unit test for DAS PLY parser/lexer
+Unit test for DAS db methods
 """
 
 import time
@@ -12,9 +12,9 @@ import traceback
 from   DAS.utils.das_db import db_connection, make_uri
 from   DAS.utils.das_config import das_readconfig
 
-class testDASPLY(unittest.TestCase):
+class testDAS_DB(unittest.TestCase):
     """
-    A test class for the DAS PLY parser/lexer
+    A test class for the DAS db methods
     """
     def setUp(self):
         """

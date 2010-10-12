@@ -9,28 +9,165 @@ __revision__ = "$Id: utils.py,v 1.21 2010/04/30 16:41:18 valya Exp $"
 __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
-import re
-import types
 from   types import NoneType
 import time
 import httplib
 import urllib
 import urllib2
-import DAS.utils.jsonwrapper as json
-from DAS.utils.regex import number_pattern
+import cherrypy
+from   cherrypy import HTTPError
 
-def urllib2_request(request, url, params, headers={}, debug=0):
+# DAS modules
+import DAS.utils.jsonwrapper as json
+from   DAS.utils.regex import number_pattern
+from   DAS.utils.regex import web_arg_pattern
+from   DAS.web.das_codes import web_code
+
+def get_ecode(error):
+    """
+    Process input HTTPError and extract DAS error code. If not found
+    return back the error.
+    """
+    for line in error.split('\n'):
+        if  line.find('DAS error, code') != -1:
+            return line.strip().replace('<p>', '').replace('</p>', '')
+    return error
+
+def checkarg(kwds, arg, atype=str):
+    """Check arg in a dict that it has provided type"""
+    return kwds.has_key(arg) and isinstance(kwds[arg], atype)
+
+def checkargs(supported):
+    """
+    Decorator to check arguments in provided supported list for DAS servers
+    """
+    def wrap(func):
+        """Wrap input function"""
+        def wrapped_f(self, *args, **kwds):
+            """Wrap function arguments"""
+            # check request headers. For methods POST/PUT
+            # we need to read request body to get parameters
+            headers = cherrypy.request.headers
+            if  cherrypy.request.method == 'POST' or\
+                cherrypy.request.method == 'PUT':
+                try:
+                    body = cherrypy.request.body.read()
+                except:
+                    body = None
+                if  args and kwds:
+                    code = web_code('Misleading request')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+                if  body:
+                    jsondict = json.loads(body, encoding='latin-1')
+                else:
+                    jsondict = kwds
+                for key, val in jsondict.items():
+                    kwds[str(key)] = str(val)
+
+            pat = web_arg_pattern
+            if  not kwds:
+                if  args:
+                    kwds = args[-1]
+            keys = []
+            if  kwds:
+                keys = [i for i in kwds.keys() if i not in supported]
+            if  keys:
+                code  = web_code('Unsupported key')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'query') and not len(kwds['query']):
+                code  = web_code('Invalid query')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'expire') and not pat.match(str(kwds['expire'])):
+                code  = web_code('Unsupported expire value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'order'):
+                if  kwds['order'] not in ['asc', 'desc']:
+                    code  = web_code('Unsupported order value')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'skey') and not isinstance(kwds['skey'], str):
+                code  = web_code('Unsupported skey value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'input') and not len(kwds['input']):
+                code  = web_code('Invalid input')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'idx') and not pat.match(str(kwds['idx'])):
+                code  = web_code('Unsupported idx value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'limit') and not pat.match(str(kwds['limit'])):
+                code  = web_code('Unsupported limit value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'method'):
+                if  kwds['method'] not in ['GET', 'PUT', 'DELETE', 'POST']:
+                    code  = web_code('Unsupported method')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'dir'):
+                if  kwds['dir'] not in ['asc', 'desc']:
+                    code  = web_code('Unsupported dir value')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'sort'):
+                if  kwds['sort'] not in ['true', 'false']:
+                    code  = web_code('Unsupported sort value')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'view'):
+                if  kwds['view'] not in ['list', 'xml', 'json']:
+                    code  = web_code('Unsupported view')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'format'):
+                if  kwds['format'] not in ['xml', 'json']:
+                    code  = web_code('Unsupported format')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'database') and \
+                not isinstance(kwds['database'], str):
+                if  kwds['database'] not in \
+                    ['das', 'analytics', 'admin', 'logging', 'mapping']:
+                    code  = web_code('Unsupported database')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'collection'):
+                if  kwds['collection'] not in ['cache', 'merge']:
+                    code  = web_code('Unsupported collection')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'ajax'):
+                if  str(kwds['ajax']) not in ['0', '1']:
+                    code  = web_code('Unsupported ajax value')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'show'):
+                if  kwds['show'] not in ['json', 'code', 'yaml']:
+                    code  = web_code('Unsupported show value')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'dasquery') and not len(kwds['dasquery']):
+                code = web_code('Unsupported dasquery value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'dbcoll'):
+                if  kwds['dbcoll'].find('.') == -1:
+                    code = web_code('Unsupported dbcoll value')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'msg') and not isinstance(kwds['msg'], str):
+                code = web_code('Unsupported msg value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+            data = func (self, *args, **kwds)
+            return data
+        wrapped_f.__doc__  = func.__doc__
+        wrapped_f.__name__ = func.__name__
+        wrapped_f.exposed  = True
+        return wrapped_f
+    wrap.exposed = True
+    return wrap
+
+
+def urllib2_request(request, url, params, headers=None, debug=0):
     """request method using GET request from urllib2 library"""
+    if  not headers:
+        headers = {}
     if  request == 'GET' or request == 'DELETE':
-        encoded_data=urllib.urlencode(params, doseq=True)
+        encoded_data = urllib.urlencode(params, doseq=True)
         url += '?%s' % encoded_data
         req = UrlRequest(request, url=url, headers=headers)
     else:
-        encoded_data=json.dumps(params)
+        encoded_data = json.dumps(params)
         req = UrlRequest(request, url=url, data=encoded_data, headers=headers)
     if  debug:
-        h=urllib2.HTTPHandler(debuglevel=1)
-        opener = urllib2.build_opener(h)
+        hdlr   = urllib2.HTTPHandler(debuglevel=1)
+        opener = urllib2.build_opener(hdlr)
     else:
         opener = urllib2.build_opener()
     fdesc  = opener.open(req)
@@ -110,7 +247,6 @@ def json2html(idict, pad=""):
         if  key == 'das_id' or key == 'cache_id':
             if  isinstance(val, list):
                 value = '['
-                counter = 0
                 lpad = ' '*len(' "das_id": [')
                 _width = len("'', ")
                 for item in val:
@@ -121,7 +257,6 @@ def json2html(idict, pad=""):
                     value += \
                         "<a href=\"/das/records/%s?collection=cache\">%s</a>, "\
                         % (item, item)
-                    counter += 1
                 value = value[:-2] + ']'
             else:
                 value = "<a href=\"/das/records/%s?collection=cache\">%s</a>"\
@@ -148,9 +283,11 @@ def json2html(idict, pad=""):
                     if  isinstance(item, NoneType):
                         sss += """%s<code class="null">None</code>""" % ppp
                     elif  isinstance(item, int) or pat.match(str(item)):
-                        sss += """%s<code class="number">%s</code>""" % (ppp, item)
+                        sss += """%s<code class="number">%s</code>""" \
+                                % (ppp, item)
                     else:
-                        sss += """%s<code class="string">"%s"</code>""" % (ppp, item)
+                        sss += """%s<code class="string">"%s"</code>""" \
+                                % (ppp, item)
                 if  idx < len(val) - 1:
                     sss += ',' + nline
             sss += ']'

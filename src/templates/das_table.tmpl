@@ -41,7 +41,7 @@ YAHOO.example.DynamicData = function() {
     };
     // DataTable configuration
     var myConfigs = {
-        initialRequest: "$input&idx=0&limit=$rowsperpage", // Initial request for first page of data
+        initialRequest: $urllib.quote_plus($input)+"&idx=0&limit="+$urllib.quote_plus($rowsperpage), // Initial request for first page of data
         dynamicData: true, // Enables dynamic server-driven data
         sortedBy : {key:"id", dir:YAHOO.widget.DataTable.CLASS_ASC}, // Sets UI initial sort arrow
         paginator: new YAHOO.widget.Paginator({ rowsPerPage:$rowsperpage}) // Enables pagination 
