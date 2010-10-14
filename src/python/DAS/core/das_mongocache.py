@@ -275,28 +275,6 @@ def update_item(item, key, val):
                 newdict = {kkk : newdict}
         item[kkk] = newdict
 
-#def make_connection(dbhost, dbport, attempt):
-#    """
-#    Safely make connection to MongoDB.
-#    
-#    Waits 5-10 seconds after a connection failure
-#    before retrying.
-#    """
-#    if  not attempt or attempt < 0:
-#        msg = 'Unable to make connection to MongoDB after %s attempts' % attempt
-#        raise Exception(msg)
-#    try:
-#        conn = Connection(dbhost, dbport)
-#    except AutoReconnect:
-#        attempt -= 1
-#        time.sleep(5 + 5 * random.random())
-#        make_connection(dbhost, dbport, attempt)
-#    except ConnectionFailure:
-#        attempt -= 1
-#        time.sleep(5 + 5 * random.random())
-#        make_connection(dbhost, dbport, attempt)
-#    return conn
-
 class DASMongocache(object):
     """
     DAS cache based MongoDB. 
@@ -305,27 +283,24 @@ class DASMongocache(object):
         self.dbhost  = config['mongodb']['dbhost']
         self.dbport  = config['mongodb']['dbport']
         self.limit   = config['mongodb']['lifetime']
-        self.attempt = config['mongodb']['attempt']
         self.cache_size = config['mongodb']['bulkupdate_size']
-        self.dbname  = config['mongodb'].get('dbname', 'das')
+        self.dbname  = config['dasdb']['dbname']
         self.logger  = config['logger']
         self.verbose = config['verbose']
 
         self.conn    = db_connection(self.dbhost, self.dbport)
         self.mdb     = self.conn[self.dbname]
-        self.col     = self.mdb['cache']
-        self.mrcol   = self.mdb['mapreduce']
-        self.merge   = self.mdb['merge']
+        self.col     = self.mdb[config['dasdb']['cachecollection']]
+        self.mrcol   = self.mdb[config['dasdb']['mrcollection']]
+        self.merge   = self.mdb[config['dasdb']['mergecollection']]
 
-        msg = "DASMongocache::__init__ %s:%s@%s, Connection %s" \
-        % (self.dbhost, self.dbport, self.dbname, self.conn.__dict__)
+        msg = "DASMongocache::__init__ %s:%s@%s" \
+        % (self.dbhost, self.dbport, self.dbname)
         self.logger.info(msg)
 
         # get analytics db handler
-        analyticsdb    = config['analyticsdb'].\
-                get('analytics_dbname', 'analytics') 
-        collection     = config['analyticsdb'].\
-                get('analytics_collname', 'db') 
+        analyticsdb    = config['analyticsdb']['dbname']
+        collection     = config['analyticsdb']['collname']
         self.analytics = self.conn[analyticsdb][collection]
 
         self.add_manipulator()
@@ -529,19 +504,15 @@ class DASMongocache(object):
         try:
             if  limit:
                 if  skeys:
-                    print "CALLED w limit and skey", spec, fields
                     res = col.find(spec=spec, fields=fields)\
                         .sort(skeys).skip(idx).limit(limit)
                 else:
-                    print "CALLED w limit", spec, fields
                     res = col.find(spec=spec, fields=fields)\
                         .skip(idx).limit(limit)
             else:
                 if  skeys:
-                    print "CALLED w/o limit and w skey", spec, fields
                     res = col.find(spec=spec, fields=fields).sort(skeys)
                 else:
-                    print "CALLED w/o limit", spec, fields
                     res = col.find(spec=spec, fields=fields)
         except Exception as exp:
             row = {'exception': exp}

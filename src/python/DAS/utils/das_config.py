@@ -17,30 +17,28 @@ DAS_OPTIONS = [
 DASOption('mongodb', 'dbport', 'int', 27017),
 DASOption('mongodb', 'dbhost', 'string', 'localhost'),
 DASOption('mongodb', 'dbname', 'string', 'das'),
-DASOption('mongodb', 'attempt', 'int', 3),
 DASOption('mongodb', 'bulkupdate_size', 'int', 5000),
-DASOption('mongodb', 'capped_size', 'int', 100*1024*1024),
 DASOption('mongodb', 'lifetime', 'int', 1*24*60*60),
 
-DASOption('mappingdb', 'dbport', 'int', 27017),
-DASOption('mappingdb', 'dbhost', 'string', 'localhost'),
 DASOption('mappingdb', 'dbname', 'string', 'mapping'),
-DASOption('mappingdb', 'attempt', 'int', 3),
 DASOption('mappingdb', 'collname', 'string', 'db'),
 
-DASOption('analyticsdb', 'dbport', 'int', 27017),
-DASOption('analyticsdb', 'dbhost', 'string', 'localhost'),
 DASOption('analyticsdb', 'dbname', 'string', 'analytics'),
-DASOption('analyticsdb', 'attempt', 'int', 3),
 DASOption('analyticsdb', 'collname', 'string', 'db'),
                
-DASOption('parserdb', 'dbport', 'int', 27017),
-DASOption('parserdb', 'dbhost', 'string', 'localhost'),
 DASOption('parserdb', 'dbname', 'string', 'parser'),
-DASOption('parserdb', 'attempt', 'int', 3),
 DASOption('parserdb', 'collname', 'string', 'db'),
 DASOption('parserdb', 'enable', 'bool', True),
 DASOption('parserdb', 'sizecap', 'int', 1048576*5),
+
+DASOption('loggingdb', 'dbname', 'string', 'parser'),
+DASOption('loggingdb', 'collname', 'string', 'db'),
+DASOption('loggingdb', 'capped_size', 'int', 100*1024*1024),
+
+DASOption('dasdb', 'dbname', 'string', 'das'),
+DASOption('dasdb', 'cachecollection', 'string', 'cache'),
+DASOption('dasdb', 'mergecollection', 'string', 'merge'),
+DASOption('dasdb', 'mrcollection', 'string', 'mapreduce'),
 
 DASOption('cache_server', 'port', 'int', 8211),
 DASOption('cache_server', 'host', 'string', '0.0.0.0'),
@@ -68,7 +66,7 @@ DASOption('das', 'logfile', 'string', '/tmp/das.log', destination='logfile'),
 DASOption('das', 'logformat', 'string', 
                 '%(levelname)s %(message)s', destination='logformat'),
 DASOption('das', 'services', 'list', 
-                ['google_maps', 'ip', 'postalcode'], destination='services')
+                ['google_maps', 'ip', 'postalcode'], destination='services'),
 ]
 
 def read_configparser(dasconfig):

@@ -21,10 +21,9 @@ class DASParserDB(object):
     def __init__(self, config):
         self.verbose  = config['verbose']
         self.logger   = config['logger']
-        self.dbhost   = config['parserdb']['dbhost']
-        self.dbport   = config['parserdb']['dbport']
+        self.dbhost   = config['mongodb']['dbhost']
+        self.dbport   = config['mongodb']['dbport']
         self.dbname   = config['parserdb']['dbname']
-        self.attempts = config['parserdb']['attempt']
         self.sizecap  = config['parserdb']['sizecap']
         self.colname  = config['parserdb']['collname']
         

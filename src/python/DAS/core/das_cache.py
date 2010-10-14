@@ -62,7 +62,17 @@ class DASCacheMgr(object):
         except:
             pass
 
+# use this worker for thread pool and let it die/throw Exception
 def worker(query, verbose=None):
+    """
+    Invokes DAS core call to update the cache for provided query
+    """
+    logger  = DummyLogger()
+    dascore = DASCore(logger=logger, nores=True)
+    status  = dascore.call(query)
+
+# use this worker for multiprocessing since I can capture the status
+def worker_w_status(query, verbose=None):
     """
     Invokes DAS core call to update the cache for provided query
     """
@@ -104,7 +114,7 @@ def multiprocess_monitor(cachemgr, config):
                 if  not cachemgr.qmap.has_key(item):
                     continue
                 query  = cachemgr.qmap[item]
-                result = mypool.apply_async(worker, (query, verbose))
+                result = mypool.apply_async(worker_w_status, (query, verbose))
                 worker_proc[item] = result # bind result with worker
             except:
                 traceback.print_exc()

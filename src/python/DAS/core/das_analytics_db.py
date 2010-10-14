@@ -30,9 +30,8 @@ class DASAnalytics(object):
     def __init__(self, config):
         self.logger  = config['logger']
         self.verbose = config['verbose']
-        self.attempt = config['analyticsdb']['attempt']
-        self.dbhost  = config['analyticsdb']['dbhost']
-        self.dbport  = config['analyticsdb']['dbport']
+        self.dbhost  = config['mongodb']['dbhost']
+        self.dbport  = config['mongodb']['dbport']
         self.dbname  = config['analyticsdb']['dbname']
         self.colname = config['analyticsdb']['collname']
 

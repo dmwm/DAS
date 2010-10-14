@@ -17,12 +17,13 @@ import urllib
 import urllib2
 import cherrypy
 import traceback
+import thread
 
 import yaml
 from pprint import pformat
 
 from itertools import groupby
-from cherrypy import expose
+from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from json import JSONEncoder
 
@@ -32,6 +33,8 @@ from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators
 from DAS.utils.utils import getarg, access
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
+from DAS.utils.das_config import das_readconfig
+from DAS.utils.das_db import db_connection, connection_monitor
 from DAS.web.utils import urllib2_request, json2html, web_time
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.tools import exposedasjson, exposetext
@@ -52,10 +55,6 @@ class DASWebService(DASWebManager):
         DASWebManager.__init__(self, config)
         self.cachesrv   = config['cache_server_url']
         self.base       = config['url_base']
-        self.dasmgr     = DASCore()
-        self.daskeys    = self.dasmgr.das_keys()
-        self.daskeys.sort()
-        self.dasmapping = self.dasmgr.mapping
         logfile  = config['logfile']
         loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
@@ -63,6 +62,24 @@ class DASWebService(DASWebManager):
         self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
+        dasconfig = das_readconfig()
+        dbhost = dasconfig['mongodb']['dbhost']
+        dbport = dasconfig['mongodb']['dbport']
+
+        self.init()
+        # Monitoring thread which performs auto-reconnection
+        thread.start_new_thread(connection_monitor, \
+                (dbhost, dbport, self.init, 5))
+
+    def init(self):
+        """Init DAS web server, connect to DAS Core"""
+        try:
+            self.dasmgr     = DASCore()
+            self.daskeys    = self.dasmgr.das_keys()
+            self.daskeys.sort()
+            self.dasmapping = self.dasmgr.mapping
+        except:
+            self.dasmgr = None
 
     @expose
     @checkargs(DAS_WEB_INPUTS)

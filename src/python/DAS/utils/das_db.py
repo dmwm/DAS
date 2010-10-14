@@ -10,10 +10,26 @@ __revision__ = "$Id: das_db.py,v 1.9 2010/05/04 21:12:19 valya Exp $"
 __version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
+import time
 import types
+import traceback
 
 # monogo db modules
 from pymongo.connection import Connection
+
+def connection_monitor(dbhost, dbport, func, sleep=5):
+    """
+    Monitor connection to MongoDB and invoke provided function
+    upon successfull connection. This function can be used in DAS server
+    for monitoring MongoDB connections.
+    """
+    conn = db_connection(dbhost, dbport)
+    while True:
+        time.sleep(sleep)
+        if  not conn:
+            conn = db_connection(dbhost, dbport)
+            if  conn:
+                func()
 
 def make_uri(pairs):
     """Return MongoDB URI for provided set of dbhost,dbport pairs"""
@@ -47,14 +63,22 @@ class _DBConnectionSingleton(object):
         pair = (dbhost, dbport)
         uri  = make_uri([pair])
         if  not self.conndict.has_key(uri):
-            self.conndict[uri] = Connection(uri)
+            try:
+                self.conndict[uri] = Connection(uri)
+            except:
+                traceback.print_exc()
+                return None
         return self.conndict[uri]
 
     def connections(self, pairs):
         """Return MongoDB connection"""
         uri  = make_uri(pairs)
         if  not self.conndict.has_key(uri):
-            self.conndict[uri] = Connection(uri)
+            try:
+                self.conndict[uri] = Connection(uri)
+            except:
+                traceback.print_exc()
+                return None
         return self.conndict[uri]
 
 DB_CONN_SINGLETON = _DBConnectionSingleton()

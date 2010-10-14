@@ -30,10 +30,9 @@ class DASMapping(object):
         self.logger   = config['logger']
         self.verbose  = config['verbose']
         self.services = config['services']
-        self.dbhost   = config['mappingdb']['dbhost']
-        self.dbport   = config['mappingdb']['dbport']
+        self.dbhost   = config['mongodb']['dbhost']
+        self.dbport   = config['mongodb']['dbport']
         self.dbname   = config['mappingdb']['dbname']
-        self.attempt  = config['mappingdb']['attempt']
         self.colname  = config['mappingdb']['collname']
 
         msg = "DASMapping::__init__ %s:%s@%s" \

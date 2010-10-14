@@ -12,6 +12,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import json
+import thread
 import urllib
 import traceback
 from pprint import pformat
@@ -22,7 +23,7 @@ from cherrypy import expose, response, request, HTTPRedirect, HTTPError
 # DAS modules
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.utils import genkey
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, connection_monitor
 from DAS.utils.regex import web_arg_pattern
 from DAS.core.das_core import DASCore
 from DAS.core.das_mongocache import convert2pattern, encode_mongo_query
@@ -73,11 +74,20 @@ class DASExpertService(DASWebManager):
         das_config  = das_readconfig()
         self.dbhost = das_config['mongodb']['dbhost']
         self.dbport = das_config['mongodb']['dbport']
-        self.conn   = db_connection(self.dbhost, self.dbport)
         self.dasconfig = das_config
-        self.das    = DASCore(debug=0, nores=True)
-#        msg = 'DASExpertService, Connection %s' % self.conn.__dict__
-#        self.logger.info(msg)
+        self.init()
+        # Monitor thread which performs auto-reconnection
+        thread.start_new_thread(connection_monitor, \
+                (self.dbhost, self.dbport, self.init, 5))
+
+    def init(self):
+        """Connect to DASCore"""
+        try:
+            self.conn   = db_connection(self.dbhost, self.dbport)
+            self.das    = DASCore(debug=0, nores=True)
+        except:
+            self.conn = None
+            self.das  = None
 
     @expose
     @checkargs(DAS_EXPERT_INPUTS)

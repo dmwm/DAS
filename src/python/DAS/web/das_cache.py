@@ -26,7 +26,7 @@ from pymongo.objectid import ObjectId
 import DAS.utils.jsonwrapper as json
 from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCacheMgr, thread_monitor
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, connection_monitor
 from DAS.utils.utils import getarg, genkey
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
@@ -80,23 +80,16 @@ class DASCacheService(DASWebManager):
         self.methods['DELETE'] = {'delete':
                 {'args':['query'],
                  'call': self.delete, 'version':__version__}}
-        dasconfig     = das_readconfig()
-        dbhost        = dasconfig['mongodb']['dbhost']
-        dbport        = dasconfig['mongodb']['dbport']
-        capped_size   = dasconfig['mongodb']['capped_size']
-        self.con      = db_connection(dbhost, dbport)
-        if  'logging' not in self.con.database_names():
-            dbname    = self.con['logging']
-            options   = {'capped':True, 'size': capped_size}
-            dbname.create_collection('db', **options)
-            self.warning('Created logging.db, size=%s' % capped_size)
-        self.col      = self.con['logging']['db']
-        sleep         = dasconfig.get('sleep', 2)
+        self.dasconfig   = das_readconfig()
+        self.dbhost      = self.dasconfig['mongodb']['dbhost']
+        self.dbport      = self.dasconfig['mongodb']['dbport']
+        self.qlimit      = self.dasconfig['cache_server']['queue_limit'] 
+
+        sleep         = self.dasconfig.get('sleep', 2)
         verbose       = int(config.get('loglevel'))
         logfile       = config.get('logfile')
-        self.qlimit   = dasconfig['cache_server']['queue_limit'] 
         logformat     = '%(levelname)s - %(message)s'
-        nprocs        = dasconfig['cache_server']['n_worker_threads']
+        nprocs        = self.dasconfig['cache_server']['n_worker_threads']
         logger        = DASLogger(logfile=logfile, verbose=verbose, 
                         name='DASCacheServer', format=logformat)
         self.logger   = logger
@@ -106,11 +99,34 @@ class DASCacheService(DASWebManager):
         self.cachemgr = DASCacheMgr(iconfig)
         thread.start_new_thread(thread_monitor, (self.cachemgr, iconfig))
 
-        self.dascore  = DASCore()
-        msg  = 'DASCacheService::init, host=%s, port=%s, capped_size=%s' \
-                % (dbhost, dbport, capped_size)
-        msg += ' Connection %s' % self.con.__dict__
+        msg  = 'DASCacheService::init'
         self.logger.info(msg)
+
+        self.init()
+        # Monitoring thread which performs auto-init of the server
+        thread.start_new_thread(connection_monitor, \
+                (self.dbhost, self.dbport, self.init, 5))
+
+    def init(self):
+        """
+        Init DAS cache server, connect to DAS Core, etc.
+        """
+        capped_size = self.dasconfig['loggingdb']['capped_size']
+        logdbname   = self.dasconfig['loggingdb']['dbname']
+        logdbcoll   = self.dasconfig['loggingdb']['collname']
+        try:
+            self.con      = db_connection(self.dbhost, self.dbport)
+            if  logdbname not in self.con.database_names():
+                dbname    = self.con[logdbname]
+                options   = {'capped':True, 'size': capped_size}
+                dbname.create_collection('db', **options)
+                self.warning('Created %s.%s, size=%s' \
+                % (logdbname, logdbcoll, capped_size))
+            self.col      = self.con[logdbname][logdbcoll]
+            self.dascore  = DASCore()
+        except:
+            self.con  = None
+            self.dascore = None
 
     def logdb(self, query):
         """
