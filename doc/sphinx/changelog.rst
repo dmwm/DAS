@@ -54,6 +54,10 @@ map is represented data-service URI (URL, input parameters, API, etc.).
     DAS server error code.
   - fix #525, #542.
   - fix issue with counting of empty records, #455
+  - Handle the case when MongoDB is down. Both DAS servers can
+    handle now outage of MongoDB either at start-up or during their
+    operations. Adjust code to use a single mongodb host/port across all
+    databases, fix #566
 
 - 0.5.0 till 0.5.2
 
