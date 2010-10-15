@@ -29,7 +29,7 @@ class testUtils(unittest.TestCase):
     def test_expire_timestamp(self):
         """Test expire_timestamp function"""
         result = expire_timestamp('Mon, 04 Oct 2010 18:57:42 GMT')
-        expect = 1286236662
+        expect = 1286218662
         self.assertEqual(result, expect)
 
         tstamp = time.time() + 10000
