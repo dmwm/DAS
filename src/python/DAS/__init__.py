@@ -12,4 +12,4 @@ __revision__ = "$Id: __init__.py,v 1.8 2010/04/30 17:14:35 valya Exp $"
 __version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
-version = "0.5.3c"
+version = "0.5.3d"
