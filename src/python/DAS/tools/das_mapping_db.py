@@ -69,10 +69,10 @@ if __name__ == '__main__':
     logfile   = dasconfig['das'].get('logfile', None)
     logger    = DASLogger(logfile=logfile, verbose=opts.debug)
     dbname, colname = opts.db.split('.')
-    mappingdb = dict(dbhost=opts.host, dbport=opts.port, 
-                dbname=dbname, collname=colname, attempt=3)
+    mongodb   = dict(dbhost=opts.host, dbport=opts.port)
+    mappingdb = dict(dbname=dbname, collname=colname)
     config    = dict(logger=logger, verbose=opts.debug, mappingdb=mappingdb,
-                attempt=3, services=dasconfig['das'].get('services', []))
+                mongodb=mongodb, services=dasconfig['das'].get('services', []))
 
     mgr = DASMapping(config)
 
