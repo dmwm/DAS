@@ -7,7 +7,7 @@ The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
 
-- 0.5.3
+- 0.5.3 series
 
   - Clean-up %post and do not package docs over there
   - All names in bin are adjusted to one schema: das_<task>.
@@ -58,6 +58,8 @@ map is represented data-service URI (URL, input parameters, API, etc.).
     handle now outage of MongoDB either at start-up or during their
     operations. Adjust code to use a single mongodb host/port across all
     databases, fix #566
+  - Remove from all unit test hardcoded value for mongodb host/port,
+    instead use those from DAS configuration file
 
 - 0.5.0 till 0.5.2
 
