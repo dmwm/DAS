@@ -84,7 +84,7 @@ def expire_timestamp(expire):
     # check if we provided with HTTP header string
     if  isinstance(expire, str) and \
         expire.find(',') != -1 and expire.find(':') != -1:
-        return time.mktime(time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z'))
+        return calendar.timegm(time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z'))
     tstamp = time.time()
     # use Jan 1st, 2010 as a seed to check expire date
     # prior 2010 DAS was not released in production

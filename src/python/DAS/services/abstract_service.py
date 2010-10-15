@@ -517,8 +517,10 @@ class DASAbstractService(object):
                 headers = make_headers(dformat)
                 data    = self.getdata(url, args, headers)
                 try: # get HTTP header and look for Expires
-                    e_time = data.info().__dict__['dict']['expires']
-                    expire = expire_timestamp(e_time)
+                    e_time = expire_timestamp(\
+                        data.info().__dict__['dict']['expires'])
+                    if  e_time > time.time():
+                        expire = e_time
                 except:
                     pass
                 rawrows = self.parser(query, dformat, data, api)
