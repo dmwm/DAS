@@ -60,6 +60,9 @@ map is represented data-service URI (URL, input parameters, API, etc.).
     databases, fix #566
   - Remove from all unit test hardcoded value for mongodb host/port,
     instead use those from DAS configuration file
+  - Use calendar.timegm instead of time.mktime to correctly convert 
+    timestamp into sec since epoch; protect expire timestamp overwrite 
+    if exires timestamp is less then local time
 
 - 0.5.0 till 0.5.2
 
