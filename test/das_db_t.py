@@ -27,14 +27,14 @@ class testDAS_DB(unittest.TestCase):
 
     def test_make_uri(self):
         """Test DAS PLY lexer"""
-        pairs  = [('localhost', 27017), ('a.b.com', 8888)]
+        pairs  = [(self.dbhost, self.dbport), ('a.b.com', 8888)]
         result = make_uri(pairs)
-        expect = 'mongodb://localhost:27017,a.b.com:8888'
+        expect = 'mongodb://%s:%s,a.b.com:8888' % (self.dbhost, self.dbport)
         self.assertEqual(expect, result)
 
-        pairs  = [('localhost', 27017)]
+        pairs  = [(self.dbhost, self.dbport)]
         result = make_uri(pairs)
-        expect = 'mongodb://localhost:27017'
+        expect = 'mongodb://%s:%s' % (self.dbhost, self.dbport)
         self.assertEqual(expect, result)
 
         pairs = [('localhost', 1.1)]

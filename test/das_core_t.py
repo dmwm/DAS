@@ -25,7 +25,10 @@ class testDASCore(unittest.TestCase):
         """
         debug = 0
         self.das = DASCore(debug=debug)
-        connection = Connection("localhost", 27017)
+        config = das_readconfig()
+        dbhost = config['mongodb']['dbhost']
+        dbport = config['mongodb']['dbport']
+        connection = Connection(dbhost, dbport)
         connection.drop_database('das') 
 
     def testAddressService(self):

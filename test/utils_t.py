@@ -80,7 +80,7 @@ class testUtils(unittest.TestCase):
     def test_aggregator(self):
         """Test aggregator function"""
         # 1 row in results
-        das  = {'expire': 10, 'primary_key':'vk'}
+        das  = {'expire': 10, 'primary_key':'vk', 'empty_record': 0}
         row  = {'run':10, 'das':das, '_id':1, 'das_id':1}
         rows = (row for i in range(0,1))
         result = [r for r in aggregator(rows, das['expire'])]
@@ -100,7 +100,7 @@ class testUtils(unittest.TestCase):
         self.assertEqual(result, expect)
 
         # 2 rows with common value for common key
-        das  = {'expire': 10, 'primary_key':'run.a'}
+        das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0}
         rows = []
         row  = {'run':{'a':1,'b':1}, 'das':das, '_id':1, 'das_id':1}
         rows.append(row)
