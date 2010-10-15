@@ -39,8 +39,6 @@ class DASParserDB(object):
         Create db collection
         """
         conn = db_connection(self.dbhost, self.dbport)
-        msg  = 'DASParserCache, Connection %s' % conn.__dict__
-        self.logger.info(msg)
         dbn  = conn[self.dbname]
         if self.colname not in dbn.collection_names() and self.sizecap > 0:
             dbn.create_collection(self.colname, capped=True, size=self.sizecap)
