@@ -76,7 +76,7 @@ class TemplatedPage(Page):
         Page.__init__(self)
         templatedir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'templates')
         if  not os.path.isdir(templatedir):
-            templatedir  = os.environ['DAS_ROOT'] + '/src/templates'
+            templatedir  = os.environ['DAS_TMPLPATH']
         self.templatedir = config.get('templatedir', templatedir)
         self.name = "TemplatedPage"
         self.debug("Templates are located in: %s" % self.templatedir)

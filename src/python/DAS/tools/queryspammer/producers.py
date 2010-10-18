@@ -209,14 +209,6 @@ class MappingProducer(Producer):
                                            random.choice(presentation_keys))
         
         return query
-            
-        
-        
-    
-        
-                    
-    
-
 
 class YAMLProducer(Producer):
     "Baseclass for data producers using a DAS yaml map"
@@ -225,10 +217,7 @@ class YAMLProducer(Producer):
         self.data = data
         self.keys = {} #key->subkeys
         self.keymap = {} #key->map
-        yamlfile = os.environ['DAS_ROOT'] +\
-                    ('/' if not os.environ['DAS_ROOT'][-1]=='/' else '') +\
-                     'src/python/DAS/services/maps/' +\
-                      yamlfile
+        yamlfile = os.environ['DAS_MAPS'] + yamlfile
         for block in yaml.load_all(open(yamlfile).read()):
             keys = []
             for key in block.get('daskeys', []):

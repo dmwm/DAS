@@ -69,13 +69,13 @@ class DASWebManager(TemplatedPage):
         self.base   = '' # defines base path for HREF in templates
         self.imgdir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'images')
         if  not os.path.isdir(self.imgdir):
-            self.imgdir = os.environ['DAS_ROOT'] + '/src/images'
+            self.imgdir = os.environ['DAS_IMAGESPATH']
         self.cssdir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'css')
         if  not os.path.isdir(self.cssdir):
-            self.cssdir = os.environ['DAS_ROOT'] + '/src/css'
+            self.cssdir = os.environ['DAS_CSSPATH']
         self.jsdir  = '%s/%s' % (__file__.rsplit('/', 1)[0], 'js')
         if  not os.path.isdir(self.jsdir):
-            self.jsdir = os.environ['DAS_ROOT'] + '/src/js'
+            self.jsdir = os.environ['DAS_JSPATH']
         if  not os.environ.has_key('YUI_ROOT'):
             msg = ''
             raise Exception(msg)

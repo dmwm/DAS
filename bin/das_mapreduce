@@ -3,10 +3,10 @@
 # setup environment
 #. `dirname $0`/setup.sh
 
-if  [ -z $DAS_PYTHONROOT ]; then
-   echo "DAS_PYTHONROOT environment is not set"
+if  [ -z $DAS_PYTHONPATH ]; then
+   echo "DAS_PYTHONPATH environment is not set"
    exit 1
 fi
 
 # run actual script
-$DAS_PYTHONROOT/DAS/tools/das_map_reduce.py ${1+"$@"}
+$DAS_PYTHONPATH/DAS/tools/das_map_reduce.py ${1+"$@"}

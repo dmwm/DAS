@@ -1,8 +1,8 @@
 #!/bin/sh
 
-if  [ -z $DAS_PYTHONROOT ]; then
-   echo "DAS_PYTHONROOT environment is not set"
+if  [ -z $DAS_PYTHONPATH ]; then
+   echo "DAS_PYTHONPATH environment is not set"
    exit 1
 fi
 
-$DAS_PYTHONROOT/DAS/analytics/analytics_controller.py ${1+"$@"}
+$DAS_PYTHONPATH/DAS/analytics/analytics_controller.py ${1+"$@"}

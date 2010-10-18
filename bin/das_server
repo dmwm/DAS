@@ -3,10 +3,14 @@
 # setup environment
 #. `dirname $0`/setup.sh
 
-if  [ -z $DAS_PYTHONROOT ]; then
-   echo "DAS_PYTHONROOT environment is not set"
-   exit 1
-fi
+foo=valya
+
+for dasenv in DAS_PYTHONPATH DAS_TMPLPATH DAS_JSPATH DAS_IMAGESPATH DAS_CSSPATH; do
+   if [ -z `env | grep $dasenv` ]; then
+       echo "The environment variable $dasenv must be set"
+       exit 1
+   fi
+done
 
 usage="Usage: das_server <web|cache> {start|stop|status|restart|stdout}"
 if [ $# != 2 ]; then
@@ -17,17 +21,11 @@ fi
 server="$1"
 
 # run actual script
-cmd="$DAS_PYTHONROOT/DAS/web/das_server.py --server=$server"
-
-if [ -z $DAS_ROOT ]; then
-   echo "The DAS_ROOT environment is not set"
-   exit 1
-fi
+cmd="$DAS_PYTHONPATH/DAS/web/das_server.py --server=$server"
 
 RETVAL=$?
 
 pid=`ps auxwww | grep das_server.py | grep "server=$server" | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
-#echo $pid
 
 function das_server_status()
 {

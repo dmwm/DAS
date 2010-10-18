@@ -57,7 +57,7 @@ class MapReduceMgr(object):
         self.port   = port
         self.conn   = Connection(host, port)
         self.mapreduce = self.conn['das']['mapreduce']
-        self.tmpldir   = os.path.join(os.environ['DAS_ROOT'], 'src/templates')
+        self.tmpldir   = os.environ['DAS_TMPLROOT']
 
     def add_mapreduce(self, name, fmap, freduce):
         """

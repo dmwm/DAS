@@ -134,8 +134,8 @@ class DASWebService(DASWebManager):
         """
         Serve DAS CLI file download.
         """
-        clifile = os.path.join(os.environ['DAS_ROOT'], 
-                'src/python/DAS/tools/das_cache_client.py')
+        clifile = os.path.join(os.environ['DAS_PYTHONPATH'], 
+                'DAS/tools/das_cache_client.py')
         return serve_file(clifile, content_type='text/plain')
 
     @expose

@@ -1,7 +1,7 @@
 #!/bin/sh
 
-if  [ -z $DAS_PYTHONROOT ]; then
-   echo "DAS_PYTHONROOT environment is not set"
+if  [ -z $DAS_PYTHONPATH ]; then
+   echo "DAS_PYTHONPATH environment is not set"
    exit 1
 fi
 
@@ -16,7 +16,7 @@ cmd=`ls $dir/$SCRAM_ARCH/cms/cmssw/ | egrep '^CMSSW_*' | sed "s,/,,g"`
 for release in $cmd
 do
     echo "Trying $release ..."
-    echo "$DAS_PYTHONROOT/DAS/tools/cmssw_config_db.py --path=$dir --release=$release"
-    $DAS_PYTHONROOT/DAS/tools/cmssw_config_db.py --path=$dir --release=$release
+    echo "$DAS_PYTHONPATH/DAS/tools/cmssw_config_db.py --path=$dir --release=$release"
+    $DAS_PYTHONPATH/DAS/tools/cmssw_config_db.py --path=$dir --release=$release
 done
 

@@ -64,7 +64,8 @@ performed stress tests and code audit DAS servers.
     timestamp into sec since epoch; protect expire timestamp overwrite 
     if exires timestamp is less then local time
   - Add empty_record=0 into DAS records, to allow consistent look-up
-  - Change to use DAS_PYTHONROOT in scripts to allow DAS code relocation
+  - Added DAS_PYTHONROOT, DAS_TMPLROOT, DAS_IMAGESROOT, DAS_CSSROOT, DAS_JSROOT
+    to allow DAS code relocation
 
 - 0.5.0 till 0.5.2
 
