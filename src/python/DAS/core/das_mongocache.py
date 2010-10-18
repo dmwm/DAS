@@ -753,6 +753,7 @@ class DASMongocache(object):
             self.logger.info(msg)
             q_record = dict(das=dasheader, query=encode_mongo_query(query))
             q_record['das']['lookup_keys'] = lkeys
+            q_record['das']['empty_record'] = 0
             objid  = self.col.insert(q_record)
             index_list = [('das.qhash', DESCENDING), 
                           ('das.expire', ASCENDING),
@@ -805,7 +806,8 @@ class DASMongocache(object):
                 if  item.has_key('exception') or item.has_key('error'):
                     continue
                 counter += 1
-                item['das'] = dict(expire=expire, primary_key=prim_key)
+                item['das'] = dict(expire=expire, primary_key=prim_key, 
+                                        empty_record=0)
                 item['das_id'] = str(objid)
                 yield item
         else:
