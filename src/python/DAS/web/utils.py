@@ -87,7 +87,7 @@ def checkargs(supported):
             if  checkarg(kwds, 'skey') and not isinstance(kwds['skey'], str):
                 code  = web_code('Unsupported skey value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'input') and not len(kwds['input']):
+            if  kwds.has_key('input') and not isinstance(kwds['input'], str):
                 code  = web_code('Invalid input')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'idx') and not pat.match(str(kwds['idx'])):
