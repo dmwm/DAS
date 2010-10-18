@@ -104,7 +104,8 @@ package_data = {
 }
 #packages     = find_packages('src/python/DAS') 
 packages     = find_packages('src/python/') 
-packages    += ['src/css', 'src/js', 'src/templates', 'src/python/parser', 'etc', 'bin', 'test', 'doc']
+packages    += ['src/css', 'src/js', 'src/templates', 'src/images', 
+                'src/python/parser', 'etc', 'bin', 'test', 'doc']
 license      = "CMS experiment software"
 classifiers  = [
     "Development Status :: 3 - Production/Beta",
