@@ -1,3 +1,8 @@
 #!/bin/sh
 
-$DAS_ROOT/src/python/DAS/analytics/analytics_controller.py ${1+"$@"}
+if  [ -z $DAS_PYTHONROOT ]; then
+   echo "DAS_PYTHONROOT environment is not set"
+   exit 1
+fi
+
+$DAS_PYTHONROOT/DAS/analytics/analytics_controller.py ${1+"$@"}

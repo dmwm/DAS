@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if  [ -z $DAS_PYTHONROOT ]; then
+   echo "DAS_PYTHONROOT environment is not set"
+   exit 1
+fi
+
 if  [ $# != 3 ]; then
    echo "Usage: das_map <location of the map directory> <dbhost> <dbport>"
    exit 1
@@ -8,7 +13,7 @@ dir=$1
 host=$2
 port=$3
 echo "Read DAS maps from $dir"
-cmd="$DAS_ROOT/src/python/DAS/tools/das_mapping_db.py --host=$host --port=$port"
+cmd="$DAS_PYTHONROOT/DAS/tools/das_mapping_db.py --host=$host --port=$port"
 echo $cmd
 
 # run actual script

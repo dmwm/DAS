@@ -1,6 +1,11 @@
 #!/bin/bash
 
-#find $DASHOME -name "*.py" | \
+if  [ -z $DAS_PYTHONROOT ]; then
+   echo "DAS_PYTHONROOT environment is not set"
+   exit 1
+fi
+
+#find $DAS_PYTHONROOT -name "*.py" | \
 #awk '{print "echo; echo \"running pylint tests for "$0"\"; pylint "$0" | grep \"Your code\""}' | \
 #/bin/sh | awk '{split($0,a,"("); print a[1]}'
 
@@ -24,8 +29,8 @@ fi
 echo "Run pylint with $thr/10 threashold level, exit immediate=$immediate"
 echo
 
-#files=`find $DASHOME -name "*.py" | grep -v ipy_profile_mongo`
-files=`find $DASHOME -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py`
+#files=`find $DAS_PYTHONROOT -name "*.py" | grep -v ipy_profile_mongo`
+files=`find $DAS_PYTHONROOT -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py`
 fail_files=0
 for f in $files
 do

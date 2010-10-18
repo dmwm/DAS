@@ -1,4 +1,9 @@
 #!/bin/sh
 
+if  [ -z $DAS_PYTHONROOT ]; then
+   echo "DAS_PYTHONROOT environment is not set"
+   exit 1
+fi
+
 # run actual script
-$DAS_ROOT/src/python/DAS/tools/queryspammer/queryspammer.py ${1+"$@"}
+$DAS_PYTHONROOT/DAS/tools/queryspammer/queryspammer.py ${1+"$@"}

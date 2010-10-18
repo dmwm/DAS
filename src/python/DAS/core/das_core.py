@@ -97,10 +97,13 @@ class DASCore(object):
         # dasconfig; load appropriate module/class; register data
         # service with DASCore.
         self.systems = dasmapping.list_systems()
+        if  not os.environ.has_key('DAS_PYTHONROOT'):
+            msg = 'DAS_PYTHONROOT environment variable is not set'
+            raise Exception(msg)
         for name in self.systems:
             try:
-                klass  = 'src/python/DAS/services/%s/%s_service.py'\
-                    % (name, name)
+                klass  = '%s/DAS/services/%s/%s_service.py' \
+                    % (os.environ['DAS_PYTHONROOT'], name, name)
                 srvfile = os.path.join(dasroot, klass)
                 with file(srvfile) as srvclass:
                     for line in srvclass:

@@ -7,7 +7,7 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
-- 0.5.3 series
+- 0.5.3 - 0.5.4 series
 
   - Clean-up %post and do not package docs over there
   - All names in bin are adjusted to one schema: das_<task>.
@@ -64,6 +64,7 @@ performed stress tests and code audit DAS servers.
     timestamp into sec since epoch; protect expire timestamp overwrite 
     if exires timestamp is less then local time
   - Add empty_record=0 into DAS records, to allow consistent look-up
+  - Change to use DAS_PYTHONROOT in scripts to allow DAS code relocation
 
 - 0.5.0 till 0.5.2
 

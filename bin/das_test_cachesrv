@@ -3,6 +3,11 @@
 # setup environment
 #. `dirname $0`/setup.sh
 
+if  [ -z $DAS_PYTHONROOT ]; then
+   echo "DAS_PYTHONROOT environment is not set"
+   exit 1
+fi
+
 # run actual script
-$DAS_ROOT/src/python/DAS/tools/test_cachesrv.py ${1+"$@"}
+$DAS_PYTHONROOT/DAS/tools/test_cachesrv.py ${1+"$@"}
 

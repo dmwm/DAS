@@ -3,5 +3,10 @@
 # setup environment
 #. `dirname $0`/setup.sh
 
-cmd=$DAS_ROOT/src/python/DAS/tools/das_mapping_db.py
+if  [ -z $DAS_PYTHONROOT ]; then
+   echo "DAS_PYTHONROOT environment is not set"
+   exit 1
+fi
+
+cmd=$DAS_PYTHONROOT/DAS/tools/das_mapping_db.py
 $cmd ${1+"$@"}

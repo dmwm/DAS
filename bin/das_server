@@ -3,6 +3,11 @@
 # setup environment
 #. `dirname $0`/setup.sh
 
+if  [ -z $DAS_PYTHONROOT ]; then
+   echo "DAS_PYTHONROOT environment is not set"
+   exit 1
+fi
+
 usage="Usage: das_server <web|cache> {start|stop|status|restart|stdout}"
 if [ $# != 2 ]; then
     echo $usage
@@ -12,7 +17,7 @@ fi
 server="$1"
 
 # run actual script
-cmd="$DAS_ROOT/src/python/DAS/web/das_server.py --server=$server"
+cmd="$DAS_PYTHONROOT/DAS/web/das_server.py --server=$server"
 
 if [ -z $DAS_ROOT ]; then
    echo "The DAS_ROOT environment is not set"
