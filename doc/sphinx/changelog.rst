@@ -1,11 +1,11 @@
 DAS release notes
 =================
 
-Release V04 series
-------------------
-The most significant part of this release is new plug-and-play mechanism
-to add new data-services. This is done via data-service map creation. Each
-map is represented data-service URI (URL, input parameters, API, etc.).
+Release 0.5.X series
+--------------------
+This release series is targeted to DAS stability. We redesigned DAS-QL
+parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
+performed stress tests and code audit DAS servers.
 
 - 0.5.3 series
 
@@ -63,6 +63,7 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - Use calendar.timegm instead of time.mktime to correctly convert 
     timestamp into sec since epoch; protect expire timestamp overwrite 
     if exires timestamp is less then local time
+  - Add empty_record=0 into DAS records, to allow consistent look-up
 
 - 0.5.0 till 0.5.2
 
@@ -98,6 +99,12 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - updated DAS documentation (proof-reading, DAS QL section, etc.)
   - remove src/python/ply to avoid overlap with system defaul ply and added
     src/python/parser to keep parsertab.py around
+
+Release 0.4.X series
+--------------------
+The most significant part of this release is new plug-and-play mechanism
+to add new data-services. This is done via data-service map creation. Each
+map is represented data-service URI (URL, input parameters, API, etc.).
 
 - 0.4.13 till 0.4.18
 
