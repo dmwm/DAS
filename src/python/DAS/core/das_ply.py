@@ -17,7 +17,7 @@ import ply.yacc
 import re
 
 from   DAS.utils.utils import convert2date
-from   DAS.core.das_ql import das_filters, das_operators
+from   DAS.core.das_ql import das_filters, das_operators, das_mapreduces
 from   DAS.core.das_ql import das_aggregators
 
 def lexer_error(query, pos, error):
@@ -34,7 +34,7 @@ class DASPLY(object):
     """
     def __init__(self, parserdir, daskeys, dassystems,
                  operators=None, filters=None,
-                 aggregators=None, verbose=0):
+                 aggregators=None, mapreduces=None, verbose=0):
         self.daskeys = daskeys
         self.verbose = verbose
         self.lexer   = None # defined at run time using self.build()
@@ -51,6 +51,7 @@ class DASPLY(object):
         operators = operators if operators else das_operators()
         filters = filters if filters else das_filters()
         aggregators = aggregators if aggregators else das_aggregators()
+        mapreduces = mapreduces if mapreduces else das_mapreduces()
         
         # build a map of token->token.type which we can use in the
         # enlarged VALUE rule
@@ -61,6 +62,8 @@ class DASPLY(object):
             self.tokenmap[f] = 'FILTER'
         for a in aggregators:
             self.tokenmap[a] = 'AGGREGATOR'
+        for m in mapreduces:
+            self.tokenmap[m] = 'MAPREDUCE'
 
     tokens = [
         'DASKEY',
@@ -77,13 +80,12 @@ class DASPLY(object):
         'VALUE',
         'NUMBER',
         'DATE',
-#        'MAPREDUCE',
+        'MAPREDUCE',
     ]
 
     t_OPERATOR = r'='
     t_PIPE = r'\|'
     t_COMMA    = r'\,'
-#    t_MAPREDUCE = r'NEVER MATCH ME'
     t_LSQUARE = r'\['
     t_RSQUARE = r'\]'
     t_LPAREN = r'\('
@@ -123,6 +125,7 @@ class DASPLY(object):
             #eg, FILTER
             t.type = self.tokenmap[t.value]
             return t
+
         #test for a DASKEY
         # DASKEY if
         # 1. lowercase word without dots in self.daskeys
@@ -237,6 +240,10 @@ class DASPLY(object):
         """pipefunc : FILTER"""
         p[0] = tuple(['filter', p[1], None])
 
+    def p_mapreduce(self, p): #should probably merge this with p_arglist
+        """pipefunc : MAPREDUCE"""
+        p[0] = tuple(['mapreduce', p[1], None])
+
     def p_oneagg(self, p):
         """oneagg : AGGREGATOR LPAREN DASKEY RPAREN"""
         p[0] = tuple(['aggregator', p[1], p[3]])
@@ -284,6 +291,9 @@ def ply2mongo(query):
             if  item[0] == 'aggregators':
                 aggs = [(k[1], k[2]) for k in item[1:]]
                 mongodict['aggregators'] = aggs
+            if  item[0] == 'mapreduce':
+                _, name, _ = item
+                mongodict['mapreduce'] = name
     fields = []
     spec   = {}
     for _, name, oper, val in query['keys']:

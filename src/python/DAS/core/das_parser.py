@@ -327,8 +327,8 @@ class QLManager(object):
                     ply_query = self.dasply.parser.parse(query)
                     mongo_query = ply2mongo(ply_query)
                     self.parserdb.insert_valid_query(query, mongo_query)
-                except Exception, e:
-                    self.parserdb.insert_invalid_query(query, e.msg)
+                except Exception, exp:
+                    self.parserdb.insert_invalid_query(query, exp.message)
                     raise
         else:
             ply_query   = self.dasply.parser.parse(query)

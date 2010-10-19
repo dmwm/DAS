@@ -57,7 +57,7 @@ class MapReduceMgr(object):
         self.port   = port
         self.conn   = Connection(host, port)
         self.mapreduce = self.conn['das']['mapreduce']
-        self.tmpldir   = os.environ['DAS_TMPLROOT']
+        self.tmpldir   = os.environ['DAS_TMPLPATH']
 
     def add_mapreduce(self, name, fmap, freduce):
         """
@@ -138,14 +138,14 @@ if __name__ == '__main__':
     for pat in patterns_sum:
         MAP = MGR.gen_map_func('sum', pat)
         REDUCE = MGR.gen_reduce_func('total', pat)
-        MGR.add_mapreduce('sum(%s)' % pat, MAP, REDUCE)
+        MGR.add_mapreduce('sum_%s' % pat, MAP, REDUCE)
 
     # add count mapreduce functions
     patterns_count = ['block.replica.nfiles', 'block.nfiles']
     for pat in patterns_count:
         MAP = MGR.gen_map_func('count', pat)
         REDUCE = MGR.gen_reduce_func('total', pat)
-        MGR.add_mapreduce('count(%s)' % pat, MAP, REDUCE)
+        MGR.add_mapreduce('count_%s' % pat, MAP, REDUCE)
 
     sys.exit(0)
 
@@ -191,4 +191,4 @@ function (key, values) {
     return total;
 }
 """   
-    MGR.add_mapreduce('sum(block.replica.size)', MAP, REDUCE)
+    MGR.add_mapreduce('sum_block.replica.size', MAP, REDUCE)

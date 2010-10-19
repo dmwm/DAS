@@ -12,6 +12,8 @@ __author__ = "Valentin Kuznetsov"
 
 import inspect
 from DAS.core.das_aggregators import ResultObject
+from DAS.utils.das_config import das_readconfig
+from DAS.utils.das_db import db_connection
 
 DAS_FILTERS   = ['grep', 'unique']
 DAS_OPERATORS = ['=', 'between', 'in', 'last']
@@ -81,4 +83,21 @@ def das_aggregators():
             continue
         alist.append(name)
     return alist
+
+def das_mapreduces():
+    """
+    Return list of DAS mapreduce functions
+    """
+    mlist   = []
+    config  = das_readconfig()
+    dbhost  = config['mongodb']['dbhost']
+    dbport  = config['mongodb']['dbport']
+    dbname  = config['dasdb']['dbname']
+    colname = config['dasdb']['mrcollection']
+    conn    = db_connection(dbhost, dbport)
+    coll    = conn[dbname][colname]
+    for row in coll.find({}):
+        if  set(row.keys()) == set(['map', 'reduce', 'name', '_id']):
+            mlist.append(row['name'])
+    return mlist
 

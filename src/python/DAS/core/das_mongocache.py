@@ -30,11 +30,10 @@ from DAS.utils.das_db import db_connection
 import DAS.utils.jsonwrapper as json
 
 # monogo db modules
-from pymongo.connection import Connection
 from pymongo.objectid import ObjectId
 from pymongo.code import Code
 from pymongo import DESCENDING, ASCENDING
-from pymongo.errors import InvalidOperation, AutoReconnect, ConnectionFailure
+from pymongo.errors import InvalidOperation
 
 DOT = '.'
 SEP = '___'
