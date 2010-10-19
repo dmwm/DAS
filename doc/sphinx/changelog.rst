@@ -7,6 +7,12 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.5.5
+
+  - fix map-reduce parsing using DAS PLY
+  - introduce das_mapreduces() function which look-up MR functions in das.mapreduce
+    collection
+
 - 0.5.3 - 0.5.4 series
 
   - Clean-up %post and do not package docs over there
