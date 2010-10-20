@@ -348,9 +348,11 @@ class DASAbstractService(object):
         notationmap = self.notations()
         if  not notationmap:
             return {}
-        notations = dict(notationmap['']) # notations applied to all APIs
-        if  notationmap.has_key(api): # overwrite the one for provided API
-            notations.update(notationmap[api])
+        notations = {}
+        if  notationmap.has_key(''):
+            notations = dict(notationmap['']) # notations applied to all APIs
+            if  notationmap.has_key(api): # overwrite the one for provided API
+                notations.update(notationmap[api])
         return notations
 
     def parser(self, query, dformat, data, api):
@@ -470,7 +472,7 @@ class DASAbstractService(object):
                             value = existing_value
                         else:
                             value = str(value) # to avoid {'$gt':number}
-                    elif existing_value and value != existing_value:\
+                    elif existing_value and value != existing_value:
                         # we got proximity results
                         if  ddict.has_key('proximity'):
                             proximity = DotDict({key:existing_value})

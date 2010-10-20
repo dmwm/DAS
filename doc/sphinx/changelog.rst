@@ -12,6 +12,7 @@ performed stress tests and code audit DAS servers.
   - fix map-reduce parsing using DAS PLY
   - introduce das_mapreduces() function which look-up MR functions in das.mapreduce
     collection
+  - fixes for Tier0 service
 
 - 0.5.3 - 0.5.4 series
 
