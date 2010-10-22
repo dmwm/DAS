@@ -135,6 +135,11 @@ class testDASPLY(unittest.TestCase):
         mongo = {'fields': None, 'spec':{'city': 'betweenPostfix'}}
         self.queries[query] = mongo
 
+        # query w/ filter which contains a key/value pair
+        query = 'block=/a/b/c | grep site=T1 '
+        mongo = {'fields': None, 'spec': {'block': '/a/b/c'}, 'filters': ['site=T1']}
+        self.queries[query] = mongo
+
     def test_lexer(self):
         """Test DAS PLY lexer"""
         for query, expect in self.queries.items():

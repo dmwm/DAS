@@ -225,12 +225,17 @@ class DASPLY(object):
         p[0] = [p[1]]
 
     def p_list_for_filter(self, p):
-        """list_for_filter : DASKEY"""
-        p[0] = [p[1]]
+        """list_for_filter : DASKEY OPERATOR VALUE
+                           | DASKEY"""
+        val = ''
+        for idx in range(0, len(p)):
+            if  p[idx]:
+                val += p[idx]
+        p[0] = [val]
 
     def p_list_for_filter2(self, p):
-        """list_for_filter : list_for_filter COMMA DASKEY"""
-        p[0] = p[1] + [p[3]]
+        """list_for_filter : list_for_filter COMMA list_for_filter"""
+        p[0] = p[1] + p[3]
 
     def p_pipefunc0(self, p):
         """pipefunc : FILTER list_for_filter"""
