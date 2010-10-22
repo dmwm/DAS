@@ -119,6 +119,11 @@ class DASOptionParser:
              help="delete expired records")
         self.parser.add_option("--renew-expired", action="store_true", dest="renew",
              help="renew expired records")
+        self.parser.add_option("--clear", action="store_true", dest="clear",
+             help="clean up DAS, remove entries from parser.db, das.cache, das.merge, das.analytics")
+        self.parser.add_option("--clean", action="store", dest="clean",
+             default=None, type="string",
+             help="clean up DAS db.collection")
         self.parser.add_option("--interval", action="store", dest="interval",
              default="0", type="int",
              help="specify interval in seconds for renewal process")
@@ -142,6 +147,36 @@ class DASMongoDB(object):
         self.cache  = self.conn['das']['cache']
         self.line   = "-"*80
         self.config = das_readconfig()
+
+    def clear(self):
+        """
+        Clear DAS, remove entries from all db.collections
+        """
+        dbname = self.config['dasdb']['dbname']
+        dbcoll = self.config['dasdb']['cachecollection']
+        self.clean(dbname, dbcoll)
+        dbcoll = self.config['dasdb']['mergecollection']
+        self.clean(dbname, dbcoll)
+        dbcoll = self.config['dasdb']['mrcollection']
+        self.clean(dbname, dbcoll)
+        # parser
+        dbname = 'parser'
+        dbcoll = 'db'
+        self.clean(dbname, dbcoll)
+        # analytics
+#        dbname = 'analytics'
+#        dbcoll = 'db'
+#        self.clean(dbname, dbcoll)
+
+    def clean(self, dbname, dbcoll):
+        """
+        Perform DAS clean-up on given db.collection
+        """
+        coll = self.conn[dbname][dbcoll]
+        if  dbname == 'parser':
+            coll.drop() # capped collection use drop
+        else:
+            coll.remove({}) # normal collections use remove
 
     def fetch(self, spec, fields, db=None, system=None, pretty=False):
         """
@@ -283,5 +318,17 @@ if __name__ == '__main__':
             print "Specify non-zero interval"
             sys.exit(0)
         DASMONGO.renew(opts.interval, opts.system)
+        sys.exit(0)
+
+    if  opts.clear:
+        DASMONGO.clear()
+        sys.exit(0)
+
+    if  opts.clean:
+        try:
+            dbname, dbcoll = opts.clean.split('.')
+            DASMONGO.clean(dbname, dbcoll)
+        except:
+            print "Please provide <dbname>.<dbcollection>"
         sys.exit(0)
 

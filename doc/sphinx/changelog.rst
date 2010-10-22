@@ -12,7 +12,12 @@ performed stress tests and code audit DAS servers.
   - fix map-reduce parsing using DAS PLY
   - introduce das_mapreduces() function which look-up MR functions in das.mapreduce
     collection
-  - fixes for Tier0 service
+  - fixes for Tier0,DBS3 services
+  - fix core when no services is available, it returns an empty result set
+  - fix DAS parser cache to properly store MongoDB queries. By default
+    MongoDB does not allow usage of $ sign in dictionary keys, since it is used
+    in MongoQL. To fix the issue we encode the query as dict of key/value/operator
+    and decode it back upon retrieval.
 
 - 0.5.3 - 0.5.4 series
 

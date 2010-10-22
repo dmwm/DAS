@@ -77,6 +77,12 @@ def set_prompt(in1):
     prompt.set_p_str() 
 
 def das_clean():
+    # clean parser.db
+    dbname = 'parser'
+    col = 'db'
+    IP.user_ns['db'] = IP.user_ns['connection'][dbname]
+    IP.user_ns['collection'] = IP.user_ns['connection'][dbname][col]
+    collection.drop()
     # clean analytics.db
     dbname = 'analytics'
     col = 'db'

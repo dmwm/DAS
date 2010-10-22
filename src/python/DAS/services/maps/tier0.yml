@@ -21,7 +21,7 @@ expire : 600
 params : {"run": "required", "dataset": ""}
 daskeys : [
         {"key":"run", "map":"run.run_number", "pattern":""},
-        {"key":"primary_ds", "map":"primary_dataset.name", "pattern":""},
+        {"key":"primary_dataset", "map":"primary_dataset.name", "pattern":""},
 ]
 das2api : [
         {"das_key":"run.run_number","api_param":"run", "pattern":"[1-9][0-9]{4,5}"},

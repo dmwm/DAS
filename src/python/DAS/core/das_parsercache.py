@@ -9,6 +9,7 @@ __author__ = "Gordon Ball"
 
 from DAS.utils.utils import genkey
 from DAS.utils.das_db import db_connection
+from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
 
 PARSERCACHE_NOTFOUND = 5
 PARSERCACHE_INVALID = 17
@@ -56,11 +57,14 @@ class DASParserDB(object):
         """
         result = self.col.find_one({'hash':genkey(rawtext)},
                         fields=['query', 'error'])
+
         if result and result['query']:
             if self.verbose:
                 self.logger.debug("DASParserCache: found valid %s->%s" %\
                                   (rawtext, result['query']))
-            return (PARSERCACHE_VALID, result['query'])
+            
+            query = decode_mongo_query(result['query'])
+            return (PARSERCACHE_VALID, query)
         elif result and result['error']:
             if self.verbose:
                 self.logger.debug("DASParserCache: found invalid %s->%s" %\
@@ -85,6 +89,9 @@ class DASParserDB(object):
         if  self.verbose:
             self.logger.debug("DASParserCache: insert %s->%s/%s" %\
 	                          (rawtext, query, error))
+        # since MongoDB does not support insertion of $ sign in queries
+        # we need to encode inserted query
+        encquery = encode_mongo_query(query)
         self.col.insert({'raw':rawtext, 'hash':genkey(rawtext),
-                         'query':query, 'error':error})
+                         'query':encquery, 'error':error})
         self.col.ensure_index('hash', unique=True, drop_dups=True)

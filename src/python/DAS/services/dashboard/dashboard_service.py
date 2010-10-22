@@ -77,7 +77,7 @@ class DashboardService(DASAbstractService):
         args['date2'] = date2
         cond   = query['spec']
         for key, value in cond.items():
-            if  isinstance(value, dict): # we got equal condition
+            if  not isinstance(value, dict): # we got equal condition
                 if  key == 'date':
                     if  isinstance(value, list) and len(value) != 2:
                         msg  = 'Dashboard service requires 2 time stamps.'
@@ -91,7 +91,8 @@ class DashboardService(DASAbstractService):
                         args[param] = value
             else: # we got some operator, e.g. key :{'$in' : [1,2,3]}
                 # TODO: not sure how to deal with them right now, will throw
-                msg = 'JobSummary does not support operator %s' % oper
+                msg = 'JobSummary does not support key=%s, value=%s' \
+                        % (key, value)
                 raise Exception(msg)
 
 #        url = url + '/' + api + '?%s' % urllib.urlencode(args)

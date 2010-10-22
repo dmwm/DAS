@@ -193,6 +193,8 @@ class DASCore(object):
             msg += 'input query, will decompose it ...'
             self.logger.info(msg)
             skeys = query['fields']
+            if  not skeys:
+                skeys = []
             if  len(skeys) == 1: # no way we can proceed
                 return results
             for key in skeys:

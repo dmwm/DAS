@@ -13,6 +13,7 @@ from optparse import OptionParser
 from DAS.core.das_mapping_db import DASMapping
 from DAS.utils.logger import DASLogger
 from DAS.utils.das_config import das_readconfig
+from DAS.utils.das_db import db_connection
 from DAS.services.map_reader import read_service_map
 
 class DASOptionParser: 
@@ -114,6 +115,14 @@ if __name__ == '__main__':
     if  opts.clean:
         mgr.delete_db()
         mgr.create_db()
+        # I need to clear DAS cache/merge since I don't know
+        # a-priory what kind of changes new maps will bring
+        conn   = db_connection(opts.host, opts.port)
+        dbname = dasconfig['dasdb']['dbname']
+        cache  = conn[dbname][dasconfig['dasdb']['cachecollection']]
+        cache.remove({})
+        merge  = conn[dbname][dasconfig['dasdb']['mergecollection']]
+        merge.remove({})
 
     if  opts.remove:
         mgr.remove(opts.remove)

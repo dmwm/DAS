@@ -28,8 +28,7 @@ url : "http://vocms09:8585/DBSG/datasets/"
 expire : 900
 params : {
         "dataset":"*",
-        "release_version":"*",
-        "run_num":"*",
+        "detail":"True",
 }
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
