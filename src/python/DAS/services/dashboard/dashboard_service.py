@@ -16,7 +16,12 @@ from DAS.services.abstract_service import DASAbstractService, dasheader
 from DAS.utils.utils import map_validator
 
 def convert_datetime(sec):
-    """Convert seconds since epoch to date format used in dashboard"""
+    """
+    Convert seconds since epoch or YYYYMMDD to date format used in dashboard
+    """
+    value = str(sec)
+    if  value == 8: # we got YYYYMMDD
+        return "%s-%s-%s" % (value[:4], value[5:6], value[7:8])
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(sec))
 
 class DashboardService(DASAbstractService):
@@ -70,32 +75,41 @@ class DashboardService(DASAbstractService):
         url    = self.map[api]['url']
         expire = self.map[api]['expire']
         args   = dict(self.map[api]['params'])
-        date1  = time.strftime("%Y-%m-%d %H:%M:%S", \
-                 time.gmtime(time.time()-24*60*60))
-        date2  = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-        args['date1'] = date1
-        args['date2'] = date2
         cond   = query['spec']
+        count  = 0
         for key, value in cond.items():
+            err = 'JobSummary does not support key=%s, value=%s' \
+                    % (key, value)
             if  not isinstance(value, dict): # we got equal condition
                 if  key == 'date':
                     if  isinstance(value, list) and len(value) != 2:
                         msg  = 'Dashboard service requires 2 time stamps.'
                         msg += 'Please use either date last XXh format or'
-                        msg += 'date in YYYYMMDD-YYYYMMDD'
+                        msg += 'date in [YYYYMMDD, YYYYMMDD]'
                         raise Exception(msg)
                     args['date1'] = convert_datetime(value[0])
                     args['date2'] = convert_datetime(value[1])
+                    count += 1
                 else:
                     for param in self.dasmapping.das2api(self.name, key):
                         args[param] = value
+                        count += 1
             else: # we got some operator, e.g. key :{'$in' : [1,2,3]}
-                # TODO: not sure how to deal with them right now, will throw
-                msg = 'JobSummary does not support key=%s, value=%s' \
-                        % (key, value)
-                raise Exception(msg)
+                if  key == 'date' or key == 'jobsummary':
+                    if  value.has_key('$in'):
+                        vallist = value['$in']
+                        args['date1'] = convert_datetime(vallist[0])
+                        args['date2'] = convert_datetime(vallist[-1])
+                        count += 1
+                    else:
+                        raise Exception(err)
+                else:
+                    raise Exception(err)
+        if  not count:
+            # if no parameter are given, use last 24 hours interval
+            args['date1'] = convert_datetime(time.time()-24*60*60)
+            args['date2'] = convert_datetime(time.time())
 
-#        url = url + '/' + api + '?%s' % urllib.urlencode(args)
         url = url + '?%s' % urllib.urlencode(args)
 
         time0 = time.time()

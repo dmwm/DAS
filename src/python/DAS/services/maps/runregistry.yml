@@ -7,7 +7,7 @@ expire : 900
 params : {}
 daskeys : [
     {"key":"run","map":"run.run_number","pattern":""},
-    {"key":"date","map":"runStartTime","pattern":""},
+    {"key":"date","map":"date","pattern":""},
 ]
 ---
 notations : [

@@ -23,14 +23,15 @@ params : {
 }
 daskeys : [
     {"key":"jobsummary", "map":"jobsummary", "pattern":""},
+    {"key":"site", "map":"jobsummary.site", "pattern":"^T[0-3]"},
+    {"key":"site", "map":"jobsummary.site", "pattern":"([a-zA-Z0-9]+\\.){2}"},
+    {"key":"user", "map":"jobsummary.user", "pattern":""},
+    {"key":"date", "map":"date", "pattern":""},
 ]
 das2api : [
-    {"das_key":"date", "api_param":"date1", "pattern":""},
-    {"das_key":"date", "api_param":"date2", "pattern":""},
-    {"das_key":"site", "api_param":"ce", "pattern":"([a-zA-Z0-9]+\\.){2}"},
-    {"das_key":"site.ce", "api_param":"ce", "pattern":"([a-zA-Z0-9]+\\.){2}"},
-    {"das_key":"site", "api_param":"site", "pattern":"^T[0-3]_"},
-    {"das_key":"site.name", "api_param":"site", "pattern":"^T[0-3]_"},
+    {"das_key":"jobsummary.user", "api_param":"user", "pattern":""},
+    {"das_key":"jobsummary.site", "api_param":"ce", "pattern":"([a-zA-Z0-9]+\\.){2}"},
+    {"das_key":"jobsummary.site", "api_param":"site", "pattern":"^T[0-3]_"},
 ]
 ---
 notations : [
