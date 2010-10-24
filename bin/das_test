@@ -1,5 +1,5 @@
 #!/bin/sh
-tests=`find $DAS_ROOT/test -name "*_t.py"`
+tests=`find test -name "*_t.py"`
 for t in $tests
 do
     cmgrcache=`echo $t | grep das_cache_t`

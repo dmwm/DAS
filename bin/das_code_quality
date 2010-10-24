@@ -1,14 +1,5 @@
 #!/bin/bash
 
-if  [ -z $DAS_PYTHONPATH ]; then
-   echo "DAS_PYTHONPATH environment is not set"
-   exit 1
-fi
-
-#find $DAS_PYTHONPATH -name "*.py" | \
-#awk '{print "echo; echo \"running pylint tests for "$0"\"; pylint "$0" | grep \"Your code\""}' | \
-#/bin/sh | awk '{split($0,a,"("); print a[1]}'
-
 if [ "$#" -gt 2 ]; then
     echo "Usage: das_code_quality.sh <optional threashold up to 10> <stop at first failure, true or false>"
     exit 1
@@ -26,11 +17,13 @@ else
 immediate="true"
 fi
 
+# find out where DAS is installed on a system
+dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+
 echo "Run pylint with $thr/10 threashold level, exit immediate=$immediate"
 echo
 
-#files=`find $DAS_PYTHONPATH -name "*.py" | grep -v ipy_profile_mongo`
-files=`find $DAS_PYTHONPATH -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py`
+files=`find $dasroot -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py`
 fail_files=0
 for f in $files
 do

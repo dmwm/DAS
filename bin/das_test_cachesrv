@@ -1,13 +1,7 @@
 #!/bin/sh
 
-# setup environment
-#. `dirname $0`/setup.sh
-
-if  [ -z $DAS_PYTHONPATH ]; then
-   echo "DAS_PYTHONPATH environment is not set"
-   exit 1
-fi
-
+# find out where DAS is installed on a system
+dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 # run actual script
-$DAS_PYTHONPATH/DAS/tools/test_cachesrv.py ${1+"$@"}
+$dasroot/tools/test_cachesrv.py ${1+"$@"}
 

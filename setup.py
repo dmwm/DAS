@@ -3,9 +3,7 @@
 import sys
 import os
 
-from ez_setup import use_setuptools
-use_setuptools()
-from setuptools import setup, find_packages, Feature
+from distutils.core import setup
 from distutils.cmd import Command
 from distutils.command.build_ext import build_ext
 from distutils.errors import CCompilerError
@@ -30,7 +28,7 @@ except ImportError:
     requirements.append("pymongo")
 
 required_python_version = '2.6'
-required_pymongo_version = '1.6'
+required_pymongo_version = '1.8'
 
 if sys.platform == 'win32' and sys.version_info > (2, 6):
    # 2.6's distutils.msvc9compiler can raise an IOError when failing to
@@ -73,19 +71,45 @@ although they do result in significant speed improvements.
                                           "Above is the ouput showing how "
                                           "the compilation failed.")
 
-c_ext = Feature(
-    "optional C extension",
-    standard=True,
-    ext_modules=[Extension('DAS.extensions.das_speed_utils',
-                           include_dirs=['extensions'],
-                           sources=['src/python/DAS/extensions/dict_handler.c'])])
+def dirwalk(relativedir):
+    """
+    Walk a directory tree and look-up for __init__.py files.
+    If found yield those dirs. Code based on
+    http://code.activestate.com/recipes/105873-walk-a-directory-tree-using-a-generator/
+    """
+    dir = os.path.join(os.getcwd(), relativedir)
+    for fname in os.listdir(dir):
+        fullpath = os.path.join(dir, fname)
+        if  os.path.isdir(fullpath) and not os.path.islink(fullpath):
+            for subdir in dirwalk(fullpath):  # recurse into subdir
+                yield subdir
+        else:
+            initdir, initfile = os.path.split(fullpath)
+            if  initfile == '__init__.py':
+                yield initdir
 
-if "--no_ext" in sys.argv:
-    sys.argv = [x for x in sys.argv if x != "--no_ext"]
-    features = {}
-else:
-    features = {"c-ext": c_ext}
+def find_packages(relativedir):
+    packages = [] 
+    for dir in dirwalk(relativedir):
+        package = dir.replace(os.getcwd() + '/', '')
+        package = package.replace(relativedir + '/', '')
+        package = package.replace('/', '.')
+        packages.append(package)
+    return packages
 
+def datafiles(dir):
+    """Return list of data files in provided relative dir"""
+    files = []
+    for dirname, dirnames, filenames in os.walk(dir):
+        for subdirname in dirnames:
+            files.append(os.path.join(dirname, subdirname))
+        for filename in filenames:
+            if  filename[-1] == '~':
+                continue
+            files.append(os.path.join(dirname, filename))
+    return files
+#    return [os.path.join(dir, f) for f in os.listdir(dir)]
+    
 version      = das_version
 name         = "DAS"
 description  = "CMS Data Aggregation System"
@@ -99,13 +123,22 @@ scriptfiles  = filter(os.path.isfile, ['etc/das.cfg'])
 url          = "https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService",
 keywords     = ["DAS", "Aggregation", "Meta-data"]
 package_dir  = {'DAS': 'src/python/DAS'}
-package_data = {
-    'src': ['python/DAS/services/maps/*.yml', 'python/DAS/web/css/*.css'],
-}
-#packages     = find_packages('src/python/DAS') 
-packages     = find_packages('src/python/') 
-packages    += ['src/css', 'src/js', 'src/templates', 'src/images', 
-                'src/python/parser', 'etc', 'bin', 'test', 'doc']
+packages     = find_packages('src/python')
+data_files   = [
+                ('DAS/etc', ['etc/das.cfg']),
+                ('DAS/test', datafiles('test')),
+                ('DAS/services/maps', datafiles('src/python/DAS/services/maps')),
+                ('DAS/doc/sphinx/web', datafiles('doc/shpinx/web')),
+                ('DAS/doc/sphinx/core', datafiles('doc/shpinx/core')),
+                ('DAS/doc/sphinx/services', datafiles('doc/shpinx/services')),
+                ('DAS/doc/sphinx/_images', datafiles('doc/shpinx/_images')),
+                ('DAS/doc/sphinx', datafiles('doc/shpinx')),
+                ('DAS/doc', ['doc/Makefile']),
+                ('DAS/web/js', datafiles('src/js')),
+                ('DAS/web/css', datafiles('src/css')),
+                ('DAS/web/images', datafiles('src/images')),
+                ('DAS/web/templates', datafiles('src/templates')),
+               ]
 license      = "CMS experiment software"
 classifiers  = [
     "Development Status :: 3 - Production/Beta",
@@ -140,14 +173,16 @@ def main():
         description          = description,
         long_description     = readme,
         keywords             = keywords,
-        package_dir          = package_dir,
         packages             = packages,
-        package_data         = package_data,
-#        data_files           = data_files,
-        include_package_data = True,
-        install_requires     = requirements,
-#        scripts              = scriptfiles,
-        features             = features,
+        package_dir          = package_dir,
+        data_files           = data_files,
+        scripts              = datafiles('bin'),
+        requires             = ['python (>=2.6)', 'pymongo (>=1.6)', 'ply (>=3.3)',
+                                'sphinx (>=1.0.4)', 'cherrypy (>3.1.2)',
+                                'Cheetah (>=2.4)', 'yaml (>=3.09)'],
+        ext_modules          = [Extension('DAS.extensions.das_speed_utils',
+                               include_dirs=['extensions'],
+                               sources=['src/python/DAS/extensions/dict_handler.c'])],
         classifiers          = classifiers,
         cmdclass             = {"build_ext": custom_build_ext},
         author               = author,

@@ -95,10 +95,8 @@ class DASCore(object):
         # dasconfig; load appropriate module/class; register data
         # service with DASCore.
         self.systems = dasmapping.list_systems()
-        if  not os.environ.has_key('DAS_PYTHONPATH'):
-            msg = 'DAS_PYTHONPATH environment variable is not set'
-            raise Exception(msg)
-        dasroot = os.environ['DAS_PYTHONPATH']
+        # pointer to the DAS top level directory
+        dasroot = '/'.join(__file__.split('/')[:-3])
         for name in self.systems:
             try:
                 klass  = 'DAS/services/%s/%s_service.py' \

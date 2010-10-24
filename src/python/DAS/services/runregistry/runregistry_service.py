@@ -124,8 +124,9 @@ class RunRegistryService(DASAbstractService):
         time0   = time.time()
         rawrows = worker(url, _query)
         genrows = self.translator(api, rawrows)
+        dasrows = self.set_misses(query, api, genrows)
         ctime   = time.time() - time0
-        self.write_to_cache(query, expire, url, api, args, genrows, ctime)
+        self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
 #
 if __name__ == '__main__':
     QUERY = "{runNumber} >= 135230 and {runNumber} <= 135230"

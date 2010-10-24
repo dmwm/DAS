@@ -102,13 +102,13 @@ def das_configfile():
     """
     Return DAS configuration file name $DAS_ROOT/etc/das.cfg
     """
-    if  os.environ.has_key('DAS_ROOT'):
-        dasconfig = os.path.join(os.environ['DAS_ROOT'], 'etc/das.cfg')
+    if  os.environ.has_key('DAS_CONFIG'):
+        dasconfig = os.environ['DAS_CONFIG']
         if  not os.path.isfile(dasconfig):
             raise EnvironmentError('No DAS config file %s found' % dasconfig)
         return dasconfig
     else:
-        raise EnvironmentError('DAS_ROOT environment is not set up')
+        raise EnvironmentError('DAS_CONFIG environment is not set up')
 
 def das_readconfig_helper(dasconfig=None):
     """

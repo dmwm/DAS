@@ -1,16 +1,15 @@
 #!/bin/bash
 
-# setup environment
-#. `dirname $0`/setup.sh
+#for dasenv in DAS_PYTHONPATH DAS_TMPLPATH DAS_JSPATH DAS_IMAGESPATH DAS_CSSPATH; do
+#   if [ -z `env | grep $dasenv` ]; then
+#       echo "The environment variable $dasenv must be set"
+#       exit 1
+#   fi
+#done
 
-foo=valya
+# find out where DAS is installed on a system
+dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 
-for dasenv in DAS_PYTHONPATH DAS_TMPLPATH DAS_JSPATH DAS_IMAGESPATH DAS_CSSPATH; do
-   if [ -z `env | grep $dasenv` ]; then
-       echo "The environment variable $dasenv must be set"
-       exit 1
-   fi
-done
 
 usage="Usage: das_server <web|cache> {start|stop|status|restart|stdout}"
 if [ $# != 2 ]; then
@@ -21,7 +20,7 @@ fi
 server="$1"
 
 # run actual script
-cmd="$DAS_PYTHONPATH/DAS/web/das_server.py --server=$server"
+cmd="$dasroot/web/das_server.py --server=$server"
 
 RETVAL=$?
 

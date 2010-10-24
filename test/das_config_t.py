@@ -17,8 +17,8 @@ class testDASConfig(unittest.TestCase):
 
     def testEnvConfig(self):
         """test das configuration file"""
-        if  os.environ.has_key('DAS_ROOT'):
-            del os.environ['DAS_ROOT']
+        if  os.environ.has_key('DAS_CONFIG'):
+            del os.environ['DAS_CONFIG']
         self.assertRaises(EnvironmentError, das_configfile)
         
     def testConfig(self):                          
