@@ -139,6 +139,28 @@ class DASWebService(DASWebManager):
         return serve_file(clifile, content_type='text/plain')
 
     @expose
+    def opensearch(self):
+        """
+        Serve DAS opensearch file.
+        """
+        if  self.base and self.base.find('http://') != -1:
+            base = self.base
+        else:
+            base = 'http://cmsweb.cern.ch/das'
+        desc = """<?xml version="1.0"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+<ShortName>DAS search</ShortName>
+<Description>CMS DAS Search</Description>
+<Image type="image/png">%s/images/cms_logo.png</Image>
+<Url type="text/html" method="get" template="%s/?input={searchTerms}&amp;view=list&amp;show=json"/>
+<moz:SearchForm>%s</moz:SearchForm>
+</OpenSearchDescription>""" % (base, base, base)
+        cherrypy.response.headers['Content-Type'] = \
+                'application/opensearchdescription+xml'
+        return desc
+
+    @expose
     @checkargs(DAS_WEB_INPUTS)
     def services(self, *args, **kwargs):
         """

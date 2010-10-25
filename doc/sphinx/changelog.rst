@@ -20,6 +20,11 @@ performed stress tests and code audit DAS servers.
     and decode it back upon retrieval.
   - fix DAS PLY to support value assignment in filters, e.g.
     block | grep site=T1
+  - Fixes for Dashboard, RunRegistry services
+  - Eliminate DAS_PYTHONPATH, automatically detect DAS code location
+  - Drop off ez_setup in favor python distutils, re-wrote setup.py to use only
+    distutils
+  - add opensearch plugin
 
 - 0.5.3 - 0.5.4 series
 
