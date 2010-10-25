@@ -14,21 +14,7 @@ from distutils.command.install import INSTALL_SCHEMES
 sys.path.append(os.path.join(os.getcwd(), 'src/python'))
 from DAS import version as das_version
 
-requirements = []
-try:
-    import xml.etree.cElementTree
-except ImportError:
-    try:
-        import celementtree
-    except ImportError:
-        requirements.append("celementtree")
-try:
-    import pymongo
-except ImportError:
-    requirements.append("pymongo")
-
 required_python_version = '2.6'
-required_pymongo_version = '1.8'
 
 if sys.platform == 'win32' and sys.version_info > (2, 6):
    # 2.6's distutils.msvc9compiler can raise an IOError when failing to
@@ -157,11 +143,6 @@ def main():
         print s % (name, version, required_python_version)
         sys.exit(1)
 
-    if  pymongo.version < required_pymongo_version:
-        s = "I'm sorry, but %s %s required pymongo %s or later."
-        print s % (name, version, required_pymongo_version)
-        sys.exit(1)
-
     # set default location for "data_files" to
     # platform specific "site-packages" location
     for scheme in INSTALL_SCHEMES.values():
@@ -178,7 +159,7 @@ def main():
         data_files           = data_files,
         scripts              = datafiles('bin'),
         requires             = ['python (>=2.6)', 'pymongo (>=1.6)', 'ply (>=3.3)',
-                                'sphinx (>=1.0.4)', 'cherrypy (>3.1.2)',
+                                'sphinx (>=1.0.4)', 'cherrypy (>=3.1.2)',
                                 'Cheetah (>=2.4)', 'yaml (>=3.09)'],
         ext_modules          = [Extension('DAS.extensions.das_speed_utils',
                                include_dirs=['extensions'],

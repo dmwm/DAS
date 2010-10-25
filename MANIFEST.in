@@ -2,6 +2,7 @@ recursive-include src/templates *.tmpl
 recursive-include src/css *.css
 recursive-include src/images *
 recursive-include src/js *.js
+recursive-include test *_t.py
 recursive-include doc *
 recursive-include bin *
 recursive-include src/python/DAS/services/maps *
