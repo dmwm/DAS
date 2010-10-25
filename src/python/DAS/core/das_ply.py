@@ -18,7 +18,7 @@ import re
 
 from   DAS.utils.utils import convert2date
 from   DAS.core.das_ql import das_filters, das_operators, das_mapreduces
-from   DAS.core.das_ql import das_aggregators
+from   DAS.core.das_ql import das_aggregators, das_special_keys
 
 def lexer_error(query, pos, error):
     """Produce pretty formatted message about invalid query"""
@@ -33,7 +33,7 @@ class DASPLY(object):
     DAS QL parser based on PLY lexer/parser.
     """
     def __init__(self, parserdir, daskeys, dassystems,
-                 operators=None, filters=None,
+                 operators=None, specials=None, filters=None,
                  aggregators=None, mapreduces=None, verbose=0):
         self.daskeys = daskeys
         self.verbose = verbose
@@ -52,6 +52,7 @@ class DASPLY(object):
         filters = filters if filters else das_filters()
         aggregators = aggregators if aggregators else das_aggregators()
         mapreduces = mapreduces if mapreduces else das_mapreduces()
+        specials = specials if specials else das_special_keys()
         
         # build a map of token->token.type which we can use in the
         # enlarged VALUE rule
@@ -64,6 +65,8 @@ class DASPLY(object):
             self.tokenmap[a] = 'AGGREGATOR'
         for m in mapreduces:
             self.tokenmap[m] = 'MAPREDUCE'
+        for s in specials:
+            self.tokenmap[s] = 'SPECIALKEY'
 
     tokens = [
         'DASKEY',
@@ -81,6 +84,7 @@ class DASPLY(object):
         'NUMBER',
         'DATE',
         'MAPREDUCE',
+        'SPECIALKEY',
     ]
 
     t_OPERATOR = r'='
@@ -194,7 +198,8 @@ class DASPLY(object):
                  | DASKEY OPERATOR DASKEY
                  | DASKEY OPERATOR NUMBER
                  | DASKEY OPERATOR IPADDR
-                 | DASKEY OPERATOR DATE
+                 | SPECIALKEY OPERATOR DATE
+                 | SPECIALKEY OPERATOR VALUE
                  | DASKEY OPERATOR array"""
         p[0] = ('keyop', p[1], p[2], p[3])
 
@@ -225,8 +230,8 @@ class DASPLY(object):
         p[0] = [p[1]]
 
     def p_list_for_filter(self, p):
-        """list_for_filter : DASKEY OPERATOR VALUE
-                           | DASKEY"""
+        """oneexp : DASKEY OPERATOR VALUE
+                  | DASKEY"""
         val = ''
         for idx in range(0, len(p)):
             if  p[idx]:
@@ -234,8 +239,12 @@ class DASPLY(object):
         p[0] = [val]
 
     def p_list_for_filter2(self, p):
-        """list_for_filter : list_for_filter COMMA list_for_filter"""
+        """list_for_filter : list_for_filter COMMA oneexp"""
         p[0] = p[1] + p[3]
+
+    def p_list_for_filter3(self, p):
+        """list_for_filter : oneexp"""
+        p[0] = p[1]
 
     def p_pipefunc0(self, p):
         """pipefunc : FILTER list_for_filter"""

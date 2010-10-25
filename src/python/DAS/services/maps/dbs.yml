@@ -29,13 +29,13 @@ params : {
      "ps_hash": "*",
 }
 daskeys : [
-    #{"key":"proc_ds", "map":"processed_dataset.name", "pattern":""}
-    {"key":"dataset", "map":"dataset.name", "pattern":""}
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
+    {"key":"release", "map":"release.name", "pattern":"CMSSW_.*"},
 ]
 das2api : [
-    #{"das_key":"processed_dataset.name", "api_param":"processed_datatset_name_pattern", "pattern":""},
     {"das_key":"dataset.name", "api_param":"processed_datatset_name_pattern", "pattern":""},
     {"das_key":"primary_dataset.name", "api_param":"primary_datatset_name_pattern", "pattern":""},
+    {"das_key":"release.name", "api_param":"app_version", "pattern":"CMSSW_.*"},
 ]
 ---
 urn : listDatasetSummary
@@ -61,7 +61,7 @@ params : {
      "app_executable_name": "*",
 }
 daskeys : [
-    {"key":"release", "map":"release.name", "pattern":""}
+    {"key":"release", "map":"release.name", "pattern":"CMSSW_.*"}
 ]
 das2api : [
     {"das_key":"release.name", "api_param":"app_version", "pattern":""},

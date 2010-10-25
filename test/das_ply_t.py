@@ -27,7 +27,6 @@ class testDASPLY(unittest.TestCase):
         parserdir = '/tmp'
 
         self.dasply = DASPLY(parserdir, daskeys, dassystems, verbose=self.debug)
-#        args = {'debug':self.debug, 'errorlog' : ply.yacc.NullLogger()}
         args = {'errorlog' : ply.yacc.NullLogger()}
         self.dasply.build(**args)
 
@@ -162,6 +161,15 @@ class testDASPLY(unittest.TestCase):
                 print "ply query  ", ply_query
             result = ply2mongo(ply_query)
             self.assertEqual(expect, result)
+
+    def test_parser_negate(self):
+        """Test DAS PLY parser with negative results"""
+        queries = {}
+        query = 'run last 24h'
+        mongo = {'fields': None, 'spec': {'block': '/a/b/c'}, 'filters': ['site=T1']}
+        queries[query] = mongo
+        for query, expect in queries.items():
+            self.assertRaises(Exception, self.dasply.parser.parse, query)
 
 #
 # main

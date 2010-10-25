@@ -25,6 +25,10 @@ performed stress tests and code audit DAS servers.
   - Drop off ez_setup in favor python distutils, re-wrote setup.py to use only
     distutils
   - add opensearch plugin
+  - fix issue with DAS PLY shift/reduce conflict (issue with COMMA/list_for_filter)
+  - add to DAS PLY special keys, date and system, to allow queries like
+    run date last 24h, jobsummary date last 24h. Prevent queires like
+    run last 24h since it leads to ambuguous conditions.
 
 - 0.5.3 - 0.5.4 series
 
