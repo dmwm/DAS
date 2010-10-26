@@ -27,6 +27,9 @@ class DBSService(DASAbstractService):
         """
         if  api == 'listBlocks':
             prim_key = 'block'
+        if  api == 'listBlocks4path':
+            api = 'listBlocks'
+            prim_key = 'block'
         elif api == 'listBlockProvenance':
             prim_key = 'block'
         elif api == 'listFiles':

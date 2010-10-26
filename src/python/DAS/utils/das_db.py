@@ -10,12 +10,14 @@ __revision__ = "$Id: das_db.py,v 1.9 2010/05/04 21:12:19 valya Exp $"
 __version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
+import sys
 import time
 import types
 import traceback
 
 # monogo db modules
 from pymongo.connection import Connection
+import gridfs
 
 def connection_monitor(dbhost, dbport, func, sleep=5):
     """
@@ -64,7 +66,10 @@ class _DBConnectionSingleton(object):
         uri  = make_uri([pair])
         if  not self.conndict.has_key(uri):
             try:
-                self.conndict[uri] = Connection(uri)
+                dbinst = Connection(uri)
+                gfs    = dbinst.gridfs
+                fsinst = gridfs.GridFS(gfs)
+                self.conndict[uri] = (dbinst, fsinst)
             except:
                 traceback.print_exc()
                 return None
@@ -75,7 +80,10 @@ class _DBConnectionSingleton(object):
         uri  = make_uri(pairs)
         if  not self.conndict.has_key(uri):
             try:
-                self.conndict[uri] = Connection(uri)
+                dbinst = Connection(uri)
+                gfs    = dbinst.gridfs
+                fsinst = gridfs.GridFS(gfs)
+                self.conndict[uri] = (dbinst, fsinst)
             except:
                 traceback.print_exc()
                 return None
@@ -85,12 +93,38 @@ DB_CONN_SINGLETON = _DBConnectionSingleton()
 
 def db_connection(dbhost, dbport):
     """Return DB connection instance"""
-    return DB_CONN_SINGLETON.connection(dbhost, dbport)
+    dbinst, _ = DB_CONN_SINGLETON.connection(dbhost, dbport)
+    return dbinst
 
 def db_connections(pairs):
     """
     Return DB connection instance for provided set of (dbhost, dbport)
     pairs
     """
-    return DB_CONN_SINGLETON.connections(pairs)
+    dbinst, _ = DB_CONN_SINGLETON.connections(pairs)
+    return dbinst
 
+def db_gridfs(dbhost, dbport):
+    """
+    Return pointer to MongoDB GridFS
+    """
+    _, fsinst = DB_CONN_SINGLETON.connection(dbhost, dbport)
+    return fsinst
+
+def parse2gridfs(gfs, genrows, logger=None):
+    """
+    Yield docs from provided generator with size < 4MB or store them into
+    GridFS.
+    """
+    for row in genrows:
+        row_size = sys.getsizeof(str(row))
+        if  row_size < 4*1024*1024:
+            yield row
+        else:
+            fid = gfs.put(row)
+            gfs_rec = dict(gridfs_id=fid)
+            if  logger:
+                msg = 'parse2gridfs record %s/size %s replaced with fid=%s'\
+                % (row['_id'], row_size, fid)
+                logger.info(msg)
+            yield gfs_rec

@@ -25,9 +25,9 @@ from DAS.utils.utils import getarg, genkey, DotDict
 from DAS.utils.utils import row2das, extract_http_error, make_headers
 from DAS.utils.utils import xml_parser, json_parser, plist_parser
 from DAS.utils.utils import yield_rows, expire_timestamp
-#from DAS.core.das_aggregators import das_func
 from DAS.core.das_mongocache import compare_specs, encode_mongo_query
 from DAS.utils.das_timer import das_timer
+from DAS.utils.das_db import db_gridfs, parse2gridfs
 
 def dasheader(system, query, api, url, args, ctime, expire):
     """
@@ -55,6 +55,9 @@ class DASAbstractService(object):
             self.dasmapping  = config['dasmapping']
             self.analytics   = config['dasanalytics']
             self.write2cache = config.get('write_cache', True)
+            host             = config['mongodb']['dbhost']
+            port             = config['mongodb']['dbport']
+            self.gfs         = db_gridfs(host, port)
         except:
             traceback.print_exc()
             print config
@@ -440,6 +443,10 @@ class DASAbstractService(object):
         Check and adjust DAS records wrt input query. If some of the DAS
         keys are missing, add it with its value to the DAS record.
         """
+        # Scan all docs and store those whose size above MongoDB limit into
+        # GridFS
+        genrows = parse2gridfs(self.gfs, genrows, self.logger)
+        # look-up primary key
         prim_key  = self.dasmapping.primary_key(self.name, api)
         spec  = query['spec']
         skeys = spec.keys()

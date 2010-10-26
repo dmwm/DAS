@@ -29,6 +29,9 @@ performed stress tests and code audit DAS servers.
   - add to DAS PLY special keys, date and system, to allow queries like
     run date last 24h, jobsummary date last 24h. Prevent queires like
     run last 24h since it leads to ambuguous conditions.
+  - add support for GridFS; parse2gridfs generator pass docs whose size less then
+    MongoDB limit (4MB) or store doc into GridFS. In later case the doc in DAS
+    workflow is replaced with gridfs pointer (issue #611)
 
 - 0.5.3 - 0.5.4 series
 

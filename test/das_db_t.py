@@ -9,7 +9,7 @@ import time
 import ply.yacc
 import unittest
 import traceback
-from   DAS.utils.das_db import db_connection, make_uri
+from   DAS.utils.das_db import db_connection, make_uri, db_gridfs
 from   DAS.utils.das_config import das_readconfig
 
 class testDAS_DB(unittest.TestCase):
@@ -50,6 +50,15 @@ class testDAS_DB(unittest.TestCase):
 
         result = db_connection(self.dbhost, self.dbport)
         self.assertEqual(expect, result.instance)
+
+    def test_db_gridfs(self):
+        """Test db_gridfs"""
+        fsinst  = db_gridfs(self.dbhost, self.dbport)
+        doc     = 'hello world!'
+        fid     = fsinst.put(doc)
+        content = fsinst.get(fid).read()
+        self.assertEqual(doc, content)
+        fsinst.delete(fid)
 
 #
 # main
