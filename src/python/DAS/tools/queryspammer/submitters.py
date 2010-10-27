@@ -89,28 +89,36 @@ class HTTPSubmitter(Submitter):
         self.timeout = kwargs.get('timeout', None)
         Submitter.__init__(self, producer, **kwargs)
     def submit(self, query):
-        if self.mode == 'GET':
+        data = ''
+        if self.method == 'GET':
             if self.getmode == 'query':
                 self.args[self.queryarg] = query
                 url = self.baseurl +\
-                 '' if self.baseurl[-1] == '?' else '?' +\
+                 ('' if self.baseurl[-1] == '?' else '?') +\
                   urllib.urlencode(self.args)
                 req = urllib2.Request(url=url, headers=self.headers)
                 result = urllib2.urlopen(req, timeout=self.timeout)
-                return len(result.read())
+                data = result.read()
+                 
             elif self.getmode == 'positional':
                 url = self.baseurl + urllib.quote_plus(query)
                 req = urllib2.Request(url=url, headers=self.headers)
                 result = urllib2.urlopen(req, timeout=self.timeout)
-                return 'READ %d' % len(result.read())
-        elif self.mode == 'POST':
+                data = result.read()
+        elif self.method == 'POST':
             self.args[self.queryarg] = query
             req = urllib2.Request(url=url, 
                                   data=urllib.urlencode(self.args), 
                                   headers=self.headers)
             result = urllib2.urlopen(req, timeout=self.timeout)
-            return 'READ %d' % len(result.read())
-        return None
+            data = result.read()
+        return 'READ %d bytes: %s' % (len(data), data[:256] + ('...' if len(data) > 256 else ''))
+
+class DASWebSubmitter(HTTPSubmitter):
+    def __init__(self, producer, **kwargs):
+        HTTPSubmitter.__init__(self, producer, 
+                               baseurl='http://localhost:8212/das/jsonview',
+                               queryarg='input', **kwargs)
 
 class DASSubmitter(Submitter):
     "Submitter using DASCore"
@@ -141,12 +149,14 @@ class PLYSubmitter(Submitter):
     def __init__(self, producer, **kwargs):
         assert HAVE_DAS
         core = DASCore()
-        mapping = core.mapping
-        allkeys = []
-        for system, keys in core.mapping.daskeys().items():
-            allkeys.extend(keys)
-        allkeys = list(set(allkeys))
-        self.DASPLY = DASPLY(allkeys)
+        parserdir   = core.dasconfig['das']['parserdir']
+        dasservices = core.dasconfig['services']
+        daskeys = []
+        for val in core.mapping.daskeys().values():
+            for item in val:
+                daskeys.append(item)
+        
+        self.DASPLY = DASPLY(parserdir, daskeys, dasservices)
         self.DASPLY.build()
         Submitter.__init__(self, producer, **kwargs)
     def submit(self, query):

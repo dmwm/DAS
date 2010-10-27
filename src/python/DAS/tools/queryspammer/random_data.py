@@ -160,7 +160,10 @@ class RandomData(object):
     def get_random(self, key):
         if self.has_key(key):
             generator = random.choice(self.keygen[key])
-            return getattr(self, generator)()
+            data = getattr(self, generator)() 
+            if ' ' in data:
+                data = '"%s"' % data
+            return data
         return None
     
     def get_keys(self):

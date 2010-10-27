@@ -81,6 +81,10 @@ class WeightedSiteProducer(WeightedKeyProducer):
     "Weighted site=value producer"
     def __init__(self, data):
         WeightedKeyProducer.__init__(self, data, 'site')
+        
+class WeightedCityProducer(WeightedKeyProducer):
+    def __init__(self, data):
+        WeightedKeyProducer.__init__(self, data, 'city')
                 
 class MappingProducer(Producer):
     "Tries to produce random queries using DAS mapping DB directly"
