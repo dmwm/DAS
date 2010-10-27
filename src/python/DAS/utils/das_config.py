@@ -110,26 +110,28 @@ def das_configfile():
     else:
         raise EnvironmentError('DAS_CONFIG environment is not set up')
 
-def das_readconfig_helper(dasconfig=None):
+def das_readconfig_helper():
     """
     Read DAS configuration file and store DAS parameters into returning
     dictionary.
     """
     configdict = {}
+    dasconfig  = das_configfile()
     # read first CMS python configuration file
     # if not fall back to standard python cfg file
     try:
         from DAS.utils.das_cms_config import read_wmcore
         print "Reading DAS CMS configuration..."
-        cmsconfig = dasconfig
-        if  not cmsconfig:
-            cmsconfig = 'config/das_cms.py'
-        configdict = read_wmcore(cmsconfig)
-    except Exception, ex:
-        print 'Unable to read DAS CMS configuration,', str(ex)
-        if  not dasconfig:
-            dasconfig = das_configfile()
-        configdict = read_configparser(dasconfig)
+        configdict = read_wmcore(dasconfig)
+    except Exception, exp:
+        print 'Unable to read DAS CMS configuration,', str(exp)
+        try:
+            configdict = read_configparser(dasconfig)
+        except Exception, exp:
+            print 'Unable to read DAS cfg configuration,', str(exp)
+    if  not configdict:
+        msg = 'Unable to read DAS configuration'
+        raise Exception(msg)
     return configdict
 
 class _DASConfigSingleton(object):

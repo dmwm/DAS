@@ -50,5 +50,8 @@ class DAS_SONManipulator(SONManipulator):
                 son['das_id'] = [str(r) for r in objdas_id]
             else:
                 son['das_id'] = objdas_id
+        if  isinstance(son, dict) and son.has_key('gridfs_id'):
+            objdas_id = son['gridfs_id']
+            son['gridfs_id'] = objdas_id
         return son
 

@@ -144,6 +144,9 @@ def checkargs(supported):
             if  checkarg(kwds, 'msg') and not isinstance(kwds['msg'], str):
                 code = web_code('Unsupported msg value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'fid') and len(kwds['fid']) != 24:
+                code = web_code('Unsupported id value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
             data = func (self, *args, **kwds)
             return data
         wrapped_f.__doc__  = func.__doc__
@@ -264,6 +267,8 @@ def json2html(idict, pad=""):
                 if  len(str(val)) < 3: # aggregator's ids
                     value = val
             sss += pad + """ <code class="key">"%s": </code>%s""" % (key, value)
+        elif key == 'gridfs_id':
+            value = "<a href=\"/das/gridfs/%s\">%s</das>" % (val, val)
         elif isinstance(val, list):
             if  len(val) == 1:
                 nline = ''

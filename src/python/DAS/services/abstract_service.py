@@ -443,11 +443,14 @@ class DASAbstractService(object):
         Check and adjust DAS records wrt input query. If some of the DAS
         keys are missing, add it with its value to the DAS record.
         """
-        # Scan all docs and store those whose size above MongoDB limit into
-        # GridFS
-        genrows = parse2gridfs(self.gfs, genrows, self.logger)
         # look-up primary key
         prim_key  = self.dasmapping.primary_key(self.name, api)
+
+        # Scan all docs and store those whose size above MongoDB limit into
+        # GridFS
+        map_key = self.dasmapping.primary_mapkey(self.name, api)
+        genrows = parse2gridfs(self.gfs, map_key, genrows, self.logger)
+
         spec  = query['spec']
         skeys = spec.keys()
         row   = genrows.next()

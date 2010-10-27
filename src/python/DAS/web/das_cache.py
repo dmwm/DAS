@@ -35,9 +35,10 @@ from DAS.web.tools import exposejson
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 from DAS.web.utils import checkargs
+from DAS.utils.das_db import db_gridfs
 
 DAS_CACHE_INPUTS = ['query', 'idx', 'limit', 'expire', 'method', 
-             'skey', 'order', 'collection']
+             'skey', 'order', 'collection', 'fid']
 
 class DASCacheService(DASWebManager):
     """
@@ -67,6 +68,9 @@ class DASCacheService(DASWebManager):
             'records':
                 {'args':['query', 'count', 'collection'],
                  'call': self.records, 'version':__version__},
+            'gridfs':
+                {'args':['fid'],
+                 'call': self.gridfs, 'version':__version__},
             'status':
                 {'args':['query'],
                  'call': self.status, 'version':__version__},
@@ -124,6 +128,7 @@ class DASCacheService(DASWebManager):
                 % (logdbname, logdbcoll, capped_size))
             self.col      = self.con[logdbname][logdbcoll]
             self.dascore  = DASCore()
+            self.gfs      = db_gridfs(self.dbhost, self.dbport)
         except:
             self.con  = None
             self.dascore = None
@@ -182,6 +187,33 @@ class DASCacheService(DASWebManager):
                 (spec, idx=idx, limit=limit, collection=coll, adjust=False)
             data['status'] = 'success'
             data['data']   = [r for r in gen]
+        except:
+            self.logger.error(traceback.format_exc())
+            code = web_code('Exception')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
+        data['ctime'] = time.time() - time0
+        return data
+
+    @expose
+    @checkargs(DAS_CACHE_INPUTS)
+    def gridfs(self, *args, **kwargs):
+        """
+        HTTP GET request.
+        Retrieve file from MongoDB GridFS for given file id.
+        """
+        time0 = time.time()
+        msg = 'gridfs(%s, %s)' % (args, kwargs)
+        self.logger.info(msg)
+        data  = {'server_method':'request'}
+        if  not kwargs.has_key('fid'):
+            code = web_code('No file id')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
+        fid = kwargs.get('fid')
+        data.update({'status':'requested', 'fid':fid}) 
+        try:
+            fds = self.gfs.get(ObjectId(fid))
+            data['status'] = 'success'
+            data['data']   = fds.read()
         except:
             self.logger.error(traceback.format_exc())
             code = web_code('Exception')

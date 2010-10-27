@@ -60,6 +60,8 @@ class testDAS_DB(unittest.TestCase):
         self.assertEqual(doc, content)
         fsinst.delete(fid)
 
+        rec     = {'test': 1}
+        self.assertRaises(Exception, fsinst.put, rec)
 #
 # main
 #

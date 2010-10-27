@@ -32,6 +32,9 @@ performed stress tests and code audit DAS servers.
   - add support for GridFS; parse2gridfs generator pass docs whose size less then
     MongoDB limit (4MB) or store doc into GridFS. In later case the doc in DAS
     workflow is replaced with gridfs pointer (issue #611)
+  - add new method to DAS cache server to get data from GridFS for provided file id
+  - fix DAS son manipulator to support gridfs_id
+  - fix das_config to explicitly use DAS_CONFIG environment
 
 - 0.5.3 - 0.5.4 series
 

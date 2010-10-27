@@ -327,6 +327,37 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    def gridfs(self, *args, **kwargs):
+        """
+        Retieve records from GridFS
+        """
+        try:
+            recid = args[0]
+            time0    = time.time()
+            url      = self.cachesrv
+            show     = getarg(kwargs, 'show', 'json')
+            coll     = getarg(kwargs, 'collection', 'merge')
+            params   = {'fid':recid}
+            path     = '/rest/gridfs'
+            headers  = {"Accept": "application/json"}
+            try:
+                data = urllib2_request('GET', url+path, params, headers=headers)
+                result = json.loads(data)
+            except urllib2.HTTPError, httperror:
+                err = get_ecode(httperror.read())
+                self.logger.error(err)
+                result = {'status':'fail', 'reason': err}
+            except:
+                self.logger.error(traceback.format_exc())
+                result = {'status':'fail', 'reason':traceback.format_exc()}
+        except:
+                self.logger.error(traceback.format_exc())
+                result = {'status':'fail', 'reason':traceback.format_exc()}
+        cherrypy.response.headers['Content-Type'] = 'application/json'
+        return result
+
+    @expose
+    @checkargs(DAS_WEB_INPUTS)
     def records(self, *args, **kwargs):
         """
         Retieve all records id's.

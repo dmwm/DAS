@@ -48,6 +48,9 @@ class DASOptionParser:
         self.parser.add_option("--query", action="store", type="string", 
                                default=False, dest="query",
              help="specify query for your request")
+        self.parser.add_option("--fid", action="store", type="string", 
+                               default=False, dest="fid",
+             help="specify file id to get file from MongoDB GridFS")
         self.parser.add_option("--input", action="store", type="string", 
                                default=False, dest="input",
              help="specify input for your request; the input should be in a form of dict")
@@ -88,6 +91,8 @@ if __name__ == '__main__':
         params = json.loads(opts.input)
     elif opts.query:
         params = {'query':query, 'idx':idx, 'limit':limit}
+    elif opts.fid:
+        params = {'fid': opts.fid}
     else:
         msg = 'You need to provide either input dict or query.'
         raise Exception(msg)
@@ -97,6 +102,8 @@ if __name__ == '__main__':
         method = 'replace'
     elif opts.request.lower() == 'delete':
         method = 'delete'
+    elif opts.fid:
+        method = 'gridfs'
     else:
         method = 'request'
     path = '/rest/%s' % method
