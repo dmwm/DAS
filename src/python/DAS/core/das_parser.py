@@ -299,7 +299,12 @@ class QLManager(object):
             if  add_to_analytics:
                 self.analytics.add_query(query, mongo_query)
             return mongo_query
-        mongo_query = self.mongo_query(query)
+        try:
+            mongo_query = self.mongo_query(query)
+        except:
+            print "\nUnable to convert input query='%s' into MongoDB one\n" \
+                % query
+            raise
         self.convert2skeys(mongo_query)
         if  add_to_analytics:
             self.analytics.add_query(query, mongo_query)
@@ -328,7 +333,7 @@ class QLManager(object):
                     mongo_query = ply2mongo(ply_query)
                     self.parserdb.insert_valid_query(query, mongo_query)
                 except Exception, exp:
-                    self.parserdb.insert_invalid_query(query, exp.message)
+                    self.parserdb.insert_invalid_query(query, exp)
                     raise
         else:
             ply_query   = self.dasply.parser.parse(query)

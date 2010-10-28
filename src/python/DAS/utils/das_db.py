@@ -124,6 +124,8 @@ def parse2gridfs(gfs, prim_key, genrows, logger=None):
     """
     key = prim_key.split('.')[0]
     for row in genrows:
+        if  not row:
+            continue
         row_size = sys.getsizeof(str(row))
         if  row_size < MONGODB_LIMIT:
             yield row
@@ -136,6 +138,12 @@ def parse2gridfs(gfs, prim_key, genrows, logger=None):
                 msg = 'parse2gridfs record size %s, replace with %s'\
                 % (row_size, gfs_rec)
                 logger.info(msg)
+            # to avoid expire time collapse in post-poned generator actions
+            # I need to dump (force generator to be executed)
+            rec = gfs.get(fid)
+            msg = 'Created new entry in GridFS, fid=%s, md5=%s, upload_date=%s'\
+                % (fid, rec.md5, rec.upload_date)
+            print msg
             if  val != row and sys.getsizeof(str(val)) < MONGODB_LIMIT:
                 drec = DotDict(gfs_rec)
                 drec._set(prim_key, val)

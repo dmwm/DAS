@@ -62,6 +62,8 @@ class DBSService(DASAbstractService):
             raise Exception(msg)
         gen = xml_parser(source, prim_key)
         for row in gen:
+            if  not row:
+                continue
             if  row.has_key('algorithm'):
                 del row['algorithm']['ps_content']
             if  row.has_key('processed_dataset') and \

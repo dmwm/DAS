@@ -100,6 +100,9 @@ def encode_mongo_query(query):
 
     Conversion is done using JSON dumps method.
     """
+    if  not query:
+        msg = 'Cannot decode, input query=%s' % query
+        raise Exception(msg)
     return_query = dict(query)
     speclist = []
     for key, val in return_query.pop('spec').items():
