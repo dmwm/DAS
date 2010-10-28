@@ -42,6 +42,11 @@ class testUtils(unittest.TestCase):
         expect = tstamp
         self.assertEqual(result, expect)
 
+        expire = '900'
+        result = long(expire_timestamp(expire))
+        expect = long(time.time()) + 900
+        self.assertEqual(result, expect)
+
     def test_yield_rows(self):
         """Test yield_rows function"""
         val    = 1

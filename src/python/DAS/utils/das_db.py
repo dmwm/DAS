@@ -117,26 +117,26 @@ def db_gridfs(dbhost, dbport):
     _, fsinst = DB_CONN_SINGLETON.connection(dbhost, dbport)
     return fsinst
 
-def parse2gridfs(gfs, genrows, logger=None):
+def parse2gridfs(gfs, prim_key, genrows, logger=None):
     """
     Yield docs from provided generator with size < 4MB or store them into
     GridFS.
     """
-    limit = MONGODB_LIMIT
+    key = prim_key.split('.')[0]
     for row in genrows:
         row_size = sys.getsizeof(str(row))
-        if  row_size < limit:
+        if  row_size < MONGODB_LIMIT:
             yield row
         else:
             fid = gfs.put(str(row))
-            gfs_rec = dict(gridfs_id=fid)
+            gfs_rec = {key: {'gridfs_id': str(fid)}}
             ddict = DotDict(row)
             val = ddict._get(prim_key)
             if  logger:
                 msg = 'parse2gridfs record size %s, replace with %s'\
                 % (row_size, gfs_rec)
                 logger.info(msg)
-            if  val != row and sys.getsizeof(str(val)) < limit:
+            if  val != row and sys.getsizeof(str(val)) < MONGODB_LIMIT:
                 drec = DotDict(gfs_rec)
                 drec._set(prim_key, val)
                 yield drec

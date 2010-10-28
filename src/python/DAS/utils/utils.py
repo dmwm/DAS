@@ -85,6 +85,8 @@ def expire_timestamp(expire):
     if  isinstance(expire, str) and \
         expire.find(',') != -1 and expire.find(':') != -1:
         return calendar.timegm(time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z'))
+    if  isinstance(expire, str):
+        expire = long(expire)
     tstamp = time.time()
     # use Jan 1st, 2010 as a seed to check expire date
     # prior 2010 DAS was not released in production
