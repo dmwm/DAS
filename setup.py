@@ -2,7 +2,9 @@
 
 import sys
 import os
-
+from unittest import TextTestRunner, TestLoader
+from glob import glob
+from os.path import splitext, basename, join as pjoin, walk
 from distutils.core import setup
 from distutils.cmd import Command
 from distutils.command.build_ext import build_ext
@@ -14,10 +16,15 @@ from distutils.command.install import INSTALL_SCHEMES
 sys.path.append(os.path.join(os.getcwd(), 'src/python'))
 from DAS import version as das_version
 
-#from distutils.core import Command
-from unittest import TextTestRunner, TestLoader
-from glob import glob
-from os.path import splitext, basename, join as pjoin, walk
+required_python_version = '2.6'
+
+if sys.platform == 'win32' and sys.version_info > (2, 6):
+   # 2.6's distutils.msvc9compiler can raise an IOError when failing to
+   # find the compiler
+   build_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError,
+                 IOError)
+else:
+   build_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError)
 
 class TestCommand(Command):
     """
@@ -44,7 +51,7 @@ class TestCommand(Command):
                     ['test', splitext(basename(t))[0]])
                 )
         tests = TestLoader().loadTestsFromNames(testfiles)
-        t = TextTestRunner(verbosity = 1)
+        t = TextTestRunner(verbosity = 2)
         t.run(tests)
 
 class CleanCommand(Command):
@@ -72,17 +79,6 @@ class CleanCommand(Command):
                 os.unlink(clean_me)
             except:
                 pass
-
-required_python_version = '2.6'
-
-if sys.platform == 'win32' and sys.version_info > (2, 6):
-   # 2.6's distutils.msvc9compiler can raise an IOError when failing to
-   # find the compiler
-   build_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError,
-                 IOError)
-else:
-   build_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError)
-
 
 class BuildExtCommand(build_ext):
     """
