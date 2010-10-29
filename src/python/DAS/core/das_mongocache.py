@@ -300,11 +300,6 @@ class DASMongocache(object):
         % (self.dbhost, self.dbport, self.dbname)
         self.logger.info(msg)
 
-        # get analytics db handler
-        analyticsdb    = config['analyticsdb']['dbname']
-        collection     = config['analyticsdb']['collname']
-        self.analytics = self.conn[analyticsdb][collection]
-
         self.add_manipulator()
         
     def add_manipulator(self):
@@ -788,20 +783,6 @@ class DASMongocache(object):
         counter    = 0
         if  isinstance(results, list) or isinstance(results, GeneratorType):
             for item in results:
-                if  not counter:
-                    # get expire timestamp from apicall record
-                    spec   = {'apicall.qhash':qhash}
-                    record = self.analytics.find_one(spec)
-                    if  not record:
-                        msg  = 'DASMongocache::update_records, '
-                        msg += 'no apicall records found in analytics db'
-                        msg += '\nspec=%s, record=%s' % (spec, record)
-                        raise Exception(msg)
-                    expire = record['apicall']['expire']
-                    # update query record with new expire timestamp
-                    self.col.update({'das.qhash':qhash}, 
-                    {'$set': {'das.expire':expire}})
-
                 # TODO:
                 # the exception/error records should not go to cache
                 # instead we can place them elsewhere for further analysis
