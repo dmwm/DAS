@@ -35,6 +35,12 @@ performed stress tests and code audit DAS servers.
   - add new method to DAS cache server to get data from GridFS for provided file id
   - fix DAS son manipulator to support gridfs_id
   - fix das_config to explicitly use DAS_CONFIG environment
+  - fix bug with expire timestamp update from analytics
+  - add support for "test" and "clean" action in setup.py;
+    remove das_test in favor standard python setup.py test
+  - add weighted producer into queryspammer toolkit; this allows to mimic
+    real time behavior of most popular queries and ability to invoke
+    DAS robots for them (up-coming)
 
 - 0.5.3 - 0.5.4 series
 
