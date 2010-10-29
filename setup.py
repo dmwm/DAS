@@ -14,6 +14,65 @@ from distutils.command.install import INSTALL_SCHEMES
 sys.path.append(os.path.join(os.getcwd(), 'src/python'))
 from DAS import version as das_version
 
+#from distutils.core import Command
+from unittest import TextTestRunner, TestLoader
+from glob import glob
+from os.path import splitext, basename, join as pjoin, walk
+
+class TestCommand(Command):
+    """
+    Class to handle unit tests
+    """
+    user_options = [ ]
+
+    def initialize_options(self):
+        """Init method"""
+        self._dir = os.getcwd()
+
+    def finalize_options(self):
+        """Finalize method"""
+        pass
+
+    def run(self):
+        """
+        Finds all the tests modules in test/, and runs them.
+        """
+        testfiles = [ ]
+        for t in glob(pjoin(self._dir, 'test', '*_t.py')):
+            if not t.endswith('__init__.py'):
+                testfiles.append('.'.join(
+                    ['test', splitext(basename(t))[0]])
+                )
+        tests = TestLoader().loadTestsFromNames(testfiles)
+        t = TextTestRunner(verbosity = 1)
+        t.run(tests)
+
+class CleanCommand(Command):
+    """
+    Class which clean-up all pyc files
+    """
+    user_options = [ ]
+
+    def initialize_options(self):
+        """Init method"""
+        self._clean_me = [ ]
+        for root, dirs, files in os.walk('.'):
+            for f in files:
+                if f.endswith('.pyc'):
+                    self._clean_me.append(pjoin(root, f))
+
+    def finalize_options(self):
+        """Finalize method"""
+        pass
+
+    def run(self):
+        """Run method"""
+        for clean_me in self._clean_me:
+            try:
+                os.unlink(clean_me)
+            except:
+                pass
+
 required_python_version = '2.6'
 
 if sys.platform == 'win32' and sys.version_info > (2, 6):
@@ -25,8 +84,9 @@ else:
    build_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError)
 
 
-class custom_build_ext(build_ext):
-    """Allow C extension building to fail.
+class BuildExtCommand(build_ext):
+    """
+    Allow C extension building to fail.
     The C extension speeds up DAS, but is not essential.
     """
 
@@ -159,7 +219,9 @@ def main():
                                include_dirs=['extensions'],
                                sources=['src/python/DAS/extensions/dict_handler.c'])],
         classifiers          = classifiers,
-        cmdclass             = {"build_ext": custom_build_ext},
+        cmdclass             = {'build_ext': BuildExtCommand,
+                                'test': TestCommand, 
+                                'clean': CleanCommand},
         author               = author,
         author_email         = author_email,
         url                  = url,

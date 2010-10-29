@@ -8,6 +8,7 @@ Unit test for DAS config module
 import os
 import types
 import unittest
+from tempfile import NamedTemporaryFile
 from DAS.utils.das_config import das_configfile, das_readconfig, write_configparser
 
 class testDASConfig(unittest.TestCase):
@@ -23,6 +24,10 @@ class testDASConfig(unittest.TestCase):
         
     def testConfig(self):                          
         """test read/write of configuration file"""
+        if  os.environ.has_key('DAS_CONFIG'):
+            del os.environ['DAS_CONFIG']
+        fds = NamedTemporaryFile()
+        os.environ['DAS_CONFIG'] = fds.name
         dasconfig = das_configfile()
         write_configparser(dasconfig, True)
         readdict = das_readconfig()
