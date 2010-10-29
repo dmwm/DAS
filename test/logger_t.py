@@ -7,7 +7,6 @@ unit test for logger module
 
 import os
 import unittest
-from tempfile import NamedTemporaryFile
 from DAS.utils.logger import DASLogger
 
 class testDASLogger(unittest.TestCase):
@@ -19,8 +18,7 @@ class testDASLogger(unittest.TestCase):
         set up DAS core module
         """
         self.verbose = 0
-        fds = NamedTemporaryFile()
-        self.logfile = fds.name
+        self.logfile = '/tmp/das_logger_t.log'
         format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         self.daslogger = DASLogger(logfile=self.logfile, 
                 verbose=self.verbose, format=format)
