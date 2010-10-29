@@ -31,24 +31,21 @@ class testDASCore(unittest.TestCase):
         connection = Connection(dbhost, dbport)
         connection.drop_database('das') 
 
-    def testAddressService(self):
-        """test DASCore with as address service, via google_maps"""
-        # test DAS workflow
-        query  = "city=Ithaca"
-        query  = self.das.adjust_query(query)
-        result = self.das.call(query)
-        expect = 1
-        self.assertEqual(expect, result)
+#    def testAddressService(self):
+#        """test DASCore with as address service, via google_maps"""
+#        query  = "city=Ithaca"
+#        query  = self.das.adjust_query(query)
+#        result = self.das.call(query)
+#        expect = 1
+#        self.assertEqual(expect, result)
 
-        # test results
-        query  = "city=Ithaca | grep city.Placemark.address"
-        query  = self.das.adjust_query(query)
-        result = self.das.get_from_cache(query)
-        result = [r for r in result][0]
-        result = DotDict(result)._get('city.Placemark.address')
-#        expect = 'Ithaca, NY 14850, USA'
-        expect = 'Ithaca'
-        self.assertEqual(expect, result.split(',')[0])
+#        query  = "city=Ithaca | grep city.Placemark.address"
+#        query  = self.das.adjust_query(query)
+#        result = self.das.get_from_cache(query)
+#        result = [r for r in result][0]
+#        result = DotDict(result)._get('city.Placemark.address')
+#        expect = 'Ithaca'
+#        self.assertEqual(expect, result.split(',')[0])
 
     def testAggregators(self):
         """test DASCore aggregators via zip service"""

@@ -44,12 +44,14 @@ class TestCommand(Command):
         """
         Finds all the tests modules in test/, and runs them.
         """
-        testfiles = [ ]
+        exclude = [pjoin(self._dir, 'test', 'cern_sso_auth_t.py')]
+        testfiles = []
         for t in glob(pjoin(self._dir, 'test', '*_t.py')):
-            if not t.endswith('__init__.py'):
+            if  not t.endswith('__init__.py') and t not in exclude:
                 testfiles.append('.'.join(
                     ['test', splitext(basename(t))[0]])
                 )
+        testfiles.sort()
         tests = TestLoader().loadTestsFromNames(testfiles)
         t = TextTestRunner(verbosity = 2)
         t.run(tests)
