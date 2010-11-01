@@ -41,6 +41,11 @@ performed stress tests and code audit DAS servers.
   - add weighted producer into queryspammer toolkit; this allows to mimic
     real time behavior of most popular queries and ability to invoke
     DAS robots for them (up-coming)
+  - fix #52, now both min and max das aggregators return _id of the record
+  - return None as db instances when MongoDB is down
+  - add avg/median functions to result object; modified result object to hold 
+    result and rec counter; add helper das function to associate with each 
+    aggreagators, e.g. das_min
 
 - 0.5.3 - 0.5.4 series
 

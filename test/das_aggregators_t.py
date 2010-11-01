@@ -6,15 +6,16 @@ Unit test for DAS aggregators
 """
 
 import unittest
-from DAS.core.das_aggregators import das_func
+from DAS.core.das_aggregators import das_func, das_sum, das_avg, das_min, das_max
+from DAS.core.das_aggregators import das_count, das_median
 from DAS.utils.utils import DotDict
 
-class testQLParser(unittest.TestCase):
+class testDASAggregators(unittest.TestCase):
     """
-    A test class for the DAS qlparser
+    A test class for the DAS aggregators
     """
-    def testBracketObj(self):                          
-        """test search for bracket objects"""
+    def test_aggregators(self):
+        """test aggregators dict records"""
         rows = []
         data = {'block': {'name':'AAA', 'replica': [{'name':'a', 'size':1}, {'name':'b', 'size':10}] }}
         rows.append(data)
@@ -22,25 +23,84 @@ class testQLParser(unittest.TestCase):
         rows.append(data)
 
         expect = 33
-        result = das_func('sum', 'block.replica.size', rows)
-        self.assertEqual(expect, result)
+        robj = das_func('sum', 'block.replica.size', rows)
+        self.assertEqual(expect, robj.result)
 
         expect = 4
-        result = das_func('count', 'block.replica.size', rows)
-        self.assertEqual(expect, result)
+        robj = das_func('count', 'block.replica.size', rows)
+        self.assertEqual(expect, robj.result)
 
         expect = 1
-        result = das_func('min', 'block.replica.size', rows)
-        self.assertEqual(expect, result)
+        robj = das_func('min', 'block.replica.size', rows)
+        self.assertEqual(expect, robj.result)
 
         expect = 20
-        result = das_func('max', 'block.replica.size', rows)
-        self.assertEqual(expect, result)
+        robj = das_func('max', 'block.replica.size', rows)
+        self.assertEqual(expect, robj.result)
+
+        expect = (1+10+2+20)/4.
+        robj = das_func('avg', 'block.replica.size', rows)
+        self.assertEqual(expect, float(robj.result)/robj.rec_count)
+
+        expect = (10+2)/2
+        robj = das_func('median', 'block.replica.size', rows)
+        val = (robj.result[len(robj.result)/2-1] + \
+                                robj.result[len(robj.result)/2] )/2
+        self.assertEqual(expect, val)
 
         expect = 20
         drows  = [DotDict(row) for row in rows]
-        result = das_func('max', 'block.replica.size', drows)
+        robj = das_func('max', 'block.replica.size', drows)
+        self.assertEqual(expect, robj.result)
+
+    def test_aggregators_with_das(self):
+        """test aggregators with das record"""
+        rows = []
+        data = {'block': {'name':'AAA', 'replica': [{'name':'a', 'size':1}, {'name':'b', 'size':10}] }}
+        data.update({'_id' : 1})
+        rows.append(data)
+        data = {'block': {'name':'AAA', 'replica': [{'name':'a', 'size':2}, {'name':'b', 'size':20}] }}
+        data.update({'_id' : 2})
+        rows.append(data)
+
+        expect = {'result': 20, '_id': 2}
+        robj = das_func('max', 'block.replica.size', rows)
+        self.assertEqual(expect, dict(result=robj.result, _id=robj._id))
+
+    def test_das_aggregators(self):
+        """test das aggregator functions"""
+        rows = []
+        data = {'block': {'name':'AAA', 'replica': [{'name':'a', 'size':1}, {'name':'b', 'size':10}] }}
+        data.update({'_id' : 1})
+        rows.append(data)
+        data = {'block': {'name':'AAA', 'replica': [{'name':'a', 'size':2}, {'name':'b', 'size':20}] }}
+        data.update({'_id' : 2})
+        rows.append(data)
+
+        expect = {'value': 33}
+        result = das_sum('block.replica.size', rows)
         self.assertEqual(expect, result)
+
+        expect = {'value': 4}
+        result = das_count('block.replica.size', rows)
+        self.assertEqual(expect, result)
+
+        expect = {'value': 1, '_id': 1}
+        result = das_min('block.replica.size', rows)
+        self.assertEqual(expect, result)
+
+        expect = {'value': 20, '_id': 2}
+        result = das_max('block.replica.size', rows)
+        self.assertEqual(expect, result)
+
+        expect = {'value': (1+10+2+20)/4.}
+        result = das_avg('block.replica.size', rows)
+        self.assertEqual(expect, result)
+
+        expect = {'value': (10+2)/2}
+        result = das_median('block.replica.size', rows)
+        self.assertEqual(expect, result)
+
 #
 # main
 #

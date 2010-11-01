@@ -27,7 +27,6 @@ from DAS.core.das_parser import QLManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
-from DAS.core.das_aggregators import das_func
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg, unique_filter
@@ -35,6 +34,7 @@ from DAS.utils.das_timer import das_timer, get_das_timer
 
 # DAS imports
 import DAS.utils.jsonwrapper as json
+import DAS.core.das_aggregators as das_aggregator
 
 class DASCore(object):
     """
@@ -348,7 +348,6 @@ class DASCore(object):
             if  fields:
                 query['fields'] = fields
 
-#            query['fields'] = filters
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
         elif aggregators:
@@ -356,14 +355,7 @@ class DASCore(object):
             _id = 0
             for func, key in aggregators:
                 rows = self.rawcache.get_from_cache(query, collection='merge')
-                if  func == 'avg':
-                    nres = self.rawcache.nresults(query, collection='merge')
-                    if  not nres:
-                        data = 'N/A'
-                    else:
-                        data = float(das_func('sum', key, rows))/nres
-                else:
-                    data = das_func(func, key, rows)
+                data = getattr(das_aggregator, 'das_%s' % func)(key, rows)
                 res += [{'_id':_id, 'function': func, 'key': key, 'result': data}]
                 _id += 1
         else:

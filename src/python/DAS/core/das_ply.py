@@ -140,6 +140,10 @@ class DASPLY(object):
         if re.match(r'[a-z_]+(\.[a-zA-Z_]+)+', t.value):
             t.type = 'DASKEY'
             return t
+        # 3. das_id is also a DASKEY
+        if re.match(r'das_id', t.value):
+            t.type = 'DASKEY'
+            return t
         
         # strip quotation marks, if included
         # anything in quotation marks can't have been a

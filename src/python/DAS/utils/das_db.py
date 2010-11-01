@@ -99,7 +99,11 @@ DB_CONN_SINGLETON = _DBConnectionSingleton()
 
 def db_connection(dbhost, dbport):
     """Return DB connection instance"""
-    dbinst, _ = DB_CONN_SINGLETON.connection(dbhost, dbport)
+    dbinst = None
+    try:
+        dbinst, _ = DB_CONN_SINGLETON.connection(dbhost, dbport)
+    except:
+        pass
     return dbinst
 
 def db_connections(pairs):
@@ -107,14 +111,22 @@ def db_connections(pairs):
     Return DB connection instance for provided set of (dbhost, dbport)
     pairs
     """
-    dbinst, _ = DB_CONN_SINGLETON.connections(pairs)
+    dbinst = None
+    try:
+        dbinst, _ = DB_CONN_SINGLETON.connections(pairs)
+    except:
+        pass
     return dbinst
 
 def db_gridfs(dbhost, dbport):
     """
     Return pointer to MongoDB GridFS
     """
-    _, fsinst = DB_CONN_SINGLETON.connection(dbhost, dbport)
+    fsinst = None
+    try:
+        _, fsinst = DB_CONN_SINGLETON.connection(dbhost, dbport)
+    except:
+        pass
     return fsinst
 
 def parse2gridfs(gfs, prim_key, genrows, logger=None):
