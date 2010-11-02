@@ -10,7 +10,7 @@ added in addition.
 __revision__ = "$Id: __init__.py,v 1.3 2010/01/04 19:01:21 valya Exp $"
 __version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
-__all__ = ['loads', 'dumps']
+__all__ = ['loads', 'dumps', 'JSONEncoder']
 
 try:
     import cjson
@@ -39,6 +39,12 @@ def load(source):
     objects.
     """
     return json.load(source)
+
+def JSONEncoder(*args, **kwargs):
+    """
+    This class is only available in non-cjson
+    """
+    return json.JSONEncoder(*args, **kwargs)
 
 def dumps(idict, **kwargs):
     """

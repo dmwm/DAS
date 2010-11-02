@@ -21,11 +21,17 @@ from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser, unique_filter
 from DAS.utils.utils import DotDict, filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
+from DAS.utils.utils import genkey
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_genkey(self):
+        d1 = {'fields': None, 'spec': [{'key': u'dataset.name', 'value': u'"/TTbar_1jet_Et30-alpgen/Winter09_IDEAL_V12_FastSim_v1/GEN-SIM-DIGI-RECO"'}]}
+        d2 = {'fields': None, 'spec': [{'value': u'"/TTbar_1jet_Et30-alpgen/Winter09_IDEAL_V12_FastSim_v1/GEN-SIM-DIGI-RECO"', 'key': u'dataset.name'}]}
+        self.assertEqual(genkey(d1), genkey(d2))
+    
     def test_expire_timestamp(self):
         """Test expire_timestamp function"""
         result = expire_timestamp('Mon, 04 Oct 2010 18:57:42 GMT')

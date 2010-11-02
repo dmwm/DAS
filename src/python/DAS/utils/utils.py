@@ -294,7 +294,7 @@ def splitlist(ilist, nentries):
         jdx = idx+nentries
         if  jdx > len(ilist):
             jdx = len(ilist)
-        yield ilist[idx:jdx]
+        yield ilist[idx:jdx] 
 
 def genkey(query):
     """
@@ -303,9 +303,12 @@ def genkey(query):
     """
     keyhash = hashlib.md5()
     if  isinstance(query, dict):
-        query = json.dumps(query)
+        query = json.JSONEncoder(sort_keys=True).encode(query)
     keyhash.update(query)
     return keyhash.hexdigest()
+
+
+    
 
 def gen2list(results):
     """
