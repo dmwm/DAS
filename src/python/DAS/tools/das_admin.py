@@ -244,7 +244,7 @@ class DASMongoDB(object):
         """
         Retrieve some statistics about DAS DBs.
         """
-        nrecords    = self.cache.find({}).count()
+        nrecords    = self.cache.count()
         nexpire     = self.cache.find({'das.expire' : {'$lt':time.time()}}).count()
         timestamp   = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
         systems     = self.config['systems']
@@ -274,7 +274,7 @@ class DASMongoDB(object):
 #        print "eval res", res
 
         if  not isystem:
-            nrecords   = self.conn.analytics.db.find({}).count()
+            nrecords   = self.conn.analytics.db.count()
             print self.line
             print "DB report, analytics,", timestamp 
             print "total number of records:", nrecords
@@ -283,7 +283,7 @@ class DASMongoDB(object):
             for row in self.conn.analytics.system.indexes.find({}):
                 print row
 
-            nrecords   = self.conn.mapping.db.find({}).count()
+            nrecords   = self.conn.mapping.db.count()
             print self.line
             print "DB report, mapping,", timestamp 
             print "total number of records:", nrecords

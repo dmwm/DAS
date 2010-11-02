@@ -14,7 +14,12 @@ __version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 from pymongo.son_manipulator import SONManipulator
-from pymongo.son import SON
+try:
+    # new pymongo
+    from bson.son import SON
+except ImportError:
+    # old pymongo
+    from pymongo.son import SON
 
 class DAS_SONManipulator(SONManipulator):
     """DAS SON manipulator"""

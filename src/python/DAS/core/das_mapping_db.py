@@ -75,7 +75,7 @@ class DASMapping(object):
         """
         Check if there are records in Mapping DB
         """
-        return self.col.find().count()
+        return self.col.count()
 
     def remove(self, spec):
         """

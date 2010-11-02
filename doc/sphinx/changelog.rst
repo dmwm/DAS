@@ -50,6 +50,9 @@ performed stress tests and code audit DAS servers.
     (to be used for connection with MongoDB replica sets)
   - replace host/port to URI for MongoDB specs, this will allow to specify
     replication sets in DAS config
+  - use bson.son import SON to be compatible with newer version of pymongo
+  - use col.count() vs col.find().count(), since former is O(1) operation wrt O(N)
+    in later case
 
 - 0.5.3 - 0.5.4 series
 
