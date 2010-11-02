@@ -55,9 +55,8 @@ class DASAbstractService(object):
             self.dasmapping  = config['dasmapping']
             self.analytics   = config['dasanalytics']
             self.write2cache = config.get('write_cache', True)
-            host             = config['mongodb']['dbhost']
-            port             = config['mongodb']['dbport']
-            self.gfs         = db_gridfs(host, port)
+            dburi            = config['mongodb']['dburi']
+            self.gfs         = db_gridfs(dburi)
         except:
             traceback.print_exc()
             print config

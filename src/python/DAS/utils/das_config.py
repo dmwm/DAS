@@ -14,8 +14,7 @@ import ConfigParser
 from DAS.utils.das_option import DASOption
 
 DAS_OPTIONS = [
-DASOption('mongodb', 'dbport', 'int', 27017),
-DASOption('mongodb', 'dbhost', 'string', 'localhost'),
+DASOption('mongodb', 'dburi', 'list', ['mongodb://localhost:27017']),
 DASOption('mongodb', 'dbname', 'string', 'das'),
 DASOption('mongodb', 'bulkupdate_size', 'int', 5000),
 DASOption('mongodb', 'lifetime', 'int', 1*24*60*60),

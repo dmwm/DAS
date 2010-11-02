@@ -47,9 +47,8 @@ def check_dn(func):
         redirect = True
         headers = request.headers
         dasconfig = das_readconfig()
-        dbhost = dasconfig['mongodb']['dbhost']
-        dbport = dasconfig['mongodb']['dbport']
-        conn = db_connection(dbhost, dbport)
+        dburi  = dasconfig['mongodb']['dburi']
+        conn = db_connection(dburi)
         database = conn['admin']
         coll = database['dns']
         dn = headers.get('Ssl-Client-S-Dn', None)
@@ -72,18 +71,16 @@ class DASExpertService(DASWebManager):
         DASWebManager.__init__(self, config)
         self.base   = '/das'
         das_config  = das_readconfig()
-        self.dbhost = das_config['mongodb']['dbhost']
-        self.dbport = das_config['mongodb']['dbport']
+        self.dburi  = das_config['mongodb']['dburi']
         self.dasconfig = das_config
         self.init()
         # Monitor thread which performs auto-reconnection
-        thread.start_new_thread(connection_monitor, \
-                (self.dbhost, self.dbport, self.init, 5))
+        thread.start_new_thread(connection_monitor, (self.dburi, self.init, 5))
 
     def init(self):
         """Connect to DASCore"""
         try:
-            self.conn   = db_connection(self.dbhost, self.dbport)
+            self.conn   = db_connection(self.dburi)
             self.das    = DASCore(debug=0, nores=True)
         except:
             self.conn = None
@@ -96,7 +93,7 @@ class DASExpertService(DASWebManager):
         """Serve default index.html web page"""
         msg = kwargs.get('msg', '')
         databases = self.conn.database_names()
-        server_info = dict(host=self.dbhost, port=self.dbport)
+        server_info = dict(dburi=self.uri)
         server_info.update(self.conn.server_info())
         ddict = {}
         for database in databases:

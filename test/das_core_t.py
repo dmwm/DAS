@@ -26,9 +26,8 @@ class testDASCore(unittest.TestCase):
         debug = 0
         self.das = DASCore(debug=debug)
         config = das_readconfig()
-        dbhost = config['mongodb']['dbhost']
-        dbport = config['mongodb']['dbport']
-        connection = Connection(dbhost, dbport)
+        dburi = config['mongodb']['dburi']
+        connection = Connection(dburi)
         connection.drop_database('das') 
 
 #    def testAddressService(self):

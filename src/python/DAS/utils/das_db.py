@@ -20,18 +20,18 @@ from pymongo.connection import Connection
 import gridfs
 
 # DAS modules
-from DAS.utils.utils import DotDict
+from DAS.utils.utils import DotDict, genkey
 
 # MongoDB does not allow to store documents whose size more then 4MB
 MONGODB_LIMIT = 4*1024*1024
 
-def connection_monitor(dbhost, dbport, func, sleep=5):
+def connection_monitor(uri, func, sleep=5):
     """
     Monitor connection to MongoDB and invoke provided function
     upon successfull connection. This function can be used in DAS server
     for monitoring MongoDB connections.
     """
-    conn = db_connection(dbhost, dbport)
+    conn = db_connection(uri)
     while True:
         time.sleep(sleep)
         if  not conn:
@@ -66,65 +66,38 @@ class _DBConnectionSingleton(object):
         self.instance = "Instance at %d" % self.__hash__()
         self.conndict = {}
 
-    def connection(self, dbhost, dbport):
+    def connection(self, uri):
         """Return MongoDB connection"""
-        pair = (dbhost, dbport)
-        uri  = make_uri([pair])
-        if  not self.conndict.has_key(uri):
+        key = genkey(str(uri))
+        if  not self.conndict.has_key(key):
             try:
-                dbinst = Connection(uri)
+                dbinst = Connection(host=uri)
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
-                self.conndict[uri] = (dbinst, fsinst)
+                self.conndict[key] = (dbinst, fsinst)
             except:
                 traceback.print_exc()
                 return None
-        return self.conndict[uri]
-
-    def connections(self, pairs):
-        """Return MongoDB connection"""
-        uri  = make_uri(pairs)
-        if  not self.conndict.has_key(uri):
-            try:
-                dbinst = Connection(uri)
-                gfs    = dbinst.gridfs
-                fsinst = gridfs.GridFS(gfs)
-                self.conndict[uri] = (dbinst, fsinst)
-            except:
-                traceback.print_exc()
-                return None
-        return self.conndict[uri]
+        return self.conndict[key]
 
 DB_CONN_SINGLETON = _DBConnectionSingleton()
 
-def db_connection(dbhost, dbport):
+def db_connection(uri):
     """Return DB connection instance"""
     dbinst = None
     try:
-        dbinst, _ = DB_CONN_SINGLETON.connection(dbhost, dbport)
+        dbinst, _ = DB_CONN_SINGLETON.connection(uri)
     except:
         pass
     return dbinst
 
-def db_connections(pairs):
-    """
-    Return DB connection instance for provided set of (dbhost, dbport)
-    pairs
-    """
-    dbinst = None
-    try:
-        dbinst, _ = DB_CONN_SINGLETON.connections(pairs)
-    except:
-        pass
-    return dbinst
-
-def db_gridfs(dbhost, dbport):
+def db_gridfs(uri):
     """
     Return pointer to MongoDB GridFS
     """
     fsinst = None
     try:
-        _, fsinst = DB_CONN_SINGLETON.connection(dbhost, dbport)
+        _, fsinst = DB_CONN_SINGLETON.connection(uri)
     except:
         pass
     return fsinst

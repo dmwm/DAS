@@ -20,10 +20,11 @@ class testDAS_DB(unittest.TestCase):
         """
         set up DAS core module
         """
-        self.debug = 0
-        dasconfig = das_readconfig()
-        self.dbhost = dasconfig['mongodb']['dbhost']
-        self.dbport = dasconfig['mongodb']['dbport']
+        self.debug  = 0
+        dasconfig   = das_readconfig()
+        self.dburi  = dasconfig['mongodb']['dburi']
+        self.dbhost = 'localhost'
+        self.dbport = 27017
 
     def test_make_uri(self):
         """Test DAS PLY lexer"""
@@ -45,15 +46,15 @@ class testDAS_DB(unittest.TestCase):
 
     def test_db_connection(self):
         """Test db_connection"""
-        result = db_connection(self.dbhost, self.dbport)
+        result = db_connection(self.dburi)
         expect = result.instance
 
-        result = db_connection(self.dbhost, self.dbport)
+        result = db_connection(self.dburi)
         self.assertEqual(expect, result.instance)
 
     def test_db_gridfs(self):
         """Test db_gridfs"""
-        fsinst  = db_gridfs(self.dbhost, self.dbport)
+        fsinst  = db_gridfs(self.dburi)
         doc     = 'hello world!'
         fid     = fsinst.put(doc)
         content = fsinst.get(fid).read()

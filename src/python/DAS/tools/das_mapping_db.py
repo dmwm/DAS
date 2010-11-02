@@ -66,11 +66,12 @@ if __name__ == '__main__':
     optManager  = DASOptionParser()
     (opts, args) = optManager.getOpt()
 
+    dburi     = 'mongodb://%s:%s' % (opts.host, opts.port)
     dasconfig = das_readconfig()
     logfile   = dasconfig['das'].get('logfile', None)
     logger    = DASLogger(logfile=logfile, verbose=opts.debug)
     dbname, colname = opts.db.split('.')
-    mongodb   = dict(dbhost=opts.host, dbport=opts.port)
+    mongodb   = dict(dburi=dburi)
     mappingdb = dict(dbname=dbname, collname=colname)
     config    = dict(logger=logger, verbose=opts.debug, mappingdb=mappingdb,
                 mongodb=mongodb, services=dasconfig['das'].get('services', []))
@@ -117,7 +118,7 @@ if __name__ == '__main__':
         mgr.create_db()
         # I need to clear DAS cache/merge since I don't know
         # a-priory what kind of changes new maps will bring
-        conn   = db_connection(opts.host, opts.port)
+        conn   = db_connection(dburi)
         dbname = dasconfig['dasdb']['dbname']
         cache  = conn[dbname][dasconfig['dasdb']['cachecollection']]
         cache.remove({})

@@ -31,10 +31,9 @@ class testDASMongocache(unittest.TestCase):
         logger   = DASLogger(verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        dbhost   = config['mongodb']['dbhost']
-        dbport   = config['mongodb']['dbport']
+        dburi    = config['mongodb']['dburi']
 
-        connection = Connection(dbhost, dbport)
+        connection = Connection(dburi)
         connection.drop_database('das') 
         self.dasmongocache = DASMongocache(config)
 

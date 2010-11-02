@@ -23,13 +23,12 @@ class testDASAnalytics(unittest.TestCase):
         debug    = 0
         self.db  = 'test_analytics.db'
         config   = das_readconfig()
-        dbhost   = config['mongodb']['dbhost']
-        dbport   = config['mongodb']['dbport']
+        dburi    = config['mongodb']['dburi']
         logger   = DASLogger(verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        config['analyticsdb'] = dict(dbhost=dbhost,
-                dbport=dbport, dbname='test_analytics', collname='db')
+        config['analyticsdb'] = dict(dburi=dburi,
+                dbname='test_analytics', collname='db')
         self.mgr = DASAnalytics(config)
 
     def tearDown(self):

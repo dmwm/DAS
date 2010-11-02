@@ -90,11 +90,10 @@ def das_mapreduces():
     """
     mlist   = []
     config  = das_readconfig()
-    dbhost  = config['mongodb']['dbhost']
-    dbport  = config['mongodb']['dbport']
+    dburi   = config['mongodb']['dburi']
     dbname  = config['dasdb']['dbname']
     colname = config['dasdb']['mrcollection']
-    conn    = db_connection(dbhost, dbport)
+    conn    = db_connection(dburi)
     coll    = conn[dbname][colname]
     for row in coll.find({}):
         if  set(row.keys()) == set(['map', 'reduce', 'name', '_id']):

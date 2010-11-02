@@ -46,6 +46,10 @@ performed stress tests and code audit DAS servers.
   - add avg/median functions to result object; modified result object to hold 
     result and rec counter; add helper das function to associate with each 
     aggreagators, e.g. das_min
+  - drop dbhost/dbport in favor of dburi, which can be a list of MongoDB uris
+    (to be used for connection with MongoDB replica sets)
+  - replace host/port to URI for MongoDB specs, this will allow to specify
+    replication sets in DAS config
 
 - 0.5.3 - 0.5.4 series
 

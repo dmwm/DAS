@@ -85,8 +85,7 @@ class DASCacheService(DASWebManager):
                 {'args':['query'],
                  'call': self.delete, 'version':__version__}}
         self.dasconfig   = das_readconfig()
-        self.dbhost      = self.dasconfig['mongodb']['dbhost']
-        self.dbport      = self.dasconfig['mongodb']['dbport']
+        self.dburi       = self.dasconfig['mongodb']['dburi']
         self.qlimit      = self.dasconfig['cache_server']['queue_limit'] 
 
         sleep         = self.dasconfig.get('sleep', 2)
@@ -108,8 +107,7 @@ class DASCacheService(DASWebManager):
 
         self.init()
         # Monitoring thread which performs auto-init of the server
-        thread.start_new_thread(connection_monitor, \
-                (self.dbhost, self.dbport, self.init, 5))
+        thread.start_new_thread(connection_monitor, (self.dburi, self.init, 5))
 
     def init(self):
         """
@@ -119,7 +117,7 @@ class DASCacheService(DASWebManager):
         logdbname   = self.dasconfig['loggingdb']['dbname']
         logdbcoll   = self.dasconfig['loggingdb']['collname']
         try:
-            self.con      = db_connection(self.dbhost, self.dbport)
+            self.con      = db_connection(self.dburi)
             if  logdbname not in self.con.database_names():
                 dbname    = self.con[logdbname]
                 options   = {'capped':True, 'size': capped_size}
@@ -128,7 +126,7 @@ class DASCacheService(DASWebManager):
                 % (logdbname, logdbcoll, capped_size))
             self.col      = self.con[logdbname][logdbcoll]
             self.dascore  = DASCore()
-            self.gfs      = db_gridfs(self.dbhost, self.dbport)
+            self.gfs      = db_gridfs(self.dburi)
         except:
             self.con  = None
             self.dascore = None

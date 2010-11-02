@@ -63,13 +63,11 @@ class DASWebService(DASWebManager):
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
         dasconfig = das_readconfig()
-        dbhost = dasconfig['mongodb']['dbhost']
-        dbport = dasconfig['mongodb']['dbport']
+        dburi = dasconfig['mongodb']['dburi']
 
         self.init()
         # Monitoring thread which performs auto-reconnection
-        thread.start_new_thread(connection_monitor, \
-                (dbhost, dbport, self.init, 5))
+        thread.start_new_thread(connection_monitor, (dburi, self.init, 5))
 
     def init(self):
         """Init DAS web server, connect to DAS Core"""

@@ -31,9 +31,8 @@ class CMSSWConfigsService(DASAbstractService):
         map_validator(self.map)
 
         # specify access to DB
-        dbhost    = config.get('dbhost')
-        dbport    = config.get('dbport')
-        self.conn = db_connection(dbhost, dbport)
+        dburi = config.get('dburi')
+        self.conn = db_connection(dburi)
         database  = self.conn['configdb']
         self.managers = {}
         for release in database.collection_names():

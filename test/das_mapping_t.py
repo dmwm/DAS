@@ -23,13 +23,12 @@ class testDASMapping(unittest.TestCase):
         debug    = 0
         self.db  = 'test_mapping.db'
         config   = das_readconfig()
-        dbhost   = config['mongodb']['dbhost']
-        dbport   = config['mongodb']['dbport']
+        dburi    = config['mongodb']['dburi']
         logger   = DASLogger(verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        config['mappingdb'] = dict(dbhost=dbhost,
-            dbport=dbport, dbname='test_mapping', collname='db')
+        config['mappingdb'] = dict(dburi=dburi,
+            dbname='test_mapping', collname='db')
         self.mgr = DASMapping(config)
 
     def tearDown(self):

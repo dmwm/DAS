@@ -282,22 +282,20 @@ class DASMongocache(object):
     DAS cache based MongoDB. 
     """
     def __init__(self, config):
-        self.dbhost  = config['mongodb']['dbhost']
-        self.dbport  = config['mongodb']['dbport']
+        self.dburi   = config['mongodb']['dburi']
         self.limit   = config['mongodb']['lifetime']
         self.cache_size = config['mongodb']['bulkupdate_size']
         self.dbname  = config['dasdb']['dbname']
         self.logger  = config['logger']
         self.verbose = config['verbose']
 
-        self.conn    = db_connection(self.dbhost, self.dbport)
+        self.conn    = db_connection(self.dburi)
         self.mdb     = self.conn[self.dbname]
         self.col     = self.mdb[config['dasdb']['cachecollection']]
         self.mrcol   = self.mdb[config['dasdb']['mrcollection']]
         self.merge   = self.mdb[config['dasdb']['mergecollection']]
 
-        msg = "DASMongocache::__init__ %s:%s@%s" \
-        % (self.dbhost, self.dbport, self.dbname)
+        msg = "DASMongocache::__init__ %s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
 
         self.add_manipulator()

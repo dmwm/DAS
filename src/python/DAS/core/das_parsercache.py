@@ -22,14 +22,12 @@ class DASParserDB(object):
     def __init__(self, config):
         self.verbose  = config['verbose']
         self.logger   = config['logger']
-        self.dbhost   = config['mongodb']['dbhost']
-        self.dbport   = config['mongodb']['dbport']
+        self.dburi    = config['mongodb']['dburi']
         self.dbname   = config['parserdb']['dbname']
         self.sizecap  = config['parserdb']['sizecap']
         self.colname  = config['parserdb']['collname']
         
-        msg = "DASParserCache::__init__ %s:%s@%s" \
-        % (self.dbhost, self.dbport, self.dbname)
+        msg = "DASParserCache::__init__ %s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         
         self.col = None
@@ -39,7 +37,7 @@ class DASParserDB(object):
         """
         Create db collection
         """
-        conn = db_connection(self.dbhost, self.dbport)
+        conn = db_connection(self.dburi)
         dbn  = conn[self.dbname]
         if self.colname not in dbn.collection_names() and self.sizecap > 0:
             dbn.create_collection(self.colname, capped=True, size=self.sizecap)

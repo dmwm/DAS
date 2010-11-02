@@ -30,13 +30,11 @@ class DASAnalytics(object):
     def __init__(self, config):
         self.logger  = config['logger']
         self.verbose = config['verbose']
-        self.dbhost  = config['mongodb']['dbhost']
-        self.dbport  = config['mongodb']['dbport']
+        self.dburi   = config['mongodb']['dburi']
         self.dbname  = config['analyticsdb']['dbname']
         self.colname = config['analyticsdb']['collname']
 
-        msg = "DASAnalytics::__init__ %s:%s@%s" \
-        % (self.dbhost, self.dbport, self.dbname)
+        msg = "DASAnalytics::__init__ %s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         self.create_db()
 
@@ -44,7 +42,7 @@ class DASAnalytics(object):
         """
         Create analytics DB in MongoDB back-end.
         """
-        self.conn = db_connection(self.dbhost, self.dbport)
+        self.conn = db_connection(self.dburi)
         database  = self.conn[self.dbname]
         self.col  = database[self.colname]
 #        if  self.dbname not in self.conn.database_names():

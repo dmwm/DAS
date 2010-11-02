@@ -30,13 +30,11 @@ class DASMapping(object):
         self.logger   = config['logger']
         self.verbose  = config['verbose']
         self.services = config['services']
-        self.dbhost   = config['mongodb']['dbhost']
-        self.dbport   = config['mongodb']['dbport']
+        self.dburi    = config['mongodb']['dburi']
         self.dbname   = config['mappingdb']['dbname']
         self.colname  = config['mappingdb']['collname']
 
-        msg = "DASMapping::__init__ %s:%s@%s" \
-        % (self.dbhost, self.dbport, self.dbname)
+        msg = "DASMapping::__init__ %s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         
         self.create_db()
@@ -63,7 +61,7 @@ class DASMapping(object):
         """
         Establish connection to MongoDB back-end and create DB.
         """
-        self.conn = db_connection(self.dbhost, self.dbport)
+        self.conn = db_connection(self.dburi)
         self.db   = self.conn[self.dbname]
         self.col  = self.db[self.colname]
 
