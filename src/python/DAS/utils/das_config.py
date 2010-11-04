@@ -24,6 +24,7 @@ DASOption('mappingdb', 'collname', 'string', 'db'),
 
 DASOption('analyticsdb', 'dbname', 'string', 'analytics'),
 DASOption('analyticsdb', 'collname', 'string', 'db'),
+DASOption('analyticsdb', 'history', 'int', 60*24*60*60),
                
 DASOption('parserdb', 'dbname', 'string', 'parser'),
 DASOption('parserdb', 'collname', 'string', 'db'),

@@ -250,9 +250,8 @@ class DASAbstractService(object):
 
         # check that apicall record is present in analytics DB
         qhash = genkey(encode_mongo_query(query))
-        if not self.analytics.list_apicalls(qhash=qhash):
-            self.analytics.insert_apicall(self.name, query, 
-                                          url, api, args, expire)
+        self.analytics.insert_apicall(self.name, query, 
+                                      url, api, args, expire)
 
         # update the cache
         self.localcache.update_cache(query, result, header)

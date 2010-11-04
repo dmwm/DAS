@@ -1,0 +1,40 @@
+<div><h3>Results</h3></div>
+#if $limit
+<div>Showing $limit of $total entries, offset $offset 
+&nbsp;<a href='$base/results?limit=$limit&offset=#echo $offset+$limit#'>Next</a>
+&nbsp;<a href='$base/results?limit=0'>See All</a>
+</div> 
+#end if
+#if $last
+<div>Showing results from last $last seconds</div>
+#end if
+#if $master
+<div>Showing spawn of <a href='$base/task?id=$master'>$master</a></div>
+#end if
+#if $parent
+<div>Showing spawn of children of <a href='$base/task?id=$parent'>$parent</a></div>
+#end if
+#if $error
+<div>Showing failed jobs only</div>
+#end if
+#if $success
+<div>Showing successful jobs only</div>
+#end if
+<div><table>
+<tr><th>Name</th><th>Index</th><th>Started</th><th>Finished</th><th>Elapsed</th><th>Success</th><th>Task</th><th>Parent</th></tr>
+#import time
+#for $result in $results
+<tr><td><a href='$base/result?id=$result.task_id'>$result.name</a></td><td>$result.index</td>
+<td>#echo time.strftime('%H:%M:%S', time.localtime($result.start_time))#</td>
+<td>#echo time.strftime('%H:%M:%S', time.localtime($result.finish_time))#</td>
+<td>#echo time.strftime('%H:%M:%S', time.gmtime($result.finish_time-$result.start_time))#</td>
+<td>$result.success</td>
+<td><a href='$base/task?id=$result.master_id'>Task</a></td>
+<td>
+#if $result.parent
+<a href='$base/task?id=$result.parent'>Parent</a>
+#end if
+</td>
+</tr>
+#end for
+</table></div>

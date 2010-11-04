@@ -28,7 +28,7 @@ class Test(object):
             result['resubmit']=False
         elif effect > 0.95:
             task = {'name':'spawn-of-%s'%self.taskid,
-                    'classname':'test',
+                    'classname':'Test',
                     'interval': random.randint(1,30),
                     'kwargs':{'message':'spawn-of-%s'%self.message}}
             effect2 = random.random()

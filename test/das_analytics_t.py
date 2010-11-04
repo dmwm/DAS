@@ -27,7 +27,7 @@ class testDASAnalytics(unittest.TestCase):
         logger   = DASLogger(verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        config['analyticsdb'] = dict(dburi=dburi,
+        config['analyticsdb'] = dict(dburi=dburi, history=5184000,
                 dbname='test_analytics', collname='db')
         self.mgr = DASAnalytics(config)
 

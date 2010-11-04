@@ -1,0 +1,24 @@
+<div><h3>Analytics Server Control</h3></div>
+<div><h4>Configuration</h4></div>
+<div><pre>
+#import json
+#echo json.dumps($config, indent=4, default=str)
+</pre></div>
+<div><h4>Shutdown</h4></div>
+<div><a href='$base/shutdown'>Shutdown</a></div>
+<div><h4>Add Task</h4></div>
+<div><form name='addtask' action='$base/add_task' method='get'>
+<table>
+<tr><td>Name</td><td><input type='text' name='name'></td></tr>
+<tr><td>Classname</td><td><input type='text' name='classname'></td></tr>
+<tr><td>Interval</td><td><input type='text' name='interval' value='3600'></td></tr>
+<tr><td>Arguments</td><td><input type='textarea' name='kwargs' value='{}'></td></tr>
+<tr><td>Only Once?</td><td><input type='checkbox' name='only_once'></td></tr>
+<tr><td>Max Runs</td><td><input type='text' name='max_runs' value='null'></td></tr>
+<tr><td>Only Before</td><td><input type='text' name='only_before' value='null'></td></tr>
+<tr><td></td><td><input type='submit' name='Submit'></td></tr>
+</table>
+</form></div>
+<script type="application/javascript>
+
+</script>

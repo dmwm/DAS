@@ -1,0 +1,64 @@
+<!-- analytics_header.tmpl -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head profile="http://www.w3.org/2005/11/profile">
+    <title>CMS Data Aggregation Service - Analytics</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Language" content="en-us" />
+    <meta http-equiv="Content-Script-Type" content="application/javascript" />
+    <meta http-equiv="imagetoolbar" content="no" />
+    <meta name="author" content="Gordon Ball" />
+    <meta name="MSSmartTagsPreventParsing" content="true" />
+    <meta name="ROBOTS" content="ALL" />
+    <meta name="Copyright" content="(CC) 2010, CMS collaboration." />
+    <meta name="Rating" content="General" />
+
+    <link rel="icon" type="image/png" href="$base/images/cms_logo.png" />
+    <link rel="stylesheet" type="text/css" href="$base/css/das.css"/>
+
+    <script type="application/javascript" src="$base/js/prototype.js"></script>
+    <script type="application/javascript" src="$base/js/utils.js"></script>
+    <script type="application/javascript" src="$base/js/ajax_utils.js"></script>
+
+    <!-- YUI stuff -->
+    <link rel="stylesheet" type="text/css" href="$base/yui/build/fonts/fonts-min.css" />
+    <link rel="stylesheet" type="text/css" href="$base/yui/build/container/assets/skins/sam/container.css" />
+
+    <script type="application/javascript" src="$base/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+    <script type="application/javascript" src="$base/yui/build/container/container-min.js"></script>
+
+</head>
+<body class="yui-skin-sam">
+
+<div id="banner">
+<table>
+<tr><td>
+<img src="$base/images/cms_logo.jpg" alt="CMS" width="30" style="border:none" />
+</td><td>
+<h3>Data Aggregation System - Analytics Server:
+<a href="$base/">Main</a>
+| <a id="analytics_schedule" href="$base/schedule">Schedule</a>
+| <a id="analytics_results" href="$base/results">Results</a>
+| <a id="analytics_log" href="$base/logger">Log</a>
+| <a id="analytics_control" href="$base/control">Control</a>
+</h3>
+</td></tr>
+</table>
+</div>
+<hr class="line" />
+<script type="text/javascript">
+function wait() {
+    plage_img('_response', '$base/images/loading.gif', 'please wait');
+}
+top_tt1 = new YAHOO.widget.Tooltip("top_tt1", 
+    { context:"analytics_schedule", text:"Current schedule of analytics tasks" });
+top_tt3 = new YAHOO.widget.Tooltip("top_tt3", 
+    { context:"analytics_results", text:"Results of previously run tasks" });
+top_tt4 = new YAHOO.widget.Tooltip("top_tt4", 
+    { context:"analytics_log", text:"Analytics log viewer" });
+top_tt5 = new YAHOO.widget.Tooltip("top_tt5", 
+    { context:"analytics_control", text:"Control interface" });
+
+</script>
+<!-- end of analytics_header.tmpl -->

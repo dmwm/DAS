@@ -1,16 +1,16 @@
-from analytics_config import DASAnalyticsConfig
-from analytics_scheduler import TaskScheduler
-from analytics_web import DASAnalyticsWeb
-from analytics_utils import PipeHandler
+#!/usr/bin/env python
+
+from DAS.analytics.analytics_config import DASAnalyticsConfig
+from DAS.analytics.analytics_scheduler import TaskScheduler
+from DAS.analytics.analytics_web import DASAnalyticsWeb
+from DAS.analytics.analytics_utils import multilogging
 
 import logging.handlers
 import sys
 import os
 import random
 import time
-import multiprocessing
-
-from DAS.core.das_robot import Robot
+import threading
 
 DASAnalyticsConfig.add_option('log_to_stdout',
                               group="Logging",
@@ -99,47 +99,6 @@ class DASAnalyticsLogging(object):
         return self.logger
 
 
-DASAnalyticsConfig.add_option("detach",
-                              short="d",
-                              type=bool,
-                              group="Daemon",
-                              default=False,
-                              help="Daemonize the controller.")
-DASAnalyticsConfig.add_option("detach_stdout",
-                              type=bool,
-                              group="Daemon",
-                              default=True,
-                              help="Detach stdout on daemonization.")
-DASAnalyticsConfig.add_option("detach_stderr",
-                              type=bool,
-                              group="Daemon",
-                              default=True,
-                              help="Detach stderr on daemonization.")
-DASAnalyticsConfig.add_option("pidfile",
-                              type=basestring,
-                              group="Daemon",
-                              default="analytics.pid",
-                              help="File to store the PID in.")
-DASAnalyticsConfig.add_option("start",
-                              type=bool,
-                              group="Daemon",
-                              default=False,
-                              help="Wake up and smell the ashes.")
-DASAnalyticsConfig.add_option("restart",
-                              type=bool,
-                              group="Daemon",
-                              default=False,
-                              help="Have you tried turning it off and on again?")
-DASAnalyticsConfig.add_option("stop",
-                              type=bool,
-                              group="Daemon",
-                              default=False,
-                              help="SCRAM the pile.")
-DASAnalyticsConfig.add_option("status",
-                              type=bool,
-                              group="Daemon",
-                              default=False,
-                              help="SNAFU.")
 DASAnalyticsConfig.add_option("no_start_offset",
                               type=bool,
                               default=False,
@@ -148,117 +107,61 @@ DASAnalyticsConfig.add_option("web",
                               type=bool,
                               default=False,
                               help="Enable webserver.")
-class DASAnalyticsController(Robot):
+class DASAnalyticsController:
     def __init__(self):
+        self.config = None
+        self.logger = None
+        self.scheduler = None
+        self.webserver = None
+        
+        self.finish = False
+        
+        self.run()
+    
+    def run(self):
+        "Actually do something."
+        
+        multilogging()
+        
         self.config = DASAnalyticsConfig()
         self.config.configure()
         
-        self.pidfile = self.config.pidfile
-        
-        self.stdin = os.devnull
-        self.stdout = os.devnull if self.config.detach_stdout else sys.stdout
-        self.stderr = os.devnull if self.config.detach_stderr else sys.stderr
-        
-        self.web = self.config.web
-        self.pipe = None
-        
-        operations = sum([self.config.start, 
-                          self.config.restart, 
-                          self.config.stop, 
-                          self.config.status]) #bool is int, ish
-        if operations == 1:
-            if self.config.start:
-                self.start()
-            if self.config.restart:
-                self.restart()
-            if self.config.stop:
-                self.stop()
-            if self.config.status:
-                self.status()
-        
-        else:
-            print "Require exactly one of"
-            print "--start --stop --restart --status"
-    
-    def daemonize(self):
-        "Only detach if the daemonize option if set"
-        if self.config.detach:
-            Robot.daemonize(self)    
-        
-    def status(self):
-        "Brief info (override from robot which does specific things here)"
-        # Get the pid from the pidfile
-        try:
-            pidf  = file(self.pidfile, 'r')
-            pid = int(pidf.read().strip())
-            pidf.close()
-        except IOError:
-            pid = None
-
-        if not pid:
-            message = "pidfile %s does not exist. Daemon not running?\n"
-            sys.stderr.write(message % self.pidfile)
-            return # not an error in a restart
-
-        print "Analytics info: running"
-        print "PID    :", pid
-        print "pidfile:", self.pidfile
-       
-    def result_callback(self, result):
-        "Callback to send job results to the webserver pipe"
-        self.pipe.send(('result', result))
-    
-    def run(self):
-        "Overriden robot method. Actually do something."
-        
-        start_time = time.time()
-        
         logconf = DASAnalyticsLogging(self.config)
-        logger = logconf.get_logger()
+        self.logger = logconf.get_logger()
+        self.logger.info("Analytics server starting.")
+        self.logger.info("Configuration: %s", self.config._options)
         
-        scheduler = TaskScheduler(self.config)
+        self.scheduler = TaskScheduler(self, self.config)
         
-        if self.web:
-            self.pipe, remote = multiprocessing.Pipe(True)
-            logger.addHandler(PipeHandler(self.pipe))
-            scheduler.add_callback(self.result_callback)
-            web = DASAnalyticsWeb(self.config, remote)
-            web.start()
+        if self.config.web:
+            self.webserver = DASAnalyticsWeb(self.config, self)
+            webthread = threading.Thread(target=self.webserver.start)
+            webthread.daemon = True
+            webthread.start()
         
         tasks = self.config.get_tasks()
-        logger.info("Scheduling %s tasks." % len(tasks))
+        self.logger.info("Scheduling %s tasks." % len(tasks))
         for task in self.config.get_tasks():
             if self.config.no_start_offset:
-                scheduler.add_task(task, offset=0)
+                self.scheduler.add_task(task, offset=0)
             else:
-                scheduler.add_task(task, offset=random.random()*task.interval)
+                self.scheduler.add_task(task, offset=random.random()*task.interval)
         
-        counter = 0
         while True:
             
-            # scheduler used to run in a separate thread
-            # but since we need to have a loop here, why do so?
-            scheduler.run()
+            if self.finish:
+                return
             
-            # this lot should probably go in a separate function
-            # in which case objects like scheduler need to be moved to self
-            if self.web:
-                if counter % 5 == 0:
-                    self.pipe.send(('tasks', scheduler.get_tasks()))
-                    self.pipe.send(('info', {'uptime':time.time()-start_time}))
-                while self.pipe.poll():
-                    msg = self.pipe.recv()
-                    if isinstance(msg, tuple) and len(msg) == 2:
-                        msgtype, payload = msg
-                        if msgtype == "shutdown":
-                            return
-                        if msgtype == "stop":
-                            self.stop()
-                        if msgtype == "restart":
-                            self.restart()
-                        
-            counter += 1
+            self.scheduler.run()
+            
             time.sleep(1)
+            
+    def stop(self):
+        """
+        Stop the main loop, after which all the daemon threads should die.
+        """
+        self.finish = True
+            
     
 if __name__ == '__main__':
     controller = DASAnalyticsController()

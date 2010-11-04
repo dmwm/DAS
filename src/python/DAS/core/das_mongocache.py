@@ -21,6 +21,7 @@ from   types import GeneratorType
 import random
 import itertools
 import traceback
+import fnmatch
 
 # DAS modules
 from DAS.utils.utils import genkey, convert_dot_notation, aggregator
@@ -331,7 +332,26 @@ class DASMongocache(object):
                 return True
         self.logger.info("%s, False" % msg)
         return False
-
+    
+    def get_superset_keys(self, key, value):
+        """
+        This is a special-case version of similar_keys,
+        intended for analysers that want to quickly
+        find possible superset queries of a simple
+        query of the form key=value.
+        """
+        
+        msg = "DASMongocache::get_superset_keys %s=%s" % (key, value)
+        self.logger.info(msg)
+        cond = {'query.spec.key': key}
+        found_keys = []
+        for row in self.col.find(cond):
+            mongo_query = decode_mongo_query(row['query'])
+            for thiskey, thisvalue in mongo_query.items():
+                if thiskey == key:
+                    if fnmatch.fnmatch(value, thisvalue):
+                        yield thisvalue
+        
     def remove_expired(self, collection):
         """
         Remove expired records from DAS cache.

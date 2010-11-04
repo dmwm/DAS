@@ -1,0 +1,35 @@
+<div><h3>Task: $name</h3></div>
+<div><table>
+#import json
+#import time
+<tr><th>Key</th><th>Value</th>
+<tr><td>Class</td><td>$classname</td></tr>
+<tr><td>Interval</td><td>$interval</td></tr>
+<tr><td>Arguments</td><td><pre>#echo json.dumps($kwargs, indent=2, default=str)#</pre></td></tr>
+<tr><td>Run Count</td><td>$run_count</td></tr>
+#if $last_run_at
+<tr><td>Last run</td><td>#echo time.strftime('%d/%m/%y %H:%M:%S', time.localtime($last_run_at))#</td></tr>
+#end if
+#if $parent
+<tr><td>Parent</td><td><a href='$base/task?id=$parent'>$parent</a></td></tr>
+#end if
+<tr><td>Results</td><td><a href='$base/results?master=$master_id'>Self</a><br>
+<a href='$base/results?parent=$master_id'>Children</a></td></tr>
+</table></div>
+<div><pre>
+id=$master_id
+#if $only_once
+only_once
+#end if
+#if $max_runs
+max_runs=$max_runs
+#end if
+#if $only_before
+only_before=$only_before
+#end if
+#if $retries
+retries=$retries
+#end if
+can_respawn=$can_respawn
+</pre></div>
+

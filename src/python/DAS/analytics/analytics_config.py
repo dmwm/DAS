@@ -1,9 +1,8 @@
-import logging
 import ConfigParser
 import optparse
 import string
 
-from analytics_task import Task
+from DAS.analytics.analytics_task import Task
 
 
 class Option(object):
@@ -138,7 +137,8 @@ class DASAnalyticsConfig(object):
                         if validation == True:
                             result[option] = value
                         else:
-                            self.logger.warning(validation)
+                            print validation
+                            #self.logger.warning(validation)
         else:
             #self.logger.info("Reading %s (with execfile)" % filename)
             exec_globals = {'Task': self.add_task}
@@ -149,7 +149,8 @@ class DASAnalyticsConfig(object):
                     if validation == True:
                         result[option] = value
                     else:
-                        self.logger.warning(validation)
+                        print validation
+                        #self.logger.warning(validation)
         return result
             
         
@@ -174,7 +175,7 @@ class DASAnalyticsConfig(object):
                     args = [self.name_to_longcmd(option.name)]
                     if option.short:
                         args = ['-'+option.short] + args
-                    kwargs = {'dest':option.name, 'default':option.default}
+                    kwargs = {'dest':option.name}
                     if option.type and option.type in self.type_map:
                         kwargs['type'] = self.type_map[option.type]
                     elif option.type == bool:
@@ -195,13 +196,13 @@ class DASAnalyticsConfig(object):
         
         cmdresult = {} 
         for name in names:
-            if hasattr(opts, name):
+            if hasattr(opts, name) and not getattr(opts, name) == None:
                 cmdresult[name] = getattr(opts, name)
             
         fileresult = {}    
         for arg in args:
             fileresult.update(self.readfile(arg))
-        
+            
         defaults.update(fileresult)
         defaults.update(cmdresult)
         self._options.update(defaults)
