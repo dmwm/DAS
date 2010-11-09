@@ -68,7 +68,8 @@ class Root(object):
                           'tools.etags.autotags':True,
                           'tools.encode.on': True,
                           'tools.proxy.on': True,
-                          'tools.gzip.on': True
+                          'tools.gzip.on': True,
+#                          'tools.trailing_slash.on': False,
                           })
 
         log("loading config: %s" % cpconfig, 

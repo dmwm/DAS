@@ -300,7 +300,23 @@ class DASMongocache(object):
         self.logger.info(msg)
 
         self.add_manipulator()
+
+        # ensure that we have the following indexes
+        index_list = [('das.expire', ASCENDING), ('query.spec.key', ASCENDING),
+                      ('das.qhash', DESCENDING), ('das.empty_record', ASCENDING),
+                      ('query', DESCENDING), ('query.spec', DESCENDING)]
+        self.indexes(self.col, index_list)
+        index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
+                      ('das.empty_record', ASCENDING)]
+        self.indexes(self.merge, index_list)
         
+    def indexes(self, coll, index_list):
+        """
+        Invoke ensure_index for provided collection and index_list
+        """
+        for pair in index_list:
+            coll.ensure_index([pair])
+
     def add_manipulator(self):
         """
         Add DAS-specific MongoDB SON manipulator to perform
@@ -662,12 +678,6 @@ class DASMongocache(object):
                 expire = row['das']['expire']
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
-        # create index on das.expire
-        try:
-            self.merge.create_index([('das.expire', ASCENDING)])
-            self.merge.create_index([('das.empty_record', DESCENDING)])
-        except:
-            pass
         inserted = 0
         for pkey in lookup_keys:
             skey = [(pkey, DESCENDING)]
@@ -722,27 +732,11 @@ class DASMongocache(object):
         # insert/check query record in DAS cache
         self.insert_query_record(query, header)
 
-        # create index on special keys
-        for specialkey in ['das.expire', 'das_id']:
-            try:
-                self.merge.create_index([(specialkey, ASCENDING)])
-            except:
-                pass
-        for specialkey in ['das.expire', 'query.spec.key', 'das_id']:
-            try:
-                self.col.create_index([(specialkey, ASCENDING)])
-            except:
-                pass
-
         # update results records in DAS cache
         rec   = [k for i in header['lookup_keys'] for k in i.values()]
         lkeys = list(set(k for i in rec for k in i))
         index_list = [(key, DESCENDING) for key in lkeys]
-        if  index_list:
-            try:
-                self.col.ensure_index(index_list)
-            except:
-                pass
+        self.indexes(self.col, index_list)
         gen = self.update_records(query, results, header)
         # bulk insert
         try:
@@ -770,12 +764,6 @@ class DASMongocache(object):
             q_record['das']['lookup_keys'] = lkeys
             q_record['das']['empty_record'] = 0
             objid  = self.col.insert(q_record)
-            index_list = [('das.qhash', DESCENDING), 
-                          ('das.expire', ASCENDING),
-                          ('query', DESCENDING),
-                          ('query.spec', DESCENDING),
-                         ]
-            self.col.ensure_index(index_list)
 
     def update_records(self, query, results, header):
         """

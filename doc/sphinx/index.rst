@@ -25,6 +25,7 @@ Contents:
    das_cache.rst
    das_merge.rst
    das_logging.rst
+   das_analytics.rst
    code.rst
    new_service.rst
    das_config.rst

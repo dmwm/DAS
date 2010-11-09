@@ -7,6 +7,32 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.5.6
+
+  - add usable analytics system; this consists of a daemon (analytics_controller)
+    which schedules tasks (which might spawn other tasks), several worker processes
+    which actually perform these tasks and a cherrypy server which provides
+    some information and control of the analytics tasks
+  - the initial set of tasks are
+  
+    - Test - prints spam and spawns more copies of itself, as might be expected
+    - QueryRunner - duplicates DAS Robot, issues a fixed query at regular intervals
+    - QueryMaintainer - given a query, looks up expiry times for all associated 
+      records and reschedules itself shortly before expiry to force an update
+    - ValueHotspot - identifies the most used values for a given key, and
+      spawns QueryMaintainers to keep them in the cache until the next analysis
+    - KeyHotspot - identifies the most used query keys, and spawns ValueHotspot
+      instances to keep their most popular values maintained in the cache
+      
+  - provides a cli utility, das_analytics_task allowing one-off tasks to be run
+    without starting the analytics server
+  - fix apicall records in analytics_db so that for a given set of all parameters
+    except expiry, there is only one record
+  - fix genkey function to properly compare dictionaries with different insert
+    histories but identical content
+  - alter analyticsdb query records to store an array of call times rather than
+    one record per query, with a configurable history time
+
 - 0.5.5
 
   - fix map-reduce parsing using DAS PLY
