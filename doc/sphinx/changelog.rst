@@ -32,6 +32,7 @@ performed stress tests and code audit DAS servers.
     histories but identical content
   - alter analyticsdb query records to store an array of call times rather than
     one record per query, with a configurable history time
+  - append "/" to $base to avoid /das?query patterns
 
 - 0.5.5
 

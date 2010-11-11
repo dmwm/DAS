@@ -307,9 +307,6 @@ def genkey(query):
     keyhash.update(query)
     return keyhash.hexdigest()
 
-
-    
-
 def gen2list(results):
     """
     Convert generator to a list discarding duplicates
