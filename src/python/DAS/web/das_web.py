@@ -707,48 +707,6 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def tableview(self, **kwargs):
-        """
-        provide DAS table view
-        """
-        kwargs['format'] = 'html'
-        uinput  = getarg(kwargs, 'input', '')
-        ajaxreq = getarg(kwargs, 'ajax', 0)
-        form    = self.form(input=uinput)
-        time0   = time.time()
-        total   = self.nresults(kwargs)
-        if  not total:
-            ctime   = (time.time()-time0)
-            form    = self.form(input)
-            page    = self.templatepage('not_ready')
-            page    = self.page(form + page, ctime=ctime)
-            return page
-
-        # find out which selection keys were used
-        selkeys = uinput.replace('find ', '').split(' where ')[0].split(',')
-        uikeys  = []
-        for key in selkeys:
-            res = self.dasmapping.presentation(key)
-            uikeys += [item['ui'] for item in res]
-        titles = ["id"] + uikeys
-        coldefs = ""
-        for title in titles:
-            coldefs += '{key:"%s",label:"%s",sortable:true,resizeable:true},' \
-                        % (title, title)
-        coldefs = "[%s]" % coldefs[:-1] # remove last comma
-        coldefs = coldefs.replace("},{","},\n{")
-        limit   = getarg(kwargs, 'limit', 10)
-        names   = {'titlelist':titles,
-                   'coldefs':coldefs, 'rowsperpage':limit,
-                   'total':total, 'tag':'mytag', 'ajax':ajaxreq,
-                   'input':urllib.urlencode(dict(input=uinput))}
-        page    = self.templatepage('das_table', **names)
-        ctime   = (time.time()-time0)
-        page    = self.page(form + page, ctime=ctime)
-        return page
-
-    @expose
-    @checkargs(DAS_WEB_INPUTS)
     def status(self, **kwargs):
         """
         Place request to obtain status about given query

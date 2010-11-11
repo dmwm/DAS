@@ -18,3 +18,7 @@ web_base = "/analytics"
 logfile_rotating_count = 0
 
 Task("DatasetHotspot", "ValueHotspot", 3600, key="dataset.name")
+Task("BlockHotspot", "ValueHotspot", 3600, key="block.name")
+Task("FileHotspot", "ValueHotspot", 3600, key="file.name")
+Task("SiteHotspot", "ValueHotspot", 3600, key="site.name")
+Task("RunHotspot", "ValueHotspot", 3600, key="run.run_number")
