@@ -1,14 +1,20 @@
 <div><h3>Current Schedule</h3></div>
 <div><h4>Scheduled</h4></div>
 <div><table>
-<tr><th>Scheduled</th><th>Name</th><th>Class</th><th>Commands</th></tr>
+<tr><th>Scheduled</th><th>Name</th><th>Class</th><th>Commands</th><th></th></tr>
 #import time
 #for $task in $schedule
-<tr><td>#echo time.strftime('%H:%M:%S',time.localtime($task.at))#</td>
+<tr><td>#echo time.strftime('%H:%M:%S',time.localtime($task.at))# (#echo int($task.at - $now)# sec)</td>
 <td><a href='$base/task?id=$task.master_id'>$task.name</a></td>
 <td>$task.classname</td>
-<td><a href='$base/remove_task?id=$task.master_id'>Remove</a>&nbsp;
-<a href='$base/reschedule_task?id=$task.master_id'>Reschedule</a> 
+<td><a href='$base/remove_task?id=$task.master_id'>Remove</a></td>
+<td>
+<form name='reschedule-$task.master_id' action='$base/reschedule_task' method='get'>
+<input type='text' name='at' value='$task.at'>
+<input type='hidden' name='id' value='$task.master_id'>
+<input type='submit' value='Reschedule'> 
+</form>
+</td>
 <td></tr>
 
 #end for
@@ -17,7 +23,7 @@
 <div><table>
 <tr><th>Started</th><th>Name</th><th>Class</th></tr>
 #for $task in $running
-<tr><td>#echo time.strftime('%H:%M:%S',time.localtime($task.started))#</td>
+<tr><td>#echo time.strftime('%H:%M:%S',time.localtime($task.started))# (#echo int($now - $task.started)# sec)</td>
 <td><a href='$base/task?id=$task.master_id'>$task.name</a></td>
 <td>$task.classname</td></tr>
 #end for

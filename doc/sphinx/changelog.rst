@@ -33,6 +33,9 @@ performed stress tests and code audit DAS servers.
   - alter analyticsdb query records to store an array of call times rather than
     one record per query, with a configurable history time
   - append "/" to $base to avoid /das?query patterns
+  - Updates for analytics server, add JSON methods, add help section to web page
+  - Analytics CLI
+  - Add ability to learn data-service output keys, fixes #424
 
 - 0.5.5
 

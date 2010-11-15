@@ -159,7 +159,25 @@ class DASAnalyticsConfig(object):
         name = ''.join([n for n in name 
                         if n in string.letters+string.digits+'-_'])
         return '--%s' % (name)
-        
+    
+    def get_dict(self):
+        """
+        Return the options dictionary
+        """
+        return self._options
+    
+    def set_option(self, name, value):
+        "Change an option after analytics start"
+        if name in self.options:
+            validation = self.options[name].validate(value)
+            if validation == True:
+                self._options[name] = value
+                return True
+            else:
+                return validation
+        else:
+            return "Not a known option"
+    
     def configure(self):
         "Accept command line options and parse any config files requested."
         parser = optparse.OptionParser(

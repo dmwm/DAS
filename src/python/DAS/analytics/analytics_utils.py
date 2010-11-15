@@ -3,6 +3,9 @@ import threading
 import logging
 import time
 import collections
+import re
+import datetime
+from DAS.core.das_core import DASCore
 
 #adapted from http://stackoverflow.com/questions/641420/how-should-i-log-while-using-multiprocessing-in-python
 class MultiprocessingLoggerClient:
@@ -99,7 +102,7 @@ class WebHandler(logging.Handler):
         self.store = store
         logging.Handler.__init__(self, 1)
     def emit(self, record):
-        self.store.append(record)
+        self.store.appendleft(record)
         
 class RunningJobHandler(logging.Handler):
     """
@@ -133,4 +136,76 @@ class RunningJobHandler(logging.Handler):
         "Get the logs for a given taskid and remove it from the watchlist"
         self.watchlist.remove(taskid)
         return self.cache.pop(taskid, [])
+    
+def parse_time(raw):
+    """
+    Consider time formats:
+    number - interpret as GMT unix time
+    +number - seconds from now
+    +number[hH] - hours from now
+    +number[mM] - minutes from now
+    HH:MM[:SS] - absolute (localtime)
+    HH:MM[:SS][utc gmt z] - absolute (gmt)
+    """
+    raw = raw.lower()
+    match_unix = re.match(r'([0-9]+(?:\.[0-9]*)?)', raw)
+    match_offset = re.match(r'\+([0-9]+(?:\.[0-9]*)?)([smhd]?)', raw)
+    match_local = re.match(r'([0-9]{2}:[0-9]{2}(?::[0-9]{2})?)([utcgmz]?)', raw)
+    
+    if match_local:
+        split = match_local.group(1).split(':') 
+        if len(split) == 3:
+            hours, mins, secs = map(float, split)
+        else:
+            hours, mins, secs = map(float, split) + [0]
+        if match_local.group(2):
+            local = time.gmtime()
+        else:
+            local = time.localtime()
+        target = time.time()
+        target -= local.tm_hour * 3600
+        target -= local.tm_min * 60
+        target -= local.tm_sec
+        target += hours * 3600
+        target += mins * 60
+        target += secs
+        if target < time.time():
+            target += 86400
+        return target
+    elif match_offset:
+        value = float(match_offset.group(1))
+        mult = match_offset.group(2)
+        if mult == 'd':
+            return time.time() + value*86400
+        elif mult == 'h':
+            return time.time() + value*3600
+        elif mult == 'm':
+            return time.time() + value*60
+        else:
+            return time.time() + value
+    elif match_unix:
+        return float(match_unix.group(1))
+        
+GLOBAL_DAS=None
+USE_GLOBAL_DAS=False
+def das_factory(logname):
+    """
+    If global_das is enabled, return the global instance
+    (creating it on the first call)
+    Otherwise, create a new instance with the specified
+    logger name
+    """
+    global GLOBAL_DAS
+    global USE_GLOBAL_DAS
+    if USE_GLOBAL_DAS:
+        if not GLOBAL_DAS:
+            GLOBAL_DAS = DASCore(logger=multilogging().getLogger(logname))
+        return GLOBAL_DAS
+    else:
+        return DASCore(logger=multilogging().getLogger(logname))
+    
+def set_global_das(mode):
+    "Set whether to use a global instance or spawn new ones"
+    global USE_GLOBAL_DAS
+    USE_GLOBAL_DAS=mode
         

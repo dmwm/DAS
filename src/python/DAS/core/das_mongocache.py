@@ -397,6 +397,12 @@ class DASMongocache(object):
         """
         enc_query = encode_mongo_query(query)
         return self.col.find_one({'das.qhash': genkey(enc_query)})
+    
+    def find_records(self, das_id):
+        """
+        Return all the records matching a given das_id
+        """
+        return self.col.find({'das_id': das_id})
 
     def add_to_record(self, query, info):
         """

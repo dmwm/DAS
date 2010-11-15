@@ -26,6 +26,7 @@ from DAS.core.das_ql import das_operators
 from DAS.core.das_parser import QLManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
+from DAS.core.das_keylearning import DASKeyLearning
 from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
@@ -86,6 +87,9 @@ class DASCore(object):
 
         self.mongoparser = QLManager(dasconfig)
         dasconfig['mongoparser'] = self.mongoparser
+
+        self.keylearning = DASKeyLearning(dasconfig)
+        dasconfig['keylearning'] = self.keylearning
 
         # init DAS cache
         self.rawcache = DASMongocache(dasconfig)

@@ -1,0 +1,223 @@
+<div class="page">
+<div class="normal">
+
+<h3>General</h3>
+<a href="javascript:ShowTag('general')">show</a> |
+<a href="javascript:HideTag('general')">hide</a> this section.
+<div id="general" class="hide">
+
+<div class="navcontainer">
+<ul>
+<li>
+What is the analytics system?
+</li>
+</ul>
+<p>
+Analytics is a system for live monitoring of DAS operations, with the main purpose of
+trying to ensure as many user queries as possible are answered from the cache rather
+than having to wait for data to be fetched. This allows us to keep load low and user
+experience favourable.<br>
+
+More technically, analytics consists of<br>
+
+1. A collection in DAS containing records of queries made and APIs called. 
+Meta-meta-data, if you will.<br>
+2. A scheduler and worker pool that manage analytics tasks<br>
+3. Tasks that are run by (2) on the data in (1) to actually carry out 
+analytics functions<br>
+4. A web server that you are now looking at<br>
+
+</p>
+
+<ul>
+<li>
+What are the pages in this interface?
+</li>
+</ul>
+<p>
+<a href='$base/schedule>Schedule</a> lists the tasks currently queued on the
+scheduler, along with the times they will be (requested to be) executed.<br>
+<a href='$base/results>Results</a> lists the results of tasks that have
+previously been executed.<br>
+<a href='$base/log>Log</a> lists the log entries both from analytics itself,
+from the jobs executed and from the DAS instance it owns.<br>
+<a href='$base/control>Control</a> allows limited alterations to the server
+configuration, and new tasks to be added.
+</p>
+
+
+
+</div>
+</div>
+<hr class="line" />
+
+
+<h3>Scheduler</h3>
+<a href="javascript:ShowTag('scheduler')">show</a> |
+<a href="javascript:HideTag('scheduler')">hide</a> this section.
+<div id="scheduler" class="hide">
+
+<div class="navcontainer">
+<ul>
+<li>
+What is the scheduler?
+</li>
+</ul>
+<p>
+The scheduler is the main thread of the analytics system, which maintains a list
+of jobs and the next time they should run. This works more or less like cron,
+except that jobs aren't scheduled at fixed intervals but can control when they are
+resubmitted, and spawn new jobs.
+
+The web interface lets you either remove or reschedule jobs, if desired.
+</p>
+
+<ul>
+<li>
+When do tasks run?
+</li>
+</ul>
+<p>
+The scheduler has a granularity of 1 second, but at the point a job "runs" actually
+means the point it is added to the worker pool. If the worker pool is full it may
+not actually start running instantly.
+</p>
+
+<ul>
+<li>
+How do I remove/reschedule tasks?
+</li>
+</ul>
+<p>
+The schedule page contains a list of the tasks in the queue, each of which has a "Remove"
+link and a "Reschedule" form. Rescheduling currently requires a UNIX timestamp for the
+new execution time, the CLI supports other more useful formats and these will be added
+to the web interface in time.
+</p>
+
+
+</div>
+</div>
+<hr class="line" />
+
+<h3>Results</h3>
+<a href="javascript:ShowTag('results')">show</a> |
+<a href="javascript:HideTag('results')">hide</a> this section.
+<div id="results" class="hide">
+
+<div class="navcontainer">
+<ul>
+<li>
+What is a result?
+</li>
+</ul>
+<p>
+Results are the dictionaries returned by a job when it executes. This contains
+any relevant information that the job wants to show you, plus some fields
+that signal information to the scheduler (eg "new_tasks" to spawn children, "next"
+to control resubmission time).
+
+Currently you will just see a JSON dump of the output, it is intended that some
+jobs will provide custom HTML templates for this information in future.
+</p>
+
+<ul>
+<li>
+What do the other fields mean?
+</li>
+</ul>
+<p>
+"Start", "Finish" and "Elapsed" should be self-explanatory. The first column
+contains a link to the detailed result printout. 
+
+"Success" is determined by
+the task not throwing an exception during execution, instantiation and not
+setting "success" to a non-true value in their return dictionary.
+
+"Task" and "Parent" provide links to the task definitions of the actual
+task that ran, and if relevant the task which spawned this task.
+
+"Index" is a counter showing how many times this particular task has executed.
+</p>
+
+<ul>
+<li>
+What happens if a task fails?
+</li>
+</ul>
+<p>
+If a task returns unsuccessfully, and does not explicitly prevent resubmission
+(by setting "resubmit" to false in the return dictionary), it will be retried.
+The number of retries available to a task are shown in the config (on the
+control page). Retries will be scheduled after the config option "retry_time".
+
+If a job exhausts the retry count without successfully running, it is removed from
+the scheduler. This should probably then be shown somewhere on the scheduler page,
+but currently just disappears (leaving a log entry).
+</p>
+
+</div>
+</div>
+<hr class="line" />
+
+<h3>New Tasks</h3>
+<a href="javascript:ShowTag('addnew')">show</a> |
+<a href="javascript:HideTag('addnew')">hide</a> this section.
+<div id="addnew" class="hide">
+<div class="navcontainer">
+<ul>
+<li>
+How do I add a new task?
+</li>
+</ul>
+<p>
+The "control" page includes a form to submit a new task. This should be replaced
+by a more user-friendly interface, but for the moment this form allows tasks to be
+submitted.
+<table>
+<tr><td>Name</td><td>Display name to give the task. This should be unique.</td><tr>
+<tr><td>Classname</td><td>The name of a python file and contained class in 
+DAS.analytics.tasks, eg "QueryMaintainer". This should be a class with signature
+<pre>
+[file MyClass.py]
+class MyClass:
+    def __init__(self, **kwargs):
+        self.logger = kwargs['logger']
+        self.DAS = kwargs['DAS']
+        #your arguments
+    def __call__(self):
+        #do stuff
+</pre>
+</td><tr>
+<tr><td>Interval</td><td>Interval in seconds at which this task should be executed.</td></tr>
+<tr><td>Arguments</td><td>JSON object that will be converted into a python dictionary
+of arguments to pass to the class constructor. JSON names should be used here, ie
+"null", "true" and "false" instead of "None", "True" and "False". Arguments of the form
+<pre>
+{"key1": "value1", "key2": "value2"}
+</pre>
+should be found by the class as
+<pre>
+class MyClass:
+    def __init__(self, **kwargs):
+        self.key1 = kwargs['key1']
+        self.key2 = kwargs['key2']
+        #etc, etc
+</pre>
+</td></tr>
+<tr><td>Only Once</td><td>Request that the task only executes once. This will still
+apply regardless what you set for "Maximum Runs" and "Only Before". For one-off tasks,
+you can also use the "das_analytics_task" CLI command to instantly run a task.</td></tr>
+<tr><td>Max Runs</td><td>If this is a number, the task will stop being scheduled after
+the specified number of executions. Set it to "null" to run an unlimited number of times.
+</td></tr>
+<tr><td>Only Before</td><td>If this is a number, it is interpreted as a GMT UNIX timestamp,
+which the task is prevented from running after. Set it to "null" to run forever. If both
+"Only Before" and "Max Runs" are set, the task will stop after hitting the first limit.
+</td></tr></table>
+</p>
+
+
+</div>
+</div>
+<hr class="line" />

@@ -142,7 +142,7 @@ class TaskScheduler(object):
         try:
             for item in self.scheduled:
                 if item['master_id'] == masterid:
-                    item['when'] = when
+                    item['at'] = when
                     self._set_next_task()
                     return True
             return False
@@ -249,7 +249,7 @@ class TaskScheduler(object):
                     else:
                         self.logger.info('...exceeded maximum runs or time cutoff, not scheduling.')
                 else:
-                    if task.retries < self.max_retries:
+                    if task.retries <= self.max_retries:
                         self.logger.info('...retrying in %s.', self.retry_delay)
                         task.retries += 1
                         self._add_task(task, offset=self.retry_delay)

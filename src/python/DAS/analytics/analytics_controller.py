@@ -3,7 +3,7 @@
 from DAS.analytics.analytics_config import DASAnalyticsConfig
 from DAS.analytics.analytics_scheduler import TaskScheduler
 from DAS.analytics.analytics_web import DASAnalyticsWeb
-from DAS.analytics.analytics_utils import multilogging
+from DAS.analytics.analytics_utils import multilogging, das_factory, set_global_das
 
 import logging.handlers
 import sys
@@ -30,23 +30,23 @@ DASAnalyticsConfig.add_option('log_to_file',
 DASAnalyticsConfig.add_option('logfile',
                               group="Logging",
                               type=basestring,
-                              default='das_analytics.log',
+                              default='/tmp/das_analytics.log',
                               help="Name for logfile.")
 DASAnalyticsConfig.add_option('logfile_mode',
                               group="Logging",
                               type=basestring,
                               choices=['None','TimeRotate','SizeRotate'],
-                              default='None',
-                              help="Number of files for rotating log.")
+                              default='TimeRotate',
+                              help="Mode for rotating logs, if any.")
 DASAnalyticsConfig.add_option('logfile_rotating_count',
                               group="Logging",
                               type=int,
-                              default=0,
+                              default=5,
                               help="Number of rotating logfiles.")
 DASAnalyticsConfig.add_option('logfile_rotating_size',
                               group="Logging",
                               type=int,
-                              default=100000,
+                              default=1000000,
                               help="Size of rotating logfiles.")
 DASAnalyticsConfig.add_option('logfile_rotating_interval',
                               group="Logging",
@@ -56,7 +56,7 @@ DASAnalyticsConfig.add_option('logfile_rotating_interval',
 DASAnalyticsConfig.add_option('log_format',
                               group="Logging",
                               type=basestring,
-                              default="",
+                              default="%(asctime)s:%(name)s:%(levelname)s - %(message)s",
                               help="Logging format to use.")
 class DASAnalyticsLogging(object):
     "Helper object that does the necessary logging config."
@@ -107,6 +107,10 @@ DASAnalyticsConfig.add_option("web",
                               type=bool,
                               default=False,
                               help="Enable webserver.")
+DASAnalyticsConfig.add_option("global_das",
+                              type=bool,
+                              default=False,
+                              help="Use a single DAS instance.")
 class DASAnalyticsController:
     def __init__(self):
         self.config = None
@@ -130,6 +134,12 @@ class DASAnalyticsController:
         self.logger = logconf.get_logger()
         self.logger.info("Analytics server starting.")
         self.logger.info("Configuration: %s", self.config._options)
+        
+        if self.config.global_das:
+            set_global_das(True)
+            das_factory("DASAnalytics.DAS")
+        else:
+            set_global_das(False)
         
         self.scheduler = TaskScheduler(self, self.config)
         

@@ -761,3 +761,34 @@ class DASWebService(DASWebManager):
             except:
                 page = traceback.format_exc()
         return page
+    
+    @expose
+    def keysearch(self, **kwargs):
+        """
+        Interface to the DAS keylearning system, for a 
+        as-you-type suggestion system. This is a call for AJAX
+        in the page rather than a user-visible one.
+        
+        TODO: different output structure? limited number of results?
+        
+        It might be better just to return the list of data members
+        matched and then information about those on demand.
+        
+        Example output:
+        
+        keysearch?text=name ->
+        
+        {'site.name': [{'system': 'sitedb', 'urn': 'CMStoSiteName', keys: ['site']},
+                        ...]
+         ...}
+        """
+        
+        text = kwargs.get("text", "")
+        if text:
+            result = {}
+            possible_members = self.dasmgr.keylearning.text_search(text)
+            for member in possible_members:
+                result[member] = self.dasmgr.keylearning.member_info(member)
+                
+            return json.dumps(result)
+        return "{}"

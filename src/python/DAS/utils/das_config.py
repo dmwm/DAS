@@ -22,6 +22,9 @@ DASOption('mongodb', 'lifetime', 'int', 1*24*60*60),
 DASOption('mappingdb', 'dbname', 'string', 'mapping'),
 DASOption('mappingdb', 'collname', 'string', 'db'),
 
+DASOption('keylearningdb', 'dbname', 'string', 'keylearning'),
+DASOption('keylearningdb', 'collname', 'string', 'db'),
+
 DASOption('analyticsdb', 'dbname', 'string', 'analytics'),
 DASOption('analyticsdb', 'collname', 'string', 'db'),
 DASOption('analyticsdb', 'history', 'int', 60*24*60*60),

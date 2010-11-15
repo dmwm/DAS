@@ -12,7 +12,7 @@ import copy
 
 from DAS.core.das_core import DASCore
 from DAS.utils.utils import genkey
-from DAS.analytics.analytics_utils import multilogging
+from DAS.analytics.analytics_utils import multilogging, das_factory
 
 class Task(object):
     "Representation of a repeatedly-run task with access to DAS"
@@ -127,20 +127,22 @@ class RunnableTask(object):
                     'start_time':start_time, 'finish_time':start_time,
                     'name':self.name, 'index':self.index, 'parent':self.parent,
                     'master_id':self.master_id}
-        childlogger = multilogging().getLogger("DASAnalytics.Task.%s" % \
-                                           (self.classname))
-        daslogger = multilogging().getLogger("DASAnalytics.Task.%s.DAS" % \
-                                         (self.classname))
+        
+        log_child = "DASAnalytics.Task.%s.%s" % (self.classname, self.taskid)
+        log_das = "DASAnalytics.Task.%s.%s.DAS" % (self.classname, self.taskid)                                           
+        
+        childlogger = multilogging().getLogger(log_child)
         
         #we probably need to add a DASCore instance here too.
         
-        
+        #the DAS instance will now be global if this option is set,
+        #and otherwise uniquely created by das_factory
         self.kwargs.update({'logger':childlogger, 
                             'taskid': taskid, #task uuid
                             'name':self.name, #task title
                             'index':self.index, # #runs of this task
                             'interval':self.interval, #desired frequency
-                            'DAS':DASCore(logger=daslogger)})
+                            'DAS':das_factory(log_das)})
         
         try:
             instance = klass(**self.kwargs)
