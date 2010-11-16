@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+
+"""
+Base class for scheduling analyzers
+"""
+__author__ = "Gordon Ball"
+
 import time
 import collections
 
@@ -29,20 +37,24 @@ class HotspotBase(object):
         epoch_start = epoch_end - self.period
         
         summaries = self.get_summaries(epoch_start, epoch_end)
-        self.logger.info("HotspotBase::__call__ Got %s summaries", len(summaries))
+        self.logger.info("HotspotBase::__call__ Got %s summaries",
+                len(summaries))
         
         items = self.get_all_items(summaries)
-        self.logger.info("HotspotBase::__call__ Got %s items", len(items))
+        self.logger.info("HotspotBase::__call__ Got %s items",
+                len(items))
         
         items = self.preselect_items(items)
-        self.logger.info("HotspotBase::__call__ Preselected to %s items", len(items))
+        self.logger.info("HotspotBase::__call__ Preselected to %s items",
+                len(items))
         
         items = self.select_items(items)
         self.logger.info("HotspotBase::__call__ Selected %s items (%s:%s)", 
                          len(items), self.mode, self.fraction)
         
         items = self.mutate_items(items)
-        self.logger.info("HotspotBase::__call__ Mutated to %s items", len(items))
+        self.logger.info("HotspotBase::__call__ Mutated to %s items", 
+                len(items))
         
         retval = {'mode': self.mode,
                   'fraction': self.fraction,
@@ -60,8 +72,8 @@ class HotspotBase(object):
                 task = self.generate_task(item, count, epoch_start, epoch_end)
                 if task:
                     new_tasks.append(task)
-            except Exception, e:
-                failed_items.append((item, count, str(e)))
+            except Exception, exc:
+                failed_items.append((item, count, str(exc)))
         retval['new_tasks'] = new_tasks
         retval['failed_items'] = failed_items
         
@@ -74,7 +86,7 @@ class HotspotBase(object):
         For the given selected key, generate an appropriate task
         dictionary as understood by taskscheduler.
         """
-        raise NotImplemented
+        raise NotImplementedError
     
     def report(self):
         """
@@ -104,8 +116,8 @@ class HotspotBase(object):
         """
         items = collections.defaultdict(int)
         for summary in summaries:
-            for k,v in summary.items():
-                items[k] += v
+            for key, val in summary.items():
+                items[key] += val
         return items
     
     def select_items(self, items):
@@ -125,12 +137,12 @@ class HotspotBase(object):
                     break
         elif self.mode == 'keys':
             selected_items = dict([(k, items[k]) 
-                                   for k in sorted_keys[0:int(len(sorted_keys)*self.fraction)]])
+               for k in sorted_keys[0:int(len(sorted_keys)*self.fraction)]])
         elif self.mode == 'fixed':
             selected_items = dict([(k, items[k]) 
-                                   for k in sorted_keys[0:int(self.fraction)]])
+               for k in sorted_keys[0:int(self.fraction)]])
         else:
-            raise NotImplemented
+            raise NotImplementedError
         return selected_items
     
     def get_summaries(self, epoch_start, epoch_end):
@@ -172,7 +184,8 @@ class HotspotBase(object):
             if delta > self.interval:
                 blocks = int(delta/self.interval)
                 span = delta/blocks
-                self.logger.info("Gap longer than interval, creating %s summaries.", 
+                self.logger.info("Gap longer than interval, " +\
+                                 "creating %s summaries.", 
                                  blocks)
                 for i in range(blocks):
                     summary = self.make_one_summary(start+span*i, 
@@ -201,4 +214,4 @@ class HotspotBase(object):
         for the specified time range. Subclasses need to
         implement this for the analysis in question.
         """
-        raise NotImplemented
+        raise NotImplementedError

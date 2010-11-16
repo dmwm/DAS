@@ -36,6 +36,7 @@ performed stress tests and code audit DAS servers.
   - Updates for analytics server, add JSON methods, add help section to web page
   - Analytics CLI
   - Add ability to learn data-service output keys, fixes #424
+  - Add new class DASQuery
 
 - 0.5.5
 

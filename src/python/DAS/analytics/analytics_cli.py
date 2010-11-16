@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+"""
+DAS analytics CLI tool. Accesses a running web-enabled analytics
+instance to set or retrieve information.
+"""
+__author__ = "Gordon Ball"
+
 import urllib
 import urllib2
 import json
@@ -8,18 +14,15 @@ import sys
 import pprint
 from DAS.analytics.analytics_utils import parse_time
 
-"""
-DAS analytics CLI tool. Accesses a running web-enabled analytics
-instance to set or retrieve information.
-"""
-
-if __name__ == '__main__':
+def main():
+    "Main function"
     parser = optparse.OptionParser()
     
     group_host = optparse.OptionGroup(parser, "Host")
-    group_host.add_option("--host",
-                          help="Analytics host including protocol, port and path",
-                          default="http://localhost:8213/analytics")
+    msg  = "Analytics host including protocol, port and path,"
+    msg += " e.g http://localhost:8213/analytics (default)"
+    group_host.add_option("--host", help=msg,
+          default="http://localhost:8213/analytics")
     parser.add_option_group(group_host)
     
     group_task = optparse.OptionGroup(parser, "New Task")
@@ -62,32 +65,33 @@ if __name__ == '__main__':
     parser.add_option_group(group_mod)
     
     group_time = optparse.OptionGroup(parser, "Time",
-                                      "TIMEISH accepts the following\n"+\
-                                      "number - GMT UNIX timestamp\n"+\
-                                      "+number[smhd] - offset from now\n"+\
-                                      "    in secs/mins/hours/days\n"+\
-                                      "HH:MM[:SS] - localtime (tomorrow\n"+\
-                                      "    if this is in the past)\n"+\
-                                      "HH:MM[:SS]gmt|utc|z - as above but GMT")
+                              "TIMEISH accepts the following\n"+\
+                              "number - GMT UNIX timestamp\n"+\
+                              "+number[smhd] - offset from now\n"+\
+                              "    in secs/mins/hours/days\n"+\
+                              "HH:MM[:SS] - localtime (tomorrow\n"+\
+                              "    if this is in the past)\n"+\
+                              "HH:MM[:SS]gmt|utc|z - as above but GMT")
     parser.add_option_group(group_time)
     
-    opts, args = parser.parse_args()
+    opts, _ = parser.parse_args()
     
     host = opts.host
     if not host[-1] == '/':
         host += '/'
     
     def get_json(path, opts=None):
+        "Helper function to send request and parse output to JSON"
         url = host + path
         if opts:
             url += '?%s' % urllib.urlencode(opts)
         req = urllib2.Request(url, headers={"Accept": "application/json"})
         try:
             result = urllib2.urlopen(req).read()
-        except Exception, e:
+        except Exception, exc:
             print "There was an error fetching data from %s" % (host+path)
             print "Error was:"
-            print e
+            print exc
             sys.exit(0)
         try:
             return json.loads(result)
@@ -134,9 +138,6 @@ if __name__ == '__main__':
                 print "Assuming that key should be interpreted as a string"
                 kwargs['key'] = key
         
-        only_once = opts.once
-        max_runs = opts.runs
-        only_before = opts.before
         form =  {'name': opts.name,
                  'classname': opts.klass,
                  'interval': opts.interval}
@@ -173,8 +174,6 @@ if __name__ == '__main__':
         
     else:
         print "No action requested. Game over."
-    
-        
-        
-        
-            
+
+if __name__ == '__main__':
+    main()

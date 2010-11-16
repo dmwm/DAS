@@ -12,7 +12,6 @@ __author__ = "Valentin Kuznetsov"
 
 import sys
 import time
-import types
 import traceback
 
 # monogo db modules
@@ -35,7 +34,7 @@ def connection_monitor(uri, func, sleep=5):
     while True:
         time.sleep(sleep)
         if  not conn:
-            conn = db_connection(dbhost, dbport)
+            conn = db_connection(uri)
             if  conn:
                 func()
 

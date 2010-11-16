@@ -3,6 +3,7 @@
 """
 Runs a standalone test on an analytics task object.
 """
+__author__ = "Gordon Ball"
 
 import optparse
 import logging
@@ -10,8 +11,8 @@ import pprint
 import time
 from DAS.core.das_core import DASCore
 
-if __name__ == '__main__':
-
+def main():
+    "Main routine"
     logging.basicConfig(level=logging.DEBUG)
 
     parser = optparse.OptionParser()
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     parser.add_option("-t", "--interval", help="Task interval", 
                       type="int", default=3600)
 
-    opts, args = parser.parse_args()
+    opts, _ = parser.parse_args()
 
     if not opts.klass:
         raise Exception("Task class required.")
@@ -69,3 +70,6 @@ if __name__ == '__main__':
     if 'new_tasks' in result:
         print "Task requested the following new tasks:"
         pprint.pprint(result['new_tasks'])
+
+if __name__ == '__main__':
+    main()
