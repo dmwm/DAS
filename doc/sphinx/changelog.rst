@@ -37,6 +37,7 @@ performed stress tests and code audit DAS servers.
   - Analytics CLI
   - Add ability to learn data-service output keys, fixes #424
   - Add new class DASQuery
+  - Add analytics server pid into analytics configuration
 
 - 0.5.5
 

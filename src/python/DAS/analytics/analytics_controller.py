@@ -58,6 +58,7 @@ DASAnalyticsConfig.add_option('log_format',
                               type=basestring,
                               default="%(asctime)s:%(name)s:%(levelname)s - %(message)s",
                               help="Logging format to use.")
+
 class DASAnalyticsLogging(object):
     "Helper object that does the necessary logging config."
     def __init__(self, config):
@@ -111,6 +112,9 @@ DASAnalyticsConfig.add_option("global_das",
                               type=bool,
                               default=False,
                               help="Use a single DAS instance.")
+DASAnalyticsConfig.add_option('pid', type=str, default="/tmp/das_analytics.pid",
+                  help="Location and name of web server PID file, e.g. /tmp/pid.txt")
+
 class DASAnalyticsController:
     def __init__(self):
         self.config = None

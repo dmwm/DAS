@@ -1,8 +1,17 @@
+#!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+
+"""
+DAS Analytics web server
+"""
+__author__ = "Gordon Ball"
+
 import logging
 import cherrypy
 import collections
 import time
 import json
+from cherrypy.process.plugins import PIDFile
 
 from DAS.analytics.analytics_config import DASAnalyticsConfig
 from DAS.web.das_webmanager import DASWebManager
@@ -28,6 +37,7 @@ DASAnalyticsConfig.add_option("web_base",
                               type=basestring,
                               default='/analytics',
       help="Base path for analytics web")
+
 class DASAnalyticsWebManager(DASWebManager):
     """
     Use the DASWebManager class as the root of our interfaces,
@@ -397,6 +407,7 @@ class DASAnalyticsWeb:
         
         self.log_data = collections.deque(maxlen=config.web_history)
         self.result_data = collections.deque(maxlen=config.web_history)
+        self.pid = config.get('pid', '/tmp/das_analytics.pid')
 
     def start(self):
         """
@@ -411,5 +422,8 @@ class DASAnalyticsWeb:
         cherrypy.tree.mount(DASAnalyticsWebManager(self.config, self),
                             self.config.web_base)
         
+        pid = PIDFile(cherrypy.engine, self.pid)
+        pid.subscribe()
+
         cherrypy.engine.start()
         cherrypy.engine.block()

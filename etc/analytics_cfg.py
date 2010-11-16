@@ -19,6 +19,7 @@ workers = 4
 log_to_stderr = 0 
 web_base = "/analytics" 
 logfile_rotating_count = 5
+pid = "/tmp/das_analytics.pid"
 
 Task("DatasetHotspot", "ValueHotspot", 3600, key="dataset.name")
 Task("BlockHotspot", "ValueHotspot", 3600, key="block.name")
