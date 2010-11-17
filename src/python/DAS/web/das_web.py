@@ -44,7 +44,7 @@ from DAS.web.das_codes import web_code
 
 import DAS.utils.jsonwrapper as json
 
-DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 
+DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
                   'format', 'sort', 'dir', 'ajax', 'view', 'method']
 
 class DASWebService(DASWebManager):
