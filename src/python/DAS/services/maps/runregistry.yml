@@ -14,5 +14,4 @@ notations : [
     {"notation":"bField", "map":"bfield", "api":""},
     {"notation":"hltKey", "map":"hlt", "api":""},
     {"notation":"runNumber", "map":"run_number", "api":""},
-    {"notation":"run", "map":"run_number", "api":""},
 ]
