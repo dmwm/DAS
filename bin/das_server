@@ -20,7 +20,7 @@ fi
 server="$1"
 
 # run actual script
-cmd="$dasroot/web/das_server.py --server=$server"
+cmd="python $dasroot/web/das_server.py --server=$server"
 
 RETVAL=$?
 

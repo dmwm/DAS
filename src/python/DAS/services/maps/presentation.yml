@@ -1,24 +1,18 @@
 # DAS presentation map, it applies to all systems and all urls
 # to create uniform representation of meta-data
 presentation: {
-city    : [
-        {"das":"city.name", "ui":"City"}, 
-        {"das":"city.Placemark.address", "ui":"Address"}, 
-        {"das":"city.Placemark.ExtendedData.LatLonBox.west", "ui":"Location west"}, 
-        {"das":"city.Placemark.ExtendedData.LatLonBox.east", "ui":"Location east"}, 
-        {"das":"city.Placemark.ExtendedData.LatLonBox.north", "ui":"Location north"}, 
-        {"das":"city.Placemark.ExtendedData.LatLonBox.south", "ui":"Location south"}, 
-        ],
-primary_ds : [
-        {"das":"primary_ds.name", "ui":"Name"}, 
-        {"das":"primary_ds.primary_ds_type", "ui":"Type"},
-        {"das":"primary_ds.type", "ui":"Type"},
-        {"das":"primary_ds.create_by", "ui":"Created by:"}, 
+primary_dataset : [
+        {"das":"primary_dataset.name", "ui":"Name"}, 
+        {"das":"primary_dataset.type", "ui":"Type"},
+        {"das":"primary_dataset.create_by", "ui":"Created by:"}, 
         ],
 dataset : [
         {"das":"dataset.error", "ui":"Error"}, 
         {"das":"dataset.httperror", "ui":"Reason"}, 
-        {"das":"dataset.name", "ui":"Dataset name"}, 
+        {"das":"dataset.name", "ui":"Name"}, 
+        {"das":"dataset.primary_datatset_name", "ui":"Primary dataset"}, 
+        {"das":"dataset.processed_datatset_name", "ui":"Processed dataset"}, 
+        {"das":"dataset.physics_group_name", "ui":"Physics group"}, 
         {"das":"dataset.global_tag", "ui":"Tag"},
         {"das":"dataset.xtcrosssection", "ui":"Cross section"},
         {"das":"dataset.release_version", "ui":"Release"},
@@ -40,7 +34,11 @@ file : [
         {"das":"file.nevents", "ui":"Number of events"},
         ],
 run : [
-        {"das":"run.number", "ui":"Run number"}, 
+        {"das":"run.run_number", "ui":"Run number"}, 
+        {"das":"run.primary_dataset", "ui":"Primary dataset"}, 
+        {"das":"run.datasetName", "ui":"Dataset"}, 
+        {"das":"run.global_tag", "ui":"Global tag"}, 
+        {"das":"run.lhcFill", "ui":"LHC fill"}, 
         {"das":"run.bfield", "ui":"Magnetic Field"}, 
         {"das":"run.sequence", "ui":"Sequence"}, 
         {"das":"run.components", "ui":"Components"}, 
@@ -48,6 +46,10 @@ run : [
         {"das":"run.key", "ui":"Run type"}, 
         {"das":"run.triggers", "ui":"Number of triggers"}, 
         {"das":"run.CROSSINGS_PER_ORBIT", "ui":"Crossing/orbit"}, 
+        ],
+run_status: [
+        {"das":"run.run_number", "ui":"Run number"},
+        {"das":"run.start_time", "ui":"Start time"},
         ],
 tier : [
         {"das":"tier.error", "ui":"Error"}, 
@@ -85,10 +87,25 @@ group : [
         {"das":"group.dest_bytes", "ui":"# of approved bytes for this group"},
         {"das":"group.node_bytes", "ui":"# of bytes archived on this node"},
         ],
+jobsummary : [
+        {"das":"jobsummary.name", "ui":"Name"},
+        {"das":"jobsummary.activity", "ui":"Activity"},
+        {"das":"jobsummary.terminated", "ui":"Terminated"},
+        {"das":"jobsummary.running", "ui":"Running"},
+        {"das":"jobsummary.submitted", "ui":"Submitted"},
+        ],
 ip : [
         {"das":"ip.City", "ui":"City"},
         {"das":"ip.CountryName", "ui":"Country"},
         {"das":"ip.Latitude", "ui":"Latitude"},
         {"das":"ip.Longitude", "ui":"Longitude"},
+        ],
+city    : [
+        {"das":"city.name", "ui":"City"}, 
+        {"das":"city.Placemark.address", "ui":"Address"}, 
+        {"das":"city.Placemark.ExtendedData.LatLonBox.west", "ui":"Location west"}, 
+        {"das":"city.Placemark.ExtendedData.LatLonBox.east", "ui":"Location east"}, 
+        {"das":"city.Placemark.ExtendedData.LatLonBox.north", "ui":"Location north"}, 
+        {"das":"city.Placemark.ExtendedData.LatLonBox.south", "ui":"Location south"}, 
         ],
 }

@@ -38,6 +38,9 @@ performed stress tests and code audit DAS servers.
   - Add ability to learn data-service output keys, fixes #424
   - Add new class DASQuery
   - Add analytics server pid into analytics configuration
+  - Prepend python to all shell scripts to avoid permission problem
+  - fix dbs blockpath map
+  - add new presentation layouts for various services
 
 - 0.5.5
 

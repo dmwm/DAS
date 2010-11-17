@@ -15,6 +15,6 @@ for release in $cmd
 do
     echo "Trying $release ..."
     echo "$dasroot/tools/cmssw_config_db.py --path=$dir --release=$release"
-    $dasroot/tools/cmssw_config_db.py --path=$dir --release=$release
+    python $dasroot/tools/cmssw_config_db.py --path=$dir --release=$release
 done
 

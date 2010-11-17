@@ -11,7 +11,7 @@ port=$3
 dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 # run actual script
 echo "Read DAS maps from $dir"
-cmd="$dasroot/tools/das_mapping_db.py --host=$host --port=$port"
+cmd="python $dasroot/tools/das_mapping_db.py --host=$host --port=$port"
 echo $cmd
 
 # run actual script

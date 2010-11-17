@@ -143,8 +143,8 @@ params : {
      "storage_elemennt_name": "*", "user_type":"NORMAL"
 }
 daskeys : [
-    {"key":"dataset", "map":"dataset.name", "pattern":""},
     {"key":"block", "map":"block.name", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
     {"key":"site", "map":"site.name", "pattern":"([a-zA-Z0-9]+\\.){2}"},
 ]
 das2api : [

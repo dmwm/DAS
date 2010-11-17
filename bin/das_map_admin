@@ -3,4 +3,4 @@
 # find out where DAS is installed on a system
 dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 # run actual script
-$dasroot/tools/das_mapping_db.py ${1+"$@"}
+python $dasroot/tools/das_mapping_db.py ${1+"$@"}
