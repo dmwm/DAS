@@ -41,7 +41,9 @@ performed stress tests and code audit DAS servers.
   - Prepend python to all shell scripts to avoid permission problem
   - fix dbs blockpath map
   - add new presentation layouts for various services
-
+  - increase ajaxStatus lookup time
+  - fix issue with date, in the case when date was specified as a range, e.g.
+    date last 24h, the merge records incorrectly record the date value
 - 0.5.5
 
   - fix map-reduce parsing using DAS PLY

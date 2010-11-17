@@ -714,7 +714,7 @@ class DASWebService(DASWebManager):
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         req  = """
         <script type="application/javascript">
-        setTimeout('ajaxStatus("%s")',3000)
+        setTimeout('ajaxStatus("%s")',8000)
         </script>""" % self.base
 
         def set_header():

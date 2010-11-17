@@ -533,10 +533,6 @@ class DASMongocache(object):
                 skeys = [(skey, ASCENDING)]
             else:
                 skeys = [(skey, DESCENDING)]
-        ### The date is special key in DAS, data-services doesn't provide
-        ### it, so we must drop it.
-        if  spec.has_key('date'):
-            del spec['date']
         res = []
         try:
             if  limit:

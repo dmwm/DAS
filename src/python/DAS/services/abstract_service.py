@@ -478,6 +478,9 @@ class DASAbstractService(object):
                         isinstance(value, list): # we got condition
                         if  existing_value:
                             value = existing_value
+                        elif isinstance(value, dict) and \
+                        value.has_key('$in'): # we got a range {'$in': []}
+                            value = value['$in']
                         else:
                             value = str(value) # to avoid {'$gt':number}
                     elif existing_value and value != existing_value:
