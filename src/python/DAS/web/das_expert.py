@@ -93,7 +93,7 @@ class DASExpertService(DASWebManager):
         """Serve default index.html web page"""
         msg = kwargs.get('msg', '')
         databases = self.conn.database_names()
-        server_info = dict(dburi=self.uri)
+        server_info = dict(dburi=self.dburi)
         server_info.update(self.conn.server_info())
         ddict = {}
         for database in databases:
