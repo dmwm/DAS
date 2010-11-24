@@ -311,7 +311,8 @@ class DASCore(object):
         das_timer('DASCore::call', self.verbose)
         return 1
 
-    def get_from_cache(self, query, idx=0, limit=None, skey=None, sorder='asc'):
+    def get_from_cache(self, query, idx=0, limit=None, skey=None, sorder='asc',
+                        collection='merge'):
         """
         Look-up results from the merge cache and yield them for
         further processing.
@@ -358,13 +359,14 @@ class DASCore(object):
             res = []
             _id = 0
             for func, key in aggregators:
-                rows = self.rawcache.get_from_cache(query, collection='merge')
+                rows = self.rawcache.get_from_cache(\
+                        query, collection=collection)
                 data = getattr(das_aggregator, 'das_%s' % func)(key, rows)
                 res += [{'_id':_id, 'function': func, 'key': key, 'result': data}]
                 _id += 1
         else:
             res = self.rawcache.get_from_cache(\
-                query, idx, limit, skey, sorder, collection='merge')
+                query, idx, limit, skey, sorder, collection=collection)
         # check if we have unique filter
         if  unique:
             for row in unique_filter(res):

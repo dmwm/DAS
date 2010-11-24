@@ -6,7 +6,6 @@ Unit test for DAS core module
 """
 
 import os
-import types
 import unittest
 
 from pymongo.connection import Connection

@@ -7,6 +7,26 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.5.7
+
+
+  - Fix dbport/dbhost vs uri bug for das expert interface
+  - Created new self-contained unit test framework to test CMS data-services
+
+    - add new DASTestDataService class which represents DAS test integration
+      web server
+    - provide unit test against DAS test data web service
+    - add new configuration for DASTestDataService server
+    - perform queries against local DAS test data service, all queries can be
+      persistent and adjusted in unittest
+    - add fake dbs/phedex/sitedb/ip/zip services into DASTestDataService
+
+  - remove all handlers before initialization of DASLogger
+  - add NullHandler
+  - add collection parameter to DAS core get_from_cache method
+  - add unit test for web.utils
+  - add delete_db_collection to mapping/analytics classes
+
 - 0.5.6
 
   - add usable analytics system; this consists of a daemon (analytics_controller)

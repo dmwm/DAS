@@ -60,6 +60,12 @@ class DASAnalytics(object):
         """
         self.conn.drop_database(self.dbname)
 
+    def delete_db_collection(self):
+        """
+        Delete analytics DB collection in MongoDB.
+        """
+        self.conn.drop_collection(self.colname)
+
     def add_query(self, dasquery, mongoquery):
         """
         Add DAS-QL/MongoDB-QL queries into analytics.

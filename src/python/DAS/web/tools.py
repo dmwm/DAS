@@ -79,8 +79,10 @@ class TemplatedPage(Page):
             templatedir  = os.environ['DAS_TMPLPATH']
         self.templatedir = config.get('templatedir', templatedir)
         self.name = "TemplatedPage"
-        self.debug("Templates are located in: %s" % self.templatedir)
-        self.debug("Using Cheetah version: %s" % Version)
+        verbose = config.get('verbose', 0)
+        if  verbose:
+            self.info("Templates are located in: %s" % self.templatedir)
+            self.info("Using Cheetah version: %s" % Version)
 
     def templatepage(self, ifile=None, *args, **kwargs):
         """

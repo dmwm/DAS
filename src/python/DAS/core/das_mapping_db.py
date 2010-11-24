@@ -71,6 +71,12 @@ class DASMapping(object):
         """
         self.conn.drop_database(self.dbname)
 
+    def delete_db_collection(self):
+        """
+        Delete mapping DB collection in MongoDB.
+        """
+        self.db.drop_collection(self.colname)
+
     def check_maps(self):
         """
         Check if there are records in Mapping DB

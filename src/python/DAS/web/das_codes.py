@@ -37,6 +37,7 @@ DAS_WEB_CODES = [
         (25 , 'Unable to start DASCore'),
         (26 , 'No file id'),
         (27 , 'Unsupported id value'),
+        (28 , 'Server error'),
 ]
 def decode_code(code):
     """Return human readable string for provided code ID"""

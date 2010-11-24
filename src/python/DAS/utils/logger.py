@@ -15,6 +15,15 @@ import logging
 import logging.handlers
 import cherrypy
 
+class NullHandler(logging.Handler):
+    """Do nothing logger"""
+    def emit(self, record):
+        "This method does nothing."
+        pass
+    def handle(self, record):
+        "This method does nothing."
+        pass
+
 class DummyLogger(object):
     """
     Base logger class
@@ -68,6 +77,7 @@ class DASLogger(object):
         self.logfile  = logfile
         self.name     = name
         self.logger   = logging.getLogger(self.name)
+        self.logger.handlers = [] # remove all existing handlers
         self.loglevel = logging.INFO
         self.addr     = repr(self).split()[-1]
         self.logname  = name

@@ -25,7 +25,6 @@ from pprint import pformat
 from itertools import groupby
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
-from json import JSONEncoder
 
 # DAS modules
 import DAS
@@ -37,6 +36,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, connection_monitor
 from DAS.web.utils import urllib2_request, json2html, web_time
 from DAS.web.utils import ajax_response, checkargs, get_ecode
+from DAS.web.utils import wrap2dasxml, wrap2dasjson
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import exposejson, exposedasplist
 from DAS.web.das_webmanager import DASWebManager
@@ -303,26 +303,6 @@ class DASWebService(DASWebManager):
         page  = self.page(self.form() + error)
         return page
 
-    def wrap2dasjson(self, data):
-        """DAS JSON wrapper"""
-        encoder = JSONEncoder()
-        cherrypy.response.headers['Content-Type'] = "text/json"
-        try:
-            jsondata = encoder.encode(data)
-            return jsondata
-        except:
-            return dict(error="Failed to JSONtify obj '%s' type '%s'" \
-                % (data, type(data)))
-
-    def wrap2dasxml(self, data):
-        """DAS XML wrapper.
-        Return data in XML plist format, 
-        see http://docs.python.org/library/plistlib.html#module-plistlib
-        """
-        plist_str = plistlib.writePlistToString(data)
-        cherrypy.response.headers['Content-Type'] = "application/xml"
-        return plist_str
-
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def gridfs(self, *args, **kwargs):
@@ -428,9 +408,9 @@ class DASWebService(DASWebManager):
             if  recordid:
                 if  format:
                     if  format == 'xml':
-                        return self.wrap2dasxml(result['data'])
+                        return wrap2dasxml(result['data'])
                     elif  format == 'json':
-                        return self.wrap2dasjson(result['data'])
+                        return wrap2dasjson(result['data'])
                     else:
                         return self.error('Unsupported data format %s' % format)
                 page  = res

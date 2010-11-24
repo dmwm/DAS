@@ -15,7 +15,9 @@ import httplib
 import urllib
 import urllib2
 import cherrypy
+import plistlib
 from   cherrypy import HTTPError
+from   json import JSONEncoder
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
@@ -340,4 +342,23 @@ def ajax_response(msg):
     page += "</ajax-response>"
     return page
 
+def wrap2dasjson(data):
+    """DAS JSON wrapper"""
+    encoder = JSONEncoder()
+    cherrypy.response.headers['Content-Type'] = "text/json"
+    try:
+        jsondata = encoder.encode(data)
+        return jsondata
+    except:
+        return dict(error="Failed to JSONtify obj '%s' type '%s'" \
+            % (data, type(data)))
+
+def wrap2dasxml(data):
+    """DAS XML wrapper.
+    Return data in XML plist format, 
+    see http://docs.python.org/library/plistlib.html#module-plistlib
+    """
+    plist_str = plistlib.writePlistToString(data)
+    cherrypy.response.headers['Content-Type'] = "application/xml"
+    return plist_str
 
