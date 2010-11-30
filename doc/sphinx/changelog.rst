@@ -26,6 +26,8 @@ performed stress tests and code audit DAS servers.
   - add collection parameter to DAS core get_from_cache method
   - add unit test for web.utils
   - add delete_db_collection to mapping/analytics classes
+  - remove obsolete templates, e.g. das_admin, mapreduce.
+  - sanitize DAS templates, #545
 
 - 0.5.6
 
