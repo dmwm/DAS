@@ -1,4 +1,8 @@
-
+#from DAS.web.utils import quote
+#set base = $quote($base)
+#if  $msg
+#set msg = $quote($msg)
+#end if
 <!-- das_expert.tmpl -->
 <div id="container">
 
@@ -38,6 +42,8 @@ db:
 #for db in $ddict.keys()
 #for coll, info in $ddict[$db].items()
 #if $coll!="system.indexes"
+#set db = $quote($db)
+#set coll = $quote($coll)
 <option value="$db.$coll">$db.$coll</option>
 #end if
 #end for
@@ -77,6 +83,8 @@ db:
 #for db in $ddict.keys()
 #for coll, info in $ddict[$db].items()
 #if $coll!="system.indexes"
+#set db = $quote($db)
+#set coll = $quote($coll)
 <option value="$db.$coll">$db.$coll</option>
 #end if
 #end for
@@ -114,6 +122,7 @@ DAS query:
 <h3 class="sectionhead">Databases</h3>
 <ul>
 #for db in $ddict.keys()
+#set db = $quote($db)
 <li><a href="javascript:HideAll();ShowTag('$db')">$db</a></li>
 #end for
 </ul>
@@ -126,7 +135,7 @@ DAS query:
 <div id="info" class="show">
 <h3>MongoDB info</h3>
 #for key, val in $mongo_info.items()
-<b>$key</b>: $val
+<b>$quote($key)</b>: $quote($val)
 <br />
 #end for
 </div> <!--end of id=info -->
@@ -139,15 +148,17 @@ $dasconfig
 </div> <!--end of id=dasconfig -->
 
 #for db in $ddict.keys()
-<div id="$db" class="hide">
-<h3>Database: $db</h3>
+<div id="$quote($db)" class="hide">
+<h3>Database: $quote($db)</h3>
 #for coll, info in $ddict[$db].items()
+#set db = $quote($db)
+#set coll = $quote($coll)
 <h4>Collection: $coll</h4>
-number of documents $info[0], collection
+number of documents $quote($info[0]), collection
 <a href="$base/expert/records?database=$db&amp;collection=$coll">records</a>,
 collection info
 <pre>
-$info[1]
+$quote($info[1])
 </pre>
 #set index_dict=$info[2]
 #if $index_dict.keys()
@@ -160,6 +171,9 @@ $info[1]
 #else
 #set name=""
 #end if
+#set name = $quote($name)
+#set key = $quote($key)
+#set val = $quote($val)
 <tr class="$name">
 <td>$key</td>
 <td>$val</td>
@@ -184,6 +198,7 @@ function HideAll() {
     HideTag('info');
     HideTag('dasconfig');
 #for db in $ddict.keys()
+#set db = $quote($db)
     HideTag('$db');
 #end for
 }

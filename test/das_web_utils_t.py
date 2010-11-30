@@ -11,7 +11,7 @@ import unittest
 
 from pymongo.connection import Connection
 
-from DAS.web.utils import wrap2dasxml, wrap2dasjson, json2html
+from DAS.web.utils import wrap2dasxml, wrap2dasjson, json2html, quote
 
 class testDASWebUtils(unittest.TestCase):
     """
@@ -23,6 +23,23 @@ class testDASWebUtils(unittest.TestCase):
         """
         debug = 0
 
+    def testDASXML(self):
+        """test quote function"""
+        data = 1
+        result = quote(data)
+        expect = '1'
+        self.assertEqual(expect, result)
+        
+        data = '1'
+        result = quote(data)
+        expect = '1'
+        self.assertEqual(expect, result)
+        
+        data = 'vk test'
+        result = quote(data)
+        expect = 'vk%20test'
+        self.assertEqual(expect, result)
+        
     def testDASXML(self):
         """test wrap2dasxml function"""
         data = {'test': {'foo':1}}

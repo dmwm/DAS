@@ -1,3 +1,5 @@
+#from DAS.web.utils import quote
+#set base=$quote($base)
 <div class="page">
 <div class="normal">
 
@@ -35,13 +37,13 @@ What are the pages in this interface?
 </li>
 </ul>
 <p>
-<a href='$base/schedule>Schedule</a> lists the tasks currently queued on the
+<a href="$base/schedule">Schedule</a> lists the tasks currently queued on the
 scheduler, along with the times they will be (requested to be) executed.<br>
-<a href='$base/results>Results</a> lists the results of tasks that have
+<a href="$base/results">Results</a> lists the results of tasks that have
 previously been executed.<br>
-<a href='$base/log>Log</a> lists the log entries both from analytics itself,
+<a href="$base/logger">Log</a> lists the log entries both from analytics itself,
 from the jobs executed and from the DAS instance it owns.<br>
-<a href='$base/control>Control</a> allows limited alterations to the server
+<a href="$base/control">Control</a> allows limited alterations to the server
 configuration, and new tasks to be added.
 </p>
 

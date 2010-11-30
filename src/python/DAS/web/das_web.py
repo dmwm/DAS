@@ -34,7 +34,7 @@ from DAS.utils.utils import getarg, access
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, connection_monitor
-from DAS.web.utils import urllib2_request, json2html, web_time
+from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
 from DAS.web.tools import exposedasjson, exposetext
@@ -46,6 +46,16 @@ import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
                   'format', 'sort', 'dir', 'ajax', 'view', 'method']
+
+def das_json(record, pad=''):
+    """
+    Wrap provided jsonhtml code snippet into div/pre blocks. Provided jsonhtml
+    snippet is sanitized by json2html function.
+    """
+    page  = """<div class="code"><pre>"""
+    page += json2html(record, pad)
+    page += "</pre></div>"
+    return page
 
 class DASWebService(DASWebManager):
     """
@@ -104,15 +114,8 @@ class DASWebService(DASWebManager):
         """
         page  = self.top()
         page += content
-        timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-        services = self.dasmgr.keys()
-        srv = ""
-        for key in services.keys():
-            srv += "%s, " % key
-        srv = srv[:-2] # remove last comma
-        page += self.templatepage('das_bottom', ctime=ctime, services=srv,
-                                  version=DAS.version,
-                                  timestamp=timestamp, div=response_div)
+        page += self.templatepage('das_bottom', ctime=ctime, 
+                                  version=DAS.version, div=response_div)
         return page
 
     @expose
@@ -191,15 +194,14 @@ class DASWebService(DASWebManager):
         show   = kwargs.get('show', 'json')
         page   = "<b>DAS mapping record</b>"
         if  show == 'json':
-            jsoncode = {'jsoncode': json2html(record, "")}
-            page += self.templatepage('das_json', **jsoncode)
+            page += das_json(record)
         elif show == 'code':
             code  = pformat(record, indent=1, width=100)
-            page += self.templatepage('das_code', code=code)
+            page += self.templatepage('das_json', jsoncode=code)
         else:
             code  = yaml.dump(record, width=100, indent=4, 
                         default_flow_style=False)
-            page += self.templatepage('das_code', code=code)
+            page += self.templatepage('das_json', jsoncode=code)
         return self.page(page, response_div=False)
 
     @expose
@@ -383,21 +385,20 @@ class DASWebService(DASWebManager):
                 if  recordid: # we got id
                     for row in result['data']:
                         if  show == 'json':
-                            jsoncode = {'jsoncode': json2html(row, "")}
-                            res += self.templatepage('das_json', **jsoncode)
+                            res += das_json(row)
                         elif show == 'code':
                             code  = pformat(row, indent=1, width=100)
-                            res += self.templatepage('das_code', code=code)
+                            res += self.templatepage('das_json', jsoncode=code)
                         else:
                             code = yaml.dump(row, width=100, indent=4, 
                                         default_flow_style=False)
-                            res += self.templatepage('das_code', code=code)
+                            res += self.templatepage('das_json', jsoncode=code)
                 else:
                     for row in result['data']:
                         rid  = row['_id']
                         del row['_id']
-                        record = dict(id=rid, daskeys=', '.join(row))
-                        res += self.templatepage('das_record', **record)
+                        res += self.templatepage('das_record', \
+                                id=rid, daskeys=', '.join(row))
             else:
                 res = result['status']
                 if  res.has_key('reason'):
@@ -416,12 +417,12 @@ class DASWebService(DASWebManager):
                 page  = res
             else:
                 url   = '/das/records?'
-                idict = dict(nrows=nresults, idx=idx, 
-                            limit=limit, results=res, url=url)
                 if  nresults:
-                    page = self.templatepage('das_pagination', **idict)
+                    page = self.templatepage('das_pagination', \
+                        nrows=nresults, idx=idx, limit=limit, url=url)
                 else:
                     page = 'No results found'
+                page += res
 
             form    = self.form(input="")
             ctime   = (time.time()-time0)
@@ -584,31 +585,31 @@ class DASWebService(DASWebManager):
                 page += "<b>%s</b>: %s<br />" % (uikey, value)
             pad   = ""
             if  show == 'json':
-                jsoncode = {'jsoncode': json2html(row, pad)}
-                jsonhtml = self.templatepage('das_json', **jsoncode)
-                jsondict = dict(data=jsonhtml, id=id, rec_id=id)
-                page += self.templatepage('das_row', **jsondict)
+                jsonhtml = das_json(row, pad)
+                page += self.templatepage('das_row', \
+                        sanitized_data=jsonhtml, id=id, rec_id=id)
             elif show == 'code':
                 code  = pformat(row, indent=1, width=100)
-                data  = self.templatepage('das_code', code=code)
-                datadict = {'data':data, 'id':id, 'rec_id':id}
-                page += self.templatepage('das_row', **datadict)
+                data  = self.templatepage('das_json', jsoncode=code)
+                page += self.templatepage('das_row', \
+                        sanitized_data=data, id=id, rec_id=id)
             else:
                 code  = yaml.dump(row, width=100, indent=4, 
                                 default_flow_style=False)
-                data  = self.templatepage('das_code', code=code)
-                datadict = {'data':data, 'id':id, 'rec_id':id}
-                page += self.templatepage('das_row', **datadict)
+                data  = self.templatepage('das_json', jsoncode=code)
+                page += self.templatepage('das_row', \
+                        sanitized_data=data, id=id, rec_id=id)
             page += '</div>'
         ctime = (time.time()-time0)
         url   = "%s/?view=list&show=%s&input=%s&ajax=%s" \
-        % (self.base, show, uinput, ajaxreq)
-        idict = dict(nrows=total, idx=idx,
-                    limit=limit, results=page, url=url)
+        % (quote(self.base), quote(show), quote(uinput), quote(ajaxreq))
+        content = page
         if  total:
-            page = self.templatepage('das_pagination', **idict)
+            page  = self.templatepage('das_pagination', \
+                nrows=total, idx=idx, limit=limit, url=url)
+            page += content
         else:
-            page = 'No results found'
+            page  = 'No results found'
         return self.page(form + page, ctime=ctime)
 
     @exposetext

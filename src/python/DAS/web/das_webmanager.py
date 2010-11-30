@@ -107,16 +107,15 @@ class DASWebManager(TemplatedPage):
         """
         Provide masthead for all web pages
         """
-        return self.templatepage('das_top', base=self.base, yui=self.yuidir)
+        return self.templatepage('das_top', base=self.base)
 
     def bottom(self):
         """
         Provide footer for all web pages
         """
-        timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
         ctime = 0
-        return self.templatepage('das_bottom', div="", services="",
-                timestamp=timestamp, ctime=ctime, version=DAS.version)
+        return self.templatepage('das_bottom', div="", 
+                ctime=ctime, version=DAS.version)
 
     def page(self, content):
         """
@@ -182,7 +181,7 @@ class DASWebManager(TemplatedPage):
         scripts = self.check_scripts(args, self.jsmap, self.jsdir)
         return self.serve_files(args, scripts, self.jsmap)
 
-    def serve_files(self, args, scripts, _map, datatype='', minimize=False):
+    def serve_files(self, args, scripts, resource, datatype='', minimize=False):
         """
         Return asked set of files for JS, YUI, CSS.
         """
@@ -192,7 +191,7 @@ class DASWebManager(TemplatedPage):
             if  datatype == 'css':
                 data = '@CHARSET "UTF-8";'
             for script in args:
-                path = os.path.join(sys.path[0], _map[script])
+                path = os.path.join(sys.path[0], resource[script])
                 path = os.path.normpath(path)
                 ifile = open(path)
                 data = "\n".join ([data, ifile.read().\
@@ -206,13 +205,14 @@ class DASWebManager(TemplatedPage):
                 self.cache[idx] = data
         return self.cache[idx] 
     
-    def check_scripts(self, scripts, map, path):
+    def check_scripts(self, scripts, resource, path):
         """
-        Check a script is known to the map and that the script actually exists   
+        Check a script is known to the resource map 
+        and that the script actually exists   
         """           
         for script in scripts:
-            if  script not in map.keys():
+            if  script not in resource.keys():
                 spath = os.path.normpath(os.path.join(path, script))
                 if  os.path.isfile(spath):
-                    map.update({script: spath})
+                    resource.update({script: spath})
         return scripts

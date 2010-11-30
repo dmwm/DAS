@@ -1,35 +1,37 @@
-<div><h3>Task: $name</h3></div>
+#from DAS.web.utils import quote
+#from urllib import quote_plus
+<div><h3>Task: $quote($name)</h3></div>
 <div><table>
 #import json
 #import time
 <tr><th>Key</th><th>Value</th>
-<tr><td>Class</td><td>$classname</td></tr>
-<tr><td>Interval</td><td>$interval</td></tr>
-<tr><td>Arguments</td><td><pre>#echo json.dumps($kwargs, indent=2, default=str)#</pre></td></tr>
-<tr><td>Run Count</td><td>$run_count</td></tr>
+<tr><td>Class</td><td>$quote($classname)</td></tr>
+<tr><td>Interval</td><td>$quote($interval)</td></tr>
+<tr><td>Arguments</td><td><pre>$quote($json.dumps($kwargs, indent=2, default=str))</pre></td></tr>
+<tr><td>Run Count</td><td>$quote($run_count)</td></tr>
 #if $last_run_at
 <tr><td>Last run</td><td>#echo time.strftime('%d/%m/%y %H:%M:%S', time.localtime($last_run_at))#</td></tr>
 #end if
 #if $parent
-<tr><td>Parent</td><td><a href='$base/task?id=$parent'>$parent</a></td></tr>
+<tr><td>Parent</td><td><a href='$base/task?id=$quote_plus($parent)'>$quote($parent)</a></td></tr>
 #end if
-<tr><td>Results</td><td><a href='$base/results?master=$master_id'>Self</a><br>
-<a href='$base/results?parent=$master_id'>Children</a></td></tr>
+<tr><td>Results</td><td><a href='$base/results?master=$quote_plus($master_id)'>Self</a><br>
+<a href='$base/results?parent=$quote_plus($master_id)'>Children</a></td></tr>
 </table></div>
 <div><pre>
-id=$master_id
+id=$quote($master_id)
 #if $only_once
 only_once
 #end if
 #if $max_runs
-max_runs=$max_runs
+max_runs=$quote($max_runs)
 #end if
 #if $only_before
-only_before=$only_before
+only_before=$quote($only_before)
 #end if
 #if $retries
-retries=$retries
+retries=$quote($retries)
 #end if
-can_respawn=$can_respawn
+can_respawn=$quote($can_respawn)
 </pre></div>
 

@@ -1,3 +1,4 @@
+#from DAS.web.utils import quote
 
 <!-- das_services.tmpl -->
 #import urllib
@@ -12,7 +13,7 @@ what a given DAS key will be transformed to when querying relevant CMS data serv
 <th>DAS keys\services</th>
 #set systems=$dasdict.keys()
 #for system in $systems
-<th>$system</th> 
+<th>$quote($system)</th> 
 #end for
 </tr>
 #set counter=0
@@ -23,8 +24,8 @@ what a given DAS key will be transformed to when querying relevant CMS data serv
 #set style=""
 #end if
 #set $counter+=1
-<tr class="$style">
-<td>$daskey</td>
+<tr class="$quote($style)">
+<td>$quote($daskey)</td>
 #for system in $systems
 #set sysdict=$dasdict[$system]['keys']
 #if $sysdict.has_key($daskey)
@@ -32,9 +33,9 @@ what a given DAS key will be transformed to when querying relevant CMS data serv
 #set uikeys=$dasdict[$system]['keys'][$daskey]
 #for uikey in $uikeys
 #if  uikey!=$uikeys[-1]
-$uikey,
+$quote($uikey),
 #else
-$uikey
+$quote($uikey)
 #end if
 #end for
 </td>
@@ -55,7 +56,7 @@ $uikey
 <table class="daskeys">
 <tr style="text-align:left">
 #for system in $systems
-<th>$system</th> 
+<th>$quote($system)</th> 
 #end for
 </tr>
 
@@ -65,9 +66,9 @@ $uikey
 #silent $apilist.sort()
 <td>
 #for api in $apilist[:-1]
-<a href="/das/api?name=$urllib.quote_plus($api)">$api</a>, <br /> 
+<a href="/das/api?name=$urllib.quote_plus($api)">$quote($api)</a>, <br /> 
 #end for
-<a href="/das/api?name=$urllib.quote_plus($apilist[-1])">$apilist[-1]</a>
+<a href="/das/api?name=$urllib.quote_plus($apilist[-1])">$quote($apilist[-1])</a>
 </td>
 #end for
 </tr>
@@ -86,18 +87,18 @@ block=/a/b* | sum(block.replica.size)
 <div class="normal">
 <ul>
 #for row in $mapreduce
-#set id=$row['_id']
+#set id=$quote($row['_id'])
 <li>
-$row['name'],
+$quote($row['name']),
 <a href="javascript:ShowTag('$id')">show</a> |
 <a href="javascript:HideTag('$id')">hide</a>
 <div class="hide" id="$id">
 <pre>
 Map function:
-$row['map']
+$quote($row['map'])
 
 Reduce function:
-$row['reduce']
+$quote($row['reduce'])
 </div>
 </li>
 #end for

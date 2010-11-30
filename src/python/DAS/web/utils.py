@@ -10,6 +10,7 @@ __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 from   types import NoneType
+import cgi
 import time
 import httplib
 import urllib
@@ -18,12 +19,23 @@ import cherrypy
 import plistlib
 from   cherrypy import HTTPError
 from   json import JSONEncoder
+from   urllib import quote_plus
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from   DAS.utils.regex import number_pattern
 from   DAS.utils.regex import web_arg_pattern
 from   DAS.web.das_codes import web_code
+
+def quote(data):
+    """
+    Sanitize the data using cgi.escape.
+    """
+    if  isinstance(data, int) or isinstance(data, float):
+        res = data
+    else:
+        res = cgi.escape(str(data), quote=True)
+    return res
 
 def get_ecode(error):
     """
@@ -239,9 +251,11 @@ class UrlRequest(urllib2.Request):
         """Return request method"""
         return self._method
 
-def json2html(idict, pad=""):
+def json2html(idict, pad="", recusive=False):
     """
-    Convert input JSON into HTML code snippet.
+    Convert input JSON into HTML code snippet. We sanitize values with
+    quote function for HTML content (see in this module) and quote_plus
+    (from urllib) for URL context.
     """
     width = 100
     newline = '\n'
@@ -261,22 +275,27 @@ def json2html(idict, pad=""):
                         _width = len("'', ")
                     value += \
                         "<a href=\"/das/records/%s?collection=cache\">%s</a>, "\
-                        % (item, item)
+                        % (quote_plus(item), quote(item))
                 value = value[:-2] + ']'
             else:
                 value = "<a href=\"/das/records/%s?collection=cache\">%s</a>"\
-                        % (val, val)
+                        % (quote_plus(val), quote(val))
                 if  len(str(val)) < 3: # aggregator's ids
                     value = val
-            sss += pad + """ <code class="key">"%s": </code>%s""" % (key, value)
+            # we don't need to quote value here since it constructs sanitized URLs,
+            # see block above
+            sss += pad + """ <code class="key">"%s": </code>%s""" \
+                % (quote(key), value)
         elif key == 'gridfs_id':
-            value = "<a href=\"/das/gridfs/%s\">%s</das>" % (val, val)
+            value = "<a href=\"/das/gridfs/%s\">%s</das>" \
+                % (quote_plus(val), quote(val))
         elif isinstance(val, list):
             if  len(val) == 1:
                 nline = ''
             else:
                 nline = newline
-            sss += pad + """ <code class="key">"%s": </code>""" % key
+            sss += pad + """ <code class="key">"%s": </code>""" \
+                        % quote(key)
             sss += '[' + nline
             pad += " "*3
             ppp  = pad
@@ -288,31 +307,34 @@ def json2html(idict, pad=""):
                     sss += json2html(item, pad)
                 else:
                     if  isinstance(item, NoneType):
-                        sss += """%s<code class="null">None</code>""" % ppp
+                        sss += """%s<code class="null">None</code>""" \
+                                % quote(ppp)
                     elif  isinstance(item, int) or pat.match(str(item)):
                         sss += """%s<code class="number">%s</code>""" \
-                                % (ppp, item)
+                                % (quote(ppp), quote(item))
                     else:
                         sss += """%s<code class="string">"%s"</code>""" \
-                                % (ppp, item)
+                                % (quote(ppp), quote(item))
                 if  idx < len(val) - 1:
                     sss += ',' + nline
             sss += ']'
             pad = orig_pad
         elif isinstance(val, dict):
-            sss += pad + """ <code class="key">"%s"</code>: """ % key
+            sss += pad + """ <code class="key">"%s"</code>: """ \
+                        % quote(key)
             pad += ' '*3
             sss += json2html(val, pad)[len(pad):] # don't account for first pad
             pad  = pad[:-3]
         else:
-            sss += pad + """ <code class="key">"%s"</code>""" % key
+            sss += pad + """ <code class="key">"%s"</code>""" \
+                        % quote(key)
             if  isinstance(val, NoneType):
                 sss += """: <code class="null">None</code>"""
             elif isinstance(val, int) or \
                 (isinstance(val, str) and pat.match(str(val))):
-                sss += """: <code class="number">%s</code>""" % val
+                sss += """: <code class="number">%s</code>""" % quote(val)
             else:
-                sss += """: <code class="string">"%s"</code>""" % val
+                sss += """: <code class="string">"%s"</code>""" % quote(val)
         if  key != idict.keys()[-1]:
             sss += ',' + newline
         else:

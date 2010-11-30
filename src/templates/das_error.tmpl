@@ -1,12 +1,14 @@
+#from DAS.web.utils import quote
+#assert isinstance($msg, str)
+#set msg = $quote($msg)
 
 <!-- das_error.tmpl -->
-#import urllib
 An error has occurred while processing your request:
 <pre>
 $msg
 </pre>
 Please submit a bug report 
-#set details=$urllib.quote($msg)
+#set details=$quote($msg)
 #set msg=details.replace('/', '%2F')
 <a href="https://savannah.cern.ch/bugs/?func=additem&group=das&assigned_to=2753&severity=5&priority=5&resolution_id=3&summary=Web+Error&details=$msg">here</a>.
 <!-- end of das_error.tmpl -->

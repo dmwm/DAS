@@ -87,9 +87,7 @@ class DASAnalyticsWebManager(DASWebManager):
         """
         Provide masthead for all web pages
         """
-        return self.templatepage('analytics_header',
-                                 base=self.base,
-                                 yui=self.yuidir)
+        return self.templatepage('analytics_header', base=self.base)
 
     @cherrypy.expose
     def doc(self):
@@ -101,9 +99,7 @@ class DASAnalyticsWebManager(DASWebManager):
         """
         Provide footer for all web pages
         """
-        timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-        return self.templatepage('analytics_bottom',
-                timestamp=timestamp, version=DAS.version)
+        return self.templatepage('analytics_bottom', version=DAS.version)
     
     @cherrypy.expose    
     def schedule(self, *path, **attrs):

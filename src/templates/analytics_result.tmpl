@@ -1,5 +1,6 @@
-<div><h3>Result $result.task_id</h3></div>
+#from DAS.web.utils import quote
+<div><h3>Result $quote($result.task_id)</h3></div>
 <div><pre>
 #import json
-#echo json.dumps($result, indent=4, default=str)
+$quote($json.dumps($result, indent=4, default=str))
 </pre></div>

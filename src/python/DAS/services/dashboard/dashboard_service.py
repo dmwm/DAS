@@ -47,22 +47,21 @@ class DashboardService(DASAbstractService):
 
         try:
             elem  = ET.fromstring(data)
+            for i in elem:
+                if  i.tag == 'summaries':
+                    for j in i:
+                        row = {}
+                        for k in j.getchildren():
+                            name = k.tag
+                            row[name] = k.text
+                        if  params:
+                            for key, val in params.items():
+                                if  not row.has_key(key):
+                                    row[key] = val
+                        rowkey = self.map[api]['keys'][0]
+                        yield {rowkey : row}
         except:
-            print "data='%s'" % data
-            raise Exception('Unable to parse dashboard output')
-        for i in elem:
-            if  i.tag == 'summaries':
-                for j in i:
-                    row = {}
-                    for k in j.getchildren():
-                        name = k.tag
-                        row[name] = k.text
-                    if  params:
-                        for key, val in params.items():
-                            if  not row.has_key(key):
-                                row[key] = val
-                    rowkey = self.map[api]['keys'][0]
-                    yield {rowkey : row}
+            yield {'error' : data}
         if  close:
             source.close()
 

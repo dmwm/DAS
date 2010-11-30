@@ -1,3 +1,6 @@
+#from DAS.web.utils import quote
+#from urllib import quote_plus
+#set base=$quote($base)
 <div><h3>Current Schedule</h3></div>
 <div><h4>Scheduled</h4></div>
 <div><table>
@@ -5,13 +8,13 @@
 #import time
 #for $task in $schedule
 <tr><td>#echo time.strftime('%H:%M:%S',time.localtime($task.at))# (#echo int($task.at - $now)# sec)</td>
-<td><a href='$base/task?id=$task.master_id'>$task.name</a></td>
-<td>$task.classname</td>
-<td><a href='$base/remove_task?id=$task.master_id'>Remove</a></td>
+<td><a href='$base/task?id=$quote_plus($task.master_id)'>$quote($task.name)</a></td>
+<td>$quote($task.classname)</td>
+<td><a href='$base/remove_task?id=$quote_plus($task.master_id)'>Remove</a></td>
 <td>
-<form name='reschedule-$task.master_id' action='$base/reschedule_task' method='get'>
-<input type='text' name='at' value='$task.at'>
-<input type='hidden' name='id' value='$task.master_id'>
+<form name='reschedule-$quote($task.master_id)' action='$base/reschedule_task' method='get'>
+<input type='text' name='at' value='$quote($task.at)'>
+<input type='hidden' name='id' value='$quote($task.master_id)'>
 <input type='submit' value='Reschedule'> 
 </form>
 </td>
@@ -24,7 +27,7 @@
 <tr><th>Started</th><th>Name</th><th>Class</th></tr>
 #for $task in $running
 <tr><td>#echo time.strftime('%H:%M:%S',time.localtime($task.started))# (#echo int($now - $task.started)# sec)</td>
-<td><a href='$base/task?id=$task.master_id'>$task.name</a></td>
-<td>$task.classname</td></tr>
+<td><a href='$base/task?id=$quote_plus($task.master_id)'>$quote($task.name)</a></td>
+<td>$quote($task.classname)</td></tr>
 #end for
 </table></div>

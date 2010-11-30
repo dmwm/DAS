@@ -1,26 +1,38 @@
-<div><h3>Log of $textpath</h3></div>
+#from DAS.web.utils import quote
+#assert isinstance($total, int)
+#assert isinstance($offset, int)
+#set path=$quote($path)
+<div><h3>Log of $quote($textpath)</h3></div>
 #if $limit
+#assert isinstance($limit, int)
 <div>Showing $limit of $total entries, offset $offset 
 &nbsp;<a href='$path?limit=$limit&offset=#echo $offset+$limit#'>Next</a>
 &nbsp;<a href='$path?limit=0'>See All</a>
 </div> 
 #end if
 #if $last
+#assert isinstance($last, int)
 <div>Showing results from last $last seconds</div>
 #end if
 #if $level
+#assert isinstance($level, int)
 <div>Showing results with level&gt;=$level</div>
 #end if
 <div>Child Logs:&nbsp;
 #for $filter in $filters
-<a href='$path/$filter'>$filter</a>&nbsp;
+<a href='$path/$quote($filter)'>$quote($filter)</a>&nbsp;
 #end for
 </div>
 <div><table>
 <tr><th>Component</th><th>Time</th><th>Message</th></tr>
 #import time
 #for $entry in $entries
-<tr><td>$entry.name</td><td>#echo time.strftime('%d/%m/%y %H:%M:%S',time.localtime($entry.created))#</td><td>$entry.getMessage()</td></tr>
+#set name=$quote($entry.name)
+#set created=$quote($entry.created)
+#set msg=$quote($entry.getMessage())
+<tr><td>$name</td>
+<td>#echo time.strftime('%d/%m/%y %H:%M:%S',time.localtime($created))#</td>
+<td>$msg</td></tr>
 #end for
 
 </table></div>

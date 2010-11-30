@@ -1,8 +1,12 @@
+#from DAS.web.utils import quote
+#set base=$quote($base)
 <div><h3>Analytics Server Control</h3></div>
 <div><h4>Configuration</h4></div>
 <div><table>
 <tr><th>Key</th><th>Value</th></tr>
 #for $key, $value in $config.items()
+#set key=$quote($key)
+#set value=$quote($value)
 <tr><td>$key</td><td>$value</td></tr>
 #end for
 </table></div>
@@ -15,13 +19,27 @@ Key <input type='text' size=20 name='key'> Value <input type='text' size=40 name
 <div><form name='addtask' action='$base/add_task' method='get'>
 Fields interpreted as JSON.
 <table>
-<tr><td>Name</td><td><input type='text' size=40 name='name'></td><td>Display name.</td></tr>
-<tr><td>Classname</td><td><input type='text' size=40 name='classname'></td><td>Class name to instantiate.</td></tr>
-<tr><td>Interval</td><td><input type='text' size=6 name='interval' value='3600'></td><td>Requested execution interval in seconds.</td></tr>
-<tr><td>Arguments</td><td><textarea rows=6 cols=60 name='kwargs'>{}</textarea></td><td>JSON dictionary of arguments to pass to constructor.</td></tr>
-<tr><td>Only Once?</td><td><input type='checkbox' name='only_once'></td><td>Should the task only run once?</td></tr>
-<tr><td>Max Runs</td><td><input type='text' size=6 name='max_runs' value='null'></td><td>Number of times the task should run or "null" for infinite.</td></tr>
-<tr><td>Only Before</td><td><input type='text' size=15 name='only_before' value='null'></td><td>Timestamp after which the tasks should be disabled, or "null" to run forever.</td></tr>
+<tr><td>Name</td>
+<td><input type='text' size=40 name='name'></td>
+<td>Display name.</td></tr>
+<tr><td>Classname</td>
+<td><input type='text' size=40 name='classname'></td>
+<td>Class name to instantiate.</td></tr>
+<tr><td>Interval</td>
+<td><input type='text' size=6 name='interval' value='3600'></td>
+<td>Requested execution interval in seconds.</td></tr>
+<tr><td>Arguments</td>
+<td><textarea rows=6 cols=60 name='kwargs'>{}</textarea></td>
+<td>JSON dictionary of arguments to pass to constructor.</td></tr>
+<tr><td>Only Once?</td>
+<td><input type='checkbox' name='only_once'></td>
+<td>Should the task only run once?</td></tr>
+<tr><td>Max Runs</td>
+<td><input type='text' size=6 name='max_runs' value='null'></td>
+<td>Number of times the task should run or "null" for infinite.</td></tr>
+<tr><td>Only Before</td>
+<td><input type='text' size=15 name='only_before' value='null'></td>
+<td>Timestamp after which the tasks should be disabled, or "null" to run forever.</td></tr>
 <tr><td></td><td><input type='submit' value='Add Task'></td></tr>
 </table>
 </form></div>

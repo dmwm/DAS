@@ -1,12 +1,20 @@
+#from DAS.web.utils import quote
+#set error = $quote($error)
+#set request = $quote($request)
 <div><h3>An error has occurred while processing your request:</h3></div>
 <div><table>
 #import json
 <tr><td><b>Error</b></td><td>$error</td></tr>
+#set key = $quote($key)
+#set value = $quote($value)
 #for $key, $value in $extra.items()
-<tr><td><b>$key</b></td><td><pre>#echo json.dumps($value, indent=4, default=str)#</pre></td></tr>
+<tr><td><b>$key</b></td>
+<td><pre>$quote($json.dumps($value, indent=4, default=str))</pre></td></tr>
 #end for 
 <tr><td><b>Request</b></td><td><pre>$request</pre></td></tr>
-<tr><td><b>Params</b></td><td><pre>#echo json.dumps($params, indent=4, default=str)#</pre></td></tr>
-<tr><td><b>Headers</b></td><td><pre>#echo json.dumps($headers, indent=4, default=str)#</pre></td></tr>
+<tr><td><b>Params</b></td>
+<td><pre>$quote($json.dumps($params, indent=4, default=str))</pre></td></tr>
+<tr><td><b>Headers</b></td>
+<td><pre>$quote($json.dumps($headers, indent=4, default=str))</pre></td></tr>
 </table></div>
 

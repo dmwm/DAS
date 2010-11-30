@@ -7,14 +7,14 @@ function ajaxStatus(base) {
 }
 function ajaxQueryInfo(base) {
     var q = document.getElementById('dasquery');
-    new Ajax.Updater('_queryinfo', base+'/admin/query_info', 
+    new Ajax.Updater('_queryinfo', base+'/expert/query_info', 
     { method: 'get' ,
       parameters : {'dasquery':q.value},
     });
 }
 function ajaxCleanInfo(base) {
     var q = document.getElementById('dbcoll');
-    new Ajax.Updater('_cleaninfo', base+'/admin/clean', 
+    new Ajax.Updater('_cleaninfo', base+'/expert/clean', 
     { method: 'get' ,
       parameters : {'dbcoll':q.value},
     });

@@ -295,7 +295,7 @@ class DASCore(object):
         qhash = genkey(query)
         try:
             for srv in services:
-                self.logger.info('DASCore::call %s(%s)' % (srv, query))
+                self.logger.info('\nDASCore::call ##### %s ######\n' % srv)
                 das_timer(srv, self.verbose)
                 getattr(getattr(self, srv), 'call')(query)
                 das_timer(srv, self.verbose)

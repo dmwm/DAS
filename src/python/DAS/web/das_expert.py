@@ -28,7 +28,7 @@ from DAS.utils.regex import web_arg_pattern
 from DAS.core.das_core import DASCore
 from DAS.core.das_mongocache import convert2pattern, encode_mongo_query
 from DAS.web.das_webmanager import DASWebManager
-from DAS.web.utils import json2html, ajax_response, checkargs
+from DAS.web.utils import json2html, ajax_response, checkargs, quote
 from DAS.web.das_codes import web_code
 
 DAS_EXPERT_INPUTS = ['idx', 'limit', 'collection', 'database', 'query',
@@ -52,6 +52,7 @@ def check_dn(func):
         database = conn['admin']
         coll = database['dns']
         dn = headers.get('Ssl-Client-S-Dn', None)
+        redirect = False
         if  dn:
             if  coll.find_one({'dn': dn}):
                 redirect = False
@@ -152,11 +153,13 @@ class DASExpertService(DASWebManager):
         if  not iquery:
             iquery = {}
         url = '%s/expert/records?database=%s&collection=%s&query=%s' \
-                % (self.base, database, collection, iquery)
+        % (quote(self.base), quote(database), quote(collection), quote(iquery))
         nresults = self.conn[database][collection].find(query).count()
         idict = dict(nrows=nresults, idx=idx, 
-                    limit=limit, results=page, url=url)
+                    limit=limit, url=url)
+        content = page
         page  = self.templatepage('das_pagination', **idict)
+        page += content
         return self.page(page)
 
     @expose
