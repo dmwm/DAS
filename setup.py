@@ -172,6 +172,7 @@ data_files   = [
                 ('DAS/etc', ['etc/das.cfg']),
                 ('DAS/test', datafiles('test')),
                 ('DAS/services/maps', datafiles('src/python/DAS/services/maps')),
+                ('DAS/services/cms_maps', datafiles('src/python/DAS/services/cms_maps')),
                 ('DAS/web/js', datafiles('src/js')),
                 ('DAS/web/css', datafiles('src/css')),
                 ('DAS/web/images', datafiles('src/images')),

@@ -6,5 +6,6 @@ recursive-include test *_t.py
 recursive-include doc *
 recursive-include bin *
 recursive-include src/python/DAS/services/maps *
+recursive-include src/python/DAS/services/cms_maps *
 recursive-include etc das.cfg
 include *.py
