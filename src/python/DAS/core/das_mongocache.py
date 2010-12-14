@@ -484,8 +484,9 @@ class DASMongocache(object):
             for field in fields:
                 if  not spec.has_key(field):
                     spec.update({field:{'$exists':True}})
-        for filter in filters:
-            spec.update({filter:{'$exists':True}})
+        if  filters:
+            for filter in filters:
+                spec.update({filter:{'$exists':True}})
         self.logger.info("DASMongocache::nresults(%s, coll=%s) spec=%s" \
                 % (query, collection, spec))
         return col.find(spec=spec).count()
