@@ -256,8 +256,9 @@ class DASCore(object):
         """
         Return total number of results (count) for progived query.
         """
+        filters = query.get('filters')
         query, dquery = convert2pattern(loose(query))
-        return self.rawcache.nresults(query, collection=coll)
+        return self.rawcache.nresults(query, collection=coll, filters=filters)
 
     def call(self, query, add_to_analytics=True):
         """
@@ -352,6 +353,10 @@ class DASCore(object):
                         fields.append(filter)
             if  fields:
                 query['fields'] = fields
+            # adjust query if we got a filter
+            if  query.has_key('filters'):
+                for filter in query.get('filters'):
+                    query['spec'][filter] = {'$exists':True}
 
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)

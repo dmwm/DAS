@@ -573,14 +573,14 @@ class DASAbstractService(object):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
             if  not found:
-                msg = "%s reject API %s, parameters don't match, args=%s" \
+                msg = "--- %s reject API %s, parameters don't match, args=%s" \
                         % (self.name, api, args)
                 self.logger.info(msg)
                 continue
             # check that there is no "required" parameter left in args,
             # since such api will not work
             if 'required' in args.values():
-                msg = "%s reject API %s, parameter is required, args=%s" \
+                msg = "--- %s reject API %s, parameter is required, args=%s" \
                         % (self.name, api, args)
                 self.logger.info(msg)
                 continue

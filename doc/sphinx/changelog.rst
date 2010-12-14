@@ -28,6 +28,7 @@ performed stress tests and code audit DAS servers.
   - add delete_db_collection to mapping/analytics classes
   - remove obsolete templates, e.g. das_admin, mapreduce.
   - sanitize DAS templates, #545
+  - Fix issues with showing records while applying DAS filters, #853
 
 - 0.5.6
 

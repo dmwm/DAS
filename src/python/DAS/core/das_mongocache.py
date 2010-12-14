@@ -462,7 +462,7 @@ class DASMongocache(object):
             return True
         return False
 
-    def nresults(self, query, collection='merge'):
+    def nresults(self, query, collection='merge', filters=None):
         """
         Return number of results for given query.
         Please note, input parameter query means MongoDB query, please
@@ -484,6 +484,8 @@ class DASMongocache(object):
             for field in fields:
                 if  not spec.has_key(field):
                     spec.update({field:{'$exists':True}})
+        for filter in filters:
+            spec.update({filter:{'$exists':True}})
         self.logger.info("DASMongocache::nresults(%s, coll=%s) spec=%s" \
                 % (query, collection, spec))
         return col.find(spec=spec).count()
