@@ -156,6 +156,7 @@ class DASWebManager(TemplatedPage):
         build/container/container.js
         """
         args = ['/'.join(args)] # preserve YUI dir structure
+        datatype = args[-1].split('.')[-1]
         scripts = self.check_scripts(args, self.yuimap, self.yuidir)
         return self.serve_files(args, scripts, self.yuimap)
         

@@ -325,7 +325,7 @@ def dump(ilist, idx=0):
     else:
         reslist = ilist
     if  not reslist:
-        print "No results found"
+        print "dump, no results found"
         return
     idx = 0
     for row in reslist:

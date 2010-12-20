@@ -17,6 +17,7 @@ import urllib
 import urllib2
 import cherrypy
 import plistlib
+import traceback
 from   cherrypy import HTTPError
 from   json import JSONEncoder
 from   urllib import quote_plus
@@ -34,7 +35,12 @@ def quote(data):
     if  isinstance(data, int) or isinstance(data, float):
         res = data
     else:
-        res = cgi.escape(str(data), quote=True)
+        try:
+            res = cgi.escape(data, quote=True)
+        except:
+            traceback.print_exc()
+            print "Unable to cgi.escape(%s, quote=True)" % data
+            res = ""
     return res
 
 def get_ecode(error):

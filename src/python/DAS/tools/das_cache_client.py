@@ -51,6 +51,8 @@ class DASOptionParser:
         self.parser.add_option("--fid", action="store", type="string", 
                                default=False, dest="fid",
              help="specify file id to get file from MongoDB GridFS")
+        self.parser.add_option("--nresults", action="store_true", dest="nresults",
+             help="request to return number of results for given query")
         self.parser.add_option("--input", action="store", type="string", 
                                default=False, dest="input",
              help="specify input for your request; the input should be in a form of dict")
@@ -104,6 +106,8 @@ if __name__ == '__main__':
         method = 'delete'
     elif opts.fid:
         method = 'gridfs'
+    elif opts.nresults:
+        method = 'nresults'
     else:
         method = 'request'
     path = '/rest/%s' % method

@@ -87,7 +87,9 @@ class DASWebService(DASWebManager):
             self.daskeys.sort()
             self.dasmapping = self.dasmgr.mapping
         except:
+            traceback.print_exc()
             self.dasmgr = None
+            self.daskeys = []
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -421,7 +423,7 @@ class DASWebService(DASWebManager):
                     page = self.templatepage('das_pagination', \
                         nrows=nresults, idx=idx, limit=limit, url=url)
                 else:
-                    page = 'No results found'
+                    page = 'No results found, nresults=%s' % nresults
                 page += res
 
             form    = self.form(input="")
@@ -609,7 +611,7 @@ class DASWebService(DASWebManager):
                 nrows=total, idx=idx, limit=limit, url=url)
             page += content
         else:
-            page  = 'No results found'
+            page  = 'No results found, total=%s' % total
         return self.page(form + page, ctime=ctime)
 
     @exposetext
