@@ -2,14 +2,14 @@
 # to create uniform representation of meta-data
 presentation: {
 primary_dataset : [
-        {"das":"primary_dataset.name", "ui":"Name"}, 
+        {"das":"primary_dataset.name", "ui":"Primary dataset"}, 
         {"das":"primary_dataset.type", "ui":"Type"},
         {"das":"primary_dataset.create_by", "ui":"Created by:"}, 
         ],
 dataset : [
         {"das":"dataset.error", "ui":"Error"}, 
         {"das":"dataset.httperror", "ui":"Reason"}, 
-        {"das":"dataset.name", "ui":"Name"}, 
+        {"das":"dataset.name", "ui":"Dataset"}, 
         {"das":"dataset.primary_datatset_name", "ui":"Primary dataset"}, 
         {"das":"dataset.processed_datatset_name", "ui":"Processed dataset"}, 
         {"das":"dataset.physics_group_name", "ui":"Physics group"}, 
@@ -88,7 +88,7 @@ group : [
         {"das":"group.node_bytes", "ui":"# of bytes archived on this node"},
         ],
 jobsummary : [
-        {"das":"jobsummary.name", "ui":"Name"},
+        {"das":"jobsummary.name", "ui":"Jobsummary"},
         {"das":"jobsummary.activity", "ui":"Activity"},
         {"das":"jobsummary.terminated", "ui":"Terminated"},
         {"das":"jobsummary.running", "ui":"Running"},

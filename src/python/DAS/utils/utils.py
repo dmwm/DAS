@@ -28,6 +28,21 @@ from   DAS.utils.regex import se_pattern, site_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 import DAS.utils.jsonwrapper as json
 
+def size_format(uinput):
+    """
+    Format file size utility, it converts file size into KB, MB, GB, TB, PB units
+    """
+    try:
+        num = float(uinput)
+    except:
+        traceback.print_exc()
+        return "N/A"
+    base = 1000. # power of 10, or use 1024. for power of 2
+    for xxx in ['','KB','MB','GB','TB','PB']:
+        if  num < base: 
+            return "%3.1f%s" % (num, xxx)
+        num /= base
+
 def convert2date(value):
     """
     Convert input value to date range format expected by DAS.

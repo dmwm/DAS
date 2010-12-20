@@ -286,11 +286,15 @@ class DASAbstractService(object):
                     args = self.inspect_params(api, api_params)
                     cond   = {'das.qhash': row['apicall']['qhash']}
                     record = self.localcache.col.find_one(cond)
-                    expire = record['das']['expire']
-                    self.write_to_cache(query, expire, url, api, args, [], 0)
+                    if  record and record.has_key('das') and \
+                        record['das'].has_key('expire'):
+                        expire = record['das']['expire']
+                        self.write_to_cache(query, expire, url, api, args, [], 0)
                 except:
+                    traceback.print_exc()
                     msg  = 'DASAbstractService::pass_apicall\n'
-                    msg += '   input query %s\n' % input_query
+                    msg += 'failed api %s\n' % api
+                    msg += 'input query %s\n' % input_query
                     msg += 'existing query %s\n' % exist_query
                     msg += 'Unable to look-up existing query and extract '
                     msg += 'expire timestamp'

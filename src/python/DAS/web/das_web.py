@@ -30,7 +30,7 @@ from cherrypy.lib.static import serve_file
 import DAS
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators
-from DAS.utils.utils import getarg, access
+from DAS.utils.utils import getarg, access, size_format
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, connection_monitor
@@ -46,6 +46,50 @@ import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
                   'format', 'sort', 'dir', 'ajax', 'view', 'method']
+
+def make_links(key, values):
+    """
+    Make new link out of provided key/value pair.
+    """
+    for val in values:
+        uinput = urllib.quote('%s=%s' % (key, val))
+        url = '/das/?view=list&limit=10&show=json&input=%s&ajax=1' % uinput
+        url = """<a href="%s">%s</a>""" % (quote(url), val)
+        yield url
+
+def key_values(gen):
+    """
+    Helper function to group by values for identical key.
+    It can be extended further to provide links for specific values
+    of known keys, e.g. make links for dataset, run, etc.
+    """
+    rdict = {}
+    for uikey, value in [k for k, g in groupby(gen)]:
+        val = str(quote(value))
+        if  rdict.has_key(uikey):
+            rdict[uikey] = rdict[uikey] + [val]
+        else:
+            rdict[uikey] = [val]
+    page = ""
+    for key, val in rdict.items():
+        if  key == 'CMSName':
+            value = make_links('site', val)
+        elif  key == 'Primary dataset':
+            value = make_links('primary_dataset', val)
+        elif  key == 'Run number':
+            value = make_links('run', val)
+        elif  key == 'Dataset':
+            value = make_links('dataset', val)
+        elif  key == 'Block name':
+            value = make_links('block', val)
+        elif  key == 'File name':
+            value = make_links('file', val)
+        elif  key == 'Block size' or key == 'File size':
+            value = [size_format(val[-1])]
+        else:
+            value = val
+        page += "<b>%s</b>: %s<br />" % (key, ', '.join(value))
+    return page
 
 def das_json(record, pad=''):
     """
@@ -150,15 +194,7 @@ class DASWebService(DASWebManager):
             base = self.base
         else:
             base = 'http://cmsweb.cern.ch/das'
-        desc = """<?xml version="1.0"?>
-<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
-                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
-<ShortName>DAS search</ShortName>
-<Description>CMS DAS Search</Description>
-<Image type="image/png">%s/images/cms_logo.png</Image>
-<Url type="text/html" method="get" template="%s/?input={searchTerms}&amp;view=list&amp;show=json"/>
-<moz:SearchForm>%s</moz:SearchForm>
-</OpenSearchDescription>""" % (base, base, base)
+        desc = self.tempaltepage('das_opensearch', base=base)
         cherrypy.response.headers['Content-Type'] = \
                 'application/opensearchdescription+xml'
         return desc
@@ -583,8 +619,7 @@ class DASWebService(DASWebManager):
                     pkey  = row['das']['primary_key']
                     page += '<b>DAS key:</b> %s<br />' % pkey.split('.')[0]
             gen   = self.convert2ui(row)
-            for uikey, value in [k for k, g in groupby(gen)]:
-                page += "<b>%s</b>: %s<br />" % (uikey, value)
+            page += key_values(gen)
             pad   = ""
             if  show == 'json':
                 jsonhtml = das_json(row, pad)

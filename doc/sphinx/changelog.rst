@@ -29,6 +29,11 @@ performed stress tests and code audit DAS servers.
   - remove obsolete templates, e.g. das_admin, mapreduce.
   - sanitize DAS templates, #545
   - Fix issues with showing records while applying DAS filters, #853
+  - Move opensearch into das_opensearch.tmpl
+  - Fix dbs/presentation maps
+  - Add size_format function
+  - Updated performance plot
+  - make presentation layer more friendly, fixes #848, #879, #880
 
 - 0.5.6
 
