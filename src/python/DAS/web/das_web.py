@@ -67,7 +67,9 @@ def key_values(gen):
     for uikey, value in [k for k, g in groupby(gen)]:
         val = str(quote(value))
         if  rdict.has_key(uikey):
-            rdict[uikey] = rdict[uikey] + [val]
+            existing_list = rdict[uikey]
+            if  val not in existing_list:
+                rdict[uikey] = existing_list + [val]
         else:
             rdict[uikey] = [val]
     page = ""
