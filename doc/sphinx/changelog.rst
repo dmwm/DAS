@@ -40,6 +40,11 @@ performed stress tests and code audit DAS servers.
     implement new pagination via server calls, rather JS; make 
     form and all view methods to be internal; added check_data method;
     redesign AJAX status method)
+  - Make admin tool be transparent to Ipython
+  - Add new functions/unit tests for date conversion, e.g. to_seconds, next_day,
+    prev_day
+  - fix date issue with dashboard/runregistry services, fixes #888. Now user will
+    be able to retrieve information for a certain date
 
 - 0.5.6
 

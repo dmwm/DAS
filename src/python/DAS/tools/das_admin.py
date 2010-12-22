@@ -24,38 +24,56 @@ class PrintManager:
     Print manager class defines color-full output of the messages.
     """
     def __init__(self):
-        from IPython import ColorANSI
-        self.term = ColorANSI.TermColors
+        try:
+            from IPython import ColorANSI
+            self.term = ColorANSI.TermColors
+        except:
+            self.term = None
 
     def red(self, msg):
         """yield message using red color"""
         if  not msg:
             msg = ''
-        return self.term.Red + msg + self.term.Black
+        if  self.term:
+            return self.term.Red + msg + self.term.Black
+        else:
+            return msg
 
     def purple(self, msg):
         """yield message using purple color"""
         if  not msg:
             msg = ''
-        return self.term.Purple + msg + self.term.Black
+        if  self.term:
+            return self.term.Purple + msg + self.term.Black
+        else:
+            return msg
 
     def cyan(self, msg):
         """yield message using cyan color"""
         if  not msg:
             msg = ''
-        return self.term.LightCyan + msg + self.term.Black
+        if  self.term:
+            return self.term.LightCyan + msg + self.term.Black
+        else:
+            return msg
 
     def green(self, msg):
         """yield message using green color"""
         if  not msg:
             msg = ''
-        return self.term.Green + msg + self.term.Black
+        if  self.term:
+            return self.term.Green + msg + self.term.Black
+        else:
+            return msg
 
     def blue(self, msg):
         """yield message using blue color"""
         if  not msg:
             msg = ''
-        return self.term.Blue + msg + self.term.Black
+        if  self.term:
+            return self.term.Blue + msg + self.term.Black
+        else:
+            return msg
 
 # Globals, to be use in magic functions
 PM = PrintManager()

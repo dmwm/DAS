@@ -13,15 +13,15 @@ from   types import InstanceType
 import urllib
 import xml.etree.cElementTree as ET
 from DAS.services.abstract_service import DASAbstractService, dasheader
-from DAS.utils.utils import map_validator
+from DAS.utils.utils import map_validator, next_day
 
 def convert_datetime(sec):
     """
     Convert seconds since epoch or YYYYMMDD to date format used in dashboard
     """
     value = str(sec)
-    if  value == 8: # we got YYYYMMDD
-        return "%s-%s-%s" % (value[:4], value[5:6], value[7:8])
+    if  len(value) == 8: # we got YYYYMMDD
+        return "%s-%s-%s" % (value[:4], value[4:6], value[6:8])
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(sec))
 
 class DashboardService(DASAbstractService):
@@ -86,6 +86,8 @@ class DashboardService(DASAbstractService):
                         msg += 'Please use either date last XXh format or'
                         msg += 'date in [YYYYMMDD, YYYYMMDD]'
                         raise Exception(msg)
+                    if  isinstance(value, str) or isinstance(value, int):
+                        value = [value, next_day(value)]
                     args['date1'] = convert_datetime(value[0])
                     args['date2'] = convert_datetime(value[1])
                     count += 1
@@ -97,11 +99,13 @@ class DashboardService(DASAbstractService):
                 if  key == 'date' or key == 'jobsummary':
                     if  value.has_key('$in'):
                         vallist = value['$in']
-                        args['date1'] = convert_datetime(vallist[0])
-                        args['date2'] = convert_datetime(vallist[-1])
-                        count += 1
+                    elif value.has_key('$between'):
+                        vallist = value['$between']
                     else:
                         raise Exception(err)
+                    args['date1'] = convert_datetime(vallist[0])
+                    args['date2'] = convert_datetime(vallist[-1])
+                    count += 1
                 else:
                     raise Exception(err)
         if  not count:

@@ -21,12 +21,36 @@ from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser, unique_filter
 from DAS.utils.utils import DotDict, filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
-from DAS.utils.utils import genkey
+from DAS.utils.utils import genkey, next_day, prev_day
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_next_day(self):
+        """Test next_day function"""
+        result = next_day(20101231)
+        expect = 20110101
+        self.assertEqual(result, expect)
+
+        result = next_day(20101230)
+        expect = 20101231
+        self.assertEqual(result, expect)
+
+        self.assertRaises(Exception, next_day, 123)
+
+    def test_prev_day(self):
+        """Test prev_day function"""
+        result = prev_day(20110101)
+        expect = 20101231
+        self.assertEqual(result, expect)
+
+        result = prev_day(20101231)
+        expect = 20101230
+        self.assertEqual(result, expect)
+
+        self.assertRaises(Exception, prev_day, 123)
+
     def test_genkey(self):
         d1 = {'fields': None, 'spec': [{'key': u'dataset.name', 'value': u'"/TTbar_1jet_Et30-alpgen/Winter09_IDEAL_V12_FastSim_v1/GEN-SIM-DIGI-RECO"'}]}
         d2 = {'fields': None, 'spec': [{'value': u'"/TTbar_1jet_Et30-alpgen/Winter09_IDEAL_V12_FastSim_v1/GEN-SIM-DIGI-RECO"', 'key': u'dataset.name'}]}
