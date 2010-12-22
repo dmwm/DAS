@@ -97,6 +97,12 @@ class testDASPLY(unittest.TestCase):
         mongo = {'fields': ['run'], 'spec': {'date': {'$in': [long(date1), long(date2)]}}}
         self.queries[query] = mongo
 
+        date1 = 20101201
+        date2 = 20101202
+        query = "run date in [%s, %s]" % (date1, date2)
+        mongo = {'fields': ['run'], 'spec': {'date': {'$in': [date1, date2]}}}
+        self.queries[query] = mongo
+
         query = "dataset file=/a/b run in [1,2] | grep file.name, file.age | unique | sum(file.size),max(file.size)"
         mongo = {'fields': ['dataset'], 'spec': {'run': {'$in': [1, 2]}, 'file': '/a/b'}, 
                  'filters': ['file.name', 'file.age'],

@@ -196,7 +196,7 @@ class DASPLY(object):
 
     # lexer logic, we can have daskey=value, but due to ambiguity of daskey
     # defition it is allowed to have <daskey>=<daskey> where second <daskey>
-    # can be a simple workd, e.g. system=sitedb
+    # can be a simple word, e.g. system=sitedb
     def p_keyop0(self, p):
         """keyop : DASKEY OPERATOR VALUE
                  | DASKEY OPERATOR DASKEY
@@ -204,6 +204,7 @@ class DASPLY(object):
                  | DASKEY OPERATOR IPADDR
                  | SPECIALKEY OPERATOR DATE
                  | SPECIALKEY OPERATOR VALUE
+                 | SPECIALKEY OPERATOR array
                  | DASKEY OPERATOR array"""
         p[0] = ('keyop', p[1], p[2], p[3])
 

@@ -146,6 +146,6 @@ class RunRegistryService(DASAbstractService):
 if __name__ == '__main__':
     QUERY = "{runNumber} >= 135230 and {runNumber} <= 135230"
     QUERY = {'runStartTime': '>= 2010-10-18 and < 2010-10-22'}
-    URL = 'http://localhost:8080/runregistry/xmlrpc'
+    URL = 'http://localhost:8081/runregistry/xmlrpc'
     for row in worker(URL, QUERY):
         print row, type(row)

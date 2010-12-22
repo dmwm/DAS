@@ -3,7 +3,7 @@ format : JSON
 ---
 urn : rr_xmlrpc
 #url : "http://pccmsdqm04.cern.ch/runregistry/xmlrpc"
-url : "http://localhost:8080/runregistry/xmlrpc"
+url : "http://localhost:8081/runregistry/xmlrpc"
 expire : 900
 params : {}
 daskeys : [
