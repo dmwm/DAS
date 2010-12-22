@@ -618,10 +618,18 @@ class DASWebService(DASWebManager):
         # raw cache into merge cache
         rows    = self.result(kwargs) # call it before nresults, since
         total   = self.nresults(kwargs)
-        if  not total:
-            return "No results found in cache"
+        if  total:
+            params = {} # will keep everything except idx/limit
+            for key, val in kwargs.items():
+                if  key != 'idx' and key != 'limit':
+                    params[key] = val
+            url = "%s/request?%s" \
+                    % (self.base, urllib.urlencode(params, doseq=True))
+            page = self.templatepage('das_pagination', \
+                nrows=total, idx=idx, limit=limit, url=url)
+        else:
+            return 'No results found in DAS cache'
         nrows   = len(rows)
-        page    = ""
         style   = "white"
         for row in rows:
             id    = row['_id']
@@ -649,20 +657,6 @@ class DASWebService(DASWebManager):
                 page += self.templatepage('das_row', \
                         sanitized_data=data, id=id, rec_id=id)
             page += '</div>'
-        # delete idx/limit from kwargs, since template will take care of them
-        if  kwargs.has_key('idx'):
-            del kwargs['idx']
-        if  kwargs.has_key('limit'):
-            del kwargs['limit']
-        url = "%s/request?%s" \
-                % (self.base, urllib.urlencode(kwargs, doseq=True))
-        content = page
-        if  total:
-            page  = self.templatepage('das_pagination', \
-                nrows=total, idx=idx, limit=limit, url=url)
-            page += content
-        else:
-            page  = 'No results found, total=%s' % total
         return page
 
     @exposedasplist

@@ -24,9 +24,8 @@ all records
 #if $total>$nrows
 #set total=$nrows
 #end if
-#set startidx=$idx+1
-#set from_res=$idx*$limit+1
-#set to_res=$idx*$limit + $limit
+#set from_res=$idx+1
+#set to_res=$idx+$limit
 #if $to_res > $nrows
 #set to_res=$nrows
 #end if
@@ -39,20 +38,23 @@ $from_res&#8212;$to_res records out of $nrows.
 &lt;<a href="$newUrl">first</a> |
 ##### prev
 #if  $idx
-#set newUrl = $url + "&amp;idx=" + $str($idx*$limit-1) + "&amp;limit=" + $str($limit)
+#set prev=$idx-$limit
 #else
-#set newUrl = $url + "&amp;idx=" + $str($idx) + "&amp;limit=" + $str($limit)
+#set prev=$idx
 #end if
+#set newUrl = $url + "&amp;idx=" + $str($prev) + "&amp;limit=" + $str($limit)
 <a href="$newUrl">prev</a> |
 ##### next
-#if  ($idx+1)*$limit < $nrows - 1
-#set newUrl = $url + "&amp;idx=" + $str($idx*$limit+1) + "&amp;limit=" + $str($limit)
+#if  $idx+$limit < $nrows
+#set next=$idx+$limit
 #else
-#set newUrl = $url + "&amp;idx=" + $str($nrows/$limit) + "&amp;limit=" + $str($limit)
+#set next=($nrows/$limit)*$limit
 #end if
+#set newUrl = $url + "&amp;idx=" + $str($next) + "&amp;limit=" + $str($limit)
 <a href="$newUrl">next</a> |
 ##### last
-#set newUrl = $url + "&amp;idx=" + $str($nrows/$limit) + "&amp;limit=" + $str($limit)
+#set last=($nrows/$limit)*$limit
+#set newUrl = $url + "&amp;idx=" + $str($last) + "&amp;limit=" + $str($limit)
 <a href="$newUrl">last</a>&gt;
 </div>
 </td>
