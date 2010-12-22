@@ -13,11 +13,12 @@ __author__ = "Valentin Kuznetsov"
 import os
 import sys
 import time
+import thread
 import urllib
 import urllib2
+import inspect
 import cherrypy
 import traceback
-import thread
 
 import yaml
 from pprint import pformat
@@ -45,7 +46,7 @@ from DAS.web.das_codes import web_code
 import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
-                  'format', 'sort', 'dir', 'ajax', 'view', 'method']
+                  'format', 'sort', 'dir', 'view', 'method']
 
 def make_links(key, values):
     """
@@ -53,7 +54,7 @@ def make_links(key, values):
     """
     for val in values:
         uinput = urllib.quote('%s=%s' % (key, val))
-        url = '/das/?view=list&limit=10&show=json&input=%s&ajax=1' % uinput
+        url = '/das/request?input=%s' % uinput
         url = """<a href="%s">%s</a>""" % (quote(url), val)
         yield url
 
@@ -88,6 +89,17 @@ def key_values(gen):
             value = make_links('file', val)
         elif  key == 'Block size' or key == 'File size':
             value = [size_format(val[-1])]
+        elif  key == 'Number of events' or key == 'Number of files' or\
+            key == 'Number of triggers':
+            try:
+                vvv = val[-1].split('.')
+                if  vvv[-1] == '0':
+                    value = [vvv[0]]
+                else:
+                    value = val
+            except:
+                traceback.print_exc()
+                value = val
         else:
             value = val
         page += "<b>%s</b>: %s<br />" % (key, ', '.join(value))
@@ -111,6 +123,7 @@ class DASWebService(DASWebManager):
         DASWebManager.__init__(self, config)
         self.cachesrv   = config['cache_server_url']
         self.base       = config['url_base']
+        self.status_update = config['status_update']
         logfile  = config['logfile']
         loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
@@ -268,7 +281,7 @@ class DASWebService(DASWebManager):
         try:
             mongo_query = self.dasmgr.mongoparser.parse(uinput)
         except:
-            msg = sys.exc_info()[1]
+            msg  = 'Fail in mongo parser, unable to parse input query.\n'
             return helper(uinput, msg)
         fields = mongo_query.get('fields', [])
         if  not fields:
@@ -295,31 +308,13 @@ class DASWebService(DASWebManager):
         It uses das_searchform template for
         input form and yui_table for output Table widget.
         """
-        try:
-            if  not args and not kwargs:
-                page = self.form()
-                return self.page(page)
-            uinput  = getarg(kwargs, 'input', '')
-            results = self.check_input(uinput)
-            if  results:
-                return self.page(self.form() + results)
-            view = getarg(kwargs, 'view', 'list')
-            if  args:
-                return getattr(self, args[0][0])(args[1])
-            if  view not in self.pageviews:
-                raise Exception("Page view '%s' is not supported" % view)
-            return getattr(self, '%sview' % view)(**kwargs)
-        except:
-            return self.error(self.gen_error_msg(kwargs))
+        return self.page(self.form())
 
-    @expose
-    @checkargs(DAS_WEB_INPUTS)
-    def form(self, input=None, msg=None):
+    def form(self, input=None):
         """
         provide input DAS search form
         """
-        page = self.templatepage('das_searchform', input=input, msg=msg, 
-                                        base=self.base)
+        page = self.templatepage('das_searchform', input=input, base=self.base)
         return page
 
     def gen_error_msg(self, kwargs):
@@ -545,22 +540,6 @@ class DASWebService(DASWebManager):
             res    = data['data']
         return res
         
-    @exposedasplist
-    def xmlview(self, *args, **kwargs):
-        """
-        provide DAS XML
-        """
-        rows = self.result(kwargs)
-        return rows
-
-    @exposedasjson
-    def jsonview(self, *args, **kwargs):
-        """
-        provide DAS JSON
-        """
-        rows = self.result(kwargs)
-        return rows
-
     def convert2ui(self, idict):
         """
         Convert input row (dict) into UI presentation
@@ -579,37 +558,68 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def listview(self, **kwargs):
+    def request(self, *args, **kwargs):
         """
-        provide DAS list view
+        Request data from DAS cache.
         """
-        # force to load the page all the time
+        # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
 
         time0   = time.time()
-        ajaxreq = getarg(kwargs, 'ajax', 0)
+        uinput  = getarg(kwargs, 'input', '')
+        form    = self.form(input=uinput)
+        view    = kwargs.get('view', 'list')
+        # self.status sends request to Cache Server
+        # Cache Server uses das_core to retrieve status
+        status  = self.check_data(input=uinput)
+        if  status == 'no data':
+            # no data in raw cache, send POST request
+            self.send_request('POST', kwargs)
+            img   = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
+            page  = img + ' there is no data in a cache yet, please wait...'
+            page += ', <a href="/das/">stop</a> request' 
+            page += """<script type="application/javascript">"""
+            page += """setTimeout('ajaxStatus("%s")', %s)</script>""" \
+                        % (self.base, self.status_update)
+            view  = 'list'
+        elif status == 'fail':
+            msg   = "DAS cache server fails to process your request"
+            msg   = self.gen_error_msg(kwargs)
+            page  = self.templatepage('das_error', msg=msg)
+            view  = 'list'
+        else:
+            try:
+                func = getattr(self, view + "view") 
+                page = func(kwargs)
+            except:
+                traceback.print_exc()
+                msg   = 'Wrong view'
+                msg  += self.gen_error_msg(kwargs)
+                page  = self.templatepage('das_error', msg=msg)
+        ctime = (time.time()-time0)
+        if  view == 'list' or view == 'plain':
+            return self.page(form + page, ctime=ctime)
+        else:
+            return page
+        
+    def listview(self, kwargs):
+        """
+        Helper function to make listview page.
+        """
+        time0   = time.time()
         uinput  = getarg(kwargs, 'input', '')
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
         show    = getarg(kwargs, 'show', 'json')
-        form    = self.form(input=uinput)
-        # self.status sends request to Cache Server
-        # Cache Server uses das_core to retrieve status
-        status  = self.status(input=uinput, ajax='0')
-        if  status == 'no data':
-            # no data in raw cache, send POST request
-            self.send_request('POST', kwargs)
-            ctime = (time.time()-time0)
-            page  = self.status(input=uinput)
-            page  = self.page(form + page, ctime=ctime)
-            return page
-        elif status == 'fail':
-            kwargs['reason'] = 'Unable to get status from data-service'
-            return self.error(self.gen_error_msg(kwargs))
-
+        # call self.result before self.nresults
+        # since it invokes send_request, which by itself invokes
+        # DAS core result function and trigger data movement from
+        # raw cache into merge cache
+        rows    = self.result(kwargs) # call it before nresults, since
         total   = self.nresults(kwargs)
-        rows    = self.result(kwargs)
+        if  not total:
+            return "No results found in cache"
         nrows   = len(rows)
         page    = ""
         style   = "white"
@@ -639,9 +649,13 @@ class DASWebService(DASWebManager):
                 page += self.templatepage('das_row', \
                         sanitized_data=data, id=id, rec_id=id)
             page += '</div>'
-        ctime = (time.time()-time0)
-        url   = "%s/?view=list&show=%s&input=%s&ajax=%s" \
-        % (quote(self.base), quote(show), quote(uinput), quote(ajaxreq))
+        # delete idx/limit from kwargs, since template will take care of them
+        if  kwargs.has_key('idx'):
+            del kwargs['idx']
+        if  kwargs.has_key('limit'):
+            del kwargs['limit']
+        url = "%s/request?%s" \
+                % (self.base, urllib.urlencode(kwargs, doseq=True))
         content = page
         if  total:
             page  = self.templatepage('das_pagination', \
@@ -649,10 +663,25 @@ class DASWebService(DASWebManager):
             page += content
         else:
             page  = 'No results found, total=%s' % total
-        return self.page(form + page, ctime=ctime)
+        return page
+
+    @exposedasplist
+    def xmlview(self, kwargs):
+        """
+        provide DAS XML
+        """
+        rows = self.result(kwargs)
+        return rows
+
+    @exposedasjson
+    def jsonview(self, kwargs):
+        """
+        provide DAS JSON
+        """
+        rows = self.result(kwargs)
+        return rows
 
     @exposetext
-    @checkargs(DAS_WEB_INPUTS)
     def plainview(self, kwargs):
         """
         provide DAS plain view
@@ -727,25 +756,13 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def status(self, **kwargs):
+    def check_data(self, **kwargs):
         """
-        Place request to obtain status about given query
+        Check status of user request in DAS cache.
+        We return either ok/no data/fail.
         """
-        img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
-        req  = """
-        <script type="application/javascript">
-        setTimeout('ajaxStatus("%s")',8000)
-        </script>""" % self.base
-
-        def set_header():
-            "Set HTTP header parameters"
-            tstamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
-            cherrypy.response.headers['Expire'] = tstamp
-            cherrypy.response.headers['Cache-control'] = 'no-cache'
-
         uinput  = kwargs.get('input', '')
         uinput  = urllib.unquote_plus(uinput)
-        ajax    = kwargs.get('ajax', 1)
         view    = kwargs.get('view', 'list')
         params  = {'query':uinput}
         path    = '/rest/status'
@@ -761,25 +778,62 @@ class DASWebService(DASWebManager):
         except:
             self.logger.error(traceback.format_exc())
             data = {'status':'fail'}
-        if  int(ajax):
-            cherrypy.response.headers['Content-Type'] = 'text/xml'
-            if  data['status'] == 'ok':
-                page  = '<script type="application/javascript">reload()</script>'
-            elif data['status'] == 'fail':
-                page  = '<script type="application/javascript">reload()</script>'
-                page += self.error(self.gen_error_msg(kwargs))
-            else:
-                page  = img + ' ' + str(data['status']) + ', please wait...'
-                img_stop = ''
-                page += ', <a href="/das/">stop</a> request' 
-                page += req
-                set_header()
-            page = ajax_response(page)
+        if  data['status']:
+            status = data['status']
         else:
-            try:
-                page = data['status']
-            except:
-                page = traceback.format_exc()
+            status = 'no data'
+        return status
+
+    @expose
+    @checkargs(DAS_WEB_INPUTS)
+    def status(self, **kwargs):
+        """
+        Place AJAX request to obtain status about given query
+        """
+        img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
+        req  = """
+        <script type="application/javascript">
+        setTimeout('ajaxStatus("%s")', %s)
+        </script>""" % (self.base, self.status_update)
+
+        def set_header():
+            "Set HTTP header parameters"
+            tstamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+            cherrypy.response.headers['Expire'] = tstamp
+            cherrypy.response.headers['Cache-control'] = 'no-cache'
+
+        uinput  = kwargs.get('input', '')
+        uinput  = urllib.unquote_plus(uinput)
+        params  = {'query':uinput}
+        path    = '/rest/status'
+        url     = self.cachesrv
+        headers = {'Accept': 'application/json'}
+        try:
+            res  = urllib2_request('GET', url+path, params, headers=headers)
+            data = json.loads(res)
+        except urllib2.HTTPError, httperror:
+            err = get_ecode(httperror.read())
+            self.logger.error(err)
+            data = {'status':'fail', 'reason': err}
+        except:
+            self.logger.error(traceback.format_exc())
+            data = {'status':'fail'}
+        cherrypy.response.headers['Content-Type'] = 'text/xml'
+        if  data['status'] == 'ok':
+            # we got data
+            kwargs['input'] = uinput
+            page = self.listview(kwargs)
+        elif data['status'] == 'fail':
+            # we fail, stop here and show message to ther user
+            page  = 'Request failed. '
+            page += self.error(self.gen_error_msg(kwargs))
+        else:
+            # we still acquiring the data, continue with AJAX request
+            page  = img + ' ' + str(data['status']) + ', please wait...'
+            page += ', <a href="/das/">stop</a> request' 
+            page += req
+        set_header()
+        page = ajax_response(page)
         return page
     
     @expose

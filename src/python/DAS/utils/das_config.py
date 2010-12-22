@@ -62,6 +62,7 @@ DASOption('web_server', 'url_base', 'string', '/das'),
 DASOption('web_server', 'cache_server_url', 'string', 'http://localhost:8211'),
 DASOption('web_server', 'logfile', 'string', '/tmp/das_web.log'),
 DASOption('web_server', 'loglevel', 'int', 0),
+DASOption('web_server', 'status_update', 'int', 5000),
 
 DASOption('test_server', 'host', 'string', '0.0.0.0'),
 DASOption('test_server', 'port', 'int', 8214),

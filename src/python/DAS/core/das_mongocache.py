@@ -449,8 +449,8 @@ class DASMongocache(object):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        col    = self.mdb[collection]
         self.remove_expired(collection)
+        col    = self.mdb[collection]
         query  = adjust_id(query)
         spec   = query.get('spec', {})
         fields = query.get('fields', None)

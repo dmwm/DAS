@@ -1,8 +1,10 @@
 #from DAS.web.utils import quote
+#import cgi
 #assert isinstance($limit, int)
 #assert isinstance($idx, int)
 #assert isinstance($nrows, int)
 #assert isinstance($url, str)
+#set url=cgi.escape($url)
 <!-- url here is quoted in a code -->
 <!-- das_pagination.tmpl -->
 #import types
@@ -14,25 +16,45 @@
 <td align="left">
 Showing
 #if not $limit
-all results
+all records
 </td>
 </tr>
 #else
-<!--
-<span id="results" name="results">
--->
-<span>
 #set total = $idx+$limit
 #if $total>$nrows
 #set total=$nrows
 #end if
 #set startidx=$idx+1
-$startidx-$total
-</span>
-of $nrows rows
+#set from_res=$idx*$limit+1
+#set to_res=$idx*$limit + $limit
+#if $to_res > $nrows
+#set to_res=$nrows
+#end if
+$from_res&#8212;$to_res records out of $nrows.
 </td>
 <td align="right">
-<div id="paginator"> </div>
+<div id="paginator">
+##### first
+#set newUrl = $url + "&amp;idx=0&amp;limit=" + $str($limit)
+&lt;<a href="$newUrl">first</a> |
+##### prev
+#if  $idx
+#set newUrl = $url + "&amp;idx=" + $str($idx-1) + "&amp;limit=" + $str($limit)
+#else
+#set newUrl = $url + "&amp;idx=" + $str($idx) + "&amp;limit=" + $str($limit)
+#end if
+<a href="$newUrl">prev</a> |
+##### next
+#if  ($idx+1)*$limit < $nrows - 1
+#set newUrl = $url + "&amp;idx=" + $str($idx+1) + "&amp;limit=" + $str($limit)
+#else
+#set newUrl = $url + "&amp;idx=" + $str($nrows/$limit) + "&amp;limit=" + $str($limit)
+#end if
+<a href="$newUrl">next</a> |
+##### last
+#set newUrl = $url + "&amp;idx=" + $str($nrows/$limit) + "&amp;limit=" + $str($limit)
+<a href="$newUrl">last</a>&gt;
+</div>
 </td>
 </tr>
 #end if
@@ -41,71 +63,4 @@ of $nrows rows
 </div> <!-- end of align="left" -->
 
 </div> <!-- end of id="div_results" -->
-#if $limit
-<script type="application/javascript">
-//<![CDATA[
-function changeRange(page) {
-    var newidx = (page-1)*$limit;
-    var newurl = '$url' + '&idx=' + newidx  + '&limit=$limit';
-    load(newurl);
-}
-#set npages = $nrows/$limit
-function makePagination(startWith) {
-    var str = '';
-    var nrows = $nrows;
-    var npages = $npages;
-    var pagination = 5;
-
-    if (npages*pagination < nrows) {
-        npages += 1;
-    }
-    if (npages < pagination) {
-        pagination = npages;
-    }
-
-    var start = startWith-2;
-    var end   = startWith+2;
-    if (start < 1) {
-        start = 1;
-        end   = pagination;
-    }
-    if (end  >= npages) {
-        end   = npages;
-    }
-    var prev  = startWith-1;
-    var next  = startWith+1;
-
-    if (start != 1) {
-        str += '<a href="javascript:changeRange(1)">first</a>&nbsp;';
-        str += '<a href="javascript:changeRange('+prev+')">prev</a>&nbsp;';
-    }
-    for(page=start; page<=end; page++) {
-        if(page==startWith) {
-            str += '<span id="page'+page+'" name="page'+page+'" class="gray_box">';
-        } else {
-            str += '<span id="page'+page+'" name="page'+page+'" class="box">';
-        }
-        var strpage = '';
-        if (page<10) {
-            strpage = '&nbsp;'+page
-        } else {
-            strpage = page;
-        }
-        str += '<a href="javascript:changeRange('+page+')">'+strpage+'</a>';
-        str += '</span> &nbsp';
-    }
-    if (end != npages) {
-        str += '<a href="javascript:changeRange('+next+')">next</a>&nbsp;';
-        str += '<a href="javascript:changeRange('+npages+')">last</a>';
-    } else {
-        str += '<a href="javascript:changeRange('+npages+')">last</a>';
-    }
-    id = document.getElementById('paginator');
-    id.innerHTML = str;
-}
-#set loadpage=$idx/$limit+1
-makePagination($loadpage);
-//]]>
-</script>
-#end if
 <!-- end of das_pagination.tmpl -->

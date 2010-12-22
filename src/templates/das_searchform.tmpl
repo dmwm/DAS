@@ -1,10 +1,7 @@
 #from DAS.web.utils import quote
 #set base = $quote($base)
-#if $msg
-#set msg = $quote($msg)
-#end if
 <!-- das_searchform.tmpl -->
-<form action="$base/" method="get">
+<form action="$base/request" method="get">
 <table>
 <tr>
 <td class="right">
@@ -43,7 +40,6 @@ format,
 <div>
 <input type="text" size="80" name="input" id="input" />
 <input type="submit" value="Search" />
-<input type="hidden" name="ajax" value="1" />
 <input type="reset" />
 </div>
 </form>
@@ -60,8 +56,4 @@ updateInput();
 <!-- end of das_searchform.tmpl -->
 
 <div id="_response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
-
-#if $msg
-$msg
-#end if
 

@@ -51,6 +51,11 @@ class DASCacheService(DASWebManager):
         self.config  = config 
         DASWebManager.__init__(self, config)
         self.version = __version__
+
+        # do not allow caching
+        cherrypy.response.headers['Cache-Control'] = 'no-cache'
+        cherrypy.response.headers['Pragma'] = 'no-cache'
+
         self.methods = {}
         self.methods['GET'] = {
             'request':

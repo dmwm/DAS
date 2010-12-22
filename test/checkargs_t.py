@@ -36,14 +36,13 @@ class testCheckArgs(unittest.TestCase):
         """
         Test checkargs of DAS web server, here is supported list
         supported = ['input', 'idx', 'limit', 'show', 'collection', 
-                     'format', 'sort', 'dir', 'ajax', 'view', 'method']
+                     'format', 'sort', 'dir', 'view', 'method']
         """
 
         arg    = [0]
         kwds   = dict(idx='1', limit='1', show='json',
                 input='site=T1', collection='merge',
-                format='xml', sort='true', dir='asc', ajax='0',
-                view='list')
+                format='xml', sort='true', dir='asc', view='list')
         result = func_web(arg, **kwds)
         expect = None
         self.assertEqual(result, expect)

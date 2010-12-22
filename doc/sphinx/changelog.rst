@@ -34,6 +34,12 @@ performed stress tests and code audit DAS servers.
   - Add size_format function
   - Updated performance plot
   - make presentation layer more friendly, fixes #848, #879, #880
+  - add new configuration parameter status_update, which allow to tune up
+    DAS web server AJAX status update message (in msec) 
+  - re-factor DAS web server code (eliminate unnecessary AJAX calls;
+    implement new pagination via server calls, rather JS; make 
+    form and all view methods to be internal; added check_data method;
+    redesign AJAX status method)
 
 - 0.5.6
 
