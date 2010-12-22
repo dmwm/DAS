@@ -39,14 +39,14 @@ $from_res&#8212;$to_res records out of $nrows.
 &lt;<a href="$newUrl">first</a> |
 ##### prev
 #if  $idx
-#set newUrl = $url + "&amp;idx=" + $str($idx-1) + "&amp;limit=" + $str($limit)
+#set newUrl = $url + "&amp;idx=" + $str($idx*$limit-1) + "&amp;limit=" + $str($limit)
 #else
 #set newUrl = $url + "&amp;idx=" + $str($idx) + "&amp;limit=" + $str($limit)
 #end if
 <a href="$newUrl">prev</a> |
 ##### next
 #if  ($idx+1)*$limit < $nrows - 1
-#set newUrl = $url + "&amp;idx=" + $str($idx+1) + "&amp;limit=" + $str($limit)
+#set newUrl = $url + "&amp;idx=" + $str($idx*$limit+1) + "&amp;limit=" + $str($limit)
 #else
 #set newUrl = $url + "&amp;idx=" + $str($nrows/$limit) + "&amp;limit=" + $str($limit)
 #end if
