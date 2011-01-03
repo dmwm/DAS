@@ -283,6 +283,7 @@ class DASCore(object):
         query = self.adjust_query(query, add_to_analytics)
         
         if  self.rawcache.similar_queries(query):
+            self.logger.info('DASCore::call, found SIMILAR query in cache\n')
             if  self.in_raw_cache(query):
                 das_timer('DASCore::call', self.verbose)
                 return 1

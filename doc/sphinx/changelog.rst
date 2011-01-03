@@ -20,6 +20,8 @@ performed stress tests and code audit DAS servers.
   - add reverse look-up from presentation key into DAS key
   - add cache for presentation keys in DAS mapping class
   - update DAS chep paper, it is accepted as CMS Note CR-2010/230
+  - fix issue with similar queries, e.g. dataset=/a/b/c is the same as
+    dataset dataset=/a/b/c
 
 - 0.5.7
 

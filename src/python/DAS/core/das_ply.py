@@ -334,6 +334,8 @@ def ply2mongo(query):
             exist_value = spec[dasname]
             if  isinstance(exist_value, list):
                 array = [r for r in exist_value] + [value]
+            elif exist_value == '*' and value != '*':
+                array = value
             else:
                 array = [exist_value, value]
             spec[dasname] = array

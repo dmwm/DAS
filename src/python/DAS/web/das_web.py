@@ -325,12 +325,13 @@ class DASWebService(DASWebManager):
         return error
 
     @expose
-    def error(self, msg):
+    def error(self, msg, wrap=True):
         """
         Show error message.
         """
-        error = self.templatepage('das_error', msg=msg)
-        page  = self.page(self.form() + error)
+        page = self.templatepage('das_error', msg=msg)
+        if  wrap:
+            page  = self.page(self.form() + page)
         return page
 
     @expose
@@ -815,7 +816,7 @@ class DASWebService(DASWebManager):
         elif data['status'] == 'fail':
             # we fail, stop here and show message to ther user
             page  = 'Request failed. '
-            page += self.error(self.gen_error_msg(kwargs))
+            page += self.error(self.gen_error_msg(kwargs), wrap=False)
         else:
             # we still acquiring the data, continue with AJAX request
             page  = img + ' ' + str(data['status']) + ', please wait...'

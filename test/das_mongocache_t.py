@@ -231,6 +231,13 @@ class testDASMongocache(unittest.TestCase):
 
     def test_similar_queries(self):                          
         """test similar_queries method of DASMongoCache"""
+        query  = {'fields':None, 'spec':{'dataset.name':'ABC'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
+        query  = {'fields':['dataset'], 'spec':{'dataset.name':'ABC'}}
+        result = self.dasmongocache.similar_queries(query)
+        self.assertEqual(True, result)
+        self.dasmongocache.delete_cache()
+
         query  = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
         self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
         query  = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
