@@ -39,8 +39,11 @@ class DASMapping(object):
         
         self.create_db()
 
-        self.notationcache = {}
+        self.presentationcache = {}    # to be filled at run time
+        self.reverse_presentation = {} # to be filled at run time
+        self.notationcache = {}        # to be filled at run time
         self.init_notationcache()
+        self.init_presentationcache()
 
     # ===============
     # Management APIs
@@ -56,6 +59,22 @@ class DASMapping(object):
                     self.notationcache[key] += [ (row['api'], row['map']) ]
                 else:
                     self.notationcache[key] = [ (row['api'], row['map']) ]
+
+    def init_presentationcache(self):
+        """
+        Initialize presentation cache by reading presentation map.
+        """
+        query = {'presentation':{'$ne':None}}
+        data  = self.col.find_one(query)
+        if  data:
+            self.presentationcache = data['presentation']
+            for daskey, uilist in self.presentationcache.items():
+                for row in uilist:
+                    link = None
+                    if  row.has_key('link'):
+                        link = row['link']
+                    self.reverse_presentation[row['ui']] = \
+                            (daskey, row['das'], link)
 
     def create_db(self):
         """
@@ -463,9 +482,13 @@ class DASMapping(object):
         Return web UI presentation keys for provided DAS keyword.
         For example once asked for block we present block.name, block.size, etc.
         """
-        query = {'presentation':{'$ne':None}}
-        for row in self.col.find(query):
-            data = row['presentation']
-            if  data.has_key(daskey):
-                return data[daskey]
+        if  self.presentationcache.has_key(daskey):
+            return self.presentationcache[daskey]
         return [daskey]
+    def daskey_from_presentation(self, uikey):
+        """
+        Return triplet (DAS key, DAS access key, link)
+        associated with provided UI key.
+        """
+        if  self.reverse_presentation.has_key(uikey):
+            return self.reverse_presentation[uikey]

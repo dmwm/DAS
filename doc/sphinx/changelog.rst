@@ -7,6 +7,20 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.5.8
+
+  - Finish work to make presentation layer more interactive, ticket #880
+
+    - create hyperlinks for primary DAS keys
+    - round numbers for number of events, etc.
+    - present file/block size in GB notations
+
+  - add new "link" key into presentation to indicate that given key
+    should be used for hyperlinks
+  - add reverse look-up from presentation key into DAS key
+  - add cache for presentation keys in DAS mapping class
+  - update DAS chep paper, it is accepted as CMS Note CR-2010/230
+
 - 0.5.7
 
 

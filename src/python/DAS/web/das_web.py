@@ -50,7 +50,7 @@ DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
 
 def make_links(key, values):
     """
-    Make new link out of provided key/value pair.
+    Make new link for provided key/values.
     """
     for val in values:
         uinput = urllib.quote('%s=%s' % (key, val))
@@ -58,11 +58,14 @@ def make_links(key, values):
         url = """<a href="%s">%s</a>""" % (quote(url), val)
         yield url
 
-def key_values(gen):
+def adjust_values(func, gen):
     """
-    Helper function to group by values for identical key.
-    It can be extended further to provide links for specific values
-    of known keys, e.g. make links for dataset, run, etc.
+    Helper function to adjust values in UI.
+    It groups values for identical key, make links for provided mapped function,
+    represent "Number of" keys as integers and represents size values in GB format.
+    The mapped function is the one from das_mapping_db which convert
+    UI key into triplet of das key, das access key and link, see 
+    das_mapping_db:daskey_from_presentation
     """
     rdict = {}
     for uikey, value in [k for k, g in groupby(gen)]:
@@ -75,22 +78,12 @@ def key_values(gen):
             rdict[uikey] = [val]
     page = ""
     for key, val in rdict.items():
-        if  key == 'CMSName':
-            value = make_links('site', val)
-        elif  key == 'Primary dataset':
-            value = make_links('primary_dataset', val)
-        elif  key == 'Run number':
-            value = make_links('run', val)
-        elif  key == 'Dataset':
-            value = make_links('dataset', val)
-        elif  key == 'Block name':
-            value = make_links('block', val)
-        elif  key == 'File name':
-            value = make_links('file', val)
-        elif  key == 'Block size' or key == 'File size':
+        daskey, _, link = func(key)
+        if  daskey and link:
+            value = make_links(daskey, val)
+        elif  key.find('size') != -1:
             value = [size_format(val[-1])]
-        elif  key == 'Number of events' or key == 'Number of files' or\
-            key == 'Number of triggers':
+        elif  key.find('Number of ') != -1:
             try:
                 vvv = val[-1].split('.')
                 if  vvv[-1] == '0':
@@ -639,7 +632,9 @@ class DASWebService(DASWebManager):
                     pkey  = row['das']['primary_key']
                     page += '<b>DAS key:</b> %s<br />' % pkey.split('.')[0]
             gen   = self.convert2ui(row)
-            page += key_values(gen)
+            if  self.dasmgr:
+                func  = self.dasmgr.mapping.daskey_from_presentation
+                page += adjust_values(func, gen)
             pad   = ""
             if  show == 'json':
                 jsonhtml = das_json(row, pad)

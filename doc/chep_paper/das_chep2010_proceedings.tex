@@ -3,7 +3,7 @@
 
 \begin{document}
 \title{Data Aggregation System - a system for information retrieval on demand over relational and non-relational distributed data sources}
-\author{G Ball$^1$, V Kuznetsov$^2$, D Evans$^3$ and S Metson$^4$}
+\author{G. Ball$^1$, V. Kuznetsov$^2$, D. Evans$^3$ and S. Metson$^4$}
 
 \address{$^1$ Imperial College London, London, UK}
 \address{$^2$ Cornell University, Ithaca, New York, USA}
@@ -13,12 +13,12 @@
 \ead{gordon.ball@cern.ch, vkuznet@gmail.com}
 
 \begin{abstract}
-We present the Data Aggregation System, a system for information retrieval and aggregation from heterogenous sources of relational and non-relational data for the Compact Muon Solenoid experiment on the CERN Large Hadron Collider. The experiment currently has a number of organically-developed data sources, including front-ends to a number of different relational databases and non-database data services which do not share common data structures or APIs, and cannot at this stage be readily converged. DAS provides an single interface for querying all these services, a caching layer to speed up access to expensive underlying calls and the ability to merge records from different data services pertaining to a single primary key.
+We present the Data Aggregation System, a system for information retrieval and aggregation from heterogenous sources of relational and non-relational data for the Compact Muon Solenoid experiment on the CERN Large Hadron Collider. The experiment currently has a number of organically-developed data sources, including front-ends to a number of different relational databases and non-database data services which do not share common data structures or APIs {\it (Application Programming Interfaces)}, and cannot at this stage be readily converged. DAS provides a single interface for querying all these services, a caching layer to speed up access to expensive underlying calls and the ability to merge records from different data services pertaining to a single primary key.
 \end{abstract}
 
 \section{Introduction}
 
-In 2010, data taking at the CMS experiment began in earnest, with approximately $42pb^{-1}$ of proton-proton collision data recorded at the time of writing. At full data-taking rates, this is expected to produce around 5PiB of raw and reconstructed data per year. Associated with this is around 1TiB per year of metadata, such as data locations, dataset descriptions and machine conditions.
+In 2010, data taking at the CMS experiment began in earnest, with approximately $42pb^{-1}$ of proton-proton collision data recorded at the time of writing. At full data-taking rates, this is expected to produce around 5PB of raw and reconstructed data per year. Associated with this is around 1TB per year of metadata, such as data locations, dataset descriptions and machine conditions.
 
 Each of these metadata aspects are stored into a specialised system, using a variety of different technologies. Each provides specialised interfaces to query the specific metadata stored. In the pre-data-taking epoch, this situation was satisfactory as most systems were used in isolation and only then by experts. However, in the data-taking era users regularly need to perform queries across multiple data services (for example, to look up the recorded luminosity, machine conditions and software configuration for a particular dataset) which prove very expensive to serve under the existing model. DAS simplifies data look-up to end users by providing a single point of access and provides a caching layer to data services.
 
@@ -35,13 +35,13 @@ Although designed in the context of the CMS experiment, DAS itself does not make
 
 DAS is designed as an additional layer on top of a heterogenous ecosystem of existing CMS data services.
  
-The architecture of DAS was designed as a series of independent components, which can scale from all running on a single node to multiple nodes and duplicate components, as necessary (Fig.~\ref{dasarch}).
+The architecture of DAS was designed as a series of independent components, which can scale from all running on a single node to multiple nodes and duplicate components, as necessary (Fig.~\ref{dasarch}). An initial description of the architectur, choice of technology and comparison with similar systems was given in \cite{das2010}. Here we present further development of the query language (Sec.~\ref{dasql}), analytics (Sec.~\ref{analytics}) and initial benchmark results (Sec.~\ref{benchmarks}).
 
-The \emph{web server} handles user sessions, whether they originate from a browser or automated scripts. Queries made here are passed onto the \emph{cache server} for processing, during which time the \emph{web server} periodically polls for the current status (displayed to the user by AJAX) until the request is completed. An MD5 hash of the input query is used to identify the correct output (and hence multiple users making identical queries will only result in a single worker thread doing the processing). Methods are provided here for output in machine-readable formats as well as human-readable formatting.
+The \emph{web server} handles user sessions, whether they originate from a browser or automated scripts. Queries made here are passed onto the \emph{cache server} for processing, during which time the \emph{web server} periodically polls for the current status and displays it to the user by AJAX {\it (Asynchronous Javascript and XML)}, until the request is completed. An MD5 hash of the input query is used to identify the correct output (and hence multiple users making identical queries will only result in a single worker thread doing the processing). Methods are provided here for output in machine-readable formats as well as human-readable formatting.
 
-The \emph{cache server} consists of a pool of worker threads which handle the DAS queries received from the web front-end. Each query is handled entirely by a single thread. A detailed description of the workflow is given in \cite{das2010}. The worker thread first parses a text-based query from the DAS Query Language (Sec.~\ref{dasql}) into an internal representation. The query is then analysed to identify the set of data service APIs which are relevant. The \emph{cache} is checked for items of data matching the query, or data that would form a superset of the query. If any data cannot be found, the relevant service (Sec.~\ref{services}) is called to fetch and transform the data, and insert it into the raw cache (Sec.~\ref{cachemerge}). Once all the data is in the raw cache, records sharing common keys are merged together into a single document, which is stored in the merge cache. If any additional data processing has been specified in the query, it is performed on the merged document before being returned.
+The \emph{cache server} consists of a pool of worker threads which handle the DAS queries received from the web front-end. Each query is handled entirely by a single thread. The worker thread first parses a text-based query from the DAS Query Language (Sec.~\ref{dasql}) into an internal representation. The query is then analysed to identify the set of data service APIs which are relevant. The \emph{cache} is checked for items of data matching the query, or data that would form a superset of the query. If any data cannot be found, the relevant service (Sec.~\ref{services}) is called to fetch and transform the data, and insert it into the raw cache (Sec.~\ref{cachemerge}). Once all the data is in the raw cache, records sharing common keys are merged together into a single document, which is stored in the merge cache. If any additional data processing has been specified in the query, it is performed on the merged document before being returned.
 
-The \emph{cache} consists of one or more MongoDB~\cite{mongodb} shards. MongoDB is a document store which natively stores the JSON documents DAS uses as its internal representation. This is used both for the primary record stores (the \emph{raw} and \emph{merged} caches) and for the ancillary databases required by DAS, such as storing the server logs, analytics data and mapping between keys. MongoDB also provides GridFS~\cite{gridfs}, which DAS uses to store otherwise oversize documents, typically the result of merging large numbers of raw documents together.
+The \emph{cache} consists of one or more MongoDB~\cite{mongodb} shards. MongoDB is a document store which natively stores the JSON {\it (Javascript Object Notation)} documents DAS uses as its internal representation. This is used both for the primary record stores (the \emph{raw} and \emph{merged} caches) and for the ancillary databases required by DAS, such as storing the server logs, analytics data and mapping between keys. MongoDB also provides GridFS~\cite{gridfs}, which DAS uses to store otherwise oversize documents, typically the result of merging large numbers of raw documents together. The choice of a document store instead of a traditional relational database was driven by the need to be able to store and subsequently query individual members of the deeply-nested data structures that DAS handles, the structure of which are not known until run-time. We tested the CouchDB~\cite{couchdb} and MongoDB document stores for this purpose; we found the latter to have better performance in our use-case, better scalability across multiple nodes and a query model more compatible with our own.
 
 The \emph{analytics server} provides a facility for scheduling regular tasks. The rest of DAS operates only when triggered by user input, and although some clean-up is performed at run-time (such as discarded expired records) it is also necessary to have a facility for running asynchronous operations. Analytics consists of a task scheduler and a pool of workers which execute the tasks. This is done independently of the \emph{cache server}, so heavy analytics tasks will not interfere with end-user use.
 
@@ -127,16 +127,16 @@ A simple example of an analyser is designated \emph{ValueHotspot}, and is design
 
 There are a large number of possible future analysis strategies (such as the time structure throughout a week of certain types of queries, automatically pre-fetching information about new datasets as they are released or considering a metric based on total preventible latency rather than total numbers of calls), but some experience with actual users is needed to determine what will actually prove useful.
 
-\section{Benchmarks}
+\section{\label{benchmarks}Benchmarks}
 
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.6\textwidth]{das_vs_mongo_fully_random}
 \end{center}
-\caption{\label{dasbench}Benchmark showing the average latency for fetching a single randomly-selected document from a wildcard query, with a given number of parallel clients. The cache contains $5\times10^7$ records. The red line shows the performance of the complete DAS stack, and the blue line the time spent by MongoDB.}
+\caption{\label{dasbench}Benchmark showing the average latency for fetching a single randomly-selected document from a wildcard query, with a given number of parallel clients. The cache contains $5\times10^7$ records. The red triangles show the performance of the complete DAS stack, and the blue stars the time spent by MongoDB.}
 \end{figure}
 
-To benchmark DAS performance, we used a 64-bit linux node with 8 cores (each 2.33GhZ) and 16GiB of RAM, which we would expect to be typical of the hardware DAS would use in production. All DAS systems and MongoDB share this node.
+To benchmark DAS performance, we used a 64-bit linux node with 8 cores (each 2.33GhZ) and 16GB of RAM, which we would expect to be typical of the hardware DAS would use in production. All DAS systems and MongoDB share this node.
 
 Testing was performed with the cache pre-populated with approximately $5\times10^7$ records (100 times the expected volume), consisting of \emph{block} records from the CMS PhEDEx~\cite{phedex} and DBS systems. We test with up to 500 clients making requests in parallel. Each client requests one random record from the entire result set (which will test the time required for DAS to process the query but largely exclude the time required to serialise a large output set), using queries of the form \verb block=/[a-z]* (past experience with the DBS system shows wildcard queries are very common, even when the user knows the complete string in question). Fig.~\ref{dasbench} shows the benchmark results.
 
@@ -158,6 +158,7 @@ This work was supported by the Science and Technology Facilities Council, UK.
 \bibitem{das2010} Kuznetsov V, Evans D and Metson S 2010 The CMS data aggregation system {\it Procedia Comp. Sci.} {\bf 1} 1529-37
 \bibitem{mongodb} MongoDB, a scalable, high-performance, open-source, document-orientated database {\it http://www.mongodb.org/}
 \bibitem{gridfs} MongoDB GridFS {\it http://www.mongodb.org/display/DOCS/GridFS}
+\bibitem{couchdb} Apache CouchDB {\it http://couchdb.apache.org/}
 \bibitem{dbsql} Kuznetsov V, Riley D, Afaq A, Sekhri V, Guo Y and Lueking L 2009 The CMS DBS query language {\it CHEP}
 \bibitem{ply} Python Lex-Yacc {\it http://www.dabeaz.com/ply/}
 \bibitem{yaml} YAML ain't markup language {\it http://www.yaml.org/}
