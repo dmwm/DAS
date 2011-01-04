@@ -17,7 +17,6 @@ DAS_OPTIONS = [
 DASOption('mongodb', 'dburi', 'list', ['mongodb://localhost:27017']),
 DASOption('mongodb', 'dbname', 'string', 'das'),
 DASOption('mongodb', 'bulkupdate_size', 'int', 5000),
-DASOption('mongodb', 'lifetime', 'int', 1*24*60*60),
 
 DASOption('mappingdb', 'dbname', 'string', 'mapping'),
 DASOption('mappingdb', 'collname', 'string', 'db'),

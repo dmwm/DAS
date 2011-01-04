@@ -284,7 +284,6 @@ class DASMongocache(object):
     """
     def __init__(self, config):
         self.dburi   = config['mongodb']['dburi']
-        self.limit   = config['mongodb']['lifetime']
         self.cache_size = config['mongodb']['bulkupdate_size']
         self.dbname  = config['dasdb']['dbname']
         self.logger  = config['logger']
