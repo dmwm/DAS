@@ -478,11 +478,10 @@ class DASMongocache(object):
 
         # loop over fields, since user interesting to see only results for
         # provided fields. Update spec to check that given field exists
-        # in a query
-        if  fields:
-            for field in fields:
-                if  not spec.has_key(field):
-                    spec.update({field:{'$exists':True}})
+        # in a das query as primary key
+        for key in fields:
+            prim_key = re.compile("^%s\." % key) 
+            spec.update({'das.primary_key': prim_key})
         if  filters:
             for filter in filters:
                 spec.update({filter:{'$exists':True}})

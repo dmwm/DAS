@@ -22,6 +22,16 @@ performed stress tests and code audit DAS servers.
   - update DAS chep paper, it is accepted as CMS Note CR-2010/230
   - fix issue with similar queries, e.g. dataset=/a/b/c is the same as
     dataset dataset=/a/b/c
+  - improve presentation layer and add links
+
+      - replace link from boolean to a list of record in presentation YML file
+      - the link key in presentation now refers to list of records, where each
+        record is a dict of name/query. The name is shown on a web UI under the Links:,
+        whiel query represents DAS query to get this value, for example
+        {"name":"Files", "query":"file dataset=%s"}
+
+  - fix issue with counting results in a cache
+  - make dataset query look-up close to DD view, fixes #821
 
 - 0.5.7
 

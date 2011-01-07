@@ -5,8 +5,6 @@
 DAS analytics DB module.
 """
 
-from __future__ import with_statement
-
 __revision__ = "$Id: das_analytics_db.py,v 1.19 2010/04/14 16:56:28 valya Exp $"
 __version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"

@@ -214,7 +214,10 @@ def parser(query, daskeys, operators):
         if  count == 10:
             break
     if  not fields:
-        fields = None
+        if  len(spec.keys()) == 1:
+            fields = [spec.keys()[0].split('.')[0]]
+        else:
+            fields = None
     mongo_query = dict(fields=fields, spec=spec)
     if  mapreduce:
         mongo_query['mapreduce'] = mapreduce

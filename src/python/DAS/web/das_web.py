@@ -48,15 +48,21 @@ import DAS.utils.jsonwrapper as json
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
                   'format', 'sort', 'dir', 'view', 'method']
 
-def make_links(key, values):
+def make_links(links, values):
     """
     Make new link for provided key/values.
     """
-    for val in values:
-        uinput = urllib.quote('%s=%s' % (key, val))
-        url = '/das/request?input=%s' % uinput
-        url = """<a href="%s">%s</a>""" % (quote(url), val)
-        yield url
+    for link in links:
+        name, query = link.items()
+        for val in values:
+            dasquery = link['query'] % val
+            uinput = urllib.quote(dasquery)
+            url = '/das/request?input=%s' % uinput
+            if  link['name']:
+                url = """<a href="%s">%s</a>""" % (quote(url), link['name'])
+            else:
+                url = """<a href="%s">%s</a>""" % (quote(url), val)
+            yield url
 
 def adjust_values(func, gen):
     """
@@ -80,7 +86,8 @@ def adjust_values(func, gen):
     for key, val in rdict.items():
         daskey, _, link = func(key)
         if  daskey and link:
-            value = make_links(daskey, val)
+            key = 'Links'
+            value = make_links(link, val)
         elif  key.find('size') != -1:
             value = [size_format(val[-1])]
         elif  key.find('Number of ') != -1:
@@ -840,11 +847,14 @@ class DASWebService(DASWebManager):
         
         Example output:
         
-        keysearch?text=name ->
-        
-        {'site.name': [{'system': 'sitedb', 'urn': 'CMStoSiteName', keys: ['site']},
-                        ...]
-         ...}
+        .. doctest::
+
+            keysearch?text=name ->
+            
+            {'site.name': [{'system': 'sitedb',
+                            'urn': 'CMStoSiteName', keys: ['site']},
+                            ...]
+             ...}
         """
         
         text = kwargs.get("text", "")

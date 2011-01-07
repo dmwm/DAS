@@ -5,14 +5,26 @@
 # for all primary DAS keys, e.g. dataset, block, run, etc.
 presentation: {
 primary_dataset : [
-        {"das":"primary_dataset.name", "ui":"Primary dataset", "link":True}, 
+        {"das":"primary_dataset.name", "ui":"Primary dataset", 
+         "link":[
+                 {"name":"Datasets", "query":"dataset primary_dataset=%s"},
+                ]}, 
         {"das":"primary_dataset.type", "ui":"Type"},
         {"das":"primary_dataset.create_by", "ui":"Created by:"}, 
         ],
 dataset : [
         {"das":"dataset.error", "ui":"Error"}, 
         {"das":"dataset.httperror", "ui":"Reason"}, 
-        {"das":"dataset.name", "ui":"Dataset", "link":True}, 
+        {"das":"dataset.name", "ui":"Dataset", 
+         "link":[
+                 {"name":"Blocks", "query":"block dataset=%s"},
+                 {"name":"Files", "query":"file dataset=%s"},
+                 {"name":"Runs", "query":"run dataset=%s"},
+                ]}, 
+        {"das":"dataset.nfiles", "ui":"Number of files"}, 
+        {"das":"dataset.nblocks", "ui":"Number of blocks"}, 
+        {"das":"dataset.nevents", "ui":"Number of events"}, 
+        {"das":"dataset.size", "ui":"Dataset size"}, 
         {"das":"dataset.primary_datatset_name", "ui":"Primary dataset"}, 
         {"das":"dataset.processed_datatset_name", "ui":"Processed dataset"}, 
         {"das":"dataset.physics_group_name", "ui":"Physics group"}, 
@@ -23,7 +35,10 @@ dataset : [
 block : [
         {"das":"block.error", "ui":"Error"}, 
         {"das":"block.httperror", "ui":"Reason"}, 
-        {"das":"block.name", "ui":"Block name", "link":True}, 
+        {"das":"block.name", "ui":"Block name",
+         "link":[
+                 {"name":"Files", "query":"file block=%s"},
+                ]}, 
         {"das":"block.size", "ui":"Block size"},
         {"das":"block.nevents", "ui":"Number of events"},
         {"das":"block.nfiles", "ui":"Number of files"},
@@ -31,13 +46,19 @@ block : [
 file : [
         {"das":"file.error", "ui":"Error"}, 
         {"das":"file.httperror", "ui":"Reason"}, 
-        {"das":"file.name", "ui":"File name", "link":True}, 
+        {"das":"file.name", "ui":"File name",
+         "link":[
+                 {"name": "Files", "query": "file file=%s"},
+                ]}, 
         {"das":"file.size", "ui":"File size"},
         {"das":"file.type", "ui":"File type"},
         {"das":"file.nevents", "ui":"Number of events"},
         ],
 run : [
-        {"das":"run.run_number", "ui":"Run number", "link":True}, 
+        {"das":"run.run_number", "ui":"Run number",
+         "link":[
+                 {"name":"Run", "query": "run run=%s"},
+                ]}, 
         {"das":"run.primary_dataset", "ui":"Primary dataset"}, 
         {"das":"run.datasetName", "ui":"Dataset"}, 
         {"das":"run.global_tag", "ui":"Global tag"}, 
@@ -57,20 +78,31 @@ run_status: [
 tier : [
         {"das":"tier.error", "ui":"Error"}, 
         {"das":"tier.httperror", "ui":"Reason"}, 
-        {"das":"tier.name", "ui":"Tier name", "link":True}, 
+        {"das":"tier.name", "ui":"Tier name", 
+         "link":[
+                ]}, 
         ],
 release: [
         {"das":"release.error", "ui":"Error"}, 
         {"das":"release.httperror", "ui":"Reason"}, 
-        {"das":"release.name", "ui":"Release name", "link":True}, 
+        {"das":"release.name", "ui":"Release name",
+         "link":[
+                 {"name":"Datasets", "query":"dataset release=%s"},
+                ]}, 
         {"das":"release.algorithm.executable", "ui":"Executable"}, 
         {"das":"release.algorithm.name", "ui":"Algorithm name"}, 
         ],
 site : [
         {"das":"site.error", "ui":"Error"}, 
         {"das":"site.httperror", "ui":"Reason"}, 
-        {"das":"site.name", "ui":"CMSName", "link":True}, 
-        {"das":"site.se", "ui":"StorageElement", "link":True}, 
+        {"das":"site.name", "ui":"CMSName",
+         "link":[
+                 {"name":"Blocks", "query":"block site=%s"},
+                ]}, 
+        {"das":"site.se", "ui":"StorageElement", 
+         "link":[
+                 {"name":"Blocks", "query":"block site=%s"},
+                ]}, 
         {"das":"site.samname", "ui":"SAMName"}, 
         {"das":"site.sitename", "ui":"Site"},
         {"das":"site.admin.email", "ui":"Site Admin Email"},

@@ -347,7 +347,10 @@ def ply2mongo(query):
             if  len(spec.keys()) != 1 and spec.has_key(key):
                 del spec[key]
     else:
-        mongodict['fields'] = None
+        if  len(spec.keys()) == 1:
+            mongodict['fields'] = [spec.keys()[0].split('.')[0]]
+        else:
+            mongodict['fields'] = None
     mongodict['spec'] = spec
     return mongodict
 
