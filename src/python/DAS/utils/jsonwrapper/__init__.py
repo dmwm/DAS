@@ -13,15 +13,20 @@ try:
     import yajl
     _module = "yajl"
 except:
-    try:
-        import cjson
-        _module = "cjson"
-    except:
-        pass
+    pass
+
+try:
+    import cjson
+    _module = "cjson"
+except:
+    pass
 
 import json
 if  not _module: # use default JSON module
     _module = "json"
+
+# stick so far with cjson, until yajl will be fully tested
+_module = "cjson"
 
 def loads(idict, **kwargs):
     """
