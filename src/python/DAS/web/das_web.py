@@ -95,38 +95,42 @@ def adjust_values(func, gen):
     """
     rdict = {}
     for uikey, value in [k for k, g in groupby(gen)]:
-        val = str(quote(value))
+#        val = str(quote(value))
+        val = quote(value)
         if  rdict.has_key(uikey):
             existing_list = rdict[uikey]
             if  val not in existing_list:
                 rdict[uikey] = existing_list + [val]
         else:
-            rdict[uikey] = [val]
+            rdict[uikey] = val
     page = ""
     links = {}
     for key, val in rdict.items():
-        daskey, _, link = func(key)
-        if  daskey and link:
-#            value = make_links(link, val)
-            value = val
-            for kkk, vvv in make_links(link, val):
-                if  not links.has_key(kkk):
-                    links[kkk] = vvv
-        elif  key.find('size') != -1:
-            value = [size_format(val[-1])]
-        elif  key.find('Number of ') != -1:
-            try:
-                vvv = val[-1].split('.')
-                if  vvv[-1] == '0':
-                    value = [vvv[0]]
+        lookup = func(key)
+        if  lookup:
+            daskey, _, link = lookup
+            if  daskey and link:
+                value = val
+                for kkk, vvv in make_links(link, val):
+                    if  not links.has_key(kkk):
+                        links[kkk] = vvv
+            elif  isinstance(val, list):
+                if  isinstance(val[0], str):
+                    value = ','.join(val)
                 else:
                     value = val
-            except:
-                traceback.print_exc()
+            elif  key.find('size') != -1:
+                value = size_format(val)
+            elif  key.find('Number of ') != -1:
+                value = int(val)
+            else:
                 value = val
+            page += "<b>%s:</b> %s<br />" % (key, value)
         else:
-            value = val
-        page += "<b>%s:</b> %s<br />" % (key, ', '.join(value))
+            if  key == 'result' and isinstance(val, dict) and \
+                val.has_key('value'): # result of aggregation function
+                val = val['value']
+            page += "<b>%s:</b> %s<br />" % (key, val)
     if  links:
         page += "<b>Links:</b> "
         page += ','.join(links.values()) + '<br />'

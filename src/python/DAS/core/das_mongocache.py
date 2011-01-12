@@ -480,13 +480,16 @@ class DASMongocache(object):
         # provided fields. Update spec to check that given field exists
         # in a das query as primary key
         for key in fields:
-            prim_key = re.compile("^%s\." % key) 
+            prim_key = re.compile("^%s" % key) 
             spec.update({'das.primary_key': prim_key})
         if  filters:
             for filter in filters:
                 spec.update({filter:{'$exists':True}})
         self.logger.info("DASMongocache::nresults(%s, coll=%s) spec=%s" \
                 % (query, collection, spec))
+        for key, val in spec.items():
+            if  val == '*':
+                del spec[key]
         return col.find(spec=spec).count()
 
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc', 
