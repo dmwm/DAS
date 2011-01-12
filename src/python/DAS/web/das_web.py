@@ -11,6 +11,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
+import re
 import sys
 import time
 import thread
@@ -40,6 +41,7 @@ from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import exposejson, exposedasplist
+from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 
@@ -47,6 +49,23 @@ import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
                   'format', 'sort', 'dir', 'view', 'method']
+
+
+RE_DBSQL_0 = re.compile(r"^find")
+RE_DBSQL_1 = re.compile(r"^find\s+(\w+)")
+RE_DBSQL_2 = re.compile(r"^find\s+(\w+)\s+where\s+([\w.]+)\s*(=|in|like)\s*(.*)")
+RE_DATASET = re.compile(r"^/\w+")
+RE_SITE = re.compile(r"^T[0123]_")
+RE_SUBKEY = re.compile(r"^([a-z_]+\.[a-zA-Z_]+)")
+RE_KEYS = re.compile(r"""([a-z_]+)\s?(?:=|in|between|last)\s?(".*?"|'.*?'|[^\s]+)|([a-z_]+)""")
+RE_COND_0 = re.compile(r"^([a-z_]+)")
+RE_HASPIPE = re.compile(r"^.*?\|")
+RE_PIPECMD = re.compile(r"^.*?\|\s*(\w+)$")
+RE_AGGRECMD = re.compile(r"^.*?\|\s*(\w+)\(([\w.]+)$")
+RE_FILTERCMD = re.compile(r"^.*?\|\s*(\w+)\s+(?:[\w.]+\s*,\s*)*([\w.]+)$")
+
+
+DAS_PIPECMDS = das_aggregators() + das_filters()
 
 def make_links(links, values):
     """
@@ -59,10 +78,11 @@ def make_links(links, values):
             uinput = urllib.quote(dasquery)
             url = '/das/request?input=%s' % uinput
             if  link['name']:
-                url = """<a href="%s">%s</a>""" % (quote(url), link['name'])
+                key = link['name']
             else:
-                url = """<a href="%s">%s</a>""" % (quote(url), val)
-            yield url
+                key = val
+            url = """<a href="%s">%s</a>""" % (quote(url), key)
+            yield (key, url)
 
 def adjust_values(func, gen):
     """
@@ -83,11 +103,15 @@ def adjust_values(func, gen):
         else:
             rdict[uikey] = [val]
     page = ""
+    links = {}
     for key, val in rdict.items():
         daskey, _, link = func(key)
         if  daskey and link:
-            key = 'Links'
-            value = make_links(link, val)
+#            value = make_links(link, val)
+            value = val
+            for kkk, vvv in make_links(link, val):
+                if  not links.has_key(kkk):
+                    links[kkk] = vvv
         elif  key.find('size') != -1:
             value = [size_format(val[-1])]
         elif  key.find('Number of ') != -1:
@@ -102,7 +126,10 @@ def adjust_values(func, gen):
                 value = val
         else:
             value = val
-        page += "<b>%s</b>: %s<br />" % (key, ', '.join(value))
+        page += "<b>%s:</b> %s<br />" % (key, ', '.join(value))
+    if  links:
+        page += "<b>Links:</b> "
+        page += ','.join(links.values()) + '<br />'
     return page
 
 def das_json(record, pad=''):
@@ -833,36 +860,185 @@ class DASWebService(DASWebManager):
         page = ajax_response(page)
         return page
     
-    @expose
-    def keysearch(self, **kwargs):
+    @exposedasjson
+    @checkargs(['query'])
+    def autocomplete(self, **kwargs):
         """
         Interface to the DAS keylearning system, for a 
         as-you-type suggestion system. This is a call for AJAX
         in the page rather than a user-visible one.
         
-        TODO: different output structure? limited number of results?
-        
-        It might be better just to return the list of data members
-        matched and then information about those on demand.
-        
-        Example output:
-        
-        .. doctest::
-
-            keysearch?text=name ->
-            
-            {'site.name': [{'system': 'sitedb',
-                            'urn': 'CMStoSiteName', keys: ['site']},
-                            ...]
-             ...}
+        This returns a list of JS objects, formatted like:
+        {'css': '<ul> css class', 'value': 'autocompleted text',
+         'info': '<html> text'}
+         
+        Some of the work done here could be moved client side, and
+        only calls that actually require keylearning look-ups
+        forwarded. Given the number of REs used, this may be necessary
+        if load increases.
         """
         
-        text = kwargs.get("text", "")
-        if text:
-            result = {}
-            possible_members = self.dasmgr.keylearning.text_search(text)
-            for member in possible_members:
-                result[member] = self.dasmgr.keylearning.member_info(member)
+        query = kwargs.get("query", "").strip()
+        result = []
+        if RE_DBSQL_0.match(query):
+            #find...
+            match1 = RE_DBSQL_1.match(query) 
+            match2 = RE_DBSQL_2.match(query)
+            if match1:
+                daskey = match1.group(1)
+                if daskey in self.daskeys:
+                    if match2:
+                        operator = match2.group(3)
+                        value = match2.group(4)
+                        if operator == '=' or operator == 'like':
+                            result.append({'css': 'ac-warinig sign', 'value':'%s=%s' % (daskey, value),
+                                           'info': "This appears to be a DBS-QL query, but the key (<b>%s</b>) is a valid DAS key, and the condition should <b>probably</b> be expressed like this." % (daskey)})
+                        else:
+                            result.append({'css': 'ac-warinig sign', 'value':daskey,
+                                           'info': "This appears to be a DBS-QL query, but the key (<b>%s</b>) is a valid DAS key. However, I'm not sure how to interpret the condition (<b>%s %s<b>)." % (daskey, operator, value)})
+                    else:
+                        result.append({'css': 'ac-warinig sign', 'value': daskey,
+                                       'info': 'This appears to be a DBS-QL query, but the key (<b>%s</b>) is a valid DAS key.' % daskey})
+                else:
+                    result.append({'css': 'ac-error sign', 'value': '',
+                                   'info': "This appears to be a DBS-QL query, and the key (<b>%s</b>) isn't known to DAS." % daskey})
+                    
+                    key_search = self.dasmgr.keylearning.key_search(daskey)
+                    #do a key search, and add info elements for them here
+                    for keys, members in key_search.items():
+                        result.append({'css': 'ac-info', 'value': ' '.join(keys),
+                                       'info': 'Possible keys <b>%s</b> (matching %s).' % (', '.join(keys), ', '.join(members))})
+                    if not key_search:
+                        result.append({'css': 'ac-error sign', 'value': '',
+                                       'info': 'No matches found for <b>%s</b>.' % daskey})
+                        
+                    
+            else:
+                result.append({'css': 'ac-error sign', 'value': '',
+                               'info': 'This appears to be a DBS-QL query. DAS queries are of the form <b>key</b><span class="faint">[ operator value]</span>'})
+        elif RE_DATASET.match(query):
+            #/something...
+            result.append({'css': 'ac-warinig sign', 'value':'dataset=%s' % query,
+                           'info':'''This appears to be a dataset query. The correct syntax is <b>dataset=/some/dataset</b> <span class="faint">| grep dataset.<i>field</i></span>'''})
+        elif RE_SITE.match(query):
+            #T{0123}_...
+            result.append({'css': 'ac-warinig sign', 'value':'site=%s' % query,
+                           'info':'''This appears to be a site query. The correct syntax is <b>site=TX_YY_ZZZ</b> <span class="faint">| grep site.<i>field</i></span>'''})    
+        elif RE_HASPIPE.match(query):
+            keystr = query.split('|')[0]
+            keys = set()
+            for keymatch in RE_KEYS.findall(keystr):
+                if keymatch[0]:
+                    keys.add(keymatch[0])
+                else:
+                    keys.add(keymatch[2])
+            keys = list(keys)
+            if not keys:
+                result.append({'css':'ac-error sign', 'value': '',
+                               'info': "You seem to be trying to write a pipe command without any keys."})
+            
+            pipecmd = RE_PIPECMD.match(query)
+            filtercmd = RE_FILTERCMD.match(query)
+            aggrecmd = RE_AGGRECMD.match(query)
+            
+            if pipecmd:
+                cmd = pipecmd.group(1)
+                precmd = query[:pipecmd.start(1)]
+                matches = filter(lambda x: x.startswith(cmd), DAS_PIPECMDS)
+                if matches:
+                    for match in matches:
+                        result.append({'css': 'ac-info', 'value': '%s%s' % (precmd, match),
+                                       'info': 'Function match <b>%s</b>' % (match)})
+                else:
+                    result.append({'css': 'ac-warinig sign', 'value': precmd,
+                                   'info': 'No aggregation or filter functions match <b>%s</b>.' % cmd})
+            elif aggrecmd:
+                cmd = aggrecmd.group(1)
+                if not cmd in das_aggregators():
+                    result.append({'css':'ac-error sign', 'value': '',
+                                   'info': 'Function <b>%s</b> is not a known DAS aggregator.' % cmd})
                 
-            return json.dumps(result)
-        return "{}"
+            elif filtercmd:
+                cmd = filtercmd.group(1)
+                if not cmd in das_filters():
+                    result.append({'css':'ac-error sign', 'value': '',
+                                   'info': 'Function <b>%s</b> is not a known DAS filter.' % cmd})
+            
+            if aggrecmd or filtercmd:
+                match = aggrecmd if aggrecmd else filtercmd
+                subkey = match.group(2)
+                prekey = query[:match.start(2)]
+                members = self.dasmgr.keylearning.members_for_keys(keys)
+                if members:
+                    matches = filter(lambda x: x.startswith(subkey), members)
+                    if matches:
+                        for match in matches:
+                            result.append({'css': 'ac-info', 'value': prekey+match,
+                                           'info': 'Possible match <b>%s</b>' % match})
+                    else:
+                        result.append({'css': 'ac-warinig sign', 'value': prekey,
+                                       'info': 'No data members match <b>%s</b> (but this could be a gap in keylearning coverage).' % subkey})
+                else:
+                    result.append({'css': 'ac-warinig sign', 'value': prekey,
+                                   'info': 'No data members found for keys <b>%s</b> (but this might be a gap in keylearning coverage).' % ' '.join(keys)})
+                
+            
+        elif RE_SUBKEY.match(query):
+            subkey = RE_SUBKEY.match(query).group(1)
+            daskey = subkey.split('.')[0]
+            if daskey in self.daskeys:
+                if self.dasmgr.keylearning.has_member(subkey):
+                    result.append({'css': 'ac-warinig sign', 'value': '%s | grep %s' % (daskey, subkey),
+                                   'info': 'DAS queries should start with a top-level key. Use <b>grep</b> to see output for one data member.'})
+                else:
+                    result.append({'css': 'ac-warinig sign', 'value': '%s | grep %s' % (daskey, subkey),
+                                   'info': "DAS queries should start with a top-level key. Use <b>grep</b> to see output for one data member. DAS doesn't know anything about the <b>%s</b> member but keylearning might be incomplete." % (subkey)})
+                    key_search = self.dasmgr.keylearning.key_search(subkey, daskey)
+                    for keys, members in key_search.items():
+                        for member in members:
+                            result.append({'css': 'ac-info', 'value':'%s | grep %s' % (daskey, member),
+                                           'info': 'Possible member match <b>%s</b> (for daskey <b>%s</b>)' % (member, daskey)})
+                    if not key_search:
+                        result.append({'css': 'ac-error sign', 'value': '',
+                                       'info': 'No matches found for <b>%s</b>.' % (subkey)})
+                            
+            else:
+                result.append({'css': 'ac-error sign', 'value': '',
+                               'info': "Das queries should start with a top-level key. <b>%s</b> is not a valid DAS key." % daskey})
+                key_search = self.dasmgr.keylearning.key_search(subkey)
+                for keys, members in key_search.items():
+                    result.append({'css': 'ac-info', 'value': ' '.join(keys),
+                                   'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
+                if not key_search:
+                    result.append({'css': 'ac-error sign', 'value': '',
+                                   'info': 'No matches found for <b>%s</b>.' % subkey})
+                    
+        elif RE_KEYS.match(query):
+            keys = set()
+            for keymatch in RE_KEYS.findall(query):
+                if keymatch[0]:
+                    keys.add(keymatch[0])
+                else:
+                    keys.add(keymatch[2])
+            for key in keys:
+                if not key in self.daskeys:
+                    result.append({'css':'ac-error sign', 'value': '',
+                                   'info': 'Key <b>%s</b> is not known to DAS.' % key})
+                    key_search = self.dasmgr.keylearning.key_search(query)
+                    for keys, members in key_search.items():
+                        result.append({'css': 'ac-info', 'value': ' '.join(keys),
+                                       'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
+                    if not key_search:
+                        result.append({'css': 'ac-error sign', 'value': '',
+                                       'info': 'No matches found for <b>%s</b>.' % query})
+        else:
+            #we've no idea what you're trying to accomplish, do a search
+            key_search = self.dasmgr.keylearning.key_search(query)
+            for keys, members in key_search.items():
+                result.append({'css': 'ac-info', 'value': ' '.join(keys),
+                               'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
+            if not key_search:
+                result.append({'css': 'ac-error sign', 'value': '',
+                               'info': 'No matches found for <b>%s</b>.' % query})
+            
+        return result

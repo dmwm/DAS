@@ -364,3 +364,64 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
     margin: 0px;
     padding:2px 0px;
 }
+
+.input_field {
+    color: #263750;
+    background-color: #efefef;
+    padding-left: 10px;
+    height: 20px;
+    -webkit-border-radius: 40px;
+    -khtml-border-radius: 40px;
+    -moz-border-radius: 40px;
+    border-radius: 40px;
+}
+.btn { 
+    padding-top: 2px;
+    font: bold 84% 'trebuchet ms',helvetica,sans-serif; 
+    border:1px solid; 
+    color: #263750;
+    background-color: rgb(223, 219, 195);
+} 
+.shadow {
+    -webkit-box-shadow: 10px 10px 20px #666666;
+    -moz-box-shadow: 10px 10px 20px #666666;
+    -o-box-shadow: 10px 10px 20px #666666;
+    box-shadow: 10px 10px 20px #666666;
+}
+.borders {
+    -webkit-border-radius: 40px;
+    -khtml-border-radius: 40px;
+    -moz-border-radius: 40px;
+    border-radius: 40px;
+}
+option.sand {background-color: rgb(223, 219, 195); font-weight: bold; font-size: 12px; color: #263750;}
+/*select.sand {*/
+/*    -webkit-border-radius: 4px;*/
+/*    -khtml-border-radius: 4px;*/
+/*    -moz-border-radius: 4px;*/
+/*    border-radius: 4px;*/
+/*    -moz-box-shadow: 1px 1px 5px #cfcfcf inset;*/
+/*    border: 1px solid #cfcfcf;*/
+/*    vertical-align: middle;*/
+/*    background-color: transparent;*/
+/*}*/
+
+
+/* autocompletion related */
+/*.faint {font-weight: lighter;}*/
+.faint {font-weight: normal;}
+.ac-info {position: absolute; height: 100%; width: 20px;}
+.sign {
+    position: absolute;
+    height: 100%;
+    width: 20px;
+    -webkit-border-radius: 30px;
+    -khtml-border-radius: 30px;
+    -moz-border-radius: 30px;
+    border-radius: 30px;
+}
+.ac-warning {background-color: #ff9900;}
+.ac-error {background-color: #ff0000;}
+.ac-suggest {font-family: monospace; font-weight: bold; padding-left: 20px; padding-right: 10px}
+.ac-extra {color: #708090; padding-left: 20px; }
+.autocomplete {padding-bottom: 2em;}

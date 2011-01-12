@@ -32,9 +32,9 @@ performed stress tests and code audit DAS servers.
 
   - fix issue with counting results in a cache
   - make dataset query look-up close to DD view, fixes #821
-  - add YAJL (Yet Another JSON Library) as default JSON, see
-    http://lloyd.github.com/yajl/ and its python binding. Provide fall back
-    to cjson and json.
+  - add YAJL (Yet Another JSON Library) as experimental JSON module, see
+    http://lloyd.github.com/yajl/ and its python binding. 
+  - add keylearning and autocompletion, ticket #50
 
 - 0.5.7
 

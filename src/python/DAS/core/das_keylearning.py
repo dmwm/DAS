@@ -1,5 +1,6 @@
 # DAS modules
 from DAS.utils.das_db import db_connection
+import collections
 
 class DASKeyLearning(object):
     """
@@ -94,6 +95,7 @@ class DASKeyLearning(object):
         
         return [doc['member'] for doc in possible_members]
         
+    
     def member_info(self, member):
         """
         Once the text search has identified a member that might be a match,
@@ -107,3 +109,40 @@ class DASKeyLearning(object):
                            'urn': doc['urn'],
                            'keys': doc['keys']})
         return result
+    
+    def key_search(self, text, limitkey=None):
+        """
+        Try and find suggested DAS keys, by performing a member search and then
+        mapping back to the DAS keys those are produced by.
+        """
+        text = text.lower()
+        result = collections.defaultdict(set)
+        for member in self.text_search(text):
+            for info in self.member_info(member):
+                result[tuple(info['keys'])].add(member)
+        if limitkey:
+            for key in result:
+                if not limitkey in key:
+                    del result[key]
+        return result
+    
+    def members_for_keys(self, keys):
+        """
+        Return all the members that exactly match the set of keys
+        """
+        result = []
+        for doc in self.col.find({'keys': {'$all': keys, '$size': len(keys)}},
+                                 fields=['members']):
+            result += doc['members']
+        return result
+         
+    
+    def has_member(self, member):
+        """
+        Return true if we know anything about the given member.
+        """
+        if self.col.find_one({'member': member}):
+            return True
+        else:
+            return False
+            
