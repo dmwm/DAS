@@ -28,6 +28,68 @@ from   DAS.utils.regex import se_pattern, site_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 import DAS.utils.jsonwrapper as json
 
+def parse_filters(filters):
+    """
+    Parse given filter list and return MongoDB key/value dictionary
+    """
+    mdict = {}
+    for filter in filters:
+        for key, val in parse_filter(filter).items():
+            if  mdict.has_key(key):
+                value = mdict[key]
+                if  isinstance(value, dict) and isinstance(val, dict):
+                    mdict[key].update(val)
+                else:
+                    msg  = 'Mis-match in filters (%s, %s)' \
+                        % ({key:value}, filter)
+                    raise Exception(msg)
+            else:
+                mdict.update({key:val})
+    return mdict
+
+def parse_filter(filter):
+    """
+    Parse given filter and return MongoDB key/value dictionary
+    """
+    if  filter.find('=') != -1 and \
+       (filter.find('<') == -1 and filter.find('>') == -1):
+        key, val = filter.split('=')
+        if  int_number_pattern.match(str(val)):
+            val = int(val)
+        if  float_number_pattern.match(str(val)):
+            val = float(val)
+        return {key:val}
+    elif  filter.find('<=') != -1:
+        key, val = filter.split('<=')
+        if  int_number_pattern.match(str(val)):
+            val = int(val)
+        if  float_number_pattern.match(str(val)):
+            val = float(val)
+        return {key: {'$lte': val}}
+    elif  filter.find('<') != -1:
+        key, val = filter.split('<')
+        if  int_number_pattern.match(str(val)):
+            val = int(val)
+        if  float_number_pattern.match(str(val)):
+            val = float(val)
+        return {key: {'$lt': val}}
+    elif  filter.find('>=') != -1:
+        key, val = filter.split('>=')
+        if  int_number_pattern.match(str(val)):
+            val = int(val)
+        if  float_number_pattern.match(str(val)):
+            val = float(val)
+        return {key: {'$gte': val}}
+    elif  filter.find('>') != -1:
+        key, val = filter.split('>')
+        if  int_number_pattern.match(str(val)):
+            val = int(val)
+        if  float_number_pattern.match(str(val)):
+            val = float(val)
+        return {key: {'$gt': val}}
+    else:
+        return {filter:{'$exists':True}}
+
 def size_format(uinput):
     """
     Format file size utility, it converts file size into KB, MB, GB, TB, PB units

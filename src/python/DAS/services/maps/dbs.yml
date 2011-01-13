@@ -30,6 +30,7 @@ params : {
 }
 daskeys : [
     {"key":"dataset", "map":"dataset.name", "pattern":""},
+    {"key":"primary_dataset", "map":"primary_dataset.name", "pattern":""},
     {"key":"release", "map":"release.name", "pattern":"CMSSW_.*"},
 ]
 das2api : [

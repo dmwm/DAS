@@ -30,7 +30,7 @@ from DAS.core.das_keylearning import DASKeyLearning
 from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
-from DAS.utils.utils import genkey, getarg, unique_filter
+from DAS.utils.utils import genkey, getarg, unique_filter, parse_filters
 from DAS.utils.das_timer import das_timer, get_das_timer
 
 # DAS imports
@@ -356,9 +356,7 @@ class DASCore(object):
                 query['fields'] = fields
             # adjust query if we got a filter
             if  query.has_key('filters'):
-                for filter in query.get('filters'):
-                    query['spec'][filter] = {'$exists':True}
-
+                query['spec'].update(parse_filters(query.get('filters')))
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
         elif aggregators:

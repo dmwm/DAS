@@ -47,7 +47,6 @@ def load(source):
     provide this method. The load method works on file-descriptor
     objects.
     """
-    return json.load(source)
     if  _module == 'json':
         return json.load(source)
     elif _module == 'cjson':
@@ -92,12 +91,12 @@ class JSONEncoder(object):
     JSONEncoder wrapper
     """
     def __init__(self, **kwargs):
-        self.encoder = json.JSONEncoder(kwargs)
+        self.encoder = json.JSONEncoder(**kwargs)
         self.kwargs = kwargs
 
     def encode(self, idict):
         """Decode JSON method"""
-        if  _module == 'cjson':
+        if  _module == 'cjson' and not self.kwargs:
             return cjson.encode(idict)
         elif _module == 'yajl':
             return yajl.Encoder(self.kwargs).encode(idict)
@@ -111,16 +110,17 @@ class JSONDecoder(object):
     JSONDecoder wrapper
     """
     def __init__(self, **kwargs):
-        self.decoder = json.JSONDecoder(kwargs)
+        self.decoder = json.JSONDecoder(**kwargs)
+        self.kwargs = kwargs
 
-    def decode(self, idict):
+    def decode(self, istring):
         """Decode JSON method"""
-        if  _module == 'cjson':
-            return cjson.decode(idict)
+        if  _module == 'cjson' and not self.kwargs:
+            return cjson.decode(istring)
         elif _module == 'yajl':
-            return jajl.Decoder(self.kwargs).decode(idict)
-        return self.decoder.decode(idict)
+            return yajl.Decoder(self.kwargs).decode(istring)
+        return self.decoder.decode(istring)
 
-    def raw_decode(self, idict):
-        return self.decoder.raw_decode(idict)
+    def raw_decode(self, istring):
+        return self.decoder.raw_decode(istring)
 

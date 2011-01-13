@@ -35,7 +35,7 @@ class testQLParser(unittest.TestCase):
         self.assertEqual(expect, result)
 
         query  = "site=New York"
-        expect = {'fields':None, 'spec':{'site':'New York'}}
+        expect = {'fields':['site'], 'spec':{'site':'New York'}}
         result = parser(query, self.daskeys, self.operators)
         self.assertEqual(expect, result)
 
@@ -52,7 +52,7 @@ class testQLParser(unittest.TestCase):
     def test_parser2(self):
         """Test parser function w/ filters"""
         query  = "lon=1 | grep lon.name | sum(lon.name)"
-        expect = {'fields':None, 'spec':{'lon':1}, 
+        expect = {'fields':['lon'], 'spec':{'lon':1}, 
                   'filters':['lon.name'],
                   'aggregators':[('sum', 'lon.name')]}
         result = parser(query, self.daskeys, self.operators)

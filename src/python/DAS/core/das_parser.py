@@ -21,6 +21,7 @@ from DAS.utils.utils import adjust_value, convert2date, das_dateformat
 from DAS.utils.regex import key_attrib_pattern
 from DAS.core.das_parsercache import DASParserDB, PARSERCACHE_NOTFOUND
 from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
+from DAS.utils.regex import int_number_pattern, float_number_pattern
 import DAS.utils.jsonwrapper as json
 
 def add_spaces(query):

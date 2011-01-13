@@ -12,6 +12,8 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_mapping_db import DASMapping
 
+from pymongo.connection import Connection
+
 class testDASMapping(unittest.TestCase):
     """
     A test class for the DAS mappingdb class
@@ -27,8 +29,17 @@ class testDASMapping(unittest.TestCase):
         logger   = DASLogger(verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
-        config['mappingdb'] = dict(dburi=dburi,
-            dbname='test_mapping', collname='db')
+        dbname   = 'test_mapping'
+        collname = 'db'
+        config['mappingdb'] = dict(dburi=dburi, dbname=dbname, collname=collname)
+        # add some maps to mapping db
+        conn = Connection(dburi)
+        conn.drop_database(dbname)
+        coll = conn[dbname][collname]
+        self.pmap = {"presentation": {"block":[{"ui": "Block name", "das": "block.name"}, 
+        {"ui": "Block size", "das": "block.size"}]}}
+        coll.insert(self.pmap)
+
         self.mgr = DASMapping(config)
 
     def tearDown(self):
@@ -146,9 +157,9 @@ class testDASMapping(unittest.TestCase):
     def test_presentation(self):                          
         """test presentation method"""
         self.mgr.create_db()
-        rec = {'presentation':{'block':['block.name', 'block.size'], 'size':['size.name']}}
-        self.mgr.add(rec)
-        expect = ['block.name', 'block.size']
+#        rec = {'presentation':{'block':['block.name', 'block.size'], 'size':['size.name']}}
+#        self.mgr.add(rec)
+        expect = self.pmap['presentation']['block']
         result = self.mgr.presentation('block')
         self.assertEqual(expect, result)
 

@@ -67,14 +67,18 @@ RE_FILTERCMD = re.compile(r"^.*?\|\s*(\w+)\s+(?:[\w.]+\s*,\s*)*([\w.]+)$")
 
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
-def make_links(links, values):
+def make_links(links, value):
     """
-    Make new link for provided key/values.
+    Make new link for provided query links and passed value.
     """
+    if  isinstance(value, list):
+        values = value
+    else:
+        values = [value]
     for link in links:
         name, query = link.items()
         for val in values:
-            dasquery = link['query'] % val
+            dasquery = link['query'] % value
             uinput = urllib.quote(dasquery)
             url = '/das/request?input=%s' % uinput
             if  link['name']:
@@ -95,12 +99,13 @@ def adjust_values(func, gen):
     """
     rdict = {}
     for uikey, value in [k for k, g in groupby(gen)]:
-#        val = str(quote(value))
         val = quote(value)
         if  rdict.has_key(uikey):
-            existing_list = rdict[uikey]
-            if  val not in existing_list:
-                rdict[uikey] = existing_list + [val]
+            existing_val = rdict[uikey]
+            if  not isinstance(existing_val, list):
+                existing_val = [existing_val]
+            if  val not in existing_val:
+                rdict[uikey] = existing_val + [val]
         else:
             rdict[uikey] = val
     page = ""
@@ -116,7 +121,7 @@ def adjust_values(func, gen):
                         links[kkk] = vvv
             elif  isinstance(val, list):
                 if  isinstance(val[0], str):
-                    value = ','.join(val)
+                    value = ', '.join(val)
                 else:
                     value = val
             elif  key.find('size') != -1:
@@ -133,7 +138,7 @@ def adjust_values(func, gen):
             page += "<b>%s:</b> %s<br />" % (key, val)
     if  links:
         page += "<b>Links:</b> "
-        page += ','.join(links.values()) + '<br />'
+        page += ', '.join(links.values()) + '<br />'
     return page
 
 def das_json(record, pad=''):

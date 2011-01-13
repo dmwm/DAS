@@ -35,6 +35,11 @@ performed stress tests and code audit DAS servers.
   - add YAJL (Yet Another JSON Library) as experimental JSON module, see
     http://lloyd.github.com/yajl/ and its python binding. 
   - add keylearning and autocompletion, ticket #50
+  - add parse_filter, parse_filters functions to parse input list of filters,
+    they used by core/mongocache to yield/count results when filters are passed
+    DAS-QL. This addresses several Oli use cases when multiple filters will
+    be passed to DAS query, e.g.
+    file dataset=/a/b/c | grep file.size>1, file.size<100
 
 - 0.5.7
 

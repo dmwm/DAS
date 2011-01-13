@@ -37,21 +37,21 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "zip=10000 | grep zip.Placemark.address | count(zip.Placemark.address)"
-        mongo = {'fields': None, 'spec': {'zip': 10000}, 
+        mongo = {'fields': ['zip'], 'spec': {'zip': 10000}, 
                  'filters': ['zip.Placemark.address'],
                  'aggregators': [('count', 'zip.Placemark.address')] }
         self.queries[query] = mongo
 
         query = "city=Ithaca"
-        mongo = {'fields': None, 'spec': {'city': 'Ithaca'}}
+        mongo = {'fields': ['city'], 'spec': {'city': 'Ithaca'}}
         self.queries[query] = mongo
 
         query = "zip=14850"
-        mongo = {'fields': None, 'spec': {'zip': 14850}}
+        mongo = {'fields': ['zip'], 'spec': {'zip': 14850}}
         self.queries[query] = mongo
 
         query = "ip=137.138.141.145 | grep ip.City"
-        mongo = {'fields': None, 'spec': {'ip': '137.138.141.145'}, 'filters': ['ip.City']}
+        mongo = {'fields': ['ip'], 'spec': {'ip': '137.138.141.145'}, 'filters': ['ip.City']}
         self.queries[query] = mongo
 
         query = 'latitude=11.1 longitude=-72'
@@ -59,7 +59,7 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "site=T1_CH_CERN"
-        mongo = {'fields': None, 'spec': {'site': 'T1_CH_CERN'}}
+        mongo = {'fields': ['site'], 'spec': {'site': 'T1_CH_CERN'}}
         self.queries[query] = mongo
 
         query = "dataset"
@@ -67,15 +67,15 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "run=20853"
-        mongo = {'fields': None, 'spec': {'run': 20853}}
+        mongo = {'fields': ['run'], 'spec': {'run': 20853}}
         self.queries[query] = mongo
 
         query = "run in [20853,20859]"
-        mongo = {'fields': None, 'spec': {'run': {'$in': [20853, 20859]}}}
+        mongo = {'fields': ['run'], 'spec': {'run': {'$in': [20853, 20859]}}}
         self.queries[query] = mongo
 
         query = "run between [20853,20859]"
-        mongo = {'fields': None, 'spec': {'run': {'$gte': 20853, '$lte': 20859}}}
+        mongo = {'fields': ['run'], 'spec': {'run': {'$gte': 20853, '$lte': 20859}}}
         self.queries[query] = mongo
 
         query = "file block=123 | grep file.size | sum(file.size)"
@@ -84,7 +84,7 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "block=/a/b/RECO#9f5c396b-b6a1"
-        mongo = {'fields': None, 'spec': {'block': '/a/b/RECO#9f5c396b-b6a1'}}
+        mongo = {'fields': ['block'], 'spec': {'block': '/a/b/RECO#9f5c396b-b6a1'}}
         self.queries[query] = mongo
 
         query = "block dataset=/W/a_2/RECO"
@@ -110,39 +110,39 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
         
         query = "city = camelCase"
-        mongo = {'fields': None, 'spec':{'city': 'camelCase'}}
+        mongo = {'fields': ['city'], 'spec':{'city': 'camelCase'}}
         self.queries[query] = mongo
         
         query = "city = lowercase"
-        mongo = {'fields': None, 'spec':{'city': 'lowercase'}}
+        mongo = {'fields': ['city'], 'spec':{'city': 'lowercase'}}
         self.queries[query] = mongo
         
         query = "city = 'two words'"
-        mongo = {'fields': None, 'spec':{'city': 'two words'}}
+        mongo = {'fields': ['city'], 'spec':{'city': 'two words'}}
         self.queries[query] = mongo
         
         query = 'city = "two words"'
-        mongo = {'fields': None, 'spec':{'city': 'two words'}}
+        mongo = {'fields': ['city'], 'spec':{'city': 'two words'}}
         self.queries[query] = mongo
         
         #query=DASKEY
         query = 'city = dataset'
-        mongo = {'fields': None, 'spec':{'city': 'dataset'}}
+        mongo = {'fields': ['city'], 'spec':{'city': 'dataset'}}
         self.queries[query] = mongo
         
         #query=DASKEYtext
         query = 'city = datasetPostfix'
-        mongo = {'fields': None, 'spec':{'city': 'datasetPostfix'}}
+        mongo = {'fields': ['city'], 'spec':{'city': 'datasetPostfix'}}
         self.queries[query] = mongo
         
         #query=OPERATORtext (I don't expect query=OPERATOR to ever work)
         query = 'city = betweenPostfix'
-        mongo = {'fields': None, 'spec':{'city': 'betweenPostfix'}}
+        mongo = {'fields': ['city'], 'spec':{'city': 'betweenPostfix'}}
         self.queries[query] = mongo
 
         # query w/ filter which contains a key/value pair
         query = 'block=/a/b/c | grep site=T1 '
-        mongo = {'fields': None, 'spec': {'block': '/a/b/c'}, 'filters': ['site=T1']}
+        mongo = {'fields': ['block'], 'spec': {'block': '/a/b/c'}, 'filters': ['site=T1']}
         self.queries[query] = mongo
 
     def test_lexer(self):

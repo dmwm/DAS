@@ -28,6 +28,7 @@ from DAS.utils.utils import genkey, convert_dot_notation, aggregator
 from DAS.utils.utils import adjust_mongo_keyvalue
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection
+from DAS.utils.utils import parse_filters
 import DAS.utils.jsonwrapper as json
 
 # monogo db modules
@@ -483,8 +484,7 @@ class DASMongocache(object):
             prim_key = re.compile("^%s" % key) 
             spec.update({'das.primary_key': prim_key})
         if  filters:
-            for filter in filters:
-                spec.update({filter:{'$exists':True}})
+            spec.update(parse_filters(filters))
         self.logger.info("DASMongocache::nresults(%s, coll=%s) spec=%s" \
                 % (query, collection, spec))
         for key, val in spec.items():

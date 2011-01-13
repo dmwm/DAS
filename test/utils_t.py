@@ -22,11 +22,59 @@ from DAS.utils.utils import delete_elem, plist_parser, unique_filter
 from DAS.utils.utils import DotDict, filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day
+from DAS.utils.utils import parse_filters, parse_filter
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_parse_filter(self):
+        """Test parse_filters function"""
+        filters = ['monitor', 'file.size=1']
+        expect  = {'monitor': {'$exists':True}, 'file.size': 1}
+        result  = parse_filters(filters)
+        self.assertEqual(expect, result)
+
+        filters = ['file.size>1', 'file.size=1']
+        self.assertRaises(Exception, parse_filters, filters)
+
+        filters = ['file.size>1', 'file.size<=10']
+        expect  = {'file.size': {'$gt':1, '$lte':10}}
+        result  = parse_filters(filters)
+        self.assertEqual(expect, result)
+
+    def test_parse_filter(self):
+        """Test parse_filter function"""
+        filter = 'monitor'
+        result = parse_filter(filter)
+        expect = {filter: {'$exists':True}}
+        self.assertEqual(expect, result)
+
+        filter = 'file.size=1'
+        result = parse_filter(filter)
+        expect = {'file.size': 1}
+        self.assertEqual(expect, result)
+
+        filter = 'file.size<1'
+        result = parse_filter(filter)
+        expect = {'file.size': {'$lt': 1}}
+        self.assertEqual(expect, result)
+
+        filter = 'file.size<=1'
+        result = parse_filter(filter)
+        expect = {'file.size': {'$lte': 1}}
+        self.assertEqual(expect, result)
+
+        filter = 'file.size>1'
+        result = parse_filter(filter)
+        expect = {'file.size': {'$gt': 1}}
+        self.assertEqual(expect, result)
+
+        filter = 'file.size>=1'
+        result = parse_filter(filter)
+        expect = {'file.size': {'$gte': 1}}
+        self.assertEqual(expect, result)
+
     def test_next_day(self):
         """Test next_day function"""
         result = next_day(20101231)
@@ -52,8 +100,9 @@ class testUtils(unittest.TestCase):
         self.assertRaises(Exception, prev_day, 123)
 
     def test_genkey(self):
-        d1 = {'fields': None, 'spec': [{'key': u'dataset.name', 'value': u'"/TTbar_1jet_Et30-alpgen/Winter09_IDEAL_V12_FastSim_v1/GEN-SIM-DIGI-RECO"'}]}
-        d2 = {'fields': None, 'spec': [{'value': u'"/TTbar_1jet_Et30-alpgen/Winter09_IDEAL_V12_FastSim_v1/GEN-SIM-DIGI-RECO"', 'key': u'dataset.name'}]}
+        dataset = "/a/b/c"
+        d1 = {'fields': None, 'spec': [{'key': 'dataset.name', 'value': dataset}]}
+        d2 = {'fields': None, 'spec': [{'value': dataset, 'key': 'dataset.name'}]}
         self.assertEqual(genkey(d1), genkey(d2))
     
     def test_expire_timestamp(self):
