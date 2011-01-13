@@ -130,7 +130,6 @@ class RunRegistryService(DASAbstractService):
                     raise Exception(msg)
                 run_time = '>= %s and < %s' % (date1, date2)
                 _query = {'runStartTime': run_time}
-        print "\n### query", _query
         if  not _query:
             msg = 'Unable to match input parameters with input query'
             raise Exception(msg)

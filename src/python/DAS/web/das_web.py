@@ -78,7 +78,7 @@ def make_links(links, value):
     for link in links:
         name, query = link.items()
         for val in values:
-            dasquery = link['query'] % value
+            dasquery = link['query'] % val
             uinput = urllib.quote(dasquery)
             url = '/das/request?input=%s' % uinput
             if  link['name']:
@@ -86,7 +86,7 @@ def make_links(links, value):
             else:
                 key = val
             url = """<a href="%s">%s</a>""" % (quote(url), key)
-            yield (key, url)
+            yield (key, val, url)
 
 def adjust_values(func, gen):
     """
@@ -116,9 +116,13 @@ def adjust_values(func, gen):
             daskey, _, link = lookup
             if  daskey and link:
                 value = val
-                for kkk, vvv in make_links(link, val):
+                for kkk, vvv, lll in make_links(link, val):
                     if  not links.has_key(kkk):
-                        links[kkk] = vvv
+                        links[kkk] = [(daskey, vvv, lll)]
+                    else:
+                        existing   = links[kkk]
+                        links[kkk] = existing + [(daskey, vvv, lll)]
+
             elif  isinstance(val, list):
                 if  isinstance(val[0], str):
                     value = ', '.join(val)
@@ -140,7 +144,20 @@ def adjust_values(func, gen):
             page += "<b>%s:</b> %s<br />" % (key, val)
     if  links:
         page += "<b>Links:</b> "
-        page += ', '.join(links.values()) + '<br />'
+        link_page = ""
+        for key, val in links.items():
+            if  len(val) == 1:
+                _, _, link = val[0]
+                if  link_page:
+                    link_page += ', '
+                link_page += link
+            else:
+                for item in val:
+                    daskey, value, link = item
+                    if  link_page:
+                        link_page += ', '
+                    link_page += "%s (%s=%s)" % (link, daskey, value)
+        page += link_page + '<br />'
     return page
 
 def das_json(record, pad=''):
