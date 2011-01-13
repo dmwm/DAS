@@ -476,12 +476,13 @@ class DASMongocache(object):
         fields = query.get('fields', None)
         # to cover the case of one key=value pair, e.g. site=T1,
         # to return only records associated with requested key (site and not
-        # blocks) loop over spec keys and update spec with primary key
-        if  len(spec.keys()) == 1 and fields and len(fields) == 1:
-            key = spec.keys()[0].split('.')[0]
-            if  key == fields[0]:
-                prim_key = re.compile("^%s" % key) 
-                spec.update({'das.primary_key': prim_key})
+        # blocks) loop over fields and update spec with primary key constructed
+        # from a field key
+        if  fields:
+            for field in fields:
+                if  not spec.has_key(field):
+                    prim_key = re.compile("^%s" % field) 
+                    spec.update({'das.primary_key': prim_key})
 
         # always look-up non-empty records
         spec.update({"das.empty_record":0})
@@ -493,7 +494,9 @@ class DASMongocache(object):
         for key, val in spec.items():
             if  val == '*':
                 del spec[key]
-        return col.find(spec=spec, fields=fields).count()
+        # usage of fields in find doesn't account for counting, since it
+        # is a view over records found with spec, so we don't need to use it.
+        return col.find(spec=spec).count()
 
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc', 
                         collection='merge', adjust=True):
