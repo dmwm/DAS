@@ -144,6 +144,11 @@ class DASPLY(object):
         if re.match(r'das_id', t.value):
             t.type = 'DASKEY'
             return t
+        # 4. records is also a DASKEY
+        if re.match(r'records', t.value):
+            t.type = 'DASKEY'
+            return t
+        
         
         # strip quotation marks, if included
         # anything in quotation marks can't have been a
@@ -352,5 +357,9 @@ def ply2mongo(query):
         else:
             mongodict['fields'] = None
     mongodict['spec'] = spec
+    # VERY SPECIAL case. If user asks to look-up all records, by using
+    # records keyword we clean-up fields in mongo query.
+    if  mongodict['fields'] == ['records']:
+        mongodict['fields'] = None
     return mongodict
 

@@ -163,6 +163,35 @@ are equivalent.
 
 <ul>
 <li>
+Can I use conditions in filters?
+</li>
+</ul>
+<p>
+Yes you can, here is an example:
+<div class="example">
+file dataset=/a/b/c | grep file.size>1, file.size<100
+</div>
+</p>
+
+<ul>
+<li>
+How do I combine conditions or specify multiple DAS keys?
+</li>
+</ul>
+<p>
+Yes, you can, the following forms
+<div class="example">
+site=T1_CH_CERN block=/a/b/c
+</div>
+or
+<div class="example">
+site=T1_CH_CERN, block=/a/b/c
+</div>
+are equivalent.
+</p>
+
+<ul>
+<li>
 Does DAS support logical operators for multiple conditions?
 </li>
 </ul>

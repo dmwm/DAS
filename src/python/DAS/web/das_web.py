@@ -130,6 +130,8 @@ def adjust_values(func, gen):
                 value = int(val)
             else:
                 value = val
+            if  isinstance(value, list) and isinstance(value[0], str):
+                value = ', '.join(value)
             page += "<b>%s:</b> %s<br />" % (key, value)
         else:
             if  key == 'result' and isinstance(val, dict) and \

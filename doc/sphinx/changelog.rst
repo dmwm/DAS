@@ -40,6 +40,11 @@ performed stress tests and code audit DAS servers.
     DAS-QL. This addresses several Oli use cases when multiple filters will
     be passed to DAS query, e.g.
     file dataset=/a/b/c | grep file.size>1, file.size<100
+  - add special DAS key records, which can be used to look-up records regarless
+    of condition/filter content, e.g. the DAS query site=T1_CH_CERN only shows
+    site records, while other info can be pulled to DAS. So to look-up all records
+    for given condition user can use records site=T1_CH_CERN
+  - remove obsolete code from das_parser.py
 
 - 0.5.7
 

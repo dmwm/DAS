@@ -153,7 +153,7 @@ class DASCore(object):
         """
         Return map of data service keys
         """
-        _keys = []
+        _keys = ['records']
         for values in self.service_keys.values():
             for key in values:
                 if  key not in _keys:
