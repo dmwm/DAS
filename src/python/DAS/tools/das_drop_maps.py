@@ -6,7 +6,6 @@ dump them on stdout
 """
 __author__ = "Valentin Kuznetsov"
 
-import sys
 import json
 from optparse import OptionParser
 from DAS.services.map_reader import read_service_map
@@ -21,7 +20,8 @@ class DASOptionParser:
              default=None , dest="umap", help="specify uri map file")
         self.parser.add_option("--notation-map", action="store", type="string",
              default=None , dest="nmap", help="specify notation map file")
-        self.parser.add_option("--presentation-map", action="store", type="string",
+        self.parser.add_option("--presentation-map", action="store",
+             type="string",
              default=None , dest="pmap", help="specify presentation map file")
     def get_opt(self):
         """
@@ -31,14 +31,13 @@ class DASOptionParser:
 
 def nooutput(results):
     """Just iterate over generator, but don't print it out"""
-    for row in results:
+    for _row in results:
         pass
-#
-# main
-#
-if __name__ == '__main__':
-    optManager  = DASOptionParser()
-    (opts, args) = optManager.get_opt()
+
+def main():
+    """Main function"""
+    opt_mgr = DASOptionParser()
+    (opts, _args) = opt_mgr.get_opt()
 
     if  opts.umap:
         for rec in read_service_map(opts.umap, field='uri'):
@@ -52,3 +51,8 @@ if __name__ == '__main__':
         for rec in read_service_map(opts.pmap, field='presentation'):
             print json.dumps(rec)
 
+#
+# main
+#
+if __name__ == '__main__':
+    main()
