@@ -32,11 +32,13 @@ daskeys : [
     {"key":"dataset", "map":"dataset.name", "pattern":""},
     {"key":"primary_dataset", "map":"primary_dataset.name", "pattern":""},
     {"key":"release", "map":"release.name", "pattern":"CMSSW_.*"},
+    {"key":"tier", "map":"tier.name", "pattern":"[A-Z].*"},
 ]
 das2api : [
     {"das_key":"dataset.name", "api_param":"processed_datatset_name_pattern", "pattern":""},
     {"das_key":"primary_dataset.name", "api_param":"primary_datatset_name_pattern", "pattern":""},
     {"das_key":"release.name", "api_param":"app_version", "pattern":"CMSSW_.*"},
+    {"das_key":"tier.name", "api_param":"data_tier_name_pattern", "pattern":"[A-Z].*"},
 ]
 ---
 urn : listDatasetSummary

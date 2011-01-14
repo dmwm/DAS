@@ -10,6 +10,8 @@ performed stress tests and code audit DAS servers.
 - 0.5.9
 
   - fix issue with <,> operators and numeric valus in filters
+  - add tier into DBS listProcessedDatasets API as input parameter, so user
+    can query as "dataset primary_dataset=ZJetToEE_Pt* tier=*GEN*"
 
 - 0.5.8
 
