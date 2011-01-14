@@ -7,6 +7,10 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.5.9
+
+  - fix issue with <,> operators and numeric valus in filters
+
 - 0.5.8
 
   - Finish work to make presentation layer more interactive, ticket #880

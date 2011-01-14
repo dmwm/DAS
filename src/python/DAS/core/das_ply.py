@@ -80,6 +80,7 @@ class DASPLY(object):
         'LPAREN',
         'RPAREN',
         'OPERATOR',
+        'FILTER_OPERATOR',
         'VALUE',
         'NUMBER',
         'DATE',
@@ -88,6 +89,7 @@ class DASPLY(object):
     ]
 
     t_OPERATOR = r'='
+    t_FILTER_OPERATOR = r'>|<|<=|>='
     t_PIPE = r'\|'
     t_COMMA    = r'\,'
     t_LSQUARE = r'\['
@@ -241,11 +243,14 @@ class DASPLY(object):
 
     def p_list_for_filter(self, p):
         """oneexp : DASKEY OPERATOR VALUE
+                  | DASKEY OPERATOR NUMBER
+                  | DASKEY FILTER_OPERATOR VALUE
+                  | DASKEY FILTER_OPERATOR NUMBER
                   | DASKEY"""
         val = ''
         for idx in range(0, len(p)):
             if  p[idx]:
-                val += p[idx]
+                val += str(p[idx])
         p[0] = [val]
 
     def p_list_for_filter2(self, p):

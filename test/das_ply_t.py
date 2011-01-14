@@ -153,6 +153,12 @@ class testDASPLY(unittest.TestCase):
         mongo = {'fields': ['block'], 'spec': {'block': '/a/b/c'}, 'filters': ['site=T1']}
         self.queries[query] = mongo
 
+        # query w/ filter which contains a filter conditions
+        query = 'run dataset=/a/b/c | grep run.run_number>1, run.run_number<10 '
+        mongo = {'fields': ['run'], 'spec': {'dataset': '/a/b/c'}, 
+                        'filters': ['run.run_number>1', 'run.run_number<10']}
+        self.queries[query] = mongo
+
     def test_lexer(self):
         """Test DAS PLY lexer"""
         for query, expect in self.queries.items():

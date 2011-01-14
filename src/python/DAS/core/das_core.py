@@ -351,7 +351,9 @@ class DASCore(object):
                     query['spec'][key.strip()] = val.strip()
                 else:
                     if  filter not in fields:
-                        fields.append(filter)
+                        if  filter.find('=') != -1 and filter.find('<') != -1\
+                        and filter.find('>') != -1:
+                            fields.append(filter)
             if  fields:
                 query['fields'] = fields
             # adjust query if we got a filter

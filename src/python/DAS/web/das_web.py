@@ -124,7 +124,7 @@ def adjust_values(func, gen):
                         links[kkk] = existing + [(daskey, vvv, lll)]
 
             elif  isinstance(val, list):
-                if  isinstance(val[0], str):
+                if  isinstance(val[0], str) or isinstance(val[0], unicode):
                     value = ', '.join(val)
                 else:
                     value = val
