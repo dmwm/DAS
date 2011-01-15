@@ -12,6 +12,8 @@ performed stress tests and code audit DAS servers.
   - fix issue with <,> operators and numeric valus in filters
   - add tier into DBS listProcessedDatasets API as input parameter, so user
     can query as "dataset primary_dataset=ZJetToEE_Pt* tier=*GEN*"
+  - DBS2 API provides typos in their output, e.g. primary_datatset, processed_datatset,
+    add those typos into DAS map to make those attributes queriable.
 
 - 0.5.8
 
