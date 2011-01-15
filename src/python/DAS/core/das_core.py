@@ -342,6 +342,7 @@ class DASCore(object):
             fields  = query['fields']
             if  not fields or not isinstance(fields, list):
                 fields = []
+            new_fields = []
             for filter in filters:
                 if  filter == 'unique':
                     unique = True
@@ -353,9 +354,14 @@ class DASCore(object):
                     if  filter not in fields:
                         if  filter.find('=') == -1 and filter.find('<') == -1\
                         and filter.find('>') == -1:
-                            fields.append(filter)
-            if  fields:
-                query['fields'] = fields
+                            new_fields.append(filter)
+            if  new_fields:
+                query['fields'] = new_fields
+            else:
+                if  fields:
+                    query['fields'] = fields
+                else:
+                    query['fields'] = None
             # adjust query if we got a filter
             if  query.has_key('filters'):
                 query['spec'].update(parse_filters(query.get('filters')))

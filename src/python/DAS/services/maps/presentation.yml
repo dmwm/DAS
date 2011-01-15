@@ -27,6 +27,8 @@ dataset : [
         {"das":"dataset.size", "ui":"Dataset size"}, 
         {"das":"dataset.primary_datatset_name", "ui":"Primary dataset"}, 
         {"das":"dataset.processed_datatset_name", "ui":"Processed dataset"}, 
+        {"das":"dataset.primary_dataset_name", "ui":"Primary dataset"}, 
+        {"das":"dataset.processed_dataset_name", "ui":"Processed dataset"}, 
         {"das":"dataset.physics_group_name", "ui":"Physics group"}, 
         {"das":"dataset.global_tag", "ui":"Tag"},
         {"das":"dataset.xtcrosssection", "ui":"Cross section"},
