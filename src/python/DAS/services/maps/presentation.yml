@@ -80,6 +80,12 @@ run_status: [
         {"das":"run.run_number", "ui":"Run number"},
         {"das":"run.start_time", "ui":"Start time"},
         ],
+lumi : [
+        {"das": "lumi.run_number", "ui": "Run number"},
+        {"das": "lumi.lumi", "ui": "Luminosiy number"},
+        {"das": "lumi.start_event", "ui": "Start event"},
+        {"das": "lumi.end_event", "ui": "End event"},
+        ],
 tier : [
         {"das":"tier.error", "ui":"Error"}, 
         {"das":"tier.httperror", "ui":"Reason"}, 

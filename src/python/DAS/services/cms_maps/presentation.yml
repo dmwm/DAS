@@ -27,6 +27,8 @@ dataset : [
         {"das":"dataset.size", "ui":"Dataset size"}, 
         {"das":"dataset.primary_datatset_name", "ui":"Primary dataset"}, 
         {"das":"dataset.processed_datatset_name", "ui":"Processed dataset"}, 
+        {"das":"dataset.primary_dataset_name", "ui":"Primary dataset"}, 
+        {"das":"dataset.processed_dataset_name", "ui":"Processed dataset"}, 
         {"das":"dataset.physics_group_name", "ui":"Physics group"}, 
         {"das":"dataset.global_tag", "ui":"Tag"},
         {"das":"dataset.xtcrosssection", "ui":"Cross section"},
@@ -37,6 +39,7 @@ block : [
         {"das":"block.httperror", "ui":"Reason"}, 
         {"das":"block.name", "ui":"Block name",
          "link":[
+#                 {"name":"Dataset", "query":"dataset block=%s"},
                  {"name":"Files", "query":"file block=%s"},
                 ]}, 
         {"das":"block.size", "ui":"Block size"},
@@ -48,6 +51,7 @@ file : [
         {"das":"file.httperror", "ui":"Reason"}, 
         {"das":"file.name", "ui":"File name",
          "link":[
+#                 {"name": "Dataset", "query": "dataset file=%s"},
                  {"name": "Files", "query": "file file=%s"},
                 ]}, 
         {"das":"file.size", "ui":"File size"},
@@ -57,6 +61,7 @@ file : [
 run : [
         {"das":"run.run_number", "ui":"Run number",
          "link":[
+#                 {"name":"Datasets", "query": "dataset run=%s"},
                  {"name":"Run", "query": "run run=%s"},
                 ]}, 
         {"das":"run.primary_dataset", "ui":"Primary dataset"}, 
@@ -75,11 +80,18 @@ run_status: [
         {"das":"run.run_number", "ui":"Run number"},
         {"das":"run.start_time", "ui":"Start time"},
         ],
+lumi : [
+        {"das": "lumi.run_number", "ui": "Run number"},
+        {"das": "lumi.lumi", "ui": "Luminosiy number"},
+        {"das": "lumi.start_event", "ui": "Start event"},
+        {"das": "lumi.end_event", "ui": "End event"},
+        ],
 tier : [
         {"das":"tier.error", "ui":"Error"}, 
         {"das":"tier.httperror", "ui":"Reason"}, 
         {"das":"tier.name", "ui":"Tier name", 
          "link":[
+#                 {"name":"Datasets", "query": "dataset tier=%s"},
                 ]}, 
         ],
 release: [

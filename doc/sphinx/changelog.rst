@@ -14,6 +14,7 @@ performed stress tests and code audit DAS servers.
     can query as "dataset primary_dataset=ZJetToEE_Pt* tier=*GEN*"
   - DBS2 API provides typos in their output, e.g. primary_datatset, processed_datatset,
     add those typos into DAS map to make those attributes queriable.
+  - Add lumi into DBS map, as well as its presentation UI keys
 
 - 0.5.8
 
