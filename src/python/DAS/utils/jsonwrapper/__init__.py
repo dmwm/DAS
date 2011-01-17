@@ -37,7 +37,7 @@ def loads(idict, **kwargs):
     elif _module == 'cjson':
         return cjson.decode(idict)
     elif _module == 'yajl':
-        return yajl.loads(idict, **kwargs)
+        return yajl.loads(idict)
     else:
         raise Exception("Not support JSON module: %s" % _module)
 
@@ -66,7 +66,7 @@ def dumps(idict, **kwargs):
     elif _module == 'cjson':
         return cjson.encode(idict)
     elif _module == 'yajl':
-        return yajl.dumps(idict, **kwargs)
+        return yajl.dumps(idict)
     else:
         raise Exception("Not support JSON module: %s" % _module)
 
@@ -98,8 +98,8 @@ class JSONEncoder(object):
         """Decode JSON method"""
         if  _module == 'cjson' and not self.kwargs:
             return cjson.encode(idict)
-        elif _module == 'yajl':
-            return yajl.Encoder(self.kwargs).encode(idict)
+        elif _module == 'yajl' and not self.kwargs:
+            return yajl.Encoder().encode(idict)
         return self.encoder.encode(idict)
 
     def iterencode(self, idict):
@@ -117,8 +117,8 @@ class JSONDecoder(object):
         """Decode JSON method"""
         if  _module == 'cjson' and not self.kwargs:
             return cjson.decode(istring)
-        elif _module == 'yajl':
-            return yajl.Decoder(self.kwargs).decode(istring)
+        elif _module == 'yajl' and not self.kwargs:
+            return yajl.Decoder().decode(istring)
         return self.decoder.decode(istring)
 
     def raw_decode(self, istring):

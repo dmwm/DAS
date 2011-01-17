@@ -183,7 +183,7 @@ class DASWebService(DASWebManager):
         loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
-        self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 
+        self.pageviews  = ['xml', 'list', 'json'] 
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
         dasconfig = das_readconfig()
@@ -587,14 +587,11 @@ class DASWebService(DASWebManager):
         web methods
         """
         result  = self.send_request('GET', kwargs)
-        res = []
         if  isinstance(result, str):
             data = json.loads(result)
         else:
             data = result
-        if  data['status'] == 'success':
-            res    = data['data']
-        return res
+        return data
         
     def convert2ui(self, idict):
         """
@@ -672,7 +669,12 @@ class DASWebService(DASWebManager):
         # since it invokes send_request, which by itself invokes
         # DAS core result function and trigger data movement from
         # raw cache into merge cache
-        rows    = self.result(kwargs) # call it before nresults, since
+        result   = self.result(kwargs)
+        if  result['status'] == 'success':
+            rows = result['data']
+        else:
+            rows = []
+        server_cache_time = result.get('ctime')
         total   = self.nresults(kwargs)
         if  total:
             params = {} # will keep everything except idx/limit
@@ -715,6 +717,8 @@ class DASWebService(DASWebManager):
                 page += self.templatepage('das_row', \
                         sanitized_data=data, id=id, rec_id=id)
             page += '</div>'
+        page += '<div align="right">DAS cache server time: %5.3f sec</div>' \
+                % server_cache_time
         return page
 
     @exposedasplist
@@ -722,7 +726,11 @@ class DASWebService(DASWebManager):
         """
         provide DAS XML
         """
-        rows = self.result(kwargs)
+        result   = self.result(kwargs)
+        if  result['status'] == 'success':
+            rows = result['data']
+        else:
+            rows = []
         return rows
 
     @exposedasjson
@@ -730,7 +738,11 @@ class DASWebService(DASWebManager):
         """
         provide DAS JSON
         """
-        rows = self.result(kwargs)
+        result   = self.result(kwargs)
+        if  result['status'] == 'success':
+            rows = result['data']
+        else:
+            rows = []
         return rows
 
     @exposetext
@@ -738,73 +750,16 @@ class DASWebService(DASWebManager):
         """
         provide DAS plain view
         """
-        rows, total, form = self.result(kwargs)
+        result   = self.result(kwargs)
+        if  result['status'] == 'success':
+            rows = result['data']
+        else:
+            rows = []
         page = ""
         for item in rows:
             item  = str(item).replace('[','').replace(']','')
             page += "%s\n" % item.replace("'","")
         return page
-
-    @exposejson
-    @checkargs(DAS_WEB_INPUTS)
-    def yuijson(self, **kwargs):
-        """
-        Provide JSON in YUI compatible format to be used in DynamicData table
-        widget, see
-        http://developer.yahoo.com/yui/examples/datatable/dt_dynamicdata.html
-        """
-        rows = self.result(kwargs)
-        rowlist = []
-        id = 0
-        for row in rows:
-            das = row['das']
-            if  isinstance(das, dict):
-                das = [das]
-            resdict = {}
-            for jdx in range(0, len(das)):
-                item = das[jdx]
-                resdict[id] = id
-                for idx in range(0, len(item['system'])):
-                    api    = item['api'][idx]
-                    system = item['system'][idx]
-                    key    = item['selection_keys'][idx]
-                    data   = row[key]
-                    if  isinstance(data, list):
-                        data = data[idx]
-                    # I need to extract from DAS object the values for UI keys
-                    for item in self.dasmapping.presentation(key):
-                        daskey = item['das']
-                        uiname = item['ui']
-                        if  not resdict.has_key(uiname):
-                            resdict[uiname] = ""
-                        # look at key attributes, which may be compound as well
-                        # e.g. block.replica.se
-                        if  isinstance(data, dict):
-                            result = dict(data)
-                        elif isinstance(data, list):
-                            result = list(data)
-                        else:
-                            result = data
-                        res = ""
-                        try:
-                            for elem in daskey.split('.')[1:]:
-                                if  result.has_key(elem):
-                                    res  = result[elem]
-                                    resdict[uiname] = res
-                        except:
-                            pass
-            if  resdict not in rowlist:
-                rowlist.append(resdict)
-            id += 1
-        idx      = getarg(kwargs, 'idx', 0)
-        limit    = getarg(kwargs, 'limit', 10)
-        total    = len(rowlist) 
-        jsondict = {'recordsReturned': len(rowlist),
-                   'totalRecords': total, 'startIndex':idx,
-                   'sort':'true', 'dir':'asc',
-                   'pageSize': limit,
-                   'records': rowlist}
-        return jsondict
 
     @expose
     @checkargs(DAS_WEB_INPUTS)

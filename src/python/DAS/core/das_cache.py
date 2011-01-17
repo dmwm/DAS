@@ -67,7 +67,10 @@ def worker(query, verbose=None):
     """
     Invokes DAS core call to update the cache for provided query
     """
-    logger  = DummyLogger()
+    if  verbose:
+        logger = DASLogger(verbose=verbose)
+    else:
+        logger = DummyLogger()
     dascore = DASCore(logger=logger, nores=True)
     status  = dascore.call(query)
 
@@ -76,7 +79,10 @@ def worker_w_status(query, verbose=None):
     """
     Invokes DAS core call to update the cache for provided query
     """
-    logger = DummyLogger()
+    if  verbose:
+        logger = DASLogger(verbose=verbose)
+    else:
+        logger = DummyLogger()
     status = 0
     try:
         dascore = DASCore(logger=logger, nores=True)

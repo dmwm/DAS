@@ -225,10 +225,7 @@ def compare_specs(input_query, exist_query):
 
     for key, val1 in spec1.items():
         val2 = spec2[key]
-        if  type(val1) != type(val2) and not isinstance(val1, dict)\
-            and not isinstance(val2, dict):
-            return False
-        elif (isinstance(val1, str) or isinstance(val1, unicode)) and \
+        if (isinstance(val1, str) or isinstance(val1, unicode)) and \
              (isinstance(val2, str) or isinstance(val2, unicode)):
             if  val2.find('*') != -1:
                 val1 = val1.replace('*', '')
@@ -240,6 +237,9 @@ def compare_specs(input_query, exist_query):
                 val2 = val2.replace('*', '')
                 if  val1 != val2:
                     return False
+        elif  type(val1) != type(val2) and not isinstance(val1, dict)\
+            and not isinstance(val2, dict):
+            return False
         elif isinstance(val1, dict) and isinstance(val2, dict):
             if  not compare_dicts(val1, val2):
                 return False

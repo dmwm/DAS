@@ -178,6 +178,12 @@ class testDASMongocache(unittest.TestCase):
         result = compare_specs(input_query, exist_query)
         self.assertEqual(True, result)
 
+        # test that str and unicode will agree
+        input_query = {'spec': {u'api':u'a', u'lfn':'test'}}
+        exist_query = {'spec': {u'api':u'a', u'lfn':u'test'}}
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result)
+
     def test_convert2pattern(self):
         """
         Test how we convert mongo dict with patterns into spec

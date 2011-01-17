@@ -7,6 +7,15 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.5.10
+
+  - add DAS cache server time into the web page, fixes #941
+  - remove obsolete yuijson code from DAS web server
+  - use DASLogger in workers (instead of DummyLogger) when verbosity level is on.
+    This allows to get proper printouts in debug mode.
+  - fix bug in compare_specs, where it was not capable to identify
+    that str value can be equal to unicode value (add unittest for that).
+
 - 0.5.9
 
   - fix issue with <,> operators and numeric valus in filters
