@@ -107,7 +107,8 @@ params : {
      "api":"listDatasetParents", "apiversion": "DBS_2_0_9", "path": "*",
 }
 daskeys : [
-    {"key":"dataset", "map":"dataset.name", "pattern":""}
+    {"key":"parent", "map":"parent.name", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
 ]
 das2api : [
     {"das_key":"dataset.name", "api_param":"path", "pattern":""},
@@ -207,6 +208,7 @@ params : {
      "api":"listFileParents", "apiversion": "DBS_2_0_9", "lfn":"required",
 }
 daskeys : [
+    {"key":"parent", "map":"parent.name", "pattern":""},
     {"key":"file", "map":"file.name", "pattern":""},
 ]
 das2api : [
@@ -279,6 +281,8 @@ notations : [
     {"notation":"processed_dataset", "map":"dataset", "api":""},
     {"notation":"primary_datatset_name", "map":"primary_dataset_name", "api":""},
     {"notation":"processed_datatset_name", "map":"processed_dataset_name", "api":""},
+    {"notation":"processed_dataset_parent", "map":"parent", "api":""},
+    {"notation":"file_parent", "map":"parent", "api":""},
     {"notation":"data_tier", "map":"tier", "api":""},
     {"notation":"path.dataset_path", "map":"name", "api":""},
     {"notation":"name.dataset_path", "map":"name", "api":""},

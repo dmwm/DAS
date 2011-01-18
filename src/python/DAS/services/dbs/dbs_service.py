@@ -29,6 +29,10 @@ class DBSService(DASAbstractService):
             pat = kwds['pattern']
             if  pat[0] == '/':
                 kwds['pattern'] = pat.split('/')[1]
+        if  api == 'listProcessedDatasets':
+            pat = kwds['processed_datatset_name_pattern']
+            if  pat[0] == '/':
+                kwds['processed_datatset_name_pattern'] = pat.split('/')[2]
             
     def parser(self, query, dformat, source, api):
         """

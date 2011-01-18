@@ -19,6 +19,8 @@ performed stress tests and code audit DAS servers.
   - change adjust_params in abstract interface to accept API as well
   - adjust DBS2 plugin to use adjust_params for specific APIs, e.g. listPrimaryDatasets,
     to accept other parameters, fix #934 
+  - add new DAS keyword, parent, and allow parent look-up for dataset/file via
+    appropriate DBS2 APIs
 
 - 0.5.9
 
