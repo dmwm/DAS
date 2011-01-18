@@ -15,6 +15,10 @@ performed stress tests and code audit DAS servers.
     This allows to get proper printouts in debug mode.
   - fix bug in compare_specs, where it was not capable to identify
     that str value can be equal to unicode value (add unittest for that).
+  - classified logger messages, move a lot of info into debug
+  - change adjust_params in abstract interface to accept API as well
+  - adjust DBS2 plugin to use adjust_params for specific APIs, e.g. listPrimaryDatasets,
+    to accept other parameters, fix #934 
 
 - 0.5.9
 
