@@ -21,6 +21,15 @@ class DBSService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
+    def adjust_params(self, api, kwds):
+        """
+        Adjust DBS2 parameters for specific query requests
+        """
+        if  api == 'listPrimaryDatasets':
+            pat = kwds['pattern']
+            if  pat[0] == '/':
+                kwds['pattern'] = pat.split('/')[1]
+            
     def parser(self, query, dformat, source, api):
         """
         DBS data-service parser.

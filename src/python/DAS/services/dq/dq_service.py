@@ -45,13 +45,13 @@ class DQService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def adjust_params(self, args):
+    def adjust_params(self, api, kwds):
         """
         Data-service specific parser to adjust parameters according to
         specifications.
         """
-        for key, val in args.items():
-            args[key] = param_parser(val)
+        for key, val in kwds.items():
+            kwds[key] = param_parser(val)
 
     def parser(self, dformat, source, api):
         """

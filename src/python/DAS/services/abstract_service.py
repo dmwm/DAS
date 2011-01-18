@@ -143,12 +143,6 @@ class DASAbstractService(object):
         host = url.replace('http://', '').split('/')[0]
 
         input_params = params
-        # if necessary the data-service implementation will adjust parameters,
-        # for instance, DQ need to parse the following input
-        # Tracker_Global=GOOD&Tracker_Local1=1
-        # into the following form
-        # [{"Oper": "=", "Name": "Tracker_Global",  "Value": "GOOD"},...]
-        self.adjust_params(params)
 
         # based on provided interface correctly deal with input parameters
         if  self.name == 'dq':
@@ -243,7 +237,7 @@ class DASAbstractService(object):
         msg  = 'DASAbstractService::%s::add_api added to Analytics DB' \
                 % self.name
         msg += ' query=%s, api=%s, args=%s' % (query, api, args)
-        self.logger.info(msg)
+        self.logger.debug(msg)
         header  = dasheader(self.name, query, api, url, args, ctime,
             expire)
         header['lookup_keys'] = self.lookup_keys(api)
@@ -258,12 +252,15 @@ class DASAbstractService(object):
 
         msg  = 'DASAbstractService::%s cache has been updated,\n' \
                 % self.name
-        self.logger.info(msg)
+        self.logger.debug(msg)
 
-    def adjust_params(self, args):
+    def adjust_params(self, api, kwds):
         """
         Data-service specific parser to adjust parameters according to
-        specifications.
+        its specifications. For example, DQ service accepts a string
+        of parameters, rather parameter set, while DBS2 can reuse
+        some parameters for different API, e.g. I can use dataset path
+        to pass to listPrimaryDatasets as primary_dataset pattern.
         """
         pass
 
@@ -438,7 +435,7 @@ class DASAbstractService(object):
                 yield {prim_key:row}
         msg = "DASAbstractService::%s::translator yield %s rows" \
                 % (self.name, count)
-        self.logger.info(msg)
+        self.logger.debug(msg)
 
     def set_misses(self, query, api, genrows):
         """
@@ -464,7 +461,7 @@ class DASAbstractService(object):
                 keys2adjust.append(key)
         msg   = "DASAbstractService::%s::set_misses, adjust keys %s"\
                 % (self.name, keys2adjust)
-        self.logger.info(msg)
+        self.logger.debug(msg)
         count = 1
         if  keys2adjust:
             # adjust of the rows
@@ -509,7 +506,7 @@ class DASAbstractService(object):
                 count += 1
         msg   = "DASAbstractService::%s::set_misses yield %s rows"\
                 % (self.name, count)
-        self.logger.info(msg)
+        self.logger.debug(msg)
             
     def api(self, query):
         """
@@ -577,14 +574,16 @@ class DASAbstractService(object):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
             if  not found:
-                msg = "--- %s reject API %s, parameters don't match, args=%s" \
+                msg  = 'DASAbstractService::apimap\n\n'
+                msg += "--- %s reject API %s, parameters don't match, args=%s" \
                         % (self.name, api, args)
                 self.logger.info(msg)
                 continue
             # check that there is no "required" parameter left in args,
             # since such api will not work
             if 'required' in args.values():
-                msg = "--- %s reject API %s, parameter is required, args=%s" \
+                msg  = 'DASAbstractService::apimap\n\n'
+                msg += "--- %s reject API %s, parameter is required, args=%s" \
                         % (self.name, api, args)
                 self.logger.info(msg)
                 continue
@@ -597,10 +596,17 @@ class DASAbstractService(object):
             # check if analytics db has a similar API call
             if  not self.pass_apicall(query, url, api, args):
                 continue
+
+            self.adjust_params(api, args)
+            msg  = 'DASAbstractService::apimap\n\n'
+            msg += '+++ %s pass API %s, args=%s' % (self.name, api, args)
+            self.logger.info(msg)
+
             msg  = "DASAbstractService::apimap yield "
             msg += "system ***%s***, url=%s, api=%s, args=%s, format=%s, " \
                 % (self.name, url, api, args, format)
             msg += "expire=%s, wild_card=%s" \
                 % (expire, wild)
-            self.logger.info(msg)
+            self.logger.debug(msg)
+
             yield url, api, args, format, expire

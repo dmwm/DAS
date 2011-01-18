@@ -9,10 +9,12 @@ params : {
      "api":"listPrimaryDatasets", "apiversion": "DBS_2_0_9", "pattern":"*",
 }
 daskeys : [
-    {"key":"primary_dataset", "map":"primary_dataset.name", "pattern":""}
+    {"key":"primary_dataset", "map":"primary_dataset.name", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
 ]
 das2api : [
     {"das_key":"primary_dataset.name", "api_param":"pattern", "pattern":""},
+    {"das_key":"dataset.name", "api_param":"pattern", "pattern":""},
 ]
 ---
 urn : listProcessedDatasets

@@ -138,7 +138,7 @@ class DASOptionParser:
         self.parser.add_option("--renew-expired", action="store_true", dest="renew",
              help="renew expired records")
         self.parser.add_option("--clear", action="store_true", dest="clear",
-             help="clean up DAS, remove entries from parser.db, das.cache, das.merge, das.analytics")
+             help="clean up DAS, remove entries from parser.db, das.cache, das.merge")
         self.parser.add_option("--clean", action="store", dest="clean",
              default=None, type="string",
              help="clean up DAS db.collection")

@@ -346,6 +346,8 @@ def ply2mongo(query):
                 array = [r for r in exist_value] + [value]
             elif exist_value == '*' and value != '*':
                 array = value
+            elif value == '*' and exist_value != '*':
+                array = exist_value
             else:
                 array = [exist_value, value]
             spec[dasname] = array

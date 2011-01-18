@@ -358,7 +358,7 @@ class DASMongocache(object):
         """
         
         msg = "DASMongocache::get_superset_keys %s=%s" % (key, value)
-        self.logger.info(msg)
+        self.logger.debug(msg)
         cond = {'query.spec.key': key}
         found_keys = []
         for row in self.col.find(cond):
@@ -380,7 +380,7 @@ class DASMongocache(object):
             msg  = "DASMongocache::remove_expired, will remove %s records"\
                  % nrec
             msg += ", localtime=%s" % timestamp
-            self.logger.info(msg)
+            self.logger.debug(msg)
         col.remove(spec)
 
     def find_spec(self, query):
@@ -489,14 +489,17 @@ class DASMongocache(object):
 
         if  filters:
             spec.update(parse_filters(filters))
-        self.logger.info("DASMongocache::nresults(%s, coll=%s) spec=%s" \
+        self.logger.debug("DASMongocache::nresults(%s, coll=%s) spec=%s" \
                 % (query, collection, spec))
         for key, val in spec.items():
             if  val == '*':
                 del spec[key]
         # usage of fields in find doesn't account for counting, since it
         # is a view over records found with spec, so we don't need to use it.
-        return col.find(spec=spec).count()
+        res = col.find(spec=spec).count()
+        msg = "DASMongocache::nresults=%s" % res
+        self.logger.info(msg)
+        return res
 
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc', 
                         collection='merge', adjust=True):
@@ -509,7 +512,7 @@ class DASMongocache(object):
         col = self.mdb[collection]
         msg = "DASMongocache::get_from_cache(%s, %s, %s, %s, %s, coll=%s)"\
                 % (query, idx, limit, skey, order, collection)
-        self.logger.info(msg)
+        self.logger.debug(msg)
         # get aggregators and loose query for further processing
         aggregators = query.get('aggregators', None)
         if  query.has_key('spec') and query['spec'].has_key('_id'):
@@ -522,7 +525,7 @@ class DASMongocache(object):
         if  adjust:
             query  = adjust_id(query)
             query, dquery = convert2pattern(query)
-            self.logger.info("DASMongocache::get_from_cache, converted to %s"\
+            self.logger.debug("DASMongocache::get_from_cache, converted to %s"\
                     % dquery)
         idx    = int(idx)
         spec   = query.get('spec', {})
@@ -628,7 +631,7 @@ class DASMongocache(object):
         Perform map/reduce operation over DAS cache using provided
         collection, mapreduce name and optional conditions.
         """
-        self.logger.info("DASMongocache::map_reduce(%s, %s)" \
+        self.logger.debug("DASMongocache::map_reduce(%s, %s)" \
                 % (mapreduce, spec))
         record = self.mrcol.find_one({'name':mapreduce})
         if  not record:
@@ -666,7 +669,7 @@ class DASMongocache(object):
         2. run aggregtor function to merge neighbors
         3. insert records into das.merge
         """
-        self.logger.info("DASMongocache::merge_records(%s)" % query)
+        self.logger.debug("DASMongocache::merge_records(%s)" % query)
         lookup_keys = []
         id_list = []
         expire  = 9999999999 # future
@@ -703,7 +706,7 @@ class DASMongocache(object):
             else:
                 msg  = "DASMongocache::merge_records, merging records"
                 msg += ", for %s key" % pkey
-            self.logger.info(msg)
+            self.logger.debug(msg)
             records = self.col.find(spec).sort(skey)
             # aggregate all records
             gen = aggregator(records, expire)
@@ -771,7 +774,7 @@ class DASMongocache(object):
         if  not self.incache(spec, collection='cache'):
             msg = "DASMongocache::insert_query_record, query=%s, header=%s" \
                     % (query, header)
-            self.logger.info(msg)
+            self.logger.debug(msg)
             q_record = dict(das=dasheader, query=encode_mongo_query(query))
             q_record['das']['lookup_keys'] = lkeys
             q_record['das']['empty_record'] = 0
@@ -782,7 +785,7 @@ class DASMongocache(object):
         Iterate over provided results, update records and yield them
         to next level (update_cache)
         """
-        self.logger.info("DASMongocache::update_cache(%s) store to cache" \
+        self.logger.debug("DASMongocache::update_cache(%s) store to cache" \
                 % query)
         if  not results:
             return

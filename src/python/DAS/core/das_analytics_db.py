@@ -74,7 +74,7 @@ class DASAnalytics(object):
         if  isinstance(mongoquery, dict):
             mongoquery = encode_mongo_query(mongoquery)
         msg = 'DASAnalytics::add_query("%s", %s)' % (dasquery, mongoquery)
-        self.logger.info(msg)
+        self.logger.debug(msg)
         dhash = genkey(dasquery)
         qhash = genkey(mongoquery)
 
@@ -110,7 +110,7 @@ class DASAnalytics(object):
         """
         
         msg = 'DASAnalytics::clean_queries()'
-        self.logger.info(msg)
+        self.logger.debug(msg)
         
         now = time.time()
         
@@ -136,7 +136,7 @@ class DASAnalytics(object):
         immutable.
         """
         msg = 'DASAnalytics::add_summary(%s, %s->%s, %s)'
-        self.logger.info(msg, identifier, start, finish, payload)
+        self.logger.debug(msg, identifier, start, finish, payload)
         
         record = {'analyzer':identifier,
                   'start': start,
@@ -171,7 +171,7 @@ class DASAnalytics(object):
             query = encode_mongo_query(query)
         msg = 'DASAnalytics::add_api(%s, %s, %s, %s)' \
         % (system, query, api, args)
-        self.logger.info(msg)
+        self.logger.debug(msg)
         # find query record
         qhash = genkey(query)
         record = self.col.find_one({'qhash':qhash}, fields=['dasquery'])
@@ -206,7 +206,7 @@ class DASAnalytics(object):
         msg = 'DASAnalytics::insert_apicall, query=%s, url=%s,'\
                 % (query, url)
         msg += 'api=%s, args=%s, expire=%s' % (api, api_params, expire)
-        self.logger.info(msg)
+        self.logger.debug(msg)
         expire = expire_timestamp(expire)
         query = encode_mongo_query(query)
         qhash = genkey(query)
@@ -217,7 +217,7 @@ class DASAnalytics(object):
                                       'apicall.api_params': api_params,
                                       'apicall.qhash':      qhash})
         if existing:
-            self.logger.info("DASAnalytics::insert_apicall updating")
+            self.logger.debug("DASAnalytics::insert_apicall updating")
             self.col.update({'_id': existing['_id']},
                             {'$set':{'apicall.expire': expire}})
         else:
@@ -239,7 +239,7 @@ class DASAnalytics(object):
         """
         msg = 'DBSAnalytics::update_apicall, query=%s, das_dict=%s'\
                 % (query, das_dict)
-        self.logger.info(msg)
+        self.logger.debug(msg)
         spec = {'apicall.qhash':genkey(encode_mongo_query(query))} 
         record = self.col.find_one(spec)
         self.col.update({'_id':ObjectId(record['_id'])},
@@ -253,7 +253,7 @@ class DASAnalytics(object):
         if  isinstance(query, dict):
             query = encode_mongo_query(query)
         msg = 'DASAnalytics::update(%s, %s)' % (system, query)
-        self.logger.info(msg)
+        self.logger.debug(msg)
         qhash = genkey(query)
         cond = {'qhash':qhash, 'system':system}
         self.col.update(cond, {'$inc' : {'counter':1}})
