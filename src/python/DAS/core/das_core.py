@@ -191,14 +191,14 @@ class DASCore(object):
         # otherwise decompose it into list of queries
         service_map = self.mongoparser.service_apis_map(query)
         if  not service_map:
-            msg  = 'DASCore::result there is no single API to answer'
+            msg  = 'DASCore::result, no APIs found to answer '
             msg += 'input query, will decompose it ...'
             self.logger.info(msg)
             skeys = query['fields']
             if  not skeys:
                 skeys = []
-            if  len(skeys) == 1: # no way we can proceed
-                return results
+#            if  len(skeys) == 1: # no way we can proceed
+#                return results
             for key in skeys:
                 newquery = dict(fields=[key], spec=query['spec'])
                 self.call(newquery) # process query
@@ -280,8 +280,12 @@ class DASCore(object):
         # expects a mongo query (this could be a string)
         # this also guarantees the query in question hits
         # analytics
-        query = self.adjust_query(query, add_to_analytics)
-        
+        query  = self.adjust_query(query, add_to_analytics)
+        spec   = query.get('spec')
+        fields = query.get('fields')
+        if  spec == dict(records='*'):
+            self.logger.info("DASCore::call, look-up everything in cache")
+            return 1
         if  self.rawcache.similar_queries(query):
             self.logger.info('DASCore::call, found SIMILAR query in cache\n')
             if  self.in_raw_cache(query):
@@ -324,6 +328,9 @@ class DASCore(object):
                 % (query, idx, limit, skey, sorder)
         self.logger.info(msg)
         spec      = query.get('spec', {})
+        if  spec == dict(records='*'):
+            spec  = {} # we got request to get everything
+            query['spec'] = spec
         fields    = query.get('fields', None)
         if  fields:
             prim_keys = []

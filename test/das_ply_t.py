@@ -32,12 +32,28 @@ class testDASPLY(unittest.TestCase):
 
         self.queries = {}
 
+        query = "records"
+        mongo = {'fields': None, 'spec': {'records': '*'}}
+        self.queries[query] = mongo
+
         query = "records site=T1_CH_CERN"
         mongo = {'fields': None, 'spec': {'site': 'T1_CH_CERN'}}
         self.queries[query] = mongo
 
         query = "site=T1_CH_CERN"
         mongo = {'fields': ['site'], 'spec': {'site': 'T1_CH_CERN'}}
+        self.queries[query] = mongo
+
+        query = "site site=T1_CH_CERN"
+        mongo = {'fields': ['site'], 'spec': {'site': 'T1_CH_CERN'}}
+        self.queries[query] = mongo
+
+        query = "site=T1_CH_CERN site"
+        mongo = {'fields': ['site'], 'spec': {'site': 'T1_CH_CERN'}}
+        self.queries[query] = mongo
+
+        query = "site"
+        mongo = {'fields': ['site'], 'spec': {'site': '*'}}
         self.queries[query] = mongo
 
         query = "site=T1_CH_CERN system=sitedb"

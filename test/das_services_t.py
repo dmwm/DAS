@@ -182,6 +182,49 @@ class testCMSFakeDataServices(unittest.TestCase):
         expect = '137.138.141.145'
         self.assertEqual(expect, result)
 
+    def testRecords(self):
+        """test records DAS keyword with all services"""
+        query  = "ip=137.138.141.145"
+        query  = self.das.adjust_query(query)
+        result = self.das.call(query)
+        expect = 1
+        self.assertEqual(expect, result)
+
+        query  = "site=T3_US_Cornell"
+        query  = self.das.adjust_query(query)
+        result = self.das.call(query)
+        expect = 1
+        self.assertEqual(expect, result)
+
+        query  = "records | grep ip.address"
+        query  = self.das.adjust_query(query)
+        result = self.das.get_from_cache(query, collection=self.dasmerge)
+        result = [r for r in result]
+        result = DotDict(result[0])._get('ip.address')
+        expect = '137.138.141.145'
+        self.assertEqual(expect, result)
+
+        query  = "records | grep site.name"
+        query  = self.das.adjust_query(query)
+        result = self.das.get_from_cache(query, collection=self.dasmerge)
+        result = [r for r in result]
+        expect = 'T3_US_Cornell'
+        self.assertEqual(expect, DotDict(result[0])._get('site.name'))
+
+        query  = "records"
+        query  = self.das.adjust_query(query)
+        result = self.das.get_from_cache(query, collection=self.dasmerge)
+        res    = []
+        for row in result:
+            if  row.has_key('ip') and row['ip'].has_key('address'):
+                res.append(row['ip']['address'])
+            if  row.has_key('site'):
+                for item in row['site']:
+                    if  item.has_key('name') and item['name'] not in res:
+                        res.append(item['name'])
+        res.sort()
+        expect = ['137.138.141.145', 'T3_US_Cornell']
+        self.assertEqual(expect, res)
 #
 # main
 #

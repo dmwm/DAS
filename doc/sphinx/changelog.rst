@@ -21,6 +21,12 @@ performed stress tests and code audit DAS servers.
     to accept other parameters, fix #934 
   - add new DAS keyword, parent, and allow parent look-up for dataset/file via
     appropriate DBS2 APIs
+  - extend usage of records DAS keyword to the following cases
+
+    - look-up all records in DAS cache and apply conditions, e.g.
+      records | grep file.size>1, file.size<10
+    - look-up all records in DAS cache regardless of their content (good/bad records),
+      do not apply das.empty_record condition to passed empty spec
 
 - 0.5.9
 

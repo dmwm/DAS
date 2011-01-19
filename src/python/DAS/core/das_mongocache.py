@@ -532,7 +532,8 @@ class DASMongocache(object):
         fields = query.get('fields', None)
 
         # always look-up non-empty records
-        spec.update({'das.empty_record':0})
+        if  spec:
+            spec.update({'das.empty_record':0})
 
         # look-up API query
         recapi = self.col.find_one({"query":strquery})
