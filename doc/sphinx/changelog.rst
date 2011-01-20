@@ -28,6 +28,8 @@ performed stress tests and code audit DAS servers.
     - look-up all records in DAS cache regardless of their content (good/bad records),
       do not apply das.empty_record condition to passed empty spec
 
+  - Fix filter->spec overwrite, ticket #958
+
 - 0.5.9
 
   - fix issue with <,> operators and numeric valus in filters

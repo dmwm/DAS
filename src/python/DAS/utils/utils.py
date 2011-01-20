@@ -28,13 +28,16 @@ from   DAS.utils.regex import se_pattern, site_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 import DAS.utils.jsonwrapper as json
 
-def parse_filters(filters):
+def parse_filters(query):
     """
-    Parse given filter list and return MongoDB key/value dictionary
+    Parse filter list in DAS query and return MongoDB key/value dictionary.
+    Be smart not to overwrite spec condition of DAS query.
     """
+    spec  = query.get('spec', {})
+    filters = query.get('filters', [])
     mdict = {}
     for filter in filters:
-        for key, val in parse_filter(filter).items():
+        for key, val in parse_filter(spec, filter).items():
             if  mdict.has_key(key):
                 value = mdict[key]
                 if  isinstance(value, dict) and isinstance(val, dict):
@@ -47,9 +50,10 @@ def parse_filters(filters):
                 mdict.update({key:val})
     return mdict
 
-def parse_filter(filter):
+def parse_filter(spec, filter):
     """
-    Parse given filter and return MongoDB key/value dictionary
+    Parse given filter and return MongoDB key/value dictionary.
+    Be smart not to overwrite spec condition of DAS query.
     """
     if  filter.find('=') != -1 and \
        (filter.find('<') == -1 and filter.find('>') == -1):
@@ -88,7 +92,9 @@ def parse_filter(filter):
             val = float(val)
         return {key: {'$gt': val}}
     else:
-        return {filter:{'$exists':True}}
+        if  not spec.get(filter, None):
+            return {filter:{'$exists':True}}
+    return {}
 
 def size_format(uinput):
     """

@@ -371,7 +371,9 @@ class DASCore(object):
                     query['fields'] = None
             # adjust query if we got a filter
             if  query.has_key('filters'):
-                query['spec'].update(parse_filters(query.get('filters')))
+                filter_dict = parse_filters(query)
+                if  filter_dict:
+                    query['spec'].update(filter_dict)
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
         elif aggregators:

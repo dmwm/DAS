@@ -488,7 +488,9 @@ class DASMongocache(object):
         spec.update({"das.empty_record":0})
 
         if  filters:
-            spec.update(parse_filters(filters))
+            filter_dict = parse_filters(query)
+            if  filter_dict:
+                spec.update(filter_dict)
         self.logger.debug("DASMongocache::nresults(%s, coll=%s) spec=%s" \
                 % (query, collection, spec))
         for key, val in spec.items():

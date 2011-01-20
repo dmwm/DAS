@@ -45,33 +45,39 @@ class testUtils(unittest.TestCase):
 
     def test_parse_filter(self):
         """Test parse_filter function"""
+        spec = {'file.size':1}
         filter = 'monitor'
-        result = parse_filter(filter)
+        result = parse_filter(spec, filter)
         expect = {filter: {'$exists':True}}
         self.assertEqual(expect, result)
 
+        filter = 'file.size'
+        result = parse_filter(spec, filter)
+        expect = {} # no filter must be added, since spec carry the condition
+        self.assertEqual(expect, result)
+
         filter = 'file.size=1'
-        result = parse_filter(filter)
+        result = parse_filter(spec, filter)
         expect = {'file.size': 1}
         self.assertEqual(expect, result)
 
         filter = 'file.size<1'
-        result = parse_filter(filter)
+        result = parse_filter(spec, filter)
         expect = {'file.size': {'$lt': 1}}
         self.assertEqual(expect, result)
 
         filter = 'file.size<=1'
-        result = parse_filter(filter)
+        result = parse_filter(spec, filter)
         expect = {'file.size': {'$lte': 1}}
         self.assertEqual(expect, result)
 
         filter = 'file.size>1'
-        result = parse_filter(filter)
+        result = parse_filter(spec, filter)
         expect = {'file.size': {'$gt': 1}}
         self.assertEqual(expect, result)
 
         filter = 'file.size>=1'
-        result = parse_filter(filter)
+        result = parse_filter(spec, filter)
         expect = {'file.size': {'$gte': 1}}
         self.assertEqual(expect, result)
 
