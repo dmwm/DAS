@@ -40,6 +40,21 @@ from DAS.utils.das_db import db_gridfs
 DAS_CACHE_INPUTS = ['query', 'idx', 'limit', 'expire', 'method', 
              'skey', 'order', 'collection', 'fid']
 
+def cache_cleaner(dburi, collections, sleep):
+    """
+    Clean-up expired records in provided set of DAS caches
+    """
+    conn = db_connection(dburi)
+    while True:
+        time.sleep(sleep)
+        for name in collections:
+            dbname, collname = name.split('.')
+            if  dbname == 'analytics':
+                spec = {'apicall.expire': {'$lt' : int(time.time())}}
+            else:
+                spec = {'das.expire' : {'$lt' : int(time.time())}}
+            conn[dbname][collname].remove(spec)
+        
 class DASCacheService(DASWebManager):
     """
     DASCacheService represents DAS cache RESTful interface.
@@ -113,6 +128,11 @@ class DASCacheService(DASWebManager):
         self.init()
         # Monitoring thread which performs auto-init of the server
         thread.start_new_thread(connection_monitor, (self.dburi, self.init, 5))
+
+        # thread which performs clean-up of DAS caches
+        sleep = self.dasconfig['cache_server'].get('clean_interval', 600) # seconds
+        collections = ['das.cache', 'das.merge', 'analytics.db']
+        thread.start_new_thread(cache_cleaner, (self.dburi, collections, sleep))
 
     def init(self):
         """

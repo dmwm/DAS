@@ -195,7 +195,7 @@ def expire_timestamp(expire):
     # use Jan 1st, 2010 as a seed to check expire date
     # prior 2010 DAS was not released in production
     tup = (2010, 1, 1, 0, 0, 0, 0, 1, -1)
-    if  isinstance(expire, int) or expire < time.mktime(tup):
+    if  isinstance(expire, int) and expire < time.mktime(tup):
         expire = tstamp + expire
     return expire
 

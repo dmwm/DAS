@@ -29,6 +29,10 @@ performed stress tests and code audit DAS servers.
       do not apply das.empty_record condition to passed empty spec
 
   - Fix filter->spec overwrite, ticket #958
+  - Add cache_cleaner into cache server, its task is periodically clean-up
+    expired records in das.cache, das.merge, analytics.db
+  - Fix bug in expire_timestamp
+  - Remove loose query condition which leads to pattern look-up (ticket #960)
 
 - 0.5.9
 

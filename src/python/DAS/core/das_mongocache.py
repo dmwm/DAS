@@ -345,6 +345,7 @@ class DASMongocache(object):
             if  mongo_query['spec'] == query['spec'] or \
                 compare_specs(query, mongo_query):
                 self.logger.info("%s, True" % msg)
+                self.logger.info("similar to %s" % mongo_query)
                 return True
         self.logger.info("%s, False" % msg)
         return False
@@ -522,7 +523,9 @@ class DASMongocache(object):
             strquery = ""
         else:
             strquery = json.dumps(query)
-            query = loose(query)
+# TODO: investigate why do I need to loose the query????
+# 20110120 (ticket #960)
+#            query = loose(query)
         # adjust query id if it's requested
         if  adjust:
             query  = adjust_id(query)

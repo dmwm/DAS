@@ -51,6 +51,7 @@ DASOption('cache_server', 'socket_queue_size', 'int', 100),
 DASOption('cache_server', 'n_worker_threads', 'int', 4),
 DASOption('cache_server', 'logfile', 'string', '/tmp/das_cache.log'),
 DASOption('cache_server', 'loglevel', 'int', 0),
+DASOption('cache_server', 'clean_interval', 'int', 60),
 
 DASOption('web_server', 'host', 'string', '0.0.0.0'),
 DASOption('web_server', 'port', 'int', 8212),
