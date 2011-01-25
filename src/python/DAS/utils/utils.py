@@ -936,6 +936,35 @@ def dict_helper(idict, notations):
             child_dict[notations.get(kkk, kkk)] = adjust_value(vvv)
         return child_dict
 
+def qlxml_parser(source, prim_key):
+    """
+    It's a temperary XML parser for DBS2 QL results. The same module as 
+    xml_parser below, but only cover the DBS2 QL results, which is storing 
+    value in emlement.text other that element.attrib.
+
+    Iterparse method is using to walk through provide source descriptor(
+    as xml_parser method)
+     
+    The input prim_key defines a tag to capture
+    """
+    context   = ET.iterparse(source, events=("start", "end"))
+    root      = None
+    for item in context:
+        event, elem = item
+        if  event == "start" and root is None:
+            root = elem # the first element is root
+        row = {}
+        key = elem.tag
+        if  key != prim_key:
+            continue
+        row[key] = elem.text
+        if  event == 'end':
+            elem.clear()
+            yield row
+    root.clear()
+    source.close()
+
+
 def xml_parser(source, prim_key, tags=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for

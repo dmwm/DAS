@@ -129,7 +129,8 @@ class testUtils(unittest.TestCase):
 
         expire = '900'
         result = long(expire_timestamp(expire))
-        expect = long(time.time()) + 900
+#        expect = long(time.time()) + 900
+        expect = 900
         self.assertEqual(result, expect)
 
     def test_yield_rows(self):
@@ -740,6 +741,53 @@ class testUtils(unittest.TestCase):
                                   }
                           }
                  }
+        self.assertEqual(expect, result)
+
+    def test_xml_parser_3(self):
+        """
+        Test functionality of xml_parser
+        """
+        xmldata = """<?xml version='1.0' encoding='ISO-8859-1'?>
+<results>
+<row>
+  <dataset>/a/b/c</dataset>
+</row>
+</results>
+"""
+        fdesc  = tempfile.NamedTemporaryFile()
+        fname  = fdesc.name
+        stream = file(fname, 'w')
+        stream.write(xmldata)
+        stream.close()
+        stream = file(fname, 'r')
+        gen    = xml_parser(stream, "results", [])
+        result = gen.next()
+        expect = {'results': {'row': {'dataset': '/a/b/c'}}} 
+        self.assertEqual(expect, result)
+
+    def test_xml_parser_4(self):
+        """
+        Test functionality of xml_parser
+        """
+        xmldata = """<?xml version='1.0' encoding='ISO-8859-1'?>
+<results>
+<row>
+  <file>/c1.root</file>
+</row>
+<row>
+  <file>/c2.root</file>
+</row>
+</results>
+"""
+        fdesc  = tempfile.NamedTemporaryFile()
+        fname  = fdesc.name
+        stream = file(fname, 'w')
+        stream.write(xmldata)
+        stream.close()
+        stream = file(fname, 'r')
+        gen    = xml_parser(stream, "results", [])
+        result = gen.next()
+        expect = {'results': {'row': [{'file': '/c1.root'}, {'file': '/c2.root'}]}} 
         self.assertEqual(expect, result)
 
     def test_json_parser(self):

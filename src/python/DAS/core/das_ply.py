@@ -84,6 +84,7 @@ class DASPLY(object):
         'VALUE',
         'NUMBER',
         'DATE',
+        'DATE_STR',
         'MAPREDUCE',
         'SPECIALKEY',
     ]
@@ -108,7 +109,20 @@ class DASPLY(object):
         return t
 
     def t_DATE(self, t):
-        r'[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]|[0-9]+[dhm]'
+        r'20\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])'
+        t.value = int(t.value)
+        return t
+
+#    def t_DATE(self, t):
+#        r'20\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])|[0-9]+[dhm]'
+#        if  t.value.find('h') == -1 and \
+#            t.value.find('d') == -1 and \
+#            t.value.find('m') == -1:
+#            t.value = int(t.value)
+#        return t
+
+    def t_DATE_STR(self, t):
+        r'[0-9]+[dhm]'
         if  t.value.find('h') == -1 and \
             t.value.find('d') == -1 and \
             t.value.find('m') == -1:
@@ -208,8 +222,10 @@ class DASPLY(object):
         """keyop : DASKEY OPERATOR VALUE
                  | DASKEY OPERATOR DASKEY
                  | DASKEY OPERATOR NUMBER
+                 | DASKEY OPERATOR DATE
                  | DASKEY OPERATOR IPADDR
                  | SPECIALKEY OPERATOR DATE
+                 | SPECIALKEY OPERATOR DATE_STR
                  | SPECIALKEY OPERATOR VALUE
                  | SPECIALKEY OPERATOR array
                  | DASKEY OPERATOR array"""
@@ -244,8 +260,10 @@ class DASPLY(object):
     def p_list_for_filter(self, p):
         """oneexp : DASKEY OPERATOR VALUE
                   | DASKEY OPERATOR NUMBER
+                  | DASKEY OPERATOR DATE
                   | DASKEY FILTER_OPERATOR VALUE
                   | DASKEY FILTER_OPERATOR NUMBER
+                  | DASKEY FILTER_OPERATOR DATE
                   | DASKEY"""
         val = ''
         for idx in range(0, len(p)):

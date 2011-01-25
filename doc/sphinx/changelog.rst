@@ -33,6 +33,14 @@ performed stress tests and code audit DAS servers.
     expired records in das.cache, das.merge, analytics.db
   - Fix bug in expire_timestamp
   - Remove loose query condition which leads to pattern look-up (ticket #960)
+  - Fix but in das_ply to handle correctly date
+
+    - add new date regex
+    - split t_DATE into t_DATE, t_DATE_STR
+
+  - add support for fake queries in DBS plugin to fake non-existing DBS API
+    via DBS-QL
+  - remove details from DSB listFiles
 
 - 0.5.9
 

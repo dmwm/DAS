@@ -9,7 +9,7 @@ __version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, xml_parser
+from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 
 class DBSService(DASAbstractService):
     """
@@ -33,6 +33,12 @@ class DBSService(DASAbstractService):
             pat = kwds['processed_datatset_name_pattern']
             if  pat[0] == '/':
                 kwds['processed_datatset_name_pattern'] = pat.split('/')[2]
+        if  api == 'fakeListDataset4File':
+            val = kwds['query']
+            kwds['query'] = "find dataset where file=%s" % val
+        if  api == 'fakeListFile4Site':
+            val = kwds['query']
+            kwds['query'] = "find file where site=%s" % val
             
     def parser(self, query, dformat, source, api):
         """
@@ -69,11 +75,18 @@ class DBSService(DASAbstractService):
             prim_key = 'algorithm'
         elif api == 'listRuns':
             prim_key = 'run'
+        elif  api == 'fakeListDataset4File':
+            prim_key = 'dataset'
+        elif  api == 'fakeListFile4Site':
+            prim_key = 'file'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
             raise Exception(msg)
-        gen = xml_parser(source, prim_key)
+        if  api.find('fake') != -1:
+            gen = qlxml_parser(source, prim_key)
+        else:
+            gen = xml_parser(source, prim_key)
         for row in gen:
             if  not row:
                 continue
