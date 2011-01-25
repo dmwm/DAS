@@ -22,7 +22,7 @@ from DAS.utils.utils import delete_elem, plist_parser, unique_filter
 from DAS.utils.utils import DotDict, filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day
-from DAS.utils.utils import parse_filters, parse_filter
+from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 
 class testUtils(unittest.TestCase):
     """
@@ -760,9 +760,9 @@ class testUtils(unittest.TestCase):
         stream.write(xmldata)
         stream.close()
         stream = file(fname, 'r')
-        gen    = xml_parser(stream, "results", [])
+        gen    = qlxml_parser(stream, "dataset")
         result = gen.next()
-        expect = {'results': {'row': {'dataset': '/a/b/c'}}} 
+        expect = {'dataset': '/a/b/c'}
         self.assertEqual(expect, result)
 
     def test_xml_parser_4(self):
@@ -785,9 +785,9 @@ class testUtils(unittest.TestCase):
         stream.write(xmldata)
         stream.close()
         stream = file(fname, 'r')
-        gen    = xml_parser(stream, "results", [])
-        result = gen.next()
-        expect = {'results': {'row': [{'file': '/c1.root'}, {'file': '/c2.root'}]}} 
+        gen    = qlxml_parser(stream, "file")
+        result = [r for r in gen]
+        expect = [{'file': '/c1.root'}, {'file': '/c2.root'}]
         self.assertEqual(expect, result)
 
     def test_json_parser(self):
