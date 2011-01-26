@@ -159,26 +159,25 @@ def get_http_expires(data):
         time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z') )
     return expire
 
-def to_seconds(das_date):
-    """Convert provided DAS date into seconds since epoch"""
+def datestamp(das_date):
+    """Convert provided DAS date into datetime.date object"""
     tstamp = str(das_date)
     if  len(tstamp) != 8:
         raise Exception('Provided date does not confirm DAS date format')
     year  = tstamp[:4]
     month = tstamp[4:6]
     day   = tstamp[6:8]
-    obj   = datetime.date(int(year), int(month), int(day))
-    return time.mktime(obj.timetuple())
+    return datetime.date(int(year), int(month), int(day))
 
 def next_day(das_date):
     """Return next date provided DAS date""" 
-    next  = to_seconds(das_date) + 24*60*60
-    return int(time.strftime("%Y%m%d", time.gmtime(next)))
+    next  = datestamp(das_date) + datetime.timedelta(days=1)
+    return int(time.strftime("%Y%m%d", next.timetuple()))
     
 def prev_day(das_date):
     """Return previous date provided DAS date""" 
-    next  = to_seconds(das_date) - 24*60*60
-    return int(time.strftime("%Y%m%d", time.gmtime(next)))
+    prev  = datestamp(das_date) - datetime.timedelta(days=1)
+    return int(time.strftime("%Y%m%d", prev.timetuple()))
 
 def expire_timestamp(expire):
     """
