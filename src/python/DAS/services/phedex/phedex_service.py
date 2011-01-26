@@ -23,6 +23,15 @@ class PhedexService(DASAbstractService):
         map_validator(self.map)
         self.notationmap = self.notations()
 
+    def adjust_params(self, api, kwds):
+        """
+        Adjust Phedex parameters for specific query requests
+        """
+        if  api == 'blockReplicas':
+            for key, val in kwds.items():
+                if  val == '*':
+                    del kwds[key]
+
     def parser(self, query, dformat, source, api):
         """
         Phedex data-service parser.

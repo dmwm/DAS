@@ -41,6 +41,9 @@ performed stress tests and code audit DAS servers.
   - add support for fake queries in DBS plugin to fake non-existing DBS API
     via DBS-QL
   - remove details from DSB listFiles
+  - add adjust_params to phedex plugin
+  - adjust parameters in phedex map, blockReplicas can be invoked with passed dataset
+  - update cms_maps with fake DBS2 APIs 
 
 - 0.5.9
 
