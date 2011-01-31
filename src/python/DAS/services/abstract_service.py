@@ -421,7 +421,7 @@ class DASAbstractService(object):
         Convert raw results into DAS records. 
         """
         prim_key  = self.dasmapping.primary_key(self.name, api)
-        notations = self.dasmapping.notations(self.name)[self.name]
+#        notations = self.dasmapping.notations(self.name)[self.name]
         count = 0
         for row in genrows:
             row2das(self.dasmapping.notation2das, self.name, api, row)
@@ -570,7 +570,7 @@ class DASAbstractService(object):
                     # need to convert key (which is daskeys.map) into
                     # input api parameter
                     found = True
-                    for apiparam in self.dasmapping.das2api(self.name, key):
+                    for apiparam in self.dasmapping.das2api(self.name, key, api=api):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
             if  not found:

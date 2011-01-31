@@ -30,6 +30,20 @@ das2api : [
     {"das_key":"site.name", "api_param":"query", "pattern":""},
 ]
 ---
+urn : fakeListDatasetbyDate
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"required",
+}
+daskeys : [
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
+    {"key":"date", "map":"dataset.createdate", "pattern":""},
+]
+das2api : [
+    {"das_key":"dataset.createdate", "api_param":"query", "pattern":""},
+]
+---
 urn : listPrimaryDatasets
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
@@ -320,4 +334,12 @@ notations : [
     {"notation":"primary_name", "map":"name", "api":""},
     {"notation":"file_lfn", "map":"file", "api":""},
     {"notation":"file_lumi_section", "map":"lumi", "api":""},
+    {"notation":"count_block", "map":"nblocks", "api":""},
+    {"notation":"sum_block.size", "map":"size", "api":""},
+    {"notation":"sum_block.numfiles", "map":"nfiles", "api":""},
+    {"notation":"sum_block.numevents", "map":"nevents", "api":""},
+    {"notation":"dataset.createdate", "map":"creation_time", "api":""},
+    {"notation":"dataset.moddate", "map":"modification_time", "api":""},
+    {"notation":"dataset.createby", "map":"create_by", "api":""},
+    {"notation":"dataset.modby", "map":"mod_by", "api":""},
 ]

@@ -297,8 +297,12 @@ class DASAnalytics(object):
         Get popular queries based on provided spec, which can be
         in a form of time stamp range, etc.
         """
-        cond = {'counter':1}
-        return self.col.find(cond)
+        cond = {'counter':{'$exists':True}}
+        for row in self.col.find(fields=['qhash'], spec=cond).\
+                sort('counter', DESCENDING):
+            spec = {'qhash': row['qhash'], 'counter':{'$exists': False}}
+            for res in self.col.find(spec):
+                yield res
 
     def list_apis(self, system=None):
         """

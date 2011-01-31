@@ -124,6 +124,10 @@ class testDASMapping(unittest.TestCase):
         res = self.mgr.das2api(system, daskey, value)
         self.assertEqual([api_input], res)
 
+        # adding another params which default is None
+        res = self.mgr.das2api(system, daskey, value, api)
+        self.assertEqual([api_input], res)
+
         res = self.mgr.api2das(system, api_input)
         self.assertEqual([daskey, primkey], res)
 

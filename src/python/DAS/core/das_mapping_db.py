@@ -378,11 +378,13 @@ class DASMapping(object):
                     names.append(daskey)
         return names
 
-    def das2api(self, system, daskey, value=None):
+    def das2api(self, system, daskey, value=None, api=None):
         """
         Translates DAS QL key into data-service API input parameter
         """
         query = {'system':system, 'das2api.das_key': daskey}
+        if api: # only check this api
+            query['urn'] = api 
         names = []
         for adas in self.col.find(query, ['das2api']):
             for row in adas['das2api']:

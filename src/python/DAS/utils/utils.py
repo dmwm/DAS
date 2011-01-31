@@ -148,6 +148,39 @@ def das_dateformat(value):
         msg = 'Unacceptable date format'
         raise Exception(msg)
 
+def dbsql_dateformat(value):
+    """
+    Temeporary use for convert DAS date into DBS input date
+    Please rewrite one if other system also has such requirements
+    I assume that the value passed in is in das_dateformat
+    which means YYYYMMDD
+    dbsql is asking YYYY-MM-DD, so we return that
+    """
+    pat = date_yyyymmdd_pattern
+    if  pat.match(value): # we accept YYYYMMDD
+        qldate = '-'.join((value[0:4],value[4:6],value[6:8]))
+        return qldate
+    else:
+        msg = 'Unacceptable date format'
+        raise Exception(msg)
+
+def dbsql_opt_map(operator):
+    """
+    convert the das operator to normal ones
+    I only need a map, it might be already exists.
+    $gt $lt $gte $lte
+    >   <   >=   <=
+    """
+    if operator == '$gt':
+        return '>'
+    elif operator == '$lt':
+        return '<'
+    elif operator == '$gte':
+        return '>='
+    elif operator == '$lte':
+        return '<='
+    
+
 def get_http_expires(data):
     """
     Return HTTP Expires value in seconds since epoch.
@@ -943,20 +976,27 @@ def qlxml_parser(source, prim_key):
 
     Iterparse method is using to walk through provide source descriptor(
     as xml_parser method)
-     
-    The input prim_key defines a tag to capture
+    
+    tag 'row' will be captured, then we construct a result dict base on 
+    it's chilren.  
+    The input prim_key defines the name of dict.
+    
     """
+    notations = {}
     context   = ET.iterparse(source, events=("start", "end"))
-    root      = None
+    root = None
+    row = {}
+    row[prim_key]={}
     for item in context:
         event, elem = item
-        if  event == "start" and root is None:
-            root = elem # the first element is root
-        row = {}
         key = elem.tag
-        if  key != prim_key:
+        if key != 'row':
             continue
-        row[key] = elem.text
+        if event == 'start' :
+            root = elem
+            row = {}
+            row[prim_key] = {}
+            get_children(elem, event, row, prim_key, notations)
         if  event == 'end':
             elem.clear()
             yield row

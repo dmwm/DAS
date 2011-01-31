@@ -190,6 +190,17 @@ class testDASPLY(unittest.TestCase):
                         'filters': ['run.run_number>1', 'run.run_number<10']}
         self.queries[query] = mongo
 
+        # query with DASKEY, date=value
+        query = 'dataset date=20110124'
+        mongo = {'fields': ['dataset'], 'spec': {'date': 20110124}}
+        self.queries[query] = mongo
+        
+        # query with DASKEY, date between [value1, value2]
+        query = 'dataset date between [20110124,20110126]'
+        mongo = {'fields': ['dataset'], 'spec': {'date': {'$gte': 20110124, '$lte': 20110126}}}
+        self.queries[query] = mongo
+
+
     def test_lexer(self):
         """Test DAS PLY lexer"""
         for query, expect in self.queries.items():
