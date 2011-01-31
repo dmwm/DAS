@@ -27,7 +27,7 @@ class PhedexService(DASAbstractService):
         """
         Adjust Phedex parameters for specific query requests
         """
-        if  api == 'blockReplicas':
+        if  api == 'blockReplicas' or api == 'fileReplicas':
             for key, val in kwds.items():
                 if  val == '*':
                     del kwds[key]
