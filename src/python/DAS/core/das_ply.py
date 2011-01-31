@@ -19,6 +19,7 @@ import re
 from   DAS.utils.utils import convert2date
 from   DAS.core.das_ql import das_filters, das_operators, das_mapreduces
 from   DAS.core.das_ql import das_aggregators, das_special_keys
+from   DAS.core.das_ql import das_db_keywords
 
 def lexer_error(query, pos, error):
     """Produce pretty formatted message about invalid query"""
@@ -113,14 +114,6 @@ class DASPLY(object):
         t.value = int(t.value)
         return t
 
-#    def t_DATE(self, t):
-#        r'20\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])|[0-9]+[dhm]'
-#        if  t.value.find('h') == -1 and \
-#            t.value.find('d') == -1 and \
-#            t.value.find('m') == -1:
-#            t.value = int(t.value)
-#        return t
-
     def t_DATE_STR(self, t):
         r'[0-9]+[dhm]'
         if  t.value.find('h') == -1 and \
@@ -160,11 +153,11 @@ class DASPLY(object):
         if re.match(r'das_id', t.value):
             t.type = 'DASKEY'
             return t
-        # 4. records is also a DASKEY
-        if re.match(r'records', t.value):
-            t.type = 'DASKEY'
-            return t
-        
+        # 4. assign das_db_keywords as DASKEY's
+        for keyword in das_db_keywords():
+            if  re.match(keyword, t.value):
+                t.type = 'DASKEY'
+                return t
         
         # strip quotation marks, if included
         # anything in quotation marks can't have been a

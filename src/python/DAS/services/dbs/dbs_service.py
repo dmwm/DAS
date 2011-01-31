@@ -32,7 +32,10 @@ class DBSService(DASAbstractService):
         if  api == 'listProcessedDatasets':
             pat = kwds['processed_datatset_name_pattern']
             if  pat[0] == '/':
-                kwds['processed_datatset_name_pattern'] = pat.split('/')[2]
+                try:
+                    kwds['processed_datatset_name_pattern'] = pat.split('/')[2]
+                except:
+                    pass
         if  api == 'fakeListDataset4File':
             val = kwds['query']
             kwds['query'] = "find dataset where file=%s" % val

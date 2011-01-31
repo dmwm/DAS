@@ -292,6 +292,14 @@ class DASAnalytics(object):
         
         return self.col.find(cond)
             
+    def get_popular_queries(self, spec):
+        """
+        Get popular queries based on provided spec, which can be
+        in a form of time stamp range, etc.
+        """
+        cond = {'counter':1}
+        return self.col.find(cond)
+
     def list_apis(self, system=None):
         """
         List all APIs.

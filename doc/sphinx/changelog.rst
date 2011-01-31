@@ -44,6 +44,10 @@ performed stress tests and code audit DAS servers.
   - add adjust_params to phedex plugin
   - adjust parameters in phedex map, blockReplicas can be invoked with passed dataset
   - update cms_maps with fake DBS2 APIs 
+  - add DAS_DB_KEYWORDS (records, queries, popular)
+  - add abstract support to query DAS (popular) queries, a concrete implementation
+    will be added later
+  - fix #998
 
 - 0.5.9
 

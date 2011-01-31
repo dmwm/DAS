@@ -32,6 +32,21 @@ class testDASPLY(unittest.TestCase):
 
         self.queries = {}
 
+        query = "queries"
+        mongo = {'fields': ['queries'], 'spec': {'queries': '*'}}
+        self.queries[query] = mongo
+
+        query = "popular queries"
+        mongo = {'fields': ['popular', 'queries'], 'spec': {'queries': '*'}}
+        self.queries[query] = mongo
+
+        query = "popular queries date last 24h"
+        date1 = time.time() - 24*60*60
+        date2 = time.time()
+        mongo = {'fields': ['popular', 'queries'], 
+                 'spec': {'date': {'$in': [long(date1), long(date2)]}}}
+        self.queries[query] = mongo
+
         query = "records"
         mongo = {'fields': None, 'spec': {'records': '*'}}
         self.queries[query] = mongo

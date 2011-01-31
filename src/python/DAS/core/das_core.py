@@ -385,6 +385,9 @@ class DASCore(object):
                 data = getattr(das_aggregator, 'das_%s' % func)(key, rows)
                 res += [{'_id':_id, 'function': func, 'key': key, 'result': data}]
                 _id += 1
+        elif isinstance(fields, list) and \
+             ('popular' in fields or 'queries' in fields):
+             res = self.get_queries(query)
         else:
             res = self.rawcache.get_from_cache(\
                 query, idx, limit, skey, sorder, collection=collection)
@@ -396,3 +399,31 @@ class DASCore(object):
             for row in res:
                 yield row
         das_timer('DASCore::get_from_cache', self.verbose)
+
+    def get_queries(self, query):
+        """
+        Look-up (popular) queries in DAS analytics/logging db
+        """
+        das_timer('DASCore::get_queries', self.verbose)
+        fields = query.get('fields')
+        spec   = query.get('spec')
+        if  'popular' in fields:
+            res = self.analytics.get_popular_queries(spec)
+        else:
+            datestamp = spec.get('date')
+            if  isinstance(datestamp, dict):
+                value = datestamp.get('$in')
+                res = self.analytics.list_queries(after=value[0], before=value[1])
+            elif isinstance(datestamp, int):
+                res = self.analytics.list_queries(after=datestamp)
+            elif not datestamp:
+                res = self.analytics.list_queries()
+            else:
+               msg = 'Unsupported date value: %s' % datestamp
+               raise Exception(msg)
+        for row in res:
+            if  row.has_key('_id'):
+                del row['_id']
+            yield row
+        das_timer('DASCore::get_queries', self.verbose)
+

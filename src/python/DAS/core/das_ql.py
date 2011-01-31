@@ -20,6 +20,7 @@ DAS_OPERATORS = ['=', 'between', 'in', 'last']
 #DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
 #                 'between', 'nin', 'in', 'last']
 DAS_SPECIALS  = ['date', 'system']
+DAS_DB_KEYWORDS = ['records', 'queries', 'popular']
 DAS_RESERVED  = DAS_FILTERS + DAS_OPERATORS + DAS_SPECIALS
 URL_MAP       = {
     '!=' : '%21%3D',
@@ -71,6 +72,12 @@ def das_reserved():
     Return list of DAS reserved keywords
     """
     return DAS_RESERVED
+
+def das_db_keywords():
+    """
+    Return list of DAS special keywords for retrieving information DAS DBs
+    """
+    return DAS_DB_KEYWORDS
 
 def das_aggregators():
     """
