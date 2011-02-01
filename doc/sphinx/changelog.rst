@@ -48,6 +48,11 @@ performed stress tests and code audit DAS servers.
   - add abstract support to query DAS (popular) queries, a concrete implementation
     will be added later
   - fix #998
+  - fix SiteDB maps
+  - fix host parameter in das_cache_client
+  - remove sys.exit in das_admin to allow combination of multiple options together
+  - fix compare_specs to address a bug when query with value A is considered as
+    similar to next query with value A*
 
 - 0.5.9
 

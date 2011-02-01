@@ -8,6 +8,7 @@ __revision__ = "$Id: das_cache_client.py,v 1.15 2009/09/09 18:43:05 valya Exp $"
 __version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
+import re
 import json
 import urllib
 import urllib2
@@ -112,8 +113,10 @@ if __name__ == '__main__':
         method = 'request'
     path = '/rest/%s' % method
 
-    if  host.find('http://') == -1:
-        host = 'http://' + host
+    pat  = re.compile('http[s]{0,1}://')
+    if  not pat.match(host):
+        msg = 'Invalid hostname: %s' % host
+        raise Exception(msg)
     url = host + path
 
     headers = {"Accept": "application/json"}

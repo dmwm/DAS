@@ -321,26 +321,21 @@ if __name__ == '__main__':
    
     if  opts.stats:
         DASMONGO.stats(opts.system)
-        sys.exit(0)
 
     if  opts.records:
         DASMONGO.fetch(opts.spec, opts.fields, opts.db, opts.system, opts.pretty)
-        sys.exit(0)
 
     if  opts.delete:
         DASMONGO.delete(opts.system)
-        sys.exit(0)
 
     if  opts.renew:
         if  not opts.interval:
             print "Specify non-zero interval"
             sys.exit(0)
         DASMONGO.renew(opts.interval, opts.system)
-        sys.exit(0)
 
     if  opts.clear:
         DASMONGO.clear()
-        sys.exit(0)
 
     if  opts.clean:
         try:
@@ -348,5 +343,4 @@ if __name__ == '__main__':
             DASMONGO.clean(dbname, dbcoll)
         except:
             print "Please provide <dbname>.<dbcollection>"
-        sys.exit(0)
 

@@ -233,10 +233,13 @@ def compare_specs(input_query, exist_query):
                 if  val1.find(val2) == -1:
                     return False
             else:
+                orig = val1
                 val1 = val1.replace('*', '')
                 val2 = val2.replace('*', '')
                 if  val1 != val2:
                     return False
+                elif orig.find('*') != -1 and val1 == val2:
+                    return False # compare A* with existing A
         elif  type(val1) != type(val2) and not isinstance(val1, dict)\
             and not isinstance(val2, dict):
             return False

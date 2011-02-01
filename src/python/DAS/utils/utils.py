@@ -1000,7 +1000,8 @@ def qlxml_parser(source, prim_key):
         if  event == 'end':
             elem.clear()
             yield row
-    root.clear()
+    if  root:
+        root.clear()
     source.close()
 
 
