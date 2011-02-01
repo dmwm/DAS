@@ -53,6 +53,7 @@ performed stress tests and code audit DAS servers.
   - remove sys.exit in das_admin to allow combination of multiple options together
   - fix compare_specs to address a bug when query with value A is considered as
     similar to next query with value A*
+  - fix get_status to wait for completion of DAS core workflow
 
 - 0.5.9
 

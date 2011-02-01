@@ -234,13 +234,15 @@ class DASCore(object):
         """
         Look-up status of provided query in a cache.
         """
+        status = 0
         iquery = dict(query)
         query  = self.bare_query(query)
-        if  self.rawcache.similar_queries(query) and self.in_raw_cache(query):
-            return 'ok' # self.call set status ok for processed queries
-        status = 0
-#        record = self.rawcache.das_record(query)
         record = self.rawcache.find_spec(query)
+        if  record:
+            status = record['das']['status']
+        if  self.rawcache.similar_queries(query) and self.in_raw_cache(query)\
+            and status == 'ok':
+            return 'ok' # self.call set status ok for processed queries
         if  record:
             status = record['das']['status']
         return status
