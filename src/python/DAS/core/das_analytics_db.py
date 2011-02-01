@@ -19,6 +19,7 @@ from pymongo.objectid import ObjectId
 # DAS modules
 from DAS.utils.utils import gen2list, genkey, expire_timestamp
 from DAS.core.das_mongocache import encode_mongo_query
+from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection
 
 class DASAnalytics(object):
@@ -43,6 +44,8 @@ class DASAnalytics(object):
         """
         self.conn = db_connection(self.dburi)
         database  = self.conn[self.dbname]
+        das_son_manipulator = DAS_SONManipulator()
+        database.add_son_manipulator(das_son_manipulator)
         self.col  = database[self.colname]
 #        if  self.dbname not in self.conn.database_names():
 #            capped_size = 104857600
@@ -301,7 +304,7 @@ class DASAnalytics(object):
         for row in self.col.find(fields=['qhash'], spec=cond).\
                 sort('counter', DESCENDING):
             spec = {'qhash': row['qhash'], 'counter':{'$exists': False}}
-            for res in self.col.find(spec):
+            for res in self.col.find(spec=spec):
                 yield res
 
     def list_apis(self, system=None):

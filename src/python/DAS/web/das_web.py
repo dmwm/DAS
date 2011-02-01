@@ -674,7 +674,7 @@ class DASWebService(DASWebManager):
             rows = result['data']
         else:
             rows = []
-        server_cache_time = result.get('ctime')
+        server_cache_time = result.get('ctime', 0)
         total   = self.nresults(kwargs)
         if  total:
             params = {} # will keep everything except idx/limit
