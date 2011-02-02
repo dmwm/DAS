@@ -28,19 +28,23 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
-    def test_parse_filter(self):
+    def test_parse_filters(self):
         """Test parse_filters function"""
         filters = ['monitor', 'file.size=1']
-        expect  = {'monitor': {'$exists':True}, 'file.size': 1}
-        result  = parse_filters(filters)
+        spec    = {'monitor': {'$exists':True}, 'file.size': 1}
+        query   = {'spec': spec, 'filters': filters}
+        expect  = {'file.size': 1}
+        result  = parse_filters(query)
         self.assertEqual(expect, result)
 
         filters = ['file.size>1', 'file.size=1']
-        self.assertRaises(Exception, parse_filters, filters)
+        query.update({'filters': filters})
+        self.assertRaises(Exception, parse_filters, query)
 
         filters = ['file.size>1', 'file.size<=10']
         expect  = {'file.size': {'$gt':1, '$lte':10}}
-        result  = parse_filters(filters)
+        query.update({'filters': filters})
+        result  = parse_filters(query)
         self.assertEqual(expect, result)
 
     def test_parse_filter(self):

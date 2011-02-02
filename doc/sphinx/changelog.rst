@@ -54,6 +54,10 @@ performed stress tests and code audit DAS servers.
   - fix compare_specs to address a bug when query with value A is considered as
     similar to next query with value A*
   - fix get_status to wait for completion of DAS core workflow
+  - fix merge insert problem when records exceed MongoDB BSON limit (4MB), put
+    those records into GridFS
+  - fix nresults to return correct number of found results when applying a filter,
+    e.g. monitor | grep monitor.node=T3_US_UCLA
 
 - 0.5.9
 

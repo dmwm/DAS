@@ -29,6 +29,7 @@ from DAS.utils.utils import adjust_mongo_keyvalue
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection
 from DAS.utils.utils import parse_filters
+from DAS.utils.das_db import db_gridfs, parse2gridfs
 import DAS.utils.jsonwrapper as json
 
 # monogo db modules
@@ -36,6 +37,7 @@ from pymongo.objectid import ObjectId
 from pymongo.code import Code
 from pymongo import DESCENDING, ASCENDING
 from pymongo.errors import InvalidOperation
+from bson.errors import InvalidDocument
 
 DOT = '.'
 SEP = '___'
@@ -298,6 +300,7 @@ class DASMongocache(object):
         self.col     = self.mdb[config['dasdb']['cachecollection']]
         self.mrcol   = self.mdb[config['dasdb']['mrcollection']]
         self.merge   = self.mdb[config['dasdb']['mergecollection']]
+        self.gfs     = db_gridfs(self.dburi)
 
         msg = "DASMongocache::__init__ %s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
@@ -492,11 +495,14 @@ class DASMongocache(object):
         spec.update({"das.empty_record":0})
 
         if  filters:
-            filter_dict = parse_filters(query)
+            new_query = dict(query)
+            new_query.update({'filters': filters})
+            filter_dict = parse_filters(new_query)
             if  filter_dict:
                 spec.update(filter_dict)
-        self.logger.debug("DASMongocache::nresults(%s, coll=%s) spec=%s" \
-                % (query, collection, spec))
+        msg = 'DASMongocache::nresults(%s, %s, %s) spec=%s' \
+                % (query, collection, filters, spec)
+        self.logger.debug(msg)
         for key, val in spec.items():
             if  val == '*':
                 del spec[key]
@@ -731,6 +737,17 @@ class DASMongocache(object):
                     if  not self.merge.insert(itertools.islice(gen, size)):
                         inserted = 1
                         break
+            except InvalidDocument as exp:
+                msg = "Caught bson error: " + str(exp)
+                self.logger.info(msg)
+                records = self.col.find(spec).sort(skey)
+                gen = aggregator(records, expire)
+                genrows = parse2gridfs(self.gfs, pkey, gen, self.logger)
+                das_dict = {'das':{'expire':expire, 'primary_key':lookup_keys,
+                        'empty_record': 0}, 'cache_id':[], 'das_id': id_list}
+                for row in genrows:
+                    row.update(das_dict)
+                    self.merge.insert(row)
             except InvalidOperation:
                 pass
         if  not inserted: # we didn't merge anything

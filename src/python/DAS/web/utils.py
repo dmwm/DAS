@@ -36,6 +36,8 @@ def quote(data):
         res = data
     elif  isinstance(data, dict):
         res = data
+    elif  isinstance(data, list):
+        res = data
     else:
         try:
             res = cgi.escape(data, quote=True)
