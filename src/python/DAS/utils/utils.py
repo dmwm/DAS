@@ -1201,7 +1201,7 @@ def aggregator(results, expire):
             rec['das_id'] = [das_id]
         _ids = rec.pop('_id')
         if  not isinstance(_ids, list):
-            _ids = [_ids]
+            _ids = [str(_ids)]
         rec['cache_id'] = list(set(_ids))
         rec['das']['empty_record'] = 0
         yield rec
