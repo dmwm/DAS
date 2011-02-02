@@ -65,7 +65,10 @@ class DBSService(DASAbstractService):
                 if  key == 'tier' and val:
                     value += ' and tier=%s' % val
             for key in ['dataset', 'release', 'primary_dataset', 'tier']:
-                del kwds[key]
+                try:
+                    del kwds[key]
+                except:
+                    pass
             if  value:
                 kwds['query'] = "find dataset, sum(block.numfiles), sum(block.numevents), \
   count(block), sum(block.size) where %s" % value[4:]
