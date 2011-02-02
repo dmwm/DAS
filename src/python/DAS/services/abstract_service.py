@@ -573,6 +573,7 @@ class DASAbstractService(object):
                     for apiparam in self.dasmapping.das2api(self.name, key, api=api):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
+            self.adjust_params(api, args)
             if  not found:
                 msg  = 'DASAbstractService::apimap\n\n'
                 msg += "--- %s reject API %s, parameters don't match, args=%s" \
@@ -597,7 +598,7 @@ class DASAbstractService(object):
             if  not self.pass_apicall(query, url, api, args):
                 continue
 
-            self.adjust_params(api, args)
+#            self.adjust_params(api, args)
             msg  = 'DASAbstractService::apimap\n\n'
             msg += '+++ %s pass API %s, args=%s' % (self.name, api, args)
             self.logger.info(msg)

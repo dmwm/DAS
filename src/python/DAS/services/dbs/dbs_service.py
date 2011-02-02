@@ -8,6 +8,7 @@ __revision__ = "$Id: dbs_service.py,v 1.24 2010/04/09 19:41:23 valya Exp $"
 __version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
+import re
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import dbsql_dateformat, dbsql_opt_map
@@ -39,12 +40,35 @@ class DBSService(DASAbstractService):
                     pass
         if  api == 'fakeListDataset4File':
             val = kwds['query']
-            kwds['query'] = "find dataset , count(block), count(file.size), \
+            if  val != 'required':
+                kwds['query'] = "find dataset , count(block), count(file.size), \
   sum(block.size), sum(block.numfiles), sum(block.numevents) \
   where file=%s and dataset.status like VALID*" % val
         if  api == 'fakeListFile4Site':
             val = kwds['query']
-            kwds['query'] = "find file where site=%s" % val
+            if  val != 'required':
+                kwds['query'] = "find file where site=%s" % val
+        if  api == 'fakeDatasetSummary':
+            value = ""
+            for key, val in kwds.items():
+                if  key == 'dataset' and val:
+                    pat = re.compile('/.*/.*/.*')
+                    if  pat.match(val):
+                        if  val.find('*') != -1:
+                            value += ' and dataset=%s' % val
+                    else:
+                        value += ' and dataset=%s' % val
+                if  key == 'primary_dataset' and val:
+                    value += ' and primds=%s' % val
+                if  key == 'release' and val:
+                    value += ' and release=%s' % val
+                if  key == 'tier' and val:
+                    value += ' and tier=%s' % val
+            for key in ['dataset', 'release', 'primary_dataset', 'tier']:
+                del kwds[key]
+            if  value:
+                kwds['query'] = "find dataset, sum(block.numfiles), sum(block.numevents), \
+  count(block), sum(block.size) where %s" % value[4:]
         if  api == 'fakeListDatasetbyDate':
 #           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124} 
             query_for_single = "find dataset , count(block), sum(block.size),\
@@ -113,6 +137,8 @@ class DBSService(DASAbstractService):
         elif  api == 'fakeListFile4Site':
             prim_key = 'file'
         elif  api == 'fakeListDatasetbyDate':
+            prim_key = 'dataset'
+        elif  api == 'fakeDatasetSummary':
             prim_key = 'dataset'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \

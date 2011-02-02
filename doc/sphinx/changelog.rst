@@ -58,6 +58,10 @@ performed stress tests and code audit DAS servers.
     those records into GridFS
   - fix nresults to return correct number of found results when applying a filter,
     e.g. monitor | grep monitor.node=T3_US_UCLA
+  - replace listProcessedDatasets with fakeDatasetSummary, since it's better suits
+    dataset queries. DBS3 will provide proper API to look-up dataset out of provided
+    dataset path, release, tier, primary_dataset.
+  - fix listLFNs to supply file as primary key
 
 - 0.5.9
 
