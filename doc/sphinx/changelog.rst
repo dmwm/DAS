@@ -62,6 +62,14 @@ performed stress tests and code audit DAS servers.
     dataset queries. DBS3 will provide proper API to look-up dataset out of provided
     dataset path, release, tier, primary_dataset.
   - fix listLFNs to supply file as primary key
+  - comment out pass_api call to prevent from non-merge situation, must revisit the code
+
+    - fix issue with missing merge step when das record disapper from cache
+
+  - bug fix to prevent from null string in number of events
+  - increase expire time stamp for dashboard, due to problem described in 1032 ticket. 
+    I need to revisit code and make das record/service rather then combined one to 
+    utilize cache better. Meanwhile align expire timestamp wrt to DBS/Phedex
 
 - 0.5.9
 
