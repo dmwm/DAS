@@ -530,13 +530,18 @@ class DASAbstractService(object):
                                               api, args, expire)
                 headers = make_headers(dformat)
                 data    = self.getdata(url, args, headers)
-                try: # get HTTP header and look for Expires
-                    e_time = expire_timestamp(\
-                        data.info().__dict__['dict']['expires'])
-                    if  e_time > time.time():
-                        expire = e_time
-                except:
-                    pass
+# TODO: need more time to investigate how to use correctly HTTP Header expire
+# timestamp. The problem is that such timestamp can differ significantly from
+# the ones I assign in maps, which leads to large gaps between data records
+# expire timestamps, e.g. phedex block info can expire in 10 min, while DBS 
+# will stay in 1 hour.
+#                try: # get HTTP header and look for Expires
+#                    e_time = expire_timestamp(\
+#                        data.info().__dict__['dict']['expires'])
+#                    if  e_time > time.time():
+#                        expire = e_time
+#                except:
+#                    pass
                 rawrows = self.parser(query, dformat, data, api)
                 dasrows = self.translator(api, rawrows)
                 dasrows = self.set_misses(query, api, dasrows)
@@ -595,8 +600,14 @@ class DASAbstractService(object):
                         val   = val.replace('*', wild)
                     args[key] = val
             # check if analytics db has a similar API call
-            if  not self.pass_apicall(query, url, api, args):
-                continue
+#TODO: I commented this part on 2011-02-03 since I found that das record can be
+# wiped out sooner then data/analytics records. It carries the smallest expire 
+# timestamp among all, so checking analytics can lead to the case when records
+# in analytics are present, while das record is gone. As consequence it leads to
+# situation when I don't get any records during merging step (since new data
+# records are not created due to this miss)
+#            if  not self.pass_apicall(query, url, api, args):
+#                continue
 
 #            self.adjust_params(api, args)
             msg  = 'DASAbstractService::apimap\n\n'

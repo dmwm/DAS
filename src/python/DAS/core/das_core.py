@@ -324,6 +324,7 @@ class DASCore(object):
         except:
             traceback.print_exc()
             return 0
+        self.logger.info('\nDASCore::call ##### merging ######\n')
         self.rawcache.update_das_record(query, 'merging')
         das_timer('merge', self.verbose)
         self.rawcache.merge_records(query)
