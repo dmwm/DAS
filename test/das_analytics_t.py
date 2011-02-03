@@ -59,11 +59,11 @@ class testDASAnalytics(unittest.TestCase):
 
         self.mgr.add_api('dbs', query, dbs_api, dbs_params)
         res = self.mgr.api_counter(dbs_api)
-        self.assertEqual(2, res) # we invoke API twice, so should get 2
+        self.assertEqual(1, res) # we invoke API twice, so should get 2
 
         self.mgr.update('dbs', query)
         res = self.mgr.api_counter(dbs_api)
-        self.assertEqual(3, res) # we update API call, so should get 3
+        self.assertEqual(2, res) # we invoke API twice, so should get 2
         
         res = self.mgr.api_params(phedex_api)
         self.assertEqual([phedex_params], res)

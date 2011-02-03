@@ -20,6 +20,7 @@ import datetime
 import traceback
 import xml.etree.cElementTree as ET
 from   itertools import groupby
+from   bson.objectid import ObjectId
 
 # DAS modules
 from   DAS.utils.regex import float_number_pattern, int_number_pattern
@@ -1201,7 +1202,10 @@ def aggregator(results, expire):
             rec['das_id'] = [das_id]
         _ids = rec.pop('_id')
         if  not isinstance(_ids, list):
-            _ids = [str(_ids)]
+            if  isinstance(id, ObjectId):
+                _ids = [str(_ids)]
+            else:
+                _ids = [_ids]
         rec['cache_id'] = list(set(_ids))
         rec['das']['empty_record'] = 0
         yield rec
