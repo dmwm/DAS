@@ -128,9 +128,9 @@ def adjust_values(func, gen):
                     value = ', '.join(val)
                 else:
                     value = val
-            elif  key.find('size') != -1:
+            elif  key.find('size') != -1 and val:
                 value = size_format(val)
-            elif  key.find('Number of ') != -1:
+            elif  key.find('Number of ') != -1 and val:
                 value = int(val)
             else:
                 value = val
