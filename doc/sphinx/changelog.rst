@@ -70,6 +70,7 @@ performed stress tests and code audit DAS servers.
   - increase expire time stamp for dashboard, due to problem described in 1032 ticket. 
     I need to revisit code and make das record/service rather then combined one to 
     utilize cache better. Meanwhile align expire timestamp wrt to DBS/Phedex
+  - Add DBS support to look-up file via provided run (so far using fake API)
 
 - 0.5.9
 
