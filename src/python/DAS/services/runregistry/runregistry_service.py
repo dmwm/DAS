@@ -10,6 +10,7 @@ __author__ = "Valentin Kuznetsov"
 
 import time
 import xmlrpclib
+import traceback
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, next_day
@@ -140,7 +141,12 @@ class RunRegistryService(DASAbstractService):
         genrows = self.translator(api, rawrows)
         dasrows = self.set_misses(query, api, genrows)
         ctime   = time.time() - time0
-        self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
+        try:
+            self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
+        except:
+            traceback.print_exc()
+            self.logger.info('Fail to write_to_cache for runregistry service')
+            pass
 #
 if __name__ == '__main__':
     QUERY = "{runNumber} >= 135230 and {runNumber} <= 135230"

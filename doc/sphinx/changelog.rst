@@ -70,7 +70,11 @@ performed stress tests and code audit DAS servers.
   - increase expire time stamp for dashboard, due to problem described in 1032 ticket. 
     I need to revisit code and make das record/service rather then combined one to 
     utilize cache better. Meanwhile align expire timestamp wrt to DBS/Phedex
-  - Add DBS support to look-up file via provided run (so far using fake API)
+  - add DBS support to look-up file via provided run (so far using fake API)
+  - use fakseDataset4Run instead of fakeFile4Run, since it's much faster. Users 
+    will be able to find dataset for a given run and then find files for a
+    given dataset
+  - fix issue with JSON'ifying HTTP error dict
 
 - 0.5.9
 

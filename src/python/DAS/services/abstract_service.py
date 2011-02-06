@@ -197,7 +197,7 @@ class DASAbstractService(object):
             self.logger.error(msg + '\n' + traceback.format_exc())
             data = {'error': msg, 
                     'reason': 'Unable to invoke HTTP call to data-service'}
-            data = str(data)
+            data = json.dumps(data)
         das_timer(timer_key, self.verbose)
         return data
 

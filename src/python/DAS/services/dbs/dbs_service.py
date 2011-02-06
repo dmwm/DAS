@@ -54,9 +54,11 @@ file.createby where site=%s" % val
             if  val != 'required':
                 kwds['query'] = "find file, file.createdate, file.moddate, \
 file.createby where run=%s" % val
-#        if  api == 'fakeDataset4Run':
-#            val = kwds['query']
-#            if  val != 'required':
+        if  api == 'fakeDataset4Run':
+            val = kwds['query']
+            if  val != 'required':
+                kwds['query'] = "find dataset \
+  where run=%s and dataset.status like VALID*" % val
 #                kwds['query'] = "find dataset , count(block), count(file.size), \
 #  sum(block.size), sum(block.numfiles), sum(block.numevents) \
 #  where run=%s and dataset.status like VALID*" % val
@@ -155,8 +157,8 @@ file.createby where run=%s" % val
             prim_key = 'dataset'
         elif  api == 'fakeDatasetSummary':
             prim_key = 'dataset'
-#        elif  api == 'fakeDataset4Run':
-#            prim_key = 'dataset'
+        elif  api == 'fakeDataset4Run':
+            prim_key = 'dataset'
         elif  api == 'fakeFile4Run':
             prim_key = 'file'
         else:

@@ -9,9 +9,10 @@ __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
 import time
-from   types import InstanceType
 import urllib
+import traceback
 import xml.etree.cElementTree as ET
+from types import InstanceType
 from DAS.services.abstract_service import DASAbstractService, dasheader
 from DAS.utils.utils import map_validator, next_day
 
@@ -122,4 +123,9 @@ class DashboardService(DASAbstractService):
         genrows = self.translator(api, rawrows)
         dasrows = self.set_misses(query, api, genrows)
         ctime = time.time() - time0
-        self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
+        try:
+            self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
+        except:
+            traceback.print_exc()
+            self.logger.info('Fail to write_to_cache for dashboard service')
+            pass
