@@ -49,11 +49,6 @@ class DBSService(DASAbstractService):
             if  val != 'required':
                 kwds['query'] = "find file, file.createdate, file.moddate, \
 file.createby where site=%s" % val
-        if  api == 'fakeFile4Run':
-            val = kwds['query']
-            if  val != 'required':
-                kwds['query'] = "find file, file.createdate, file.moddate, \
-file.createby where run=%s" % val
         if  api == 'fakeDataset4Run':
             val = kwds['query']
             if  val != 'required':
@@ -159,8 +154,6 @@ file.createby where run=%s" % val
             prim_key = 'dataset'
         elif  api == 'fakeDataset4Run':
             prim_key = 'dataset'
-        elif  api == 'fakeFile4Run':
-            prim_key = 'file'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)

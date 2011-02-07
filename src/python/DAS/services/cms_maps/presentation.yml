@@ -155,4 +155,15 @@ city    : [
         {"das":"city.Placemark.ExtendedData.LatLonBox.north", "ui":"Location north"}, 
         {"das":"city.Placemark.ExtendedData.LatLonBox.south", "ui":"Location south"}, 
         ],
+parent  : [
+        {"das":"parent.name", "ui":"Name"}, 
+        {"das":"parent.nevents", "ui":"Number of events"}, 
+        {"das":"parent.size", "ui":"Size"}, 
+        ],
+das_query : [
+#        {"das":"das_query.mongoquery", "ui":"MongoDB query"},
+#        {"das":"das_query.qhash", "ui":"MongoDB query hash"},
+        {"das":"das_query.dasquery", "ui":"DAS query"},
+#        {"das":"das_query.dhash", "ui":"DAS query hash"},
+        ],
 }

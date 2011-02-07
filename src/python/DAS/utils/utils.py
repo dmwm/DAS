@@ -1202,7 +1202,7 @@ def aggregator(results, expire):
             rec['das_id'] = [das_id]
         _ids = rec.pop('_id')
         if  not isinstance(_ids, list):
-            if  isinstance(id, ObjectId):
+            if  isinstance(_ids, ObjectId):
                 _ids = [str(_ids)]
             else:
                 _ids = [_ids]
