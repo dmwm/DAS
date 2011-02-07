@@ -995,10 +995,10 @@ def qlxml_parser(source, prim_key):
             continue
         if event == 'start' :
             root = elem
+        if  event == 'end':
             row = {}
             row[prim_key] = {}
             get_children(elem, event, row, prim_key, notations)
-        if  event == 'end':
             elem.clear()
             yield row
     if  root:

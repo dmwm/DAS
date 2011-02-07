@@ -798,6 +798,70 @@ class testUtils(unittest.TestCase):
                   {'file': {'name': '/c2.root', 'size': 2}}]
         self.assertEqual(expect, result)
 
+    def test_xml_parser_5(self):
+        """
+        Test functionality of xml_parser
+        """
+        xmldata = """<?xml version='1.0' standalone='yes'?>
+<!-- DBS Version 1 -->
+<dbs>
+ <userinput>
+  <input>find dataset where  tier=*GEN* and primds=ZJetToEE_Pt*
+  </input>
+  <timeStamp>Mon Feb 07 19:51:59 CET 2011</timeStamp>
+ </userinput>
+ <java_query> 
+  <sql>GROUP BY  PATH</sql>
+  <bp>%GEN%</bp>
+  <bp>ZJetToEE_Pt%</bp>
+ </java_query>
+ <python_query>
+  <sql>SELECT  PATH AS PATH,</sql>
+  <bindparams><p0>%GEN%</p0>
+   <p1>ZJetToEE_Pt%</p1>
+  </bindparams>
+ </python_query>
+ <count_query>
+  <sql> SELECT COUNT(*) AS CNT FROM </sql>
+  <bindparams> <p0>%GEN%</p0>
+   <p1>ZJetToEE_Pt%</p1>
+  </bindparams>
+ </count_query>
+ <results>"""
+ 
+        suffix = """ </results>
+<SUCCESS/>
+</dbs>
+"""
+        row = """<row>
+  <dataset>/ZJetToEE_Pt_80to120_TuneZ2_7TeV_pythia6/</dataset>
+  <sum_block.numfiles>%d</sum_block.numfiles>
+  <sum_block.numevents>110000</sum_block.numevents>
+  <count_block>1</count_block>
+  <sum_block.size>61942523513</sum_block.size>
+</row>"""
+        for i in range(200):
+            xmldata = xmldata + row % i
+        xmldata = xmldata + suffix  
+        fdesc  = tempfile.NamedTemporaryFile()
+        fname  = fdesc.name
+        stream = file(fname, 'w')
+        stream.write(xmldata)
+        stream.close()
+        stream = file(fname, 'r')
+        gen    = qlxml_parser(stream, "dataset")
+        expect = {'dataset': {'sum_block.numfiles': 12, 
+                              'count_block': 1, 
+                              'sum_block.numevents': 110000, 
+                              'sum_block.size': 61942523513, 
+                  'dataset': '/ZJetToEE_Pt_80to120_TuneZ2_7TeV_pythia6/'}}
+        count = 0
+        for r in gen:
+            expect['dataset']['sum_block.numfiles'] = count
+            self.assertEqual(expect, r)
+            count = count + 1
+        self.assertEqual(200, count)
+
     def test_json_parser(self):
         """
         Test functionality of json_parser
