@@ -75,6 +75,7 @@ performed stress tests and code audit DAS servers.
     will be able to find dataset for a given run and then find files for a
     given dataset
   - fix issue with JSON'ifying HTTP error dict
+  - replace DAS error placement from savannah to TRAC
 
 - 0.5.9
 
