@@ -554,18 +554,36 @@ class DASAbstractService(object):
                 msg += traceback.format_exc()
                 self.logger.info(msg)
 
+    def url_instance(self, url, _instance):
+        """
+        Virtual method to adjust URL for a given instance,
+        must be implemented in service classes
+        """
+        return url
+
+    def adjust_url(self, url, instance):
+        """
+        Adjust data-service URL wrt provided instance, e.g.
+        DBS carry several instances
+        """
+        if  instance:
+            url = self.url_instance(url, instance)
+        return url
+
     def apimap(self, query):
         """
         Analyze input query and yield url, api, args, format, expire
         for further processing.
         """
         cond  = getarg(query, 'spec', {})
+        instance = cond.get('instance', '')
         skeys = getarg(query, 'fields', [])
         self.logger.info("\n")
         for api, value in self.map.items():
             expire = value['expire']
             format = value['format']
-            url    = value['url']
+#            url    = value['url']
+            url    = self.adjust_url(value['url'], instance)
             args   = value['params']
             wild   = value.get('wild_card', '*')
             found  = False

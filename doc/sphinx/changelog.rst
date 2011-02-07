@@ -76,6 +76,11 @@ performed stress tests and code audit DAS servers.
     given dataset
   - fix issue with JSON'ifying HTTP error dict
   - replace DAS error placement from savannah to TRAC
+  - add new special keyword, instance, to allow query results from local
+    DBS instances. The keyword itself it neutral and can be applied to any
+    system. Add new abstract method url_instance in abstract_service which
+    can be used by sub-systems to add actual logic how to adjust sub-system
+    URL to specific instance needs.
 
 - 0.5.9
 

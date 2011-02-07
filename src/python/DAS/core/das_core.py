@@ -308,7 +308,6 @@ class DASCore(object):
                 das_timer('DASCore::call', self.verbose)
                 return 1
 
-        
         msg = 'DASCore::call, query=%s' % query
         self.logger.info(msg)
         params = self.mongoparser.params(query)
@@ -345,6 +344,8 @@ class DASCore(object):
                 % (query, idx, limit, skey, sorder)
         self.logger.info(msg)
         spec      = query.get('spec', {})
+        if  spec.has_key('instance'):
+            del spec['instance'] # while we look-up data we don't need instance
         if  spec == dict(records='*'):
             spec  = {} # we got request to get everything
             query['spec'] = spec

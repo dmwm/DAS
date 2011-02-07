@@ -22,7 +22,18 @@ class DBSService(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
+        self.prim_instance = 'cms_dbs_prod_global'
+        self.instances = ['cms_dbs_prod_global', 'cms_dbs_caf_analysis_01',
+                'cms_dbs_ph_analysis_01', 'cms_dbs_ph_analysis_02']
 
+    def url_instance(self, url, instance):
+        """
+        Adjust URL for a given instance
+        """
+        if  instance in self.instances:
+            return url.replace(self.prim_instance, instance)
+        return url
+            
     def adjust_params(self, api, kwds):
         """
         Adjust DBS2 parameters for specific query requests
