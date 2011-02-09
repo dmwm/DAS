@@ -81,6 +81,8 @@ performed stress tests and code audit DAS servers.
     system. Add new abstract method url_instance in abstract_service which
     can be used by sub-systems to add actual logic how to adjust sub-system
     URL to specific instance needs.
+  - replace connection_monitor with dascore_monitor to better handle connection/DASCore
+    absense due to loosing connection to MongoDB
 
 - 0.5.9
 

@@ -24,20 +24,6 @@ from DAS.utils.utils import DotDict, genkey
 # MongoDB does not allow to store documents whose size more then 4MB
 MONGODB_LIMIT = 4*1024*1024
 
-def connection_monitor(uri, func, sleep=5):
-    """
-    Monitor connection to MongoDB and invoke provided function
-    upon successfull connection. This function can be used in DAS server
-    for monitoring MongoDB connections.
-    """
-    conn = db_connection(uri)
-    while True:
-        time.sleep(sleep)
-        if  not conn:
-            conn = db_connection(uri)
-            if  conn:
-                func()
-
 def make_uri(pairs):
     """Return MongoDB URI for provided set of dbhost,dbport pairs"""
     uris = []

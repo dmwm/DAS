@@ -24,9 +24,35 @@ from   urllib import quote_plus
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from   DAS.utils.regex import number_pattern
-from   DAS.utils.regex import web_arg_pattern
+from   DAS.utils.regex import number_pattern, web_arg_pattern
+from   DAS.utils.das_db import db_connection
+from   DAS.core.das_core import DASCore
 from   DAS.web.das_codes import web_code
+
+def dascore_monitor(cdict, func, sleep=5):
+    """
+    Check status of DASCore and MongoDB connection for provided
+    in cdict das/uri parameters. Invoke provided function upon 
+    successfull connection.
+    """
+    uri  = cdict['uri']
+    das  = cdict['das']
+    conn = db_connection(uri)
+    while True:
+        time.sleep(sleep)
+        if  not conn or not das:
+            conn = db_connection(uri)
+            try:
+                if  conn['mapping']['db'].count():
+                    time.sleep(3) # sleep to ensure that all maps are loaded
+                    func() # re-initialize DAS
+                    das = True # we do see maps in MongoDB
+                else:
+                    das = False
+            except:
+                das = False
+            print "\n### re-established connection %s, mapping.db records %s" \
+                % (conn, das)
 
 def quote(data):
     """

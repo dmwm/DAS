@@ -35,10 +35,11 @@ from DAS.core.das_ql import das_aggregators, das_operators
 from DAS.utils.utils import getarg, access, size_format
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
-from DAS.utils.das_db import db_connection, connection_monitor
+from DAS.utils.das_db import db_connection
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
+from DAS.web.utils import dascore_monitor
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import exposejson, exposedasplist
 from DAS.core.das_ql import das_aggregators, das_filters
@@ -191,7 +192,8 @@ class DASWebService(DASWebManager):
 
         self.init()
         # Monitoring thread which performs auto-reconnection
-        thread.start_new_thread(connection_monitor, (dburi, self.init, 5))
+        thread.start_new_thread(dascore_monitor, \
+                ({'das':self.dasmgr, 'uri':dburi}, self.init, 5))
 
     def init(self):
         """Init DAS web server, connect to DAS Core"""

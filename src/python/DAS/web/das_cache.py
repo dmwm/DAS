@@ -26,7 +26,7 @@ from pymongo.objectid import ObjectId
 import DAS.utils.jsonwrapper as json
 from DAS.core.das_core import DASCore
 from DAS.core.das_cache import DASCacheMgr, thread_monitor
-from DAS.utils.das_db import db_connection, connection_monitor
+from DAS.utils.das_db import db_connection
 from DAS.utils.utils import getarg, genkey
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
@@ -35,6 +35,7 @@ from DAS.web.tools import exposejson
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 from DAS.web.utils import checkargs
+from DAS.web.utils import dascore_monitor
 from DAS.utils.das_db import db_gridfs
 
 DAS_CACHE_INPUTS = ['query', 'idx', 'limit', 'expire', 'method', 
@@ -53,7 +54,10 @@ def cache_cleaner(dburi, collections, sleep):
                 spec = {'apicall.expire': {'$lt' : int(time.time())}}
             else:
                 spec = {'das.expire' : {'$lt' : int(time.time())}}
-            conn[dbname][collname].remove(spec)
+            try:
+                conn[dbname][collname].remove(spec)
+            except:
+                pass
         
 class DASCacheService(DASWebManager):
     """
@@ -127,7 +131,8 @@ class DASCacheService(DASWebManager):
 
         self.init()
         # Monitoring thread which performs auto-init of the server
-        thread.start_new_thread(connection_monitor, (self.dburi, self.init, 5))
+        thread.start_new_thread(dascore_monitor, \
+                ({'das':self.dascore, 'uri':self.dburi}, self.init, 5))
 
         # thread which performs clean-up of DAS caches
         sleep = self.dasconfig['cache_server'].get('clean_interval', 600) # seconds
@@ -150,8 +155,8 @@ class DASCacheService(DASWebManager):
                 self.warning('Created %s.%s, size=%s' \
                 % (logdbname, logdbcoll, capped_size))
             self.col      = self.con[logdbname][logdbcoll]
-            self.dascore  = DASCore()
             self.gfs      = db_gridfs(self.dburi)
+            self.dascore  = DASCore()
         except:
             self.con  = None
             self.dascore = None

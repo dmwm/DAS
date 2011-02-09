@@ -23,12 +23,13 @@ from cherrypy import expose, response, request, HTTPRedirect, HTTPError
 # DAS modules
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.utils import genkey
-from DAS.utils.das_db import db_connection, connection_monitor
+from DAS.utils.das_db import db_connection
 from DAS.utils.regex import web_arg_pattern
 from DAS.core.das_core import DASCore
 from DAS.core.das_mongocache import convert2pattern, encode_mongo_query
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.utils import json2html, ajax_response, checkargs, quote
+from DAS.web.utils import dascore_monitor
 from DAS.web.das_codes import web_code
 
 DAS_EXPERT_INPUTS = ['idx', 'limit', 'collection', 'database', 'query',
@@ -76,7 +77,8 @@ class DASExpertService(DASWebManager):
         self.dasconfig = das_config
         self.init()
         # Monitor thread which performs auto-reconnection
-        thread.start_new_thread(connection_monitor, (self.dburi, self.init, 5))
+        thread.start_new_thread(dascore_monitor, \
+                ({'das':self.das, 'uri':self.dburi}, self.init, 5))
 
     def init(self):
         """Connect to DASCore"""
