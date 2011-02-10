@@ -38,10 +38,10 @@ params : {
 }
 daskeys : [
     {"key":"dataset", "map":"dataset.name", "pattern":""},
-    {"key":"date", "map":"dataset.createdate", "pattern":""},
+    {"key":"date", "map":"date", "pattern":""},
 ]
 das2api : [
-    {"das_key":"dataset.createdate", "api_param":"query", "pattern":""},
+    {"das_key":"date", "api_param":"query", "pattern":""},
 ]
 ---
 urn : listPrimaryDatasets
