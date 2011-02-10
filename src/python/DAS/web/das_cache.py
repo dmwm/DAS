@@ -41,6 +41,18 @@ from DAS.utils.das_db import db_gridfs
 DAS_CACHE_INPUTS = ['query', 'idx', 'limit', 'expire', 'method', 
              'skey', 'order', 'collection', 'fid']
 
+def parser_error(error):
+    """Return human readable DAS parser error string"""
+    print "ERROR", error
+    try:
+        # LexToken returns tok.type, tok.value, tok.lineno, and tok.lexpos
+        msg, tok = error.split("LexToken")
+        tokarr = tok.split(',')
+        return "%s error %s=%s, at line %s, position %s" \
+                % (msg.strip(), tokarr[0].lower(), tokarr[1], tokarr[2], tokarr[3])
+    except:
+        return error
+
 def cache_cleaner(dburi, collections, sleep):
     """
     Clean-up expired records in provided set of DAS caches
@@ -262,7 +274,13 @@ class DASCacheService(DASWebManager):
         if  kwargs.has_key('query'):
             query  = kwargs['query']
             self.logdb(query)
-            query  = self.dascore.mongoparser.parse(query)
+            try:
+                query  = self.dascore.mongoparser.parse(query)
+            except:
+                data['status'] = 'fail'
+                data['ctime']  = time.time() - time0
+                data['parser'] = parser_error(str(sys.exc_info()[1]))
+                return data 
             status = self.dascore.get_status(query)
             if  not status:
                 status = 'no data' 
@@ -288,7 +306,13 @@ class DASCacheService(DASWebManager):
             query = kwargs['query']
             coll  = kwargs.get('collection', 'merge')
             self.logdb(query)
-            query = self.dascore.mongoparser.parse(query)
+            try:
+                query  = self.dascore.mongoparser.parse(query)
+            except:
+                data['status'] = 'fail'
+                data['ctime']  = time.time() - time0
+                data['parser'] = parser_error(str(sys.exc_info()[1]))
+                return data 
             data.update({'status':'success'})
             res = self.dascore.in_raw_cache_nresults(query, coll)
             data.update({'status':'success', 'nresults':res})
@@ -368,7 +392,13 @@ class DASCacheService(DASWebManager):
         if  kwargs.has_key('query'):
             query = kwargs['query']
             self.logdb(query)
-            query = self.dascore.mongoparser.parse(query)
+            try:
+                query  = self.dascore.mongoparser.parse(query)
+            except:
+                data['status'] = 'fail'
+                data['ctime']  = time.time() - time0
+                data['parser'] = parser_error(str(sys.exc_info()[1]))
+                return data 
             idx   = getarg(kwargs, 'idx', 0)
             limit = getarg(kwargs, 'limit', 0)
             skey  = getarg(kwargs, 'skey', '')
@@ -418,7 +448,13 @@ class DASCacheService(DASWebManager):
         if  kwargs.has_key('query'):
             query  = kwargs['query']
             self.logdb(query)
-            query  = self.dascore.mongoparser.parse(query)
+            try:
+                query  = self.dascore.mongoparser.parse(query)
+            except:
+                data['status'] = 'fail'
+                data['ctime']  = time.time() - time0
+                data['parser'] = parser_error(str(sys.exc_info()[1]))
+                return data 
             try: # this block implies usage of multiprocessing, see DASCacheMgr
                 status = self.cachemgr.add(query)
                 data.update({'status':status, 'query':query})
@@ -448,7 +484,13 @@ class DASCacheService(DASWebManager):
         if  kwargs.has_key('query'):
             query = kwargs['query']
             self.logdb(query)
-            query = self.dascore.mongoparser.parse(query)
+            try:
+                query  = self.dascore.mongoparser.parse(query)
+            except:
+                data['status'] = 'fail'
+                data['ctime']  = time.time() - time0
+                data['parser'] = parser_error(str(sys.exc_info()[1]))
+                return data 
             try:
                 self.dascore.remove_from_cache(query)
             except:
@@ -483,7 +525,13 @@ class DASCacheService(DASWebManager):
         if  kwargs.has_key('query'):
             query = kwargs['query']
             self.logdb(query)
-            query = self.dascore.mongoparser.parse(query)
+            try:
+                query  = self.dascore.mongoparser.parse(query)
+            except:
+                data['status'] = 'fail'
+                data['ctime']  = time.time() - time0
+                data['parser'] = parser_error(str(sys.exc_info()[1]))
+                return data 
             data.update({'status':'requested', 'query':query})
             try:
                 self.dascore.remove_from_cache(query)

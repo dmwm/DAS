@@ -627,8 +627,16 @@ class DASWebService(DASWebManager):
         view    = kwargs.get('view', 'list')
         # self.status sends request to Cache Server
         # Cache Server uses das_core to retrieve status
-        status  = self.check_data(input=uinput)
-        if  status == 'no data':
+        data    = self.check_data(input=uinput)
+        if  not data.has_key('status'):
+            msg = "DAS cache server fails to process your request.\n"
+            if  data.has_key('parser'):
+                msg += data['parser']
+            else:
+                msg  += self.gen_error_msg(kwargs)
+            page  = self.templatepage('das_error', msg=msg)
+            view  = 'list'
+        if  data['status'] == 'no data':
             # no data in raw cache, send POST request
             self.send_request('POST', kwargs)
             img   = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
@@ -638,9 +646,12 @@ class DASWebService(DASWebManager):
             page += """setTimeout('ajaxStatus("%s")', %s)</script>""" \
                         % (self.base, self.status_update)
             view  = 'list'
-        elif status == 'fail':
-            msg   = "DAS cache server fails to process your request"
-            msg   = self.gen_error_msg(kwargs)
+        elif data['status'] == 'fail':
+            msg   = "DAS cache server fails to process your request.\n"
+            if  data.has_key('parser'):
+                msg += data['parser']
+            else:
+                msg  += self.gen_error_msg(kwargs)
             page  = self.templatepage('das_error', msg=msg)
             view  = 'list'
         else:
@@ -787,11 +798,7 @@ class DASWebService(DASWebManager):
         except:
             self.logger.error(traceback.format_exc())
             data = {'status':'fail'}
-        if  data['status']:
-            status = data['status']
-        else:
-            status = 'no data'
-        return status
+        return data
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
