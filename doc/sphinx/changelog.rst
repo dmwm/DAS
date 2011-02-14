@@ -84,8 +84,10 @@ performed stress tests and code audit DAS servers.
   - replace connection_monitor with dascore_monitor to better handle connection/DASCore
     absense due to loosing connection to MongoDB
   - propagate parser error to user, adjust both DAS cache/web servers
-  - fix queries with date clause
-  - add filter view to show filtered data in plain/text, fixes #959
+  - fix queries with date clause, ticket #1112
+  - add filter view to show filtered data in plain/text, ticket #959
+  - add first implementation of tabular representation, ticket #979, based on YUI
+    DataSource table with dynamic JSON/AJAX table feeder
 
 - 0.5.9
 

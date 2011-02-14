@@ -29,6 +29,13 @@ from   DAS.utils.das_db import db_connection
 from   DAS.core.das_core import DASCore
 from   DAS.web.das_codes import web_code
 
+def yui_name(name):
+    """
+    Parse input name and return compatible with YUI library name, e.g.
+    YUI does not accepts period on a name in DataSource table objects.
+    """
+    return quote(str(name.replace('.', '_')))
+
 def dascore_monitor(cdict, func, sleep=5):
     """
     Check status of DASCore and MongoDB connection for provided
@@ -159,7 +166,8 @@ def checkargs(supported):
                     code  = web_code('Unsupported sort value')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'view'):
-                if  kwds['view'] not in ['list', 'xml', 'json', 'filter']:
+                if  kwds['view'] not in \
+                        ['list', 'xml', 'json', 'filter', 'table']:
                     code  = web_code('Unsupported view')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'format'):

@@ -39,7 +39,7 @@ from DAS.utils.das_db import db_connection
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
-from DAS.web.utils import dascore_monitor
+from DAS.web.utils import dascore_monitor, yui_name
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import exposejson, exposedasplist
 from DAS.core.das_ql import das_aggregators, das_filters
@@ -49,7 +49,7 @@ from DAS.web.das_codes import web_code
 import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
-                  'format', 'sort', 'dir', 'view', 'method']
+                  'format', 'sort', 'dir', 'view', 'method', 'skey']
 
 
 RE_DBSQL_0 = re.compile(r"^find")
@@ -184,7 +184,7 @@ class DASWebService(DASWebManager):
         loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
-        self.pageviews  = ['xml', 'list', 'json', 'filter'] 
+#        self.pageviews  = ['xml', 'list', 'json', 'filter', 'table', 'table_records'] 
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
         dasconfig = das_readconfig()
@@ -736,17 +736,22 @@ class DASWebService(DASWebManager):
                 % server_cache_time
         return page
 
-    @exposetext
-    def filterview(self, kwargs):
+    def check_request4view(self, kwargs):
         """
-        provide DAS plain view for queries with filters
+        Check that request is suitable for given view
         """
         query = kwargs.get('input', None)
         if  query.find(' grep ') == -1:
             code = web_code('Query is not suitable for this view')
             raise HTTPError(500, 'DAS error, code=%s' % code)
+
+    def records4filter(self, kwargs):
+        """
+        Retrieve records for given filter
+        """
+        query = kwargs.get('input', None)
         try:
-            query  = self.dasmgr.mongoparser.parse(query)
+            query = self.dasmgr.mongoparser.parse(query)
         except:
             code = web_code('DAS parser error')
             raise HTTPError(500, 'DAS error, code=%s' % code)
@@ -757,11 +762,84 @@ class DASWebService(DASWebManager):
             rows = []
         results  = ""
         for row in rows:
+            record = {}
             for filter in query['filters']:
                 if  filter.find('=') != -1 or filter.find('>') != -1 or \
                     filter.find('<') != -1:
                     continue
-                results += str(DotDict(row)._get(filter)) + '\n'
+                try:
+                    record[yui_name(filter)] = DotDict(row)._get(filter)
+                except:
+                    pass
+            yield record
+
+    @exposejson
+    @checkargs(DAS_WEB_INPUTS)
+    def table_records(self, **kwargs):
+        """
+        Provide JSON in YUI compatible format to be used in DynamicData table
+        widget, see
+        http://developer.yahoo.com/yui/examples/datatable/dt_dynamicdata.html
+        """
+        rowlist  = [record for record in self.records4filter(kwargs)]
+        idx      = getarg(kwargs, 'idx', 0)
+        limit    = getarg(kwargs, 'limit', 10)
+        total    = self.nresults(kwargs)
+        jsondict = {'recordsReturned': len(rowlist),
+                   'totalRecords': total, 'startIndex':idx,
+                   'sort':'true', 'dir':'asc',
+                   'pageSize': limit,
+                   'records': rowlist}
+        return jsondict
+
+    def tableview(self, kwargs):
+        self.check_request4view(kwargs)
+        query = kwargs.get('input', None)
+        try:
+            query = self.dasmgr.mongoparser.parse(query)
+        except:
+            code = web_code('DAS parser error')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
+        if  not query.has_key('filters'):
+            code = web_code('Query is not suitable for this view')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
+        titles  = []
+        for filter in query['filters']:
+            if  filter.find('=') != -1 or filter.find('>') != -1 or \
+                filter.find('<') != -1:
+                continue
+            titles.append(yui_name(filter))
+        time0   = time.time()
+        uinput  = getarg(kwargs, 'input', '')
+        limit   = getarg(kwargs, 'limit', 10)
+        form    = self.form(input=uinput)
+        total   = self.nresults(kwargs)
+        coldefs = ""
+        for title in titles:
+            coldefs += '{key:"%s",label:"%s",sortable:true,resizeable:true},' \
+                        % (title, title)
+        coldefs = "[%s]" % coldefs[:-1] # remove last comma
+        coldefs = coldefs.replace("},{","},\n{")
+        names   = {'titlelist':titles, 'base': self.base,
+                   'coldefs':coldefs, 'rowsperpage':limit,
+                   'total':total, 'tag':'mytag',
+                   'input':urllib.urlencode(dict(input=uinput))}
+        page    = self.templatepage('das_table', **names)
+        ctime   = (time.time()-time0)
+        page    = self.page(form + page, ctime=ctime)
+        return page
+
+    @exposetext
+    def filterview(self, kwargs):
+        """
+        provide DAS plain view for queries with filters
+        """
+        self.check_request4view(kwargs)
+        results = ""
+        for record in self.records4filter(kwargs):
+            for val in record.values():
+                results += val
+            results += '\n'
         return results
 
     @exposedasplist
