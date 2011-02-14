@@ -159,7 +159,7 @@ def checkargs(supported):
                     code  = web_code('Unsupported sort value')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'view'):
-                if  kwds['view'] not in ['list', 'xml', 'json']:
+                if  kwds['view'] not in ['list', 'xml', 'json', 'filter']:
                     code  = web_code('Unsupported view')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'format'):

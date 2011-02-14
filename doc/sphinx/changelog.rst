@@ -85,6 +85,7 @@ performed stress tests and code audit DAS servers.
     absense due to loosing connection to MongoDB
   - propagate parser error to user, adjust both DAS cache/web servers
   - fix queries with date clause
+  - add filter view to show filtered data in plain/text, fixes #959
 
 - 0.5.9
 

@@ -32,7 +32,7 @@ from cherrypy.lib.static import serve_file
 import DAS
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators
-from DAS.utils.utils import getarg, access, size_format
+from DAS.utils.utils import getarg, access, size_format, DotDict
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
@@ -184,7 +184,7 @@ class DASWebService(DASWebManager):
         loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
-        self.pageviews  = ['xml', 'list', 'json'] 
+        self.pageviews  = ['xml', 'list', 'json', 'filter'] 
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
         dasconfig = das_readconfig()
@@ -658,9 +658,11 @@ class DASWebService(DASWebManager):
             try:
                 func = getattr(self, view + "view") 
                 page = func(kwargs)
+            except HTTPError, _err:
+                raise 
             except:
                 traceback.print_exc()
-                msg   = 'Wrong view'
+                msg   = 'Wrong view. '
                 msg  += self.gen_error_msg(kwargs)
                 page  = self.templatepage('das_error', msg=msg)
         ctime = (time.time()-time0)
@@ -733,6 +735,34 @@ class DASWebService(DASWebManager):
         page += '<div align="right">DAS cache server time: %5.3f sec</div>' \
                 % server_cache_time
         return page
+
+    @exposetext
+    def filterview(self, kwargs):
+        """
+        provide DAS plain view for queries with filters
+        """
+        query = kwargs.get('input', None)
+        if  query.find(' grep ') == -1:
+            code = web_code('Query is not suitable for this view')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
+        try:
+            query  = self.dasmgr.mongoparser.parse(query)
+        except:
+            code = web_code('DAS parser error')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
+        result   = self.result(kwargs)
+        if  result['status'] == 'success':
+            rows = result['data']
+        else:
+            rows = []
+        results  = ""
+        for row in rows:
+            for filter in query['filters']:
+                if  filter.find('=') != -1 or filter.find('>') != -1 or \
+                    filter.find('<') != -1:
+                    continue
+                results += str(DotDict(row)._get(filter)) + '\n'
+        return results
 
     @exposedasplist
     def xmlview(self, kwargs):
