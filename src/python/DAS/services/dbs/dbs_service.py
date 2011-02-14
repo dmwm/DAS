@@ -9,9 +9,19 @@ __version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
+import time
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
-from DAS.utils.utils import dbsql_dateformat, dbsql_opt_map
+from DAS.utils.utils import dbsql_opt_map
+
+def convert_datetime(sec):
+    """ 
+    Convert seconds since epoch or YYYYMMDD to date format used in DBS QL
+    """
+    value = str(sec)
+    if  len(value) == 8: # we got YYYYMMDD
+        return "%s-%s-%s" % (value[:4], value[4:6], value[6:8])
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(sec))
 
 class DBSService(DASAbstractService):
     """
@@ -95,10 +105,11 @@ file.createby where site=%s" % val
         if  api == 'fakeListDatasetbyDate':
 #           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124} 
             query_for_single = "find dataset , count(block), sum(block.size),\
-  sum(block.numfiles), sum(block.numevents) where dataset.createdate %s %s \
-  and dataset.status like VALID*"
+  sum(block.numfiles), sum(block.numevents), dataset.createdate \
+  where dataset.createdate %s %s and dataset.status like VALID*"
             query_for_double = "find dataset , count(block), sum(block.size),\
-  sum(block.numfiles), sum(block.numevents) where dataset.createdate %s %s \
+  sum(block.numfiles), sum(block.numevents), dataset.createdate \
+  where dataset.createdate %s %s \
   and dataset.createdate %s %s and dataset.status like VALID*"
             val = kwds['query']
             qlist = []
@@ -106,16 +117,21 @@ file.createby where site=%s" % val
             if isinstance(val, dict):
                 for opt in val:
                     nopt = dbsql_opt_map(opt)
-                    nval = dbsql_dateformat(str(val[opt]))
+                    if nopt == ('in'):
+                        self.logger.debug(val[opt])
+                        nval = [convert_datetime(x) for x in val[opt]]
+                    else:
+                        nval = convert_datetime(val[opt])
                     qlist.append(nopt)
                     qlist.append(nval)
                 if len(qlist) == 4:
                     query = query_for_double % tuple(qlist)
                 else:
-                    msg = "ERROR::fakeListDatasetbyDate wrong params get"
-                    raise Exception(msg)
+                    msg = "dbs_services::fakeListDatasetbyDate \
+ wrong params get, IN date is not support by DBS2 QL"
+                    self.logger.info(msg)
             if isinstance(val, int):
-                val = dbsql_dateformat(str(val))
+                val = convert_datetime(val)
                 query = query_for_single % ('=', val)
     
             kwds['query'] = query

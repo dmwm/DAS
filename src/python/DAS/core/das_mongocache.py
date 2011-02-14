@@ -793,7 +793,6 @@ class DASMongocache(object):
         """
         dasheader  = header['das']
         lkeys      = header['lookup_keys']
-
         # check presence of API record in a cache
         enc_query = encode_mongo_query(query)
         spec = {'spec' : dict(query=enc_query)}

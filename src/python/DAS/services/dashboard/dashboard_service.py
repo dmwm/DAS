@@ -100,8 +100,8 @@ class DashboardService(DASAbstractService):
                 if  key == 'date' or key == 'jobsummary':
                     if  value.has_key('$in'):
                         vallist = value['$in']
-                    elif value.has_key('$between'):
-                        vallist = value['$between']
+                    elif value.has_key('$lte') and value.has_key('$gte'):
+                        vallist = (value['$gte'], value['$lte'])
                     else:
                         raise Exception(err)
                     args['date1'] = convert_datetime(vallist[0])

@@ -482,8 +482,14 @@ class DASAbstractService(object):
                         elif isinstance(value, dict) and \
                         value.has_key('$in'): # we got a range {'$in': []}
                             value = value['$in']
-                        else:
-                            value = str(value) # to avoid {'$gt':number}
+                        elif isinstance(value, dict) and \
+                        value.has_key('$lte') and value.has_key('$gte'):
+                            # we got a between range
+                            min = value['$lte']
+                            max = value['$gte']
+                            value = [min, max]
+                        else: 
+                            value = json.dumps(value) 
                     elif existing_value and value != existing_value:
                         # we got proximity results
                         if  ddict.has_key('proximity'):

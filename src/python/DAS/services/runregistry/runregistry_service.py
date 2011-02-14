@@ -114,8 +114,8 @@ class RunRegistryService(DASAbstractService):
                 if  isinstance(val, dict):
                     if  val.has_key('$in'):
                         value = val['$in']
-                    elif val.has_key('$between'):
-                        value = val['$between']
+                    elif val.has_key('$lte') and val.has_key('$gte'):
+                        value = (val['$gte'], val['$lte'])
                     else:
                         msg = 'Unable to get the value from %s=%s' \
                                 % (key, val) 

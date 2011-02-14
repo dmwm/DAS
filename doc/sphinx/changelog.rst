@@ -84,6 +84,7 @@ performed stress tests and code audit DAS servers.
   - replace connection_monitor with dascore_monitor to better handle connection/DASCore
     absense due to loosing connection to MongoDB
   - propagate parser error to user, adjust both DAS cache/web servers
+  - fix queries with date clause
 
 - 0.5.9
 

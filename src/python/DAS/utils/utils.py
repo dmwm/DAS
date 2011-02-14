@@ -149,22 +149,6 @@ def das_dateformat(value):
         msg = 'Unacceptable date format'
         raise Exception(msg)
 
-def dbsql_dateformat(value):
-    """
-    Temeporary use for convert DAS date into DBS input date
-    Please rewrite one if other system also has such requirements
-    I assume that the value passed in is in das_dateformat
-    which means YYYYMMDD
-    dbsql is asking YYYY-MM-DD, so we return that
-    """
-    pat = date_yyyymmdd_pattern
-    if  pat.match(value): # we accept YYYYMMDD
-        qldate = '-'.join((value[0:4],value[4:6],value[6:8]))
-        return qldate
-    else:
-        msg = 'Unacceptable date format'
-        raise Exception(msg)
-
 def dbsql_opt_map(operator):
     """
     convert the das operator to normal ones
@@ -180,6 +164,8 @@ def dbsql_opt_map(operator):
         return '>='
     elif operator == '$lte':
         return '<='
+    elif operator == '$in':
+        return 'in'
     
 
 def get_http_expires(data):
