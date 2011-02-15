@@ -461,6 +461,11 @@ class DASMongocache(object):
         query  = adjust_id(query)
         spec   = query.get('spec', {})
         fields = query.get('fields', None)
+        if spec.has_key('date') and isinstance(spec['date'], dict)\
+             and spec['date'].has_key('$lte') \
+             and spec['date'].has_key('$gte'):
+             spec['date'] = [spec['date']['$gte'], spec['date']['$lte']]
+
         res    = col.find(spec=spec, fields=fields).count()
         msg    = "DASMongocache::incache(%s, coll=%s) found %s results"\
                 % (query, collection, res)
@@ -532,6 +537,13 @@ class DASMongocache(object):
             strquery = ""
         else:
             strquery = json.dumps(query)
+        if  query.has_key('spec') and query['spec'].has_key('date'):
+            if isinstance(query['spec']['date'], dict)\
+                and query['spec']['date'].has_key('$lte') \
+                and query['spec']['date'].has_key('$gte'):
+                query['spec']['date'] = [query['spec']['date']['$gte'],
+                                         query['spec']['date']['$lte']]
+
 # TODO: investigate why do I need to loose the query????
 # 20110120 (ticket #960)
 #            query = loose(query)

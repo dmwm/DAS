@@ -485,8 +485,8 @@ class DASAbstractService(object):
                         elif isinstance(value, dict) and \
                         value.has_key('$lte') and value.has_key('$gte'):
                             # we got a between range
-                            min = value['$lte']
-                            max = value['$gte']
+                            min = value['$gte']
+                            max = value['$lte']
                             value = [min, max]
                         else: 
                             value = json.dumps(value) 

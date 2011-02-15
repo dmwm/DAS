@@ -91,7 +91,7 @@ class DASPLY(object):
     ]
 
     t_OPERATOR = r'='
-    t_FILTER_OPERATOR = r'>|<|<=|>='
+    t_FILTER_OPERATOR = r'<=|>=|>|<'
     t_PIPE = r'\|'
     t_COMMA    = r'\,'
     t_LSQUARE = r'\['
