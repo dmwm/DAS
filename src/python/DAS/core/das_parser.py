@@ -18,7 +18,7 @@ from DAS.core.das_ql import das_special_keys
 from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
 from DAS.core.das_ply import DASPLY, ply2mongo
 from DAS.utils.utils import adjust_value, convert2date, das_dateformat
-from DAS.utils.regex import key_attrib_pattern
+from DAS.utils.regex import key_attrib_pattern, last_key_pattern
 from DAS.core.das_parsercache import DASParserDB, PARSERCACHE_NOTFOUND
 from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
 from DAS.utils.regex import int_number_pattern, float_number_pattern
@@ -100,7 +100,8 @@ class QLManager(object):
             self.dasply.test_lexer(query)
         if  self.enabledb:
             status, value = self.parserdb.lookup_query(query)
-            if status == PARSERCACHE_VALID:
+            if status == PARSERCACHE_VALID and \
+                len(last_key_pattern.findall(query)) == 0:
                 mongo_query = value
             elif status == PARSERCACHE_INVALID:
                 raise Exception(value)
@@ -111,10 +112,13 @@ class QLManager(object):
                     self.parserdb.insert_valid_query(query, mongo_query)
                 except Exception, exp:
                     self.parserdb.insert_invalid_query(query, exp)
-                    raise
+                    raise exp
         else:
-            ply_query   = self.dasply.parser.parse(query)
-            mongo_query = ply2mongo(ply_query)
+            try:
+                ply_query   = self.dasply.parser.parse(query)
+                mongo_query = ply2mongo(ply_query)
+            except Exception, exp:
+                raise exp
         return mongo_query
 
     def convert2skeys(self, mongo_query):

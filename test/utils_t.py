@@ -21,7 +21,7 @@ from DAS.utils.utils import convert_dot_notation, translate
 from DAS.utils.utils import delete_elem, plist_parser, unique_filter
 from DAS.utils.utils import DotDict, filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
-from DAS.utils.utils import genkey, next_day, prev_day
+from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 
 class testUtils(unittest.TestCase):

@@ -12,16 +12,7 @@ import re
 import time
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
-from DAS.utils.utils import dbsql_opt_map
-
-def convert_datetime(sec):
-    """ 
-    Convert seconds since epoch or YYYYMMDD to date format used in DBS QL
-    """
-    value = str(sec)
-    if  len(value) == 8: # we got YYYYMMDD
-        return "%s-%s-%s" % (value[:4], value[4:6], value[6:8])
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(sec))
+from DAS.utils.utils import dbsql_opt_map, convert_datetime
 
 class DBSService(DASAbstractService):
     """
@@ -130,7 +121,7 @@ file.createby where site=%s" % val
                     msg = "dbs_services::fakeListDatasetbyDate \
  wrong params get, IN date is not support by DBS2 QL"
                     self.logger.info(msg)
-            if isinstance(val, int):
+            else:
                 val = convert_datetime(val)
                 query = query_for_single % ('=', val)
     

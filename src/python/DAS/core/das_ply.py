@@ -16,7 +16,7 @@ import ply.lex
 import ply.yacc
 import re
 
-from   DAS.utils.utils import convert2date
+from   DAS.utils.utils import convert2date, das_dateformat
 from   DAS.core.das_ql import das_filters, das_operators, das_mapreduces
 from   DAS.core.das_ql import das_aggregators, das_special_keys
 from   DAS.core.das_ql import das_db_keywords
@@ -49,7 +49,7 @@ class DASPLY(object):
         
         # test if we have been given a list of desired operators/filters
         # /aggregators, if not get the lists from das_ql
-        operators = operators if operators else das_operators()
+#        operators = operators if operators else das_operators()
         filters = filters if filters else das_filters()
         aggregators = aggregators if aggregators else das_aggregators()
         mapreduces = mapreduces if mapreduces else das_mapreduces()
@@ -58,8 +58,8 @@ class DASPLY(object):
         # build a map of token->token.type which we can use in the
         # enlarged VALUE rule
         self.tokenmap = {}
-        for o in operators:
-            self.tokenmap[o] = 'OPERATOR'
+#        for o in operators:
+#            self.tokenmap[o] = 'OPERATOR'
         for f in filters:
             self.tokenmap[f] = 'FILTER'
         for a in aggregators:
@@ -68,6 +68,9 @@ class DASPLY(object):
             self.tokenmap[m] = 'MAPREDUCE'
         for s in specials:
             self.tokenmap[s] = 'SPECIALKEY'
+        self.tokenmap['in'] = 'IN'
+        self.tokenmap['last'] = 'LAST'
+        self.tokenmap['between'] = 'BETWEEN'
 
     tokens = [
         'DASKEY',
@@ -80,7 +83,7 @@ class DASPLY(object):
         'RSQUARE',
         'LPAREN',
         'RPAREN',
-        'OPERATOR',
+        'EQUAL',
         'FILTER_OPERATOR',
         'VALUE',
         'NUMBER',
@@ -88,9 +91,12 @@ class DASPLY(object):
         'DATE_STR',
         'MAPREDUCE',
         'SPECIALKEY',
+        'IN',
+        'LAST',
+        'BETWEEN',
     ]
 
-    t_OPERATOR = r'='
+    t_EQUAL = r'='
     t_FILTER_OPERATOR = r'<=|>=|>|<'
     t_PIPE = r'\|'
     t_COMMA    = r'\,'
@@ -211,17 +217,37 @@ class DASPLY(object):
     # lexer logic, we can have daskey=value, but due to ambiguity of daskey
     # defition it is allowed to have <daskey>=<daskey> where second <daskey>
     # can be a simple word, e.g. system=sitedb
-    def p_keyop0(self, p):
-        """keyop : DASKEY OPERATOR VALUE
-                 | DASKEY OPERATOR DASKEY
-                 | DASKEY OPERATOR NUMBER
-                 | DASKEY OPERATOR DATE
-                 | DASKEY OPERATOR IPADDR
-                 | SPECIALKEY OPERATOR DATE
-                 | SPECIALKEY OPERATOR DATE_STR
-                 | SPECIALKEY OPERATOR VALUE
-                 | SPECIALKEY OPERATOR array
-                 | DASKEY OPERATOR array"""
+
+    def p_opvalue(self, p):
+        """keyop : DASKEY EQUAL VALUE
+                 | DASKEY IN VALUE
+                 | SPECIALKEY EQUAL VALUE
+                 | SPECIALKEY IN VALUE"""
+        p[0] = ('keyop', p[1], p[2], p[3])
+
+    def p_opkey(self, p):
+        """keyop : DASKEY EQUAL DASKEY"""
+        p[0] = ('keyop', p[1], p[2], p[3])
+
+    def p_opnumber(self, p):
+        """keyop : DASKEY EQUAL NUMBER
+                 | SPECIALKEY EQUAL NUMBER"""
+        p[0] = ('keyop', p[1], p[2], p[3])
+
+    def p_opdate(self, p):
+        """keyop : DASKEY EQUAL DATE
+                 | SPECIALKEY EQUAL DATE
+                 | SPECIALKEY LAST DATE_STR"""
+        p[0] = ('keyop', p[1], p[2], p[3])
+
+    def p_oparray(self, p):
+        """keyop : DASKEY BETWEEN array
+                 | DASKEY IN array
+                 | SPECIALKEY BETWEEN array"""
+        p[0] = ('keyop', p[1], p[2], p[3])
+
+    def p_opip(self, p):
+        """keyop : DASKEY EQUAL IPADDR"""
         p[0] = ('keyop', p[1], p[2], p[3])
 
     def p_keyop1(self, p):
@@ -251,18 +277,27 @@ class DASPLY(object):
         p[0] = [p[1]]
 
     def p_list_for_filter(self, p):
-        """oneexp : DASKEY OPERATOR VALUE
-                  | DASKEY OPERATOR NUMBER
-                  | DASKEY OPERATOR DATE
+        """oneexp : DASKEY EQUAL VALUE
+                  | DASKEY EQUAL NUMBER
                   | DASKEY FILTER_OPERATOR VALUE
-                  | DASKEY FILTER_OPERATOR NUMBER
-                  | DASKEY FILTER_OPERATOR DATE
-                  | DASKEY"""
+                  | DASKEY FILTER_OPERATOR NUMBER"""
         val = ''
         for idx in range(0, len(p)):
             if  p[idx]:
                 val += str(p[idx])
         p[0] = [val]
+
+    def p_date_for_filter(self, p):
+        """oneexp : DASKEY EQUAL DATE
+                  | DASKEY FILTER_OPERATOR DATE"""
+        val = ''
+        if len(p) == 4:
+            val += str(p[1]) + str(p[2]) + str(das_dateformat(p[3]))
+        p[0] = [val]
+
+    def p_key_for_filter(self, p):
+        """oneexp : DASKEY"""
+        p[0] = [str(p[1])]
 
     def p_list_for_filter2(self, p):
         """list_for_filter : list_for_filter COMMA oneexp"""
@@ -340,12 +375,20 @@ def ply2mongo(query):
         dasname = name 
         if  oper and val: # real condition
             value = val
+            if  name == 'date' and oper == '=':
+                value = das_dateformat(value)
             if  oper == 'last':
-                value = {'$in' : convert2date(value)}
+                valist = convert2date(value)
+                value = {'$gte' : valist[0], '$lte': valist[1]}
             if  oper == 'in':
-                value = {'$in' : list(val[1:])}
+                vlist = list(val[1:])
+                if name == 'date':
+                    vlist = [das_dateformat(x) for x in vlist]
+                value = {'$in' : vlist}
             if  oper == 'between':
                 vlist = list(val[1:])
+                if name == 'date':
+                    vlist = [das_dateformat(x) for x in vlist]
                 vlist.sort()
                 value = {'$gte' : vlist[0], '$lte': vlist[-1]}
         else: # selection field

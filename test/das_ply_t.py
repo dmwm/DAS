@@ -44,7 +44,7 @@ class testDASPLY(unittest.TestCase):
         date1 = time.time() - 24*60*60
         date2 = time.time()
         mongo = {'fields': ['popular', 'queries'], 
-                 'spec': {'date': {'$in': [long(date1), long(date2)]}}}
+                 'spec': {'date': {'$gte': long(date1), '$lte': long(date2)}}}
         self.queries[query] = mongo
 
         query = "records"
@@ -133,13 +133,13 @@ class testDASPLY(unittest.TestCase):
         query = "run date last 24h"
         date1 = time.time() - 24*60*60
         date2 = time.time()
-        mongo = {'fields': ['run'], 'spec': {'date': {'$in': [long(date1), long(date2)]}}}
+        mongo = {'fields': ['run'], 'spec': {'date': {'$gte': long(date1), '$lte': long(date2)}}}
         self.queries[query] = mongo
 
         date1 = 20101201
         date2 = 20101202
-        query = "run date in [%s, %s]" % (date1, date2)
-        mongo = {'fields': ['run'], 'spec': {'date': {'$in': [date1, date2]}}}
+        query = "run date between [%s, %s]" % (date1, date2)
+        mongo = {'fields': ['run'], 'spec': {'date': {'$lte': long(1291248000), '$gte': long(1291161600)}}}
         self.queries[query] = mongo
 
         query = "dataset file=/a/b run in [1,2] | grep file.name, file.age | unique | sum(file.size),max(file.size)"
@@ -192,12 +192,12 @@ class testDASPLY(unittest.TestCase):
 
         # query with DASKEY, date=value
         query = 'dataset date=20110124'
-        mongo = {'fields': ['dataset'], 'spec': {'date': 20110124}}
+        mongo = {'fields': ['dataset'], 'spec': {'date': 1295827200}}
         self.queries[query] = mongo
         
         # query with DASKEY, date between [value1, value2]
         query = 'dataset date between [20110124,20110126]'
-        mongo = {'fields': ['dataset'], 'spec': {'date': {'$gte': 20110124, '$lte': 20110126}}}
+        mongo = {'fields': ['dataset'], 'spec': {'date': {'$gte': 1295827200, '$lte': 1296000000}}}
         self.queries[query] = mongo
 
 
@@ -230,6 +230,12 @@ class testDASPLY(unittest.TestCase):
         query = 'run last 24h'
         mongo = {'fields': None, 'spec': {'block': '/a/b/c'}, 'filters': ['site=T1']}
         queries[query] = mongo
+
+        # query with DATE IN
+        query = """dataset date in [20110124,20110126]"""
+        mongo = {'fields': None, 'spec': {'date': {'$lte': 20110124, '$gte': 20110126}}}
+        queries[query] = mongo
+
         for query, expect in queries.items():
             self.assertRaises(Exception, self.dasply.parser.parse, query)
 

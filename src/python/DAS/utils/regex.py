@@ -40,3 +40,6 @@ number_pattern = \
     re.compile('^[-]?[0-9][0-9\.]*$') # -123
 dataset_path = \
     re.compile('/[a-zA-Z0-9\-]+/[a-zA-Z0-9\-]+')
+last_key_pattern = \
+    re.compile('date\s+last')
+

@@ -139,15 +139,25 @@ def convert2date(value):
 
 def das_dateformat(value):
     """Check if provided value in expected DAS date format."""
+    value = str(value)
     pat = date_yyyymmdd_pattern
     if  pat.match(value): # we accept YYYYMMDD
         ddd = datetime.date(int(value[0:4]), # YYYY
                             int(value[4:6]), # MM
                             int(value[6:8])) # DD
-        return time.mktime(ddd.timetuple())
+        return calendar.timegm((ddd.timetuple()))
     else:
         msg = 'Unacceptable date format'
         raise Exception(msg)
+
+def convert_datetime(sec):
+    """
+    Convert seconds since epoch or YYYYMMDD to date YYYY-MM-DD
+    """
+    value = str(sec)
+    if  len(value) == 8: # we got YYYYMMDD
+        return "%s-%s-%s" % (value[:4], value[4:6], value[6:8])
+    return time.strftime("%Y-%m-%d", time.gmtime(sec))
 
 def dbsql_opt_map(operator):
     """
@@ -214,7 +224,7 @@ def expire_timestamp(expire):
     # use Jan 1st, 2010 as a seed to check expire date
     # prior 2010 DAS was not released in production
     tup = (2010, 1, 1, 0, 0, 0, 0, 1, -1)
-    if  isinstance(expire, int) and expire < time.mktime(tup):
+    if  isinstance(expire, int) and expire < calendar.timegm(tup):
         expire = tstamp + expire
     return expire
 

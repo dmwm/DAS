@@ -14,7 +14,7 @@ import traceback
 import xml.etree.cElementTree as ET
 from types import InstanceType
 from DAS.services.abstract_service import DASAbstractService, dasheader
-from DAS.utils.utils import map_validator, next_day
+from DAS.utils.utils import map_validator
 
 def convert_datetime(sec):
     """
@@ -87,8 +87,7 @@ class DashboardService(DASAbstractService):
                         msg += 'Please use either date last XXh format or'
                         msg += 'date in [YYYYMMDD, YYYYMMDD]'
                         raise Exception(msg)
-                    if  isinstance(value, str) or isinstance(value, int):
-                        value = [value, next_day(value)]
+                    value = [value, value + 24*60*60]
                     args['date1'] = convert_datetime(value[0])
                     args['date2'] = convert_datetime(value[1])
                     count += 1

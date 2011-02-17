@@ -13,17 +13,8 @@ import xmlrpclib
 import traceback
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
-from   DAS.utils.utils import map_validator, adjust_value, next_day
+from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
 
-def convert_datetime(sec):
-    """
-    Convert seconds since epoch or YYYYMMDD to date format used in RunRegistry
-    """
-    value = str(sec)
-    if  len(value) == 8: # we got YYYYMMDD
-        return "%s-%s-%s" % (value[:4], value[4:6], value[6:8])
-    return time.strftime("%Y-%m-%d", time.gmtime(sec))
-    
 def worker(url, query):
     """
     Query RunRegistry service, see documentation at
@@ -120,16 +111,17 @@ class RunRegistryService(DASAbstractService):
                         msg = 'Unable to get the value from %s=%s' \
                                 % (key, val) 
                         raise Exception(msg)
+                    try:
+                        date1 = convert_datetime(value[0])
+                        date2 = convert_datetime(value[-1])
+                    except:
+                        msg = 'Unable to convert to datetime format, %s' \
+                            % value
+                        raise Exception(msg)
                 else:
-                     value = [val, next_day(val)]
-                try:
-                    date1 = convert_datetime(value[0])
-                    date2 = convert_datetime(value[-1])
-                except:
-                    msg = 'Unable to convert to datetime format, %s' \
-                        % value
-                    raise Exception(msg)
-                run_time = '>= %s and < %s' % (date1, date2)
+                    date1 = convert_datetime(val) 
+                    date2 = convert_datetime(val + 24*60*60)
+                run_time = '>= %s and <= %s' % (date1, date2)
                 _query = {'runStartTime': run_time}
         if  not _query:
             msg = 'Unable to match input parameters with input query'

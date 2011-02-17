@@ -89,7 +89,10 @@ class DASParserDB(object):
 	                          (rawtext, query, error))
         # since MongoDB does not support insertion of $ sign in queries
         # we need to encode inserted query
-        encquery = encode_mongo_query(query)
+        if  query:
+            encquery = encode_mongo_query(query)
+        else:
+            encquery = ""
         self.col.insert({'raw':rawtext, 'hash':genkey(rawtext),
-                         'query':encquery, 'error':error})
+                         'query':encquery, 'error':str(error)})
         self.col.ensure_index('hash', unique=True, drop_dups=True)
