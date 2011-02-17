@@ -392,7 +392,8 @@ def ply2mongo(query):
                 vlist.sort()
                 value = {'$gte' : vlist[0], '$lte': vlist[-1]}
         else: # selection field
-            fields.append(name)
+            if fields.count(name) == 0:
+                fields.append(name)
             value = '*'
         if  spec.has_key(dasname):
             exist_value = spec[dasname]
@@ -402,6 +403,8 @@ def ply2mongo(query):
                 array = value
             elif value == '*' and exist_value != '*':
                 array = exist_value
+            elif value == '*' and exist_value == '*':
+                array = value
             else:
                 array = [exist_value, value]
             spec[dasname] = array
@@ -411,7 +414,8 @@ def ply2mongo(query):
         mongodict['fields'] = fields
         for key in fields:
             if  len(spec.keys()) != 1 and spec.has_key(key):
-                del spec[key]
+                if spec[key] == '*' :
+                    del spec[key]
     else:
         if  len(spec.keys()) == 1:
             mongodict['fields'] = [spec.keys()[0].split('.')[0]]

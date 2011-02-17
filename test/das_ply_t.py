@@ -201,6 +201,34 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
 
+        query = 'file=abcdeasdf'
+        mongo = {'fields': ['file'], 'spec': {'file': 'abcdeasdf'}}
+        self.queries[query] = mongo
+
+        query = 'file=abcdeasdf dataset=abcdes'
+        mongo = {'fields': None, 'spec': {'file': 'abcdeasdf', 'dataset': 'abcdes'}}
+        self.queries[query] = mongo
+
+        query = 'dataset date = 20080201'
+        mongo = {'fields': ['dataset'], 'spec': {'date': 1201824000}}
+        self.queries[query] = mongo
+
+        query = 'file dataset date = 20080201'
+        mongo = {'fields': ['file', 'dataset'], 'spec': {'date': 1201824000}}
+        self.queries[query] = mongo
+
+        query = 'dataset dataset=abcdes date = 20080201'
+        mongo = {'fields': ['dataset'], 'spec': {'date': 1201824000, 'dataset': 'abcdes'}}
+        self.queries[query] = mongo
+
+        query = 'file dataset dataset=abcdes date = 20080201'
+        mongo = {'fields': ['file', 'dataset'], 'spec': {'date': 1201824000, 'dataset': 'abcdes'}}
+        self.queries[query] = mongo
+
+        query = 'file=abcdeasdf file dataset dataset=abcdes date = 20080201'
+        mongo = {'fields': ['file', 'dataset'], 'spec': {'date': 1201824000, 'file': 'abcdeasdf', 'dataset': 'abcdes'}}
+        self.queries[query] = mongo
+
     def test_lexer(self):
         """Test DAS PLY lexer"""
         for query, expect in self.queries.items():
