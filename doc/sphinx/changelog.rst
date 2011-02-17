@@ -88,6 +88,9 @@ performed stress tests and code audit DAS servers.
   - add filter view to show filtered data in plain/text, ticket #959
   - add first implementation of tabular representation, ticket #979, based on YUI
     DataSource table with dynamic JSON/AJAX table feeder
+  - add jsonstreamer
+  - add cache method to web server (part of future merge between cache/web servers)
+  - add das_client which talks to web server
 
 - 0.5.9
 

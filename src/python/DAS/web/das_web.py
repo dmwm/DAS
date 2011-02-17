@@ -41,6 +41,7 @@ from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
 from DAS.web.utils import dascore_monitor, yui_name
 from DAS.web.tools import exposedasjson, exposetext
+from DAS.web.tools import request_headers, jsonstreamer
 from DAS.web.tools import exposejson, exposedasplist
 from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.web.das_webmanager import DASWebManager
@@ -49,7 +50,8 @@ from DAS.web.das_codes import web_code
 import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
-                  'format', 'sort', 'dir', 'view', 'method', 'skey']
+                  'format', 'sort', 'dir', 'view', 'method', 'skey',
+                  'query', 'fid']
 
 
 RE_DBSQL_0 = re.compile(r"^find")
@@ -254,7 +256,7 @@ class DASWebService(DASWebManager):
         Serve DAS CLI file download.
         """
         dasroot = '/'.join(__file__.split('/')[:-3])
-        clifile = os.path.join(dasroot, 'DAS/tools/das_cache_client.py')
+        clifile = os.path.join(dasroot, 'DAS/tools/das_client.py')
         return serve_file(clifile, content_type='text/plain')
 
     @expose
@@ -266,7 +268,7 @@ class DASWebService(DASWebManager):
             base = self.base
         else:
             base = 'http://cmsweb.cern.ch/das'
-        desc = self.tempaltepage('das_opensearch', base=base)
+        desc = self.templatepage('das_opensearch', base=base)
         cherrypy.response.headers['Content-Type'] = \
                 'application/opensearchdescription+xml'
         return desc
@@ -610,6 +612,31 @@ class DASWebService(DASWebManager):
                         yield uikey, value
                 except:
                     yield key, idict[key]
+
+    @expose
+    @jsonstreamer
+    @checkargs(DAS_WEB_INPUTS)
+    def cache(self, **kwargs):
+        """
+        Invoke DAS workflow and get data from the cache.
+        This is read-only method used by DAS CLI.
+        """
+        # do not allow caching
+        cherrypy.response.headers['Cache-Control'] = 'no-cache'
+        cherrypy.response.headers['Pragma'] = 'no-cache'
+        head  = request_headers()
+        query = getarg(kwargs, 'query', '')
+        idx   = getarg(kwargs, 'idx', 0)
+        limit = getarg(kwargs, 'limit', 10)
+        skey  = getarg(kwargs, 'sort', '')
+        sdir  = getarg(kwargs, 'dir', 'asc')
+        try:
+            data = self.dasmgr.result(query, idx, limit, skey, sdir)
+            head.update({'status':'success'})
+        except Exception, exp:
+            head.update({'status': 'fail', 'reason': str(exp)})
+            data = []
+        return head, data
 
     @expose
     @checkargs(DAS_WEB_INPUTS)

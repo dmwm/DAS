@@ -95,7 +95,7 @@ class DASWebManager(TemplatedPage):
                            'tools.gzip.on': True,
                            'tools.gzip.mime_types': mime_types,
                           })
-        self.cache    = {}
+        self._cache    = {}
 
     @expose
     def index(self, *args, **kwargs):
@@ -187,7 +187,7 @@ class DASWebManager(TemplatedPage):
         Return asked set of files for JS, YUI, CSS.
         """
         idx = "-".join(scripts)
-        if  idx not in self.cache.keys():
+        if  idx not in self._cache.keys():
             data = ''
             if  datatype == 'css':
                 data = '@CHARSET "UTF-8";'
@@ -201,10 +201,10 @@ class DASWebManager(TemplatedPage):
             if  datatype == 'css':
                 set_headers("text/css")
             if  minimize:
-                self.cache[idx] = minify(data)
+                self._cache[idx] = minify(data)
             else:
-                self.cache[idx] = data
-        return self.cache[idx] 
+                self._cache[idx] = data
+        return self._cache[idx] 
     
     def check_scripts(self, scripts, resource, path):
         """

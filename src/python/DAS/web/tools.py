@@ -13,6 +13,8 @@ __email__ = "vkuznet@gmail.com"
 
 # system modules
 import os
+import time
+import types
 import logging
 import plistlib
 
@@ -29,6 +31,7 @@ from cherrypy import expose
 from Cheetah.Template import Template
 from Cheetah import Version
 
+import DAS.utils.jsonwrapper as json
 from json import JSONEncoder
 
 class Page(object):
@@ -119,6 +122,20 @@ def auth(func):
         return data
     return wrapper
 
+def request_headers():
+    """
+    Return dict with cherrypy request headers
+    """
+    doc   = dict(timestamp=time.time(),
+            headers=cherrypy.request.headers,
+            method=cherrypy.request.method,
+            path=cherrypy.request.path_info,
+            args=cherrypy.request.params,
+            ip=cherrypy.request.remote.ip, 
+            hostname=cherrypy.request.remote.name,
+            port=cherrypy.request.remote.port)
+    return doc
+
 def exposetext (func):
     """CherryPy expose Text decorator"""
     @expose
@@ -127,6 +144,30 @@ def exposetext (func):
         data = func (self, *args, **kwds)
         cherrypy.response.headers['Content-Type'] = "text/plain"
         return data
+    return wrapper
+
+def jsonstreamer(func):
+    """JSON streamer decorator"""
+    def wrapper (self, *args, **kwds):
+        """Decorator wrapper"""
+        cherrypy.response.headers['Content-Type'] = "application/json"
+        func._cp_config = {'response.stream': True}
+        head, data = func (self, *args, **kwds)
+        yield json.dumps(head)[:-1] # do not yield }
+        yield ', "data": ['
+        if  isinstance(data, dict):
+            for chunk in JSONEncoder().iterencode(data):
+                yield chunk
+            yield ',\n'
+        elif  isinstance(data, list) or isinstance(data, types.GeneratorType):
+            for rec in data:
+                for chunk in JSONEncoder().iterencode(rec):
+                    yield chunk
+                yield ',\n'
+        else:
+            msg = 'jsonstreamer, improper data type %s' % type(data)
+            raise Exception(msg)
+        yield ']}'
     return wrapper
 
 def exposejson (func):
