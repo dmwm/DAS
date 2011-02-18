@@ -49,7 +49,7 @@ class DASPLY(object):
         
         # test if we have been given a list of desired operators/filters
         # /aggregators, if not get the lists from das_ql
-#        operators = operators if operators else das_operators()
+        operators = operators if operators else das_operators()
         filters = filters if filters else das_filters()
         aggregators = aggregators if aggregators else das_aggregators()
         mapreduces = mapreduces if mapreduces else das_mapreduces()
@@ -58,8 +58,8 @@ class DASPLY(object):
         # build a map of token->token.type which we can use in the
         # enlarged VALUE rule
         self.tokenmap = {}
-#        for o in operators:
-#            self.tokenmap[o] = 'OPERATOR'
+        for o in operators:
+            self.tokenmap[o] = 'OPERATOR'
         for f in filters:
             self.tokenmap[f] = 'FILTER'
         for a in aggregators:
@@ -68,9 +68,6 @@ class DASPLY(object):
             self.tokenmap[m] = 'MAPREDUCE'
         for s in specials:
             self.tokenmap[s] = 'SPECIALKEY'
-        self.tokenmap['in'] = 'IN'
-        self.tokenmap['last'] = 'LAST'
-        self.tokenmap['between'] = 'BETWEEN'
 
     tokens = [
         'DASKEY',
@@ -84,6 +81,7 @@ class DASPLY(object):
         'LPAREN',
         'RPAREN',
         'EQUAL',
+        'OPERATOR',
         'FILTER_OPERATOR',
         'VALUE',
         'NUMBER',
@@ -91,9 +89,6 @@ class DASPLY(object):
         'DATE_STR',
         'MAPREDUCE',
         'SPECIALKEY',
-        'IN',
-        'LAST',
-        'BETWEEN',
     ]
 
     t_EQUAL = r'='
@@ -220,9 +215,7 @@ class DASPLY(object):
 
     def p_opvalue(self, p):
         """keyop : DASKEY EQUAL VALUE
-                 | DASKEY IN VALUE
-                 | SPECIALKEY EQUAL VALUE
-                 | SPECIALKEY IN VALUE"""
+                 | SPECIALKEY EQUAL VALUE"""
         p[0] = ('keyop', p[1], p[2], p[3])
 
     def p_opkey(self, p):
@@ -234,17 +227,40 @@ class DASPLY(object):
                  | SPECIALKEY EQUAL NUMBER"""
         p[0] = ('keyop', p[1], p[2], p[3])
 
+    # last only valid in 'date last DATE_STR'
     def p_opdate(self, p):
         """keyop : DASKEY EQUAL DATE
                  | SPECIALKEY EQUAL DATE
-                 | SPECIALKEY LAST DATE_STR"""
-        p[0] = ('keyop', p[1], p[2], p[3])
+                 | SPECIALKEY OPERATOR DATE_STR"""
+        if p[2] == '=' :
+            p[0] = ('keyop', p[1], p[2], p[3])
+        elif p[2] == 'last' and p[1] == 'date':
+            p[0] = ('keyop', p[1], p[2], p[3])
+        else:
+            p.error = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+            if p[2] == 'last':
+                p.error += "'last' is only valid with key 'date'"
+            else:
+                p.error += "'%s' is expecting an array with '[]'" % p[2]
+            raise Exception(p.error)
 
-    def p_oparray(self, p):
-        """keyop : DASKEY BETWEEN array
-                 | DASKEY IN array
-                 | SPECIALKEY BETWEEN array"""
-        p[0] = ('keyop', p[1], p[2], p[3])
+    # 'date in array' is not valid,
+    def p_oparry(self, p):
+        """keyop : DASKEY OPERATOR array
+                 | SPECIALKEY OPERATOR array"""
+        if p[1] == 'date' and p[2] != 'last':
+            if p[2] == 'between':
+                p[0] = ('keyop', p[1], p[2], p[3])
+            else :
+                p.error = "'%s %s %s' is not valid, " %\
+                    (p[1], p[2], p[3])
+                p.error += "'in' is not supported by 'date'"
+                raise Exception(p.error)
+        elif p[2] != 'last':
+            p[0] = ('keyop', p[1], p[2], p[3])
+        else:
+            p.error = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+            raise Exception(p.error)
 
     def p_opip(self, p):
         """keyop : DASKEY EQUAL IPADDR"""
@@ -275,6 +291,28 @@ class DASPLY(object):
         """list : DATE
                 | NUMBER"""
         p[0] = [p[1]]
+
+    def p_err1_op(self, p):
+        """keyop : DASKEY OPERATOR VALUE
+                 | SPECIALKEY OPERATOR VALUE
+                 | DASKEY OPERATOR NUMBER
+                 | SPECIALKEY OPERATOR NUMBER
+                 | DASKEY OPERATOR DATE
+                 | SPECIALKEY OPERATOR DATE"""
+        p.error = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+        raise Exception(p.error)
+
+    def p_err2_op(self, p):
+        """keyop : VALUE EQUAL VALUE
+                 | VALUE EQUAL NUMBER
+                 | VALUE OPERATOR VALUE
+                 | VALUE OPERATOR array
+                 | VALUE OPERATOR NUMBER
+                 | VALUE EQUAL DATE
+                 | VALUE OPERATOR DATE"""
+        p.error = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+        p.error += "'%s' is not a daskey" % p[1]
+        raise Exception(p.error)
 
     def p_list_for_filter(self, p):
         """oneexp : DASKEY EQUAL VALUE

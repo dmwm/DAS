@@ -259,6 +259,24 @@ class testDASPLY(unittest.TestCase):
         mongo = {'fields': None, 'spec': {'block': '/a/b/c'}, 'filters': ['site=T1']}
         queries[query] = mongo
 
+        query = 'run last dataset'
+        queries[query] = mongo
+
+        query = 'dateset in 2010'
+        queries[query] = mongo
+
+        query = 'date in 24h'
+        queries[query] = mongo
+
+        query = 'date last [20101010,20101012]'
+        queries[query] = mongo
+
+        query = 'dataset in [/a/b/c,/c/d/e]'
+        queries[query] = mongo
+
+        query = 'detaset = /a/b/c'
+        queries[query] = mongo
+
         # query with DATE IN
         query = """dataset date in [20110124,20110126]"""
         mongo = {'fields': None, 'spec': {'date': {'$lte': 20110124, '$gte': 20110126}}}
