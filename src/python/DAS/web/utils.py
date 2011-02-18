@@ -43,7 +43,13 @@ def yui_name(name):
     Parse input name and return compatible with YUI library name, e.g.
     YUI does not accepts period on a name in DataSource table objects.
     """
-    return quote(str(name.replace('.', '_')))
+    return quote(str(name.replace('.', '__')))
+
+def yui2das(name):
+    """
+    Reverse of yui_name.
+    """
+    return quote(str(name.replace('__', '.')))
 
 def dascore_monitor(cdict, func, sleep=5):
     """

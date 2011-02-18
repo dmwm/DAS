@@ -40,7 +40,7 @@ from DAS.utils.das_db import db_connection
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
-from DAS.web.utils import dascore_monitor, yui_name, gen_color
+from DAS.web.utils import dascore_monitor, yui2das, yui_name, gen_color
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import request_headers, jsonstreamer
 from DAS.web.tools import exposejson, exposedasplist
@@ -566,7 +566,7 @@ class DASWebService(DASWebManager):
         format  = getarg(kwargs, 'format', '')
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
-        skey    = getarg(kwargs, 'sort', '')
+        skey    = getarg(kwargs, 'skey', '')
         sdir    = getarg(kwargs, 'dir', 'asc')
         params  = {'query':uinput, 'idx':idx, 'limit':limit, 
                   'skey':skey, 'order':sdir}
@@ -634,7 +634,7 @@ class DASWebService(DASWebManager):
         query = getarg(kwargs, 'query', '')
         idx   = getarg(kwargs, 'idx', 0)
         limit = getarg(kwargs, 'limit', 10)
-        skey  = getarg(kwargs, 'sort', '')
+        skey  = getarg(kwargs, 'skey', '')
         sdir  = getarg(kwargs, 'dir', 'asc')
         try:
             data = self.dasmgr.result(query, idx, limit, skey, sdir)
@@ -855,6 +855,8 @@ class DASWebService(DASWebManager):
         widget, see
         http://developer.yahoo.com/yui/examples/datatable/dt_dynamicdata.html
         """
+        if  kwargs.has_key('skey'):
+            kwargs['skey'] = yui2das(kwargs['skey'])
         rowlist  = [record for record in self.records4filter(kwargs)]
         idx      = getarg(kwargs, 'idx', 0)
         limit    = getarg(kwargs, 'limit', 10)
@@ -890,9 +892,8 @@ class DASWebService(DASWebManager):
         total   = self.nresults(kwargs)
         coldefs = ""
         for title in titles:
-#            coldefs += '{key:"%s",label:"%s",sortable:true,resizeable:true},' \
-#                        % (title, title)
-            coldefs += '{key:"%s",sortable:true,resizeable:true},' % title
+            coldefs += '{key:"%s",label:"%s",sortable:true,resizeable:true},' \
+                        % (title, title)
         coldefs = "[%s]" % coldefs[:-1] # remove last comma
         coldefs = coldefs.replace("},{","},\n{")
         names   = {'titlelist':titles, 'base': self.base,
