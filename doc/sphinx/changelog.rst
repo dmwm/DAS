@@ -90,7 +90,9 @@ performed stress tests and code audit DAS servers.
     DataSource table with dynamic JSON/AJAX table feeder
   - add jsonstreamer
   - add cache method to web server (part of future merge between cache/web servers)
-  - add das_client which talks to web server
+  - add das_client which talks to web server; on a web server side made
+    usage of multiprocessing module to handle client requests. Each request
+    spawns a new process.
   - visualize record's system by colors on web UI, ticket #977
 
 - 0.5.9

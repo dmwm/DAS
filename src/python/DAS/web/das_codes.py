@@ -40,6 +40,7 @@ DAS_WEB_CODES = [
         (28 , 'Server error'),
         (29 , 'Query is not suitable for this view'),
         (30 , 'DAS parser error'),
+        (31 , 'Unsupported pid value'),
 ]
 def decode_code(code):
     """Return human readable string for provided code ID"""

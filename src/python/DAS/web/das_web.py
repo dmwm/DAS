@@ -23,6 +23,7 @@ import traceback
 
 import yaml
 from pprint import pformat
+from multiprocessing import Process
 
 from itertools import groupby
 from cherrypy import expose, HTTPError
@@ -51,7 +52,7 @@ import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
                   'format', 'sort', 'dir', 'view', 'method', 'skey',
-                  'query', 'fid']
+                  'query', 'fid', 'pid']
 
 
 RE_DBSQL_0 = re.compile(r"^find")
@@ -190,6 +191,7 @@ class DASWebService(DASWebManager):
         self.logger.info(msg)
         dasconfig = das_readconfig()
         dburi = dasconfig['mongodb']['dburi']
+        self.requests = {} # to hold incoming requests pid
 
         self.init()
         # Monitoring thread which performs auto-reconnection
@@ -616,13 +618,14 @@ class DASWebService(DASWebManager):
                 except:
                     yield key, idict[key]
 
-    @expose
     @jsonstreamer
-    @checkargs(DAS_WEB_INPUTS)
-    def cache(self, **kwargs):
+    def datastream(self, kwargs):
+        """Stream DAS data in JSON format"""
+        return self.get_data(kwargs)
+
+    def get_data(self, kwargs):
         """
         Invoke DAS workflow and get data from the cache.
-        This is read-only method used by DAS CLI.
         """
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
@@ -640,6 +643,34 @@ class DASWebService(DASWebManager):
             head.update({'status': 'fail', 'reason': str(exp)})
             data = []
         return head, data
+
+    @expose
+    @checkargs(DAS_WEB_INPUTS)
+    def cache(self, **kwargs):
+        """
+        DAS web cache interface. Fire up new process for new requests and
+        record its pid. The client is in charge to keep track of pid.
+        The new process uses DAS core call to request the data into cache.
+        Since query are cached the repeated call with the same query
+        has no cost to DAS core.
+        """
+        pid   = getarg(kwargs, 'pid', 0)
+        query = getarg(kwargs, 'query', '')
+        if  pid:
+            if  self.requests.has_key(pid):
+                process = self.requests[pid]
+                if  process.is_alive(): # process is not yet finished
+                    return str(process.pid) 
+                else: # process is done, remove pid from requests and get data
+                    del self.requests[pid]
+                    return self.datastream(kwargs)
+            else: # process is done, get data
+                return self.datastream(kwargs)
+        else:
+            process = Process(target=self.dasmgr.call, args=(query,))
+            process.start()
+            self.requests[process.pid] = process
+            return str(process.pid)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)

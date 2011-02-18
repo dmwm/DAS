@@ -214,6 +214,9 @@ def checkargs(supported):
             if  checkarg(kwds, 'fid') and len(kwds['fid']) != 24:
                 code = web_code('Unsupported id value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'pid') and not pat.match(str(kwds['pid'])):
+                code  = web_code('Unsupported pid value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
             data = func (self, *args, **kwds)
             return data
         wrapped_f.__doc__  = func.__doc__

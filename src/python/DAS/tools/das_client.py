@@ -7,6 +7,7 @@ DAS command line tool
 __author__ = "Valentin Kuznetsov"
 
 import re
+import time
 import urllib
 import urllib2
 from   optparse import OptionParser
@@ -25,7 +26,7 @@ class DASOptionParser:
              help="specify query for your request")
         self.parser.add_option("--host", action="store", type="string", 
                                default='https://cmsweb.cern.ch', dest="host",
-             help="specify host name of DAS cache server, default http://localhost:8211")
+             help="specify host name of DAS cache server, default http://cmsweb.cern.ch")
         self.parser.add_option("--idx", action="store", type="int", 
                                default=0, dest="idx",
              help="start index for returned result set, aka pagination, use w/ limit")
@@ -59,7 +60,8 @@ def main():
     url = host + path
     headers = {"Accept": "application/json"}
     encoded_data = urllib.urlencode(params, doseq=True)
-    url    += '?%s' % encoded_data
+    url += '?%s' % encoded_data
+    req  = urllib2.Request(url=url, headers=headers)
     if  debug:
         h   = urllib2.HTTPHandler(debuglevel=1)
         opener = urllib2.build_opener(h)
@@ -68,6 +70,28 @@ def main():
     fdesc = opener.open(req)
     data = fdesc.read()
     fdesc.close()
+
+    pat = re.compile(r'(^[0-9]$|^[0-9][0-9]*$)')
+    if  data and pat.match(data[0]):
+        pid = data
+    else:
+        pid = None
+    count = 2 # initial waiting time
+    while pid:
+        params.update({'pid':data})
+        encoded_data = urllib.urlencode(params, doseq=True)
+        url  = host + path + '?%s' % encoded_data
+        req  = urllib2.Request(url=url, headers=headers)
+        fdesc = opener.open(req)
+        data = fdesc.read()
+        fdesc.close()
+        if  data and pat.match(data[0]):
+            pid = data
+        else:
+            pid = None
+        time.sleep(count)
+        if  count < 60:
+            count *= 2
     print data
 
 #
