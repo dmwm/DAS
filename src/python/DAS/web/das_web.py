@@ -39,7 +39,7 @@ from DAS.utils.das_db import db_connection
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
-from DAS.web.utils import dascore_monitor, yui_name
+from DAS.web.utils import dascore_monitor, yui_name, gen_color
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import request_headers, jsonstreamer
 from DAS.web.tools import exposejson, exposedasplist
@@ -186,7 +186,6 @@ class DASWebService(DASWebManager):
         loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
-#        self.pageviews  = ['xml', 'list', 'json', 'filter', 'table', 'table_records'] 
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
         dasconfig = das_readconfig()
@@ -204,10 +203,14 @@ class DASWebService(DASWebManager):
             self.daskeys    = self.dasmgr.das_keys()
             self.daskeys.sort()
             self.dasmapping = self.dasmgr.mapping
+            self.colors = {}
+            for system in self.dasmgr.systems:
+                self.colors[system] = gen_color(system)
         except:
             traceback.print_exc()
             self.dasmgr = None
             self.daskeys = []
+            self.colors = {}
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -698,6 +701,17 @@ class DASWebService(DASWebManager):
         else:
             return page
         
+    def systems(self, slist):
+        """Colorize provided sub-systems"""
+        page = ""
+        if  not self.colors:
+            return page
+        pads = "padding-left:10px; padding-right:10px"
+        for system in slist:
+            page += '<span style="background-color:%s;%s"></span>' \
+                % (self.colors[system], pads)
+        return page
+
     def listview(self, kwargs):
         """
         Helper function to make listview page.
@@ -729,6 +743,7 @@ class DASWebService(DASWebManager):
                 nrows=total, idx=idx, limit=limit, url=url)
         else:
             return 'No results found in DAS cache'
+        page   += self.templatepage('das_colors', colors=self.colors)
         nrows   = len(rows)
         style   = "white"
         for row in rows:
@@ -743,20 +758,21 @@ class DASWebService(DASWebManager):
                 func  = self.dasmgr.mapping.daskey_from_presentation
                 page += adjust_values(func, gen)
             pad   = ""
+            systems = self.systems(row['das']['system'])
             if  show == 'json':
                 jsonhtml = das_json(row, pad)
-                page += self.templatepage('das_row', \
+                page += self.templatepage('das_row', systems=systems, \
                         sanitized_data=jsonhtml, id=id, rec_id=id)
             elif show == 'code':
                 code  = pformat(row, indent=1, width=100)
                 data  = self.templatepage('das_json', jsoncode=code)
-                page += self.templatepage('das_row', \
+                page += self.templatepage('das_row', systems=systems, \
                         sanitized_data=data, id=id, rec_id=id)
             else:
                 code  = yaml.dump(row, width=100, indent=4, 
                                 default_flow_style=False)
                 data  = self.templatepage('das_json', jsoncode=code)
-                page += self.templatepage('das_row', \
+                page += self.templatepage('das_row', systems=systems, \
                         sanitized_data=data, id=id, rec_id=id)
             page += '</div>'
         page += '<div align="right">DAS cache server time: %5.3f sec</div>' \

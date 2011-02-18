@@ -91,6 +91,7 @@ performed stress tests and code audit DAS servers.
   - add jsonstreamer
   - add cache method to web server (part of future merge between cache/web servers)
   - add das_client which talks to web server
+  - visualize record's system by colors on web UI, ticket #977
 
 - 0.5.9
 

@@ -828,6 +828,7 @@ class DASMongocache(object):
             return
         dasheader  = header['das']
         expire     = dasheader['expire']
+        system     = dasheader['system']
         rec        = [k for i in header['lookup_keys'] for k in i.values()]
         lkeys      = list(set(k for i in rec for k in i))
         # get API record id
@@ -848,7 +849,7 @@ class DASMongocache(object):
                     continue
                 counter += 1
                 item['das'] = dict(expire=expire, primary_key=prim_key, 
-                                        empty_record=0)
+                                        system=system, empty_record=0)
                 item['das_id'] = str(objid)
                 yield item
         else:

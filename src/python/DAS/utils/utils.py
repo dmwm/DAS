@@ -1211,49 +1211,61 @@ def aggregator_helper(results, expire):
     DAS aggregator helper which iterates over all records in results set and
     perform aggregation of records on the primary_key of the record.
     """
+    def helper(expire, prim_key, system):
+        "Construct a dict out of provided values"
+        rdict = dict(expire=expire, primary_key=prim_key, system=system)
+        return dict(das=rdict)
+
     record = results.next()
     prim_key = record['das']['primary_key']
+    system   = record['das']['system']
     record.pop('das')
     update = 1
     row = {}
     for row in results:
         row_prim_key = row['das']['primary_key']
+        row_system   = row['das']['system']
         row.pop('das')
         if  row_prim_key != prim_key:
-            record.update({'das':{'expire':expire, 'primary_key':prim_key}})
+            record.update(helper(expire, prim_key, system))
             yield record
             prim_key = row_prim_key
             record = row
+            system = row_system
             continue
         try:
             val1 = dict_value(record, prim_key)
         except:
-            record.update({'das':{'expire':expire, 'primary_key':prim_key}})
+            record.update(helper(expire, prim_key, system))
             yield record
             record = dict(row)
+            system = row_system
             update = 0
             continue
         try:
             val2 = dict_value(row, prim_key)
         except:
-            row.update({'das':{'expire':expire, 'primary_key':prim_key}})
+            row.update(helper(expire, prim_key, system))
             yield row
             record = dict(row)
+            system = row_system
             update = 0
             continue
         if  val1 == val2:
             merge_dict(record, row)
+            system = list(set(system) | set(row_system))
             update = 1
         else:
-            record.update({'das':{'expire':expire, 'primary_key':prim_key}})
+            record.update(helper(expire, prim_key, system))
             yield record
             record = dict(row)
+            system = row_system
             update = 0
     if  update: # check if we did update for last row
-        record.update({'das':{'expire':expire, 'primary_key':prim_key}})
+        record.update(helper(expire, prim_key, system))
         yield record
     else:
-        row.update({'das':{'expire':expire, 'primary_key':row_prim_key}})
+        row.update(helper(expire, prim_key, system))
         yield row
 
 def unique_filter(rows):

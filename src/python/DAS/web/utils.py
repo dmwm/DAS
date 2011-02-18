@@ -29,6 +29,15 @@ from   DAS.utils.das_db import db_connection
 from   DAS.core.das_core import DASCore
 from   DAS.web.das_codes import web_code
 
+def gen_color(system):
+    """
+    Generate color for a system, use hash function for that
+    """
+    import hashlib
+    keyhash = hashlib.md5()
+    keyhash.update(system)
+    return '#%s' % keyhash.hexdigest()[:6]
+
 def yui_name(name):
     """
     Parse input name and return compatible with YUI library name, e.g.
