@@ -324,7 +324,13 @@ class DotDict(dict):
         """
         obj  = None
         keys = ckey.split('.')
-        for key in keys:
+#        for key in keys:
+        for idx in range(0, len(keys)):
+            key  = keys[idx]
+            try:
+                next = keys[idx+1]
+            except:
+                next = None
             if  key == keys[0]:
                 obj = self.get(key, None)
             else:
@@ -334,9 +340,16 @@ class DotDict(dict):
             if  isinstance(obj, dict):
                 obj = DotDict(obj)
             elif isinstance(obj, list):
-                obj = obj[0]
-                if  isinstance(obj, dict):
-                    obj = DotDict(obj)
+                for item in obj:
+                    obj = item
+                    if  next and obj.has_key(next):
+                        if  isinstance(obj, dict):
+                            obj = DotDict(obj)
+                            if  obj:
+                                break
+#                obj = obj[0]
+#                if  isinstance(obj, dict):
+#                    obj = DotDict(obj)
         return obj
         
     def _set(self, ikey, value):

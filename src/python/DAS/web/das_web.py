@@ -737,9 +737,9 @@ class DASWebService(DASWebManager):
         page = ""
         if  not self.colors:
             return page
-        pads = "padding-left:10px; padding-right:10px"
+        pads = "padding-left:7px; padding-right:7px"
         for system in slist:
-            page += '<span style="background-color:%s;%s"></span>' \
+            page += '<span style="background-color:%s;%s">&nbsp;</span>' \
                 % (self.colors[system], pads)
         return page
 
@@ -890,8 +890,9 @@ class DASWebService(DASWebManager):
         total   = self.nresults(kwargs)
         coldefs = ""
         for title in titles:
-            coldefs += '{key:"%s",label:"%s",sortable:true,resizeable:true},' \
-                        % (title, title)
+#            coldefs += '{key:"%s",label:"%s",sortable:true,resizeable:true},' \
+#                        % (title, title)
+            coldefs += '{key:"%s",sortable:true,resizeable:true},' % title
         coldefs = "[%s]" % coldefs[:-1] # remove last comma
         coldefs = coldefs.replace("},{","},\n{")
         names   = {'titlelist':titles, 'base': self.base,
