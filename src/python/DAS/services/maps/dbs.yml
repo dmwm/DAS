@@ -127,6 +127,7 @@ url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
      "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"required",
+     "dataset": ""
 }
 daskeys : [
     {"key":"dataset", "map":"dataset.name", "pattern":""},
@@ -134,6 +135,7 @@ daskeys : [
 ]
 das2api : [
     {"das_key":"run.run_number", "api_param":"query", "pattern":""},
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
 ]
 ---
 urn : listTiers

@@ -62,8 +62,10 @@ class DBSService(DASAbstractService):
                 kwds['query'] = "find file, file.createdate, file.moddate, \
 file.createby where site=%s" % val
         if  api == 'fakeDataset4Run':
-            val = kwds['query']
+            val = str(kwds['query'])
             if  val != 'required':
+                if  kwds.has_key('dataset') and kwds['dataset']:
+                    val += ' and dataset=%s' % kwds['dataset']
                 kwds['query'] = "find dataset \
   where run=%s and dataset.status like VALID*" % val
 #                kwds['query'] = "find dataset , count(block), count(file.size), \
