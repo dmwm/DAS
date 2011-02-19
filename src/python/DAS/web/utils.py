@@ -88,7 +88,10 @@ def quote(data):
         res = data
     else:
         try:
-            res = cgi.escape(data, quote=True)
+            if  data:
+                res = cgi.escape(data, quote=True)
+            else:
+                res = ""
         except:
             traceback.print_exc()
             print "Unable to cgi.escape(%s, quote=True)" % data
