@@ -26,7 +26,7 @@ class DASOptionParser:
              help="specify query for your request")
         self.parser.add_option("--host", action="store", type="string", 
                                default='https://cmsweb.cern.ch', dest="host",
-             help="specify host name of DAS cache server, default http://cmsweb.cern.ch")
+             help="specify host name of DAS cache server, default https://cmsweb.cern.ch")
         self.parser.add_option("--idx", action="store", type="int", 
                                default=0, dest="idx",
              help="start index for returned result set, aka pagination, use w/ limit")
