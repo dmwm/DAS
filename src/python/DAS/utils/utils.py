@@ -25,7 +25,7 @@ from   bson.objectid import ObjectId
 # DAS modules
 from   DAS.utils.regex import float_number_pattern, int_number_pattern
 from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
-from   DAS.utils.regex import se_pattern, site_pattern
+from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 import DAS.utils.jsonwrapper as json
 
@@ -155,9 +155,15 @@ def convert_datetime(sec):
     Convert seconds since epoch or YYYYMMDD to date YYYY-MM-DD
     """
     value = str(sec)
-    if  len(value) == 8: # we got YYYYMMDD
+    pat = date_yyyymmdd_pattern
+    pat2 = unix_time_pattern
+    if pat.match(value): # we accept YYYYMMDD
         return "%s-%s-%s" % (value[:4], value[4:6], value[6:8])
-    return time.strftime("%Y-%m-%d", time.gmtime(sec))
+    elif pat2.match(value):
+        return time.strftime("%Y-%m-%d", time.gmtime(sec))
+    else:
+        msg = 'Unacceptable date format'
+        raise Exception(msg)
 
 def dbsql_opt_map(operator):
     """

@@ -9,7 +9,8 @@ import unittest
 from DAS.utils.regex import ip_address_pattern, last_time_pattern, \
 date_yyyymmdd_pattern, key_attrib_pattern, cms_tier_pattern, \
 float_number_pattern, int_number_pattern, phedex_tier_pattern, \
-se_pattern, site_pattern, web_arg_pattern, number_pattern
+se_pattern, site_pattern, web_arg_pattern, number_pattern,\
+last_key_pattern, unix_time_pattern
 
 class testDASCore(unittest.TestCase):
     """
@@ -133,6 +134,26 @@ class testDASCore(unittest.TestCase):
         arg = '-123.123'
         self.true(pat, arg)
         arg = 'abc'
+        self.false(pat, arg)
+
+    def test_last_key(self):
+        """test last key pattern"""
+        pat = last_key_pattern
+        arg = 'date last'
+        self.true(pat, arg)
+        arg = 'date jobsummary last'
+        self.false(pat, arg)
+        arg = 'date   last'
+        self.true(pat, arg)
+
+    def test_unix_time(self):
+        """test unix time pattern"""
+        pat = unix_time_pattern
+        arg = '1234567890'
+        self.true(pat, arg)
+        arg = '0123456789'
+        self.true(pat, arg)
+        arg = '123456789'
         self.false(pat, arg)
 #
 # main

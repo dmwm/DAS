@@ -176,6 +176,7 @@ def compare_dicts(input_dict, exist_dict):
     is superset of input_dict
     """
     for key, val in input_dict.items():
+        signal = False
         vvv = None
         if  exist_dict.has_key(key):
             vvv = exist_dict[key]
@@ -183,21 +184,23 @@ def compare_dicts(input_dict, exist_dict):
                (isinstance(vvv, int) or isinstance(vvv, float))
         if  key == '$gt':
             if  cond and val > vvv:
-                return True
+                signal = True
         elif  key == '$gte':
             if  cond and val >= vvv:
-                return True
+                signal = True
         elif key == '$lt':
             if  cond and val < vvv:
-                return True
+                signal = True
         elif key == '$lte':
             if  cond and val <= vvv:
-                return True
+                signal = True
         elif key == '$in':
             if  isinstance(val, list) and isinstance(vvv, list):
                 if  set(vvv) > set(val):
-                    return True
-        return False
+                    signal = True
+        if signal == False:
+            return False
+    return True
 
 def compare_specs(input_query, exist_query):
     """

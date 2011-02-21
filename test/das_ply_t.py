@@ -229,6 +229,10 @@ class testDASPLY(unittest.TestCase):
         mongo = {'fields': ['file', 'dataset'], 'spec': {'date': 1201824000, 'file': 'abcdeasdf', 'dataset': 'abcdes'}}
         self.queries[query] = mongo
 
+        query = 'dataset run in [20145, 20146, 20148]'
+        mongo = {'fields': ['dataset'], 'spec': {'run': {'$in': [20145, 20146, 20148]}}}
+        self.queries[query] = mongo
+
     def test_lexer(self):
         """Test DAS PLY lexer"""
         for query, expect in self.queries.items():

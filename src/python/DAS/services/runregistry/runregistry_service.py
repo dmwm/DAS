@@ -94,7 +94,12 @@ class RunRegistryService(DASAbstractService):
                     maxrun = 0
                     for kkk, vvv in val.items():
                         if  kkk == '$in':
-                            minrun, maxrun = vvv
+                            if len(vvv) == 2:
+                                minrun, maxrun = vvv
+                            else: # in[1, 2, 3]
+                                msg = "runregistry can not deal with 'in'"
+                                self.logger.info(msg)
+                                continue
                         elif kkk == '$lte':
                             minrun = vvv
                         elif kkk == '$gte':

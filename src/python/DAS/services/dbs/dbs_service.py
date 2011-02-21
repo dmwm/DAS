@@ -51,26 +51,43 @@ class DBSService(DASAbstractService):
                 except:
                     pass
         if  api == 'fakeListDataset4File':
-            val = kwds['query']
+            val = kwds['file']
             if  val != 'required':
                 kwds['query'] = "find dataset , count(block), count(file.size), \
   sum(block.size), sum(block.numfiles), sum(block.numevents) \
   where file=%s and dataset.status like VALID*" % val
+            kwds.pop('file')
         if  api == 'fakeListFile4Site':
-            val = kwds['query']
+            val = kwds['site']
             if  val != 'required':
                 kwds['query'] = "find file, file.createdate, file.moddate, \
 file.createby where site=%s" % val
-        if  api == 'fakeDataset4Run':
-            val = str(kwds['query'])
+            kwds.pop('site')
+        if  api == 'fakeDataset4Run':#runregistry don't support 'in'
+            query = "find dataset where %s and dataset.status like VALID*"
+            val = kwds['run']
+            qlist = []
             if  val != 'required':
+                if isinstance(val, dict):
+                    for opt in val:
+                        nopt = dbsql_opt_map(opt)
+                        qlist.append(nopt)
+                        qlist.append(str(tuple(val[opt])))
+                    if len(qlist) == 4:
+                        val = "run %s %s and run %s %s" % tuple(qlist)
+                    else:
+                        val = "run %s %s" % tuple(qlist)
+                elif isinstance(val, int):
+                    val = "run = %d" % val
                 if  kwds.has_key('dataset') and kwds['dataset']:
                     val += ' and dataset=%s' % kwds['dataset']
                 kwds['query'] = "find dataset \
-  where run=%s and dataset.status like VALID*" % val
+  where %s and dataset.status like VALID*" % val
 #                kwds['query'] = "find dataset , count(block), count(file.size), \
 #  sum(block.size), sum(block.numfiles), sum(block.numevents) \
 #  where run=%s and dataset.status like VALID*" % val
+            kwds.pop('run')
+            kwds.pop('dataset')
         if  api == 'fakeDatasetSummary':
             value = ""
             for key, val in kwds.items():
@@ -104,30 +121,31 @@ file.createby where site=%s" % val
   sum(block.numfiles), sum(block.numevents), dataset.createdate \
   where dataset.createdate %s %s \
   and dataset.createdate %s %s and dataset.status like VALID*"
-            val = kwds['query']
+            val = kwds['date']
             qlist = []
             query = ""
-            if isinstance(val, dict):
-                for opt in val:
-                    nopt = dbsql_opt_map(opt)
-                    if nopt == ('in'):
-                        self.logger.debug(val[opt])
-                        nval = [convert_datetime(x) for x in val[opt]]
+            if val != "required":
+                if isinstance(val, dict):
+                    for opt in val:
+                        nopt = dbsql_opt_map(opt)
+                        if nopt == ('in'):
+                            self.logger.debug(val[opt])
+                            nval = [convert_datetime(x) for x in val[opt]]
+                        else:
+                            nval = convert_datetime(val[opt])
+                        qlist.append(nopt)
+                        qlist.append(nval)
+                    if len(qlist) == 4:
+                        query = query_for_double % tuple(qlist)
                     else:
-                        nval = convert_datetime(val[opt])
-                    qlist.append(nopt)
-                    qlist.append(nval)
-                if len(qlist) == 4:
-                    query = query_for_double % tuple(qlist)
-                else:
-                    msg = "dbs_services::fakeListDatasetbyDate \
+                        msg = "dbs_services::fakeListDatasetbyDate \
  wrong params get, IN date is not support by DBS2 QL"
-                    self.logger.info(msg)
-            else:
-                val = convert_datetime(val)
-                query = query_for_single % ('=', val)
-    
-            kwds['query'] = query
+                        self.logger.info(msg)
+                elif isinstance(val, int):
+                    val = convert_datetime(val)
+                    query = query_for_single % ('=', val)
+                kwds['query'] = query
+            kwds.pop('date')
             
     def parser(self, query, dformat, source, api):
         """
