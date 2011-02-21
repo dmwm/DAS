@@ -71,6 +71,11 @@ class testDASPLY(unittest.TestCase):
         mongo = {'fields': ['site'], 'spec': {'site': '*'}}
         self.queries[query] = mongo
 
+        query = "dataset=/a/b/c run=123 | grep dataset.size"
+        mongo = {'filters': ['dataset.size'], 'fields': None, 
+                 'spec': {'dataset': '/a/b/c', 'run': 123}}
+        self.queries[query] = mongo
+
         query = "site=T1_CH_CERN system=sitedb"
         mongo = {'fields': None, 'spec': {'site': 'T1_CH_CERN', 'system': 'sitedb'}}
         self.queries[query] = mongo
@@ -279,6 +284,9 @@ class testDASPLY(unittest.TestCase):
         queries[query] = mongo
 
         query = 'detaset = /a/b/c'
+        queries[query] = mongo
+
+        query = 'detaset = /a/b/c dataset.size'
         queries[query] = mongo
 
         # query with DATE IN

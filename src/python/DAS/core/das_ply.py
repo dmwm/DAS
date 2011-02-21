@@ -71,6 +71,7 @@ class DASPLY(object):
 
     tokens = [
         'DASKEY',
+        'DASKEY_ATTR',
         'IPADDR',
         'PIPE',
         'AGGREGATOR',
@@ -148,7 +149,7 @@ class DASPLY(object):
             return t
         # 2. lowercase.AnyCase(.AnyCase...)
         if re.match(r'[a-z_]+(\.[a-zA-Z_]+)+', t.value):
-            t.type = 'DASKEY'
+            t.type = 'DASKEY_ATTR'
             return t
         # 3. das_id is also a DASKEY
         if re.match(r'das_id', t.value):
@@ -318,7 +319,11 @@ class DASPLY(object):
         """oneexp : DASKEY EQUAL VALUE
                   | DASKEY EQUAL NUMBER
                   | DASKEY FILTER_OPERATOR VALUE
-                  | DASKEY FILTER_OPERATOR NUMBER"""
+                  | DASKEY FILTER_OPERATOR NUMBER
+                  | DASKEY_ATTR EQUAL VALUE
+                  | DASKEY_ATTR EQUAL NUMBER
+                  | DASKEY_ATTR FILTER_OPERATOR VALUE
+                  | DASKEY_ATTR FILTER_OPERATOR NUMBER"""
         val = ''
         for idx in range(0, len(p)):
             if  p[idx]:
@@ -334,7 +339,8 @@ class DASPLY(object):
         p[0] = [val]
 
     def p_key_for_filter(self, p):
-        """oneexp : DASKEY"""
+        """oneexp : DASKEY
+                  | DASKEY_ATTR"""
         p[0] = [str(p[1])]
 
     def p_list_for_filter2(self, p):
@@ -358,7 +364,8 @@ class DASPLY(object):
         p[0] = tuple(['mapreduce', p[1], None])
 
     def p_oneagg(self, p):
-        """oneagg : AGGREGATOR LPAREN DASKEY RPAREN"""
+        """oneagg : AGGREGATOR LPAREN DASKEY RPAREN
+                  | AGGREGATOR LPAREN DASKEY_ATTR RPAREN"""
         p[0] = tuple(['aggregator', p[1], p[3]])
 
     def p_agglist0(self, p):
