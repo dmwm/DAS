@@ -128,6 +128,12 @@ class RunRegistryService(DASAbstractService):
                     date2 = convert_datetime(val + 24*60*60)
                 run_time = '>= %s and <= %s' % (date1, date2)
                 _query = {'runStartTime': run_time}
+            else:
+                msg  = 'RunRegistryService::api\n\n'
+                msg += "--- %s reject API %s, parameters don't match, args=%s" \
+                        % (self.name, api, args)
+                self.logger.info(msg)
+                return
         if  not _query:
             msg = 'Unable to match input parameters with input query'
             raise Exception(msg)

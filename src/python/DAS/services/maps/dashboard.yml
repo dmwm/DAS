@@ -25,14 +25,15 @@ daskeys : [
     {"key":"jobsummary", "map":"jobsummary", "pattern":""},
     {"key":"site", "map":"site.ce", "pattern":"([a-zA-Z0-9]+\\.){2}"},
     {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
-    #{"key":"user", "map":"jobsummary.user", "pattern":""},
-    {"key":"user", "map":"user", "pattern":""},
+    {"key":"user", "map":"user.name", "pattern":""},
     {"key":"date", "map":"date", "pattern":""},
+    {"key":"application", "map":"release.name", "pattern":""},
 ]
 das2api : [
-    #{"das_key":"jobsummary.user", "api_param":"user", "pattern":""},
+    {"das_key":"user.name", "api_param":"user", "pattern":""},
     {"das_key":"site.ce", "api_param":"ce", "pattern":"([a-zA-Z0-9]+\\.){2}"},
     {"das_key":"site.name", "api_param":"site", "pattern":"^T[0-3]_"},
+    {"das_key":"release.name", "api_param":"application", "pattern":""},
 ]
 ---
 notations : [

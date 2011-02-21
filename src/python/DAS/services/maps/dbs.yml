@@ -125,6 +125,20 @@ das2api : [
     {"das_key":"dataset.name", "api_param":"path", "pattern":""},
 ]
 ---
+urn : fakeRun4Run
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "run": "required",
+}
+daskeys : [
+    {"key":"run", "map":"run.run_number", "pattern":""},
+]
+das2api : [
+    {"das_key":"run.run_number", "api_param":"run", "pattern":""},
+]
+---
 urn : fakeDataset4Run
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
@@ -221,7 +235,7 @@ urn : listBlockProvenance
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
-     "api":"listBlockProvenance", "apiversion": "DBS_2_0_9", "block_name":"*",
+     "api":"listBlockProvenance", "apiversion": "DBS_2_0_9", "block_name":"required",
      "parent_or_child": "PARENT"
 }
 daskeys : [

@@ -28,6 +28,7 @@ from DAS.utils.utils import yield_rows, expire_timestamp
 from DAS.core.das_mongocache import compare_specs, encode_mongo_query
 from DAS.utils.das_timer import das_timer
 from DAS.utils.das_db import db_gridfs, parse2gridfs
+from DAS.core.das_ql import das_special_keys
 
 def dasheader(system, query, api, url, args, ctime, expire):
     """
@@ -588,20 +589,24 @@ class DASAbstractService(object):
         for api, value in self.map.items():
             expire = value['expire']
             format = value['format']
-#            url    = value['url']
             url    = self.adjust_url(value['url'], instance)
             args   = value['params']
             wild   = value.get('wild_card', '*')
-            found  = False
+            count  = 0
             for key, val in cond.items():
                 # check if keys from conditions are accepted by API.
                 if  self.dasmapping.check_dasmap(self.name, api, key, val):
                     # need to convert key (which is daskeys.map) into
                     # input api parameter
-                    found = True
                     for apiparam in self.dasmapping.das2api(self.name, key, api=api):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
+                            count += 1
+            nkeys = len([k for k in cond.keys() if k not in das_special_keys()])
+            if  count == nkeys and count and nkeys:
+                found = True
+            else:
+                found = False
             self.adjust_params(api, args)
             if  not found:
                 msg  = 'DASAbstractService::apimap\n\n'

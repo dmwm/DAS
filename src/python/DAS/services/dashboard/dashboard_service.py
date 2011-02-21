@@ -109,9 +109,18 @@ class DashboardService(DASAbstractService):
                 else:
                     raise Exception(err)
         if  not count:
-            # if no parameter are given, use last 24 hours interval
-            args['date1'] = convert_datetime(time.time()-24*60*60)
-            args['date2'] = convert_datetime(time.time())
+            # if no parameter are given, don't pass the API
+            msg  = 'DashboardService::api\n\n'
+            msg += "--- %s reject API %s, parameters don't match, args=%s" \
+                    % (self.name, api, args)
+            self.logger.info(msg)
+            return
+        else:
+            if  not args['date1']:
+                args['date1'] = convert_datetime(time.time()-24*60*60)
+            if  not args['date2']:
+                args['date2'] = convert_datetime(time.time())
+
 
         url = url + '?%s' % urllib.urlencode(args)
 

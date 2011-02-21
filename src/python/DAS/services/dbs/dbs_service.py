@@ -63,8 +63,23 @@ class DBSService(DASAbstractService):
                 kwds['query'] = "find file, file.createdate, file.moddate, \
 file.createby where site=%s" % val
             kwds.pop('site')
+        if  api == 'fakeRun4Run':#runregistry don't support 'in'
+            val = kwds['run']
+            if  val != 'required':
+                if isinstance(val, dict):
+                    for opt in val:
+                        nopt = dbsql_opt_map(opt)
+                        qlist.append(nopt)
+                        qlist.append(str(tuple(val[opt])))
+                    if len(qlist) == 4:
+                        val = "run %s %s and run %s %s" % tuple(qlist)
+                    else:
+                        val = "run %s %s" % tuple(qlist)
+                elif isinstance(val, int):
+                    val = "run = %d" % val
+                kwds['query'] = "find run where %s" % val
+            kwds.pop('run')
         if  api == 'fakeDataset4Run':#runregistry don't support 'in'
-            query = "find dataset where %s and dataset.status like VALID*"
             val = kwds['run']
             qlist = []
             if  val != 'required':
@@ -81,11 +96,8 @@ file.createby where site=%s" % val
                     val = "run = %d" % val
                 if  kwds.has_key('dataset') and kwds['dataset']:
                     val += ' and dataset=%s' % kwds['dataset']
-                kwds['query'] = "find dataset \
-  where %s and dataset.status like VALID*" % val
-#                kwds['query'] = "find dataset , count(block), count(file.size), \
-#  sum(block.size), sum(block.numfiles), sum(block.numevents) \
-#  where run=%s and dataset.status like VALID*" % val
+                kwds['query'] = \
+                "find dataset where %s and dataset.status like VALID*" % val
             kwds.pop('run')
             kwds.pop('dataset')
         if  api == 'fakeDatasetSummary':
@@ -192,6 +204,8 @@ file.createby where site=%s" % val
             prim_key = 'dataset'
         elif  api == 'fakeDataset4Run':
             prim_key = 'dataset'
+        elif  api == 'fakeRun4Run':
+            prim_key = 'run'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)

@@ -6,42 +6,45 @@ urn : fakeListDataset4File
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
-     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"required",
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "file": "required",
 }
 daskeys : [
     {"key":"dataset", "map":"dataset.name", "pattern":""},
     {"key":"file", "map":"file.name", "pattern":""},
 ]
 das2api : [
-    {"das_key":"file.name", "api_param":"query", "pattern":""},
+    {"das_key":"file.name", "api_param":"file", "pattern":""},
 ]
 ---
 urn : fakeListFile4Site
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
-     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"required",
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "site": "requried",
 }
 daskeys : [
     {"key":"file", "map":"file.name", "pattern":""},
     {"key":"site", "map":"site.name", "pattern":""},
 ]
 das2api : [
-    {"das_key":"site.name", "api_param":"query", "pattern":""},
+    {"das_key":"site.name", "api_param":"site", "pattern":""},
 ]
 ---
 urn : fakeListDatasetbyDate
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
-     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"required",
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "date": "required",
 }
 daskeys : [
     {"key":"dataset", "map":"dataset.name", "pattern":""},
     {"key":"date", "map":"date", "pattern":""},
 ]
 das2api : [
-    {"das_key":"date", "api_param":"query", "pattern":""},
+    {"das_key":"date", "api_param":"date", "pattern":""},
 ]
 ---
 urn : listPrimaryDatasets
@@ -122,18 +125,34 @@ das2api : [
     {"das_key":"dataset.name", "api_param":"path", "pattern":""},
 ]
 ---
+urn : fakeRun4Run
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "run": "required",
+}
+daskeys : [
+    {"key":"run", "map":"run.run_number", "pattern":""},
+]
+das2api : [
+    {"das_key":"run.run_number", "api_param":"run", "pattern":""},
+]
+---
 urn : fakeDataset4Run
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
-     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"required",
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "dataset": "", "run": "required",
 }
 daskeys : [
     {"key":"dataset", "map":"dataset.name", "pattern":""},
     {"key":"run", "map":"run.run_number", "pattern":""},
 ]
 das2api : [
-    {"das_key":"run.run_number", "api_param":"query", "pattern":""},
+    {"das_key":"run.run_number", "api_param":"run", "pattern":""},
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
 ]
 ---
 urn : listTiers
@@ -216,7 +235,7 @@ urn : listBlockProvenance
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
-     "api":"listBlockProvenance", "apiversion": "DBS_2_0_9", "block_name":"*",
+     "api":"listBlockProvenance", "apiversion": "DBS_2_0_9", "block_name":"required",
      "parent_or_child": "PARENT"
 }
 daskeys : [
