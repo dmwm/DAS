@@ -250,7 +250,9 @@ class DASWebService(DASWebManager):
         """
         represent DAS FAQ.
         """
-        page = self.templatepage('das_faq', 
+        guide = self.templatepage('dbsql_vs_dasql', 
+                    operators=', '.join(das_operators()))
+        page = self.templatepage('das_faq', guide=guide,
                 operators=', '.join(das_operators()), 
                 aggregators=', '.join(das_aggregators()))
         return self.page(page, response_div=False)

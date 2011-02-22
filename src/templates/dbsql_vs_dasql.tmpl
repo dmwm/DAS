@@ -2,10 +2,6 @@
 #set operators = $quote($operators)
 
 <!-- dbsql_vs_dasql.tmpl -->
-<a href="javascript:ShowTag('dbsql_vs_dasql')">show</a>
-<a href="javascript:HideTag('dbsql_vs_dasql')">hide</a>
-
-<div id="dbsql_vs_dasql" name="dbsql_vs_dasql" class="hide">
 #set colspan="text-align: center;border-top: 1px solid black;border-bottom: 1px solid black"
 <table class="daskeys">
 
@@ -150,6 +146,45 @@ run file=/a/b/c.root
 
 <tr class="odd">
 <td colspan="2" style="$colspan">
+<b>Find site information for a given dataset/block/file/run</b>
+</td>
+</tr>
+<tr>
+<td>
+<em style="color:red">
+In DBS-QL you can find site info for a given dataset/block/file/run, but
+this information does not belong to DBS and will disappear in new version of DBS.
+</em>
+<br/>
+find dataset, site where dataset like /Cosmics/* and run=149011
+</td>
+<td>
+To perform such query you need to break it apart:<br/>
+<em style="color:blue">
+1. Find dataset for a given pattern
+</em>
+<br/>
+dataset=/Cosmics/* run=149011
+<br/>
+<em style="color:blue">
+2. Find site information
+</em>
+<br/>
+block=/Cosmics/Run2010B-PromptReco-v2/DQM* | grep block.replica.site
+<br/>
+here we used block pattern instead of dataset, since PhEDEx operates with
+blocks.
+<br/><br/>
+<em style="color:blue">
+In DAS you need to break query apart and work with pieces:
+dataset knows about block/files, block knows about site, file knows about runs, etc.
+This approach scales better and allow faster query look-up.
+</em>
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="$colspan">
 <b>Run information</b>
 </td>
 </tr>
@@ -218,5 +253,4 @@ monitor | grep monitor.node=T2_EE_Estonia
 </tr>
 
 </table>
-</div>
 <!-- end of dbsql_vs_dasql.tmpl -->

@@ -10,10 +10,15 @@ DAS server experience unexpected problem:
 $msg
 </pre>
 For more information please use <a href="$base/faq">FAQ</a> page; review
-<b>DAS query guide:</b> $guide or submit a bug report
+<b>DAS query guide:</b>
+<a href="javascript:ShowTag('dbsql_vs_dasql')">show</a>
+<a href="javascript:HideTag('dbsql_vs_dasql')">hide</a>
+or submit a bug report
 #set details=$quote($msg)
 #set msg=details.replace('/', '%2F')
 <a href="https://svnweb.cern.ch/trac/CMSDMWM/newticket?component=DAS&description=$msg&summary=DAS+query+Error&owner=valya">here</a>.
+<div id="dbsql_vs_dasql" name="dbsql_vs_dasql" class="hide">
+$guide
 </div>
 </div> <!-- end of main div -->
 <!-- end of das_ambiguous.tmpl -->
