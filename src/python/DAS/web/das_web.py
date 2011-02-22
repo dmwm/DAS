@@ -33,6 +33,7 @@ from cherrypy.lib.static import serve_file
 import DAS
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators
+from DAS.core.das_ply import das_parser_error
 from DAS.utils.utils import getarg, access, size_format, DotDict
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
@@ -335,33 +336,34 @@ class DASWebService(DASWebManager):
         """
         def helper(myinput, msg):
             """Helper function which provide error template"""
-            return self.templatepage('das_ambiguous', msg=msg, base=self.base,
-                        input=myinput, entities=', '.join(self.daskeys),
+            guide = self.templatepage('dbsql_vs_dasql', 
                         operators=', '.join(das_operators()))
+            page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
+                        input=myinput, guide=guide,
+                        entities=', '.join(self.daskeys),
+                        operators=', '.join(das_operators()))
+            return page
         if  not uinput:
             return helper(uinput, 'No input query')
         # check provided input. If at least one word is not part of das_keys
         # return ambiguous template.
         try:
             mongo_query = self.dasmgr.mongoparser.parse(uinput)
-        except:
-            msg  = 'Fail in mongo parser, unable to parse input query.\n'
-            return helper(uinput, msg)
+        except Exception, err:
+            return helper(uinput, das_parser_error(uinput, str(err)))
         fields = mongo_query.get('fields', [])
         if  not fields:
             fields = []
         spec   = mongo_query.get('spec', {})
         if  not fields+spec.keys():
-            msg = 'Provided input does not resolve into valid set of keys'
+            msg = 'Provided input does not resolve into a valid set of keys'
             return helper(uinput, msg)
         for word in fields+spec.keys():
             found = 0
             for key in self.daskeys:
-                if  word.find(key) != -1:
-                    found = 1
-            if  not found:
-                msg = 'Provided input does not contain valid DAS key'
-                return helper(uinput, msg)
+                if  word.find(key) == -1:
+                    msg = 'Provided input does not contain a valid DAS key'
+                    return helper(uinput, msg)
         return
 
     @expose
@@ -686,6 +688,12 @@ class DASWebService(DASWebManager):
         uinput  = getarg(kwargs, 'input', '')
         form    = self.form(input=uinput)
         view    = kwargs.get('view', 'list')
+        check   = self.check_input(uinput)
+        if  check:
+            if  view == 'list' or view == 'plain':
+                return self.page(form + check, ctime=time.time()-time0)
+            else:
+                return check
         # self.status sends request to Cache Server
         # Cache Server uses das_core to retrieve status
         data    = self.check_data(input=uinput)

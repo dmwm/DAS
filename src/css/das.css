@@ -276,7 +276,7 @@ table.daskeys {
         width: 100%}
 table.daskeys th, table.daskeys td { padding: .2em .5em; }
 table.daskeys tbody tr th { background: #F0F0F0; text-align: center; }
-table.daskeys tbody tr td { background: #FFFFFF; }
+table.daskeys tbody tr td { background: #FFFFFF; vertical-align:text-top; }
 table.daskeys tbody tr.odd th, table.daskeys tbody tr.odd td,
 table.daskeys tbody.odd tr th, table.daskeys tbody.odd tr td {
   background: #EEF2FF;

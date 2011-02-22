@@ -95,8 +95,10 @@ performed stress tests and code audit DAS servers.
     spawns a new process.
   - visualize record's system by colors on web UI, ticket #977
   - add child/parent look-up for dataset/files
-  - work on DAS PLY to make errors messages more clear, especially adjust to
+  - work on DAS PLY/web UI to make errors messages more clear, especially adjust to
     handle DBS-QL queries
+  - added dbsql_vs_dasql template which guides how to construct DAS QL expressions
+    for given DBS QL ones
 
 - 0.5.9
 

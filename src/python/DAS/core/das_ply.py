@@ -21,6 +21,32 @@ from   DAS.core.das_ql import das_filters, das_operators, das_mapreduces
 from   DAS.core.das_ql import das_aggregators, das_special_keys
 from   DAS.core.das_ql import das_db_keywords
 
+def das_parser_error(query, error):
+    """Return DAS keyword which cause parser to burk"""
+    print "ERROR", error
+    try:
+        # LexToken returns tok.type, tok.value, tok.lineno, and tok.lexpos
+        msg, tok = error.split("LexToken")
+        tokarr = tok.split(',')
+        pos = int(tokarr[3].split(')')[0])
+        return 'DAS could not parse your query at %s ' % query[pos:].split()[0]
+    except:
+        import traceback
+        traceback.print_exc()
+        return error
+
+def parser_error(error):
+    """Return human readable DAS parser error string"""
+    print "ERROR", error
+    try:
+        # LexToken returns tok.type, tok.value, tok.lineno, and tok.lexpos
+        msg, tok = error.split("LexToken")
+        tokarr = tok.split(',')
+        return "%s error %s=%s, at line %s, position %s" \
+                % (msg.strip(), tokarr[0].lower(), tokarr[1], tokarr[2], tokarr[3])
+    except:
+        return error
+
 def lexer_error(query, pos, error):
     """Produce pretty formatted message about invalid query"""
     msg  = '\nUnable to parser input query\n'
@@ -134,8 +160,13 @@ class DASPLY(object):
 
     def t_VALUE(self, t):
         r'''[a-zA-Z/*][a-zA-Z_0-9/*\-#\.]+|'.*?'|".*?"'''
+        # test if query starts with find and/or contains where (DBS-QL)
+        if  t.value == 'find' or t.value == 'where':
+            msg = 'Not a valid DAS query, DBS-QL keyword: %s' % t.value
+            raise Exception(msg)
+
         # test for a filter/aggregator/operator
-        if t.value in self.tokenmap:
+        if  t.value in self.tokenmap:
             #change the token type to the appropriate one
             #eg, FILTER
             t.type = self.tokenmap[t.value]
@@ -144,15 +175,15 @@ class DASPLY(object):
         #test for a DASKEY
         # DASKEY if
         # 1. lowercase word without dots in self.daskeys
-        if t.value in self.daskeys:
+        if  t.value in self.daskeys:
             t.type = 'DASKEY'
             return t
         # 2. lowercase.AnyCase(.AnyCase...)
-        if re.match(r'[a-z_]+(\.[a-zA-Z_]+)+', t.value):
+        if  re.match(r'[a-z_]+(\.[a-zA-Z_]+)+', t.value):
             t.type = 'DASKEY_ATTR'
             return t
         # 3. das_id is also a DASKEY
-        if re.match(r'das_id', t.value):
+        if  re.match(r'das_id', t.value):
             t.type = 'DASKEY'
             return t
         # 4. assign das_db_keywords as DASKEY's
@@ -164,7 +195,7 @@ class DASPLY(object):
         # strip quotation marks, if included
         # anything in quotation marks can't have been a
         # operator/filter/aggregator/DASKEY
-        if t.value[0] in ("'", '"'):
+        if  t.value[0] in ("'", '"'):
             t.value = t.value[1:-1]
         
         # it's probably just a plain old string

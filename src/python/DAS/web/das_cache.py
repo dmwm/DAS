@@ -25,6 +25,7 @@ from pymongo.objectid import ObjectId
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.core.das_core import DASCore
+from DAS.core.das_ply import parser_error
 from DAS.core.das_cache import DASCacheMgr, thread_monitor
 from DAS.utils.das_db import db_connection
 from DAS.utils.utils import getarg, genkey
@@ -40,18 +41,6 @@ from DAS.utils.das_db import db_gridfs
 
 DAS_CACHE_INPUTS = ['query', 'idx', 'limit', 'expire', 'method', 
              'skey', 'order', 'collection', 'fid']
-
-def parser_error(error):
-    """Return human readable DAS parser error string"""
-    print "ERROR", error
-    try:
-        # LexToken returns tok.type, tok.value, tok.lineno, and tok.lexpos
-        msg, tok = error.split("LexToken")
-        tokarr = tok.split(',')
-        return "%s error %s=%s, at line %s, position %s" \
-                % (msg.strip(), tokarr[0].lower(), tokarr[1], tokarr[2], tokarr[3])
-    except:
-        return error
 
 def cache_cleaner(dburi, collections, sleep):
     """

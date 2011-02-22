@@ -1,7 +1,6 @@
 #from DAS.web.utils import quote
 #set base = $quote($base)
 #set msg = $quote($msg)
-#set operators = $quote($operators)
 #assert isinstance($base, str)
 #assert isinstance($msg, str)
 <!-- das_ambiguous.tmpl -->
@@ -10,29 +9,11 @@ DAS server experience unexpected problem:
 <pre>
 $msg
 </pre>
-DAS keywords 
-<a href="javascript:ShowTag('das_keywords')">show</a> | 
-<a href="javascript:HideTag('das_keywords')">hide</a>,
-DAS operators
-<a href="javascript:ShowTag('das_operators')">show</a> | 
-<a href="javascript:HideTag('das_operators')">hide</a>.
-For more information please use <a href="$base/faq">FAQ</a> page.
-<p />
-<div id="das_keywords" class="hide">
-<b>DAS keywords:</b>
-<em class="box_blue">
-$entities.
-</em>
-<p />
-Please use one of them with your input as 
-<em>key=value</em> pair, e.g.
-<em class="box_blue">site=T1_CH_CERN</em>.
-</div>
-<div id="das_operators" class="hide">
-<b>DAS Operators:</b>
-<em class="box_blue">
-$operators.
-</em>
+For more information please use <a href="$base/faq">FAQ</a> page; review
+<b>DAS query guide:</b> $guide or submit a bug report
+#set details=$quote($msg)
+#set msg=details.replace('/', '%2F')
+<a href="https://svnweb.cern.ch/trac/CMSDMWM/newticket?component=DAS&description=$msg&summary=DAS+query+Error&owner=valya">here</a>.
 </div>
 </div> <!-- end of main div -->
 <!-- end of das_ambiguous.tmpl -->
