@@ -94,6 +94,9 @@ performed stress tests and code audit DAS servers.
     usage of multiprocessing module to handle client requests. Each request
     spawns a new process.
   - visualize record's system by colors on web UI, ticket #977
+  - add child/parent look-up for dataset/files
+  - work on DAS PLY to make errors messages more clear, especially adjust to
+    handle DBS-QL queries
 
 - 0.5.9
 

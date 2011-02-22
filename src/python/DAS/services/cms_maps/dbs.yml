@@ -182,10 +182,21 @@ daskeys : [
 das2api : [
     {"das_key":"dataset.name", "api_param":"path", "pattern":""},
 ]
-#---
-#urn : 
-#url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-#expire : 3600
+---
+urn : fakeChild4Dataset
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "dataset": "required",
+}
+daskeys : [
+    {"key":"child", "map":"child.name", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+]
 ---
 urn : listBlocks
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
@@ -282,6 +293,21 @@ daskeys : [
 ]
 das2api : [
     {"das_key":"file.name", "api_param":"lfn", "pattern":""},
+]
+---
+urn : fakeChild4File
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "file": "required",
+}
+daskeys : [
+    {"key":"child", "map":"child.name", "pattern":""},
+    {"key":"file", "map":"file.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"file.name", "api_param":"file", "pattern":""},
 ]
 ---
 urn : listFileLumis

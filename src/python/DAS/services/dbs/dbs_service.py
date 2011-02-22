@@ -79,6 +79,18 @@ file.createby where site=%s" % val
                     val = "run = %d" % val
                 kwds['query'] = "find run where %s" % val
             kwds.pop('run')
+        if  api == 'fakeChild4File':
+            val = kwds['file']
+            if  val != 'required':
+                val = "file = %s" % val
+                kwds['query'] = "find file.child where %s" % val
+            kwds.pop('file')
+        if  api == 'fakeChild4Dataset':
+            val = kwds['dataset']
+            if  val != 'required':
+                val = "dataset = %s" % val
+                kwds['query'] = "find dataset.child where %s" % val
+            kwds.pop('dataset')
         if  api == 'fakeDataset4Run':#runregistry don't support 'in'
             val = kwds['run']
             qlist = []
@@ -206,6 +218,10 @@ file.createby where site=%s" % val
             prim_key = 'dataset'
         elif  api == 'fakeRun4Run':
             prim_key = 'run'
+        elif api == 'fakeChild4File':
+            prim_key = 'child'
+        elif api == 'fakeChild4Dataset':
+            prim_key = 'child'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
@@ -228,11 +244,17 @@ file.createby where site=%s" % val
                         row['processed_dataset']['name'] = path
             # case for fake apis
             # remove useless attribute from results
-            if row.has_key('dataset'):
-               if row['dataset'].has_key('count_file.size'):
-                   del row['dataset']['count_file.size']
-               if row['dataset'].has_key('dataset'):
-                   name = row['dataset']['dataset']
-                   del row['dataset']['dataset']
-                   row['dataset']['name'] = name
+            if  row.has_key('dataset'):
+                if  row['dataset'].has_key('count_file.size'):
+                    del row['dataset']['count_file.size']
+                if  row['dataset'].has_key('dataset'):
+                    name = row['dataset']['dataset']
+                    del row['dataset']['dataset']
+                    row['dataset']['name'] = name
+            if  row.has_key('child') and row['child'].has_key('dataset.child'):
+                row['child']['name'] = row['child']['dataset.child']
+                del row['child']['dataset.child']
+            if  row.has_key('child') and row['child'].has_key('file.child'):
+                row['child']['name'] = row['child']['file.child']
+                del row['child']['file.child']
             yield row
