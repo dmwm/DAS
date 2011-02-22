@@ -348,7 +348,8 @@ class DASWebService(DASWebManager):
         # check provided input. If at least one word is not part of das_keys
         # return ambiguous template.
         try:
-            mongo_query = self.dasmgr.mongoparser.parse(uinput)
+            mongo_query = self.dasmgr.mongoparser.parse(uinput,\
+                                add_to_analytics=False)
         except Exception, err:
             return helper(uinput, das_parser_error(uinput, str(err)))
         fields = mongo_query.get('fields', [])
@@ -361,9 +362,19 @@ class DASWebService(DASWebManager):
         for word in fields+spec.keys():
             found = 0
             for key in self.daskeys:
-                if  word.find(key) == -1:
-                    msg = 'Provided input does not contain a valid DAS key'
-                    return helper(uinput, msg)
+                if  word.find(key) != -1:
+                    found = 1
+            if  not found:
+                msg = 'Provided input does not contain a valid DAS key'
+                return helper(uinput, msg)
+        try:
+            service_map = self.dasmgr.mongoparser.service_apis_map(mongo_query)
+            if  not service_map:
+                return helper(uinput, \
+                'None of the registed in DAS APIs can answer to this query')
+        except:
+            traceback.print_exc()
+            pass
         return
 
     @expose
