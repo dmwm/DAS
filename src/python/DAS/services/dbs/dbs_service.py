@@ -67,14 +67,13 @@ file.createby where site=%s" % val
             val = kwds['run']
             if  val != 'required':
                 if isinstance(val, dict):
-                    for opt in val:
-                        nopt = dbsql_opt_map(opt)
-                        qlist.append(nopt)
-                        qlist.append(str(tuple(val[opt])))
-                    if len(qlist) == 4:
-                        val = "run %s %s and run %s %s" % tuple(qlist)
-                    else:
-                        val = "run %s %s" % tuple(qlist)
+                    if  val.has_key('$lte'):
+                        maxR = val['$lte']
+                    if  val.has_key('$gte'):
+                        minR = val['$gte']
+                    if  minR and maxR:
+                        arr = ','.join((str(r) for r in range(minR, maxR)))
+                        val = "run in (%s)" % arr
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 kwds['query'] = "find run where %s" % val
@@ -95,15 +94,14 @@ file.createby where site=%s" % val
             val = kwds['run']
             qlist = []
             if  val != 'required':
-                if isinstance(val, dict):
-                    for opt in val:
-                        nopt = dbsql_opt_map(opt)
-                        qlist.append(nopt)
-                        qlist.append(str(tuple(val[opt])))
-                    if len(qlist) == 4:
-                        val = "run %s %s and run %s %s" % tuple(qlist)
-                    else:
-                        val = "run %s %s" % tuple(qlist)
+                if  isinstance(val, dict):
+                    if  val.has_key('$lte'):
+                        maxR = val['$lte']
+                    if  val.has_key('$gte'):
+                        minR = val['$gte']
+                    if  minR and maxR:
+                        arr = ','.join((str(r) for r in range(minR, maxR)))
+                        val = "run in (%s)" % arr
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 if  kwds.has_key('dataset') and kwds['dataset']:
@@ -257,4 +255,7 @@ file.createby where site=%s" % val
             if  row.has_key('child') and row['child'].has_key('file.child'):
                 row['child']['name'] = row['child']['file.child']
                 del row['child']['file.child']
+            if  row.has_key('run') and row['run'].has_key('run'):
+                row['run']['run_number'] = row['run']['run']
+                del row['run']['run']
             yield row

@@ -602,7 +602,7 @@ class DASAbstractService(object):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
                             count += 1
-            nkeys = len([k for k in cond.keys() if k not in das_special_keys()])
+            nkeys = len([k for k in cond.keys() if k not in ['system', 'instance']])
             if  count == nkeys and count and nkeys:
                 found = True
             else:

@@ -810,7 +810,10 @@ class DASWebService(DASWebManager):
                 func  = self.dasmgr.mapping.daskey_from_presentation
                 page += adjust_values(func, gen)
             pad   = ""
-            systems = self.systems(row['das']['system'])
+            try:
+                systems = self.systems(row['das']['system'])
+            except:
+                systems = "" # we don't store systems for aggregated records
             if  show == 'json':
                 jsonhtml = das_json(row, pad)
                 page += self.templatepage('das_row', systems=systems, \
