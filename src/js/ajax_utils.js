@@ -5,6 +5,13 @@ function ajaxStatus(base) {
       evalScripts:true
     });
 }
+function ajaxCheckPid(base, pid, next) {
+    new Ajax.Updater('_response', base+'/check_pid', 
+    { method: 'get' ,
+      parameters : {'pid': pid, 'next': next},
+      evalScripts:true
+    });
+}
 function ajaxQueryInfo(base) {
     var q = document.getElementById('dasquery');
     new Ajax.Updater('_queryinfo', base+'/expert/query_info', 

@@ -49,7 +49,7 @@ def main():
     idx     = opts.idx
     limit   = opts.limit
     if  opts.query:
-        params = {'query':query, 'idx':idx, 'limit':limit}
+        params = {'input':query, 'idx':idx, 'limit':limit}
     else:
         raise Exception('You must provide input query')
     path    = '/das/cache'

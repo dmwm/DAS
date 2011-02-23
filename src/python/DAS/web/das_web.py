@@ -642,11 +642,8 @@ class DASWebService(DASWebManager):
         """
         Invoke DAS workflow and get data from the cache.
         """
-        # do not allow caching
-        cherrypy.response.headers['Cache-Control'] = 'no-cache'
-        cherrypy.response.headers['Pragma'] = 'no-cache'
         head  = request_headers()
-        query = getarg(kwargs, 'query', '')
+        query = getarg(kwargs, 'input', '')
         idx   = getarg(kwargs, 'idx', 0)
         limit = getarg(kwargs, 'limit', 10)
         skey  = getarg(kwargs, 'skey', '')
@@ -669,8 +666,11 @@ class DASWebService(DASWebManager):
         Since query are cached the repeated call with the same query
         has no cost to DAS core.
         """
-        pid   = getarg(kwargs, 'pid', 0)
-        query = getarg(kwargs, 'query', '')
+        # do not allow caching
+        cherrypy.response.headers['Cache-Control'] = 'no-cache'
+        cherrypy.response.headers['Pragma'] = 'no-cache'
+        pid    = getarg(kwargs, 'pid', 0)
+        uinput = getarg(kwargs, 'input', '')
         if  pid:
             if  self.requests.has_key(pid):
                 process = self.requests[pid]
@@ -682,7 +682,7 @@ class DASWebService(DASWebManager):
             else: # process is done, get data
                 return self.datastream(kwargs)
         else:
-            process = Process(target=self.dasmgr.call, args=(query,))
+            process = Process(target=self.dasmgr.call, args=(uinput,))
             process.start()
             self.requests[process.pid] = process
             return str(process.pid)
