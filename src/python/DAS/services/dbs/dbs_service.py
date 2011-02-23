@@ -66,7 +66,9 @@ file.createby where site=%s" % val
         if  api == 'fakeRun4Run':#runregistry don't support 'in'
             val = kwds['run']
             if  val != 'required':
-                if isinstance(val, dict):
+                if  isinstance(val, dict):
+                    minR = 0
+                    maxR = 0
                     if  val.has_key('$lte'):
                         maxR = val['$lte']
                     if  val.has_key('$gte'):
@@ -74,6 +76,9 @@ file.createby where site=%s" % val
                     if  minR and maxR:
                         arr = ','.join((str(r) for r in range(minR, maxR)))
                         val = "run in (%s)" % arr
+                    elif val.has_key('$in'):
+                        arr = ','.join((str(r) for r in val))
+                        val = 'run in (%s)' % arr
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 kwds['query'] = "find run where %s" % val
@@ -95,6 +100,8 @@ file.createby where site=%s" % val
             qlist = []
             if  val != 'required':
                 if  isinstance(val, dict):
+                    minR = 0
+                    maxR = 0
                     if  val.has_key('$lte'):
                         maxR = val['$lte']
                     if  val.has_key('$gte'):
@@ -102,6 +109,9 @@ file.createby where site=%s" % val
                     if  minR and maxR:
                         arr = ','.join((str(r) for r in range(minR, maxR)))
                         val = "run in (%s)" % arr
+                    elif val.has_key('$in'):
+                        arr = ','.join((str(r) for r in val))
+                        val = 'run in (%s)' % arr
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 if  kwds.has_key('dataset') and kwds['dataset']:
