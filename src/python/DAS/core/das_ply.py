@@ -346,6 +346,13 @@ class DASPLY(object):
         p.error += "'%s' is not a daskey" % p[1]
         raise Exception(p.error)
 
+    def p_err3_op(self, p):
+        """keyop : SPECIALKEY"""
+        p.error = "'%s' is not support without values " % p[1]
+        if p[1] == 'date':
+            p.error += "please explore date info via attribute in filter"
+        raise Exception(p.error)
+
     def p_list_for_filter(self, p):
         """oneexp : DASKEY EQUAL VALUE
                   | DASKEY EQUAL NUMBER

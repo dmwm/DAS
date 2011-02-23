@@ -22,7 +22,7 @@ import time
 import traceback
 
 # DAS modules
-from DAS.core.das_ql import das_operators
+from DAS.core.das_ql import das_operators, das_special_keys
 from DAS.core.das_parser import QLManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
@@ -140,6 +140,7 @@ class DASCore(object):
             sparams = getattr(self, name).parameters()
             self.service_parameters[getattr(self, name).name] = sparams
 
+        self.service_keys['special'] = das_special_keys()
         self.dasconfig = dasconfig
         das_timer('DASCore::init', self.verbose)
 

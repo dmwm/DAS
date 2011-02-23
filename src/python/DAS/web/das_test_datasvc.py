@@ -92,7 +92,7 @@ class DASTestDataService(DASWebManager):
         try:
             cherrypy.response.headers['Content-Type'] = "application/xml"
             data = """<?xml version='1.0' standalone='yes'?><dbs>
-                    <data_tier id='0' name='RAW'/><SUCCESS/></dbs>"""
+                    <primary_dataset id='0' primary_name='abc'/><SUCCESS/></dbs>"""
         except:
             data = ""
         return data

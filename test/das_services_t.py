@@ -116,18 +116,18 @@ class testCMSFakeDataServices(unittest.TestCase):
 
     def testDBSService(self):
         """test DASCore with test DBS service"""
-        query  = "tier=RAW" # invoke query to fill DAS cache
+        query  = "primary_dataset=abc" # invoke query to fill DAS cache
         query  = self.das.adjust_query(query)
         result = self.das.call(query)
         expect = 1
         self.assertEqual(expect, result)
 
-        query  = "tier=RAW" # invoke query to get results from DAS cache
+        query  = "primary_dataset=abc" # invoke query to get results from DAS cache
         query  = self.das.adjust_query(query)
         result = self.das.get_from_cache(query, collection=self.dasmerge)
         result = [r for r in result]
-        result = DotDict(result[0])._get('tier.name')
-        expect = 'RAW'
+        result = DotDict(result[0])._get('primary_dataset.name')
+        expect = 'abc'
         self.assertEqual(expect, result)
 
     def testPhedexAndSiteDBServices(self):
