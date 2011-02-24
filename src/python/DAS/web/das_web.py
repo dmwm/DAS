@@ -137,6 +137,8 @@ def adjust_values(func, gen):
                 value = size_format(val)
             elif  key.find('Number of ') != -1 and val:
                 value = int(val)
+            elif  key.find('Run number') != -1 and val:
+                value = int(val)
             else:
                 value = val
             if  isinstance(value, list) and isinstance(value[0], str):

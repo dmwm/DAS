@@ -355,7 +355,7 @@ class DASMongocache(object):
                 compare_specs(query, mongo_query):
                 self.logger.info("%s, True" % msg)
                 self.logger.info("similar to %s" % mongo_query)
-                return True
+                return mongo_query
         self.logger.info("%s, False" % msg)
         return False
     

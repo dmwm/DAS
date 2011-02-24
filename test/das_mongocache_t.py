@@ -238,62 +238,62 @@ class testDASMongocache(unittest.TestCase):
 
     def test_similar_queries_2(self):                          
         """test similar_queries method of DASMongoCache"""
-        query  = {'fields':None, 'spec':{'block.name':'ABC'}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
-        query  = {'fields':None, 'spec':{'block.name':'ABC*'}}
-        result = self.dasmongocache.similar_queries(query)
+        query1 = {'fields':None, 'spec':{'block.name':'ABC'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':None, 'spec':{'block.name':'ABC*'}}
+        result = self.dasmongocache.similar_queries(query2)
         self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
-        query  = {'fields':None, 'spec':{'block.name':'ABC*'}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
-        query  = {'fields':None, 'spec':{'block.name':'ABC'}}
-        result = self.dasmongocache.similar_queries(query)
-        self.assertEqual(True, result)
+        query1 = {'fields':None, 'spec':{'block.name':'ABC*'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':None, 'spec':{'block.name':'ABC'}}
+        result = self.dasmongocache.similar_queries(query2)
+        self.assertEqual(query1, result)
         self.dasmongocache.delete_cache()
 
     def test_similar_queries(self):                          
         """test similar_queries method of DASMongoCache"""
-        query  = {'fields':None, 'spec':{'block.name':'ABC#123'}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
-        query  = {'fields':None, 'spec':{'block.name':'ABC'}}
-        result = self.dasmongocache.similar_queries(query)
+        query1 = {'fields':None, 'spec':{'block.name':'ABC#123'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':None, 'spec':{'block.name':'ABC'}}
+        result = self.dasmongocache.similar_queries(query2)
         self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
-        query  = {'fields':None, 'spec':{'dataset.name':'ABC'}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
-        query  = {'fields':['dataset'], 'spec':{'dataset.name':'ABC'}}
-        result = self.dasmongocache.similar_queries(query)
-        self.assertEqual(True, result)
+        query1 = {'fields':None, 'spec':{'dataset.name':'ABC'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':['dataset'], 'spec':{'dataset.name':'ABC'}}
+        result = self.dasmongocache.similar_queries(query2)
+        self.assertEqual(query1, result)
         self.dasmongocache.delete_cache()
 
-        query  = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
-        query  = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
-        result = self.dasmongocache.similar_queries(query)
-        self.assertEqual(True, result)
+        query1 = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
+        result = self.dasmongocache.similar_queries(query2)
+        self.assertEqual(query1, result)
         self.dasmongocache.delete_cache()
 
-        query  = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
-        query  = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
-        result = self.dasmongocache.similar_queries(query)
+        query1 = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
+        result = self.dasmongocache.similar_queries(query2)
         self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
-        query  = {'fields':None, 'spec':{'run.number':20853}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
-        query  = {'fields':None, 'spec':{'run.number': {'$gte':20853, '$lte':20859}}}
-        result = self.dasmongocache.similar_queries(query)
+        query1 = {'fields':None, 'spec':{'run.number':20853}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':None, 'spec':{'run.number': {'$gte':20853, '$lte':20859}}}
+        result = self.dasmongocache.similar_queries(query2)
         self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
-        query  = {'fields':None, 'spec':{'run.number': {'$gte':20853, '$lte':20859}}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query)})
-        query  = {'fields':None, 'spec':{'run.number':20853}}
-        result = self.dasmongocache.similar_queries(query)
-        self.assertEqual(True, result)
+        query1 = {'fields':None, 'spec':{'run.number': {'$gte':20853, '$lte':20859}}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':None, 'spec':{'run.number':20853}}
+        result = self.dasmongocache.similar_queries(query2)
+        self.assertEqual(query1, result)
         self.dasmongocache.delete_cache()
 #
 # main

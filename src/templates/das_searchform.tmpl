@@ -1,12 +1,6 @@
 #from DAS.web.utils import quote
 #set base = $quote($base)
 <!-- das_searchform.tmpl -->
-<link type="text/css" rel="stylesheet" href="$base/yui/build/autocomplete/assets/skins/sam/autocomplete.css">
-<script src="$base/yui/build/datasource/datasource-min.js"></script>
-<script src="$base/yui/build/connection/connection-min.js"></script>
-<script src="$base/yui/build/cookie/cookie-min.js"></script>
-<script src="$base/yui/build/json/json-min.js"></script>
-<script src="$base/yui/build/autocomplete/autocomplete-min.js"></script>
 
 <form action="$base/request" method="get">
 <table>
@@ -48,7 +42,7 @@ format,
 <td class="right">
 &nbsp;
 autocompletion
-<select id="ac_enable" onChange="ac_select_change();">
+<select id="ac_enable" onchange="ac_select_change();">
 <option class="sand" value="true">enable</option>
 <option class="sand" value="false">disable</option>
 </select>
@@ -64,17 +58,13 @@ autocompletion
 <input type="text" name="input" id="input" style="width:100%;"/>
 <div id="ac_container"></div>
 </div>
-##<input type="submit" value="Search" />
-##<input type="reset" />
 </form>
 <div class="right">
 <img src="$base/images/mongodb_logo.png" alt="Powered by MongoDB" width="5%" />
 </div>
-<!--
-<p></p>
--->
 
 <script type="application/javascript">
+//<![CDATA[
 updateInput();
 
 ac = null;
@@ -129,7 +119,7 @@ if (initial_status) {
 } else {
 	\$("ac_enable").value = "false";
 }
-
+//]]>
 </script>
 <!-- end of das_searchform.tmpl -->
 
