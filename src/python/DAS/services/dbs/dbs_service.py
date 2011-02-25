@@ -77,7 +77,7 @@ file.createby where site=%s" % val
                         arr = ','.join((str(r) for r in range(minR, maxR)))
                         val = "run in (%s)" % arr
                     elif val.has_key('$in'):
-                        arr = ','.join((str(r) for r in val))
+                        arr = ','.join((str(r) for r in val['$in']))
                         val = 'run in (%s)' % arr
                 elif isinstance(val, int):
                     val = "run = %d" % val
@@ -110,7 +110,7 @@ file.createby where site=%s" % val
                         arr = ','.join((str(r) for r in range(minR, maxR)))
                         val = "run in (%s)" % arr
                     elif val.has_key('$in'):
-                        arr = ','.join((str(r) for r in val))
+                        arr = ','.join((str(r) for r in val['$in']))
                         val = 'run in (%s)' % arr
                 elif isinstance(val, int):
                     val = "run = %d" % val

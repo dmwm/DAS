@@ -590,7 +590,7 @@ class DASAbstractService(object):
             expire = value['expire']
             format = value['format']
             url    = self.adjust_url(value['url'], instance)
-            args   = value['params']
+            args   = dict(value['params']) # make new copy, since we'll adjust
             wild   = value.get('wild_card', '*')
             count  = 0
             for key, val in cond.items():

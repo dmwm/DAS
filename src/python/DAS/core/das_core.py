@@ -254,7 +254,7 @@ class DASCore(object):
 
         similar_query = self.rawcache.similar_queries(query)
         if  similar_query:
-            record = self.rawcache.find_spec(query)
+            record = self.rawcache.find_spec(similar_query)
             if  record:
                 similar_query_status = record['das']['status']
                 return similar_query_status
@@ -308,15 +308,24 @@ class DASCore(object):
         if  spec == dict(records='*'):
             self.logger.info("DASCore::call, look-up everything in cache")
             return 1
+        status = 0
+        record = self.rawcache.find_spec(query)
+        if  record:
+            status = record['das']['status']
+            msg = 'DASCore::call, found query in cache, status=%s\n'
+            self.logger.info(msg)
+            if  status == 'ok' and self.in_raw_cache(query):
+                das_timer('DASCore::call', self.verbose)
+                return 1
         similar_query = self.rawcache.similar_queries(query)
         if  similar_query:
-            record = self.rawcache.find_spec(query)
+            record = self.rawcache.find_spec(similar_query)
             status = 0
             if  record:
                 status = record['das']['status']
             msg = 'DASCore::call, found SIMILAR query in cache, status=%s\n'
             self.logger.info(msg)
-            if  self.in_raw_cache(similar_query) and status == 'ok':
+            if  status == 'ok' and self.in_raw_cache(similar_query):
                 das_timer('DASCore::call', self.verbose)
                 return 1
 
