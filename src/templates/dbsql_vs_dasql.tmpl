@@ -191,11 +191,11 @@ This approach scales better and allow faster query look-up.
 <tr>
 <td>
 DBS provides limited information about run<br/>
-find run where run=148126
+find run where run=1
 </td>
 <td>
 DAS provides full information (aggregated over DBS, Tier0, RunRegistry) about a run<br/>
-run=148126
+run=1
 <br/>
 run date last 12h
 <br/>
@@ -204,6 +204,28 @@ run date last 60m
 run date in [20101010, 20101011]
 <br />
 <br/>
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="$colspan">
+<b>Find run for a given dataset and find dataset for a give run</b>
+</td>
+</tr>
+<tr>
+<td>
+find run where dataset=/a/b/c
+<br/>
+find run where dataset=/a/b/c and run&gt;=1 and run&lt;=5
+<br/>
+find dataset where run=1
+</td>
+<td>
+run dataset=/a/b/c
+<br/>
+dataset=/a/b/c run | grep run.run_number&gt;=1, run.run_number&lt;=5
+<br/>
+dataset run=1
 </td>
 </tr>
 

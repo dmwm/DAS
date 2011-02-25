@@ -99,6 +99,7 @@ performed stress tests and code audit DAS servers.
     handle DBS-QL queries
   - added dbsql_vs_dasql template which guides how to construct DAS QL expressions
     for given DBS QL ones
+  - fix concurrency problem/query race conditions in DAS core
 
 - 0.5.9
 
