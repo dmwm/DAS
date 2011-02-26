@@ -158,12 +158,15 @@ def jsonstreamer(func):
         if  isinstance(data, dict):
             for chunk in JSONEncoder().iterencode(data):
                 yield chunk
-            yield ',\n'
         elif  isinstance(data, list) or isinstance(data, types.GeneratorType):
+            sep = ''
             for rec in data:
+                if  sep:
+                    yield sep
                 for chunk in JSONEncoder().iterencode(rec):
                     yield chunk
-                yield ',\n'
+                if  not sep:
+                    sep = ', '
         else:
             msg = 'jsonstreamer, improper data type %s' % type(data)
             raise Exception(msg)

@@ -4,7 +4,7 @@ format : JSON
 ---
 urn: "plot"
 url : "https://cmsweb.cern.ch/overview/plotfairy/phedex/prod/link-rate:plot"
-expire : 300
+expire : 3600
 params : {
     "span": "hour",
     "start": "",

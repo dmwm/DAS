@@ -650,10 +650,14 @@ class DASWebService(DASWebManager):
         limit = getarg(kwargs, 'limit', 10)
         skey  = getarg(kwargs, 'skey', '')
         sdir  = getarg(kwargs, 'dir', 'asc')
+        coll  = getarg(kwargs, 'collection', 'merge')
         try:
-            data = self.dasmgr.result(query, idx, limit, skey, sdir)
-            head.update({'status':'success'})
+            data   = self.dasmgr.result(query, idx, limit, skey, sdir)
+            mquery = self.dasmgr.mongoparser.parse(query, False) 
+            nres   = self.dasmgr.in_raw_cache_nresults(mquery, coll)
+            head.update({'status':'ok', 'nresults':nres, 'mongo_query': mquery})
         except Exception, exp:
+            traceback.print_exc()
             head.update({'status': 'fail', 'reason': str(exp)})
             data = []
         return head, data

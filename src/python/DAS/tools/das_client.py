@@ -9,6 +9,8 @@ __author__ = "Valentin Kuznetsov"
 import re
 import sys
 import time
+import json
+import types
 import urllib
 import urllib2
 from   optparse import OptionParser
@@ -37,11 +39,25 @@ class DASOptionParser:
         self.parser.add_option("--limit", action="store", type="int", 
                                default=10, dest="limit",
              help="number of returned results (results per page)")
+        self.parser.add_option("--separator", action="store", type="string", 
+                               default=None, dest="separator",
+             help="separator to be used in filter, e.g. empty space, comma, tab")
     def getOpt(self):
         """
         Returns parse list of options
         """
         return self.parser.parse_args()
+
+def filter(data, filters):
+    """Filter data from a row for given list of filters"""
+    for ftr in filters:
+        if  ftr.find('>') != -1 or ftr.find('<') != -1 or ftr.find('=') != -1:
+            continue
+        row = dict(data)
+        for key in ftr.split('.'):
+            if  row.has_key(key):
+                row = row[key]
+        yield str(row)
 
 def main():
     """Main function"""
@@ -96,7 +112,23 @@ def main():
         time.sleep(count)
         if  count < 60:
             count *= 2
-    print data
+    if  opts.separator:
+        jsondict = json.loads(data)
+        mongo_query = jsondict['mongo_query']
+        if  mongo_query.has_key('filters'):
+            filters = mongo_query['filters']
+            data = jsondict['data']
+            if  isinstance(data, dict):
+                rows = [r for r in filter(data, filters)]
+                print opts.separator.join(rows)
+            elif isinstance(data, list):
+                for row in data:
+                    rows = [r for r in filter(row, filters)]
+                    print opts.separator.join(rows)
+            else:
+                print jsondict
+    else:
+        print data
 
 #
 # main
