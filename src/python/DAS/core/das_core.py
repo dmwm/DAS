@@ -28,14 +28,41 @@ from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_keylearning import DASKeyLearning
 from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
+from DAS.core.das_mongocache import encode_mongo_query
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg, unique_filter, parse_filters
+from DAS.utils.utils import expire_timestamp
 from DAS.utils.das_timer import das_timer, get_das_timer
 
 # DAS imports
 import DAS.utils.jsonwrapper as json
 import DAS.core.das_aggregators as das_aggregator
+
+def dasheader(system, query, api, url, ctime, expire):
+    """
+    Return DAS header (dict) wrt DAS specifications, see
+    https://twiki.cern.ch/twiki/bin/view/CMS/
+        DMWMDataAggregationService#DAS_data_service_compliance
+    """
+    systems = []
+    if  system:
+        systems = [system]
+    apis = []
+    if  api:
+        apis = [api]
+    urls = []
+    if  url:
+        urls = [url]
+    ctimes = []
+    if  ctime:
+        ctimes = [ctime]
+    query   = encode_mongo_query(query)
+    dasdict = dict(system=systems, timestamp=time.time(),
+                url=urls, ctime=ctimes, qhash=genkey(query), 
+                expire=expire_timestamp(expire), urn=apis,
+                api=apis, status="requested")
+    return dict(das=dasdict)
 
 class DASCore(object):
     """
@@ -312,7 +339,7 @@ class DASCore(object):
         record = self.rawcache.find_spec(query)
         if  record:
             status = record['das']['status']
-            msg = 'DASCore::call, found query in cache, status=%s\n'
+            msg = 'DASCore::call, found query in cache, status=%s\n' % status
             self.logger.info(msg)
             if  status == 'ok' and self.in_raw_cache(query):
                 das_timer('DASCore::call', self.verbose)
@@ -323,7 +350,8 @@ class DASCore(object):
             status = 0
             if  record:
                 status = record['das']['status']
-            msg = 'DASCore::call, found SIMILAR query in cache, status=%s\n'
+            msg = 'DASCore::call, found SIMILAR query in cache, status=%s\n'\
+                % status
             self.logger.info(msg)
             if  status == 'ok' and self.in_raw_cache(similar_query):
                 das_timer('DASCore::call', self.verbose)
@@ -335,6 +363,13 @@ class DASCore(object):
         services = params['services']
         self.logger.info('DASCore::call, services = %s' % services)
         qhash = genkey(query)
+        das_timer('das_record', self.verbose)
+        # initial expire tstamp 1 day (long enough to be overwriten by data-srv)
+        expire = expire_timestamp(time.time()+1*24*60*60)
+        header = dasheader("das", query, api="", url="", ctime=0, expire=expire)
+        header['lookup_keys'] = []
+        self.rawcache.insert_query_record(query, header)
+        das_timer('das_record', self.verbose)
         try:
             for srv in services:
                 self.logger.info('\nDASCore::call ##### %s ######\n' % srv)

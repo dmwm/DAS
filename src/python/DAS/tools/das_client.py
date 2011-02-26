@@ -7,10 +7,14 @@ DAS command line tool
 __author__ = "Valentin Kuznetsov"
 
 import re
+import sys
 import time
 import urllib
 import urllib2
 from   optparse import OptionParser
+
+if  sys.version_info < (2, 6):
+    raise Exception("DAS requires python 2.6 or greater")
 
 class DASOptionParser: 
     """

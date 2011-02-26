@@ -29,18 +29,7 @@ from DAS.core.das_mongocache import compare_specs, encode_mongo_query
 from DAS.utils.das_timer import das_timer
 from DAS.utils.das_db import db_gridfs, parse2gridfs
 from DAS.core.das_ql import das_special_keys
-
-def dasheader(system, query, api, url, args, ctime, expire):
-    """
-    Return DAS header (dict) wrt DAS specifications, see
-    https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
-    """
-    query   = encode_mongo_query(query)
-    dasdict = dict(system=[system], timestamp=time.time(),
-                url=[url], ctime=[ctime], qhash=genkey(query), 
-                expire=expire_timestamp(expire), urn=[api],
-                api=[api], status="requested")
-    return dict(das=dasdict)
+from DAS.core.das_core import dasheader
 
 class DASAbstractService(object):
     """
@@ -239,8 +228,7 @@ class DASAbstractService(object):
                 % self.name
         msg += ' query=%s, api=%s, args=%s' % (query, api, args)
         self.logger.debug(msg)
-        header  = dasheader(self.name, query, api, url, args, ctime,
-            expire)
+        header  = dasheader(self.name, query, api, url, ctime, expire)
         header['lookup_keys'] = self.lookup_keys(api)
 
         # check that apicall record is present in analytics DB

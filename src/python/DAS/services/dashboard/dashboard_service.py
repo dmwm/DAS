@@ -13,9 +13,9 @@ import urllib
 import traceback
 import xml.etree.cElementTree as ET
 from types import InstanceType
-from DAS.services.abstract_service import DASAbstractService, dasheader
-from DAS.utils.utils import map_validator
-
+from DAS.services.abstract_service import DASAbstractService
+from DAS.utils.utils import map_validator, convert2date
+                
 def convert_datetime(sec):
     """
     Convert seconds since epoch or YYYYMMDD to date format used in dashboard
@@ -87,7 +87,11 @@ class DashboardService(DASAbstractService):
                         msg += 'Please use either date last XXh format or'
                         msg += 'date in [YYYYMMDD, YYYYMMDD]'
                         raise Exception(msg)
-                    value = [value, value + 24*60*60]
+                    if  isinstance(value, str):
+                        value = convert2date(value)
+                    else:
+                        value = [value, value + 24*60*60]
+#                    value = [value, value + 24*60*60]
                     args['date1'] = convert_datetime(value[0])
                     args['date2'] = convert_datetime(value[1])
                     count += 1

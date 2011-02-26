@@ -10,7 +10,7 @@ __author__ = "Valentin Kuznetsov"
 
 import time
 import traceback
-from DAS.services.abstract_service import DASAbstractService, dasheader
+from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator
 import DAS.utils.jsonwrapper as json
 

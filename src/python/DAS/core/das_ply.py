@@ -460,9 +460,9 @@ def ply2mongo(query):
             value = val
             if  name == 'date' and oper == '=':
                 value = das_dateformat(value)
-            if  oper == 'last':
-                valist = convert2date(value)
-                value = {'$gte' : valist[0], '$lte': valist[1]}
+#            if  oper == 'last':
+#                valist = convert2date(value)
+#                value = {'$gte' : valist[0], '$lte': valist[1]}
             if  oper == 'in':
                 vlist = list(val[1:])
                 if name == 'date':

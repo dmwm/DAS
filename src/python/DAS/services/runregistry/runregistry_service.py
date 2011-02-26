@@ -14,6 +14,7 @@ import traceback
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
+from   DAS.utils.utils import convert2date
 
 def worker(url, query):
     """
@@ -123,6 +124,8 @@ class RunRegistryService(DASAbstractService):
                         msg = 'Unable to convert to datetime format, %s' \
                             % value
                         raise Exception(msg)
+                elif  isinstance(val, str):
+                    date1, date2 = convert2date(val)
                 else:
                     date1 = convert_datetime(val) 
                     date2 = convert_datetime(val + 24*60*60)

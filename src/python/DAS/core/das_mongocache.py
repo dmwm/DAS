@@ -815,9 +815,11 @@ class DASMongocache(object):
             msg = "DASMongocache::insert_query_record, query=%s, header=%s" \
                     % (query, header)
             self.logger.debug(msg)
-            q_record = dict(das=dasheader, query=encode_mongo_query(query))
+            q_record = dict(das=dasheader, query=enc_query)
             q_record['das']['lookup_keys'] = lkeys
             q_record['das']['empty_record'] = 0
+            q_record['das']['status'] = "requested"
+            q_record['das']['qhash'] = genkey(enc_query)
             objid  = self.col.insert(q_record)
 
     def update_records(self, query, results, header):
