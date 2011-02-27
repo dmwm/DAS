@@ -944,7 +944,7 @@ class DASWebService(DASWebManager):
         results = ""
         for record in self.records4filter(kwargs):
             for val in record.values():
-                results += val
+                results += str(val) + ' '
             results += '\n'
         return results
 

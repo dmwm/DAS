@@ -388,19 +388,18 @@ class DASCacheService(DASWebManager):
                 data['ctime']  = time.time() - time0
                 data['parser'] = parser_error(str(sys.exc_info()[1]))
                 return data 
-            idx   = getarg(kwargs, 'idx', 0)
-            limit = getarg(kwargs, 'limit', 0)
-            skey  = getarg(kwargs, 'skey', '')
-            order = getarg(kwargs, 'order', 'asc')
+            idx    = getarg(kwargs, 'idx', 0)
+            limit  = getarg(kwargs, 'limit', 0)
+            skey   = getarg(kwargs, 'skey', '')
+            sorder = getarg(kwargs, 'order', 'asc')
             data.update({'status':'requested', 'idx':idx, 
                      'limit':limit, 'query':query,
-                     'skey':skey, 'order':order})
-            res = self.dascore.result(query, idx, limit)
+                     'skey':skey, 'order':sorder})
+            res = self.dascore.result(query, idx, limit, skey, sorder)
             if  isinstance(res, GeneratorType):
                 result = []
                 for item in res:
-                    if  item not in result:
-                        result.append(item)
+                    result.append(item)
                 data['data'] = result
                 tot = len(data['data'])
             else:
