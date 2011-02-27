@@ -586,7 +586,7 @@ class DASAbstractService(object):
                 if  self.dasmapping.check_dasmap(self.name, api, key, val):
                     # need to convert key (which is daskeys.map) into
                     # input api parameter
-                    for apiparam in self.dasmapping.das2api(self.name, key, api=api):
+                    for apiparam in self.dasmapping.das2api(self.name, key, val, api):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
                             count += 1

@@ -57,12 +57,6 @@ class DBSService(DASAbstractService):
   sum(block.size), sum(block.numfiles), sum(block.numevents) \
   where file=%s and dataset.status like VALID*" % val
             kwds.pop('file')
-        if  api == 'fakeListFile4Site':
-            val = kwds['site']
-            if  val != 'required':
-                kwds['query'] = "find file, file.createdate, file.moddate, \
-file.createby where site=%s" % val
-            kwds.pop('site')
         if  api == 'fakeRun4Run':#runregistry don't support 'in'
             val = kwds['run']
             if  val != 'required':
@@ -216,8 +210,6 @@ file.createby where site=%s" % val
             prim_key = 'run'
         elif  api == 'fakeListDataset4File':
             prim_key = 'dataset'
-        elif  api == 'fakeListFile4Site':
-            prim_key = 'file'
         elif  api == 'fakeListDatasetbyDate':
             prim_key = 'dataset'
         elif  api == 'fakeDatasetSummary':

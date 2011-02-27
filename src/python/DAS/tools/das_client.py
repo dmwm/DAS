@@ -10,7 +10,6 @@ import re
 import sys
 import time
 import json
-import types
 import urllib
 import urllib2
 from   optparse import OptionParser
@@ -39,16 +38,16 @@ class DASOptionParser:
         self.parser.add_option("--limit", action="store", type="int", 
                                default=10, dest="limit",
              help="number of returned results (results per page)")
-        self.parser.add_option("--separator", action="store", type="string", 
-                               default=None, dest="separator",
-             help="separator to be used in filter, e.g. empty space, comma, tab")
-    def getOpt(self):
+        self.parser.add_option("--format", action="store", type="string", 
+                               default="json", dest="format",
+             help="specify return data format (json or plain), default json")
+    def get_opt(self):
         """
         Returns parse list of options
         """
         return self.parser.parse_args()
 
-def filter(data, filters):
+def get_value(data, filters):
     """Filter data from a row for given list of filters"""
     for ftr in filters:
         if  ftr.find('>') != -1 or ftr.find('<') != -1 or ftr.find('=') != -1:
@@ -59,19 +58,9 @@ def filter(data, filters):
                 row = row[key]
         yield str(row)
 
-def main():
-    """Main function"""
-    optmgr  = DASOptionParser()
-    opts, _ = optmgr.getOpt()
-    host    = opts.host
-    debug   = opts.verbose
-    query   = opts.query
-    idx     = opts.idx
-    limit   = opts.limit
-    if  opts.query:
-        params = {'input':query, 'idx':idx, 'limit':limit}
-    else:
-        raise Exception('You must provide input query')
+def get_data(host, query, idx, limit, debug):
+    """Contact DAS server and retrieve data for given DAS query"""
+    params  = {'input':query, 'idx':idx, 'limit':limit}
     path    = '/das/cache'
     pat     = re.compile('http[s]{0,1}://')
     if  not pat.match(host):
@@ -83,8 +72,8 @@ def main():
     url += '?%s' % encoded_data
     req  = urllib2.Request(url=url, headers=headers)
     if  debug:
-        h   = urllib2.HTTPHandler(debuglevel=1)
-        opener = urllib2.build_opener(h)
+        hdlr = urllib2.HTTPHandler(debuglevel=1)
+        opener = urllib2.build_opener(hdlr)
     else:
         opener = urllib2.build_opener()
     fdesc = opener.open(req)
@@ -112,19 +101,33 @@ def main():
         time.sleep(count)
         if  count < 60:
             count *= 2
-    if  opts.separator:
+    return data
+
+def main():
+    """Main function"""
+    optmgr  = DASOptionParser()
+    opts, _ = optmgr.get_opt()
+    host    = opts.host
+    debug   = opts.verbose
+    query   = opts.query
+    idx     = opts.idx
+    limit   = opts.limit
+    if  not query:
+        raise Exception('You must provide input query')
+    data    = get_data(host, query, idx, limit, debug)
+    if  opts.format == 'plain':
         jsondict = json.loads(data)
         mongo_query = jsondict['mongo_query']
         if  mongo_query.has_key('filters'):
             filters = mongo_query['filters']
             data = jsondict['data']
             if  isinstance(data, dict):
-                rows = [r for r in filter(data, filters)]
-                print opts.separator.join(rows)
+                rows = [r for r in get_value(data, filters)]
+                print ' '.join(rows)
             elif isinstance(data, list):
                 for row in data:
-                    rows = [r for r in filter(row, filters)]
-                    print opts.separator.join(rows)
+                    rows = [r for r in get_value(row, filters)]
+                    print ' '.join(rows)
             else:
                 print jsondict
     else:

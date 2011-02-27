@@ -244,7 +244,7 @@ class DASMapping(object):
         """
         Find das key for given system and map key.
         """
-        msg   = 'DASMapping::find_daskeys, '
+        msg   = 'DASMapping::find_daskeys, system=%s\n' % das_system
         cond  = { 'system' : das_system, 'daskeys.map': map_key }
         daskeys = []
         for row in self.col.find(cond, ['daskeys']):
@@ -258,10 +258,9 @@ class DASMapping(object):
                                 if  pat.match(str(value)):
                                     daskeys.append(dkey['key'])
                                 else:
-                                    msg += 'mismatch: %s, key=%s, value=%s'\
-                                            % (das_system, map_key, value)
-                                    msg += ', pattern=%s' % pval
-                                    self.logger.info(msg)
+                                    msg += '-- reject key=%s, val=%s, pat=%s\n'\
+                                            % (map_key, value, pval)
+                                    self.logger.debug(msg)
                             else:
                                 daskeys.append(dkey['key'])
                         else:
@@ -272,7 +271,7 @@ class DASMapping(object):
         """
         Find map key for given system and das key.
         """
-        msg   = 'DASMapping::find_mapkey, '
+        msg   = 'DASMapping::find_mapkey, system=%s\n' % das_system
         cond  = { 'system' : das_system, 'daskeys.key': das_key }
         mapkeys = []
         for row in self.col.find(cond, ['daskeys', 'urn']):
@@ -283,13 +282,15 @@ class DASMapping(object):
                         if  value:
                             pval = key.get('pattern', '')
                             pat = re.compile(pval)
-                            if  not pat.match(str(value)):
-                                msg += 'mismatch: %s, key=%s, value=%s'\
-                                        % (das_system, das_key, value)
-                                msg += ', pattern=%s' % key['pattern']
-                                self.logger.info(msg)
+                            if  pat.match(str(value)):
+                                return key['map']
+                            else:
+                                msg += '-- reject key=%s, val=%s, pat=%s\n'\
+                                        % (das_key, value, key['pattern'])
+                                self.logger.debug(msg)
                                 continue
-                        return key['map']
+                        else:
+                            return key['map']
 
     def find_apis(self, das_system, map_key):
         """

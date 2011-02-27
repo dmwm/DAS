@@ -27,6 +27,13 @@ class SiteDBService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
+    def adjust_params(self, api, kwds):
+        """
+        Adjust Phedex parameters for specific query requests
+        """
+        for key, val in kwds.items():
+            kwds[key] = val.replace('*', '')
+
     def parser(self, query, dformat, source, api):
         """
         Parser for SiteDB JSON data-services

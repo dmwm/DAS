@@ -100,6 +100,11 @@ performed stress tests and code audit DAS servers.
   - added dbsql_vs_dasql template which guides how to construct DAS QL expressions
     for given DBS QL ones
   - fix concurrency problem/query race conditions in DAS core
+  - remove fakeListFile4Site from DBS maps since DBS3 does not cover this use case
+  - modified das_client to allow other tools use it as API
+  - fix DBS/phedex maps to match dashes/underscores in SE patterns
+  - add adjust_params into SiteDB to allow to use patterns in a way SiteDB does it
+    (no asterisks)
 
 - 0.5.9
 

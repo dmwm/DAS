@@ -29,4 +29,12 @@ contains information about underlying API calls made to data-provider. For examp
              "expire": 1265407785.2611251}
     }
 
-DAS handles different type of :ref:`data-objects <data_objects>`
+DAS workflow produce the following set of records
+
+.. figure::  _images/das_queries.png
+   :align:   center
+
+- data records, which contains data coming out from data-services, every data
+  record contains a pointer to das record
+- das records, which contains information how we retrieve data
+- analytics records, which contains information about API calls

@@ -41,10 +41,11 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "popular queries date last 24h"
-        date1 = time.time() - 24*60*60
-        date2 = time.time()
-        mongo = {'fields': ['popular', 'queries'], 
-                 'spec': {'date': {'$gte': long(date1), '$lte': long(date2)}}}
+        mongo = {'fields': ['popular', 'queries'], 'spec': {'date': '24h'}}
+#        date1 = time.time() - 24*60*60
+#        date2 = time.time()
+#        mongo = {'fields': ['popular', 'queries'], 
+#                 'spec': {'date': {'$gte': long(date1), '$lte': long(date2)}}}
         self.queries[query] = mongo
 
         query = "records"
@@ -136,9 +137,10 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "run date last 24h"
-        date1 = time.time() - 24*60*60
-        date2 = time.time()
-        mongo = {'fields': ['run'], 'spec': {'date': {'$gte': long(date1), '$lte': long(date2)}}}
+#        date1 = time.time() - 24*60*60
+#        date2 = time.time()
+#        mongo = {'fields': ['run'], 'spec': {'date': {'$gte': long(date1), '$lte': long(date2)}}}
+        mongo = {'fields': ['run'], 'spec': {'date': '24h'}}
         self.queries[query] = mongo
 
         date1 = 20101201

@@ -28,6 +28,24 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_convert2date(self):
+        """Test convert2date function"""
+        date = '24h'
+        expect = [long(time.time()-24*60*60), long(time.time())]
+        result = convert2date(date)
+        self.assertEqual(expect, result)
+
+        date = '60m'
+        expect = [long(time.time()-60*60), long(time.time())]
+        result = convert2date(date)
+        self.assertEqual(expect, result)
+
+        date = '60s'
+        self.assertRaises(Exception, convert2date, date)
+
+        date = '123'
+        self.assertRaises(Exception, convert2date, date)
+
     def test_parse_filters(self):
         """Test parse_filters function"""
         filters = ['monitor', 'file.size=1']
