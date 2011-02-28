@@ -598,7 +598,7 @@ class DASAbstractService(object):
             self.adjust_params(api, args)
             if  not found:
                 msg  = 'DASAbstractService::apimap\n\n'
-                msg += "--- %s reject API %s, parameters don't match, args=%s" \
+                msg += "--- %s rejects API %s, parameters don't match, args=%s" \
                         % (self.name, api, args)
                 self.logger.info(msg)
                 continue
@@ -606,7 +606,7 @@ class DASAbstractService(object):
             # since such api will not work
             if 'required' in args.values():
                 msg  = 'DASAbstractService::apimap\n\n'
-                msg += "--- %s reject API %s, parameter is required, args=%s" \
+                msg += "--- %s rejects API %s, parameter is required, args=%s" \
                         % (self.name, api, args)
                 self.logger.info(msg)
                 continue
@@ -628,7 +628,7 @@ class DASAbstractService(object):
 
 #            self.adjust_params(api, args)
             msg  = 'DASAbstractService::apimap\n\n'
-            msg += '+++ %s pass API %s, args=%s' % (self.name, api, args)
+            msg += '+++ %s passes API %s, args=%s' % (self.name, api, args)
             self.logger.info(msg)
 
             msg  = "DASAbstractService::apimap yield "
