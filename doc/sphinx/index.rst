@@ -21,8 +21,8 @@ Contents:
    das_client.rst
    architecture.rst
    workflow.rst
-   mapping.rst
    das_records.rst
+   mapping.rst
    analytics.rst
    das_cache.rst
    das_merge.rst
@@ -34,6 +34,7 @@ Contents:
    cms_operations.rst
    das_operations.rst
    benchmark.rst
+   dependencies.rst
    changelog.rst
    references.rst
 

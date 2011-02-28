@@ -5,7 +5,6 @@ DAS request flow
 This diagram illustrates the request flow triggered by a user query.
 
 .. figure:: _images/das_requestflow.png 
-   :align: center
 
 The user makes the query *site=AAA*. 
 DAS resolves it into several requests, by looking at the *daskeys* map

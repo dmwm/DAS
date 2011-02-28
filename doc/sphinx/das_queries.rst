@@ -1,28 +1,6 @@
-DAS queries
-===========
-Here we will discuss DAS Query Language (QL) and provide concrete examples of DAS
-queries.
-
-DAS QL
-++++++
-DAS-QL has the following syntax
-
-.. doctest::
-
-   <key> <key> = <value> ... | <filter> <key.att> <op> <value>, ... | <aggregator>, ...
-   <key> date last <value h|m>
-   <key> date between [YYYYMMDD, YYYYMMDD]
-
-Here the key is a valid DAS key, e.g. dataset, run and op is a valid DAS
-operator, e.g. <, >, <=, >=. The key.att represents a key attribute.
-The DAS query can be supplemented either by filters or aggregator functions.
-The filter consists of either key/key.att value pair or key/key.att fields.
-The supported aggregator functions are: sum, count, min, max, avg, median.
-Below we provide a concrete examples of DAS queries which can be used
-to look-up CMS meta-data.
-
 CMS DAS queries
-+++++++++++++++
+===============
+Here we provide concrete examples of DAS queries used in CMS.
 
 Find primary dataset
 
