@@ -106,6 +106,7 @@ performed stress tests and code audit DAS servers.
   - add adjust_params into SiteDB to allow to use patterns in a way SiteDB does it
     (no asterisks)
   - disable expert interface
+  - update analytics in DAS core when we found a match
 
 - 0.5.9
 

@@ -342,6 +342,8 @@ class DASCore(object):
             msg = 'DASCore::call, found query in cache, status=%s\n' % status
             self.logger.info(msg)
             if  status == 'ok' and self.in_raw_cache(query):
+                # update analytics for all systems (None)
+                self.analytics.update(None, query)
                 das_timer('DASCore::call', self.verbose)
                 return 1
         similar_query = self.rawcache.similar_queries(query)
@@ -354,6 +356,8 @@ class DASCore(object):
                 % status
             self.logger.info(msg)
             if  status == 'ok' and self.in_raw_cache(similar_query):
+                # update analytics for all systems (None)
+                self.analytics.update(None, query)
                 das_timer('DASCore::call', self.verbose)
                 return 1
 

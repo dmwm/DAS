@@ -258,8 +258,11 @@ class DASAnalytics(object):
         msg = 'DASAnalytics::update(%s, %s)' % (system, query)
         self.logger.debug(msg)
         qhash = genkey(query)
-        cond = {'qhash':qhash, 'system':system}
-        self.col.update(cond, {'$inc' : {'counter':1}})
+        if  system:
+            cond = {'qhash':qhash, 'system':system}
+        else:
+            cond = {'qhash':qhash}
+        self.col.update(cond, {'$inc' : {'counter':1}}, multi=True)
 
     def list_systems(self):
         """
