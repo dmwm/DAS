@@ -42,6 +42,7 @@ DAS_WEB_CODES = [
         (30 , 'DAS parser error'),
         (31 , 'Unsupported pid value'),
         (32 , 'Unsupported next value'),
+        (33 , 'Unsupported kwds'),
 ]
 def decode_code(code):
     """Return human readable string for provided code ID"""

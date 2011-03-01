@@ -144,6 +144,9 @@ def checkargs(supported):
                 if  args:
                     kwds = args[-1]
             keys = []
+            if  not isinstance(kwds, dict):
+                code  = web_code('Unsupported kwds')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
             if  kwds:
                 keys = [i for i in kwds.keys() if i not in supported]
             if  keys:
