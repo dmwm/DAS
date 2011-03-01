@@ -305,8 +305,8 @@ class DASCore(object):
                 for row in self.get_queries(query):
                     count += 1
                 return count
-        filters = query.get('filters')
-        query, dquery = convert2pattern(loose(query))
+        filters  = query.get('filters')
+        query, _ = convert2pattern(loose(query))
         return self.rawcache.nresults(query, collection=coll, filters=filters)
 
     def call(self, query, add_to_analytics=True):

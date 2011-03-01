@@ -376,7 +376,7 @@ class DASWebService(DASWebManager):
                 return helper(uinput, msg)
         try:
             service_map = self.dasmgr.mongoparser.service_apis_map(mongo_query)
-            if  not service_map:
+            if  uinput != 'records' and not service_map:
                 return helper(uinput, \
                 'None of the registed in DAS APIs can answer to this query')
         except:
@@ -557,7 +557,7 @@ class DASWebService(DASWebManager):
         web methods
         """
         url     = self.cachesrv
-        uinput  = kwargs.get('input', '')
+        uinput  = kwargs.get('input', '').strip()
         coll    = kwargs.get('collection', 'merge')
         params  = {'query':uinput, 'collection': coll}
         path    = '/rest/nresults'
@@ -582,7 +582,7 @@ class DASWebService(DASWebManager):
     def send_request(self, method, kwargs):
         "Send POST request to server with provided parameters"
         url     = self.cachesrv
-        uinput  = getarg(kwargs, 'input', '')
+        uinput  = getarg(kwargs, 'input', '').strip()
         format  = getarg(kwargs, 'format', '')
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
@@ -679,7 +679,7 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
         pid    = getarg(kwargs, 'pid', 0)
-        uinput = getarg(kwargs, 'input', '')
+        uinput = getarg(kwargs, 'input', '').strip()
         if  pid:
             if  self.requests.has_key(pid):
                 process = self.requests[pid]
@@ -707,7 +707,7 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Pragma'] = 'no-cache'
 
         time0   = time.time()
-        uinput  = getarg(kwargs, 'input', '')
+        uinput  = getarg(kwargs, 'input', '').strip()
         form    = self.form(input=uinput)
         view    = kwargs.get('view', 'list')
         check   = self.check_input(uinput)
@@ -718,9 +718,12 @@ class DASWebService(DASWebManager):
                 return check
         # self.status sends request to Cache Server
         # Cache Server uses das_core to retrieve status
-        data    = self.check_data(input=uinput)
+        if  uinput == 'records':
+            data  = {'status': 'ok'} # user wants to see all records from the cache
+        else:
+            data  = self.check_data(input=uinput)
         if  not data.has_key('status'):
-            msg = "DAS cache server fails to process your request.\n"
+            msg   = "DAS cache server fails to process your request.\n"
             if  data.has_key('parser'):
                 msg += data['parser']
             else:
@@ -778,7 +781,7 @@ class DASWebService(DASWebManager):
         Helper function to make listview page.
         """
         time0   = time.time()
-        uinput  = getarg(kwargs, 'input', '')
+        uinput  = getarg(kwargs, 'input', '').strip()
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
         show    = getarg(kwargs, 'show', 'json')
@@ -919,7 +922,7 @@ class DASWebService(DASWebManager):
                 continue
             titles.append(yui_name(filter))
         time0   = time.time()
-        uinput  = getarg(kwargs, 'input', '')
+        uinput  = getarg(kwargs, 'input', '').strip()
         limit   = getarg(kwargs, 'limit', 10)
         form    = self.form(input=uinput)
         total   = self.nresults(kwargs)
@@ -998,7 +1001,7 @@ class DASWebService(DASWebManager):
         Check status of user request in DAS cache.
         We return either ok/no data/fail.
         """
-        uinput  = kwargs.get('input', '')
+        uinput  = kwargs.get('input', '').strip()
         uinput  = urllib.unquote_plus(uinput)
         view    = kwargs.get('view', 'list')
         params  = {'query':uinput}
@@ -1035,7 +1038,7 @@ class DASWebService(DASWebManager):
             cherrypy.response.headers['Expire'] = tstamp
             cherrypy.response.headers['Cache-control'] = 'no-cache'
 
-        uinput  = kwargs.get('input', '')
+        uinput  = kwargs.get('input', '').strip()
         uinput  = urllib.unquote_plus(uinput)
         params  = {'query':uinput}
         path    = '/rest/status'

@@ -137,6 +137,8 @@ def convert2pattern(query):
     newspec = {}
     verspec = {}
     for key, val in spec.items():
+        if  key == 'records':
+            continue # skip special records keyword
         if  isinstance(val, str) or isinstance(val, unicode):
             if  val.find('*') != -1:
                 if  val == '*':
