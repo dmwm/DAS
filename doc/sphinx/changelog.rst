@@ -105,6 +105,7 @@ performed stress tests and code audit DAS servers.
   - fix DBS/phedex maps to match dashes/underscores in SE patterns
   - add adjust_params into SiteDB to allow to use patterns in a way SiteDB does it
     (no asterisks)
+  - disable expert interface
 
 - 0.5.9
 

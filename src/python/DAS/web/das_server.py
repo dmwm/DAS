@@ -27,7 +27,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_web import DASWebService
 from DAS.web.das_cache import DASCacheService
-from DAS.web.das_expert import DASExpertService
+#from DAS.web.das_expert import DASExpertService
 from cherrypy.process.plugins import PIDFile
 
 class Root(object):
@@ -91,10 +91,10 @@ class Root(object):
             obj = DASWebService(config)
             tree.mount(obj, url_base) # mount web server
             # expert part
-            config = self.config.get('expert_server', {})
-            obj = DASExpertService(config)
-            url = url_base + '/expert'
-            tree.mount(obj, url) # mount expert server
+#            config = self.config.get('expert_server', {})
+#            obj = DASExpertService(config)
+#            url = url_base + '/expert'
+#            tree.mount(obj, url) # mount expert server
         else:
             obj = DASWebManager({}) # pass empty config dict
             tree.mount(obj, '/')

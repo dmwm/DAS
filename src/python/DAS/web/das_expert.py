@@ -53,7 +53,7 @@ def check_dn(func):
         database = conn['admin']
         coll = database['dns']
         dn = headers.get('Ssl-Client-S-Dn', None)
-        redirect = False
+        redirect = True
         if  dn:
             if  coll.find_one({'dn': dn}):
                 redirect = False
