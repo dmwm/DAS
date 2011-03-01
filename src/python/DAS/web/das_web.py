@@ -816,6 +816,8 @@ class DASWebService(DASWebManager):
             if  row.has_key('das'):
                 if  row['das'].has_key('primary_key'):
                     pkey  = row['das']['primary_key']
+                    if  isinstance(pkey, list):
+                        pkey = ', '.join([k.split('.')[0] for k in pkey])
                     page += '<b>DAS key:</b> %s<br />' % pkey.split('.')[0]
             gen   = self.convert2ui(row)
             if  self.dasmgr:
