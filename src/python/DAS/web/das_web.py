@@ -147,7 +147,10 @@ def adjust_values(func, gen):
         else:
             if  key == 'result' and isinstance(val, dict) and \
                 val.has_key('value'): # result of aggregation function
-                val = val['value']
+                if  isinstance(val['value'], int):
+                    val = val['value']
+                else:
+                    val = '%.2f' % val['value']
             page += "<b>%s:</b> %s<br />" % (key, val)
     if  links:
         page += "<b>Links:</b> "
