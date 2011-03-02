@@ -90,7 +90,15 @@ class DASAnalytics(object):
             #                 '$pull': {'times': {'$lt': now - self.history}}})
             # the above is not possible - mongo disallows push and pull
             # on same field in one update operation (as of 1.7.1)
-            self.col.update({'_id': existing['_id']},
+
+            # check if times contains very old timestamps
+            rec = self.col.find({'_id': ObjectId(existing['_id']), 
+                                 'times':{'$lt' : now - self.history}})
+            if  rec:
+                self.col.update({'_id': ObjectId(existing['_id'])},
+                    {'$pull': {'times': {'$lt' : now - self.history}}})
+            # update times array with new timestamp
+            self.col.update({'_id': ObjectId(existing['_id'])},
                             {'$push': {'times': now}})
         else:
             record = dict(dasquery=dasquery, mongoquery=mongoquery,
@@ -289,7 +297,7 @@ class DASAnalytics(object):
         # in this case we need a specific element to be within the range,
         # so we need to use elemMatch
         if before and after:
-            cond['times'] = {'$elemMatch': {'$gt': after, '$lt': before}}
+            cond['times'] = {'$gt': after, '$lt': before}
         # in these cases we only need to match any element
         elif after:
             cond['times'] = {'$gt': after}
