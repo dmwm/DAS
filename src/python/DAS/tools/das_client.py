@@ -54,8 +54,13 @@ def get_value(data, filters):
             continue
         row = dict(data)
         for key in ftr.split('.'):
-            if  row.has_key(key):
+            if  isinstance(row, dict) and row.has_key(key):
                 row = row[key]
+            if  isinstance(row, list):
+                for item in row:
+                    if  isinstance(item, dict) and item.has_key(key):
+                        row = item[key]
+                        break
         yield str(row)
 
 def get_data(host, query, idx, limit, debug):
