@@ -420,7 +420,9 @@ class DASPLY(object):
 
     def p_error(self, p):
         """Error rule for syntax errors"""
-        raise Exception("Syntax error in input, %s" % p)
+        if  p:
+            raise Exception("Syntax error in input, %s" % p)
+        raise Exception("DAS unable to parse input query")
 
     def build(self, **kwargs):
         """Dynamic lexer/parser builder"""

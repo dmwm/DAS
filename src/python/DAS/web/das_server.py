@@ -27,6 +27,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_web import DASWebService
 from DAS.web.das_cache import DASCacheService
+from DAS.web.das_web_srv import DASWebService as DASNewWebService
 #from DAS.web.das_expert import DASExpertService
 from cherrypy.process.plugins import PIDFile
 
@@ -77,15 +78,15 @@ class Root(object):
                                    severity=logging.DEBUG, 
                                    traceback=False)
 
-    def start(self, blocking=True):
+    def start(self, server, blocking=True):
         """Configure and start the server."""
         self.configure()
         url_base = self.config['web_server']['url_base']
-        if  self.model == 'cache_server':
+        if  server == 'cache':
             config = self.config.get('cache_server', {})
             obj = DASCacheService(config) # mount cache server
             tree.mount(obj, '/')
-        elif self.model == 'web_server':
+        elif server == 'web':
             # web server
             config = self.config.get('web_server', {})
             obj = DASWebService(config)
@@ -95,6 +96,11 @@ class Root(object):
 #            obj = DASExpertService(config)
 #            url = url_base + '/expert'
 #            tree.mount(obj, url) # mount expert server
+        elif server == 'new':
+            # new web server
+            config = self.config.get('web_server', {})
+            obj = DASNewWebService(config)
+            tree.mount(obj, url_base) # mount web server
         else:
             obj = DASWebManager({}) # pass empty config dict
             tree.mount(obj, '/')
@@ -130,6 +136,8 @@ def main():
         model = "cache_server"
     elif opts.server == 'web':
         model = "web_server"
+    elif opts.server == 'new':
+        model = "web_server"
     else:
         print "Please specify which DAS server you want to start, see --help"
         sys.exit(1)
@@ -138,7 +146,7 @@ def main():
     print "\n### Start %s server with DAS configuration:" % model
     print pformat(config)
     root = Root(model, config)
-    root.start()
+    root.start(opts.server)
 
 if __name__ == "__main__":
     main()

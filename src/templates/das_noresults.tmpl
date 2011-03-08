@@ -1,0 +1,15 @@
+#from DAS.web.utils import quote
+
+<!-- das_noresults.tmpl -->
+<div>
+DAS queried the following services:
+<ul>
+#for key, val in $service_map.items()
+#set system=$quote($key)
+#set apis=', '.join([$quote(s) for s in val])
+<li><b>$system:</b> $apis APIs
+#end for
+</ul>
+but no results were found.
+</div>
+<!-- end of das_noresults.tmpl -->
