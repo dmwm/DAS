@@ -309,6 +309,8 @@ class DASCore(object):
                     count += 1
                 return count
         filters  = query.get('filters')
+        if  query.has_key('aggregators'):
+            return len(query['aggregators'])
         query, _ = convert2pattern(loose(query))
         return self.rawcache.nresults(query, collection=coll, filters=filters)
 
