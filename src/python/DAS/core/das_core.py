@@ -47,7 +47,10 @@ def dasheader(system, query, api, url, ctime, expire):
     """
     systems = []
     if  system:
-        systems = [system]
+        if  system == 'das': # init for das record
+            systems = []
+        else:
+            systems = [system]
     apis = []
     if  api:
         apis = [api]
