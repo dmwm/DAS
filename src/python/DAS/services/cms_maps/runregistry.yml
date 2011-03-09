@@ -2,7 +2,7 @@ system : runregistry
 format : JSON
 ---
 urn : rr_xmlrpc
-url : "http://pccmsdqm04.cern.ch/runregistry/xmlrpc"
+url : "http://pccmsdqm04.cern.ch/runregistry_api/xmlrpc"
 expire : 3600
 params : {}
 daskeys : [

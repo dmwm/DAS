@@ -7,6 +7,14 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.5.11
+
+  - change RunRegistry API
+  - fix showing result string in web UI when using aggregators
+  - bug fix for das_client with sparse records
+  - add new das_web_srv, a single DAS web server (not enabled though)
+  - fix das_top template to use TRACE rather then savannah
+
 - 0.5.10
 
   - add DAS cache server time into the web page, fixes #941
