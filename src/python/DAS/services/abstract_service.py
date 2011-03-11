@@ -517,37 +517,46 @@ class DASAbstractService(object):
         if  not genrows:
             return
         for url, api, args, dformat, expire in genrows:
-            try:
-                mkey    = self.dasmapping.primary_mapkey(self.name, api)
-                args    = self.inspect_params(api, args)
-                time0   = time.time()
-                self.analytics.insert_apicall(self.name, query, url, 
-                                              api, args, expire)
-                headers = make_headers(dformat)
-                data    = self.getdata(url, args, headers)
+            self.apicall(query, url, api, args, dformat, expire)
+
+    def apicall(self, query, url, api, args, dformat, expire):
+        """
+        Data service api method, can be defined by data-service class.
+        It parse input query and invoke appropriate data-service API
+        call. All results are stored into the DAS cache along with
+        api call inserted into Analytics DB.
+        """
+        try:
+            mkey    = self.dasmapping.primary_mapkey(self.name, api)
+            args    = self.inspect_params(api, args)
+            time0   = time.time()
+            self.analytics.insert_apicall(self.name, query, url, 
+                                          api, args, expire)
+            headers = make_headers(dformat)
+            data    = self.getdata(url, args, headers)
 # TODO: need more time to investigate how to use correctly HTTP Header expire
 # timestamp. The problem is that such timestamp can differ significantly from
 # the ones I assign in maps, which leads to large gaps between data records
 # expire timestamps, e.g. phedex block info can expire in 10 min, while DBS 
 # will stay in 1 hour.
-#                try: # get HTTP header and look for Expires
-#                    e_time = expire_timestamp(\
-#                        data.info().__dict__['dict']['expires'])
-#                    if  e_time > time.time():
-#                        expire = e_time
-#                except:
-#                    pass
-                rawrows = self.parser(query, dformat, data, api)
-                dasrows = self.translator(api, rawrows)
-                dasrows = self.set_misses(query, api, dasrows)
-                ctime   = time.time() - time0
-                self.write_to_cache(query, expire, url, api, args, 
-                        dasrows, ctime)
-            except:
-                msg  = 'Fail to process: url=%s, api=%s, args=%s' \
-                        % (url, api, args)
-                msg += traceback.format_exc()
-                self.logger.info(msg)
+#            try: # get HTTP header and look for Expires
+#                e_time = expire_timestamp(\
+#                    data.info().__dict__['dict']['expires'])
+#                if  e_time > time.time():
+#                    expire = e_time
+#            except:
+#                pass
+            rawrows = self.parser(query, dformat, data, api)
+            dasrows = self.translator(api, rawrows)
+            dasrows = self.set_misses(query, api, dasrows)
+            ctime   = time.time() - time0
+            self.write_to_cache(query, expire, url, api, args, 
+                    dasrows, ctime)
+        except:
+            msg  = 'Fail to process: url=%s, api=%s, args=%s' \
+                    % (url, api, args)
+            msg += traceback.format_exc()
+            self.logger.info(msg)
 
     def url_instance(self, url, _instance):
         """
@@ -573,6 +582,8 @@ class DASAbstractService(object):
         cond  = getarg(query, 'spec', {})
         instance = cond.get('instance', '')
         skeys = getarg(query, 'fields', [])
+        if  not skeys:
+            skeys = []
         self.logger.info("\n")
         for api, value in self.map.items():
             expire = value['expire']
@@ -580,8 +591,11 @@ class DASAbstractService(object):
             url    = self.adjust_url(value['url'], instance)
             args   = dict(value['params']) # make new copy, since we'll adjust
             wild   = value.get('wild_card', '*')
-            count  = 0
+            found  = 0
             for key, val in cond.items():
+                # check if key is a special one
+                if  key in das_special_keys():
+                    found += 1
                 # check if keys from conditions are accepted by API.
                 if  self.dasmapping.check_dasmap(self.name, api, key, val):
                     # need to convert key (which is daskeys.map) into
@@ -589,26 +603,23 @@ class DASAbstractService(object):
                     for apiparam in self.dasmapping.das2api(self.name, key, val, api):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
-                            count += 1
-            nkeys = len([k for k in cond.keys() if k not in ['system', 'instance']])
-            if  count == nkeys and count and nkeys:
-                found = True
-            else:
-                found = False
+                            found += 1
             self.adjust_params(api, args)
             if  not found:
-                msg  = 'DASAbstractService::apimap\n\n'
-                msg += "--- %s rejects API %s, parameters don't match, args=%s" \
-                        % (self.name, api, args)
+                msg = "--- %s rejects API %s, parameters don't match"\
+                        % (self.name, api)
                 self.logger.info(msg)
+                msg = 'args=%s' % args
+                self.logger.debug(msg)
                 continue
             # check that there is no "required" parameter left in args,
             # since such api will not work
             if 'required' in args.values():
-                msg  = 'DASAbstractService::apimap\n\n'
-                msg += "--- %s rejects API %s, parameter is required, args=%s" \
-                        % (self.name, api, args)
+                msg = '--- %s rejects API %s, parameter is required'\
+                        % (self.name, api)
                 self.logger.info(msg)
+                msg = 'args=%s' % args
+                self.logger.debug(msg)
                 continue
             # adjust pattern symbols in arguments
             if  wild != '*':
@@ -627,9 +638,18 @@ class DASAbstractService(object):
 #                continue
 
 #            self.adjust_params(api, args)
-            msg  = 'DASAbstractService::apimap\n\n'
-            msg += '+++ %s passes API %s, args=%s' % (self.name, api, args)
+
+            prim_key = self.dasmapping.primary_key(self.name, api)
+            if  prim_key not in skeys:
+                msg = "--- %s rejects API %s, primary_key %s is not selected"\
+                        % (self.name, api, prim_key)
+                self.logger.info(msg)
+                continue
+
+            msg = '+++ %s passes API %s' % (self.name, api)
             self.logger.info(msg)
+            msg = 'args=%s' % args
+            self.logger.debug(msg)
 
             msg  = "DASAbstractService::apimap yield "
             msg += "system ***%s***, url=%s, api=%s, args=%s, format=%s, " \

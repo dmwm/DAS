@@ -75,15 +75,11 @@ class RunRegistryService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def api(self, query):
+    def apicall(self, query, url, api, args, dformat, expire):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
-        api     = self.map.keys()[0] # we have only one key
-        url     = self.map[api]['url']
-        expire  = self.map[api]['expire']
-        args    = dict(self.map[api]['params'])
         _query  = ""
         for key, val in query['spec'].items():
             if  key == 'run.run_number':

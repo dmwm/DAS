@@ -50,7 +50,7 @@ class RunSummaryService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def api(self, query):
+    def apicall(self, query, url, api, args, dformat, expire):
         """
         Invoke DBS API to execute given query.
         Return results as a list of dict, e.g.

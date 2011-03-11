@@ -100,7 +100,7 @@ urn : listRuns
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
-     "api":"listRuns", "apiversion": "DBS_2_0_9", "path":"*",
+     "api":"listRuns", "apiversion": "DBS_2_0_9", "path":"required",
 }
 daskeys : [
     {"key":"run", "map":"run.run_number", "pattern":""},

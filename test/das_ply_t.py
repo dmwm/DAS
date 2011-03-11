@@ -49,11 +49,11 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "records"
-        mongo = {'fields': None, 'spec': {'records': '*'}}
+        mongo = {'fields': ['records'], 'spec': {'records': '*'}}
         self.queries[query] = mongo
 
         query = "records site=T1_CH_CERN"
-        mongo = {'fields': None, 'spec': {'site': 'T1_CH_CERN'}}
+        mongo = {'fields': ['records'], 'spec': {'site': 'T1_CH_CERN'}}
         self.queries[query] = mongo
 
         query = "site=T1_CH_CERN"

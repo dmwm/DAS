@@ -72,7 +72,12 @@ class QLManager(object):
             query[0] == "{" and query[-1] == "}":
             mongo_query = json.loads(query)
             if  mongo_query.keys() != ['fields', 'spec']:
-                raise Exception("Invalid MongoDB query %s" % query)
+                raise Exception('Invalid MongoDB query %s' % query)
+            if  not mongo_query['fields'] and \
+                len(mongo_query['spec'].keys()) > 1:
+                msg = 'Ambiguous query "%s", please provide selection key' \
+                        % query
+                raise Exception(msg)
             if  add_to_analytics:
                 self.analytics.add_query(query, mongo_query)
             return mongo_query
@@ -119,6 +124,12 @@ class QLManager(object):
                 mongo_query = ply2mongo(ply_query)
             except Exception, exp:
                 raise exp
+        if  set(mongo_query.keys()) & set(['fields','spec']) != \
+                set(['fields', 'spec']):
+            raise Exception('Invalid MongoDB query %s' % mongo_query)
+        if  not mongo_query['fields'] and len(mongo_query['spec'].keys()) > 1:
+            msg = 'Ambiguous query "%s", please provide selection key' % query
+            raise Exception(msg)
         return mongo_query
 
     def convert2skeys(self, mongo_query):

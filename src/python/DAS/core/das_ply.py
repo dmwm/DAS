@@ -507,9 +507,5 @@ def ply2mongo(query):
         else:
             mongodict['fields'] = None
     mongodict['spec'] = spec
-    # VERY SPECIAL case. If user asks to look-up all records, by using
-    # records keyword we clean-up fields in mongo query.
-    if  mongodict['fields'] == ['records']:
-        mongodict['fields'] = None
     return mongodict
 

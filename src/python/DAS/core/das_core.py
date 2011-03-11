@@ -28,7 +28,8 @@ from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_keylearning import DASKeyLearning
 from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
-from DAS.core.das_mongocache import encode_mongo_query
+from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
+from DAS.core.das_mongocache import compare_specs
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg, unique_filter, parse_filters
@@ -227,8 +228,6 @@ class DASCore(object):
             skeys = query['fields']
             if  not skeys:
                 skeys = []
-#            if  len(skeys) == 1: # no way we can proceed
-#                return results
             for key in skeys:
                 newquery = dict(fields=[key], spec=query['spec'])
                 self.call(newquery) # process query
@@ -337,6 +336,10 @@ class DASCore(object):
         query  = self.adjust_query(query, add_to_analytics)
         spec   = query.get('spec')
         fields = query.get('fields')
+        if  fields == ['records']:
+            msg = 'DASCore::call, look-up all records in cache'
+            self.logger.info(msg)
+            return 1
         if  spec == dict(records='*'):
             self.logger.info("DASCore::call, look-up everything in cache")
             return 1
@@ -345,6 +348,9 @@ class DASCore(object):
         if  record:
             status = record['das']['status']
             msg = 'DASCore::call, found query in cache, status=%s\n' % status
+            mongo_query = decode_mongo_query(record['query'])
+            if  not compare_specs(query, mongo_query): 
+                status = 0
             self.logger.info(msg)
             if  status == 'ok' and self.in_raw_cache(query):
                 # update analytics for all systems (None)
@@ -357,8 +363,8 @@ class DASCore(object):
             status = 0
             if  record:
                 status = record['das']['status']
-            msg = 'DASCore::call, found SIMILAR query in cache, status=%s\n'\
-                % status
+            msg  = 'DASCore::call, found SIMILAR query in cache,'
+            msg += 'query=%s, status=%s\n' % (record['query'], status)
             self.logger.info(msg)
             if  status == 'ok' and self.in_raw_cache(similar_query):
                 # update analytics for all systems (None)
@@ -408,13 +414,18 @@ class DASCore(object):
         msg = 'DASCore::get_from_cache, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
                 % (query, idx, limit, skey, sorder)
         self.logger.info(msg)
+        fields    = query.get('fields', None)
+        if  fields == ['records']:
+            msg = 'DASCore::get_from_cache, look-up all records'
+            self.logger.info(msg)
+            fields = None # look-up all records
+            query['fields'] = None # reset query field part
         spec      = query.get('spec', {})
         if  spec.has_key('instance'):
             del spec['instance'] # while we look-up data we don't need instance
         if  spec == dict(records='*'):
             spec  = {} # we got request to get everything
             query['spec'] = spec
-        fields    = query.get('fields', None)
         if  fields:
             prim_keys = []
             for key in fields:

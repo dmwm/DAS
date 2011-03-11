@@ -221,6 +221,15 @@ def compare_specs(input_query, exist_query):
     fields2 = query2.get('fields', None)
     if  not fields2:
         fields2 = []
+
+    if  fields1 != fields2:
+        if  fields1 and fields2 and not set(fields2) > set(fields1):
+            return False
+        elif fields1 and not fields2:
+            return False
+        elif fields2 and not fields1:
+            return False
+
     spec2   = query2.get('spec', {})
 
     if  spec2 == {}: # empty conditions for existing query, look at sel. fields
@@ -353,8 +362,7 @@ class DASMongocache(object):
         cond    = {'query.spec.key': {'$in' : spec.keys()}}
         for row in self.col.find(cond):
             mongo_query = decode_mongo_query(row['query'])
-            if  mongo_query['spec'] == query['spec'] or \
-                compare_specs(query, mongo_query):
+            if  compare_specs(query, mongo_query):
                 self.logger.info("%s, True" % msg)
                 self.logger.info("similar to %s" % mongo_query)
                 return mongo_query

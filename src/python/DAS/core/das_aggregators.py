@@ -175,11 +175,15 @@ def das_func(func, ckey, genrows):
 def count(key, rows):
     """DAS count aggregator function"""
     robj = das_func('count', key, rows)
+    if  not robj:
+        return {'value': 'N/A'}
     return {'value': robj.result}
 
 def das_avg(key, rows):
     """DAS avg aggregator function"""
     robj = das_func('avg', key, rows)
+    if  not robj:
+        return {'value': 'N/A'}
     if  robj.rec_count:
         data = {'value': float(robj.result)/robj.rec_count}
     else:
@@ -189,6 +193,8 @@ def das_avg(key, rows):
 def das_median(key, rows):
     """DAS median aggregator function"""
     robj = das_func('median', key, rows)
+    if  not robj:
+        return {'value': 'N/A'}
     if  len(robj.result) == 1:
         data = {'value': robj.result[0]}
     if  len(robj.result) % 2:
@@ -202,20 +208,28 @@ def das_median(key, rows):
 def das_min(key, rows):
     """DAS min aggregator function"""
     robj = das_func('min', key, rows)
+    if  not robj:
+        return {'value': 'N/A'}
     return {'value': robj.result, '_id': robj._id}
 
 def das_max(key, rows):
     """DAS max aggregator function"""
     robj = das_func('max', key, rows)
+    if  not robj:
+        return {'value': 'N/A'}
     return {'value': robj.result, '_id': robj._id}
 
 def das_sum(key, rows):
     """DAS sum aggregator function"""
     robj = das_func('sum', key, rows)
+    if  not robj:
+        return {'value': 'N/A'}
     return {'value': robj.result}
 
 def das_count(key, rows):
     """DAS count aggregator function"""
     robj = das_func('count', key, rows)
+    if  not robj:
+        return {'value': 'N/A'}
     return {'value': robj.result}
 

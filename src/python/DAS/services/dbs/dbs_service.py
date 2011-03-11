@@ -56,6 +56,8 @@ class DBSService(DASAbstractService):
                 kwds['query'] = "find dataset , count(block), count(file.size), \
   sum(block.size), sum(block.numfiles), sum(block.numevents) \
   where file=%s and dataset.status like VALID*" % val
+            else:
+                kwds['query'] = 'required'
             kwds.pop('file')
         if  api == 'fakeRun4Run':#runregistry don't support 'in'
             val = kwds['run']
@@ -76,18 +78,24 @@ class DBSService(DASAbstractService):
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 kwds['query'] = "find run where %s" % val
+            else:
+                kwds['query'] = 'required'
             kwds.pop('run')
         if  api == 'fakeChild4File':
             val = kwds['file']
             if  val != 'required':
                 val = "file = %s" % val
                 kwds['query'] = "find file.child where %s" % val
+            else:
+                kwds['query'] = 'required'
             kwds.pop('file')
         if  api == 'fakeChild4Dataset':
             val = kwds['dataset']
             if  val != 'required':
                 val = "dataset = %s" % val
                 kwds['query'] = "find dataset.child where %s" % val
+            else:
+                kwds['query'] = 'required'
             kwds.pop('dataset')
         if  api == 'fakeDataset4Run':#runregistry don't support 'in'
             val = kwds['run']
@@ -112,6 +120,8 @@ class DBSService(DASAbstractService):
                     val += ' and dataset=%s' % kwds['dataset']
                 kwds['query'] = \
                 "find dataset where %s and dataset.status like VALID*" % val
+            else:
+                kwds['query'] = 'required'
             kwds.pop('run')
             kwds.pop('dataset')
         if  api == 'fakeDatasetSummary':
@@ -138,6 +148,8 @@ class DBSService(DASAbstractService):
             if  value:
                 kwds['query'] = "find dataset, sum(block.numfiles), sum(block.numevents), \
   count(block), sum(block.size) where %s" % value[4:]
+            else:
+                kwds['query'] = 'required'
         if  api == 'fakeListDatasetbyDate':
 #           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124} 
             query_for_single = "find dataset , count(block), sum(block.size),\
@@ -171,6 +183,8 @@ class DBSService(DASAbstractService):
                     val = convert_datetime(val)
                     query = query_for_single % ('=', val)
                 kwds['query'] = query
+            else:
+                kwds['query'] = 'required'
             kwds.pop('date')
             
     def parser(self, query, dformat, source, api):

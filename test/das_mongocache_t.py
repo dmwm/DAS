@@ -86,7 +86,7 @@ class testDASMongocache(unittest.TestCase):
         input_query = dict(fields=None, spec={'test':'T1_CH_CERN'})
         exist_query = dict(fields=['site'], spec={})
         result = compare_specs(input_query, exist_query)
-        self.assertEqual(True, result) # exist_query is a superset
+        self.assertEqual(False, result) # exist_query is a superset
 
         input_query = dict(fields=None, spec={'test':'T1_CH_CERN'})
         exist_query = dict(fields=None, spec={'test':'T1_*'})
@@ -121,7 +121,12 @@ class testDASMongocache(unittest.TestCase):
         input_query = dict(fields=['site','block'], spec={'test':'site_ch'})
         exist_query = dict(fields=['site'], spec={'test':'site*'})
         result = compare_specs(input_query, exist_query)
-        self.assertEqual(True, result) # exist_query is a superset
+        self.assertEqual(False, result) # exist_query is a superset, but different fields
+
+        input_query = dict(fields=['block'], spec={'test':'site*'})
+        exist_query = dict(fields=['site'], spec={'test':'site*'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result) # different fields
 
         input_query = dict(fields=None, spec={'test':'T1_CH_*'})
         exist_query = dict(fields=None, spec={'test':'T1_CH_CERN'})
@@ -171,8 +176,17 @@ class testDASMongocache(unittest.TestCase):
         input_query = dict(fields=None, spec={'dataset.name':'/a/b/c*'})
         exist_query = dict(fields=['conf'], spec={'dataset.name':'/a/b/c'})
         result = compare_specs(input_query, exist_query)
-#        self.assertEqual(True, result)
         self.assertEqual(False, result)
+
+        input_query = dict(fields=None, spec={'dataset.name':'/a/b/c*'})
+        exist_query = dict(fields=None, spec={'dataset.name':'/a/b/c'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(False, result)
+
+        input_query = dict(fields=None, spec={'dataset.name':'/a/b/c'})
+        exist_query = dict(fields=None, spec={'dataset.name':'/a/b/c*'})
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result)
 
         input_query  = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
         exist_query  = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
@@ -265,7 +279,7 @@ class testDASMongocache(unittest.TestCase):
         self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
         query2 = {'fields':['dataset'], 'spec':{'dataset.name':'ABC'}}
         result = self.dasmongocache.similar_queries(query2)
-        self.assertEqual(query1, result)
+        self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
         query1 = {'fields':None, 'spec':{'block.name':'ABCDE*'}}

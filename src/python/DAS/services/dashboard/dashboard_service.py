@@ -66,15 +66,11 @@ class DashboardService(DASAbstractService):
         if  close:
             source.close()
 
-    def api(self, query):
+    def apicall(self, query, url, api, args, dformat, expire):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
-        api    = self.map.keys()[0] # we have only one key
-        url    = self.map[api]['url']
-        expire = self.map[api]['expire']
-        args   = dict(self.map[api]['params'])
         cond   = query['spec']
         count  = 0
         for key, value in cond.items():
@@ -91,7 +87,6 @@ class DashboardService(DASAbstractService):
                         value = convert2date(value)
                     else:
                         value = [value, value + 24*60*60]
-#                    value = [value, value + 24*60*60]
                     args['date1'] = convert_datetime(value[0])
                     args['date2'] = convert_datetime(value[1])
                     count += 1

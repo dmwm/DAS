@@ -11,7 +11,7 @@ __author__ = "Valentin Kuznetsov"
 import time
 import traceback
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator
+from DAS.utils.utils import map_validator, convert2date
 import DAS.utils.jsonwrapper as json
 
 class MonitorService(DASAbstractService):
@@ -51,18 +51,13 @@ class MonitorService(DASAbstractService):
                 newrow['rate'] = val
                 yield dict(monitor=newrow)
 
-    def api(self, query):
+    def apicall(self, query, url, api, args, dformat, expire):
         """
         An overview data-service worker.
         """
-        api  = self.map.keys()[0] # we have only one key
-        url  = self.map[api]['url']
-        expire = self.map[api]['expire']
-        args = dict(self.map[api]['params'])
         data = []
         keys = [key for key in self.map[api]['keys'] for api in self.map.keys()]
         cond = query['spec']
-        dformat = "JSON"
         for key, value in cond.items():
             if  key.find('.') != -1:
                 args['grouping'] = key.split('.')[-1]
@@ -70,13 +65,41 @@ class MonitorService(DASAbstractService):
             if  key not in keys:
                 continue
             args['end'] = '%d' % time.time()
-#            url = url + '/' + api
+
+            if  not isinstance(value, dict): # we got equal condition
+                if  key == 'date':
+                    if  isinstance(value, list) and len(value) != 2:
+                        msg  = 'Monitor service requires 2 time stamps.'
+                        msg += 'Please use either date last XXh format or'
+                        msg += 'date in [YYYYMMDD, YYYYMMDD]'
+                        raise Exception(msg)
+                    if  isinstance(value, str):
+                        value = convert2date(value)
+                    else:
+                        value = [value, value + 24*60*60]
+                    args['start'] = value[0]
+                    args['end']   = value[1]
+            else: # we got some operator, e.g. key :{'$in' : [1,2,3]}
+                if  key == 'date':
+                    if  value.has_key('$in'):
+                        vallist = value['$in']
+                    elif value.has_key('$lte') and value.has_key('$gte'):
+                        vallist = (value['$gte'], value['$lte'])
+                    else:
+                        raise Exception(err)
+                    args['start'] = convert_datetime(vallist[0])
+                    args['end'] = convert_datetime(vallist[-1])
+                else:
+                    raise Exception(err)
+
+
             time0 = time.time()
             res = self.getdata(url, args)
             try:
                 genrows = self.parser(query, dformat, res, args)
             except:
                 traceback.print_exc()
+            dasrows = self.set_misses(query, api, genrows)
             ctime = time.time() - time0
-            self.write_to_cache(query, expire, url, api, args, genrows, ctime)
+            self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
 

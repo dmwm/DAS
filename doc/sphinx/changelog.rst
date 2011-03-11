@@ -7,6 +7,22 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.6.0
+
+  - code refactoring to move from implicit data look-up to
+    explicit one. The 0.5.X series retieved all data from multiple sources 
+    based on query constrains, e.g. dataset=/a/b/c query cause to get 
+    datasets, files, block which match the constraint. While new code
+    makes precise matching between query and API and retrieve only selected
+    data, in a case above it will retrieve only dataset, but not files.
+    To get files users must explicitly specify it in a query, e.g.
+    file dataset=/a/b/c
+  - constrain PLY to reject ambiguos queries with more then one
+    condition, without specifying selection key, e.g.
+    dataset=/a/b/c site=T1 is not allowed anymore and proper exception will be
+    thrown. User must specify what they want to select, dataset, block, site. 
+  - protect aggregator functions from NULL results
+
 - 0.5.11
 
   - change RunRegistry API
