@@ -8,6 +8,14 @@ __revision__ = "$Id: abstract_service.py,v 1.94 2010/04/30 16:39:50 valya Exp $"
 __version__ = "$Revision: 1.94 $"
 __author__ = "Valentin Kuznetsov"
 
+try:
+    # import gevent for concurent API call processing
+    import gevent
+    from gevent import monkey
+    monkey.patch_all() # patches stdlib for multitasking
+except:
+    pass
+
 # system modules
 import re
 import time
@@ -45,6 +53,7 @@ class DASAbstractService(object):
             self.dasmapping  = config['dasmapping']
             self.analytics   = config['dasanalytics']
             self.write2cache = config.get('write_cache', True)
+            self.gevent      = config.get('gevent', False)
             dburi            = config['mongodb']['dburi']
             self.gfs         = db_gridfs(dburi)
         except:
@@ -516,8 +525,16 @@ class DASAbstractService(object):
         genrows = self.apimap(query)
         if  not genrows:
             return
+        jobs    = []
         for url, api, args, dformat, expire in genrows:
-            self.apicall(query, url, api, args, dformat, expire)
+#            self.apicall(query, url, api, args, dformat, expire)
+            if  self.gevent:
+                jobs.append(gevent.spawn(self.apicall, \
+                            query, url, api, args, dformat, expire))
+            else:
+                self.apicall(query, url, api, args, dformat, expire)
+        if  self.gevent:
+            gevent.joinall(jobs)
 
     def apicall(self, query, url, api, args, dformat, expire):
         """

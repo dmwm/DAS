@@ -35,5 +35,8 @@ Below we list all dependencies clarifying their role for DAS
   see [IPython]_;
 - *cjson*, a C library providing a faster JSON decoder/encoder for python (optional), see
   [CJSON]_;
-
+- *yajl*, a C library providing a faster JSON decoder/encoder for python (optional), see
+  [YAJL]_;
+- *gevent*, a coroutine-based Python networking library that uses greenlet to provide 
+  a high-level synchronous API on top of libevent event loop see [Gevent]_;
 

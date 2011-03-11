@@ -15,6 +15,14 @@ __revision__ = "$Id: das_core.py,v 1.80 2010/05/04 21:13:39 valya Exp $"
 __version__ = "$Revision: 1.80 $"
 __author__ = "Valentin Kuznetsov"
 
+try:
+    # import gevent for concurent API call processing
+    import gevent
+    from gevent import monkey
+    monkey.patch_all() # patches stdlib for multitasking
+except:
+    pass
+
 # system modules
 import re
 import os
@@ -93,6 +101,7 @@ class DASCore(object):
             dasconfig['write_cache'] = True
             self.noresults = nores
 
+        self.gevent = dasconfig['das'].get('gevent', None)
         logfile = dasconfig.get('logfile', None)
         logformat = dasconfig.get('logformat')
         if  debug:
@@ -313,6 +322,13 @@ class DASCore(object):
         query, _ = convert2pattern(loose(query))
         return self.rawcache.nresults(query, collection=coll, filters=filters)
 
+    def worker(self, srv, query):
+        """Main worker function which call data-srv call function"""
+        self.logger.info('\nDASCore::call ##### %s ######\n' % srv)
+        das_timer(srv, self.verbose)
+        getattr(getattr(self, srv), 'call')(query)
+        das_timer(srv, self.verbose)
+
     def call(self, query, add_to_analytics=True):
         """
         Top level DAS api which execute a given query using underlying
@@ -386,11 +402,14 @@ class DASCore(object):
         self.rawcache.insert_query_record(query, header)
         das_timer('das_record', self.verbose)
         try:
-            for srv in services:
-                self.logger.info('\nDASCore::call ##### %s ######\n' % srv)
-                das_timer(srv, self.verbose)
-                getattr(getattr(self, srv), 'call')(query)
-                das_timer(srv, self.verbose)
+            if  self.gevent:
+                jobs = []
+                for srv in services:
+                    jobs.append(gevent.spawn(self.worker, srv, query))
+                gevent.joinall(jobs)
+            else:
+                for srv in services:
+                    self.worker(srv, query)
         except:
             traceback.print_exc()
             return 0

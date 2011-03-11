@@ -22,6 +22,8 @@ performed stress tests and code audit DAS servers.
     dataset=/a/b/c site=T1 is not allowed anymore and proper exception will be
     thrown. User must specify what they want to select, dataset, block, site. 
   - protect aggregator functions from NULL results
+  - new multiprocessing pool class
+  - use gevent (if present, see http://www.gevent.org/) to handle data retrieval concurently
 
 - 0.5.11
 

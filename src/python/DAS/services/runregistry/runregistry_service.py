@@ -136,6 +136,8 @@ class RunRegistryService(DASAbstractService):
         if  not _query:
             msg = 'Unable to match input parameters with input query'
             raise Exception(msg)
+        if  args.has_key('run') and isinstance(args['run'], dict):
+            args['run'] = str(args['run'])
         msg = "DASAbstractService:RunRegistry, query=%s" % _query
         self.logger.info(msg)
         time0   = time.time()

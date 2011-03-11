@@ -5,6 +5,14 @@
 Unit test for DAS QL parser
 """
 
+try:
+    # import gevent for concurent API call processing
+    import gevent
+    from gevent import monkey
+    monkey.patch_all() # patches stdlib for multitasking
+except:
+    pass
+
 import time
 import unittest
 from random import randrange

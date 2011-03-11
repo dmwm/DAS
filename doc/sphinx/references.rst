@@ -23,3 +23,5 @@ References
 .. [JSON] http://en.wikipedia.org/wiki/JSON
 .. [CJSON] http://pypi.python.org/pypi/python-cjson
 .. [PLY] http://www.dabeaz.com/ply/
+.. [Gevent] http://www.gevent.org/
+.. [YAJL] http://lloyd.github.com/yajl/
