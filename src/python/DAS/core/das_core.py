@@ -102,6 +102,9 @@ class DASCore(object):
             self.noresults = nores
 
         self.gevent = dasconfig['das'].get('gevent', None)
+        if  self.verbose:
+            self.gevent = None # in verbose mode do not use gevent
+
         logfile = dasconfig.get('logfile', None)
         logformat = dasconfig.get('logformat')
         if  debug:
