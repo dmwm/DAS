@@ -125,7 +125,7 @@ class DashboardService(DASAbstractService):
 
         time0 = time.time()
         params = {} # all params are passed in url
-        res = self.getdata(url, params, headers=self.headers)
+        res, expire = self.getdata(url, params, expire, headers=self.headers)
         rawrows = self.parser(res, api, args)
         genrows = self.translator(api, rawrows)
         dasrows = self.set_misses(query, api, genrows)

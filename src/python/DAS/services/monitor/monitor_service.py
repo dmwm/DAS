@@ -10,8 +10,9 @@ __author__ = "Valentin Kuznetsov"
 
 import time
 import traceback
-from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, convert2date
+from   DAS.services.abstract_service import DASAbstractService
+from   DAS.utils.utils import map_validator, convert2date
+from   types import InstanceType
 import DAS.utils.jsonwrapper as json
 
 class MonitorService(DASAbstractService):
@@ -27,29 +28,37 @@ class MonitorService(DASAbstractService):
         """
         Data parser for Monitor service.
         """
-        data = source.read()
-        source.close()
-#        row  = eval(data)
+        if  isinstance(source, InstanceType) or isinstance(source, file):
+            try: # we got data descriptor
+                data = source.read()
+            except:
+                source.close()
+                raise
+            source.close()
+        else:
+            data = source
         try:
             row  = json.loads(data)
         except:
             msg  = "MonitorService::parser,"
             msg += " WARNING, fail to JSON'ify data:\n%s" % data
             self.logger.warning(msg)
-#            traceback.print_exc()
             row  = eval(data, { "__builtins__": None }, {})
-        monitor_time = row['series']
-        monitor_data = row['data']
-        items = ({'time':list(t), 'data':d} for t, d in \
-                            zip(monitor_time, monitor_data))
-        for row in items:
-            interval = row['time']
-            dataval  = row['data']
-            for key, val in dataval.items():
-                newrow = {'time': interval}
-                newrow[args['grouping']] = key
-                newrow['rate'] = val
-                yield dict(monitor=newrow)
+        try:
+            monitor_time = row['series']
+            monitor_data = row['data']
+            items = ({'time':list(t), 'data':d} for t, d in \
+                                zip(monitor_time, monitor_data))
+            for row in items:
+                interval = row['time']
+                dataval  = row['data']
+                for key, val in dataval.items():
+                    newrow = {'time': interval}
+                    newrow[args['grouping']] = key
+                    newrow['rate'] = val
+                    yield dict(monitor=newrow)
+        except:
+            yield dict(monitor=row)
 
     def apicall(self, query, url, api, args, dformat, expire):
         """
@@ -91,15 +100,10 @@ class MonitorService(DASAbstractService):
                     args['end'] = convert_datetime(vallist[-1])
                 else:
                     raise Exception(err)
-
-
-            time0 = time.time()
-            res = self.getdata(url, args)
-            try:
-                genrows = self.parser(query, dformat, res, args)
-            except:
-                traceback.print_exc()
+            time0   = time.time()
+            res, expire = self.getdata(url, args, expire)
+            genrows = self.parser(query, dformat, res, args)
             dasrows = self.set_misses(query, api, genrows)
-            ctime = time.time() - time0
+            ctime   = time.time() - time0
             self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
 

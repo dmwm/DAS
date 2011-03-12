@@ -48,14 +48,15 @@ class DASAbstractService(object):
     def __init__(self, name, config):
         self.name = name
         try:
-            self.verbose     = config['verbose']
-            self.logger      = config['logger']
-            self.dasmapping  = config['dasmapping']
-            self.analytics   = config['dasanalytics']
-            self.write2cache = config.get('write_cache', True)
-            self.gevent      = config.get('gevent', False)
-            dburi            = config['mongodb']['dburi']
-            self.gfs         = db_gridfs(dburi)
+            self.verbose      = config['verbose']
+            self.logger       = config['logger']
+            self.dasmapping   = config['dasmapping']
+            self.analytics    = config['dasanalytics']
+            self.write2cache  = config.get('write_cache', True)
+            self.gevent       = config['das'].get('gevent', False)
+            self.error_expire = config['das'].get('error_expire', 300) 
+            dburi             = config['mongodb']['dburi']
+            self.gfs          = db_gridfs(dburi)
         except:
             traceback.print_exc()
             print config
@@ -126,7 +127,7 @@ class DASAbstractService(object):
                     self._notations[api] = {notation:map}
         return self._notations
 
-    def getdata(self, url, params, headers=None):
+    def getdata(self, url, params, expire, headers=None):
         """
         Invoke URL call and retrieve data from data-service based
         on provided URL and set of parameters. All data will be parsed
@@ -190,6 +191,7 @@ class DASAbstractService(object):
                 data.update({'httperror': None})
                 pass
             data = str(data)
+            expire = expire_timestamp(self.error_expire)
         except:
             msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                         % (url, params, headers)
@@ -197,8 +199,9 @@ class DASAbstractService(object):
             data = {'error': msg, 
                     'reason': 'Unable to invoke HTTP call to data-service'}
             data = json.dumps(data)
+            expire = expire_timestamp(self.error_expire)
         das_timer(timer_key, self.verbose)
-        return data
+        return data, expire
 
     def call(self, query):
         """
@@ -550,7 +553,7 @@ class DASAbstractService(object):
             self.analytics.insert_apicall(self.name, query, url, 
                                           api, args, expire)
             headers = make_headers(dformat)
-            data    = self.getdata(url, args, headers)
+            data, expire = self.getdata(url, args, expire, headers)
 # TODO: need more time to investigate how to use correctly HTTP Header expire
 # timestamp. The problem is that such timestamp can differ significantly from
 # the ones I assign in maps, which leads to large gaps between data records

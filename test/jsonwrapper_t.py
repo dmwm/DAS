@@ -71,6 +71,22 @@ class testUtils(unittest.TestCase):
         result2 = myjson.JSONEncoder(**kwds).encode(data)
         self.assertEqual(result1, result2)
 
+        data = 123
+        result1 = myjson.JSONEncoder(**kwds).encode(data)
+        kwds = {'sort_keys':True}
+        result2 = myjson.JSONEncoder(**kwds).encode(data)
+        self.assertEqual(result1, result2)
+
+        data = {'a':123, 'b':[1, 2, 3], 'c':{'d':[1, '2', 3]}}
+        result1 = myjson.JSONEncoder().encode(data)
+        result2 = myjson.JSONDecoder().decode(result1)
+        self.assertEqual(data, result2)
+
+        data = {'a':123, 'b':[1, 2, 3], 'c':{'d':[1, '2', 3]}}
+        result1 = myjson.dumps(data)
+        result2 = myjson.loads(result1)
+        self.assertEqual(data, result2)
+
         myjson._module = self.module
 
 #

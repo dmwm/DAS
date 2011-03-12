@@ -26,7 +26,8 @@ if  not _module: # use default JSON module
     _module = "json"
 
 # stick so far with cjson, until yajl will be fully tested
-_module = "cjson"
+#_module = "cjson"
+_module = "yajl"
 
 def loads(idict, **kwargs):
     """
@@ -37,7 +38,11 @@ def loads(idict, **kwargs):
     elif _module == 'cjson':
         return cjson.decode(idict)
     elif _module == 'yajl':
-        return yajl.loads(idict)
+        try: # yajl.loads("123") will fail
+            res = yajl.loads(idict)
+        except: # fall back into default python JSON
+            res = json.loads(idict, **kwargs)
+        return res
     else:
         raise Exception("Not support JSON module: %s" % _module)
 
@@ -68,7 +73,7 @@ def dumps(idict, **kwargs):
     elif _module == 'yajl':
         return yajl.dumps(idict)
     else:
-        raise Exception("Not support JSON module: %s" % _module)
+        raise Exception("JSON module %s is not supported" % _module)
 
 def dump(doc, source):
     """
@@ -84,7 +89,7 @@ def dump(doc, source):
     elif _module == 'yajl':
         return yajl.dump(doc, source)
     else:
-        raise Exception("Not support JSON module: %s" % _module)
+        raise Exception("JSON module %s is not supported" % _module)
 
 class JSONEncoder(object):
     """
@@ -92,13 +97,16 @@ class JSONEncoder(object):
     """
     def __init__(self, **kwargs):
         self.encoder = json.JSONEncoder(**kwargs)
-        self.kwargs = kwargs
+        if  kwargs and kwargs.has_key('sort_keys'):
+            self.module = 'default'
+        else:
+            self.module = _module
 
     def encode(self, idict):
         """Decode JSON method"""
-        if  _module == 'cjson' and not self.kwargs:
+        if  self.module == 'cjson':
             return cjson.encode(idict)
-        elif _module == 'yajl' and not self.kwargs:
+        elif self.module == 'yajl':
             return yajl.Encoder().encode(idict)
         return self.encoder.encode(idict)
 
@@ -111,13 +119,16 @@ class JSONDecoder(object):
     """
     def __init__(self, **kwargs):
         self.decoder = json.JSONDecoder(**kwargs)
-        self.kwargs = kwargs
+        if  kwargs:
+            self.module = 'default'
+        else:
+            self.module = _module
 
     def decode(self, istring):
         """Decode JSON method"""
-        if  _module == 'cjson' and not self.kwargs:
+        if  _module == 'cjson':
             return cjson.decode(istring)
-        elif _module == 'yajl' and not self.kwargs:
+        elif _module == 'yajl':
             return yajl.Decoder().decode(istring)
         return self.decoder.decode(istring)
 

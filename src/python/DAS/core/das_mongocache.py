@@ -857,11 +857,6 @@ class DASMongocache(object):
         counter    = 0
         if  isinstance(results, list) or isinstance(results, GeneratorType):
             for item in results:
-                # TODO:
-                # the exception/error records should not go to cache
-                # instead we can place them elsewhere for further analysis
-                if  item.has_key('exception') or item.has_key('error'):
-                    continue
                 counter += 1
                 item['das'] = dict(expire=expire, primary_key=prim_key, 
                                         system=system, empty_record=0)

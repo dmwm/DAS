@@ -24,6 +24,9 @@ performed stress tests and code audit DAS servers.
   - protect aggregator functions from NULL results
   - new multiprocessing pool class
   - use gevent (if present, see http://www.gevent.org/) to handle data retrieval concurently
+  - switch to YAJL JSON parser
+  - add error_expire to control how long expire records live in cache, fixes #1240
+  - fix monitor plugin to handle connection errors
 
 - 0.5.11
 
