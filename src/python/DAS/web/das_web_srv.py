@@ -28,6 +28,7 @@ from multiprocessing import Process
 from itertools import groupby
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
+from pymongo.objectid import ObjectId
 
 # DAS modules
 import DAS
@@ -475,73 +476,45 @@ class DASWebService(DASWebManager):
             format = ''
             if  args:
                 recordid = args[0]
-                spec = {'_id':recordid}
+                spec = {'_id':ObjectId(recordid)}
                 fields = None
                 query = dict(fields=fields, spec=spec)
                 if  len(args) == 2:
                     format = args[1]
             elif  kwargs and kwargs.has_key('_id'):
-                spec = {'_id': kwargs['_id']}
+                spec = {'_id': ObjectId(kwargs['_id'])}
                 fields = None
                 query = dict(fields=fields, spec=spec)
             else: # return all ids
                 query = dict(fields=None, spec={})
 
+            res      = ''
             time0    = time.time()
-            url      = self.cachesrv
             idx      = getarg(kwargs, 'idx', 0)
             limit    = getarg(kwargs, 'limit', 10)
             show     = getarg(kwargs, 'show', 'json')
             coll     = getarg(kwargs, 'collection', 'merge')
-            nresults = self.nresults({'input':json.dumps(query), 'collection':coll})
-            params   = {'query':json.dumps(query), 'idx':idx, 'limit':limit, 
-                        'collection':coll}
-            path     = '/rest/records'
-            headers  = {"Accept": "application/json"}
-            try:
-                data = urllib2_request('GET', url+path, params, headers=headers)
-                result = json.loads(data)
-            except urllib2.HTTPError, httperror:
-                err = get_ecode(httperror.read())
-                self.logger.error(err)
-                result = {'status':'fail', 'reason': err}
-            except:
-                self.logger.error(traceback.format_exc())
-                result = {'status':'fail', 'reason':traceback.format_exc()}
-            res = ""
-            if  result['status'] == 'success':
-                if  recordid: # we got id
-                    for row in result['data']:
-                        if  show == 'json':
-                            res += das_json(row)
-                        elif show == 'code':
-                            code  = pformat(row, indent=1, width=100)
-                            res += self.templatepage('das_json', jsoncode=code)
-                        else:
-                            code = yaml.dump(row, width=100, indent=4, 
-                                        default_flow_style=False)
-                            res += self.templatepage('das_json', jsoncode=code)
-                else:
-                    for row in result['data']:
-                        rid  = row['_id']
-                        del row['_id']
-                        res += self.templatepage('das_record', \
-                                id=rid, daskeys=', '.join(row))
-            else:
-                res = result['status']
-                if  res.has_key('reason'):
-                    return self.error(res['reason'])
-                else:
-                    msg = 'Uknown error, kwargs=' % kwargs
-                    return self.error(msg)
-            if  recordid:
-                if  format:
-                    if  format == 'xml':
-                        return wrap2dasxml(result['data'])
-                    elif  format == 'json':
-                        return wrap2dasjson(result['data'])
+            nresults = self.dasmgr.rawcache.nresults(query, coll)
+            gen      = self.dasmgr.rawcache.get_from_cache\
+                (query, idx=idx, limit=limit, collection=coll, adjust=False)
+            if  recordid: # we got id
+                for row in gen:
+                    if  show == 'json':
+                        res += das_json(row)
+                    elif show == 'code':
+                        code  = pformat(row, indent=1, width=100)
+                        res += self.templatepage('das_json', jsoncode=code)
                     else:
-                        return self.error('Unsupported data format %s' % format)
+                        code = yaml.dump(row, width=100, indent=4, 
+                                    default_flow_style=False)
+                        res += self.templatepage('das_json', jsoncode=code)
+            else:
+                for row in gen:
+                    rid  = row['_id']
+                    del row['_id']
+                    res += self.templatepage('das_record', \
+                            id=rid, collection=coll, daskeys=', '.join(row))
+            if  recordid:
                 page  = res
             else:
                 url   = '/das/records?'

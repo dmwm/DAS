@@ -518,7 +518,7 @@ class DASWebService(DASWebManager):
                         rid  = row['_id']
                         del row['_id']
                         res += self.templatepage('das_record', \
-                                id=rid, daskeys=', '.join(row))
+                                id=rid, collection=coll, daskeys=', '.join(row))
             else:
                 res = result['status']
                 if  res.has_key('reason'):

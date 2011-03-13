@@ -328,9 +328,15 @@ def json2html(idict, pad="", recusive=False):
     quote function for HTML content (see in this module) and quote_plus
     (from urllib) for URL context.
     """
+    def is_number(number):
+        """Check if provided input is a number: int, long, float"""
+        pat = number_pattern
+        test = isinstance(number, int) or isinstance(number, float) or\
+                isinstance(number, long) or pat.match(str(number))
+        return test
+
     width = 100
     newline = '\n'
-    pat = number_pattern
     orig_pad = pad
     sss = pad + '{' + newline
     for key, val in idict.items():
@@ -380,7 +386,7 @@ def json2html(idict, pad="", recusive=False):
                     if  isinstance(item, NoneType):
                         sss += """%s<code class="null">None</code>""" \
                                 % quote(ppp)
-                    elif  isinstance(item, int) or pat.match(str(item)):
+                    elif  is_number(item):
                         sss += """%s<code class="number">%s</code>""" \
                                 % (quote(ppp), quote(item))
                     else:
@@ -401,8 +407,7 @@ def json2html(idict, pad="", recusive=False):
                         % quote(key)
             if  isinstance(val, NoneType):
                 sss += """: <code class="null">None</code>"""
-            elif isinstance(val, int) or \
-                (isinstance(val, str) and pat.match(str(val))):
+            elif is_number(val):
                 sss += """: <code class="number">%s</code>""" % quote(val)
             else:
                 sss += """: <code class="string">"%s"</code>""" % quote(val)

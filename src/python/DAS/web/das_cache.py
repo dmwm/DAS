@@ -203,7 +203,7 @@ class DASCacheService(DASWebManager):
         if  query['spec'].has_key('_id'):
             recid = query['spec']['_id']
             ids   = []
-            if  isinstance(recid, str):
+            if  isinstance(recid, str) or isinstance(recid, unicode):
                 ids = [ObjectId(recid)]
             elif isinstance(recid, list):
                 ids = [ObjectId(r) for r in recid]

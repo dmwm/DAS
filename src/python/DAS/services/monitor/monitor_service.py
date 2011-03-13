@@ -82,7 +82,7 @@ class MonitorService(DASAbstractService):
                         msg += 'Please use either date last XXh format or'
                         msg += 'date in [YYYYMMDD, YYYYMMDD]'
                         raise Exception(msg)
-                    if  isinstance(value, str):
+                    if  isinstance(value, str) or isinstance(value, unicode):
                         value = convert2date(value)
                     else:
                         value = [value, value + 24*60*60]
