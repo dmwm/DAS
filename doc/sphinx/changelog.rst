@@ -7,6 +7,12 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.6.1
+
+  - replace gevent with multiprocessing module
+  - add task_manager which uses multiprocessing module and provides
+    the same API as gevent
+
 - 0.6.0
 
   - code refactoring to move from implicit data look-up to

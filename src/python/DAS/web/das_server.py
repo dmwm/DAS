@@ -10,14 +10,6 @@ __revision__ = "$Id: das_server.py,v 1.9 2010/04/07 18:21:35 valya Exp $"
 __version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
-try:
-    # import gevent for concurent API call processing
-    import gevent
-    from gevent import monkey
-    monkey.patch_all() # patches stdlib for multitasking
-except:
-    pass
-
 # system modules
 import os
 import sys

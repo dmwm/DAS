@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 
-try:
-    # import gevent for concurent API call processing
-    import gevent
-    from gevent import monkey
-    monkey.patch_all() # patches stdlib for multitasking
-except:
-    pass
-
 import sys
 import os
 from unittest import TextTestRunner, TestLoader

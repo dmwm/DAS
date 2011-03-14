@@ -15,14 +15,6 @@ __revision__ = "$Id: das_core.py,v 1.80 2010/05/04 21:13:39 valya Exp $"
 __version__ = "$Revision: 1.80 $"
 __author__ = "Valentin Kuznetsov"
 
-try:
-    # import gevent for concurent API call processing
-    import gevent
-    from gevent import monkey
-    monkey.patch_all() # patches stdlib for multitasking
-except:
-    pass
-
 # system modules
 import re
 import os
@@ -42,6 +34,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg, unique_filter, parse_filters
 from DAS.utils.utils import expire_timestamp
+from DAS.utils.task_manager import TaskManager
 from DAS.utils.das_timer import das_timer, get_das_timer
 
 # DAS imports
@@ -101,9 +94,10 @@ class DASCore(object):
             dasconfig['write_cache'] = True
             self.noresults = nores
 
-        self.gevent = dasconfig['das'].get('gevent', None)
+        self.multitask = dasconfig['das'].get('multitask', True)
+        self.taskmgr = TaskManager()
         if  self.verbose:
-            self.gevent = None # in verbose mode do not use gevent
+            self.multitask = None # in verbose mode do not use multitask
 
         logfile = dasconfig.get('logfile', None)
         logformat = dasconfig.get('logformat')
@@ -405,11 +399,11 @@ class DASCore(object):
         self.rawcache.insert_query_record(query, header)
         das_timer('das_record', self.verbose)
         try:
-            if  self.gevent:
+            if  self.multitask:
                 jobs = []
                 for srv in services:
-                    jobs.append(gevent.spawn(self.worker, srv, query))
-                gevent.joinall(jobs)
+                    jobs.append(self.taskmgr.spawn(self.worker, srv, query))
+                self.taskmgr.joinall()
             else:
                 for srv in services:
                     self.worker(srv, query)

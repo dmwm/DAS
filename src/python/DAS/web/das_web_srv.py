@@ -194,9 +194,9 @@ class DASWebService(DASWebManager):
     """
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
-        self.cachesrv   = config['cache_server_url']
-        self.base       = config['url_base']
-        self.next       = 2000 # initial next update status in miliseconds
+        self.base        = config['url_base']
+        self.next        = 3000 # initial next update status in miliseconds
+        self.number_of_workers = config['number_of_workers']
         logfile  = config['logfile']
         loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
@@ -559,7 +559,6 @@ class DASWebService(DASWebManager):
         """
         head   = request_headers()
         head['args'] = kwargs
-        query  = getarg(kwargs, 'query', '') # mongo query
         uinput = getarg(kwargs, 'input', '') 
         idx    = getarg(kwargs, 'idx', 0)
         limit  = getarg(kwargs, 'limit', 10)
@@ -568,8 +567,8 @@ class DASWebService(DASWebManager):
         coll   = getarg(kwargs, 'collection', 'merge')
         time0  = time.time()
         try:
-            data   = self.dasmgr.result(query, idx, limit, skey, sdir)
             mquery = self.dasmgr.mongoparser.parse(uinput, False) 
+            data   = self.dasmgr.result(mquery, idx, limit, skey, sdir)
             nres   = self.dasmgr.in_raw_cache_nresults(mquery, coll)
             head.update({'status':'ok', 'nresults':nres, 
                          'mongo_query': mquery, 'ctime': time.time()-time0})
@@ -611,9 +610,14 @@ class DASWebService(DASWebManager):
             try:
                 query = self.dasmgr.mongoparser.parse(uinput,\
                                     add_to_analytics=False)
-                kwargs['query'] = query
             except Exception, err:
                 head.update({'status': 'fail', 'reason': str(err)})
+                data = []
+                return self.datastream(head, data)
+            if  len(self.requests.keys()) > self.number_of_workers:
+                busy = {'status':'busy', 'reason':'Server queue is full'}
+                head = request_headers()
+                head.update(busy)
                 data = []
                 return self.datastream(head, data)
             process = Process(target=worker, args=(uinput,))

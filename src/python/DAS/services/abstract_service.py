@@ -8,14 +8,6 @@ __revision__ = "$Id: abstract_service.py,v 1.94 2010/04/30 16:39:50 valya Exp $"
 __version__ = "$Revision: 1.94 $"
 __author__ = "Valentin Kuznetsov"
 
-try:
-    # import gevent for concurent API call processing
-    import gevent
-    from gevent import monkey
-    monkey.patch_all() # patches stdlib for multitasking
-except:
-    pass
-
 # system modules
 import re
 import time
@@ -39,6 +31,8 @@ from DAS.utils.das_db import db_gridfs, parse2gridfs
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_core import dasheader
 
+from DAS.utils.task_manager import TaskManager
+
 class DASAbstractService(object):
     """
     Abstract class describing DAS service. It initialized with a name who
@@ -53,7 +47,7 @@ class DASAbstractService(object):
             self.dasmapping   = config['dasmapping']
             self.analytics    = config['dasanalytics']
             self.write2cache  = config.get('write_cache', True)
-            self.gevent       = config['das'].get('gevent', False)
+            self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
             dburi             = config['mongodb']['dburi']
             self.gfs          = db_gridfs(dburi)
@@ -62,6 +56,7 @@ class DASAbstractService(object):
             print config
             raise Exception('fail to parse DAS config')
 
+        self.taskmgr    = TaskManager()
         self.map        = {}   # to be defined by data-service implementation
         self._keys      = None # to be defined at run-time in self.keys
         self._params    = None # to be defined at run-time in self.parameters
@@ -530,14 +525,13 @@ class DASAbstractService(object):
             return
         jobs    = []
         for url, api, args, dformat, expire in genrows:
-#            self.apicall(query, url, api, args, dformat, expire)
-            if  self.gevent:
-                jobs.append(gevent.spawn(self.apicall, \
+            if  self.multitask:
+                jobs.append(self.taskmgr.spawn(self.apicall, \
                             query, url, api, args, dformat, expire))
             else:
                 self.apicall(query, url, api, args, dformat, expire)
-        if  self.gevent:
-            gevent.joinall(jobs)
+        if  self.multitask:
+            self.taskmgr.joinall()
 
     def apicall(self, query, url, api, args, dformat, expire):
         """

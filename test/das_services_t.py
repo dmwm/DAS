@@ -5,14 +5,6 @@
 Unit test for CMS data-services
 """
 
-try:
-    # import gevent for concurent API call processing
-    import gevent
-    from gevent import monkey
-    monkey.patch_all() # patches stdlib for multitasking
-except:
-    pass
-
 import os
 from cherrypy import engine, tree
 from pymongo.connection import Connection

@@ -189,6 +189,7 @@ class DASWebService(DASWebManager):
         self.cachesrv   = config['cache_server_url']
         self.base       = config['url_base']
         self.status_update = config['status_update']
+        self.number_of_workers   = config['number_of_workers']
         logfile  = config['logfile']
         loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
@@ -691,6 +692,12 @@ class DASWebService(DASWebManager):
             else: # process is done, get data
                 return self.datastream(kwargs)
         else:
+            if  len(self.requests.keys()) > self.number_of_workers:
+                busy = {'status':'busy', 'reason':'Server queue is full',
+                        'data':[]}
+                head = request_headers()
+                head.update(busy)
+                return json.dumps(head)
             process = Process(target=self.dasmgr.call, args=(uinput,))
             process.start()
             self.requests[process.pid] = process
