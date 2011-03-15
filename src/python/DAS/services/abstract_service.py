@@ -523,7 +523,7 @@ class DASAbstractService(object):
         genrows = self.apimap(query)
         if  not genrows:
             return
-        jobs    = []
+        jobs = []
         for url, api, args, dformat, expire in genrows:
             if  self.multitask:
                 jobs.append(self.taskmgr.spawn(self.apicall, \
@@ -531,7 +531,7 @@ class DASAbstractService(object):
             else:
                 self.apicall(query, url, api, args, dformat, expire)
         if  self.multitask:
-            self.taskmgr.joinall()
+            self.taskmgr.joinall(jobs)
 
     def apicall(self, query, url, api, args, dformat, expire):
         """

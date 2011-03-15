@@ -38,6 +38,7 @@ from DAS.utils.utils import getarg, access, size_format, DotDict
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
+from DAS.utils.task_manager import TaskManager
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
@@ -198,7 +199,7 @@ class DASWebService(DASWebManager):
         self.logger.info(msg)
         dasconfig = das_readconfig()
         dburi = dasconfig['mongodb']['dburi']
-        self.requests = {} # to hold incoming requests pid
+        self.taskmgr = TaskManager()
 
         self.init()
         # Monitoring thread which performs auto-reconnection
@@ -679,29 +680,16 @@ class DASWebService(DASWebManager):
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        pid    = getarg(kwargs, 'pid', 0)
-        uinput = getarg(kwargs, 'input', '').strip()
-        if  pid:
-            if  self.requests.has_key(pid):
-                process = self.requests[pid]
-                if  process.is_alive(): # process is not yet finished
-                    return str(process.pid) 
-                else: # process is done, remove pid from requests and get data
-                    del self.requests[pid]
-                    return self.datastream(kwargs)
+        pid    = kwargs.get('pid', '')
+        uinput = kwargs.get('input', '').strip()
+        if  not pid:
+            if  not self.taskmgr.is_alive(pid):
+                return pid
             else: # process is done, get data
                 return self.datastream(kwargs)
         else:
-            if  len(self.requests.keys()) > self.number_of_workers:
-                busy = {'status':'busy', 'reason':'Server queue is full',
-                        'data':[]}
-                head = request_headers()
-                head.update(busy)
-                return json.dumps(head)
-            process = Process(target=self.dasmgr.call, args=(uinput,))
-            process.start()
-            self.requests[process.pid] = process
-            return str(process.pid)
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
+            return pid
 
     @expose
     @checkargs(DAS_WEB_INPUTS)

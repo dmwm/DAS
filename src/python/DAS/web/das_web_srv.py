@@ -23,7 +23,6 @@ import traceback
 
 import yaml
 from pprint import pformat
-from multiprocessing import Process
 
 from itertools import groupby
 from cherrypy import expose, HTTPError
@@ -39,6 +38,7 @@ from DAS.utils.utils import getarg, access, size_format, DotDict
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
+from DAS.utils.task_manager import TaskManager
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
@@ -205,7 +205,8 @@ class DASWebService(DASWebManager):
         self.logger.info(msg)
         dasconfig = das_readconfig()
         dburi = dasconfig['mongodb']['dburi']
-        self.requests = {} # to hold incoming requests pid
+        self.requests = {} # to hold incoming requests pid/kwargs
+        self.taskmgr = TaskManager()
 
         self.init()
         # Monitoring thread which performs auto-reconnection
@@ -592,38 +593,16 @@ class DASWebService(DASWebManager):
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        pid    = getarg(kwargs, 'pid', 0)
-        uinput = getarg(kwargs, 'input', '').strip()
-        if  pid:
-            if  self.requests.has_key(pid):
-                process, kwargs = self.requests[pid]
-                if  process.is_alive(): # process is not yet finished
-                    return str(process.pid) 
-                else: # process is done, remove pid from requests and get data
-                    del self.requests[pid]
-                    head, data = self.get_data(kwargs)
-                    return self.datastream(head, data)
+        pid    = kwargs.get('pid', '')
+        uinput = kwargs.get('input', '').strip()
+        if  not pid:
+            if  not self.taskmgr.is_alive(pid):
+                return pid
             else: # process is done, get data
-                head, data = self.get_data(kwargs)
-                return self.datastream(head, data)
+                return self.datastream(kwargs)
         else:
-            try:
-                query = self.dasmgr.mongoparser.parse(uinput,\
-                                    add_to_analytics=False)
-            except Exception, err:
-                head.update({'status': 'fail', 'reason': str(err)})
-                data = []
-                return self.datastream(head, data)
-            if  len(self.requests.keys()) > self.number_of_workers:
-                busy = {'status':'busy', 'reason':'Server queue is full'}
-                head = request_headers()
-                head.update(busy)
-                data = []
-                return self.datastream(head, data)
-            process = Process(target=worker, args=(uinput,))
-            process.start()
-            self.requests[process.pid] = process, kwargs
-            return str(process.pid)
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
+            return pid
 
     def get_page_content(self, kwargs):
         """Retrieve page content for provided set of parameters"""
@@ -672,19 +651,18 @@ class DASWebService(DASWebManager):
             msg += 'Please choose list view and search for data first.'
             page = self.error(msg)
         else: 
-            process = Process(target=self.dasmgr.call, args=(uinput,))
-            process.start()
-            self.requests[str(process.pid)] = process, kwargs
-            if  process.is_alive():
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
+            self.requests[pid] = kwargs
+            if  self.taskmgr.is_alive(pid):
                 # no data in raw cache
                 img   = '<img src="%s/images/loading.gif" alt="loading"/>'\
                             % self.base
                 page  = img + ' request PID=%s, please wait...' \
-                            % process.pid
+                            % pid
                 page += ', <a href="/das/">stop</a> request' 
                 page += '<script type="application/javascript">'
                 page += """setTimeout('ajaxCheckPid("%s", "%s", "%s")', %s)""" \
-                        % (self.base, process.pid, self.next, self.next)
+                        % (self.base, pid, self.next, self.next)
                 page += '</script>'
             else:
                 page = self.get_page_content(kwargs)
@@ -714,8 +692,8 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
         if  self.requests.has_key(pid):
-            process, kwargs = self.requests[pid]
-            if  process.is_alive():
+            kwargs = self.requests[pid]
+            if  self.taskmgr.is_alive(pid):
                 sec   = next/1000
                 page  = img + " processing PID=%s, " % pid
                 page += "next check in %s sec, please wait ..." % sec

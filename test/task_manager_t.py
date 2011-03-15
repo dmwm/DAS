@@ -30,9 +30,10 @@ class testUtils(unittest.TestCase):
         """Test task manager"""
         expect = [idx for idx in range(self.size)]
         mypool = TaskManager()
+        tasks  = []
         for idx in expect:
-            mypool.spawn(worker, idx, self.data)
-        mypool.joinall()
+            tasks.append(mypool.spawn(worker, idx, self.data))
+        mypool.joinall(tasks)
         result = [idx for idx in self.data]
         self.assertEqual(result, expect)
 

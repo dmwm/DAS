@@ -7,6 +7,15 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.6.2
+
+  - re-wrote task_manager using threads, due to problems with multiprocessing
+    modules
+  - re-wrote cache method for DAS web servers to use new task_manager
+  - adjust das_client to use new type of PID returned by task_manager upon
+    request. The PID is a hash of passed args plus time stamp
+  - bump to new version to easy distinguish code evolution
+
 - 0.6.1
 
   - replace gevent with multiprocessing module

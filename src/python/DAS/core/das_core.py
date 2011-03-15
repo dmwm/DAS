@@ -403,7 +403,7 @@ class DASCore(object):
                 jobs = []
                 for srv in services:
                     jobs.append(self.taskmgr.spawn(self.worker, srv, query))
-                self.taskmgr.joinall()
+                self.taskmgr.joinall(jobs)
             else:
                 for srv in services:
                     self.worker(srv, query)
