@@ -38,7 +38,7 @@ from DAS.utils.utils import getarg, access, size_format, DotDict
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
-from DAS.utils.task_manager import TaskManager
+from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
@@ -181,24 +181,18 @@ def das_json(record, pad=''):
     page += "</pre></div>"
     return page
 
-def worker(query):
-    """
-    DAS worker performs query processing
-    """
-    core = DASCore(debug=0)
-    core.call(query)
-
 class DASWebService(DASWebManager):
     """
     DAS web service interface.
     """
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
-        self.base        = config['url_base']
-        self.next        = 3000 # initial next update status in miliseconds
+        self.base    = config['url_base']
+        self.next    = 3000 # initial next update status in miliseconds
+        self.engine  = config.get('engine', None)
+        logfile      = config['logfile']
+        loglevel     = config['loglevel']
         self.number_of_workers = config['number_of_workers']
-        logfile  = config['logfile']
-        loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
         msg = "DASSearch::init is started with base=%s" % self.base
@@ -206,7 +200,11 @@ class DASWebService(DASWebManager):
         dasconfig = das_readconfig()
         dburi = dasconfig['mongodb']['dburi']
         self.requests = {} # to hold incoming requests pid/kwargs
-        self.taskmgr = TaskManager()
+        if  self.engine:
+            self.taskmgr = PluginTaskManager(bus=self.engine)
+            self.taskmgr.subscribe()
+        else:
+            self.taskmgr = TaskManager()
 
         self.init()
         # Monitoring thread which performs auto-reconnection
@@ -216,7 +214,7 @@ class DASWebService(DASWebManager):
     def init(self):
         """Init DAS web server, connect to DAS Core"""
         try:
-            self.dasmgr     = DASCore()
+            self.dasmgr     = DASCore(engine=self.engine)
             self.daskeys    = self.dasmgr.das_keys()
             self.daskeys.sort()
             self.dasmapping = self.dasmgr.mapping
@@ -679,7 +677,7 @@ class DASWebService(DASWebManager):
         """
         limit = 60000 # 1 minute, max check status limit
         next  = int(next)
-        if  next < limit:
+        if  next < limit and next*2 < limit:
             next *= 2
         else:
             next = limit

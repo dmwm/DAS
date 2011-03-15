@@ -1,7 +1,9 @@
-function ajaxStatus(base) {
+function ajaxStatus(base, next) {
+    params = UrlParams(),
+    params.next = next,
     new Ajax.Updater('_response', base+'/status', 
     { method: 'get' ,
-      parameters : UrlParams(),
+      parameters : params,
       evalScripts:true
     });
 }

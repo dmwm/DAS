@@ -54,7 +54,7 @@ import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
                   'format', 'sort', 'dir', 'view', 'method', 'skey',
-                  'query', 'fid', 'pid']
+                  'query', 'fid', 'pid', 'next']
 
 
 RE_DBSQL_0 = re.compile(r"^find")
@@ -187,12 +187,13 @@ class DASWebService(DASWebManager):
     """
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
+        self.next       = 3000 # initial next update status in miliseconds
         self.cachesrv   = config['cache_server_url']
         self.base       = config['url_base']
-        self.status_update = config['status_update']
+        logfile         = config['logfile']
+        loglevel        = config['loglevel']
+#        self.status_update = config['status_update']
         self.number_of_workers   = config['number_of_workers']
-        logfile  = config['logfile']
-        loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
         msg = "DASSearch::init is started with base=%s" % self.base
@@ -732,8 +733,9 @@ class DASWebService(DASWebManager):
             page  = img + ' there is no data in a cache yet, please wait...'
             page += ', <a href="/das/">stop</a> request' 
             page += """<script type="application/javascript">"""
-            page += """setTimeout('ajaxStatus("%s")', %s)</script>""" \
-                        % (self.base, self.status_update)
+            page += """setTimeout('ajaxStatus("%s", "%s")', %s)</script>""" \
+                        % (self.base, self.next, self.next)
+#                        % (self.base, self.status_update)
             view  = 'list'
         elif data['status'] == 'fail':
             msg   = "DAS cache server fails to process your request.\n"
@@ -1019,15 +1021,22 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def status(self, **kwargs):
+    def status(self, next, **kwargs):
         """
         Place AJAX request to obtain status about given query
         """
+        limit = 60000 # 1 minute, max check status limit
+        next  = int(next)
+        if  next < limit and next*2 < limit:
+            next *= 2
+        else:
+            next = limit
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         req  = """
         <script type="application/javascript">
-        setTimeout('ajaxStatus("%s")', %s)
-        </script>""" % (self.base, self.status_update)
+        setTimeout('ajaxStatus("%s", "%s")', %s)
+        </script>""" % (self.base, next, next)
+#        </script>""" % (self.base, self.status_update)
 
         def set_header():
             "Set HTTP header parameters"

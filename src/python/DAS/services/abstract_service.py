@@ -30,8 +30,7 @@ from DAS.utils.das_timer import das_timer
 from DAS.utils.das_db import db_gridfs, parse2gridfs
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_core import dasheader
-
-from DAS.utils.task_manager import TaskManager
+from DAS.utils.task_manager import TaskManager, PluginTaskManager
 
 class DASAbstractService(object):
     """
@@ -50,13 +49,18 @@ class DASAbstractService(object):
             self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
             dburi             = config['mongodb']['dburi']
+            engine            = config.get('engine', None)
             self.gfs          = db_gridfs(dburi)
         except:
             traceback.print_exc()
             print config
             raise Exception('fail to parse DAS config')
 
-        self.taskmgr    = TaskManager()
+        if  engine:
+            self.taskmgr      = PluginTaskManager(engine)
+            self.taskmgr.subscribe()
+        else:
+            self.taskmgr      = TaskManager()
         self.map        = {}   # to be defined by data-service implementation
         self._keys      = None # to be defined at run-time in self.keys
         self._params    = None # to be defined at run-time in self.parameters

@@ -23,6 +23,7 @@ class Root(object):
     DASTestDataService web server class.
     """
     def __init__(self, config=None):
+        self.engine = engine
         if  not config:
             self.config = {}
         else:
@@ -32,13 +33,13 @@ class Root(object):
         """Start the server."""
         obj = DASTestDataService(self.config) # mount test server
         tree.mount(obj, '/')
-        engine.start()
+        self.engine.start()
         if  blocking:
-            engine.block()
+            self.engine.block()
 
     def stop(self):
         """Stop the server"""
-        engine.exit()
+        self.engine.exit()
 
 class DASTestDataService(DASWebManager):
     """
@@ -50,8 +51,8 @@ class DASTestDataService(DASWebManager):
     """
     def __init__(self, config):
         DASWebManager.__init__(self, config)
-        logfile      = config['logfile']
-        loglevel     = config['loglevel']
+        logfile      = config.get('logfile', None)
+        loglevel     = config.get('loglevel', 0)
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
         # force to load the page all the time

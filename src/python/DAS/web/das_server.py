@@ -84,11 +84,13 @@ class Root(object):
         url_base = self.config['web_server']['url_base']
         if  server == 'cache':
             config = self.config.get('cache_server', {})
+            config['engine'] = engine
             obj = DASCacheService(config) # mount cache server
             tree.mount(obj, '/')
         elif server == 'web':
             # web server
             config = self.config.get('web_server', {})
+            config['engine'] = engine
             obj = DASWebService(config)
             tree.mount(obj, url_base) # mount web server
             # expert part
@@ -99,6 +101,7 @@ class Root(object):
         elif server == 'new':
             # new web server
             config = self.config.get('web_server', {})
+            config['engine'] = engine
             obj = DASNewWebService(config)
             tree.mount(obj, url_base) # mount web server
         else:

@@ -34,7 +34,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.utils.utils import genkey, getarg, unique_filter, parse_filters
 from DAS.utils.utils import expire_timestamp
-from DAS.utils.task_manager import TaskManager
+from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.das_timer import das_timer, get_das_timer
 
 # DAS imports
@@ -73,7 +73,7 @@ class DASCore(object):
     """
     DAS core class.
     """
-    def __init__(self, config=None, debug=None, nores=False, logger=None):
+    def __init__(self, config=None, debug=None, nores=False, logger=None, engine=None):
         if  config:
             dasconfig = config
         else:
@@ -95,7 +95,12 @@ class DASCore(object):
             self.noresults = nores
 
         self.multitask = dasconfig['das'].get('multitask', True)
-        self.taskmgr = TaskManager()
+        dasconfig['engine'] = engine
+        if  engine:
+            self.taskmgr = PluginTaskManager(engine)
+            self.taskmgr.subscribe()
+        else:
+            self.taskmgr = TaskManager()
         if  self.verbose:
             self.multitask = None # in verbose mode do not use multitask
 

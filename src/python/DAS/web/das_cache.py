@@ -109,6 +109,7 @@ class DASCacheService(DASWebManager):
         self.methods['DELETE'] = {'delete':
                 {'args':['query'],
                  'call': self.delete, 'version':__version__}}
+        self.engine      = self.config.get('engine', None)
         self.dasconfig   = das_readconfig()
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.qlimit      = self.dasconfig['cache_server']['queue_limit'] 
@@ -157,7 +158,7 @@ class DASCacheService(DASWebManager):
                 % (logdbname, logdbcoll, capped_size))
             self.col      = self.con[logdbname][logdbcoll]
             self.gfs      = db_gridfs(self.dburi)
-            self.dascore  = DASCore()
+            self.dascore  = DASCore(engine=self.engine)
         except:
             self.con  = None
             self.dascore = None
