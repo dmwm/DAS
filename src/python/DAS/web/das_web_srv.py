@@ -594,7 +594,7 @@ class DASWebService(DASWebManager):
         pid    = kwargs.get('pid', '')
         uinput = kwargs.get('input', '').strip()
         if  not pid:
-            if  not self.taskmgr.is_alive(pid):
+            if  self.taskmgr.is_alive(pid):
                 return pid
             else: # process is done, get data
                 return self.datastream(kwargs)

@@ -90,7 +90,7 @@ def get_data(host, query, idx, limit, debug):
         pid = data
     else:
         pid = None
-    count = 2 # initial waiting time
+    count = 3 # initial waiting time in seconds
     while pid:
         params.update({'pid':data})
         encoded_data = urllib.urlencode(params, doseq=True)
@@ -103,13 +103,15 @@ def get_data(host, query, idx, limit, debug):
         except urllib2.HTTPError, err:
             print err
             return ""
-        if  data and pat.match(data[0]):
+        if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
             pid = data
         else:
             pid = None
         time.sleep(count)
         if  count < 60:
             count *= 2
+        else:
+            count = 60
     return data
 
 def main():

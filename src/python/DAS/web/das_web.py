@@ -23,7 +23,6 @@ import traceback
 
 import yaml
 from pprint import pformat
-from multiprocessing import Process
 
 from itertools import groupby
 from cherrypy import expose, HTTPError
@@ -38,7 +37,7 @@ from DAS.utils.utils import getarg, access, size_format, DotDict
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
-from DAS.utils.task_manager import TaskManager
+from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
@@ -192,15 +191,18 @@ class DASWebService(DASWebManager):
         self.base       = config['url_base']
         logfile         = config['logfile']
         loglevel        = config['loglevel']
-#        self.status_update = config['status_update']
-        self.number_of_workers   = config['number_of_workers']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
         dasconfig = das_readconfig()
         dburi = dasconfig['mongodb']['dburi']
-        self.taskmgr = TaskManager()
+        engine = config.get('engine', None)
+        if  engine:
+            self.taskmgr = PluginTaskManager(engine)
+            self.taskmgr.subscribe()
+        else:
+            self.taskmgr = TaskManager()
 
         self.init()
         # Monitoring thread which performs auto-reconnection
@@ -658,8 +660,8 @@ class DASWebService(DASWebManager):
         sdir  = getarg(kwargs, 'dir', 'asc')
         coll  = getarg(kwargs, 'collection', 'merge')
         try:
-            data   = self.dasmgr.result(query, idx, limit, skey, sdir)
             mquery = self.dasmgr.mongoparser.parse(query, False) 
+            data   = self.dasmgr.result(mquery, idx, limit, skey, sdir)
             nres   = self.dasmgr.in_raw_cache_nresults(mquery, coll)
             head.update({'status':'ok', 'nresults':nres, 'mongo_query': mquery})
         except Exception, exp:
@@ -683,8 +685,8 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Pragma'] = 'no-cache'
         pid    = kwargs.get('pid', '')
         uinput = kwargs.get('input', '').strip()
-        if  not pid:
-            if  not self.taskmgr.is_alive(pid):
+        if  pid:
+            if  self.taskmgr.is_alive(pid):
                 return pid
             else: # process is done, get data
                 return self.datastream(kwargs)
@@ -735,7 +737,6 @@ class DASWebService(DASWebManager):
             page += """<script type="application/javascript">"""
             page += """setTimeout('ajaxStatus("%s", "%s")', %s)</script>""" \
                         % (self.base, self.next, self.next)
-#                        % (self.base, self.status_update)
             view  = 'list'
         elif data['status'] == 'fail':
             msg   = "DAS cache server fails to process your request.\n"
@@ -1036,7 +1037,6 @@ class DASWebService(DASWebManager):
         <script type="application/javascript">
         setTimeout('ajaxStatus("%s", "%s")', %s)
         </script>""" % (self.base, next, next)
-#        </script>""" % (self.base, self.status_update)
 
         def set_header():
             "Set HTTP header parameters"
