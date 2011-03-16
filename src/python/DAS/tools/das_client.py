@@ -85,27 +85,33 @@ def get_data(host, query, idx, limit, debug):
     data = fdesc.read()
     fdesc.close()
 
-    pat = re.compile(r'(^[0-9]$|^[0-9][0-9]*$)')
-    if  data and pat.match(data[0]):
+    pat = re.compile(r'^[a-z0-9]{32}')
+    if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
         pid = data
     else:
         pid = None
-    count = 2 # initial waiting time
+    count = 3 # initial waiting time in seconds
     while pid:
         params.update({'pid':data})
         encoded_data = urllib.urlencode(params, doseq=True)
         url  = host + path + '?%s' % encoded_data
         req  = urllib2.Request(url=url, headers=headers)
-        fdesc = opener.open(req)
-        data = fdesc.read()
-        fdesc.close()
-        if  data and pat.match(data[0]):
+        try:
+            fdesc = opener.open(req)
+            data = fdesc.read()
+            fdesc.close()
+        except urllib2.HTTPError, err:
+            print err
+            return ""
+        if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
             pid = data
         else:
             pid = None
         time.sleep(count)
         if  count < 60:
             count *= 2
+        else:
+            count = 60
     return data
 
 def main():

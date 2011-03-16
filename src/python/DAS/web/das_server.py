@@ -27,8 +27,6 @@ from DAS.utils.das_config import das_readconfig
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_web import DASWebService
 from DAS.web.das_cache import DASCacheService
-from DAS.web.das_web_srv import DASWebService as DASNewWebService
-#from DAS.web.das_expert import DASExpertService
 from cherrypy.process.plugins import PIDFile
 
 class Root(object):
@@ -89,17 +87,8 @@ class Root(object):
         elif server == 'web':
             # web server
             config = self.config.get('web_server', {})
+            config['engine'] = engine
             obj = DASWebService(config)
-            tree.mount(obj, url_base) # mount web server
-            # expert part
-#            config = self.config.get('expert_server', {})
-#            obj = DASExpertService(config)
-#            url = url_base + '/expert'
-#            tree.mount(obj, url) # mount expert server
-        elif server == 'new':
-            # new web server
-            config = self.config.get('web_server', {})
-            obj = DASNewWebService(config)
             tree.mount(obj, url_base) # mount web server
         else:
             obj = DASWebManager({}) # pass empty config dict
@@ -135,8 +124,6 @@ def main():
     if  opts.server == 'cache':
         model = "cache_server"
     elif opts.server == 'web':
-        model = "web_server"
-    elif opts.server == 'new':
         model = "web_server"
     else:
         print "Please specify which DAS server you want to start, see --help"

@@ -1,9 +1,10 @@
 #from DAS.web.utils import quote
 #set daskeys = $quote($daskeys)
 #set id = $quote($id)
+#set coll = $quote($collection)
 
 <!-- das_record.tmpl -->
 <hr class="line" />
-<a href="/das/records/$id">$id</a>, keys: <em>$daskeys</em>.
+<a href="/das/records/$id?collection=$coll">$id</a>, keys: <em>$daskeys</em>.
 <!-- end of das_record.tmpl -->
 

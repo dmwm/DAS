@@ -23,7 +23,6 @@ import traceback
 
 import yaml
 from pprint import pformat
-from multiprocessing import Process
 
 from itertools import groupby
 from cherrypy import expose, HTTPError
@@ -38,6 +37,7 @@ from DAS.utils.utils import getarg, access, size_format, DotDict
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
+from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
 from DAS.web.utils import wrap2dasxml, wrap2dasjson
@@ -53,7 +53,7 @@ import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
                   'format', 'sort', 'dir', 'view', 'method', 'skey',
-                  'query', 'fid', 'pid']
+                  'query', 'fid', 'pid', 'next']
 
 
 RE_DBSQL_0 = re.compile(r"^find")
@@ -188,7 +188,7 @@ class DASWebService(DASWebManager):
         DASWebManager.__init__(self, config)
         self.cachesrv   = config['cache_server_url']
         self.base       = config['url_base']
-        self.status_update = config['status_update']
+        self.next       = 3000 # initial ajax update status in miliseconds
         logfile  = config['logfile']
         loglevel = config['loglevel']
         self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
@@ -197,7 +197,12 @@ class DASWebService(DASWebManager):
         self.logger.info(msg)
         dasconfig = das_readconfig()
         dburi = dasconfig['mongodb']['dburi']
-        self.requests = {} # to hold incoming requests pid
+        engine = config.get('engine', None)
+        if  engine:
+            self.taskmgr = PluginTaskManager(engine)
+            self.taskmgr.subscribe()
+        else:
+            self.taskmgr = TaskManager()
 
         self.init()
         # Monitoring thread which performs auto-reconnection
@@ -518,7 +523,7 @@ class DASWebService(DASWebManager):
                         rid  = row['_id']
                         del row['_id']
                         res += self.templatepage('das_record', \
-                                id=rid, daskeys=', '.join(row))
+                                id=rid, collection=coll, daskeys=', '.join(row))
             else:
                 res = result['status']
                 if  res.has_key('reason'):
@@ -655,8 +660,8 @@ class DASWebService(DASWebManager):
         sdir  = getarg(kwargs, 'dir', 'asc')
         coll  = getarg(kwargs, 'collection', 'merge')
         try:
-            data   = self.dasmgr.result(query, idx, limit, skey, sdir)
             mquery = self.dasmgr.mongoparser.parse(query, False) 
+            data   = self.dasmgr.result(mquery, idx, limit, skey, sdir)
             nres   = self.dasmgr.in_raw_cache_nresults(mquery, coll)
             head.update({'status':'ok', 'nresults':nres, 'mongo_query': mquery})
         except Exception, exp:
@@ -678,23 +683,16 @@ class DASWebService(DASWebManager):
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        pid    = getarg(kwargs, 'pid', 0)
-        uinput = getarg(kwargs, 'input', '').strip()
+        pid    = kwargs.get('pid', '')
+        uinput = kwargs.get('input', '').strip()
         if  pid:
-            if  self.requests.has_key(pid):
-                process = self.requests[pid]
-                if  process.is_alive(): # process is not yet finished
-                    return str(process.pid) 
-                else: # process is done, remove pid from requests and get data
-                    del self.requests[pid]
-                    return self.datastream(kwargs)
+            if  self.taskmgr.is_alive(pid):
+                return pid
             else: # process is done, get data
                 return self.datastream(kwargs)
         else:
-            process = Process(target=self.dasmgr.call, args=(uinput,))
-            process.start()
-            self.requests[process.pid] = process
-            return str(process.pid)
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
+            return pid
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -737,8 +735,8 @@ class DASWebService(DASWebManager):
             page  = img + ' there is no data in a cache yet, please wait...'
             page += ', <a href="/das/">stop</a> request' 
             page += """<script type="application/javascript">"""
-            page += """setTimeout('ajaxStatus("%s")', %s)</script>""" \
-                        % (self.base, self.status_update)
+            page += """setTimeout('ajaxStatus("%s", "%s")', %s)</script>""" \
+                        % (self.base, self.next, self.next)
             view  = 'list'
         elif data['status'] == 'fail':
             msg   = "DAS cache server fails to process your request.\n"
@@ -1024,15 +1022,21 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def status(self, **kwargs):
+    def status(self, next, **kwargs):
         """
         Place AJAX request to obtain status about given query
         """
+        limit = 60000 # 1 minute, max check status limit
+        next  = int(next)
+        if  next < limit and next*2 < limit:
+            next *= 2
+        else:
+            next = limit
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         req  = """
         <script type="application/javascript">
-        setTimeout('ajaxStatus("%s")', %s)
-        </script>""" % (self.base, self.status_update)
+        setTimeout('ajaxStatus("%s", "%s")', %s)
+        </script>""" % (self.base, next, next)
 
         def set_header():
             "Set HTTP header parameters"
