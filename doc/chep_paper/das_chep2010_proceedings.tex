@@ -35,7 +35,7 @@ Although designed in the context of the CMS experiment, DAS itself does not make
 
 DAS is designed as an additional layer on top of a heterogenous ecosystem of existing CMS data services.
  
-The architecture of DAS was designed as a series of independent components, which can scale from all running on a single node to multiple nodes and duplicate components, as necessary (Fig.~\ref{dasarch}). An initial description of the architectur, choice of technology and comparison with similar systems was given in \cite{das2010}. Here we present further development of the query language (Sec.~\ref{dasql}), analytics (Sec.~\ref{analytics}) and initial benchmark results (Sec.~\ref{benchmarks}).
+The architecture of DAS was designed as a series of independent components, which can scale from all running on a single node to multiple nodes and duplicate components, as necessary (Fig.~\ref{dasarch}). An initial description of the architecture, choice of technology and comparison with similar systems was given in \cite{das2010}. Here we present further development of the query language (Sec.~\ref{dasql}), analytics (Sec.~\ref{analytics}) and initial benchmark results (Sec.~\ref{benchmarks}).
 
 The \emph{web server} handles user sessions, whether they originate from a browser or automated scripts. Queries made here are passed onto the \emph{cache server} for processing, during which time the \emph{web server} periodically polls for the current status and displays it to the user by AJAX {\it (Asynchronous Javascript and XML)}, until the request is completed. An MD5 hash of the input query is used to identify the correct output (and hence multiple users making identical queries will only result in a single worker thread doing the processing). Methods are provided here for output in machine-readable formats as well as human-readable formatting.
 
@@ -138,7 +138,18 @@ There are a large number of possible future analysis strategies (such as the tim
 
 To benchmark DAS performance, we used a 64-bit linux node with 8 cores (each 2.33GhZ) and 16GB of RAM, which we would expect to be typical of the hardware DAS would use in production. All DAS systems and MongoDB share this node.
 
-Testing was performed with the cache pre-populated with approximately $5\times10^7$ records (100 times the expected volume), consisting of \emph{block} records from the CMS PhEDEx~\cite{phedex} and DBS systems. We test with up to 500 clients making requests in parallel. Each client requests one random record from the entire result set (which will test the time required for DAS to process the query but largely exclude the time required to serialise a large output set), using queries of the form \verb block=/[a-z]* (past experience with the DBS system shows wildcard queries are very common, even when the user knows the complete string in question). Fig.~\ref{dasbench} shows the benchmark results.
+%Testing was performed with the cache pre-populated with approximately $5\times10^7$ records (100 times the expected volume), consisting of \emph{block} records from the CMS PhEDEx~\cite{phedex} and DBS systems. We test with up to 500 clients making requests in parallel. Each client requests one random record from the entire result set (which will test the time required for DAS to process the query but largely exclude the time required to serialise a large output set), using queries of the form \verb block=/[a-z]* (past experience with the DBS system shows wildcard queries are very common, even when the user knows the complete string in question). Fig.~\ref{dasbench} shows the benchmark results.
+Testing was performed with the cache pre-populated with approximately 
+$5\times10^7$ records (100 times the expected volume), consisting 
+of \emph{block} records from the CMS PhEDEx~\cite{phedex} and DBS 
+systems. Each \emph{block} record is a JSON document with common keys, such as
+\emph{name, nevents, nfiles, replica}, etc.
+We test with up to 500 clients making requests in parallel. 
+Each client requests a random wildcard query, e.g. \verb block=/a* , and fetches one random
+record from the returned set (which will test the time required for DAS to parse the 
+query and access the cache but largely exclude the time required to serialise a large 
+output set). No additional operations were done during this step.
+Fig.~\ref{dasbench} shows the benchmark results.
 
 \section{Future Work}
 
