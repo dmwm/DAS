@@ -188,7 +188,7 @@ class DASWebService(DASWebManager):
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
         self.base    = config['url_base']
-        self.next    = 3000 # initial next update status in miliseconds
+        self.next    = 5000 # initial next update status in miliseconds
         self.engine  = config.get('engine', None)
         logfile      = config['logfile']
         loglevel     = config['loglevel']
@@ -675,7 +675,7 @@ class DASWebService(DASWebManager):
         """
         Place AJAX request to obtain status about given process pid.
         """
-        limit = 60000 # 1 minute, max check status limit
+        limit = 30000 # 1 minute, max check status limit
         next  = int(next)
         if  next < limit and next*2 < limit:
             next *= 2

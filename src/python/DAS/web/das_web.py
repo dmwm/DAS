@@ -186,7 +186,7 @@ class DASWebService(DASWebManager):
     """
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
-        self.next       = 3000 # initial next update status in miliseconds
+        self.next       = 5000 # initial next update status in miliseconds
         self.cachesrv   = config['cache_server_url']
         self.base       = config['url_base']
         logfile         = config['logfile']
@@ -1026,7 +1026,7 @@ class DASWebService(DASWebManager):
         """
         Place AJAX request to obtain status about given query
         """
-        limit = 60000 # 1 minute, max check status limit
+        limit = 30000 # 1 minute, max check status limit
         next  = int(next)
         if  next < limit and next*2 < limit:
             next *= 2

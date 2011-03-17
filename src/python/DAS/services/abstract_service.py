@@ -239,7 +239,7 @@ class DASAbstractService(object):
                 % self.name
         msg += ' query=%s, api=%s, args=%s' % (query, api, args)
         self.logger.debug(msg)
-        header  = dasheader(self.name, query, api, url, ctime, expire)
+        header  = dasheader(self.name, query, expire, api, url, ctime)
         header['lookup_keys'] = self.lookup_keys(api)
 
         # check that apicall record is present in analytics DB

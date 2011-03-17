@@ -9,6 +9,11 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.2
 
+  - fix #1032; re-structure the code to create individual per data-srv
+    query records instead of a single one. Now, each request creates
+    1 das query record plus one query record per data-srv. This allows
+    to assign different expire timestamp for data-srv's and achieve
+    desired scalability for data-service API calls.
   - re-wrote task_manager using threads, due to problems with multiprocessing
     modules
   - re-wrote cache method for DAS web servers to use new task_manager

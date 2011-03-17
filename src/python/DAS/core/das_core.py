@@ -41,32 +41,22 @@ from DAS.utils.das_timer import das_timer, get_das_timer
 import DAS.utils.jsonwrapper as json
 import DAS.core.das_aggregators as das_aggregator
 
-def dasheader(system, query, api, url, ctime, expire):
+def dasheader(system, query, expire, api=None, url=None, ctime=None):
     """
     Return DAS header (dict) wrt DAS specifications, see
     https://twiki.cern.ch/twiki/bin/view/CMS/
         DMWMDataAggregationService#DAS_data_service_compliance
     """
-    systems = []
-    if  system:
-        if  system == 'das': # init for das record
-            systems = []
-        else:
-            systems = [system]
-    apis = []
-    if  api:
-        apis = [api]
-    urls = []
-    if  url:
-        urls = [url]
-    ctimes = []
-    if  ctime:
-        ctimes = [ctime]
     query   = encode_mongo_query(query)
-    dasdict = dict(system=systems, timestamp=time.time(),
-                url=urls, ctime=ctimes, qhash=genkey(query), 
-                expire=expire_timestamp(expire), urn=apis,
-                api=apis, status="requested")
+    if  not api:
+        dasdict = dict(system=[system], timestamp=time.time(),
+                    qhash=genkey(query), expire=expire_timestamp(expire),
+                    status="requested")
+    else:
+        dasdict = dict(system=[system], timestamp=time.time(),
+                    url=[url], ctime=[ctime], qhash=genkey(query), 
+                    expire=expire_timestamp(expire), urn=[api],
+                    api=[api], status="requested")
     return dict(das=dasdict)
 
 class DASCore(object):
@@ -395,11 +385,10 @@ class DASCore(object):
         params = self.mongoparser.params(query)
         services = params['services']
         self.logger.info('DASCore::call, services = %s' % services)
-        qhash = genkey(query)
         das_timer('das_record', self.verbose)
         # initial expire tstamp 1 day (long enough to be overwriten by data-srv)
         expire = expire_timestamp(time.time()+1*24*60*60)
-        header = dasheader("das", query, api="", url="", ctime=0, expire=expire)
+        header = dasheader("das", query, expire)
         header['lookup_keys'] = []
         self.rawcache.insert_query_record(query, header)
         das_timer('das_record', self.verbose)
@@ -416,12 +405,12 @@ class DASCore(object):
             traceback.print_exc()
             return 0
         self.logger.info('\nDASCore::call ##### merging ######\n')
-        self.rawcache.update_das_record(query, 'merging')
+        self.rawcache.update_query_record(query, 'merging')
         das_timer('merge', self.verbose)
         self.rawcache.merge_records(query)
         das_timer('merge', self.verbose)
-        self.rawcache.update_das_record(query, 'ok')
-        self.rawcache.add_to_record(query, {'das.timer': get_das_timer()})
+        self.rawcache.update_query_record(query, 'ok')
+        self.rawcache.add_to_record(query, {'das.timer': get_das_timer()}, system='das')
         das_timer('DASCore::call', self.verbose)
         return 1
 

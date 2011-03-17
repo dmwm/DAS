@@ -90,7 +90,8 @@ def get_data(host, query, idx, limit, debug):
         pid = data
     else:
         pid = None
-    count = 3 # initial waiting time in seconds
+    count = 5  # initial waiting time in seconds
+    timeout = 30 # final waiting time in seconds
     while pid:
         params.update({'pid':data})
         encoded_data = urllib.urlencode(params, doseq=True)
@@ -108,10 +109,10 @@ def get_data(host, query, idx, limit, debug):
         else:
             pid = None
         time.sleep(count)
-        if  count < 60:
+        if  count < timeout:
             count *= 2
         else:
-            count = 60
+            count = timeout
     return data
 
 def main():

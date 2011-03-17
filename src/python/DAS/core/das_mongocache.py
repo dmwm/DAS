@@ -408,7 +408,8 @@ class DASMongocache(object):
         Find if cache has query whose specs are identical to provided query.
         """
         enc_query = encode_mongo_query(query)
-        cond = {'das.qhash': {"$exists":True}, "query.spec": enc_query['spec']}
+        cond = {'das.qhash': {"$exists":True}, "query.spec": enc_query['spec'],
+                        'das.system':'das'}
         return self.col.find_one(cond)
 
     def das_record(self, query):
@@ -424,42 +425,50 @@ class DASMongocache(object):
         """
         return self.col.find({'das_id': das_id})
 
-    def add_to_record(self, query, info):
+    def add_to_record(self, query, info, system=None):
         """
         Add to existing DAS record provided info
         """
         enc_query = encode_mongo_query(query)
-        self.col.update({'query': enc_query}, {'$set': info}, upsert=True)
+        if  system:
+            self.col.update({'query': enc_query, 'das.system':system}, 
+                            {'$set': info}, upsert=True)
+        else:
+            self.col.update({'query': enc_query}, 
+                            {'$set': info}, upsert=True)
 
-    def update_das_record(self, query, status, header=None):
+    def update_query_record(self, query, status, header=None):
         """
         Update DAS record for provided query.
         """
         enc_query = encode_mongo_query(query)
         if  header:
-            record = self.col.find_one({'query': enc_query})
-            if  header['das']['expire'] < record['das']['expire']:
+            system = header['das']['system']
+            dasrecord = self.col.find_one({'query': enc_query, 'das.system': 'das'})
+            sysrecord = self.col.find_one({'query': enc_query, 'das.system': system})
+            if  header['das']['expire'] < dasrecord['das']['expire']:
                 expire = header['das']['expire']
             else:
-                expire = record['das']['expire']
+                expire = dasrecord['das']['expire']
             api = header['das']['api']
             url = header['das']['url']
-            if  set(api) & set(record['das']['api']) == set(api) and \
-                set(url) & set(record['das']['url']) == set(url):
-                self.col.update({'_id':ObjectId(record['_id'])}, 
+            if  set(api) & set(sysrecord['das']['api']) == set(api) and \
+                set(url) & set(sysrecord['das']['url']) == set(url):
+                self.col.update({'_id':ObjectId(sysrecord['_id'])}, 
                      {'$set': {'das.expire':expire, 'das.status':status}})
             else:
-                self.col.update({'_id':ObjectId(record['_id'])}, 
+                self.col.update({'_id':ObjectId(sysrecord['_id'])}, 
                     {'$pushAll':{'das.api':header['das']['api'], 
                                  'das.urn':header['das']['api'],
-                                 'das.system':header['das']['system'], 
                                  'das.url':header['das']['url'],
                                  'das.ctime':header['das']['ctime'],
                                  'das.lookup_keys':header['lookup_keys'],
                                 }, 
                      '$set': {'das.expire':expire, 'das.status':status}})
+            self.col.update({'_id':ObjectId(dasrecord['_id'])}, 
+                 {'$set': {'das.expire':expire, 'das.status':status}})
         else:
-            self.col.update({'query': enc_query},
+            self.col.update({'query': enc_query, 'das.system':'das'},
                     {'$set': {'das.status': status}})
 
     def incache(self, query, collection='merge'):
@@ -820,7 +829,7 @@ class DASMongocache(object):
         lkeys      = header['lookup_keys']
         # check presence of API record in a cache
         enc_query = encode_mongo_query(query)
-        spec = {'spec' : dict(query=enc_query)}
+        spec = {'spec' : {'query':enc_query, 'das.system':dasheader['system']}}
         if  not self.incache(spec, collection='cache'):
             msg = "DASMongocache::insert_query_record, query=%s, header=%s" \
                     % (query, header)
@@ -849,8 +858,8 @@ class DASMongocache(object):
         # get API record id
         enc_query  = encode_mongo_query(query)
         qhash      = genkey(enc_query)
-        spec       = {'spec' : dict(query=enc_query)}
-        record     = self.col.find_one({'query':enc_query}, fields=['_id'])
+        spec       = {'query':enc_query, 'das.system':system}
+        record     = self.col.find_one(spec, fields=['_id'])
         objid      = record['_id']
         # insert DAS records
         prim_key   = rec[0][0]#use rec instead of lkeys[0] which re-order items
@@ -872,7 +881,7 @@ class DASMongocache(object):
 
         # update das record with new status
         status = 'Update DAS cache, %s API' % header['das']['api'][0]
-        self.update_das_record(query, status, header)
+        self.update_query_record(query, status, header)
 
     def remove_from_cache(self, query):
         """
