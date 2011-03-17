@@ -9,11 +9,27 @@ __version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
-import traceback
-from   DAS.services.abstract_service import DASAbstractService
-from   DAS.utils.utils import map_validator, convert2date
 from   types import InstanceType
+
+from   DAS.services.abstract_service import DASAbstractService
+from   DAS.utils.utils import map_validator, convert2date, das_dateformat
 import DAS.utils.jsonwrapper as json
+from   DAS.utils.regex import unix_time_pattern, date_yyyymmdd_pattern
+
+def convert_datetime(sec):
+    """
+    Convert seconds since epoch or YYYYMMDD to date YYYY-MM-DD
+    """
+    value = str(sec)
+    pat   = date_yyyymmdd_pattern
+    pat2  = unix_time_pattern
+    if pat.match(value): # we accept YYYYMMDD
+        return das_dateformat(value)
+    elif pat2.match(value):
+        return value
+    else:
+        msg = 'Unacceptable date format'
+        raise Exception(msg)
 
 class MonitorService(DASAbstractService):
     """
@@ -64,13 +80,12 @@ class MonitorService(DASAbstractService):
         """
         An overview data-service worker.
         """
-        data = []
         keys = [key for key in self.map[api]['keys'] for api in self.map.keys()]
         cond = query['spec']
         for key, value in cond.items():
             if  key.find('.') != -1:
                 args['grouping'] = key.split('.')[-1]
-                key, attr = key.split('.', 1)
+                key, _attr = key.split('.', 1)
             if  key not in keys:
                 continue
             args['end'] = '%d' % time.time()
@@ -95,6 +110,7 @@ class MonitorService(DASAbstractService):
                     elif value.has_key('$lte') and value.has_key('$gte'):
                         vallist = (value['$gte'], value['$lte'])
                     else:
+                        err = 'Unsupported date value'
                         raise Exception(err)
                     args['start'] = convert_datetime(vallist[0])
                     args['end'] = convert_datetime(vallist[-1])
