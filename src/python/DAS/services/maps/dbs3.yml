@@ -37,17 +37,67 @@ params : {
 }
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
-        {"key": "release", "map":"release", "pattern":""},
-        {"key": "run", "map":"run.run_number", "pattern":""},
         {"key": "primary_dataset", "map":"primary_dataset.name", "pattern":""},
         {"key": "tier", "map":"tier.name", "pattern":""},
 ]
 das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
-        {"das_key":"release", "api_param": "release_version", "pattern":""},
-        {"das_key":"run.run_number", "api_param": "run_num", "pattern":""},
         {"das_key":"primary_dataset.name", "api_param": "primary_ds_name", "pattern":""},
         {"das_key":"tier.name", "api_param": "data_tier_name", "pattern":""},
+]
+---
+urn: datasets_for_release
+url : "http://localhost:8989/DBSReader/datasets/"
+expire : 900
+params : {
+        "dataset":"*",
+        "detail":"True",
+        "dataset_access_type": "PRODUCTION", # RO must be default accorging to Yuyi, but it is not exists yet in DBS3
+        "release_version": "required",
+}
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "release", "map":"release.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"release.name", "api_param": "release_version", "pattern":""},
+]
+---
+urn: datasets_for_run
+url : "http://localhost:8989/DBSReader/datasets/"
+expire : 900
+params : {
+        "dataset":"*",
+        "detail":"True",
+        "dataset_access_type": "PRODUCTION", # RO must be default accorging to Yuyi, but it is not exists yet in DBS3
+        "run_num": "required",
+}
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "run", "map":"run.run_number", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"run.run_number", "api_param": "run_num", "pattern":""},
+]
+---
+urn: datasets_for_file
+url : "http://localhost:8989/DBSReader/datasets/"
+expire : 900
+params : {
+        "dataset":"*",
+        "detail":"True",
+        "dataset_access_type": "PRODUCTION", # RO must be default accorging to Yuyi, but it is not exists yet in DBS3
+        "logical_file_name": "required",
+}
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "file", "map":"file.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"file.name", "api_param": "logical_file_name", "pattern":""},
 ]
 ---
 urn: datasetparents
@@ -92,7 +142,7 @@ das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
-urn: blocks_via_block
+urn: blocks
 url : "http://localhost:8989/DBSReader/blocks/"
 expire : 900
 params : {
@@ -127,22 +177,7 @@ expire : 900
 params : {
         "dataset":"required",
         "detail":"True",
-}
-daskeys : [
-        {"key": "file", "map":"file.name", "pattern":""},
-        {"key": "dataset", "map":"dataset.name", "pattern":""},
-]
-das2api : [
-        {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
-]
----
-urn: files_via_dataset_and_run
-url : "http://localhost:8989/DBSReader/files/"
-expire : 900
-params : {
-        "dataset":"required",
-        "minrun":"required",
-        "detail":"True",
+        "minrun": "optional",
 }
 daskeys : [
         {"key": "file", "map":"file.name", "pattern":""},
@@ -204,6 +239,7 @@ params : {
         "logical_file_name":"required",
 }
 daskeys : [
+        {"key":"lumi", "map":"lumi.number", "pattern":""},
         {"key": "file", "map":"file.name", "pattern":""},
 ]
 das2api : [
@@ -217,11 +253,15 @@ params : {
         "dataset":"required",
 }
 daskeys : [
+        {"key": "run", "map":"run.run_number", "pattern":""},
         {"key": "file", "map":"file.name", "pattern":""},
+        {"key": "block", "map":"block.name", "pattern":""},
         {"key": "dataset", "map":"dataset.name", "pattern":""},
 ]
 das2api : [
         {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+        {"das_key":"file.name", "api_param":"logical_file_name", "pattern":""},
+        {"das_key":"block.name", "api_param":"block_name", "pattern":""},
 ]
 ---
 notations : [
@@ -232,7 +272,14 @@ notations : [
         {"notation": "primary_ds_id", "map": "id", "api": "primarydatasets"},
         {"notation": "primary_ds_id", "map": "primary_dataset.id", "api": ""},
         {"notation": "dataset", "map": "name", "api": "datasets"},
+        {"notation": "dataset", "map": "name", "api": "datasets_for_release"},
+        {"notation": "dataset", "map": "name", "api": "datasets_for_run"},
+        {"notation": "dataset", "map": "name", "api": "datasets_for_file"},
         {"notation": "dataset", "map": "dataset.name", "api": ""},
+        {"notation": "child_dataset", "map": "name", "api": ""},
+        {"notation": "parent_dataset", "map": "name", "api": ""},
+        {"notation": "child_logical_file_name", "map": "name", "api": ""},
+        {"notation": "parent_logical_file_name", "map": "name", "api": ""},
         {"notation": "block_name", "map": "name", "api": "blocks"},
         {"notation": "block_size", "map": "size", "api": "blocks"},
         {"notation": "block_name", "map": "name", "api": "blocks_via_dataset"},

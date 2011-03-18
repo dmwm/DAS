@@ -630,6 +630,10 @@ class DASAbstractService(object):
                 msg = 'args=%s' % args
                 self.logger.debug(msg)
                 continue
+            if 'optional' in args.values():
+                for key, val in args.items():
+                    if  val == 'optional':
+                        del args[key]
             # check that there is no "required" parameter left in args,
             # since such api will not work
             if 'required' in args.values():
