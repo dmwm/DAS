@@ -373,10 +373,14 @@ class DASMapping(object):
         names = []
         for adas in self.col.find(query, ['das2api']):
             for row in adas['das2api']:
-                aparam = row['api_param']
-                daskey = row['das_key']
-                if  aparam == api_input_name and daskey not in names:
-                    names.append(daskey)
+                try:
+                    aparam = row['api_param']
+                    daskey = row['das_key']
+                    if  aparam == api_input_name and daskey not in names:
+                        names.append(daskey)
+                except Exception, err:
+                    print "ERROR: look-up api_param/das_key in", row
+                    raise err
         return names
 
     def das2api(self, system, daskey, value=None, api=None):

@@ -16,9 +16,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
 
 DAS_FILTERS   = ['grep', 'unique']
-DAS_OPERATORS = ['=', 'between', 'in', 'last']
-#DAS_OPERATORS = ['!=', '<=', '<', '>=', '>', '=', 
-#                 'between', 'nin', 'in', 'last']
+DAS_OPERATORS = ['=', 'between', 'last']
 DAS_SPECIALS  = ['date', 'system', 'instance']
 DAS_DB_KEYWORDS = ['records', 'queries', 'popular']
 DAS_RESERVED  = DAS_FILTERS + DAS_OPERATORS + DAS_SPECIALS

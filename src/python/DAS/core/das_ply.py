@@ -165,6 +165,12 @@ class DASPLY(object):
             msg = 'Not a valid DAS query, DBS-QL keyword: %s' % t.value
             raise Exception(msg)
 
+        # test if VALUE is in
+        if  t.value == 'in':
+            msg  = 'Operator "in" is not supported, '
+            msg += 'please use operator "between" instead'
+            raise Exception(msg)
+
         # test for a filter/aggregator/operator
         if  t.value in self.tokenmap:
             #change the token type to the appropriate one

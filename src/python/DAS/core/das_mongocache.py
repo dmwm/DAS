@@ -403,14 +403,22 @@ class DASMongocache(object):
             self.logger.debug(msg)
         col.remove(spec)
 
-    def find_spec(self, query):
+    def find(self, query):
         """
-        Find if cache has query whose specs are identical to provided query.
+        Find provided query in DAS cache.
         """
         enc_query = encode_mongo_query(query)
-        cond = {'das.qhash': {"$exists":True}, "query.spec": enc_query['spec'],
-                        'das.system':'das'}
+        cond = {'query': enc_query, 'das.system':'das'}
         return self.col.find_one(cond)
+
+    def find_specs(self, query):
+        """
+        Check if cache has query whose specs are identical to provided query.
+        Return all matches.
+        """
+        enc_query = encode_mongo_query(query)
+        cond = {'query.spec': enc_query['spec'], 'das.system':'das'}
+        return self.col.find(cond)
 
     def das_record(self, query):
         """
@@ -768,8 +776,9 @@ class DASMongocache(object):
             size = self.cache_size
             try:
                 while True:
-                    if  not self.merge.insert(itertools.islice(gen, size)):
+                    if  self.merge.insert(itertools.islice(gen, size)):
                         inserted = 1
+                    else:
                         break
             except InvalidDocument as exp:
                 msg = "Caught bson error: " + str(exp)

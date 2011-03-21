@@ -274,7 +274,7 @@ class DASCore(object):
         status = 0
         iquery = dict(query)
         query  = self.bare_query(query)
-        record = self.rawcache.find_spec(query)
+        record = self.rawcache.find(query)
         try:
             if  record:
                 status = record['das']['status']
@@ -284,7 +284,7 @@ class DASCore(object):
 
         similar_query = self.rawcache.similar_queries(query)
         if  similar_query:
-            record = self.rawcache.find_spec(similar_query)
+            record = self.rawcache.find(similar_query)
             if  record:
                 similar_query_status = record['das']['status']
                 return similar_query_status
@@ -352,10 +352,10 @@ class DASCore(object):
             self.logger.info("DASCore::call, look-up everything in cache")
             return 1
         status = 0
-        record = self.rawcache.find_spec(query)
-        if  record:
+        for record in self.rawcache.find_specs(query):
             status = record['das']['status']
-            msg = 'DASCore::call, found query in cache, status=%s\n' % status
+            msg = 'DASCore::call, found query %s in cache, status=%s\n' \
+                        % (record['query'], status)
             mongo_query = decode_mongo_query(record['query'])
             if  not compare_specs(query, mongo_query): 
                 status = 0
@@ -367,18 +367,18 @@ class DASCore(object):
                 return 1
         similar_query = self.rawcache.similar_queries(query)
         if  similar_query:
-            record = self.rawcache.find_spec(similar_query)
-            status = 0
-            if  record:
-                status = record['das']['status']
-            msg  = 'DASCore::call, found SIMILAR query in cache,'
-            msg += 'query=%s, status=%s\n' % (record['query'], status)
-            self.logger.info(msg)
-            if  status == 'ok' and self.in_raw_cache(similar_query):
-                # update analytics for all systems (None)
-                self.analytics.update(None, query)
-                das_timer('DASCore::call', self.verbose)
-                return 1
+            for record in self.rawcache.find_specs(similar_query):
+                status = 0
+                if  record:
+                    status = record['das']['status']
+                msg  = 'DASCore::call, found SIMILAR query in cache,'
+                msg += 'query=%s, status=%s\n' % (record['query'], status)
+                self.logger.info(msg)
+                if  status == 'ok' and self.in_raw_cache(similar_query):
+                    # update analytics for all systems (None)
+                    self.analytics.update(None, query)
+                    das_timer('DASCore::call', self.verbose)
+                    return 1
 
         msg = 'DASCore::call, query=%s' % query
         self.logger.info(msg)
