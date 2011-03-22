@@ -140,6 +140,21 @@ das2api : [
     {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
 ]
 ---
+urn : fakeRun4File
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "file": "required"
+}
+daskeys : [
+    {"key":"run", "map":"run.run_number", "pattern":""},
+    {"key":"file", "map":"file.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"file.name", "api_param":"file", "pattern":""},
+]
+---
 urn : listTiers
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
@@ -188,7 +203,7 @@ url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
      "api":"listBlocks", "apiversion": "DBS_2_0_9", 
-     "path":"*", "block_name":"required",
+     "path":"", "block_name":"required",
      "storage_elemennt_name": "*", "user_type":"NORMAL"
 }
 daskeys : [

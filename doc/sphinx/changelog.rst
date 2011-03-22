@@ -9,6 +9,11 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.2
 
+  - add missing fakeRun4File API to allow look-up run for a given file, fixes #1285
+  - remove 'in' from supported list of operator, users advised to use
+    'between' operator
+  - DBS3 support added, ticket #949
+  - fix #1278
   - fix #1032; re-structure the code to create individual per data-srv
     query records instead of a single one. Now, each request creates
     1 das query record plus one query record per data-srv. This allows

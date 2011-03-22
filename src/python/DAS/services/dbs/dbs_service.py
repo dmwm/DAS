@@ -124,6 +124,13 @@ class DBSService(DASAbstractService):
                 kwds['query'] = 'required'
             kwds.pop('run')
             kwds.pop('dataset')
+        if  api == 'fakeRun4File':
+            val = kwds['file']
+            if  val != 'required':
+                kwds['query'] = "find run where file = %s" % val
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('file')
         if  api == 'fakeDatasetSummary':
             value = ""
             for key, val in kwds.items():
@@ -230,6 +237,8 @@ class DBSService(DASAbstractService):
             prim_key = 'dataset'
         elif  api == 'fakeDataset4Run':
             prim_key = 'dataset'
+        elif  api == 'fakeRun4File':
+            prim_key = 'run'
         elif  api == 'fakeRun4Run':
             prim_key = 'run'
         elif api == 'fakeChild4File':
