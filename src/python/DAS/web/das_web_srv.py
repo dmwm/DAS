@@ -34,10 +34,10 @@ import DAS
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators
 from DAS.core.das_ply import das_parser_error
-from DAS.utils.utils import getarg, access, size_format, DotDict
+from DAS.utils.utils import getarg, access, size_format, DotDict, genkey
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import urllib2_request, json2html, web_time, quote
 from DAS.web.utils import ajax_response, checkargs, get_ecode
@@ -187,19 +187,19 @@ class DASWebService(DASWebManager):
     """
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
-        self.base    = config['url_base']
-        self.next    = 5000 # initial next update status in miliseconds
-        self.engine  = config.get('engine', None)
-        logfile      = config['logfile']
-        loglevel     = config['loglevel']
+        self.base   = config['url_base']
+        self.next   = 5000 # initial next update status in miliseconds
+        self.engine = config.get('engine', None)
+        logfile     = config['logfile']
+        loglevel    = config['loglevel']
         self.number_of_workers = config['number_of_workers']
-        self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
+        self.logger = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
-        dasconfig = das_readconfig()
-        dburi = dasconfig['mongodb']['dburi']
-        self.requests = {} # to hold incoming requests pid/kwargs
+        self.dasconfig   = das_readconfig()
+        self.dburi       = self.dasconfig['mongodb']['dburi']
+        self.requests    = {} # to hold incoming requests pid/kwargs
         if  self.engine:
             self.taskmgr = PluginTaskManager(bus=self.engine)
             self.taskmgr.subscribe()
@@ -209,13 +209,25 @@ class DASWebService(DASWebManager):
         self.init()
         # Monitoring thread which performs auto-reconnection
         thread.start_new_thread(dascore_monitor, \
-                ({'das':self.dasmgr, 'uri':dburi}, self.init, 5))
+                ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
 
     def init(self):
         """Init DAS web server, connect to DAS Core"""
+        capped_size = self.dasconfig['loggingdb']['capped_size']
+        logdbname   = self.dasconfig['loggingdb']['dbname']
+        logdbcoll   = self.dasconfig['loggingdb']['collname']
         try:
+            self.con        = db_connection(self.dburi)
+            if  logdbname not in self.con.database_names():
+                dbname      = self.con[logdbname]
+                options     = {'capped':True, 'size': capped_size}
+                dbname.create_collection('db', **options)
+                self.warning('Created %s.%s, size=%s' \
+                % (logdbname, logdbcoll, capped_size))
+            self.logcol     = self.con[logdbname][logdbcoll]
             self.dasmgr     = DASCore(engine=self.engine)
             self.daskeys    = self.dasmgr.das_keys()
+            self.gfs        = db_gridfs(self.dburi)
             self.daskeys.sort()
             self.dasmapping = self.dasmgr.mapping
             self.colors = {}
@@ -226,6 +238,22 @@ class DASWebService(DASWebManager):
             self.dasmgr = None
             self.daskeys = []
             self.colors = {}
+
+    def logdb(self, query):
+        """
+        Make entry in Logging DB
+        """
+        qhash = genkey(query)
+        headers = cherrypy.request.headers
+        doc = dict(qhash=qhash, timestamp=time.time(),
+                headers=cherrypy.request.headers,
+                method=cherrypy.request.method,
+                path=cherrypy.request.path_info,
+                args=cherrypy.request.params,
+                ip=cherrypy.request.remote.ip,
+                hostname=cherrypy.request.remote.name,
+                port=cherrypy.request.remote.port)
+        self.logcol.insert(doc)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -439,30 +467,22 @@ class DASWebService(DASWebManager):
         """
         Retieve records from GridFS
         """
+        time0 = time.time()
+        if  not kwargs.has_key('fid'):
+            code = web_code('No file id')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
+        fid = kwargs.get('fid')
+        data.update({'status':'requested', 'fid':fid})
         try:
-            recid = args[0]
-            time0    = time.time()
-            url      = self.cachesrv
-            show     = getarg(kwargs, 'show', 'json')
-            coll     = getarg(kwargs, 'collection', 'merge')
-            params   = {'fid':recid}
-            path     = '/rest/gridfs'
-            headers  = {"Accept": "application/json"}
-            try:
-                data = urllib2_request('GET', url+path, params, headers=headers)
-                result = json.loads(data)
-            except urllib2.HTTPError, httperror:
-                err = get_ecode(httperror.read())
-                self.logger.error(err)
-                result = {'status':'fail', 'reason': err}
-            except:
-                self.logger.error(traceback.format_exc())
-                result = {'status':'fail', 'reason':traceback.format_exc()}
+            fds = self.gfs.get(ObjectId(fid))
+            data['status'] = 'success'
+            data['data']   = fds.read()
         except:
-                self.logger.error(traceback.format_exc())
-                result = {'status':'fail', 'reason':traceback.format_exc()}
-        cherrypy.response.headers['Content-Type'] = 'application/json'
-        return result
+            self.logger.error(traceback.format_exc())
+            code = web_code('Exception')
+            raise HTTPError(500, 'DAS error, code=%s' % code)
+        data['ctime'] = time.time() - time0
+        return data
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -630,6 +650,7 @@ class DASWebService(DASWebManager):
 
         time0   = time.time()
         uinput  = getarg(kwargs, 'input', '').strip()
+        self.logdb(uinput)
         form    = self.form(input=uinput)
         view    = kwargs.get('view', 'list')
         check, content = self.check_input(uinput)

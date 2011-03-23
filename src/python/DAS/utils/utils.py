@@ -93,7 +93,7 @@ def parse_filter(spec, filter):
             val = float(val)
         return {key: {'$gt': val}}
     else:
-        if  not spec.get(filter, None):
+        if  not spec.get(filter, None) and filter != 'unique':
             return {filter:{'$exists':True}}
     return {}
 

@@ -453,7 +453,15 @@ def ply2mongo(query):
             if  item[0] == 'filter':
                 dasfilter, name, args = item
                 if  dasfilter == 'filter' and name == 'grep':
-                    mongodict['filters'] = args
+                    if  mongodict.has_key('filters'):
+                        mongodict['filters'] += args
+                    else:
+                        mongodict['filters']  = args
+                if  dasfilter == 'filter' and name == 'unique':
+                    if  mongodict.has_key('filters'):
+                        mongodict['filters'] += ['unique']
+                    else:
+                        mongodict['filters']  = ['unique']
             if  item[0] == 'aggregators':
                 aggs = [(k[1], k[2]) for k in item[1:]]
                 mongodict['aggregators'] = aggs

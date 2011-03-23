@@ -9,6 +9,7 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.2
 
+  - fix unique filter #1290
   - add missing fakeRun4File API to allow look-up run for a given file, fixes #1285
   - remove 'in' from supported list of operator, users advised to use
     'between' operator
