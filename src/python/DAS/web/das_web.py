@@ -147,10 +147,13 @@ def adjust_values(func, gen):
         else:
             if  key == 'result' and isinstance(val, dict) and \
                 val.has_key('value'): # result of aggregation function
-                if  isinstance(val['value'], int):
-                    val = val['value']
-                else:
+                if  rdict.has_key('key') and \
+                    rdict['key'].find('.size') != -1:
+                    val = size_format(val['value'])
+                elif isinstance(val['value'], float):
                     val = '%.2f' % val['value']
+                else:
+                    val = val['value']
             page += "<b>%s:</b> %s<br />" % (key, val)
     if  links:
         page += "<b>Links:</b> "

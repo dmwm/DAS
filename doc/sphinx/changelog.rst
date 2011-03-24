@@ -9,6 +9,8 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.2
 
+  - show results of agg. functions for key.size in human readable format, e.g. GB
+  - simplify DASCacheMgr
   - fix unique filter #1290
   - add missing fakeRun4File API to allow look-up run for a given file, fixes #1285
   - remove 'in' from supported list of operator, users advised to use

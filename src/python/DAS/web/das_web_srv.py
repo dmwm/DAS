@@ -148,10 +148,13 @@ def adjust_values(func, gen):
         else:
             if  key == 'result' and isinstance(val, dict) and \
                 val.has_key('value'): # result of aggregation function
-                if  isinstance(val['value'], int):
-                    val = val['value']
-                else:
+                if  rdict.has_key('key') and \
+                    rdict['key'].find('.size') != -1:
+                    val = size_format(val['value'])
+                elif isinstance(val['value'], float):
                     val = '%.2f' % val['value']
+                else:
+                    val = val['value']
             page += "<b>%s:</b> %s<br />" % (key, val)
     if  links:
         page += "<b>Links:</b> "
@@ -188,7 +191,7 @@ class DASWebService(DASWebManager):
     def __init__(self, config={}):
         DASWebManager.__init__(self, config)
         self.base   = config['url_base']
-        self.next   = 5000 # initial next update status in miliseconds
+        self.next   = 3000 # initial next update status in miliseconds
         self.engine = config.get('engine', None)
         logfile     = config['logfile']
         loglevel    = config['loglevel']
@@ -199,7 +202,7 @@ class DASWebService(DASWebManager):
         self.logger.info(msg)
         self.dasconfig   = das_readconfig()
         self.dburi       = self.dasconfig['mongodb']['dburi']
-        self.requests    = {} # to hold incoming requests pid/kwargs
+        self._requests   = {} # to hold incoming requests pid/kwargs
         if  self.engine:
             self.taskmgr = PluginTaskManager(bus=self.engine)
             self.taskmgr.subscribe()
@@ -617,9 +620,14 @@ class DASWebService(DASWebManager):
             if  self.taskmgr.is_alive(pid):
                 return pid
             else: # process is done, get data
+                try:
+                    del self._requests[pid]
+                except:
+                    pass
                 return self.datastream(kwargs)
         else:
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
+            self._requests[pid] = kwargs
             return pid
 
     def get_page_content(self, kwargs):
@@ -671,7 +679,7 @@ class DASWebService(DASWebManager):
             page = self.error(msg)
         else: 
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
-            self.requests[pid] = kwargs
+            self._requests[pid] = kwargs
             if  self.taskmgr.is_alive(pid):
                 # no data in raw cache
                 img   = '<img src="%s/images/loading.gif" alt="loading"/>'\
@@ -691,7 +699,19 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
-    @checkargs(DAS_WEB_INPUTS)
+    def requests(self):
+        """Return list of all current requests in DAS queue"""
+        page = ""
+        for pid, kwds in self._requests.items():
+            page += '<li>%s<br/>%s</li>' % (pid, kwds)
+        if  page:
+            page = "<ul>%s</ul>" % page
+        else:
+            page = "The request queue is empty"
+        return self.page(page)
+
+    @expose
+    @checkargs(['pid', 'next'])
     def check_pid(self, pid, next):
         """
         Place AJAX request to obtain status about given process pid.
@@ -710,8 +730,8 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Content-Type'] = 'text/xml'
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        if  self.requests.has_key(pid):
-            kwargs = self.requests[pid]
+        if  self._requests.has_key(pid):
+            kwargs = self._requests[pid]
             if  self.taskmgr.is_alive(pid):
                 sec   = next/1000
                 page  = img + " processing PID=%s, " % pid
@@ -720,7 +740,10 @@ class DASWebService(DASWebManager):
                 page += req
             else:
                 page  = self.get_page_content(kwargs)
-                del self.requests[pid]
+                try:
+                    del self._requests[pid]
+                except:
+                    pass
         else:
             page = "Request %s not found" % pid
         page = ajax_response(page)
