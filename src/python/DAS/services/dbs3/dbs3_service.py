@@ -39,6 +39,11 @@ class DBS3Service(DASAbstractService):
         """
         Adjust DBS2 parameters for specific query requests
         """
+        if  api == 'acquisitioneras':
+            try:
+                del kwds['era']
+            except:
+                pass
         if  api == 'runs':
             val = kwds['minrun']
             if  isinstance(val, dict): # we got a run range

@@ -1,19 +1,46 @@
-# DBSReader3 API mapping to DAS
+# DBS3 API mapping to DAS
 system : dbs3
 format : JSON
-# DBS3 test URL is http://vocms09.cern.ch:8989/DBSReader
-# I"ll use a ssh tunnel on that port for testing purposes
-#---
-#urn: acquisitioneras
-#url : "http://localhost:8989/DBSReader/acquisitioneras/"
-#expire : 900
-#params : {}
-#daskeys : [
-#        {"key": "era", "map":"era", "pattern":""},
-#]
+# DBS3 test URL is http://vocms09.cern.ch:8989/dbs/DBSReader
+# I'm using a ssh tunnel on that port for testing purposes
+---
+urn: acquisitioneras
+url : "http://localhost:8989/dbs/DBSReader/acquisitioneras/"
+expire : 900
+params : {"era":"optional"}
+daskeys : [
+        {"key": "era", "map":"era", "pattern":""},
+]
+---
+urn: datatypes
+url : "http://localhost:8989/dbs/DBSReader/datatypes/"
+expire : 900
+params : {
+        "dataset":"optional",
+}
+daskeys : [
+        {"key": "type", "map":"type.name", "pattern":""},
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+]
+---
+urn: releaseversions
+url : "http://localhost:8989/dbs/DBSReader/releaseversions/"
+expire : 900
+params : {
+        "release_version":"*",
+}
+daskeys : [
+        {"key": "release", "map":"release.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"release.name", "api_param": "release_version", "pattern":""},
+]
 ---
 urn: primarydatasets
-url : "http://localhost:8989/DBSReader/primarydatasets/"
+url : "http://localhost:8989/dbs/DBSReader/primarydatasets/"
 expire : 900
 params : {
         "primary_ds_name":"*",
@@ -26,7 +53,7 @@ das2api : [
 ]
 ---
 urn: datasets
-url : "http://localhost:8989/DBSReader/datasets/"
+url : "http://localhost:8989/dbs/DBSReader/datasets/"
 expire : 900
 params : {
         "dataset":"*",
@@ -37,6 +64,7 @@ params : {
         "release_version": "optional",
         "run_num": "optional",
         "logical_file_name": "optional",
+        "acquisition_era_name": "optional",
 }
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
@@ -45,6 +73,7 @@ daskeys : [
         {"key": "release", "map":"release.name", "pattern":""},
         {"key": "run", "map":"run.run_number", "pattern":""},
         {"key": "file", "map":"file.name", "pattern":""},
+        {"key": "era", "map":"era", "pattern":""},
 ]
 das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
@@ -53,10 +82,11 @@ das2api : [
         {"das_key":"release.name", "api_param": "release_version", "pattern":""},
         {"das_key":"run.run_number", "api_param": "run_num", "pattern":""},
         {"das_key":"file.name", "api_param": "logical_file_name", "pattern":""},
+        {"das_key":"era", "api_param": "acquisition_era_name", "pattern":""},
 ]
 ---
 urn: datasetparents
-url : "http://localhost:8989/DBSReader/datasetparents/"
+url : "http://localhost:8989/dbs/DBSReader/datasetparents/"
 expire : 900
 params : {
         "dataset":"required",
@@ -70,7 +100,7 @@ das2api : [
 ]
 ---
 urn: datasetchildren
-url : "http://localhost:8989/DBSReader/datasetchildren/"
+url : "http://localhost:8989/dbs/DBSReader/datasetchildren/"
 expire : 900
 params : {
         "dataset":"required",
@@ -84,7 +114,7 @@ das2api : [
 ]
 ---
 urn: outputconfigs
-url : "http://localhost:8989/DBSReader/outputconfigs/"
+url : "http://localhost:8989/dbs/DBSReader/outputconfigs/"
 expire : 900
 params : {
         "dataset":"required",
@@ -98,7 +128,7 @@ das2api : [
 ]
 ---
 urn: blocks
-url : "http://localhost:8989/DBSReader/blocks/"
+url : "http://localhost:8989/dbs/DBSReader/blocks/"
 expire : 900
 params : {
         "block_name":"*",
@@ -115,7 +145,7 @@ das2api : [
 ]
 ---
 urn: files_via_dataset
-url : "http://localhost:8989/DBSReader/files/"
+url : "http://localhost:8989/dbs/DBSReader/files/"
 expire : 900
 params : {
         "dataset":"required",
@@ -136,7 +166,7 @@ das2api : [
 ]
 ---
 urn: files_via_block
-url : "http://localhost:8989/DBSReader/files/"
+url : "http://localhost:8989/dbs/DBSReader/files/"
 expire : 900
 params : {
         "block_name":"required",
@@ -157,7 +187,7 @@ das2api : [
 ]
 ---
 urn: fileparents
-url : "http://localhost:8989/DBSReader/fileparents/"
+url : "http://localhost:8989/dbs/DBSReader/fileparents/"
 expire : 900
 params : {
         "logical_file_name":"required",
@@ -171,7 +201,7 @@ das2api : [
 ]
 ---
 urn: filechildren
-url : "http://localhost:8989/DBSReader/filechildren/"
+url : "http://localhost:8989/dbs/DBSReader/filechildren/"
 expire : 900
 params : {
         "logical_file_name":"required",
@@ -185,7 +215,7 @@ das2api : [
 ]
 ---
 urn: filelumis
-url : "http://localhost:8989/DBSReader/filelumis/"
+url : "http://localhost:8989/dbs/DBSReader/filelumis/"
 expire : 900
 params : {
         "logical_file_name":"required",
@@ -199,7 +229,7 @@ das2api : [
 ]
 ---
 urn: runs
-url : "http://localhost:8989/DBSReader/runs/"
+url : "http://localhost:8989/dbs/DBSReader/runs/"
 expire : 900
 params : {
         "minrun":"required",
@@ -213,7 +243,7 @@ das2api : [
 ]
 ---
 urn: runs_via_dataset
-url : "http://localhost:8989/DBSReader/runs/"
+url : "http://localhost:8989/dbs/DBSReader/runs/"
 expire : 900
 params : {
         "dataset":"required",
@@ -227,7 +257,7 @@ das2api : [
 ]
 ---
 urn: runs_via_block
-url : "http://localhost:8989/DBSReader/runs/"
+url : "http://localhost:8989/dbs/DBSReader/runs/"
 expire : 900
 params : {
         "block_name":"required",
@@ -241,7 +271,7 @@ das2api : [
 ]
 ---
 urn: runs_via_file
-url : "http://localhost:8989/DBSReader/runs/"
+url : "http://localhost:8989/dbs/DBSReader/runs/"
 expire : 900
 params : {
         "logical_file_name":"required",
@@ -274,7 +304,6 @@ notations : [
         {"notation": "logical_file_name", "map": "name", "api": "files"},
         {"notation": "logical_file_name", "map": "name", "api": "files_via_dataset"},
         {"notation": "logical_file_name", "map": "name", "api": "files_via_block"},
-        {"notation": "logical_file_name", "map": "name", "api": "fileparents"},
         {"notation": "logical_file_name", "map": "name", "api": "filelumis"},
         {"notation": "file.logical_file_name", "map": "file.name", "api": ""},
         {"notation": "file_type", "map": "type", "api": "files"},
@@ -297,5 +326,7 @@ notations : [
         {"notation": "run_num", "map": "run_number", "api": "runs_via_file"},
         {"notation": "run_num", "map": "run.run_number", "api": ""},
         {"notation": "lumi_section_num", "map": "lumi", "api": ""},
+        {"notation": "data_type", "map": "name", "api": ""},
         {"notation": "output_module_label", "map": "module_label", "api": ""},
+        {"notation": "acquisition_era_name", "map": "name", "api": "acquisitioneras"},
 ]
