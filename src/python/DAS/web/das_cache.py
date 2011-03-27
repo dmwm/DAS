@@ -203,7 +203,7 @@ class DASCacheService(DASWebManager):
         if  query['spec'].has_key('_id'):
             recid = query['spec']['_id']
             ids   = []
-            if  isinstance(recid, str):
+            if  isinstance(recid, str) or isinstance(recid, unicode):
                 ids = [ObjectId(recid)]
             elif isinstance(recid, list):
                 ids = [ObjectId(r) for r in recid]
@@ -425,9 +425,9 @@ class DASCacheService(DASWebManager):
         time0 = time.time()
         msg = 'create(%s, %s)' % (args, kwargs)
         self.logger.info(msg)
-        if  len(self.cachemgr.queue) > self.qlimit:
+        if  len(self.cachemgr.qmap.keys()) > self.qlimit:
             msg = 'CacheMgr queue is full, current size %s. ' \
-                % len(self.cachemgr.queue)
+                % len(self.cachemgr.qmap.keys())
             msg += 'Please try in a few moments.'
             data.update({'status': 'fail', 'reason': msg})
             return data
