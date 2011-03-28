@@ -76,6 +76,10 @@ class TaskManager:
         self._workers = [Worker(self._tasks, self._pids) \
                         for _ in xrange(0, nworkers)]
 
+    def nworkers(self):
+        """Return number of workers associated with this manager"""
+        return len(self._workers)
+
     def spawn(self, func, *args):
         """Spawn new process for given function"""
         pid = genkey(str(args) + str(time.time()))

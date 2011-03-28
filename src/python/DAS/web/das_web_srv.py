@@ -52,10 +52,8 @@ from DAS.web.das_codes import web_code
 
 import DAS.utils.jsonwrapper as json
 
-DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name',
-                  'format', 'sort', 'dir', 'view', 'method', 'skey',
-                  'query', 'fid', 'pid', 'next']
-
+DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name', 'dir',
+                  'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
 
 RE_DBSQL_0 = re.compile(r"^find")
 RE_DBSQL_1 = re.compile(r"^find\s+(\w+)")
@@ -195,19 +193,20 @@ class DASWebService(DASWebManager):
         self.engine = config.get('engine', None)
         logfile     = config['logfile']
         loglevel    = config['loglevel']
-        self.number_of_workers = config['number_of_workers']
+        nworkers    = config['number_of_workers']
         self.logger = DASLogger(logfile=logfile, verbose=loglevel)
         set_cherrypy_logger(self.logger.handler, loglevel)
         msg = "DASSearch::init is started with base=%s" % self.base
         self.logger.info(msg)
         self.dasconfig   = das_readconfig()
         self.dburi       = self.dasconfig['mongodb']['dburi']
+        self.queue_limit = config.get('queue_limit', 50)
         self._requests   = {} # to hold incoming requests pid/kwargs
         if  self.engine:
-            self.taskmgr = PluginTaskManager(bus=self.engine)
+            self.taskmgr = PluginTaskManager(bus=self.engine, nworkers=nworkers)
             self.taskmgr.subscribe()
         else:
-            self.taskmgr = TaskManager()
+            self.taskmgr = TaskManager(nworkers=nworkers)
 
         self.init()
         # Monitoring thread which performs auto-reconnection
@@ -571,8 +570,10 @@ class DASWebService(DASWebManager):
                     yield key, idict[key]
 
     @jsonstreamer
-    def datastream(self, head, data):
+    def datastream(self, kwargs):
         """Stream DAS data into JSON format"""
+        head = kwargs.get('head', request_headers())
+        data = kwargs.get('data', [])
         return head, data
 
     def get_data(self, kwargs):
@@ -601,6 +602,22 @@ class DASWebService(DASWebManager):
             data = []
         return head, data
 
+    def busy(self):
+        """
+        Check number server load and report busy status if it's
+        above threashold = queue size - nworkers
+        """
+        nrequests = len(self._requests.keys())
+        if  (nrequests - self.taskmgr.nworkers()) > self.queue_limit:
+            return True
+        return False
+
+    def busy_page(self, input=None):
+        """DAS server busy page layout"""
+        page = "<h3>DAS server is busy, please try later</h3>"
+        form = self.form(input)
+        return self.page(form + page)
+
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def cache(self, **kwargs):
@@ -616,7 +633,13 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Pragma'] = 'no-cache'
         pid    = kwargs.get('pid', '')
         uinput = kwargs.get('input', '').strip()
-        if  not pid:
+        if  not pid and self.busy():
+            data = []
+            head = request_headers()
+            head.update({'status': 'busy', 'reason': 'DAS server is busy',
+                         'ctime': 0})
+            return self.datastream(dict(head=head, data=data))
+        if  pid:
             if  self.taskmgr.is_alive(pid):
                 return pid
             else: # process is done, get data
@@ -624,7 +647,8 @@ class DASWebService(DASWebManager):
                     del self._requests[pid]
                 except:
                     pass
-                return self.datastream(kwargs)
+                head, data = self.get_data(kwargs)
+                return self.datastream(dict(head=head, data=data))
         else:
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
             self._requests[pid] = kwargs
@@ -659,6 +683,8 @@ class DASWebService(DASWebManager):
         time0   = time.time()
         uinput  = getarg(kwargs, 'input', '').strip()
         self.logdb(uinput)
+        if  self.busy():
+            return self.busy_page(uinput)
         form    = self.form(input=uinput)
         view    = kwargs.get('view', 'list')
         check, content = self.check_input(uinput)

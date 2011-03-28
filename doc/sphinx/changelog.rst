@@ -9,6 +9,9 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.2
 
+  - das config supports new parameters queue_limit, number_of_workers)
+  - add server busy feature (check queue size vs nworkers, reject requests above
+    threashold), ticket #1315
   - show results of agg. functions for key.size in human readable format, e.g. GB
   - simplify DASCacheMgr
   - fix unique filter #1290
