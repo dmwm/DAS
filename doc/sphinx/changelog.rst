@@ -7,6 +7,15 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.6.3
+
+  - adjust das configuration to use single server (remove cache_server bits)
+  - switch to single server, ticket #1125
+
+    - remove web/das_web.py, web/das_cache.py
+
+  - switch to MongoDB 1.8.0
+
 - 0.6.2
 
   - das config supports new parameters queue_limit, number_of_workers)

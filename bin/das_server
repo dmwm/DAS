@@ -1,57 +1,48 @@
 #!/bin/bash
 
-#for dasenv in DAS_PYTHONPATH DAS_TMPLPATH DAS_JSPATH DAS_IMAGESPATH DAS_CSSPATH; do
-#   if [ -z `env | grep $dasenv` ]; then
-#       echo "The environment variable $dasenv must be set"
-#       exit 1
-#   fi
-#done
-
 # find out where DAS is installed on a system
 dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 
 
-usage="Usage: das_server <web|cache> {start|stop|status|restart|stdout}"
-if [ $# != 2 ]; then
+usage="Usage: das_server {start|stop|status|restart|stdout}"
+if [ $# != 1 ]; then
     echo $usage
     exit 1
 fi
 
-server="$1"
-
 # run actual script
-cmd="python $dasroot/web/das_server.py --server=$server"
+cmd="python $dasroot/web/das_server.py"
 
 RETVAL=$?
 
-pid=`ps auxwww | grep das_server.py | grep "server=$server" | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
 
 function das_server_status()
 {
-    pid=`ps auxwww | grep das_server.py | grep "server=$server" | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+    pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
     if [ ! -z "${pid}" ]; then
-        echo $"DAS $server is running, pid=${pid}"
+        echo $"DAS web server is running, pid=${pid}"
         ps -f -wwww -p ${pid}
     else
-        echo $"DAS $server is not running"
+        echo $"DAS web server is not running"
     fi
 }
 
-case "$2" in
+case "$1" in
  stdout)
-        echo $"Checking for existing DAS $server..."
+        echo $"Checking for existing DAS web server..."
         if [ ! -z "${pid}" ]; then
           kill -9 ${pid}
         fi
-        echo $"Restart DAS $server..."
+        echo $"Restart DAS web server..."
         ${cmd}
         ;;
  restart)
-        echo $"Checking for existing DAS $server..."
+        echo $"Checking for existing DAS web server..."
         if [ ! -z "${pid}" ]; then
           kill -9 ${pid}
         fi
-        echo $"Restart DAS $server..."
+        echo $"Restart DAS web server..."
         nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
         das_server_status
         ;;
@@ -59,7 +50,7 @@ case "$2" in
         if [ ! -z "${pid}" ]; then
           kill -9 ${pid}
         fi
-        echo $"Start DAS $server..."
+        echo $"Start DAS web server..."
         nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
         das_server_status
         ;;

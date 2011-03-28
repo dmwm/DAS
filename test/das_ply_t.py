@@ -148,7 +148,7 @@ class testDASPLY(unittest.TestCase):
         query = "dataset file=/a/b run between [1,2] | grep file.name, file.age | unique | sum(file.size),max(file.size)"
         mongo = {'fields': ['dataset'], 'spec': 
                         {'run': {'$lte': 2, '$gte': 1}, 'file': '/a/b'}, 
-                 'filters': ['file.name', 'file.age'],
+                 'filters': ['file.name', 'file.age', 'unique'],
                  'aggregators': [('sum', 'file.size'), ('max', 'file.size')]}
         self.queries[query] = mongo
         

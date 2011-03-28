@@ -52,6 +52,7 @@ class testDASAnalytics(unittest.TestCase):
         self.mgr.add_api('phedex', query, phedex_api, phedex_params)
 
         res = self.mgr.list_systems()
+        res.sort()
         self.assertEqual(['dbs', 'phedex'], res)
 
         res = self.mgr.list_apis('dbs')

@@ -42,24 +42,12 @@ DASOption('dasdb', 'cachecollection', 'string', 'cache'),
 DASOption('dasdb', 'mergecollection', 'string', 'merge'),
 DASOption('dasdb', 'mrcollection', 'string', 'mapreduce'),
 
-DASOption('cache_server', 'port', 'int', 8211),
-DASOption('cache_server', 'host', 'string', '0.0.0.0'),
-DASOption('cache_server', 'thread_pool', 'int', 30),
-DASOption('cache_server', 'log_screen', 'bool', True),
-DASOption('cache_server', 'queue_limit', 'int', 100),
-DASOption('cache_server', 'socket_queue_size', 'int', 100),
-DASOption('cache_server', 'n_worker_threads', 'int', 4),
-DASOption('cache_server', 'logfile', 'string', '/tmp/das_cache.log'),
-DASOption('cache_server', 'loglevel', 'int', 0),
-DASOption('cache_server', 'clean_interval', 'int', 60),
-
 DASOption('web_server', 'host', 'string', '0.0.0.0'),
 DASOption('web_server', 'port', 'int', 8212),
 DASOption('web_server', 'thread_pool', 'int', 30),
 DASOption('web_server', 'log_screen', 'bool', True),
 DASOption('web_server', 'socket_queue_size', 'int', 100),
 DASOption('web_server', 'url_base', 'string', '/das'),
-DASOption('web_server', 'cache_server_url', 'string', 'http://localhost:8211'),
 DASOption('web_server', 'logfile', 'string', '/tmp/das_web.log'),
 DASOption('web_server', 'loglevel', 'int', 0),
 DASOption('web_server', 'status_update', 'int', 3000),
@@ -159,7 +147,7 @@ def das_readconfig_helper():
     try:
         configdict = read_wmcore(dasconfig)
     except Exception, exp:
-        print 'Unable to read DAS CMS configuration,', str(exp)
+        print 'Unable to read DAS CMS configuration, err="%s"' % str(exp)
         try:
             configdict = read_configparser(dasconfig)
         except Exception, exp:
