@@ -57,5 +57,6 @@ das2api : [
 ---
 notations : [
     {"notation":"run", "map":"run_number", "api":"reco_config"},
+    {"notation":"run", "map":"run_number", "api":"runsbyrecostatus"},
     {"notation":"run_id", "map":"run_number", "api":""},
 ]

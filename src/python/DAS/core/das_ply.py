@@ -253,6 +253,7 @@ class DASPLY(object):
 
     def p_opvalue(self, p):
         """keyop : DASKEY EQUAL VALUE
+                 | DASKEY EQUAL DASKEY_ATTR
                  | SPECIALKEY EQUAL VALUE"""
         p[0] = ('keyop', p[1], p[2], p[3])
 
