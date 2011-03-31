@@ -1,0 +1,23 @@
+# conddb API mapping to DAS
+system : conddb
+format : JSON
+---
+urn: "getLumi"
+url : "http://cms-conddb.cern.ch/getLumi"
+expire : 3600
+params : {
+    "runList":"",
+    "date": "optional",
+}
+daskeys : [
+    {"key":"run","map":"run.run_number","pattern":""},
+    {"key":"date","map":"date","pattern":""},
+]
+das2api: [
+    {"das_key":"run.run_number", "api_param": "runList", "pattern":""},
+]
+---
+notations : [
+    {"notation":"Run-Info", "map":"run_info", "api":""},
+    {"notation":"Run", "map":"run_number", "api":""},
+]
