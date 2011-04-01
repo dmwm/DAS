@@ -17,9 +17,8 @@ def convert_datetime(sec):
     time format: dd-Mon-yy-HH:MM
     """
     value = str(sec)
-    # FIXME I need to convert YYYYMMDD to date format used by CondDB
-    if  len(value) == 8: # we got YYYYMMDD
-        return "%s-%s-%s" % (value[:4], value[4:6], value[6:8])
+    if  len(value) == 8 and value[:2] == "20": # we got YYYYMMDD
+        return time.strftime("%d-%b-%y-%H:%M", time.strptime(value, "%Y%M%d"))
     return time.strftime("%d-%b-%y-%H:%M", time.gmtime(sec))
 
 class CondDBService(DASAbstractService):
@@ -45,3 +44,7 @@ class CondDBService(DASAbstractService):
                     value = [value, value + 24*60*60]
                 kwds['startTime'] = convert_datetime(value[0])
                 kwds['endTime'] = convert_datetime(value[1])
+            elif kwds.has_key('runList'):
+                val = kwds['runList']
+                if  isinstance(val, dict): # we got a run range
+                    kwds['runList'] = '%s-%s' % (val['$gte'], val['$lte'])
