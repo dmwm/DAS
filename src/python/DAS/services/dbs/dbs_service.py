@@ -14,6 +14,14 @@ from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import dbsql_opt_map, convert_datetime
 
+def convert_dot(row, key, attrs):
+    """Convert dot notation key.attr into storage one"""
+    for attr in attrs:
+        if  row.has_key(key) and row[key].has_key(attr):
+            name = attr.split('.')[-1]
+            row[key][name] = row[key][attr]
+            del row[key][attr]
+
 class DBSService(DASAbstractService):
     """
     Helper class to provide DBS service
@@ -50,6 +58,21 @@ class DBSService(DASAbstractService):
                     kwds['processed_datatset_name_pattern'] = pat.split('/')[2]
                 except:
                     pass
+        if  api == 'fakeRelease4Dataset':
+            val = kwds['dataset']
+            if  val != 'required':
+                kwds['query'] = 'find release where dataset=%s' % val
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('dataset')
+        if  api == 'fakeConfig':
+            val = kwds['dataset']
+            sel = 'config.name, config.content, config.version, config.type, config.annotation, config.createdate, config.createby, config.moddate, config.modby'
+            if  val != 'required':
+                kwds['query'] = 'find %s where dataset=%s' % (sel, val)
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('dataset')
         if  api == 'fakeListDataset4File':
             val = kwds['file']
             if  val != 'required':
@@ -229,6 +252,10 @@ class DBSService(DASAbstractService):
             prim_key = 'algorithm'
         elif api == 'listRuns':
             prim_key = 'run'
+        elif  api == 'fakeRelease4Dataset':
+            prim_key = 'release'
+        elif  api == 'fakeConfig':
+            prim_key = 'config'
         elif  api == 'fakeListDataset4File':
             prim_key = 'dataset'
         elif  api == 'fakeListDatasetbyDate':
@@ -283,4 +310,11 @@ class DBSService(DASAbstractService):
             if  row.has_key('run') and row['run'].has_key('run'):
                 row['run']['run_number'] = row['run']['run']
                 del row['run']['run']
+            if  row.has_key('release') and row['release'].has_key('release'):
+                row['release']['name'] = row['release']['release']
+                del row['release']['release']
+            attrs = ['config.name', 'config.content', 'config.version',\
+                     'config.type', 'config.annotation', 'config.createdate',\
+                     'config.createby', 'config.moddate', 'config.modby']
+            convert_dot(row, 'config', attrs)
             yield row

@@ -120,7 +120,7 @@ params : {
         "dataset":"required",
 }
 daskeys : [
-        {"key": "config", "map":"config", "pattern":""},
+        {"key": "config", "map":"config.name", "pattern":""},
         {"key": "dataset", "map":"dataset.name", "pattern":""},
 ]
 das2api : [

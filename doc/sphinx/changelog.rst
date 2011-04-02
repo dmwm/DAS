@@ -9,6 +9,10 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.3
 
+  - add links to Release, Children, Parents, Configs into dataset record info
+  - add support to look-up release for a given dataset
+  - add support to look-up cofiguration files for given dataset
+  - add fakeConfig, fakeRelease4Dataset APIs in DBS2
   - add support for CondDB
   - add hyperlinks to DAS record content (support only name, se, run_number), ticket #1313
   - adjust das configuration to use single server (remove cache_server bits)
