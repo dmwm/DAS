@@ -9,6 +9,8 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.3
 
+  - allow to use pattern in filters, e.g. block.replica.site=*T1*
+  - add filters values into short record view
   - add links to Release, Children, Parents, Configs into dataset record info
   - add support to look-up release for a given dataset
   - add support to look-up cofiguration files for given dataset

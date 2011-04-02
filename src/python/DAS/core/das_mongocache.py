@@ -566,7 +566,10 @@ class DASMongocache(object):
             # we got {'_id': {'$in': [ObjectId('4b912ee7e2194e35b8000010')]}}
             strquery = ""
         else:
-            strquery = json.dumps(query)
+            try:
+                strquery = json.dumps(query)
+            except: # we got filter conditions (pattern) which is not serializable
+                strquery = ""
         if  query.has_key('spec') and query['spec'].has_key('date'):
             if isinstance(query['spec']['date'], dict)\
                 and query['spec']['date'].has_key('$lte') \

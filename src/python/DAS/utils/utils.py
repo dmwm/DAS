@@ -11,6 +11,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
+import re
 import time
 from   types import GeneratorType, InstanceType
 import hashlib
@@ -63,6 +64,9 @@ def parse_filter(spec, filter):
             val = int(val)
         if  float_number_pattern.match(str(val)):
             val = float(val)
+        if  isinstance(val, str) or isinstance(val, unicode):
+            if  val.find('*') != -1:
+                val = re.compile('%s' % val.replace('*', '.*'))
         return {key:val}
     elif  filter.find('<=') != -1:
         key, val = filter.split('<=')

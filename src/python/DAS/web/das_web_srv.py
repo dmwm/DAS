@@ -92,6 +92,15 @@ def make_links(links, value):
             url = """<a href="%s">%s</a>""" % (quote(url), key)
             yield (key, val, url)
 
+def add_filter_values(row, filters):
+    """Add filter values for a given row"""
+    page = ''
+    if filters:
+        for filter in filters:
+            val   = DotDict(row)._get(filter)
+            page += "<b>%s:</b> %s<br />" % (filter, val)
+    return page
+
 def adjust_values(func, gen):
     """
     Helper function to adjust values in UI.
@@ -798,6 +807,7 @@ class DASWebService(DASWebManager):
         limit   = getarg(kwargs, 'limit', 10)
         show    = getarg(kwargs, 'show', 'json')
         query   = getarg(kwargs, 'query', {})
+        filters = query.get('filters')
         page    = ''
         if  total > 0:
             params = {} # will keep everything except idx/limit
@@ -828,6 +838,7 @@ class DASWebService(DASWebManager):
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
                 page += adjust_values(func, gen)
+                page += add_filter_values(row, filters)
             pad   = ""
             try:
                 systems = self.systems(row['das']['system'])

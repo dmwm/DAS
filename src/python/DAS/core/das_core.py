@@ -458,14 +458,15 @@ class DASCore(object):
                 if  filter == 'unique':
                     unique = True
                     continue
-                if  filter.find('=') != -1:
-                    key, val = filter.split('=')
-                    query['spec'][key.strip()] = val.strip()
-                else:
-                    if  filter not in fields:
-                        if  filter.find('=') == -1 and filter.find('<') == -1\
-                        and filter.find('>') == -1:
-                            new_fields.append(filter)
+                for oper in ['>', '<', '=']:
+                    if  filter.find(oper) != -1:
+                        fname = filter.split(oper)[0]
+                        if  fname not in fields and fname not in new_fields:
+                            new_fields.append(fname)
+                if  filter not in fields and filter not in new_fields:
+                    if  filter.find('=') == -1 and filter.find('<') == -1\
+                    and filter.find('>') == -1:
+                        new_fields.append(filter)
             if  new_fields:
                 query['fields'] = new_fields
             else:
