@@ -123,7 +123,12 @@ def adjust_values(func, gen):
             rdict[uikey] = val
     page = ""
     links = {}
-    for key, val in rdict.items():
+    keys = rdict.keys()
+    if  keys:
+        keys.sort()
+#    for key, val in rdict.items():
+    for key in keys:
+        val = rdict[key]
         lookup = func(key)
         if  lookup:
             daskey, _, link = lookup
@@ -837,8 +842,8 @@ class DASWebService(DASWebManager):
             gen   = self.convert2ui(row)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
-                page += adjust_values(func, gen)
                 page += add_filter_values(row, filters)
+                page += adjust_values(func, gen)
             pad   = ""
             try:
                 systems = self.systems(row['das']['system'])

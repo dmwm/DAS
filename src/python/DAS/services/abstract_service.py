@@ -429,7 +429,9 @@ class DASAbstractService(object):
             # check for primary key existance, since it can be overriden
             # by row2das. For example DBS3 uses flat namespace, so we
             # override dataset=>name, while dataset still is a primary key
-            if  row.has_key(prim_key):
+            if  isinstance(row, list):
+                yield {prim_key:row}
+            elif  row.has_key(prim_key):
                 yield row
             else:
                 yield {prim_key:row}

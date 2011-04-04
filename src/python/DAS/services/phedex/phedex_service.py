@@ -9,7 +9,7 @@ __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, xml_parser
+from DAS.utils.utils import map_validator, xml_parser, DotDict
 import types
 import DAS.utils.jsonwrapper as json
 
@@ -42,6 +42,12 @@ class PhedexService(DASAbstractService):
         elif api == 'fileReplicas':
             prim_key = 'file'
             tags = 'block.name'
+        elif api == 'site4dataset':
+            prim_key = 'block'
+            tags = 'block.replica.node'
+        elif api == 'site4block':
+            prim_key = 'block'
+            tags = 'block.replica.node'
         elif api == 'nodes':
             prim_key = 'node'
         elif api == 'nodeusage':
@@ -57,5 +63,16 @@ class PhedexService(DASAbstractService):
                 % (self.name, api)
             raise Exception(msg)
         gen = xml_parser(source, prim_key, tags)
+        site_names = []
         for row in gen:
-            yield row
+            if  api == 'site4dataset' or api == 'site4block':
+                site = DotDict(row)._get('block.replica.node')
+                se_name = DotDict(row)._get('block.replica.se')
+                result = {'name': site, 'se': se_name}
+                if  result not in site_names:
+                    site_names.append(result)
+            else:
+                yield row
+        if  api == 'site4dataset' or api == 'site4block':
+            yield site_names
+        del site_names
