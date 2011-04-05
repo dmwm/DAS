@@ -104,6 +104,14 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('run')
+        if  api == 'fakeGroup4Dataset':
+            val = kwds['dataset']
+            if  val != 'required':
+                val = "dataset = %s" % val
+                kwds['query'] = "find phygrp where %s" % val
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('dataset')
         if  api == 'fakeChild4File':
             val = kwds['file']
             if  val != 'required':
@@ -170,7 +178,9 @@ class DBSService(DASAbstractService):
                     value += ' and release=%s' % val
                 if  key == 'tier' and val:
                     value += ' and tier=%s' % val
-            for key in ['dataset', 'release', 'primary_dataset', 'tier']:
+                if  key == 'phygrp' and val:
+                    value += ' and phygrp=%s' % val
+            for key in ['dataset', 'release', 'primary_dataset', 'tier', 'phygrp']:
                 try:
                     del kwds[key]
                 except:
@@ -254,6 +264,8 @@ class DBSService(DASAbstractService):
             prim_key = 'run'
         elif  api == 'fakeRelease4Dataset':
             prim_key = 'release'
+        elif  api == 'fakeGroup4Dataset':
+            prim_key = 'group'
         elif  api == 'fakeConfig':
             prim_key = 'config'
         elif  api == 'fakeListDataset4File':

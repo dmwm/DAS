@@ -62,6 +62,21 @@ das2api : [
     {"das_key":"date", "api_param":"date", "pattern":""},
 ]
 ---
+urn : fakeGroup4Dataset
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9",
+     "query":"required", "dataset":""
+}
+daskeys : [
+    {"key":"group", "map":"group.name", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+]
+---
 urn : listPrimaryDatasets
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
@@ -82,19 +97,22 @@ url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
      "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"required",
-     "dataset":"", "primary_dataset":"", "release":"", "tier":""
+     "dataset":"", "primary_dataset":"", "release":"", "tier":"", 
+     "phygrp":""
 }
 daskeys : [
     {"key":"dataset", "map":"dataset.name", "pattern":""},
     {"key":"primary_dataset", "map":"primary_dataset.name", "pattern":""},
     {"key":"release", "map":"release.name", "pattern":"CMSSW_.*"},
     {"key":"tier", "map":"tier.name", "pattern":".*[A-Z].*"},
+    {"key":"group", "map":"group.name", "pattern":""},
 ]
 das2api : [
     {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
     {"das_key":"primary_dataset.name", "api_param":"primary_dataset", "pattern":""},
     {"das_key":"release.name", "api_param":"release", "pattern":"CMSSW_.*"},
     {"das_key":"tier.name", "api_param":"tier", "pattern":".*[A-Z].*"},
+    {"das_key":"group.name", "api_param":"phygrp", "pattern":""},
 ]
 ---
 urn : listDatasetSummary
@@ -431,4 +449,5 @@ notations : [
     {"notation":"file.moddate", "map":"modification_time", "api":""},
     {"notation":"file.createby", "map":"create_by", "api":""},
     {"notation":"file.modby", "map":"mod_by", "api":""},
+    {"notation":"phygrp", "map":"name", "api":""},
 ]

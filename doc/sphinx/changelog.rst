@@ -9,6 +9,7 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.3
 
+  - add physics group to DBS2 queries
   - add support to look-up of sites for a given dataset/block
   - allow to use pattern in filters, e.g. block.replica.site=*T1*
   - add filters values into short record view

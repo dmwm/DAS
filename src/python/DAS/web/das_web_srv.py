@@ -97,8 +97,9 @@ def add_filter_values(row, filters):
     page = ''
     if filters:
         for filter in filters:
-            val   = DotDict(row)._get(filter)
-            page += "<b>%s:</b> %s<br />" % (filter, val)
+            if  filter.find('<') == -1 and filter.find('>') == -1:
+                val   = DotDict(row)._get(filter)
+                page += "<b>%s:</b> %s<br />" % (filter, val)
     return page
 
 def adjust_values(func, gen):
