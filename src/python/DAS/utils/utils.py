@@ -298,6 +298,26 @@ class dict_of_none (dict):
         """Assign missing key to None"""
         return None
 
+def yield_obj(rdict, ckey):
+    """
+    Helper function for DotDict class.
+    For a given dict and compound key (a.b.c) extract and yield next key
+    and object(s) for the first key of the provided compound key. 
+    """
+    keys = ckey.split('.')
+    key  = keys[0]
+    if  len(keys) > 1:
+        next = '.'.join(keys[1:])
+    else:
+        next = None
+    if  rdict.has_key(key):
+        obj = rdict[key]
+        if  isinstance(obj, list) or isinstance(obj, GeneratorType):
+            for item in obj:
+                yield next, item
+        else:
+            yield next, obj
+
 class DotDict(dict):
     """
     Access python dictionaries via dot notations, original code taken from
@@ -378,6 +398,26 @@ class DotDict(dict):
             if  key != keys[-1]:
                 obj  = obj[key]
         obj[key] = value
+
+    def get_values(self, ckey):
+        """
+        Generator which yields values for any compound key. It works
+        up to three level deep in DotDict structure.
+        """
+        for next, item in yield_obj(self, ckey):
+            if  isinstance(item, dict):
+                for final, elem in yield_obj(item, next):
+                    if  isinstance(elem, dict) and elem.has_key(final):
+                        yield elem[final]
+                    else:
+                        yield elem
+            elif isinstance(item, list) or isinstance(item, GeneratorType):
+                for final, elem in item:
+                    for last, att in yield_obj(elem, final):
+                        if  isinstance(att, dict) and att.has_key(last):
+                            yield att[last]
+                        else:
+                            yield att
 
 def dict_type(obj):
     """

@@ -290,6 +290,24 @@ class testUtils(unittest.TestCase):
         result = ddict._get('a.b')
         self.assertEqual(expect, result)
 
+    def test_DotDict_values(self):
+        """Test DotDict class"""
+        res = {'a':[{'b':1, 'c':1}, {'c':2}]}
+        ddict = DotDict(res)
+        expect = [1]
+        result = [r for r in ddict.get_values('a.b')]
+        self.assertEqual(expect, result)
+        
+        expect = [1,2]
+        result = [r for r in ddict.get_values('a.c')]
+        self.assertEqual(expect, result)
+        
+        res = {'a':[{'b': [{'c':2}, {'c':3}]}, {'b': [{'c':4}, {'c':5}]}]}
+        ddict = DotDict(res)
+        expect = [2,3,4,5]
+        result = [r for r in ddict.get_values('a.b.c')]
+        self.assertEqual(expect, result)
+        
     def test_merge_dict(self):
         """Test merge_dict"""
         dict1  = {'block':{'name':'AAA', 'b':{'c':1}, 'size':2}, 'das':{'system':'dbs'}}

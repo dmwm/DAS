@@ -98,7 +98,8 @@ def add_filter_values(row, filters):
     if filters:
         for filter in filters:
             if  filter.find('<') == -1 and filter.find('>') == -1:
-                val   = DotDict(row)._get(filter)
+                values = set([str(r) for r in DotDict(row).get_values(filter)])
+                val = ', '.join(values)
                 page += "<b>%s:</b> %s<br />" % (filter, val)
     return page
 
@@ -968,16 +969,47 @@ class DASWebService(DASWebManager):
         return page
 
     @exposetext
-    def filterview(self, kwargs):
+    def filterview(self, head, data):
         """
         provide DAS plain view for queries with filters
         """
-        self.check_request4view(kwargs)
+        query   = head['args']['query']
+        fields  = query.get('fields', None)
+        filters = query.get('filters', None)
         results = ""
-        for record in self.records4filter(kwargs):
-            for val in record.values():
-                results += val
-            results += '\n'
+        for row in data:
+            if  filters:
+                record = {}
+                for filter in filters:
+                    if  filter.find('=') != -1 or filter.find('>') != -1 or \
+                        filter.find('<') != -1:
+                        continue
+                    try:
+                        for obj in DotDict(row).get_values(filter):
+                            results += str(obj) + '\n'
+                    except:
+                        pass
+                results += '\n'
+            else:
+                for item in fields:
+                    systems = self.dasmgr.systems
+                    mapkey  = self.dasmapping.find_mapkey(systems[0], item)
+                    try:
+                        if  not mapkey:
+                            mapkey = '%s.name' % item
+                        key, att = mapkey.split('.')
+                        if  row.has_key(key):
+                            val = row[key]
+                            if  isinstance(val, dict):
+                                results += val.get(att, '')
+                            elif isinstance(val, list):
+                                for item in val:
+                                    results += item.get(att, '')
+                                    results += '\n'
+                    except:
+                        pass
+                results += '\n'
+
         return results
 
     @exposedasplist
