@@ -90,7 +90,7 @@ def make_links(links, value):
             else:
                 key = val
             url = """<a href="%s">%s</a>""" % (quote(url), key)
-            yield (key, val, url)
+            yield url
 
 def add_filter_values(row, filters):
     """Add filter values for a given row"""
@@ -100,10 +100,10 @@ def add_filter_values(row, filters):
             if  filter.find('<') == -1 and filter.find('>') == -1:
                 values = set([str(r) for r in DotDict(row).get_values(filter)])
                 val = ', '.join(values)
-                page += "<b>%s:</b> %s<br />" % (filter, val)
+                page += "Filter <b>%s:</b> %s<br />" % (filter, val)
     return page
 
-def adjust_values(func, gen):
+def adjust_values(func, gen, links):
     """
     Helper function to adjust values in UI.
     It groups values for identical key, make links for provided mapped function,
@@ -124,30 +124,12 @@ def adjust_values(func, gen):
         else:
             rdict[uikey] = val
     page = ""
-    links = {}
-    keys = rdict.keys()
-    if  keys:
-        keys.sort()
-#    for key, val in rdict.items():
-    for key in keys:
-        val = rdict[key]
+    to_show = []
+    for key, val in rdict.items():
         lookup = func(key)
         if  lookup:
-            daskey, _, link = lookup
-            if  daskey and link:
-                value = val
-                for kkk, vvv, lll in make_links(link, val):
-                    if  not links.has_key(kkk):
-                        links[kkk] = [(daskey, vvv, lll)]
-                    else:
-                        existing   = links[kkk]
-                        links[kkk] = existing + [(daskey, vvv, lll)]
-
-            elif  isinstance(val, list):
-                if  isinstance(val[0], str) or isinstance(val[0], unicode):
-                    value = ', '.join(val)
-                else:
-                    value = val
+            if  isinstance(val, list):
+                value = ', '.join([str(v) for v in val])
             elif  key.lower().find('size') != -1 and val:
                 value = size_format(val)
             elif  key.find('Number of ') != -1 and val:
@@ -158,7 +140,7 @@ def adjust_values(func, gen):
                 value = val
             if  isinstance(value, list) and isinstance(value[0], str):
                 value = ', '.join(value)
-            page += "<b>%s:</b> %s<br />" % (key, value)
+            to_show.append((key, value))
         else:
             if  key == 'result' and isinstance(val, dict) and \
                 val.has_key('value'): # result of aggregation function
@@ -169,23 +151,10 @@ def adjust_values(func, gen):
                     val = '%.2f' % val['value']
                 else:
                     val = val['value']
-            page += "<b>%s:</b> %s<br />" % (key, val)
+            to_show.append((key, val))
+    page += ', '.join(["%s: %s" % (k, v) for k, v in to_show])
     if  links:
-        page += "<b>Links:</b> "
-        link_page = ""
-        for key, val in links.items():
-            if  len(val) == 1:
-                _, _, link = val[0]
-                if  link_page:
-                    link_page += ', '
-                link_page += link
-            else:
-                for item in val:
-                    daskey, value, link = item
-                    if  link_page:
-                        link_page += ', '
-                    link_page += "%s (%s=%s)" % (link, daskey, value)
-        page += link_page + '<br />'
+        page += '<br />' + links
     return page
 
 def das_json(record, pad=''):
@@ -570,7 +539,7 @@ class DASWebService(DASWebManager):
         except:
             return self.error(self.gen_error_msg(kwargs))
 
-    def convert2ui(self, idict):
+    def convert2ui(self, idict, not2show=None):
         """
         Convert input row (dict) into UI presentation
         """
@@ -580,6 +549,8 @@ class DASWebService(DASWebManager):
             for item in self.dasmapping.presentation(key):
                 try:
                     daskey = item['das']
+                    if  not2show and not2show == daskey:
+                        continue
                     uikey  = item['ui']
                     for value in access(idict, daskey):
                         yield uikey, value
@@ -839,15 +810,32 @@ class DASWebService(DASWebManager):
         for row in data:
             id    = row['_id']
             page += '<div class="%s"><hr class="line" />' % style
+            links = ""
+            pkey  = None
             if  row.has_key('das'):
                 if  row['das'].has_key('primary_key'):
-                    pkey  = row['das']['primary_key']
-                    page += '<b>DAS key:</b> %s<br />' % pkey.split('.')[0]
-            gen   = self.convert2ui(row)
+                    pkey    = row['das']['primary_key']
+                    lkey    = pkey.split('.')[0]
+                    pval    = DotDict(row)._get(pkey)
+                    if  pkey == 'run.run_number':
+                        pval = int(pval)
+#                    page   += '<b>%s</b>: %s<br />' % (lkey.capitalize(), pval)
+                    ifield  = urllib.urlencode({'input':'%s=%s' % (lkey, pval)})
+                    page   += '<b>%s</b>: <a href="/das/request?%s">%s</a><br/>'\
+                                % (lkey.capitalize(), ifield, pval)
+                    plist   = self.dasmgr.mapping.presentation(lkey)
+                    linkrec = None
+                    for item in plist:
+                        if  item.has_key('link'):
+                            linkrec = item['link']
+                            break
+                    if  linkrec:
+                        links = ', '.join(make_links(linkrec, pval))
+            gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
                 page += add_filter_values(row, filters)
-                page += adjust_values(func, gen)
+                page += adjust_values(func, gen, links)
             pad   = ""
             try:
                 systems = self.systems(row['das']['system'])
