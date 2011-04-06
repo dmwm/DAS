@@ -207,6 +207,58 @@ class testDASMongocache(unittest.TestCase):
         result = compare_specs(input_query, exist_query)
         self.assertEqual(True, result)
 
+        query1 = {'spec':{'dataset.name':'*Run201*RECO'}}
+        query2 = {'spec':{'dataset.name':'*Run2011*RECO'}}
+        query3 = {'spec':{'dataset.name':'*Run20*RECO'}}
+        query4 = {'spec':{'dataset.name':'*Cosmics*Run20*RECO'}}
+        query5 = {'spec':{'dataset.name':'*Run2011*PromptReco*RECO'}}
+
+        result = compare_specs(query2, query1)
+        self.assertEqual(True, result)
+
+        result = compare_specs(query1, query3)
+        self.assertEqual(True, result)
+
+        result = compare_specs(query2, query3)
+        self.assertEqual(True, result)
+
+        result = compare_specs(query4, query3)
+        self.assertEqual(True, result)
+
+        result = compare_specs(query4, query1)
+        self.assertEqual(False, result)
+
+        result = compare_specs(query5, query2)
+        self.assertEqual(True, result)
+
+        query2 = {'spec':{'dataset.name':'*Run2011*RECO'}}
+        query3 = {'spec':{'dataset.name':'*Run20*RECO*'}}
+        query5 = {'spec':{'dataset.name':'*Run2011*PromptReco*RECO*'}}
+
+        result = compare_specs(query5, query2)
+        self.assertEqual(False, result)
+
+        result = compare_specs(query5, query3)
+        self.assertEqual(True, result)
+
+        query6 = {'spec':{'dataset.name':'Run*RECO*RECO'}}
+        query7 = {'spec':{'dataset.name':'Run*RECO1*RECO2'}}
+
+        result = compare_specs(query7, query6)
+        self.assertEqual(False, result)
+
+        query8 = {'spec':{'dataset.name':'Run*0RECO*0RECO'}}
+        query9 = {'spec':{'dataset.name':'Run*RECO*RECO*End'}}
+        query10 = {'spec':{'dataset.name':'Run*1RECO*2RECO*3End'}}
+
+        result = compare_specs(query8, query6)
+        self.assertEqual(True, result)
+
+        result = compare_specs(query10, query9)
+        self.assertEqual(True, result)
+
+
+
     def test_convert2pattern(self):
         """
         Test how we convert mongo dict with patterns into spec

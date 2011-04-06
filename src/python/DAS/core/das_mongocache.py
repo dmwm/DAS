@@ -204,6 +204,86 @@ def compare_dicts(input_dict, exist_dict):
             return False
     return True
 
+def compare_str(query1, query2):
+    """
+    Function to compare string from specs of query.
+    Return True if query2 is supperset of query1.
+    query1&query2 is the string in the pattern ([a-zA-Z0-9_\-\#/*\.])*
+    * is the sign indicates that a sub string of * ([a-zA-Z0-9_\-\#/*\.])*
+
+    case 1. if query2 is flat query(w/out *) then query1 must be the
+                same flat one
+    case 2. if query1 is start/end w/ * then query2 must start/end with *
+    case 3. if query2 is start/end w/out * then query1 must start/end
+                with query2[0]/query[-1]
+    case 4. query1&query2 both include *
+        Way to perform a comparision is spliting:
+            query1 into X0*X1*X2*X3
+            query2 into Xa*Xb*Xc
+        foreach X in (Xa, Xb, Xc):
+            case 5. X is '':
+                continue
+                special case:
+                    when X0 & Xa are '' or when X3 & Xc are ''
+                    we already cover it in case 2
+            case 6. X not in query1 then return False
+            case 7. X in query1 begin at index:
+                case 7-1. X is the first X not '' we looked up in query1.(Xa)
+                    last_idx = index ;
+                    continue
+                case 7-2. X is not the first:
+                    try to find the smallest Xb > Xa
+                    if and Only if we could find a sequence:
+                        satisfy Xc > Xb > Xa, otherwise return False
+                        '=' will happen when X0 = Xa
+                        then we could return True
+    """
+    if query2.find('*') == -1:
+        if query1.find('*') != -1:
+            return False
+        elif query1 != query2:
+            return False
+        return True
+    else:
+        if query1.endswith('*') and not query2.endswith('*'):
+            return False
+        if query1.startswith('*') and not query2.startswith('*'):
+            return False
+
+        # last_idx to save where we find last X
+        last_idx = -1
+        dict2 = query2.split('*')
+        if dict2[0] != '' and not query1.startswith(dict2[0]):
+            return False
+        if dict2[-1] != '' and not query1.endswith(dict2[-1]):
+            return False
+        for x_item in dict2:
+            if x_item == '':
+                continue
+            # cur_idx to save where we find cur X
+            cur_idx = query1.find(x_item)
+            if cur_idx == -1:
+                return False
+            else :
+                if last_idx == -1:# first X not ''
+                    last_idx = cur_idx
+                    continue
+                else:
+                    while cur_idx <= last_idx:
+                        mov = query1[cur_idx+1:].find(x_item)
+                        if mov == -1:
+                            break
+                        else:
+                            cur_idx += mov +1
+                    if cur_idx > last_idx:
+                        last_idx = cur_idx
+                        continue
+                    else:# mov != -1 or cur_idx <= last_idx
+                        return False
+        # if reach this then:
+        return True
+
+
 def compare_specs(input_query, exist_query):
     """
     Function to compare set of fields and specs of two input mongo
@@ -243,19 +323,8 @@ def compare_specs(input_query, exist_query):
         val2 = spec2[key]
         if (isinstance(val1, str) or isinstance(val1, unicode)) and \
              (isinstance(val2, str) or isinstance(val2, unicode)):
-            if  val2.find('*') != -1:
-                val1 = val1.replace('*', '')
-                val2 = val2.replace('*', '')
-                if  val1.find(val2) == -1:
-                    return False
-            else:
-                orig = val1
-                val1 = val1.replace('*', '')
-                val2 = val2.replace('*', '')
-                if  val1 != val2:
-                    return False
-                elif orig.find('*') != -1 and val1 == val2:
-                    return False # compare A* with existing A
+             if not compare_str(val1, val2):
+                 return False
         elif  type(val1) != type(val2) and not isinstance(val1, dict)\
             and not isinstance(val2, dict):
             return False
