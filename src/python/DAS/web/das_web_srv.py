@@ -446,7 +446,8 @@ class DASWebService(DASWebManager):
         It uses das_searchform template for
         input form and yui_table for output Table widget.
         """
-        return self.page(self.form())
+        uinput = getarg(kwargs, 'input', '') 
+        return self.page(self.form(input=uinput))
 
     def form(self, input=None):
         """
@@ -728,7 +729,8 @@ class DASWebService(DASWebManager):
                             % self.base
                 page  = img + ' request PID=%s, please wait...' \
                             % pid
-                page += ', <a href="/das/">stop</a> request' 
+                page += ', <a href="/das/?%s">stop</a> request' \
+                        % urllib.urlencode({'input':uinput})
                 page += '<script type="application/javascript">'
                 page += """setTimeout('ajaxCheckPid("%s", "%s", "%s")', %s)""" \
                         % (self.base, pid, self.next, self.next)
