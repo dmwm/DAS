@@ -267,7 +267,8 @@ def compare_specs(input_query, exist_query):
                 return True
             return False
         else:
-            return False
+            if  val1 != val2:
+                return False
     return True
 
 def update_item(item, key, val):

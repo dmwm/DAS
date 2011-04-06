@@ -9,22 +9,10 @@ import time
 import unittest
 from   cherrypy import HTTPError
 from   DAS.web.utils import checkargs
-from   DAS.web.das_web import DAS_WEB_INPUTS
-from   DAS.web.das_expert import DAS_EXPERT_INPUTS
-from   DAS.web.das_cache import DAS_CACHE_INPUTS
+from   DAS.web.das_web_srv import DAS_WEB_INPUTS
 
 @checkargs(DAS_WEB_INPUTS)
 def func_web(*args, **kwds):
-    """Test function"""
-    pass
-
-@checkargs(DAS_EXPERT_INPUTS)
-def func_expert(*args, **kwds):
-    """Test function"""
-    pass
-
-@checkargs(DAS_CACHE_INPUTS)
-def func_cache(*args, **kwds):
     """Test function"""
     pass
 
@@ -42,7 +30,7 @@ class testCheckArgs(unittest.TestCase):
         arg    = [0]
         kwds   = dict(idx='1', limit='1', show='json',
                 input='site=T1', collection='merge',
-                format='xml', sort='true', dir='asc', view='list')
+                format='xml', dir='asc', view='list')
         result = func_web(arg, **kwds)
         expect = None
         self.assertEqual(result, expect)
@@ -71,40 +59,6 @@ class testCheckArgs(unittest.TestCase):
         self.assertRaises(HTTPError, func_web, *arg, **wrong)
         wrong  = {'view':'select'} # wrong value
         self.assertRaises(HTTPError, func_web, *arg, **wrong)
-
-    def test_expert(self):
-        """
-        Test checkargs of DAS expert server
-        supported = ['idx', 'limit', 'collection', 'database', 'query',
-                     'dasquery', 'dbcoll', 'msg']
-        """
-        arg    = [0]
-        kwds   = dict(idx='1', limit='1', query='bla',
-                        collection='merge', database='das',
-                        dasquery='bla', dbcoll='das.cache', msg='bla')
-        result = func_expert(arg, **kwds)
-        expect = None
-        self.assertEqual(result, expect)
-
-        wrong  = {'idx':'sdf'}
-        self.assertRaises(HTTPError, func_expert, *arg, **wrong)
-
-    def test_cache(self):
-        """
-        Test checkargs of DAS cache server
-        supported = ['query', 'idx', 'limit', 'expire', 'method',
-                     'skey', 'order', 'collection']
-        """
-        arg    = [0]
-        expire = str(long(time.time()))
-        kwds   = dict(idx='1', limit='1', query='bla', expire=expire,
-                method='GET', skey='site', order='asc', collection='cache')
-        result = func_cache(arg, **kwds)
-        expect = None
-        self.assertEqual(result, expect)
-
-        wrong  = {'idx':'sdf'}
-        self.assertRaises(HTTPError, func_cache, *arg, **wrong)
 
 #
 # main

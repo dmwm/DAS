@@ -199,6 +199,14 @@ class testDASMongocache(unittest.TestCase):
         result = compare_specs(input_query, exist_query)
         self.assertEqual(True, result)
 
+    def test_str_vs_unicode_compare_specs(self):
+        """Test compare_specs with str/unicode dicts"""
+        # test equivalent queries
+        input_query = {u'fields': [u'zip'], 'spec': {u'zip.code': 10000}, u'filters': [u'zip.Placemark.address']}
+        exist_query = {'fields': ['zip'], 'spec': {'zip.code': 10000}, 'filters': ['zip.Placemark.address']}
+        result = compare_specs(input_query, exist_query)
+        self.assertEqual(True, result)
+
     def test_convert2pattern(self):
         """
         Test how we convert mongo dict with patterns into spec

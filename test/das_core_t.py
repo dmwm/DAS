@@ -53,7 +53,7 @@ class testDASCore(unittest.TestCase):
         result = self.das.call(query)
         result = self.das.get_from_cache(query)
         result = [r for r in result][0]
-        expect = {"function": "count", "result": {"value": 5}, 
+        expect = {"function": "count", "result": {"value": 1}, 
                   "key": "zip.Placemark.address", "_id":0}
         self.assertEqual(expect, result)
 
