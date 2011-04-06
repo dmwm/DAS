@@ -207,6 +207,8 @@ class testDASMongocache(unittest.TestCase):
         result = compare_specs(input_query, exist_query)
         self.assertEqual(True, result)
 
+    def test_compare_specs_with_patterns(self):
+        """Test compare_specs with str/unicode dicts"""
         query1 = {'spec':{'dataset.name':'*Run201*RECO'}}
         query2 = {'spec':{'dataset.name':'*Run2011*RECO'}}
         query3 = {'spec':{'dataset.name':'*Run20*RECO'}}

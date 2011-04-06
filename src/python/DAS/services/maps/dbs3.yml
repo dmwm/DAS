@@ -65,6 +65,7 @@ params : {
         "run_num": "optional",
         "logical_file_name": "optional",
         "acquisition_era_name": "optional",
+        "physics_group_name": "optional",
 }
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
@@ -74,6 +75,7 @@ daskeys : [
         {"key": "run", "map":"run.run_number", "pattern":""},
         {"key": "file", "map":"file.name", "pattern":""},
         {"key": "era", "map":"era", "pattern":""},
+        {"key": "group", "map":"group.name", "pattern":""},
 ]
 das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
@@ -83,6 +85,7 @@ das2api : [
         {"das_key":"run.run_number", "api_param": "run_num", "pattern":""},
         {"das_key":"file.name", "api_param": "logical_file_name", "pattern":""},
         {"das_key":"era", "api_param": "acquisition_era_name", "pattern":""},
+        {"das_key":"group.name", "api_param": "physics_group_name", "pattern":""},
 ]
 ---
 urn: datasetparents
