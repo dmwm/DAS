@@ -624,6 +624,9 @@ class DASAbstractService(object):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
                             found += 1
+                else:
+                    found = 0
+                    break # condition key does not map into API params
             self.adjust_params(api, args)
             if  not found:
                 msg = "--- %s rejects API %s, parameters don't match"\

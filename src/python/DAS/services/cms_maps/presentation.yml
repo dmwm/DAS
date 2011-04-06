@@ -25,6 +25,7 @@ dataset : [
                  {"name":"Parents", "query":"parent dataset=%s"},
                  {"name":"Children", "query":"child dataset=%s"},
                  {"name":"Sites", "query":"site dataset=%s"},
+                 {"name":"Physics Groups", "query":"group dataset=%s"},
                 ]}, 
         {"das":"dataset.nfiles", "ui":"Number of files"}, 
         {"das":"dataset.nblocks", "ui":"Number of blocks"}, 

@@ -42,6 +42,12 @@ class PhedexService(DASAbstractService):
         elif api == 'fileReplicas':
             prim_key = 'file'
             tags = 'block.name'
+        elif api == 'dataset4site':
+            prim_key = 'block'
+            tags = 'block'
+        elif api == 'dataset4se':
+            prim_key = 'block'
+            tags = 'block'
         elif api == 'site4dataset':
             prim_key = 'block'
             tags = 'block.replica.node'
@@ -64,14 +70,21 @@ class PhedexService(DASAbstractService):
             raise Exception(msg)
         gen = xml_parser(source, prim_key, tags)
         site_names = []
+        seen = set()
         for row in gen:
             if  api == 'site4dataset' or api == 'site4block':
                 for replica in row['block']['replica']:
                     result = {'name': replica['node'], 'se': replica['se']}
                     if  result not in site_names:
                         site_names.append(result)
+            elif  api == 'dataset4site' or api == 'dataset4se':
+                dataset = row['block']['name'].split('#')[0]
+                if  dataset not in seen:
+                    seen.add(dataset)
+                    yield {'dataset':{'name':dataset}}
             else:
                 yield row
         if  api == 'site4dataset' or api == 'site4block':
             yield site_names
         del site_names
+        del seen
