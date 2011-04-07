@@ -3,6 +3,11 @@
 # The link key is optional and used by web UI to make a hyperlink
 # for DAS key in question. For instance, we set link to be True
 # for all primary DAS keys, e.g. dataset, block, run, etc.
+#
+# Please note, the order of dicts represents the order of UI fields
+# shown on the web page. For example primary_dataset re-presentation has
+# ui:Primary dataset first, therefore Primary Dataset will show up first
+# on a web page
 presentation: {
 primary_dataset : [
         {"das":"primary_dataset.name", "ui":"Primary dataset", 
@@ -13,8 +18,6 @@ primary_dataset : [
         {"das":"primary_dataset.create_by", "ui":"Created by:"}, 
         ],
 dataset : [
-        {"das":"dataset.error", "ui":"Error"}, 
-        {"das":"dataset.httperror", "ui":"Reason"}, 
         {"das":"dataset.name", "ui":"Dataset", 
          "link":[
                  {"name":"Release", "query":"release dataset=%s"},
@@ -39,10 +42,10 @@ dataset : [
         {"das":"dataset.global_tag", "ui":"Tag"},
         {"das":"dataset.xtcrosssection", "ui":"Cross section"},
         {"das":"dataset.release_version", "ui":"Release"},
+        {"das":"dataset.error", "ui":"Error"}, 
+        {"das":"dataset.httperror", "ui":"Reason"}, 
         ],
 block : [
-        {"das":"block.error", "ui":"Error"}, 
-        {"das":"block.httperror", "ui":"Reason"}, 
         {"das":"block.name", "ui":"Block name",
          "link":[
                 {"name":"Dataset", "query":"dataset block=%s"},
@@ -52,10 +55,11 @@ block : [
         {"das":"block.size", "ui":"Block size"},
         {"das":"block.nevents", "ui":"Number of events"},
         {"das":"block.nfiles", "ui":"Number of files"},
+        {"das":"block.replica.site", "ui":"Site"},
+        {"das":"block.error", "ui":"Error"}, 
+        {"das":"block.httperror", "ui":"Reason"}, 
         ],
 file : [
-        {"das":"file.error", "ui":"Error"}, 
-        {"das":"file.httperror", "ui":"Reason"}, 
         {"das":"file.name", "ui":"File name",
          "link":[
                 {"name": "Dataset", "query": "dataset file=%s"},
@@ -67,6 +71,9 @@ file : [
         {"das":"file.size", "ui":"File size"},
         {"das":"file.type", "ui":"File type"},
         {"das":"file.nevents", "ui":"Number of events"},
+        {"das":"file.replica.site", "ui":"Site"},
+        {"das":"file.error", "ui":"Error"}, 
+        {"das":"file.httperror", "ui":"Reason"}, 
         ],
 run : [
         {"das":"run.run_number", "ui":"Run number",
@@ -75,6 +82,8 @@ run : [
                 {"name":"Files", "query": "file run=%s"},
                 {"name":"Lumis", "query": "lumi run=%s"},
                 ]}, 
+        {"das":"run.nevents", "ui":"Number of events"}, 
+        {"das":"run.nlumis", "ui":"Number of lumis"}, 
         {"das":"run.primary_dataset", "ui":"Primary dataset"}, 
         {"das":"run.datasetName", "ui":"Dataset"}, 
         {"das":"run.global_tag", "ui":"Global tag"}, 
@@ -92,32 +101,30 @@ run_status: [
         {"das":"run.start_time", "ui":"Start time"},
         ],
 lumi : [
-        {"das": "lumi.run_number", "ui": "Run number"},
         {"das": "lumi.lumi", "ui": "Luminosiy number"},
+        {"das": "lumi.run_number", "ui": "Run number"},
         {"das": "lumi.start_event", "ui": "Start event"},
         {"das": "lumi.end_event", "ui": "End event"},
         ],
 tier : [
-        {"das":"tier.error", "ui":"Error"}, 
-        {"das":"tier.httperror", "ui":"Reason"}, 
         {"das":"tier.name", "ui":"Tier name", 
          "link":[
 #                 {"name":"Datasets", "query": "dataset tier=%s"},
                 ]}, 
+        {"das":"tier.error", "ui":"Error"}, 
+        {"das":"tier.httperror", "ui":"Reason"}, 
         ],
 release: [
-        {"das":"release.error", "ui":"Error"}, 
-        {"das":"release.httperror", "ui":"Reason"}, 
         {"das":"release.name", "ui":"Release name",
          "link":[
                  {"name":"Datasets", "query":"dataset release=%s"},
                 ]}, 
         {"das":"release.algorithm.executable", "ui":"Executable"}, 
         {"das":"release.algorithm.name", "ui":"Algorithm name"}, 
+        {"das":"release.error", "ui":"Error"}, 
+        {"das":"release.httperror", "ui":"Reason"}, 
         ],
 site : [
-        {"das":"site.error", "ui":"Error"}, 
-        {"das":"site.httperror", "ui":"Reason"}, 
         {"das":"site.name", "ui":"Site name",
          "link":[
 #                  {"name":"Blocks", "query":"block site=%s"},
@@ -127,6 +134,8 @@ site : [
         {"das":"site.sitename", "ui":"Site"},
         {"das":"site.admin.email", "ui":"Site Admin Email"},
         {"das":"site.admin.title", "ui":"Site Admin Role"},
+        {"das":"site.error", "ui":"Error"}, 
+        {"das":"site.httperror", "ui":"Reason"}, 
         ],
 monitor : [
         {"das":"monitor.node", "ui":"Phedex Node"},
