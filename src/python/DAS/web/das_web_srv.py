@@ -52,7 +52,7 @@ from DAS.web.das_codes import web_code
 
 import DAS.utils.jsonwrapper as json
 
-DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'show', 'collection', 'name', 'dir',
+DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 'instance',
                   'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
 
 RE_DBSQL_0 = re.compile(r"^find")
@@ -152,7 +152,7 @@ def adjust_values(func, gen, links):
                 else:
                     val = val['value']
             to_show.append((key, val))
-    page += ', '.join(["%s: %s" % (k, v) for k, v in to_show])
+    page += ', '.join(["<b>%s</b>: %s" % (k, v) for k, v in to_show])
     if  links:
         page += '<br />' + links
     return page
@@ -338,17 +338,8 @@ class DASWebService(DASWebManager):
         Return DAS mapping record about provided API.
         """
         record = self.dasmgr.mapping.api_info(name)
-        show   = kwargs.get('show', 'json')
         page   = "<b>DAS mapping record</b>"
-        if  show == 'json':
-            page += das_json(record)
-        elif show == 'code':
-            code  = pformat(record, indent=1, width=100)
-            page += self.templatepage('das_json', jsoncode=code)
-        else:
-            code  = yaml.dump(record, width=100, indent=4, 
-                        default_flow_style=False)
-            page += self.templatepage('das_json', jsoncode=code)
+        page  += das_json(record)
         return self.page(page, response_div=False)
 
     @expose
@@ -418,11 +409,12 @@ class DASWebService(DASWebManager):
         uinput = getarg(kwargs, 'input', '') 
         return self.page(self.form(input=uinput))
 
-    def form(self, input=None):
+    def form(self, input=None, instance='cms_dbs_prod_global', view='list'):
         """
         provide input DAS search form
         """
-        page = self.templatepage('das_searchform', input=input, base=self.base)
+        page = self.templatepage('das_searchform', input=input, base=self.base,\
+                instance=instance, view=view)
         return page
 
     def gen_error_msg(self, kwargs):
@@ -499,22 +491,13 @@ class DASWebService(DASWebManager):
             time0    = time.time()
             idx      = getarg(kwargs, 'idx', 0)
             limit    = getarg(kwargs, 'limit', 10)
-            show     = getarg(kwargs, 'show', 'json')
             coll     = getarg(kwargs, 'collection', 'merge')
             nresults = self.dasmgr.rawcache.nresults(query, coll)
             gen      = self.dasmgr.rawcache.get_from_cache\
                 (query, idx=idx, limit=limit, collection=coll, adjust=False)
             if  recordid: # we got id
                 for row in gen:
-                    if  show == 'json':
-                        res += das_json(row)
-                    elif show == 'code':
-                        code  = pformat(row, indent=1, width=100)
-                        res += self.templatepage('das_json', jsoncode=code)
-                    else:
-                        code = yaml.dump(row, width=100, indent=4, 
-                                    default_flow_style=False)
-                        res += self.templatepage('das_json', jsoncode=code)
+                    res += das_json(row)
             else:
                 for row in gen:
                     rid  = row['_id']
@@ -571,8 +554,11 @@ class DASWebService(DASWebManager):
         head   = request_headers()
         head['args'] = kwargs
         uinput = getarg(kwargs, 'input', '') 
+        inst   = kwargs.get('instance', '')
+        if  inst:
+            uinput += ' instance=%s' % inst
         idx    = getarg(kwargs, 'idx', 0)
-        limit  = getarg(kwargs, 'limit', 10)
+        limit  = getarg(kwargs, 'limit', 0) # do not impose limit
         skey   = getarg(kwargs, 'skey', '')
         sdir   = getarg(kwargs, 'dir', 'asc')
         coll   = getarg(kwargs, 'collection', 'merge')
@@ -645,8 +631,11 @@ class DASWebService(DASWebManager):
     def get_page_content(self, kwargs):
         """Retrieve page content for provided set of parameters"""
         try:
-            head, data = self.get_data(kwargs)
             view = kwargs.get('view', 'list')
+            if  view == 'plain':
+                if  kwargs.has_key('limit'):
+                    del kwargs['limit']
+            head, data = self.get_data(kwargs)
             func = getattr(self, view + "view") 
             page = func(head, data)
         except HTTPError, _err:
@@ -670,14 +659,17 @@ class DASWebService(DASWebManager):
 
         time0   = time.time()
         uinput  = getarg(kwargs, 'input', '').strip()
+        inst    = kwargs.get('instance', '')
+        if  inst:
+            uinput += ' instance=%s' % inst
         self.logdb(uinput)
         if  self.busy():
             return self.busy_page(uinput)
-        form    = self.form(input=uinput)
         view    = kwargs.get('view', 'list')
+        form    = self.form(input=uinput, instance=inst, view=view)
         check, content = self.check_input(uinput)
         if  check:
-            if  view == 'list' or view == 'plain':
+            if  view == 'list':
                 return self.page(form + content, ctime=time.time()-time0)
             else:
                 return content
@@ -709,7 +701,7 @@ class DASWebService(DASWebManager):
             else:
                 page = self.get_page_content(kwargs)
         ctime = (time.time()-time0)
-        if  view == 'list' or view == 'plain':
+        if  view == 'list':
             return self.page(form + page, ctime=ctime)
         return page
 
@@ -785,14 +777,13 @@ class DASWebService(DASWebManager):
         uinput  = getarg(kwargs, 'input', '').strip()
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
-        show    = getarg(kwargs, 'show', 'json')
         query   = getarg(kwargs, 'query', {})
         filters = query.get('filters')
         page    = ''
         if  total > 0:
             params = {} # will keep everything except idx/limit
             for key, val in kwargs.items():
-                if  key != 'idx' and key != 'limit':
+                if  key != 'idx' and key != 'limit' and key != 'query':
                     params[key] = val
             url   = "%s/request?%s" \
                     % (self.base, urllib.urlencode(params, doseq=True))
@@ -808,7 +799,11 @@ class DASWebService(DASWebManager):
         page  += self.templatepage('das_colors', colors=self.colors)
         style  = 'white'
         for row in data:
-            id    = row['_id']
+            try:
+                id = row['_id']
+            except:
+                msg = 'Fail to process row\n%s' % str(row)
+                raise Exception(msg)
             page += '<div class="%s"><hr class="line" />' % style
             links = ""
             pkey  = None
@@ -841,21 +836,9 @@ class DASWebService(DASWebManager):
                 systems = self.systems(row['das']['system'])
             except:
                 systems = "" # we don't store systems for aggregated records
-            if  show == 'json':
-                jsonhtml = das_json(row, pad)
-                page += self.templatepage('das_row', systems=systems, \
-                        sanitized_data=jsonhtml, id=id, rec_id=id)
-            elif show == 'code':
-                code  = pformat(row, indent=1, width=100)
-                data  = self.templatepage('das_json', jsoncode=code)
-                page += self.templatepage('das_row', systems=systems, \
-                        sanitized_data=data, id=id, rec_id=id)
-            else:
-                code  = yaml.dump(row, width=100, indent=4, 
-                                default_flow_style=False)
-                data  = self.templatepage('das_json', jsoncode=code)
-                page += self.templatepage('das_row', systems=systems, \
-                        sanitized_data=data, id=id, rec_id=id)
+            jsonhtml = das_json(row, pad)
+            page += self.templatepage('das_row', systems=systems, \
+                    sanitized_data=jsonhtml, id=id, rec_id=id)
             page += '</div>'
         page += '<div align="right">DAS cache server time: %5.3f sec</div>' \
                 % head['ctime']
@@ -959,7 +942,7 @@ class DASWebService(DASWebManager):
         return page
 
     @exposetext
-    def filterview(self, head, data):
+    def plainview(self, head, data):
         """
         provide DAS plain view for queries with filters
         """
@@ -1019,17 +1002,6 @@ class DASWebService(DASWebManager):
         result = dict(head)
         result['data'] = [r for r in data]
         return result
-
-    @exposetext
-    def plainview(self, head, data):
-        """
-        provide DAS plain view
-        """
-        page = ""
-        for item in data:
-            item  = str(item).replace('[','').replace(']','')
-            page += "%s\n" % item.replace("'","")
-        return page
 
     @exposedasjson
     @checkargs(['query'])

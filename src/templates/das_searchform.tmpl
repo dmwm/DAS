@@ -1,5 +1,7 @@
 #from DAS.web.utils import quote
 #set base = $quote($base)
+#set inst = $quote($instance)
+#set view = $quote($view)
 <!-- das_searchform.tmpl -->
 
 <form action="$base/request" method="get">
@@ -8,11 +10,12 @@
 <td class="right">
 data in
 <select id="view" name="view">
-<option class="sand" value="list">list</option>
-<option class="sand" value="filter">cut and paste</option>
-<option class="sand" value="table">table</option>
-<option class="sand" value="json">json</option>
-<option class="sand" value="xml">xml</option>
+#set init_views = ['list', 'plain', 'table', 'json', 'xml']
+#silent $init_views.remove($view)
+#set views = [$view] + $init_views
+#for v in $views
+<option class="sand" value="$v">$v</option>
+#end for
 </select>
 format,
 </td>
@@ -23,21 +26,21 @@ format,
 <option class="sand" value="25">25</option>
 <option class="sand" value="50">50</option>
 <option class="sand" value="100">100</option>
-<!--
-<option value="0">All</option>
--->
 </select>
 results/page,
 </td>
 <td class="right">
 &nbsp; 
-records in
-<select id="show" name="show">
-<option class="sand" value="json">browseable</option>
-<option class="sand" value="code">code</option>
-<option class="sand" value="yaml">plain</option>
+dbs instance
+<select id="instance" name="instance">
+#set init_dbses = ['cms_dbs_prod_global', 'cms_dbs_caf_analysis_01', 'cms_dbs_ph_analysis_01', 'cms_dbs_ph_analysis_02']
+#silent $init_dbses.remove($inst)
+#set dbses = [$inst] + $init_dbses
+#for d in $dbses
+<option class="sand" value="$d">$d</option>
+#end for
 </select>
-format,
+,
 </td>
 <td class="right">
 &nbsp;

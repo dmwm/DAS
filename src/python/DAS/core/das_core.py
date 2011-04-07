@@ -253,7 +253,7 @@ class DASCore(object):
         """
         query = dict(iquery)
         for key in query.keys():
-            if  key not in ['spec', 'fields']:
+            if  key not in ['spec', 'fields', 'instance']:
                 del query[key]
         msg = 'DASCore::bare_query, input query=%s, output query =%s' \
                 % (iquery, query)

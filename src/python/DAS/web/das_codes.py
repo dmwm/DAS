@@ -43,6 +43,7 @@ DAS_WEB_CODES = [
         (31 , 'Unsupported pid value'),
         (32 , 'Unsupported next value'),
         (33 , 'Unsupported kwds'),
+        (34 , 'Unsupported dbs instance'),
 ]
 def decode_code(code):
     """Return human readable string for provided code ID"""

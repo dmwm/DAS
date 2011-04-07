@@ -471,7 +471,11 @@ def ply2mongo(query):
                 mongodict['mapreduce'] = name
     fields = []
     spec   = {}
+    inst   = ""
     for _, name, oper, val in query['keys']:
+        if  name == 'instance':
+            inst = val
+            continue
         dasname = name 
         if  oper and val: # real condition
             value = val
@@ -522,5 +526,7 @@ def ply2mongo(query):
         else:
             mongodict['fields'] = None
     mongodict['spec'] = spec
+    if  inst:
+        mongodict['instance'] = inst
     return mongodict
 

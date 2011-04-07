@@ -241,6 +241,14 @@ class testDASPLY(unittest.TestCase):
         mongo = {'fields': ['file', 'dataset'], 'spec': {'date': 1201824000, 'file': 'abcdeasdf', 'dataset': 'abcdes'}}
         self.queries[query] = mongo
 
+    def test_instance(self):
+        """Test appearance of instance in a DAS query"""
+        query = 'dataset=/a/b/c instance=global'
+        mongo = {'fields': ['dataset'], 'spec': {'dataset':'/a/b/c'}, 'instance':'global'}
+        ply_query = self.dasply.parser.parse(query)
+        result = ply2mongo(ply_query)
+        self.assertEqual(mongo, result)
+
     def test_lexer(self):
         """Test DAS PLY lexer"""
         for query, expect in self.queries.items():

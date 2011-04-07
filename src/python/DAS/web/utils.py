@@ -194,7 +194,7 @@ def checkargs(supported):
                     raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'view'):
                 if  kwds['view'] not in \
-                        ['list', 'xml', 'json', 'filter', 'table']:
+                        ['list', 'xml', 'json', 'plain', 'table']:
                     code  = web_code('Unsupported view')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'format'):
@@ -215,10 +215,6 @@ def checkargs(supported):
                 if  str(kwds['ajax']) not in ['0', '1']:
                     code  = web_code('Unsupported ajax value')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'show'):
-                if  kwds['show'] not in ['json', 'code', 'yaml']:
-                    code  = web_code('Unsupported show value')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'dasquery') and not len(kwds['dasquery']):
                 code = web_code('Unsupported dasquery value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
@@ -235,6 +231,12 @@ def checkargs(supported):
             if  checkarg(kwds, 'pid') and len(str(kwds['pid'])) != 32:
                 code  = web_code('Unsupported pid value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'instance'):
+                if  kwds['instance'] not in \
+                ['cms_dbs_prod_global', 'cms_dbs_caf_analysis_01',
+                 'cms_dbs_ph_analysis_01', 'cms_dbs_ph_analysis_02']:
+                    code  = web_code('Unsupported dbs instance')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
             data = func (self, *args, **kwds)
             return data
         wrapped_f.__doc__  = func.__doc__
