@@ -71,7 +71,7 @@ RE_FILTERCMD = re.compile(r"^.*?\|\s*(\w+)\s+(?:[\w.]+\s*,\s*)*([\w.]+)$")
 
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
-def make_links(links, value):
+def make_links(links, value, inst):
     """
     Make new link for provided query links and passed value.
     """
@@ -84,7 +84,8 @@ def make_links(links, value):
         for val in values:
             dasquery = link['query'] % val
             uinput = urllib.quote(dasquery)
-            url = '/das/request?input=%s' % uinput
+            url = '/das/request?input=%s&instance=%s&idx=0&limit=10' \
+                        % (uinput, inst)
             if  link['name']:
                 key = link['name']
             else:
@@ -775,6 +776,7 @@ class DASWebService(DASWebManager):
         total   = head['nresults']
         time0   = time.time()
         uinput  = getarg(kwargs, 'input', '').strip()
+        inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
         query   = getarg(kwargs, 'query', {})
@@ -815,7 +817,8 @@ class DASWebService(DASWebManager):
                     if  pkey == 'run.run_number':
                         pval = int(pval)
 #                    page   += '<b>%s</b>: %s<br />' % (lkey.capitalize(), pval)
-                    ifield  = urllib.urlencode({'input':'%s=%s' % (lkey, pval)})
+                    ifield  = urllib.urlencode(\
+                        {'input':'%s=%s' % (lkey, pval), 'instance':inst})
                     page   += '<b>%s</b>: <a href="/das/request?%s">%s</a><br/>'\
                                 % (lkey.capitalize(), ifield, pval)
                     plist   = self.dasmgr.mapping.presentation(lkey)
@@ -825,7 +828,7 @@ class DASWebService(DASWebManager):
                             linkrec = item['link']
                             break
                     if  linkrec:
-                        links = ', '.join(make_links(linkrec, pval))
+                        links = ', '.join(make_links(linkrec, pval, inst))
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
