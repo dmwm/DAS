@@ -9,6 +9,7 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.3
 
+  - add new phedex URN to lookup files for a given dataset/site
   - put instance as separate key into mongo query (it's ignored everywhere except DBS)
   - work on web UI (remove view code/yaml), put dbs instances, remember
     user settings for view/instance on a page

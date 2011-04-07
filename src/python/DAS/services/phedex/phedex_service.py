@@ -27,7 +27,8 @@ class PhedexService(DASAbstractService):
         """
         Adjust Phedex parameters for specific query requests
         """
-        if  api == 'blockReplicas' or api == 'fileReplicas':
+        if  api.find('blockReplicas') != -1 or \
+            api.find('fileReplicas') != -1:
             for key, val in kwds.items():
                 if  val == '*':
                     del kwds[key]
@@ -40,6 +41,12 @@ class PhedexService(DASAbstractService):
         if  api == 'blockReplicas':
             prim_key = 'block'
         elif api == 'fileReplicas':
+            prim_key = 'file'
+            tags = 'block.name'
+        elif api == 'fileReplicas4dataset':
+            prim_key = 'file'
+            tags = 'block.name'
+        elif api == 'fileReplicas4file':
             prim_key = 'file'
             tags = 'block.name'
         elif api == 'dataset4site':
