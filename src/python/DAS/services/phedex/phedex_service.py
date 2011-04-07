@@ -73,8 +73,14 @@ class PhedexService(DASAbstractService):
         seen = set()
         for row in gen:
             if  api == 'site4dataset' or api == 'site4block':
-                for replica in row['block']['replica']:
-                    result = {'name': replica['node'], 'se': replica['se']}
+                if  isinstance(row['block']['replica'], list):
+                    for replica in row['block']['replica']:
+                        result = {'name': replica['node'], 'se': replica['se']}
+                        if  result not in site_names:
+                            site_names.append(result)
+                elif isinstance(row['block']['replica'], dict):
+                    replica = row['block']['replica']
+                    result  = {'name': replica['node'], 'se': replica['se']}
                     if  result not in site_names:
                         site_names.append(result)
             elif  api == 'dataset4site' or api == 'dataset4se':

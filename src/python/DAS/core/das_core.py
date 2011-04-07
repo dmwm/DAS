@@ -85,6 +85,9 @@ class DASCore(object):
             self.noresults = nores
 
         self.multitask = dasconfig['das'].get('multitask', True)
+        if  debug:
+            self.multitask = False
+            dasconfig['das']['multitask'] = False
         dasconfig['engine'] = engine
         if  engine:
             self.taskmgr = PluginTaskManager(engine)
@@ -431,8 +434,8 @@ class DASCore(object):
             fields = None # look-up all records
             query['fields'] = None # reset query field part
         spec      = query.get('spec', {})
-        if  spec.has_key('instance'):
-            del spec['instance'] # while we look-up data we don't need instance
+#        if  spec.has_key('instance'):
+#            del spec['instance'] # while we look-up data we don't need instance
         if  spec == dict(records='*'):
             spec  = {} # we got request to get everything
             query['spec'] = spec

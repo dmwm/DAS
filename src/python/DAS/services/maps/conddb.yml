@@ -15,6 +15,7 @@ daskeys : [
 ]
 das2api: [
     {"das_key":"run.run_number", "api_param": "runList", "pattern":""},
+    {"das_key":"date", "api_param": "date", "pattern":""},
 ]
 ---
 notations : [

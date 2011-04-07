@@ -387,12 +387,13 @@ class DASMapping(object):
         """
         Translates DAS QL key into data-service API input parameter
         """
-#        query = {'system':system, 'das2api.das_key': daskey}
         query = {'system':system}
         if api: # only check this api
             query['urn'] = api 
         names = []
         for adas in self.col.find(query, ['das2api']):
+            if  not adas.has_key('das2api'):
+                continue
             if  not adas['das2api']:
                 names = [daskey]
             for row in adas['das2api']:
