@@ -1,0 +1,15 @@
+#from DAS.web.utils import quote
+#set tag = $quote($tag)
+#set flag = $quote($style)
+#if  $flag
+#set klass="odd"
+#else
+#set klass=""
+#end if
+<tr>
+#for val in $rec
+<$tag class=$klass>
+$quote(val)
+</$tag>
+#end for
+</tr>

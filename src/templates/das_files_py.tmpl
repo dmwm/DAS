@@ -1,0 +1,46 @@
+import FWCore.ParameterSet.Config as cms
+
+maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+readFiles = cms.untracked.vstring()
+secFiles = cms.untracked.vstring() 
+source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
+#set $counter=0
+readFiles.extend( [
+#for $lfn in $lfnList
+#if $lfn!=$lfnList[-1] and $counter < 254
+       '$lfn',
+#else
+       '$lfn' ] );
+#set $counter=0
+#if $lfn!=$lfnList[-1]
+readFiles.extend( [
+#end if
+
+#end if
+#set $counter+=1
+#end for
+
+#import types
+#if type($pfnList) is types.ListType
+secFiles.extend( [
+#if not $pfnList
+               ] )
+#end if
+#set $counter=0
+#for $pfn in $pfnList
+#if $pfn!=$pfnList[-1] and $counter < 254
+       '$pfn',
+#else
+       '$pfn'] );
+
+#set $counter=0
+#####if $lfn!=$lfnList[-1]
+#if $pfn!=$pfnList[-1]
+secFiles.extend( [
+#end if
+
+#end if
+#set $counter+=1
+#end for
+#end if
+
