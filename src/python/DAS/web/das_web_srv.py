@@ -82,16 +82,25 @@ def make_links(links, value, inst):
     for link in links:
         name, query = link.items()
         for val in values:
-            dasquery = link['query'] % val
-            uinput = urllib.quote(dasquery)
-            url = '/das/request?input=%s&instance=%s&idx=0&limit=10' \
-                        % (uinput, inst)
-            if  link['name']:
-                key = link['name']
-            else:
-                key = val
-            url = """<a href="%s">%s</a>""" % (quote(url), key)
-            yield url
+            if  link.has_key('query'):
+                dasquery = link['query'] % val
+                uinput = urllib.quote(dasquery)
+                url = '/das/request?input=%s&instance=%s&idx=0&limit=10' \
+                            % (uinput, inst)
+                if  link['name']:
+                    key = link['name']
+                else:
+                    key = val
+                url = """<a href="%s">%s</a>""" % (quote(url), key)
+                yield url
+            elif link.has_key('link'):
+                if  link['name']:
+                    key = link['name']
+                else:
+                    key = val
+                url = link['link'] % val
+                url = """<a href="%s">%s</a>""" % (quote(url), key)
+                yield url
 
 def add_filter_values(row, filters):
     """Add filter values for a given row"""
@@ -557,7 +566,7 @@ class DASWebService(DASWebManager):
         uinput = getarg(kwargs, 'input', '') 
         inst   = kwargs.get('instance', '')
         if  inst:
-            uinput += ' instance=%s' % inst
+            uinput = ' instance=%s %s' % (inst, uinput)
         idx    = getarg(kwargs, 'idx', 0)
         limit  = getarg(kwargs, 'limit', 0) # do not impose limit
         skey   = getarg(kwargs, 'skey', '')
@@ -649,6 +658,31 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
+    def makepy(self, dataset):
+        """
+        Request to create CMSSW py snippet for a given dataset
+        """
+        pat = re.compile('/.*/.*/.*')
+        if  not pat.match(dataset):
+            msg = 'Invalid dataset name'
+            return self.error(msg)
+        query = "file dataset=%s | grep file.name" % dataset
+        try:
+            mquery = self.dasmgr.mongoparser.parse(query, False) 
+            data   = self.dasmgr.result(mquery, idx=0, limit=0)
+        except Exception, exp:
+            msg    = 'Unable to retrieve data for query=%s' % query
+            return self.error(msg)
+        lfns = []
+        for rec in data:
+            file  = DotDict(rec)._get('file.name')
+            if  file not in lfns:
+                lfns.append(file)
+        page = self.templatepage('das_files_py', lfnList=lfns, pfnList=[])
+        cherrypy.response.headers['Content-Type'] = "text/plain"
+        return page
+
+    @expose
     @checkargs(DAS_WEB_INPUTS)
     def request(self, **kwargs):
         """
@@ -662,7 +696,7 @@ class DASWebService(DASWebManager):
         uinput  = getarg(kwargs, 'input', '').strip()
         inst    = kwargs.get('instance', '')
         if  inst:
-            uinput += ' instance=%s' % inst
+            uinput = ' instance=%s %s' % (inst, uinput)
         self.logdb(uinput)
         if  self.busy():
             return self.busy_page(uinput)
@@ -670,7 +704,7 @@ class DASWebService(DASWebManager):
         form    = self.form(input=uinput, instance=inst, view=view)
         check, content = self.check_input(uinput)
         if  check:
-            if  view == 'list':
+            if  view == 'list' or view == 'table':
                 return self.page(form + content, ctime=time.time()-time0)
             else:
                 return content
@@ -679,11 +713,6 @@ class DASWebService(DASWebManager):
         status = self.dasmgr.get_status(mongo_query)
         if  status == 'ok':
             page = self.get_page_content(kwargs)
-        elif view != 'list':
-            msg  = 'You cannot request data in %s format before processing.\n'\
-                        % view
-            msg += 'Please choose list view and search for data first.'
-            page = self.error(msg)
         else: 
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
             self._requests[pid] = kwargs
@@ -702,7 +731,7 @@ class DASWebService(DASWebManager):
             else:
                 page = self.get_page_content(kwargs)
         ctime = (time.time()-time0)
-        if  view == 'list':
+        if  view == 'list' or view == 'table':
             return self.page(form + page, ctime=ctime)
         return page
 
@@ -768,19 +797,13 @@ class DASWebService(DASWebManager):
                 % (self.colors[system], pads)
         return page
 
-    def listview(self, head, data):
+    def pagination(self, total, kwargs):
         """
-        Helper function to make listview page.
+        Consutruct pagination part of the page.
         """
-        kwargs  = head['args']
-        total   = head['nresults']
-        time0   = time.time()
-        uinput  = getarg(kwargs, 'input', '').strip()
-        inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
         query   = getarg(kwargs, 'query', {})
-        filters = query.get('filters')
         page    = ''
         if  total > 0:
             params = {} # will keep everything except idx/limit
@@ -797,7 +820,23 @@ class DASWebService(DASWebManager):
             except:
                 pass
             service_map = self.dasmgr.mongoparser.service_apis_map(query)
-            return self.templatepage('das_noresults', service_map=service_map)
+            page = self.templatepage('das_noresults', service_map=service_map)
+        return page
+
+    def listview(self, head, data):
+        """
+        Helper function to make listview page.
+        """
+        kwargs  = head['args']
+        total   = head['nresults']
+        time0   = time.time()
+        uinput  = getarg(kwargs, 'input', '').strip()
+        inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
+        idx     = getarg(kwargs, 'idx', 0)
+        limit   = getarg(kwargs, 'limit', 10)
+        query   = getarg(kwargs, 'query', {})
+        filters = query.get('filters')
+        page    = self.pagination(total, kwargs)
         page  += self.templatepage('das_colors', colors=self.colors)
         style  = 'white'
         for row in data:
@@ -828,7 +867,7 @@ class DASWebService(DASWebManager):
                             linkrec = item['link']
                             break
                     if  linkrec:
-                        links = ', '.join(make_links(linkrec, pval, inst))
+                        links = ', '.join(make_links(linkrec, pval, inst)) + '.'
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
@@ -847,101 +886,53 @@ class DASWebService(DASWebManager):
                 % head['ctime']
         return page
 
-    def check_request4view(self, kwargs):
-        """
-        Check that request is suitable for given view
-        """
-        query = kwargs.get('input', None)
-        if  query.find(' grep ') == -1:
-            code = web_code('Query is not suitable for this view')
-            raise HTTPError(500, 'DAS error, code=%s' % code)
-
-    def records4filter(self, kwargs):
-        """
-        Retrieve records for given filter
-        """
-        query = kwargs.get('input', None)
-        try:
-            query = self.dasmgr.mongoparser.parse(query)
-        except:
-            code = web_code('DAS parser error')
-            raise HTTPError(500, 'DAS error, code=%s' % code)
-        _head, data = self.get_data(kwargs)
-        results  = ""
-        for row in data:
-            record = {}
-            for filter in query['filters']:
-                if  filter.find('=') != -1 or filter.find('>') != -1 or \
-                    filter.find('<') != -1:
-                    continue
-                try:
-                    record[yui_name(filter)] = DotDict(row)._get(filter)
-                except:
-                    pass
-            yield record
-
-    @exposejson
-    @checkargs(DAS_WEB_INPUTS)
-    def table_records(self, **kwargs):
-        """
-        Provide JSON in YUI compatible format to be used in DynamicData table
-        widget, see
-        http://developer.yahoo.com/yui/examples/datatable/dt_dynamicdata.html
-        """
-        uinput = kwargs.get('input', '').strip()
-        check, query = self.check_input(uinput)
-        if  check:
-            code = web_code('Server error')
-            raise HTTPError(500, 'DAS error, code=%s' % code)
-        kwargs['query'] = query
-        if  kwargs.has_key('skey'):
-            kwargs['skey'] = yui2das(kwargs['skey'])
-        rowlist  = [record for record in self.records4filter(kwargs)]
-        idx      = getarg(kwargs, 'idx', 0)
-        limit    = getarg(kwargs, 'limit', 10)
-        head, _data = self.get_data(kwargs)
-        total    = head['nresults']
-        jsondict = {'recordsReturned': len(rowlist),
-                   'totalRecords': total, 'startIndex':idx,
-                   'sort':'true', 'dir':'asc',
-                   'pageSize': limit,
-                   'records': rowlist}
-        return jsondict
-
     def tableview(self, head, data):
         """
         Represent data in tabular view.
         """
         kwargs  = head['args']
         total   = head['nresults']
-        self.check_request4view(kwargs)
-        query   = kwargs['query']
-        if  not query.has_key('filters'):
-            code = web_code('Query is not suitable for this view')
-            raise HTTPError(500, 'DAS error, code=%s' % code)
-        titles  = []
-        for filter in query['filters']:
-            if  filter.find('=') != -1 or filter.find('>') != -1 or \
-                filter.find('<') != -1:
-                continue
-            titles.append(yui_name(filter))
-        time0   = time.time()
         uinput  = getarg(kwargs, 'input', '').strip()
         limit   = getarg(kwargs, 'limit', 10)
         form    = self.form(input=uinput)
-        coldefs = ""
-        for title in titles:
-            coldefs += '{key:"%s",label:"%s",sortable:true,resizeable:true},' \
-                        % (title, title)
-        coldefs = "[%s]" % coldefs[:-1] # remove last comma
-        coldefs = coldefs.replace("},{","},\n{")
-        names   = {'titlelist':titles, 'base': self.base,
-                   'coldefs':coldefs, 'rowsperpage':limit,
-                   'total':total, 'tag':'mytag',
-                   'input':urllib.urlencode(dict(input=uinput))}
-        page    = self.templatepage('das_table', **names)
-        ctime   = (time.time()-time0)
-        page    = self.page(form + page, ctime=ctime)
+        query   = kwargs['query']
+        titles  = []
+        page    = self.pagination(total, kwargs)
+        pkey    = None
+        tpage   = ""
+        if  query.has_key('filters'):
+            for filter in query['filters']:
+                if  filter.find('=') != -1 or filter.find('>') != -1 or \
+                    filter.find('<') != -1:
+                    continue
+                titles.append(filter)
+        style = 0
+        for row in data:
+            rec  = []
+            if  not pkey and row.has_key('das'):
+                if  row['das'].has_key('primary_key'):
+                    pkey = row['das']['primary_key']
+            if  query.has_key('filters'):
+                for filter in query['filters']:
+                    rec.append(DotDict(row)._get(filter))
+            else:
+                gen = self.convert2ui(row)
+                titles = []
+                for uikey, val in gen:
+                    if  not query.has_key('filters'):
+                        titles.append(uikey)
+                    rec.append(val)
+            if  style:
+                style = 0
+            else:
+                style = 1
+            tpage += self.templatepage('das_table_row', rec=rec, tag='td',\
+                        style=style)
+        thead = self.templatepage('das_table_row', rec=titles, tag='th',\
+                        style=0)
+        page += '<table class="das_table">' + thead + tpage + '</table>'
+        page += '<div align="right">DAS cache server time: %5.3f sec</div>' \
+                % head['ctime']
         return page
 
     @exposetext

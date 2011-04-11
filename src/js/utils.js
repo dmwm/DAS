@@ -65,7 +65,9 @@ function getTagValue(tag)
 }
 function updateTag(tag, val) {
    var id = document.getElementById(tag);
-   id.value=val;
+   if (id) {
+       id.value=val;
+   }
 }
 function ClearTag(tag) {
     var id=document.getElementById(tag);

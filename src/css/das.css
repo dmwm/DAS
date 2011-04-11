@@ -285,6 +285,26 @@ table.daskeys tbody tr.even th, table.daskeys tbody tr.even td,
 table.daskeys tbody.even tr th, table.daskeys tbody.even tr td {
   background: #FFFFFF;
 }
+/* DAS table to represent result set */
+table.das_table { 
+        border-spacing: 1px; 
+        border-width: 1px; 
+        border-style: solid solid solid solid;
+        border-color: gray gray gray gray;
+        background: #FFFFFF;
+        clear: both; 
+        width: 100%}
+table.das_table th, table.das_table td { padding: .2em .5em; }
+table.das_table tbody tr th { background: #F0F0F0; text-align: left; }
+table.das_table tbody tr td { background: #FFFFFF; vertical-align:text-top; }
+table.das_table tbody tr.odd th, table.das_table tbody tr.odd td,
+table.das_table tbody.odd tr th, table.das_table tbody.odd tr td {
+  background: #EEF2FF;
+}
+table.das_table tbody tr.even th, table.das_table tbody tr.even td,
+table.das_table tbody.even tr th, table.das_table tbody.even tr td {
+  background: #FFFFFF;
+}
 /* Vertical menu */
 #vmenu ul
 {
