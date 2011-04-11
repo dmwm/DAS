@@ -73,8 +73,12 @@ class DASMapping(object):
                     link = None
                     if  row.has_key('link'):
                         link = row['link']
-                    self.reverse_presentation[row['ui']] = \
-                            (daskey, row['das'], link)
+                    tdict = {daskey : {'mapkey': row['das'], 'link': link}}
+                    if  self.reverse_presentation.has_key(row['ui']):
+                        self.reverse_presentation[row['ui']].update(tdict)
+                    else:
+                        self.reverse_presentation[row['ui']] = \
+                                {daskey : {'mapkey': row['das'], 'link': link}}
 
     def create_db(self):
         """

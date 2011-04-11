@@ -6,10 +6,14 @@
 #else
 #set klass=""
 #end if
-<tr>
+<tr class="$klass">
 #for val in $rec
-<$tag class=$klass>
+<$tag>
+#if $encode
 $quote(val)
+#else
+$val
+#end if
 </$tag>
 #end for
 </tr>

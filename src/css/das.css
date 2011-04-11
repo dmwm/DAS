@@ -295,11 +295,11 @@ table.das_table {
         clear: both; 
         width: 100%}
 table.das_table th, table.das_table td { padding: .2em .5em; }
-table.das_table tbody tr th { background: #F0F0F0; text-align: left; }
+table.das_table tbody tr th { background: rgb(223, 219, 195); text-align: left; }
 table.das_table tbody tr td { background: #FFFFFF; vertical-align:text-top; }
 table.das_table tbody tr.odd th, table.das_table tbody tr.odd td,
 table.das_table tbody.odd tr th, table.das_table tbody.odd tr td {
-  background: #EEF2FF;
+  background: #DCDCDC;
 }
 table.das_table tbody tr.even th, table.das_table tbody tr.even td,
 table.das_table tbody.even tr th, table.das_table tbody.even tr td {

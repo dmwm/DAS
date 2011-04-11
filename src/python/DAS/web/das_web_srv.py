@@ -797,6 +797,18 @@ class DASWebService(DASWebManager):
                 % (self.colors[system], pads)
         return page
 
+    def sort_dict(self, titles, pkey):
+        """Return dict of daskey/mapkey for given list of titles"""
+        tdict = {}
+        for uikey in titles:
+            pdict = self.dasmapping.daskey_from_presentation(uikey)
+            if  pdict and pdict.has_key(pkey):
+                mapkey = pdict[pkey]['mapkey']
+            else:
+                mapkey = uikey
+            tdict[uikey] = mapkey
+        return tdict
+
     def pagination(self, total, kwargs):
         """
         Consutruct pagination part of the page.
@@ -893,25 +905,27 @@ class DASWebService(DASWebManager):
         kwargs  = head['args']
         total   = head['nresults']
         uinput  = getarg(kwargs, 'input', '').strip()
+        idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
+        sdir    = getarg(kwargs, 'dir', '')
+        inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
         form    = self.form(input=uinput)
         query   = kwargs['query']
         titles  = []
         page    = self.pagination(total, kwargs)
-        pkey    = None
-        tpage   = ""
         if  query.has_key('filters'):
             for filter in query['filters']:
                 if  filter.find('=') != -1 or filter.find('>') != -1 or \
                     filter.find('<') != -1:
                     continue
                 titles.append(filter)
-        style = 0
+        style   = 1
+        tpage   = ""
+        pkey    = None
         for row in data:
             rec  = []
-            if  not pkey and row.has_key('das'):
-                if  row['das'].has_key('primary_key'):
-                    pkey = row['das']['primary_key']
+            if  not pkey and row.has_key('das') and row['das'].has_key('primary_key'):
+                pkey = row['das']['primary_key'].split('.')[0]
             if  query.has_key('filters'):
                 for filter in query['filters']:
                     rec.append(DotDict(row)._get(filter))
@@ -927,10 +941,28 @@ class DASWebService(DASWebManager):
             else:
                 style = 1
             tpage += self.templatepage('das_table_row', rec=rec, tag='td',\
-                        style=style)
-        thead = self.templatepage('das_table_row', rec=titles, tag='th',\
-                        style=0)
+                        style=style, encode=1)
+        sdict  = self.sort_dict(titles, pkey)
+        if  sdir == 'asc':
+            sdir = 'desc'
+        elif sdir == 'desc':
+            sdir = 'asc'
+        else: # default sort direction
+            sdir = 'asc' 
+        args   = {'input':uinput, 'idx':idx, 'limit':limit, 'instance':inst,\
+                         'view':'table', 'dir': sdir}
+        theads = []
+        for title in titles:
+            args.update({'skey':sdict[title]})
+            url = '<a href="/das/request?%s">%s</a>' \
+                % (urllib.urlencode(args), title)
+            theads.append(url)
+        thead = self.templatepage('das_table_row', rec=theads, tag='th',\
+                        style=0, encode=0)
+        self.sort_dict(titles, pkey)
+        page += '<br />'
         page += '<table class="das_table">' + thead + tpage + '</table>'
+        page += '<br />'
         page += '<div align="right">DAS cache server time: %5.3f sec</div>' \
                 % head['ctime']
         return page
