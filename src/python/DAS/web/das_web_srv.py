@@ -894,6 +894,8 @@ class DASWebService(DASWebManager):
                     row['das']['system'] == [u'combined']:
                     if  lkey:
                         systems = self.systems(row[lkey]['combined'])
+            except KeyError:
+                systems = "" # we don't store systems for aggregated records
             except:
                 traceback.print_exc()
                 systems = "" # we don't store systems for aggregated records
