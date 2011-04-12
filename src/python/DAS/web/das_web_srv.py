@@ -162,7 +162,9 @@ def adjust_values(func, gen, links):
                 else:
                     val = val['value']
             to_show.append((key, val))
-    page += ', '.join(["<b>%s</b>: %s" % (k, v) for k, v in to_show])
+    if  to_show:
+        page += '<br />'
+        page += ', '.join(["<b>%s</b>: %s" % (k, v) for k, v in to_show])
     if  links:
         page += '<br />' + links
     return page
@@ -229,6 +231,8 @@ class DASWebService(DASWebManager):
             self.dasmapping = self.dasmgr.mapping
             self.colors = {}
             for system in self.dasmgr.systems:
+                if  system == 'combined':
+                    continue
                 self.colors[system] = gen_color(system)
         except:
             traceback.print_exc()
@@ -860,6 +864,7 @@ class DASWebService(DASWebManager):
             page += '<div class="%s"><hr class="line" />' % style
             links = ""
             pkey  = None
+            lkey  = None
             if  row.has_key('das'):
                 if  row['das'].has_key('primary_key'):
                     pkey    = row['das']['primary_key']
@@ -867,10 +872,9 @@ class DASWebService(DASWebManager):
                     pval    = DotDict(row)._get(pkey)
                     if  pkey == 'run.run_number':
                         pval = int(pval)
-#                    page   += '<b>%s</b>: %s<br />' % (lkey.capitalize(), pval)
                     ifield  = urllib.urlencode(\
                         {'input':'%s=%s' % (lkey, pval), 'instance':inst})
-                    page   += '<b>%s</b>: <a href="/das/request?%s">%s</a><br/>'\
+                    page   += '<b>%s</b>: <a href="/das/request?%s">%s</a>'\
                                 % (lkey.capitalize(), ifield, pval)
                     plist   = self.dasmgr.mapping.presentation(lkey)
                     linkrec = None
@@ -888,6 +892,9 @@ class DASWebService(DASWebManager):
             pad   = ""
             try:
                 systems = self.systems(row['das']['system'])
+                if  row['das']['system'] == ['combined']:
+                    if  lkey:
+                        systems = self.systems(row[lkey]['combined'])
             except:
                 systems = "" # we don't store systems for aggregated records
             jsonhtml = das_json(row, pad)

@@ -24,7 +24,9 @@ class CombinedService(DASAbstractService):
     def helper(self, url, api, args, expire):
         """
         Class helper function which yields results for given
-        set of input parameters
+        set of input parameters. It yeilds the data record which
+        must contain combined attribute corresponding to systems
+        used to produce record content.
         """
         if  api == 'dataset4release_site':
             found = set()
@@ -41,24 +43,6 @@ class CombinedService(DASAbstractService):
                 dataset = row['dataset']['dataset']
                 datasets.add(dataset)
             # call Phedex to get site info for every dataset
-#            idx_range = range(0, len(datasets), 10) + [len(datasets)]
-#            idx_range.remove(0)
-#            beg = 0
-#            for idx in idx_range:
-#                phedex_args = {'dataset':list(datasets)[beg:idx], 
-#                                'node': '%s*' % args['site']}
-#                phedex_url = url['phedex']
-#                source, expire = \
-#                self.getdata(phedex_url, phedex_args, expire, headers)
-#                prim_key = 'block'
-#                tags = 'block.replica.node'
-#                for rec in xml_parser(source, prim_key, tags):
-#                    block = DotDict(rec)._get('block.name')
-#                    found_dataset = block.split('#')[0]
-#                    if  found_dataset not in found:
-#                        found.add(found_dataset)
-#                        yield {'dataset':{'name':found_dataset}}
-#                beg = idx
             phedex_args = {'dataset':list(datasets), 
                             'node': '%s*' % args['site']}
             phedex_url = url['phedex']
@@ -71,7 +55,8 @@ class CombinedService(DASAbstractService):
                 found_dataset = block.split('#')[0]
                 if  found_dataset not in found:
                     found.add(found_dataset)
-                    yield {'dataset':{'name':found_dataset}}
+                    yield {'dataset':{'name':found_dataset, 
+                                      'combined':['dbs', 'phedex']}}
             del datasets
             del found
 
