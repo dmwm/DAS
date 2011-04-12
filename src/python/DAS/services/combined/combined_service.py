@@ -12,6 +12,14 @@ import traceback
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser, DotDict
 
+#
+# NOTE:
+# DBS3 will provide datasets API, once this API will support POST request
+# and multiple datasets, I need to epxlore revert logic for combined_dataset4site
+# API. First find all blocks at given site, then strip off dataset info
+# and ask DBS to provide dataset info for found dataset.
+#
+
 class CombinedService(DASAbstractService):
     """
     Helper class to provide combined DAS service
@@ -28,35 +36,91 @@ class CombinedService(DASAbstractService):
         must contain combined attribute corresponding to systems
         used to produce record content.
         """
-        if  api == 'dataset4release_site':
-            found = set()
+        if  api == 'combined_dataset4site_via_phedex':
+            headers = {'Accept': 'text/xml'}
+            if  args['site'].find('.') != -1: # it is SE
+                phedex_args = {'se': '%s' % args['site']}
+            else:
+                phedex_args = {'node': '%s*' % args['site']}
+            if  args.has_key('dataset') and args['dataset'] != 'optional':
+                phedex_args.update({'dataset':args['dataset']})
+            phedex_url = url['phedex']
+            source, expire = \
+            self.getdata(phedex_url, phedex_args, expire, headers)
+            prim_key = 'block'
+            tags = 'block.replica.node'
+            found = {}
+            for rec in xml_parser(source, prim_key, tags):
+                ddict = DotDict(rec)
+                block = ddict._get('block.name')
+                bytes = ddict._get('block.bytes')
+                cust  = ddict._get('block.replica.custodial')
+                dataset = block.split('#')[0]
+                tier = dataset.split('/')[-1].split('-')
+                if  found.has_key(dataset):
+                    val = found[dataset]
+                    found[dataset] = {'bytes': val['bytes'] + bytes, 
+                                        'custodial':cust, 'tier':tier}
+                else:
+                    found[dataset] = {'bytes':bytes, 'custodial':cust, 'tier':tier}
+            for name, val in found.items():
+                record = dict(name=name, combined=['dbs', 'phedex'],
+                            size=val['bytes'], custodial=val['custodial'])
+                yield {'dataset':record}
+            del found
+        if  api == 'combined_dataset4site':
             # call DBS to obtain dataset for given release
             dbs_url = url['dbs']
-            query = 'find dataset where release=%s' % args['release']
+            # in DBS3 I'll use datasets API and pass release over there
+            query = 'find dataset, dataset.era '
+            cond  = ''
+            if  args.has_key('release') and args['release'] != 'optional':
+                cond += ' and release=%s' % args['release']
+            if  args.has_key('dataset') and args['dataset'] != 'optional':
+                cond += ' and dataset=%s' % args['dataset']
+            if  cond:
+                query += ' where ' + cond[4:]
             dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9',\
                         'query':query}
             headers = {'Accept': 'text/xml'}
             source, expire = self.getdata(dbs_url, dbs_args, expire, headers)
             prim_key = 'dataset'
-            datasets = set()
+            datasets = {}
             for row in qlxml_parser(source, prim_key):
                 dataset = row['dataset']['dataset']
-                datasets.add(dataset)
-            # call Phedex to get site info for every dataset
-            phedex_args = {'dataset':list(datasets), 
-                            'node': '%s*' % args['site']}
+                era = row['dataset']['dataset.era']
+                tier = dataset.split('/')[-1].split('-')
+                datasets[dataset] = dict(era=era, tier=tier)
+            if  args['site'].find('.') != -1: # it is SE
+                phedex_args = {'dataset':datasets.keys(), 
+                                'se': '%s' % args['site']}
+            else:
+                phedex_args = {'dataset':datasets.keys(), 
+                                'node': '%s*' % args['site']}
             phedex_url = url['phedex']
             source, expire = \
             self.getdata(phedex_url, phedex_args, expire, headers, post=True)
             prim_key = 'block'
             tags = 'block.replica.node'
+            found = {}
             for rec in xml_parser(source, prim_key, tags):
-                block = DotDict(rec)._get('block.name')
+                ddict = DotDict(rec)
+                block = ddict._get('block.name')
+                bytes = ddict._get('block.bytes')
+                cust  = ddict._get('block.replica.custodial')
                 found_dataset = block.split('#')[0]
-                if  found_dataset not in found:
-                    found.add(found_dataset)
-                    yield {'dataset':{'name':found_dataset, 
-                                      'combined':['dbs', 'phedex']}}
+                if  found.has_key(found_dataset):
+                    val = found[found_dataset]
+                    found[found_dataset] = {'bytes': val['bytes'] + bytes, 
+                                                'custodial':cust}
+                else:
+                    found[found_dataset] = {'bytes': bytes, 'custodial':cust}
+            for name, val in found.items():
+                record = dict(name=name, era=datasets[name]['era'],
+                                tier=datasets[name]['tier'],
+                                size=val['bytes'], custodial=val['custodial'],
+                                combined=['dbs', 'phedex']) 
+                yield {'dataset':record}
             del datasets
             del found
 
@@ -66,8 +130,20 @@ class CombinedService(DASAbstractService):
         and return results in a list with provided row.
         """
         time0 = time.time()
-        if  api == 'dataset4release_site':
-            genrows = self.helper(url, api, args, expire)
+        if  api == 'combined_dataset4site':
+            enough = False
+            for key, val in args.items():
+                if  key != 'site' and val != 'optional':
+                    enough = True # we need extra argument apart from site
+            if  not enough:
+                msg = "--- combined rejects API %s, not enough arguments" % api
+                self.logger.info(msg)
+                error   = "The provided set of arguments is too loose, please add"
+                error  += " release or dataset pattern to your query"
+                record  = dict(name="N/A", error=error, combined=['dbs', 'phedex'])
+                genrows = [dict(dataset=record)]
+            else:
+                genrows = self.helper(url, api, args, expire)
         dasrows = self.set_misses(query, api, genrows)
         ctime = time.time() - time0
         try:

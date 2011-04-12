@@ -9,6 +9,9 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.3
 
+  - add suport for the following queries:
+    dataset release=CMSSW_4_2_0 site=cmssrm.fnal.gov
+    dataset release=CMSSW_4_2_0 site=T1_US_FNAL
   - add new combined DAS plugin to allow combined queries across different
     data services. For instance, user can request to find all datasets at
     given Tier site for a given release. To accomplish this request I need

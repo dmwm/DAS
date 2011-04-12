@@ -231,8 +231,6 @@ class DASWebService(DASWebManager):
             self.dasmapping = self.dasmgr.mapping
             self.colors = {}
             for system in self.dasmgr.systems:
-                if  system == 'combined':
-                    continue
                 self.colors[system] = gen_color(system)
         except:
             traceback.print_exc()
@@ -882,7 +880,7 @@ class DASWebService(DASWebManager):
                         if  item.has_key('link'):
                             linkrec = item['link']
                             break
-                    if  linkrec:
+                    if  linkrec and pval and pval != 'N/A':
                         links = ', '.join(make_links(linkrec, pval, inst)) + '.'
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
@@ -892,10 +890,12 @@ class DASWebService(DASWebManager):
             pad   = ""
             try:
                 systems = self.systems(row['das']['system'])
-                if  row['das']['system'] == ['combined']:
+                if  row['das']['system'] == ['combined'] or \
+                    row['das']['system'] == [u'combined']:
                     if  lkey:
                         systems = self.systems(row[lkey]['combined'])
             except:
+                traceback.print_exc()
                 systems = "" # we don't store systems for aggregated records
             jsonhtml = das_json(row, pad)
             page += self.templatepage('das_row', systems=systems, \
