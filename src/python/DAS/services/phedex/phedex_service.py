@@ -9,7 +9,7 @@ __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, xml_parser
+from DAS.utils.utils import map_validator, xml_parser, DotDict
 import types
 import DAS.utils.jsonwrapper as json
 
@@ -32,6 +32,9 @@ class PhedexService(DASAbstractService):
             for key, val in kwds.items():
                 if  val == '*':
                     del kwds[key]
+        if  api.find('dataset4site') != -1:
+            if  kwds.has_key('node') and kwds['node'].find('*') == -1:
+                kwds['node'] = kwds['node'] + '*'
 
     def parser(self, query, dformat, source, api):
         """
@@ -77,7 +80,7 @@ class PhedexService(DASAbstractService):
             raise Exception(msg)
         gen = xml_parser(source, prim_key, tags)
         site_names = []
-        seen = set()
+        seen = {}
         for row in gen:
             if  api == 'site4dataset' or api == 'site4block':
                 if  isinstance(row['block']['replica'], list):
@@ -91,13 +94,23 @@ class PhedexService(DASAbstractService):
                     if  result not in site_names:
                         site_names.append(result)
             elif  api == 'dataset4site' or api == 'dataset4se':
+                ddict = DotDict(row)
                 dataset = row['block']['name'].split('#')[0]
-                if  dataset not in seen:
-                    seen.add(dataset)
-                    yield {'dataset':{'name':dataset}}
+                bytes = ddict._get('block.bytes')
+                files = ddict._get('block.files')
+                if  seen.has_key(dataset):
+                    val = seen[dataset]
+                    seen[dataset] = dict(bytes=val['bytes'] + bytes, 
+                                files=val['files'] + files)
+                else:
+                    seen[dataset] = dict(bytes=bytes, files=files)
             else:
                 yield row
         if  api == 'site4dataset' or api == 'site4block':
             yield site_names
         del site_names
+        if  seen:
+            for key, val in seen.items():
+                record = dict(name=key, size=val['bytes'], files=val['files'])
+                yield {'dataset':record}
         del seen

@@ -9,7 +9,7 @@ url : {
 }
 expire : 3600
 params : {
-     "release":"optional", "site":"required", "dataset":"optional",
+     "release":"required", "site":"required"
 }
 daskeys : [
     {"key":"dataset", "map":"dataset.name", "pattern":""},
@@ -21,5 +21,4 @@ das2api : [
     {"das_key":"site.name", "api_param":"site", "pattern":""},
     {"das_key":"site.se", "api_param":"site", "pattern":""},
     {"das_key":"release.name", "api_param":"release", "pattern":""},
-    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
 ]

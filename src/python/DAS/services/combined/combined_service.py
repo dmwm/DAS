@@ -72,30 +72,21 @@ class CombinedService(DASAbstractService):
             # call DBS to obtain dataset for given release
             dbs_url = url['dbs']
             # in DBS3 I'll use datasets API and pass release over there
-            query = 'find dataset, dataset.era '
-            cond  = ''
-            if  args.has_key('release') and args['release'] != 'optional':
-                cond += ' and release=%s' % args['release']
-            if  args.has_key('dataset') and args['dataset'] != 'optional':
-                cond += ' and dataset=%s' % args['dataset']
-            if  cond:
-                query += ' where ' + cond[4:]
+            query = 'find dataset where release=%s' % args['release']
             dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9',\
                         'query':query}
             headers = {'Accept': 'text/xml'}
             source, expire = self.getdata(dbs_url, dbs_args, expire, headers)
             prim_key = 'dataset'
-            datasets = {}
+            datasets = set()
             for row in qlxml_parser(source, prim_key):
                 dataset = row['dataset']['dataset']
-                era = row['dataset']['dataset.era']
-                tier = dataset.split('/')[-1].split('-')
-                datasets[dataset] = dict(era=era, tier=tier)
+                datasets.add(dataset)
             if  args['site'].find('.') != -1: # it is SE
-                phedex_args = {'dataset':datasets.keys(), 
+                phedex_args = {'dataset':list(datasets), 
                                 'se': '%s' % args['site']}
             else:
-                phedex_args = {'dataset':datasets.keys(), 
+                phedex_args = {'dataset':list(datasets), 
                                 'node': '%s*' % args['site']}
             phedex_url = url['phedex']
             source, expire = \
@@ -107,18 +98,16 @@ class CombinedService(DASAbstractService):
                 ddict = DotDict(rec)
                 block = ddict._get('block.name')
                 bytes = ddict._get('block.bytes')
-                cust  = ddict._get('block.replica.custodial')
+                files = ddict._get('block.files')
                 found_dataset = block.split('#')[0]
                 if  found.has_key(found_dataset):
                     val = found[found_dataset]
-                    found[found_dataset] = {'bytes': val['bytes'] + bytes, 
-                                                'custodial':cust}
+                    found[found_dataset] = {'bytes': val['bytes'] + bytes,
+                        'files': val['files'] + files}
                 else:
-                    found[found_dataset] = {'bytes': bytes, 'custodial':cust}
+                    found[found_dataset] = {'bytes': bytes, 'files': files}
             for name, val in found.items():
-                record = dict(name=name, era=datasets[name]['era'],
-                                tier=datasets[name]['tier'],
-                                size=val['bytes'], custodial=val['custodial'],
+                record = dict(name=name, size=val['bytes'], files=val['files'],
                                 combined=['dbs', 'phedex']) 
                 yield {'dataset':record}
             del datasets
