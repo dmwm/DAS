@@ -9,6 +9,10 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.3
 
+  - add new combined DAS plugin to allow combined queries across different
+    data services. For instance, user can request to find all datasets at
+    given Tier site for a given release. To accomplish this request I need
+    to query both DBS/Phedex. Provided plugin just do that.
   - add new method/tempalte to get file py snippets
   - re-factor code which provide table view for DAS web UI
   - add new phedex URN to lookup files for a given dataset/site

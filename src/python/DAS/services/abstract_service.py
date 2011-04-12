@@ -126,29 +126,19 @@ class DASAbstractService(object):
                     self._notations[api] = {notation:map}
         return self._notations
 
-    def getdata(self, url, params, expire, headers=None):
+    def getdata(self, url, params, expire, headers=None, post=None):
         """
         Invoke URL call and retrieve data from data-service based
-        on provided URL and set of parameters. All data will be parsed
-        by data-service parsers to provide uniform JSON representation
-        for further processing.
+        on provided URL and set of parameters. Use post=True to
+        invoke POST request.
         """
-        if  self.name == 'dq':
-            timer_key = '%s %s' % (self.name, url)
-        else:
-            timer_key = '%s %s?%s' \
-                % (self.name, url, urllib.urlencode(params, doseq=True))
+        timer_key = '%s %s?%s' \
+            % (self.name, url, urllib.urlencode(params, doseq=True))
         das_timer(timer_key, self.verbose)
         host = url.replace('http://', '').split('/')[0]
-
         input_params = params
-
-        # based on provided interface correctly deal with input parameters
-        if  self.name == 'dq':
-            encoded_data = json.dumps(params)
-        else:
-            encoded_data = urllib.urlencode(params, doseq=True)
-        if  encoded_data:
+        encoded_data = urllib.urlencode(params, doseq=True)
+        if  not post:
             url = url + '?' + encoded_data
         if  not headers:
             headers = {}
@@ -156,19 +146,6 @@ class DASAbstractService(object):
                 % (self.name, url, headers)
         self.logger.info("\n")
         self.logger.info(msg)
-
-# using MacPorts python 2.6 cause python to die when using das cache server
-# (multiprocessing/urllib2)
-# see http://trac.macports.org/ticket/24421
-# while using httplib library everything work fine
-#        import httplib
-#        path = url.replace('http://%s'%host, '')
-#        self.logger.info('\n### host=%s, path=%s' % (host, path))
-#        conn = httplib.HTTPConnection(host)
-#        conn.request('GET', path)
-#        res  = conn.getresponse()
-#        data = res.read()
-
         req = urllib2.Request(url)
         for key, val in headers.items():
             req.add_header(key, val)
@@ -177,7 +154,10 @@ class DASAbstractService(object):
             opener  = urllib2.build_opener(handler)
             urllib2.install_opener(opener)
         try:
-            data = urllib2.urlopen(req)
+            if  post:
+                data = urllib2.urlopen(req, encoded_data)
+            else:
+                data = urllib2.urlopen(req)
         except urllib2.HTTPError, httperror:
             msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                         % (url, params, headers)

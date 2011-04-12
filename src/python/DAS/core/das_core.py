@@ -152,6 +152,9 @@ class DASCore(object):
                 obj = getattr(module, klass)(dasconfig)
                 setattr(self, name, obj)
             except IOError:
+                if  debug > 1:
+                    # we have virtual services, so IOError can be correct
+                    traceback.print_exc()
                 try:
                     mname  = 'DAS.services.generic_service'
                     module = __import__(mname, fromlist=['GenericService'])
