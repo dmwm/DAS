@@ -43,7 +43,7 @@ class DBSService(DASAbstractService):
             return url.replace(self.prim_instance, instance)
         return url
             
-    def adjust_params(self, api, kwds):
+    def adjust_params(self, api, kwds, inst):
         """
         Adjust DBS2 parameters for specific query requests
         """
@@ -73,13 +73,13 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('dataset')
-#        if  api == 'fakeSite4Dataset':
-#            val = kwds['dataset']
-#            if  val != 'required':
-#                kwds['query'] = "find site where dataset=%s" % val
-#            else:
-#                kwds['query'] = 'required'
-#            kwds.pop('dataset')
+        if  api == 'fakeSite4Dataset' and inst and inst != self.prim_instance:
+            val = kwds['dataset']
+            if  val != 'required':
+                kwds['query'] = "find site where dataset=%s" % val
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('dataset')
         if  api == 'fakeListDataset4File':
             val = kwds['file']
             if  val != 'required':
@@ -291,8 +291,8 @@ class DBSService(DASAbstractService):
             prim_key = 'child'
         elif api == 'fakeChild4Dataset':
             prim_key = 'child'
-#        elif api == 'fakeSite4Dataset':
-#            prim_key = 'site'
+        elif api == 'fakeSite4Dataset':
+            prim_key = 'site'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
@@ -334,9 +334,9 @@ class DBSService(DASAbstractService):
             if  row.has_key('release') and row['release'].has_key('release'):
                 row['release']['name'] = row['release']['release']
                 del row['release']['release']
-#            if  row.has_key('site'):
-#                row['site']['se'] = row['site']['site']
-#                del row['site']['site']
+            if  row.has_key('site'):
+                row['site']['se'] = row['site']['site']
+                del row['site']['site']
             attrs = ['config.name', 'config.content', 'config.version',\
                      'config.type', 'config.annotation', 'config.createdate',\
                      'config.createby', 'config.moddate', 'config.modby']

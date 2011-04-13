@@ -23,7 +23,7 @@ class PhedexService(DASAbstractService):
         map_validator(self.map)
         self.notationmap = self.notations()
 
-    def adjust_params(self, api, kwds):
+    def adjust_params(self, api, kwds, inst=None):
         """
         Adjust Phedex parameters for specific query requests
         """

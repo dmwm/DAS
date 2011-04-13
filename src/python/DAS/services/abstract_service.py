@@ -234,7 +234,7 @@ class DASAbstractService(object):
                 % self.name
         self.logger.debug(msg)
 
-    def adjust_params(self, api, kwds):
+    def adjust_params(self, api, kwds, instance=None):
         """
         Data-service specific parser to adjust parameters according to
         its specifications. For example, DQ service accepts a string
@@ -607,7 +607,7 @@ class DASAbstractService(object):
                 else:
                     found = 0
                     break # condition key does not map into API params
-            self.adjust_params(api, args)
+            self.adjust_params(api, args, instance)
             if  not found:
                 msg = "--- %s rejects API %s, parameters don't match"\
                         % (self.name, api)

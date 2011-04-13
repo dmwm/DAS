@@ -346,21 +346,21 @@ das2api : [
     {"das_key":"file.name", "api_param":"file", "pattern":""},
 ]
 ---
-#urn : fakeSite4Dataset
-#url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-#expire : 3600
-#params : {
-#     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
-#     "dataset": "required",
-#}
-#daskeys : [
-#    {"key":"site", "map":"site.name", "pattern":""},
-#    {"key":"dataset", "map":"dataset.name", "pattern":"/.*/.*/.*"},
-#]
-#das2api : [
-#    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
-#]
-#---
+urn : fakeSite4Dataset
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "dataset": "required",
+}
+daskeys : [
+    {"key":"site", "map":"site.name", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":"/.*/.*/.*"},
+]
+das2api : [
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+]
+---
 urn : listFileLumis
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600

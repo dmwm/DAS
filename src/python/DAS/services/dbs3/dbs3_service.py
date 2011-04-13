@@ -11,8 +11,7 @@ __author__ = "Valentin Kuznetsov"
 import re
 import time
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
-from DAS.utils.utils import dbsql_opt_map, convert_datetime
+from DAS.utils.utils import map_validator, json_parser
 
 class DBS3Service(DASAbstractService):
     """
@@ -35,7 +34,7 @@ class DBS3Service(DASAbstractService):
             return url.replace(self.prim_instance, instance)
         return url
             
-    def adjust_params(self, api, kwds):
+    def adjust_params(self, api, kwds, inst=None):
         """
         Adjust DBS2 parameters for specific query requests
         """
@@ -53,3 +52,27 @@ class DBS3Service(DASAbstractService):
                 if  val.has_key('$lte'):
                     kwds['minrun'] = val['$gte']
                     kwds['maxrun'] = val['$lte']
+
+    def parser(self, query, dformat, source, api):
+        """
+        Phedex data-service parser.
+        """
+        if  api == 'site4dataset':
+            sites = set()
+            for rec in json_parser(source, self.logger):
+                if  isinstance(rec, list):
+                    for row in rec:
+                        orig_site = row['origin_site_name']
+                        if  orig_site not in sites:
+                            sites.add(orig_site)
+                else:
+                    orig_site = row['origin_site_name']
+                    if  orig_site not in sites:
+                        sites.add(orig_site)
+            for site in sites:
+                yield {'site': {'name': site}}
+        else:
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                yield row
+

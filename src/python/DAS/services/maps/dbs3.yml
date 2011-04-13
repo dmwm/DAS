@@ -132,6 +132,22 @@ das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
+urn: site4dataset
+url : "http://localhost:8989/dbs/DBSReader/blocks/"
+expire : 900
+params : {
+        "detail":"True",
+        "dataset":"*",
+        "dataset_access_type": "PRODUCTION",
+}
+daskeys : [
+        {"key": "site", "map":"site.name", "pattern":""},
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+]
+---
 urn: blocks
 url : "http://localhost:8989/dbs/DBSReader/blocks/"
 expire : 900
@@ -139,6 +155,7 @@ params : {
         "block_name":"*",
         "detail":"True",
         "dataset":"optional",
+        "dataset_access_type": "PRODUCTION",
 }
 daskeys : [
         {"key": "block", "map":"block.name", "pattern":""},
