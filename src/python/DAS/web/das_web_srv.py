@@ -111,6 +111,9 @@ def add_filter_values(row, filters):
                 values = set([str(r) for r in DotDict(row).get_values(filter)])
                 val = ', '.join(values)
                 if  val:
+                    if  filter.lower() == 'run.run_number':
+                        if  isinstance(val, str) or isinstance(val, unicode):
+                            val = int(val.split('.')[0])
                     page += "<br />Filter <b>%s:</b> %s" % (filter, val)
                 else:
                     page += "<br />Filter <b>%s</b>" % filter
@@ -405,7 +408,7 @@ class DASWebService(DASWebManager):
                 return 1, helper(uinput, msg)
         try:
             service_map = self.dasmgr.mongoparser.service_apis_map(mongo_query)
-            if  uinput != 'records' and not service_map:
+            if  uinput.find('records') == -1 and not service_map:
                 return 1, helper(uinput, \
                 "None of the API's registered in DAS can resolve this query")
         except:
@@ -569,7 +572,7 @@ class DASWebService(DASWebManager):
         head   = request_headers()
         head['args'] = kwargs
         uinput = getarg(kwargs, 'input', '') 
-        inst   = kwargs.get('instance', '')
+        inst   = kwargs.get('instance', 'cms_dbs_prod_global')
         if  inst:
             uinput = ' instance=%s %s' % (inst, uinput)
         idx    = getarg(kwargs, 'idx', 0)
@@ -699,7 +702,7 @@ class DASWebService(DASWebManager):
 
         time0   = time.time()
         uinput  = getarg(kwargs, 'input', '').strip()
-        inst    = kwargs.get('instance', '')
+        inst    = kwargs.get('instance', 'cms_dbs_prod_global')
         if  inst:
             uinput = ' instance=%s %s' % (inst, uinput)
         self.logdb(uinput)
@@ -866,29 +869,31 @@ class DASWebService(DASWebManager):
             links = ""
             pkey  = None
             lkey  = None
-            if  row.has_key('das'):
-                if  row['das'].has_key('primary_key'):
-                    pkey    = row['das']['primary_key']
-                    lkey    = pkey.split('.')[0]
-                    try:
-                        pval = DotDict(row)._get(pkey)
-                        if  pkey == 'run.run_number':
-                            pval = int(pval)
-                        ifield  = urllib.urlencode(\
-                            {'input':'%s=%s' % (lkey, pval), 'instance':inst})
+            if  row.has_key('das') and row['das'].has_key('primary_key'):
+                pkey = row['das']['primary_key']
+                lkey = pkey.split('.')[0]
+                try:
+                    pval = DotDict(row)._get(pkey)
+                    if  pkey == 'run.run_number':
+                        pval = int(pval)
+                    ifield  = urllib.urlencode(\
+                        {'input':'%s=%s' % (lkey, pval), 'instance':inst})
+                    if  pval:
                         page += '<b>%s</b>: <a href="/das/request?%s">%s</a>'\
                                     % (lkey.capitalize(), ifield, pval)
-                        plist = self.dasmgr.mapping.presentation(lkey)
-                        linkrec = None
-                        for item in plist:
-                            if  item.has_key('link'):
-                                linkrec = item['link']
-                                break
-                        if  linkrec and pval and pval != 'N/A':
-                            links = ', '.join(make_links(linkrec, pval, inst))\
-                                        + '.'
-                    except:
-                        pval = 'N/A'
+                    else:
+                        page += '<b>%s</b>: N/A' % lkey.capitalize()
+                    plist = self.dasmgr.mapping.presentation(lkey)
+                    linkrec = None
+                    for item in plist:
+                        if  item.has_key('link'):
+                            linkrec = item['link']
+                            break
+                    if  linkrec and pval and pval != 'N/A':
+                        links = ', '.join(make_links(linkrec, pval, inst))\
+                                    + '.'
+                except:
+                    pval = 'N/A'
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
