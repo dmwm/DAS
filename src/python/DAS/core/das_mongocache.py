@@ -316,28 +316,29 @@ def compare_specs(input_query, exist_query):
         if  set(fields2) > set(fields1): # set2 is superset of set1
             return True
 
-    if  spec2.keys() != spec1.keys():
+    if  not set(spec2.keys()).issubset(spec1.keys()):
         return False
 
     for key, val1 in spec1.items():
-        val2 = spec2[key]
-        if (isinstance(val1, str) or isinstance(val1, unicode)) and \
-             (isinstance(val2, str) or isinstance(val2, unicode)):
-             if not compare_str(val1, val2):
-                 return False
-        elif  type(val1) != type(val2) and not isinstance(val1, dict)\
-            and not isinstance(val2, dict):
-            return False
-        elif isinstance(val1, dict) and isinstance(val2, dict):
-            if  not compare_dicts(val1, val2):
+        if  spec2.has_key(key):
+            val2 = spec2[key]
+            if (isinstance(val1, str) or isinstance(val1, unicode)) and \
+                 (isinstance(val2, str) or isinstance(val2, unicode)):
+                 if not compare_str(val1, val2):
+                     return False
+            elif  type(val1) != type(val2) and not isinstance(val1, dict)\
+                and not isinstance(val2, dict):
                 return False
-        elif isinstance(val2, dict) and isinstance(val1, int):
-            if  val1 in val2.values():
-                return True
-            return False
-        else:
-            if  val1 != val2:
+            elif isinstance(val1, dict) and isinstance(val2, dict):
+                if  not compare_dicts(val1, val2):
+                    return False
+            elif isinstance(val2, dict) and isinstance(val1, int):
+                if  val1 in val2.values():
+                    return True
                 return False
+            else:
+                if  val1 != val2:
+                    return False
     return True
 
 def update_item(item, key, val):
@@ -647,9 +648,6 @@ class DASMongocache(object):
                 query['spec']['date'] = [query['spec']['date']['$gte'],
                                          query['spec']['date']['$lte']]
 
-# TODO: investigate why do I need to loose the query????
-# 20110120 (ticket #960)
-#            query = loose(query)
         # adjust query id if it's requested
         if  adjust:
             query  = adjust_id(query)
@@ -659,7 +657,6 @@ class DASMongocache(object):
         idx    = int(idx)
         spec   = query.get('spec', {})
         fields = query.get('fields', None)
-
         # always look-up non-empty records
         if  spec:
             spec.update({'das.empty_record':0})
@@ -937,6 +934,7 @@ class DASMongocache(object):
         system     = dasheader['system']
         rec        = [k for i in header['lookup_keys'] for k in i.values()]
         lkeys      = list(set(k for i in rec for k in i))
+        cond_keys  = query['spec'].keys()
         # get API record id
         enc_query  = encode_mongo_query(query)
         qhash      = genkey(enc_query)
@@ -950,6 +948,7 @@ class DASMongocache(object):
             for item in results:
                 counter += 1
                 item['das'] = dict(expire=expire, primary_key=prim_key, 
+                                        condition_keys=cond_keys,
                                         system=system, empty_record=0)
                 item['das_id'] = str(objid)
                 yield item

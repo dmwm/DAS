@@ -1274,61 +1274,69 @@ def aggregator_helper(results, expire):
     DAS aggregator helper which iterates over all records in results set and
     perform aggregation of records on the primary_key of the record.
     """
-    def helper(expire, prim_key, system):
+    def helper(expire, prim_key, system, cond_keys):
         "Construct a dict out of provided values"
-        rdict = dict(expire=expire, primary_key=prim_key, system=system)
+        rdict = dict(expire=expire, primary_key=prim_key, system=system,
+                        condition_keys=cond_keys)
         return dict(das=rdict)
 
-    record = results.next()
-    prim_key = record['das']['primary_key']
-    system   = record['das']['system']
+    record    = results.next()
+    prim_key  = record['das']['primary_key']
+    cond_keys = record['das']['condition_keys']
+    system    = record['das']['system']
     record.pop('das')
     update = 1
     row = {}
     for row in results:
-        row_prim_key = row['das']['primary_key']
-        row_system   = row['das']['system']
+        row_prim_key  = row['das']['primary_key']
+        row_cond_keys = row['das']['condition_keys']
+        row_system    = row['das']['system']
         row.pop('das')
         if  row_prim_key != prim_key:
-            record.update(helper(expire, prim_key, system))
+            record.update(helper(expire, prim_key, system, cond_keys))
             yield record
             prim_key = row_prim_key
             record = row
             system = row_system
+            cond_keys = list( set(cond_keys+row_cond_keys) )
             continue
         try:
             val1 = dict_value(record, prim_key)
         except:
-            record.update(helper(expire, prim_key, system))
+            record.update(helper(expire, prim_key, system, cond_keys))
             yield record
             record = dict(row)
             system = row_system
+            cond_keys = list( set(cond_keys+row_cond_keys) )
             update = 0
             continue
         try:
             val2 = dict_value(row, prim_key)
         except:
-            row.update(helper(expire, prim_key, system))
+            row.update(helper(expire, prim_key, system, cond_keys))
             yield row
             record = dict(row)
             system = row_system
+            cond_keys = list( set(cond_keys+row_cond_keys) )
             update = 0
             continue
         if  val1 == val2:
             merge_dict(record, row)
             system = list(set(system) | set(row_system))
+            cond_keys = list( set(cond_keys+row_cond_keys) )
             update = 1
         else:
-            record.update(helper(expire, prim_key, system))
+            record.update(helper(expire, prim_key, system, cond_keys))
             yield record
             record = dict(row)
             system = row_system
+            cond_keys = list( set(cond_keys+row_cond_keys) )
             update = 0
     if  update: # check if we did update for last row
-        record.update(helper(expire, prim_key, system))
+        record.update(helper(expire, prim_key, system, cond_keys))
         yield record
     else:
-        row.update(helper(expire, prim_key, system))
+        row.update(helper(expire, prim_key, system, cond_keys))
         yield row
 
 def unique_filter(rows):

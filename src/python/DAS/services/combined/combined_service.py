@@ -68,7 +68,7 @@ class CombinedService(DASAbstractService):
                             size=val['bytes'], custodial=val['custodial'])
                 yield {'dataset':record}
             del found
-        if  api == 'combined_dataset4site':
+        if  api == 'combined_dataset4site_release':
             # call DBS to obtain dataset for given release
             dbs_url = url['dbs']
             # in DBS3 I'll use datasets API and pass release over there
@@ -119,20 +119,15 @@ class CombinedService(DASAbstractService):
         and return results in a list with provided row.
         """
         time0 = time.time()
+        if  api == 'combined_dataset4site_release':
+            genrows = self.helper(url, api, args, expire)
         if  api == 'combined_dataset4site':
-            enough = False
-            for key, val in args.items():
-                if  key != 'site' and val != 'optional':
-                    enough = True # we need extra argument apart from site
-            if  not enough:
-                msg = "--- combined rejects API %s, not enough arguments" % api
-                self.logger.info(msg)
-                error   = "The provided set of arguments is too loose, please add"
-                error  += " release or dataset pattern to your query"
-                record  = dict(name="N/A", error=error, combined=['dbs', 'phedex'])
-                genrows = [dict(dataset=record)]
-            else:
-                genrows = self.helper(url, api, args, expire)
+            msg = "--- combined rejects API %s, not enough arguments" % api
+            self.logger.info(msg)
+            error   = "The provided set of arguments is too loose, please add"
+            error  += " release or dataset pattern to your query"
+            record  = dict(name="N/A", error=error, combined=['dbs', 'phedex'])
+            genrows = [dict(dataset=record)]
         dasrows = self.set_misses(query, api, genrows)
         ctime = time.time() - time0
         try:

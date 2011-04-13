@@ -9,6 +9,11 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.3
 
+  - add condition_keys into DAS records, this will assure that look-up conditions
+    will be applied properly. For instance, user1 requested dataset site=abc release=1
+    and user2 requested dataset site=abc. The results of user1 should not be shown
+    in user2 queries since it is superset of previous query. Therefore each cache
+    look-up is supplemented by condition_keys
   - add suport for the following queries:
     dataset release=CMSSW_4_2_0 site=cmssrm.fnal.gov
     dataset release=CMSSW_4_2_0 site=T1_US_FNAL

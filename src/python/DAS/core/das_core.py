@@ -437,11 +437,11 @@ class DASCore(object):
             fields = None # look-up all records
             query['fields'] = None # reset query field part
         spec      = query.get('spec', {})
-#        if  spec.has_key('instance'):
-#            del spec['instance'] # while we look-up data we don't need instance
         if  spec == dict(records='*'):
             spec  = {} # we got request to get everything
             query['spec'] = spec
+        else: # add look-up of condition keys
+            query['spec'].update({"das.condition_keys":spec.keys()})
         if  fields:
             prim_keys = []
             for key in fields:
@@ -497,7 +497,7 @@ class DASCore(object):
                 res += [{'_id':_id, 'function': func, 'key': key, 'result': data}]
                 _id += 1
         elif isinstance(fields, list) and 'queries' in fields:
-             res = self.get_queries(query)
+            res = self.get_queries(query)
         else:
             res = self.rawcache.get_from_cache(\
                 query, idx, limit, skey, sorder, collection=collection)

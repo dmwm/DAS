@@ -110,7 +110,10 @@ def add_filter_values(row, filters):
             if  filter.find('<') == -1 and filter.find('>') == -1:
                 values = set([str(r) for r in DotDict(row).get_values(filter)])
                 val = ', '.join(values)
-                page += "Filter <b>%s:</b> %s<br />" % (filter, val)
+                if  val:
+                    page += "<br />Filter <b>%s:</b> %s" % (filter, val)
+                else:
+                    page += "<br />Filter <b>%s</b>" % filter
     return page
 
 def adjust_values(func, gen, links):
@@ -867,21 +870,25 @@ class DASWebService(DASWebManager):
                 if  row['das'].has_key('primary_key'):
                     pkey    = row['das']['primary_key']
                     lkey    = pkey.split('.')[0]
-                    pval    = DotDict(row)._get(pkey)
-                    if  pkey == 'run.run_number':
-                        pval = int(pval)
-                    ifield  = urllib.urlencode(\
-                        {'input':'%s=%s' % (lkey, pval), 'instance':inst})
-                    page   += '<b>%s</b>: <a href="/das/request?%s">%s</a>'\
-                                % (lkey.capitalize(), ifield, pval)
-                    plist   = self.dasmgr.mapping.presentation(lkey)
-                    linkrec = None
-                    for item in plist:
-                        if  item.has_key('link'):
-                            linkrec = item['link']
-                            break
-                    if  linkrec and pval and pval != 'N/A':
-                        links = ', '.join(make_links(linkrec, pval, inst)) + '.'
+                    try:
+                        pval = DotDict(row)._get(pkey)
+                        if  pkey == 'run.run_number':
+                            pval = int(pval)
+                        ifield  = urllib.urlencode(\
+                            {'input':'%s=%s' % (lkey, pval), 'instance':inst})
+                        page += '<b>%s</b>: <a href="/das/request?%s">%s</a>'\
+                                    % (lkey.capitalize(), ifield, pval)
+                        plist = self.dasmgr.mapping.presentation(lkey)
+                        linkrec = None
+                        for item in plist:
+                            if  item.has_key('link'):
+                                linkrec = item['link']
+                                break
+                        if  linkrec and pval and pval != 'N/A':
+                            links = ', '.join(make_links(linkrec, pval, inst))\
+                                        + '.'
+                    except:
+                        pval = 'N/A'
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
@@ -900,6 +907,8 @@ class DASWebService(DASWebManager):
                 traceback.print_exc()
                 systems = "" # we don't store systems for aggregated records
             jsonhtml = das_json(row, pad)
+            if  not links:
+                page += '<br />'
             page += self.templatepage('das_row', systems=systems, \
                     sanitized_data=jsonhtml, id=id, rec_id=id)
             page += '</div>'

@@ -312,6 +312,22 @@ class testDASMongocache(unittest.TestCase):
         expect = dict(spec={'site.name':pat}, fields=fields)
         self.assertEqual(expect, debug)
 
+    def test_similar_queries_3(self):                          
+        """test similar_queries method of DASMongoCache"""
+        query1 = {'fields':None, 'spec':{'site.name':'T1'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':None, 'spec':{'site.name':'T1', 'release':'A'}}
+        result = self.dasmongocache.similar_queries(query2)
+        self.assertEqual(query1, result)
+        self.dasmongocache.delete_cache()
+
+        query1 = {'fields':None, 'spec':{'site.name':'T1', 'release':'A'}}
+        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
+        query2 = {'fields':None, 'spec':{'site.name':'T1'}}
+        result = self.dasmongocache.similar_queries(query2)
+        self.assertEqual(False, result)
+        self.dasmongocache.delete_cache()
+
     def test_similar_queries_2(self):                          
         """test similar_queries method of DASMongoCache"""
         query1 = {'fields':None, 'spec':{'block.name':'ABC'}}

@@ -23,12 +23,12 @@ class testCheckArgs(unittest.TestCase):
     def test_web(self):
         """
         Test checkargs of DAS web server, here is supported list
-        supported = ['input', 'idx', 'limit', 'show', 'collection', 
+        supported = ['input', 'idx', 'limit', 'collection', 
                      'format', 'sort', 'dir', 'view', 'method']
         """
 
         arg    = [0]
-        kwds   = dict(idx='1', limit='1', show='json',
+        kwds   = dict(idx='1', limit='1', 
                 input='site=T1', collection='merge',
                 format='xml', dir='asc', view='list')
         result = func_web(arg, **kwds)
@@ -46,8 +46,6 @@ class testCheckArgs(unittest.TestCase):
         wrong  = {'ajax':'5'} # wrong value
         self.assertRaises(HTTPError, func_web, *arg, **wrong)
         wrong  = {'method':'FOO'} # wrong method
-        self.assertRaises(HTTPError, func_web, *arg, **wrong)
-        wrong  = {'show':'FOO'} # wrong value
         self.assertRaises(HTTPError, func_web, *arg, **wrong)
         wrong  = {'format':'1'} # wrong value
         self.assertRaises(HTTPError, func_web, *arg, **wrong)
