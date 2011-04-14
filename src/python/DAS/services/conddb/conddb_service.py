@@ -6,10 +6,9 @@ CondDB service
 """
 __author__ = "Valentin Kuznetsov"
 
-import re
 import time
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator
+from DAS.utils.utils import map_validator, convert2date
 
 def convert_datetime(sec):
     """
@@ -31,7 +30,7 @@ class CondDBService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def adjust_params(self, api, kwds, inst=None):
+    def adjust_params(self, api, kwds, _inst=None):
         """
         Adjust CondDB parameters for specific query requests
         """

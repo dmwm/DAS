@@ -5,8 +5,6 @@
 DAS web interface, based on WMCore/WebTools
 """
 
-__revision__ = "$Id: das_web.py,v 1.6 2010/05/03 19:49:33 valya Exp $"
-__version__ = "$Revision: 1.6 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -16,13 +14,8 @@ import sys
 import time
 import thread
 import urllib
-import urllib2
-import inspect
 import cherrypy
 import traceback
-
-import yaml
-from pprint import pformat
 
 from itertools import groupby
 from cherrypy import expose, HTTPError
@@ -32,56 +25,25 @@ from pymongo.objectid import ObjectId
 # DAS modules
 import DAS
 from DAS.core.das_core import DASCore
-from DAS.core.das_ql import das_aggregators, das_operators
+from DAS.core.das_ql import das_aggregators, das_operators, das_filters
 from DAS.core.das_ply import das_parser_error
 from DAS.utils.utils import getarg, access, size_format, DotDict, genkey
 from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
-from DAS.web.utils import urllib2_request, json2html, web_time, quote
-from DAS.web.utils import ajax_response, checkargs, get_ecode
-from DAS.web.utils import wrap2dasxml, wrap2dasjson
-from DAS.web.utils import dascore_monitor, yui2das, yui_name, gen_color
+from DAS.web.utils import json2html, web_time, quote
+from DAS.web.utils import ajax_response, checkargs
+from DAS.web.utils import dascore_monitor, gen_color
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import request_headers, jsonstreamer
-from DAS.web.tools import exposejson, exposedasplist
-from DAS.core.das_ql import das_aggregators, das_filters
+from DAS.web.tools import exposedasplist
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
+from DAS.web.autocomplete import autocomplete_helper
 
-import DAS.utils.jsonwrapper as json
-
-DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 'instance',
-                  'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
-
-RE_DBSQL_0 = re.compile(r"^find")
-RE_DBSQL_1 = re.compile(r"^find\s+(\w+)")
-RE_DBSQL_2 = re.compile(r"^find\s+(\w+)\s+where\s+([\w.]+)\s*(=|in|like)\s*(.*)")
-RE_DATASET = re.compile(r"^/\w+")
-RE_SITE = re.compile(r"^T[0123]_")
-RE_SUBKEY = re.compile(r"^([a-z_]+\.[a-zA-Z_]+)")
-RE_KEYS = re.compile(r"""([a-z_]+)\s?(?:=|in|between|last)\s?(".*?"|'.*?'|[^\s]+)|([a-z_]+)""")
-RE_COND_0 = re.compile(r"^([a-z_]+)")
-RE_HASPIPE = re.compile(r"^.*?\|")
-RE_PIPECMD = re.compile(r"^.*?\|\s*(\w+)$")
-RE_AGGRECMD = re.compile(r"^.*?\|\s*(\w+)\(([\w.]+)$")
-RE_FILTERCMD = re.compile(r"^.*?\|\s*(\w+)\s+(?:[\w.]+\s*,\s*)*([\w.]+)$")
-RE_K_SITE = re.compile(r"^s")
-RE_K_FILE = re.compile(r"^f")
-RE_K_PR_DATASET = re.compile(r"^pr")
-RE_K_PARENT = re.compile(r"^pa")
-RE_K_CHILD = re.compile(r"^ch")
-RE_K_CONFIG = re.compile(r"^co")
-RE_K_GROUP = re.compile(r"^g")
-RE_K_DATASET = re.compile(r"^d")
-RE_K_BLOCK = re.compile(r"^b")
-RE_K_RUN = re.compile(r"^ru")
-RE_K_RELEASE = re.compile(r"^re")
-RE_K_TIER = re.compile(r"^t")
-RE_K_MONITOR = re.compile(r"^m")
-RE_K_JOBSUMMARY = re.compile(r"^j")
-
+DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 
+        'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
 def make_links(links, value, inst):
@@ -93,7 +55,6 @@ def make_links(links, value, inst):
     else:
         values = [value]
     for link in links:
-        name, query = link.items()
         for val in values:
             if  link.has_key('query'):
                 dasquery = link['query'] % val
@@ -119,17 +80,17 @@ def add_filter_values(row, filters):
     """Add filter values for a given row"""
     page = ''
     if filters:
-        for filter in filters:
-            if  filter.find('<') == -1 and filter.find('>') == -1:
-                values = set([str(r) for r in DotDict(row).get_values(filter)])
+        for flt in filters:
+            if  flt.find('<') == -1 and flt.find('>') == -1:
+                values = set([str(r) for r in DotDict(row).get_values(flt)])
                 val = ', '.join(values)
                 if  val:
-                    if  filter.lower() == 'run.run_number':
+                    if  flt.lower() == 'run.run_number':
                         if  isinstance(val, str) or isinstance(val, unicode):
                             val = int(val.split('.')[0])
-                    page += "<br />Filter <b>%s:</b> %s" % (filter, val)
+                    page += "<br />Filter <b>%s:</b> %s" % (flt, val)
                 else:
-                    page += "<br />Filter <b>%s</b>" % filter
+                    page += "<br />Filter <b>%s</b>" % flt
     return page
 
 def adjust_values(func, gen, links):
@@ -142,7 +103,7 @@ def adjust_values(func, gen, links):
     das_mapping_db:daskey_from_presentation
     """
     rdict = {}
-    for uikey, value in [k for k, g in groupby(gen)]:
+    for uikey, value in [k for k, _g in groupby(gen)]:
         val = quote(value)
         if  rdict.has_key(uikey):
             existing_val = rdict[uikey]
@@ -202,7 +163,7 @@ class DASWebService(DASWebManager):
     """
     DAS web service interface.
     """
-    def __init__(self, config={}):
+    def __init__(self, config):
         DASWebManager.__init__(self, config)
         self.base   = config['url_base']
         self.next   = 3000 # initial next update status in miliseconds
@@ -251,7 +212,7 @@ class DASWebService(DASWebManager):
             self.colors = {}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
-        except:
+        except Exception, _exp:
             traceback.print_exc()
             self.dasmgr = None
             self.daskeys = []
@@ -262,7 +223,6 @@ class DASWebService(DASWebManager):
         Make entry in Logging DB
         """
         qhash = genkey(query)
-        headers = cherrypy.request.headers
         doc = dict(qhash=qhash, timestamp=time.time(),
                 headers=cherrypy.request.headers,
                 method=cherrypy.request.method,
@@ -316,8 +276,7 @@ class DASWebService(DASWebManager):
         return self.page(page, response_div=False)
 
     @expose
-    @checkargs(DAS_WEB_INPUTS)
-    def cli(self, *args, **kwargs):
+    def cli(self):
         """
         Serve DAS CLI file download.
         """
@@ -400,7 +359,7 @@ class DASWebService(DASWebManager):
         # check provided input. If at least one word is not part of das_keys
         # return ambiguous template.
         try:
-            mongo_query = self.dasmgr.mongoparser.parse(uinput,\
+            mongo_query = self.dasmgr.mongoparser.parse(uinput, \
                                 add_to_analytics=False)
         except Exception, err:
             return 1, helper(uinput, das_parser_error(uinput, str(err)))
@@ -438,14 +397,14 @@ class DASWebService(DASWebManager):
         input form and yui_table for output Table widget.
         """
         uinput = getarg(kwargs, 'input', '') 
-        return self.page(self.form(input=uinput))
+        return self.page(self.form(uinput=uinput))
 
-    def form(self, input=None, instance='cms_dbs_prod_global', view='list'):
+    def form(self, uinput=None, instance='cms_dbs_prod_global', view='list'):
         """
         provide input DAS search form
         """
-        page = self.templatepage('das_searchform', input=input, base=self.base,\
-                instance=instance, view=view)
+        page = self.templatepage('das_searchform', input=uinput, \
+                base=self.base, instance=instance, view=view)
         return page
 
     def gen_error_msg(self, kwargs):
@@ -482,8 +441,8 @@ class DASWebService(DASWebManager):
         if  not kwargs.has_key('fid'):
             code = web_code('No file id')
             raise HTTPError(500, 'DAS error, code=%s' % code)
-        fid = kwargs.get('fid')
-        data.update({'status':'requested', 'fid':fid})
+        fid  = kwargs.get('fid')
+        data = {'status':'requested', 'fid':fid}
         try:
             fds = self.gfs.get(ObjectId(fid))
             data['status'] = 'success'
@@ -503,14 +462,11 @@ class DASWebService(DASWebManager):
         """
         try:
             recordid = None
-            format = ''
             if  args:
                 recordid = args[0]
                 spec = {'_id':ObjectId(recordid)}
                 fields = None
                 query = dict(fields=fields, spec=spec)
-                if  len(args) == 2:
-                    format = args[1]
             elif  kwargs and kwargs.has_key('_id'):
                 spec = {'_id': ObjectId(kwargs['_id'])}
                 fields = None
@@ -546,7 +502,7 @@ class DASWebService(DASWebManager):
                     page = 'No results found, nresults=%s' % nresults
                 page += res
 
-            form    = self.form(input="")
+            form    = self.form(uinput="")
             ctime   = (time.time()-time0)
             page = self.page(form + page, ctime=ctime)
             return page
@@ -617,10 +573,10 @@ class DASWebService(DASWebManager):
             return True
         return False
 
-    def busy_page(self, input=None):
+    def busy_page(self, uinput=None):
         """DAS server busy page layout"""
         page = "<h3>DAS server is busy, please try later</h3>"
-        form = self.form(input)
+        form = self.form(uinput)
         return self.page(form + page)
 
     @expose
@@ -691,14 +647,14 @@ class DASWebService(DASWebManager):
         try:
             mquery = self.dasmgr.mongoparser.parse(query, False) 
             data   = self.dasmgr.result(mquery, idx=0, limit=0)
-        except Exception, exp:
+        except Exception, _exp:
             msg    = 'Unable to retrieve data for query=%s' % query
             return self.error(msg)
         lfns = []
         for rec in data:
-            file  = DotDict(rec)._get('file.name')
-            if  file not in lfns:
-                lfns.append(file)
+            filename = DotDict(rec)._get('file.name')
+            if  filename not in lfns:
+                lfns.append(filename)
         page = self.templatepage('das_files_py', lfnList=lfns, pfnList=[])
         cherrypy.response.headers['Content-Type'] = "text/plain"
         return page
@@ -722,7 +678,7 @@ class DASWebService(DASWebManager):
         if  self.busy():
             return self.busy_page(uinput)
         view    = kwargs.get('view', 'list')
-        form    = self.form(input=uinput, instance=inst, view=view)
+        form    = self.form(uinput=uinput, instance=inst, view=view)
         check, content = self.check_input(uinput)
         if  check:
             if  view == 'list' or view == 'table':
@@ -862,11 +818,7 @@ class DASWebService(DASWebManager):
         """
         kwargs  = head['args']
         total   = head['nresults']
-        time0   = time.time()
-        uinput  = getarg(kwargs, 'input', '').strip()
         inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
-        idx     = getarg(kwargs, 'idx', 0)
-        limit   = getarg(kwargs, 'limit', 10)
         query   = getarg(kwargs, 'query', {})
         filters = query.get('filters')
         page    = self.pagination(total, kwargs)
@@ -874,7 +826,7 @@ class DASWebService(DASWebManager):
         style  = 'white'
         for row in data:
             try:
-                id = row['_id']
+                mongo_id = row['_id']
             except:
                 msg = 'Fail to process row\n%s' % str(row)
                 raise Exception(msg)
@@ -928,7 +880,7 @@ class DASWebService(DASWebManager):
             if  not links:
                 page += '<br />'
             page += self.templatepage('das_row', systems=systems, \
-                    sanitized_data=jsonhtml, id=id, rec_id=id)
+                    sanitized_data=jsonhtml, id=mongo_id, rec_id=mongo_id)
             page += '</div>'
         page += '<div align="right">DAS cache server time: %5.3f sec</div>' \
                 % head['ctime']
@@ -945,26 +897,26 @@ class DASWebService(DASWebManager):
         limit   = getarg(kwargs, 'limit', 10)
         sdir    = getarg(kwargs, 'dir', '')
         inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
-        form    = self.form(input=uinput)
         query   = kwargs['query']
         titles  = []
         page    = self.pagination(total, kwargs)
         if  query.has_key('filters'):
-            for filter in query['filters']:
-                if  filter.find('=') != -1 or filter.find('>') != -1 or \
-                    filter.find('<') != -1:
+            for flt in query['filters']:
+                if  flt.find('=') != -1 or flt.find('>') != -1 or \
+                    flt.find('<') != -1:
                     continue
-                titles.append(filter)
+                titles.append(flt)
         style   = 1
         tpage   = ""
         pkey    = None
         for row in data:
             rec  = []
-            if  not pkey and row.has_key('das') and row['das'].has_key('primary_key'):
+            if  not pkey and row.has_key('das') and \
+                row['das'].has_key('primary_key'):
                 pkey = row['das']['primary_key'].split('.')[0]
             if  query.has_key('filters'):
-                for filter in query['filters']:
-                    rec.append(DotDict(row)._get(filter))
+                for flt in query['filters']:
+                    rec.append(DotDict(row)._get(flt))
             else:
                 gen = self.convert2ui(row)
                 titles = []
@@ -976,7 +928,7 @@ class DASWebService(DASWebManager):
                 style = 0
             else:
                 style = 1
-            tpage += self.templatepage('das_table_row', rec=rec, tag='td',\
+            tpage += self.templatepage('das_table_row', rec=rec, tag='td', \
                         style=style, encode=1)
         sdict  = self.sort_dict(titles, pkey)
         if  sdir == 'asc':
@@ -985,7 +937,7 @@ class DASWebService(DASWebManager):
             sdir = 'asc'
         else: # default sort direction
             sdir = 'asc' 
-        args   = {'input':uinput, 'idx':idx, 'limit':limit, 'instance':inst,\
+        args   = {'input':uinput, 'idx':idx, 'limit':limit, 'instance':inst, \
                          'view':'table', 'dir': sdir}
         theads = []
         for title in titles:
@@ -993,7 +945,7 @@ class DASWebService(DASWebManager):
             url = '<a href="/das/request?%s">%s</a>' \
                 % (urllib.urlencode(args), title)
             theads.append(url)
-        thead = self.templatepage('das_table_row', rec=theads, tag='th',\
+        thead = self.templatepage('das_table_row', rec=theads, tag='th', \
                         style=0, encode=0)
         self.sort_dict(titles, pkey)
         page += '<br />'
@@ -1014,13 +966,12 @@ class DASWebService(DASWebManager):
         results = ""
         for row in data:
             if  filters:
-                record = {}
-                for filter in filters:
-                    if  filter.find('=') != -1 or filter.find('>') != -1 or \
-                        filter.find('<') != -1:
+                for flt in filters:
+                    if  flt.find('=') != -1 or flt.find('>') != -1 or \
+                        flt.find('<') != -1:
                         continue
                     try:
-                        for obj in DotDict(row).get_values(filter):
+                        for obj in DotDict(row).get_values(flt):
                             results += str(obj) + '\n'
                     except:
                         pass
@@ -1069,209 +1020,7 @@ class DASWebService(DASWebManager):
     @checkargs(['query'])
     def autocomplete(self, **kwargs):
         """
-        Interface to the DAS keylearning system, for a 
-        as-you-type suggestion system. This is a call for AJAX
-        in the page rather than a user-visible one.
-        
-        This returns a list of JS objects, formatted like:
-        {'css': '<ul> css class', 'value': 'autocompleted text',
-         'info': '<html> text'}
-         
-        Some of the work done here could be moved client side, and
-        only calls that actually require keylearning look-ups
-        forwarded. Given the number of REs used, this may be necessary
-        if load increases.
+        Provides autocomplete functionality for DAS web UI.
         """
-
         query = kwargs.get("query", "").strip()
-        result = []
-        if RE_DBSQL_0.match(query):
-            #find...
-            match1 = RE_DBSQL_1.match(query) 
-            match2 = RE_DBSQL_2.match(query)
-            if match1:
-                daskey = match1.group(1)
-                if daskey in self.daskeys:
-                    if match2:
-                        operator = match2.group(3)
-                        value = match2.group(4)
-                        if operator == '=' or operator == 'like':
-                            result.append({'css': 'ac-warinig sign', 'value':'%s=%s' % (daskey, value),
-                                           'info': "This appears to be a DBS-QL query, but the key (<b>%s</b>) is a valid DAS key, and the condition should <b>probably</b> be expressed like this." % (daskey)})
-                        else:
-                            result.append({'css': 'ac-warinig sign', 'value':daskey,
-                                           'info': "This appears to be a DBS-QL query, but the key (<b>%s</b>) is a valid DAS key. However, I'm not sure how to interpret the condition (<b>%s %s<b>)." % (daskey, operator, value)})
-                    else:
-                        result.append({'css': 'ac-warinig sign', 'value': daskey,
-                                       'info': 'This appears to be a DBS-QL query, but the key (<b>%s</b>) is a valid DAS key.' % daskey})
-                else:
-                    result.append({'css': 'ac-error sign', 'value': '',
-                                   'info': "This appears to be a DBS-QL query, and the key (<b>%s</b>) isn't known to DAS." % daskey})
-                    
-                    key_search = self.dasmgr.keylearning.key_search(daskey)
-                    #do a key search, and add info elements for them here
-                    for keys, members in key_search.items():
-                        result.append({'css': 'ac-info', 'value': ' '.join(keys),
-                                       'info': 'Possible keys <b>%s</b> (matching %s).' % (', '.join(keys), ', '.join(members))})
-                    if not key_search:
-                        result.append({'css': 'ac-error sign', 'value': '',
-                                       'info': 'No matches found for <b>%s</b>.' % daskey})
-                        
-                    
-            else:
-                result.append({'css': 'ac-error sign', 'value': '',
-                               'info': 'This appears to be a DBS-QL query. DAS queries are of the form <b>key</b><span class="faint">[ operator value]</span>'})
-        elif RE_K_SITE.match(query):
-            result.append({'css': 'ac-info', 'value': 'site', 'info': 'Valid DAS key: site'})
-        elif RE_K_FILE.match(query):
-            result.append({'css': 'ac-info', 'value': 'file', 'info': 'Valid DAS key: file'})
-        elif RE_K_PR_DATASET.match(query):
-            result.append({'css': 'ac-info', 'value': 'primary_dataset', 'info': 'Valid DAS key: primary_dataset'})
-        elif RE_K_JOBSUMMARY.match(query):
-            result.append({'css': 'ac-info', 'value': 'jobsummary', 'info': 'Valid DAS key: jobsummary'})
-        elif RE_K_MONITOR.match(query):
-            result.append({'css': 'ac-info', 'value': 'monitor', 'info': 'Valid DAS key: monitor'})
-        elif RE_K_TIER.match(query):
-            result.append({'css': 'ac-info', 'value': 'tier', 'info': 'Valid DAS key: tier'})
-        elif RE_K_RELEASE.match(query):
-            result.append({'css': 'ac-info', 'value': 'release', 'info': 'Valid DAS key: release'})
-        elif RE_K_CONFIG.match(query):
-            result.append({'css': 'ac-info', 'value': 'config', 'info': 'Valid DAS key: config'})
-        elif RE_K_GROUP.match(query):
-            result.append({'css': 'ac-info', 'value': 'group', 'info': 'Valid DAS key: group'})
-        elif RE_K_CHILD.match(query):
-            result.append({'css': 'ac-info', 'value': 'child', 'info': 'Valid DAS key: child'})
-        elif RE_K_PARENT.match(query):
-            result.append({'css': 'ac-info', 'value': 'parent', 'info': 'Valid DAS key: parent'})
-        elif RE_K_DATASET.match(query):
-            result.append({'css': 'ac-info', 'value': 'dataset', 'info': 'Valid DAS key: dataset'})
-        elif RE_K_RUN.match(query):
-            result.append({'css': 'ac-info', 'value': 'run', 'info': 'Valid DAS key: run'})
-        elif RE_K_BLOCK.match(query):
-            result.append({'css': 'ac-info', 'value': 'block', 'info': 'Valid DAS key: block'})
-        elif RE_K_DATASET.match(query):
-            #/something...
-            result.append({'css': 'ac-warinig sign', 'value':'dataset=%s' % query,
-                           'info':'''This appears to be a dataset query. The correct syntax is <b>dataset=/some/dataset</b> <span class="faint">| grep dataset.<i>field</i></span>'''})
-        elif RE_SITE.match(query):
-            #T{0123}_...
-            result.append({'css': 'ac-warinig sign', 'value':'site=%s' % query,
-                           'info':'''This appears to be a site query. The correct syntax is <b>site=TX_YY_ZZZ</b> <span class="faint">| grep site.<i>field</i></span>'''})    
-        elif RE_HASPIPE.match(query):
-            keystr = query.split('|')[0]
-            keys = set()
-            for keymatch in RE_KEYS.findall(keystr):
-                if keymatch[0]:
-                    keys.add(keymatch[0])
-                else:
-                    keys.add(keymatch[2])
-            keys = list(keys)
-            if not keys:
-                result.append({'css':'ac-error sign', 'value': '',
-                               'info': "You seem to be trying to write a pipe command without any keys."})
-            
-            pipecmd = RE_PIPECMD.match(query)
-            filtercmd = RE_FILTERCMD.match(query)
-            aggrecmd = RE_AGGRECMD.match(query)
-            
-            if pipecmd:
-                cmd = pipecmd.group(1)
-                precmd = query[:pipecmd.start(1)]
-                matches = filter(lambda x: x.startswith(cmd), DAS_PIPECMDS)
-                if matches:
-                    for match in matches:
-                        result.append({'css': 'ac-info', 'value': '%s%s' % (precmd, match),
-                                       'info': 'Function match <b>%s</b>' % (match)})
-                else:
-                    result.append({'css': 'ac-warinig sign', 'value': precmd,
-                                   'info': 'No aggregation or filter functions match <b>%s</b>.' % cmd})
-            elif aggrecmd:
-                cmd = aggrecmd.group(1)
-                if not cmd in das_aggregators():
-                    result.append({'css':'ac-error sign', 'value': '',
-                                   'info': 'Function <b>%s</b> is not a known DAS aggregator.' % cmd})
-                
-            elif filtercmd:
-                cmd = filtercmd.group(1)
-                if not cmd in das_filters():
-                    result.append({'css':'ac-error sign', 'value': '',
-                                   'info': 'Function <b>%s</b> is not a known DAS filter.' % cmd})
-            
-            if aggrecmd or filtercmd:
-                match = aggrecmd if aggrecmd else filtercmd
-                subkey = match.group(2)
-                prekey = query[:match.start(2)]
-                members = self.dasmgr.keylearning.members_for_keys(keys)
-                if members:
-                    matches = filter(lambda x: x.startswith(subkey), members)
-                    if matches:
-                        for match in matches:
-                            result.append({'css': 'ac-info', 'value': prekey+match,
-                                           'info': 'Possible match <b>%s</b>' % match})
-                    else:
-                        result.append({'css': 'ac-warinig sign', 'value': prekey,
-                                       'info': 'No data members match <b>%s</b> (but this could be a gap in keylearning coverage).' % subkey})
-                else:
-                    result.append({'css': 'ac-warinig sign', 'value': prekey,
-                                   'info': 'No data members found for keys <b>%s</b> (but this might be a gap in keylearning coverage).' % ' '.join(keys)})
-                
-            
-        elif RE_SUBKEY.match(query):
-            subkey = RE_SUBKEY.match(query).group(1)
-            daskey = subkey.split('.')[0]
-            if daskey in self.daskeys:
-                if self.dasmgr.keylearning.has_member(subkey):
-                    result.append({'css': 'ac-warinig sign', 'value': '%s | grep %s' % (daskey, subkey),
-                                   'info': 'DAS queries should start with a top-level key. Use <b>grep</b> to see output for one data member.'})
-                else:
-                    result.append({'css': 'ac-warinig sign', 'value': '%s | grep %s' % (daskey, subkey),
-                                   'info': "DAS queries should start with a top-level key. Use <b>grep</b> to see output for one data member. DAS doesn't know anything about the <b>%s</b> member but keylearning might be incomplete." % (subkey)})
-                    key_search = self.dasmgr.keylearning.key_search(subkey, daskey)
-                    for keys, members in key_search.items():
-                        for member in members:
-                            result.append({'css': 'ac-info', 'value':'%s | grep %s' % (daskey, member),
-                                           'info': 'Possible member match <b>%s</b> (for daskey <b>%s</b>)' % (member, daskey)})
-                    if not key_search:
-                        result.append({'css': 'ac-error sign', 'value': '',
-                                       'info': 'No matches found for <b>%s</b>.' % (subkey)})
-                            
-            else:
-                result.append({'css': 'ac-error sign', 'value': '',
-                               'info': "Das queries should start with a top-level key. <b>%s</b> is not a valid DAS key." % daskey})
-                key_search = self.dasmgr.keylearning.key_search(subkey)
-                for keys, members in key_search.items():
-                    result.append({'css': 'ac-info', 'value': ' '.join(keys),
-                                   'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
-                if not key_search:
-                    result.append({'css': 'ac-error sign', 'value': '',
-                                   'info': 'No matches found for <b>%s</b>.' % subkey})
-                    
-        elif RE_KEYS.match(query):
-            keys = set()
-            for keymatch in RE_KEYS.findall(query):
-                if keymatch[0]:
-                    keys.add(keymatch[0])
-                else:
-                    keys.add(keymatch[2])
-            for key in keys:
-                if not key in self.daskeys:
-                    result.append({'css':'ac-error sign', 'value': '',
-                                   'info': 'Key <b>%s</b> is not known to DAS.' % key})
-                    key_search = self.dasmgr.keylearning.key_search(query)
-                    for keys, members in key_search.items():
-                        result.append({'css': 'ac-info', 'value': ' '.join(keys),
-                                       'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
-                    if not key_search:
-                        result.append({'css': 'ac-error sign', 'value': '',
-                                       'info': 'No matches found for <b>%s</b>.' % query})
-        else:
-            #we've no idea what you're trying to accomplish, do a search
-            key_search = self.dasmgr.keylearning.key_search(query)
-            for keys, members in key_search.items():
-                result.append({'css': 'ac-info', 'value': ' '.join(keys),
-                               'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
-            if not key_search:
-                result.append({'css': 'ac-error sign', 'value': '',
-                               'info': 'No matches found for <b>%s</b>.' % query})
-            
-        return result
+        return autocomplete_helper(query, self.dasmgr, self.daskeys)
