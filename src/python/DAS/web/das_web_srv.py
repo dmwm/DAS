@@ -67,7 +67,20 @@ RE_HASPIPE = re.compile(r"^.*?\|")
 RE_PIPECMD = re.compile(r"^.*?\|\s*(\w+)$")
 RE_AGGRECMD = re.compile(r"^.*?\|\s*(\w+)\(([\w.]+)$")
 RE_FILTERCMD = re.compile(r"^.*?\|\s*(\w+)\s+(?:[\w.]+\s*,\s*)*([\w.]+)$")
-
+RE_K_SITE = re.compile(r"^s")
+RE_K_FILE = re.compile(r"^f")
+RE_K_PR_DATASET = re.compile(r"^pr")
+RE_K_PARENT = re.compile(r"^pa")
+RE_K_CHILD = re.compile(r"^ch")
+RE_K_CONFIG = re.compile(r"^co")
+RE_K_GROUP = re.compile(r"^g")
+RE_K_DATASET = re.compile(r"^d")
+RE_K_BLOCK = re.compile(r"^b")
+RE_K_RUN = re.compile(r"^ru")
+RE_K_RELEASE = re.compile(r"^re")
+RE_K_TIER = re.compile(r"^t")
+RE_K_MONITOR = re.compile(r"^m")
+RE_K_JOBSUMMARY = re.compile(r"^j")
 
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
@@ -1069,7 +1082,7 @@ class DASWebService(DASWebManager):
         forwarded. Given the number of REs used, this may be necessary
         if load increases.
         """
-        
+
         query = kwargs.get("query", "").strip()
         result = []
         if RE_DBSQL_0.match(query):
@@ -1108,7 +1121,35 @@ class DASWebService(DASWebManager):
             else:
                 result.append({'css': 'ac-error sign', 'value': '',
                                'info': 'This appears to be a DBS-QL query. DAS queries are of the form <b>key</b><span class="faint">[ operator value]</span>'})
-        elif RE_DATASET.match(query):
+        elif RE_K_SITE.match(query):
+            result.append({'css': 'ac-info', 'value': 'site', 'info': 'Valid DAS key: site'})
+        elif RE_K_FILE.match(query):
+            result.append({'css': 'ac-info', 'value': 'file', 'info': 'Valid DAS key: file'})
+        elif RE_K_PR_DATASET.match(query):
+            result.append({'css': 'ac-info', 'value': 'primary_dataset', 'info': 'Valid DAS key: primary_dataset'})
+        elif RE_K_JOBSUMMARY.match(query):
+            result.append({'css': 'ac-info', 'value': 'jobsummary', 'info': 'Valid DAS key: jobsummary'})
+        elif RE_K_MONITOR.match(query):
+            result.append({'css': 'ac-info', 'value': 'monitor', 'info': 'Valid DAS key: monitor'})
+        elif RE_K_TIER.match(query):
+            result.append({'css': 'ac-info', 'value': 'tier', 'info': 'Valid DAS key: tier'})
+        elif RE_K_RELEASE.match(query):
+            result.append({'css': 'ac-info', 'value': 'release', 'info': 'Valid DAS key: release'})
+        elif RE_K_CONFIG.match(query):
+            result.append({'css': 'ac-info', 'value': 'config', 'info': 'Valid DAS key: config'})
+        elif RE_K_GROUP.match(query):
+            result.append({'css': 'ac-info', 'value': 'group', 'info': 'Valid DAS key: group'})
+        elif RE_K_CHILD.match(query):
+            result.append({'css': 'ac-info', 'value': 'child', 'info': 'Valid DAS key: child'})
+        elif RE_K_PARENT.match(query):
+            result.append({'css': 'ac-info', 'value': 'parent', 'info': 'Valid DAS key: parent'})
+        elif RE_K_DATASET.match(query):
+            result.append({'css': 'ac-info', 'value': 'dataset', 'info': 'Valid DAS key: dataset'})
+        elif RE_K_RUN.match(query):
+            result.append({'css': 'ac-info', 'value': 'run', 'info': 'Valid DAS key: run'})
+        elif RE_K_BLOCK.match(query):
+            result.append({'css': 'ac-info', 'value': 'block', 'info': 'Valid DAS key: block'})
+        elif RE_K_DATASET.match(query):
             #/something...
             result.append({'css': 'ac-warinig sign', 'value':'dataset=%s' % query,
                            'info':'''This appears to be a dataset query. The correct syntax is <b>dataset=/some/dataset</b> <span class="faint">| grep dataset.<i>field</i></span>'''})

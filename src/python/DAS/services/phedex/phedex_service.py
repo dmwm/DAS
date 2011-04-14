@@ -32,9 +32,8 @@ class PhedexService(DASAbstractService):
             for key, val in kwds.items():
                 if  val == '*':
                     del kwds[key]
-        if  api.find('dataset4site') != -1:
-            if  kwds.has_key('node') and kwds['node'].find('*') == -1:
-                kwds['node'] = kwds['node'] + '*'
+        if  kwds.has_key('node') and kwds['node'].find('*') == -1:
+            kwds['node'] = kwds['node'] + '*'
 
     def parser(self, query, dformat, source, api):
         """
