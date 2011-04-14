@@ -15,6 +15,7 @@ import time
 import httplib
 import urllib
 import urllib2
+import hashlib
 import cherrypy
 import plistlib
 import traceback
@@ -33,7 +34,6 @@ def gen_color(system):
     """
     Generate color for a system, use hash function for that
     """
-    import hashlib
     keyhash = hashlib.md5()
     keyhash.update(system)
     return '#%s' % keyhash.hexdigest()[:6]

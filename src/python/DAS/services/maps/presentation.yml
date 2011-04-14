@@ -189,9 +189,7 @@ config : [
         {"das":"config.version", "ui":"Version"}, 
         ],
 das_query : [
-#        {"das":"das_query.mongoquery", "ui":"MongoDB query"},
-#        {"das":"das_query.qhash", "ui":"MongoDB query hash"},
         {"das":"das_query.dasquery", "ui":"DAS query"},
-#        {"das":"das_query.dhash", "ui":"DAS query hash"},
+        {"das":"das_query.counter", "ui":"Number of calls"},
         ],
 }

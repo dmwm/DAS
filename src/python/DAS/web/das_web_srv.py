@@ -372,6 +372,8 @@ class DASWebService(DASWebManager):
             return 1, helper(uinput, msg)
         for word in fields+spec.keys():
             found = 0
+            if  word == 'queries':
+                found = 1
             for key in self.daskeys:
                 if  word.find(key) != -1:
                     found = 1
@@ -380,7 +382,9 @@ class DASWebService(DASWebManager):
                 return 1, helper(uinput, msg)
         try:
             service_map = self.dasmgr.mongoparser.service_apis_map(mongo_query)
-            if  uinput.find('records') == -1 and not service_map:
+            if  uinput.find('queries') != -1:
+                pass
+            elif  uinput.find('records') == -1 and not service_map:
                 return 1, helper(uinput, \
                 "None of the API's registered in DAS can resolve this query")
         except:
@@ -921,15 +925,22 @@ class DASWebService(DASWebManager):
                 gen = self.convert2ui(row)
                 titles = []
                 for uikey, val in gen:
+                    skip = 0
                     if  not query.has_key('filters'):
-                        titles.append(uikey)
-                    rec.append(val)
+                        if  uikey in titles:
+                            skip = 1
+                        else:
+                            titles.append(uikey)
+                    if  not skip:
+                        rec.append(val)
             if  style:
                 style = 0
             else:
                 style = 1
+            link = '<a href="/das/records/%s?collection=merge">link</a>' \
+                        % quote(str(row['_id'])) # cgi.escape the id
             tpage += self.templatepage('das_table_row', rec=rec, tag='td', \
-                        style=style, encode=1)
+                        style=style, encode=1, record=link)
         sdict  = self.sort_dict(titles, pkey)
         if  sdir == 'asc':
             sdir = 'desc'
@@ -945,8 +956,9 @@ class DASWebService(DASWebManager):
             url = '<a href="/das/request?%s">%s</a>' \
                 % (urllib.urlencode(args), title)
             theads.append(url)
+        theads.append('Record')
         thead = self.templatepage('das_table_row', rec=theads, tag='th', \
-                        style=0, encode=0)
+                        style=0, encode=0, record=0)
         self.sort_dict(titles, pkey)
         page += '<br />'
         page += '<table class="das_table">' + thead + tpage + '</table>'

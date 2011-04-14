@@ -169,6 +169,7 @@ notations : [
     {"notation":"time_update", "map":"modification_time", "api":""},
     {"notation":"bytes", "map":"size", "api":""},
     {"notation":"node", "map":"site", "api":""},
+    {"notation":"node", "map":"node", "api":"nodeusage"},
     {"notation":"files", "map":"nfiles", "api":""},
     {"notation":"events", "map":"nevents", "api":""},
     {"notation":"lfn", "map":"name", "api":""},
