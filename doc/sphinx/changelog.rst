@@ -9,6 +9,8 @@ performed stress tests and code audit DAS servers.
 
 - 0.6.3
 
+  - support system parameter in DAS queries, e.g.
+    block block=/a/b/c#123 system=phedex
   - add condition_keys into DAS records, this will assure that look-up conditions
     will be applied properly. For instance, user1 requested dataset site=abc release=1
     and user2 requested dataset site=abc. The results of user1 should not be shown

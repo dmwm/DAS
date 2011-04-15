@@ -19,6 +19,7 @@ __author__ = "Valentin Kuznetsov"
 import re
 import os
 import time
+import types
 import traceback
 
 # DAS modules
@@ -349,6 +350,18 @@ class DASCore(object):
         used by workers on cache server.
         """
         das_timer('DASCore::call', self.verbose)
+        services = []
+        if  query['spec'].has_key('system'):
+            system = query['spec']['system']
+            if  isinstance(system, str) or isinstance(system, unicode):
+                services = [system]
+            elif isinstance(system, list):
+                services = system
+            else:
+                msg = 'Unsupported system=%s type=%s in DAS query' \
+                        % (system, type(system))
+                raise Exception(msg)
+            del query['spec']['system']
         # adjust query first, since rawcache.similar_queries
         # expects a mongo query (this could be a string)
         # this also guarantees the query in question hits
@@ -395,7 +408,8 @@ class DASCore(object):
         msg = 'DASCore::call, query=%s' % query
         self.logger.info(msg)
         params = self.mongoparser.params(query)
-        services = params['services']
+        if  not services:
+            services = params['services']
         self.logger.info('DASCore::call, services = %s' % services)
         das_timer('das_record', self.verbose)
         # initial expire tstamp 1 day (long enough to be overwriten by data-srv)
@@ -443,6 +457,8 @@ class DASCore(object):
             fields = None # look-up all records
             query['fields'] = None # reset query field part
         spec      = query.get('spec', {})
+        if  spec.has_key('system'):
+            del spec['system']
         if  spec == dict(records='*'):
             spec  = {} # we got request to get everything
             query['spec'] = spec
