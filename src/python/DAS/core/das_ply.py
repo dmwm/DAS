@@ -171,6 +171,10 @@ class DASPLY(object):
             msg += 'please use operator "between" instead'
             raise Exception(msg)
 
+        if  t.value == 'and' or t.value == 'or':
+            msg = 'DAS-QL does not support AND|OR'
+            raise Exception(msg)
+
         # test for a filter/aggregator/operator
         if  t.value in self.tokenmap:
             #change the token type to the appropriate one
