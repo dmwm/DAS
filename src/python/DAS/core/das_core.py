@@ -351,6 +351,11 @@ class DASCore(object):
         """
         das_timer('DASCore::call', self.verbose)
         services = []
+        # adjust query first, since rawcache.similar_queries
+        # expects a mongo query (this could be a string)
+        # this also guarantees the query in question hits
+        # analytics
+        query  = self.adjust_query(query, add_to_analytics)
         if  query['spec'].has_key('system'):
             system = query['spec']['system']
             if  isinstance(system, str) or isinstance(system, unicode):
@@ -362,11 +367,6 @@ class DASCore(object):
                         % (system, type(system))
                 raise Exception(msg)
             del query['spec']['system']
-        # adjust query first, since rawcache.similar_queries
-        # expects a mongo query (this could be a string)
-        # this also guarantees the query in question hits
-        # analytics
-        query  = self.adjust_query(query, add_to_analytics)
         spec   = query.get('spec')
         fields = query.get('fields')
         if  fields == ['records']:
