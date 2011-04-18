@@ -30,6 +30,19 @@ def decompose(query):
     cond  = query.get('spec', {})
     return skeys, cond
 
+def ambiguous_msg(query, keys):
+    """
+    Provide a message for ambiguous query
+    """
+    query = str(query).strip()
+    msg  = 'Ambiguous query "%s"\n\n' % query
+    msg += 'Please provide selection key, e.g.\n'
+    for key in keys:
+        msg += '%s %s\n' % (key, query)
+    msg += '\n'
+    msg += 'DAS-QL syntax: selection_key key=value'
+    return msg
+
 class QLManager(object):
     """
     DAS QL manager.
@@ -75,8 +88,7 @@ class QLManager(object):
                 raise Exception('Invalid MongoDB query %s' % query)
             if  not mongo_query['fields'] and \
                 len(mongo_query['spec'].keys()) > 1:
-                msg = 'Ambiguous query "%s", please provide selection key' \
-                        % query
+                msg = ambiguous_msg(query, mongo_query['spec'].keys())
                 raise Exception(msg)
             if  add_to_analytics:
                 self.analytics.add_query(query, mongo_query)
@@ -128,8 +140,7 @@ class QLManager(object):
                 set(['fields', 'spec']):
             raise Exception('Invalid MongoDB query %s' % mongo_query)
         if  not mongo_query['fields'] and len(mongo_query['spec'].keys()) > 1:
-            msg = 'Ambiguous query "%s", please provide selection key' % query
-            raise Exception(msg)
+            raise Exception(ambiguous_msg(query, mongo_query['spec'].keys()))
         return mongo_query
 
     def convert2skeys(self, mongo_query):
