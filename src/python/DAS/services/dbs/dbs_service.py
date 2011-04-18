@@ -58,6 +58,13 @@ class DBSService(DASAbstractService):
                     kwds['processed_datatset_name_pattern'] = pat.split('/')[2]
                 except:
                     pass
+        if  api == 'fakeReleases':
+            val = kwds['release']
+            if  val != 'required':
+                kwds['query'] = 'find release where release=%s' % val
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('release')
         if  api == 'fakeRelease4Dataset':
             val = kwds['dataset']
             if  val != 'required':
@@ -265,8 +272,8 @@ class DBSService(DASAbstractService):
             prim_key = 'primary_dataset'
         elif api == 'listProcessedDatasets':
             prim_key = 'processed_dataset'
-        elif api == 'listAlgorithms':
-            prim_key = 'algorithm'
+        elif api == 'fakeReleases':
+            prim_key = 'release'
         elif api == 'listRuns':
             prim_key = 'run'
         elif  api == 'fakeRelease4Dataset':
