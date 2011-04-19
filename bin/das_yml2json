@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# find out where DAS is installed on a system
+dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+
+if  [[ -z $1 ]]; then
+dir="$dasroot/services/cms_maps/"
+else
+dir=$1
+fi;
+echo "Using DAS maps: $dir"
+
+# build DAS JSON maps out of DAS YML files
+cmd="python $dasroot/tools/das_drop_maps.py"
+map_file="das_maps.js"
+rm -f $map_file
+export PYTHONPATH=$PYTHONPATH:$PWD/src/python
+for amap in `ls $dir/*.yml`
+do
+    $cmd --uri-map=$amap >> $map_file
+    $cmd --notation-map=$amap >> $map_file
+    $cmd --presentation-map=$amap >> $map_file
+done
