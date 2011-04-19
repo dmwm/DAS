@@ -2,23 +2,45 @@
 system : conddb
 format : JSON
 ---
-urn: "getLumi"
+urn: "get_run_info"
 url : "http://cms-conddb.cern.ch/getLumi"
 expire : 3600
 params : {
-    "runList":"",
+    "Runs":"",
     "date": "optional",
+    "lumiType":"delivered",
 }
 daskeys : [
     {"key":"run","map":"run.run_number","pattern":""},
     {"key":"date","map":"date","pattern":""},
 ]
 das2api: [
-    {"das_key":"run.run_number", "api_param": "runList", "pattern":""},
+    {"das_key":"run.run_number", "api_param": "Runs", "pattern":""},
+    {"das_key":"date", "api_param": "date", "pattern":""},
+]
+---
+urn: "get_lumi_info"
+url : "http://cms-conddb.cern.ch/getLumi"
+expire : 3600
+params : {
+    "Runs":"",
+    "date": "optional",
+}
+daskeys : [
+    {"key":"lumi","map":"lumi.number","pattern":""},
+    {"key":"run","map":"run.run_number","pattern":""},
+    {"key":"date","map":"date","pattern":""},
+]
+das2api: [
+    {"das_key":"run.run_number", "api_param": "Runs", "pattern":""},
     {"das_key":"date", "api_param": "date", "pattern":""},
 ]
 ---
 notations : [
     {"notation":"Run-Info", "map":"run_info", "api":""},
-    {"notation":"Run", "map":"run_number", "api":""},
+    {"notation":"Run", "map":"run_number", "api":"get_run_info"},
+    {"notation":"Run", "map":"run.run_number", "api":"get_lumi_info"},
+    {"notation":"DeliveredLumi", "map":"delivered_lumi", "api":""},
+    {"notation":"Lumi", "map":"lumi", "api":""},
+    {"notation":"lumisection", "map":"number", "api":""},
 ]

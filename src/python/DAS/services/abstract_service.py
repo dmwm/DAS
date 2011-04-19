@@ -401,7 +401,6 @@ class DASAbstractService(object):
         Convert raw results into DAS records. 
         """
         prim_key  = self.dasmapping.primary_key(self.name, api)
-#        notations = self.dasmapping.notations(self.name)[self.name]
         count = 0
         for row in genrows:
             row2das(self.dasmapping.notation2das, self.name, api, row)
@@ -412,7 +411,10 @@ class DASAbstractService(object):
             if  isinstance(row, list):
                 yield {prim_key:row}
             elif  row.has_key(prim_key):
-                yield row
+                if  row[prim_key].has_key(prim_key):
+                    yield row[prim_key] # remapping may create nested dict
+                else:
+                    yield row
             else:
                 yield {prim_key:row}
         msg = "DASAbstractService::%s::translator yield %s rows" \
