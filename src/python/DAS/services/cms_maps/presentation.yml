@@ -64,6 +64,7 @@ file : [
         {"das":"file.name", "ui":"File name",
          "link":[
                 {"name": "Dataset", "query": "dataset file=%s"},
+                 {"name":"Sites", "query":"site file=%s"},
                 {"name": "Runs", "query": "run file=%s"},
                 {"name": "Parents", "query": "parent file=%s"},
                 {"name": "Children", "query": "child file=%s"},
