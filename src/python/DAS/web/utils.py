@@ -412,9 +412,12 @@ def json2html(idict, pad="", recusive=False, ref=None):
                         % quote(key)
             if  isinstance(val, NoneType):
                 sss += """: <code class="null">None</code>"""
-            elif ref and (key == 'name' or key == 'se') and \
+            elif ref and (key == 'name' or key == 'se' or key == 'site') and \
                 (isinstance(val, str) or isinstance(val, unicode)):
-                query = "%s=%s" % (ref, val)
+                refkey = key
+                if  key == 'se':
+                    refkey = 'site'
+                query = "%s=%s" % (refkey, val)
                 sss += """: <a href="/das/request?%s">%s</a>""" \
                         % (urllib.urlencode({'input':query}), quote(val))
             elif key == 'run_number':
