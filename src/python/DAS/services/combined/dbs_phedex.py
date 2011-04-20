@@ -12,6 +12,7 @@ import cherrypy
 import traceback
 
 from pymongo import Connection, DESCENDING
+from pymongo.connection import AutoReconnect
 from bson.code import Code
 from cherrypy import expose
 
@@ -107,12 +108,15 @@ def update_db(urls, uri, db_name, coll_name):
     Update DB info with dataset info.
     """
     conn = db_connection(uri)
-    coll = conn[db_name][coll_name]
-    coll.drop()
-    for dataset in datasets(urls):
-        coll.insert(dataset)
-    record = {'timestamp':time.time()}
-    coll.insert(record)
+    if  conn:
+        coll = conn[db_name][coll_name]
+        coll.drop()
+        for dataset in datasets(urls):
+            coll.insert(dataset)
+        record = {'timestamp':time.time()}
+        coll.insert(record)
+    else:
+        raise AutoReconnect('could not establish connection')
 
 def find_dataset(coll, site, operation="mapreduce"):
     """
@@ -179,50 +183,88 @@ def find_dataset_mp(coll, site):
 
 def worker(urls, uri, db_name, coll_name, interval=3600):
     """
-    Daemon which update DBS/Phedex DB
+    Daemon which updates DBS/Phedex DB
     """
     while True:
         try:
             update_db(urls, uri, db_name, coll_name)
-        except Exception, _exp:
-            traceback.print_exc()
-        time.sleep(interval)
+            time.sleep(interval)
+        except AutoReconnect, err:
+            print "WARNING (dbs_phedex worker): %s" % str(err)
+            time.sleep(3) # handles broken connection
+        except Exception, exp:
+            print "ERROR (dbs_phedex worker): raised exception %s" % str(exp)
+            time.sleep(interval)
+            pass
+
+def conn_monitor(uri, func, sleep=5):
+    """
+    Daemon which ensures MongoDB connection
+    """
+    conn = db_connection(uri)
+    while True:
+        time.sleep(sleep)
+        if  not conn:
+            conn = db_connection(uri)
+            print "\n### re-establish connection to %s" % conn
+            try:
+                if  conn:
+                    func() # re-initialize DB connection
+            except Exception, err:
+                print "\n### Fail in %s, error=%s" % (func, str(err))
 
 class DBSPhedexService(object):
     """DBSPhedexService"""
     def __init__(self, uri, urls):
         super(DBSPhedexService, self).__init__()
-        self.conn     = db_connection(uri)
         self.dbname   = 'db'
         self.collname = 'datasets'
-        self.coll = self.conn[self.dbname][self.collname]
-        indexes = [('name', DESCENDING), ('site', DESCENDING), 
-                   ('timestamp', DESCENDING)]
-        for index in indexes:
-            self.coll.create_index([index])
-        self._expired = 1*60*60 # 1 hour
-#        thread.start_new_thread(worker, \
-#            (urls, uri, self.dbname, self.collname, self._expired))
+        self.expired = 1*60*60 # 1 hour
+        self.uri      = uri
+        self.init()
 
-    def is_expired(self):
+        # Monitoring thread which performs auto-reconnection
+        thread.start_new_thread(conn_monitor, (uri, self.init, 5))
+
+        # Worker thread which update dbs/phedex DB
+        thread.start_new_thread(worker, \
+            (urls, uri, self.dbname, self.collname, self.expired))
+
+    def init(self):
+        """Takes care of MongoDB connection"""
+        try:
+            self.conn = db_connection(self.uri)
+            self.coll = self.conn[self.dbname][self.collname]
+            indexes = [('name', DESCENDING), ('site', DESCENDING), 
+                       ('timestamp', DESCENDING)]
+            for index in indexes:
+                self.coll.ensure_index([index])
+        except Exception, _exp:
+            self.coll = None
+
+    def isexpired(self):
         """
         Check if data is expired in DB.
         """
-        spec = {'timestamp': {'$lt': time.time() + self._expired}}
-        if  self.coll.find_one(spec):
+        spec = {'timestamp': {'$lt': time.time() + self.expired}}
+        if  self.coll and self.coll.find_one(spec):
             return False
         return True
 
     def find_dataset(self, site, operation):
         """Find dataset info for a given site"""
-        if  self.is_expired():
-            rec = \
-            dict(dataset={'name':'N/A', 'reason':'waiting for DBS3/Phedex info'}, \
-                 site={'name':site})
+        reason = 'waiting for DBS3/Phedex info'
+        rec = dict(dataset={'name':'N/A', 'reason':reason}, site={'name':site})
+        if  self.isexpired():
             yield rec
         else:
-            for item in find_dataset(self.coll, site, operation):
-                yield {'dataset':item}
+            if  self.coll:
+                for item in find_dataset(self.coll, site, operation):
+                    yield {'dataset':item}
+            else:
+                reason = 'lost connection to internal DB'
+                rec.update({'dataset':{'name':'N/A', 'reason':reason}})
+                yield rec
 
     @exposejson
     def dataset(self, site, operation="mapreduce"):
@@ -233,7 +275,7 @@ class DBSPhedexService(object):
         if  len(records) == 1 and records[0]['dataset'] == 'N/A':
             expires = 60 # in seconds
         else:
-            expires = self._expired
+            expires = self.expired
         cherrypy.lib.caching.expires(secs=expires, force = True)
         return records
         
