@@ -63,6 +63,9 @@ class PhedexService(DASAbstractService):
         elif api == 'site4block':
             prim_key = 'block'
             tags = 'block.replica.node'
+        elif api == 'site4file':
+            prim_key = 'block'
+            tags = 'block.replica.node'
         elif api == 'nodes':
             prim_key = 'node'
         elif api == 'nodeusage':
@@ -81,14 +84,18 @@ class PhedexService(DASAbstractService):
         site_names = []
         seen = {}
         for row in gen:
-            if  api == 'site4dataset' or api == 'site4block':
-                if  isinstance(row['block']['replica'], list):
-                    for replica in row['block']['replica']:
+            if  api == 'site4dataset' or api == 'site4block' or api == 'site4file':
+                if  api == 'site4file':
+                    item = row['block']['file']['replica']
+                else:
+                    item = row['block']['replica']
+                if  isinstance(item, list):
+                    for replica in item:
                         result = {'name': replica['node'], 'se': replica['se']}
                         if  result not in site_names:
                             site_names.append(result)
-                elif isinstance(row['block']['replica'], dict):
-                    replica = row['block']['replica']
+                elif isinstance(item, dict):
+                    replica = item
                     result  = {'name': replica['node'], 'se': replica['se']}
                     if  result not in site_names:
                         site_names.append(result)
@@ -105,7 +112,7 @@ class PhedexService(DASAbstractService):
                     seen[dataset] = dict(bytes=bytes, files=files)
             else:
                 yield row
-        if  api == 'site4dataset' or api == 'site4block':
+        if  api == 'site4dataset' or api == 'site4block' or api == 'site4file':
             yield site_names
         del site_names
         if  seen:
