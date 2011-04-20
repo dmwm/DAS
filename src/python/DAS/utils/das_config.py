@@ -71,6 +71,10 @@ DASOption('das', 'logformat', 'string',
                 '%(levelname)s %(message)s', destination='logformat'),
 DASOption('das', 'services', 'list', 
                 ['google_maps', 'ip', 'postalcode'], destination='services'),
+
+DASOption('dbs_phedex', 'urls', 'list',
+        ['http://vocms09.cern.ch:8989/dbs/DBSReader/datasets',
+         'https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockReplicas'])
 ]
 
 def read_configparser(dasconfig):

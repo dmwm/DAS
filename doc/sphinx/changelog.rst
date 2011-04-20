@@ -7,6 +7,12 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.6.4
+
+  - create new DBSPhedexService to answer the dataset/site quesitions.
+    it uses internal MongoDB to collect info from DBS3/Phedex data-services
+    and map-reduce operation to extract desired info.
+
 - 0.6.3
 
   - support system parameter in DAS queries, e.g.

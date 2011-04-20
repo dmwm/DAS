@@ -9,6 +9,7 @@ __author__ = "Valentin Kuznetsov"
 import re
 import time
 import traceback
+import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser, DotDict
 
@@ -36,38 +37,18 @@ class CombinedService(DASAbstractService):
         must contain combined attribute corresponding to systems
         used to produce record content.
         """
-        if  api == 'combined_dataset4site_via_phedex':
-            headers = {'Accept': 'text/xml'}
-            if  args['site'].find('.') != -1: # it is SE
-                phedex_args = {'se': '%s' % args['site']}
-            else:
-                phedex_args = {'node': '%s*' % args['site']}
-            if  args.has_key('dataset') and args['dataset'] != 'optional':
-                phedex_args.update({'dataset':args['dataset']})
-            phedex_url = url['phedex']
-            source, expire = \
-            self.getdata(phedex_url, phedex_args, expire, headers)
-            prim_key = 'block'
-            tags = 'block.replica.node'
-            found = {}
-            for rec in xml_parser(source, prim_key, tags):
-                ddict = DotDict(rec)
-                block = ddict._get('block.name')
-                bytes = ddict._get('block.bytes')
-                cust  = ddict._get('block.replica.custodial')
-                dataset = block.split('#')[0]
-                tier = dataset.split('/')[-1].split('-')
-                if  found.has_key(dataset):
-                    val = found[dataset]
-                    found[dataset] = {'bytes': val['bytes'] + bytes, 
-                                        'custodial':cust, 'tier':tier}
+        if  api == 'combined_dataset4site':
+            headers = {'Accept': 'application/json;text/json'}
+            source, expire = self.getdata(url, args, expire, headers)
+            for item in json.load(source):
+                if  isinstance(item, list):
+                    for row in item:
+                        print "\n### row", row
+                        yield row
                 else:
-                    found[dataset] = {'bytes':bytes, 'custodial':cust, 'tier':tier}
-            for name, val in found.items():
-                record = dict(name=name, combined=['dbs', 'phedex'],
-                            size=val['bytes'], custodial=val['custodial'])
-                yield {'dataset':record}
-            del found
+                    print "\n### item", item
+                    yield item
+
         if  api == 'combined_dataset4site_release':
             # call DBS to obtain dataset for given release
             dbs_url = url['dbs']
@@ -122,16 +103,18 @@ class CombinedService(DASAbstractService):
         if  api == 'combined_dataset4site_release':
             genrows = self.helper(url, api, args, expire)
         if  api == 'combined_dataset4site':
-            msg = "--- combined rejects API %s, not enough arguments" % api
-            self.logger.info(msg)
-            error   = "The provided set of arguments is too loose, please add"
-            error  += " release or dataset pattern to your query"
-            record  = dict(name="N/A", error=error, combined=['dbs', 'phedex'])
-            genrows = [dict(dataset=record)]
+#            msg = "--- combined rejects API %s, not enough arguments" % api
+#            self.logger.info(msg)
+#            error   = "The provided set of arguments is too loose, please add"
+#            error  += " release or dataset pattern to your query"
+#            record  = dict(name="N/A", error=error, combined=['dbs', 'phedex'])
+#            genrows = [dict(dataset=record)]
+            genrows = self.helper(url, api, args, expire)
         dasrows = self.set_misses(query, api, genrows)
         ctime = time.time() - time0
         try:
-            url = "combined: %s" % url.values()
+            if  isinstance(url, dict):
+                url = "combined: %s" % url.values()
             self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
         except:
             traceback.print_exc()

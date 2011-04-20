@@ -27,6 +27,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_web_srv import DASWebService
 from cherrypy.process.plugins import PIDFile
+from DAS.services.combined.dbs_phedex import DBSPhedexService
 
 class Root(object):
     """
@@ -83,6 +84,18 @@ class Root(object):
         config['engine'] = engine
         obj = DASWebService(config)
         tree.mount(obj, url_base) # mount web server
+
+        # DBS/Phedex Service
+        uri  = self.config['mongodb']['dburi']
+        urls = {}
+        for url in self.config['dbs_phedex']['urls']:
+            if  url.find('phedex') != -1:
+                urls['phedex'] = url
+            else:
+                urls['dbs'] = url
+        obj = DBSPhedexService(uri, urls)
+        tree.mount(obj, '/dbs_phedex')
+
         print "### DAS web server, PID=%s" % self.pid
         print pformat(tree.apps)
         print pformat(config)

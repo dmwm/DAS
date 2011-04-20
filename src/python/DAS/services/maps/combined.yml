@@ -24,10 +24,7 @@ das2api : [
 ]
 ---
 urn : combined_dataset4site
-url : {
-    "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
-    "phedex": "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
-}
+url : "http://localhost:8212/dbs_phedex/dataset"
 expire : 3600
 params : {
      "site":"required"
