@@ -12,6 +12,7 @@ import traceback
 import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser, DotDict
+from DAS.utils.utils import expire_timestamp
 
 #
 # NOTE:
@@ -20,6 +21,18 @@ from DAS.utils.utils import map_validator, xml_parser, qlxml_parser, DotDict
 # API. First find all blocks at given site, then strip off dataset info
 # and ask DBS to provide dataset info for found dataset.
 #
+
+def parse_data(data):
+    """
+    Helper to parse input data
+    """
+
+    for item in json.load(data):
+        if  isinstance(item, list):
+            for row in item:
+                yield row
+        else:
+            yield item
 
 class CombinedService(DASAbstractService):
     """
@@ -37,16 +50,6 @@ class CombinedService(DASAbstractService):
         must contain combined attribute corresponding to systems
         used to produce record content.
         """
-        if  api == 'combined_dataset4site':
-            headers = {'Accept': 'application/json;text/json'}
-            source, expire = self.getdata(url, args, expire, headers)
-            for item in json.load(source):
-                if  isinstance(item, list):
-                    for row in item:
-                        yield row
-                else:
-                    yield item
-
         if  api == 'combined_dataset4site_release':
             # call DBS to obtain dataset for given release
             dbs_url = url['dbs']
@@ -97,19 +100,30 @@ class CombinedService(DASAbstractService):
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
+        # NOTE: I use helper function since it is 2 step process
+        # therefore the expire time stamp will not be changed, since
+        # helper function will yield results
         time0 = time.time()
         if  api == 'combined_dataset4site_release':
             genrows = self.helper(url, api, args, expire)
+        # here I use directly the call to the service which returns
+        # proper expire timestamp. Moreover I use HTTP header to look
+        # at expires and adjust my expire parameter accordingly
         if  api == 'combined_dataset4site':
-#            msg = "--- combined rejects API %s, not enough arguments" % api
-#            self.logger.info(msg)
-#            error   = "The provided set of arguments is too loose, please add"
-#            error  += " release or dataset pattern to your query"
-#            record  = dict(name="N/A", error=error, combined=['dbs', 'phedex'])
-#            genrows = [dict(dataset=record)]
-            genrows = self.helper(url, api, args, expire)
+            headers = {'Accept': 'application/json;text/json'}
+            datastream, expire = self.getdata(url, args, expire, headers)
+            try: # get HTTP header and look for Expires
+                e_time = expire_timestamp(\
+                    datastream.info().__dict__['dict']['expires'])
+                if  e_time > time.time():
+                    expire = e_time
+            except:
+                pass
+            genrows = parse_data(datastream)
+
+        # proceed with standard workflow
         dasrows = self.set_misses(query, api, genrows)
-        ctime = time.time() - time0
+        ctime   = time.time() - time0
         try:
             if  isinstance(url, dict):
                 url = "combined: %s" % url.values()
@@ -118,4 +132,3 @@ class CombinedService(DASAbstractService):
             traceback.print_exc()
             self.logger.info('Fail to write_to_cache for combined service')
             pass
-        

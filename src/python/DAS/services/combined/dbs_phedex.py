@@ -290,7 +290,7 @@ class DBSPhedexService(object):
         Service exposed method to get dataset/site info
         """
         records = [r for r in self.find_dataset(site, operation)]
-        if  len(records) == 1 and records[0]['dataset'] == 'N/A':
+        if  len(records) == 1 and records[0]['dataset'].has_key('reason'):
             expires = 60 # in seconds
         else:
             expires = self.expired
