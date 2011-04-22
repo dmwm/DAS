@@ -81,7 +81,6 @@ run : [
         {"das":"run.run_number", "ui":"Run number",
          "link":[
                 {"name":"Datasets", "query": "dataset run=%s"},
-                {"name":"Files", "query": "file run=%s"},
                 {"name":"Lumis", "query": "lumi run=%s"},
                 ]}, 
         {"das":"run.nevents", "ui":"Number of events"}, 
