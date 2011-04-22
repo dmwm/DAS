@@ -763,7 +763,7 @@ class DASWebService(DASWebManager):
                 except:
                     pass
         else:
-            page = "Request %s not found" % pid
+            page = "Request %s not found, please reload the page" % pid
         page = ajax_response(page)
         return page
     
