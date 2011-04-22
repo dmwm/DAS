@@ -43,10 +43,8 @@ class CombinedService(DASAbstractService):
             for item in json.load(source):
                 if  isinstance(item, list):
                     for row in item:
-                        print "\n### row", row
                         yield row
                 else:
-                    print "\n### item", item
                     yield item
 
         if  api == 'combined_dataset4site_release':

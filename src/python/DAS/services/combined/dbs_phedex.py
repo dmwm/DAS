@@ -4,6 +4,7 @@
 DAS DBS/Phedex combined service to fetch dataset/site information.
 """
 
+import re
 import time
 import thread
 import urllib
@@ -19,6 +20,8 @@ from cherrypy import expose
 import DAS.utils.jsonwrapper as json
 from DAS.utils.das_db import db_connection
 from DAS.web.tools import exposejson
+
+PAT = re.compile("^T[0-3]_")
 
 def getdata(url, params, headers=None, post=None, verbose=0):
     """
@@ -146,7 +149,11 @@ def find_dataset_group(coll, site):
         out.count += 1;}""")
     finalize = Code("""function(out) {
         out.nfiles = parseInt(out.nfiles); }""")
-    spec = {'site':site}
+    if  PAT.match(site):
+        key = 'site'
+    else:
+        key = 'se'
+    spec = {key:site}
     key  = {'name':True}
     for row in coll.group(key, spec, initial, redfunc, finalize):
         yield row
@@ -176,7 +183,11 @@ def find_dataset_mp(coll, site):
             result.custodial = value.custodial;
         });
         return result;}""")
-    spec = {'site':site}
+    if  PAT.match(site):
+        key = 'site'
+    else:
+        key = 'se'
+    spec = {key:site}
     result = coll.map_reduce(mapfunc, redfunc, "results", query=spec)
     for row in result.find():
         yield row['value']
@@ -219,7 +230,7 @@ class DBSPhedexService(object):
         super(DBSPhedexService, self).__init__()
         self.dbname   = 'db'
         self.collname = 'datasets'
-        self.expired = 1*60*60 # 1 hour
+        self.expired  = 1*60*60 # 1 hour
         self.uri      = uri
         self.init()
 
@@ -254,7 +265,11 @@ class DBSPhedexService(object):
     def find_dataset(self, site, operation):
         """Find dataset info for a given site"""
         reason = 'waiting for DBS3/Phedex info'
-        rec = dict(dataset={'name':'N/A', 'reason':reason}, site={'name':site})
+        if  PAT.match(site):
+            key = 'name'
+        else:
+            key = 'se'
+        rec = dict(dataset={'name':'N/A', 'reason':reason}, site={key:site})
         if  self.isexpired():
             yield rec
         else:

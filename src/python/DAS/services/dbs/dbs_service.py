@@ -96,6 +96,15 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('file')
+        if  api == 'fakeListDataset4Block':
+            val = kwds['block']
+            if  val != 'required':
+                kwds['query'] = "find dataset , count(block), count(file.size), \
+  sum(block.size), sum(block.numfiles), sum(block.numevents) \
+  where block=%s and dataset.status like VALID*" % val
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('block')
         if  api == 'fakeRun4Run':#runregistry don't support 'in'
             val = kwds['run']
             if  val != 'required':
@@ -282,6 +291,8 @@ class DBSService(DASAbstractService):
             prim_key = 'group'
         elif  api == 'fakeConfig':
             prim_key = 'config'
+        elif  api == 'fakeListDataset4Block':
+            prim_key = 'dataset'
         elif  api == 'fakeListDataset4File':
             prim_key = 'dataset'
         elif  api == 'fakeListDatasetbyDate':
