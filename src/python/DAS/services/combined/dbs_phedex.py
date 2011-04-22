@@ -10,12 +10,10 @@ import thread
 import urllib
 import urllib2
 import cherrypy
-import traceback
 
 from pymongo import Connection, DESCENDING
 from pymongo.connection import AutoReconnect
 from bson.code import Code
-from cherrypy import expose
 
 import DAS.utils.jsonwrapper as json
 from DAS.utils.das_db import db_connection
@@ -196,17 +194,22 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
     """
     Daemon which updates DBS/Phedex DB
     """
+    conn_interval = 3 # default connection failure sleep interval
+    threshold = 60 # 1 minute is threashold to check connections
     while True:
+        if  conn_interval > threshold:
+            conn_interval = threshold
         try:
             update_db(urls, uri, db_name, coll_name)
             time.sleep(interval)
         except AutoReconnect, err:
             print "WARNING (dbs_phedex worker): %s" % str(err)
-            time.sleep(3) # handles broken connection
+            time.sleep(conn_interval) # handles broken connection
+            conn_interval *= 2
         except Exception, exp:
             print "ERROR (dbs_phedex worker): raised exception %s" % str(exp)
-            time.sleep(interval)
-            pass
+            time.sleep(conn_interval)
+            conn_interval *= 2
 
 def conn_monitor(uri, func, sleep=5):
     """
@@ -244,8 +247,8 @@ class DBSPhedexService(object):
     def init(self):
         """Takes care of MongoDB connection"""
         try:
-            self.conn = db_connection(self.uri)
-            self.coll = self.conn[self.dbname][self.collname]
+            conn = db_connection(self.uri)
+            self.coll = conn[self.dbname][self.collname]
             indexes = [('name', DESCENDING), ('site', DESCENDING), 
                        ('timestamp', DESCENDING)]
             for index in indexes:
