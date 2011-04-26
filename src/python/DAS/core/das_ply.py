@@ -532,5 +532,9 @@ def ply2mongo(query):
     mongodict['spec'] = spec
     if  inst:
         mongodict['instance'] = inst
+    if  len(spec.keys()) == 1 and spec.values() == ['*'] and \
+        spec.keys()[0] not in ['records', 'queries']:
+        msg = 'Single DAS key with no conditions'
+        raise Exception(msg)
     return mongodict
 

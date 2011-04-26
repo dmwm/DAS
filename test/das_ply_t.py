@@ -76,10 +76,6 @@ class testDASPLY(unittest.TestCase):
         mongo = {'fields': ['site'], 'spec': {'site': 'T1_CH_CERN'}}
         self.queries[query] = mongo
 
-        query = "site"
-        mongo = {'fields': ['site'], 'spec': {'site': '*'}}
-        self.queries[query] = mongo
-
         query = "dataset=/a/b/c run=123 | grep dataset.size"
         mongo = {'filters': ['dataset.size'], 'fields': None, 
                  'spec': {'dataset': '/a/b/c', 'run': 123}}
@@ -113,10 +109,6 @@ class testDASPLY(unittest.TestCase):
 
         query = "site=T1_CH_CERN"
         mongo = {'fields': ['site'], 'spec': {'site': 'T1_CH_CERN'}}
-        self.queries[query] = mongo
-
-        query = "dataset"
-        mongo = {'fields': ['dataset'], 'spec': {'dataset': '*'}}
         self.queries[query] = mongo
 
         query = "run=20853"
@@ -305,6 +297,9 @@ class testDASPLY(unittest.TestCase):
         queries[query] = mongo
 
         query = "run in [20853,20859]"
+        self.queries[query] = mongo
+
+        query = "dataset" # prevent usage of single keys
         self.queries[query] = mongo
 
         for query, expect in queries.items():
