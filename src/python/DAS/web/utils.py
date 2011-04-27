@@ -415,7 +415,7 @@ def json2html(idict, pad="", recusive=False, ref=None):
             elif ref and (key == 'name' or key == 'se' or key == 'site') and \
                 (isinstance(val, str) or isinstance(val, unicode)):
                 refkey = key
-                if  key == 'se':
+                if  key == 'se' or ref == 'site':
                     refkey = 'site'
                 query = "%s=%s" % (refkey, val)
                 sss += """: <a href="/das/request?%s">%s</a>""" \

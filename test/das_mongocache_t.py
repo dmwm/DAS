@@ -16,7 +16,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_mongocache import DASMongocache, loose
 from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
-from DAS.core.das_mongocache import update_item, convert2pattern, compare_specs
+from DAS.core.das_mongocache import convert2pattern, compare_specs
 
 class testDASMongocache(unittest.TestCase):
     """
@@ -55,24 +55,6 @@ class testDASMongocache(unittest.TestCase):
         result = loose(query)
         expect = query
         self.assertEqual(expect, result)
-
-    def test_update_item(self):
-        """test update_item method"""
-        expect = {'test':1, 'block' : {'name' : '/a/b/c#123'}}
-
-        row = {'test':1}
-        key = 'block.name'
-        val = '/a/b/c#123'
-        update_item(row, key, val)
-        self.assertEqual(expect, row)
-
-        row = {'test':1}
-        key = 'block.name'
-        val = {'$gte' : '/a/b/c#123'}
-        update_item(row, key, val)
-        # upon update we create a list of values for given key: block.name
-        expect = {'test':1, 'block' : {'name' : ['/a/b/c#123']}}
-        self.assertEqual(expect, row)
 
     def test_compare_specs(self):
         """

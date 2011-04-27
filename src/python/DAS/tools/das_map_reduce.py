@@ -15,6 +15,7 @@ import types
 import traceback
 from optparse import OptionParser
 from DAS.utils.das_config import das_readconfig
+from DAS.utils.das_db import create_indexes
 
 # monogo db modules
 from pymongo.connection import Connection
@@ -68,7 +69,7 @@ class MapReduceMgr(object):
         if  exists:
             raise Exception('Map/reduce functions for %s already exists' % name)
         self.mapreduce.insert(dict(name=name, map=fmap, reduce=freduce))
-        self.mapreduce.ensure_index([('name', DESCENDING)])
+        create_indexes(self.mapreduce, [('name', DESCENDING)])
 
     def gen_map_func(self, func_name, tag):
         """

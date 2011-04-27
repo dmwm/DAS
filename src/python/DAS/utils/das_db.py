@@ -115,3 +115,24 @@ def parse2gridfs(gfs, prim_key, genrows, logger=None):
             else:
                 yield gfs_rec
 
+def create_indexes(coll, index_list):
+    """
+    Create indexes for provided collection/index_list and
+    ensure that they are in place
+    """
+    index_info = coll.index_information().values()
+    for pair in index_list:
+        index_exists = 0
+        for item in index_info:
+            if  item['key'] == [pair]:
+                index_exists = 1
+        if  not index_exists:
+            try:
+                coll.create_index([pair])
+            except Exception, exp:
+                print str(exp)
+        try:
+            coll.ensure_index([pair])
+        except Exception, exp:
+            print str(exp)
+

@@ -18,7 +18,6 @@ __author__ = "Valentin Kuznetsov"
 import re
 import time
 from   types import GeneratorType
-import random
 import itertools
 import traceback
 import fnmatch
@@ -29,7 +28,7 @@ from DAS.utils.utils import adjust_mongo_keyvalue
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection
 from DAS.utils.utils import parse_filters
-from DAS.utils.das_db import db_gridfs, parse2gridfs
+from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 import DAS.utils.jsonwrapper as json
 
 # monogo db modules
@@ -322,10 +321,10 @@ def compare_specs(input_query, exist_query):
     for key, val1 in spec1.items():
         if  spec2.has_key(key):
             val2 = spec2[key]
-            if (isinstance(val1, str) or isinstance(val1, unicode)) and \
-                 (isinstance(val2, str) or isinstance(val2, unicode)):
-                 if not compare_str(val1, val2):
-                     return False
+            if  (isinstance(val1, str) or isinstance(val1, unicode)) and \
+                (isinstance(val2, str) or isinstance(val2, unicode)):
+                if  not compare_str(val1, val2):
+                    return False
             elif  type(val1) != type(val2) and not isinstance(val1, dict)\
                 and not isinstance(val2, dict):
                 return False
@@ -340,34 +339,6 @@ def compare_specs(input_query, exist_query):
                 if  val1 != val2:
                     return False
     return True
-
-def update_item(item, key, val):
-    """
-    Update provided row with given key and a value. The key can be in
-    form of x.y.z, etc. in this case it is composed key and associative
-    dictionary must be build.
-    The value here can be in form of MongoDB condition
-    dictionary, e.g. {key : {'$gte':value}}
-    """
-    if  not isinstance(val, dict):
-        value = val
-    else:
-        value = val.values()
-
-    keys = key.split('.')
-    if  len(keys) == 1:
-        if  not item.has_key(key):
-            item[key] = value
-    else: # we got composed key
-        keys.reverse()
-        for kkk in keys:
-            if  kkk == keys[0]:
-                newdict = {kkk : value}
-            elif kkk == keys[-1]:
-                continue
-            else:
-                newdict = {kkk : newdict}
-        item[kkk] = newdict
 
 class DASMongocache(object):
     """
@@ -393,21 +364,16 @@ class DASMongocache(object):
         self.add_manipulator()
 
         # ensure that we have the following indexes
-        index_list = [('das.expire', ASCENDING), ('query.spec.key', ASCENDING),
-                      ('das.qhash', DESCENDING), ('das.empty_record', ASCENDING),
+        index_list = [('das.expire', ASCENDING),
+                      ('query.spec.key', ASCENDING),
+                      ('das.qhash', DESCENDING),
+                      ('das.empty_record', ASCENDING),
                       ('query', DESCENDING), ('query.spec', DESCENDING)]
-        self.indexes(self.col, index_list)
+        create_indexes(self.col, index_list)
         index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
                       ('das.empty_record', ASCENDING)]
-        self.indexes(self.merge, index_list)
+        create_indexes(self.merge, index_list)
         
-    def indexes(self, coll, index_list):
-        """
-        Invoke ensure_index for provided collection and index_list
-        """
-        for pair in index_list:
-            coll.ensure_index([pair])
-
     def add_manipulator(self):
         """
         Add DAS-specific MongoDB SON manipulator to perform
@@ -429,7 +395,6 @@ class DASMongocache(object):
         """
         msg = "DASMongocache::similar_queries %s" % query
         spec    = query.get('spec', {})
-        fields  = query.get('fields', None)
         cond    = {'query.spec.key': {'$in' : spec.keys()}}
         for row in self.col.find(cond):
             mongo_query = decode_mongo_query(row['query'])
@@ -451,7 +416,6 @@ class DASMongocache(object):
         msg = "DASMongocache::get_superset_keys %s=%s" % (key, value)
         self.logger.debug(msg)
         cond = {'query.spec.key': key}
-        found_keys = []
         for row in self.col.find(cond):
             mongo_query = decode_mongo_query(row['query'])
             for thiskey, thisvalue in mongo_query.items():
@@ -523,8 +487,10 @@ class DASMongocache(object):
         enc_query = encode_mongo_query(query)
         if  header:
             system = header['das']['system']
-            dasrecord = self.col.find_one({'query': enc_query, 'das.system': 'das'})
-            sysrecord = self.col.find_one({'query': enc_query, 'das.system': system})
+            spec1  = {'query': enc_query, 'das.system': 'das'}
+            dasrecord = self.col.find_one(spec1)
+            spec2  = {'query': enc_query, 'das.system': system}
+            sysrecord = self.col.find_one(spec2)
             if  header['das']['expire'] < dasrecord['das']['expire']:
                 expire = header['das']['expire']
             else:
@@ -562,13 +528,12 @@ class DASMongocache(object):
         query  = adjust_id(query)
         spec   = query.get('spec', {})
         fields = query.get('fields', None)
-        if spec.has_key('date') and isinstance(spec['date'], dict)\
-             and spec['date'].has_key('$lte') \
-             and spec['date'].has_key('$gte'):
-             spec['date'] = [spec['date']['$gte'], spec['date']['$lte']]
-
+        if  spec.has_key('date') and isinstance(spec['date'], dict) \
+            and spec['date'].has_key('$lte') \
+            and spec['date'].has_key('$gte'):
+            spec['date'] = [spec['date']['$gte'], spec['date']['$lte']]
         res    = col.find(spec=spec, fields=fields).count()
-        msg    = "DASMongocache::incache(%s, coll=%s) found %s results"\
+        msg    = "DASMongocache::incache(%s, coll=%s) found %s results" \
                 % (query, collection, res)
         self.logger.info(msg)
         if  res:
@@ -584,7 +549,7 @@ class DASMongocache(object):
         """
         col    = self.mdb[collection]
         query  = adjust_id(query)
-        query, dquery = convert2pattern(query)
+        query, _dquery = convert2pattern(query)
         spec   = query.get('spec', {})
         fields = query.get('fields', None)
         # to cover the case of one key=value pair, e.g. site=T1,
@@ -631,15 +596,13 @@ class DASMongocache(object):
         msg = "DASMongocache::get_from_cache(%s, %s, %s, %s, %s, coll=%s)"\
                 % (query, idx, limit, skey, order, collection)
         self.logger.debug(msg)
-        # get aggregators and loose query for further processing
-        aggregators = query.get('aggregators', None)
         if  query.has_key('spec') and query['spec'].has_key('_id'):
             # we got {'_id': {'$in': [ObjectId('4b912ee7e2194e35b8000010')]}}
             strquery = ""
         else:
             try:
                 strquery = json.dumps(query)
-            except: # we got filter conditions (pattern) which is not serializable
+            except: #we got filter conditions/pattern which is not serializable
                 strquery = ""
         if  query.has_key('spec') and query['spec'].has_key('date'):
             if isinstance(query['spec']['date'], dict)\
@@ -838,10 +801,7 @@ class DASMongocache(object):
             # aggregate all records
             gen = aggregator(records, expire)
             # create index on all lookup keys
-            try:
-                self.merge.ensure_index(skey)
-            except:
-                pass
+            create_indexes(self.merge, skey)
             # insert all records into das.merge using bulk insert
             size = self.cache_size
             try:
@@ -890,7 +850,7 @@ class DASMongocache(object):
         rec   = [k for i in header['lookup_keys'] for k in i.values()]
         lkeys = list(set(k for i in rec for k in i))
         index_list = [(key, DESCENDING) for key in lkeys]
-        self.indexes(self.col, index_list)
+        create_indexes(self.col, index_list)
         gen = self.update_records(query, results, header)
         # bulk insert
         try:
@@ -918,7 +878,7 @@ class DASMongocache(object):
             q_record['das']['empty_record'] = 0
             q_record['das']['status'] = "requested"
             q_record['das']['qhash'] = genkey(enc_query)
-            objid  = self.col.insert(q_record)
+            self.col.insert(q_record)
 
     def update_records(self, query, results, header):
         """
@@ -933,11 +893,9 @@ class DASMongocache(object):
         expire     = dasheader['expire']
         system     = dasheader['system']
         rec        = [k for i in header['lookup_keys'] for k in i.values()]
-        lkeys      = list(set(k for i in rec for k in i))
         cond_keys  = query['spec'].keys()
         # get API record id
         enc_query  = encode_mongo_query(query)
-        qhash      = genkey(enc_query)
         spec       = {'query':enc_query, 'das.system':system}
         record     = self.col.find_one(spec, fields=['_id'])
         objid      = record['_id']

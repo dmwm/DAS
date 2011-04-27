@@ -1,5 +1,5 @@
 # DAS modules
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, create_indexes
 import collections
 
 class DASKeyLearning(object):
@@ -64,11 +64,8 @@ class DASKeyLearning(object):
                 self.col.insert({'member': member,
                                  'stems': self.stem(member)})
                 
-        self.col.ensure_index([('system', 1),
-                               ('urn', 1), 
-                               ('members', 1),
-                               ('stems', 1)])
-            
+        index_list = [('system', 1), ('urn', 1), ('members', 1), ('stems', 1)]
+        create_indexes(self.col, index_list)
         
     def stem(self, member):
         """
