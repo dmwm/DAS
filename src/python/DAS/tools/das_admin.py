@@ -195,6 +195,7 @@ class DASMongoDB(object):
             coll.drop() # capped collection use drop
         else:
             coll.remove({}) # normal collections use remove
+            coll.drop_indexes()
 
     def fetch(self, spec, fields, db=None, system=None, pretty=False):
         """

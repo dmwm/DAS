@@ -20,7 +20,7 @@ from pymongo.objectid import ObjectId
 from DAS.utils.utils import gen2list, genkey, expire_timestamp
 from DAS.core.das_mongocache import encode_mongo_query
 from DAS.core.das_son_manipulator import DAS_SONManipulator
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, create_indexes
 
 class DASAnalytics(object):
     """
@@ -107,7 +107,7 @@ class DASAnalytics(object):
 
         index = [('qhash', DESCENDING),
                  ('dhash', DESCENDING)]
-        self.col.ensure_index(index)
+        create_indexes(self.col, index)
         
     def clean_queries(self):
         """
@@ -155,8 +155,7 @@ class DASAnalytics(object):
         payload.update(record) #ensure key fields are set correctly
         self.col.insert(payload)
         # ensure summary items are indexed for quick extract
-        self.col.ensure_index([('analyzer', DESCENDING)])
-        
+        create_indexes(self.col, [('analyzer', DESCENDING)])
 
     def get_summary(self, identifier, after=None, before=None, **query):
         """
@@ -199,7 +198,7 @@ class DASAnalytics(object):
             self.col.insert(record)
         index = [('system', DESCENDING), ('dasquery', DESCENDING),
                  ('api.name', DESCENDING), ('qhash', DESCENDING) ]
-        self.col.ensure_index(index)
+        create_indexes(self.col, index)
         
     def insert_apicall(self, system, query, url, api, api_params, expire):
         """
@@ -241,7 +240,7 @@ class DASAnalytics(object):
         index_list = [('apicall.url', DESCENDING),
                       ('apicall.api', DESCENDING),
                       ('qhash', DESCENDING)]
-        self.col.ensure_index(index_list)
+        create_indexes(self.col, index_list)
         
     def update_apicall(self, query, das_dict):
         """

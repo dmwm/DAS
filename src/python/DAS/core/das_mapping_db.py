@@ -20,7 +20,7 @@ from pymongo import DESCENDING
 
 # DAS modules
 from DAS.utils.utils import gen2list, access
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, create_indexes
 
 class DASMapping(object):
     """
@@ -158,7 +158,7 @@ class DASMapping(object):
             msg = 'Invalid record %s' % record
             raise Exception(msg)
         if  index:
-            self.col.ensure_index(index)
+            create_indexes(self.col, index)
 
     # ==================
     # Informational APIs

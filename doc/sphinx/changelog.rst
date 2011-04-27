@@ -7,6 +7,11 @@ This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
 
+- 0.7.X
+
+  - add create_indexes into das_db module to allow consistenly create/ensure
+    indexes in DAS code
+
 - 0.6.5
 
   - handle auto-connection recovery for DBSPhedexService

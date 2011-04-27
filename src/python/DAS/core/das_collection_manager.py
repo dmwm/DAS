@@ -9,7 +9,7 @@ __author__ = "Valentin Kuznetsov"
 
 # DAS modules
 from DAS.core.das_son_manipulator import DAS_SONManipulator
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, create_indexes
 
 # monogo db modules
 from pymongo import DESCENDING, ASCENDING
@@ -63,7 +63,7 @@ class DASCollectionManager(object):
         collection = mongodb[colname]
         index_list = getattr(self, '%s_index_list' % colname)
         for pair in index_list:
-            collection.ensure_index([pair])
+            create_indexes(collection, [pair])
         self.cachemgr[colname][dbname] = collection
         return collection
 

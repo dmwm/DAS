@@ -16,7 +16,7 @@ from pymongo.connection import AutoReconnect
 from bson.code import Code
 
 import DAS.utils.jsonwrapper as json
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, create_indexes
 from DAS.web.tools import exposejson
 
 PAT = re.compile("^T[0-3]_")
@@ -252,7 +252,7 @@ class DBSPhedexService(object):
             indexes = [('name', DESCENDING), ('site', DESCENDING), 
                        ('timestamp', DESCENDING)]
             for index in indexes:
-                self.coll.ensure_index([index])
+                create_indexes(self.coll, [index])
         except Exception, _exp:
             self.coll = None
 
