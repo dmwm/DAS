@@ -414,7 +414,7 @@ def json2html(idict, pad="", recusive=False, ref=None):
                 sss += """: <code class="null">None</code>"""
             elif ref and (key == 'name' or key == 'se' or key == 'site') and \
                 (isinstance(val, str) or isinstance(val, unicode)):
-                refkey = key
+                refkey = ref
                 if  key == 'se' or ref == 'site':
                     refkey = 'site'
                 query = "%s=%s" % (refkey, val)
