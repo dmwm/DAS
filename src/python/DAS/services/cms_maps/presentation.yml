@@ -128,9 +128,14 @@ release: [
 site : [
         {"das":"site.name", "ui":"Site name",
          "link":[
-#                  {"name":"Blocks", "query":"block site=%s"},
+#                  {"name":"Sites", "query":"site=%s"},
+#                  {"name":"Blocks", "query":"block site=%s*"},
                 ]}, 
-        {"das":"site.se", "ui":"StorageElement"}, 
+        {"das":"site.se", "ui":"StorageElement",
+         "link":[
+                 {"name":"Site", "query":"site=%s"},
+                ]
+        }, 
         {"das":"site.samname", "ui":"SAMName"}, 
         {"das":"site.sitename", "ui":"Site"},
         {"das":"site.admin.email", "ui":"Site Admin Email"},

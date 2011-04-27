@@ -46,6 +46,12 @@ DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir',
         'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
+def make_args(key, val, inst):
+    """
+    Helper function to make appropriate url parameters
+    """
+    return urllib.urlencode({'input':'%s=%s' % (key, val), 'instance':inst})
+
 def make_links(links, value, inst):
     """
     Make new link for provided query links and passed value.
@@ -842,14 +848,20 @@ class DASWebService(DASWebManager):
                 pkey = row['das']['primary_key']
                 lkey = pkey.split('.')[0]
                 try:
-                    pval = DotDict(row)._get(pkey)
+                    pval = list(set(DotDict(row).get_values(pkey)))
+                    if  len(pval) == 1:
+                        pval = pval[0]
                     if  pkey == 'run.run_number':
                         pval = int(pval)
-                    ifield  = urllib.urlencode(\
-                        {'input':'%s=%s' % (lkey, pval), 'instance':inst})
                     if  pval:
-                        page += '<b>%s</b>: <a href="/das/request?%s">%s</a>'\
-                                    % (lkey.capitalize(), ifield, pval)
+                        page += '<b>%s</b>:' % lkey.capitalize()
+                        if  isinstance(pval, list):
+                            page += ', '.join([\
+                                '<a href="/das/request?%s">%s</a>'\
+                                % (make_args(lkey, i, inst), i) for i in pval])
+                        else:
+                            page += '<a href="/das/request?%s">%s</a>'\
+                                % (make_args(lkey, pval, inst), pval)
                     else:
                         page += '<b>%s</b>: N/A' % lkey.capitalize()
                     plist = self.dasmgr.mapping.presentation(lkey)
@@ -858,7 +870,8 @@ class DASWebService(DASWebManager):
                         if  item.has_key('link'):
                             linkrec = item['link']
                             break
-                    if  linkrec and pval and pval != 'N/A':
+                    if  linkrec and pval and pval != 'N/A' and \
+                        not isinstance(pval, list):
                         links = ', '.join(make_links(linkrec, pval, inst))\
                                     + '.'
                 except:
