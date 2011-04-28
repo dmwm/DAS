@@ -38,12 +38,15 @@ def parse_filters(query):
     spec  = query.get('spec', {})
     filters = query.get('filters', [])
     mdict = {}
+    existance = {'$exists': True}
     for filter in filters:
         for key, val in parse_filter(spec, filter).items():
             if  mdict.has_key(key):
                 value = mdict[key]
                 if  isinstance(value, dict) and isinstance(val, dict):
                     mdict[key].update(val)
+                elif isinstance(value, dict) and value == existance:
+                    mdict[key] = val
                 else:
                     msg  = 'Mis-match in filters (%s, %s)' \
                         % ({key:value}, filter)

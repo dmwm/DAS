@@ -13,6 +13,19 @@ from DAS.utils.utils import map_validator, xml_parser, DotDict
 import types
 import DAS.utils.jsonwrapper as json
 
+def site_info(site_dict, block, replica):
+    """Helper function to fill out site info"""
+    node  = replica['node']
+    files = replica['files']
+    totfiles = block['files']
+    if  site_dict.has_key(node):
+        vdict = site_dict[node]
+        vdict['files'] += files
+        vdict['totfiles'] += totfiles
+        site_dict[node] = vdict
+    else:
+        site_dict[node] = dict(files=files, totfiles=totfiles)
+
 class PhedexService(DASAbstractService):
     """
     Helper class to provide Phedex service
@@ -83,12 +96,30 @@ class PhedexService(DASAbstractService):
         gen = xml_parser(source, prim_key, tags)
         site_names = []
         seen = {}
+        tot_files  = 0
+        site_info_dict = {}
         for row in gen:
-            if  api == 'site4dataset' or api == 'site4block' or api == 'site4file':
-                if  api == 'site4file':
-                    item = row['block']['file']['replica']
-                else:
-                    item = row['block']['replica']
+            if  api == 'site4dataset' or api == 'site4block':
+                item = row['block']['replica']
+                if  isinstance(item, list):
+                    for replica in item:
+                        result = {'name': replica['node'], 'se': replica['se']}
+                        site_info(site_info_dict, row['block'], replica)
+                        if  not replica['files']:
+                            continue
+                        if  result not in site_names:
+                            site_names.append(result)
+                elif isinstance(item, dict):
+                    replica = item
+                    result = {'name': replica['node'], 'se': replica['se']}
+                    site_info(site_info_dict, row['block'], replica)
+                    if  not replica['files']:
+                        continue
+                    result  = {'name': replica['node'], 'se': replica['se']}
+                    if  result not in site_names:
+                        site_names.append(result)
+            elif api == 'site4file':
+                item = row['block']['file']['replica']
                 if  isinstance(item, list):
                     for replica in item:
                         result = {'name': replica['node'], 'se': replica['se']}
@@ -112,9 +143,23 @@ class PhedexService(DASAbstractService):
                     seen[dataset] = dict(bytes=bytes, files=files)
             else:
                 yield row
-        if  api == 'site4dataset' or api == 'site4block' or api == 'site4file':
-            yield site_names
+        if  api == 'site4dataset' or api == 'site4block':
+            for row in site_names:
+                name = row['name']
+                if  site_info_dict.has_key(name):
+                    sdict      = site_info_dict[name]
+                    sfiles     = float(sdict['files'])
+                    tot_files  = float(sdict['totfiles'])
+                    file_occ   = '%5.2f%%' % (100*sfiles/tot_files)
+                else:
+                    file_occ   = '0%%'
+                row['file_fraction'] = file_occ.strip()
+                yield row
+        if  api == 'site4file':
+            for row in site_names:
+                yield row
         del site_names
+        del site_info_dict
         if  seen:
             for key, val in seen.items():
                 record = dict(name=key, size=val['bytes'], files=val['files'])

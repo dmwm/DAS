@@ -9,6 +9,9 @@ performed stress tests and code audit DAS servers.
 
 - 0.7.X
 
+  - get file present fraction for site view (users want to know if
+    dataset is completed on a site or not)
+  - fix PLY to accept y|n as a value, can be used to check openness of the block
   - add create_indexes into das_db module to allow consistenly create/ensure
     indexes in DAS code
 
