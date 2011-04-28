@@ -121,6 +121,8 @@ def adjust_values(func, gen, links):
             rdict[uikey] = val
     page = ""
     to_show = []
+    green = 'style="color:green"'
+    red = 'style="color:red"'
     for key, val in rdict.items():
         lookup = func(key)
         if  lookup:
@@ -136,6 +138,19 @@ def adjust_values(func, gen, links):
                 value = val
             if  isinstance(value, list) and isinstance(value[0], str):
                 value = ', '.join(value)
+            if  key == 'Open':
+                if  value == 'n':
+                    value = '<span %s>%s</span>' % (green, value)
+                else:
+                    value = '<span %s>%s</span>' % (red, value)
+            if  key == 'File present':
+                if  not value:
+                    continue
+                else:
+                    if  value == '100.00%':
+                        value = '<span %s>100%%</span>' % green
+                    else:
+                        value = '<span %s>%s</span>' % (red, value)
             to_show.append((key, value))
         else:
             if  key == 'result' and isinstance(val, dict) and \
