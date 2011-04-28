@@ -139,7 +139,7 @@ site : [
         }, 
         {"das":"site.samname", "ui":"SAMName"}, 
         {"das":"site.sitename", "ui":"Site"},
-        {"das":"site.file_fraction", "ui":"File present"},
+        {"das":"site.file_fraction", "ui":"File presence"},
         {"das":"site.admin.email", "ui":"Site Admin Email"},
         {"das":"site.admin.title", "ui":"Site Admin Role"},
         {"das":"site.error", "ui":"Error"}, 
