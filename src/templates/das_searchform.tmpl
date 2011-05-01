@@ -136,3 +136,20 @@ if (initial_status) {
 
 <div id="_response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
 
+#if not $input
+<div>
+<h3>Query examples</h3>
+<ul>
+<li>dataset=*RelVal*</li>
+<li>file dataset=/ExpressPhysics/Commissioning10-Express-v6/FEVT</li>
+<li>site dataset=/WJets_matchingup_7TeV-madgraph/Summer10-START36_V10_FastSim-v3/DQM</li>
+<li>run=148126</li>
+<li>dataset run=148126</li>
+<li>run dataset=/Monitor/Commissioning08-v1/RAW</li>
+<li>release=CMSSW_2_0_8</li>
+<li>dataset release=CMSSW_2_0_8</li>
+</ul>
+For more details please read DAS <a href="$base/faq">Frequently Asked Questions</a>.
+The list of supported DAS keys can be found in <a href="$base/services">Services</a> section.
+</div>
+#end if
