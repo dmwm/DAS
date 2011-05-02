@@ -195,7 +195,7 @@ def exposejs (func):
     def wrapper (self, *args, **kwds):
         """Decorator wrapper"""
         data = func (self, *args, **kwds)
-        cherrypy.response.headers['Content-Type'] = "application/javascript"
+        cherrypy.response.headers['Content-Type'] = "text/javascript"
         return data
     return wrapper
 

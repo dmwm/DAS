@@ -8,7 +8,7 @@
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta http-equiv="Content-Language" content="en-us" />
-    <meta http-equiv="Content-Script-Type" content="application/javascript" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
     <meta http-equiv="imagetoolbar" content="no" />
     <meta name="author" content="Valentin Kuznetsov (vkuznet at gmail dot com)" />
     <meta name="MSSmartTagsPreventParsing" content="true" />
@@ -21,9 +21,9 @@
 
     <link rel="search" type="application/opensearchdescription+xml" href="$base/opensearch" title="CMS DAS" />
 
-    <script type="application/javascript" src="$base/js/prototype.js"></script>
-    <script type="application/javascript" src="$base/js/utils.js"></script>
-    <script type="application/javascript" src="$base/js/ajax_utils.js"></script>
+    <script type="text/javascript" src="$base/js/prototype.js"></script>
+    <script type="text/javascript" src="$base/js/utils.js"></script>
+    <script type="text/javascript" src="$base/js/ajax_utils.js"></script>
 
     <!-- YUI stuff -->
     <link rel="stylesheet" type="text/css" href="$base/yui/build/fonts/fonts-min.css" />
@@ -31,16 +31,16 @@
     <link type="text/css" rel="stylesheet" href="$base/yui/build/autocomplete/assets/skins/sam/autocomplete.css"/>
     <link rel="stylesheet" type="text/css" href="$base/yui/build/paginator/assets/skins/sam/paginator.css"/>
     <link rel="stylesheet" type="text/css" href="$base/yui/build/datatable/assets/skins/sam/datatable.css"/>
-    <script type="application/javascript" src="$base/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
-    <script type="application/javascript" src="$base/yui/build/container/container-min.js"></script>
-    <script type="application/javascript" src="$base/yui/build/datasource/datasource-min.js"></script>
-    <script type="application/javascript" src="$base/yui/build/connection/connection-min.js"></script>
-    <script type="application/javascript" src="$base/yui/build/cookie/cookie-min.js"></script>
-    <script type="application/javascript" src="$base/yui/build/json/json-min.js"></script>
-    <script type="application/javascript" src="$base/yui/build/autocomplete/autocomplete-min.js"></script>
-    <script type="application/javascript" src="$base/yui/build/element/element-min.js"></script>
-    <script type="application/javascript" src="$base/yui/build/paginator/paginator-min.js"></script>
-    <script type="application/javascript" src="$base/yui/build/datatable/datatable-min.js"></script>
+    <script type="text/javascript" src="$base/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+    <script type="text/javascript" src="$base/yui/build/container/container-min.js"></script>
+    <script type="text/javascript" src="$base/yui/build/datasource/datasource-min.js"></script>
+    <script type="text/javascript" src="$base/yui/build/connection/connection-min.js"></script>
+    <script type="text/javascript" src="$base/yui/build/cookie/cookie-min.js"></script>
+    <script type="text/javascript" src="$base/yui/build/json/json-min.js"></script>
+    <script type="text/javascript" src="$base/yui/build/autocomplete/autocomplete-min.js"></script>
+    <script type="text/javascript" src="$base/yui/build/element/element-min.js"></script>
+    <script type="text/javascript" src="$base/yui/build/paginator/paginator-min.js"></script>
+    <script type="text/javascript" src="$base/yui/build/datatable/datatable-min.js"></script>
 
 </head>
 <body class="yui-skin-sam">
@@ -69,19 +69,5 @@
 function wait() {
     plage_img('_response', '$base/images/loading.gif', 'please wait');
 }
-/*
-top_tt1 = new YAHOO.widget.Tooltip("top_tt1", 
-    { context:"das_top_srv", text:"DAS service description" });
-top_tt2 = new YAHOO.widget.Tooltip("top_tt2", 
-    { context:"das_top_bug", text:"Report DAS problem into CMS Savannah" });
-top_tt3 = new YAHOO.widget.Tooltip("top_tt3", 
-    { context:"das_top_faq", text:"Frequiently Asked Question or HELP" });
-top_tt4 = new YAHOO.widget.Tooltip("top_tt4", 
-    { context:"das_top_cli", text:"DAS Command Line Tool" });
-top_tt5 = new YAHOO.widget.Tooltip("top_tt5", 
-    { context:"das_top_expert", text:"DAS Expert interface" });
-top_tt6 = new YAHOO.widget.Tooltip("top_tt6", 
-    { context:"das_top_doc", text:"DAS Online Documentation" });
-*/
 </script>
 <!-- end of das_top.tmpl -->
