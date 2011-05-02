@@ -445,7 +445,7 @@ def web_time():
     # 2010-01-04 10:40:53,850
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time()))
 
-def ajax_response_orig(msg, tag="_response", element="object"):
+def ajax_response_orig(msg, tag="response", element="object"):
     """AJAX response wrapper"""
     page  = """<ajax-response><response type="%s" id="%s">""" % (element, tag)
     page += msg
