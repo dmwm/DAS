@@ -726,7 +726,7 @@ class DASWebService(DASWebManager):
                             % pid
                 page += ', <a href="/das/?%s">stop</a> request' \
                         % urllib.urlencode({'input':uinput})
-                page += '<script type="application/javascript">'
+                page += '<script type="text/javascript">'
                 page += """setTimeout('ajaxCheckPid("%s", "%s", "%s")', %s)""" \
                         % (self.base, pid, self.next, self.next)
                 page += '</script>'
@@ -763,7 +763,7 @@ class DASWebService(DASWebManager):
             next = limit
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         req  = """
-        <script type="application/javascript">
+        <script type="text/javascript">
         setTimeout('ajaxCheckPid("%s", "%s", "%s")', %s)
         </script>""" % (self.base, pid, next, next)
         cherrypy.response.headers['Content-Type'] = 'text/xml'
