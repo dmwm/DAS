@@ -19,46 +19,6 @@ function updateInput() {
    if  (ushow) updateTag('show', ushow);
    else updateTag('show', '');
 }
-/*
- * General set of utilities used in DAS web interface
- * Author: Valentin Kuznetsov, 2009
- */
-var Updater=Class.create();
-Updater.prototype = {
-    initialize: function(tab) {
-       this.tab=tab
-    },
-    ajaxUpdate: function(ajaxResponse) {
-       var responseHTML=RicoUtil.getContentAsString(ajaxResponse);
-       var t=document.getElementById(this.tab);
-       t.innerHTML=responseHTML;
-       // parse response and search for any JavaScript code there, if found execute it.
-       var jsCode = SearchForJSCode(responseHTML);
-       if (jsCode) {
-           eval(jsCode);
-       }
-    }
-}
-function SearchForCode(text,begPattern,endPattern) {
-    var foundCode='';
-    while( text && text.search(begPattern) != -1 ) {
-        var p=text.split(begPattern);
-        for(i=1;i<p.length;i++) {
-            var n=p[i].split(endPattern);
-            foundCode=foundCode+n[0]+';\n';
-        }
-        return foundCode;
-    }
-    return foundCode;
-}
-function SearchForJSCode(text) {
-    var pattern1='<script type="application\/javascript">';
-    var pattern2='<script type=\'application\/javascript\'>';
-    var end='<\/script>';
-    var foundCode=SearchForCode(text,pattern1,end);
-    foundCode=foundCode+SearchForCode(text,pattern2,end);
-    return foundCode;
-}
 function getTagValue(tag)
 {
     return document.getElementById(tag).value;
@@ -87,10 +47,6 @@ function ShowTag(tag) {
         id.className="show";
     }
 }
-//function wait() {
-//    var id=document.getElementById('_response');
-//    id.innerHTML='<div><img src="/dascontrollers/images/loading.gif" alt="loading" /> please wait</div>';
-//}
 function load(url) {
     window.location.href=url;
 }

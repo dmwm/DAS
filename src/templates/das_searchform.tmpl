@@ -134,19 +134,26 @@ if (initial_status) {
 </script>
 <!-- end of das_searchform.tmpl -->
 
-<div id="_response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
+<div id="response" name="response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
 
 #if not $input
 <div>
-<h3>Query examples</h3>
+To start your search please use 
+<span style="color:blue">key=value</span> pairs, for example
 <ul>
 <li>dataset=*RelVal*</li>
+<li>run=148126</li>
+<li>release=CMSSW_2_0_8</li>
+</ul>
+
+You can use common keys 
+(<span style="color:blue">dataset, file, run, block, site, etc.</span>)
+to look for specific values, e.g.
+<ul>
 <li>file dataset=/ExpressPhysics/Commissioning10-Express-v6/FEVT</li>
 <li>site dataset=/WJets_matchingup_7TeV-madgraph/Summer10-START36_V10_FastSim-v3/DQM</li>
-<li>run=148126</li>
-<li>dataset run=148126</li>
 <li>run dataset=/Monitor/Commissioning08-v1/RAW</li>
-<li>release=CMSSW_2_0_8</li>
+<li>dataset run=148126</li>
 <li>dataset release=CMSSW_2_0_8</li>
 </ul>
 For more details please read DAS <a href="$base/faq">Frequently Asked Questions</a>.
