@@ -48,7 +48,7 @@ def main():
     logger = logging.getLogger(opts.name)
     daslogger = logging.getLogger(opts.name + '_DAS')
 
-    dascore = DASCore(logger=daslogger)
+    dascore = DASCore(logger=daslogger, multitask=None)
 
     instance = klass(logger=logger, DAS=dascore, name=opts.name,
                      taskid=opts.id, index=0, interval=opts.interval,

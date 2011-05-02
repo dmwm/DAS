@@ -9,6 +9,7 @@ performed stress tests and code audit DAS servers.
 
 - 0.7.X
 
+  - turn off multitask for analytics services
   - add query examples into front-page
   - get file present fraction for site view (users want to know if
     dataset is completed on a site or not)

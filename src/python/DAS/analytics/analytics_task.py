@@ -10,7 +10,6 @@ import logging
 import uuid
 import copy
 
-from DAS.core.das_core import DASCore
 from DAS.utils.utils import genkey
 from DAS.analytics.analytics_utils import multilogging, das_factory
 
@@ -132,8 +131,6 @@ class RunnableTask(object):
         log_das = "DASAnalytics.Task.%s.%s.DAS" % (self.classname, self.taskid)                                           
         
         childlogger = multilogging().getLogger(log_child)
-        
-        #we probably need to add a DASCore instance here too.
         
         #the DAS instance will now be global if this option is set,
         #and otherwise uniquely created by das_factory

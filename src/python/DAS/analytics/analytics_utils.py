@@ -199,10 +199,11 @@ def das_factory(logname):
     global USE_GLOBAL_DAS
     if USE_GLOBAL_DAS:
         if not GLOBAL_DAS:
-            GLOBAL_DAS = DASCore(logger=multilogging().getLogger(logname))
+            GLOBAL_DAS = \
+            DASCore(logger=multilogging().getLogger(logname), multitask=None)
         return GLOBAL_DAS
     else:
-        return DASCore(logger=multilogging().getLogger(logname))
+        return DASCore(logger=multilogging().getLogger(logname), multitask=None)
     
 def set_global_das(mode):
     "Set whether to use a global instance or spawn new ones"

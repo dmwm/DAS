@@ -64,7 +64,8 @@ class DASCore(object):
     """
     DAS core class.
     """
-    def __init__(self, config=None, debug=None, nores=False, logger=None, engine=None):
+    def __init__(self, config=None, debug=None, 
+                nores=False, logger=None, engine=None, multitask=True):
         if  config:
             dasconfig = config
         else:
@@ -86,17 +87,21 @@ class DASCore(object):
             self.noresults = nores
 
         self.multitask = dasconfig['das'].get('multitask', True)
-        if  debug:
+        if  debug or self.verbose:
+            self.multitask = False # in verbose mode do not use multitask
+            dasconfig['das']['multitask'] = False
+        if  not multitask: # explicitly call DASCore ctor, e.g. in analytics
             self.multitask = False
             dasconfig['das']['multitask'] = False
         dasconfig['engine'] = engine
-        if  engine:
-            self.taskmgr = PluginTaskManager(engine)
-            self.taskmgr.subscribe()
+        if  self.multitask:
+            if  engine:
+                self.taskmgr = PluginTaskManager(engine)
+                self.taskmgr.subscribe()
+            else:
+                self.taskmgr = TaskManager()
         else:
-            self.taskmgr = TaskManager()
-        if  self.verbose:
-            self.multitask = None # in verbose mode do not use multitask
+            self.taskmgr = None
 
         logfile = dasconfig.get('logfile', None)
         logformat = dasconfig.get('logformat')

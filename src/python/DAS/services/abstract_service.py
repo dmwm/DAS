@@ -56,11 +56,15 @@ class DASAbstractService(object):
             print config
             raise Exception('fail to parse DAS config')
 
-        if  engine:
-            self.taskmgr      = PluginTaskManager(engine)
-            self.taskmgr.subscribe()
+        if  self.multitask:
+            if  engine:
+                self.taskmgr      = PluginTaskManager(engine)
+                self.taskmgr.subscribe()
+            else:
+                self.taskmgr      = TaskManager()
         else:
-            self.taskmgr      = TaskManager()
+            self.taskmgr = None
+
         self.map        = {}   # to be defined by data-service implementation
         self._keys      = None # to be defined at run-time in self.keys
         self._params    = None # to be defined at run-time in self.parameters
