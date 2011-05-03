@@ -138,25 +138,19 @@ if (initial_status) {
 
 #if not $input
 <div>
-To start your search please use 
+<span class="hint">Hint:</span> 
+if you new to DAS try to search desired data by using 
 <span style="color:blue">key=value</span> pairs, for example
 <ul>
 <li>dataset=*RelVal*</li>
+<li>release=CMSSW_2_0_*</li>
 <li>run=148126</li>
-<li>release=CMSSW_2_0_8</li>
 </ul>
 
-You can use common keys 
-(<span style="color:blue">dataset, file, run, block, site, etc.</span>)
-to look for specific values, e.g.
-<ul>
-<li>file dataset=/ExpressPhysics/Commissioning10-Express-v6/FEVT</li>
-<li>site dataset=/WJets_matchingup_7TeV-madgraph/Summer10-START36_V10_FastSim-v3/DQM</li>
-<li>run dataset=/Monitor/Commissioning08-v1/RAW</li>
-<li>dataset run=148126</li>
-<li>dataset release=CMSSW_2_0_8</li>
-</ul>
-For more details please read DAS <a href="$base/faq">Frequently Asked Questions</a>.
-The list of supported DAS keys can be found in <a href="$base/services">Services</a> section.
+The list of supported DAS 
+<span style="color:blue">keys</span> can be found in 
+<b><a href="$base/services">Services</a></b> section.
+For more details please read DAS 
+<b><a href="$base/faq">Frequently Asked Questions</a></b>.
 </div>
 #end if
