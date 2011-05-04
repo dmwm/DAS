@@ -5,11 +5,13 @@
 Task class for analytics.
 """
 
+# system modules
 import time
 import logging
 import uuid
 import copy
 
+# DAS modules
 from DAS.utils.utils import genkey
 from DAS.analytics.analytics_utils import multilogging, das_factory
 
@@ -114,14 +116,17 @@ class RunnableTask(object):
         "Callable that the worker process will run."
         taskid = self.get_task_id()
         self.logger = multilogging().getLogger("DASAnalytics.RunnableTask")
-        self.logger.info('Starting TaskID "%s".', taskid)
+        msg = 'Starting task=%s, id=%s, class=%s' \
+                % (self.name, taskid, self.classname)
+        self.logger.info(msg)
         start_time = time.time()
         
         try:
             klass = self._load_class()
         except Exception, exp:
-            self.logger.error('Task "%s" (%s) failed to load class "%s", aborting.',
-                         self.name, taskid, self.classname)
+            msg = 'Task "%s" (%s) failed to load class "%s", aborting.' \
+                (self.name, taskid, self.classname)
+            print "ERROR: %s" % msg
             return {'task_id':taskid, 'success': False, 'error': exp, 
                     'start_time':start_time, 'finish_time':start_time,
                     'name':self.name, 'index':self.index, 'parent':self.parent,
@@ -144,8 +149,9 @@ class RunnableTask(object):
         try:
             instance = klass(**self.kwargs)
         except Exception, exp:
-            self.logger.error('Task "%s" (%s) failed to instantiate, aborting. Error was %s',
-                         self.name, taskid, str(exp))
+            msg = 'ERROR: task=%s, id=%s failed to instantiate, aborting.\n%s' \
+                         (self.name, taskid, str(exp))
+            print msg
             return {'task_id':taskid, 'success': False, 'error': exp, 
                     'start_time':start_time, 'finish_time':start_time,
                     'name':self.name, 'index':self.index, 'parent':self.parent,
@@ -154,16 +160,17 @@ class RunnableTask(object):
             result = instance()
         except Exception, exp:
             finish_time = time.time() #we might have run for some time by now
-            self.logger.error('Task "%s" (%s) failed during run, aborting. Error was %s',
-                         self.name, taskid, str(exp))
+            msg = 'ERROR: task=%s, id=%s failed during run, aborting\n%s' \
+                         (self.name, taskid, str(exp))
+            print msg
             return {'task_id':taskid, 'success': False, 'error': exp,
                     'start_time':start_time, 'finish_time':finish_time,
                     'name':self.name, 'index':self.index, 'parent':self.parent,
                     'master_id':self.master_id}
         
         finish_time = time.time()
-        self.logger.info('Finishing Task "%s" (%s) (success).', 
-                    self.name, taskid)
+#        self.logger.info('Finishing Task "%s" (%s) (success).', 
+#                    self.name, taskid)
         if isinstance(result, dict):
             result.update({'task_id':taskid, 'success':True, 
                            'start_time':start_time, 'finish_time':finish_time,

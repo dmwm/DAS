@@ -14,64 +14,141 @@ import ConfigParser
 from DAS.utils.das_option import DASOption
 
 DAS_OPTIONS = [
+#
+# MongoDB options
+#
+# URI, can be multiple
 DASOption('mongodb', 'dburi', 'list', ['mongodb://localhost:27017']),
+# default DB name
 DASOption('mongodb', 'dbname', 'string', 'das'),
+# default bulk size to be used by DAS during records insertion into MongoDB
 DASOption('mongodb', 'bulkupdate_size', 'int', 5000),
 
+#
+# Mapping DB options
+#
+# default DB name
 DASOption('mappingdb', 'dbname', 'string', 'mapping'),
+# default collection name
 DASOption('mappingdb', 'collname', 'string', 'db'),
 
+#
+# Keyleardnign DB options
+#
+# default DB name
 DASOption('keylearningdb', 'dbname', 'string', 'keylearning'),
+# default collection name
 DASOption('keylearningdb', 'collname', 'string', 'db'),
 
+#
+# Analytics DB options
+#
+# default db name
 DASOption('analyticsdb', 'dbname', 'string', 'analytics'),
+# default collection name
 DASOption('analyticsdb', 'collname', 'string', 'db'),
+# controls how long records in analytics live, default 2 months
 DASOption('analyticsdb', 'history', 'int', 60*24*60*60),
                
+#
+# ParserDB optins
+#
+# default db name
 DASOption('parserdb', 'dbname', 'string', 'parser'),
+# default colleciton name
 DASOption('parserdb', 'collname', 'string', 'db'),
+# enable/disable writing QL into parserdb
 DASOption('parserdb', 'enable', 'bool', True),
+# size of parser db (MongoDB capped collection)
 DASOption('parserdb', 'sizecap', 'int', 1048576*5),
 
+#
+# Loggind DB options
+#
+# default db name
 DASOption('loggingdb', 'dbname', 'string', 'parser'),
+# default collection name
 DASOption('loggingdb', 'collname', 'string', 'db'),
+# size of logging db (MongoDB capped collection)
 DASOption('loggingdb', 'capped_size', 'int', 100*1024*1024),
 
+#
+# DAS DBs options
+#
+# default db name
 DASOption('dasdb', 'dbname', 'string', 'das'),
+# default cache collection name
 DASOption('dasdb', 'cachecollection', 'string', 'cache'),
+# default merge collection name
 DASOption('dasdb', 'mergecollection', 'string', 'merge'),
+# default map reduce collecion name
 DASOption('dasdb', 'mrcollection', 'string', 'mapreduce'),
 
+#
+# DAS web server options
+#
+# default host name, 0.0.0.0 to serve all incoming IPV4 requests
 DASOption('web_server', 'host', 'string', '0.0.0.0'),
+# default port number
 DASOption('web_server', 'port', 'int', 8212),
+# number of threads in cherrypy server
 DASOption('web_server', 'thread_pool', 'int', 30),
+# cherrypy log_screen option
 DASOption('web_server', 'log_screen', 'bool', True),
+# cherrypy server parameter, controls number of pending request in socket queue
 DASOption('web_server', 'socket_queue_size', 'int', 100),
+# default URL base mount point
 DASOption('web_server', 'url_base', 'string', '/das'),
+# default log file name
 DASOption('web_server', 'logfile', 'string', '/tmp/das_web.log'),
+# default log level
 DASOption('web_server', 'loglevel', 'int', 0),
+# status_update controls how often AJAX calls should be invoked (in milsec)
 DASOption('web_server', 'status_update', 'int', 3000),
+# number of workers to serve user queries in DAS server
 DASOption('web_server', 'number_of_workers', 'int', 10),
+# limit number of peding jobs in DAS server queue
 DASOption('web_server', 'queue_limit', 'int', 50),
 
+#
+# DAS test server options
+#
+# default host address, 0.0.0.0 to support all incoming IPV4
 DASOption('test_server', 'host', 'string', '0.0.0.0'),
+# default port number
 DASOption('test_server', 'port', 'int', 8214),
+# cherrypy thread pool parameter
 DASOption('test_server', 'thread_pool', 'int', 30),
+# cherrypy log_screen parameter
 DASOption('test_server', 'log_screen', 'bool', True),
+# cherrypy socket queue size
 DASOption('test_server', 'socket_queue_size', 'int', 100),
+# default log file name
 DASOption('test_server', 'logfile', 'string', '/tmp/das_test.log'),
+# default log level
 DASOption('test_server', 'loglevel', 'int', 0),
 
+#
+# DAS core options
+#
+# location of parser.out file used by PLY
 DASOption('das', 'parserdir', 'string', '/tmp'),
+# verbosity level
 DASOption('das', 'verbose', 'int', 0, destination='verbose'),
+# log file for logger
 DASOption('das', 'logfile', 'string', '/tmp/das.log', destination='logfile'),
+# flag to turn on/off the multitasking (thread based) support in DAS
 DASOption('das', 'multitask', 'bool', True),
+# error_expire controls how long to keep DAS record for misbehaving data-srv
 DASOption('das', 'error_expire', 'int', 300),
+# logformat for DAS logger
 DASOption('das', 'logformat', 'string', 
                 '%(levelname)s %(message)s', destination='logformat'),
+# list of data services participated in DAS
 DASOption('das', 'services', 'list', 
                 ['google_maps', 'ip', 'postalcode'], destination='services'),
 
+# DAS dbs_phedex service options
 DASOption('dbs_phedex', 'urls', 'list',
         ['http://vocms09.cern.ch:8989/dbs/DBSReader/datasets',
          'https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockReplicas'])

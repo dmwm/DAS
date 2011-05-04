@@ -1,9 +1,22 @@
-from DAS.analytics.analytics_config import DASAnalyticsConfig
-from DAS.analytics.analytics_task import Task
+#!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+
+"""
+General set of useful utilities used by DAS
+"""
+
+__author__ = "Gordon Ball"
+
+# system modules
 import logging
 import time
 import multiprocessing
 import copy
+
+# DAS modules
+from DAS.analytics.analytics_config import DASAnalyticsConfig
+from DAS.analytics.analytics_task import Task
+from DAS.utils.utils import dastimestamp
 
 DASAnalyticsConfig.add_option("max_retries",
                               type=int,
@@ -111,6 +124,10 @@ class TaskScheduler(object):
             
         self.logger.info('Adding Task "%s" to TaskScheduler, scheduled in %d',
                          task.name, int(when - time.time()))
+#        
+#        msg = 'Adding Task "%s" to TaskScheduler, scheduled in %d' \
+#                % (task.name, int(when - time.time()))
+#        print msg
         
         self.registry[task.master_id] = task
         self.scheduled.append({'at':when, 'master_id':task.master_id,
@@ -183,11 +200,14 @@ class TaskScheduler(object):
             master_id = item['master_id']
             task = self.registry[master_id]
             self.logger.info('Submitting Task "%s".', task.name)
+            tstamp = dastimestamp()
             runnable = task.spawn()
             task_id = runnable.get_task_id()
             #self.loghandler.add_watch(task_id)
             self.logger.info('Task "%s" has TaskID %s',
                              runnable.name, task_id)
+            msg = '%s task=%s, id=%s' % (tstamp, runnable.name, task_id)
+            print msg
             self.running[task_id] = {'master_id':master_id,
                                      'name':task.name,
                                      'classname':task.classname,

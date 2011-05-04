@@ -13,7 +13,7 @@ __author__ = "Valentin Kuznetsov"
 import time
 
 # monogo db modules
-from pymongo import DESCENDING
+from pymongo import DESCENDING, ASCENDING
 from pymongo.objectid import ObjectId
 
 # DAS modules
@@ -33,7 +33,6 @@ class DASAnalytics(object):
         self.dbname  = config['analyticsdb']['dbname']        
         self.colname = config['analyticsdb']['collname']
         self.history = config['analyticsdb']['history']
-
         msg = "DASAnalytics::__init__ %s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         self.create_db()
@@ -149,13 +148,18 @@ class DASAnalytics(object):
         msg = 'DASAnalytics::add_summary(%s, %s->%s, %s)'
         self.logger.debug(msg, identifier, start, finish, payload)
         
+        # clean-up analyzer records whose start timestamp is too old
+        spec = {'start':{'$lt':time.time()-self.history}}
+        self.col.remove(spec)
+
+        # insert new analyzer record
         record = {'analyzer':identifier,
                   'start': start,
                   'finish': finish}
         payload.update(record) #ensure key fields are set correctly
         self.col.insert(payload)
         # ensure summary items are indexed for quick extract
-        create_indexes(self.col, [('analyzer', DESCENDING)])
+        create_indexes(self.col, [('analyzer', DESCENDING), ('start', ASCENDING)])
 
     def get_summary(self, identifier, after=None, before=None, **query):
         """

@@ -5,8 +5,6 @@
 General set of useful utilities used by DAS
 """
 
-__revision__ = "$Id: utils.py,v 1.86 2010/04/30 16:33:40 valya Exp $"
-__version__ = "$Revision: 1.86 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -29,6 +27,14 @@ from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 import DAS.utils.jsonwrapper as json
+
+def dastimestamp():
+    """
+    Return timestamp in pre-defined format. For simplicity we match
+    cherrypy date format.
+    """
+    tstamp = time.strftime("[%d/%b/%Y:%H:%M:%S]", time.localtime())
+    return tstamp
 
 def parse_filters(query):
     """

@@ -50,7 +50,9 @@ class ValueHotspot(HotspotBase):
     
     def generate_task(self, item, count, epoch_start, epoch_end):
         only_before = epoch_end + self.interval
-        query = {'fields': None, 'spec': [{'key':self.key, 'value': item}]}
+        # fields must be specified in DAS
+        fields = [self.key.split('.')[0]]
+        query = {'fields': fields, 'spec': [{'key':self.key, 'value': item}]}
         expiry = self.get_query_expiry(query)
         schedule = expiry - self.preempt
         interval = schedule - time.time()
