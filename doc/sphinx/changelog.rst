@@ -9,6 +9,7 @@ performed stress tests and code audit DAS servers.
 
 - 0.7.X
 
+  - work on CondDB APIs
   - fix issue with IE
   - turn off multitask for analytics services
   - add query examples into front-page

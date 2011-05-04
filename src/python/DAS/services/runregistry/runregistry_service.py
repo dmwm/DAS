@@ -125,7 +125,7 @@ class RunRegistryService(DASAbstractService):
                 else:
                     date1 = convert_datetime(val) 
                     date2 = convert_datetime(val + 24*60*60)
-                run_time = '>= %s and <= %s' % (date1, date2)
+                run_time = '>= %s and < %s' % (date1, date2)
                 _query = {'runStartTime': run_time}
             else:
                 msg  = 'RunRegistryService::api\n\n'

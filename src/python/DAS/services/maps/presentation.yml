@@ -97,6 +97,7 @@ run : [
         {"das":"run.key", "ui":"Run type"}, 
         {"das":"run.triggers", "ui":"Number of triggers"}, 
         {"das":"run.CROSSINGS_PER_ORBIT", "ui":"Crossing/orbit"}, 
+        {"das":"run.delivered_lumi", "ui":"Delivered lumi"}, 
         ],
 run_status: [
         {"das":"run.run_number", "ui":"Run number"},
