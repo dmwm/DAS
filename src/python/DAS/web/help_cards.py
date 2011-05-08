@@ -14,7 +14,8 @@ def help_cards(base):
     Return list of help cards used on web UI
     """
     first = """
-if you new to DAS try to search desired data by using 
+<h3 class="big">DAS queries</h3>
+If you new to DAS try to search desired data by using 
 <b>key=value</b> pairs, for example
 <ul>
 <li>dataset=*RelVal*</li>
@@ -32,6 +33,7 @@ For more details please read DAS
     card_list = []
 
     card = """
+<h3 class="big">DAS filters</h3>
 Do you know that DAS supports filters?
 There are two types of filters: <b>grep</b> and <b>unique</b>.
 The first one allows to select certain fields in DAS record. For example,
@@ -48,6 +50,7 @@ dataset=*RelVal* | unique
     card_list.append(card)
 
     card = """
+<h3 class="big">DAS filters and conditions</h3>
 Do you know that DAS filters supports conditions. Their usage is trivial:
 <pre>
 file dataset=/a/b/c | grep file.name, file.size>3000000, file.size<6000000
@@ -62,6 +65,7 @@ dataset=*RelVal* | grep dataset.name, dataset.name=*RECO
     card_list.append(card)
 
     card = """
+<h3 class="big">DAS aggregators</h3>
 DAS supports variety of aggregator functions, such as:
 <b>min, max, sum, count, avg, median</b>. They can be applied in any
 order to any DAS record attribute. For example:
@@ -74,7 +78,8 @@ Custom map-reduce function are also supported. Please contact DAS
     card_list.append(card)
 
     card = """
-    DAS has a special <b>date</b> keyword. It can accepts values either in
+<h3 class="big">DAS date usage</h3>
+DAS has a special <b>date</b> keyword. It can accepts values either in
 YYYYMMDD format or via <b>last</b> operator. For example:
 <pre>
 run date=20110316
@@ -87,6 +92,7 @@ Supported units for <b>last</b> operator are <b>d</b> (days),
     card_list.append(card)
 
     card = """
+<h3 class="big">DAS special keywords</h3>
 DAS has special <b>records</b> and <b>queries</b> keywords.
 The former can be used to look-up all records in DAS cache, while
 later shows most recent queries placed into DAS. The DAS filters
@@ -99,6 +105,7 @@ records | grep file.name
     card_list.append(card)
 
     card = """
+<h3 class="big">DAS command line interface</h3>
 Do you know that you can use DAS from your terminal. Go to
 <b><a href="%s/cli">CLI</a></b> link and save it on your disk, e.g. as <em>das_cli</em>.
 Then you can use it as simple as
