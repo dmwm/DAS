@@ -124,10 +124,6 @@ class TaskScheduler(object):
             
         self.logger.info('Adding Task "%s" to TaskScheduler, scheduled in %d',
                          task.name, int(when - time.time()))
-#        
-#        msg = 'Adding Task "%s" to TaskScheduler, scheduled in %d' \
-#                % (task.name, int(when - time.time()))
-#        print msg
         
         self.registry[task.master_id] = task
         self.scheduled.append({'at':when, 'master_id':task.master_id,
@@ -249,7 +245,6 @@ class TaskScheduler(object):
             
             result['log'] = []#self.loghandler.get(task_id)
             
-        
             if 'next' in result:
                 self.logger.info('Task "%s" (%s) requesting resubmission at %s',
                              task.name, task_id, result['next'])
@@ -297,8 +292,9 @@ class TaskScheduler(object):
                 try:
                     callback(result)
                 except Exception, e:
-                    self.logger.error('Exception occurred during result dispatch for Task "%s" (%s). Error was %s',
-                                      task.name, task_id, str(e))
+                    msg = 'ERROR: dispatch for task=%s, id=%s, exp=%s' \
+                        % (task.name, task_id, str(e))
+                    print msg
         finally:
             self.lock.release()
         

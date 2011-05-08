@@ -136,21 +136,3 @@ if (initial_status) {
 
 <div id="response" name="response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
 
-#if not $input
-<div>
-<span class="hint">Hint:</span> 
-if you new to DAS try to search desired data by using 
-<span style="color:blue">key=value</span> pairs, for example
-<ul>
-<li>dataset=*RelVal*</li>
-<li>release=CMSSW_2_0_*</li>
-<li>run=148126</li>
-</ul>
-
-The list of supported DAS 
-<span style="color:blue">keys</span> can be found in 
-<b><a href="$base/services">Services</a></b> section.
-For more details please read DAS 
-<b><a href="$base/faq">Frequently Asked Questions</a></b>.
-</div>
-#end if

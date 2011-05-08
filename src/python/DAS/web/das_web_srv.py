@@ -41,6 +41,7 @@ from DAS.web.tools import exposedasplist
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 from DAS.web.autocomplete import autocomplete_helper
+from DAS.web.help_cards import help_cards
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 
         'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
@@ -428,8 +429,10 @@ class DASWebService(DASWebManager):
         """
         provide input DAS search form
         """
-        page = self.templatepage('das_searchform', input=uinput, \
+        page  = self.templatepage('das_searchform', input=uinput, \
                 base=self.base, instance=instance, view=view)
+        page += self.templatepage('das_cards', base=self.base, input=uinput, \
+                width=900, height=200, cards=help_cards(self.base))
         return page
 
     def gen_error_msg(self, kwargs):
