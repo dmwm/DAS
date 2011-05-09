@@ -853,6 +853,8 @@ class DASWebService(DASWebManager):
         page  += self.templatepage('das_colors', colors=self.colors)
         style  = 'white'
         for row in data:
+            if  not row:
+                continue
             try:
                 mongo_id = row['_id']
             except:
