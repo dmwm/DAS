@@ -10,6 +10,7 @@ __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 from   types import NoneType
+import re
 import cgi
 import time
 import httplib
@@ -29,6 +30,38 @@ from   DAS.utils.regex import number_pattern, web_arg_pattern
 from   DAS.utils.das_db import db_connection
 from   DAS.core.das_core import DASCore
 from   DAS.web.das_codes import web_code
+
+# regex patterns used in code
+PAT_RUN  = re.compile('^[0-9]{3,10}')
+PAT_FILE = re.compile('^/.*\.root$')
+PAT_RELEASE = re.compile('^CMSSW_')
+PAT_SITE = re.compile('^T[0-3]')
+
+def custom_adjust(daskeys, uinput):
+    if  uinput.find(' ') == -1:
+        found_das_key = \
+            [d for d in daskeys if uinput.find(d) != -1 and d != 'instance']
+        if  not found_das_key: # no DAS keys is found in input query
+            if  PAT_RUN.match(uinput):
+                uinput = 'run=%s' % uinput
+            elif PAT_FILE.match(uinput):
+                uinput = 'file=%s' % uinput
+            elif PAT_RELEASE.match(uinput):
+                if  uinput.find('*') != -1:
+                    uinput = 'release=%s' % uinput
+                else:
+                    uinput = 'release=%s*' % uinput
+            elif PAT_SITE.match(uinput):
+                if  uinput.find('*') != -1:
+                    uinput = 'site=%s' % uinput
+                else:
+                    uinput = 'site=%s*' % uinput
+            else:
+                if  uinput.find('*') != -1:
+                    uinput = 'dataset=%s' % uinput
+                else:
+                    uinput = 'dataset=*%s*' % uinput
+    return uinput
 
 def gen_color(system):
     """

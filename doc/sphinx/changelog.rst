@@ -9,6 +9,7 @@ performed stress tests and code audit DAS servers.
 
 - 0.7.X
 
+  - add initial support for search without DAS keywords
   - apply unique filter permanently for output results
   - add help cards to front web page to help users get use with DAS syntax
   - work on CondDB APIs

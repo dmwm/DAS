@@ -32,7 +32,7 @@ from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
-from DAS.web.utils import json2html, web_time, quote
+from DAS.web.utils import json2html, web_time, quote, custom_adjust
 from DAS.web.utils import ajax_response, checkargs
 from DAS.web.utils import dascore_monitor, gen_color
 from DAS.web.tools import exposedasjson, exposetext
@@ -206,6 +206,7 @@ class DASWebService(DASWebManager):
             self.taskmgr.subscribe()
         else:
             self.taskmgr = TaskManager(nworkers=nworkers)
+        self.adjust      = config.get('adjust_input', False)
 
         self.init()
         # Monitoring thread which performs auto-reconnection
@@ -620,6 +621,7 @@ class DASWebService(DASWebManager):
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
+        self.adjust_input(kwargs)
         pid    = kwargs.get('pid', '')
         uinput = kwargs.get('input', '').strip()
         if  not pid and self.busy():
@@ -686,6 +688,17 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Content-Type'] = "text/plain"
         return page
 
+    def adjust_input(self, kwargs):
+        """
+        Adjust user input if self.adjust flag is enable it. 
+        This method can be customization for concrete DAS applications via
+        external custom_adjust function (part of DAS.web.utils module)
+        """
+        if  not self.adjust:
+            return
+        uinput = kwargs.get('input', '')
+        kwargs['input'] = custom_adjust(self.daskeys, uinput)
+
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def request(self, **kwargs):
@@ -697,6 +710,7 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Pragma'] = 'no-cache'
 
         time0   = time.time()
+        self.adjust_input(kwargs)
         uinput  = getarg(kwargs, 'input', '').strip()
         inst    = kwargs.get('instance', 'cms_dbs_prod_global')
         if  inst:

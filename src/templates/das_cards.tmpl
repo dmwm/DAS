@@ -4,7 +4,11 @@
 #set height=$quote($height)
 #set max_width=len($cards)*$width
 
-#if not $input
+#if $input
+#set klass="hide"
+#else
+#set klass="show_inline"
+#end if
 <!-- das__cards.tmpl -->
 <style type="text/css" media="screen">
 \#slide_container {
@@ -33,6 +37,7 @@
 }
 </style>
 
+<div class="$klass" id="das_cards" name="das_cards">
 <table align="center">
 <tr><td>
 <a href="javascript:Transition(-$width)" alt="left" style="background-color:#fff">
@@ -61,6 +66,7 @@
 </a>
 </td></tr>
 </table>
+</div>
 
 <script type="text/javascript" charset="utf-8">
 function Transition(pos) {
@@ -83,4 +89,3 @@ function Transition(pos) {
 </script>
 
 <!-- end of das__cards.tmpl -->
-#end if
