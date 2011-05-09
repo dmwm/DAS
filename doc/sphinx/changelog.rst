@@ -9,6 +9,7 @@ performed stress tests and code audit DAS servers.
 
 - 0.7.X
 
+  - apply unique filter permanently for output results
   - add help cards to front web page to help users get use with DAS syntax
   - work on CondDB APIs
   - fix issue with IE

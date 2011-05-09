@@ -209,8 +209,9 @@ class DBSService(DASAbstractService):
                 except:
                     pass
             if  value:
-                kwds['query'] = "find dataset, sum(block.numfiles), sum(block.numevents), \
-  count(block), sum(block.size) where %s" % value[4:]
+                kwds['query'] = "find dataset, sum(block.numfiles), \
+sum(block.numevents), count(block), sum(block.size) where %s \
+and dataset.status like VALID*" % value[4:]
             else:
                 kwds['query'] = 'required'
         if  api == 'fakeListDatasetbyDate':

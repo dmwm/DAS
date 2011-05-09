@@ -34,17 +34,16 @@ For more details please read DAS
 
     card = """
 <h3 class="big">DAS filters</h3>
-Do you know that DAS supports filters?
-There are two types of filters: <b>grep</b> and <b>unique</b>.
-The first one allows to select certain fields in DAS record. For example,
+Do you know that DAS supports filters? Similar to UNIX you can apply
+<b>grep</b> filter to select certain data. For example,
 if you look for a given dataset=*RelVal*, you can select its number of events
 as simple as
 <pre>
 dataset=*RelVal* | grep dataset.nevents
 </pre>
-While second filter duplicates from DAS results, use it as
+Multiple filters can be applied together, for instance
 <pre>
-dataset=*RelVal* | unique
+dataset=*RelVal* | grep dataset.name, dataset.nevents, dataset.nfiles
 </pre>
     """
     card_list.append(card)
