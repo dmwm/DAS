@@ -657,9 +657,8 @@ class DASWebService(DASWebManager):
             raise 
         except:
             traceback.print_exc()
-            msg   = 'Wrong view. '
-            msg  += self.gen_error_msg(kwargs)
-            page  = self.templatepage('das_error', msg=msg)
+            msg  = self.gen_error_msg(kwargs)
+            page = self.templatepage('das_error', msg=msg)
         return page
 
     @expose
