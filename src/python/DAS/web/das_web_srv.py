@@ -849,8 +849,9 @@ class DASWebService(DASWebManager):
         query   = getarg(kwargs, 'query', {})
         filters = query.get('filters')
         page    = self.pagination(total, kwargs)
-        page  += self.templatepage('das_colors', colors=self.colors)
-        style  = 'white'
+        if  page.find('das_noresults') == -1:
+            page += self.templatepage('das_colors', colors=self.colors)
+        style   = 'white'
         for row in data:
             if  not row:
                 continue

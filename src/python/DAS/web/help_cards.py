@@ -8,6 +8,7 @@ Collection of help cards for web UI.
 __author__ = "Valentin Kuznetsov"
 
 import random
+from DAS.web.utils import gen_color
 
 def help_cards(base):
     """
@@ -120,6 +121,26 @@ python das_cli --query="dataset=/ExpressPhysics* | grep dataset.name, dataset.ne
 ...
 </pre>
     """ % base
+    card_list.append(card)
+
+    card = """
+<h3 class="big">DAS colors</h3>
+Do you know that colored little box, e.g.
+<cite style="background-color:%s;padding-left:7px; padding-right:7px">&nbsp;</cite>
+next to the Record output 
+represents specific CMS data-services.<br />
+Please follow DAS color map: <u>show</u> <u>hide</u>
+links to find out which system it corresponds to.
+
+<br/>
+<br/>
+
+If you see several colored boxes in a row, e.g.
+<cite style="background-color:%s;padding-left:7px; padding-right:7px">&nbsp;</cite>
+<cite style="background-color:%s;padding-left:7px; padding-right:7px">&nbsp;</cite>,
+it means that this
+record is aggregated across several CMS data-services.
+    """ % (gen_color('phedex'), gen_color('dbs'), gen_color('phedex'))
     card_list.append(card)
 
     random.shuffle(card_list)
