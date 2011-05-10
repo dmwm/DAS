@@ -891,6 +891,11 @@ class DASWebService(DASWebManager):
                         pval = int(pval)
                     if  pval:
                         page += '<b>%s</b>: ' % lkey.capitalize()
+                        if  lkey == 'parent' or lkey == 'child':
+                            if  str(pval).find('.root') != -1:
+                                lkey = 'file'
+                            else:
+                                lkey = 'dataset'
                         if  lkey in not_to_link():
                             page += '%s' % pval
                         elif  isinstance(pval, list):

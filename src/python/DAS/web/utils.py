@@ -462,7 +462,10 @@ def json2html(idict, pad="", recusive=False, ref=None):
                     refkey = 'site'
                 if  key == 'name':
                     if  ref == 'child' or ref == 'parent':
-                        refkey = 'file'
+                        if  str(val).rfind('.root') != -1:
+                            refkey = 'file'
+                        else:
+                            refkey = 'dataset'
                     else:
                         refkey = ref
                 if  refkey not in not_to_link():
