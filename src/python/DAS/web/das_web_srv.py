@@ -33,7 +33,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import json2html, web_time, quote, custom_adjust
-from DAS.web.utils import ajax_response, checkargs
+from DAS.web.utils import ajax_response, checkargs, not_to_link
 from DAS.web.utils import dascore_monitor, gen_color
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import request_headers, jsonstreamer
@@ -134,6 +134,8 @@ def adjust_values(func, gen, links):
             elif  key.find('Number of ') != -1 and val:
                 value = int(val)
             elif  key.find('Run number') != -1 and val:
+                value = int(val)
+            elif  key.find('Lumi') != -1 and val:
                 value = int(val)
             else:
                 value = val
@@ -885,11 +887,13 @@ class DASWebService(DASWebManager):
                     pval = list(set(DotDict(row).get_values(pkey)))
                     if  len(pval) == 1:
                         pval = pval[0]
-                    if  pkey == 'run.run_number':
+                    if  pkey == 'run.run_number' or pkey == 'lumi.number':
                         pval = int(pval)
                     if  pval:
-                        page += '<b>%s</b>:' % lkey.capitalize()
-                        if  isinstance(pval, list):
+                        page += '<b>%s</b>: ' % lkey.capitalize()
+                        if  lkey in not_to_link():
+                            page += '%s' % pval
+                        elif  isinstance(pval, list):
                             page += ', '.join([\
                                 '<a href="/das/request?%s">%s</a>'\
                                 % (make_args(lkey, i, inst), i) for i in pval])

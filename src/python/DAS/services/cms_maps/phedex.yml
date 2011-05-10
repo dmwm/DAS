@@ -19,6 +19,7 @@ das2api : [
         {"das_key":"site.se", "api_param":"se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
 ]
 ---
+# This API will go away once I turn on dbs_phedex service (upon DBS3)
 urn : dataset4site
 url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockreplicasummary"
 expire : 3600
@@ -32,6 +33,7 @@ das2api : [
         {"das_key":"site.name", "api_param":"node", "pattern":"^T[0-3]_"},
 ]
 ---
+# This API will go away once I turn on dbs_phedex service (upon DBS3)
 urn : dataset4se
 url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockreplicasummary"
 expire : 3600

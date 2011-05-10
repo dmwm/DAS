@@ -55,7 +55,7 @@ class DBS3Service(DASAbstractService):
 
     def parser(self, query, dformat, source, api):
         """
-        Phedex data-service parser.
+        DBS3 data-service parser.
         """
         if  api == 'site4dataset':
             sites = set()

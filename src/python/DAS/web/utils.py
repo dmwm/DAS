@@ -363,6 +363,13 @@ class UrlRequest(urllib2.Request):
         """Return request method"""
         return self._method
 
+def not_to_link():
+    """
+    Return a list of primary keys which do not need to provide a web links
+    on UI.
+    """
+    return ['config', 'lumi', 'group']
+
 def json2html(idict, pad="", recusive=False, ref=None):
     """
     Convert input JSON into HTML code snippet. We sanitize values with
@@ -454,10 +461,16 @@ def json2html(idict, pad="", recusive=False, ref=None):
                 if  key == 'se' or key == 'site':
                     refkey = 'site'
                 if  key == 'name':
-                    refkey = ref
-                query = "%s=%s" % (refkey, val)
-                sss += """: <a href="/das/request?%s">%s</a>""" \
-                        % (urllib.urlencode({'input':query}), quote(val))
+                    if  ref == 'child' or ref == 'parent':
+                        refkey = 'file'
+                    else:
+                        refkey = ref
+                if  refkey not in not_to_link():
+                    query = "%s=%s" % (refkey, val)
+                    sss += """: <a href="/das/request?%s">%s</a>""" \
+                            % (urllib.urlencode({'input':query}), quote(val))
+                else:
+                    sss += ": %s" % quote(val)
             elif key == 'run_number':
                 run_number = int(val)
                 query = "run=%s" % run_number

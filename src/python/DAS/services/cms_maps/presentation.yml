@@ -104,7 +104,7 @@ run_status: [
         {"das":"run.start_time", "ui":"Start time"},
         ],
 lumi : [
-        {"das": "lumi.lumi", "ui": "Luminosiy number"},
+        {"das": "lumi.number", "ui": "Luminosiy number"},
         {"das": "lumi.run_number", "ui": "Run number"},
         {"das": "lumi.start_event", "ui": "Start event"},
         {"das": "lumi.end_event", "ui": "End event"},
@@ -131,7 +131,8 @@ site : [
         {"das":"site.name", "ui":"Site name",
          "link":[
 #                  {"name":"Sites", "query":"site=%s"},
-#                  {"name":"Blocks", "query":"block site=%s*"},
+                 {"name":"Blocks", "query":"block site=%s*"},
+                 {"name":"Datasets", "query":"dataset site=%s*"},
                 ]}, 
         {"das":"site.se", "ui":"StorageElement",
          "link":[

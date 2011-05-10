@@ -69,3 +69,16 @@ class CondDBService(DASAbstractService):
                 kwds['startTime'] = convert_datetime(value[0])
                 kwds['endTime'] = convert_datetime(value[1])
                 del kwds['date']
+
+    def parser(self, query, dformat, source, api):
+        """
+        CondDB data-service parser.
+        """
+        gen = DASAbstractService.parser(self, query, dformat, source, api)
+        for row in gen:
+            if  api == 'get_lumi_info':
+                for lumi in row['lumi']['Lumi']:
+                    yield lumi
+            else:
+                yield row
+

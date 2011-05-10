@@ -323,6 +323,9 @@ and dataset.status like VALID*" % value[4:]
         for row in gen:
             if  not row:
                 continue
+            if  row.has_key('file_lumi_section'):
+                row['lumi'] = row['file_lumi_section']
+                del row['file_lumi_section']
             if  row.has_key('algorithm'):
                 del row['algorithm']['ps_content']
             if  row.has_key('processed_dataset') and \
