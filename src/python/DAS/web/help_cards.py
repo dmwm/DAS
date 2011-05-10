@@ -14,6 +14,11 @@ def help_cards(base):
     """
     Return list of help cards used on web UI
     """
+    hide = """
+<div style="text-align: right">
+<a href="javascript:HideTag('das_cards')">hide</a>
+</div>
+"""
     first = """
 <h3 class="big">Help: DAS queries</h3>
 DAS queries are formed by
@@ -31,6 +36,7 @@ The list of supported DAS
 For more details please read DAS 
 <b><a href="%s/faq">Frequently Asked Questions</a></b>.
     """ % (base, base)
+    first += hide
 
     card_list = []
 
@@ -48,6 +54,7 @@ Multiple filters can be applied together, for instance
 dataset=*RelVal* | grep dataset.name, dataset.nevents, dataset.nfiles
 </pre>
     """
+    card += hide
     card_list.append(card)
 
     card = """
@@ -63,6 +70,7 @@ attribute and apply a wild-card condition at the same time:
 dataset=*RelVal* | grep dataset.name, dataset.name=*RECO
 </pre>
     """
+    card += hide
     card_list.append(card)
 
     card = """
@@ -76,6 +84,7 @@ file dataset=/a/b/c |  max(file.size), min(file.size),avg(file.size),median(file
 Custom map-reduce function are also supported. Please contact DAS 
 <b><a href="https://svnweb.cern.ch/trac/CMSDMWM/newticket?component=DAS&summary=Request map reduce function&owner=valya">support</a></b> if you need one.
     """
+    card += hide
     card_list.append(card)
 
     card = """
@@ -90,6 +99,7 @@ jobsummary date last 60m
 Supported units for <b>last</b> operator are <b>d</b> (days),
 <b>h</b> (hours) and <b>m</b>(minutes).
     """
+    card += hide
     card_list.append(card)
 
     card = """
@@ -103,6 +113,7 @@ are any file records in DAS cache you can simply type:
 records | grep file.name
 </pre>
     """
+    card += hide
     card_list.append(card)
 
     card = """
@@ -121,6 +132,7 @@ python das_cli --query="dataset=/ExpressPhysics* | grep dataset.name, dataset.ne
 ...
 </pre>
     """ % base
+    card += hide
     card_list.append(card)
 
     card = """
@@ -142,6 +154,7 @@ If you see several colored boxes in a row, e.g.
 it means that this
 record is aggregated across several CMS data-services.
     """ % (gen_color('phedex'), gen_color('dbs'), gen_color('phedex'))
+    card += hide
     card_list.append(card)
 
     random.shuffle(card_list)

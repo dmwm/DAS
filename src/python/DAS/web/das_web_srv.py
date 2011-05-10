@@ -432,10 +432,10 @@ class DASWebService(DASWebManager):
         """
         provide input DAS search form
         """
-        page  = self.templatepage('das_searchform', input=uinput, \
-                base=self.base, instance=instance, view=view)
-        page += self.templatepage('das_cards', base=self.base, input=uinput, \
+        cards = self.templatepage('das_cards', base=self.base, input=uinput, \
                 width=900, height=220, cards=help_cards(self.base))
+        page  = self.templatepage('das_searchform', input=uinput, \
+                base=self.base, instance=instance, view=view, cards=cards)
         return page
 
     def gen_error_msg(self, kwargs):
