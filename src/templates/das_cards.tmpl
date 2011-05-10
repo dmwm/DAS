@@ -7,7 +7,7 @@
 #if $input
 #set klass="hide"
 #else
-#set klass="show_inline"
+#set klass="show"
 #end if
 <!-- das__cards.tmpl -->
 <style type="text/css" media="screen">
@@ -33,7 +33,7 @@
     margin:0;
     float:left;
     width:${width}px;
-    height:${height}px;
+    /*height:${height}px;*/ /* Seems like I don't need it */
 }
 </style>
 
@@ -53,7 +53,7 @@
 #set card=$cards[$idx]
 #set pos=$idx*$width
 #set cwidth=$width
-<div style="position:absolute;left:${pos}px;width:${cwidth}px;margin:10px">$card</div>
+<div style="position:absolute;left:${pos}px;width:${cwidth}px;">$card</div>
 #end for
         <!-- end of sliding cards -->
 
