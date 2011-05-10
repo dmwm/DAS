@@ -36,6 +36,7 @@ PAT_RUN  = re.compile('^[0-9]{3,10}')
 PAT_FILE = re.compile('^/.*\.root$')
 PAT_RELEASE = re.compile('^CMSSW_')
 PAT_SITE = re.compile('^T[0-3]')
+PAT_SE = re.compile('([a-zA-Z0-9-_]+\\.){2}')
 
 def custom_adjust(daskeys, uinput):
     if  uinput.find(' ') == -1:
@@ -56,6 +57,8 @@ def custom_adjust(daskeys, uinput):
                     uinput = 'site=%s' % uinput
                 else:
                     uinput = 'site=%s*' % uinput
+            elif PAT_SE.match(uinput):
+                uinput = 'site=%s' % uinput
             else:
                 if  uinput.find('*') != -1:
                     uinput = 'dataset=%s' % uinput

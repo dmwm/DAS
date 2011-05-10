@@ -95,7 +95,7 @@ class PhedexService(DASAbstractService):
             raise Exception(msg)
         gen = xml_parser(source, prim_key, tags)
         site_names = []
-        seen = {}
+        seen = set()
         tot_files  = 0
         site_info_dict = {}
         for row in gen:
@@ -131,16 +131,8 @@ class PhedexService(DASAbstractService):
                     if  result not in site_names:
                         site_names.append(result)
             elif  api == 'dataset4site' or api == 'dataset4se':
-                ddict = DotDict(row)
                 dataset = row['block']['name'].split('#')[0]
-                bytes = ddict._get('block.bytes')
-                files = ddict._get('block.files')
-                if  seen.has_key(dataset):
-                    val = seen[dataset]
-                    seen[dataset] = dict(bytes=val['bytes'] + bytes, 
-                                files=val['files'] + files)
-                else:
-                    seen[dataset] = dict(bytes=bytes, files=files)
+                seen.add(dataset)
             else:
                 yield row
         if  api == 'site4dataset' or api == 'site4block':
@@ -161,7 +153,6 @@ class PhedexService(DASAbstractService):
         del site_names
         del site_info_dict
         if  seen:
-            for key, val in seen.items():
-                record = dict(name=key, size=val['bytes'], files=val['files'])
-                yield {'dataset':record}
+            for dataset in seen:
+                yield {'dataset':dict(name=dataset)}
         del seen
