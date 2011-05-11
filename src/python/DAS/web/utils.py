@@ -62,6 +62,8 @@ def custom_adjust(daskeys, uinput):
             else:
                 if  uinput.find('*') != -1:
                     uinput = 'dataset=%s' % uinput
+                elif len(uinput) > 0 and uinput[0] == '/':
+                    uinput = 'dataset=%s*' % uinput
                 else:
                     uinput = 'dataset=*%s*' % uinput
     return uinput

@@ -2,10 +2,9 @@
  * DAS specific utilities
  * Author: Valentin Kuznetsov, 2009
  */ 
-function updateInput() {
-//   var uinput = gup('input');
-//   if  (uinput) updateTag('input', uinput);
-//   else updateTag('input', '');
+function updateInput(myinput) {
+   if  (myinput) updateTag('input', myinput);
+   else updateTag('input', '');
 
    var ulimit = gup('limit');
    if  (ulimit) updateTag('limit', ulimit);

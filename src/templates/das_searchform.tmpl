@@ -4,7 +4,7 @@
 #set view = $quote($view)
 <!-- das_searchform.tmpl -->
 
-<form action="$base/request" method="get">
+<form action="$base/request" method="get" name="das_search">
 <table>
 <tr>
 <td class="right">
@@ -66,7 +66,7 @@ autocompletion
 </tr>
 </table>
 <div class="autocomplete">
-<input type="text" name="input" id="input" style="width:100%;" value="$input"/>
+<input type="text" name="input" id="input" style="width:100%;" />
 <div id="ac_container"></div>
 </div>
 </form>
@@ -76,7 +76,7 @@ autocompletion
 
 <script type="text/javascript">
 //<![CDATA[
-updateInput();
+updateInput('$input');
 
 ac = null;
 ac_datasrc = null;
