@@ -3,21 +3,21 @@
  * Author: Valentin Kuznetsov, 2009
  */ 
 function updateInput() {
-   var uinput = gup('input');
-   if  (uinput) updateTag('input', uinput);
-   else updateTag('input', '');
+//   var uinput = gup('input');
+//   if  (uinput) updateTag('input', uinput);
+//   else updateTag('input', '');
 
    var ulimit = gup('limit');
    if  (ulimit) updateTag('limit', ulimit);
-   else updateTag('limit', '');
+   else updateTag('limit', '10');
 
    var uview = gup('view');
    if  (uview) updateTag('view', uview);
-   else updateTag('view', '');
+   else updateTag('view', 'list');
 
-   var ushow = gup('show');
-   if  (ushow) updateTag('show', ushow);
-   else updateTag('show', '');
+   var uinstance = gup('instance');
+   if  (uinstance) updateTag('instance', uinstance);
+   else updateTag('instance', 'cms_dbs_prod_global');
 }
 function getTagValue(tag)
 {

@@ -428,7 +428,7 @@ class DASWebService(DASWebManager):
         uinput = getarg(kwargs, 'input', '') 
         return self.page(self.form(uinput=uinput))
 
-    def form(self, uinput=None, instance='cms_dbs_prod_global', view='list'):
+    def form(self, uinput='', instance='cms_dbs_prod_global', view='list'):
         """
         provide input DAS search form
         """
@@ -715,13 +715,13 @@ class DASWebService(DASWebManager):
         self.adjust_input(kwargs)
         uinput  = getarg(kwargs, 'input', '').strip()
         inst    = kwargs.get('instance', 'cms_dbs_prod_global')
+        view    = kwargs.get('view', 'list')
+        form    = self.form(uinput=uinput, instance=inst, view=view)
         if  inst:
             uinput = ' instance=%s %s' % (inst, uinput)
         self.logdb(uinput)
         if  self.busy():
             return self.busy_page(uinput)
-        view    = kwargs.get('view', 'list')
-        form    = self.form(uinput=uinput, instance=inst, view=view)
         check, content = self.check_input(uinput)
         if  check:
             if  view == 'list' or view == 'table':
