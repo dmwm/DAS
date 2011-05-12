@@ -19,4 +19,6 @@ notations : [
     {"notation":"bField", "map":"bfield", "api":""},
     {"notation":"hltKey", "map":"hlt", "api":""},
     {"notation":"runNumber", "map":"run_number", "api":""},
+    {"notation":"events", "map":"nevents", "api":""},
+    {"notation":"lumi_sections", "map":"nlumis", "api":""},
 ]

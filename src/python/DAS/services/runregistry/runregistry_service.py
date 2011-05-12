@@ -9,12 +9,39 @@ __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
 import time
+import calendar
+import datetime
 import xmlrpclib
 import traceback
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
 from   DAS.utils.utils import convert2date
+
+def duration(ctime, etime):
+    """
+    Calculate run duration.
+    """
+    dformat = "%Y-%m-%dT%H:%M:%S" # 2010-10-09T17:39:51.0
+    csec = time.strptime(ctime.split('.')[0], dformat)
+    esec = time.strptime(etime.split('.')[0], dformat)
+    tot  = calendar.timegm(csec) - calendar.timegm(esec)
+    return str(datetime.timedelta(seconds=abs(tot)))
+
+def run_duration(records):
+    """
+    Custom parser to produce run duration out of RR records
+    """
+    for row in records:
+        if  not row.has_key('run'):
+            continue
+        run = row['run']
+        if  isinstance(run, dict):
+            if  run.has_key('create_time') and run.has_key('end_time'):
+                ctime = run['create_time']
+                etime = run['end_time']
+                run['duration'] = duration(ctime, etime)
+        yield row
 
 def worker(url, query):
     """
@@ -84,8 +111,12 @@ class RunRegistryService(DASAbstractService):
         for key, val in query['spec'].items():
             if  key == 'run.run_number':
                 if  isinstance(val, int):
-                    _query += "{runNumber} >= %s and {runNumber} <= %s" \
-                                % (val, val)
+# this query provides different output
+# see RunLumiSectionRangeTable API
+#                    _query += "{runNumber} >= %s and {runNumber} <= %s" \
+#                                % (val, val)
+# this query provides short output more suitable for physicists
+                    _query = {'runNumber': '%s' % val}
                 elif isinstance(val, dict):
                     minrun = 0
                     maxrun = 0
@@ -101,8 +132,9 @@ class RunRegistryService(DASAbstractService):
                             minrun = vvv
                         elif kkk == '$gte':
                             maxrun = vvv
-                    _query += "{runNumber} >= %s and {runNumber} <= %s" \
-                            % (minrun, maxrun)
+#                    _query += "{runNumber} >= %s and {runNumber} <= %s" \
+#                            % (minrun, maxrun)
+                    _query = {'runNumber': '>= %s and < %s' % (minrun, maxrun)}
             elif key == 'date':
                 if  isinstance(val, dict):
                     if  val.has_key('$in'):
@@ -143,7 +175,7 @@ class RunRegistryService(DASAbstractService):
         time0   = time.time()
         rawrows = worker(url, _query)
         genrows = self.translator(api, rawrows)
-        dasrows = self.set_misses(query, api, genrows)
+        dasrows = self.set_misses(query, api, run_duration(genrows))
         ctime   = time.time() - time0
         try:
             self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
@@ -155,6 +187,9 @@ class RunRegistryService(DASAbstractService):
 if __name__ == '__main__':
     QUERY = "{runNumber} >= 135230 and {runNumber} <= 135230"
     QUERY = {'runStartTime': '>= 2010-10-18 and < 2010-10-22'}
+    QUERY = {'runNumber': '>= 137081 and < 137088'}
+    QUERY = {'runNumber': '>= 147623 and <= 147623'}
+    QUERY = {'runNumber': '147623'}
     URL = 'http://localhost:8081/runregistry_api/xmlrpc'
     for row in worker(URL, QUERY):
         print row, type(row)
