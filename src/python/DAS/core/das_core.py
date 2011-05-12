@@ -327,8 +327,7 @@ class DASCore(object):
         # add look-up of condition keys
         if  query['spec'].keys():
             query['spec'].update({'das.condition_keys': query['spec'].keys()})
-        if  query.has_key('fields') and query['fields'] == ['records'] \
-            and not query['spec']:
+        if  query.has_key('fields') and query['fields'] == ['records']:
             query['fields'] = None
         return self.rawcache.nresults(query, collection=coll, filters=filters)
 

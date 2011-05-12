@@ -123,8 +123,6 @@ release: [
 site : [
         {"das":"site.name", "ui":"Site name",
          "link":[
-#                  {"name":"Sites", "query":"site=%s"},
-                 {"name":"Blocks", "query":"block site=%s*"},
                  {"name":"Datasets", "query":"dataset site=%s*"},
                 ]}, 
         {"das":"site.se", "ui":"StorageElement",
