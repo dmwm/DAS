@@ -35,7 +35,7 @@ class CondDBService(DASAbstractService):
         Adjust CondDB parameters for specific query requests
         """
         day = 24*60*60
-        if  api == 'getLumi':
+        if  api == 'get_lumi_info':
             if  kwds.has_key('date') and kwds['date'] != 'optional':
                 value = kwds['date']
                 if  isinstance(value, str):
@@ -69,6 +69,22 @@ class CondDBService(DASAbstractService):
                 kwds['startTime'] = convert_datetime(value[0])
                 kwds['endTime'] = convert_datetime(value[1])
                 del kwds['date']
+        if  kwds.has_key('Runs') and isinstance(kwds['Runs'], dict):
+            minrun = 0
+            maxrun = 0
+            for kkk, vvv in kwds['Runs'].items():
+                if  kkk == '$in':
+                    if len(vvv) == 2:
+                        minrun, maxrun = vvv
+                    else: # in[1, 2, 3]
+                        msg = "conddb can not deal with 'in'"
+                        self.logger.info(msg)
+                        continue
+                elif kkk == '$lte':
+                    maxrun = vvv
+                elif kkk == '$gte':
+                    minrun = vvv
+            kwds['Runs'] = '%s-%s' % (minrun, maxrun)
 
     def parser(self, query, dformat, source, api):
         """

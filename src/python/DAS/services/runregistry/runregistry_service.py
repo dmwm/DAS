@@ -129,9 +129,9 @@ class RunRegistryService(DASAbstractService):
                                 self.logger.info(msg)
                                 continue
                         elif kkk == '$lte':
-                            minrun = vvv
-                        elif kkk == '$gte':
                             maxrun = vvv
+                        elif kkk == '$gte':
+                            minrun = vvv
 #                    _query += "{runNumber} >= %s and {runNumber} <= %s" \
 #                            % (minrun, maxrun)
                     _query = {'runNumber': '>= %s and < %s' % (minrun, maxrun)}
