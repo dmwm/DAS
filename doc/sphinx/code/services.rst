@@ -4,15 +4,6 @@ DAS services
 .. toctree::
    :maxdepth: 4
 
-   services/abstract_service
-   services/map_reader
-   services/dashboard
-   services/dbs
-   services/phedex
-   services/sitedb
-   services/runsummary
-   services/monitor
-
 DAS operates using a provided list of data-services and their definitions.
 The nature of these services is unimportant provided that they provide a
 some form of API which DAS can call and aggregate the data returned.
@@ -50,4 +41,19 @@ timeout as well as API and notations maps.
 
 Please use these links :ref:`API map <api_map>` and :ref:`API notation <notation>`
 for concrete examples.
+
+DAS abstract service
+--------------------
+.. automodule:: DAS.services.abstract_service
+        :members:
+
+DAS generic service
+-------------------
+.. automodule:: DAS.services.generic_service
+        :members:
+
+DAS map reader module
+---------------------
+.. automodule:: DAS.services.map_reader
+        :members:
 

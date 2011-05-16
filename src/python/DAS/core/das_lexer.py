@@ -6,8 +6,6 @@
 DAS Query Language lexer.
 """
 
-__revision__ = "$Id: das_lexer.py,v 1.3 2010/05/04 13:16:36 valya Exp $"
-__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys

@@ -207,32 +207,51 @@ def compare_str(query1, query2):
     """
     Function to compare string from specs of query.
     Return True if query2 is supperset of query1.
-    query1&query2 is the string in the pattern ([a-zA-Z0-9_\-\#/*\.])*
-    * is the sign indicates that a sub string of * ([a-zA-Z0-9_\-\#/*\.])*
+    query1&query2 is the string in the pattern::
 
-    case 1. if query2 is flat query(w/out *) then query1 must be the
-                same flat one
-    case 2. if query1 is start/end w/ * then query2 must start/end with *
-    case 3. if query2 is start/end w/out * then query1 must start/end
-                with query2[0]/query[-1]
-    case 4. query1&query2 both include *
+         ([a-zA-Z0-9_\-\#/*\.])*
+
+    \* is the sign indicates that a sub string of \*::
+
+        ([a-zA-Z0-9_\-\#/*\.])*
+
+    case 1. if query2 is flat query(w/out \*) then query1 must be the same flat one
+
+    case 2. if query1 is start/end w/ \* then query2 must start/end with \*
+
+    case 3. if query2 is start/end w/out \* then query1 must start/end with query2[0]/query[-1]
+
+    case 4. query1&query2 both include \*
+
         Way to perform a comparision is spliting:
+
             query1 into X0*X1*X2*X3
             query2 into Xa*Xb*Xc
+
         foreach X in (Xa, Xb, Xc):
+
             case 5. X is '':
+
                 continue
+
                 special case:
+
                     when X0 & Xa are '' or when X3 & Xc are ''
                     we already cover it in case 2
+
             case 6. X not in query1 then return False
+
             case 7. X in query1 begin at index:
+
                 case 7-1. X is the first X not '' we looked up in query1.(Xa)
                     last_idx = index ;
                     continue
+
                 case 7-2. X is not the first:
+
                     try to find the smallest Xb > Xa
                     if and Only if we could find a sequence:
+
                         satisfy Xc > Xb > Xa, otherwise return False
                         '=' will happen when X0 = Xa
                         then we could return True

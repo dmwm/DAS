@@ -45,8 +45,7 @@ import DAS.core.das_aggregators as das_aggregator
 def dasheader(system, query, expire, api=None, url=None, ctime=None):
     """
     Return DAS header (dict) wrt DAS specifications, see
-    https://twiki.cern.ch/twiki/bin/view/CMS/
-        DMWMDataAggregationService#DAS_data_service_compliance
+    https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
     """
     query   = encode_mongo_query(query)
     if  not api:

@@ -23,9 +23,9 @@ def autocomplete_helper(query, dasmgr, daskeys):
     as-you-type suggestion system. This is a call for AJAX
     in the page rather than a user-visible one.
     
-    This returns a list of JS objects, formatted like:
-    {'css': '<ul> css class', 'value': 'autocompleted text',
-     'info': '<html> text'}
+    This returns a list of JS objects, formatted like::
+
+    {'css': '<ul> css class', 'value': 'autocompleted text', 'info': '<html> text'}
      
     Some of the work done here could be moved client side, and
     only calls that actually require keylearning look-ups

@@ -3,16 +3,10 @@
 """
 Task manager
 
-spawn(func, *args) to spawn execution of given func(args)
+spawn(func, \*args) to spawn execution of given func(args)
 is_alive(pid) return status of executing job
 joinall() to join all tasks in a queue and exiting existing workers
 join(jobs) to join all tasks without stopping workers
-
-Usage of multiprocessing pool is limited to serializable functions, since using
-class objects lead to the following error
-Can't pickle <type 'instancemethod'> when using python's multiprocessing Pool
-http://stackoverflow.com/questions/1816958/cant-pickle-type-instancemethod-when-using-pythons-multiprocessing-pool-map
-http://bytes.com/topic/python/answers/552476-why-cant-you-pickle-instancemethods
 """
 
 import time
