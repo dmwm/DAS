@@ -419,12 +419,10 @@ Queries to get run information
 </p>
 <div class="example">
 <pre>
-run=20853
-run=20853 | grep run.components
-run in [20853,20859]
-run between [20853,20859]
-run between [20853,20859] | grep run.run_number
-run between [20853,20859] | grep run.run_number | unique
+run=160915
+run=160915 | grep run.bfield
+run between [160915,20859]
+run between [160915,20859] | grep run.run_number
 </pre>
 </div>
 
@@ -433,7 +431,7 @@ DBS-like queries
 </p>
 <div class="example">
 <pre>
-primary_ds
+primary_dataset=Cosmics
 dataset | grep dataset.name
 block dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER
 block dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER | sum(block.size)
@@ -449,8 +447,8 @@ Miscellaneous queries:
 </p>
 <div class="example">
 <pre>
-monitor
-jobsummary
+monitor date last 24h | grep monitor.node=T3_US_UCLA
+jobsummary date last 24h
 ip=137.138.141.145 | grep ip.City
 </pre>
 </div>

@@ -4,14 +4,25 @@
 """
 Phedex service
 """
-__revision__ = "$Id: phedex_service.py,v 1.21 2010/02/25 14:53:48 valya Exp $"
-__version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
+
+import socket
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, DotDict
 import types
 import DAS.utils.jsonwrapper as json
+
+def get_replica_info(replica):
+    """
+    Get replica info: name, se, ip
+    """
+    result = {'name': replica['node'], 'se': replica['se']}
+    try:
+        result.update({'ip': socket.gethostbyname(replica['se'])})
+    except:
+        pass
+    return result
 
 def site_info(site_dict, block, replica):
     """Helper function to fill out site info"""
@@ -103,7 +114,7 @@ class PhedexService(DASAbstractService):
                 item = row['block']['replica']
                 if  isinstance(item, list):
                     for replica in item:
-                        result = {'name': replica['node'], 'se': replica['se']}
+                        result = get_replica_info(replica)
                         site_info(site_info_dict, row['block'], replica)
                         if  not replica['files']:
                             continue
@@ -111,29 +122,35 @@ class PhedexService(DASAbstractService):
                             site_names.append(result)
                 elif isinstance(item, dict):
                     replica = item
-                    result = {'name': replica['node'], 'se': replica['se']}
+                    result = get_replica_info(replica)
                     site_info(site_info_dict, row['block'], replica)
                     if  not replica['files']:
                         continue
-                    result  = {'name': replica['node'], 'se': replica['se']}
+                    result = get_replica_info(replica)
                     if  result not in site_names:
                         site_names.append(result)
             elif api == 'site4file':
                 item = row['block']['file']['replica']
                 if  isinstance(item, list):
                     for replica in item:
-                        result = {'name': replica['node'], 'se': replica['se']}
+                        result = get_replica_info(replica)
                         if  result not in site_names:
                             site_names.append(result)
                 elif isinstance(item, dict):
                     replica = item
-                    result  = {'name': replica['node'], 'se': replica['se']}
+                    result = get_replica_info(replica)
                     if  result not in site_names:
                         site_names.append(result)
             elif  api == 'dataset4site' or api == 'dataset4se':
                 dataset = row['block']['name'].split('#')[0]
                 seen.add(dataset)
             else:
+                if  row.has_key('node') and row['node'].has_key('se'):
+                    try:
+                        row['node']['ip'] = \
+                        socket.gethostbyname(row['node']['se'])
+                    except:
+                        pass
                 yield row
         if  api == 'site4dataset' or api == 'site4block':
             for row in site_names:

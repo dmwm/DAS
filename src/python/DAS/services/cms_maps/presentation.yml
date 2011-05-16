@@ -130,6 +130,11 @@ site : [
                  {"name":"Site", "query":"site=%s"},
                 ]
         }, 
+        {"das":"site.ip", "ui":"IP address",
+         "link":[
+                 {"name":"Location", "query":"ip=%s"},
+                ]
+        }, 
         {"das":"site.samname", "ui":"SAMName"}, 
         {"das":"site.sitename", "ui":"Site"},
         {"das":"site.file_fraction", "ui":"File presence"},

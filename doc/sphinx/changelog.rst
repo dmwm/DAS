@@ -9,6 +9,7 @@ performed stress tests and code audit DAS servers.
 
 - 0.7.X
 
+  - if possible get IP address of SE and create appropriate link to ip service
   - calculate run duration from RR output
   - add conddb map into cms_maps
   - add initial support for search without DAS keywords

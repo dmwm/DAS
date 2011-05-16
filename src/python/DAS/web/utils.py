@@ -481,6 +481,10 @@ def json2html(idict, pad="", recusive=False, ref=None):
                 query = "run=%s" % run_number
                 sss += """: <a href="/das/request?%s">%s</a>""" \
                         % (urllib.urlencode({'input':query}), run_number)
+            elif key == 'ip':
+                query = "ip=%s" % val
+                sss += """: <a href="/das/request?%s">%s</a>""" \
+                        % (urllib.urlencode({'input':query}), val)
             elif is_number(val):
                 sss += """: <code class="number">%s</code>""" % quote(val)
             else:
