@@ -400,19 +400,39 @@ we simply drop this header from shown records.
 <div class="navcontainer">
 
 <p>
-Here is an un-complete set of queries support in DAS
+Here is an incomplete list of queries supported in DAS
 <br/>
 Queries to get Site information
 </p>
 <div class="example">
 <pre>
+T1_CH_CERN
 site=T1_CH_CERN
 site=T1_*
-site=T1_* | grep site.name
-site=T1_* | grep site.se
+site=T1_* | grep site.name, site.se
 </pre>
 </div>
 
+<p>
+Dataset queries
+</p>
+<div class="example">
+<pre>
+Zee
+dataset=*Zee*
+dataset release=CMSSW_4*
+dataset release=CMSSW_4* datatype=mc
+dataset dataset=*Zee* datatype=mc
+dataset dataset=*Zee* datatype=mc release=CMSSW_4*
+dataset dataset=/Cosmics/Run2010B* site=T1_US_FNAL
+dataset primary_dataset=ZJetToEE_Pt*
+dataset primary_dataset=ZJetToEE_Pt* tier=*GEN*
+dataset tier=*GEN*
+dataset group=Top
+dataset group=Top datatype=mc
+dataset run=148126
+</pre>
+</div>
 
 <p>
 Queries to get run information

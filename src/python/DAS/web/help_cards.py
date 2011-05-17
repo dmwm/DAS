@@ -157,6 +157,24 @@ record is aggregated across several CMS data-services.
     card += hide
     card_list.append(card)
 
+    card = """
+<h3 class="big">Help: Commonly used dataset queries</h3>
+Most physicists are interested to find their desired dataset. Here is an incomplete
+list of queries which cover this use-case:
+<pre>
+dataset=*Zee*
+dataset release=CMSSW_4*
+dataset release=CMSSW_4* datatype=mc
+dataset dataset=*Zee* datatype=mc release=CMSSW_4*
+dataset primary_dataset=ZJetToEE_Pt* tier=*GEN*
+dataset group=Top datatype=mc
+dataset run=148126
+dataset dataset=/Cosmics/Run2010B* site=T1_US_FNAL
+</pre>
+"""
+    card += hide
+    card_list.append(card)
+
     random.shuffle(card_list)
     cards = [first] + card_list
     return cards
