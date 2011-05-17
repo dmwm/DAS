@@ -35,6 +35,7 @@ dataset : [
         {"das":"dataset.nblocks", "ui":"Number of blocks"}, 
         {"das":"dataset.nevents", "ui":"Number of events"}, 
         {"das":"dataset.size", "ui":"Dataset size"}, 
+        {"das":"dataset.datatype", "ui":"Type"}, 
         {"das":"dataset.primary_datatset_name", "ui":"Primary dataset"}, 
         {"das":"dataset.processed_datatset_name", "ui":"Processed dataset"}, 
         {"das":"dataset.primary_dataset_name", "ui":"Primary dataset"}, 

@@ -212,14 +212,14 @@ class DBSService(DASAbstractService):
                 except:
                     pass
             if  value:
-                kwds['query'] = "find dataset, sum(block.numfiles), \
+                kwds['query'] = "find dataset, datatype, sum(block.numfiles), \
 sum(block.numevents), count(block), sum(block.size) where %s \
 and dataset.status like VALID*" % value[4:]
             else:
                 kwds['query'] = 'required'
         if  api == 'fakeListDatasetbyDate':
 #           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124} 
-            query_for_single = "find dataset , count(block), sum(block.size),\
+            query_for_single = "find dataset, datatype, count(block), sum(block.size),\
   sum(block.numfiles), sum(block.numevents), dataset.createdate \
   where dataset.createdate %s %s and dataset.status like VALID*"
             query_for_double = "find dataset , count(block), sum(block.size),\
