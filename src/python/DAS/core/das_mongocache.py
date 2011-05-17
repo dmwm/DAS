@@ -598,7 +598,19 @@ class DASMongocache(object):
                 del spec[key]
         # usage of fields in find doesn't account for counting, since it
         # is a view over records found with spec, so we don't need to use it.
-        res = col.find(spec=spec).count()
+        #
+        # PLEASE NOTE: we allow to store duplicates, but this creates a problem
+        # of correctly counting non-duplicate results. Currently, mognodb
+        # 1.8.1 I can't combine distinct and count together, see
+        # ticket https://jira.mongodb.org/browse/SERVER-2801
+        # instead I use non-das keys and get len of distinct docs for single
+        # key record, e.g. dataset=/a/b/c
+        keys = [k for k in spec.keys() \
+                if k.find('das') == -1 and k.find('_id') == -1]
+        if  len(keys) == 1:
+            res = len(col.find(spec).distinct(keys[0]))
+        else:
+            res = col.find(spec=spec).count()
         msg = "DASMongocache::nresults=%s" % res
         self.logger.info(msg)
         return res
@@ -649,12 +661,18 @@ class DASMongocache(object):
         # look-up raw record
         if  fields: # be sure to extract those fields
             fields += ['das_id', 'das', 'cache_id']
+        # try to get sort keys all the time to get ordered list of
+        # docs which allow unique_filter to apply afterwards
         skeys  = []
         if  skey:
             if  order == 'asc':
                 skeys = [(skey, ASCENDING)]
             else:
                 skeys = [(skey, DESCENDING)]
+        else:
+            keys = [k for k in spec.keys() \
+                if k.find('das') == -1 and k.find('_id') == -1]
+            skeys = [(k, ASCENDING) for k in keys]
         res = []
         try:
             if  limit:
