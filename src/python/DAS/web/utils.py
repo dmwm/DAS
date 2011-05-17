@@ -370,7 +370,7 @@ def not_to_link():
     Return a list of primary keys which do not need to provide a web links
     on UI.
     """
-    return ['config', 'lumi', 'group']
+    return ['config', 'lumi', 'group', 'jobsummary']
 
 def json2html(idict, pad="", recusive=False, ref=None):
     """

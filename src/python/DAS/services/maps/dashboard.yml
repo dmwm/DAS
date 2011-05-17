@@ -4,7 +4,7 @@ format : XML
 ---
 urn: "jobsummary-plot-or-table"
 url : "http://dashb-cms-job.cern.ch/dashboard/request.py/jobsummary-plot-or-table"
-expire : 3600
+expire : 300
 params : {
     "user": "",
     "site": "",
@@ -22,7 +22,7 @@ params : {
     "check": "submitted",
 }
 daskeys : [
-    {"key":"jobsummary", "map":"jobsummary", "pattern":""},
+    {"key":"jobsummary", "map":"jobsummary.name", "pattern":""},
     {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9]+\\.){2}"},
     {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
     {"key":"user", "map":"user.name", "pattern":""},

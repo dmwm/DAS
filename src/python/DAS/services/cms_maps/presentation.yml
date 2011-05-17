@@ -151,7 +151,6 @@ group : [
         ],
 jobsummary : [
         {"das":"jobsummary.name", "ui":"Jobsummary"},
-        {"das":"jobsummary.activity", "ui":"Activity"},
         {"das":"jobsummary.terminated", "ui":"Terminated"},
         {"das":"jobsummary.running", "ui":"Running"},
         {"das":"jobsummary.submitted", "ui":"Submitted"},
