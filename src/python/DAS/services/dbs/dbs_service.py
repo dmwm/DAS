@@ -203,7 +203,10 @@ class DBSService(DASAbstractService):
                     value += ' and tier=%s' % val
                 if  key == 'phygrp' and val:
                     value += ' and phygrp=%s' % val
-            for key in ['dataset', 'release', 'primary_dataset', 'tier', 'phygrp']:
+                if  key == 'datatype' and val:
+                    value += ' and datatype=%s' % val
+            keys = ['dataset', 'release', 'primary_dataset', 'tier', 'phygrp', 'datatype']
+            for key in keys:
                 try:
                     del kwds[key]
                 except:
