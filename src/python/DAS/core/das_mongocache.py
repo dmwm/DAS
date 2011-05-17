@@ -575,6 +575,7 @@ class DASMongocache(object):
         # to return only records associated with requested key (site and not
         # blocks) loop over fields and update spec with primary key constructed
         # from a field key
+        prim_key = None
         if  fields:
             for field in fields:
                 if  not spec.has_key(field):
@@ -605,10 +606,20 @@ class DASMongocache(object):
         # ticket https://jira.mongodb.org/browse/SERVER-2801
         # instead I use non-das keys and get len of distinct docs for single
         # key record, e.g. dataset=/a/b/c
-        keys = [k for k in spec.keys() \
-                if k.find('das') == -1 and k.find('_id') == -1]
+        if  fields:
+            keys = list(fields)
+        else:
+            keys = [k for k in spec.keys() \
+                    if k.find('das') == -1 and k.find('_id') == -1]
         if  len(keys) == 1:
-            res = len(col.find(spec).distinct(keys[0]))
+            lkey = keys[0]
+            # FIXME: I need to lookup primary key for lkey instead
+            # of hard-coded values, but it requires changes in mapping db API
+            if  lkey in ['dataset', 'site', 'release', 'file', 'block']:
+                lkey = '%s.name' % lkey
+                res = len(col.find(spec).distinct(lkey))
+            else:
+                res = col.find(spec=spec).count()
         else:
             res = col.find(spec=spec).count()
         msg = "DASMongocache::nresults=%s" % res
