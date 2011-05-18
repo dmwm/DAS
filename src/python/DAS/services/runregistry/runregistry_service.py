@@ -18,6 +18,14 @@ from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
 from   DAS.utils.utils import convert2date
 
+def rr_date(timestamp):
+    """
+    Convert given timestamp into RR date format, YYYY-MM-DD
+    """
+    if  isinstance(timestamp, int) or isinstance(timestamp, long):
+        return time.strftime("%Y-%m-%d", time.gmtime(timestamp))
+    return timestamp
+
 def duration(ctime, etime):
     """
     Calculate run duration.
@@ -154,8 +162,10 @@ class RunRegistryService(DASAbstractService):
                         raise Exception(msg)
                 elif  isinstance(val, str):
                     date1, date2 = convert2date(val)
+                    date1 = rr_date(date1)
+                    date2 = rr_date(date2)
                 else:
-                    date1 = convert_datetime(val) 
+                    date1 = convert_datetime(val)
                     date2 = convert_datetime(val + 24*60*60)
                 run_time = '>= %s and < %s' % (date1, date2)
                 _query = {'runStartTime': run_time}
