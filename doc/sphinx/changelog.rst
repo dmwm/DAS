@@ -9,6 +9,9 @@ performed stress tests and code audit DAS servers.
 
 - 0.7.X
 
+  - add DBS status keyword to allow to select dataset with different statuses in
+    DBS, the default status is VALID, ticket #1608
+  - add datatype to select different type of data, e.g. MC, data, calib, etc.
   - if possible get IP address of SE and create appropriate link to ip service
   - calculate run duration from RR output
   - add conddb map into cms_maps

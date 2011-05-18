@@ -47,6 +47,14 @@ class DBSService(DASAbstractService):
         """
         Adjust DBS2 parameters for specific query requests
         """
+        if  api == 'fakeStatus':
+            val = kwds['status']
+            if  val:
+                kwds['query'] = \
+                'find dataset.status where dataset.status=%s' % val
+            else:
+                kwds['query'] = 'find dataset.status'
+            kwds.pop('status')
         if  api == 'listPrimaryDatasets':
             pat = kwds['pattern']
             if  pat[0] == '/':
@@ -189,12 +197,7 @@ class DBSService(DASAbstractService):
             value = ""
             for key, val in kwds.items():
                 if  key == 'dataset' and val:
-                    pat = re.compile('/.*/.*/.*')
-                    if  pat.match(val):
-                        if  val.find('*') != -1:
-                            value += ' and dataset=%s' % val
-                    else:
-                        value += ' and dataset=%s' % val
+                    value += ' and dataset=%s' % val
                 if  key == 'primary_dataset' and val:
                     value += ' and primds=%s' % val
                 if  key == 'release' and val:
@@ -205,27 +208,38 @@ class DBSService(DASAbstractService):
                     value += ' and phygrp=%s' % val
                 if  key == 'datatype' and val:
                     value += ' and datatype=%s' % val
-            keys = ['dataset', 'release', 'primary_dataset', 'tier', 'phygrp', 'datatype']
+                if  key == 'status':
+                    if  val:
+                        value += ' and dataset.status=%s' % val
+                    else:
+                        value += ' and dataset.status like VALID*'
+            keys = ['dataset', 'release', 'primary_dataset', 'tier', \
+                'phygrp', 'datatype', 'status']
             for key in keys:
                 try:
                     del kwds[key]
                 except:
                     pass
             if  value:
-                kwds['query'] = "find dataset, datatype, sum(block.numfiles), \
-sum(block.numevents), count(block), sum(block.size) where %s \
-and dataset.status like VALID*" % value[4:]
+                kwds['query'] = "find dataset, datatype, dataset.status, \
+sum(block.numfiles), sum(block.numevents), count(block), sum(block.size) \
+where %s" % value[4:]
             else:
                 kwds['query'] = 'required'
         if  api == 'fakeListDatasetbyDate':
+            value = ''
+            if  kwds['status']:
+                value = ' and dataset.status=%s' % kwds['status']
+            else:
+                value = ' and dataset.status like VALID*'
 #           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124} 
-            query_for_single = "find dataset, datatype, count(block), sum(block.size),\
-  sum(block.numfiles), sum(block.numevents), dataset.createdate \
-  where dataset.createdate %s %s and dataset.status like VALID*"
+            query_for_single = "find dataset, datatype, dataset.status, \
+  count(block), sum(block.size), sum(block.numfiles), sum(block.numevents), \
+  dataset.createdate where dataset.createdate %s %s " + value
             query_for_double = "find dataset , count(block), sum(block.size),\
   sum(block.numfiles), sum(block.numevents), dataset.createdate \
   where dataset.createdate %s %s \
-  and dataset.createdate %s %s and dataset.status like VALID*"
+  and dataset.createdate %s %s " + value
             val = kwds['date']
             qlist = []
             query = ""
@@ -277,8 +291,6 @@ and dataset.status like VALID*" % value[4:]
             prim_key = 'file_parent'
         elif api == 'listTiers':
             prim_key = 'data_tier'
-        elif api == 'listDatasetSummary':
-            prim_key = 'processed_dataset'
         elif api == 'listDatasetParents':
             prim_key = 'processed_dataset_parent'
         elif api == 'listPrimaryDatasets':
@@ -315,6 +327,8 @@ and dataset.status like VALID*" % value[4:]
             prim_key = 'child'
         elif api == 'fakeSite4Dataset':
             prim_key = 'site'
+        elif api == 'fakeStatus':
+            prim_key = 'status'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
@@ -326,6 +340,14 @@ and dataset.status like VALID*" % value[4:]
         for row in gen:
             if  not row:
                 continue
+            if  row.has_key('status') and \
+                row['status'].has_key('dataset.status'):
+                row['status']['name'] = row['status']['dataset.status']
+                del row['status']['dataset.status']
+            if  row.has_key('dataset') and \
+                row['dataset'].has_key('dataset.status'):
+                row['dataset']['status'] = row['dataset']['dataset.status']
+                del row['dataset']['dataset.status']
             if  row.has_key('file_lumi_section'):
                 row['lumi'] = row['file_lumi_section']
                 del row['file_lumi_section']

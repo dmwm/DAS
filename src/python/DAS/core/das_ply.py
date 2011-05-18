@@ -159,7 +159,7 @@ class DASPLY(object):
         return t
 
     def t_VALUE(self, t):
-        r'''[a-zA-Z/*][a-zA-Z_0-9/*\-#\.]+|'.*?'|".*?"|y|n'''
+        r'''[a-zA-Z/*][a-zA-Z_0-9/*\-#\.]+|'.*?'|".*?"|y|n|\*'''
         # test if query starts with find and/or contains where (DBS-QL)
         if  t.value == 'find' or t.value == 'where':
             msg = 'Not a valid DAS query, DBS-QL keyword: %s' % t.value
@@ -533,7 +533,7 @@ def ply2mongo(query):
     if  inst:
         mongodict['instance'] = inst
     if  len(spec.keys()) == 1 and spec.values() == ['*'] and \
-        spec.keys()[0] not in ['records', 'queries']:
+        spec.keys()[0] not in ['records', 'queries', 'status']:
         msg = 'Single DAS key with no conditions'
         raise Exception(msg)
     return mongodict
