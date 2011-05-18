@@ -384,7 +384,7 @@ class DASMongocache(object):
         self.add_manipulator()
 
         # ensure that we have the following indexes
-        index_list = [('das.expire', ASCENDING),
+        index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
                       ('query.spec.key', ASCENDING),
                       ('das.qhash', DESCENDING),
                       ('das.empty_record', ASCENDING),
@@ -872,8 +872,10 @@ class DASMongocache(object):
                     self.merge.insert(row)
             except InvalidOperation:
                 pass
-        if  not inserted: # we didn't merge anything
-            empty_record = {'das':{'expire':expire, 'primary_key':lookup_keys,
+        if  not inserted: # we didn't merge anything, it DB look-up failure
+            empty_expire = 20 # secs, short enough to expire
+            empty_record = {'das':{'expire':empty_expire,
+                                   'primary_key':lookup_keys,
                                    'empty_record': 1}, 
                             'cache_id':[], 'das_id': id_list}
             spec = query['spec']

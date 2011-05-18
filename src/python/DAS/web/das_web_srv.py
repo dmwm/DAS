@@ -583,8 +583,12 @@ class DASWebService(DASWebManager):
         time0  = time.time()
         try:
             mquery = self.dasmgr.mongoparser.parse(uinput, False) 
-            data   = self.dasmgr.result(mquery, idx, limit, skey, sdir)
             nres   = self.dasmgr.in_raw_cache_nresults(mquery, coll)
+            # if MongoDB fails during merging step revoke it again
+            if  not nres:
+                self.dasmgr.rawcache.merge_records(mquery)
+                nres = self.dasmgr.in_raw_cache_nresults(mquery, coll)
+            data   = self.dasmgr.result(mquery, idx, limit, skey, sdir)
             head.update({'status':'ok', 'nresults':nres, 
                          'mongo_query': mquery, 'ctime': time.time()-time0})
         except Exception, exp:

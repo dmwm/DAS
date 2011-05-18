@@ -325,8 +325,11 @@ class DASCore(object):
         query, _ = convert2pattern(loose(query))
         # add look-up of condition keys
         if  query['spec'].keys():
-            query['spec'].update(\
-                {'das.condition_keys': {'$in':query['spec'].keys()}})
+            ckeys = query['spec'].keys()
+            if  len(ckeys) == 1:
+                query['spec'].update({'das.condition_keys': ckeys})
+            else:
+                query['spec'].update({'das.condition_keys': {'$all':ckeys}})
         if  query.has_key('fields') and query['fields'] == ['records']:
             query['fields'] = None
         return self.rawcache.nresults(query, collection=coll, filters=filters)
@@ -467,8 +470,11 @@ class DASCore(object):
             spec  = {} # we got request to get everything
             query['spec'] = spec
         else: # add look-up of condition keys
-            query['spec'].update(\
-                {"das.condition_keys":{'$in':spec.keys()}})
+            ckeys = spec.keys()
+            if  len(ckeys) == 1:
+                query['spec'].update({'das.condition_keys': ckeys})
+            else:
+                query['spec'].update({'das.condition_keys': {'$all':ckeys}})
         if  fields:
             prim_keys = []
             for key in fields:
