@@ -369,6 +369,7 @@ class DASMongocache(object):
         self.dbname  = config['dasdb']['dbname']
         self.logger  = config['logger']
         self.verbose = config['verbose']
+        self.mapping = config['dasmapping']
 
         self.conn    = db_connection(self.dburi)
         self.mdb     = self.conn[self.dbname]
@@ -612,11 +613,11 @@ class DASMongocache(object):
             keys = [k for k in spec.keys() \
                     if k.find('das') == -1 and k.find('_id') == -1]
         if  len(keys) == 1:
-            lkey = keys[0]
-            # FIXME: I need to lookup primary key for lkey instead
-            # of hard-coded values, but it requires changes in mapping db API
-            if  lkey in ['dataset', 'site', 'release', 'file', 'block']:
-                lkey = '%s.name' % lkey
+            lkey = None
+            for lkey in self.mapping.mapkeys(keys[0]):
+                if  lkey.find('name') != -1:
+                    break
+            if  lkey:
                 res = len(col.find(spec).distinct(lkey))
             else:
                 res = col.find(spec=spec).count()

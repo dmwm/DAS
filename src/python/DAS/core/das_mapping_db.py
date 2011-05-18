@@ -39,6 +39,7 @@ class DASMapping(object):
         
         self.create_db()
 
+        self.keymap = {}           # to be filled at run time
         self.presentationcache = {}    # to be filled at run time
         self.reverse_presentation = {} # to be filled at run time
         self.notationcache = {}        # to be filled at run time
@@ -295,6 +296,21 @@ class DASMapping(object):
                                 continue
                         else:
                             return key['map']
+
+    def mapkeys(self, daskey):
+        """
+        Find primary key for a given daskey
+        """
+        if  self.keymap.has_key(daskey):
+            return self.keymap[daskey]
+        spec = {'daskeys.key' : daskey}
+        mapkeys = []
+        for row in self.col.find(spec, ['daskeys']):
+            for kmap in row['daskeys']:
+                if  kmap['key'] == daskey and kmap['map'] not in mapkeys:
+                    mapkeys.append(kmap['map'])
+        self.keymap[daskey] = mapkeys
+        return self.keymap[daskey]
 
     def find_apis(self, das_system, map_key):
         """

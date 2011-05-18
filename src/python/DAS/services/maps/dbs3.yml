@@ -340,8 +340,7 @@ das2api : [
 notations : [
         {"notation": "primary_ds_name", "map": "name", "api": "primarydatasets"},
         {"notation": "primary_ds_name", "map": "primary_dataset.name", "api": ""},
-        {"notation": "primary_ds_type", "map": "type", "api": "primarydatasets"},
-        {"notation": "primary_ds_type", "map": "primary_dataset.type", "api": ""},
+        {"notation": "primary_ds_type", "map": "datatype", "api": ""},
         {"notation": "primary_ds_id", "map": "id", "api": "primarydatasets"},
         {"notation": "primary_ds_id", "map": "primary_dataset.id", "api": ""},
         {"notation": "dataset", "map": "name", "api": "datasets"},
