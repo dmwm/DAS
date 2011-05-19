@@ -487,12 +487,16 @@ class DASCore(object):
         aggregators = query.get('aggregators', None)
         mapreduce   = query.get('mapreduce', None)
         filters     = query.get('filters', None)
+        unique      = False
         if  filters:
             fields  = query['fields']
             if  not fields or not isinstance(fields, list):
                 fields = []
             new_fields = []
             for filter in filters:
+                if  filter == 'unique':
+                    unique = True
+                    continue
                 for oper in ['>', '<', '=']:
                     if  filter.find(oper) != -1:
                         fname = filter.split(oper)[0]
@@ -530,9 +534,13 @@ class DASCore(object):
         else:
             res = self.rawcache.get_from_cache(\
                 query, idx, limit, skey, sorder, collection=collection)
-        # apply unique filter
-        for row in unique_filter(res):
-            yield row
+        # check if we have unique filter
+        if  unique:
+            for row in unique_filter(res):
+                yield row
+        else:
+            for row in res:
+                yield row
         das_timer('DASCore::get_from_cache', self.verbose)
 
     def get_queries(self, query):

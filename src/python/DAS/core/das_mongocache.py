@@ -607,22 +607,29 @@ class DASMongocache(object):
         # ticket https://jira.mongodb.org/browse/SERVER-2801
         # instead I use non-das keys and get len of distinct docs for single
         # key record, e.g. dataset=/a/b/c
-        if  fields:
-            keys = list(fields)
-        else:
-            keys = [k for k in spec.keys() \
-                    if k.find('das') == -1 and k.find('_id') == -1]
-        if  len(keys) == 1:
-            lkey = None
-            for lkey in self.mapping.mapkeys(keys[0]):
-                if  lkey.find('name') != -1:
-                    break
-            if  lkey:
-                res = len(col.find(spec).distinct(lkey))
-            else:
-                res = col.find(spec=spec).count()
-        else:
-            res = col.find(spec=spec).count()
+# 20110519
+# This code needs further testing
+# it affects how unique records can be counted.
+# Right now I find unreliable to use distinct and get all records from DB
+# to do the counting.
+# This affects decision not to use unique filter in das_core.
+#        if  fields:
+#            keys = list(fields)
+#        else:
+#            keys = [k for k in spec.keys() \
+#                    if k.find('das') == -1 and k.find('_id') == -1]
+#        if  len(keys) == 1:
+#            lkey = None
+#            for lkey in self.mapping.mapkeys(keys[0]):
+#                if  lkey.find('name') != -1:
+#                    break
+#            if  lkey:
+#                res = len(col.find(spec).distinct(lkey))
+#            else:
+#                res = col.find(spec=spec).count()
+#        else:
+#            res = col.find(spec=spec).count()
+        res = col.find(spec=spec).count()
         msg = "DASMongocache::nresults=%s" % res
         self.logger.info(msg)
         return res
