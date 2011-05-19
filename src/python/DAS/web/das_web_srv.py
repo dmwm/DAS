@@ -886,8 +886,8 @@ class DASWebService(DASWebManager):
             lkey  = None
             if  row.has_key('das') and row['das'].has_key('primary_key'):
                 pkey = row['das']['primary_key']
-                lkey = pkey.split('.')[0]
                 try:
+                    lkey = pkey.split('.')[0]
                     pval = list(set(DotDict(row).get_values(pkey)))
                     if  len(pval) == 1:
                         pval = pval[0]
