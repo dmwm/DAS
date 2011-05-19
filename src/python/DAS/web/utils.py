@@ -41,7 +41,7 @@ PAT_SE = re.compile('([a-zA-Z0-9-_]+\\.){2}')
 def custom_adjust(daskeys, uinput):
     if  uinput.find('queries') != -1 or uinput.find('records') != -1:
         return uinput
-    if  uinput.find(' ') == -1:
+    if  uinput.find(' ') == -1 and uinput.find('=') == -1:
         found_das_key = \
             [d for d in daskeys if uinput.find(d) != -1 and d != 'instance']
         if  not found_das_key: # no DAS keys is found in input query
