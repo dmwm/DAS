@@ -466,13 +466,16 @@ class DASMongocache(object):
         cond = {'query': enc_query, 'das.system':'das'}
         return self.col.find_one(cond)
 
-    def find_specs(self, query):
+    def find_specs(self, query, system='das'):
         """
         Check if cache has query whose specs are identical to provided query.
         Return all matches.
         """
         enc_query = encode_mongo_query(query)
-        cond = {'query.spec': enc_query['spec'], 'das.system':'das'}
+        if  system:
+            cond = {'query.spec': enc_query['spec'], 'das.system':'das'}
+        else:
+            cond = {'query.spec': enc_query['spec']}
         return self.col.find(cond)
 
     def das_record(self, query):
@@ -600,35 +603,6 @@ class DASMongocache(object):
                 del spec[key]
         # usage of fields in find doesn't account for counting, since it
         # is a view over records found with spec, so we don't need to use it.
-        #
-        # PLEASE NOTE: we allow to store duplicates, but this creates a problem
-        # of correctly counting non-duplicate results. Currently, mognodb
-        # 1.8.1 I can't combine distinct and count together, see
-        # ticket https://jira.mongodb.org/browse/SERVER-2801
-        # instead I use non-das keys and get len of distinct docs for single
-        # key record, e.g. dataset=/a/b/c
-# 20110519
-# This code needs further testing
-# it affects how unique records can be counted.
-# Right now I find unreliable to use distinct and get all records from DB
-# to do the counting.
-# This affects decision not to use unique filter in das_core.
-#        if  fields:
-#            keys = list(fields)
-#        else:
-#            keys = [k for k in spec.keys() \
-#                    if k.find('das') == -1 and k.find('_id') == -1]
-#        if  len(keys) == 1:
-#            lkey = None
-#            for lkey in self.mapping.mapkeys(keys[0]):
-#                if  lkey.find('name') != -1:
-#                    break
-#            if  lkey:
-#                res = len(col.find(spec).distinct(lkey))
-#            else:
-#                res = col.find(spec=spec).count()
-#        else:
-#            res = col.find(spec=spec).count()
         res = col.find(spec=spec).count()
         msg = "DASMongocache::nresults=%s" % res
         self.logger.info(msg)
@@ -637,7 +611,7 @@ class DASMongocache(object):
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc', 
                         collection='merge', adjust=True):
         """
-        Retreieve results from cache, otherwise return null.
+        Retrieve results from cache, otherwise return null.
         Please note, input parameter query means MongoDB query, please
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
@@ -654,12 +628,6 @@ class DASMongocache(object):
                 strquery = json.dumps(query)
             except: #we got filter conditions/pattern which is not serializable
                 strquery = ""
-        if  query.has_key('spec') and query['spec'].has_key('date'):
-            if isinstance(query['spec']['date'], dict)\
-                and query['spec']['date'].has_key('$lte') \
-                and query['spec']['date'].has_key('$gte'):
-                query['spec']['date'] = [query['spec']['date']['$gte'],
-                                         query['spec']['date']['$lte']]
 
         # adjust query id if it's requested
         if  adjust:
@@ -694,18 +662,11 @@ class DASMongocache(object):
             skeys = [(k, ASCENDING) for k in keys]
         res = []
         try:
+            res = col.find(spec=spec, fields=fields).sort(skeys)
+            if  idx:
+                res = res.skip(idx)
             if  limit:
-                if  skeys:
-                    res = col.find(spec=spec, fields=fields)\
-                        .sort(skeys).skip(idx).limit(limit)
-                else:
-                    res = col.find(spec=spec, fields=fields)\
-                        .skip(idx).limit(limit)
-            else:
-                if  skeys:
-                    res = col.find(spec=spec, fields=fields).sort(skeys)
-                else:
-                    res = col.find(spec=spec, fields=fields)
+                res = res.limit(limit)
         except Exception as exp:
             row = {'exception': exp}
             yield row

@@ -32,7 +32,7 @@ from DAS.utils.logger import DASLogger, set_cherrypy_logger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
-from DAS.web.utils import json2html, web_time, quote, custom_adjust
+from DAS.web.utils import json2html, web_time, quote, free_text_parser
 from DAS.web.utils import ajax_response, checkargs, not_to_link
 from DAS.web.utils import dascore_monitor, gen_color
 from DAS.web.tools import exposedasjson, exposetext
@@ -698,12 +698,12 @@ class DASWebService(DASWebManager):
         """
         Adjust user input if self.adjust flag is enable it. 
         This method can be customization for concrete DAS applications via
-        external custom_adjust function (part of DAS.web.utils module)
+        external free_text_parser function (part of DAS.web.utils module)
         """
         if  not self.adjust:
             return
         uinput = kwargs.get('input', '')
-        kwargs['input'] = custom_adjust(self.daskeys, uinput)
+        kwargs['input'] = free_text_parser(uinput, self.daskeys)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)

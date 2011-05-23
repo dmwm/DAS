@@ -31,44 +31,67 @@ from   DAS.utils.das_db import db_connection
 from   DAS.core.das_core import DASCore
 from   DAS.web.das_codes import web_code
 
-# regex patterns used in code
+# regex patterns used in free_text_parser
+PAT_BLOCK = re.compile('^/.*/.*/.*\#.*')
 PAT_RUN  = re.compile('^[0-9]{3,10}')
 PAT_FILE = re.compile('^/.*\.root$')
-PAT_RELEASE = re.compile('^CMSSW_')
+PAT_RELEASE = re.compile('^CMSSW_|[0-9]_[0-9]')
 PAT_SITE = re.compile('^T[0-3]')
 PAT_SE = re.compile('([a-zA-Z0-9-_]+\\.){2}')
+PAT_DATATYPE = re.compile('mc|calib|data|raw|cosmic', re.I)
+PAT_TIERS = re.compile('gen|sim|raw|digi|reco|alcoreco|hlt|fevt|alcaprompt|dqm', re.I)
 
-def custom_adjust(daskeys, uinput):
-    if  uinput.find('queries') != -1 or uinput.find('records') != -1:
-        return uinput
-    if  uinput.find(' ') == -1 and uinput.find('=') == -1:
-        found_das_key = \
-            [d for d in daskeys if uinput.find(d) != -1 and d != 'instance']
-        if  not found_das_key: # no DAS keys is found in input query
-            if  PAT_RUN.match(uinput):
-                uinput = 'run=%s' % uinput
-            elif PAT_FILE.match(uinput):
-                uinput = 'file=%s' % uinput
-            elif PAT_RELEASE.match(uinput):
-                if  uinput.find('*') != -1:
-                    uinput = 'release=%s' % uinput
+def free_text_parser(sentence, daskeys, default_key="dataset"):
+    """Parse sentence and construct DAS QL expresion"""
+    found = 0
+    for word in sentence.split():
+        if  word.find('=') != -1 or word in daskeys:
+            found = 1
+    dasquery = ''
+    if  not found:
+        for word in sentence.split():
+            if  PAT_RUN.match(word):
+                dasquery += 'run=%s ' % word
+            elif PAT_BLOCK.match(word):
+                dasquery += 'block=%s ' % word
+            elif PAT_FILE.match(word):
+                dasquery += 'file=%s ' % word
+            elif PAT_RELEASE.match(word):
+                if  word.find('CMSSW_') == -1:
+                    word = 'CMSSW_' + word
+                if  word.find('*') != -1:
+                    dasquery += 'release=%s ' % word
                 else:
-                    uinput = 'release=%s*' % uinput
-            elif PAT_SITE.match(uinput):
-                if  uinput.find('*') != -1:
-                    uinput = 'site=%s' % uinput
+                    dasquery += 'release=%s* ' % word
+            elif PAT_SITE.match(word):
+                if  word.find('*') != -1:
+                    dasquery += 'site=%s ' % word
                 else:
-                    uinput = 'site=%s*' % uinput
-            elif PAT_SE.match(uinput):
-                uinput = 'site=%s' % uinput
+                    dasquery += 'site=%s* ' % word
+            elif PAT_SE.match(word):
+                dasquery += 'site=%s ' % word
+            elif PAT_TIERS.match(word):
+                if  word.find('*') != -1:
+                    dasquery += 'tier=%s ' % word
+                else:
+                    dasquery += 'tier=*%s* ' % word
+            elif PAT_DATATYPE.match(word):
+                dasquery += 'datatype=%s ' % word
             else:
-                if  uinput.find('*') != -1:
-                    uinput = 'dataset=%s' % uinput
-                elif len(uinput) > 0 and uinput[0] == '/':
-                    uinput = 'dataset=%s*' % uinput
+                if  word.find('*') != -1:
+                    dasquery += 'dataset=%s ' % word
+                elif len(word) > 0 and word[0] == '/':
+                    dasquery += 'dataset=%s* ' % word
                 else:
-                    uinput = 'dataset=*%s*' % uinput
-    return uinput
+                    dasquery += 'dataset=*%s* ' % word
+    if  dasquery:
+        if  dasquery.find(default_key) != -1:
+            select_key = default_key
+        else:
+            select_key = dasquery.split('=')[0]
+        dasquery = select_key + ' ' + dasquery
+        return dasquery.strip()
+    return sentence
 
 def gen_color(system):
     """
