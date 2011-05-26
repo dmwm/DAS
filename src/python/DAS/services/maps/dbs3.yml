@@ -62,6 +62,7 @@ params : {
         "primary_ds_name":"*",
         "detail":"True",
         "dataset_access_type": "PRODUCTION", # RO must be default accorging to Yuyi, but it is not exists yet in DBS3
+        "block_name":"optional",
         "data_tier_name":"optional",
         "release_version": "optional",
         "run_num": "optional",
@@ -71,6 +72,7 @@ params : {
 }
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "block", "map":"block.name", "pattern":""},
         {"key": "primary_dataset", "map":"primary_dataset.name", "pattern":""},
         {"key": "tier", "map":"tier.name", "pattern":""},
         {"key": "release", "map":"release.name", "pattern":""},
@@ -81,6 +83,7 @@ daskeys : [
 ]
 das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"block.name", "api_param": "block_name", "pattern":""},
         {"das_key":"primary_dataset.name", "api_param": "primary_ds_name", "pattern":""},
         {"das_key":"tier.name", "api_param": "data_tier_name", "pattern":""},
         {"das_key":"release.name", "api_param": "release_version", "pattern":""},
@@ -88,6 +91,19 @@ das2api : [
         {"das_key":"file.name", "api_param": "logical_file_name", "pattern":""},
         {"das_key":"era", "api_param": "acquisition_era_name", "pattern":""},
         {"das_key":"group.name", "api_param": "physics_group_name", "pattern":""},
+]
+---
+urn: filesummaries
+url : "http://localhost:8989/dbs/DBSReader/filesummaries/"
+expire : 900
+params : {
+        "dataset":"required",
+}
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":"/.*/.*/.*"},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
 urn: datasetparents
@@ -376,8 +392,13 @@ notations : [
         {"notation": "run_num", "map": "run_number", "api": "runs_via_dataset"},
         {"notation": "run_num", "map": "run_number", "api": "runs_via_block"},
         {"notation": "run_num", "map": "run_number", "api": "runs_via_file"},
+        {"notation": "run_num", "map": "run_number", "api": "filelumis"},
+        {"notation": "run_num", "map": "run_number", "api": "filelumis4block"},
         {"notation": "run_num", "map": "run.run_number", "api": ""},
-        {"notation": "lumi_section_num", "map": "lumi", "api": ""},
+        {"notation": "num_file", "map": "nfiles", "api": ""},
+        {"notation": "num_lumi", "map": "nlumis", "api": ""},
+        {"notation": "event_count", "map": "nevents", "api": ""},
+        {"notation": "lumi_section_num", "map": "number", "api": ""},
         {"notation": "data_type", "map": "name", "api": ""},
         {"notation": "output_module_label", "map": "module_label", "api": ""},
         {"notation": "acquisition_era_name", "map": "name", "api": "acquisitioneras"},

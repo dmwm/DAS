@@ -43,6 +43,13 @@ class DBS3Service(DASAbstractService):
                 del kwds['era']
             except:
                 pass
+        if  api == 'datasets':
+            if  kwds['dataset'] == '*' and kwds['block_name']:
+                kwds['dataset'] = kwds['block_name'].split('#')[0]
+            try:
+                del kwds['block_name']
+            except:
+                pass
         if  api == 'runs':
             val = kwds['minrun']
             if  isinstance(val, dict): # we got a run range
@@ -71,6 +78,10 @@ class DBS3Service(DASAbstractService):
                         sites.add(orig_site)
             for site in sites:
                 yield {'site': {'name': site}}
+        elif api == 'filesummaries':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                yield row['dataset']
         else:
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
