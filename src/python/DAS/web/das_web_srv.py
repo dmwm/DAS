@@ -34,7 +34,7 @@ from DAS.utils.das_db import db_connection, db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import json2html, web_time, quote, free_text_parser
 from DAS.web.utils import ajax_response, checkargs, not_to_link
-from DAS.web.utils import dascore_monitor, gen_color
+from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import request_headers, jsonstreamer
 from DAS.web.tools import exposedasplist
@@ -703,7 +703,12 @@ class DASWebService(DASWebManager):
         if  not self.adjust:
             return
         uinput = kwargs.get('input', '')
-        kwargs['input'] = free_text_parser(uinput, self.daskeys)
+        new_input = free_text_parser(uinput, self.daskeys)
+        if  new_input == uinput:
+            selkey = choose_select_key(uinput, self.daskeys, 'dataset')
+            if  selkey:
+                new_input = selkey + ' ' + new_input
+        kwargs['input'] = new_input
 
     @expose
     @checkargs(DAS_WEB_INPUTS)

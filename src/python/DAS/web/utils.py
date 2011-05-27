@@ -32,14 +32,8 @@ from   DAS.core.das_core import DASCore
 from   DAS.web.das_codes import web_code
 
 # regex patterns used in free_text_parser
-PAT_BLOCK = re.compile('^/.*/.*/.*\#.*')
-PAT_RUN  = re.compile('^[0-9]{3,10}')
-PAT_FILE = re.compile('^/.*\.root$')
-PAT_RELEASE = re.compile('^CMSSW_|[0-9]_[0-9]')
-PAT_SITE = re.compile('^T[0-3]')
-PAT_SE = re.compile('([a-zA-Z0-9-_]+\\.){2}')
-PAT_DATATYPE = re.compile('mc|calib|data|raw|cosmic', re.I)
-PAT_TIERS = re.compile('gen|sim|raw|digi|reco|alcoreco|hlt|fevt|alcaprompt|dqm', re.I)
+from DAS.utils.regex import PAT_BLOCK, PAT_RUN, PAT_FILE, PAT_RELEASE
+from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
 
 def free_text_parser(sentence, daskeys, default_key="dataset"):
     """Parse sentence and construct DAS QL expresion"""
@@ -93,6 +87,20 @@ def free_text_parser(sentence, daskeys, default_key="dataset"):
         return dasquery.strip()
     return sentence
 
+def choose_select_key(dasinput, daskeys, default='dataset'):
+    """
+    For given das input query pick-up select key. If default key is found
+    in input use, otherwise select key is a first DAS key
+    """
+    first_word = dasinput.split('|')[0].split()[0]
+    if  first_word.find('=') != -1:
+        if  dasinput.find('%s=' % default) != -1:
+            return default
+        first_word = first_word.split('=')[0]
+    if  first_word in daskeys:
+        return first_word
+    return None
+        
 def gen_color(system):
     """
     Generate color for a system, use hash function for that

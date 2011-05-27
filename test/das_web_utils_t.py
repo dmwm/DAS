@@ -12,7 +12,7 @@ import unittest
 from pymongo.connection import Connection
 
 from DAS.web.utils import wrap2dasxml, wrap2dasjson, json2html, quote
-from DAS.web.utils import free_text_parser
+from DAS.web.utils import free_text_parser, choose_select_key
 
 class testDASWebUtils(unittest.TestCase):
     """
@@ -77,6 +77,40 @@ class testDASWebUtils(unittest.TestCase):
         for uinput, dasquery in pairs:
             result = free_text_parser(uinput, daskeys)
             self.assertEqual(dasquery, result)
+
+    def test_choose_select_key(self):
+        """test choose_select_key function"""
+        keys   = ['dataset', 'release', 'file']
+        query  = 'dataset=abc release=CMS'
+        expect = 'dataset' 
+        result = choose_select_key(query, keys)
+        self.assertEqual(expect, result)
+
+        query  = 'release=CMS dataset=abc'
+        expect = 'dataset'
+        result = choose_select_key(query, keys)
+        self.assertEqual(expect, result)
+
+        query  = 'release release=CMS dataset=abc'
+        expect = 'release'
+        result = choose_select_key(query, keys)
+        self.assertEqual(expect, result)
+
+        query  = 'file=/a.root dataset=abc'
+        expect = 'dataset'
+        result = choose_select_key(query, keys)
+        self.assertEqual(expect, result)
+
+        query  = 'file=/a.root release=CMS'
+        expect = 'file'
+        result = choose_select_key(query, keys)
+        self.assertEqual(expect, result)
+
+        query  = 'release=CMS file=/a.root'
+        expect = 'release'
+        result = choose_select_key(query, keys)
+        self.assertEqual(expect, result)
+
 #
 # main
 #

@@ -13,6 +13,15 @@ __author__ = "Valentin Kuznetsov"
 # system modules
 import re
 
+def word_chars(word):
+    """
+    Creates a pattern of given word as series of its characters, e.g.
+    for given word dataset I'll get
+    '^d$|^da$|^dat$|^data$|^datas$|^datase$|^dataset$'
+    which can be used later in regular expressions
+    """
+    return r'|'.join(['^%s$' % word[:x+1] for x in range(len(word))])
+
 ip_address_pattern = \
     re.compile(r"^([0-9]{1,3}\.){3,3}[0-9]{1,3}$")
 last_time_pattern = \
@@ -54,23 +63,34 @@ RE_DATASET = re.compile(r"^/\w+")
 RE_SITE = re.compile(r"^T[0123]_")
 RE_SUBKEY = re.compile(r"^([a-z_]+\.[a-zA-Z_]+)")
 RE_KEYS = re.compile(r"""\
-([a-z_]+)\s?(?:=|in|between|last)\s?(".*?"|'.*?'|[^\s]+)|([a-z_]+)""")
+([a-z_]+)\s?(?:=|between|last)\s?(".*?"|'.*?'|[^\s]+)|([a-z_]+)""")
 RE_COND_0 = re.compile(r"^([a-z_]+)")
 RE_HASPIPE = re.compile(r"^.*?\|")
 RE_PIPECMD = re.compile(r"^.*?\|\s*(\w+)$")
 RE_AGGRECMD = re.compile(r"^.*?\|\s*(\w+)\(([\w.]+)$")
 RE_FILTERCMD = re.compile(r"^.*?\|\s*(\w+)\s+(?:[\w.]+\s*,\s*)*([\w.]+)$")
-RE_K_SITE = re.compile(r"^s")
-RE_K_FILE = re.compile(r"^f")
-RE_K_PR_DATASET = re.compile(r"^pr")
-RE_K_PARENT = re.compile(r"^pa")
-RE_K_CHILD = re.compile(r"^ch")
-RE_K_CONFIG = re.compile(r"^co")
-RE_K_GROUP = re.compile(r"^g")
-RE_K_DATASET = re.compile(r"^d")
-RE_K_BLOCK = re.compile(r"^b")
-RE_K_RUN = re.compile(r"^ru")
-RE_K_RELEASE = re.compile(r"^re")
-RE_K_TIER = re.compile(r"^t")
-RE_K_MONITOR = re.compile(r"^m")
-RE_K_JOBSUMMARY = re.compile(r"^j")
+RE_K_SITE = re.compile(word_chars("site"))
+RE_K_FILE = re.compile(word_chars("file"))
+RE_K_PR_DATASET = re.compile(word_chars("primary_dataset"))
+RE_K_PARENT = re.compile(word_chars("parent"))
+RE_K_CHILD = re.compile(word_chars("child"))
+RE_K_CONFIG = re.compile(word_chars("config"))
+RE_K_GROUP = re.compile(word_chars("group"))
+RE_K_DATASET = re.compile(word_chars("dataset"))
+RE_K_BLOCK = re.compile(word_chars("block"))
+RE_K_RUN = re.compile(word_chars("run"))
+RE_K_RELEASE = re.compile(word_chars("release"))
+RE_K_TIER = re.compile(word_chars("tier"))
+RE_K_MONITOR = re.compile(word_chars("monitor"))
+RE_K_JOBSUMMARY = re.compile(word_chars("jobsummary"))
+
+# concrete patterns for CMS data
+PAT_SLASH = re.compile('^/.*')
+PAT_BLOCK = re.compile('^/.*/.*/.*\#.*')
+PAT_RUN  = re.compile('^[0-9]{3,10}')
+PAT_FILE = re.compile('^/.*\.root$')
+PAT_RELEASE = re.compile('^CMSSW_|^[0-9]_$|^[0-9]_[0-9]|' + word_chars('CMSSW_'))
+PAT_SITE = re.compile('^T[0-3]')
+PAT_SE = re.compile('([a-zA-Z0-9-_]+\\.){1,4}')
+PAT_DATATYPE = re.compile('^mc$|^calib$|^data$|^raw$|^cosmic$', re.I)
+PAT_TIERS = re.compile('gen|sim|raw|digi|reco|alcoreco|hlt|fevt|alcaprompt|dqm', re.I)
