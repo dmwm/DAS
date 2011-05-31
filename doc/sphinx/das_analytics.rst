@@ -1,3 +1,5 @@
+.. _das_analytcs:
+
 DAS analytics
 =============
 DAS analytics subsystem provides a task scheduler for running analytic

@@ -1,14 +1,17 @@
 DAS release notes
 =================
 
-Release 0.5.X series
+Release 0.7.X series
 --------------------
-This release series is targeted to DAS stability. We redesigned DAS-QL
-parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
-performed stress tests and code audit DAS servers.
+This release series is targeted to DAS usability. We collected users
+requests in terms of DAS functionality and usability. All changes made
+towards making DAS easy to use for end-users.
 
 - 0.7.X
 
+  - revisit how to retrieve unique records from DAS cache
+  - add DAS query builder into autocomplete
+  - extend refex to support free-text based queries
   - add DBS status keyword to allow to select dataset with different statuses in
     DBS, the default status is VALID, ticket #1608
   - add datatype to select different type of data, e.g. MC, data, calib, etc.
@@ -27,6 +30,12 @@ performed stress tests and code audit DAS servers.
   - fix PLY to accept y|n as a value, can be used to check openness of the block
   - add create_indexes into das_db module to allow consistenly create/ensure
     indexes in DAS code
+
+Release 0.6.X series
+--------------------
+This release series is targeted towards DAS production version. We switched from
+implicit to explicit data retrieval model; removed DAS cache server and re-design
+DAS web server; add multitasking support.
 
 - 0.6.5
 
@@ -129,6 +138,12 @@ performed stress tests and code audit DAS servers.
   - switch to YAJL JSON parser
   - add error_expire to control how long expire records live in cache, fixes #1240
   - fix monitor plugin to handle connection errors
+
+Release 0.5.X series
+--------------------
+This release series is targeted to DAS stability. We redesigned DAS-QL
+parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
+performed stress tests and code audit DAS servers.
 
 - 0.5.11
 

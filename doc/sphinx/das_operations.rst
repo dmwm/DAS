@@ -7,20 +7,15 @@ DAS operations
 Running DAS services
 --------------------
 
-DAS comes with 2 services
-
-- DAS cache server
-- DAS web server
-
-Both can either reside on a single node or can run on dedicated machines.
+DAS consists of multi-threaded DAS web and DAS analytics servers.
 Please refer to :ref:`DAS CMS operations <cms_operations>` section for deployment instructions
 and :ref:`DAS configuration <das_config>` section for description of configuration
 parameters.
 
 By CMS conventions DAS uses the following ports
 
-- 8211 for DAS cache server
 - 8212 for DAS web server
+- 8213 for DAS analytics server
 
 In order to start each of server you need to setup your environment, see
 :ref:`setup.sh <setup.sh>` file. For that use the following steps:
@@ -33,7 +28,7 @@ In order to start each of server you need to setup your environment, see
 Setting up DAS maps
 -------------------
 Each data-service is registered with DAS via its DAS map. All maps are located
-in $DAS_ROOT/src/python/DAS/services/maps area. We provide a single admin script
+in $DAS_ROOT/src/python/DAS/services/cms_maps area. We provide a single admin script
 to install available maps. It is located in $DAS_ROOT/bin/ area which should be
 in your path once your setup your environment *source setup.sh*. Then you can simply
 call *das_map* and it will install all the maps specified in your services configuration.
@@ -85,37 +80,88 @@ MongoDB server operates via standard UNIX init script:
 The MongoDB database is located in $MONGO_ROOT/db, while logs are in 
 $MONGO_ROOT/logs. 
 
-DAS cache server
-----------------
-
-The DAS cache is multi-threaded server. When it starts 
-you'll see that it runs 2*N+1 python processes, where 
-N refers to number of CPUs on a node. 1 thread dedicated to
-request queue while other 2*N to DAS workers. 
-
-DAS server can be start as following:
-
-.. doctest::
-
-    das_server cache start|stop|status|restart
-
-The das_cacheserver should be in your path once you setup your CMS DAS
-environment, see :ref:`setup.sh <setup.sh>`, otherwise please locate it under
-$DAS_ROOT/bin/ area.
-
 DAS web server
 --------------
 
-DAS web server can be started independently from DAS cache server using the 
+DAS web server is multi-threaded server. It can be started using the 
 following command
 
 .. doctest::
 
-    das_server web start|stop|status|restart
+    das_server start|stop|status|restart
 
-The das_web should be in your path once you setup your CMS DAS
+The das_server should be in your path once you setup your CMS DAS
 environment, see :ref:`setup.sh <setup.sh>`, otherwise please locate it under
 $DAS_ROOT/bin/ area.
+
+It consits of N threads used by DAS web server, plus M threads used by DAS core to
+run data retrieval processes concurrently.
+DAS configuration has the following parameters
+
+.. doctest::
+
+    config.web_server.thread_pool = 30
+    config.web_server.socket_queue_size = 15
+    config.web_server.number_of_workers = 8
+    config.web_server.queue_limit = 20
+
+The first two (thread_pool and socket_queue_size) are used by underlying CherryPy
+server to control its internal thread pool and queue, while second pair (number_of_workers
+and queue_limit) are used by DAS core to control number of worker threads used internally.
+The DAS core multitasking can be turned off by using 
+
+.. doctest::
+
+    config.das.multitask = False
+
+parameter.
+
+DAS analytics server
+--------------------
+
+The DAS analytics is complementary set of daemons who can populate DAS cache
+based on provided tasks, see :ref:`DAS analytics <das_analytics>`. Their server
+can be started as simple as 
+
+.. doctest::
+
+    python -u $DAS_PYTHONPATH/DAS/analytics/analytics_controller.py $DAS_ANALYTICS_CFG
+
+where analytics_controller.py expects a valid DAS analytics config file. Below you can
+find a simple version of analytics configuration file (in CMS configuration format):
+
+.. doctest::
+
+
+    logfile_rotating_size = 100000 
+    log_to_stdout = 0
+    log_to_file = 0 
+    web_history = 10000 
+    minimum_interval = 60 
+    log_format = "" 
+    max_retries = 1 
+    retry_delay = 60 
+    logfile = "/tmp/das_analytics.log" 
+    logfile_rotating_interval = 24 
+    no_start_offset = False 
+    web = True 
+    web_port = 8213 
+    logfile_mode = "None" 
+    workers = 4
+    log_to_stderr = 0 
+    web_base = "/analytics" 
+    logfile_rotating_count = 0
+    pid = "/tmp/analytics.pid"
+
+    # delta = finish-start (finish = start+period)
+    # period: the calls to be considered by analytics, default 1 month
+    # allowed_gap: is maximum gap in the summary record we are happy to ignore, default 1h
+    # interval: interval of the task, suggested value 14400 (4 hours) 
+
+    # here interval=14400, 4 hours
+    # while preempt argument specify at which time task should be run before results are expired.
+    Task("SiteHotspot", "ValueHotspot", 14400, key="site.name")
+    Task("DatasetHotspot", "ValueHotspot", 3600, key="dataset.name")
 
 DAS administration
 ------------------
@@ -123,7 +169,6 @@ DAS administration
 DAS RPMs provide a set of tools for administration tasks. 
 They are located at $DAS_ROOT/bin.
 
-- das_cacheclient is a CLI interface to DAS, it sends request to DAS cache server;
 - das_server is a DAS server init script;
 - das_cli is DAS stand-along CLI tool, it doesn't require neither cache or web DAS servers;
 - das_code_quality.sh is a bash script to check DAS code quality. It is based on pylint
