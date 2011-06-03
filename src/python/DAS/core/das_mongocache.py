@@ -668,13 +668,13 @@ class DASMongocache(object):
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
         skeys  = []
-        existing_idx = [i for i in self.existing_indexes(collection)]
         if  skey:
             if  order == 'asc':
                 skeys = [(skey, ASCENDING)]
             else:
                 skeys = [(skey, DESCENDING)]
         else:
+            existing_idx = [i for i in self.existing_indexes(collection)]
             keys = [k for k in spec.keys() \
                 if k.find('das') == -1 and k.find('_id') == -1 and k in existing_idx]
             skeys = [(k, ASCENDING) for k in keys]
