@@ -35,7 +35,7 @@ import DAS.utils.jsonwrapper as json
 from pymongo.objectid import ObjectId
 from pymongo.code import Code
 from pymongo import DESCENDING, ASCENDING
-from pymongo.errors import InvalidOperation
+from pymongo.errors import InvalidOperation, OperationFailure
 from bson.errors import InvalidDocument
 
 DOT = '.'
@@ -608,6 +608,23 @@ class DASMongocache(object):
         self.logger.info(msg)
         return res
 
+    def existing_indexes(self, collection='merge'):
+        """
+        Get list of existing indexes in DB. They are returned by index_information
+        API in the following for:
+
+        .. doctest::
+
+            {u'_id_': {u'key': [(u'_id', 1)], u'v': 0},
+             u'das.expire_1': {u'key': [(u'das.expire', 1)], u'v': 0},
+             ...
+             u'tier.name_-1': {u'key': [(u'tier.name', -1)], u'v': 0}}
+        """
+        col = self.mdb[collection]
+        for val in col.index_information().values():
+            for idx in val['key']:
+                yield idx[0] # index name
+
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc', 
                         collection='merge', adjust=True):
         """
@@ -651,6 +668,7 @@ class DASMongocache(object):
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
         skeys  = []
+        existing_idx = [i for i in self.existing_indexes(collection)]
         if  skey:
             if  order == 'asc':
                 skeys = [(skey, ASCENDING)]
@@ -658,7 +676,7 @@ class DASMongocache(object):
                 skeys = [(skey, DESCENDING)]
         else:
             keys = [k for k in spec.keys() \
-                if k.find('das') == -1 and k.find('_id') == -1]
+                if k.find('das') == -1 and k.find('_id') == -1 and k in existing_idx]
             skeys = [(k, ASCENDING) for k in keys]
         res = []
         try:

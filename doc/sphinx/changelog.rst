@@ -9,6 +9,7 @@ towards making DAS easy to use for end-users.
 
 - 0.7.X
 
+  - ticket #1727, issue with index/sort while geting records from the cache
   - revisit how to retrieve unique records from DAS cache
   - add DAS query builder into autocomplete
   - extend refex to support free-text based queries

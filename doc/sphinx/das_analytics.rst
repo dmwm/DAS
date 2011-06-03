@@ -1,4 +1,4 @@
-.. _das_analytcs:
+.. _das_analytics:
 
 DAS analytics
 =============
