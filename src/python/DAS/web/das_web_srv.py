@@ -203,7 +203,6 @@ class DASWebService(DASWebManager):
         self.dasconfig   = das_readconfig()
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.queue_limit = config.get('queue_limit', 50)
-        self.reqmgr      = RequestManager()
         if  self.engine:
             self.taskmgr = PluginTaskManager(bus=self.engine, nworkers=nworkers)
             self.taskmgr.subscribe()
@@ -230,6 +229,7 @@ class DASWebService(DASWebManager):
                 self.warning('Created %s.%s, size=%s' \
                 % (logdbname, logdbcoll, capped_size))
             self.logcol     = self.con[logdbname][logdbcoll]
+            self.reqmgr     = RequestManager(self.dburi)
             self.dasmgr     = DASCore(engine=self.engine)
             self.daskeys    = self.dasmgr.das_keys()
             self.gfs        = db_gridfs(self.dburi)
@@ -795,8 +795,9 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Content-Type'] = 'text/xml'
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        if  self.reqmgr.has_key(pid):
-            kwargs = self.reqmgr.get(pid)
+        doc = self.reqmgr.get(pid)
+        if  doc:
+            kwargs = doc
             if  self.taskmgr.is_alive(pid):
                 sec   = next/1000
                 page  = img + " processing PID=%s, " % pid

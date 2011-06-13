@@ -7,6 +7,10 @@ This release series is targeted to DAS usability. We collected users
 requests in terms of DAS functionality and usability. All changes made
 towards making DAS easy to use for end-users.
 
+- 0.8.X
+  - work on scalability of DAS web server
+  - ticket #1791
+
 - 0.7.X
 
   - ticket #1727, issue with index/sort while geting records from the cache
