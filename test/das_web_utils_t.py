@@ -111,6 +111,11 @@ class testDASWebUtils(unittest.TestCase):
         result = choose_select_key(query, keys)
         self.assertEqual(expect, result)
 
+        query  = 'file dataset=abc'
+        expect = 'file'
+        result = choose_select_key(query, keys)
+        self.assertEqual(expect, result)
+
 #
 # main
 #

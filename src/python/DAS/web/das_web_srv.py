@@ -42,6 +42,7 @@ from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 from DAS.web.autocomplete import autocomplete_helper
 from DAS.web.help_cards import help_cards
+from DAS.web.request_manager import RequestManager
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 
         'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
@@ -202,7 +203,7 @@ class DASWebService(DASWebManager):
         self.dasconfig   = das_readconfig()
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.queue_limit = config.get('queue_limit', 50)
-        self._requests   = {} # to hold incoming requests pid/kwargs
+        self.reqmgr      = RequestManager()
         if  self.engine:
             self.taskmgr = PluginTaskManager(bus=self.engine, nworkers=nworkers)
             self.taskmgr.subscribe()
@@ -603,7 +604,7 @@ class DASWebService(DASWebManager):
         Check number server load and report busy status if it's
         above threashold = queue size - nworkers
         """
-        nrequests = len(self._requests.keys())
+        nrequests = self.reqmgr.size()
         if  (nrequests - self.taskmgr.nworkers()) > self.queue_limit:
             return True
         return False
@@ -640,15 +641,12 @@ class DASWebService(DASWebManager):
             if  self.taskmgr.is_alive(pid):
                 return pid
             else: # process is done, get data
-                try:
-                    del self._requests[pid]
-                except:
-                    pass
+                self.reqmgr.remove(pid)
                 head, data = self.get_data(kwargs)
                 return self.datastream(dict(head=head, data=data))
         else:
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
-            self._requests[pid] = kwargs
+            self.reqmgr.add(pid, kwargs)
             return pid
 
     def get_page_content(self, kwargs):
@@ -706,7 +704,8 @@ class DASWebService(DASWebManager):
         new_input = free_text_parser(uinput, self.daskeys)
         if  new_input == uinput:
             selkey = choose_select_key(uinput, self.daskeys, 'dataset')
-            if  selkey:
+            if  selkey and len(new_input) > len(selkey) and \
+                new_input[:len(selkey)] != selkey:
                 new_input = selkey + ' ' + new_input
         kwargs['input'] = new_input
 
@@ -744,7 +743,7 @@ class DASWebService(DASWebManager):
             page = self.get_page_content(kwargs)
         else: 
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
-            self._requests[pid] = kwargs
+            self.reqmgr.add(pid, kwargs)
             if  self.taskmgr.is_alive(pid):
                 # no data in raw cache
                 img   = '<img src="%s/images/loading.gif" alt="loading"/>'\
@@ -768,7 +767,7 @@ class DASWebService(DASWebManager):
     def requests(self):
         """Return list of all current requests in DAS queue"""
         page = ""
-        for pid, kwds in self._requests.items():
+        for pid, kwds in self.reqmgr.items():
             page += '<li>%s<br/>%s</li>' % (pid, kwds)
         if  page:
             page = "<ul>%s</ul>" % page
@@ -796,8 +795,8 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Content-Type'] = 'text/xml'
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        if  self._requests.has_key(pid):
-            kwargs = self._requests[pid]
+        if  self.reqmgr.has_key(pid):
+            kwargs = self.reqmgr.get(pid)
             if  self.taskmgr.is_alive(pid):
                 sec   = next/1000
                 page  = img + " processing PID=%s, " % pid
@@ -806,10 +805,7 @@ class DASWebService(DASWebManager):
                 page += req
             else:
                 page  = self.get_page_content(kwargs)
-                try:
-                    del self._requests[pid]
-                except:
-                    pass
+                self.reqmgr.remove(pid)
         else:
             page = "Request %s not found, please reload the page" % pid
         page = ajax_response(page)

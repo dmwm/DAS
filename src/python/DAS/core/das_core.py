@@ -207,7 +207,7 @@ class DASCore(object):
     def adjust_query(self, query, add_to_analytics=True):
         """Check that provided query is indeed in MongoDB format"""
         err = '\nDASCore::result unable to load the input query: "%s"' % query
-        if  isinstance(query, str): # DAS-QL
+        if  isinstance(query, str) or isinstance(query, unicode): # DAS-QL
             try:
                 query = json.loads(query)
             except:

@@ -236,12 +236,16 @@ def checkargs(supported):
                 if  kwds['order'] not in ['asc', 'desc']:
                     code  = web_code('Unsupported order value')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'skey') and not isinstance(kwds['skey'], str):
-                code  = web_code('Unsupported skey value')
-                raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  kwds.has_key('input') and not isinstance(kwds['input'], str):
-                code  = web_code('Invalid input')
-                raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'skey'):
+                if  not (isinstance(kwds['skey'], str) or \
+                    isinstance(kwds['skey'], unicode)):
+                    code  = web_code('Unsupported skey value')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  kwds.has_key('input'):
+                if  not (isinstance(kwds['input'], str) or \
+                    isinstance(kwds['input'], unicode)):
+                    code  = web_code('Invalid input')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'idx') and not pat.match(str(kwds['idx'])):
                 code  = web_code('Unsupported idx value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
