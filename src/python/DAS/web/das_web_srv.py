@@ -218,13 +218,14 @@ class DASWebService(DASWebManager):
 
         # DBSDaemon thread
         self.dataset_daemon = config.get('dataset_daemon', False)
+        update_interval = config.get('dataset_daemon_interval', 3600)
         if  self.dataset_daemon:
             self.dbsmgr = DBSDaemon(self.dburi)
             def dbs_updater(interval):
                 while True:
                     self.dbsmgr.update()
                     time.sleep(interval)
-            thread.start_new_thread(dbs_updater, (3600, ))
+            thread.start_new_thread(dbs_updater, (update_interval, ))
 
     def init(self):
         """Init DAS web server, connect to DAS Core"""

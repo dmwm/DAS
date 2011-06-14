@@ -115,6 +115,8 @@ DASOption('web_server', 'adjust_input', 'bool', False),
 # DBS dataset daemon fetch list of known DBS datasets and keep them
 # in separate collection, to be used by DAS web server for autocompletion
 DASOption('web_server', 'dataset_daemon', 'bool', False),
+# DBS dataset daemon update interval in seconds
+DASOption('web_server', 'dataset_daemon_interval', 'int', 3600),
 
 #
 # DAS test server options

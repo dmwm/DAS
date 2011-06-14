@@ -8,6 +8,7 @@ Description: DBS daemon, which update DAS cache with DBS datasets
 
 # system modules
 import re
+import time
 import thread
 import urllib
 import urllib2
@@ -19,13 +20,13 @@ from pymongo import ASCENDING
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from DAS.utils.utils import qlxml_parser
+from DAS.utils.utils import qlxml_parser, dastimestamp
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.web.utils import db_monitor
 
 class DBSDaemon(object):
     """docstring for DBSDaemon"""
-    def __init__(self, dburi, dbname='dbs', dbcoll='datasets', cache_size=10000):
+    def __init__(self, dburi, dbname='dbs', dbcoll='datasets', cache_size=1000):
         self.dburi  = dburi
         self.dbname = dbname
         self.dbcoll = dbcoll
@@ -41,7 +42,9 @@ class DBSDaemon(object):
         try:
             conn = db_connection(self.dburi)
             self.col = conn[self.dbname][self.dbcoll]
-            create_indexes(self.col, [('dataset', ASCENDING)])
+            indexes = [('dataset', ASCENDING), ('ts', ASCENDING)]
+            create_indexes(self.col, indexes)
+            self.col.remove()
         except Exception, _exp:
             self.col = None
 
@@ -50,15 +53,24 @@ class DBSDaemon(object):
         Update DBS collection with a fresh copy of datasets
         """
         if  self.col:
-            self.col.remove()
+            time0 = time.time()
             gen = self.datasets()
-            try: # perform bulk insert operation
-                while True:
-                    if  not self.col.insert(itertools.islice(gen, self.cache_size)):
-                        break
-            except InvalidOperation:
-                pass
-            print "\n### DBSDaemon update is performed"
+            if  not self.col.count():
+                try: # perform bulk insert operation
+                    while True:
+                        if  not self.col.insert(\
+                                itertools.islice(gen, self.cache_size)):
+                            break
+                except InvalidOperation:
+                    pass
+            else: # we already have records, update their ts
+                for row in gen:
+                    spec = dict(dataset=row['dataset'])
+                    self.col.update(spec, {'$set':{'ts':time0}})
+            # remove records with old ts
+            self.col.remove({'ts':{'$lt':time0}})
+            print "%s DBSDaemon update is performed in %s sec, nrec=%s" \
+                % (dastimestamp(), time.time()-time0, self.col.count())
 
     def find(self, pattern, idx=0, limit=10):
         """
