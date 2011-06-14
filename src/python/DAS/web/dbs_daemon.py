@@ -8,6 +8,7 @@ Description: DBS daemon, which update DAS cache with DBS datasets
 
 # system modules
 import re
+import thread
 import urllib
 import urllib2
 import itertools
@@ -19,29 +20,46 @@ from pymongo import ASCENDING
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import xml_parser
-from DAS.utils.das_db import db_connection
-from DAS.utils.das_db import create_indexes
+from DAS.utils.das_db import db_connection, create_indexes
+from DAS.web.utils import db_monitor
 
 class DBSDaemon(object):
     """docstring for DBSDaemon"""
     def __init__(self, dburi, dbname='dbs', dbcoll='datasets', cache_size=10000):
-        self.con = db_connection(dburi)
-        self.col = self.con[dbname][dbcoll]
+        self.dburi  = dburi
+        self.dbname = dbname
+        self.dbcoll = dbcoll
         self.cache_size = cache_size
-        create_indexes(self.col, [('dataset', ASCENDING)])
+        self.init()
+        # Monitoring thread which performs auto-reconnection to MongoDB
+        thread.start_new_thread(db_monitor, (dburi, self.init))
+
+    def init(self):
+        """
+        Init db connection
+        """
+        try:
+            conn = db_connection(self.dburi)
+            self.col = conn[self.dbname][self.dbcoll]
+            create_indexes(self.col, [('dataset', ASCENDING)])
+            self.update()
+        except Exception, _exp:
+            self.col = None
 
     def update(self):
         """
         Update DBS collection with a fresh copy of datasets
         """
-        self.col.remove()
-        gen = self.datasets()
-        try: # perform bulk insert operation
-            while True:
-                if  not self.col.insert(itertools.islice(gen, self.cache_size)):
-                    break
-        except InvalidOperation:
-            pass
+        if  self.col:
+            self.col.remove()
+            gen = self.datasets()
+            try: # perform bulk insert operation
+                while True:
+                    if  not self.col.insert(itertools.islice(gen, self.cache_size)):
+                        break
+            except InvalidOperation:
+                pass
+            print "\n### DBSDaemon update is performed"
 
     def find(self, pattern, idx=0, limit=10):
         """
@@ -49,18 +67,19 @@ class DBSDaemon(object):
         control number of retrieved records (aka pagination). The
         limit=-1 means no pagination (get all records).
         """
-        if  pattern[0] == '/':
-            pattern = '^%s' % pattern
-        if  pattern.find('*') != -1:
-            pattern = pattern.replace('*', '.*')
-        pat  = re.compile('%s' % pattern, re.I)
-        spec = {'dataset':pat}
-        if  limit == -1:
-            for row in self.col.find(spec):
-                yield row['dataset']
-        else:
-            for row in self.col.find(spec).skip(idx).limit(limit):
-                yield row['dataset']
+        if  self.col:
+            if  pattern[0] == '/':
+                pattern = '^%s' % pattern
+            if  pattern.find('*') != -1:
+                pattern = pattern.replace('*', '.*')
+            pat  = re.compile('%s' % pattern, re.I)
+            spec = {'dataset':pat}
+            if  limit == -1:
+                for row in self.col.find(spec):
+                    yield row['dataset']
+            else:
+                for row in self.col.find(spec).skip(idx).limit(limit):
+                    yield row['dataset']
 
     def datasets(self):
         """
@@ -92,7 +111,7 @@ class DBSDaemon(object):
             yield row
         stream.close()
         
-def main():
+def test():
     uri = 'mongodb://localhost:8230'
     mgr = DBSDaemon(uri)
     mgr.update()
@@ -102,4 +121,4 @@ def main():
         print row
 
 if __name__ == '__main__':
-    main()        
+    test()        
