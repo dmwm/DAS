@@ -8,6 +8,8 @@ requests in terms of DAS functionality and usability. All changes made
 towards making DAS easy to use for end-users.
 
 - 0.8.X
+  - add dbs_daemon whose task to fetch all DBS dataset; this info
+    is stored into separte collection and can be used for autocompletion mode
   - work on scalability of DAS web server
   - ticket #1791
 

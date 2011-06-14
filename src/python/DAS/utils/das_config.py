@@ -112,6 +112,9 @@ DASOption('web_server', 'queue_limit', 'int', 50),
 # The adjust_input function can be implemented for concrete use case
 # In CMS we can adjust input values to regex certain things, like dataset/run/etc.
 DASOption('web_server', 'adjust_input', 'bool', False),
+# DBS dataset daemon fetch list of known DBS datasets and keep them
+# in separate collection, to be used by DAS web server for autocompletion
+DASOption('web_server', 'dataset_daemon', 'bool', False),
 
 #
 # DAS test server options

@@ -46,7 +46,6 @@ def autocomplete_helper(query, dasmgr, daskeys):
     if  len(qsplit) != 1:
         prev = ' '.join(qsplit[:-1])
     query = last_word
-#    print "\n### input=%s, last=%s, rel match=%s" % (uinput, query, PAT_RELEASE.match(query))
     if RE_DBSQL_0.match(query):
         #find...
         match1 = RE_DBSQL_1.match(query) 
@@ -157,9 +156,6 @@ def autocomplete_helper(query, dasmgr, daskeys):
                     for member in members:
                         result.append({'css': 'ac-info', 'value':'%s | grep %s' % (daskey, member),
                                        'info': 'Possible member match <b>%s</b> (for daskey <b>%s</b>)' % (member, daskey)})
-#                if not key_search:
-#                    result.append({'css': 'ac-error sign', 'value': '',
-#                                   'info': 'No matches found for <b>%s</b>.' % (subkey)})
         else:
             result.append({'css': 'ac-error sign', 'value': '',
                            'info': "Das queries should start with a top-level key. <b>%s</b> is not a valid DAS key." % daskey})
@@ -167,9 +163,6 @@ def autocomplete_helper(query, dasmgr, daskeys):
             for keys, members in key_search.items():
                 result.append({'css': 'ac-info', 'value': ' '.join(keys),
                                'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
-#            if not key_search:
-#                result.append({'css': 'ac-error sign', 'value': '',
-#                               'info': 'No matches found for <b>%s</b>.' % subkey})
                 
     elif PAT_RELEASE.match(query):
         if  query[0] == 'C': # CMS releases all starts with CMSSW
@@ -247,36 +240,10 @@ def autocomplete_helper(query, dasmgr, daskeys):
         result.append({'css': 'ac-warinig sign', 'value':'site=%s' % query,
                        'info':'''Seems like site query. The correct syntax is <b>site=TX_YY_ZZZ</b>'''})    
         result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
-    elif RE_KEYS.match(query):
-        keys = set()
-        for keymatch in RE_KEYS.findall(query):
-            if keymatch[0]:
-                keys.add(keymatch[0])
-            else:
-                keys.add(keymatch[2])
-        for key in keys:
-            if not key in daskeys:
-#                result.append({'css':'ac-error sign', 'value': '',
-#                               'info': 'Key <b>%s</b> is not known to DAS.' % key})
-                key_search = dasmgr.keylearning.key_search(query)
-                for keys, members in key_search.items():
-                    result.append({'css': 'ac-info', 'value': ' '.join(keys),
-                                   'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
-#                if not key_search:
-#                    result.append({'css': 'ac-error sign', 'value': '',
-#                                   'info': 'No matches found for <b>%s</b>.' % query})
-#                    result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     else:
         #we've no idea what you're trying to accomplish, do a search
         result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query,
                        'info': 'seems like dataset pattern'})
-#        key_search = dasmgr.keylearning.key_search(query)
-#        for keys, members in key_search.items():
-#            result.append({'css': 'ac-info', 'value': ' '.join(keys),
-#                           'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
-#        if not key_search:
-#            result.append({'css': 'ac-error sign', 'value': '',
-#                           'info': 'No matches found for <b>%s</b>.' % query})
         
     if  prev:
         new_result = []

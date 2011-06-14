@@ -43,6 +43,7 @@ from DAS.web.das_codes import web_code
 from DAS.web.autocomplete import autocomplete_helper
 from DAS.web.help_cards import help_cards
 from DAS.web.request_manager import RequestManager
+from DAS.web.dbs_daemon import DBSDaemon
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 
         'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
@@ -214,6 +215,16 @@ class DASWebService(DASWebManager):
         # Monitoring thread which performs auto-reconnection
         thread.start_new_thread(dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
+
+        # DBSDaemon thread
+        self.dataset_daemon = config.get('dataset_daemon', False)
+        if  self.dataset_daemon:
+            self.dbsmgr = DBSDaemon(self.dburi)
+            def dbs_updater(interval):
+                while True:
+                    self.dbsmgr.update()
+                    time.sleep(interval)
+            thread.start_new_thread(dbs_updater, (3600, ))
 
     def init(self):
         """Init DAS web server, connect to DAS Core"""
@@ -1097,4 +1108,10 @@ class DASWebService(DASWebManager):
         Provides autocomplete functionality for DAS web UI.
         """
         query = kwargs.get("query", "").strip()
-        return autocomplete_helper(query, self.dasmgr, self.daskeys)
+        result = autocomplete_helper(query, self.dasmgr, self.daskeys)
+        if  self.dataset_daemon:
+            for row in self.dbsmgr.find(query):
+                result.append({'css': 'ac-info', 'value': 'dataset=%s' % row,
+                               'info': 'dataset'})
+        return result
+
