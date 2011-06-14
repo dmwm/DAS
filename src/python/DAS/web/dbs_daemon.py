@@ -19,7 +19,7 @@ from pymongo import ASCENDING
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from DAS.utils.utils import xml_parser
+from DAS.utils.utils import qlxml_parser
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.web.utils import db_monitor
 
@@ -42,7 +42,6 @@ class DBSDaemon(object):
             conn = db_connection(self.dburi)
             self.col = conn[self.dbname][self.dbcoll]
             create_indexes(self.col, [('dataset', ASCENDING)])
-            self.update()
         except Exception, _exp:
             self.col = None
 
@@ -86,14 +85,16 @@ class DBSDaemon(object):
         Retrieve a list of DBS datasets (DBS2)
         """
         url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
-        params = {'api': 'listDatasetPaths', 'user_type': 'NORMAL', 'apiversion': 'DBS_2_0_9'}
+        query = 'find dataset,dataset.status'
+        params = {'api': 'executeQuery', 'apiversion': 'DBS_2_0_9', 'query':query}
         encoded_data = urllib.urlencode(params, doseq=True)
         url = url + '?' + encoded_data
         req = urllib2.Request(url)
         stream = urllib2.urlopen(req)
-        gen = xml_parser(stream, 'processed_dataset')
+        gen = qlxml_parser(stream, 'dataset')
         for row in gen:
-            yield dict(dataset=row['processed_dataset']['path'])
+            if  row['dataset']['dataset.status'] == 'VALID':
+                yield dict(dataset=row['dataset']['dataset'])
         stream.close()
 
     def dbs3_datasets(self):
