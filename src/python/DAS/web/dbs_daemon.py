@@ -68,7 +68,8 @@ class DBSDaemon(object):
                     spec = dict(dataset=row['dataset'])
                     self.col.update(spec, {'$set':{'ts':time0}})
             # remove records with old ts
-            self.col.remove({'ts':{'$lt':time0}})
+            old = 4*60*60 # 4 hours
+            self.col.remove({'ts':{'$lt':time0-old}})
             print "%s DBSDaemon update is performed in %s sec, nrec=%s" \
                 % (dastimestamp(), time.time()-time0, self.col.count())
 

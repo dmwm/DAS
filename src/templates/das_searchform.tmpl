@@ -125,10 +125,13 @@ function ac_select_change() {
 var initial_status = (YAHOO.util.Cookie.get("autocomplete") != "false"); 
 
 if (initial_status) { 
-	set_autocomplete(initial_status);
+	set_autocomplete("true");
 	\$("ac_enable").value = "true";
+        YAHOO.util.Cookie.set("autocomplete", "true");
 } else {
+	set_autocomplete("false");
 	\$("ac_enable").value = "false";
+        YAHOO.util.Cookie.set("autocomplete", "false");
 }
 //]]>
 </script>
