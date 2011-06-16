@@ -177,16 +177,18 @@ dataset dataset=/Cosmics/Run2010B* site=T1_US_FNAL
 
     card = """
 <h3 class="big">Help: Free text based queries</h3>
-As a convenience DAS supports free text based queries, e.g.
+If you type free text based query, e.g.
 <pre>
-Zee
 Zee CMSSW_3
-160915
 </pre>
-This is done via regular expression matching to
-appropriate DAS <b>key=value</b> pairs, which will displayed in the input field.
-<b>Please be aware</b> that DAS queries are case-sensitive due to underlying 
-restrictions from participated data-services.
+DAS will match provided keywords with
+appropriate DAS <b>key=value</b> pairs which will displayed in the input field,
+in this case 
+<pre>dataset=*Zee* release=CMSSW_3*</pre>
+<b>Please note:</b> DAS queries are case-sensitive due to underlying 
+restrictions from participated data-services, but in
+<b>autocompletion</b> mode DAS will apply case-insensitive searches for
+all valid datasets to find your match.
 """
     card += hide
     card_list.append(card)
