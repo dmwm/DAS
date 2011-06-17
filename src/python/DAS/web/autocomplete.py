@@ -194,52 +194,65 @@ def autocomplete_helper(query, dasmgr, daskeys):
     elif PAT_SE.match(query):
         result.append({'css': 'ac-info', 'value': 'site=%s*' % query, 'info': 'seems like SE'})
     elif RE_K_SITE.match(query):
-        result.append({'css': 'ac-info', 'value': 'site=', 'info': 'Valid DAS key: site'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: site'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_FILE.match(query):
-        result.append({'css': 'ac-info', 'value': 'file=', 'info': 'Valid DAS key: file'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: file'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_PR_DATASET.match(query):
-        result.append({'css': 'ac-info', 'value': 'primary_dataset=', 'info': 'Valid DAS key: primary_dataset'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: primary_dataset'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_JOBSUMMARY.match(query):
-        result.append({'css': 'ac-info', 'value': 'jobsummary=', 'info': 'Valid DAS key: jobsummary'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: jobsummary'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_MONITOR.match(query):
-        result.append({'css': 'ac-info', 'value': 'monitor=', 'info': 'Valid DAS key: monitor'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: monitor'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_TIER.match(query):
-        result.append({'css': 'ac-info', 'value': 'tier=', 'info': 'Valid DAS key: tier'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: tier'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_RELEASE.match(query):
-        result.append({'css': 'ac-info', 'value': 'release=', 'info': 'Valid DAS key: release'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': release, 'info': 'Valid DAS key: release'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_CONFIG.match(query):
-        result.append({'css': 'ac-info', 'value': 'config=', 'info': 'Valid DAS key: config'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: config'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_GROUP.match(query):
-        result.append({'css': 'ac-info', 'value': 'group=', 'info': 'Valid DAS key: group'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: group'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_CHILD.match(query):
-        result.append({'css': 'ac-info', 'value': 'child=', 'info': 'Valid DAS key: child'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: child'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_PARENT.match(query):
-        result.append({'css': 'ac-info', 'value': 'parent=', 'info': 'Valid DAS key: parent'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: parent'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_DATASET.match(query):
-        result.append({'css': 'ac-info', 'value': 'dataset=', 'info': 'Valid DAS key: dataset'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: dataset'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_RUN.match(query):
-        result.append({'css': 'ac-info', 'value': 'run=', 'info': 'Valid DAS key: run'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: run'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_BLOCK.match(query):
-        result.append({'css': 'ac-info', 'value': 'block=', 'info': 'Valid DAS key: block'})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: block'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_DATASET.match(query):
         #/something...
-        result.append({'css': 'ac-warinig sign', 'value':'dataset=%s' % query,
-                       'info':'''Seems like dataset query. The correct syntax is <b>dataset=/some/dataset</b>'''})
-        result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+        result.append({'css': 'ac-warinig sign', 'value': query,
+                       'info':'''Seems like dataset query'''})
     elif RE_SITE.match(query):
         #T{0123}_...
         result.append({'css': 'ac-warinig sign', 'value':'site=%s' % query,

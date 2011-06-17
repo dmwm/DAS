@@ -33,7 +33,7 @@ def dastimestamp():
     Return timestamp in pre-defined format. For simplicity we match
     cherrypy date format.
     """
-    tstamp = time.strftime("[%d/%b/%Y:%H:%M:%S]", time.localtime())
+    tstamp = time.strftime("DAS [%d/%b/%Y:%H:%M:%S]", time.localtime())
     return tstamp
 
 def parse_filters(query):

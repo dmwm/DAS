@@ -20,7 +20,8 @@ def word_chars(word):
     '^d$|^da$|^dat$|^data$|^datas$|^datase$|^dataset$'
     which can be used later in regular expressions
     """
-    return r'|'.join(['^%s$' % word[:x+1] for x in range(len(word))])
+    return r'|'.join(['^%s$' % word[:x+1] for x in range(len(word))])\
+        + '|^%s=' % word
 
 ip_address_pattern = \
     re.compile(r"^([0-9]{1,3}\.){3,3}[0-9]{1,3}$")

@@ -21,11 +21,11 @@ from   bson.code import Code
 from   DAS.utils.das_db import db_connection, create_indexes
 from   DAS.utils.url_utils import getdata
 from   DAS.web.tools import exposejson
-from   DAS.utils.utils import qlxml_parser
+from   DAS.utils.utils import qlxml_parser, dastimestamp
 import DAS.utils.jsonwrapper as json
 
 PAT = re.compile("^T[0-3]_")
-
+        
 def datasets_dbs3(urls, verbose=0):
     """
     Retrieve list of datasets from DBS and compare each of them
@@ -62,8 +62,9 @@ def datasets(urls, verbose=0):
     url     = urls.get('dbs')
     query   = 'find dataset,dataset.tier,dataset.era where dataset.status like VALID*'
     params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
-    data, _ = getdata(url, params, headers, verbose=verbose)
-    records = qlxml_parser(data, 'dataset')
+    stream, _ = getdata(url, params, headers, verbose=verbose)
+    records = [r for r in qlxml_parser(stream, 'dataset')]
+    stream.close()
     data = {}
     size = 10 # size for POST request to Phedex
     for row in records:
@@ -78,7 +79,7 @@ def datasets(urls, verbose=0):
     if  data:
         for rec in dataset_info(urls, data):
             yield rec
-    data.close()
+    del records
 
 def dataset_info(urls, datasetdict, verbose=0):
     """
@@ -117,16 +118,17 @@ def update_db(urls, uri, db_name, coll_name):
     """
     Update DB info with dataset info.
     """
+    tst  = time.time()
     conn = db_connection(uri)
     if  conn:
         coll = conn[db_name][coll_name]
-        coll.drop()
         for dataset in datasets(urls):
-            coll.insert(dataset)
-        record = {'timestamp':time.time()}
-        coll.insert(record)
+            dataset.update({'timestamp':tst})
+            spec = dict(name=dataset['name'])
+            coll.update(spec, dataset, upsert=True)
     else:
         raise AutoReconnect('could not establish connection')
+    coll.remove({'timestamp': {'$lt': tst}})
 
 def find_dataset(coll, site, operation="mapreduce"):
     """
@@ -205,11 +207,14 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
     """
     conn_interval = 3 # default connection failure sleep interval
     threshold = 60 # 1 minute is threashold to check connections
+    time0 = time.time()
     while True:
         if  conn_interval > threshold:
             conn_interval = threshold
         try:
             update_db(urls, uri, db_name, coll_name)
+            print "%s update dbs_phedex DB %s sec" \
+                % (dastimestamp(), time.time()-time0)
             time.sleep(interval)
         except AutoReconnect, err:
             print "WARNING (dbs_phedex worker): %s" % str(err)
@@ -240,7 +245,7 @@ class DBSPhedexService(object):
     """DBSPhedexService"""
     def __init__(self, uri, urls):
         super(DBSPhedexService, self).__init__()
-        self.dbname   = 'db'
+        self.dbname   = 'dbs_phedex'
         self.collname = 'datasets'
         self.expired  = 1*60*60 # 1 hour
         self.uri      = uri
