@@ -4,6 +4,7 @@
 DAS DBS/Phedex combined service to fetch dataset/site information.
 """
 
+# system modules
 import re
 import time
 import thread
@@ -11,50 +12,30 @@ import urllib
 import urllib2
 import cherrypy
 
-from pymongo import Connection, DESCENDING
-from pymongo.connection import AutoReconnect
-from bson.code import Code
+# pymongo modules
+from   pymongo import Connection, DESCENDING
+from   pymongo.connection import AutoReconnect
+from   bson.code import Code
 
+# DAS modules
+from   DAS.utils.das_db import db_connection, create_indexes
+from   DAS.utils.url_utils import getdata
+from   DAS.web.tools import exposejson
+from   DAS.utils.utils import qlxml_parser
 import DAS.utils.jsonwrapper as json
-from DAS.utils.das_db import db_connection, create_indexes
-from DAS.web.tools import exposejson
 
 PAT = re.compile("^T[0-3]_")
 
-def getdata(url, params, headers=None, post=None, verbose=0):
-    """
-    Invoke URL call and retrieve data from data-service based
-    on provided URL and set of parameters. Use post=True to
-    invoke POST request.
-    """
-    encoded_data = urllib.urlencode(params, doseq=True)
-    if  not post:
-        url = url + '?' + encoded_data
-    if  not headers:
-        headers = {}
-    req = urllib2.Request(url)
-    for key, val in headers.items():
-        req.add_header(key, val)
-    if  verbose > 1:
-        handler = urllib2.HTTPHandler(debuglevel=1)
-        opener  = urllib2.build_opener(handler)
-        urllib2.install_opener(opener)
-    if  post:
-        data = urllib2.urlopen(req, encoded_data)
-    else:
-        data = urllib2.urlopen(req)
-    return data
-
-def datasets(urls, verbose=0):
+def datasets_dbs3(urls, verbose=0):
     """
     Retrieve list of datasets from DBS and compare each of them
     wrt list in MongoDB.
     """
     headers = {'Accept':'application/json;text/json'}
     records = []
-    url = urls.get('dbs')
-    params = {'detail':'True', 'dataset_access_type':'PRODUCTION'}
-    data = getdata(url, params, headers, verbose=verbose)
+    url     = urls.get('dbs')
+    params  = {'detail':'True', 'dataset_access_type':'PRODUCTION'}
+    data, _ = getdata(url, params, headers, verbose=verbose)
     records = json.load(data)
     data.close()
     data = {}
@@ -71,6 +52,34 @@ def datasets(urls, verbose=0):
         for rec in dataset_info(urls, data):
             yield rec
 
+def datasets(urls, verbose=0):
+    """
+    Retrieve list of datasets from DBS and compare each of them
+    wrt list in MongoDB.
+    """
+    headers = {'Accept':'application/xml;text/xml'}
+    records = []
+    url     = urls.get('dbs')
+    query   = 'find dataset,dataset.tier,dataset.era where dataset.status like VALID*'
+    params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
+    data, _ = getdata(url, params, headers, verbose=verbose)
+    records = qlxml_parser(data, 'dataset')
+    data = {}
+    size = 10 # size for POST request to Phedex
+    for row in records:
+        dataset = row['dataset']
+        if  not data.has_key(dataset['dataset']):
+            data[dataset['dataset']] = \
+            dict(era=dataset['dataset.era'], tier=dataset['dataset.tier'])
+        if  len(data.keys()) > size:
+            for rec in dataset_info(urls, data):
+                yield rec
+            data = {}
+    if  data:
+        for rec in dataset_info(urls, data):
+            yield rec
+    data.close()
+
 def dataset_info(urls, datasetdict, verbose=0):
     """
     Request blockReplicas information from Phedex for a given
@@ -81,7 +90,7 @@ def dataset_info(urls, datasetdict, verbose=0):
     url = urls.get('phedex')
     params = {'dataset': [d for d in datasetdict.keys()]}
     headers = {'Accept':'application/json;text/json'}
-    data = getdata(url, params, headers, post=True, verbose=verbose)
+    data, _ = getdata(url, params, headers, post=True, verbose=verbose)
     jsondict = json.load(data)
     data.close()
     for row in jsondict['phedex']['block']:
@@ -300,7 +309,8 @@ class DBSPhedexService(object):
 def main():
     """Test main function"""
     uri = 'mongodb://localhost:8230'
-    urls = {'dbs':'http://localhost:8989/dbs/DBSReader/datasets',
+#    urls = {'dbs':'http://localhost:8989/dbs/DBSReader/datasets',
+    urls = {'dbs':'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet',
     'phedex':'https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockReplicas'}
     cherrypy.quickstart(DBSPhedexService(uri, urls), '/')
 

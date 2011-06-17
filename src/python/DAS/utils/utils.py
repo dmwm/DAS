@@ -1421,4 +1421,3 @@ def filter_with_filters(rows, filters):
         flist = [(f, ddict._get(f)) for f in filters]
         for idx in flist:
             yield idx
-

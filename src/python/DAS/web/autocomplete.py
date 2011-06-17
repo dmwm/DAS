@@ -175,9 +175,14 @@ def autocomplete_helper(query, dasmgr, daskeys):
         result.append({'css': 'ac-info', 'value': 'tier=*%s*' % query, 'info': 'seems like data tier'})
         result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif PAT_SLASH.match(query):
-        result.append({'css': 'ac-info', 'value': 'block=%s*' % query, 'info': 'seems like block name'})
-        result.append({'css': 'ac-info', 'value': 'file=%s*' % query, 'info': 'seems like file pattern'})
-        result.append({'css': 'ac-info', 'value': 'dataset=%s*' % query, 'info': 'seems like dataset pattern'})
+        if  PAT_FILE.match(query):
+            result.append({'css': 'ac-info', 'value': 'file=%s*' % query, 'info': 'seems like file pattern'})
+        elif PAT_BLOCK.match(query):
+            result.append({'css': 'ac-info', 'value': 'block=%s*' % query, 'info': 'seems like block name'})
+        else:
+            result.append({'css': 'ac-info', 'value': 'block=%s*' % query, 'info': 'seems like block name'})
+            result.append({'css': 'ac-info', 'value': 'file=%s*' % query, 'info': 'seems like file pattern'})
+            result.append({'css': 'ac-info', 'value': 'dataset=%s*' % query, 'info': 'seems like dataset pattern'})
     elif PAT_RUN.match(query):
         result.append({'css': 'ac-info', 'value': 'run=%s*' % query, 'info': 'seems like run number'})
     elif PAT_DATATYPE.match(query):

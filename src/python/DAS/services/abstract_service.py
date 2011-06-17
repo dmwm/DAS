@@ -27,6 +27,7 @@ from DAS.utils.utils import xml_parser, json_parser, plist_parser
 from DAS.utils.utils import yield_rows, expire_timestamp
 from DAS.core.das_mongocache import compare_specs, encode_mongo_query
 from DAS.utils.das_timer import das_timer
+from DAS.utils.url_utils import getdata
 from DAS.utils.das_db import db_gridfs, parse2gridfs
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_core import dasheader
@@ -131,68 +132,16 @@ class DASAbstractService(object):
         return self._notations
 
     def getdata(self, url, params, expire, headers=None, post=None):
-        """
-        Invoke URL call and retrieve data from data-service based
-        on provided URL and set of parameters. Use post=True to
-        invoke POST request.
-        """
-        timer_key = '%s %s?%s' \
-            % (self.name, url, urllib.urlencode(params, doseq=True))
-        das_timer(timer_key, self.verbose)
-        host = url.replace('http://', '').split('/')[0]
-        input_params = params
-        encoded_data = urllib.urlencode(params, doseq=True)
-        if  not post:
-            url = url + '?' + encoded_data
-        if  not headers:
-            headers = {}
-        msg = 'DASAbstractService::%s::getdata, url=%s, headers=%s' \
-                % (self.name, url, headers)
-        self.logger.info("\n")
-        self.logger.info(msg)
-        req = urllib2.Request(url)
-        for key, val in headers.items():
-            req.add_header(key, val)
-        if  self.verbose > 1:
-            handler = urllib2.HTTPHandler(debuglevel=1)
-            opener  = urllib2.build_opener(handler)
-            urllib2.install_opener(opener)
-        try:
-            if  post:
-                data = urllib2.urlopen(req, encoded_data)
-            else:
-                data = urllib2.urlopen(req)
-        except urllib2.HTTPError, httperror:
-            msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
-                        % (url, params, headers)
-            self.logger.error(msg + '\n' + traceback.format_exc())
-            data = {'error': msg}
-            try:
-                err  = httperror.read()
-                data.update({'httperror':extract_http_error(err)})
-            except:
-                data.update({'httperror': None})
-                pass
-            data = str(data)
-            expire = expire_timestamp(self.error_expire)
-        except:
-            msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
-                        % (url, params, headers)
-            self.logger.error(msg + '\n' + traceback.format_exc())
-            data = {'error': msg, 
-                    'reason': 'Unable to invoke HTTP call to data-service'}
-            data = json.dumps(data)
-            expire = expire_timestamp(self.error_expire)
-        das_timer(timer_key, self.verbose)
-        return data, expire
+        """URL call wrapper"""
+        return getdata(url, params, headers, expire, post, 
+                        self.error_expire, self.verbose)
 
     def call(self, query):
         """
         Invoke service API to execute given query.
         Return results as a collect list set.
         """
-        msg = 'DASAbstractService::%s::call(%s)' \
-                % (self.name, query)
+        msg = 'DASAbstractService::%s::call(%s)' % (self.name, query)
         self.logger.info(msg)
 
         # check the cache for records with given query/system
@@ -540,18 +489,6 @@ class DASAbstractService(object):
                                           api, args, expire)
             headers = make_headers(dformat)
             data, expire = self.getdata(url, args, expire, headers)
-# TODO: need more time to investigate how to use correctly HTTP Header expire
-# timestamp. The problem is that such timestamp can differ significantly from
-# the ones I assign in maps, which leads to large gaps between data records
-# expire timestamps, e.g. phedex block info can expire in 10 min, while DBS 
-# will stay in 1 hour.
-#            try: # get HTTP header and look for Expires
-#                e_time = expire_timestamp(\
-#                    data.info().__dict__['dict']['expires'])
-#                if  e_time > time.time():
-#                    expire = e_time
-#            except:
-#                pass
             rawrows = self.parser(query, dformat, data, api)
             dasrows = self.translator(api, rawrows)
             dasrows = self.set_misses(query, api, dasrows)

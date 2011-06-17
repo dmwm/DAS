@@ -8,6 +8,11 @@ requests in terms of DAS functionality and usability. All changes made
 towards making DAS easy to use for end-users.
 
 - 0.8.X
+  - add TFC Phedex API
+  - add HTTP Expires handling into getdata
+  - made a new module utils/url_utils.py to keep url related functions in
+    one place; remove duplicate getdata implementation in combined/dbs_phedex
+    module
   - add dbs_daemon whose task to fetch all DBS dataset; this info
     is stored into separte collection and can be used for autocompletion mode
   - work on scalability of DAS web server

@@ -57,7 +57,8 @@ class PhedexService(DASAbstractService):
                 if  val == '*':
                     del kwds[key]
         if  kwds.has_key('node') and kwds['node'].find('*') == -1:
-            kwds['node'] = kwds['node'] + '*'
+            if  not api == 'tfc':
+                kwds['node'] = kwds['node'] + '*'
 
     def parser(self, query, dformat, source, api):
         """
@@ -100,6 +101,8 @@ class PhedexService(DASAbstractService):
             prim_key = 'node'
         elif api == 'lfn2pfn':
             prim_key = 'mapping'
+        elif api == 'tfc':
+            prim_key = 'storage-mapping'
         else:
             msg = 'PhedexService::parser, unsupported %s API %s' \
                 % (self.name, api)
