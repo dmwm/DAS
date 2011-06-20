@@ -114,9 +114,11 @@ DASOption('web_server', 'queue_limit', 'int', 50),
 DASOption('web_server', 'adjust_input', 'bool', False),
 # DBS dataset daemon fetch list of known DBS datasets and keep them
 # in separate collection, to be used by DAS web server for autocompletion
-DASOption('web_server', 'dataset_daemon', 'bool', False),
+DASOption('web_server', 'dbs_daemon', 'bool', False),
 # DBS dataset daemon update interval in seconds
-DASOption('web_server', 'dataset_daemon_interval', 'int', 3600),
+DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
+# DBS dataset daemon url (to easy distinguish DBS2/DBS3 system)
+DASOption('web_server', 'dbs_daemon_url', 'string', 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'),
 
 #
 # DAS test server options

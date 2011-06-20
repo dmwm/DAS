@@ -217,10 +217,11 @@ class DASWebService(DASWebManager):
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
 
         # DBSDaemon thread
-        self.dataset_daemon = config.get('dataset_daemon', False)
-        update_interval = config.get('dataset_daemon_interval', 3600)
+        self.dataset_daemon = config.get('dbs_daemon', False)
+        self.dbs_daemon_url = config.get('dbs_daemon_url', False)
+        update_interval = config.get('dbs_daemon_interval', 3600)
         if  self.dataset_daemon:
-            self.dbsmgr = DBSDaemon(self.dburi)
+            self.dbsmgr = DBSDaemon(self.dbs_daemon_url, self.dburi)
             def dbs_updater(interval):
                 while True:
                     self.dbsmgr.update()
