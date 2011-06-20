@@ -8,6 +8,10 @@ requests in terms of DAS functionality and usability. All changes made
 towards making DAS easy to use for end-users.
 
 - 0.8.X
+  - fix getdata to assign proper timestamp in case of mis-behaved data-services
+    ticket #1841
+  - add dbs_daemon configuration into DAS config, which handles DBS
+    parameters for DBSDaemon (useful for testing DBS2/DBS3)
   - add TFC Phedex API
   - add HTTP Expires handling into getdata
   - made a new module utils/url_utils.py to keep url related functions in

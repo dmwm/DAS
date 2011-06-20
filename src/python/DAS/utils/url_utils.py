@@ -41,14 +41,18 @@ def getdata(url, params, headers=None, expire=3600, post=None,
         opener  = urllib2.build_opener(handler)
         urllib2.install_opener(opener)
     try:
+        time0 = time.time()
         if  post:
             data = urllib2.urlopen(req, encoded_data)
         else:
             data = urllib2.urlopen(req)
+        data_srv_time = time.time()-time0
         try: # get HTTP header and look for Expires
             e_time = expire_timestamp(\
                 data.info().__dict__['dict']['expires'])
-            if  e_time > time.time():
+            if  e_time < expire_timestamp(data_srv_time):
+                expire = max(e_time, expire_timestamp(expire))
+            elif e_time > time.time():
                 expire = e_time
         except Exception as _exp:
             pass
