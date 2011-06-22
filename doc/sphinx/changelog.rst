@@ -8,6 +8,7 @@ requests in terms of DAS functionality and usability. All changes made
 towards making DAS easy to use for end-users.
 
 - 0.8.X
+  - Make DBSDaemon be aware of different DBS instances, ticket #1857
   - fix getdata to assign proper timestamp in case of mis-behaved data-services
     ticket #1841
   - add dbs_daemon configuration into DAS config, which handles DBS

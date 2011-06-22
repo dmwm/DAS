@@ -77,6 +77,10 @@ autocompletion
 <script type="text/javascript">
 //<![CDATA[
 updateInput('$input');
+function dbs_inst() {
+   var doc = document.getElementById('instance');
+   return doc.value;
+}
 
 ac = null;
 ac_datasrc = null;
@@ -107,6 +111,9 @@ function set_autocomplete(enable) {
 		};
 		ac.applyLocalFilter = false;
 		ac.queryMatchContains = false;
+                ac.generateRequest = function(sQuery) {
+                    return '?dbs_instance='+dbs_inst()+'&query='+sQuery;
+                };
 	} else {
 		if (! (ac === undefined || ac === null)) {
 			ac.destroy();

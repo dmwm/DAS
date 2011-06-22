@@ -218,15 +218,21 @@ class DASWebService(DASWebManager):
 
         # DBSDaemon thread
         self.dataset_daemon = config.get('dbs_daemon', False)
-        self.dbs_daemon_url = config.get('dbs_daemon_url', False)
-        update_interval = config.get('dbs_daemon_interval', 3600)
+        self.dbs_urls = config.get('dbs_daemon_urls', [])
+        interval = config.get('dbs_daemon_interval', 3600)
+        self.dbsmgr = {} # dbs_urls vs dbs_daemons
         if  self.dataset_daemon:
-            self.dbsmgr = DBSDaemon(self.dbs_daemon_url, self.dburi)
-            def dbs_updater(interval):
-                while True:
-                    self.dbsmgr.update()
-                    time.sleep(interval)
-            thread.start_new_thread(dbs_updater, (update_interval, ))
+            for dbs_url in self.dbs_urls:
+                cname  = genkey(dbs_url) # collection name
+                dbsmgr = DBSDaemon(dbs_url, self.dburi, dbcoll=cname)
+                self.dbsmgr[dbs_url] = dbsmgr
+                def dbs_updater(_dbsmgr, interval):
+                    while True:
+                        _dbsmgr.update()
+                        time.sleep(interval)
+                print "Start DBSDaemon for %s, collection %s" \
+                        % (dbs_url, cname)
+                thread.start_new_thread(dbs_updater, (dbsmgr, interval, ))
 
     def init(self):
         """Init DAS web server, connect to DAS Core"""
@@ -1104,16 +1110,22 @@ class DASWebService(DASWebManager):
         return result
 
     @exposedasjson
-    @checkargs(['query'])
+    @checkargs(['query', 'dbs_instance'])
     def autocomplete(self, **kwargs):
         """
         Provides autocomplete functionality for DAS web UI.
         """
+        print "\n### autocomplete", kwargs
         query = kwargs.get("query", "").strip()
         result = autocomplete_helper(query, self.dasmgr, self.daskeys)
+        dbsinst = kwargs.get('dbs_instance', 'cms_dbs_prod_global')
         if  self.dataset_daemon:
-            for row in self.dbsmgr.find(query):
-                result.append({'css': 'ac-info', 'value': 'dataset=%s' % row,
-                               'info': 'dataset'})
+            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(dbsinst) != -1]
+            if  len(dbs_urls) == 1:
+                dbsmgr = self.dbsmgr[dbs_urls[0]]
+                for row in dbsmgr.find(query):
+                    result.append({'css': 'ac-info',
+                                   'value': 'dataset=%s' % row,
+                                   'info': 'dataset'})
         return result
 

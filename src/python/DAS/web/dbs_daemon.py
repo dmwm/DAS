@@ -76,8 +76,8 @@ class DBSDaemon(object):
             # remove records with old ts
             old = 4*60*60 # 4 hours
             self.col.remove({'ts':{'$lt':time0-old}})
-            print "%s DBSDaemon update is performed in %s sec, nrec=%s" \
-                % (dastimestamp(), time.time()-time0, self.col.count())
+            print "%s DBSDaemon updated in %s sec, collection=%s, nrec=%s" \
+            % (dastimestamp(), self.dbcoll, time.time()-time0, self.col.count())
 
     def find(self, pattern, idx=0, limit=10):
         """
