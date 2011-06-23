@@ -14,7 +14,7 @@ from DAS.utils.regex import RE_HASPIPE, RE_PIPECMD, RE_AGGRECMD
 from DAS.utils.regex import RE_FILTERCMD, RE_K_SITE, RE_K_FILE
 from DAS.utils.regex import RE_K_PR_DATASET, RE_K_PARENT, RE_K_CHILD
 from DAS.utils.regex import RE_K_CONFIG, RE_K_GROUP, RE_K_DATASET
-from DAS.utils.regex import RE_K_BLOCK, RE_K_RUN, RE_K_RELEASE
+from DAS.utils.regex import RE_K_BLOCK, RE_K_RUN, RE_K_RELEASE, RE_K_STATUS
 from DAS.utils.regex import RE_K_TIER, RE_K_MONITOR, RE_K_JOBSUMMARY
 from DAS.utils.regex import PAT_RELEASE, PAT_TIERS, PAT_SITE, PAT_SE
 from DAS.utils.regex import PAT_BLOCK, PAT_RUN, PAT_FILE, PAT_DATATYPE
@@ -247,6 +247,10 @@ def autocomplete_helper(query, dasmgr, daskeys):
             result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_BLOCK.match(query):
         result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: block'})
+        if  query.find('=') == -1:
+            result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
+    elif RE_K_STATUS.match(query):
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: status'})
         if  query.find('=') == -1:
             result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_DATASET.match(query):

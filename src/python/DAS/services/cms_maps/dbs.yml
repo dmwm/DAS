@@ -7,13 +7,15 @@ url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
      "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
-     "status":"",
+     "status":"", "dataset":""
 }
 daskeys : [
     {"key":"status", "map":"status.name", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
 ]
 das2api : [
     {"das_key":"status.name", "api_param":"status", "pattern":""},
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
 ]
 ---
 urn : fakeRelease4Dataset

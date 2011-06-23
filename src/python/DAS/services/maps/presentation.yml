@@ -185,6 +185,7 @@ config : [
         {"das":"config.type", "ui":"Type"}, 
         {"das":"config.version", "ui":"Version"}, 
         ],
+status: [],
 das_query : [
         {"das":"das_query.dasquery", "ui":"DAS query"},
         {"das":"das_query.counter", "ui":"Number of calls"},

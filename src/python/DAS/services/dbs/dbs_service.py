@@ -54,6 +54,12 @@ class DBSService(DASAbstractService):
                 'find dataset.status where dataset.status=%s' % val
             else:
                 kwds['query'] = 'find dataset.status'
+            val = kwds['dataset']
+            if  val:
+                if  kwds['query'].find(' where ') != -1:
+                    kwds['query'] += ' and dataset=%s' % val
+                else:
+                    kwds['query'] += ' where dataset=%s' % val
             kwds.pop('status')
         if  api == 'listPrimaryDatasets':
             pat = kwds['pattern']
