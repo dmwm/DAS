@@ -61,7 +61,7 @@ autocompletion
 <td class="right">
 &nbsp;
 <input type="submit" value="Search" class="btn borders" />
-<input type="reset" class="btn borders" onclick="javascript:set_autocomplete('true')" />
+<input type="button" class="btn borders" onclick="javascript:ac_init()" value="Reset" />
 </td>
 </tr>
 </table>
@@ -86,7 +86,7 @@ ac = null;
 ac_datasrc = null;
 
 function set_autocomplete(enable) {
-	if (enable == "true") {
+	if (enable) {
                 YAHOO.util.Cookie.set("autocomplete", "true");
 		ac_datasrc = new YAHOO.util.XHRDataSource("$base/autocomplete");
 		ac_datasrc.responseType = YAHOO.util.XHRDataSource.TYPE_JSARRAY;
@@ -128,13 +128,20 @@ function set_autocomplete(enable) {
 function ac_select_change() {
     var enable = (\$("ac_enable").value == "true");
     set_autocomplete(enable);
-    YAHOO.util.Cookie.set("autocomplete", enable);
 };
 function ac_init() {
-    var ac_cookie = YAHOO.util.Cookie.get("autocomplete");
+    // clear input field
+    var doc = document.getElementById('input');
+    doc.value = "";
+    // get cookie for autocomplete and follow its value
+    var ac_cookie = (YAHOO.util.Cookie.get("autocomplete") == "true");
+    var doc = document.getElementById("ac_enable");
+    if  (ac_cookie) {
+        doc.value = "enable";
+    } else {
+        doc.value = "disable";
+    }
     set_autocomplete(ac_cookie);
-    var doc = document.getElementById('ac_enable');
-    doc.value = ac_cookie;
 };
 ac_init();
 //]]>
