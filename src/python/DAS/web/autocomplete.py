@@ -218,7 +218,7 @@ def autocomplete_helper(query, dasmgr, daskeys):
         if  query.find('=') == -1:
             result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_RELEASE.match(query):
-        result.append({'css': 'ac-info', 'value': release, 'info': 'Valid DAS key: release'})
+        result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: release'})
         if  query.find('=') == -1:
             result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif RE_K_CONFIG.match(query):

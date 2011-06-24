@@ -24,17 +24,31 @@ from DAS.utils.utils import qlxml_parser, dastimestamp
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.web.utils import db_monitor
 
+def dbs_instance(dbsurl):
+    """Parse dbs instance from provided DBS url"""
+    if  dbsurl[-1] == '/':
+        dbsurl = dbsurl[:-1]
+    if  dbsurl.find('DBSServlet') != -1:
+        # http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet
+        dbsinst = dbsurl.split('/')[-3]
+    elif dbsurl.find('DBSReader') != -1:
+        # http://vocms09.cern.ch:8989/dbs/DBSReader
+        dbsinst = dbsurl.split('/')[-2]
+    else:
+        msg = 'Unable to parse dbs instance from provided url %s' % dbsurl
+        raise Exception(msg)
+    return dbsinst
+
 class DBSDaemon(object):
     """
     DBSDaemon fetch list of known datasets from DBS2/DBS3
     and store them in separate collection to be used by
     DAS autocomplete web interface.
     """
-    def __init__(self, dbs_url, dburi, dbname='dbs', dbcoll='datasets', 
-                        cache_size=1000):
+    def __init__(self, dbs_url, dburi, dbname='dbs', cache_size=1000):
         self.dburi  = dburi
         self.dbname = dbname
-        self.dbcoll = dbcoll
+        self.dbcoll = dbs_instance(dbs_url)
         self.cache_size = cache_size
         self.dbs_url = dbs_url
         self.init()

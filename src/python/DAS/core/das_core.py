@@ -518,6 +518,8 @@ class DASCore(object):
                 fields = []
             new_fields = []
             for filter in filters:
+                if  filter == 'unique':
+                    continue
                 for oper in ['>', '<', '=']:
                     if  filter.find(oper) != -1:
                         fname = filter.split(oper)[0]

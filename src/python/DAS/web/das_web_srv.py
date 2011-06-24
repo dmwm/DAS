@@ -223,15 +223,13 @@ class DASWebService(DASWebManager):
         self.dbsmgr = {} # dbs_urls vs dbs_daemons
         if  self.dataset_daemon:
             for dbs_url in self.dbs_urls:
-                cname  = genkey(dbs_url) # collection name
-                dbsmgr = DBSDaemon(dbs_url, self.dburi, dbcoll=cname)
+                dbsmgr = DBSDaemon(dbs_url, self.dburi)
                 self.dbsmgr[dbs_url] = dbsmgr
                 def dbs_updater(_dbsmgr, interval):
                     while True:
                         _dbsmgr.update()
                         time.sleep(interval)
-                print "Start DBSDaemon for %s, collection %s" \
-                        % (dbs_url, cname)
+                print "Start DBSDaemon for %s" % dbs_url
                 thread.start_new_thread(dbs_updater, (dbsmgr, interval, ))
 
     def init(self):
@@ -1115,7 +1113,6 @@ class DASWebService(DASWebManager):
         """
         Provides autocomplete functionality for DAS web UI.
         """
-        print "\n### autocomplete", kwargs
         query = kwargs.get("query", "").strip()
         result = autocomplete_helper(query, self.dasmgr, self.daskeys)
         dbsinst = kwargs.get('dbs_instance', 'cms_dbs_prod_global')
