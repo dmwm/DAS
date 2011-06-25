@@ -13,15 +13,17 @@ __author__ = "Valentin Kuznetsov"
 # system modules
 import re
 
-def word_chars(word):
+def word_chars(word, equal=True):
     """
     Creates a pattern of given word as series of its characters, e.g.
     for given word dataset I'll get
     '^d$|^da$|^dat$|^data$|^datas$|^datase$|^dataset$'
     which can be used later in regular expressions
     """
-    return r'|'.join(['^%s$' % word[:x+1] for x in range(len(word))])\
-        + '|^%s=' % word
+    pat = r'|'.join(['^%s$' % word[:x+1] for x in range(len(word))])
+    if  equal:
+        pat += '|^%s=' % word
+    return pat
 
 ip_address_pattern = \
     re.compile(r"^([0-9]{1,3}\.){3,3}[0-9]{1,3}$")

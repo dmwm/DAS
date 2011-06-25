@@ -8,6 +8,7 @@ DAS autocomplete function for web UI
 
 __author__ = "Gordon Ball and Valentin Kuznetsov"
 
+import re
 from DAS.utils.regex import RE_DBSQL_0, RE_DBSQL_1, RE_DBSQL_2
 from DAS.utils.regex import RE_SITE, RE_SUBKEY, RE_KEYS
 from DAS.utils.regex import RE_HASPIPE, RE_PIPECMD, RE_AGGRECMD
@@ -18,10 +19,11 @@ from DAS.utils.regex import RE_K_BLOCK, RE_K_RUN, RE_K_RELEASE, RE_K_STATUS
 from DAS.utils.regex import RE_K_TIER, RE_K_MONITOR, RE_K_JOBSUMMARY
 from DAS.utils.regex import PAT_RELEASE, PAT_TIERS, PAT_SITE, PAT_SE
 from DAS.utils.regex import PAT_BLOCK, PAT_RUN, PAT_FILE, PAT_DATATYPE
-from DAS.utils.regex import PAT_SLASH
+from DAS.utils.regex import PAT_SLASH, word_chars
 from DAS.core.das_ql import das_aggregators, das_filters
 
-DAS_PIPECMDS = das_aggregators() + das_filters()
+AGG_PAT = re.compile(''.join([word_chars(a) for a in das_aggregators()]))
+FLT_PAT = re.compile(''.join([word_chars(a) for a in das_filters()]))
 
 def autocomplete_helper(query, dasmgr, daskeys):
     """
@@ -41,6 +43,8 @@ def autocomplete_helper(query, dasmgr, daskeys):
     uinput = str(query)
     qsplit = uinput.split()
     last_word = qsplit[-1] # operate on last word in a query
+    if  last_word.find(',') != -1:
+        last_word = last_word.strip().replace(',', '').split()[-1]
     result = []
     prev = ""
     if  len(qsplit) != 1:
@@ -82,6 +86,22 @@ def autocomplete_helper(query, dasmgr, daskeys):
         else:
             result.append({'css': 'ac-error sign', 'value': '',
                            'info': 'This appears to be a DBS-QL query. DAS queries are of the form <b>key</b><span class="faint">[ operator value]</span>'})
+    elif RE_HASPIPE.match(uinput) and RE_SUBKEY.match(query):
+        subkey = RE_SUBKEY.match(query).group(1)
+        daskey = subkey.split('.')[0]
+        if  daskey in daskeys and dasmgr.keylearning.col and\
+            dasmgr.keylearning.col.count():
+            if  dasmgr.keylearning.has_member(subkey):
+                result.append({'css': 'ac-info', 'value': subkey,
+                               'info': 'Correct DAS query'})
+            else:
+                result.append({'css': 'ac-warinig sign', 'value': subkey,
+                               'info': "Correct DAS query, but <b>%s</b> is not known in DAS keylearning system" % subkey})
+                key_search = dasmgr.keylearning.key_search(subkey, daskey)
+                for keys, members in key_search.items():
+                    for member in members:
+                        result.append({'css': 'ac-info', 'value':'%s' % member,
+                                       'info': 'Possible member match <b>%s</b> (for daskey <b>%s</b>)' % (member, daskey)})
     elif RE_HASPIPE.match(uinput):
         keystr = uinput.split('|')[0]
         keys = set()
@@ -95,75 +115,27 @@ def autocomplete_helper(query, dasmgr, daskeys):
             result.append({'css':'ac-error sign', 'value': '',
                            'info': "You seem to be trying to write a pipe command without any keys."})
         
-        pipecmd = RE_PIPECMD.match(query)
-        filtercmd = RE_FILTERCMD.match(query)
-        aggrecmd = RE_AGGRECMD.match(query)
-        
-        if pipecmd:
-            cmd = pipecmd.group(1)
-            precmd = query[:pipecmd.start(1)]
-            matches = filter(lambda x: x.startswith(cmd), DAS_PIPECMDS)
-            if matches:
+        agg_pat = AGG_PAT.match(query)
+        flt_pat = FLT_PAT.match(query)
+        daskey  = query.split('.')[0]
+        if  agg_pat:
+            matches = filter(lambda x: x.startswith(query), das_aggregators())
+            if  matches:
                 for match in matches:
-                    result.append({'css': 'ac-info', 'value': '%s%s' % (precmd, match),
-                                   'info': 'Function match <b>%s</b>' % (match)})
-            else:
-                result.append({'css': 'ac-warinig sign', 'value': precmd,
-                               'info': 'No aggregation or filter functions match <b>%s</b>.' % cmd})
-        elif aggrecmd:
-            cmd = aggrecmd.group(1)
-            if not cmd in das_aggregators():
-                result.append({'css':'ac-error sign', 'value': '',
-                               'info': 'Function <b>%s</b> is not a known DAS aggregator.' % cmd})
-            
-        elif filtercmd:
-            cmd = filtercmd.group(1)
-            if not cmd in das_filters():
-                result.append({'css':'ac-error sign', 'value': '',
-                               'info': 'Function <b>%s</b> is not a known DAS filter.' % cmd})
-        
-        if aggrecmd or filtercmd:
-            match = aggrecmd if aggrecmd else filtercmd
-            subkey = match.group(2)
-            prekey = query[:match.start(2)]
-            members = dasmgr.keylearning.members_for_keys(keys)
-            if members:
-                matches = filter(lambda x: x.startswith(subkey), members)
-                if matches:
-                    for match in matches:
-                        result.append({'css': 'ac-info', 'value': prekey+match,
-                                       'info': 'Possible match <b>%s</b>' % match})
-                else:
-                    result.append({'css': 'ac-warinig sign', 'value': prekey,
-                                   'info': 'No data members match <b>%s</b> (but this could be a gap in keylearning coverage).' % subkey})
-            else:
-                result.append({'css': 'ac-warinig sign', 'value': prekey,
-                               'info': 'No data members found for keys <b>%s</b> (but this might be a gap in keylearning coverage).' % ' '.join(keys)})
-            
-        
-    elif RE_SUBKEY.match(query):
-        subkey = RE_SUBKEY.match(query).group(1)
-        daskey = subkey.split('.')[0]
-        if daskey in daskeys:
-            if dasmgr.keylearning.has_member(subkey):
-                result.append({'css': 'ac-warinig sign', 'value': '%s | grep %s' % (daskey, subkey),
-                               'info': 'DAS queries should start with a top-level key. Use <b>grep</b> to see output for one data member.'})
-            else:
-                result.append({'css': 'ac-warinig sign', 'value': '%s | grep %s' % (daskey, subkey),
-                               'info': "DAS queries should start with a top-level key. Use <b>grep</b> to see output for one data member. DAS doesn't know anything about the <b>%s</b> member but keylearning might be incomplete." % (subkey)})
-                key_search = dasmgr.keylearning.key_search(subkey, daskey)
-                for keys, members in key_search.items():
-                    for member in members:
-                        result.append({'css': 'ac-info', 'value':'%s | grep %s' % (daskey, member),
-                                       'info': 'Possible member match <b>%s</b> (for daskey <b>%s</b>)' % (member, daskey)})
-        else:
-            result.append({'css': 'ac-error sign', 'value': '',
-                           'info': "Das queries should start with a top-level key. <b>%s</b> is not a valid DAS key." % daskey})
-            key_search = dasmgr.keylearning.key_search(subkey)
-            for keys, members in key_search.items():
-                result.append({'css': 'ac-info', 'value': ' '.join(keys),
-                               'info': 'Possible keys <b>%s</b> (matching <b>%s</b>).' % (', '.join(keys), ', '.join(members))})
-                
+                    result.append({'css': 'ac-info', 'value': '%s' % match,
+                                   'info': 'Aggregated function <b>%s</b>' % (match)})
+        elif  flt_pat:
+            matches = filter(lambda x: x.startswith(query), das_filters())
+            if  matches:
+                for match in matches:
+                    result.append({'css': 'ac-info', 'value': '%s' % match,
+                                   'info': 'Filter function <b>%s</b>' % (match)})
+        elif daskey.strip() == '|':
+            result.append({'css': 'ac-warning sign', 'value': query,
+           'info': 'DAS pipe must follow either by filter or aggregator function'})
+        elif daskey not in daskeys and daskey.find('(') == -1:
+            result.append({'css': 'ac-warning sign', 'value': query,
+           'info': '<b>%s</b> is neither aggregator, filter or DAS key' % query})
     elif PAT_RELEASE.match(query):
         if  query[0] == 'C': # CMS releases all starts with CMSSW
             release = '%s*' % query
@@ -176,15 +148,15 @@ def autocomplete_helper(query, dasmgr, daskeys):
         result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'seems like dataset pattern'})
     elif PAT_SLASH.match(query):
         if  PAT_FILE.match(query):
-            result.append({'css': 'ac-info', 'value': 'file=%s*' % query, 'info': 'seems like file pattern'})
+            result.append({'css': 'ac-info', 'value': 'file=%s' % query, 'info': 'seems like file pattern'})
         elif PAT_BLOCK.match(query):
-            result.append({'css': 'ac-info', 'value': 'block=%s*' % query, 'info': 'seems like block name'})
+            result.append({'css': 'ac-info', 'value': 'block=%s' % query, 'info': 'seems like block name'})
         else:
             result.append({'css': 'ac-info', 'value': 'block=%s*' % query, 'info': 'seems like block name'})
             result.append({'css': 'ac-info', 'value': 'file=%s*' % query, 'info': 'seems like file pattern'})
             result.append({'css': 'ac-info', 'value': 'dataset=%s*' % query, 'info': 'seems like dataset pattern'})
     elif PAT_RUN.match(query):
-        result.append({'css': 'ac-info', 'value': 'run=%s*' % query, 'info': 'seems like run number'})
+        result.append({'css': 'ac-info', 'value': 'run=%s' % query, 'info': 'seems like run number'})
     elif PAT_DATATYPE.match(query):
         result.append({'css': 'ac-info', 'value': 'datatype=%s*' % query, 'info': 'seems like data type'})
         result.append({'css': 'ac-info', 'value': 'dataset=%s*' % query, 'info': 'seems like dataset pattern'})
@@ -192,7 +164,7 @@ def autocomplete_helper(query, dasmgr, daskeys):
         result.append({'css': 'ac-info', 'value': 'site=%s*' % query, 'info': 'seems like site name'})
         result.append({'css': 'ac-info', 'value': 'dataset=%s*' % query, 'info': 'seems like dataset pattern'})
     elif PAT_SE.match(query):
-        result.append({'css': 'ac-info', 'value': 'site=%s*' % query, 'info': 'seems like SE'})
+        result.append({'css': 'ac-info', 'value': 'site=%s' % query, 'info': 'seems like SE'})
     elif RE_K_SITE.match(query):
         result.append({'css': 'ac-info', 'value': query, 'info': 'Valid DAS key: site'})
         if  query.find('=') == -1:
@@ -270,6 +242,7 @@ def autocomplete_helper(query, dasmgr, daskeys):
     if  prev:
         new_result = []
         for idict in result:
-            new_result.append(prev + ' ' + idict['value'])
+            newval = prev + ' ' + idict['value']
+            new_result.append({'css':idict['css'], 'value':newval, 'info':idict['info']})
         return new_result
     return result

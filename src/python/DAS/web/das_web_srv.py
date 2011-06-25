@@ -1115,11 +1115,14 @@ class DASWebService(DASWebManager):
         """
         query = kwargs.get("query", "").strip()
         result = autocomplete_helper(query, self.dasmgr, self.daskeys)
+        dataset = [r for r in result if r['value'].find('dataset=')!=-1]
         dbsinst = kwargs.get('dbs_instance', 'cms_dbs_prod_global')
-        if  self.dataset_daemon:
+        if  self.dataset_daemon and len(dataset):
             dbs_urls = [d for d in self.dbsmgr.keys() if d.find(dbsinst) != -1]
             if  len(dbs_urls) == 1:
                 dbsmgr = self.dbsmgr[dbs_urls[0]]
+                if  query.find('dataset=') != -1:
+                    query = query.replace('dataset=', '')
                 for row in dbsmgr.find(query):
                     result.append({'css': 'ac-info',
                                    'value': 'dataset=%s' % row,

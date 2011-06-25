@@ -100,18 +100,21 @@ class DBSDaemon(object):
         limit=-1 means no pagination (get all records).
         """
         if  self.col:
-            if  pattern[0] == '/':
-                pattern = '^%s' % pattern
-            if  pattern.find('*') != -1:
-                pattern = pattern.replace('*', '.*')
-            pat  = re.compile('%s' % pattern, re.I)
-            spec = {'dataset':pat}
-            if  limit == -1:
-                for row in self.col.find(spec):
-                    yield row['dataset']
-            else:
-                for row in self.col.find(spec).skip(idx).limit(limit):
-                    yield row['dataset']
+            try:
+                if  len(pattern) > 0 and pattern[0] == '/':
+                    pattern = '^%s' % pattern
+                if  pattern.find('*') != -1:
+                    pattern = pattern.replace('*', '.*')
+                pat  = re.compile('%s' % pattern, re.I)
+                spec = {'dataset':pat}
+                if  limit == -1:
+                    for row in self.col.find(spec):
+                        yield row['dataset']
+                else:
+                    for row in self.col.find(spec).skip(idx).limit(limit):
+                        yield row['dataset']
+            except:
+                pass
 
     def datasets(self):
         """
