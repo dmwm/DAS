@@ -784,8 +784,9 @@ class DASWebService(DASWebManager):
     def requests(self):
         """Return list of all current requests in DAS queue"""
         page = ""
-        for pid, kwds in self.reqmgr.items():
-            page += '<li>%s<br/>%s</li>' % (pid, kwds)
+        for row in self.reqmgr.items():
+            page += '<li>%s placed at %s<br/>%s</li>' \
+                        % (row['_id'], row['timestamp'], row['kwds'])
         if  page:
             page = "<ul>%s</ul>" % page
         else:
