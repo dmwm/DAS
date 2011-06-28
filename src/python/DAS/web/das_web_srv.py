@@ -775,6 +775,7 @@ class DASWebService(DASWebManager):
                 page += '</script>'
             else:
                 page = self.get_page_content(kwargs)
+                self.reqmgr.remove(pid)
         ctime = (time.time()-time0)
         if  view == 'list' or view == 'table':
             return self.page(form + page, ctime=ctime)
@@ -784,13 +785,17 @@ class DASWebService(DASWebManager):
     def requests(self):
         """Return list of all current requests in DAS queue"""
         page = ""
+        count = 0
         for row in self.reqmgr.items():
             page += '<li>%s placed at %s<br/>%s</li>' \
                         % (row['_id'], row['timestamp'], row['kwds'])
+            count += 1
         if  page:
             page = "<ul>%s</ul>" % page
         else:
             page = "The request queue is empty"
+        if  count:
+            page += '<div>Total: %s requests</div>' % count
         return self.page(page)
 
     @expose
