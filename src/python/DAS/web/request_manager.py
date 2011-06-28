@@ -20,11 +20,11 @@ class RequestManager(object):
     does not support storage of 'key.attr' as a dict key, we use
     json dumps/loads method to serialize kwds.
     """
-    def __init__(self, dburi, dbname='das', dbcoll='requests', interval=86400):
+    def __init__(self, dburi, dbname='das', dbcoll='requests', lifetime=86400):
         self.con = db_connection(dburi)
         self.col = self.con[dbname][dbcoll]
         create_indexes(self.col, [('ts', ASCENDING)])
-        self.interval = interval # default 1 hour
+        self.lifetime = lifetime # default 1 hour
 
     def get(self, pid):
         """Get params for a given pid"""
@@ -38,7 +38,7 @@ class RequestManager(object):
         doc = dict(_id=pid, kwds=json.dumps(kwds),
                 ts=time.time(), timestamp=tstamp)
         self.col.insert(doc)
-        self.col.remove({'ts':{'$lt':time.time()-self.interval}})
+        self.col.remove({'ts':{'$lt':time.time()-self.lifetime}})
         
     def remove(self, pid):
         """Remove given pid"""

@@ -23,6 +23,8 @@ DASOption('mongodb', 'dburi', 'list', ['mongodb://localhost:27017']),
 DASOption('mongodb', 'dbname', 'string', 'das'),
 # default bulk size to be used by DAS during records insertion into MongoDB
 DASOption('mongodb', 'bulkupdate_size', 'int', 5000),
+# default lifetime of requests in MongoDB
+DASOption('mongodb', 'lifetime', 'int', 86400),
 
 #
 # Mapping DB options

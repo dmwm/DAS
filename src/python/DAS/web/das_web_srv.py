@@ -203,6 +203,7 @@ class DASWebService(DASWebManager):
         self.logger.info(msg)
         self.dasconfig   = das_readconfig()
         self.dburi       = self.dasconfig['mongodb']['dburi']
+        self.lifetime    = self.dasconfig['mongodb']['lifetime']
         self.queue_limit = config.get('queue_limit', 50)
         if  self.engine:
             self.taskmgr = PluginTaskManager(bus=self.engine, nworkers=nworkers)
@@ -246,7 +247,7 @@ class DASWebService(DASWebManager):
                 self.warning('Created %s.%s, size=%s' \
                 % (logdbname, logdbcoll, capped_size))
             self.logcol     = self.con[logdbname][logdbcoll]
-            self.reqmgr     = RequestManager(self.dburi)
+            self.reqmgr     = RequestManager(self.dburi, lifetime=self.lifetime)
             self.dasmgr     = DASCore(engine=self.engine)
             self.daskeys    = self.dasmgr.das_keys()
             self.gfs        = db_gridfs(self.dburi)
