@@ -61,7 +61,7 @@ autocompletion
 <td class="right">
 &nbsp;
 <input type="submit" value="Search" class="btn borders" />
-<input type="button" class="btn borders" onclick="javascript:ac_init()" value="Reset" />
+<input type="button" class="btn borders" onclick="javascript:ac_init();clear_input()" value="Reset" />
 </td>
 </tr>
 </table>
@@ -129,17 +129,26 @@ function ac_select_change() {
     var enable = (\$("ac_enable").value == "true");
     set_autocomplete(enable);
 };
-function ac_init() {
+function clear_input() {
     // clear input field
     var doc = document.getElementById('input');
     doc.value = "";
+}
+function ac_init() {
     // get cookie for autocomplete and follow its value
     var ac_cookie = (YAHOO.util.Cookie.get("autocomplete") == "true");
     var doc = document.getElementById("ac_enable");
+    doc.options.length=0;
     if  (ac_cookie) {
-        doc.value = "enable";
+        doc.options[0] = new Option("enable", "true", false, false);
+        doc.options[1] = new Option("disable", "false", false, false);
+        doc.options[0].className = "sand";
+        doc.options[1].className = "sand";
     } else {
-        doc.value = "disable";
+        doc.options[0] = new Option("disable", "false", false, false);
+        doc.options[1] = new Option("enable", "true", false, false);
+        doc.options[0].className = "sand";
+        doc.options[1].className = "sand";
     }
     set_autocomplete(ac_cookie);
 };

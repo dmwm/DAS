@@ -23,8 +23,8 @@ towards making DAS easy to use for end-users.
     module
   - add dbs_daemon whose task to fetch all DBS dataset; this info
     is stored into separte collection and can be used for autocompletion mode
-  - work on scalability of DAS web server
-  - ticket #1791
+  - improve autocompletion
+  - work on scalability of DAS web server, ticket #1791
 
 - 0.7.X
 
