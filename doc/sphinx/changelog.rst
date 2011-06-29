@@ -8,6 +8,8 @@ requests in terms of DAS functionality and usability. All changes made
 towards making DAS easy to use for end-users.
 
 - 0.8.X
+  - resolve double requests issue, ticket #1881, see discussion on HN
+    https://hypernews.cern.ch/HyperNews/CMS/get/webInterfaces/708.html
   - Adjust RequestManager to store timestamp and handle stale requests
   - Make DBSDaemon be aware of different DBS instances, ticket #1857
   - fix getdata to assign proper timestamp in case of mis-behaved data-services

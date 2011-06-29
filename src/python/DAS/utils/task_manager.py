@@ -76,7 +76,7 @@ class TaskManager:
 
     def spawn(self, func, *args):
         """Spawn new process for given function"""
-        pid = genkey(str(args) + str(time.time()))
+        pid = genkey(str(args))
         self._pids.add(pid)
         ready = Event()
         self._tasks.put((ready, pid, func, args))

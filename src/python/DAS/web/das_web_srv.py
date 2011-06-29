@@ -663,7 +663,8 @@ class DASWebService(DASWebManager):
                 head, data = self.get_data(kwargs)
                 return self.datastream(dict(head=head, data=data))
         else:
-            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
+            addr = cherrypy.request.headers.get('Remote-Addr')
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput, addr)
             self.reqmgr.add(pid, kwargs)
             return pid
 
@@ -760,7 +761,8 @@ class DASWebService(DASWebManager):
         if  status == 'ok':
             page = self.get_page_content(kwargs)
         else: 
-            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput)
+            addr = cherrypy.request.headers.get('Remote-Addr')
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput, addr)
             self.reqmgr.add(pid, kwargs)
             if  self.taskmgr.is_alive(pid):
                 # no data in raw cache
