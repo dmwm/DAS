@@ -22,6 +22,7 @@ import traceback
 from   cherrypy import HTTPError
 from   json import JSONEncoder
 from   urllib import quote_plus
+from   pymongo.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
@@ -175,6 +176,8 @@ def quote(data):
     elif  isinstance(data, long) or isinstance(data, int) or\
           isinstance(data, float):
         res = data
+    elif  isinstance(data, ObjectId):
+        res = str(data)
     else:
         try:
             if  data:
