@@ -10,15 +10,12 @@ __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 from   types import NoneType
-import re
 import cgi
 import time
-import httplib
 import urllib
 import hashlib
 import cherrypy
 import plistlib
-import traceback
 from   cherrypy import HTTPError
 from   json import JSONEncoder
 from   urllib import quote_plus
@@ -26,9 +23,9 @@ from   pymongo.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
+from   DAS.utils.utils import print_exc
 from   DAS.utils.regex import number_pattern, web_arg_pattern
 from   DAS.utils.das_db import db_connection
-from   DAS.core.das_core import DASCore
 from   DAS.web.das_codes import web_code
 
 # regex patterns used in free_text_parser
@@ -184,8 +181,8 @@ def quote(data):
                 res = cgi.escape(data, quote=True)
             else:
                 res = ""
-        except:
-            traceback.print_exc()
+        except Exception as exc:
+            print_exc(exc)
             print "Unable to cgi.escape(%s, quote=True)" % data
             res = ""
     return res
@@ -346,7 +343,7 @@ def not_to_link():
     """
     return ['config', 'lumi', 'group', 'jobsummary']
 
-def json2html(idict, pad="", recusive=False, ref=None):
+def json2html(idict, pad="", ref=None):
     """
     Convert input JSON into HTML code snippet. We sanitize values with
     quote function for HTML content (see in this module) and quote_plus
@@ -383,8 +380,8 @@ def json2html(idict, pad="", recusive=False, ref=None):
                         % (quote_plus(val), quote(val))
                 if  len(str(val)) < 3: # aggregator's ids
                     value = val
-            # we don't need to quote value here since it constructs sanitized URLs,
-            # see block above
+            # we don't need to quote value here since 
+            # it constructs sanitized URLs, see block above
             sss += pad + """ <code class="key">"%s": </code>%s""" \
                 % (quote(key), value)
         elif key == 'gridfs_id':
@@ -424,7 +421,8 @@ def json2html(idict, pad="", recusive=False, ref=None):
             sss += pad + """ <code class="key">"%s"</code>: """ \
                         % quote(key)
             pad += ' '*3
-            sss += json2html(val, pad, ref=key)[len(pad):] # don't account for first pad
+            # don't account for 1st pad
+            sss += json2html(val, pad, ref=key)[len(pad):]
             pad  = pad[:-3]
         else:
             sss += pad + """ <code class="key">"%s"</code>""" \

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0703
 
 """
 Dashboard service
@@ -9,12 +10,10 @@ __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
 import time
-import urllib
-import traceback
 import xml.etree.cElementTree as ET
 from types import InstanceType
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, convert2date
+from DAS.utils.utils import map_validator, convert2date, print_exc
                 
 def convert_datetime(sec):
     """
@@ -128,7 +127,6 @@ class DashboardService(DASAbstractService):
         ctime = time.time() - time0
         try:
             self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
-        except:
-            traceback.print_exc()
+        except Exception as exc:
+            print_exc(exc)
             self.logger.info('Fail to write_to_cache for dashboard service')
-            pass

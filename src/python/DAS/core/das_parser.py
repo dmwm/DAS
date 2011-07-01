@@ -12,12 +12,12 @@ __author__ = "Valentin Kuznetsov"
 import re
 import time
 import urllib
-from DAS.core.das_lexer import DASLexer
 from DAS.core.das_ql import das_filters, das_aggregators, das_reserved
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
 from DAS.core.das_ply import DASPLY, ply2mongo
 from DAS.utils.utils import adjust_value, convert2date, das_dateformat
+from DAS.utils.utils import print_exc
 from DAS.utils.regex import key_attrib_pattern, last_key_pattern
 from DAS.core.das_parsercache import DASParserDB, PARSERCACHE_NOTFOUND
 from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
@@ -95,7 +95,8 @@ class QLManager(object):
             return mongo_query
         try:
             mongo_query = self.mongo_query(query)
-        except:
+        except Exception as exc:
+            print_exc(exc)
             print "\nUnable to convert input query='%s' into MongoDB one\n" \
                 % query
             raise
@@ -127,14 +128,14 @@ class QLManager(object):
                     ply_query = self.dasply.parser.parse(query)
                     mongo_query = ply2mongo(ply_query)
                     self.parserdb.insert_valid_query(query, mongo_query)
-                except Exception, exp:
+                except Exception as exp:
                     self.parserdb.insert_invalid_query(query, exp)
                     raise exp
         else:
             try:
                 ply_query   = self.dasply.parser.parse(query)
                 mongo_query = ply2mongo(ply_query)
-            except Exception, exp:
+            except Exception as exp:
                 raise exp
         if  set(mongo_query.keys()) & set(['fields','spec']) != \
                 set(['fields', 'spec']):

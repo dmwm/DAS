@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0703
 
 """
 Abstract interface for DAS service
@@ -9,24 +10,15 @@ __version__ = "$Revision: 1.94 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
-import re
 import time
-import urllib
-import urllib2
-import traceback
 import DAS.utils.jsonwrapper as json
 
-# MongoDB modules
-from pymongo import DESCENDING
-from pymongo.objectid import ObjectId
-
 # DAS modules
-from DAS.utils.utils import getarg, genkey, DotDict
-from DAS.utils.utils import row2das, extract_http_error, make_headers
-from DAS.utils.utils import xml_parser, json_parser, plist_parser
-from DAS.utils.utils import yield_rows, expire_timestamp
+from DAS.utils.utils import getarg, genkey, DotDict, print_exc
+from DAS.utils.utils import row2das, make_headers
+from DAS.utils.utils import xml_parser, json_parser
+from DAS.utils.utils import yield_rows
 from DAS.core.das_mongocache import compare_specs, encode_mongo_query
-from DAS.utils.das_timer import das_timer
 from DAS.utils.url_utils import getdata
 from DAS.utils.das_db import db_gridfs, parse2gridfs
 from DAS.core.das_ql import das_special_keys
@@ -52,9 +44,8 @@ class DASAbstractService(object):
             dburi             = config['mongodb']['dburi']
             engine            = config.get('engine', None)
             self.gfs          = db_gridfs(dburi)
-        except:
-            traceback.print_exc()
-            print config
+        except Exception as exc:
+            print_exc(exc)
             raise Exception('fail to parse DAS config')
 
         if  self.multitask:
@@ -219,9 +210,10 @@ class DASAbstractService(object):
                     if  record and record.has_key('das') and \
                         record['das'].has_key('expire'):
                         expire = record['das']['expire']
-                        self.write_to_cache(query, expire, url, api, args, [], 0)
-                except:
-                    traceback.print_exc()
+                        self.write_to_cache(\
+                                query, expire, url, api, args, [], 0)
+                except Exception as exc:
+                    print_exc(exc)
                     msg  = 'DASAbstractService::pass_apicall\n'
                     msg += 'failed api %s\n' % api
                     msg += 'input query %s\n' % input_query
@@ -495,11 +487,11 @@ class DASAbstractService(object):
             ctime   = time.time() - time0
             self.write_to_cache(query, expire, url, api, args, 
                     dasrows, ctime)
-        except:
+        except Exception as exc:
+            print_exc(exc)
             msg  = 'Fail to process: url=%s, api=%s, args=%s' \
                     % (url, api, args)
-            msg += traceback.format_exc()
-            self.logger.info(msg)
+            print msg
 
     def url_instance(self, url, _instance):
         """
@@ -543,7 +535,8 @@ class DASAbstractService(object):
                 if  self.dasmapping.check_dasmap(self.name, api, key, val):
                     # need to convert key (which is daskeys.map) into
                     # input api parameter
-                    for apiparam in self.dasmapping.das2api(self.name, key, val, api):
+                    for apiparam in \
+                        self.dasmapping.das2api(self.name, key, val, api):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
                             found += 1

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0703
 """
 File: url_utils.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>
@@ -56,7 +57,7 @@ def getdata(url, params, headers=None, expire=3600, post=None,
                 expire = e_time
         except Exception as _exp:
             pass
-    except urllib2.HTTPError, httperror:
+    except urllib2.HTTPError as httperror:
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                     % (url, params, headers)
         data = {'error': msg}

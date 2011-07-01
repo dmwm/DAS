@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0103,C0301,R0201
+#pylint: disable-msg=C0103,C0301,R0201,W0703
 
 """
 DAS Query Language parser based on PLY.
@@ -16,7 +16,7 @@ import ply.lex
 import ply.yacc
 import re
 
-from   DAS.utils.utils import convert2date, das_dateformat
+from   DAS.utils.utils import das_dateformat, print_exc
 from   DAS.core.das_ql import das_filters, das_operators, das_mapreduces
 from   DAS.core.das_ql import das_aggregators, das_special_keys
 from   DAS.core.das_ql import das_db_keywords
@@ -26,13 +26,12 @@ def das_parser_error(query, error):
     print "ERROR", error
     try:
         # LexToken returns tok.type, tok.value, tok.lineno, and tok.lexpos
-        msg, tok = error.split("LexToken")
+        _msg, tok = error.split("LexToken")
         tokarr = tok.split(',')
         pos = int(tokarr[3].split(')')[0])
         return 'DAS could not parse your query at %s ' % query[pos:].split()[0]
-    except:
-        import traceback
-        traceback.print_exc()
+    except Exception as exc:
+        print_exc(exc)
         return error
 
 def parser_error(error):
@@ -295,7 +294,7 @@ class DASPLY(object):
             if p[2] == 'between':
                 p[0] = ('keyop', p[1], p[2], p[3])
             else :
-                p.error = "'%s %s %s' is not valid, " %\
+                p.error = "'%s %s %s' is not valid, " % \
                     (p[1], p[2], p[3])
                 p.error += "'in' is not supported by 'date'"
                 raise Exception(p.error)
@@ -485,9 +484,6 @@ def ply2mongo(query):
             value = val
             if  name == 'date' and oper == '=':
                 value = das_dateformat(value)
-#            if  oper == 'last':
-#                valist = convert2date(value)
-#                value = {'$gte' : valist[0], '$lte': valist[1]}
             if  oper == 'in':
                 vlist = list(val[1:])
                 if name == 'date':

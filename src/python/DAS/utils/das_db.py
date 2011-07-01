@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0613,W0622,W0702
+#pylint: disable-msg=W0613,W0622,W0702,W0703
 
 """
 DAS DB utilities.
@@ -11,15 +11,13 @@ __version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
-import time
-import traceback
 
 # monogo db modules
 from pymongo.connection import Connection
 import gridfs
 
 # DAS modules
-from DAS.utils.utils import DotDict, genkey
+from DAS.utils.utils import DotDict, genkey, print_exc
 
 # MongoDB does not allow to store documents whose size more then 4MB
 MONGODB_LIMIT = 4*1024*1024
@@ -60,8 +58,8 @@ class _DBConnectionSingleton(object):
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
-            except:
-                traceback.print_exc()
+            except Exception as exc:
+                print_exc(exc)
                 return None
         return self.conndict[key]
 

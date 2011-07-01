@@ -11,7 +11,6 @@ __author__ = "Valentin Kuznetsov"
 import re
 from   types import InstanceType
 import socket
-import traceback
 
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import add2dict, map_validator

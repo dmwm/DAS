@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0703
 
 """
 General set of useful utilities used by DAS
@@ -10,6 +11,7 @@ __author__ = "Valentin Kuznetsov"
 # system modules
 import os
 import re
+import sys
 import time
 from   types import GeneratorType, InstanceType
 import hashlib
@@ -28,13 +30,23 @@ from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 import DAS.utils.jsonwrapper as json
 
-def dastimestamp():
+def dastimestamp(msg='DAS '):
     """
     Return timestamp in pre-defined format. For simplicity we match
     cherrypy date format.
     """
-    tstamp = time.strftime("DAS [%d/%b/%Y:%H:%M:%S]", time.localtime())
+    tstamp = time.strftime('[%d/%b/%Y:%H:%M:%S]', time.localtime())
+    if  msg:
+        return msg + tstamp
     return tstamp
+
+def print_exc(exc):
+    """Standard way to print exceptions"""
+    print dastimestamp('DAS ERROR '), type(exc), str(exc)
+    try:
+        print traceback.print_tb(sys.exc_info()[-1], limit=1, file=sys.stdout)
+    except:
+        pass
 
 def parse_filters(query):
     """
@@ -116,8 +128,8 @@ def size_format(uinput):
     """
     try:
         num = float(uinput)
-    except:
-        traceback.print_exc()
+    except Exception as exc:
+        print_exc(exc)
         return "N/A"
     base = 1000. # power of 10, or use 1024. for power of 2
     for xxx in ['','KB','MB','GB','TB','PB']:
@@ -1174,8 +1186,8 @@ def json_parser(source, logger=None):
         # got data descriptor
         try:
             jsondict = json.load(source)
-        except:
-            traceback.print_exc()
+        except Exception as exc:
+            print_exc(exc)
             source.close()
             raise
         source.close()
@@ -1210,8 +1222,8 @@ def plist_parser(source):
         # got data descriptor
         try:
             data = source.read()
-        except:
-            traceback.print_exc()
+        except Exception as exc:
+            print_exc(exc)
             source.close()
             raise
         source.close()

@@ -6,13 +6,11 @@ Combined DAS service
 """
 __author__ = "Valentin Kuznetsov"
 
-import re
 import time
-import traceback
 import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser, DotDict
-from DAS.utils.utils import expire_timestamp
+from DAS.utils.utils import expire_timestamp, print_exc
 
 #
 # NOTE:
@@ -55,7 +53,7 @@ class CombinedService(DASAbstractService):
             dbs_url = url['dbs']
             # in DBS3 I'll use datasets API and pass release over there
             query = 'find dataset where release=%s' % args['release']
-            dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9',\
+            dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
                         'query':query}
             headers = {'Accept': 'text/xml'}
             source, expire = self.getdata(dbs_url, dbs_args, expire, headers)
@@ -79,15 +77,15 @@ class CombinedService(DASAbstractService):
             for rec in xml_parser(source, prim_key, tags):
                 ddict = DotDict(rec)
                 block = ddict._get('block.name')
-                bytes = ddict._get('block.bytes')
+                bbytes = ddict._get('block.bytes')
                 files = ddict._get('block.files')
                 found_dataset = block.split('#')[0]
                 if  found.has_key(found_dataset):
                     val = found[found_dataset]
-                    found[found_dataset] = {'bytes': val['bytes'] + bytes,
+                    found[found_dataset] = {'bytes': val['bytes'] + bbytes,
                         'files': val['files'] + files}
                 else:
-                    found[found_dataset] = {'bytes': bytes, 'files': files}
+                    found[found_dataset] = {'bytes': bbytes, 'files': files}
             for name, val in found.items():
                 record = dict(name=name, size=val['bytes'], files=val['files'],
                                 combined=['dbs', 'phedex']) 
@@ -128,7 +126,6 @@ class CombinedService(DASAbstractService):
             if  isinstance(url, dict):
                 url = "combined: %s" % url.values()
             self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
-        except:
-            traceback.print_exc()
+        except Exception as exc:
+            print_exc(exc)
             self.logger.info('Fail to write_to_cache for combined service')
-            pass

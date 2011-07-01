@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0703
 
 """
 DAS mapping DB module
@@ -13,7 +14,6 @@ import os
 import re
 import time
 import types
-import traceback
 
 # monogo db modules
 from pymongo import DESCENDING

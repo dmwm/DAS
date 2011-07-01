@@ -15,7 +15,6 @@ import time
 import thread
 import urllib
 import cherrypy
-import traceback
 
 from itertools import groupby
 from cherrypy import expose, HTTPError
@@ -27,8 +26,8 @@ import DAS
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators, das_filters
 from DAS.core.das_ply import das_parser_error
-from DAS.utils.utils import getarg, access, size_format, DotDict, genkey
-from DAS.utils.logger import DASLogger, set_cherrypy_logger
+from DAS.utils.utils import getarg, access, size_format, DotDict
+from DAS.utils.utils import genkey, print_exc
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
@@ -185,6 +184,19 @@ def das_json(record, pad=''):
     page += "</pre></div>"
     return page
 
+def gen_error_msg(kwargs):
+    """
+    Generate standard error message.
+    """
+    error  = "My request to DAS is failed\n\n"
+    error += "Input parameters:\n"
+    for key, val in kwargs.items():
+        error += '%s: %s\n' % (key, val)
+    error += "Exception type: %s\nException value: %s\nTime: %s" \
+                % (sys.exc_info()[0], sys.exc_info()[1], web_time())
+    error = error.replace("<", "").replace(">", "")
+    return error
+
 class DASWebService(DASWebManager):
     """
     DAS web service interface.
@@ -194,13 +206,7 @@ class DASWebService(DASWebManager):
         self.base   = config['url_base']
         self.next   = 3000 # initial next update status in miliseconds
         self.engine = config.get('engine', None)
-        logfile     = config['logfile']
-        loglevel    = config['loglevel']
         nworkers    = config['number_of_workers']
-        self.logger = DASLogger(logfile=logfile, verbose=loglevel)
-        set_cherrypy_logger(self.logger.handler, loglevel)
-        msg = "DASSearch::init is started with base=%s" % self.base
-        self.logger.info(msg)
         self.dasconfig   = das_readconfig()
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
@@ -227,6 +233,7 @@ class DASWebService(DASWebManager):
                 dbsmgr = DBSDaemon(dbs_url, self.dburi)
                 self.dbsmgr[dbs_url] = dbsmgr
                 def dbs_updater(_dbsmgr, interval):
+                    """DBS updater daemon"""
                     while True:
                         _dbsmgr.update()
                         time.sleep(interval)
@@ -256,8 +263,8 @@ class DASWebService(DASWebManager):
             self.colors = {}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
-        except Exception, _exp:
-            traceback.print_exc()
+        except Exception as exc:
+            print_exc(exc)
             self.dasmgr = None
             self.daskeys = []
             self.colors = {}
@@ -405,8 +412,8 @@ class DASWebService(DASWebManager):
         try:
             mongo_query = self.dasmgr.mongoparser.parse(uinput, \
                                 add_to_analytics=False)
-        except Exception, err:
-            return 1, helper(uinput, das_parser_error(uinput, str(err)))
+        except Exception as exc:
+            return 1, helper(uinput, das_parser_error(uinput, str(exc)))
         fields = mongo_query.get('fields', [])
         if  not fields:
             fields = []
@@ -431,9 +438,8 @@ class DASWebService(DASWebManager):
             elif  uinput.find('records') == -1 and not service_map:
                 return 1, helper(uinput, \
                 "None of the API's registered in DAS can resolve this query")
-        except:
-            traceback.print_exc()
-            pass
+        except Exception as exc:
+            print_exc(exc)
         return 0, mongo_query
 
     @expose
@@ -456,20 +462,6 @@ class DASWebService(DASWebManager):
         page  = self.templatepage('das_searchform', input=uinput, \
                 base=self.base, instance=instance, view=view, cards=cards)
         return page
-
-    def gen_error_msg(self, kwargs):
-        """
-        Generate standard error message.
-        """
-        self.logger.error(traceback.format_exc())
-        error  = "My request to DAS is failed\n\n"
-        error += "Input parameters:\n"
-        for key, val in kwargs.items():
-            error += '%s: %s\n' % (key, val)
-        error += "Exception type: %s\nException value: %s\nTime: %s" \
-                    % (sys.exc_info()[0], sys.exc_info()[1], web_time())
-        error = error.replace("<", "").replace(">", "")
-        return error
 
     @expose
     def error(self, msg, wrap=True):
@@ -497,8 +489,8 @@ class DASWebService(DASWebManager):
             fds = self.gfs.get(ObjectId(fid))
             data['status'] = 'success'
             data['data']   = fds.read()
-        except:
-            self.logger.error(traceback.format_exc())
+        except Exception as exc:
+            print_exc(exc)
             code = web_code('Exception')
             raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
@@ -556,8 +548,9 @@ class DASWebService(DASWebManager):
             ctime   = (time.time()-time0)
             page = self.page(form + page, ctime=ctime)
             return page
-        except:
-            return self.error(self.gen_error_msg(kwargs))
+        except Exception as exc:
+            print_exc(exc)
+            return self.error(gen_error_msg(kwargs))
 
     def convert2ui(self, idict, not2show=None):
         """
@@ -610,9 +603,9 @@ class DASWebService(DASWebManager):
             data   = self.dasmgr.result(mquery, idx, limit, skey, sdir)
             head.update({'status':'ok', 'nresults':nres, 
                          'mongo_query': mquery, 'ctime': time.time()-time0})
-        except Exception, exp:
-            traceback.print_exc()
-            head.update({'status': 'fail', 'reason': str(exp),
+        except Exception as exc:
+            print_exc(exc)
+            head.update({'status': 'fail', 'reason': str(exc),
                          'ctime': time.time()-time0})
             data = []
         return head, data
@@ -680,9 +673,9 @@ class DASWebService(DASWebManager):
             page = func(head, data)
         except HTTPError, _err:
             raise 
-        except:
-            traceback.print_exc()
-            msg  = self.gen_error_msg(kwargs)
+        except Exception as exc:
+            print_exc(exc)
+            msg  = gen_error_msg(kwargs)
             page = self.templatepage('das_error', msg=msg)
         return page
 
@@ -699,8 +692,9 @@ class DASWebService(DASWebManager):
         try:
             mquery = self.dasmgr.mongoparser.parse(query, False) 
             data   = self.dasmgr.result(mquery, idx=0, limit=0)
-        except Exception, _exp:
-            msg    = 'Unable to retrieve data for query=%s' % query
+        except Exception as exc:
+            msg    = 'Exception: %s\n' % str(exc)
+            msg   += 'Unable to retrieve data for query=%s' % query
             return self.error(msg)
         lfns = []
         for rec in data:
@@ -905,7 +899,8 @@ class DASWebService(DASWebManager):
                 continue
             try:
                 mongo_id = row['_id']
-            except:
+            except Exception as exc:
+                msg = 'Exception: %s\n' % str(exc)
                 msg = 'Fail to process row\n%s' % str(row)
                 raise Exception(msg)
             page += '<div class="%s"><hr class="line" />' % style
@@ -965,8 +960,8 @@ class DASWebService(DASWebManager):
                         systems = self.systems(row[lkey]['combined'])
             except KeyError:
                 systems = "" # we don't store systems for aggregated records
-            except:
-                traceback.print_exc()
+            except Exception as exc:
+                print_exc(exc)
                 systems = "" # we don't store systems for aggregated records
             jsonhtml = das_json(row, pad)
             if  not links:

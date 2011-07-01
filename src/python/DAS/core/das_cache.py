@@ -10,9 +10,6 @@ __version__ = "$Revision: 1.30 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
-import traceback
-import multiprocessing 
-from   multiprocessing import cpu_count
 
 # DAS modules
 from DAS.utils.utils import genkey

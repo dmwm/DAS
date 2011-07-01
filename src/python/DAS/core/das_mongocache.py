@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0703
 
 """
 DAS mongocache manager.
@@ -19,12 +20,11 @@ import re
 import time
 from   types import GeneratorType
 import itertools
-import traceback
 import fnmatch
 
 # DAS modules
 from DAS.utils.utils import genkey, convert_dot_notation, aggregator
-from DAS.utils.utils import adjust_mongo_keyvalue
+from DAS.utils.utils import adjust_mongo_keyvalue, print_exc
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection
 from DAS.utils.utils import parse_filters
@@ -35,7 +35,7 @@ import DAS.utils.jsonwrapper as json
 from pymongo.objectid import ObjectId
 from pymongo.code import Code
 from pymongo import DESCENDING, ASCENDING
-from pymongo.errors import InvalidOperation, OperationFailure
+from pymongo.errors import InvalidOperation
 from bson.errors import InvalidDocument
 
 DOT = '.'
@@ -676,7 +676,8 @@ class DASMongocache(object):
         else:
             existing_idx = [i for i in self.existing_indexes(collection)]
             keys = [k for k in spec.keys() \
-                if k.find('das') == -1 and k.find('_id') == -1 and k in existing_idx]
+                if k.find('das') == -1 and k.find('_id') == -1 and \
+                        k in existing_idx]
             skeys = [(k, ASCENDING) for k in keys]
         res = []
         try:
@@ -805,8 +806,8 @@ class DASMongocache(object):
             try:
                 rec   = \
                 [k for i in row['das']['lookup_keys'] for k in i.values()]
-            except:
-                traceback.print_exc()
+            except Exception as exc:
+                print_exc(exc)
                 print "Fail with record:", row
                 continue
             lkeys = list(set(k for i in rec for k in i))

@@ -12,11 +12,10 @@ import time
 import calendar
 import datetime
 import xmlrpclib
-import traceback
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
-from   DAS.utils.utils import convert2date
+from   DAS.utils.utils import convert2date, print_exc
 
 def rr_date(timestamp):
     """
@@ -189,11 +188,11 @@ class RunRegistryService(DASAbstractService):
         ctime   = time.time() - time0
         try:
             self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
-        except:
-            traceback.print_exc()
+        except Exception as exc:
+            print_exc(exc)
             self.logger.info('Fail to write_to_cache for runregistry service')
             pass
-#
+
 if __name__ == '__main__':
     QUERY = "{runNumber} >= 135230 and {runNumber} <= 135230"
     QUERY = {'runStartTime': '>= 2010-10-18 and < 2010-10-22'}

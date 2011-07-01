@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0703
 
 """
 Core class for Data Aggregation Service (DAS) framework.
@@ -16,11 +17,8 @@ __version__ = "$Revision: 1.80 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
-import re
 import os
 import time
-import types
-import traceback
 
 # DAS modules
 from DAS.core.das_ql import das_operators, das_special_keys
@@ -33,8 +31,8 @@ from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
 from DAS.core.das_mongocache import compare_specs
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
-from DAS.utils.utils import genkey, getarg, unique_filter, parse_filters
-from DAS.utils.utils import expire_timestamp
+from DAS.utils.utils import genkey, unique_filter, parse_filters
+from DAS.utils.utils import expire_timestamp, print_exc
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.das_timer import das_timer, get_das_timer
 
@@ -156,21 +154,21 @@ class DASCore(object):
                 module = __import__(mname, fromlist=[klass])
                 obj = getattr(module, klass)(dasconfig)
                 setattr(self, name, obj)
-            except IOError:
+            except IOError as err:
                 if  debug > 1:
                     # we have virtual services, so IOError can be correct
-                    traceback.print_exc()
+                    print_exc(err)
                 try:
                     mname  = 'DAS.services.generic_service'
                     module = __import__(mname, fromlist=['GenericService'])
                     obj    = module.GenericService(name, dasconfig)
                     setattr(self, name, obj)
-                except:
-                    traceback.print_exc()
+                except Exception as exc:
+                    print_exc(exc)
                     msg = "Unable to load %s data-service plugin" % name
                     raise Exception(msg)
-            except:
-                traceback.print_exc()
+            except Exception as exc:
+                print_exc(exc)
                 msg = "Unable to load %s data-service plugin" % name
                 raise Exception(msg)
 
@@ -283,7 +281,6 @@ class DASCore(object):
             if  fields and isinstance(fields, list) and 'queries' in fields:
                 return 'ok'
         status = 0
-        iquery = dict(query)
         query  = self.bare_query(query)
         record = self.rawcache.find(query)
         try:
@@ -305,7 +302,7 @@ class DASCore(object):
         """
         Return true/false for input query if it exists in raw-cache.
         """
-        query, dquery = convert2pattern(loose(query))
+        query, _dquery = convert2pattern(loose(query))
         return self.rawcache.incache(query, collection='merge')
 
     def get_das_ids(self, query):
@@ -314,7 +311,8 @@ class DASCore(object):
         """
         das_ids = []
         try:
-            das_ids = [r['_id'] for r in self.rawcache.find_specs(query, system='')]
+            das_ids = \
+                [r['_id'] for r in self.rawcache.find_specs(query, system='')]
         except:
             pass
         return das_ids
@@ -328,7 +326,7 @@ class DASCore(object):
             fields = query['fields']
             if  fields and isinstance(fields, list) and 'queries' in fields:
                 count = 0
-                for row in self.get_queries(query):
+                for _row in self.get_queries(query):
                     count += 1
                 return count
         filters  = query.get('filters')
@@ -448,8 +446,8 @@ class DASCore(object):
             else:
                 for srv in services:
                     self.worker(srv, query)
-        except:
-            traceback.print_exc()
+        except Exception as exc:
+            print_exc(exc)
             return 0
         self.logger.info('\nDASCore::call ##### merging ######\n')
         self.rawcache.update_query_record(query, 'merging')
@@ -457,7 +455,8 @@ class DASCore(object):
         self.rawcache.merge_records(query)
         das_timer('merge', self.verbose)
         self.rawcache.update_query_record(query, 'ok')
-        self.rawcache.add_to_record(query, {'das.timer': get_das_timer()}, system='das')
+        self.rawcache.add_to_record(\
+                query, {'das.timer': get_das_timer()}, system='das')
         das_timer('DASCore::call', self.verbose)
         return 1
 
@@ -468,8 +467,9 @@ class DASCore(object):
         further processing.
         """
         das_timer('DASCore::get_from_cache', self.verbose)
-        msg = 'DASCore::get_from_cache, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
-                % (query, idx, limit, skey, sorder)
+        msg  = 'DASCore::get_from_cache, query=%s, idx=%s, limit=%s'\
+                % (query, idx, limit)
+        msg += ', skey=%s, order=%s' % (skey, sorder)
         self.logger.info(msg)
         # add das_ids look-up to remove duplicates
         das_ids = self.get_das_ids(query)
@@ -512,23 +512,26 @@ class DASCore(object):
         aggregators = query.get('aggregators', None)
         mapreduce   = query.get('mapreduce', None)
         filters     = query.get('filters', None)
+        unique      = False
         if  filters:
             fields  = query['fields']
             if  not fields or not isinstance(fields, list):
                 fields = []
             new_fields = []
-            for filter in filters:
-                if  filter == 'unique':
+            for dasfilter in filters:
+                if  dasfilter == 'unique':
+                    unique = True
                     continue
                 for oper in ['>', '<', '=']:
-                    if  filter.find(oper) != -1:
-                        fname = filter.split(oper)[0]
+                    if  dasfilter.find(oper) != -1:
+                        fname = dasfilter.split(oper)[0]
                         if  fname not in fields and fname not in new_fields:
                             new_fields.append(fname)
-                if  filter not in fields and filter not in new_fields:
-                    if  filter.find('=') == -1 and filter.find('<') == -1\
-                    and filter.find('>') == -1:
-                        new_fields.append(filter)
+                if  dasfilter not in fields and \
+                    dasfilter not in new_fields:
+                    if  dasfilter.find('=') == -1 and dasfilter.find('<') == -1\
+                    and dasfilter.find('>') == -1:
+                        new_fields.append(dasfilter)
             if  new_fields:
                 query['fields'] = new_fields
             else:
@@ -550,15 +553,20 @@ class DASCore(object):
                 rows = self.rawcache.get_from_cache(\
                         query, collection=collection)
                 data = getattr(das_aggregator, 'das_%s' % func)(key, rows)
-                res += [{'_id':_id, 'function': func, 'key': key, 'result': data}]
+                res += \
+                [{'_id':_id, 'function': func, 'key': key, 'result': data}]
                 _id += 1
         elif isinstance(fields, list) and 'queries' in fields:
             res = self.get_queries(query)
         else:
             res = self.rawcache.get_from_cache(\
                 query, idx, limit, skey, sorder, collection=collection)
-        for row in res:
-            yield row
+        if  unique:
+            for row in unique_filter(res):
+                yield row
+        else:
+            for row in res:
+                yield row
         das_timer('DASCore::get_from_cache', self.verbose)
 
     def get_queries(self, query):
@@ -574,14 +582,15 @@ class DASCore(object):
             datestamp = spec.get('date')
             if  isinstance(datestamp, dict):
                 value = datestamp.get('$in')
-                res = self.analytics.list_queries(after=value[0], before=value[1])
+                res = \
+                self.analytics.list_queries(after=value[0], before=value[1])
             elif isinstance(datestamp, int):
                 res = self.analytics.list_queries(after=datestamp)
             elif not datestamp:
                 res = self.analytics.list_queries()
             else:
-               msg = 'Unsupported date value: %s' % datestamp
-               raise Exception(msg)
+                msg = 'Unsupported date value: %s' % datestamp
+                raise Exception(msg)
         for row in res:
             rid = row.pop('_id')
             yield dict(das_query=row, _id=rid)
