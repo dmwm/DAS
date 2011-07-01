@@ -243,11 +243,11 @@ def conn_monitor(uri, func, sleep=5):
 
 class DBSPhedexService(object):
     """DBSPhedexService"""
-    def __init__(self, uri, urls):
+    def __init__(self, uri, urls, expire=3600):
         super(DBSPhedexService, self).__init__()
         self.dbname   = 'dbs_phedex'
         self.collname = 'datasets'
-        self.expired  = 1*60*60 # 1 hour
+        self.expired  = expire
         self.uri      = uri
         self.init()
 

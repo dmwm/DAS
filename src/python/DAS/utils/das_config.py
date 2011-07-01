@@ -166,10 +166,10 @@ DASOption('das', 'services', 'list',
                 ['google_maps', 'ip', 'postalcode'], destination='services'),
 
 # DAS dbs_phedex service options
-DASOption('dbs_phedex', 'urls', 'list',
-        ['http://vocms09.cern.ch:8989/dbs/DBSReader/datasets',
-         'https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockReplicas'])
-]
+DASOption('dbs_phedex', 'urls', 'list',[]),
+# DAS dbs_phedex expiration
+DASOption('dbs_phedex', 'expire', 'int', 3600),
+] # end of DAS_OPTIONS list
 
 def read_configparser(dasconfig):
     """Read DAS configuration"""
