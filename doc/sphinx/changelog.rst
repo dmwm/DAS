@@ -7,7 +7,15 @@ This release series is targeted to DAS usability. We collected users
 requests in terms of DAS functionality and usability. All changes made
 towards making DAS easy to use for end-users.
 
+- 0.9.X
+
+  - code clean-up
+  - replace traceback with custom print_exc function which prints all
+    exceptions in the following format: msg, timestamp, exp_type,
+    exc_msg, file_location
+
 - 0.8.X
+
   - resolve double requests issue, ticket #1881, see discussion on HN
     https://hypernews.cern.ch/HyperNews/CMS/get/webInterfaces/708.html
   - Adjust RequestManager to store timestamp and handle stale requests

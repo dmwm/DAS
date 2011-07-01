@@ -8,4 +8,4 @@ DAS modules
 .. moduleauthor:: Valentin Kuznetsov <vkuznet@gmail.com>
 """
 __author__ = "Valentin Kuznetsov"
-version = "0.8.4"
+version = "0.9.0"
