@@ -488,10 +488,10 @@ class DASAbstractService(object):
             self.write_to_cache(query, expire, url, api, args, 
                     dasrows, ctime)
         except Exception as exc:
-            print_exc(exc)
             msg  = 'Fail to process: url=%s, api=%s, args=%s' \
                     % (url, api, args)
             print msg
+            print_exc(exc)
 
     def url_instance(self, url, _instance):
         """

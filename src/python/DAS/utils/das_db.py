@@ -6,8 +6,6 @@
 DAS DB utilities.
 """
 
-__revision__ = "$Id: das_db.py,v 1.9 2010/05/04 21:12:19 valya Exp $"
-__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -127,10 +125,10 @@ def create_indexes(coll, index_list):
         if  not index_exists:
             try:
                 coll.create_index([pair])
-            except Exception, exp:
-                print str(exp)
+            except Exception as exp:
+                print_exc(exp)
         try:
             coll.ensure_index([pair])
-        except Exception, exp:
-            print str(exp)
+        except Exception as exp:
+            print_exc(exp)
 

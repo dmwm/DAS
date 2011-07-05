@@ -21,7 +21,7 @@ from   bson.code import Code
 from   DAS.utils.das_db import db_connection, create_indexes
 from   DAS.utils.url_utils import getdata
 from   DAS.web.tools import exposejson
-from   DAS.utils.utils import qlxml_parser, dastimestamp
+from   DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 import DAS.utils.jsonwrapper as json
 
 PAT = re.compile("^T[0-3]_")
@@ -216,12 +216,12 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
             print "%s update dbs_phedex DB %s sec" \
                 % (dastimestamp(), time.time()-time0)
             time.sleep(interval)
-        except AutoReconnect, err:
-            print "WARNING (dbs_phedex worker): %s" % str(err)
+        except AutoReconnect as err:
+            print_exc(err)
             time.sleep(conn_interval) # handles broken connection
             conn_interval *= 2
-        except Exception, exp:
-            print "ERROR (dbs_phedex worker): raised exception %s" % str(exp)
+        except Exception as exp:
+            print_exc(exp)
             time.sleep(conn_interval)
             conn_interval *= 2
 
@@ -238,8 +238,8 @@ def conn_monitor(uri, func, sleep=5):
             try:
                 if  conn:
                     func() # re-initialize DB connection
-            except Exception, err:
-                print "\n### Fail in %s, error=%s" % (func, str(err))
+            except Exception as err:
+                print_exc(err)
 
 class DBSPhedexService(object):
     """DBSPhedexService"""

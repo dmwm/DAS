@@ -5,16 +5,17 @@
 """
 DAS admin tool to handle DAS records in DAS cache server
 """
-__revision__ = "$Id"
-__version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import sys
 import json
 import time
-import traceback
+
+# DAS modules
 from optparse import OptionParser
 from DAS.utils.das_config import das_readconfig
+from DAS.utils.utils import print_exc
 
 # monogo db modules
 from pymongo.connection import Connection
@@ -236,10 +237,10 @@ class DASMongoDB(object):
             self.cache.remove(spec)
             msg += ", delete operation [OK]"
             print msg
-        except:
+        except Exception as exc:
             msg += ", delete operation [FAIL]"
             print msg
-            traceback.print_exc()
+            print_exc(exc)
 
     def renew(self, interval, system=None):
         """
@@ -340,8 +341,8 @@ if __name__ == '__main__':
 
     if  opts.clean:
         try:
-            dbname, dbcoll = opts.clean.split('.')
-            DASMONGO.clean(dbname, dbcoll)
+            DBNAME, DBCOLL = opts.clean.split('.')
+            DASMONGO.clean(DBNAME, DBCOLL)
         except:
             print "Please provide <dbname>.<dbcollection>"
 

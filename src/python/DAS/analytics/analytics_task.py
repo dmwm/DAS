@@ -7,12 +7,11 @@ Task class for analytics.
 
 # system modules
 import time
-import logging
 import uuid
 import copy
 
 # DAS modules
-from DAS.utils.utils import genkey
+from DAS.utils.utils import genkey, print_exc
 from DAS.analytics.analytics_utils import multilogging, das_factory
 
 class Task(object):
@@ -123,10 +122,11 @@ class RunnableTask(object):
         
         try:
             klass = self._load_class()
-        except Exception, exp:
+        except Exception as exp:
             msg = 'Task "%s" (%s) failed to load class "%s", aborting.' \
-                (self.name, taskid, self.classname)
+                % (self.name, taskid, self.classname)
             print "ERROR: %s" % msg
+            print_exc(exp)
             return {'task_id':taskid, 'success': False, 'error': exp, 
                     'start_time':start_time, 'finish_time':start_time,
                     'name':self.name, 'index':self.index, 'parent':self.parent,
@@ -148,21 +148,23 @@ class RunnableTask(object):
         
         try:
             instance = klass(**self.kwargs)
-        except Exception, exp:
-            msg = 'ERROR: task=%s, id=%s failed to instantiate, aborting.\n%s' \
-                         (self.name, taskid, str(exp))
+        except Exception as exp:
+            msg = 'ERROR: task=%s, id=%s failed to instantiate, aborting' \
+                         % (self.name, taskid)
             print msg
+            print_exc(exp)
             return {'task_id':taskid, 'success': False, 'error': exp, 
                     'start_time':start_time, 'finish_time':start_time,
                     'name':self.name, 'index':self.index, 'parent':self.parent,
                     'master_id':self.master_id}
         try:
             result = instance()
-        except Exception, exp:
+        except Exception as exp:
             finish_time = time.time() #we might have run for some time by now
-            msg = 'ERROR: task=%s, id=%s failed during run, aborting\n%s' \
-                         (self.name, taskid, str(exp))
+            msg = 'ERROR: task=%s, id=%s failed during run, aborting' \
+                         % (self.name, taskid)
             print msg
+            print_exc(exp)
             return {'task_id':taskid, 'success': False, 'error': exp,
                     'start_time':start_time, 'finish_time':finish_time,
                     'name':self.name, 'index':self.index, 'parent':self.parent,

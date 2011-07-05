@@ -4,16 +4,16 @@
 """
 Monitor service
 """
-__revision__ = "$Id: monitor_service.py,v 1.15 2010/03/05 18:08:08 valya Exp $"
-__version__ = "$Revision: 1.15 $"
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import time
 from   types import InstanceType
 
+# DAS modules
+import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, convert2date, das_dateformat
-import DAS.utils.jsonwrapper as json
 from   DAS.utils.regex import unix_time_pattern, date_yyyymmdd_pattern
 
 def convert_datetime(sec):

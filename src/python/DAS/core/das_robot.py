@@ -17,7 +17,7 @@ import atexit
 from signal import SIGTERM 
 
 # DAS modules
-from DAS.utils.utils import genkey, getarg
+from DAS.utils.utils import genkey, getarg, print_exc
 from DAS.core.das_core import DASCore
 
 class Robot(object):
@@ -52,7 +52,7 @@ class Robot(object):
             if  pid > 0:
                 # exit first parent
                 sys.exit(0) 
-        except OSError, err: 
+        except OSError as err: 
             sys.stderr.write("fork #1 failed: %d (%s)\n" \
                 % (err.errno, err.strerror))
             sys.exit(1)
@@ -68,7 +68,7 @@ class Robot(object):
             if  pid > 0:
                 # exit from second parent
                 sys.exit(0) 
-        except OSError, err:
+        except OSError as err:
             sys.stderr.write("fork #2 failed: %d (%s)\n" \
                 % (err.errno, err.strerror))
             sys.exit(1) 
@@ -135,13 +135,12 @@ class Robot(object):
             while 1:
                 os.kill(pid, SIGTERM)
                 time.sleep(0.1)
-        except OSError, err:
-            err = str(err)
+        except OSError as err:
             if err.find("No such process") > 0:
                 if os.path.exists(self.pidfile):
                     os.remove(self.pidfile)
             else:
-                print str(err)
+                print_exc(err)
                 sys.exit(1)
 
     def restart(self):

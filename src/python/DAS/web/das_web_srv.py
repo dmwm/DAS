@@ -401,9 +401,7 @@ class DASWebService(DASWebManager):
             guide = self.templatepage('dbsql_vs_dasql', 
                         operators=', '.join(das_operators()))
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
-                        input=myinput, guide=guide,
-                        entities=', '.join(self.daskeys),
-                        operators=', '.join(das_operators()))
+                        guide=guide)
             return page
         if  not uinput:
             return 1, helper(uinput, 'No input query')
@@ -671,7 +669,7 @@ class DASWebService(DASWebManager):
             head, data = self.get_data(kwargs)
             func = getattr(self, view + "view") 
             page = func(head, data)
-        except HTTPError, _err:
+        except HTTPError as _err:
             raise 
         except Exception as exc:
             print_exc(exc)

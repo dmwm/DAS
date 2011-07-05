@@ -681,13 +681,16 @@ class DASMongocache(object):
             skeys = [(k, ASCENDING) for k in keys]
         res = []
         try:
-            res = col.find(spec=spec, fields=fields).sort(skeys)
+            res = col.find(spec=spec, fields=fields)
+            if  skeys:
+                res = res.sort(skeys)
             if  idx:
                 res = res.skip(idx)
             if  limit:
                 res = res.limit(limit)
         except Exception as exp:
-            row = {'exception': exp}
+            print_exc(exp)
+            row = {'exception': str(exp)}
             yield row
         counter = 0
         for row in res:

@@ -72,7 +72,7 @@ class HotspotBase(object):
                 task = self.generate_task(item, count, epoch_start, epoch_end)
                 if task:
                     new_tasks.append(task)
-            except Exception, exc:
+            except Exception as exc:
                 failed_items.append((item, count, str(exc)))
         retval['new_tasks'] = new_tasks
         retval['failed_items'] = failed_items

@@ -65,7 +65,7 @@ class DBSDaemon(object):
             indexes = [('dataset', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
             self.col.remove()
-        except Exception, _exp:
+        except Exception as _exp:
             self.col = None
 
     def update(self):

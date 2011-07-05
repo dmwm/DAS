@@ -2,7 +2,7 @@
 #set base = $quote($base)
 #set msg = $quote($msg)
 #assert isinstance($base, str)
-#assert isinstance($msg, str)
+#assert (isinstance($msg, str) or isinstance($msg, unicode))
 <!-- das_ambiguous.tmpl -->
 <div> <!-- main div -->
 DAS server experience unexpected problem:

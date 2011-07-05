@@ -101,8 +101,8 @@ def get_data(host, query, idx, limit, debug):
             fdesc = opener.open(req)
             data = fdesc.read()
             fdesc.close()
-        except urllib2.HTTPError, err:
-            print err
+        except urllib2.HTTPError as err:
+            print str(err)
             return ""
         if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
             pid = data

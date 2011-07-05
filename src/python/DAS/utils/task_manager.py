@@ -9,11 +9,13 @@ joinall() to join all tasks in a queue and exiting existing workers
 join(jobs) to join all tasks without stopping workers
 """
 
-import time
+# system modules
 from cherrypy.process import plugins
 from threading import Thread, Event
 from Queue import Queue
-from DAS.utils.utils import genkey
+
+# DAS modules
+from DAS.utils.utils import genkey, print_exc
 
 class Worker(Thread):
     """Thread executing worker from a given tasks queue"""
@@ -41,9 +43,9 @@ class Worker(Thread):
             try:
                 func(*args)
                 self._pids.discard(pid)
-            except Exception, err: 
+            except Exception as err: 
                 self._pids.discard(pid)
-                print err
+                print_exc(err)
             evt.set()
 
 class TaskManager:
@@ -125,7 +127,6 @@ class PluginTaskManager(TaskManager, plugins.SimplePlugin):
         """
         if  self.debug:
             print "%s start" % self.name
-        pass
 
     def stop(self):
         """

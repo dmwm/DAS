@@ -129,4 +129,3 @@ class DashboardService(DASAbstractService):
             self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)
-            self.logger.info('Fail to write_to_cache for dashboard service')

@@ -43,10 +43,8 @@ def dastimestamp(msg='DAS '):
 def print_exc(exc):
     """Standard way to print exceptions"""
     print dastimestamp('DAS ERROR '), type(exc), str(exc)
-    try:
-        print traceback.print_tb(sys.exc_info()[-1], limit=1, file=sys.stdout)
-    except:
-        pass
+    _type, _value, exc_traceback = sys.exc_info()
+    traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
 
 def parse_filters(query):
     """

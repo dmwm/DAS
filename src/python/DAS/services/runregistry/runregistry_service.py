@@ -190,8 +190,6 @@ class RunRegistryService(DASAbstractService):
             self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)
-            self.logger.info('Fail to write_to_cache for runregistry service')
-            pass
 
 if __name__ == '__main__':
     QUERY = "{runNumber} >= 135230 and {runNumber} <= 135230"

@@ -11,7 +11,7 @@ import unittest
 from urllib2 import URLError
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
-from DAS.web.utils import urllib2_request
+from DAS.utils.url_utils import urllib2_request
 
 class testDASCache(unittest.TestCase):
     """

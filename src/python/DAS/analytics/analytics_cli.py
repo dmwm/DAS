@@ -13,6 +13,7 @@ import optparse
 import sys
 import pprint
 from DAS.analytics.analytics_utils import parse_time
+from DAS.utils.utils import print_exc
 
 def main():
     "Main function"
@@ -88,10 +89,10 @@ def main():
         req = urllib2.Request(url, headers={"Accept": "application/json"})
         try:
             result = urllib2.urlopen(req).read()
-        except Exception, exc:
+        except Exception as exc:
             print "There was an error fetching data from %s" % (host+path)
             print "Error was:"
-            print exc
+            print_exc(exc)
             sys.exit(0)
         try:
             return json.loads(result)

@@ -6,11 +6,14 @@ Python thread pool, see
 http://code.activestate.com/recipes/577187-python-thread-pool/
 """
 
-__revision__ = "$Id: threadpool.py,v 1.2 2010/05/04 13:32:47 valya Exp $"
-__version__ = "$Revision: 1.2 $"
+__author__ = 'Valentin Kuznetsov'
 
+# system modules
 from Queue import Queue
 from threading import Thread
+
+# DAS modules
+from DAS.utils.utils import print_exc
 
 class Worker(Thread):
     """Thread executing tasks from a given tasks queue"""
@@ -26,8 +29,8 @@ class Worker(Thread):
             func, args, kargs = self.tasks.get()
             try:
                 func(*args, **kargs)
-            except Exception, exp:
-                print exp
+            except Exception as exp:
+                print_exc(exp)
             self.tasks.task_done()
 
 class ThreadPool:

@@ -9,10 +9,14 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - walk through every exception in a code and use print_exc as a
+    default method to print out exception message. Adjust all
+    exception to PEP 3110 syntax
   - code clean-up
   - replace traceback with custom print_exc function which prints all
     exceptions in the following format: msg, timestamp, exp_type,
     exc_msg, file_location
+  - remove extra cherrypy logging, clean-up DAS server logs
 
 - 0.8.X
 

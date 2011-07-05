@@ -212,7 +212,7 @@ class DASCore(object):
                 try:
                     query = self.mongoparser.parse(query, 
                                 add_to_analytics)
-                except Exception, exp:
+                except Exception as exp:
                     raise exp
         err = '\nDASCore::result query not in MongoDB format, %s' % query
         if  not isinstance(query, dict):

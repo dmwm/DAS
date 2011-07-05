@@ -93,13 +93,7 @@ class QLManager(object):
             if  add_to_analytics:
                 self.analytics.add_query(query, mongo_query)
             return mongo_query
-        try:
-            mongo_query = self.mongo_query(query)
-        except Exception as exc:
-            print_exc(exc)
-            print "\nUnable to convert input query='%s' into MongoDB one\n" \
-                % query
-            raise
+        mongo_query = self.mongo_query(query)
         self.convert2skeys(mongo_query)
         if  add_to_analytics:
             self.analytics.add_query(query, mongo_query)
@@ -135,8 +129,11 @@ class QLManager(object):
             try:
                 ply_query   = self.dasply.parser.parse(query)
                 mongo_query = ply2mongo(ply_query)
-            except Exception as exp:
-                raise exp
+            except Exception as exc:
+                print "Unable to convert input query='%s' into MongoDB format" \
+                    % query
+                print_exc(exc)
+                raise
         if  set(mongo_query.keys()) & set(['fields','spec']) != \
                 set(['fields', 'spec']):
             raise Exception('Invalid MongoDB query %s' % mongo_query)

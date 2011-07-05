@@ -1,25 +1,15 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0103,C0301,E0611
-#  error code E0611 for 
-#  E: 15: No name 'son_manipulator' in module 'pymongo'
-#  E: 16: No name 'son' in module 'pymongo'
+#pylint: disable-msg=C0103,C0301
 
 """
 DAS MongoDB SON manipulator.
 """
 
-__revision__ = "$Id: das_son_manipulator.py,v 1.5 2010/04/13 13:33:19 valya Exp $"
-__version__ = "$Revision: 1.5 $"
 __author__ = "Valentin Kuznetsov"
 
 from pymongo.son_manipulator import SONManipulator
-try:
-    # new pymongo
-    from bson.son import SON
-except ImportError:
-    # old pymongo
-    from pymongo.son import SON
+from bson.son import SON
 
 class DAS_SONManipulator(SONManipulator):
     """DAS SON manipulator"""

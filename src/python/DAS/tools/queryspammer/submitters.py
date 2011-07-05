@@ -25,6 +25,7 @@ class Submitter(multiprocessing.Process):
         self.max_time = kwargs.get('max_time', -1)
         multiprocessing.Process.__init__(self)
     def run(self):
+        """run the job"""
         calls = 0
         start_time = time.time()
         while True:
@@ -33,22 +34,20 @@ class Submitter(multiprocessing.Process):
             query_start = time.time()
             try:
                 result = self.submit(query)
-            except Exception, e:
-                result = str(e)            
+            except Exception as exc:
+                result = str(exc)
             query_end = time.time()
-
-            LOG.info('call=%d query="%s" latency=%.3f result="%s"' % (calls,
-                                                                      query,
-                                                                      query_end-query_start,
-                                                                      result))
-
+            LOG.info('call=%d query="%s" latency=%.3f result="%s"' \
+                % (calls, query, query_end-query_start, result))
             calls += 1
-            
             if not self.max_calls == -1 and calls > self.max_calls:
-                LOG.info('Reached maximum calls (%s), aborting.' % self.max_calls)
+                LOG.info('Reached maximum calls (%s), aborting.' \
+                        % self.max_calls)
                 return
-            if not self.max_time == -1 and query_end - start_time > self.max_time:
-                LOG.info('Reached maximum time (%s), aborting.' % self.max_time)
+            if  not self.max_time == -1 and \
+                query_end - start_time > self.max_time:
+                LOG.info('Reached maximum time (%s), aborting.' \
+                        % self.max_time)
                 return
 
             if self.mode == 'continuous':
@@ -58,11 +57,13 @@ class Submitter(multiprocessing.Process):
             elif self.mode == 'random':
                 time.sleep(random.random() * self.delay)
     def submit(self, query):
+        """submit query"""
         return None
             
 class StdOutSubmitter(Submitter):
     "Submitter that prints the query to stdout"
     def submit(self, query):
+        """submit query"""
         print query
         return True
             
@@ -74,6 +75,7 @@ class FileSubmitter(Submitter):
         LOG.info('Writing to %s' % self.filename)
         Submitter.__init__(self, producer, **kwargs)
     def submit(self, query):
+        """submit query"""
         self.file.write(query+'\n')
         return True
 
@@ -89,6 +91,7 @@ class HTTPSubmitter(Submitter):
         self.timeout = kwargs.get('timeout', None)
         Submitter.__init__(self, producer, **kwargs)
     def submit(self, query):
+        """submit query"""
         data = ''
         if self.method == 'GET':
             if self.getmode == 'query':
@@ -112,9 +115,11 @@ class HTTPSubmitter(Submitter):
                                   headers=self.headers)
             result = urllib2.urlopen(req, timeout=self.timeout)
             data = result.read()
-        return 'READ %d bytes: %s' % (len(data), data[:256] + ('...' if len(data) > 256 else ''))
+        return 'READ %d bytes: %s' \
+                % (len(data), data[:256] + ('...' if len(data) > 256 else ''))
 
 class DASWebSubmitter(HTTPSubmitter):
+    "DAS Web submitter class"
     def __init__(self, producer, **kwargs):
         HTTPSubmitter.__init__(self, producer, 
                                baseurl='http://localhost:8212/das/jsonview',
@@ -129,15 +134,16 @@ class DASSubmitter(Submitter):
         self.skey = kwargs.get('skey', None)
         self.sorder = kwargs.get('sorder', 'asc')
         Submitter.__init__(self, producer, **kwargs)
-        self.DAS = DASCore()
+        self.das = DASCore()
     def submit(self, query):
-        result = self.DAS.result(query, 
+        """submit query"""
+        result = self.das.result(query, 
                                  self.idx, 
                                  self.limit, 
                                  self.skey, 
                                  self.sorder)
         count = 0
-        for row in result:
+        for _ in result:
             count += 1
         return 'READ %d' % count
 
@@ -156,15 +162,16 @@ class PLYSubmitter(Submitter):
             for item in val:
                 daskeys.append(item)
         
-        self.DASPLY = DASPLY(parserdir, daskeys, dasservices)
-        self.DASPLY.build()
+        self.dasply = DASPLY(parserdir, daskeys, dasservices)
+        self.dasply.build()
         Submitter.__init__(self, producer, **kwargs)
     def submit(self, query):
-        print "RAW: ",query
-        ply = self.DASPLY.parser.parse(query)
-        print "PLY: ",ply
+        """submit query"""
+        print "RAW: ", query
+        ply = self.dasply.parser.parse(query)
+        print "PLY: ", ply
         mongo = ply2mongo(ply)
-        print "MONGO: ",mongo
+        print "MONGO: ", mongo
         return True
         
     

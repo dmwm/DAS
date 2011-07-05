@@ -16,7 +16,7 @@ import copy
 # DAS modules
 from DAS.analytics.analytics_config import DASAnalyticsConfig
 from DAS.analytics.analytics_task import Task
-from DAS.utils.utils import dastimestamp
+from DAS.utils.utils import dastimestamp, print_exc
 
 DASAnalyticsConfig.add_option("max_retries",
                               type=int,
@@ -291,10 +291,11 @@ class TaskScheduler(object):
             for callback in self.callbacks:
                 try:
                     callback(result)
-                except Exception, e:
-                    msg = 'ERROR: dispatch for task=%s, id=%s, exp=%s' \
-                        % (task.name, task_id, str(e))
+                except Exception as exc:
+                    msg = 'ERROR: dispatch for task=%s, id=%s' \
+                        % (task.name, task_id)
                     print msg
+                    print_exc(exc)
         finally:
             self.lock.release()
         
