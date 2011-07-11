@@ -264,8 +264,9 @@ def checkargs(supported):
             if  checkarg(kwds, 'idx') and not pat.match(str(kwds['idx'])):
                 code  = web_code('Unsupported idx value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'next') and not pat.match(str(kwds['next'])):
-                code  = web_code('Unsupported next value')
+            if  checkarg(kwds, 'interval') and \
+                not pat.match(str(kwds['interval'])):
+                code  = web_code('Unsupported interval value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'limit') and not pat.match(str(kwds['limit'])):
                 code  = web_code('Unsupported limit value')

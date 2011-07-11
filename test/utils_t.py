@@ -190,6 +190,11 @@ class testUtils(unittest.TestCase):
         expect = [{'k':1, '_id':1}, {'r':1}]
         self.assertEqual(result, expect)
 
+        rows = [{'k':1, '_id':1}, {'k':1, '_id':2}, {'k':1, '_id':3}, {'r':1}]
+        result = [r for r in unique_filter(rows)]
+        expect = [{'k':1, '_id':1}, {'r':1}]
+        self.assertEqual(result, expect)
+
     def test_aggregator(self):
         """Test aggregator function"""
         # 1 row in results

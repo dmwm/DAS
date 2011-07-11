@@ -203,10 +203,10 @@ class DASWebService(DASWebManager):
     """
     def __init__(self, config):
         DASWebManager.__init__(self, config)
-        self.base   = config['url_base']
-        self.next   = 3000 # initial next update status in miliseconds
-        self.engine = config.get('engine', None)
-        nworkers    = config['number_of_workers']
+        self.base        = config['url_base']
+        self.interval    = 3000 # initial update interval in msec
+        self.engine      = config.get('engine', None)
+        nworkers         = config['number_of_workers']
         self.dasconfig   = das_readconfig()
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
@@ -396,7 +396,7 @@ class DASWebService(DASWebManager):
         Check provided input as valid DAS input query.
         Returns status and content.
         """
-        def helper(myinput, msg):
+        def helper(msg):
             """Helper function which provide error template"""
             guide = self.templatepage('dbsql_vs_dasql', 
                         operators=', '.join(das_operators()))
@@ -404,21 +404,21 @@ class DASWebService(DASWebManager):
                         guide=guide)
             return page
         if  not uinput:
-            return 1, helper(uinput, 'No input query')
+            return 1, helper('No input query')
         # check provided input. If at least one word is not part of das_keys
         # return ambiguous template.
         try:
             mongo_query = self.dasmgr.mongoparser.parse(uinput, \
                                 add_to_analytics=False)
         except Exception as exc:
-            return 1, helper(uinput, das_parser_error(uinput, str(exc)))
+            return 1, helper(das_parser_error(uinput, str(exc)))
         fields = mongo_query.get('fields', [])
         if  not fields:
             fields = []
         spec   = mongo_query.get('spec', {})
         if  not fields+spec.keys():
             msg = 'Provided input does not resolve into a valid set of keys'
-            return 1, helper(uinput, msg)
+            return 1, helper(msg)
         for word in fields+spec.keys():
             found = 0
             if  word == 'queries':
@@ -428,13 +428,13 @@ class DASWebService(DASWebManager):
                     found = 1
             if  not found:
                 msg = 'Provided input does not contain a valid DAS key'
-                return 1, helper(uinput, msg)
+                return 1, helper(msg)
         try:
             service_map = self.dasmgr.mongoparser.service_apis_map(mongo_query)
             if  uinput.find('queries') != -1:
                 pass
             elif  uinput.find('records') == -1 and not service_map:
-                return 1, helper(uinput, \
+                return 1, helper(\
                 "None of the API's registered in DAS can resolve this query")
         except Exception as exc:
             print_exc(exc)
@@ -766,7 +766,7 @@ class DASWebService(DASWebManager):
                         % urllib.urlencode({'input':uinput})
                 page += '<script type="text/javascript">'
                 page += """setTimeout('ajaxCheckPid("%s", "%s", "%s")', %s)""" \
-                        % (self.base, pid, self.next, self.next)
+                        % (self.base, pid, self.interval, self.interval)
                 page += '</script>'
             else:
                 page = self.get_page_content(kwargs)
@@ -794,22 +794,22 @@ class DASWebService(DASWebManager):
         return self.page(page)
 
     @expose
-    @checkargs(['pid', 'next'])
-    def check_pid(self, pid, next):
+    @checkargs(['pid', 'interval'])
+    def check_pid(self, pid, interval):
         """
         Place AJAX request to obtain status about given process pid.
         """
         limit = 30000 # 1 minute, max check status limit
-        next  = int(next)
-        if  next < limit and next*2 < limit:
-            next *= 2
+        interval = int(interval)
+        if  interval*2 < limit:
+            interval *= 2
         else:
-            next = limit
+            interval = limit
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         req  = """
         <script type="text/javascript">
         setTimeout('ajaxCheckPid("%s", "%s", "%s")', %s)
-        </script>""" % (self.base, pid, next, next)
+        </script>""" % (self.base, pid, interval, interval)
         cherrypy.response.headers['Content-Type'] = 'text/xml'
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
@@ -817,7 +817,7 @@ class DASWebService(DASWebManager):
         if  doc:
             kwargs = doc
             if  self.taskmgr.is_alive(pid):
-                sec   = next/1000
+                sec   = interval/1000
                 page  = img + " processing PID=%s, " % pid
                 page += "next check in %s sec, please wait ..." % sec
                 page += ', <a href="/das/">stop</a> request' 
