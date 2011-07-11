@@ -41,7 +41,7 @@ DAS_WEB_CODES = [
         (29 , 'Query is not suitable for this view'),
         (30 , 'DAS parser error'),
         (31 , 'Unsupported pid value'),
-        (32 , 'Unsupported inerval value'),
+        (32 , 'Unsupported interval value'),
         (33 , 'Unsupported kwds'),
         (34 , 'Unsupported dbs instance'),
 ]

@@ -50,6 +50,10 @@ class RequestManager(object):
             row['_id'] = str(row['_id'])
             yield row
 
+    def has_pid(self, pid):
+        """Return true/false for requested pid"""
+        return self.col.find_one({'_id':pid})
+
     def size(self):
         """Return size of the request cache"""
         return self.col.count()

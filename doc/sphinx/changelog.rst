@@ -9,6 +9,8 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - replace ajax XHR recursive calls with pattern matching and
+    onSuccess/onException in ajaxCheckPid/check_pid bundle
   - walk through every exception in a code and use print_exc as a
     default method to print out exception message. Adjust all
     exception to PEP 3110 syntax

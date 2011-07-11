@@ -32,7 +32,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import json2html, web_time, quote, free_text_parser
-from DAS.web.utils import ajax_response, checkargs, not_to_link
+from DAS.web.utils import checkargs, not_to_link
 from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.tools import request_headers, jsonstreamer
@@ -794,40 +794,26 @@ class DASWebService(DASWebManager):
         return self.page(page)
 
     @expose
-    @checkargs(['pid', 'interval'])
-    def check_pid(self, pid, interval):
+    @checkargs(['pid'])
+    def check_pid(self, pid):
         """
-        Place AJAX request to obtain status about given process pid.
+        Check status of given pid and return appropriate page content.
+        This is a server callback function for ajaxCheckPid, see
+        js/ajax_utils.js
         """
-        limit = 30000 # 1 minute, max check status limit
-        interval = int(interval)
-        if  interval*2 < limit:
-            interval *= 2
-        else:
-            interval = limit
-        img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
-        req  = """
-        <script type="text/javascript">
-        setTimeout('ajaxCheckPid("%s", "%s", "%s")', %s)
-        </script>""" % (self.base, pid, interval, interval)
-        cherrypy.response.headers['Content-Type'] = 'text/xml'
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
         doc = self.reqmgr.get(pid)
+        img = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         if  doc:
             kwargs = doc
             if  self.taskmgr.is_alive(pid):
-                sec   = interval/1000
-                page  = img + " processing PID=%s, " % pid
-                page += "next check in %s sec, please wait ..." % sec
-                page += ', <a href="/das/">stop</a> request' 
-                page += req
+                page = img + " processing PID=%s" % pid
             else:
-                page  = self.get_page_content(kwargs)
+                page = self.get_page_content(kwargs)
                 self.reqmgr.remove(pid)
         else:
             page = "Request %s not found, please reload the page" % pid
-        page = ajax_response(page)
         return page
     
     def systems(self, slist):
