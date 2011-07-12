@@ -260,6 +260,7 @@ class DASWebService(DASWebManager):
             self.gfs        = db_gridfs(self.dburi)
             self.daskeys.sort()
             self.dasmapping = self.dasmgr.mapping
+            self.dasmapping.init_presentationcache()
             self.colors = {}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
