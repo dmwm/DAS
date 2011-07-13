@@ -14,6 +14,7 @@ import sys
 import time
 import thread
 import urllib
+import urlparse
 import cherrypy
 
 from itertools import groupby
@@ -814,7 +815,14 @@ class DASWebService(DASWebManager):
                 page = self.get_page_content(kwargs)
                 self.reqmgr.remove(pid)
         else:
-            page = "Request %s not found, please reload the page" % pid
+            url = cherrypy.request.headers.get('Referer')
+            if  url:
+                kwargs = {}
+                for key, val in urlparse.parse_qsl(urlparse.urlparse(url).query):
+                    kwargs[key] = val
+                page = self.get_page_content(kwargs)
+            else:
+                page = "Request %s not found, please reload the page" % pid
         return page
     
     def systems(self, slist):
