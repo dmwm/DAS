@@ -166,7 +166,7 @@ class HotspotBase(object):
             last_time = summary['finish']
         result = self.make_summary(last_time, epoch_end)
         extra_summaries.extend(result)
-        summaries = [s['keys'] for s in summaries]
+        summaries = [dict(s['keys']) for s in summaries]
         summaries += extra_summaries
         
         return summaries
@@ -193,7 +193,7 @@ class HotspotBase(object):
                     self.das.analytics.add_summary(self.identifier,
                                                    start+span*i,
                                                    start+span*(i+1),
-                                                   keys=dict(summary))
+                                                   keys=(dict(summary)).items())
                     result.append(summary)
                     
             else:
@@ -201,7 +201,7 @@ class HotspotBase(object):
                 self.das.analytics.add_summary(self.identifier,
                                                start,
                                                finish,
-                                               keys=dict(summary))
+                                               keys=(dict(summary)).items())
                 result.append(summary)
         else:
             self.logger.info("...short enough to ignore.")
