@@ -1358,6 +1358,18 @@ def aggregator_helper(results, expire):
         row.update(helper(expire, prim_key, system, cond_keys))
         yield row
 
+def das_diff(rows, compare_keys):
+    """Perform diff action for given set of rows and compare_keys"""
+    diff_keys = []
+    for row in rows:
+        for key in compare_keys:
+            values = [v for v in DotDict(row).get_values(key)]
+            if  len(set(values)) > 1:
+                diff_keys.append(key)
+        if  diff_keys:
+            row.update({'das':{'diff':diff_keys}})
+        yield row
+
 def unique_filter(rows):
     """
     Unique filter drop duplicate rows.

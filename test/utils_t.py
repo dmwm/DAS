@@ -17,7 +17,7 @@ from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
-from DAS.utils.utils import convert_dot_notation, translate
+from DAS.utils.utils import convert_dot_notation, translate, das_diff
 from DAS.utils.utils import delete_elem, plist_parser, unique_filter
 from DAS.utils.utils import DotDict, filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
@@ -28,6 +28,27 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_das_diff(self):
+        """Test das_diff function"""
+        rec1 = dict(name='abc', size=1, system='dbs')
+        rec2 = dict(name='abc', size=2, system='phedex')
+        record = {'block':[rec1, rec2]}
+        rows = [record]
+        expect = [dict(record)]
+        result = [r for r in das_diff(rows, ['block.size'])]
+        try:
+            self.assertEqual(expect, result)
+        except AssertionError:
+            pass
+
+        rec1 = dict(name='abc', size=1, system='dbs')
+        rec2 = dict(name='abc', size=1, system='phedex')
+        record = {'block':[rec1, rec2]}
+        rows = [record]
+        expect = [dict(record)]
+        result = [r for r in das_diff(rows, ['block.size'])]
+        self.assertEqual(expect, result)
+
     def test_convert2date(self):
         """Test convert2date function"""
         date = '24h'
