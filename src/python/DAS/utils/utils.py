@@ -1367,7 +1367,10 @@ def das_diff(rows, compare_keys):
             if  len(set(values)) > 1:
                 diff_keys.append(key)
         if  diff_keys:
-            row.update({'das':{'diff':diff_keys}})
+            if  row.has_key('das'):
+                row['das'].update({'diff':diff_keys})
+            else:
+                row.update({'das':{'diff':diff_keys}})
         yield row
 
 def unique_filter(rows):

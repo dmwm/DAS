@@ -39,10 +39,11 @@ class DASMapping(object):
         
         self.create_db()
 
-        self.keymap = {}           # to be filled at run time
+        self.keymap = {}               # to be filled at run time
         self.presentationcache = {}    # to be filled at run time
         self.reverse_presentation = {} # to be filled at run time
         self.notationcache = {}        # to be filled at run time
+        self.diffkeycache = {}         # to be filled at run time
         self.init_notationcache()
         self.init_presentationcache()
 
@@ -74,6 +75,8 @@ class DASMapping(object):
                     link = None
                     if  row.has_key('link'):
                         link = row['link']
+                    if  row.has_key('diff'):
+                        self.diffkeycache[daskey] = row['diff']
                     tdict = {daskey : {'mapkey': row['das'], 'link': link}}
                     if  self.reverse_presentation.has_key(row['ui']):
                         self.reverse_presentation[row['ui']].update(tdict)
@@ -516,6 +519,7 @@ class DASMapping(object):
         if  self.presentationcache.has_key(daskey):
             return self.presentationcache[daskey]
         return [daskey]
+
     def daskey_from_presentation(self, uikey):
         """
         Return triplet (DAS key, DAS access key, link)
@@ -523,3 +527,11 @@ class DASMapping(object):
         """
         if  self.reverse_presentation.has_key(uikey):
             return self.reverse_presentation[uikey]
+
+    def diff_keys(self, daskey):
+        """
+        Return diff keys for provided DAS key.
+        """
+        if  self.diffkeycache.has_key(daskey):
+            return self.diffkeycache[daskey]
+        return []

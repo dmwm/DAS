@@ -1,9 +1,13 @@
 #from DAS.web.utils import quote
 #set rec_id = $quote($rec_id)
 #set id = $quote($id)
+#set duff = $quote($diff)
 <!-- das_row.tmpl -->
 <b>Record</b>: $systems &nbsp; <a href="javascript:ShowTag('id_$id')">show</a>, 
 <a href="javascript:HideTag('id_$id')">hide</a>
+#if  $diff
+<span class="box_red"><b>diff:</b> $diff</span>
+#end if
 <div class="hide" id="id_$id">
 $sanitized_data
 </div>

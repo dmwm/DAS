@@ -9,6 +9,10 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - add das_diff utility to check merged records for inconsistencies.
+    This is done during merge step. The keys to compare are configurable
+    via presentation map. So far I enable block/file/run keys and
+    check for inconsistencies in size/nfiles/nevents in them
   - replace ajax XHR recursive calls with pattern matching and
     onSuccess/onException in ajaxCheckPid/check_pid bundle
   - walk through every exception in a code and use print_exc as a

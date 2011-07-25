@@ -1,8 +1,16 @@
 # DAS presentation map, it applies to all systems and all urls
 # to create uniform representation of meta-data.
+# 
+# There are two optional keys, e.g. link and diff.
+#
 # The link key is optional and used by web UI to make a hyperlink
 # for DAS key in question. For instance, we set link to be True
 # for all primary DAS keys, e.g. dataset, block, run, etc.
+#
+# The diff key is optional and used by DAS core framework to
+# perform a diff action on given list of keys. For example we can
+# compare that block.size returned by DBS/Phedex services is identical
+# among them.
 #
 # Please note, the order of dicts represents the order of UI fields
 # shown on the web page. For example primary_dataset re-presentation has
@@ -49,6 +57,7 @@ dataset : [
         ],
 block : [
         {"das":"block.name", "ui":"Block name",
+         "diff":["block.size", "block.nevents", "block.nfiles"],
          "link":[
                 {"name":"Dataset", "query":"dataset block=%s"},
                 {"name":"Files", "query":"file block=%s"},
@@ -64,9 +73,10 @@ block : [
         ],
 file : [
         {"das":"file.name", "ui":"File name",
+         "diff":["file.size", "file.nevents"],
          "link":[
                 {"name": "Dataset", "query": "dataset file=%s"},
-                 {"name":"Sites", "query":"site file=%s"},
+                {"name":"Sites", "query":"site file=%s"},
                 {"name": "Runs", "query": "run file=%s"},
                 {"name": "Parents", "query": "parent file=%s"},
                 {"name": "Children", "query": "child file=%s"},
@@ -81,6 +91,7 @@ file : [
         ],
 run : [
         {"das":"run.run_number", "ui":"Run number",
+         "diff":["run.nevents"],
          "link":[
                 {"name":"Datasets", "query": "dataset run=%s"},
                 {"name":"Lumis", "query": "lumi run=%s"},

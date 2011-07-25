@@ -24,7 +24,7 @@ import fnmatch
 
 # DAS modules
 from DAS.utils.utils import genkey, convert_dot_notation, aggregator
-from DAS.utils.utils import adjust_mongo_keyvalue, print_exc
+from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection
 from DAS.utils.utils import parse_filters
@@ -838,7 +838,9 @@ class DASMongocache(object):
             self.logger.debug(msg)
             records = self.col.find(spec).sort(skey)
             # aggregate all records
-            gen = aggregator(records, expire)
+            agen = aggregator(records, expire)
+            # diff aggregated records
+            gen = das_diff(agen, self.mapping.diff_keys(pkey.split('.')[0]))
             # create index on all lookup keys
             create_indexes(self.merge, skey)
             # insert all records into das.merge using bulk insert
