@@ -468,7 +468,7 @@ class DASWebService(DASWebManager):
         """
         Show error message.
         """
-        page = self.templatepage('das_error', msg=msg)
+        page = self.templatepage('das_error', msg=str(msg))
         if  wrap:
             page  = self.page(self.form() + page)
         return page
@@ -959,13 +959,13 @@ class DASWebService(DASWebManager):
             jsonhtml = das_json(row, pad)
             if  not links:
                 page += '<br />'
-            if  row.has_key('das') and row['das'].has_key('diff'):
-                diff = ', '.join(row['das']['diff'])
+            if  row.has_key('das') and row['das'].has_key('conflict'):
+                conflict = ', '.join(row['das']['conflict'])
             else:
-                diff = ''
+                conflict = ''
             page += self.templatepage('das_row', systems=systems, \
                     sanitized_data=jsonhtml, id=mongo_id, rec_id=mongo_id,
-                    diff=diff)
+                    conflict=conflict)
             page += '</div>'
         page += '<div align="right">DAS cache server time: %5.3f sec</div>' \
                 % head['ctime']

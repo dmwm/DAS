@@ -44,7 +44,7 @@ def print_exc(exc):
     """Standard way to print exceptions"""
     print dastimestamp('DAS ERROR '), type(exc), str(exc)
     _type, _value, exc_traceback = sys.exc_info()
-    traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+    traceback.print_tb(exc_traceback, file=sys.stdout)
 
 def parse_filters(query):
     """
@@ -1368,9 +1368,9 @@ def das_diff(rows, compare_keys):
                 diff_keys.append(key)
         if  diff_keys:
             if  row.has_key('das'):
-                row['das'].update({'diff':diff_keys})
+                row['das'].update({'conflict':diff_keys})
             else:
-                row.update({'das':{'diff':diff_keys}})
+                row.update({'das':{'conflict':diff_keys}})
         yield row
 
 def unique_filter(rows):
