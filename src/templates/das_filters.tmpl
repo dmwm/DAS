@@ -1,0 +1,22 @@
+#from DAS.web.utils import quote
+<!-- das_filters.tmpl -->
+<div>
+<form action="javascript:addFilters()" name="das_filters">
+<label for="filters"><span class="label">
+Add filter/aggrator function to the query:</span></label>
+<select id="filters">
+#for filter in $filters
+#set filter = $quote($filter)
+<option class="sand" value="$filter">$filter</option>
+#end for
+</select>
+<select id="das_keys">
+#for key in $das_keys
+#set key = $quote($key)
+<option class="sand" value="$key">$key</option>
+#end for
+</select>
+<input type="submit" value="+" class="btn borders" />
+</form>
+</div>
+<!-- end of das_filters.tmpl -->
