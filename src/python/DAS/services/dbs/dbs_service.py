@@ -343,6 +343,8 @@ where %s" % value[4:]
             gen = qlxml_parser(source, prim_key)
         else:
             gen = xml_parser(source, prim_key)
+        useless_run_atts = ['number_of_events', 'number_of_lumi_sections', 'id',\
+                'total_luminosity', 'store_number', 'end_of_run', 'start_of_run']
         for row in gen:
             if  not row:
                 continue
@@ -394,4 +396,9 @@ where %s" % value[4:]
                      'config.type', 'config.annotation', 'config.createdate',\
                      'config.createby', 'config.moddate', 'config.modby']
             convert_dot(row, 'config', attrs)
+            # remove DBS2 run attributes (to be consistent with DBS3 output)
+            # and let people extract this info from CondDB/LumiDB.
+            if  row.has_key('run'):
+                for att in useless_run_atts:
+                    del row['run'][att]
             yield row

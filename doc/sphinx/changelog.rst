@@ -9,6 +9,8 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - remove several run attributes from DBS2 output, since this information
+    belong to CondDB and is not present in DBS3 output
   - add das_diff utility to check merged records for inconsistencies.
     This is done during merge step. The keys to compare are configurable
     via presentation map. So far I enable block/file/run keys and
