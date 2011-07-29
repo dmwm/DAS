@@ -237,12 +237,19 @@ div#banner h3
         border:1px solid #ccc;
         background:#f8f8f8;
 }
-form {
+.das_form {
         padding:1em;
         border:1px solid #ccc;
         background:#f8f8f8;
 }
-label {display:block;}
+.label {
+    border-left: 5px solid #B3B3B3;
+    color: #666666;
+    background:white;
+    font-weight: bold;
+    padding-left: 3px;
+    padding-right: 3px;
+}
 .navcontainer ul
 {
     margin: 0;

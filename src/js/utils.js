@@ -103,3 +103,32 @@ function place_img(tag, img, txt) {
     var id=document.getElementById(tag);
     id.innerHTML='<div><img src="'+img+'" alt="loading" />'+txt+'</div>';
 }
+function addFilters() {
+    var uin=document.getElementById('input');
+    var flt=document.getElementById('filters');
+    var val=document.getElementById('das_keys');
+    var newval = '';
+    if (uin.value.indexOf('|') != -1) {
+        if (uin.value.indexOf(' grep') != -1) {
+            if (flt.value == 'grep') {
+                newval = uin.value + ', ' + val.value;
+            } else {
+                alert('Cannot mix grep and aggregator function');
+                newval = uin.value;
+            }
+        } else {
+            if (flt.value == 'grep') {
+                alert('Cannot mix grep and aggregator functions');
+                newval = uin.value;
+            } else {
+                newval = uin.value + ', ' + flt.value + '(' +val.value +')';
+            }
+        }
+    } else {
+        if (flt.value == 'grep')
+            newval = uin.value + '| ' + flt.value+' ' + val.value;
+        else
+            newval = uin.value + '| ' + flt.value + '(' + val.value+')';
+    }
+    updateTag('input', newval);
+}

@@ -9,6 +9,7 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - add filter/aggragator builder, fixes #978
   - remove several run attributes from DBS2 output, since this information
     belong to CondDB and is not present in DBS3 output
   - add das_diff utility to check merged records for inconsistencies.

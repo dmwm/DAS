@@ -883,10 +883,13 @@ class DASWebService(DASWebManager):
         inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
         query   = getarg(kwargs, 'query', {})
         filters = query.get('filters')
-        page    = self.pagination(total, kwargs)
-        if  page.find('das_noresults') == -1:
-            page += self.templatepage('das_colors', colors=self.colors)
+        main    = self.pagination(total, kwargs)
+        if  main.find('das_noresults') == -1:
+            main += self.templatepage('das_colors', colors=self.colors)
         style   = 'white'
+        rowkeys = []
+        fltpage = ''
+        page    = ''
         for row in data:
             if  not row:
                 continue
@@ -902,6 +905,17 @@ class DASWebService(DASWebManager):
             lkey  = None
             if  row.has_key('das') and row['das'].has_key('primary_key'):
                 pkey = row['das']['primary_key']
+                if  pkey and not rowkeys:
+                    try:
+                        mkey = pkey.split('.')[0]
+                        rowkeys = ['%s.%s' % (mkey, k) for k in \
+                            row[mkey].keys()]
+                        dflt = das_filters() + das_aggregators()
+                        dflt.remove('unique')
+                        fltpage = self.templatepage('das_filters', \
+                                filters=dflt, das_keys=rowkeys)
+                    except:
+                        pass
                 try:
                     lkey = pkey.split('.')[0]
                     pval = list(set(DotDict(row).get_values(pkey)))
@@ -967,9 +981,11 @@ class DASWebService(DASWebManager):
                     sanitized_data=jsonhtml, id=mongo_id, rec_id=mongo_id,
                     conflict=conflict)
             page += '</div>'
-        page += '<div align="right">DAS cache server time: %5.3f sec</div>' \
+        main += fltpage
+        main += page
+        main += '<div align="right">DAS cache server time: %5.3f sec</div>' \
                 % head['ctime']
-        return page
+        return main
 
     def tableview(self, head, data):
         """
