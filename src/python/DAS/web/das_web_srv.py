@@ -908,13 +908,15 @@ class DASWebService(DASWebManager):
                 if  pkey and not rowkeys:
                     try:
                         mkey = pkey.split('.')[0]
-                        rowkeys = ['%s.%s' % (mkey, k) for k in \
-                            row[mkey].keys()]
+                        rowkeys = [k for k in \
+                            set(DotDict(row).get_keys(mkey))]
+                        rowkeys.sort()
                         dflt = das_filters() + das_aggregators()
                         dflt.remove('unique')
                         fltpage = self.templatepage('das_filters', \
                                 filters=dflt, das_keys=rowkeys)
-                    except:
+                    except Exception as exc:
+                        print_exc(exc)
                         pass
                 try:
                     lkey = pkey.split('.')[0]

@@ -437,6 +437,7 @@ notations : [
     {"notation":"app_family_name", "map":"name", "api":""},
     {"notation":"app_executable_name", "map":"executable", "api":""},
     {"notation":"storage_element", "map":"se", "api":""},
+    {"notation":"storage_element", "map":"site", "api":"listBlocks4path"},
     {"notation":"storage_element_name", "map":"se", "api":""},
     {"notation":"number_of_files", "map":"nfiles", "api":""},
     {"notation":"number_of_events", "map":"nevents", "api":""},

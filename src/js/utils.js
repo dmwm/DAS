@@ -103,7 +103,7 @@ function place_img(tag, img, txt) {
     var id=document.getElementById(tag);
     id.innerHTML='<div><img src="'+img+'" alt="loading" />'+txt+'</div>';
 }
-function addFilters() {
+function AddFilters() {
     var uin=document.getElementById('input');
     var flt=document.getElementById('filters');
     var val=document.getElementById('das_keys');
@@ -126,9 +126,15 @@ function addFilters() {
         }
     } else {
         if (flt.value == 'grep')
-            newval = uin.value + '| ' + flt.value+' ' + val.value;
+            newval = uin.value + ' | ' + flt.value+' ' + val.value;
         else
-            newval = uin.value + '| ' + flt.value + '(' + val.value+')';
+            newval = uin.value + ' | ' + flt.value + '(' + val.value+')';
     }
     updateTag('input', newval);
+}
+function ClearFilters() {
+    var uin=document.getElementById('input');
+    if (uin.value.indexOf('|') != -1) {
+        updateTag('input', uin.value.substring(0, uin.value.indexOf('|')));
+    }
 }

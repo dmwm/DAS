@@ -423,9 +423,9 @@ class DotDict(dict):
         Generator which yields values for any compound key. It works
         up to three level deep in DotDict structure.
         """
-        for next, item in yield_obj(self, ckey):
+        for next_key, item in yield_obj(self, ckey):
             if  isinstance(item, dict):
-                for final, elem in yield_obj(item, next):
+                for final, elem in yield_obj(item, next_key):
                     if  isinstance(elem, dict) and elem.has_key(final):
                         yield elem[final]
                     else:
@@ -437,6 +437,37 @@ class DotDict(dict):
                             yield att[last]
                         else:
                             yield att
+
+    def get_keys(self, ckey):
+        """Generator which yields all keys for a starting ckey"""
+        if  self.has_key(ckey):
+            doc = self[ckey]
+        else:
+            doc = [o for o in self.get_values(ckey)]
+        if  isinstance(doc, dict):
+            for key in doc.keys():
+                if  ckey.rfind('%s.' % key) == -1:
+                    yield '%s.%s' % (ckey, key)
+                    for kkk in self.get_keys('%s.%s' % (ckey, key)):
+                        yield kkk
+        elif isinstance(doc, list):
+            for item in doc:
+                if  isinstance(item, dict):
+                    for key in item.keys():
+                        if  ckey.rfind('%s.' % key) == -1:
+                            yield '%s.%s' % (ckey, key)
+                            for kkk in self.get_keys('%s.%s' % (ckey, key)):
+                                yield kkk
+                elif isinstance(item, list):
+                    for elem in item:
+                        if  isinstance(elem, dict):
+                            yield '%s.%s' % (ckey, elem)
+                        else:
+                            yield ckey
+                else: # basic type, so we reach the end
+                    yield ckey
+        else: # basic type, so we reach the end
+            yield ckey
 
 def dict_type(obj):
     """

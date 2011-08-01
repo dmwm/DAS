@@ -243,12 +243,8 @@ div#banner h3
         background:#f8f8f8;
 }
 .label {
-    border-left: 5px solid #B3B3B3;
-    color: #666666;
-    background:white;
+    color: #191919;
     font-weight: bold;
-    padding-left: 3px;
-    padding-right: 3px;
 }
 .navcontainer ul
 {

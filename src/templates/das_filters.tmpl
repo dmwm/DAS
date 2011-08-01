@@ -1,7 +1,7 @@
 #from DAS.web.utils import quote
 <!-- das_filters.tmpl -->
 <div>
-<form action="javascript:addFilters()" name="das_filters">
+<form action="javascript:AddFilters()" name="das_filters">
 <label for="filters"><span class="label">
 Add filter/aggrator function to the query:</span></label>
 <select id="filters">
@@ -17,6 +17,7 @@ Add filter/aggrator function to the query:</span></label>
 #end for
 </select>
 <input type="submit" value="+" class="btn borders" />
+<input type="button" value="Clear" class="btn borders" onclick="javascript:ClearFilters()" />
 </form>
 </div>
 <!-- end of das_filters.tmpl -->
