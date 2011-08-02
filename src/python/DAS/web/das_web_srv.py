@@ -577,6 +577,17 @@ class DASWebService(DASWebManager):
         data = kwargs.get('data', [])
         return head, data
 
+    def get_one_row(self, query):
+        """
+        Invoke DAS workflow and get one row from the cache.
+        """
+        if  query.has_key('aggregators'):
+            del query['aggregators']
+        if  query.has_key('filters'):
+            del query['filters']
+        data = [r for r in self.dasmgr.get_from_cache(query, idx=0, limit=1)]
+        return data[0]
+
     def get_data(self, kwargs):
         """
         Invoke DAS workflow and get data from the cache.
@@ -874,6 +885,27 @@ class DASWebService(DASWebManager):
             page = self.templatepage('das_noresults', service_map=service_map)
         return page
 
+    def fltpage(self, row):
+        """Prepare filter snippet for a given query"""
+        rowkeys = []
+        page = ''
+        if  row.has_key('das') and row['das'].has_key('primary_key'):
+            pkey = row['das']['primary_key']
+            if  pkey:
+                try:
+                    mkey = pkey.split('.')[0]
+                    rowkeys = [k for k in \
+                        set(DotDict(row).get_keys(mkey))]
+                    rowkeys.sort()
+                    dflt = das_filters() + das_aggregators()
+                    dflt.remove('unique')
+                    page = self.templatepage('das_filters', \
+                            filters=dflt, das_keys=rowkeys)
+                except Exception as exc:
+                    print_exc(exc)
+                    pass
+        return page
+
     def listview(self, head, data):
         """
         Helper function to make listview page.
@@ -888,7 +920,11 @@ class DASWebService(DASWebManager):
             main += self.templatepage('das_colors', colors=self.colors)
         style   = 'white'
         rowkeys = []
-        fltpage = ''
+        if  kwargs.get('input', '').find('|') != -1:
+            # if we have filter/aggregator get one row from the given query
+            fltpage = self.fltpage(self.get_one_row(query))
+        else:
+            fltpage = ''
         page    = ''
         for row in data:
             if  not row:
@@ -905,19 +941,8 @@ class DASWebService(DASWebManager):
             lkey  = None
             if  row.has_key('das') and row['das'].has_key('primary_key'):
                 pkey = row['das']['primary_key']
-                if  pkey and not rowkeys:
-                    try:
-                        mkey = pkey.split('.')[0]
-                        rowkeys = [k for k in \
-                            set(DotDict(row).get_keys(mkey))]
-                        rowkeys.sort()
-                        dflt = das_filters() + das_aggregators()
-                        dflt.remove('unique')
-                        fltpage = self.templatepage('das_filters', \
-                                filters=dflt, das_keys=rowkeys)
-                    except Exception as exc:
-                        print_exc(exc)
-                        pass
+                if  pkey and not rowkeys and not fltpage:
+                    fltpage = self.fltpage(row)
                 try:
                     lkey = pkey.split('.')[0]
                     pval = list(set(DotDict(row).get_values(pkey)))

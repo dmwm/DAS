@@ -131,10 +131,12 @@ function AddFilters() {
             newval = uin.value + ' | ' + flt.value + '(' + val.value+')';
     }
     updateTag('input', newval);
+    load('/das/request?'+$('das_search').serialize());
 }
 function ClearFilters() {
     var uin=document.getElementById('input');
     if (uin.value.indexOf('|') != -1) {
         updateTag('input', uin.value.substring(0, uin.value.indexOf('|')));
     }
+    load('/das/request?'+$('das_search').serialize());
 }
