@@ -9,6 +9,8 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - integrate DAS with FileMover, add Download links to FM for file records,
+    ticket #2060
   - add filter/aggragator builder, fixes #978
   - remove several run attributes from DBS2 output, since this information
     belong to CondDB and is not present in DBS3 output

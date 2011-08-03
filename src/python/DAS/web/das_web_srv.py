@@ -978,6 +978,13 @@ class DASWebService(DASWebManager):
                         not isinstance(pval, list):
                         links = ', '.join(make_links(linkrec, pval, inst))\
                                     + '.'
+                    if  pkey and pkey == 'file.name':
+                        try:
+                            lfn = DotDict(row)._get('file.name')
+                            if  lfn:
+                                links += self.templatepage('filemover', lfn=lfn)
+                        except:
+                            pass
                 except:
                     pval = 'N/A'
             gen   = self.convert2ui(row, pkey)
