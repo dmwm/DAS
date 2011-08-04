@@ -897,6 +897,7 @@ class DASWebService(DASWebManager):
                     rowkeys = [k for k in \
                         set(DotDict(row).get_keys(mkey))]
                     rowkeys.sort()
+                    rowkeys += ['das.conflict']
                     dflt = das_filters() + das_aggregators()
                     dflt.remove('unique')
                     page = self.templatepage('das_filters', \
