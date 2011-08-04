@@ -1403,6 +1403,7 @@ def das_diff(rows, compare_keys):
             else:
                 row.update({'das':{'conflict':diff_keys}})
         yield row
+        diff_keys = []
 
 def unique_filter(rows):
     """
