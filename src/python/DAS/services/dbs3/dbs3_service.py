@@ -82,6 +82,14 @@ class DBS3Service(DASAbstractService):
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 yield row['dataset']
+        elif api == 'blockparents':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                try:
+                    del row['parent']['this_block_name']
+                except:
+                    pass
+                yield row
         else:
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:

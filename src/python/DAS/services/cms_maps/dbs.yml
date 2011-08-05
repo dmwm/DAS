@@ -310,13 +310,32 @@ params : {
      "parent_or_child": "PARENT"
 }
 daskeys : [
+    {"key":"parent", "map":"parent.name", "pattern":""},
     {"key":"block", "map":"block.name", "pattern":""},
     {"key":"relationship", "map":"relationship", "pattern":""}
 ]
 das2api : [
     {"das_key":"block.name", "api_param":"block_name", "pattern":""},
     {"das_key":"relationship", "api_param":"parent_or_child", 
-     "pattern":"(PARENT|CHILD)"},
+     "pattern":"(PARENT|parent)"},
+]
+---
+urn : listBlockProvenance4child
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"listBlockProvenance", "apiversion": "DBS_2_0_9", "block_name":"required",
+     "parent_or_child": "CHILD"
+}
+daskeys : [
+    {"key":"child", "map":"child.name", "pattern":""},
+    {"key":"block", "map":"block.name", "pattern":""},
+    {"key":"relationship", "map":"relationship", "pattern":""}
+]
+das2api : [
+    {"das_key":"block.name", "api_param":"block_name", "pattern":""},
+    {"das_key":"relationship", "api_param":"parent_or_child", 
+     "pattern":"(CHILD|child)"},
 ]
 ---
 urn : listFiles
@@ -460,6 +479,8 @@ notations : [
     {"notation":"name.dataset_path", "map":"name", "api":""},
     {"notation":"path", "map":"dataset", "api":"listBlocks"},
     {"notation":"path", "map":"dataset", "api":"listBlocks4path"},
+    {"notation":"path", "map":"dataset", "api":"listBlockProvenance"},
+    {"notation":"path", "map":"dataset", "api":"listBlockProvenance4child"},
     {"notation":"path", "map":"name", "api":""},
     {"notation":"primary_name", "map":"name", "api":""},
     {"notation":"file_lfn", "map":"file", "api":""},

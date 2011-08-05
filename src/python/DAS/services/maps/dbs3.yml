@@ -182,6 +182,34 @@ das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
+urn: blockparents
+url : "http://localhost:8989/dbs/DBSReader/blockparents/"
+expire : 900
+params : {
+        "block_name":"required",
+}
+daskeys : [
+        {"key": "parent", "map":"parent.name", "pattern":""},
+        {"key": "block", "map":"block.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"block.name", "api_param": "block_name", "pattern":""},
+]
+---
+urn: blockchildren
+url : "http://localhost:8989/dbs/DBSReader/blockchildren/"
+expire : 900
+params : {
+        "block_name":"required",
+}
+daskeys : [
+        {"key": "child", "map":"child.name", "pattern":""},
+        {"key": "block", "map":"block.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"block.name", "api_param": "block_name", "pattern":""},
+]
+---
 urn: files_via_dataset
 url : "http://localhost:8989/dbs/DBSReader/files/"
 expire : 900
@@ -363,9 +391,11 @@ notations : [
         {"notation": "dataset", "map": "dataset.name", "api": ""},
         {"notation": "child_dataset", "map": "name", "api": ""},
         {"notation": "parent_dataset", "map": "name", "api": ""},
+        {"notation": "parent_block_name", "map": "name", "api": ""},
         {"notation": "child_logical_file_name", "map": "name", "api": ""},
         {"notation": "parent_logical_file_name", "map": "name", "api": ""},
         {"notation": "block_name", "map": "name", "api": "blocks"},
+        {"notation": "block_name", "map": "name", "api": "blockchildren"},
         {"notation": "block_size", "map": "size", "api": "blocks"},
         {"notation": "block_name", "map": "block.name", "api": ""},
         {"notation": "block_size", "map": "block.size", "api": ""},

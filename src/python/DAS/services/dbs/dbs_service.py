@@ -285,6 +285,8 @@ where %s" % value[4:]
             prim_key = 'block'
         elif api == 'listBlockProvenance':
             prim_key = 'block'
+        elif api == 'listBlockProvenance4child':
+            prim_key = 'block'
         elif api == 'listFiles':
             prim_key = 'file'
         elif api == 'listLFNs':
@@ -383,6 +385,12 @@ where %s" % value[4:]
             if  row.has_key('child') and row['child'].has_key('file.child'):
                 row['child']['name'] = row['child']['file.child']
                 del row['child']['file.child']
+            if  row.has_key('block') and query.get('fields') == ['parent']:
+                row['parent'] = row['block']
+                del row['block']
+            if  row.has_key('block') and query.get('fields') == ['child']:
+                row['child'] = row['block']
+                del row['block']
             if  row.has_key('run') and row['run'].has_key('run'):
                 row['run']['run_number'] = row['run']['run']
                 del row['run']['run']
