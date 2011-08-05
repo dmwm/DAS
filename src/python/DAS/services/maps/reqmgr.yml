@@ -1,0 +1,22 @@
+# ReqMgr API mapping to DAS
+system : reqmgr
+format : JSON
+ckey   : "/Users/vk/.globus/userkey.pem"
+cert   : "/Users/vk/.globus/usercert.pem"
+# ReqMgr test URL is https://cmsreqmgr.cern.ch/reqmgr/rest
+# I'm using a ssh tunnel on that port for testing purposes
+---
+urn: inputdataset
+url : "https://localhost:9999/reqmgr/rest/inputdataset"
+expire : 900
+params : {"dataset": "required"}
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+]
+---
+notations : [
+        {"notation": "primary_ds_name", "map": "name", "api": "primarydatasets"},
+]
