@@ -9,7 +9,8 @@ __author__ = "Valentin Kuznetsov"
 import time
 import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, xml_parser, qlxml_parser, DotDict
+from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
+from DAS.utils.ddict import DotDict
 from DAS.utils.utils import expire_timestamp, print_exc
 
 #
@@ -76,9 +77,9 @@ class CombinedService(DASAbstractService):
             found = {}
             for rec in xml_parser(source, prim_key, tags):
                 ddict = DotDict(rec)
-                block = ddict._get('block.name')
-                bbytes = ddict._get('block.bytes')
-                files = ddict._get('block.files')
+                block = ddict.get('block.name')
+                bbytes = ddict.get('block.bytes')
+                files = ddict.get('block.files')
                 found_dataset = block.split('#')[0]
                 if  found.has_key(found_dataset):
                     val = found[found_dataset]

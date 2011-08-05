@@ -23,7 +23,8 @@ import itertools
 import fnmatch
 
 # DAS modules
-from DAS.utils.utils import genkey, convert_dot_notation, aggregator
+from DAS.utils.ddict import convert_dot_notation
+from DAS.utils.utils import genkey, aggregator
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection

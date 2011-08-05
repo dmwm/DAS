@@ -14,7 +14,8 @@ import time
 import DAS.utils.jsonwrapper as json
 
 # DAS modules
-from DAS.utils.utils import getarg, genkey, DotDict, print_exc
+from DAS.utils.ddict import DotDict
+from DAS.utils.utils import getarg, genkey, print_exc
 from DAS.utils.utils import row2das, make_headers
 from DAS.utils.utils import xml_parser, json_parser
 from DAS.utils.utils import yield_rows
@@ -385,7 +386,7 @@ class DASAbstractService(object):
         ddict = DotDict(row)
         keys2adjust = []
         for key in spec.keys():
-            val = ddict._get(key)
+            val = ddict.get(key)
             if  spec[key] != val and key not in keys2adjust:
                 keys2adjust.append(key)
         msg   = "DASAbstractService::%s::set_misses, adjust keys %s"\
@@ -398,7 +399,7 @@ class DASAbstractService(object):
                 ddict = DotDict(row)
                 for key in keys2adjust:
                     value = spec[key]
-                    existing_value = ddict._get(key)
+                    existing_value = ddict.get(key)
                     # the way to deal with proximity/patern/condition results
                     if  (isinstance(value, str) or isinstance(value, unicode))\
                         and value.find('*') != -1: # we got pattern
@@ -426,12 +427,12 @@ class DASAbstractService(object):
                             ddict['proximity'].update(proximity)
                         else:
                             proximity = DotDict({})
-                            proximity._set(key, existing_value)
+                            proximity[key] = existing_value
                             ddict['proximity'] = proximity
                     else:
                         if  existing_value:
                             value = existing_value
-                    ddict._set(key, value)
+                    ddict[key] = value
                 yield ddict
                 count += 1
         else:

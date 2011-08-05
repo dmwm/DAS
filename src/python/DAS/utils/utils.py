@@ -24,6 +24,7 @@ from   itertools import groupby
 from   bson.objectid import ObjectId
 
 # DAS modules
+from   DAS.utils.ddict import DotDict, convert_dot_notation
 from   DAS.utils.regex import float_number_pattern, int_number_pattern
 from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
@@ -316,158 +317,6 @@ class dict_of_none (dict):
     def __missing__ (self, key):
         """Assign missing key to None"""
         return None
-
-def yield_obj(rdict, ckey):
-    """
-    Helper function for DotDict class.
-    For a given dict and compound key (a.b.c) extract and yield next key
-    and object(s) for the first key of the provided compound key. 
-    """
-    keys = ckey.split('.')
-    key  = keys[0]
-    if  len(keys) > 1:
-        next = '.'.join(keys[1:])
-    else:
-        next = None
-    if  rdict.has_key(key):
-        obj = rdict[key]
-        if  isinstance(obj, list) or isinstance(obj, GeneratorType):
-            for item in obj:
-                yield next, item
-        else:
-            yield next, obj
-
-class DotDict(dict):
-    """
-    Access python dictionaries via dot notations, original code taken from
-    http://parand.com/say/index.php/2008/10/24/python-dot-notation-dictionary-access/
-    Class has been extended with helper method to use compound keys, e.g. a.b.c.
-    All extended method follow standard python dictionary naming conventions,
-    but has extra underscore in front of them to allow dict methods. A non
-    overlapping methods do not have extra underscore.
-    """
-    def __getattr__(self, attr):
-        obj = self.get(attr, {})
-        if  isinstance(obj, dict):
-            return DotDict(obj)
-        return obj
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
-
-    def _delete(self, ckey):
-        """
-        Delete provided compound key from dot dictionary
-        """
-        obj  = self
-        keys = ckey.split('.')
-        for key in keys:
-            if  key == keys[-1]:
-                if  obj.has_key(key):
-                    del obj[key]
-            else:
-                obj = obj[key]
-        
-    def _get(self, ckey):
-        """
-        Get value for provided compound key.
-        """
-        obj  = None
-        keys = ckey.split('.')
-#        for key in keys:
-        for idx in range(0, len(keys)):
-            key  = keys[idx]
-            try:
-                next = keys[idx+1]
-            except:
-                next = None
-            if  key == keys[0]:
-                obj = self.get(key, None)
-            else:
-                obj = getattr(obj, key)
-            if  not obj and obj != 0:
-                return None
-            if  isinstance(obj, dict):
-                obj = DotDict(obj)
-            elif isinstance(obj, list):
-                for item in obj:
-                    obj = item
-                    if  next and obj.has_key(next):
-                        if  isinstance(obj, dict):
-                            obj = DotDict(obj)
-                            if  obj:
-                                break
-#                obj = obj[0]
-#                if  isinstance(obj, dict):
-#                    obj = DotDict(obj)
-        return obj
-        
-    def _set(self, ikey, value):
-        """
-        Set value for provided compound key.
-        """
-        obj  = self
-        keys = ikey.split('.')
-        for idx in range(0, len(keys)):
-            key = keys[idx]
-            if  not obj.has_key(key):
-                ckey = '.'.join(keys[idx:])
-                nkey, nval = convert_dot_notation(ckey, value)
-                obj[nkey] = nval
-                return
-            if  key != keys[-1]:
-                obj  = obj[key]
-        obj[key] = value
-
-    def get_values(self, ckey):
-        """
-        Generator which yields values for any compound key. It works
-        up to three level deep in DotDict structure.
-        """
-        for next_key, item in yield_obj(self, ckey):
-            if  isinstance(item, dict):
-                for final, elem in yield_obj(item, next_key):
-                    if  isinstance(elem, dict) and elem.has_key(final):
-                        yield elem[final]
-                    else:
-                        yield elem
-            elif isinstance(item, list) or isinstance(item, GeneratorType):
-                for final, elem in item:
-                    for last, att in yield_obj(elem, final):
-                        if  isinstance(att, dict) and att.has_key(last):
-                            yield att[last]
-                        else:
-                            yield att
-
-    def get_keys(self, ckey):
-        """Generator which yields all keys for a starting ckey"""
-        if  self.has_key(ckey):
-            doc = self[ckey]
-        else:
-            doc = [o for o in self.get_values(ckey)]
-        if  isinstance(doc, dict):
-            for key in doc.keys():
-                if  ckey.rfind('%s.' % key) == -1:
-                    yield '%s.%s' % (ckey, key)
-                    for kkk in self.get_keys('%s.%s' % (ckey, key)):
-                        yield kkk
-        elif isinstance(doc, list):
-            for item in doc:
-                if  isinstance(item, dict):
-                    for key in item.keys():
-                        if  ckey.rfind('%s.' % key) == -1:
-                            yield '%s.%s' % (ckey, key)
-                            for kkk in self.get_keys('%s.%s' % (ckey, key)):
-                                yield kkk
-                elif isinstance(item, list):
-                    for elem in item:
-                        if  isinstance(elem, dict):
-                            yield '%s.%s' % (ckey, elem)
-                        else:
-                            yield ckey
-                else: # basic type, so we reach the end
-                    yield ckey
-        else: # basic type, so we reach the end
-            yield ckey
 
 def dict_type(obj):
     """
@@ -1260,24 +1109,6 @@ def plist_parser(source):
         data = source
     yield plistlib.readPlistFromString(data)
 
-def convert_dot_notation(key, val):
-    """
-    In DAS key can be presented in dot notation, e.g. block.name.
-    Take provided key/value pair and convert it into dict if it
-    is required.
-    """
-    split_list = key.split('.')
-    if  len(split_list) == 1: # no dot notation found
-        return key, val
-    split_list.reverse()
-    newval = val
-    item = None
-    for item in split_list:
-        if  item == split_list[-1]:
-            return item, newval
-        newval = {item:newval}
-    return item, newval
-    
 def row2das(mapper, system, api, row):
     """
     Transform keys of row into DAS notations, e.g. bytes to size
@@ -1475,6 +1306,6 @@ def filter_with_filters(rows, filters):
     """
     for row in rows:
         ddict = DotDict(row)
-        flist = [(f, ddict._get(f)) for f in filters]
+        flist = [(f, ddict.get(f)) for f in filters]
         for idx in flist:
             yield idx

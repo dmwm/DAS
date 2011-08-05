@@ -19,7 +19,7 @@ from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate, das_diff
 from DAS.utils.utils import delete_elem, plist_parser, unique_filter
-from DAS.utils.utils import DotDict, filter_with_filters, aggregator, yield_rows
+from DAS.utils.utils import filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
@@ -265,89 +265,6 @@ class testUtils(unittest.TestCase):
         filters = ['file.size', 'file.evts']
         result = [r for r in filter_with_filters(rows, filters)]
         self.assertEqual(expect, result)
-
-    def test_DotDict(self):
-        """Test DotDict class"""
-        res = {u'zip' : {u'code':u'14850'}}
-        ddict = DotDict(res)
-        ddict._set('zip.code', 14850)
-        expect = {u'zip' : {u'code':14850}}
-        self.assertEqual(expect, ddict)
-
-        res = {'a':{'b':{'c':10}, 'd':10}}
-        ddict = DotDict(res)
-        ddict._set('x.y.z', 10)
-        expect = {'a':{'b':{'c':10}, 'd':10}, 'x':{'y':{'z':10}}}
-        self.assertEqual(expect, ddict)
-
-        ddict._set('a.b.k.m', 10)
-        expect = {'a':{'b':{'c':10, 'k':{'m':10}}, 'd':10}, 'x':{'y':{'z':10}}}
-        self.assertEqual(expect, ddict)
-        expect = 10
-        result = ddict._get('a.b.k.m')
-        self.assertEqual(expect, result)
-
-        res = {'a':{'b':{'c':10}, 'd':[{'x':1}, {'x':2}]}}
-        ddict = DotDict(res)
-        expect = 1
-        result = ddict._get('a.d.x')
-        self.assertEqual(expect, result)
-        expect = None
-        result = ddict._get('a.M.Z')
-        self.assertEqual(expect, result)
-
-        res = {'a': {'b': {'c':1, 'd':2}}}
-        ddict = DotDict(res)
-        expect = {'a': {'b': {'c':1}}}
-        ddict._delete('a.b.d')
-        self.assertEqual(expect, ddict)
-
-    def test_DotDict_list(self):
-        """Test DotDict class"""
-        res = {'a':[{'b':1, 'c':1}, {'c':1}]}
-        ddict = DotDict(res)
-        expect = 1
-        result = ddict._get('a.b')
-        self.assertEqual(expect, result)
-
-        res = {'a':[{'c':1}, {'b':1, 'c':1}]}
-        ddict = DotDict(res)
-        expect = 1
-        result = ddict._get('a.b')
-        self.assertEqual(expect, result)
-
-    def test_DotDict_values(self):
-        """Test DotDict get_values method"""
-        res = {'a':[{'b':1, 'c':1}, {'c':2}]}
-        ddict = DotDict(res)
-        expect = [1]
-        result = [r for r in ddict.get_values('a.b')]
-        self.assertEqual(expect, result)
-        
-        expect = [1,2]
-        result = [r for r in ddict.get_values('a.c')]
-        self.assertEqual(expect, result)
-        
-        res = {'a':[{'b': [{'c':2}, {'c':3}]}, {'b': [{'c':4}, {'c':5}]}]}
-        ddict = DotDict(res)
-        expect = [2,3,4,5]
-        result = [r for r in ddict.get_values('a.b.c')]
-        self.assertEqual(expect, result)
-        
-    def test_DotDict_keys(self):
-        """Test DotDict get_keys method"""
-        res = {'a':[{'b':1, 'c':1}, {'c':2}]}
-        ddict = DotDict(res)
-        expect = ['a.b', 'a.c']
-        result = [r for r in ddict.get_keys('a')]
-        self.assertEqual(set(expect), set(result))
-
-        res = {'a':[{'b': [{'c':2}, {'c':{'d':1}}]},
-                    {'b': [{'c':4}, {'c':5}]}]}
-        ddict = DotDict(res)
-        expect = ['a.b', 'a.b.c', 'a.b.c.d']
-        result = [r for r in ddict.get_keys('a')]
-        self.assertEqual(set(expect), set(result))
 
     def test_merge_dict(self):
         """Test merge_dict"""

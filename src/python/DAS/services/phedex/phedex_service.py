@@ -9,7 +9,7 @@ __author__ = "Valentin Kuznetsov"
 import socket
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, xml_parser, DotDict
+from DAS.utils.utils import map_validator, xml_parser
 import types
 import DAS.utils.jsonwrapper as json
 

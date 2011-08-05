@@ -27,7 +27,8 @@ import DAS
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators, das_filters
 from DAS.core.das_ply import das_parser_error
-from DAS.utils.utils import getarg, access, size_format, DotDict
+from DAS.utils.utils import getarg, access, size_format
+from DAS.utils.ddict import DotDict
 from DAS.utils.utils import genkey, print_exc
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, db_gridfs
@@ -709,7 +710,7 @@ class DASWebService(DASWebManager):
             return self.error(msg)
         lfns = []
         for rec in data:
-            filename = DotDict(rec)._get('file.name')
+            filename = DotDict(rec).get('file.name')
             if  filename not in lfns:
                 lfns.append(filename)
         page = self.templatepage('das_files_py', lfnList=lfns, pfnList=[])
@@ -981,7 +982,7 @@ class DASWebService(DASWebManager):
                                     + '.'
                     if  pkey and pkey == 'file.name':
                         try:
-                            lfn = DotDict(row)._get('file.name')
+                            lfn = DotDict(row).get('file.name')
                             if  lfn:
                                 links += self.templatepage('filemover', lfn=lfn)
                         except:
@@ -1052,7 +1053,7 @@ class DASWebService(DASWebManager):
                 pkey = row['das']['primary_key'].split('.')[0]
             if  query.has_key('filters'):
                 for flt in query['filters']:
-                    rec.append(DotDict(row)._get(flt))
+                    rec.append(DotDict(row).get(flt))
             else:
                 gen = self.convert2ui(row)
                 titles = []

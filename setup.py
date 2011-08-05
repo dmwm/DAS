@@ -52,7 +52,11 @@ class TestCommand(Command):
                     ['test', splitext(basename(t))[0]])
                 )
         testfiles.sort()
-        tests = TestLoader().loadTestsFromNames(testfiles)
+        try:
+            tests = TestLoader().loadTestsFromNames(testfiles)
+        except:
+            print "\nFail to load unit tests", testfiles
+            raise
         t = TextTestRunner(verbosity = 2)
         t.run(tests)
 

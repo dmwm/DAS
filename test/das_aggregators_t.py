@@ -8,7 +8,7 @@ Unit test for DAS aggregators
 import unittest
 from DAS.core.das_aggregators import das_func, das_sum, das_avg, das_min, das_max
 from DAS.core.das_aggregators import das_count, das_median
-from DAS.utils.utils import DotDict
+from DAS.utils.ddict import DotDict
 
 class testDASAggregators(unittest.TestCase):
     """

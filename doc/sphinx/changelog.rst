@@ -9,6 +9,7 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - move DotDict into stand-alone module, fixes #2047
   - fix block child/parent relationship, tickets 2066, 2067
   - integrate DAS with FileMover, add Download links to FM for file records,
     ticket #2060

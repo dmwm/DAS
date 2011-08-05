@@ -15,7 +15,8 @@ from pymongo.connection import Connection
 import gridfs
 
 # DAS modules
-from DAS.utils.utils import DotDict, genkey, print_exc
+from DAS.utils.utils import genkey, print_exc
+from DAS.utils.ddict import DotDict
 
 # MongoDB does not allow to store documents whose size more then 4MB
 MONGODB_LIMIT = 4*1024*1024
@@ -99,14 +100,14 @@ def parse2gridfs(gfs, prim_key, genrows, logger=None):
             fid = gfs.put(str(row))
             gfs_rec = {key: {'gridfs_id': str(fid)}}
             ddict = DotDict(row)
-            val = ddict._get(prim_key)
+            val = ddict.get(prim_key)
             if  logger:
                 msg = 'parse2gridfs record size %s, replace with %s'\
                 % (row_size, gfs_rec)
                 logger.info(msg)
             if  val != row and sys.getsizeof(str(val)) < MONGODB_LIMIT:
                 drec = DotDict(gfs_rec)
-                drec._set(prim_key, val)
+                drec.set(prim_key, val)
                 yield drec
             else:
                 yield gfs_rec

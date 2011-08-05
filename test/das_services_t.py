@@ -11,7 +11,7 @@ from pymongo.connection import Connection
 import unittest
 
 from DAS.core.das_core import DASCore
-from DAS.utils.utils import DotDict
+from DAS.utils.ddict import DotDict
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
 from DAS.core.das_mapping_db import DASMapping
@@ -126,7 +126,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         query  = self.das.adjust_query(query)
         result = self.das.get_from_cache(query, collection=self.dasmerge)
         result = [r for r in result]
-        result = DotDict(result[0])._get('primary_dataset.name')
+        result = DotDict(result[0]).get('primary_dataset.name')
         expect = 'abc'
         self.assertEqual(expect, result)
 
@@ -143,7 +143,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         result = self.das.get_from_cache(query, collection=self.dasmerge)
         result = [r for r in result]
         expect = 'T3_US_Cornell'
-        self.assertEqual(expect, DotDict(result[0])._get('site.name'))
+        self.assertEqual(expect, DotDict(result[0]).get('site.name'))
         expect = ['_id', 'das_id', 'site', 'cache_id', 'das']
         expect.sort()
         rkeys = result[0].keys()
@@ -178,7 +178,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         query  = self.das.adjust_query(query)
         result = self.das.get_from_cache(query, collection=self.dasmerge)
         result = [r for r in result]
-        result = DotDict(result[0])._get('ip.address')
+        result = DotDict(result[0]).get('ip.address')
         expect = '137.138.141.145'
         self.assertEqual(expect, result)
 
@@ -200,7 +200,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         query  = self.das.adjust_query(query)
         result = self.das.get_from_cache(query, collection=self.dasmerge)
         result = [r for r in result]
-        result = DotDict(result[0])._get('ip.address')
+        result = DotDict(result[0]).get('ip.address')
         expect = '137.138.141.145'
         self.assertEqual(expect, result)
 
@@ -209,7 +209,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         result = self.das.get_from_cache(query, collection=self.dasmerge)
         result = [r for r in result]
         expect = 'T3_US_Cornell'
-        self.assertEqual(expect, DotDict(result[0])._get('site.name'))
+        self.assertEqual(expect, DotDict(result[0]).get('site.name'))
 
         query  = "records"
         query  = self.das.adjust_query(query)
