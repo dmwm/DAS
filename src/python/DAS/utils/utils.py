@@ -692,22 +692,12 @@ def map_validator(smap):
     if  not isinstance(smap.keys(), list):
         raise Exception(msg)
     possible_keys = ['api', 'keys', 'params', 'url', 'expire', 
-                        'format', 'wild_card']
-    possible_keys.sort()
+                        'format', 'wild_card', 'ckey', 'cert']
     for item in smap.values():
         if  not isinstance(item, dict):
             raise Exception(msg)
         keys = item.keys()
-        keys.sort()
-        if  len(keys) == len(possible_keys):
-            if  keys != possible_keys:
-                raise Exception(msg)
-        elif len(keys) == len(possible_keys)-1:
-            pkeys = list(possible_keys)
-            pkeys.remove('api')
-            if  keys != pkeys:
-                raise Exception(msg)
-        else:
+        if  set(keys) | set(possible_keys) != set(possible_keys):
             raise Exception(msg)
         if  not isinstance(item['keys'], list):
             raise Exception(msg)

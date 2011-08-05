@@ -18,8 +18,35 @@ from   DAS.utils.das_timer import das_timer
 from   DAS.utils.utils import expire_timestamp, extract_http_error
 import DAS.utils.jsonwrapper as json
 
+class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
+    """
+    Simple HTTPS client authentication class based on provided 
+    key/ca information
+    """
+    def __init__(self, key=None, cert=None, level=0):
+        if  level:
+            urllib2.HTTPSHandler.__init__(self, debuglevel=1)
+        else:
+            urllib2.HTTPSHandler.__init__(self)
+        self.key = key
+        self.cert = cert
+
+    def https_open(self, req):
+        """Open request method"""
+        #Rather than pass in a reference to a connection class, we pass in
+        # a reference to a function which, for all intents and purposes,
+        # will behave as a constructor
+        return self.do_open(self.get_connection, req)
+
+    def get_connection(self, host, timeout=300):
+        """Connection method"""
+        if  self.key:
+            return httplib.HTTPSConnection(host, key_file=self.key,
+                                                cert_file=self.cert)
+        return httplib.HTTPSConnection(host)
+
 def getdata(url, params, headers=None, expire=3600, post=None, 
-                error_expire=300, verbose=0):
+                error_expire=300, verbose=0, ckey=None, cert=None):
     """
     Invoke URL call and retrieve data from data-service based
     on provided URL and set of parameters. Use post=True to
@@ -39,6 +66,10 @@ def getdata(url, params, headers=None, expire=3600, post=None,
         req.add_header(key, val)
     if  verbose > 1:
         handler = urllib2.HTTPHandler(debuglevel=1)
+        opener  = urllib2.build_opener(handler)
+        urllib2.install_opener(opener)
+    if  ckey and cert:
+        handler = HTTPSClientAuthHandler(ckey, cert, verbose)
         opener  = urllib2.build_opener(handler)
         urllib2.install_opener(opener)
     try:

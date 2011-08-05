@@ -57,7 +57,7 @@ class PhedexService(DASAbstractService):
                 if  val == '*':
                     del kwds[key]
         if  kwds.has_key('node') and kwds['node'].find('*') == -1:
-            if  not api == 'tfc':
+            if  not api == 'tfc' and kwds['node'] != 'required':
                 kwds['node'] = kwds['node'] + '*'
 
     def parser(self, query, dformat, source, api):

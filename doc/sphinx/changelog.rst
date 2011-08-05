@@ -9,6 +9,7 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - add support for key/cert in DAS map records, fixes #2068
   - move DotDict into stand-alone module, fixes #2047
   - fix block child/parent relationship, tickets 2066, 2067
   - integrate DAS with FileMover, add Download links to FM for file records,

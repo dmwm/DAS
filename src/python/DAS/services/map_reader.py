@@ -18,11 +18,17 @@ def read_service_map(filename, field="uri"):
     record = {}
     system = ''
     url    = ''
-    format = ''
+    frmt   = ''
     notations = ''
     wild   = '*'
+    ckey   = None
+    cert   = None
     with open(filename, 'r') as apimap:
         for metric in yaml.load_all(apimap.read()):
+            if  not ckey:
+                ckey = metric.get('ckey')
+            if  not cert:
+                cert = metric.get('cert')
             if  metric.has_key('system'):
                 system = metric['system']
             if  metric.has_key('url'):
@@ -30,7 +36,7 @@ def read_service_map(filename, field="uri"):
             if  metric.has_key('wild_card'):
                 wild   = metric['wild_card']
             if  metric.has_key('format'):
-                format = metric['format']
+                frmt = metric['format']
             if  field == 'uri' and metric.has_key('urn'):
                 params = metric['params']
                 urn    = metric['urn']
@@ -38,12 +44,16 @@ def read_service_map(filename, field="uri"):
                 apitag = metric.get('apitag', None)
                 record = dict(url=url, system=system, expire=expire,
                                 urn=urn, params=params, apitag=apitag,
-                                format=format, wild_card=wild,
+                                format=frmt, wild_card=wild,
                                 created=time.time())
                 if  metric.has_key('das2api'):
                     record['das2api'] = metric['das2api']
                 else:
                     record['das2api'] = []
+                if  ckey:
+                    record['ckey'] = ckey
+                if  cert:
+                    record['cert'] = cert
                 if  metric.has_key('daskeys'):
                     record['daskeys'] = metric['daskeys']
                 else:
