@@ -41,6 +41,9 @@ class ReqMgrService(DASAbstractService):
         if  api == 'inputdataset':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
-                data = row['dataset']
-                data = data['WMCore.RequestManager.DataStructs.Request.Request']
-                yield data
+                try:
+                    data = row['dataset']
+                    data = data['WMCore.RequestManager.DataStructs.Request.Request']
+                    yield data
+                except:
+                    yield row

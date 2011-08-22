@@ -9,6 +9,8 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - upon user request highlight in bold search values;
+    dim off other links; adjust CSS and das_row template, ticket #2080
   - add support for key/cert in DAS map records, fixes #2068
   - move DotDict into stand-alone module, fixes #2047
   - fix block child/parent relationship, tickets 2066, 2067

@@ -105,13 +105,21 @@ hr.line {
     border: none;
     border-top: 1px dotted #CCCCCC;
 }
-a:link {color:#8f1f08;}
-a:visited {color:#5f1406;}
+/*a:link {color:#8f1f08;}*/
+/*a:visited {color:#5f1406;}*/
+a:link {color:#999999;}
+a:visited {color:#666666;}
 a:hover,
 a:focus,
 a:active {
-    color:#800000;
+/*    color:#800000;*/
+    color:#666666;
     background-color:#e3e0d1;
+}
+.highlight a {
+    color: #333333;
+    padding: 3px;
+    font-weight: bold;
 }
 /*
  * various div settings

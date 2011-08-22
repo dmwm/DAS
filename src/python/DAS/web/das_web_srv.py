@@ -171,7 +171,7 @@ def adjust_values(func, gen, links):
             to_show.append((key, val))
     if  to_show:
         page += '<br />'
-        page += ', '.join(["<b>%s</b>: %s" % (k, v) for k, v in to_show])
+        page += ', '.join(["%s: %s" % (k, v) for k, v in to_show])
     if  links:
         page += '<br />' + links
     return page
@@ -953,7 +953,7 @@ class DASWebService(DASWebManager):
                     if  pkey == 'run.run_number' or pkey == 'lumi.number':
                         pval = int(pval)
                     if  pval:
-                        page += '<b>%s</b>: ' % lkey.capitalize()
+                        page += '%s: ' % lkey.capitalize()
                         if  lkey == 'parent' or lkey == 'child':
                             if  str(pval).find('.root') != -1:
                                 lkey = 'file'
@@ -962,11 +962,12 @@ class DASWebService(DASWebManager):
                         if  lkey in not_to_link():
                             page += '%s' % pval
                         elif  isinstance(pval, list):
-                            page += ', '.join([\
-                                '<a href="/das/request?%s">%s</a>'\
+                            page += ', '.join(['<span class="highlight>"'+\
+                                '<a href="/das/request?%s">%s</a></span>'\
                                 % (make_args(lkey, i, inst), i) for i in pval])
                         else:
-                            page += '<a href="/das/request?%s">%s</a>'\
+                            page += '<span class="highlight">'+\
+                                '<a href="/das/request?%s">%s</a></span>'\
                                 % (make_args(lkey, pval, inst), pval)
                     else:
                         page += '<b>%s</b>: N/A' % lkey.capitalize()
