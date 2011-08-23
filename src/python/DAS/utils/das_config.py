@@ -158,6 +158,8 @@ DASOption('das', 'logfile', 'string', '/tmp/das.log', destination='logfile'),
 DASOption('das', 'multitask', 'bool', True),
 # error_expire controls how long to keep DAS record for misbehaving data-srv
 DASOption('das', 'error_expire', 'int', 300),
+# emptyset_expire controls how long to keep DAS record for empty result set
+DASOption('das', 'emptyset_expire', 'int', 5),
 # logformat for DAS logger
 DASOption('das', 'logformat', 'string', 
                 '%(levelname)s %(message)s', destination='logformat'),

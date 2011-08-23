@@ -28,7 +28,7 @@ from DAS.utils.utils import genkey, aggregator
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection
-from DAS.utils.utils import parse_filters
+from DAS.utils.utils import parse_filters, expire_timestamp
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 import DAS.utils.jsonwrapper as json
 
@@ -365,6 +365,8 @@ class DASMongocache(object):
     DAS cache based MongoDB. 
     """
     def __init__(self, config):
+        self.emptyset_expire = expire_timestamp(\
+            config['das'].get('emptyset_expire', 5))
         self.dburi   = config['mongodb']['dburi']
         self.cache_size = config['mongodb']['bulkupdate_size']
         self.dbname  = config['dasdb']['dbname']
@@ -556,6 +558,11 @@ class DASMongocache(object):
             and spec['date'].has_key('$lte') \
             and spec['date'].has_key('$gte'):
             spec['date'] = [spec['date']['$gte'], spec['date']['$lte']]
+        if  fields:
+            for field in fields:
+                if  not spec.has_key(field):
+                    prim_key = re.compile("^%s" % field)
+                    spec.update({'das.primary_key': prim_key})
         res    = col.find(spec=spec, fields=fields).count()
         msg    = "DASMongocache::incache(%s, coll=%s) found %s results" \
                 % (query, collection, res)
@@ -957,6 +964,8 @@ class DASMongocache(object):
         else:
             print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
+        if  not counter: # empty record set
+            header['das']['expire'] = self.emptyset_expire
         self.logger.info("\n")
         msg = "DASMongocache::update_cache, %s yield %s rows" \
                 % (dasheader['system'], counter)

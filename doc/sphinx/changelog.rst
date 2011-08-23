@@ -9,6 +9,7 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - fix issue with empty record set, see tickets #2174, 2183, 2184
   - upon user request highlight in bold search values;
     dim off other links; adjust CSS and das_row template, ticket #2080
   - add support for key/cert in DAS map records, fixes #2068
