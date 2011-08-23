@@ -476,9 +476,12 @@ class DASMongocache(object):
         """
         enc_query = encode_mongo_query(query)
         if  system:
-            cond = {'query.spec': enc_query['spec'], 'das.system':'das'}
+            cond = {'query.spec': enc_query['spec'],
+                    'query.fields': enc_query['fields'],
+                    'das.system':'das'}
         else:
-            cond = {'query.spec': enc_query['spec']}
+            cond = {'query.spec': enc_query['spec'],
+                    'query.fields': enc_query['fields']}
         return self.col.find(cond)
 
     def das_record(self, query):
@@ -559,10 +562,13 @@ class DASMongocache(object):
             and spec['date'].has_key('$gte'):
             spec['date'] = [spec['date']['$gte'], spec['date']['$lte']]
         if  fields:
+            prim_keys = []
             for field in fields:
                 if  not spec.has_key(field):
                     prim_key = re.compile("^%s" % field)
-                    spec.update({'das.primary_key': prim_key})
+                    prim_keys.append(prim_key)
+            if  prim_keys:
+                spec.update({'das.primary_key': {'$in': prim_keys}})
         res    = col.find(spec=spec, fields=fields).count()
         msg    = "DASMongocache::incache(%s, coll=%s) found %s results" \
                 % (query, collection, res)
@@ -644,7 +650,7 @@ class DASMongocache(object):
         col = self.mdb[collection]
         msg = "DASMongocache::get_from_cache(%s, %s, %s, %s, %s, coll=%s)"\
                 % (query, idx, limit, skey, order, collection)
-        self.logger.debug(msg)
+        self.logger.info(msg)
         if  query.has_key('spec') and query['spec'].has_key('_id'):
             # we got {'_id': {'$in': [ObjectId('4b912ee7e2194e35b8000010')]}}
             strquery = ""

@@ -467,8 +467,8 @@ class DASCore(object):
         further processing.
         """
         das_timer('DASCore::get_from_cache', self.verbose)
-        msg  = 'DASCore::get_from_cache, query=%s, idx=%s, limit=%s'\
-                % (query, idx, limit)
+        msg  = 'DASCore::get_from_cache, col=%s, query=%s, idx=%s, limit=%s'\
+                % (collection, query, idx, limit)
         msg += ', skey=%s, order=%s' % (skey, sorder)
         self.logger.info(msg)
         # add das_ids look-up to remove duplicates
