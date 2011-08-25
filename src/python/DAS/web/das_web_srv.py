@@ -227,7 +227,12 @@ class DASWebService(DASWebManager):
 
         # DBSDaemon thread
         self.dataset_daemon = config.get('dbs_daemon', False)
-        self.dbs_urls = config.get('dbs_daemon_urls', [])
+        self.dbs_instances = self.dasconfig['dbs']['dbs_instances']
+        main_dbs_url = self.dasconfig['dbs']['dbs_global_url']
+        prim_inst = self.dasconfig['dbs']['dbs_global_instance']
+        self.dbs_urls = []
+        for inst in self.dbs_instances:
+            self.dbs_urls.append(main_dbs_url.replace(prim_inst, inst))
         interval = config.get('dbs_daemon_interval', 3600)
         self.dbsmgr = {} # dbs_urls vs dbs_daemons
         if  self.dataset_daemon:
@@ -461,6 +466,7 @@ class DASWebService(DASWebManager):
         cards = self.templatepage('das_cards', base=self.base, input=uinput, \
                 width=900, height=220, cards=help_cards(self.base))
         page  = self.templatepage('das_searchform', input=uinput, \
+                init_dbses=self.dbs_instances, \
                 base=self.base, instance=instance, view=view, cards=cards)
         return page
 

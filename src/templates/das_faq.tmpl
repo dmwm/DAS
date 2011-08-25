@@ -433,6 +433,20 @@ dataset group=Top datatype=mc
 dataset run=148126
 </pre>
 </div>
+Please note, DAS supports <em>status</em> keyword which allows to
+specify dataset status field, e.g. VALID. Here is a few examples:
+<div class="example">
+<pre>
+dataset dataset=*Zee* status=VALID*
+dataset status=INVALID
+</pre>
+</div>
+DAS also supports <em>instance</em> keyword to specify DBS instance, e.g.
+<div class="example">
+<pre>
+dataset=/QCD_Pt_*/*_pythia_fall10* instance=cms_dbs_ph_analysis_02
+</pre>
+</div>
 
 <p>
 Queries to get run information

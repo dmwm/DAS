@@ -119,13 +119,21 @@ DASOption('web_server', 'adjust_input', 'bool', False),
 DASOption('web_server', 'dbs_daemon', 'bool', False),
 # DBS dataset daemon update interval in seconds
 DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
-# DBS dataset daemon url (to easy distinguish DBS2/DBS3 system)
-DASOption('web_server', 'dbs_daemon_urls', 'list', \
-['http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet',\
- 'http://cmsdbsprod.cern.ch/cms_dbs_caf_analysis_01/servlet/DBSServlet',
- 'http://cmsdbsprod.cern.ch/cms_dbs_ph_analysis_01/servlet/DBSServlet',
- 'http://cmsdbsprod.cern.ch/cms_dbs_ph_analysis_02/servlet/DBSServlet',
+# DBS section of DAS config
+# list of dbs instances
+DASOption('dbs', 'dbs_instances', 'list', \
+['cms_dbs_prod_global', 'cms_dbs_caf_analysis_01',
+ 'cms_dbs_ph_analysis_01', 'cms_dbs_ph_analysis_02',
+ 'cms_dbs_prod_local_01', 'cms_dbs_prod_local_02', 'cms_dbs_prod_local_03',
+ 'cms_dbs_prod_local_04', 'cms_dbs_prod_local_05', 'cms_dbs_prod_local_06',
+ 'cms_dbs_prod_local_07', 'cms_dbs_prod_local_08', 'cms_dbs_prod_local_09',
+ 'cms_dbs_prod_local_10', 'cms_dbs_prod_local_tier0',
 ]),
+# dbs global instance URL
+DASOption('dbs', 'dbs_global_url', 'string', \
+'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'),
+# name of dbs global instance
+DASOption('dbs', 'dbs_global_instance', 'string', 'cms_dbs_prod_global'),
 
 #
 # DAS test server options
