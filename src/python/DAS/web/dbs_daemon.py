@@ -20,7 +20,7 @@ from pymongo import ASCENDING
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from DAS.utils.utils import qlxml_parser, dastimestamp
+from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.web.utils import db_monitor
 
@@ -136,7 +136,12 @@ class DBSDaemon(object):
         encoded_data = urllib.urlencode(params, doseq=True)
         url = self.dbs_url + '?' + encoded_data
         req = urllib2.Request(url)
-        stream = urllib2.urlopen(req)
+        try:
+            stream = urllib2.urlopen(req)
+        except Exception as exc:
+            print_exc(exc)
+            msg = 'Fail to contact %s' % url
+            raise Exception(msg)
         gen = qlxml_parser(stream, 'dataset')
         for row in gen:
             if  row['dataset']['dataset.status'] == 'VALID':

@@ -77,6 +77,68 @@ records are merged and the user sees a single document about each block.
 <!-- END OF SECTION -->
 
 <!-- BEGIN NEW SECTION -->
+<h3>DAS command line tool</h3>
+<a href="javascript:ShowTag('cli')">show</a> |
+<a href="javascript:HideTag('cli')">hide</a> this section.
+<div id="cli" name="cli" class="hide">
+
+<div class="navcontainer">
+<ul>
+<li>
+How I can get DAS command line tool?
+</li>
+</ul>
+<p>
+The DAS command line tool can be downloaded directly from DAS web page.
+Click on <a href="/das/cli">CLI</a> link and save page using your
+browser capabilities. You can also save it as simple as
+<pre class="example">
+curl https://cmsweb.cern.ch/das/cli > das_client.py
+</pre>
+</p>
+
+<ul>
+<li>
+How can I use DAS CLI?
+</li>
+</ul>
+The DAS CLI only requires python (version 2.6 and above). No other dependencies,
+not even CMSSW. Just download and save it in your prefered location
+(I will assume you save it under name das_client.py). Change its
+permission
+<pre class="example">
+chmod a+x das_client.py
+</pre>
+and then invoke its help as
+<pre class="example">
+./das_client.py --help
+Usage: das_client.py [options]
+
+Options:
+  -h, --help        show this help message and exit
+  --verbose=VERBOSE verbose output
+  --query=QUERY     specify query for your request
+  --host=HOST       specify host name of DAS cache server, default https://cmsweb.cern.ch
+  --idx=IDX         start index for returned result set, aka pagination, use w/ limit
+  --limit=LIMIT     number of returned results (results per page)
+  --format=FORMAT   specify return data format (json or plain), default json
+</pre>
+Here are few examples of DAS cli usage:
+<pre class="example">
+./das_client.py --query="dataset=/EG/Run2010A*/AOD"
+./das_client.py --query="dataset=/EG/Run2010A*/AOD" --verbose=1
+./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name"
+./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name, dataset.nevents" --format=plain
+</pre>
+Please note, the --format option can only be used together with DAS filters, since
+tabulated format requires knowledge of columns (which are fields you specify in a filter).
+
+</div>
+</div>
+<hr class="line" />
+<!-- END OF SECTION -->
+
+<!-- BEGIN NEW SECTION -->
 <h3>DAS-QL vs DBS-QL query guide</h3>
 <a href="javascript:ShowTag('guide_table')">show</a> |
 <a href="javascript:HideTag('guide_table')">hide</a> this section

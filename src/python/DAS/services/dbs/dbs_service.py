@@ -407,5 +407,8 @@ where %s" % value[4:]
             # and let people extract this info from CondDB/LumiDB.
             if  row.has_key('run'):
                 for att in useless_run_atts:
-                    del row['run'][att]
+                    try:
+                        del row['run'][att]
+                    except:
+                        pass
             yield row

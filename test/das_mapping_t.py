@@ -52,13 +52,13 @@ class testDASMapping(unittest.TestCase):
         self.mgr.create_db()
 
         apiversion = 'DBS_2_0_8'
-        url    = 'http://a.com'
-        format = 'JSON'
-        expire = 100
+        url     = 'http://a.com'
+        dformat = 'JSON'
+        expire  = 100
 
         api = 'listRuns'
         params = { 'apiversion':apiversion, 'path' : 'required', 'api':api}
-        rec = {'system' : 'dbs', 'urn':api, 'format':format, 'url':url,
+        rec = {'system' : 'dbs', 'urn':api, 'format':dformat, 'url':url,
             'params': params, 'expire':expire, "wild_card": "*",
             'daskeys' : [dict(key='run', map='run.run_number', pattern='')],
             'das2api' : [
@@ -71,13 +71,13 @@ class testDASMapping(unittest.TestCase):
         res = self.mgr.check_dasmap('dbs', api, 'run.run_number')
         self.assertEqual(True, res)
         smap = {api: {'url':url, 'expire':expire, 'keys': ['run'], 
-                'format': format, "wild_card":"*",
+                'format': dformat, "wild_card":"*", 'cert':None, 'ckey': None,
                 'params': {'path': 'required', 'api': api, 
                            'apiversion': 'DBS_2_0_8'}
                      }
         }
 
-        rec = {'system':'dbs', 'urn': 'listBlocks', 'format':format,
+        rec = {'system':'dbs', 'urn': 'listBlocks', 'format':dformat,
           'url':url, 'expire': expire,
           'params' : {'apiversion': apiversion, 'api': 'listBlocks',
                       'block_name':'*', 'storage_element_name':'*',
@@ -148,8 +148,8 @@ class testDASMapping(unittest.TestCase):
         self.assertEqual([daskey], res)
 
         # build service map
-        smap.update({api: {'url':url, 'expire':expire,
-                'keys': ['block'], 'format':format, "wild_card": "*",
+        smap.update({api: {'url':url, 'expire':expire, 'cert':None, 'ckey': None,
+                'keys': ['block'], 'format':dformat, "wild_card": "*",
                 'params': {'storage_element_name': '*', 'api':api, 
                            'block_name': '*', 'user_type': 'NORMAL', 
                            'apiversion': 'DBS_2_0_8'}

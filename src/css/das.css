@@ -6,12 +6,12 @@ body {
     color:#000;
     background:#fff;
     font-size: 14px;
-    font: "Lucida Grande","Lucida Sans Unicode","Lucida Sans",helvetica,arial,sans-serif;
+    font: "Lucida Grande","Lucida Sans Unicode","Lucida Sans",Helvetica,Arial,sans-serif;
 }
 h3 { 
     font-size: 16px;
     font-weight:bold;
-    font-family: helvetica, arial, verdana, sans-serif;
+    font-family: Helvetica, Arial, Verdana, sans-serif;
     text-decoration: none;
 }
 .sectionhead {
@@ -35,14 +35,14 @@ h3 {
     padding: 0;
     border-spacing: 0px;
     font-size: 14px;
-    font-family: helvetica, arial, verdana, sans-serif;
+    font-family: Helvetica, Arial, Verdana, sans-serif;
     text-decoration: none;
     width: 100%;
 }
 .big { 
     font-size: 16px;
     font-weight:bold;
-    font-family: helvetica, arial, verdana, sans-serif;
+    font-family: Helvetica, Arial, Verdana, sans-serif;
     text-decoration: none;
 }
 .small  {
@@ -50,20 +50,20 @@ h3 {
     padding: 0;
     border-spacing: 0px;
     font-size: 13px;
-    font-family: helvetica, arial, verdana, sans-serif;
+    font-family: Helvetica, Arial, Verdana, sans-serif;
     text-decoration: none;
 }
 .tiny  {
     font-size: 12px;
     font-weight: normal;
-    font-family: helvetica, arial, verdana, sans-serif;
+    font-family: Helvetica, Arial, Verdana, sans-serif;
     text-decoration: none;
     text-transform: none;
 }
 .inputtext {
     font-size: 14px;
     font-weight: normal;
-    font-family: helvetica, arial, verdana, sans-serif;
+    font-family: Helvetica, Arial, Verdana, sans-serif;
     text-decoration: none;
     text-transform: none;
     color: #B3B3B3;
@@ -73,7 +73,7 @@ h3 {
     padding: 5px;
     font-size: 14px;
     font-weight: normal;
-    font-family: helvetica, arial, verdana, sans-serif;
+    font-family: Fixed, monospace;
     text-decoration: none;
     text-transform: none;
     color: #000000;
@@ -86,7 +86,7 @@ h3 {
     padding: 5px;
     font-size: 12px;
     font-weight: normal;
-    font-family: helvetica, arial, verdana, sans-serif;
+    font-family: Helvetica, Arial, Verdana, sans-serif;
     text-decoration: none;
     text-transform: none;
     color: #000000;
@@ -390,7 +390,7 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
 
 .btn { 
     padding-top: 2px;
-    font: bold 84% 'trebuchet ms',helvetica,sans-serif; 
+    font: bold 84% 'trebuchet ms',Helvetica,sans-serif; 
     border:1px solid; 
     color: #263750;
     background-color: rgb(223, 219, 195);

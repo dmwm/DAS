@@ -122,12 +122,11 @@ DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
 # DBS section of DAS config
 # list of dbs instances
 DASOption('dbs', 'dbs_instances', 'list', \
-['cms_dbs_prod_global', 'cms_dbs_caf_analysis_01',
- 'cms_dbs_ph_analysis_01', 'cms_dbs_ph_analysis_02',
- 'cms_dbs_prod_local_01', 'cms_dbs_prod_local_02', 'cms_dbs_prod_local_03',
- 'cms_dbs_prod_local_04', 'cms_dbs_prod_local_05', 'cms_dbs_prod_local_06',
- 'cms_dbs_prod_local_07', 'cms_dbs_prod_local_08', 'cms_dbs_prod_local_09',
- 'cms_dbs_prod_local_10', 'cms_dbs_prod_local_tier0',
+['cms_dbs_prod_global', 'cms_dbs_caf_analysis_01', 'cms_dbs_ph_analysis_01',
+ 'cms_dbs_ph_analysis_02', 'cms_dbs_prod_local_01', 'cms_dbs_prod_local_02',
+ 'cms_dbs_prod_local_03', 'cms_dbs_prod_local_04', 'cms_dbs_prod_local_05',
+ 'cms_dbs_prod_local_06', 'cms_dbs_prod_local_07', 'cms_dbs_prod_local_08',
+ 'cms_dbs_prod_local_09', 'cms_dbs_prod_local_10',
 ]),
 # dbs global instance URL
 DASOption('dbs', 'dbs_global_url', 'string', \

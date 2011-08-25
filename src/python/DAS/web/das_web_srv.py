@@ -171,7 +171,7 @@ def adjust_values(func, gen, links):
             to_show.append((key, val))
     if  to_show:
         page += '<br />'
-        page += ', '.join(["%s: %s" % (k, v) for k, v in to_show])
+        page += ', '.join(["%s: %s" % (k.capitalize(), v) for k, v in to_show])
     if  links:
         page += '<br />' + links
     return page
