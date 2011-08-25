@@ -970,8 +970,6 @@ class DASMongocache(object):
         else:
             print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
-        if  not counter: # empty record set
-            header['das']['expire'] = self.emptyset_expire
         self.logger.info("\n")
         msg = "DASMongocache::update_cache, %s yield %s rows" \
                 % (dasheader['system'], counter)

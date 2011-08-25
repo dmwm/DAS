@@ -77,8 +77,8 @@ def worker(url, query):
 #                yield row
 #        os.remove(tname)
 
-        format = 'tsv_runs' # other formats are xml_all, csv_runs
-        data   = server.RunDatasetTable.export(namespace, format, query)
+        iformat = 'tsv_runs' # other formats are xml_all, csv_runs
+        data   = server.RunDatasetTable.export(namespace, iformat, query)
         titles = []
         for line in data.split('\n'):
             if  not line:

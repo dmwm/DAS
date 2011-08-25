@@ -913,7 +913,7 @@ class DASWebService(DASWebManager):
         Helper function to make listview page.
         """
         kwargs  = head['args']
-        total   = head['nresults']
+        total   = head.get('nresults', 0)
         inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
         query   = getarg(kwargs, 'query', {})
         filters = query.get('filters')
