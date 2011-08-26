@@ -119,6 +119,8 @@ DASOption('web_server', 'adjust_input', 'bool', False),
 DASOption('web_server', 'dbs_daemon', 'bool', False),
 # DBS dataset daemon update interval in seconds
 DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
+# DBS dataset daemon expire timestamp (in seconds)
+DASOption('web_server', 'dbs_daemon_expire', 'int', 3600),
 # DBS section of DAS config
 # list of dbs instances
 DASOption('dbs', 'dbs_instances', 'list', \

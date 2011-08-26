@@ -45,12 +45,14 @@ class DBSDaemon(object):
     and store them in separate collection to be used by
     DAS autocomplete web interface.
     """
-    def __init__(self, dbs_url, dburi, dbname='dbs', cache_size=1000):
+    def __init__(self, dbs_url, dburi, dbname='dbs', cache_size=1000,
+                        expire=3600):
         self.dburi  = dburi
         self.dbname = dbname
         self.dbcoll = dbs_instance(dbs_url)
         self.cache_size = cache_size
         self.dbs_url = dbs_url
+        self.expire = expire
         self.init()
         # Monitoring thread which performs auto-reconnection to MongoDB
         thread.start_new_thread(db_monitor, (dburi, self.init))
@@ -88,8 +90,7 @@ class DBSDaemon(object):
                     spec = dict(dataset=row['dataset'])
                     self.col.update(spec, {'$set':{'ts':time0}})
             # remove records with old ts
-            old = 4*60*60 # 4 hours
-            self.col.remove({'ts':{'$lt':time0-old}})
+            self.col.remove({'ts':{'$lt':time0-self.expire}})
             print "%s DBSDaemon updated in %s sec, collection=%s, nrec=%s" \
             % (dastimestamp(), self.dbcoll, time.time()-time0, self.col.count())
 

@@ -186,7 +186,7 @@ def convert_datetime(sec):
     elif pat2.match(value):
         return time.strftime("%Y-%m-%d", time.gmtime(sec))
     else:
-        msg = 'Unacceptable date format'
+        msg = 'Unacceptable date format, value=%s, type=%s' % (sec, type(sec))
         raise Exception(msg)
 
 def dbsql_opt_map(operator):

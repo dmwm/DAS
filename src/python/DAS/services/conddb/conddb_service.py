@@ -38,7 +38,7 @@ class CondDBService(DASAbstractService):
         if  api == 'get_lumi_info':
             if  kwds.has_key('date') and kwds['date'] != 'optional':
                 value = kwds['date']
-                if  isinstance(value, str):
+                if  isinstance(value, str) or isinstance(value, unicode):
                     value = convert2date(value)
                 elif isinstance(value, dict):
                     value = [kwds['date']['$gte'], kwds['date']['$lte']]
@@ -57,7 +57,7 @@ class CondDBService(DASAbstractService):
         if  api == 'get_run_info':
             if  kwds.has_key('date') and kwds['date'] != 'optional':
                 value = kwds['date']
-                if  isinstance(value, str):
+                if  isinstance(value, str) or isinstance(value, unicode):
                     value = convert2date(value)
                 elif isinstance(value, dict):
                     value = [kwds['date']['$gte'], kwds['date']['$lte']]

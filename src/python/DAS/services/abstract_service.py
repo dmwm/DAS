@@ -568,7 +568,7 @@ class DASAbstractService(object):
             # adjust pattern symbols in arguments
             if  wild != '*':
                 for key, val in args.items():
-                    if  isinstance(val, str):
+                    if  isinstance(val, str) or isinstance(val, unicode):
                         val   = val.replace('*', wild)
                     args[key] = val
             # check if analytics db has a similar API call

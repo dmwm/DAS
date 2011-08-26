@@ -58,7 +58,7 @@ def worker(url, query):
     """
     server    = xmlrpclib.ServerProxy(url)
     namespace = 'GLOBAL'
-    if  isinstance(query, str):
+    if  isinstance(query, str) or isinstance(query, unicode):
         data = server.RunLumiSectionRangeTable.exportJson(namespace, query)
         for row in json.loads(data):
             yield row
@@ -159,7 +159,7 @@ class RunRegistryService(DASAbstractService):
                         msg = 'Unable to convert to datetime format, %s' \
                             % value
                         raise Exception(msg)
-                elif  isinstance(val, str):
+                elif  isinstance(val, str) or isinstance(val, unicode):
                     date1, date2 = convert2date(val)
                     date1 = rr_date(date1)
                     date2 = rr_date(date2)

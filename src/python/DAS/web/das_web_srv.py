@@ -98,9 +98,9 @@ def add_filter_values(row, filters):
                     if  flt.lower() == 'run.run_number':
                         if  isinstance(val, str) or isinstance(val, unicode):
                             val = int(val.split('.')[0])
-                    page += "<br />Filter <b>%s:</b> %s" % (flt, val)
+                    page += "<br />Filter <em>%s:</em> %s" % (flt, val)
                 else:
-                    page += "<br />Filter <b>%s</b>" % flt
+                    page += "<br />Filter <em>%s</em>" % flt
     return page
 
 def adjust_values(func, gen, links):
@@ -171,7 +171,16 @@ def adjust_values(func, gen, links):
             to_show.append((key, val))
     if  to_show:
         page += '<br />'
-        page += ', '.join(["%s: %s" % (k.capitalize(), v) for k, v in to_show])
+        tdict = {}
+        for key, val in to_show:
+            tdict[key] = val
+        if  set(tdict.keys()) == set(['function', 'result', 'key']):
+            page += '%s(%s)=%s' \
+                % (tdict['function'], tdict['key'], tdict['result'])
+        else:
+            rlist = ["%s: %s" % (k.capitalize(), v) for k, v in to_show]
+            rlist.sort()
+            page += ', '.join(rlist)
     if  links:
         page += '<br />' + links
     return page
@@ -233,11 +242,12 @@ class DASWebService(DASWebManager):
         self.dbs_urls = []
         for inst in self.dbs_instances:
             self.dbs_urls.append(main_dbs_url.replace(prim_inst, inst))
-        interval = config.get('dbs_daemon_interval', 3600)
+        interval  = config.get('dbs_daemon_interval', 3600)
+        dbsexpire = config.get('dbs_daemon_expire', 3600)
         self.dbsmgr = {} # dbs_urls vs dbs_daemons
         if  self.dataset_daemon:
             for dbs_url in self.dbs_urls:
-                dbsmgr = DBSDaemon(dbs_url, self.dburi)
+                dbsmgr = DBSDaemon(dbs_url, self.dburi, expire=dbsexpire)
                 self.dbsmgr[dbs_url] = dbsmgr
                 def dbs_updater(_dbsmgr, interval):
                     """DBS updater daemon"""
@@ -889,7 +899,8 @@ class DASWebService(DASWebManager):
             except:
                 pass
             service_map = self.dasmgr.mongoparser.service_apis_map(query)
-            page = self.templatepage('das_noresults', service_map=service_map)
+            if  service_map.keys():
+                page = self.templatepage('das_noresults', service_map=service_map)
         return page
 
     def fltpage(self, row):
@@ -976,7 +987,7 @@ class DASWebService(DASWebManager):
                                 '<a href="/das/request?%s">%s</a></span>'\
                                 % (make_args(lkey, pval, inst), pval)
                     else:
-                        page += '<b>%s</b>: N/A' % lkey.capitalize()
+                        page += '%s: N/A' % lkey.capitalize()
                     plist = self.dasmgr.mapping.presentation(lkey)
                     linkrec = None
                     for item in plist:
