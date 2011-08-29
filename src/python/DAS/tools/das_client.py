@@ -34,10 +34,10 @@ class DASOptionParser:
              help="specify host name of DAS cache server, default https://cmsweb.cern.ch")
         self.parser.add_option("--idx", action="store", type="int", 
                                default=0, dest="idx",
-             help="start index for returned result set, aka pagination, use w/ limit")
+             help="start index for returned result set, aka pagination, use w/ limit (default is 0)")
         self.parser.add_option("--limit", action="store", type="int", 
                                default=10, dest="limit",
-             help="number of returned results (results per page)")
+             help="number of returned results (results per page), 10 by default")
         self.parser.add_option("--format", action="store", type="string", 
                                default="json", dest="format",
              help="specify return data format (json or plain), default json")
@@ -129,6 +129,10 @@ def main():
     data    = get_data(host, query, idx, limit, debug)
     if  opts.format == 'plain':
         jsondict = json.loads(data)
+        nres = jsondict['nresults']
+        msg  = "\nShowing %s-%s out of %s results" % (idx+1, idx+limit, nres)
+        msg += ", for more results use --idx/--limit options\n"
+        print msg
         mongo_query = jsondict['mongo_query']
         if  mongo_query.has_key('filters'):
             filters = mongo_query['filters']
