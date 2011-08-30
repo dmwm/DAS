@@ -9,6 +9,8 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - fix issue with showing DAS error records when data-service
+    is down, see ticket #2230
   - add DBS prod local instances, ticket 2200
   - fix issue with empty record set, see tickets #2174, 2183, 2184
   - upon user request highlight in bold search values;

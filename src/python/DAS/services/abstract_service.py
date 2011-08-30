@@ -397,6 +397,10 @@ class DASAbstractService(object):
             # adjust of the rows
             for row in yield_rows(row, genrows):
                 ddict = DotDict(row)
+                pval  = ddict.get(map_key)
+                if  isinstance(pval, dict) and pval.has_key('error'):
+                    ddict[map_key] = ''
+                    ddict.update({prim_key: pval})
                 for key in keys2adjust:
                     value = spec[key]
                     existing_value = ddict.get(key)
@@ -404,11 +408,7 @@ class DASAbstractService(object):
                     if  (isinstance(value, str) or isinstance(value, unicode))\
                         and value.find('*') != -1: # we got pattern
                         if  existing_value:
-                            if  isinstance(existing_value, dict) and\
-                                existing_value.has_key('error'):
-                                ddict.update(existing_value)
-                            else:
-                                value = existing_value
+                            value = existing_value
                     elif isinstance(value, dict) or \
                         isinstance(value, list): # we got condition
                         if  existing_value:

@@ -91,7 +91,7 @@ def getdata(url, params, headers=None, expire=3600, post=None,
     except urllib2.HTTPError as httperror:
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                     % (url, params, headers)
-        data = {'error': 'Unable to contact data-service', 'reason': msg}
+        data = {'error': 'Unable to contact data-service.', 'reason': msg}
         try:
             err  = httperror.read()
             data.update({'httperror':extract_http_error(err)})
@@ -106,7 +106,7 @@ def getdata(url, params, headers=None, expire=3600, post=None,
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                     % (url, params, headers)
         print msg + '\n' + str(exp)
-        data = {'error': 'Unable to contact data-service', 'reason': msg}
+        data = {'error': 'Unable to contact data-service.', 'reason': msg}
         data = json.dumps(data)
         expire = expire_timestamp(error_expire)
     das_timer(timer_key, verbose)

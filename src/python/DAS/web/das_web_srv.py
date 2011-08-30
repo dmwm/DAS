@@ -125,10 +125,16 @@ def adjust_values(func, gen, links):
             rdict[uikey] = val
     page = ""
     to_show = []
+    error = 0
     green = 'style="color:green"'
     red = 'style="color:red"'
     for key, val in rdict.items():
         lookup = func(key)
+        if  key.lower() == 'reason':
+            continue
+        if  key.lower() == 'error':
+            key = '<span %s>Error</span>' % red
+            error = 1
         if  lookup:
             if  isinstance(val, list):
                 value = ', '.join([str(v) for v in val])
@@ -168,10 +174,6 @@ def adjust_values(func, gen, links):
                     val = '%.2f' % val['value']
                 else:
                     val = val['value']
-            if  key == 'reason':
-                continue
-            if  key == 'error':
-                key = '<span class="box_red">Error</span>'
             to_show.append((key, val))
     if  to_show:
         page += '<br />'
@@ -185,7 +187,7 @@ def adjust_values(func, gen, links):
             rlist = ["%s: %s" % (k[0].capitalize()+k[1:],v) for k,v in to_show]
             rlist.sort()
             page += ', '.join(rlist)
-    if  links:
+    if  links and not error:
         page += '<br />' + links
     return page
 
