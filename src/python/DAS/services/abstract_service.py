@@ -404,7 +404,11 @@ class DASAbstractService(object):
                     if  (isinstance(value, str) or isinstance(value, unicode))\
                         and value.find('*') != -1: # we got pattern
                         if  existing_value:
-                            value = existing_value
+                            if  isinstance(existing_value, dict) and\
+                                existing_value.has_key('error'):
+                                ddict.update(existing_value)
+                            else:
+                                value = existing_value
                     elif isinstance(value, dict) or \
                         isinstance(value, list): # we got condition
                         if  existing_value:

@@ -678,7 +678,7 @@ class DASMongocache(object):
 
         # look-up raw record
         if  fields: # be sure to extract those fields
-            fields += ['das_id', 'das', 'cache_id']
+            fields += ['das_id', 'das', 'cache_id', 'error', 'reason']
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
         skeys  = []

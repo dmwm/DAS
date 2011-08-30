@@ -168,6 +168,10 @@ def adjust_values(func, gen, links):
                     val = '%.2f' % val['value']
                 else:
                     val = val['value']
+            if  key == 'reason':
+                continue
+            if  key == 'error':
+                key = '<span class="box_red">Error</span>'
             to_show.append((key, val))
     if  to_show:
         page += '<br />'
@@ -178,7 +182,7 @@ def adjust_values(func, gen, links):
             page += '%s(%s)=%s' \
                 % (tdict['function'], tdict['key'], tdict['result'])
         else:
-            rlist = ["%s: %s" % (k.capitalize(), v) for k, v in to_show]
+            rlist = ["%s: %s" % (k[0].capitalize()+k[1:],v) for k,v in to_show]
             rlist.sort()
             page += ', '.join(rlist)
     if  links:
@@ -946,6 +950,7 @@ class DASWebService(DASWebManager):
             fltpage = ''
         page    = ''
         for row in data:
+            error = row.get('error', None)
             if  not row:
                 continue
             try:
@@ -995,7 +1000,7 @@ class DASWebService(DASWebManager):
                             linkrec = item['link']
                             break
                     if  linkrec and pval and pval != 'N/A' and \
-                        not isinstance(pval, list):
+                        not isinstance(pval, list) and not error:
                         links = ', '.join(make_links(linkrec, pval, inst))\
                                     + '.'
                     if  pkey and pkey == 'file.name':
