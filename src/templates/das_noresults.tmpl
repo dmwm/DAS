@@ -2,7 +2,7 @@
 
 <!-- das_noresults.tmpl -->
 <div>
-DAS queried the following services:
+DAS queried the following services [1]:
 <ul>
 #for key, val in $service_map.items()
 #set system=$quote($key)
@@ -10,12 +10,11 @@ DAS queried the following services:
 <li><b>$system:</b> $apis APIs
 #end for
 </ul>
-but no results were found. You may try to use a pattern in your query to
-increase a chance to find what you want, e.g.
-<pre>
-dataset=*RelVal*
-</pre>
-Please note, DAS is <b>case-sensitive</b> due to restrictions in underlying
+but no results were found. Please note, the underlying data-service(s)
+may experience a technical problem and empty results set can be temporary.
+You may try later.
+<hr class="line" />
+1. DAS is <b>case-sensitive</b> due to restrictions in underlying
 data services.
 </div>
 <!-- end of das_noresults.tmpl -->
