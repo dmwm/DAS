@@ -889,6 +889,7 @@ class DASWebService(DASWebManager):
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
         query   = getarg(kwargs, 'query', {})
+        uinput  = getarg(kwargs, 'input', '')
         page    = ''
         if  total > 0:
             params = {} # will keep everything except idx/limit
@@ -904,9 +905,7 @@ class DASWebService(DASWebManager):
                 del query['spec']['das.primary_key'] # this is used for look-up
             except:
                 pass
-            service_map = self.dasmgr.mongoparser.service_apis_map(query)
-            if  service_map.keys():
-                page = self.templatepage('das_noresults', service_map=service_map)
+            page = self.templatepage('das_noresults', query=uinput)
         return page
 
     def fltpage(self, row):

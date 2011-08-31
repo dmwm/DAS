@@ -1,20 +1,14 @@
 #from DAS.web.utils import quote
+#set query=$quote($query)
 
 <!-- das_noresults.tmpl -->
 <div>
-DAS queried the following services [1]:
-<ul>
-#for key, val in $service_map.items()
-#set system=$quote($key)
-#set apis=', '.join([$quote(s) for s in val])
-<li><b>$system:</b> $apis APIs
-#end for
-</ul>
-but no results were found. Please note, the underlying data-service(s)
-may experience a technical problem and empty results set can be temporary.
-You may try later.
-<hr class="line" />
-1. DAS is <b>case-sensitive</b> due to restrictions in underlying
-data services.
+DAS unable to find any results for this query.
+<br />
+Please note, that underlying data-service(s) may
+experience a technical problem at this time and
+you may try later, otherwise feel free to report the problem
+<a href="https://svnweb.cern.ch/trac/CMSDMWM/newticket?component=DAS&amp;description=No+results+for+$query&amp;summary=Empty+result+set&amp;owner=valya">here</a>
 </div>
+<hr class="line" />
 <!-- end of das_noresults.tmpl -->
