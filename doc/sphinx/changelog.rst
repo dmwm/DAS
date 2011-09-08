@@ -9,6 +9,7 @@ towards making DAS easy to use for end-users.
 
 - 0.9.X
 
+  - change RunRegistry URL
   - fix issue with showing DAS error records when data-service
     is down, see ticket #2230
   - add DBS prod local instances, ticket 2200
