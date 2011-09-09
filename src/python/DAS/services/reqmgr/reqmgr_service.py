@@ -21,8 +21,6 @@ class ReqMgrService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
         entries = self.map.values()
-        self.ckey = entries[0].get('ckey')
-        self.cert = entries[0].get('cert')
 
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""

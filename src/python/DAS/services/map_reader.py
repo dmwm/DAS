@@ -21,14 +21,8 @@ def read_service_map(filename, field="uri"):
     frmt   = ''
     notations = ''
     wild   = '*'
-    ckey   = None
-    cert   = None
     with open(filename, 'r') as apimap:
         for metric in yaml.load_all(apimap.read()):
-            if  not ckey:
-                ckey = metric.get('ckey')
-            if  not cert:
-                cert = metric.get('cert')
             if  metric.has_key('system'):
                 system = metric['system']
             if  metric.has_key('url'):
@@ -50,10 +44,6 @@ def read_service_map(filename, field="uri"):
                     record['das2api'] = metric['das2api']
                 else:
                     record['das2api'] = []
-                if  ckey:
-                    record['ckey'] = ckey
-                if  cert:
-                    record['cert'] = cert
                 if  metric.has_key('daskeys'):
                     record['daskeys'] = metric['daskeys']
                 else:

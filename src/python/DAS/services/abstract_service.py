@@ -16,7 +16,7 @@ import DAS.utils.jsonwrapper as json
 # DAS modules
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import getarg, genkey, print_exc
-from DAS.utils.utils import row2das, make_headers
+from DAS.utils.utils import row2das, make_headers, get_key_cert
 from DAS.utils.utils import xml_parser, json_parser
 from DAS.utils.utils import yield_rows
 from DAS.core.das_mongocache import compare_specs, encode_mongo_query
@@ -48,6 +48,14 @@ class DASAbstractService(object):
         except Exception as exc:
             print_exc(exc)
             raise Exception('fail to parse DAS config')
+
+        # read key/cert info
+        try:
+            self.ckey, self.cert = get_key_cert()
+        except Exception as exc:
+            print_exc(exc)
+            self.ckey = None
+            self.cert = None
 
         if  self.multitask:
             if  engine:
@@ -125,8 +133,12 @@ class DASAbstractService(object):
 
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""
-        return getdata(url, params, headers, expire, post, 
-                        self.error_expire, self.verbose)
+        if  url.find('https:') != -1:
+            return getdata(url, params, headers, expire, post,
+                            self.error_expire, self.verbose, self.ckey, self.cert)
+        else:
+            return getdata(url, params, headers, expire, post,
+                            self.error_expire, self.verbose)
 
     def call(self, query):
         """

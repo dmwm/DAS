@@ -1,8 +1,6 @@
 # ReqMgr API mapping to DAS
 system : reqmgr
 format : JSON
-ckey   : "/Users/vk/.globus/userkey.pem"
-cert   : "/Users/vk/.globus/usercert.pem"
 # ReqMgr test URL is https://cmsreqmgr.cern.ch/reqmgr/rest
 # I'm using a ssh tunnel on that port for testing purposes
 ---
