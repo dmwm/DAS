@@ -4,10 +4,10 @@
 #set height=$quote($height)
 #set max_width=len($cards)*$width
 
-#if $input
-#set klass="hide"
-#else
+#if $show
 #set klass="show"
+#else
+#set klass="hide"
 #end if
 <!-- das__cards.tmpl -->
 <style type="text/css" media="screen">

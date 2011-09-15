@@ -465,6 +465,29 @@ def json2html(idict, pad="", ref=None):
     sss += newline + pad + '}'
     return sss
 
+def das_json(record, pad=''):
+    """
+    Wrap provided jsonhtml code snippet into div/pre blocks. Provided jsonhtml
+    snippet is sanitized by json2html function.
+    """
+    page  = """<div class="code"><pre>"""
+    page += json2html(record, pad)
+    page += "</pre></div>"
+    return page
+
+def gen_error_msg(kwargs):
+    """
+    Generate standard error message.
+    """
+    error  = "My request to DAS is failed\n\n"
+    error += "Input parameters:\n"
+    for key, val in kwargs.items():
+        error += '%s: %s\n' % (key, val)
+    error += "Exception type: %s\nException value: %s\nTime: %s" \
+                % (sys.exc_info()[0], sys.exc_info()[1], web_time())
+    error = error.replace("<", "").replace(">", "")
+    return error
+
 def web_time():
     """
     Return time in format record in Cherrypy log.
