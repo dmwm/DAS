@@ -46,7 +46,7 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
         return httplib.HTTPSConnection(host)
 
 def getdata(url, params, headers=None, expire=3600, post=None, 
-                error_expire=300, verbose=0, ckey=None, cert=None):
+                error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
     """
     Invoke URL call and retrieve data from data-service based
     on provided URL and set of parameters. Use post=True to
@@ -54,7 +54,7 @@ def getdata(url, params, headers=None, expire=3600, post=None,
     """
     timer_key = '%s?%s' % (url, urllib.urlencode(params, doseq=True))
     das_timer(timer_key, verbose)
-    encoded_data = urllib.urlencode(params, doseq=True)
+    encoded_data = urllib.urlencode(params, doseq=doseq)
     if  not post:
         url = url + '?' + encoded_data
     if  not headers:

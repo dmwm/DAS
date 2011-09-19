@@ -169,7 +169,6 @@ class CMSRepresentation(DASRepresentation):
     def __init__(self, config, dasmgr):
         DASRepresentation.__init__(self, config)
         self.dasmgr     = dasmgr
-        self.systems    = dasmgr.systems
         self.dasmapping = self.dasmgr.mapping
         self.colors     = {}
         for system in self.dasmgr.systems:
@@ -237,6 +236,17 @@ class CMSRepresentation(DASRepresentation):
                         yield uikey, value
                 except:
                     yield key, idict[key]
+
+    def systems(self, slist):
+        """Colorize provided sub-systems"""
+        page = ""
+        if  not self.colors:
+            return page
+        pads = "padding-left:7px; padding-right:7px"
+        for system in slist:
+            page += '<span style="background-color:%s;%s">&nbsp;</span>' \
+                % (self.colors[system], pads)
+        return page
 
     def listview(self, head, data):
         """
