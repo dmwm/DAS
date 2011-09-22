@@ -388,13 +388,13 @@ class DASMongocache(object):
 
         # ensure that we have the following indexes
         index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                      ('query.spec.key', ASCENDING),
+                      ('query.spec.key', ASCENDING), ('das.ts', ASCENDING),
                       ('das.qhash', DESCENDING),
                       ('das.empty_record', ASCENDING),
                       ('query', DESCENDING), ('query.spec', DESCENDING)]
         create_indexes(self.col, index_list)
         index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                      ('das.empty_record', ASCENDING)]
+                      ('das.empty_record', ASCENDING), ('das.ts', ASCENDING)]
         create_indexes(self.merge, index_list)
         
     def add_manipulator(self):
@@ -951,6 +951,7 @@ class DASMongocache(object):
         system     = dasheader['system']
         rec        = [k for i in header['lookup_keys'] for k in i.values()]
         cond_keys  = query['spec'].keys()
+        daststamp  = time.time()
         # get API record id
         enc_query  = encode_mongo_query(query)
         spec       = {'query':enc_query, 'das.system':system}
@@ -963,7 +964,7 @@ class DASMongocache(object):
             for item in results:
                 counter += 1
                 item['das'] = dict(expire=expire, primary_key=prim_key, 
-                                        condition_keys=cond_keys,
+                                        condition_keys=cond_keys, ts=daststamp,
                                         system=system, empty_record=0)
                 item['das_id'] = str(objid)
                 yield item

@@ -320,8 +320,7 @@ class CMSRepresentation(DASRepresentation):
                             break
                     if  linkrec and pval and pval != 'N/A' and \
                         not isinstance(pval, list) and not error:
-                        links = ', '.join(make_links(linkrec, pval, inst))\
-                                    + '.'
+                        links = ', '.join(make_links(linkrec, pval, inst))
                     if  pkey and pkey == 'file.name':
                         try:
                             lfn = DotDict(row).get('file.name')
@@ -329,6 +328,11 @@ class CMSRepresentation(DASRepresentation):
                                 links += self.templatepage('filemover', lfn=lfn)
                         except:
                             pass
+                    if  pkey and pkey == 'release.name':
+                        rel  = '["%s"]' % DotDict(row).get('release.name')
+                        url  = 'https://cmstags.cern.ch/tc/py_getReleasesTags?'
+                        url += 'diff=false&releases=%s' % urllib.quote(rel)
+                        links += ', <a href="%s">Packages</a>' % url
                 except:
                     pval = 'N/A'
             gen   = self.convert2ui(row, pkey)

@@ -1145,16 +1145,17 @@ def aggregator_helper(results, expire):
     DAS aggregator helper which iterates over all records in results set and
     perform aggregation of records on the primary_key of the record.
     """
-    def helper(expire, prim_key, system, cond_keys):
+    def helper(expire, prim_key, system, cond_keys, tstamp):
         "Construct a dict out of provided values"
         rdict = dict(expire=expire, primary_key=prim_key, system=system,
-                        condition_keys=cond_keys)
+                        condition_keys=cond_keys, ts=tstamp)
         return dict(das=rdict)
 
     record    = results.next()
     prim_key  = record['das']['primary_key']
     cond_keys = record['das']['condition_keys']
     system    = record['das']['system']
+    tstamp    = time.time()
     record.pop('das')
     update = 1
     row = {}
@@ -1164,7 +1165,7 @@ def aggregator_helper(results, expire):
         row_system    = row['das']['system']
         row.pop('das')
         if  row_prim_key != prim_key:
-            record.update(helper(expire, prim_key, system, cond_keys))
+            record.update(helper(expire, prim_key, system, cond_keys, tstamp))
             yield record
             prim_key = row_prim_key
             record = row
@@ -1174,7 +1175,7 @@ def aggregator_helper(results, expire):
         try:
             val1 = dict_value(record, prim_key)
         except:
-            record.update(helper(expire, prim_key, system, cond_keys))
+            record.update(helper(expire, prim_key, system, cond_keys, tstamp))
             yield record
             record = dict(row)
             system = row_system
@@ -1184,7 +1185,7 @@ def aggregator_helper(results, expire):
         try:
             val2 = dict_value(row, prim_key)
         except:
-            row.update(helper(expire, prim_key, system, cond_keys))
+            row.update(helper(expire, prim_key, system, cond_keys, tstamp))
             yield row
             record = dict(row)
             system = row_system
@@ -1197,17 +1198,17 @@ def aggregator_helper(results, expire):
             cond_keys = list( set(cond_keys+row_cond_keys) )
             update = 1
         else:
-            record.update(helper(expire, prim_key, system, cond_keys))
+            record.update(helper(expire, prim_key, system, cond_keys, tstamp))
             yield record
             record = dict(row)
             system = row_system
             cond_keys = list( set(cond_keys+row_cond_keys) )
             update = 0
     if  update: # check if we did update for last row
-        record.update(helper(expire, prim_key, system, cond_keys))
+        record.update(helper(expire, prim_key, system, cond_keys, tstamp))
         yield record
     else:
-        row.update(helper(expire, prim_key, system, cond_keys))
+        row.update(helper(expire, prim_key, system, cond_keys, tstamp))
         yield row
 
 def das_diff(rows, compare_keys):

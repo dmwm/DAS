@@ -8,6 +8,7 @@ requests in terms of DAS functionality and usability. All changes made
 towards making DAS easy to use for end-users.
 
 - 1.0.X
+  - add DAS timestamp to all records; add link to TC; fixes #2429, #2392
   - re-factor das web server, and put DAS records representation on web UI
     into separate layer. Create abstract representation class and current
     CMS representation. See ticket 1975.
