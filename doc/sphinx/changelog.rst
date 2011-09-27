@@ -1,17 +1,20 @@
 DAS release notes
 =================
 
-Release 0.7.X series
+Release 1.X.Y series
 --------------------
-This release series is targeted to DAS usability. We collected users
-requests in terms of DAS functionality and usability. All changes made
-towards making DAS easy to use for end-users.
+This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
+
+  - add dataset name to block queries
   - add DAS timestamp to all records; add link to TC; fixes #2429, #2392
   - re-factor das web server, and put DAS records representation on web UI
     into separate layer. Create abstract representation class and current
     CMS representation. See ticket 1975.
+
+Release 0.9.X series
+--------------------
 
 - 0.9.X
 
@@ -45,6 +48,9 @@ towards making DAS easy to use for end-users.
     exc_msg, file_location
   - remove extra cherrypy logging, clean-up DAS server logs
 
+Release 0.8.X series
+--------------------
+
 - 0.8.X
 
   - resolve double requests issue, ticket #1881, see discussion on HN
@@ -64,6 +70,12 @@ towards making DAS easy to use for end-users.
     is stored into separte collection and can be used for autocompletion mode
   - improve autocompletion
   - work on scalability of DAS web server, ticket #1791
+
+Release 0.7.X series
+--------------------
+This release series is targeted to DAS usability. We collected users
+requests in terms of DAS functionality and usability. All changes made
+towards making DAS easy to use for end-users.
 
 - 0.7.X
 

@@ -113,6 +113,10 @@ class PhedexService(DASAbstractService):
         tot_files  = 0
         site_info_dict = {}
         for row in gen:
+            if  row.has_key('block') and row['block'].has_key('name'):
+                if  not row['block'].has_key('dataset'):
+                    dataset = row['block']['name'].split('#')[0]
+                    row['block']['dataset'] = dataset
             if  api == 'site4dataset' or api == 'site4block':
                 item = row['block']['replica']
                 if  isinstance(item, list):
