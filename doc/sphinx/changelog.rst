@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - fix plain format for das CLI while using aggregators, ticket 2447
   - add dataset name to block queries
   - add DAS timestamp to all records; add link to TC; fixes #2429, #2392
   - re-factor das web server, and put DAS records representation on web UI

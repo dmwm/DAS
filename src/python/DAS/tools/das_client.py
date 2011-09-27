@@ -146,6 +146,12 @@ def main():
                     print ' '.join(rows)
             else:
                 print jsondict
+        elif mongo_query.has_key('aggregators'):
+            aggs = mongo_query['aggregators']
+            data = jsondict['data']
+            for row in data:
+                print '%s(%s)=%s' \
+                % (row['function'], row['key'], row['result']['value'])
     else:
         print data
 
