@@ -321,7 +321,12 @@ def checkargs(supported):
             if  checkarg(kwds, 'instance'):
                 if  kwds['instance'] not in \
                 ['cms_dbs_prod_global', 'cms_dbs_caf_analysis_01',
-                 'cms_dbs_ph_analysis_01', 'cms_dbs_ph_analysis_02']:
+                 'cms_dbs_ph_analysis_01', 'cms_dbs_ph_analysis_02',
+                 'cms_dbs_prod_local_01', 'cms_dbs_prod_local_02',
+                 'cms_dbs_prod_local_03', 'cms_dbs_prod_local_04',
+                 'cms_dbs_prod_local_05', 'cms_dbs_prod_local_06',
+                 'cms_dbs_prod_local_07', 'cms_dbs_prod_local_08',
+                 'cms_dbs_prod_local_09', 'cms_dbs_prod_local_10']:
                     code  = web_code('Unsupported dbs instance')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
             data = func (self, *args, **kwds)
