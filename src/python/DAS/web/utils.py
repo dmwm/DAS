@@ -27,10 +27,13 @@ from   DAS.utils.utils import print_exc
 from   DAS.utils.regex import number_pattern, web_arg_pattern
 from   DAS.utils.das_db import db_connection
 from   DAS.web.das_codes import web_code
+from   DAS.utils.das_config import das_readconfig
 
 # regex patterns used in free_text_parser
 from DAS.utils.regex import PAT_BLOCK, PAT_RUN, PAT_FILE, PAT_RELEASE
 from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
+
+DBS_INSTANCES = das_readconfig()['dbs']['dbs_instances']
 
 def free_text_parser(sentence, daskeys, default_key="dataset"):
     """Parse sentence and construct DAS QL expresion"""
@@ -197,9 +200,11 @@ def get_ecode(error):
             return line.strip().replace('<p>', '').replace('</p>', '')
     return error
 
-def checkarg(kwds, arg, atype=str):
-    """Check arg in a dict that it has provided type"""
-    return kwds.has_key(arg) and isinstance(kwds[arg], atype)
+def checkarg(kwds, arg):
+    """Check arg in a dict that it has str/unicode type"""
+    data = kwds.get(arg, None)
+    cond = data and (isinstance(data, str) or isinstance(data, unicode))
+    return cond
 
 def checkargs(supported):
     """
@@ -319,14 +324,7 @@ def checkargs(supported):
                 code  = web_code('Unsupported pid value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'instance'):
-                if  kwds['instance'] not in \
-                ['cms_dbs_prod_global', 'cms_dbs_caf_analysis_01',
-                 'cms_dbs_ph_analysis_01', 'cms_dbs_ph_analysis_02',
-                 'cms_dbs_prod_local_01', 'cms_dbs_prod_local_02',
-                 'cms_dbs_prod_local_03', 'cms_dbs_prod_local_04',
-                 'cms_dbs_prod_local_05', 'cms_dbs_prod_local_06',
-                 'cms_dbs_prod_local_07', 'cms_dbs_prod_local_08',
-                 'cms_dbs_prod_local_09', 'cms_dbs_prod_local_10']:
+                if  kwds['instance'] not in DBS_INSTANCES:
                     code  = web_code('Unsupported dbs instance')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
             data = func (self, *args, **kwds)
