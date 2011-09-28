@@ -421,7 +421,9 @@ class DASMongocache(object):
         cond    = {'query.spec.key': {'$in' : spec.keys()}}
         for row in self.col.find(cond):
             mongo_query = decode_mongo_query(row['query'])
-            if  compare_specs(query, mongo_query):
+            qinst = query.get('instance', None)
+            minst = mongo_query.get('instance', None)
+            if  qinst == minst and compare_specs(query, mongo_query):
                 self.logger.info("%s, True" % msg)
                 self.logger.info("similar to %s" % mongo_query)
                 return mongo_query
