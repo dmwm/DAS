@@ -309,6 +309,12 @@ def compare_specs(input_query, exist_query):
     queries. Return True if results of exist_query are superset 
     of resulst for input_query.
     """
+    # check that instance remain the same
+    inst1 = input_query.get('instance', None)
+    inst2 = exist_query.get('instance', None)
+    if  inst1 != inst2:
+        return False
+
     # we use notation query2 is superset of query1
     query1  = input_query
     query2  = exist_query
@@ -421,9 +427,7 @@ class DASMongocache(object):
         cond    = {'query.spec.key': {'$in' : spec.keys()}}
         for row in self.col.find(cond):
             mongo_query = decode_mongo_query(row['query'])
-            qinst = query.get('instance', None)
-            minst = mongo_query.get('instance', None)
-            if  qinst == minst and compare_specs(query, mongo_query):
+            if  compare_specs(query, mongo_query):
                 self.logger.info("%s, True" % msg)
                 self.logger.info("similar to %s" % mongo_query)
                 return mongo_query
@@ -477,6 +481,7 @@ class DASMongocache(object):
         Return all matches.
         """
         enc_query = encode_mongo_query(query)
+        inst = query.get('instance', None)
         if  system:
             cond = {'query.spec': enc_query['spec'],
                     'query.fields': enc_query['fields'],
@@ -484,6 +489,8 @@ class DASMongocache(object):
         else:
             cond = {'query.spec': enc_query['spec'],
                     'query.fields': enc_query['fields']}
+        if  inst:
+            cond.update({'query.instance':inst})
         return self.col.find(cond)
 
     def das_record(self, query):
