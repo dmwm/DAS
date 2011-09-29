@@ -22,7 +22,7 @@ class DBS3Service(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.prim_instance = 'cms_dbs_prod_global'
+        self.prim_instance = config['dbs']['dbs_global_instance']
         self.instances = config['dbs']['dbs_instances']
 
     def url_instance(self, url, instance):
@@ -43,6 +43,8 @@ class DBS3Service(DASAbstractService):
             except:
                 pass
         if  api == 'datasets':
+            if  kwds['dataset'][0] == '*':
+                kwds['dataset'] = '/' + kwds['dataset']
             if  kwds['dataset'] == '*' and kwds['block_name']:
                 kwds['dataset'] = kwds['block_name'].split('#')[0]
             try:

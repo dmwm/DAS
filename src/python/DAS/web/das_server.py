@@ -82,7 +82,7 @@ class Root(object):
         url_base = self.config['web_server']['url_base']
         config = self.config.get('web_server', {})
         config['engine'] = engine
-        obj = DASWebService(config)
+        obj = DASWebService(self.config)
         tree.mount(obj, url_base) # mount web server
 
         # DBS/Phedex Service
@@ -102,7 +102,7 @@ class Root(object):
 
         print "### DAS web server, PID=%s" % self.pid
         print pformat(tree.apps)
-        print pformat(config)
+        print pformat(self.config)
         pid = PIDFile(engine, self.pid)
         pid.subscribe()
         engine.start()

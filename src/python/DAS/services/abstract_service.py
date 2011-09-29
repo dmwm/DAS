@@ -42,6 +42,10 @@ class DASAbstractService(object):
             self.write2cache  = config.get('write_cache', True)
             self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
+            if  config.has_key('dbs'):
+                self.dbs_global = config['dbs'].get('dbs_global_instance', None)
+            else:
+                self.dbs_global = None
             dburi             = config['mongodb']['dburi']
             engine            = config.get('engine', None)
             self.gfs          = db_gridfs(dburi)
@@ -532,7 +536,7 @@ class DASAbstractService(object):
         for further processing.
         """
         cond  = getarg(query, 'spec', {})
-        instance = query.get('instance', 'cms_dbs_prod_global')
+        instance = query.get('instance', self.dbs_global)
         skeys = getarg(query, 'fields', [])
         if  not skeys:
             skeys = []

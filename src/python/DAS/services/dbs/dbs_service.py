@@ -31,7 +31,7 @@ class DBSService(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.prim_instance = 'cms_dbs_prod_global'
+        self.prim_instance = config['dbs']['dbs_global_instance']
         self.instances = config['dbs']['dbs_instances']
 
     def url_instance(self, url, instance):

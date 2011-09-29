@@ -28,7 +28,6 @@ from DAS.core.das_ply import das_parser_error
 from DAS.utils.utils import getarg
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import genkey, print_exc
-from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection, db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import free_text_parser
@@ -52,13 +51,14 @@ class DASWebService(DASWebManager):
     """
     DAS web service interface.
     """
-    def __init__(self, config):
-        DASWebManager.__init__(self, config)
+    def __init__(self, dasconfig):
+        DASWebManager.__init__(self, dasconfig)
+        config = dasconfig['web_server']
         self.base        = config['url_base']
         self.interval    = 3000 # initial update interval in msec
         self.engine      = config.get('engine', None)
         nworkers         = config['number_of_workers']
-        self.dasconfig   = das_readconfig()
+        self.dasconfig   = dasconfig
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
         self.queue_limit = config.get('queue_limit', 50)
@@ -77,28 +77,44 @@ class DASWebService(DASWebManager):
         thread.start_new_thread(dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
 
-        # DBSDaemon thread
+        # Obtain DBS global instance or set it as None
+        if  self.dasconfig.has_key('dbs'):
+            self.dbs_global = \
+                self.dasconfig['dbs'].get('dbs_global_instance', None)
+            self.dbs_instances = \
+                self.dasconfig['dbs'].get('dbs_instances', [])
+        else:
+            self.dbs_global = None
+            self.dbs_instances = []
+
+        # Start DBS daemon
         self.dataset_daemon = config.get('dbs_daemon', False)
-        self.dbs_instances = self.dasconfig['dbs']['dbs_instances']
-        main_dbs_url = self.dasconfig['dbs']['dbs_global_url']
-        prim_inst = self.dasconfig['dbs']['dbs_global_instance']
-        self.dbs_urls = []
-        for inst in self.dbs_instances:
-            self.dbs_urls.append(main_dbs_url.replace(prim_inst, inst))
-        interval  = config.get('dbs_daemon_interval', 3600)
-        dbsexpire = config.get('dbs_daemon_expire', 3600)
-        self.dbsmgr = {} # dbs_urls vs dbs_daemons
         if  self.dataset_daemon:
-            for dbs_url in self.dbs_urls:
-                dbsmgr = DBSDaemon(dbs_url, self.dburi, expire=dbsexpire)
-                self.dbsmgr[dbs_url] = dbsmgr
-                def dbs_updater(_dbsmgr, interval):
-                    """DBS updater daemon"""
-                    while True:
-                        _dbsmgr.update()
-                        time.sleep(interval)
-                print "Start DBSDaemon for %s" % dbs_url
-                thread.start_new_thread(dbs_updater, (dbsmgr, interval, ))
+            self.dbs_daemon(config)
+
+    def dbs_daemon(self, config):
+        """Start DBS daemon if it is requested via DAS configuration"""
+        try:
+            main_dbs_url = self.dasconfig['dbs']['dbs_global_url']
+            self.dbs_urls = []
+            for inst in self.dbs_instances:
+              self.dbs_urls.append(main_dbs_url.replace(self.dbs_global, inst))
+            interval  = config.get('dbs_daemon_interval', 3600)
+            dbsexpire = config.get('dbs_daemon_expire', 3600)
+            self.dbsmgr = {} # dbs_urls vs dbs_daemons
+            if  self.dataset_daemon:
+                for dbs_url in self.dbs_urls:
+                    dbsmgr = DBSDaemon(dbs_url, self.dburi, expire=dbsexpire)
+                    self.dbsmgr[dbs_url] = dbsmgr
+                    def dbs_updater(_dbsmgr, interval):
+                        """DBS updater daemon"""
+                        while True:
+                            _dbsmgr.update()
+                            time.sleep(interval)
+                    print "Start DBSDaemon for %s" % dbs_url
+                    thread.start_new_thread(dbs_updater, (dbsmgr, interval, ))
+        except Exception as exc:
+            print_exc(exc)
 
     def init(self):
         """Init DAS web server, connect to DAS Core"""
@@ -312,11 +328,12 @@ class DASWebService(DASWebManager):
         uinput = getarg(kwargs, 'input', '') 
         return self.page(self.form(uinput=uinput, cards=True))
 
-    def form(self, uinput='', instance='cms_dbs_prod_global',
-                view='list', cards=False):
+    def form(self, uinput='', instance=None, view='list', cards=False):
         """
         provide input DAS search form
         """
+        if  not instance:
+            instance = self.dbs_global
         cards = self.templatepage('das_cards', base=self.base, show=cards, \
                 width=900, height=220, cards=help_cards(self.base))
         page  = self.templatepage('das_searchform', input=uinput, \
@@ -427,7 +444,7 @@ class DASWebService(DASWebManager):
         head   = request_headers()
         head['args'] = kwargs
         uinput = getarg(kwargs, 'input', '') 
-        inst   = kwargs.get('instance', 'cms_dbs_prod_global')
+        inst   = kwargs.get('instance', self.dbs_global)
         if  inst:
             uinput = ' instance=%s %s' % (inst, uinput)
         idx    = getarg(kwargs, 'idx', 0)
@@ -578,7 +595,7 @@ class DASWebService(DASWebManager):
         time0   = time.time()
         self.adjust_input(kwargs)
         uinput  = getarg(kwargs, 'input', '').strip()
-        inst    = kwargs.get('instance', 'cms_dbs_prod_global')
+        inst    = kwargs.get('instance', self.dbs_global)
         view    = kwargs.get('view', 'list')
         form    = self.form(uinput=uinput, instance=inst, view=view)
         if  inst:
@@ -698,7 +715,7 @@ class DASWebService(DASWebManager):
         query = kwargs.get("query", "").strip()
         result = autocomplete_helper(query, self.dasmgr, self.daskeys)
         dataset = [r for r in result if r['value'].find('dataset=')!=-1]
-        dbsinst = kwargs.get('dbs_instance', 'cms_dbs_prod_global')
+        dbsinst = kwargs.get('dbs_instance', self.dbs_global)
         if  self.dataset_daemon and len(dataset):
             dbs_urls = [d for d in self.dbsmgr.keys() if d.find(dbsinst) != -1]
             if  len(dbs_urls) == 1:

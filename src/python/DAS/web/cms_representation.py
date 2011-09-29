@@ -170,6 +170,10 @@ class CMSRepresentation(DASRepresentation):
         DASRepresentation.__init__(self, config)
         self.dasmgr     = dasmgr
         self.dasmapping = self.dasmgr.mapping
+        if  config.has_key('dbs'):
+            self.dbs_global = config['dbs'].get('dbs_global_instance', None)
+        else:
+            self.dbs_global = None
         self.colors     = {}
         for system in self.dasmgr.systems:
             self.colors[system] = gen_color(system)
@@ -254,7 +258,7 @@ class CMSRepresentation(DASRepresentation):
         """
         kwargs  = head['args']
         total   = head.get('nresults', 0)
-        inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
+        inst    = getarg(kwargs, 'instance', self.dbs_global)
         query   = getarg(kwargs, 'query', {})
         filters = query.get('filters')
         main    = self.pagination(total, kwargs)
@@ -379,7 +383,7 @@ class CMSRepresentation(DASRepresentation):
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
         sdir    = getarg(kwargs, 'dir', '')
-        inst    = getarg(kwargs, 'instance', 'cms_dbs_prod_global')
+        inst    = getarg(kwargs, 'instance', self.dbs_global)
         query   = kwargs['query']
         titles  = []
         page    = self.pagination(total, kwargs)

@@ -3,9 +3,11 @@ system : dbs3
 format : JSON
 # DBS3 test URL is http://vocms09.cern.ch:8989/dbs/DBSReader
 # I'm using a ssh tunnel on that port for testing purposes
+# New DBS3 test URL is https://dbs3-dastestbed.cern.ch/dbs/prod/global/DBSReader
+# for this URL I use ssh tunnel with port 8979
 ---
 urn: acquisitioneras
-url : "http://localhost:8989/dbs/DBSReader/acquisitioneras/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/acquisitioneras/"
 expire : 900
 params : {"era":"optional"}
 daskeys : [
@@ -13,7 +15,7 @@ daskeys : [
 ]
 ---
 urn: datatypes
-url : "http://localhost:8989/dbs/DBSReader/datatypes/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/datatypes/"
 expire : 900
 params : {
         "dataset":"optional",
@@ -27,7 +29,7 @@ das2api : [
 ]
 ---
 urn: releaseversions
-url : "http://localhost:8989/dbs/DBSReader/releaseversions/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/releaseversions/"
 expire : 900
 params : {
         "release_version":"optional", "dataset":"optional",
@@ -42,7 +44,7 @@ das2api : [
 ]
 ---
 urn: primarydatasets
-url : "http://localhost:8989/dbs/DBSReader/primarydatasets/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/primarydatasets/"
 expire : 900
 params : {
         "primary_ds_name":"*",
@@ -55,7 +57,7 @@ das2api : [
 ]
 ---
 urn: datasets
-url : "http://localhost:8989/dbs/DBSReader/datasets/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/datasets/"
 expire : 900
 params : {
         "dataset":"*",
@@ -94,7 +96,7 @@ das2api : [
 ]
 ---
 urn: filesummaries
-url : "http://localhost:8989/dbs/DBSReader/filesummaries/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/filesummaries/"
 expire : 900
 params : {
         "dataset":"required",
@@ -107,7 +109,7 @@ das2api : [
 ]
 ---
 urn: datasetparents
-url : "http://localhost:8989/dbs/DBSReader/datasetparents/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/datasetparents/"
 expire : 900
 params : {
         "dataset":"required",
@@ -121,7 +123,7 @@ das2api : [
 ]
 ---
 urn: datasetchildren
-url : "http://localhost:8989/dbs/DBSReader/datasetchildren/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/datasetchildren/"
 expire : 900
 params : {
         "dataset":"required",
@@ -135,7 +137,7 @@ das2api : [
 ]
 ---
 urn: outputconfigs
-url : "http://localhost:8989/dbs/DBSReader/outputconfigs/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/outputconfigs/"
 expire : 900
 params : {
         "dataset":"required",
@@ -149,7 +151,7 @@ das2api : [
 ]
 ---
 urn: site4dataset
-url : "http://localhost:8989/dbs/DBSReader/blocks/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/blocks/"
 expire : 900
 params : {
         "detail":"True",
@@ -165,7 +167,7 @@ das2api : [
 ]
 ---
 urn: blocks
-url : "http://localhost:8989/dbs/DBSReader/blocks/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/blocks/"
 expire : 900
 params : {
         "block_name":"*",
@@ -183,7 +185,7 @@ das2api : [
 ]
 ---
 urn: blockparents
-url : "http://localhost:8989/dbs/DBSReader/blockparents/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/blockparents/"
 expire : 900
 params : {
         "block_name":"required",
@@ -197,7 +199,7 @@ das2api : [
 ]
 ---
 urn: blockchildren
-url : "http://localhost:8989/dbs/DBSReader/blockchildren/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/blockchildren/"
 expire : 900
 params : {
         "block_name":"required",
@@ -211,7 +213,7 @@ das2api : [
 ]
 ---
 urn: files_via_dataset
-url : "http://localhost:8989/dbs/DBSReader/files/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/files/"
 expire : 900
 params : {
         "dataset":"required",
@@ -232,7 +234,7 @@ das2api : [
 ]
 ---
 urn: files_via_block
-url : "http://localhost:8989/dbs/DBSReader/files/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/files/"
 expire : 900
 params : {
         "block_name":"required",
@@ -253,7 +255,7 @@ das2api : [
 ]
 ---
 urn: fileparents
-url : "http://localhost:8989/dbs/DBSReader/fileparents/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/fileparents/"
 expire : 900
 params : {
         "logical_file_name":"required",
@@ -267,7 +269,7 @@ das2api : [
 ]
 ---
 urn: filechildren
-url : "http://localhost:8989/dbs/DBSReader/filechildren/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/filechildren/"
 expire : 900
 params : {
         "logical_file_name":"required",
@@ -281,7 +283,7 @@ das2api : [
 ]
 ---
 urn: filelumis
-url : "http://localhost:8989/dbs/DBSReader/filelumis/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/filelumis/"
 expire : 900
 params : {
         "logical_file_name":"required", "run_num":"optional",
@@ -297,7 +299,7 @@ das2api : [
 ]
 ---
 urn: filelumis4block
-url : "http://localhost:8989/dbs/DBSReader/filelumis/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/filelumis/"
 expire : 900
 params : {
         "block_name":"required", "run_num":"optional",
@@ -313,7 +315,7 @@ das2api : [
 ]
 ---
 urn: runs
-url : "http://localhost:8989/dbs/DBSReader/runs/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/runs/"
 expire : 900
 params : {
         "minrun":"required",
@@ -327,7 +329,7 @@ das2api : [
 ]
 ---
 urn: runs_via_dataset
-url : "http://localhost:8989/dbs/DBSReader/runs/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/runs/"
 expire : 900
 params : {
         "dataset":"required",
@@ -341,7 +343,7 @@ das2api : [
 ]
 ---
 urn: runs_via_block
-url : "http://localhost:8989/dbs/DBSReader/runs/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/runs/"
 expire : 900
 params : {
         "block_name":"required",
@@ -355,7 +357,7 @@ das2api : [
 ]
 ---
 urn: runs_via_file
-url : "http://localhost:8989/dbs/DBSReader/runs/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/runs/"
 expire : 900
 params : {
         "logical_file_name":"required",
@@ -369,7 +371,7 @@ das2api : [
 ]
 ---
 urn: physicsgroup
-url : "http://localhost:8989/dbs/DBSReader/physicsgroups/"
+url : "https://localhost:8979/dbs/prod/global/DBSReader/physicsgroups/"
 expire : 900
 params : {
         "physics_group_name":"optional",
