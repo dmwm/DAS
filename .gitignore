@@ -17,5 +17,11 @@ auth.ini
 .project
 .pydevproject
 .settings
+old
+new
+merge.cmd
+parser.out
+config
+das_usage.py
 src/python/parser/parsetab.py
 MANIFEST

@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - fix compare_spec, ticket #2497
   - add new data retrieval manager based on pycurl library;
     partial resolution for ticket #2480
   - fix plain format for das CLI while using aggregators, ticket 2447

@@ -341,7 +341,9 @@ def compare_specs(input_query, exist_query):
         if  set(fields2) > set(fields1): # set2 is superset of set1
             return True
 
-    if  not set(spec2.keys()).issubset(spec1.keys()):
+    # check spec keys, since they applied to data-srv APIs do not
+    # allow their comparison for different set of keys.
+    if  spec2.keys() != spec1.keys():
         return False
 
     for key, val1 in spec1.items():
