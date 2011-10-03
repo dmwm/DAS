@@ -305,23 +305,11 @@ class DASCore(object):
         query, _dquery = convert2pattern(loose(query))
         return self.rawcache.incache(query, collection='merge')
 
-    def get_das_ids(self, query):
-        """
-        Return list of DAS ids associated with given query
-        """
-        das_ids = []
-        try:
-            das_ids = \
-                [r['_id'] for r in self.rawcache.find_specs(query, system='')]
-        except:
-            pass
-        return das_ids
-
     def in_raw_cache_nresults(self, query, coll='merge'):
         """
         Return total number of results (count) for progived query.
         """
-        das_ids = self.get_das_ids(query)
+        das_ids = self.rawcache.get_das_ids(query)
         if  query and query.has_key('fields'):
             fields = query['fields']
             if  fields and isinstance(fields, list) and 'queries' in fields:
@@ -472,7 +460,7 @@ class DASCore(object):
         msg += ', skey=%s, order=%s' % (skey, sorder)
         self.logger.info(msg)
         # add das_ids look-up to remove duplicates
-        das_ids = self.get_das_ids(query)
+        das_ids = self.rawcache.get_das_ids(query)
         if  das_ids:
             query['spec'].update({'das_id':{'$in':das_ids}})
         fields    = query.get('fields', None)

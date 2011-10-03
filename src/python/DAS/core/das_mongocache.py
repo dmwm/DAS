@@ -495,6 +495,32 @@ class DASMongocache(object):
             cond.update({'query.instance':inst})
         return self.col.find(cond)
 
+    def get_das_ids(self, query):
+        """
+        Return list of DAS ids associated with given query
+        """
+        das_ids = []
+        try:
+            das_ids = \
+                [r['_id'] for r in self.col.find_specs(query, system='')]
+        except:
+            pass
+        return das_ids
+
+    def update_das_expire(self, query, timestamp):
+        """Update timestamp of all DAS data records for given query"""
+        newval  = {'$set': {'das.expire':timestamp}}
+        specs   = self.find_specs(query, system='')
+        das_ids = [r['_id'] for r in specs]
+        # update DAS records
+        spec = {'_id' : {'$in': [ObjectId(i) for i in das_ids]}}
+        self.col.update(spec, newval, multi=True)
+        self.merge.update(spec, newval, multi=True)
+        # update data records
+        spec = {'das_id' : {'$in': das_ids}}
+        self.col.update(spec, newval, multi=True)
+        self.merge.update(spec, newval, multi=True)
+
     def das_record(self, query):
         """
         Retrieve DAS record for given query.
