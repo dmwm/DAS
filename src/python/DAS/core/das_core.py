@@ -401,9 +401,7 @@ class DASCore(object):
             msg = 'DASCore::call, found query %s in cache, status=%s\n' \
                         % (record['query'], status)
             mongo_query = decode_mongo_query(record['query'])
-            qinst = query.get('instance', None)
-            minst = mongo_query.get('instance', None)
-            if  qinst != minst or not compare_specs(query, mongo_query):
+            if  not compare_specs(query, mongo_query):
                 status = 0
             self.logger.info(msg)
             if  status == 'ok' and self.in_raw_cache(query):
