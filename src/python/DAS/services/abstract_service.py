@@ -309,9 +309,6 @@ class DASAbstractService(object):
           actual data
         - *api* is API name
         """
-        msg  = "DASAbstractService::%s::parser, api=%s, format=%s " \
-                % (self.name, api, dformat)
-        self.logger.info(msg)
         prim_key  = self.dasmapping.primary_key(self.name, api)
         notations = self.get_notations(api)
         apitag    = self.dasmapping.apitag(self.name, api)
