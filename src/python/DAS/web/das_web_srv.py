@@ -109,7 +109,10 @@ class DASWebService(DASWebManager):
                     def dbs_updater(_dbsmgr, interval):
                         """DBS updater daemon"""
                         while True:
-                            _dbsmgr.update()
+                            try:
+                                _dbsmgr.update()
+                            except:
+                                pass
                             time.sleep(interval)
                     print "Start DBSDaemon for %s" % dbs_url
                     thread.start_new_thread(dbs_updater, (dbsmgr, interval, ))
