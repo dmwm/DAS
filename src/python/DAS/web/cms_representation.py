@@ -357,6 +357,7 @@ class CMSRepresentation(DASRepresentation):
                 print_exc(exc)
                 systems = "" # we don't store systems for aggregated records
             jsonhtml = das_json(row, pad)
+            jsonhtml = jsonhtml.replace('request?', 'request?instance=%s&' % inst)
             if  not links:
                 page += '<br />'
             if  row.has_key('das') and row['das'].has_key('conflict'):
