@@ -1,0 +1,120 @@
+# SiteDB API mapping to DAS
+system: sitedb2
+format: JSON
+--- 
+urn : resource_pledges
+url : "https://cmsweb.cern.ch/sitedb/data/prod/resource_pledges"
+expire : 3600
+params : {"match":""}
+daskeys : [
+    {"key":"pledge", "map":"pledge.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"pledge.name", "api_param":"match", "pattern":"^T[0-3]"}
+]
+---
+urn : sites
+url : "https://cmsweb.cern.ch/sitedb/data/prod/sites"
+expire : 3600
+params : {"name":"optional"}
+daskeys : [
+    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
+    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+das2api : [
+    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
+    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+---
+urn : site-names
+url : "https://cmsweb.cern.ch/sitedb/data/prod/site-names"
+expire : 3600
+params : {"name":"optional"}
+daskeys : [
+    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
+    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+das2api : [
+    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
+    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+---
+urn : site-resources
+url : "https://cmsweb.cern.ch/sitedb/data/prod/site-resources"
+expire : 3600
+params : {"name":"optional"}
+daskeys : [
+    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
+    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+das2api : [
+    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
+    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+---
+urn : site-associations
+url : "https://cmsweb.cern.ch/sitedb/data/prod/site-associations"
+expire : 3600
+params : {"name":"optional"}
+daskeys : [
+    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
+    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+das2api : [
+    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
+    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+---
+urn : site-responsibilities
+url : "https://cmsweb.cern.ch/sitedb/data/prod/site-responsibilities"
+expire : 3600
+params : {"name":"optional"}
+daskeys : [
+    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
+    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+das2api : [
+    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
+    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+---
+urn : groups
+url : "https://cmsweb.cern.ch/sitedb/data/prod/groups"
+expire : 3600
+params : {"match":""}
+daskeys : [
+    {"key":"group", "map":"group.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"group.name", "api_param":"match", "pattern":"^T[0-3]"}
+]
+---
+urn : people
+url : "https://cmsweb.cern.ch/sitedb/data/prod/people"
+expire : 3600
+params : {"match":""}
+daskeys : [
+    {"key":"email", "map":"user.email", "pattern":""},
+]
+das2api : [
+    {"das_key":"user.email", "api_param":"match", "pattern":"^T[0-3]"}
+]
+---
+urn : roles
+url : "https://cmsweb.cern.ch/sitedb/data/prod/roles"
+expire : 3600
+params : {"match":""}
+daskeys : [
+    {"key":"role", "map":"user.role", "pattern":""},
+]
+das2api : [
+    {"das_key":"user.role", "api_param":"match", "pattern":"^T[0-3]"}
+]
+---
+notations : [
+        {"notation": "cms_name", "map":"name", "api":"list"},
+        {"notation": "site.cms_name", "map":"site.name", "api":""},
+#        {"notation": "site.resource_element.cms_name", "map": "site.name", "api": ""},
+#        {"notation": "site.resource_pledge.cms_name", "map": "site.name", "api": ""},
+#        {"notation": "admin.contacts.cms_name", "map":"site.name", "api":""}
+]
