@@ -5,12 +5,12 @@ format: JSON
 urn : resource_pledges
 url : "https://cmsweb.cern.ch/sitedb/data/prod/resource_pledges"
 expire : 3600
-params : {"match":""}
+params : {"match":"optional"}
 daskeys : [
     {"key":"pledge", "map":"pledge.name", "pattern":""},
 ]
 das2api : [
-    {"das_key":"pledge.name", "api_param":"match", "pattern":"^T[0-3]"}
+    {"das_key":"pledge.name", "api_param":"match", "pattern":""}
 ]
 ---
 urn : sites
@@ -81,40 +81,48 @@ das2api : [
 urn : groups
 url : "https://cmsweb.cern.ch/sitedb/data/prod/groups"
 expire : 3600
-params : {"match":""}
+params : {"match":"optional"}
 daskeys : [
     {"key":"group", "map":"group.name", "pattern":""},
 ]
 das2api : [
-    {"das_key":"group.name", "api_param":"match", "pattern":"^T[0-3]"}
+    {"das_key":"group.name", "api_param":"match", "pattern":""}
 ]
 ---
-urn : people
+urn : people_via_email
 url : "https://cmsweb.cern.ch/sitedb/data/prod/people"
 expire : 3600
-params : {"match":""}
+params : {"match":"optional"}
 daskeys : [
     {"key":"email", "map":"user.email", "pattern":""},
 ]
 das2api : [
-    {"das_key":"user.email", "api_param":"match", "pattern":"^T[0-3]"}
+    {"das_key":"user.email", "api_param":"match", "pattern":""},
+]
+---
+urn : people_via_name
+url : "https://cmsweb.cern.ch/sitedb/data/prod/people"
+expire : 3600
+params : {"match":"optional"}
+daskeys : [
+    {"key":"user", "map":"user.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"user.name", "api_param":"match", "pattern":""},
 ]
 ---
 urn : roles
 url : "https://cmsweb.cern.ch/sitedb/data/prod/roles"
 expire : 3600
-params : {"match":""}
+params : {"match":"optional"}
 daskeys : [
     {"key":"role", "map":"user.role", "pattern":""},
 ]
 das2api : [
-    {"das_key":"user.role", "api_param":"match", "pattern":"^T[0-3]"}
+    {"das_key":"user.role", "api_param":"match", "pattern":""}
 ]
 ---
 notations : [
         {"notation": "cms_name", "map":"name", "api":"list"},
         {"notation": "site.cms_name", "map":"site.name", "api":""},
-#        {"notation": "site.resource_element.cms_name", "map": "site.name", "api": ""},
-#        {"notation": "site.resource_pledge.cms_name", "map": "site.name", "api": ""},
-#        {"notation": "admin.contacts.cms_name", "map":"site.name", "api":""}
 ]
