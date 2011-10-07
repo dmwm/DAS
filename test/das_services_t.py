@@ -216,8 +216,8 @@ class testCMSFakeDataServices(unittest.TestCase):
         result = self.das.get_from_cache(query, collection=self.dasmerge)
         res    = []
         for row in result:
-            if  row.has_key('ip') and row['ip'].has_key('address'):
-                res.append(row['ip']['address'])
+            if  row.has_key('ip'):
+                res.append(DotDict(row).get('ip.address'))
             if  row.has_key('site'):
                 for item in row['site']:
                     if  item.has_key('name') and item['name'] not in res:

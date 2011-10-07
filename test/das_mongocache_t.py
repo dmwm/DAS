@@ -14,6 +14,7 @@ from pymongo.connection import Connection
 
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import DASLogger
+from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_mongocache import DASMongocache, loose
 from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
 from DAS.core.das_mongocache import convert2pattern, compare_specs
@@ -35,6 +36,8 @@ class testDASMongocache(unittest.TestCase):
 
         connection = Connection(dburi)
         connection.drop_database('das') 
+        dasmapping = DASMapping(config)
+        config['dasmapping'] = dasmapping
         self.dasmongocache = DASMongocache(config)
 
     def test_encode_decode(self):
@@ -293,22 +296,6 @@ class testDASMongocache(unittest.TestCase):
         self.assertEqual(expect, result)
         expect = dict(spec={'site.name':pat}, fields=fields)
         self.assertEqual(expect, debug)
-
-    def test_similar_queries_3(self):                          
-        """test similar_queries method of DASMongoCache"""
-        query1 = {'fields':None, 'spec':{'site.name':'T1'}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
-        query2 = {'fields':None, 'spec':{'site.name':'T1', 'release':'A'}}
-        result = self.dasmongocache.similar_queries(query2)
-        self.assertEqual(query1, result)
-        self.dasmongocache.delete_cache()
-
-        query1 = {'fields':None, 'spec':{'site.name':'T1', 'release':'A'}}
-        self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
-        query2 = {'fields':None, 'spec':{'site.name':'T1'}}
-        result = self.dasmongocache.similar_queries(query2)
-        self.assertEqual(False, result)
-        self.dasmongocache.delete_cache()
 
     def test_similar_queries_2(self):                          
         """test similar_queries method of DASMongoCache"""

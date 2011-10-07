@@ -223,6 +223,7 @@ class testUtils(unittest.TestCase):
         row  = {'run':10, 'das':das, '_id':1, 'das_id':1}
         rows = (row for i in range(0,1))
         result = [r for r in aggregator(rows, das['expire'])]
+        del result[0]['das']['ts'] # we don't need record timestamp
         expect = [{'run': 10, 'das':das, 'cache_id': [1], 'das_id': [1]}]
         self.assertEqual(result, expect)
 
@@ -234,6 +235,8 @@ class testUtils(unittest.TestCase):
         rows.append(row)
         res  = (r for r in rows)
         result = [r for r in aggregator(res, das['expire'])]
+        for r in result:
+            del r['das']['ts'] # we don't need record timestamp
         expect = [{'run': 1, 'das':das, 'das_id': [1], 'cache_id': [1]}, 
                   {'run': 2, 'das':das, 'das_id': [1], 'cache_id': [1]}]
         self.assertEqual(result, expect)
@@ -247,6 +250,8 @@ class testUtils(unittest.TestCase):
         rows.append(row)
         res  = (r for r in rows)
         result = [r for r in aggregator(res, das['expire'])]
+        for r in result:
+            del r['das']['ts'] # we don't need record timestamp
         expect = [{'run': [{'a': 1, 'b': 1}, {'a': 1, 'b': 2}], 'das':das,
                    'das_id': [1], 'cache_id': [1]}]
         self.assertEqual(result, expect)

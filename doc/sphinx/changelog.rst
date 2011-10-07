@@ -8,7 +8,12 @@ This release series is targeted to DAS production stability and quality.
 - 1.0.X
 
   - initial support for new SiteDB implementation
-  - fix compare_spec, ticket #2497
+  - change the behavior of compare_spec to only compare specs with
+    the same key content, otherwise it leads to wrong results when
+    one query followed by another with additional key, e.g.
+    file dataset=abc followed by file dataset=abc site=X. This lead
+    compare_spec to identify later query as subset of former one, but
+    cache has not had site in records, ticket #2497
   - add new data retrieval manager based on pycurl library;
     partial resolution for ticket #2480
   - fix plain format for das CLI while using aggregators, ticket 2447
