@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - add Phedex subscription link, fixes #2588
   - initial support for new SiteDB implementation
   - change the behavior of compare_spec to only compare specs with
     the same key content, otherwise it leads to wrong results when

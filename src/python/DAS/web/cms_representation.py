@@ -329,7 +329,16 @@ class CMSRepresentation(DASRepresentation):
                         try:
                             lfn = DotDict(row).get('file.name')
                             if  lfn:
-                                links += self.templatepage('filemover', lfn=lfn)
+                                links += ', ' + \
+                                        self.templatepage('filemover', lfn=lfn)
+                        except:
+                            pass
+                    if  pkey and pkey == 'dataset.name':
+                        try:
+                            path = DotDict(row).get('dataset.name')
+                            if  path:
+                                links += ', ' + self.templatepage(\
+                                    'phedex_subscription', path=path, inst=inst)
                         except:
                             pass
                     if  pkey and pkey == 'release.name':
