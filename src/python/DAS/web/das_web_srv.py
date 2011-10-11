@@ -1005,8 +1005,7 @@ class DASWebService(DASWebManager):
                             break
                     if  linkrec and pval and pval != 'N/A' and \
                         not isinstance(pval, list) and not error:
-                        links = ', '.join(make_links(linkrec, pval, inst))\
-                                    + '.'
+                        links = ', '.join(make_links(linkrec, pval, inst))
                     if  pkey and pkey == 'file.name':
                         try:
                             lfn = DotDict(row).get('file.name')
