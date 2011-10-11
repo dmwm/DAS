@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#pylint: disable-msg=C0301,C0103
+#pylint: disable-msg=C0301,C0103,R0914,R0903
 
 """
 DAS command line tool
@@ -31,15 +31,17 @@ class DASOptionParser:
         self.parser.add_option("--query", action="store", type="string", 
                                default=False, dest="query",
              help="specify query for your request")
+        msg  = "host name of DAS cache server, default is https://cmsweb.cern.ch"
         self.parser.add_option("--host", action="store", type="string", 
-                               default='https://cmsweb.cern.ch', dest="host",
-             help="specify host name of DAS cache server, default https://cmsweb.cern.ch")
+                       default='https://cmsweb.cern.ch', dest="host", help=msg)
+        msg  = "start index for returned result set, aka pagination,"
+        msg += " use w/ limit (default is 0)"
         self.parser.add_option("--idx", action="store", type="int", 
-                               default=0, dest="idx",
-             help="start index for returned result set, aka pagination, use w/ limit (default is 0)")
+                               default=0, dest="idx", help=msg)
+        msg  = "number of returned results (default is 10),"
+        msg += " use --limit=0 to show all results"
         self.parser.add_option("--limit", action="store", type="int", 
-                               default=10, dest="limit",
-             help="number of returned results (results per page), 10 by default")
+                               default=10, dest="limit", help=msg)
         msg  = 'specify return data format (json or plain), default json.'
         msg += ' Please note, the --format option can only be used together'
         msg += ' with DAS filters, since tabulated format requires knowledge'
@@ -135,7 +137,11 @@ def main():
     if  opts.format == 'plain':
         jsondict = json.loads(data)
         nres = jsondict['nresults']
-        msg  = "\nShowing %s-%s out of %s results" % (idx+1, idx+limit, nres)
+        if  not limit:
+            drange = '%s' % nres
+        else:
+            drange = '%s-%s out of %s' % (idx+1, idx+limit, nres)
+        msg  = "\nShowing %s results" % drange
         msg += ", for more results use --idx/--limit options\n"
         print msg
         mongo_query = jsondict['mongo_query']
@@ -152,7 +158,6 @@ def main():
             else:
                 print jsondict
         elif mongo_query.has_key('aggregators'):
-            aggs = mongo_query['aggregators']
             data = jsondict['data']
             for row in data:
                 print '%s(%s)=%s' \
