@@ -38,9 +38,12 @@ class DASOptionParser:
         self.parser.add_option("--limit", action="store", type="int", 
                                default=10, dest="limit",
              help="number of returned results (results per page), 10 by default")
+        msg  = 'specify return data format (json or plain), default json.'
+        msg += ' Please note, the --format option can only be used together'
+        msg += ' with DAS filters, since tabulated format requires knowledge'
+        msg += ' of columns (the fields you specify in a filter).'
         self.parser.add_option("--format", action="store", type="string", 
-                               default="json", dest="format",
-             help="specify return data format (json or plain), default json")
+                               default="json", dest="format", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
