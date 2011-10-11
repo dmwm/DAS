@@ -22,7 +22,9 @@ class DASOptionParser:
     DAS cache client option parser
     """
     def __init__(self):
-        self.parser = OptionParser()
+        usage  = "Usage: %prog [options]\n"
+        usage += "For more help please visit https://cmsweb.cern.ch/das/faq"
+        self.parser = OptionParser(usage=usage)
         self.parser.add_option("-v", "--verbose", action="store", 
                                type="int", default=0, dest="verbose",
              help="verbose output")
