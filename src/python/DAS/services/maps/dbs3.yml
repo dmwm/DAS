@@ -418,6 +418,8 @@ notations : [
         {"notation": "event_count", "map": "nevents", "api": "files"},
         {"notation": "event_count", "map": "nevents", "api": "files_via_dataset"},
         {"notation": "event_count", "map": "nevents", "api": "files_via_block"},
+        {"notation": "num_event", "map": "nevents", "api": "filesummaries"},
+        {"notation": "num_block", "map": "nblocks", "api": "filesummaries"},
         {"notation": "file.event_count", "map": "file.nevents", "api": ""},
         {"notation": "file_count", "map": "nfiles", "api": ""},
         {"notation": "run_num", "map": "run_number", "api": "runs"},
