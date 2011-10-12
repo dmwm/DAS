@@ -679,6 +679,9 @@ class DASWebService(DASWebManager):
         self.adjust_input(kwargs)
         pid    = kwargs.get('pid', '')
         uinput = kwargs.get('input', '').strip()
+        inst   = kwargs.get('instance', self.dbs_global)
+        if  inst:
+            uinput = ' instance=%s %s' % (inst, uinput)
         if  not pid and self.busy():
             data = []
             head = request_headers()
