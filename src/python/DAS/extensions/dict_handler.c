@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <Python.h>
 /* 
  * C-version of dict_helper from utils/utils.py
@@ -22,7 +23,13 @@ _dict_handler(PyObject *self, PyObject *args)
     Py_ssize_t pos = 0;
     while (PyDict_Next(dict, &pos, &key, &val)) {
         PyObject *mkey = PyDict_GetItem(map, key);
-        PyObject *res = PyFloat_FromString(val, NULL);
+        PyObject *res = NULL;
+        char *dotch = strchr((char *)val, '.'); /* search for . character */
+        if ( dotch != NULL ) {
+            res = PyFloat_FromString(val, NULL);
+        } else {
+            res = PyInt_FromString(PyString_AsString(val), NULL, 0);
+        }
         int decr = 1;
         if (res == NULL) {
             res  = val;
@@ -35,8 +42,9 @@ _dict_handler(PyObject *self, PyObject *args)
         } else { 
             PyDict_SetItem(data, key, res);
         }   
-        if (decr == 1)
+        if (decr == 1) {
             Py_XDECREF(res);
+        }
     }       
     PyErr_Clear();
     return data;
