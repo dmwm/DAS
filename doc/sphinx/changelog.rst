@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - fix makepy to accept DBS instance; ticket #2646
   - fix data type conversion in C-extension, ticket #2594
   - fix duplicates shown in using DAS CLI, ticket #2593
   - add Phedex subscription link, fixes #2588

@@ -546,7 +546,7 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
-    def makepy(self, dataset):
+    def makepy(self, dataset, instance):
         """
         Request to create CMSSW py snippet for a given dataset
         """
@@ -554,7 +554,8 @@ class DASWebService(DASWebManager):
         if  not pat.match(dataset):
             msg = 'Invalid dataset name'
             return self.error(msg)
-        query = "file dataset=%s | grep file.name" % dataset
+        query = "file dataset=%s instance=%s | grep file.name" \
+                % (dataset, instance)
         try:
             mquery = self.dasmgr.mongoparser.parse(query, False) 
             data   = self.dasmgr.result(mquery, idx=0, limit=0)

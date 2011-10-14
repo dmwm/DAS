@@ -338,6 +338,8 @@ class CMSRepresentation(DASRepresentation):
                             path = DotDict(row).get('dataset.name')
                             if  path:
                                 links += ', ' + self.templatepage(\
+                                    'makepy', path=path, inst=inst)
+                                links += ', ' + self.templatepage(\
                                     'phedex_subscription', path=path, inst=inst)
                         except:
                             pass
