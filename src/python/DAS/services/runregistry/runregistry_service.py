@@ -29,6 +29,8 @@ def duration(ctime, etime):
     """
     Calculate run duration.
     """
+    if  not ctime or not etime:
+        return 'N/A'
     dformat = "%Y-%m-%dT%H:%M:%S" # 2010-10-09T17:39:51.0
     csec = time.strptime(ctime.split('.')[0], dformat)
     esec = time.strptime(etime.split('.')[0], dformat)

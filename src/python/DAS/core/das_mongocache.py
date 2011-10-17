@@ -857,6 +857,10 @@ class DASMongocache(object):
         # get all API records for given DAS query
         records = self.col.find({'query':encode_mongo_query(query)})
         for row in records:
+            if  not row.has_key('das'):
+                continue
+            if  not row['das'].has_key('lookup_keys'):
+                continue
             try:
                 rec   = \
                 [k for i in row['das']['lookup_keys'] for k in i.values()]

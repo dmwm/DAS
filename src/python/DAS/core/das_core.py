@@ -402,7 +402,12 @@ class DASCore(object):
             for record in self.rawcache.find_specs(similar_query):
                 status = 0
                 if  record:
-                    status = record['das']['status']
+                    try:
+                        status = record['das']['status']
+                    except:
+                        status = 0
+                        msg = 'Fail to look-up das.status, record=%s' % record
+                        self.logger.info(msg)
                 msg  = 'DASCore::call, found SIMILAR query in cache,'
                 msg += 'query=%s, status=%s\n' % (record['query'], status)
                 self.logger.info(msg)

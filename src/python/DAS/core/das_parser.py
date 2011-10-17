@@ -124,6 +124,7 @@ class QLManager(object):
                     self.parserdb.insert_valid_query(query, mongo_query)
                 except Exception as exp:
                     self.parserdb.insert_invalid_query(query, exp)
+                    print "Input query=%s" % query
                     raise exp
         else:
             try:
