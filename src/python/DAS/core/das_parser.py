@@ -43,6 +43,15 @@ def ambiguous_msg(query, keys):
     msg += 'DAS-QL syntax: selection_key key=value'
     return msg
 
+def ambiguos_val_msg(query, key, val):
+    """Provide message for ambiguos value in DAS query for given key"""
+    query = str(query).strip()
+    msg  = 'Provided query=%s\n' % query
+    msg += 'Contains ambiguous condition %s=%s\n' % (key, val)
+    msg += 'DAS does not support AND|OR operations, please revisit your '
+    msg += 'query and choose either value'
+    return msg
+
 class QLManager(object):
     """
     DAS QL manager.
@@ -140,6 +149,9 @@ class QLManager(object):
             raise Exception('Invalid MongoDB query %s' % mongo_query)
         if  not mongo_query['fields'] and len(mongo_query['spec'].keys()) > 1:
             raise Exception(ambiguous_msg(query, mongo_query['spec'].keys()))
+        for key, val in mongo_query['spec'].items():
+            if  isinstance(val, list):
+                raise Exception(ambiguos_val_msg(query, key, val))
         return mongo_query
 
     def convert2skeys(self, mongo_query):

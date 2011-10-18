@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - prohibit queries with ambiguos value for certain key, ticket #2657
   - protect filter look-up when DAS cache is filled with error record, ticket #2655
   - fix makepy to accept DBS instance; ticket #2646
   - fix data type conversion in C-extension, ticket #2594
