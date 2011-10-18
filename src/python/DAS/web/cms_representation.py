@@ -268,7 +268,13 @@ class CMSRepresentation(DASRepresentation):
         rowkeys = []
         if  kwargs.get('input', '').find('|') != -1:
             # if we have filter/aggregator get one row from the given query
-            fltpage = self.fltpage(self.get_one_row(query))
+            try:
+                fltpage = self.fltpage(self.get_one_row(query))
+            except Exception as exc:
+                fltpage = 'N/A, please check DAS record for errors'
+                msg = 'Fail to apply filter to query=%s' % query
+                print msg
+                print_exc(exc)
         else:
             fltpage = ''
         page    = ''
