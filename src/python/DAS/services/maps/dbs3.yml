@@ -383,6 +383,25 @@ das2api : [
         {"das_key":"group.name", "api_param": "physics_group_name", "pattern":""},
 ]
 ---
+urn: file4DatasetRunLumi
+url : "https://localhost:8979/dbs/prod/global/DBSReader/files/"
+expire : 900
+params : {
+        "dataset":"required", "run":"", "lumi_list":[]
+}
+daskeys : [
+    {"key": "file", "map":"file.name", "pattern":""},
+    {"key":"run", "map":"run.run_number", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
+    {"key":"lumi", "map":"lumi.number", "pattern":""},
+]
+das2api : [
+    {"das_key":"run.run_number", "api_param":"run", "pattern":""},
+    {"das_key":"file.name", "api_param":"file", "pattern":""},
+    {"das_key":"lumi.number", "api_param":"lumi_list", "pattern":""},
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+]
+---
 notations : [
         {"notation": "primary_ds_name", "map": "name", "api": "primarydatasets"},
         {"notation": "primary_ds_name", "map": "primary_dataset.name", "api": ""},

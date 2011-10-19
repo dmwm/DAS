@@ -12,6 +12,7 @@ import re
 import time
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, json_parser
+from DAS.utils.url_utils import getdata
 
 class DBS3Service(DASAbstractService):
     """
@@ -24,6 +25,12 @@ class DBS3Service(DASAbstractService):
         map_validator(self.map)
         self.prim_instance = config['dbs']['dbs_global_instance']
         self.instances = config['dbs']['dbs_instances']
+
+    def getdata(self, url, params, expire, headers=None, post=None):
+        """URL call wrapper"""
+        return getdata(url, params, headers, expire, post,
+                self.error_expire, self.verbose, self.ckey, self.cert,
+                doseq=False)
 
     def url_instance(self, url, instance):
         """
@@ -60,6 +67,18 @@ class DBS3Service(DASAbstractService):
                 if  val.has_key('$lte'):
                     kwds['minrun'] = val['$gte']
                     kwds['maxrun'] = val['$lte']
+        if  api == 'file4DatasetRunLumi':
+            val = kwds['run']
+            if  val:
+                kwds['minrun'] = val
+                kwds['maxrun'] = val
+            try:
+                del kwds['run']
+            except:
+                pass
+            val = kwds['lumi_list']
+            if  val:
+                kwds['lumi_list'] = [val]
 
     def parser(self, query, dformat, source, api):
         """

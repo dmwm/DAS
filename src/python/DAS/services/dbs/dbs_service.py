@@ -198,6 +198,24 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('file')
+        if  api == 'fakeFiles4DatasetRunLumis':
+            cond = ""
+            val = kwds['dataset']
+            if  val:
+                cond = " and dataset=%s" % val
+            val = kwds['run']
+            if  val:
+                cond += " and run=%s" % val
+            val = kwds['lumi']
+            if  val:
+                cond += " and lumi=%s" % val
+            if  cond:
+                kwds['query'] = "find file where %s" % cond[4:]
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('dataset')
+            kwds.pop('run')
+            kwds.pop('lumi')
         if  api == 'fakeDatasetSummary':
             value = ""
             for key, val in kwds.items():
@@ -336,6 +354,8 @@ where %s" % value[4:]
             prim_key = 'site'
         elif api == 'fakeStatus':
             prim_key = 'status'
+        elif api == 'fakeFiles4DatasetRunLumis':
+            prim_key = 'file'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
