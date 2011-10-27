@@ -77,7 +77,7 @@ class DASWebManager(TemplatedPage):
         if  not os.path.isdir(self.jsdir):
             self.jsdir = os.environ['DAS_JSPATH']
         if  not os.environ.has_key('YUI_ROOT'):
-            msg = ''
+            msg = 'YUI_ROOT is not set in environment'
             raise Exception(msg)
         self.yuidir = os.environ['YUI_ROOT']
 

@@ -42,6 +42,7 @@ from DAS.web.help_cards import help_cards
 from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
+from DAS.web.das_representation import DASRepresentation
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 
         'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
@@ -70,8 +71,8 @@ class DASWebService(DASWebManager):
         self.adjust      = config.get('adjust_input', False)
 
         self.init()
-        # Define representation layer
-        self.repmgr = CMSRepresentation(config, self.dasmgr)
+        # Define representation layer, to be overwritten at self.init
+        self.repmgr      = DASRepresentation(config)
 
         # Monitoring thread which performs auto-reconnection
         thread.start_new_thread(dascore_monitor, \
@@ -135,6 +136,7 @@ class DASWebService(DASWebManager):
             self.logcol     = self.con[logdbname][logdbcoll]
             self.reqmgr     = RequestManager(self.dburi, lifetime=self.lifetime)
             self.dasmgr     = DASCore(engine=self.engine)
+            self.repmgr     = CMSRepresentation(config, self.dasmgr)
             self.daskeys    = self.dasmgr.das_keys()
             self.gfs        = db_gridfs(self.dburi)
             self.daskeys.sort()
