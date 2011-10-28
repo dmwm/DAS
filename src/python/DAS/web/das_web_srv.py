@@ -133,8 +133,7 @@ class DASWebService(DASWebManager):
             self.logcol     = self.con[logdbname][logdbcoll]
             self.reqmgr     = RequestManager(self.dburi, lifetime=self.lifetime)
             self.dasmgr     = DASCore(engine=self.engine)
-            config          = self.dasconfig['web_server']
-            self.repmgr     = CMSRepresentation(config, self.dasmgr)
+            self.repmgr     = CMSRepresentation(self.dasconfig, self.dasmgr)
             self.daskeys    = self.dasmgr.das_keys()
             self.gfs        = db_gridfs(self.dburi)
             self.daskeys.sort()
