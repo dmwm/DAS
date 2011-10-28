@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - switch default format for DAS CLI; ticket 2734
   - add support for 'file dataset=/a/b/c run=1 lumi=80' queries both in DBS2/DBS3, ticket #2602
   - prohibit queries with ambiguos value for certain key, ticket #2657
   - protect filter look-up when DAS cache is filled with error record, ticket #2655

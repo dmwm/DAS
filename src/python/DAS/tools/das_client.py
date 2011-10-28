@@ -42,12 +42,9 @@ class DASOptionParser:
         msg += " use --limit=0 to show all results"
         self.parser.add_option("--limit", action="store", type="int", 
                                default=10, dest="limit", help=msg)
-        msg  = 'specify return data format (json or plain), default json.'
-        msg += ' Please note, the --format option can only be used together'
-        msg += ' with DAS filters, since tabulated format requires knowledge'
-        msg += ' of columns (the fields you specify in a filter).'
+        msg  = 'specify return data format (json or plain), default plain.'
         self.parser.add_option("--format", action="store", type="string", 
-                               default="json", dest="format", help=msg)
+                               default="plain", dest="format", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
@@ -122,6 +119,17 @@ def get_data(host, query, idx, limit, debug):
             count = timeout
     return data
 
+def prim_value(row):
+    """Extract primary key value from DAS record"""
+    prim_key = row['das']['primary_key']
+    key, att = prim_key.split('.')
+    if  isinstance(row[key], list):
+        for item in row[key]:
+            if  item.has_key(att):
+                return item[att]
+    else:
+        return row[key][att]
+
 def main():
     """Main function"""
     optmgr  = DASOptionParser()
@@ -141,9 +149,10 @@ def main():
             drange = '%s' % nres
         else:
             drange = '%s-%s out of %s' % (idx+1, idx+limit, nres)
-        msg  = "\nShowing %s results" % drange
-        msg += ", for more results use --idx/--limit options\n"
-        print msg
+        if  opts.limit:
+            msg  = "\nShowing %s results" % drange
+            msg += ", for more results use --idx/--limit options\n"
+            print msg
         mongo_query = jsondict['mongo_query']
         if  mongo_query.has_key('filters'):
             filters = mongo_query['filters']
@@ -162,6 +171,24 @@ def main():
             for row in data:
                 print '%s(%s)=%s' \
                 % (row['function'], row['key'], row['result']['value'])
+        else:
+            data = jsondict['data']
+            if  isinstance(data, list):
+                old = None
+                for row in data:
+                    val = prim_value(row)
+                    if  not opts.limit:
+                        if  val != old:
+                            print val
+                            old = val
+                    else:
+                        print val
+                if  val != old and not opts.limit:
+                    print val
+            elif isinstance(data, dict):
+                print prim_value(data)
+            else:
+                print data
     else:
         print data
 
