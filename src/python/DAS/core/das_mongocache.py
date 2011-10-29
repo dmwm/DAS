@@ -318,6 +318,10 @@ def compare_specs(input_query, exist_query):
     # we use notation query2 is superset of query1
     query1  = input_query
     query2  = exist_query
+
+    if  query1 == query2:
+        return True
+
     fields1 = query1.get('fields', None)
     if  not fields1:
         fields1 = []
