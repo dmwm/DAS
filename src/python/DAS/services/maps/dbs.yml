@@ -455,7 +455,7 @@ url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
      "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
-     "dataset": "", "run": "", "lumi": "",
+     "dataset": "required", "run": "required", "lumi": "required",
 }
 daskeys : [
     {"key":"file", "map":"file.name", "pattern":""},

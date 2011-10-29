@@ -23,7 +23,7 @@ class DASRepresentation(DASWebManager):
     """
     def __init__(self, config):
         DASWebManager.__init__(self, config)
-        self.base       = config.get('url_base', 'das')
+        self.base       = config['web_server'].get('url_base', 'das')
         self.dasconfig  = das_readconfig()
 
     def listview(self, head, data):

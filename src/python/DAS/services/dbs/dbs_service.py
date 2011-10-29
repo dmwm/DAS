@@ -203,19 +203,19 @@ class DBSService(DASAbstractService):
             val = kwds['dataset']
             if  val:
                 cond = " and dataset=%s" % val
+                kwds.pop('dataset')
             val = kwds['run']
             if  val:
                 cond += " and run=%s" % val
+                kwds.pop('run')
             val = kwds['lumi']
             if  val:
                 cond += " and lumi=%s" % val
+                kwds.pop('lumi')
             if  cond:
-                kwds['query'] = "find file where %s" % cond[4:]
+                kwds['query'] = "find file.name where %s" % cond[4:]
             else:
                 kwds['query'] = 'required'
-            kwds.pop('dataset')
-            kwds.pop('run')
-            kwds.pop('lumi')
         if  api == 'fakeDatasetSummary':
             value = ""
             for key, val in kwds.items():
@@ -423,6 +423,7 @@ where %s" % value[4:]
                      'config.type', 'config.annotation', 'config.createdate',\
                      'config.createby', 'config.moddate', 'config.modby']
             convert_dot(row, 'config', attrs)
+            convert_dot(row, 'file', ['file.name'])
             # remove DBS2 run attributes (to be consistent with DBS3 output)
             # and let people extract this info from CondDB/LumiDB.
             if  row.has_key('run'):
