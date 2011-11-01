@@ -21,19 +21,27 @@ _dict_handler(PyObject *self, PyObject *args)
 
     PyObject *key = NULL, *val = NULL;
     Py_ssize_t pos = 0;
+
     while (PyDict_Next(dict, &pos, &key, &val)) {
         PyObject *mkey = PyDict_GetItem(map, key);
         PyObject *res = NULL;
-        char *dotch = strchr((char *)val, '.'); /* search for . character */
-        if ( dotch != NULL ) {
-            res = PyFloat_FromString(val, NULL);
+        if ( PyString_AsString(val) == NULL ) {
+            /*case when val is not a string, e.g. int*/
+            res = val;
         } else {
-            res = PyInt_FromString(PyString_AsString(val), NULL, 0);
+            char *dotch = strchr(PyString_AsString(val), '.'); /* search for . character */
+            if ( dotch != NULL ) {
+                /* case if val string contains dot, PyFloat may return none
+                 * if unable to convert the value */
+                res = PyFloat_FromString(val, NULL);
+            } else {
+                res = PyInt_FromString(PyString_AsString(val), NULL, 0);
+            }
         }
-        int decr = 1;
+        int decr = 1; /* reference counter */
         if (res == NULL) {
             res  = val;
-            decr = 0;
+            decr = 0; /* if we unable to convert decrement ref counter */
         }
     
         if  (mkey != NULL) { 

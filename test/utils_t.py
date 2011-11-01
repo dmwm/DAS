@@ -5,14 +5,16 @@
 Unit test for DAS QL parser
 """
 
+# system modules
 import json
 import time
 import unittest
 import urllib2, urllib
 import tempfile
+
+# das modules
 from DAS.utils.utils import cartesian_product
-#, dasheader
-from DAS.utils.utils import genresults, transform_dict2list
+from DAS.utils.utils import genresults, transform_dict2list, size_format
 from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
@@ -47,6 +49,28 @@ class testUtils(unittest.TestCase):
         rows = [record]
         expect = [dict(record)]
         result = [r for r in das_diff(rows, ['block.size'])]
+        self.assertEqual(expect, result)
+
+    def test_size_format(self):
+        """Test size_format function"""
+        pat = 'abc'
+        expect = 'N/A'
+        result = size_format(pat)
+        self.assertEqual(expect, result)
+
+        pat = None
+        expect = 'N/A'
+        result = size_format(pat)
+        self.assertEqual(expect, result)
+
+        pat = 1024
+        expect = '1.0KB'
+        result = size_format(pat)
+        self.assertEqual(expect, result)
+
+        pat = '1024'
+        expect = '1.0KB'
+        result = size_format(pat)
         self.assertEqual(expect, result)
 
     def test_convert2date(self):

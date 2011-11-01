@@ -125,6 +125,9 @@ def size_format(uinput):
     """
     Format file size utility, it converts file size into KB, MB, GB, TB, PB units
     """
+    if  not (float_number_pattern.match(str(uinput)) or \
+                int_number_pattern.match(str(uinput))):
+        return 'N/A'
     try:
         num = float(uinput)
     except Exception as exc:

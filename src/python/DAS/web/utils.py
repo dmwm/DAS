@@ -10,6 +10,7 @@ __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 from   types import NoneType
+import sys
 import cgi
 import time
 import urllib

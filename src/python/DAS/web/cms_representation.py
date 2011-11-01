@@ -199,13 +199,14 @@ class CMSRepresentation(DASRepresentation):
         if  query.has_key('filters'):
             del query['filters']
         data = [r for r in self.dasmgr.get_from_cache(query, idx=0, limit=1)]
-        return data[0]
+        if  len(data):
+            return data[0]
 
     def fltpage(self, row):
         """Prepare filter snippet for a given query"""
         rowkeys = []
         page = ''
-        if  row.has_key('das') and row['das'].has_key('primary_key'):
+        if  row and row.has_key('das') and row['das'].has_key('primary_key'):
             pkey = row['das']['primary_key']
             if  pkey:
                 try:
@@ -279,9 +280,9 @@ class CMSRepresentation(DASRepresentation):
             fltpage = ''
         page    = ''
         for row in data:
-            error = row.get('error', None)
             if  not row:
                 continue
+            error = row.get('error', None)
             try:
                 mongo_id = row['_id']
             except Exception as exc:
