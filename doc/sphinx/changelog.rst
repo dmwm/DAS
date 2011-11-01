@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - migrate from http to https for all Phedex URLs; ticket 2755
   - switch default format for DAS CLI; ticket 2734
   - add support for 'file dataset=/a/b/c run=1 lumi=80' queries both in DBS2/DBS3, ticket #2602
   - prohibit queries with ambiguos value for certain key, ticket #2657

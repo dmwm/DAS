@@ -3,7 +3,7 @@ system : phedex
 format : XML
 ---
 urn : blockReplicas
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
 expire : 3600
 params : {"se":"*", "block":"*", "node":"*", "dataset":"*"}
 daskeys : [
@@ -21,7 +21,7 @@ das2api : [
 ---
 # This API will go away once I turn on dbs_phedex service (upon DBS3)
 urn : dataset4site
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockreplicasummary"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockreplicasummary"
 expire : 3600
 params : {"node":"required", "dataset":"optional"}
 daskeys : [
@@ -35,7 +35,7 @@ das2api : [
 ---
 # This API will go away once I turn on dbs_phedex service (upon DBS3)
 urn : dataset4se
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockreplicasummary"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockreplicasummary"
 expire : 3600
 params : {"se":"required", "dataset":"optional"}
 daskeys : [
@@ -48,7 +48,7 @@ das2api : [
 ]
 ---
 urn : site4dataset
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
 expire : 3600
 params : {"dataset":"required"}
 daskeys : [
@@ -60,7 +60,7 @@ das2api : [
 ]
 ---
 urn : site4block
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
 expire : 3600
 params : {"block":"required"}
 daskeys : [
@@ -72,7 +72,7 @@ das2api : [
 ]
 ---
 urn : site4file
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas"
 expire : 3600
 params : {"lfn":"required"}
 daskeys : [
@@ -84,7 +84,7 @@ das2api : [
 ]
 ---
 urn : fileReplicas
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas"
 expire : 3600
 params : {"se":"*", "block":"required", "node":"*"}
 daskeys : [
@@ -100,7 +100,7 @@ das2api : [
 ]
 ---
 urn : fileReplicas4dataset
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas"
 expire : 3600
 params : {"se":"*", "dataset":"required", "node":"*"}
 daskeys : [
@@ -116,7 +116,7 @@ das2api : [
 ]
 ---
 urn : fileReplicas4file
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas"
 expire : 3600
 params : {"se":"*", "lfn":"required", "node":"*"}
 daskeys : [
@@ -131,7 +131,7 @@ das2api : [
 ]
 ---
 urn : nodes
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/nodes"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/nodes"
 expire : 3600
 params : {"node":"*", "noempty":""}
 daskeys : [{"key":"site", "map":"site.name", "pattern":"^T[0-3]_"}]
@@ -141,7 +141,7 @@ das2api : [
 ]
 ---
 urn : nodeusage
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/nodeusage"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/nodeusage"
 expire : 3600
 params : {"node":"*"}
 daskeys : [{"key":"site", "map":"site.name", "pattern":"^T[0-3]_"}]
@@ -151,7 +151,7 @@ das2api : [
 ]
 ---
 urn : groups
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/groups"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/groups"
 expire : 3600
 params : {"group":"*"}
 daskeys : [{"key":"group", "map":"group.name", "pattern":""}]
@@ -161,7 +161,7 @@ das2api : [
 ]
 ---
 urn : groupusage
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/groupusage"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/groupusage"
 expire : 3600
 params : {"node":"*", "se": "*", "group":"*"}
 daskeys : [{"key":"node", "map":"node.name", "pattern":""}]
@@ -175,7 +175,7 @@ das2api : [
 ]
 ---
 urn : tfc
-url : "http://cmsweb.cern.ch/phedex/datasvc/xml/prod/TFC"
+url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/TFC"
 expire : 3600
 params : {"node":"required"}
 daskeys : [{"key":"site", "map":"site.name", "pattern":"^T[0-3]_"}]
