@@ -6,8 +6,6 @@ Phedex service
 """
 __author__ = "Valentin Kuznetsov"
 
-import socket
-
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser
 import types
@@ -18,10 +16,6 @@ def get_replica_info(replica):
     Get replica info: name, se, ip
     """
     result = {'name': replica['node'], 'se': replica['se']}
-    try:
-        result.update({'ip': socket.gethostbyname(replica['se'])})
-    except:
-        pass
     return result
 
 def site_info(site_dict, block, replica):
@@ -148,12 +142,6 @@ class PhedexService(DASAbstractService):
                 dataset = row['block']['name'].split('#')[0]
                 seen.add(dataset)
             else:
-                if  row.has_key('node') and row['node'].has_key('se'):
-                    try:
-                        row['node']['ip'] = \
-                        socket.gethostbyname(row['node']['se'])
-                    except:
-                        pass
                 yield row
         if  api == 'site4dataset' or api == 'site4block':
             for row in site_names:
