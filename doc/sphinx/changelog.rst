@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - remove IP lookup in phedex plugin, ticket #2788
+  - require 3 slashes for dataset/block pattern while using fileReplicas API, ticket #2789
   - switch DBS3 URL to official one on cmsweb; add dbs3 map into cms_maps
   - migrate from http to https for all Phedex URLs; ticket 2755
   - switch default format for DAS CLI; ticket 2734
