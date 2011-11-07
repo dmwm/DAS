@@ -10,7 +10,6 @@ __author__ = "Valentin Kuznetsov"
 
 import re
 from   types import InstanceType
-import socket
 
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import add2dict, map_validator
@@ -69,10 +68,5 @@ class SiteDBService(DASAbstractService):
                 row = val
             else:
                 raise Exception('Not implemented yet')
-            if  row.has_key('se'):
-                try:
-                    row['ip'] = socket.gethostbyname(row['se'])
-                except:
-                    pass
             yield {'site': row}
 
