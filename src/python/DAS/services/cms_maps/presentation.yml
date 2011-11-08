@@ -31,7 +31,6 @@ dataset : [
                  {"name":"Release", "query":"release dataset=%s"},
                  {"name":"Blocks", "query":"block dataset=%s"},
                  {"name":"Files", "query":"file dataset=%s"},
-                 {"name":"py", "link":"/das/makepy?dataset=%s"},
                  {"name":"Runs", "query":"run dataset=%s"},
                  {"name":"Configs", "query":"config dataset=%s"},
                  {"name":"Parents", "query":"parent dataset=%s"},
