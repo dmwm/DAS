@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - fix duplicates when applying filters/aggregators to the query, tickets #2802, #2803
   - fix issue with MongoDB 2.x index lookup (error: cannot index parallel arrays).
   - test DAS with MongoDB 2.0.1
   - remove IP lookup in phedex plugin, ticket #2788

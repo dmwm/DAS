@@ -316,8 +316,15 @@ def compare_specs(input_query, exist_query):
         return False
 
     # we use notation query2 is superset of query1
-    query1  = input_query
-    query2  = exist_query
+    query1  = dict(input_query)
+    query2  = dict(exist_query)
+
+    # delete aggregators during comparision
+    for query in [query1, query2]:
+        if  query.has_key('aggregators'):
+            del query['aggregators']
+        if  query.has_key('filters'):
+            del query['filters']
 
     if  query1 == query2:
         return True
