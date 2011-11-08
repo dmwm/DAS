@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - fix issue with MongoDB 2.x index lookup (error: cannot index parallel arrays).
+  - test DAS with MongoDB 2.0.1
   - remove IP lookup in phedex plugin, ticket #2788
   - require 3 slashes for dataset/block pattern while using fileReplicas API, ticket #2789
   - switch DBS3 URL to official one on cmsweb; add dbs3 map into cms_maps

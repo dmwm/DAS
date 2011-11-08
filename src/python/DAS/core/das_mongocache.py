@@ -730,7 +730,11 @@ class DASMongocache(object):
                 skeys = [(skey, DESCENDING)]
         else:
             existing_idx = [i for i in self.existing_indexes(collection)]
-            keys = [k for k in spec.keys() \
+            if  fields:
+                lkeys = fields
+            else:
+                lkeys = spec.keys()
+            keys = [k for k in lkeys \
                 if k.find('das') == -1 and k.find('_id') == -1 and \
                         k in existing_idx]
             skeys = [(k, ASCENDING) for k in keys]
