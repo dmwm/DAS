@@ -33,14 +33,17 @@ url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/releaseversions/"
 expire : 900
 params : {
         "release_version":"optional", "dataset":"optional",
+        "logical_file_name":"optional",
 }
 daskeys : [
         {"key": "release", "map":"release.name", "pattern":""},
         {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "file", "map":"file.name", "pattern":""},
 ]
 das2api : [
         {"das_key":"release.name", "api_param": "release_version", "pattern":""},
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"file.name", "api_param": "logical_file_name", "pattern":""},
 ]
 ---
 urn: primarydatasets

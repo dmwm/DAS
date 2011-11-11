@@ -78,6 +78,13 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('release')
+        if  api == 'fakeRelease4File':
+            val = kwds['file']
+            if  val != 'required':
+                kwds['query'] = 'find release where file=%s' % val
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('file')
         if  api == 'fakeRelease4Dataset':
             val = kwds['dataset']
             if  val != 'required':
@@ -327,6 +334,8 @@ where %s" % value[4:]
             prim_key = 'release'
         elif api == 'listRuns':
             prim_key = 'run'
+        elif  api == 'fakeRelease4File':
+            prim_key = 'release'
         elif  api == 'fakeRelease4Dataset':
             prim_key = 'release'
         elif  api == 'fakeGroup4Dataset':
