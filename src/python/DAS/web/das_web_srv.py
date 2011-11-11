@@ -443,6 +443,7 @@ class DASWebService(DASWebManager):
         """
         Invoke DAS workflow and get data from the cache.
         """
+        self.adjust_input(kwargs)
         head   = request_headers()
         head['args'] = kwargs
         uinput = getarg(kwargs, 'input', '') 

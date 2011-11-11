@@ -8,6 +8,7 @@ Description: CMS DAS records representation
 """
 
 # system modules
+import time
 import urllib
 from itertools import groupby
 
@@ -116,6 +117,12 @@ def adjust_values(func, gen, links):
                 value = int(val)
             elif  key.find('Lumi') != -1 and val:
                 value = int(val)
+            elif  key.find('Creation time') != -1 and val and\
+                not isinstance(val, list):
+                try:
+                    value = time.strftime('%d/%b/%Y %H:%M:%S GMT', time.gmtime(val))
+                except:
+                    value = val
             else:
                 value = val
             if  isinstance(value, list) and isinstance(value[0], str):
