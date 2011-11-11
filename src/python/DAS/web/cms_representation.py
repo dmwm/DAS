@@ -117,8 +117,7 @@ def adjust_values(func, gen, links):
                 value = int(val)
             elif  key.find('Lumi') != -1 and val:
                 value = int(val)
-            elif  key.find('Creation time') != -1 and val and\
-                not isinstance(val, list):
+            elif  key.find('Creation time') != -1 and val:
                 try:
                     value = time.strftime('%d/%b/%Y %H:%M:%S GMT', time.gmtime(val))
                 except:
