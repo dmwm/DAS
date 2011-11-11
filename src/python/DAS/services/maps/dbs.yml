@@ -471,8 +471,6 @@ das2api : [
 ]
 ---
 notations : [
-    {"notation":"creation_date", "map":"creation_time", "api":""},
-    {"notation":"last_modification_date", "map":"modification_time", "api":""},
     {"notation":"app_family_name", "map":"name", "api":""},
     {"notation":"app_executable_name", "map":"executable", "api":""},
     {"notation":"storage_element", "map":"se", "api":""},
@@ -512,11 +510,15 @@ notations : [
     {"notation":"sum_block.numevents", "map":"nevents", "api":""},
     {"notation":"dataset.createdate", "map":"creation_time", "api":""},
     {"notation":"dataset.moddate", "map":"modification_time", "api":""},
-    {"notation":"dataset.createby", "map":"create_by", "api":""},
-    {"notation":"dataset.modby", "map":"mod_by", "api":""},
+    {"notation":"dataset.createby", "map":"created_by", "api":""},
+    {"notation":"dataset.modby", "map":"modified_by", "api":""},
     {"notation":"file.createdate", "map":"creation_time", "api":""},
     {"notation":"file.moddate", "map":"modification_time", "api":""},
-    {"notation":"file.createby", "map":"create_by", "api":""},
-    {"notation":"file.modby", "map":"mod_by", "api":""},
+    {"notation":"file.createby", "map":"created_by", "api":""},
+    {"notation":"file.modby", "map":"modified_by", "api":""},
+    {"notation":"creation_date", "map":"creation_time", "api":""},
+    {"notation":"last_modification_date", "map":"modification_time", "api":""},
+    {"notation":"create_by", "map":"created_by", "api":""},
+    {"notation":"mod_by", "map":"modified_by", "api":""},
     {"notation":"phygrp", "map":"name", "api":""},
 ]

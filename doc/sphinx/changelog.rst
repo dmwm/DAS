@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.0.X
 
+  - add creation_time/modification_time/created_by/modified_by into DBS maps, ticket #2843
   - fix duplicates when applying filters/aggregators to the query, tickets #2802, #2803
   - fix issue with MongoDB 2.x index lookup (error: cannot index parallel arrays).
   - test DAS with MongoDB 2.0.1
