@@ -6,10 +6,8 @@ ReqMgr service
 """
 __author__ = "Valentin Kuznetsov"
 
-import re
-import time
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, json_parser
+from DAS.utils.utils import map_validator
 from DAS.utils.url_utils import getdata
 
 class ReqMgrService(DASAbstractService):
@@ -20,14 +18,13 @@ class ReqMgrService(DASAbstractService):
         DASAbstractService.__init__(self, 'reqmgr', config)
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        entries = self.map.values()
 
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""
         if  url[-1] == '/':
             url = url[:-1]
-        for key, val in params.items():
-            url = '/'.join([url,params[key]])
+        for key, _val in params.items():
+            url = '/'.join([url, params[key]])
         params = {}
         return getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert)
@@ -41,7 +38,8 @@ class ReqMgrService(DASAbstractService):
             for row in gen:
                 try:
                     data = row['dataset']
-                    data = data['WMCore.RequestManager.DataStructs.Request.Request']
+                    data = \
+                    data['WMCore.RequestManager.DataStructs.Request.Request']
                     yield data
                 except:
                     yield row
