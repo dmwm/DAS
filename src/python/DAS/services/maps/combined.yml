@@ -3,6 +3,10 @@ system : combined
 format : XML
 ---
 urn : combined_dataset4site_release
+# DBS3 url
+# "dbs": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets",
+# DBS2 url
+# "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
 url : {
     "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
     "phedex": "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
@@ -40,6 +44,10 @@ das2api : [
 ]
 ---
 urn : combined_site4dataset
+# DBS3 url
+# "dbs": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filesummaries",
+# DBS2 url
+# "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
 url : {
     "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
     "phedex": "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"

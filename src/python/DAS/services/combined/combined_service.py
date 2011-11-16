@@ -19,6 +19,7 @@ import time
 import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
+from DAS.utils.utils import json_parser
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import expire_timestamp, print_exc
 
@@ -44,7 +45,7 @@ def parse_data(data):
 
 def which_dbs(dbs_url):
     """Determine DBS version based on given DBS url"""
-    if  dbs_url.find('servlet'):
+    if  dbs_url.find('servlet') != -1:
         return 'dbs2'
     return 'dbs3'
 
@@ -63,8 +64,14 @@ def dbs_dataset4site_release(dbs_url, getdata, release):
             dataset = row['dataset']['dataset']
             yield dataset
     else:
-        # TODO: implement DBS3 call
-        pass
+        # we call datasets?release=release to get list of datasets
+        dbs_args = \
+        {'release_version': release, 'dataset_access_type':'PRODUCTION'}
+        headers = {'Accept': 'application/json;text/json'}
+        source, expire = getdata(dbs_url, dbs_args, expire, headers)
+        for rec in json_parser(source, None):
+            for row in rec:
+                yield row['dataset']
 
 def dataset_summary(dbs_url, getdata, dataset):
     """
@@ -87,9 +94,14 @@ def dataset_summary(dbs_url, getdata, dataset):
             totblocks = row['dataset']['count_block.name']
             return totblocks, totfiles
     else:
-        # TODO: implement DBS3 call
-        # filesummaries?dataset=dataset
-        pass
+        # we call filesummaries?dataset=dataset to get number of files/blks
+        dbs_args = {'dataset': dataset}
+        headers = {'Accept': 'application/json;text/json'}
+        source, expire = getdata(dbs_url, dbs_args, expire, headers)
+        for row in json_parser(source, None):
+            totfiles  = row[0]['num_file']
+            totblocks = row[0]['num_block']
+            return totblocks, totfiles
 
 class CombinedService(DASAbstractService):
     """
@@ -172,10 +184,16 @@ class CombinedService(DASAbstractService):
                         site_info[node] = {'files': files, 'blocks': 1}
             row = {}
             for key, val in site_info.items():
-                nfiles = \
-                '%5.2f%%' % (100*float(site_info[key]['files'])/totfiles)
-                nblks  = \
-                '%5.2f%%' % (100*float(site_info[key]['blocks'])/totblocks)
+                if  totfiles:
+                    nfiles = \
+                    '%5.2f%%' % (100*float(site_info[key]['files'])/totfiles)
+                else:
+                    nfiles = 'N/A'
+                if  totblocks:
+                    nblks  = \
+                    '%5.2f%%' % (100*float(site_info[key]['blocks'])/totblocks)
+                else:
+                    nblks = 'N/A'
                 row = {'site':{'name':key, 'dataset_fraction': nfiles,
                         'block_fraction': nblks}}
                 yield row
