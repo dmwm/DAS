@@ -131,7 +131,7 @@ def adjust_values(func, gen, links):
                     value = '<span %s>%s</span>' % (green, value)
                 else:
                     value = '<span %s>%s</span>' % (red, value)
-            if  key == 'File presence':
+            if  key.lower().find('presence') != -1:
                 if  not value:
                     continue
                 else:

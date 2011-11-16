@@ -22,3 +22,21 @@ das2api : [
     {"das_key":"site.se", "api_param":"site", "pattern":""},
     {"das_key":"release.name", "api_param":"release", "pattern":""},
 ]
+---
+urn : combined_site4dataset
+url : {
+    "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
+    "phedex": "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
+}
+expire : 3600
+params : {
+     "dataset":"required"
+}
+daskeys : [
+    {"key":"site", "map":"site.name", "pattern":"^T[0-3]_"},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"site.name", "api_param":"site", "pattern":""},
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+]

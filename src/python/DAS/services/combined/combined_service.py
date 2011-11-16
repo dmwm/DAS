@@ -2,7 +2,16 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-Combined DAS service
+Combined DAS service (DBS+Phedex). It can be used to get
+information which is divided between two services. For example
+to find dataset at given site and release name or
+find out dataset presence on a given site.
+
+We use the following definitions for dataset presence:
+- dataset_fraction is defined as a number of files at a site X
+  divided by total number of files in a dataset
+- block_fraction is a total number of blocks at a site X
+  divided by total number of blocks in a dataset
 """
 __author__ = "Valentin Kuznetsov"
 
@@ -33,6 +42,55 @@ def parse_data(data):
         else:
             yield item
 
+def which_dbs(dbs_url):
+    """Determine DBS version based on given DBS url"""
+    if  dbs_url.find('servlet'):
+        return 'dbs2'
+    return 'dbs3'
+
+def dbs_dataset4site_release(dbs_url, getdata, release):
+    expire = 600 # set some expire since we're not going to use it
+    if  which_dbs(dbs_url) == 'dbs2':
+        # in DBS3 I'll use datasets API and pass release over there
+        query = 'find dataset where release=%s' % release
+        dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
+                    'query':query}
+        headers = {'Accept': 'text/xml'}
+        source, expire = getdata(dbs_url, dbs_args, expire, headers)
+        prim_key = 'dataset'
+        datasets = set()
+        for row in qlxml_parser(source, prim_key):
+            dataset = row['dataset']['dataset']
+            yield dataset
+    else:
+        # TODO: implement DBS3 call
+        pass
+
+def dataset_summary(dbs_url, getdata, dataset):
+    """
+    Invoke DBS2/DBS3 call to get information about total
+    number of filesi/blocks in a given dataset.
+    """
+    expire = 600 # set some expire since we're not going to use it
+    if  which_dbs(dbs_url) == 'dbs2':
+        # DBS2 call
+        query = 'find count(file.name), count(block.name) where dataset=%s'\
+                 % dataset
+        dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
+                    'query':query}
+        headers = {'Accept': 'text/xml'}
+        source, expire = getdata(dbs_url, dbs_args, expire, headers)
+        prim_key = 'dataset'
+        datasets = set()
+        for row in qlxml_parser(source, prim_key):
+            totfiles  = row['dataset']['count_file.name']
+            totblocks = row['dataset']['count_block.name']
+            return totblocks, totfiles
+    else:
+        # TODO: implement DBS3 call
+        # filesummaries?dataset=dataset
+        pass
+
 class CombinedService(DASAbstractService):
     """
     Helper class to provide combined DAS service
@@ -49,27 +107,21 @@ class CombinedService(DASAbstractService):
         must contain combined attribute corresponding to systems
         used to produce record content.
         """
+        dbs_url = url['dbs']
+        phedex_url = url['phedex']
         if  api == 'combined_dataset4site_release':
-            # call DBS to obtain dataset for given release
-            dbs_url = url['dbs']
-            # in DBS3 I'll use datasets API and pass release over there
-            query = 'find dataset where release=%s' % args['release']
-            dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
-                        'query':query}
-            headers = {'Accept': 'text/xml'}
-            source, expire = self.getdata(dbs_url, dbs_args, expire, headers)
-            prim_key = 'dataset'
+            # DBS part
             datasets = set()
-            for row in qlxml_parser(source, prim_key):
-                dataset = row['dataset']['dataset']
-                datasets.add(dataset)
+            for row in dbs_dataset4site_release(dbs_url, self.getdata, args['release']):
+                datasets.add(row)
+            # Phedex part
             if  args['site'].find('.') != -1: # it is SE
                 phedex_args = {'dataset':list(datasets), 
                                 'se': '%s' % args['site']}
             else:
                 phedex_args = {'dataset':list(datasets), 
                                 'node': '%s*' % args['site']}
-            phedex_url = url['phedex']
+            headers = {'Accept': 'text/xml'}
             source, expire = \
             self.getdata(phedex_url, phedex_args, expire, headers, post=True)
             prim_key = 'block'
@@ -93,6 +145,40 @@ class CombinedService(DASAbstractService):
                 yield {'dataset':record}
             del datasets
             del found
+        if  api == 'combined_site4dataset':
+            # DBS part
+            dataset = args['dataset']
+            totblocks, totfiles = \
+                dataset_summary(dbs_url, self.getdata, dataset)
+            # Phedex part
+            phedex_args = {'dataset':args['dataset']}
+            headers = {'Accept': 'text/xml'}
+            source, expire = \
+            self.getdata(phedex_url, phedex_args, expire, headers, post=True)
+            prim_key = 'block'
+            tags = 'block.replica.node'
+            found = {}
+            site_info = {}
+            for rec in xml_parser(source, prim_key, tags):
+                ddict = DotDict(rec)
+                for row in ddict.get('block.replica'):
+                    node = row['node']
+                    files = int(row['files'])
+                    if  site_info.has_key(node):
+                        nfiles = site_info[node]['files'] + files
+                        nblks  = site_info[node]['blocks'] + 1
+                        site_info[node] = {'files': nfiles, 'blocks': nblks}
+                    else:
+                        site_info[node] = {'files': files, 'blocks': 1}
+            row = {}
+            for key, val in site_info.items():
+                nfiles = \
+                '%5.2f%%' % (100*float(site_info[key]['files'])/totfiles)
+                nblks  = \
+                '%5.2f%%' % (100*float(site_info[key]['blocks'])/totblocks)
+                row = {'site':{'name':key, 'dataset_fraction': nfiles,
+                        'block_fraction': nblks}}
+                yield row
 
     def apicall(self, query, url, api, args, dformat, expire):
         """
@@ -103,7 +189,8 @@ class CombinedService(DASAbstractService):
         # therefore the expire time stamp will not be changed, since
         # helper function will yield results
         time0 = time.time()
-        if  api == 'combined_dataset4site_release':
+        if  api == 'combined_dataset4site_release' or \
+            api == 'combined_site4dataset':
             genrows = self.helper(url, api, args, expire)
         # here I use directly the call to the service which returns
         # proper expire timestamp. Moreover I use HTTP header to look

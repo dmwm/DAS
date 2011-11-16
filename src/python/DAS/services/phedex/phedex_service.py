@@ -157,7 +157,7 @@ class PhedexService(DASAbstractService):
                     file_occ   = '%5.2f%%' % (100*sfiles/tot_files)
                 else:
                     file_occ   = '0%%'
-                row['file_fraction'] = file_occ.strip()
+                row['replica_fraction'] = file_occ.strip()
                 yield row
         if  api == 'site4file':
             for row in site_names:

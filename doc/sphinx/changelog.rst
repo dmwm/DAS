@@ -5,6 +5,10 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.1.X
+
+  - add dataset/block/replica presence, according to ticket #2858; made changes to maps
+
 - 1.0.X
 
   - add support for release file=lfn query, ticket #2837
