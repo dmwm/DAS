@@ -13,7 +13,7 @@ import urllib2, urllib
 import tempfile
 
 # das modules
-from DAS.utils.utils import cartesian_product
+from DAS.utils.utils import cartesian_product, deepcopy, identical_data_records
 from DAS.utils.utils import genresults, transform_dict2list, size_format
 from DAS.utils.utils import sitename, add2dict, map_validator
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
@@ -30,6 +30,27 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_identical_data_records(self):
+        """Tests identical_data_records function"""
+        old = {'das_id':1, 'test':1, 'das':1}
+        new = {'das_id':2, 'test':1, 'das':'foo'}
+        result = identical_data_records(old, new)
+        self.assertEqual(True, result)
+        row = {'das_id':3, 'test':1, 'name':'foo'}
+        result = identical_data_records(old, row)
+        self.assertEqual(False, result)
+
+    def test_deepcopy(self):
+        """Test deepcopy function"""
+        query = {'fields': ['release'], 
+                 'spec': {u'release.name': 'CMSSW_2_0_8',
+                 'das.primary_key': {'$in': [u'release.name']},
+                 'das.condition_keys': [u'release.name']}}
+        obj = deepcopy(query)
+        self.assertEqual(query, obj)
+        del query['spec']['das.primary_key']
+        self.assertNotEqual(query, obj)
+
     def test_das_diff(self):
         """Test das_diff function"""
         rec1 = dict(name='abc', size=1, system='dbs')
@@ -278,6 +299,23 @@ class testUtils(unittest.TestCase):
             del r['das']['ts'] # we don't need record timestamp
         expect = [{'run': [{'a': 1, 'b': 1}, {'a': 1, 'b': 2}], 'das':das,
                    'das_id': [1], 'cache_id': [1]}]
+        self.assertEqual(result, expect)
+
+    def test_aggregator_duplicates(self):
+        """Test aggregator function"""
+        das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0,
+                'system':['foo'], 'condition_keys':['run']}
+        rows = []
+        row  = {'run':{'a':1,'b':1}, 'das':das, '_id':1, 'das_id':1}
+        rows.append(row)
+        row  = {'run':{'a':1,'b':1}, 'das':das, '_id':2, 'das_id':2}
+        rows.append(row)
+        res  = (r for r in rows)
+        result = [r for r in aggregator(res, das['expire'])]
+        for r in result:
+            del r['das']['ts'] # we don't need record timestamp
+        expect = [{'run': [{'a': 1, 'b': 1}], 'das':das,
+                   'das_id': [1, 2], 'cache_id': [1, 2]}]
         self.assertEqual(result, expect)
 
     def test_filter(self):

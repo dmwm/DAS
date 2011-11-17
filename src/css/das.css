@@ -209,6 +209,15 @@ div#banner h3
     color: #0000FF;
     background: #CDBECD;
 }
+.box_attention {
+  color: #000000;
+  background-color: #F5C669;
+  border-width: 1px 1px 1px 1px;
+  padding: 3px 3px 3px 3px;
+  border-style: dashed;
+  border-color: #000;
+  cursor: pointer;
+}
 .gray_box {
   color: #000000;
   background-color: #E0E0E0;

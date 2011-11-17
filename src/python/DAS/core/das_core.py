@@ -213,6 +213,7 @@ class DASCore(object):
                     query = self.mongoparser.parse(query, 
                                 add_to_analytics)
                 except Exception as exp:
+                    print "Fail to process query='%s'" % query
                     raise exp
         err = '\nDASCore::result query not in MongoDB format, %s' % query
         if  not isinstance(query, dict):
@@ -299,40 +300,14 @@ class DASCore(object):
         return status
 
     def in_raw_cache(self, query):
-        """
-        Return true/false for input query if it exists in raw-cache.
-        """
+        """Check if input query exists in raw-cache"""
         query, _dquery = convert2pattern(loose(query))
         return self.rawcache.incache(query, collection='merge')
 
-    def in_raw_cache_nresults(self, query, coll='merge'):
-        """
-        Return total number of results (count) for progived query.
-        """
-        das_ids = self.rawcache.get_das_ids(query)
-        if  query and query.has_key('fields'):
-            fields = query['fields']
-            if  fields and isinstance(fields, list) and 'queries' in fields:
-                count = 0
-                for _row in self.get_queries(query):
-                    count += 1
-                return count
-        filters  = query.get('filters')
-        if  query.has_key('aggregators'):
-            return len(query['aggregators'])
-        query, _ = convert2pattern(loose(query))
-        # add look-up of condition keys
-        if  query['spec'].keys():
-            ckeys = query['spec'].keys()
-            if  len(ckeys) == 1:
-                query['spec'].update({'das.condition_keys': ckeys})
-            else:
-                query['spec'].update({'das.condition_keys': {'$all':ckeys}})
-        if  query.has_key('fields') and query['fields'] == ['records']:
-            query['fields'] = None
-        if  das_ids:
-            query['spec'].update({'das_id':{'$in':das_ids}})
-        return self.rawcache.nresults(query, collection=coll, filters=filters)
+    def nresults(self, orig_query, coll='merge'):
+        """Return total number of results (count) for provided query"""
+        query = self.rawcache.execution_query(orig_query)
+        return self.rawcache.nresults(query, coll)
 
     def worker(self, srv, query):
         """Main worker function which call data-srv call function"""
@@ -453,90 +428,23 @@ class DASCore(object):
         das_timer('DASCore::call', self.verbose)
         return 1
 
-    def get_from_cache(self, query, idx=0, limit=None, skey=None, sorder='asc',
-                        collection='merge'):
+    def get_from_cache(self, orig_query, idx=0, limit=None, skey=None,
+                        sorder='asc', collection='merge'):
         """
         Look-up results from the merge cache and yield them for
         further processing.
         """
         das_timer('DASCore::get_from_cache', self.verbose)
         msg  = 'DASCore::get_from_cache, col=%s, query=%s, idx=%s, limit=%s'\
-                % (collection, query, idx, limit)
+                % (collection, orig_query, idx, limit)
         msg += ', skey=%s, order=%s' % (skey, sorder)
         self.logger.info(msg)
-        # add das_ids look-up to remove duplicates
-        das_ids = self.rawcache.get_das_ids(query)
-        if  das_ids:
-            query['spec'].update({'das_id':{'$in':das_ids}})
-        fields    = query.get('fields', None)
-        if  fields == ['records']:
-            msg = 'DASCore::get_from_cache, look-up all records'
-            self.logger.info(msg)
-            fields = None # look-up all records
-            query['fields'] = None # reset query field part
-        spec      = query.get('spec', {})
-        if  spec.has_key('system'):
-            del spec['system']
-        if  spec == dict(records='*'):
-            spec  = {} # we got request to get everything
-            query['spec'] = spec
-        else: # add look-up of condition keys
-            ckeys = [k for k in spec.keys() if k != 'das_id']
-            if  len(ckeys) == 1:
-                query['spec'].update({'das.condition_keys': ckeys})
-            else:
-                query['spec'].update({'das.condition_keys': {'$all':ckeys}})
-        # add proper date condition
-        if  query.has_key('spec') and query['spec'].has_key('date'):
-            if isinstance(query['spec']['date'], dict)\
-                and query['spec']['date'].has_key('$lte') \
-                and query['spec']['date'].has_key('$gte'):
-                query['spec']['date'] = [query['spec']['date']['$gte'],
-                                         query['spec']['date']['$lte']]
-        if  fields:
-            prim_keys = []
-            for key in fields:
-                for srv in self.systems:
-                    prim_key = self.mapping.find_mapkey(srv, key)
-                    if  prim_key and prim_key not in prim_keys:
-                        prim_keys.append(prim_key)
-            if  prim_keys:
-                query['spec'].update({"das.primary_key": {"$in":prim_keys}})
+
+        query       = self.rawcache.execution_query(orig_query)
         aggregators = query.get('aggregators', None)
         mapreduce   = query.get('mapreduce', None)
-        filters     = query.get('filters', None)
-        unique      = False
-        if  filters:
-            fields  = query['fields']
-            if  not fields or not isinstance(fields, list):
-                fields = []
-            new_fields = []
-            for dasfilter in filters:
-                if  dasfilter == 'unique':
-                    unique = True
-                    continue
-                for oper in ['>', '<', '=']:
-                    if  dasfilter.find(oper) != -1:
-                        fname = dasfilter.split(oper)[0]
-                        if  fname not in fields and fname not in new_fields:
-                            new_fields.append(fname)
-                if  dasfilter not in fields and \
-                    dasfilter not in new_fields:
-                    if  dasfilter.find('=') == -1 and dasfilter.find('<') == -1\
-                    and dasfilter.find('>') == -1:
-                        new_fields.append(dasfilter)
-            if  new_fields:
-                query['fields'] = new_fields
-            else:
-                if  fields:
-                    query['fields'] = fields
-                else:
-                    query['fields'] = None
-            # adjust query if we got a filter
-            if  query.has_key('filters'):
-                filter_dict = parse_filters(query)
-                if  filter_dict:
-                    query['spec'].update(filter_dict)
+        fields      = query.get('fields', None)
+
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
         elif aggregators:
@@ -544,7 +452,7 @@ class DASCore(object):
             _id = 0
             for func, key in aggregators:
                 rows = self.rawcache.get_from_cache(\
-                        query, collection=collection)
+                        query, collection=collection, skey=skey)
                 data = getattr(das_aggregator, 'das_%s' % func)(key, rows)
                 res += \
                 [{'_id':_id, 'function': func, 'key': key, 'result': data}]
@@ -552,14 +460,10 @@ class DASCore(object):
         elif isinstance(fields, list) and 'queries' in fields:
             res = self.get_queries(query)
         else:
-            res = self.rawcache.get_from_cache(\
-                query, idx, limit, skey, sorder, collection=collection)
-        if  unique:
-            for row in unique_filter(res):
-                yield row
-        else:
-            for row in res:
-                yield row
+            res = self.rawcache.get_from_cache(query, idx, limit, skey, \
+                    sorder, collection=collection)
+        for row in res:
+            yield row
         das_timer('DASCore::get_from_cache', self.verbose)
 
     def get_queries(self, query):

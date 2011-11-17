@@ -193,14 +193,17 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
-    @checkargs(DAS_WEB_INPUTS)
+    @checkargs(DAS_WEB_INPUTS + ['section', 'highlight'])
     def faq(self, *args, **kwargs):
         """
         represent DAS FAQ.
         """
+        section = kwargs.get('section', None)
+        highlight = kwargs.get('highlight', None)
         guide = self.templatepage('dbsql_vs_dasql', 
                     operators=', '.join(das_operators()))
         page = self.templatepage('das_faq', guide=guide,
+                section=section, highlight=highlight,
                 operators=', '.join(das_operators()), 
                 aggregators=', '.join(das_aggregators()))
         return self.page(page, response_div=False)
@@ -403,7 +406,7 @@ class DASWebService(DASWebManager):
             coll     = getarg(kwargs, 'collection', 'merge')
             nresults = self.dasmgr.rawcache.nresults(query, coll)
             gen      = self.dasmgr.rawcache.get_from_cache\
-                (query, idx=idx, limit=limit, collection=coll, adjust=False)
+                (query, idx=idx, limit=limit, collection=coll)
             if  recordid: # we got id
                 for row in gen:
                     res += das_json(row)
@@ -458,12 +461,8 @@ class DASWebService(DASWebManager):
         time0  = time.time()
         try:
             mquery = self.dasmgr.mongoparser.parse(uinput, False) 
-            nres   = self.dasmgr.in_raw_cache_nresults(mquery, coll)
-            # if MongoDB fails during merging step revoke it again
-            if  not nres:
-                self.dasmgr.rawcache.merge_records(mquery)
-                nres = self.dasmgr.in_raw_cache_nresults(mquery, coll)
             data   = self.dasmgr.result(mquery, idx, limit, skey, sdir)
+            nres   = self.dasmgr.nresults(mquery, coll)
             head.update({'status':'ok', 'nresults':nres, 
                          'mongo_query': mquery, 'ctime': time.time()-time0})
         except Exception as exc:

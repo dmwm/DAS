@@ -94,11 +94,12 @@ def decomposer(idict, target):
     """
     Receive input dict and pass its key,value pairs further to the target.
     """
-    _id = idict.get('_id', None)
-    try:
-        target.send((idict, _id))
-    except StopIteration:
-        pass
+    if  idict and isinstance(idict, dict):
+        _id = idict.get('_id', None)
+        try:
+            target.send((idict, _id))
+        except StopIteration:
+            pass
 
 @coroutine
 def selector(key, target):

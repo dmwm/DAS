@@ -103,6 +103,8 @@ run : [
         {"das":"run.bfield", "ui":"Magnetic Field"}, 
         {"das":"run.delivered_lumi", "ui":"Delivered lumi"}, 
         {"das":"run.duration", "ui":"Duration"}, 
+        {"das":"run.error", "ui":"Error"},
+        {"das":"run.httperror", "ui":"Reason"},
         ],
 run_status: [
         {"das":"run.run_number", "ui":"Run number"},

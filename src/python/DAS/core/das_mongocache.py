@@ -23,12 +23,13 @@ import itertools
 import fnmatch
 
 # DAS modules
-from DAS.utils.ddict import convert_dot_notation
-from DAS.utils.utils import genkey, aggregator
-from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.core.das_son_manipulator import DAS_SONManipulator
-from DAS.utils.das_db import db_connection
+from DAS.utils.ddict import convert_dot_notation
+from DAS.utils.utils import genkey, aggregator, unique_filter
+from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.utils.utils import parse_filters, expire_timestamp
+from DAS.utils.utils import dastimestamp, deepcopy
+from DAS.utils.das_db import db_connection
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 import DAS.utils.jsonwrapper as json
 
@@ -41,6 +42,15 @@ from bson.errors import InvalidDocument
 
 DOT = '.'
 SEP = '___'
+
+def check_unique_filter(query):
+    """Check if query carries unique filter"""
+    filters     = query.get('filters', None)
+    if  filters:
+        unique  = bool('unique' in filters)
+    else:
+        unique  = False
+    return unique
 
 def adjust_id(query):
     """
@@ -134,6 +144,9 @@ def convert2pattern(query):
     """
     spec    = query.get('spec', {})
     fields  = query.get('fields', None)
+    filters = query.get('filters', None)
+    aggs    = query.get('aggregators', None)
+    inst    = query.get('instance', None)
     newspec = {}
     verspec = {}
     for key, val in spec.items():
@@ -169,7 +182,18 @@ def convert2pattern(query):
         else:
             newspec[key] = val
             verspec[key] = val
-    return dict(spec=newspec, fields=fields), dict(spec=verspec, fields=fields)
+    newquery = dict(spec=newspec, fields=fields)
+    newdquery = dict(spec=verspec, fields=fields)
+    if  filters:
+        newquery.update({'filters': filters})
+        newdquery.update({'filters': filters})
+    if  aggs:
+        newquery.update({'aggregators': aggs})
+        newdquery.update({'aggregators': aggs})
+    if  inst:
+        newquery.update({'instance': inst})
+        newdquery.update({'instance': inst})
+    return newquery, newdquery
 
 def compare_dicts(input_dict, exist_dict):
     """
@@ -325,6 +349,8 @@ def compare_specs(input_query, exist_query):
             del query['aggregators']
         if  query.has_key('filters'):
             del query['filters']
+        if  query.has_key('instance'):
+            del query['instance']
 
     if  query1 == query2:
         return True
@@ -400,6 +426,8 @@ class DASMongocache(object):
         self.merge   = self.mdb[config['dasdb']['mergecollection']]
         self.gfs     = db_gridfs(self.dburi)
 
+        self.das_internal_keys = ['das_id', 'das', 'cache_id']
+
         msg = "DASMongocache::__init__ %s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
 
@@ -464,7 +492,99 @@ class DASMongocache(object):
                 if thiskey == key:
                     if fnmatch.fnmatch(value, thisvalue):
                         yield thisvalue
-        
+
+    def execution_query(self, orig_query):
+        """
+        Prepare execution query to be run for records retrieval
+        """
+        prefix = 'DASMongocache::execution_query'
+
+        # do deep copy of original query to avoid dictionary
+        # overwrites tricks
+        query = deepcopy(orig_query)
+
+        # setup properly _id type
+        query  = adjust_id(query)
+
+        # convert query spec to use patterns
+        query, dquery = convert2pattern(query)
+        msg = '%s, adjusted query %s' % (prefix, dquery)
+        self.logger.debug(msg)
+
+        # add das_ids look-up to remove duplicates
+        das_ids = self.get_das_ids(query)
+        if  das_ids:
+            query['spec'].update({'das_id':{'$in':das_ids}})
+        fields = query.get('fields', None)
+        if  fields == ['records']:
+            fields = None # look-up all records
+            query['fields'] = None # reset query field part
+        spec = query.get('spec', {})
+        if  spec.has_key('system'):
+            del spec['system']
+        if  spec == dict(records='*'):
+            spec  = {} # we got request to get everything
+            query['spec'] = spec
+        else: # add look-up of condition keys
+            ckeys = [k for k in spec.keys() if k != 'das_id']
+            if  len(ckeys) == 1:
+                query['spec'].update({'das.condition_keys': ckeys})
+            else:
+                query['spec'].update({'das.condition_keys': {'$all':ckeys}})
+        # add proper date condition
+        if  query.has_key('spec') and query['spec'].has_key('date'):
+            if isinstance(query['spec']['date'], dict)\
+                and query['spec']['date'].has_key('$lte') \
+                and query['spec']['date'].has_key('$gte'):
+                query['spec']['date'] = [query['spec']['date']['$gte'],
+                                         query['spec']['date']['$lte']]
+        if  fields:
+            prim_keys = []
+            for key in fields:
+                for srv in self.mapping.list_systems():
+                    prim_key = self.mapping.find_mapkey(srv, key)
+                    if  prim_key and prim_key not in prim_keys:
+                        prim_keys.append(prim_key)
+            if  prim_keys:
+                query['spec'].update({"das.primary_key": {"$in":prim_keys}})
+        aggregators = query.get('aggregators', None)
+        mapreduce   = query.get('mapreduce', None)
+        filters     = query.get('filters', None)
+        if  filters:
+            fields  = query['fields']
+            if  not fields or not isinstance(fields, list):
+                fields = []
+            new_fields = []
+            for dasfilter in filters:
+                if  dasfilter == 'unique':
+                    continue
+                for oper in ['>', '<', '=']:
+                    if  dasfilter.find(oper) != -1:
+                        fname = dasfilter.split(oper)[0]
+                        if  fname not in fields and fname not in new_fields:
+                            new_fields.append(fname)
+                if  dasfilter not in fields and \
+                    dasfilter not in new_fields:
+                    if  dasfilter.find('=') == -1 and dasfilter.find('<') == -1\
+                    and dasfilter.find('>') == -1:
+                        new_fields.append(dasfilter)
+            if  new_fields:
+                query['fields'] = new_fields
+            else:
+                if  fields:
+                    query['fields'] = fields
+                else:
+                    query['fields'] = None
+            # adjust query if we got a filter
+            if  query.has_key('filters'):
+                filter_dict = parse_filters(query)
+                if  filter_dict:
+                    query['spec'].update(filter_dict)
+
+        msg = '%s, execution query %s' % (prefix, query)
+        self.logger.debug(msg)
+        return query
+
     def remove_expired(self, collection):
         """
         Remove expired records from DAS cache.
@@ -625,50 +745,60 @@ class DASMongocache(object):
             return True
         return False
 
-    def nresults(self, query, collection='merge', filters=None):
-        """
-        Return number of results for given query.
-        Please note, input parameter query means MongoDB query, please
-        consult MongoDB API for more details,
-        http://api.mongodb.org/python/
-        """
-        col    = self.mdb[collection]
-        query  = adjust_id(query)
-        query, _dquery = convert2pattern(query)
-        spec   = query.get('spec', {})
-        fields = query.get('fields', None)
-        # to cover the case of one key=value pair, e.g. site=T1,
-        # to return only records associated with requested key (site and not
-        # blocks) loop over fields and update spec with primary key constructed
-        # from a field key
-        prim_key = None
-        if  fields:
-            for field in fields:
-                if  not spec.has_key(field):
-                    prim_key = re.compile("^%s" % field) 
-                    spec.update({'das.primary_key': prim_key})
-
-        # always look-up non-empty records
-        spec.update({"das.empty_record":0})
-
-        if  filters:
-            new_query = dict(query)
-            new_query.update({'filters': filters})
-            filter_dict = parse_filters(new_query)
-            if  filter_dict:
-                spec.update(filter_dict)
-        msg = 'DASMongocache::nresults(%s, %s, %s) spec=%s' \
-                % (query, collection, filters, spec)
-        self.logger.debug(msg)
-        for key, val in spec.items():
-            if  val == '*':
-                del spec[key]
+    def nresults(self, query, collection='merge'):
+        """Return number of results for given query."""
+        if  query.has_key('aggregators'):
+            return len(query['aggregators'])
+        # Distinguish 2 use cases, unique filter and general query
+        # in first one we should count only unique records, in later
+        # we can rely on DB count() method. Pleas keep in mind that
         # usage of fields in find doesn't account for counting, since it
         # is a view over records found with spec, so we don't need to use it.
-        res = col.find(spec=spec).count()
+        col  = self.mdb[collection]
+        spec = query['spec']
+        if  check_unique_filter(query):
+            skeys = self.find_sort_keys(collection, query)
+            if  skeys:
+                gen = col.find(spec=spec).sort(skeys)
+            else:
+                gen = col.find(spec=spec)
+            res = len([r for r in unique_filter(gen)])
+        else:
+            res = col.find(spec=spec).count()
         msg = "DASMongocache::nresults=%s" % res
         self.logger.info(msg)
         return res
+
+    def find_sort_keys(self, collection, query, skey=None):
+        """
+        Find list of sort keys for a given DAS query. Check existing
+        indexes and either use fields or spec keys to find them out.
+        """
+        # try to get sort keys all the time to get ordered list of
+        # docs which allow unique_filter to apply afterwards
+        fields = query.get('fields')
+        spec   = query.get('spec')
+        skeys  = []
+        if  skey:
+            if  order == 'asc':
+                skeys = [(skey, ASCENDING)]
+            else:
+                skeys = [(skey, DESCENDING)]
+        else:
+            existing_idx = [i for i in self.existing_indexes(collection)]
+            if  fields:
+                lkeys = []
+                for key in fields:
+                    for mkey in self.mapping.mapkeys(key):
+                        if  mkey not in lkeys:
+                            lkeys.append(mkey)
+            else:
+                lkeys = spec.keys()
+            keys = [k for k in lkeys \
+                if k.find('das') == -1 and k.find('_id') == -1 and \
+                        k in existing_idx]
+            skeys = [(k, ASCENDING) for k in keys]
+        return skeys
 
     def existing_indexes(self, collection='merge'):
         """
@@ -687,33 +817,63 @@ class DASMongocache(object):
             for idx in val['key']:
                 yield idx[0] # index name
 
+    def get_records(self, col, spec, fields, skeys, idx, limit, unique=False):
+        """
+        Get DAS records out of MongoDB and correctly apply
+        unique filter. If it is present in request, we skip
+        idx/limit options and apply then at application level.
+        """
+        # ensure that all fields keys will be presented in DAS record
+        if  fields:
+            for key in fields:
+                if  key not in self.das_internal_keys and \
+                    not spec.has_key(key):
+                    spec.update({key: {'$exists':True}})
+        res = []
+        try:
+            res = col.find(spec=spec, fields=fields)
+            if  skeys:
+                res = res.sort(skeys)
+            if  not unique:
+                if  idx:
+                    res = res.skip(idx)
+                if  limit:
+                    res = res.limit(limit)
+        except Exception as exp:
+            print_exc(exp)
+            row = {'exception': str(exp)}
+            yield row
+        if  unique:
+            if  limit:
+                gen = itertools.islice(unique_filter(res), idx, idx+limit)
+            else:
+                gen = unique_filter(res)
+            for row in gen:
+                yield row
+        else:
+            for row in res:
+                yield row
+
     def get_from_cache(self, query, idx=0, limit=0, skey=None, order='asc', 
-                        collection='merge', adjust=True):
+                        collection='merge'):
         """
         Retrieve results from cache, otherwise return null.
         Please note, input parameter query means MongoDB query, please
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
+        prefix = 'DASMongocache::get_from_cache'
         col = self.mdb[collection]
-        msg = "DASMongocache::get_from_cache(%s, %s, %s, %s, %s, coll=%s)"\
-                % (query, idx, limit, skey, order, collection)
+        msg = "%s(%s, %s, %s, %s, %s, coll=%s)"\
+                % (prefix, query, idx, limit, skey, order, collection)
         self.logger.info(msg)
-        if  query.has_key('spec') and query['spec'].has_key('_id'):
-            # we got {'_id': {'$in': [ObjectId('4b912ee7e2194e35b8000010')]}}
-            strquery = ""
-        else:
-            try:
-                strquery = json.dumps(query)
-            except: #we got filter conditions/pattern which is not serializable
-                strquery = ""
 
-        # adjust query id if it's requested
-        if  adjust:
-            query  = adjust_id(query)
-            query, dquery = convert2pattern(query)
-            self.logger.debug("DASMongocache::get_from_cache, converted to %s"\
-                    % dquery)
+        # keep original MongoDB query without DAS additions
+        orig_query = deepcopy(query)
+        for key in orig_query['spec'].keys():
+            if  key.find('das') != -1:
+                del orig_query['spec'][key]
+
         idx    = int(idx)
         spec   = query.get('spec', {})
         fields = query.get('fields', None)
@@ -721,81 +881,37 @@ class DASMongocache(object):
         if  spec:
             spec.update({'das.empty_record':0})
 
-        # look-up API query
-        recapi = self.col.find_one({"query":strquery})
-
         # look-up raw record
         if  fields: # be sure to extract those fields
-            fields += ['das_id', 'das', 'cache_id']
+            fields = list(fields) + self.das_internal_keys
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
-        skeys  = []
-        if  skey:
-            if  order == 'asc':
-                skeys = [(skey, ASCENDING)]
-            else:
-                skeys = [(skey, DESCENDING)]
-        else:
-            existing_idx = [i for i in self.existing_indexes(collection)]
-            if  fields:
-                lkeys = fields
-            else:
-                lkeys = spec.keys()
-            keys = [k for k in lkeys \
-                if k.find('das') == -1 and k.find('_id') == -1 and \
-                        k in existing_idx]
-            skeys = [(k, ASCENDING) for k in keys]
-        res = []
-        try:
-            res = col.find(spec=spec, fields=fields)
-            if  skeys:
-                res = res.sort(skeys)
-            if  idx:
-                res = res.skip(idx)
-            if  limit:
-                res = res.limit(limit)
-        except Exception as exp:
-            print_exc(exp)
-            row = {'exception': str(exp)}
-            yield row
+        skeys  = self.find_sort_keys(collection, query, skey)
+        res = self.get_records(col, spec, fields, skeys, \
+                        idx, limit, check_unique_filter(query))
         counter = 0
         for row in res:
-            if  fields:
-                fkeys = [k.split('.')[0] for k in fields]
-                if  set(row.keys()) & set(fkeys) == set(fkeys):
-                    counter += 1
-                    yield row # only when row has all fields
-            else:
-                counter += 1
-                yield row
-
-        # check if aggregator info is present in records
-        if  recapi and recapi.has_key('_id'):
-            spec = {'das_id':recapi['_id'], 'aggregator':{'$exists':True}}
-            res = self.col.find(spec)
-            for row in res:
-                counter += 1
-                yield row
+            counter += 1
+            yield row
 
         if  counter:
-            msg = "DASMongocache::get_from_cache, yield %s record(s)"\
-                    % counter
+            msg = "%s, yield %s record(s)" % (prefix, counter)
             self.logger.info(msg)
 
         # if no raw records were yield we look-up possible error records
-        counter = 0
-        if  recapi and recapi.has_key('_id'):
-            for key in spec.keys():
-                qkey = '%s.error' % key.split(".")[0]
-                spec = {'das_id':recapi['_id'], qkey:{'$exists':True}}
-                res = self.col.find(spec)
-                for row in res:
-                    counter += 1
+        if  not counter:
+            err = 0
+            for row in self.col.find({'query':encode_mongo_query(orig_query)}):
+                spec = {'das_id': str(row['_id'])}
+                for row in self.col.find(spec, fields):
+                    err += 1
+                    msg = 'For query %s, found %s' % (orig_query, row)
+                    print dastimestamp('DAS WARNING '), msg
                     yield row
-        if  counter:
-            msg = "DASMongocache::get_from_cache, found %s error record(s)"\
-                    % counter
-            self.logger.info(msg)
+
+            if  err:
+                msg = "%s, found %s error record(s)" % (prefix, counter)
+                self.logger.info(msg)
 
     def map_reduce(self, mr_input, spec=None, collection='merge'):
         """

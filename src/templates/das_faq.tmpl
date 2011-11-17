@@ -1,3 +1,6 @@
+#from DAS.web.utils import quote
+#set section = $quote($section)
+#set highlight = $quote($highlight)
 
 <!-- das_faq.tmpl -->
 <div class="page">
@@ -193,6 +196,36 @@ $guide
 
 For more information about DAS-QL please refer to
 <a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/DASQueryGuide">DASQueryGuide</a>.
+
+<ul>
+<li>
+<span id="duplicates">
+Why do I see duplicate results and how to avoid them?
+</span>
+</li>
+</ul>
+<p>
+Indeed, in some cases, duplicates can appear in DAS. For instance if
+you perform two consecutive queries:
+</p>
+<div class="example">
+<pre>
+run between [20853,20859]
+run=20853
+</pre>
+</div>
+<p>
+you'll see runs that are duplicate. This happens because input queries are
+different while back-end API used the same set of parameters. Since DAS queries
+are different their hashes will be different too, which leads to two different
+API calls, who will create different records in DAS with different expiration
+timestamps. To avoid this issue you can simple apply the <em>unique</em>
+filter to the output, like
+</p>
+<pre class="example">
+run=20853 | unique
+</pre>
+
 <ul>
 <li>
 Which operators does DAS support?
@@ -371,33 +404,6 @@ responding to you. The DAS web interface is designed to provide you as much
 feedback as possible, please pay attention to messages appearing next 
 to the spinning wheel.
 </p>
-
-<ul>
-<li>
-Why do I see duplicate results and how to avoid them?
-</li>
-</ul>
-<p>
-Indeed, in some cases, duplicates can appear in DAS. For instance if
-you perform two consecutive queries:
-</p>
-<div class="example">
-<pre>
-run between [20853,20859]
-run=20853
-</pre>
-</div>
-<p>
-you'll see runs that are duplicate. This happens because input queries are
-different while back-end API used the same set of parameters. Since DAS queries
-are different their hashes will be different too, which leads to two different
-API calls, who will create different records in DAS with different expiration
-timestamps. To avoid this issue you can simple apply the <em>unique</em>
-filter to the output, lik-
-</p>
-<pre class="example">
-run=20853 | unique
-</pre>
 
 </div>
 </div>
@@ -588,5 +594,13 @@ jobsummary date last 24h
 </div> <!-- end of class="normal" -->
 </div> <!-- end of class="page" -->
 
+<script text="text/javascript">
+#if $section
+ShowTag('$section')
+#end if
+#if $highlight
+\$('$highlight').addClassName('box_attention').show()
+#end if
+</script>
 <!-- end of das_faq.tmpl -->
 

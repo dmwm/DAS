@@ -16,6 +16,7 @@ from itertools import groupby
 from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import print_exc, getarg, size_format, access
+from DAS.utils.utils import identical_data_records
 from DAS.web.utils import das_json, quote, gen_color
 from DAS.web.utils import not_to_link
 from DAS.web.tools import exposetext
@@ -109,6 +110,10 @@ def adjust_values(func, gen, links):
         if  lookup:
             if  isinstance(val, list):
                 value = ', '.join([str(v) for v in val])
+                if  len(set(val)) > 1 and \
+                    (key.lower().find('number') != -1 or \
+                        key.lower().find('size') != -1):
+                    value = '<span %s>%s</span>' % (red, value)
             elif  key.lower().find('size') != -1 and val:
                 value = size_format(val)
             elif  key.find('Number of ') != -1 and val:
@@ -267,16 +272,20 @@ class CMSRepresentation(DASRepresentation):
         total   = head.get('nresults', 0)
         inst    = getarg(kwargs, 'instance', self.dbs_global)
         query   = getarg(kwargs, 'query', {})
+        uinput  = kwargs.get('input', '')
         filters = query.get('filters')
         main    = self.pagination(total, kwargs)
         if  main.find('das_noresults') == -1:
             main += self.templatepage('das_colors', colors=self.colors)
         style   = 'white'
         rowkeys = []
-        if  kwargs.get('input', '').find('|') != -1:
+        if  uinput.find('|') != -1:
             # if we have filter/aggregator get one row from the given query
             try:
-                fltpage = self.fltpage(self.get_one_row(query))
+                if  query:
+                    fltpage = self.fltpage(self.get_one_row(query))
+                else:
+                    fltpage = uinput.split('|')[-1]
             except Exception as exc:
                 fltpage = 'N/A, please check DAS record for errors'
                 msg = 'Fail to apply filter to query=%s' % query
@@ -284,10 +293,14 @@ class CMSRepresentation(DASRepresentation):
                 print_exc(exc)
         else:
             fltpage = ''
-        page    = ''
+        page = ''
+        old  = None
+        dup  = False
         for row in data:
             if  not row:
                 continue
+            if  not dup and old and identical_data_records(old, row):
+                dup = True
             error = row.get('error', None)
             try:
                 mongo_id = row['_id']
@@ -374,7 +387,8 @@ class CMSRepresentation(DASRepresentation):
                 if  row['das']['system'] == ['combined'] or \
                     row['das']['system'] == [u'combined']:
                     if  lkey:
-                        systems = self.systems(row[lkey]['combined'])
+                        rowsystems = DotDict(row).get('%s.combined' % lkey) 
+                        systems = self.systems(rowsystems)
             except KeyError:
                 systems = "" # we don't store systems for aggregated records
             except Exception as exc:
@@ -392,7 +406,10 @@ class CMSRepresentation(DASRepresentation):
                     sanitized_data=jsonhtml, id=mongo_id, rec_id=mongo_id,
                     conflict=conflict)
             page += '</div>'
+            old = row
         main += fltpage
+        if  dup:
+            main += self.templatepage('das_duplicates', uinput=uinput)
         main += page
         main += '<div align="right">DAS cache server time: %5.3f sec</div>' \
                 % head['ctime']

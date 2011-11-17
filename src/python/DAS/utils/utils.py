@@ -31,6 +31,31 @@ from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 import DAS.utils.jsonwrapper as json
 
+def identical_data_records(old, row):
+    """Checks if 2 DAS records are identical"""
+    old_keys = [k for k in old.keys() if not (k.find('_id')!=-1 or k=='das')]
+    old_keys.sort()
+    row_keys = [k for k in row.keys() if not (k.find('_id')!=-1 or k=='das')]
+    row_keys.sort()
+    if  old_keys != row_keys:
+        return False
+    for key in old_keys:
+        if  old[key] != row[key]:
+            return False
+    return True
+
+def deepcopy(query):
+    """Perform full copy of given query into new dict object"""
+    obj = {}
+    for key, val in query.items():
+        if  isinstance(val, dict):
+            obj[key] = deepcopy(val)
+        elif isinstance(val, list):
+            obj[key] = list(val)
+        else:
+            obj[key] = val
+    return obj
+
 def dastimestamp(msg='DAS '):
     """
     Return timestamp in pre-defined format. For simplicity we match
@@ -56,8 +81,8 @@ def parse_filters(query):
     filters = query.get('filters', [])
     mdict = {}
     existance = {'$exists': True}
-    for filter in filters:
-        for key, val in parse_filter(spec, filter).items():
+    for flt in filters:
+        for key, val in parse_filter(spec, flt).items():
             if  mdict.has_key(key):
                 value = mdict[key]
                 if  isinstance(value, dict) and isinstance(val, dict):
@@ -66,20 +91,20 @@ def parse_filters(query):
                     mdict[key] = val
                 else:
                     msg  = 'Mis-match in filters (%s, %s)' \
-                        % ({key:value}, filter)
+                        % ({key:value}, flt)
                     raise Exception(msg)
             else:
                 mdict.update({key:val})
     return mdict
 
-def parse_filter(spec, filter):
+def parse_filter(spec, flt):
     """
     Parse given filter and return MongoDB key/value dictionary.
     Be smart not to overwrite spec condition of DAS query.
     """
-    if  filter.find('=') != -1 and \
-       (filter.find('<') == -1 and filter.find('>') == -1):
-        key, val = filter.split('=')
+    if  flt.find('=') != -1 and \
+       (flt.find('<') == -1 and flt.find('>') == -1):
+        key, val = flt.split('=')
         if  int_number_pattern.match(str(val)):
             val = int(val)
         if  float_number_pattern.match(str(val)):
@@ -88,37 +113,37 @@ def parse_filter(spec, filter):
             if  val.find('*') != -1:
                 val = re.compile('%s' % val.replace('*', '.*'))
         return {key:val}
-    elif  filter.find('<=') != -1:
-        key, val = filter.split('<=')
+    elif  flt.find('<=') != -1:
+        key, val = flt.split('<=')
         if  int_number_pattern.match(str(val)):
             val = int(val)
         if  float_number_pattern.match(str(val)):
             val = float(val)
         return {key: {'$lte': val}}
-    elif  filter.find('<') != -1:
-        key, val = filter.split('<')
+    elif  flt.find('<') != -1:
+        key, val = flt.split('<')
         if  int_number_pattern.match(str(val)):
             val = int(val)
         if  float_number_pattern.match(str(val)):
             val = float(val)
         return {key: {'$lt': val}}
-    elif  filter.find('>=') != -1:
-        key, val = filter.split('>=')
+    elif  flt.find('>=') != -1:
+        key, val = flt.split('>=')
         if  int_number_pattern.match(str(val)):
             val = int(val)
         if  float_number_pattern.match(str(val)):
             val = float(val)
         return {key: {'$gte': val}}
-    elif  filter.find('>') != -1:
-        key, val = filter.split('>')
+    elif  flt.find('>') != -1:
+        key, val = flt.split('>')
         if  int_number_pattern.match(str(val)):
             val = int(val)
         if  float_number_pattern.match(str(val)):
             val = float(val)
         return {key: {'$gt': val}}
     else:
-        if  not spec.get(filter, None) and filter != 'unique':
-            return {filter:{'$exists':True}}
+        if  not spec.get(flt, None) and flt != 'unique':
+            return {flt:{'$exists':True}}
     return {}
 
 def size_format(uinput):
@@ -369,7 +394,9 @@ def merge_dict(dict1, dict2):
     for key, value in dict2.items():
         if  dict1.has_key(key):
             val = dict1[key]
-            if  isinstance(val, list):
+            if  val == value:
+                dict1[key] = [value]
+            elif isinstance(val, list):
                 if  isinstance(value, list):
                     dict1[key] = val + value
                 else:
@@ -1141,6 +1168,10 @@ def aggregator(results, expire):
                 _ids = [_ids]
         rec['cache_id'] = list(set(_ids))
         rec['das']['empty_record'] = 0
+        for key, val in rec.items():
+            if  key not in ['das_id', 'das', 'cache_id', '_id']:
+                if  isinstance(val, dict):
+                    rec[key] = [val]
         yield rec
 
 def aggregator_helper(results, expire):
