@@ -528,7 +528,7 @@ class DASMongocache(object):
             ckeys = [k for k in spec.keys() if k != 'das_id']
             if  len(ckeys) == 1:
                 query['spec'].update({'das.condition_keys': ckeys})
-            else:
+            elif len(ckeys):
                 query['spec'].update({'das.condition_keys': {'$all':ckeys}})
         # add proper date condition
         if  query.has_key('spec') and query['spec'].has_key('date'):
@@ -686,27 +686,28 @@ class DASMongocache(object):
             dasrecord = self.col.find_one(spec1)
             spec2  = {'query': enc_query, 'das.system': system}
             sysrecord = self.col.find_one(spec2)
-            if  header['das']['expire'] < dasrecord['das']['expire']:
-                expire = header['das']['expire']
-            else:
-                expire = dasrecord['das']['expire']
-            api = header['das']['api']
-            url = header['das']['url']
-            if  set(api) & set(sysrecord['das']['api']) == set(api) and \
-                set(url) & set(sysrecord['das']['url']) == set(url):
-                self.col.update({'_id':ObjectId(sysrecord['_id'])}, 
+            if  dasrecord and sysrecord:
+                if  header['das']['expire'] < dasrecord['das']['expire']:
+                    expire = header['das']['expire']
+                else:
+                    expire = dasrecord['das']['expire']
+                api = header['das']['api']
+                url = header['das']['url']
+                if  set(api) & set(sysrecord['das']['api']) == set(api) and \
+                    set(url) & set(sysrecord['das']['url']) == set(url):
+                    self.col.update({'_id':ObjectId(sysrecord['_id'])},
+                         {'$set': {'das.expire':expire, 'das.status':status}})
+                else:
+                    self.col.update({'_id':ObjectId(sysrecord['_id'])},
+                        {'$pushAll':{'das.api':header['das']['api'],
+                                     'das.urn':header['das']['api'],
+                                     'das.url':header['das']['url'],
+                                     'das.ctime':header['das']['ctime'],
+                                     'das.lookup_keys':header['lookup_keys'],
+                                    },
+                         '$set': {'das.expire':expire, 'das.status':status}})
+                self.col.update({'_id':ObjectId(dasrecord['_id'])},
                      {'$set': {'das.expire':expire, 'das.status':status}})
-            else:
-                self.col.update({'_id':ObjectId(sysrecord['_id'])}, 
-                    {'$pushAll':{'das.api':header['das']['api'], 
-                                 'das.urn':header['das']['api'],
-                                 'das.url':header['das']['url'],
-                                 'das.ctime':header['das']['ctime'],
-                                 'das.lookup_keys':header['lookup_keys'],
-                                }, 
-                     '$set': {'das.expire':expire, 'das.status':status}})
-            self.col.update({'_id':ObjectId(dasrecord['_id'])}, 
-                 {'$set': {'das.expire':expire, 'das.status':status}})
         else:
             self.col.update({'query': enc_query, 'das.system':'das'},
                     {'$set': {'das.status': status}})

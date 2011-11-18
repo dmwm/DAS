@@ -10,7 +10,7 @@ import time
 import unittest
 from urllib2 import URLError
 from DAS.utils.das_config import das_readconfig
-from DAS.utils.logger import DASLogger
+from DAS.utils.logger import PrintManager
 from DAS.utils.url_utils import urllib2_request
 
 class testDASCache(unittest.TestCase):
@@ -23,7 +23,7 @@ class testDASCache(unittest.TestCase):
         """
         debug    = 0
         config   = das_readconfig()
-        logger   = DASLogger(verbose=debug)
+        logger   = PrintManager('TestDASCache', verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
 

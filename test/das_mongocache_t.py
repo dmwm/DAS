@@ -13,7 +13,7 @@ import unittest
 from pymongo.connection import Connection
 
 from DAS.utils.das_config import das_readconfig
-from DAS.utils.logger import DASLogger
+from DAS.utils.logger import PrintManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_mongocache import DASMongocache, loose
 from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
@@ -29,7 +29,7 @@ class testDASMongocache(unittest.TestCase):
         """
         debug    = 0
         config   = das_readconfig()
-        logger   = DASLogger(verbose=debug)
+        logger   = PrintManager('TestDASMongocache', verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
         dburi    = config['mongodb']['dburi']

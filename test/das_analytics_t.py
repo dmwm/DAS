@@ -9,7 +9,7 @@ import os
 import time
 import unittest
 from DAS.utils.das_config import das_readconfig
-from DAS.utils.logger import DASLogger
+from DAS.utils.logger import PrintManager
 from DAS.core.das_analytics_db import DASAnalytics
 
 class testDASAnalytics(unittest.TestCase):
@@ -24,7 +24,7 @@ class testDASAnalytics(unittest.TestCase):
         self.db  = 'test_analytics.db'
         config   = das_readconfig()
         dburi    = config['mongodb']['dburi']
-        logger   = DASLogger(verbose=debug)
+        logger   = PrintManager('TestDASAnalytics', verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
         config['analyticsdb'] = dict(dburi=dburi, history=5184000,

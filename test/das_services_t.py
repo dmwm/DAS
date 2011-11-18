@@ -13,7 +13,7 @@ import unittest
 from DAS.core.das_core import DASCore
 from DAS.utils.ddict import DotDict
 from DAS.utils.das_config import das_readconfig
-from DAS.utils.logger import DASLogger
+from DAS.utils.logger import PrintManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.web.das_test_datasvc import DASTestDataService, Root
 from DAS.services.map_reader import read_service_map
@@ -40,7 +40,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         config        = das_readconfig()
         dburi         = config['mongodb']['dburi']
         self.dburi    = dburi
-        logger        = DASLogger(verbose=debug)
+        logger        = PrintManager('TestCMSFakeDataServices', verbose=debug)
         self.base     = 'http://localhost:8080' # URL of DASTestDataService
         self.expire   = 100
         config['logger']    = logger
