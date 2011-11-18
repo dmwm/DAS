@@ -21,20 +21,21 @@ from pymongo import DESCENDING
 # DAS modules
 from DAS.utils.utils import gen2list, access
 from DAS.utils.das_db import db_connection, create_indexes
+from DAS.utils.logger import PrintManager
 
 class DASMapping(object):
     """
     This class manages DAS mapping DB.
     """
     def __init__(self, config):
-        self.logger   = config['logger']
         self.verbose  = config['verbose']
+        self.logger   = PrintManager('DASMapping', self.verbose)
         self.services = config['services']
         self.dburi    = config['mongodb']['dburi']
         self.dbname   = config['mappingdb']['dbname']
         self.colname  = config['mappingdb']['collname']
 
-        msg = "DASMapping::__init__ %s@%s" % (self.dburi, self.dbname)
+        msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         
         self.create_db()
@@ -146,7 +147,7 @@ class DASMapping(object):
                  {"notation" : "storage_element_name", "map":"site", "api": ""},
              ]
         """
-        msg = 'DASMapping::add(%s)' % record
+        msg = 'record=%s' % record
         self.logger.info(msg)
         self.col.insert(record)
         index = None
@@ -252,7 +253,7 @@ class DASMapping(object):
         """
         Find das key for given system and map key.
         """
-        msg   = 'DASMapping::find_daskeys, system=%s\n' % das_system
+        msg   = 'system=%s\n' % das_system
         cond  = { 'system' : das_system, 'daskeys.map': map_key }
         daskeys = []
         for row in self.col.find(cond, ['daskeys']):
@@ -279,7 +280,7 @@ class DASMapping(object):
         """
         Find map key for given system and das key.
         """
-        msg   = 'DASMapping::find_mapkey, system=%s\n' % das_system
+        msg   = 'system=%s\n' % das_system
         cond  = { 'system' : das_system, 'daskeys.key': das_key }
         mapkeys = []
         for row in self.col.find(cond, ['daskeys', 'urn']):

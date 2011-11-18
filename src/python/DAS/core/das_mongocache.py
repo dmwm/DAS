@@ -31,6 +31,7 @@ from DAS.utils.utils import parse_filters, expire_timestamp
 from DAS.utils.utils import dastimestamp, deepcopy
 from DAS.utils.das_db import db_connection
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
+from DAS.utils.logger import PrintManager
 import DAS.utils.jsonwrapper as json
 
 # monogo db modules
@@ -415,8 +416,8 @@ class DASMongocache(object):
         self.dburi   = config['mongodb']['dburi']
         self.cache_size = config['mongodb']['bulkupdate_size']
         self.dbname  = config['dasdb']['dbname']
-        self.logger  = config['logger']
         self.verbose = config['verbose']
+        self.logger  = PrintManager('DASMongocache', self.verbose)
         self.mapping = config['dasmapping']
 
         self.conn    = db_connection(self.dburi)
@@ -428,7 +429,7 @@ class DASMongocache(object):
 
         self.das_internal_keys = ['das_id', 'das', 'cache_id']
 
-        msg = "DASMongocache::__init__ %s@%s" % (self.dburi, self.dbname)
+        msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
 
         self.add_manipulator()
@@ -451,7 +452,7 @@ class DASMongocache(object):
         """
         das_son_manipulator = DAS_SONManipulator()
         self.mdb.add_son_manipulator(das_son_manipulator)
-        msg = "DASMongocache::__init__, DAS_SONManipulator %s" \
+        msg = "DAS_SONManipulator %s" \
         % das_son_manipulator
         self.logger.debug(msg)
 
@@ -463,7 +464,7 @@ class DASMongocache(object):
         For example, if cache contains records about T1 sites, 
         then input query T1_CH_CERN is subset of results stored in cache.
         """
-        msg = "DASMongocache::similar_queries %s" % query
+        msg = "query=%s" % query
         spec    = query.get('spec', {})
         cond    = {'query.spec.key': {'$in' : spec.keys()}}
         for row in self.col.find(cond):
@@ -483,7 +484,7 @@ class DASMongocache(object):
         query of the form key=value.
         """
         
-        msg = "DASMongocache::get_superset_keys %s=%s" % (key, value)
+        msg = "%s=%s" % (key, value)
         self.logger.debug(msg)
         cond = {'query.spec.key': key}
         for row in self.col.find(cond):
@@ -497,8 +498,6 @@ class DASMongocache(object):
         """
         Prepare execution query to be run for records retrieval
         """
-        prefix = 'DASMongocache::execution_query'
-
         # do deep copy of original query to avoid dictionary
         # overwrites tricks
         query = deepcopy(orig_query)
@@ -508,7 +507,7 @@ class DASMongocache(object):
 
         # convert query spec to use patterns
         query, dquery = convert2pattern(query)
-        msg = '%s, adjusted query %s' % (prefix, dquery)
+        msg = 'adjusted query %s' % dquery
         self.logger.debug(msg)
 
         # add das_ids look-up to remove duplicates
@@ -581,7 +580,7 @@ class DASMongocache(object):
                 if  filter_dict:
                     query['spec'].update(filter_dict)
 
-        msg = '%s, execution query %s' % (prefix, query)
+        msg = 'execution query %s' % query
         self.logger.debug(msg)
         return query
 
@@ -594,8 +593,7 @@ class DASMongocache(object):
         spec = {'das.expire' : {'$lt' : timestamp}}
         if  self.verbose:
             nrec = col.find(spec).count()
-            msg  = "DASMongocache::remove_expired, will remove %s records"\
-                 % nrec
+            msg  = "will remove %s records" % nrec
             msg += ", localtime=%s" % timestamp
             self.logger.debug(msg)
         col.remove(spec)
@@ -738,8 +736,7 @@ class DASMongocache(object):
             if  prim_keys:
                 spec.update({'das.primary_key': {'$in': prim_keys}})
         res    = col.find(spec=spec, fields=fields).count()
-        msg    = "DASMongocache::incache(%s, coll=%s) found %s results" \
-                % (query, collection, res)
+        msg    = "(%s, coll=%s) found %s results" % (query, collection, res)
         self.logger.info(msg)
         if  res:
             return True
@@ -765,7 +762,7 @@ class DASMongocache(object):
             res = len([r for r in unique_filter(gen)])
         else:
             res = col.find(spec=spec).count()
-        msg = "DASMongocache::nresults=%s" % res
+        msg = "%s" % res
         self.logger.info(msg)
         return res
 
@@ -862,10 +859,9 @@ class DASMongocache(object):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        prefix = 'DASMongocache::get_from_cache'
         col = self.mdb[collection]
-        msg = "%s(%s, %s, %s, %s, %s, coll=%s)"\
-                % (prefix, query, idx, limit, skey, order, collection)
+        msg = "(%s, %s, %s, %s, %s, coll=%s)"\
+                % (query, idx, limit, skey, order, collection)
         self.logger.info(msg)
 
         # keep original MongoDB query without DAS additions
@@ -895,7 +891,7 @@ class DASMongocache(object):
             yield row
 
         if  counter:
-            msg = "%s, yield %s record(s)" % (prefix, counter)
+            msg = "yield %s record(s)" % counter
             self.logger.info(msg)
 
         # if no raw records were yield we look-up possible error records
@@ -910,7 +906,7 @@ class DASMongocache(object):
                     yield row
 
             if  err:
-                msg = "%s, found %s error record(s)" % (prefix, counter)
+                msg = "found %s error record(s)" % counter
                 self.logger.info(msg)
 
     def map_reduce(self, mr_input, spec=None, collection='merge'):
@@ -942,8 +938,7 @@ class DASMongocache(object):
         Perform map/reduce operation over DAS cache using provided
         collection, mapreduce name and optional conditions.
         """
-        self.logger.debug("DASMongocache::map_reduce(%s, %s)" \
-                % (mapreduce, spec))
+        self.logger.debug("(%s, %s)" % (mapreduce, spec))
         record = self.mrcol.find_one({'name':mapreduce})
         if  not record:
             raise Exception("Map/reduce function '%s' not found" % mapreduce)
@@ -953,8 +948,7 @@ class DASMongocache(object):
             result = coll.map_reduce(Code(fmap), Code(freduce), query=spec)
         else:
             result = coll.map_reduce(Code(fmap), Code(freduce))
-        msg = "DASMongocache::map_reduce found %s records in %s" \
-                % (result.count(), result.name)
+        msg = "found %s records in %s" % (result.count(), result.name)
         self.logger.info(msg)
         self.logger.debug(fmap)
         self.logger.debug(freduce)
@@ -980,7 +974,7 @@ class DASMongocache(object):
         2. run aggregtor function to merge neighbors
         3. insert records into das.merge
         """
-        self.logger.debug("DASMongocache::merge_records(%s)" % query)
+        self.logger.debug("(%s)" % query)
         lookup_keys = []
         id_list = []
         expire  = 9999999999 # future
@@ -1015,12 +1009,9 @@ class DASMongocache(object):
             spec = {'das_id': {'$in': id_list}, 'das.primary_key': pkey}
             if  self.verbose:
                 nrec = self.col.find(spec).sort(skey).count()
-                msg  = "DASMongocache::merge_records, merging %s records"\
-                        % nrec 
-                msg += ", for %s key" % pkey
+                msg  = "merging %s records, for %s key" % (nrec, pkey) 
             else:
-                msg  = "DASMongocache::merge_records, merging records"
-                msg += ", for %s key" % pkey
+                msg  = "merging records, for %s key" % pkey
             self.logger.debug(msg)
             records = self.col.find(spec).sort(skey)
             # aggregate all records
@@ -1099,8 +1090,7 @@ class DASMongocache(object):
         enc_query = encode_mongo_query(query)
         spec = {'spec' : {'query':enc_query, 'das.system':dasheader['system']}}
         if  not self.incache(spec, collection='cache'):
-            msg = "DASMongocache::insert_query_record, query=%s, header=%s" \
-                    % (query, header)
+            msg = "query=%s, header=%s" % (query, header)
             self.logger.debug(msg)
             q_record = dict(das=dasheader, query=enc_query)
             q_record['das']['lookup_keys'] = lkeys
@@ -1114,8 +1104,7 @@ class DASMongocache(object):
         Iterate over provided results, update records and yield them
         to next level (update_cache)
         """
-        self.logger.debug("DASMongocache::update_cache(%s) store to cache" \
-                % query)
+        self.logger.debug("(%s) store to cache" % query)
         if  not results:
             return
         dasheader  = header['das']
@@ -1144,8 +1133,7 @@ class DASMongocache(object):
             print "\n\n ### results = ", str(results)
             raise Exception('Provided results is not a list/generator type')
         self.logger.info("\n")
-        msg = "DASMongocache::update_cache, %s yield %s rows" \
-                % (dasheader['system'], counter)
+        msg = "%s yield %s rows" % (dasheader['system'], counter)
         self.logger.info(msg)
 
         # update das record with new status

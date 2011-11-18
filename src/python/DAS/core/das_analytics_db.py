@@ -21,19 +21,20 @@ from DAS.utils.utils import gen2list, genkey, expire_timestamp
 from DAS.core.das_mongocache import encode_mongo_query
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection, create_indexes
+from DAS.utils.logger import PrintManager
 
 class DASAnalytics(object):
     """
     DAS analytics DB manager.
     """
     def __init__(self, config):
-        self.logger = config['logger']
         self.verbose = config['verbose']
+        self.logger  = PrintManager('DASAnalytics', self.verbose)
         self.dburi   = config['mongodb']['dburi']
         self.dbname  = config['analyticsdb']['dbname']        
         self.colname = config['analyticsdb']['collname']
         self.history = config['analyticsdb']['history']
-        msg = "DASAnalytics::__init__ %s@%s" % (self.dburi, self.dbname)
+        msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         self.create_db()
 
@@ -75,7 +76,7 @@ class DASAnalytics(object):
         """
         if  isinstance(mongoquery, dict):
             mongoquery = encode_mongo_query(mongoquery)
-        msg = 'DASAnalytics::add_query("%s", %s)' % (dasquery, mongoquery)
+        msg = 'dasquery=%s, mongoquery=%s' % (dasquery, mongoquery)
         self.logger.debug(msg)
         dhash = genkey(dasquery)
         qhash = genkey(mongoquery)
@@ -119,8 +120,7 @@ class DASAnalytics(object):
         so it should probably be done asynchronously at fixed intervals.
         """
         
-        msg = 'DASAnalytics::clean_queries()'
-        self.logger.debug(msg)
+        self.logger.debug('')
         
         now = time.time()
         
@@ -145,8 +145,8 @@ class DASAnalytics(object):
         each run of an analyzer (if desirable) and is thereafter
         immutable.
         """
-        msg = 'DASAnalytics::add_summary(%s, %s->%s, %s)'
-        self.logger.debug(msg, identifier, start, finish, payload)
+        msg = '(%s, %s->%s, %s)' % (identifier, start, finish, payload)
+        self.logger.debug(msg)
         
         # clean-up analyzer records whose start timestamp is too old
         spec = {'start':{'$lt':time.time()-self.history}}
@@ -183,8 +183,7 @@ class DASAnalytics(object):
         orig_query = query
         if  isinstance(query, dict):
             query = encode_mongo_query(query)
-        msg = 'DASAnalytics::add_api(%s, %s, %s, %s)' \
-        % (system, query, api, args)
+        msg = '(%s, %s, %s, %s)' % (system, query, api, args)
         self.logger.debug(msg)
         # find query record
         qhash = genkey(query)
@@ -217,8 +216,7 @@ class DASAnalytics(object):
         fast even though not all are), and if it exists just update
         the expiry. Otherwise insert a new record.
         """
-        msg = 'DASAnalytics::insert_apicall, query=%s, url=%s,'\
-                % (query, url)
+        msg = 'query=%s, url=%s,' % (query, url)
         msg += 'api=%s, args=%s, expire=%s' % (api, api_params, expire)
         self.logger.debug(msg)
         expire = expire_timestamp(expire)
@@ -231,7 +229,7 @@ class DASAnalytics(object):
                                       'apicall.api_params': api_params,
                                       'apicall.qhash':      qhash})
         if existing:
-            self.logger.debug("DASAnalytics::insert_apicall updating")
+            self.logger.debug("updating")
             self.col.update({'_id': existing['_id']},
                             {'$set':{'apicall.expire': expire}})
         else:
@@ -266,7 +264,7 @@ class DASAnalytics(object):
         """
         if  isinstance(query, dict):
             query = encode_mongo_query(query)
-        msg = 'DASAnalytics::update(%s, %s)' % (system, query)
+        msg = 'system=%s, query=%s' % (system, query)
         self.logger.debug(msg)
         qhash = genkey(query)
         if  system:

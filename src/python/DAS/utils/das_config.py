@@ -101,10 +101,6 @@ DASOption('web_server', 'log_screen', 'bool', True),
 DASOption('web_server', 'socket_queue_size', 'int', 100),
 # default URL base mount point
 DASOption('web_server', 'url_base', 'string', '/das'),
-# default log file name
-DASOption('web_server', 'logfile', 'string', '/tmp/das_web.log'),
-# default log level
-DASOption('web_server', 'loglevel', 'int', 0),
 # status_update controls how often AJAX calls should be invoked (in milsec)
 DASOption('web_server', 'status_update', 'int', 3000),
 # number of workers to serve user queries in DAS server
@@ -145,14 +141,8 @@ DASOption('test_server', 'host', 'string', '0.0.0.0'),
 DASOption('test_server', 'port', 'int', 8214),
 # cherrypy thread pool parameter
 DASOption('test_server', 'thread_pool', 'int', 30),
-# cherrypy log_screen parameter
-DASOption('test_server', 'log_screen', 'bool', True),
 # cherrypy socket queue size
 DASOption('test_server', 'socket_queue_size', 'int', 100),
-# default log file name
-DASOption('test_server', 'logfile', 'string', '/tmp/das_test.log'),
-# default log level
-DASOption('test_server', 'loglevel', 'int', 0),
 
 #
 # DAS core options
@@ -161,17 +151,12 @@ DASOption('test_server', 'loglevel', 'int', 0),
 DASOption('das', 'parserdir', 'string', '/tmp'),
 # verbosity level
 DASOption('das', 'verbose', 'int', 0, destination='verbose'),
-# log file for logger
-DASOption('das', 'logfile', 'string', '/tmp/das.log', destination='logfile'),
 # flag to turn on/off the multitasking (thread based) support in DAS
 DASOption('das', 'multitask', 'bool', True),
 # error_expire controls how long to keep DAS record for misbehaving data-srv
 DASOption('das', 'error_expire', 'int', 300),
 # emptyset_expire controls how long to keep DAS record for empty result set
 DASOption('das', 'emptyset_expire', 'int', 5),
-# logformat for DAS logger
-DASOption('das', 'logformat', 'string', 
-                '%(levelname)s %(message)s', destination='logformat'),
 # list of data services participated in DAS
 DASOption('das', 'services', 'list', 
                 ['google_maps', 'ip', 'postalcode'], destination='services'),

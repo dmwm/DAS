@@ -13,7 +13,7 @@ from cherrypy import expose, tree, engine, HTTPError
 from inspect import getmembers
 
 # DAS modules
-from DAS.utils.logger import DASLogger, set_cherrypy_logger, NullHandler
+from DAS.utils.logger import set_cherrypy_logger, NullHandler
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 from DAS.web.utils import wrap2dasjson
@@ -53,8 +53,9 @@ class DASTestDataService(DASWebManager):
         DASWebManager.__init__(self, config)
         logfile      = config.get('logfile', None)
         loglevel     = config.get('loglevel', 0)
-        self.logger  = DASLogger(logfile=logfile, verbose=loglevel)
-        set_cherrypy_logger(self.logger.handler, loglevel)
+        self.logger  = logging.getLogger('DASTestDataService')
+        hdlr = logging.StreamHandler()
+        set_cherrypy_logger(hdlr, loglevel)
         # force to load the page all the time
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'

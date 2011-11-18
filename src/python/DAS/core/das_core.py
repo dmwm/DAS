@@ -30,7 +30,7 @@ from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
 from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
 from DAS.core.das_mongocache import compare_specs
 from DAS.utils.das_config import das_readconfig
-from DAS.utils.logger import DASLogger
+from DAS.utils.logger import PrintManager
 from DAS.utils.utils import genkey, unique_filter, parse_filters
 from DAS.utils.utils import expire_timestamp, print_exc
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
@@ -100,19 +100,10 @@ class DASCore(object):
         else:
             self.taskmgr = None
 
-        logfile = dasconfig.get('logfile', None)
-        logformat = dasconfig.get('logformat')
-        if  debug:
-            logfile = None # I want stdout printouts in debug mode
-            logformat = '%(message)s'
-        if  not logger:
-            self.logger = DASLogger(logfile=logfile, verbose=self.verbose,
-                name='DAS', format=logformat)
-        else:
+        if  logger:
             self.logger = logger
-        dasconfig['logfile'] = logfile
-        dasconfig['logformat'] = logformat
-        dasconfig['logger'] = self.logger
+        else:
+            self.logger = PrintManager('DASCore', self.verbose)
 
         # define Mapping/Analytics/Parser in this order since Parser depends
         # on first two
@@ -233,8 +224,7 @@ class DASCore(object):
         # otherwise decompose it into list of queries
         service_map = self.mongoparser.service_apis_map(query)
         if  not service_map:
-            msg  = 'DASCore::result, no APIs found to answer '
-            msg += 'input query, will decompose it ...'
+            msg  = 'no APIs found to answer input query, will decompose it'
             self.logger.info(msg)
             skeys = query['fields']
             if  not skeys:
@@ -265,8 +255,7 @@ class DASCore(object):
         for key in query.keys():
             if  key not in ['spec', 'fields', 'instance']:
                 del query[key]
-        msg = 'DASCore::bare_query, input query=%s, output query =%s' \
-                % (iquery, query)
+        msg = 'input query=%s, output query =%s' % (iquery, query)
         self.logger.debug(msg)
         return query
 
@@ -311,7 +300,7 @@ class DASCore(object):
 
     def worker(self, srv, query):
         """Main worker function which call data-srv call function"""
-        self.logger.info('\nDASCore::call ##### %s ######\n' % srv)
+        self.logger.info('##### %s ######\n' % srv)
         das_timer(srv, self.verbose)
         getattr(getattr(self, srv), 'call')(query)
         das_timer(srv, self.verbose)
@@ -352,16 +341,16 @@ class DASCore(object):
         spec   = query.get('spec')
         fields = query.get('fields')
         if  fields == ['records']:
-            msg = 'DASCore::call, look-up all records in cache'
+            msg = 'look-up all records in cache'
             self.logger.info(msg)
             return 1
         if  spec == dict(records='*'):
-            self.logger.info("DASCore::call, look-up everything in cache")
+            self.logger.info("look-up everything in cache")
             return 1
         status = 0
         for record in self.rawcache.find_specs(query):
             status = record['das']['status']
-            msg = 'DASCore::call, found query %s in cache, status=%s\n' \
+            msg = 'found query %s in cache, status=%s\n' \
                         % (record['query'], status)
             mongo_query = decode_mongo_query(record['query'])
             if  not compare_specs(query, mongo_query):
@@ -383,7 +372,7 @@ class DASCore(object):
                         status = 0
                         msg = 'Fail to look-up das.status, record=%s' % record
                         self.logger.info(msg)
-                msg  = 'DASCore::call, found SIMILAR query in cache,'
+                msg  = 'found SIMILAR query in cache,'
                 msg += 'query=%s, status=%s\n' % (record['query'], status)
                 self.logger.info(msg)
                 if  status == 'ok' and self.in_raw_cache(similar_query):
@@ -392,12 +381,12 @@ class DASCore(object):
                     das_timer('DASCore::call', self.verbose)
                     return 1
 
-        msg = 'DASCore::call, query=%s' % query
+        msg = 'query=%s' % query
         self.logger.info(msg)
         params = self.mongoparser.params(query)
         if  not services:
             services = params['services']
-        self.logger.info('DASCore::call, services = %s' % services)
+        self.logger.info('services = %s' % services)
         das_timer('das_record', self.verbose)
         # initial expire tstamp 1 day (long enough to be overwriten by data-srv)
         expire = expire_timestamp(time.time()+1*24*60*60)
@@ -417,7 +406,7 @@ class DASCore(object):
         except Exception as exc:
             print_exc(exc)
             return 0
-        self.logger.info('\nDASCore::call ##### merging ######\n')
+        self.logger.info('\n##### merging ######\n')
         self.rawcache.update_query_record(query, 'merging')
         das_timer('merge', self.verbose)
         self.rawcache.merge_records(query)
@@ -435,9 +424,8 @@ class DASCore(object):
         further processing.
         """
         das_timer('DASCore::get_from_cache', self.verbose)
-        msg  = 'DASCore::get_from_cache, col=%s, query=%s, idx=%s, limit=%s'\
-                % (collection, orig_query, idx, limit)
-        msg += ', skey=%s, order=%s' % (skey, sorder)
+        msg = 'col=%s, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
+                % (collection, orig_query, idx, limit, skey, sorder)
         self.logger.info(msg)
 
         query       = self.rawcache.execution_query(orig_query)

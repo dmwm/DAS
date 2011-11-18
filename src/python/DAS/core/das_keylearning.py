@@ -1,5 +1,6 @@
 # DAS modules
 from DAS.utils.das_db import db_connection, create_indexes
+from DAS.utils.logger import PrintManager
 import collections
 
 class DASKeyLearning(object):
@@ -16,8 +17,8 @@ class DASKeyLearning(object):
     
     """
     def __init__(self, config):
-        self.logger   = config['logger']
         self.verbose  = config['verbose']
+        self.logger   = PrintManager('DASKeyLearning', self.verbose)
         self.services = config['services']
         self.dburi    = config['mongodb']['dburi']
         self.dbname   = config['keylearningdb']['dbname']
@@ -25,7 +26,7 @@ class DASKeyLearning(object):
         
         self.mapping  = config['dasmapping']
 
-        msg = "DASKeyLearning::__init__ %s@%s" % (self.dburi, self.dbname)
+        msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         
         self.col = None
@@ -44,8 +45,7 @@ class DASKeyLearning(object):
         Add a list of data members for a given API (system, urn, url),
         and generate, which are stored as separate records.
         """
-        msg = "DASKeyLearning::add_members(%s, %s, %s)" % \
-                                        (system, urn, members)
+        msg = "system=%s, urn=%s, members=%s)" % (system, urn, members)
         self.logger.info(msg)
         
         result = self.col.find_one({'system': system, 'urn': urn})

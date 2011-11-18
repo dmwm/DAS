@@ -11,7 +11,6 @@ __author__ = "Valentin Kuznetsov"
 import sys
 from optparse import OptionParser
 from DAS.core.das_mapping_db import DASMapping
-from DAS.utils.logger import DASLogger
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
 from DAS.services.map_reader import read_service_map
@@ -69,11 +68,10 @@ if __name__ == '__main__':
     dburi     = 'mongodb://%s:%s' % (opts.host, opts.port)
     dasconfig = das_readconfig()
     logfile   = dasconfig['das'].get('logfile', None)
-    logger    = DASLogger(logfile=logfile, verbose=opts.debug)
     dbname, colname = opts.db.split('.')
     mongodb   = dict(dburi=dburi)
     mappingdb = dict(dbname=dbname, collname=colname)
-    config    = dict(logger=logger, verbose=opts.debug, mappingdb=mappingdb,
+    config    = dict(verbose=opts.debug, mappingdb=mappingdb,
                 mongodb=mongodb, services=dasconfig['das'].get('services', []))
 
     mgr = DASMapping(config)

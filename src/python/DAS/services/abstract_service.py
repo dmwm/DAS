@@ -25,6 +25,7 @@ from DAS.utils.das_db import db_gridfs, parse2gridfs
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_core import dasheader
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
+from DAS.utils.logger import PrintManager
 
 class DASAbstractService(object):
     """
@@ -36,7 +37,8 @@ class DASAbstractService(object):
         self.name = name
         try:
             self.verbose      = config['verbose']
-            self.logger       = config['logger']
+            title             = 'DASAbstactService_%s' % self.name
+            self.logger       = PrintManager(title, self.verbose)
             self.dasmapping   = config['dasmapping']
             self.analytics    = config['dasanalytics']
             self.write2cache  = config.get('write_cache', True)
@@ -75,8 +77,7 @@ class DASAbstractService(object):
         self._params    = None # to be defined at run-time in self.parameters
         self._notations = {}   # to be defined at run-time in self.notations
 
-        msg = 'DASAbstractService::__init__ %s' % self.name
-        self.logger.info(msg)
+        self.logger.info('initialized')
         # define internal cache manager to put 'raw' results into cache
         if  config.has_key('rawcache') and config['rawcache']:
             self.localcache   = config['rawcache']
@@ -149,8 +150,7 @@ class DASAbstractService(object):
         Invoke service API to execute given query.
         Return results as a collect list set.
         """
-        msg = 'DASAbstractService::%s::call(%s)' % (self.name, query)
-        self.logger.info(msg)
+        self.logger.info('query=%s' % query)
 
         # check the cache for records with given query/system
         enc_query = encode_mongo_query(query)
@@ -158,9 +158,7 @@ class DASAbstractService(object):
         dasquery = {'spec': {'das.qhash': qhash, 'das.system': self.name}, 
                     'fields': None}
         if  self.localcache.incache(query=dasquery, collection='cache'):
-            msg  = "DASAbstractService::%s found records in local cache."\
-                  % self.name
-            msg += "Update analytics."
+            msg  = "found records in local cache. Update analytics"
             self.logger.info(msg)
             self.analytics.update(self.name, query)
             return
@@ -176,8 +174,7 @@ class DASAbstractService(object):
         if  not self.write2cache:
             return
         self.analytics.add_api(self.name, query, api, args)
-        msg  = 'DASAbstractService::%s::add_api added to Analytics DB' \
-                % self.name
+        msg  = 'added to Analytics DB'
         msg += ' query=%s, api=%s, args=%s' % (query, api, args)
         self.logger.debug(msg)
         header  = dasheader(self.name, query, expire, api, url, ctime)
@@ -191,8 +188,7 @@ class DASAbstractService(object):
         # update the cache
         self.localcache.update_cache(query, result, header)
 
-        msg  = 'DASAbstractService::%s cache has been updated,\n' \
-                % self.name
+        msg  = 'cache has been updated,\n'
         self.logger.debug(msg)
 
     def adjust_params(self, api, kwds, instance=None):
@@ -210,8 +206,7 @@ class DASAbstractService(object):
         Filter provided apicall wrt existing apicall records in Analytics DB.
         """
         self.analytics.remove_expired()
-        msg  = 'DBSAbstractService::pass_apicall, %s, API=%s, args=%s'\
-        % (self.name, api, api_params)
+        msg  = 'API=%s, args=%s' % (api, api_params)
         for row in self.analytics.list_apicalls(url=url, api=api):
             input_query = {'spec':api_params}
             exist_query = {'spec':row['apicall']['api_params']}
@@ -231,8 +226,7 @@ class DASAbstractService(object):
                                 query, expire, url, api, args, [], 0)
                 except Exception as exc:
                     print_exc(exc)
-                    msg  = 'DASAbstractService::pass_apicall\n'
-                    msg += 'failed api %s\n' % api
+                    msg  = 'failed api %s\n' % api
                     msg += 'input query %s\n' % input_query
                     msg += 'existing query %s\n' % exist_query
                     msg += 'Unable to look-up existing query and extract '
@@ -281,9 +275,7 @@ class DASAbstractService(object):
                         minval = int(val)
                         args[key] = minval
                     else:
-                        msg  = 'DASAbstractService::inspect_params, API=%s'\
-                                % api
-                        msg += ' does not support operator %s' % oper
+                        msg = '%s does not support operator %s' % (api, oper)
                         raise Exception(msg)
         return args
 
@@ -349,10 +341,8 @@ class DASAbstractService(object):
         else:
             msg = 'Unsupported data format="%s", API="%s"' % (dformat, api)
             raise Exception(msg)
-        msg  = "DASAbstractService::%s::parser, api=%s, format=%s " \
-                % (self.name, api, dformat)
-        msg += "prim_key=%s yield %s rows" \
-                % (prim_key, counter)
+        msg  = "api=%s, format=%s " % (api, dformat)
+        msg += "prim_key=%s yield %s rows" % (prim_key, counter)
         self.logger.info(msg)
 
     def translator(self, api, genrows):
@@ -376,8 +366,7 @@ class DASAbstractService(object):
                     yield row
             else:
                 yield {prim_key:row}
-        msg = "DASAbstractService::%s::translator yield %s rows" \
-                % (self.name, count)
+        msg = "yield %s rows" % count
         self.logger.debug(msg)
 
     def set_misses(self, query, api, genrows):
@@ -402,8 +391,7 @@ class DASAbstractService(object):
             val = ddict.get(key)
             if  spec[key] != val and key not in keys2adjust:
                 keys2adjust.append(key)
-        msg   = "DASAbstractService::%s::set_misses, adjust keys %s"\
-                % (self.name, keys2adjust)
+        msg   = "adjust keys %s" % keys2adjust
         self.logger.debug(msg)
         count = 1
         if  keys2adjust:
@@ -457,8 +445,7 @@ class DASAbstractService(object):
             for row in genrows:
                 yield row
                 count += 1
-        msg   = "DASAbstractService::%s::set_misses yield %s rows"\
-                % (self.name, count)
+        msg   = "yield %s rows" % count
         self.logger.debug(msg)
             
     def api(self, query):
@@ -468,8 +455,7 @@ class DASAbstractService(object):
         call. All results are stored into the DAS cache along with
         api call inserted into Analytics DB.
         """
-        self.logger.info('DASAbstractService::%s::api(%s)' \
-                % (self.name, query))
+        self.logger.info('query=%s' % query)
         result  = False
         genrows = self.apimap(query)
         if  not genrows:
@@ -540,7 +526,7 @@ class DASAbstractService(object):
         self.logger.info("\n")
         for api, value in self.map.items():
             expire = value['expire']
-            format = value['format']
+            iformat = value['format']
             url    = self.adjust_url(value['url'], instance)
             args   = dict(value['params']) # make new copy, since we'll adjust
             wild   = value.get('wild_card', '*')
@@ -563,8 +549,7 @@ class DASAbstractService(object):
                     break # condition key does not map into API params
             self.adjust_params(api, args, instance)
             if  not found:
-                msg = "--- %s rejects API %s, parameters don't match"\
-                        % (self.name, api)
+                msg = "--- rejects API %s, parameters don't match" % api
                 self.logger.info(msg)
                 msg = 'args=%s' % args
                 self.logger.debug(msg)
@@ -576,8 +561,7 @@ class DASAbstractService(object):
             # check that there is no "required" parameter left in args,
             # since such api will not work
             if 'required' in args.values():
-                msg = '--- %s rejects API %s, parameter is required'\
-                        % (self.name, api)
+                msg = '--- rejects API %s, parameter is required' % api
                 self.logger.info(msg)
                 msg = 'args=%s' % args
                 self.logger.debug(msg)
@@ -602,8 +586,8 @@ class DASAbstractService(object):
 
             prim_key = self.dasmapping.primary_key(self.name, api)
             if  prim_key not in skeys:
-                msg = "--- %s rejects API %s, primary_key %s is not selected"\
-                        % (self.name, api, prim_key)
+                msg = "--- rejects API %s, primary_key %s is not selected"\
+                        % (api, prim_key)
                 self.logger.info(msg)
                 continue
 
@@ -612,11 +596,11 @@ class DASAbstractService(object):
             msg = 'args=%s' % args
             self.logger.debug(msg)
 
-            msg  = "DASAbstractService::apimap yield "
+            msg  = "yield "
             msg += "system ***%s***, url=%s, api=%s, args=%s, format=%s, " \
-                % (self.name, url, api, args, format)
+                % (self.name, url, api, args, iformat)
             msg += "expire=%s, wild_card=%s" \
                 % (expire, wild)
             self.logger.debug(msg)
 
-            yield url, api, args, format, expire
+            yield url, api, args, iformat, expire

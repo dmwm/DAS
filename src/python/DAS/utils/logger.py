@@ -3,17 +3,69 @@
 #pylint: disable-msg=C0301,C0103
 
 """
-General purpose DAS logger class
+General purpose DAS logger class. 
+PrintManager class is based on the following work
+http://stackoverflow.com/questions/245304/how-do-i-get-the-name-of-a-function-or-method-from-within-a-python-function-or-m
+http://stackoverflow.com/questions/251464/how-to-get-the-function-name-as-string-in-python
 """
 
-__revision__ = "$Id: logger.py,v 1.12 2010/04/14 20:29:59 valya Exp $"
-__version__ = "$Revision: 1.12 $"
 __author__ = "Valentin Kuznetsov"
 
-import os
 import logging
 import logging.handlers
-import cherrypy
+import inspect
+import functools
+
+def funcname():
+    """Extract caller name from a stack"""
+    return inspect.stack()[1][3]
+
+def print_msg(msg, cls, prefix=''):
+    """
+    Print message in a form cls::caller msg, suitable for class usage
+    """
+    print "%s %s:%s %s" % (prefix, cls, inspect.stack()[2][3], msg)
+
+class PrintManager(object):
+    """PrintManager class"""
+    def __init__(self, name='function', verbose=0):
+        super(PrintManager, self).__init__()
+        self.name      = name
+        if  verbose == None or verbose == False:
+            verbose = 0
+        if  verbose == True:
+            verbose = 1
+        self.verbose   = verbose
+        self.infolog   = \
+        functools.partial(print_msg, cls=self.name, prefix='INFO')
+        self.debuglog  = \
+        functools.partial(print_msg, cls=self.name, prefix='DEBUG')
+        self.warnlog   = \
+        functools.partial(print_msg, cls=self.name, prefix='WARNING')
+        self.errlog    = \
+        functools.partial(print_msg, cls=self.name, prefix='ERROR')
+
+    def info(self, msg):
+        """print info messages"""
+        msg = str(msg)
+        if  self.verbose:
+            self.infolog(msg)
+
+    def debug(self, msg):
+        """print debug messages"""
+        msg = str(msg)
+        if  self.verbose > 1:
+            self.debuglog(msg)
+
+    def warning(self, msg):
+        """print warning messages"""
+        msg = str(msg)
+        self.warnlog(msg)
+
+    def error(self, msg):
+        """print warning messages"""
+        msg = str(msg)
+        self.errlog(msg)
 
 class NullHandler(logging.Handler):
     """Do nothing logger"""
@@ -24,150 +76,6 @@ class NullHandler(logging.Handler):
         "This method does nothing."
         pass
 
-class DummyLogger(object):
-    """
-    Base logger class
-    """
-    def __init__(self):
-        pass
-
-    def error(self, msg):
-        """
-        logger error method
-        """
-        pass
-
-    def info(self, msg):
-        """
-        logger info method
-        """
-        pass
-
-    def debug(self, msg):
-        """
-        logger debug method
-        """
-        pass
-
-    def warning(self, msg):
-        """
-        logger warning method
-        """
-        pass
-
-    def exception(self, msg):
-        """
-        logger expception method
-        """
-        pass
-
-    def critical(self, msg):
-        """
-        logger critical method
-        """
-        pass
-
-class DASLogger(object):
-    """
-    DAS base logger class
-    """
-    def __init__(self, logfile=None, verbose=0, name='DAS',
-                 format='%(name)s %(levelname)s %(message)s'):
-        self.verbose  = int(verbose)
-        self.logfile  = logfile
-        self.name     = name
-        self.logger   = logging.getLogger(self.name)
-        self.logger.handlers = [] # remove all existing handlers
-        self.loglevel = logging.INFO
-        self.addr     = repr(self).split()[-1]
-        self.logname  = name
-        if  logfile:
-            self.dir, _  = os.path.split(logfile)
-            self.logname = logfile
-            try:
-                if  not os.path.isdir(self.dir):
-                    os.makedirs(self.dir)
-                if  not os.path.isfile(self.logname):
-                    fds = open(self.logname, 'a')
-                    fds.close()
-            except:
-                msg = "Not enough permissions to create %s"\
-                       % self.logfile 
-                raise Exception(msg)
-        if  self.logfile:
-            hdlr = logging.handlers.TimedRotatingFileHandler( \
-                      self.logname, 'midnight', 1, 7 )
-        else:
-            hdlr = logging.StreamHandler()
-        formatter = logging.Formatter(format)
-        hdlr.setFormatter( formatter )
-        self.logger.addHandler(hdlr)
-        self.level(verbose)
-        self.handler = hdlr
-
-    def level(self, level):
-        """
-        Set logging level
-        """
-        self.verbose = level
-        if  level == 1:
-            self.loglevel = logging.INFO
-        elif level == 2:
-            self.loglevel = logging.DEBUG
-        elif level >= 2:
-            self.loglevel = logging.NOTSET
-        else:
-            self.loglevel = logging.ERROR
-        self.logger.setLevel(self.loglevel)
-
-    def error(self, msg='N/A'):
-        """
-        Write given message to the logger at error logging level
-        """
-        msg = str(msg)
-        msg = self.addr + ' ' + msg
-        self.logger.error(msg)
-
-    def info(self, msg='N/A'):
-        """
-        Write given message to the logger at info logging level
-        """
-        msg = str(msg)
-        msg = self.addr + ' ' + msg
-        self.logger.info(msg)
-
-    def debug(self, msg='N/A'):
-        """
-        Write given message to the logger at debug logging level
-        """
-        msg = str(msg)
-        msg = self.addr + ' ' + msg
-        self.logger.debug(msg)
-
-    def warning(self, msg='N/A'):
-        """
-        Write given message to the logger at warning logging level
-        """
-        msg = str(msg)
-        msg = self.addr + ' ' + msg
-        self.logger.warn(msg)
-
-    def exception(self, msg='N/A'):
-        """
-        Write given message to the logger at exception logging level
-        """
-        msg = str(msg)
-        msg = self.addr + ' ' + msg
-        self.logger.error(msg)
-
-    def critical(self, msg='N/A'):
-        """
-        Write given message to the logger at critical logging level
-        """
-        msg = str(msg)
-        msg = self.addr + ' ' + msg
-        self.logger.critical(msg)
-
 def set_cherrypy_logger(hdlr, level):
     """set up logging for CherryPy"""
     logging.getLogger('cherrypy.error').setLevel(level)
@@ -175,8 +83,3 @@ def set_cherrypy_logger(hdlr, level):
 
     logging.getLogger('cherrypy.error').addHandler(hdlr)
     logging.getLogger('cherrypy.access').addHandler(hdlr)
-
-def empty_str():
-    """Return empty string"""
-    return ('')
-

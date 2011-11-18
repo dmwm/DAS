@@ -14,7 +14,7 @@ import time
 # DAS modules
 from DAS.utils.utils import genkey
 from DAS.core.das_core import DASCore
-from DAS.utils.logger import DASLogger, DummyLogger
+from DAS.utils.logger import PrintManager
 from DAS.utils.threadpool import ThreadPool
 
 class DASCacheMgr(object):
@@ -29,8 +29,7 @@ class DASCacheMgr(object):
         """
         logfile = config['logfile']
         verbose = config['verbose']
-        name    = 'DASCacheMgr'
-        self.logger = DASLogger(logfile=logfile, verbose=verbose, name=name)
+        self.logger = PrintManager('DASCacheMgr', verbose)
         self.qmap   = {} # map of hash:query
 
     def add(self, query):
@@ -39,13 +38,13 @@ class DASCacheMgr(object):
             return "waiting in queue"
         qhash = genkey(str(query))
         self.qmap[qhash] = query
-        self.logger.info("::add, added %s, hash=%s, queue size=%s" \
+        self.logger.info("added %s, hash=%s, queue size=%s" \
                 % (query, qhash, len(self.qmap.keys())))
         return "requested"
 
     def remove(self, qhash):
         """Remove query from a queue"""
-        msg = "::remove, hash=%s, query=%s, queue size=%s" \
+        msg = "hash=%s, query=%s, queue size=%s" \
                 % (qhash, self.qmap[qhash], len(self.qmap.keys()))
         self.logger.info(msg)
         try:
@@ -58,11 +57,7 @@ def worker(query, verbose=None):
     """
     Invokes DAS core call to update the cache for provided query
     """
-    if  verbose:
-        logger = DASLogger(verbose=verbose)
-    else:
-        logger = DummyLogger()
-    dascore = DASCore(logger=logger, nores=True)
+    dascore = DASCore(nores=True)
     status  = dascore.call(query)
 
 def thread_monitor(cachemgr, config):
@@ -77,7 +72,7 @@ def thread_monitor(cachemgr, config):
     nprocs   = config.get('nprocs')
     mypool   = ThreadPool(nprocs)
     name     = 'THREAD_MONITOR'
-    logger   = DASLogger(logfile=logfile, verbose=verbose, name=name)
+    logger   = PrintManager('thread_monitor', verbose)
     time.sleep(2) # sleep to allow main thread with DAS core take off
     logger.info("started with %s threads" % nprocs)
     while True: 

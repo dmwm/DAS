@@ -19,9 +19,10 @@ from DAS.core.das_ply import DASPLY, ply2mongo
 from DAS.utils.utils import adjust_value, convert2date, das_dateformat
 from DAS.utils.utils import print_exc
 from DAS.utils.regex import key_attrib_pattern, last_key_pattern
+from DAS.utils.regex import int_number_pattern, float_number_pattern
+from DAS.utils.logger import PrintManager
 from DAS.core.das_parsercache import DASParserDB, PARSERCACHE_NOTFOUND
 from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
-from DAS.utils.regex import int_number_pattern, float_number_pattern
 import DAS.utils.jsonwrapper as json
 
 def decompose(query):
@@ -73,7 +74,7 @@ class QLManager(object):
         self.operators   = list(das_operators())
         self.daskeys     = list(das_special_keys())
         self.verbose     = config['verbose']
-        self.logger      = config['logger']
+        self.logger      = PrintManager('QLManger', self.verbose)
         for val in self.daskeysmap.values():
             for item in val:
                 self.daskeys.append(item)
@@ -116,7 +117,7 @@ class QLManager(object):
         # PLY parser, otherwise it fails to parse.
         self.dasply.build()
         if  self.verbose:
-            msg = "QLManager::mongo_query, input query='%s'" % query
+            msg = "input query='%s'" % query
             self.logger.debug(msg)
             self.dasply.test_lexer(query)
         if  self.enabledb:
