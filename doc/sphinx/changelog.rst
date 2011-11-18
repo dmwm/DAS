@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Fix unique filter usage in das client, 
+    add additions to convert timestamp/size into human readable format, ticket #2792
   - Retire DASLogger in favor of new PrintManager
   - code re-factoring to address duplicates issue; ticket #2848
   - add dataset/block/replica presence, according to ticket #2858; made changes to maps
