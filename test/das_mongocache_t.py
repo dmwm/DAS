@@ -52,6 +52,14 @@ class testDASMongocache(unittest.TestCase):
         expect = decode_mongo_query(result)
         self.assertEqual(expect, query)
 
+        pat = re.compile('/test.*')
+        query  = {'fields': ['block'], 'spec': {'dataset.name': pat}}
+        result = encode_mongo_query(query)
+        expect = decode_mongo_query(result)
+        self.assertEqual(expect['fields'], query['fields'])
+        self.assertEqual(expect['spec']['dataset.name'].pattern,
+                         query['spec']['dataset.name'].pattern)
+
     def test_loose(self):
         """Test loose function"""
         query  = {'fields': ['block'], 'spec': {}}

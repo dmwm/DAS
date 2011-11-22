@@ -207,6 +207,8 @@ class QLManager(object):
         Return a map of found services and their apis.
         """
         skeys, cond = decompose(query)
+        if  cond.has_key('system'):
+            del cond['system'] # ignore request for system
         if  not skeys:
             skeys = []
         if  isinstance(skeys, str):

@@ -7,6 +7,12 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - match nresults with get_from_cache method, i.e. apply similar techniques
+    for different types of DAS queries, w/ filters, aggregators, etc.
+  - properly encode/decode DAS queries with value patterns
+  - fix issue with system keyword
+  - allow usage of combined dbs_phedex service regardless of DBS,
+    now works with both DBS2 and DBS3
   - Fix unique filter usage in das client, 
     add additions to convert timestamp/size into human readable format, ticket #2792
   - Retire DASLogger in favor of new PrintManager

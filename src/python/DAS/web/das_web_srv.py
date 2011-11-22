@@ -580,6 +580,9 @@ class DASWebService(DASWebManager):
         if  not self.adjust:
             return
         uinput = kwargs.get('input', '')
+        query_part = uinput.split('|')[0]
+        if  query_part == 'queries' or query_part == 'records':
+            return
         new_input = free_text_parser(uinput, self.daskeys)
         if  new_input == uinput:
             selkey = choose_select_key(uinput, self.daskeys, 'dataset')

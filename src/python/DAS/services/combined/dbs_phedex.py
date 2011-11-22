@@ -22,20 +22,35 @@ from   DAS.utils.das_db import db_connection, create_indexes
 from   DAS.utils.url_utils import getdata
 from   DAS.web.tools import exposejson
 from   DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
+from   DAS.utils.utils import get_key_cert
 import DAS.utils.jsonwrapper as json
 
 PAT = re.compile("^T[0-3]_")
         
-def datasets_dbs3(urls, verbose=0):
+def datasets(urls, verbose=0):
     """
     Retrieve list of datasets from DBS and compare each of them
     wrt list in MongoDB.
     """
+    url     = urls.get('dbs')
+    if  url.find('servlet') != -1: # DBS2 url
+        gen = datasets_dbs2(urls, verbose)
+    elif url.find('cmsweb') != -1 and url.find('DBSReader') != -1:
+        gen = datasets_dbs3(urls, verbose)
+    else:
+        raise Exception('Unsupport DBS URL, url=%s' % url)
+    for row in gen:
+        yield row
+
+def datasets_dbs3(urls, verbose=0):
+    """DBS3 implementation of datasets function"""
     headers = {'Accept':'application/json;text/json'}
     records = []
     url     = urls.get('dbs')
     params  = {'detail':'True', 'dataset_access_type':'PRODUCTION'}
-    data, _ = getdata(url, params, headers, verbose=verbose)
+    ckey, cert = get_key_cert()
+    data, _ = getdata(url, params, headers, verbose=verbose,
+                ckey=ckey, cert=cert, doseq=False)
     records = json.load(data)
     data.close()
     data = {}
@@ -52,11 +67,8 @@ def datasets_dbs3(urls, verbose=0):
         for rec in dataset_info(urls, data):
             yield rec
 
-def datasets(urls, verbose=0):
-    """
-    Retrieve list of datasets from DBS and compare each of them
-    wrt list in MongoDB.
-    """
+def datasets_dbs2(urls, verbose=0):
+    """DBS2 implementation of datasets function"""
     headers = {'Accept':'application/xml;text/xml'}
     records = []
     url     = urls.get('dbs')

@@ -12,13 +12,12 @@ It performs the following tasks:
 - pass results to presentation layer (CLI or WEB)
 """
 
-__revision__ = "$Id: das_core.py,v 1.80 2010/05/04 21:13:39 valya Exp $"
-__version__ = "$Revision: 1.80 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
 import time
+import itertools
 
 # DAS modules
 from DAS.core.das_ql import das_operators, das_special_keys
@@ -293,11 +292,6 @@ class DASCore(object):
         query, _dquery = convert2pattern(loose(query))
         return self.rawcache.incache(query, collection='merge')
 
-    def nresults(self, orig_query, coll='merge'):
-        """Return total number of results (count) for provided query"""
-        query = self.rawcache.execution_query(orig_query)
-        return self.rawcache.nresults(query, coll)
-
     def worker(self, srv, query):
         """Main worker function which call data-srv call function"""
         self.logger.info('##### %s ######\n' % srv)
@@ -327,8 +321,10 @@ class DASCore(object):
         # this also guarantees the query in question hits
         # analytics
         query  = self.adjust_query(query, add_to_analytics)
+        self.logger.info('input query=%s' % query)
         if  query['spec'].has_key('system'):
             system = query['spec']['system']
+            query['system'] = system
             if  isinstance(system, str) or isinstance(system, unicode):
                 services = [system]
             elif isinstance(system, list):
@@ -417,6 +413,24 @@ class DASCore(object):
         das_timer('DASCore::call', self.verbose)
         return 1
 
+    def nresults(self, orig_query, coll='merge'):
+        """
+        Return total number of results (count) for provided query
+        Code should match body of get_from_cache method.
+        """
+        query       = self.rawcache.execution_query(orig_query)
+        aggregators = query.get('aggregators', None)
+        mapreduce   = query.get('mapreduce', None)
+        fields      = query.get('fields', None)
+        spec        = query.get('spec', {})
+        if  mapreduce:
+            return len([1 for _ in self.rawcache.map_reduce(mapreduce, spec)])
+        elif aggregators:
+            return len(query['aggregators'])
+        elif isinstance(fields, list) and 'queries' in fields:
+            return len([1 for _ in self.get_queries(query)])
+        return self.rawcache.nresults(query, coll)
+
     def get_from_cache(self, orig_query, idx=0, limit=None, skey=None,
                         sorder='asc', collection='merge'):
         """
@@ -432,6 +446,7 @@ class DASCore(object):
         aggregators = query.get('aggregators', None)
         mapreduce   = query.get('mapreduce', None)
         fields      = query.get('fields', None)
+        spec        = query.get('spec', {})
 
         if  mapreduce:
             res = self.rawcache.map_reduce(mapreduce, spec)
@@ -446,7 +461,7 @@ class DASCore(object):
                 [{'_id':_id, 'function': func, 'key': key, 'result': data}]
                 _id += 1
         elif isinstance(fields, list) and 'queries' in fields:
-            res = self.get_queries(query)
+            res = itertools.islice(self.get_queries(query), idx, idx+limit)
         else:
             res = self.rawcache.get_from_cache(query, idx, limit, skey, \
                     sorder, collection=collection)

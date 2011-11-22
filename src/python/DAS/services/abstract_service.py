@@ -485,6 +485,7 @@ class DASAbstractService(object):
                                           api, args, expire)
             headers = make_headers(dformat)
             data, expire = self.getdata(url, args, expire, headers)
+            self.logger.info("%s expire %s" % (api, expire))
             rawrows = self.parser(query, dformat, data, api)
             dasrows = self.translator(api, rawrows)
             dasrows = self.set_misses(query, api, dasrows)

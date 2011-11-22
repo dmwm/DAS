@@ -98,7 +98,7 @@ def loose(query):
         newspec[key] = val
     return dict(spec=newspec, fields=fields)
 
-def encode_mongo_query(query):
+def encode_mongo_query(query, pattern=False):
     """
     Encode mongo query into storage format. MongoDB does not allow storage of
     dict with keys containing "." or MongoDB operators, e.g. $lt. So we
@@ -121,8 +121,12 @@ def encode_mongo_query(query):
     return_query = dict(query)
     speclist = []
     for key, val in return_query.pop('spec').items():
-        val = json.dumps(val)
-        speclist.append({"key":key, "value":val})
+        if  str(type(val)) == "<type '_sre.SRE_Pattern'>":
+            val = json.dumps(val.pattern)
+            speclist.append({"key":key, "value":val, "pattern":1})
+        else:
+            val = json.dumps(val)
+            speclist.append({"key":key, "value":val})
     return_query['spec'] = speclist
     return return_query
 
@@ -133,6 +137,8 @@ def decode_mongo_query(query):
     spec = {}
     for item in query.pop('spec'):
         val = json.loads(item['value'])
+        if  item.has_key('pattern'):
+            val = re.compile(val)
         spec.update({item['key'] : val})
     query['spec'] = spec
     return query
@@ -521,6 +527,9 @@ class DASMongocache(object):
         spec = query.get('spec', {})
         if  spec.has_key('system'):
             del spec['system']
+        if  query.has_key('system'):
+            spec.update({'das.system' : query['system']})
+            del query['system']
         if  spec == dict(records='*'):
             spec  = {} # we got request to get everything
             query['spec'] = spec

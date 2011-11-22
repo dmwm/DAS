@@ -219,7 +219,7 @@ class CMSRepresentation(DASRepresentation):
         page = ''
         if  row and row.has_key('das') and row['das'].has_key('primary_key'):
             pkey = row['das']['primary_key']
-            if  pkey:
+            if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
                 try:
                     mkey = pkey.split('.')[0]
                     rowkeys = [k for k in \
@@ -231,6 +231,8 @@ class CMSRepresentation(DASRepresentation):
                     page = self.templatepage('das_filters', \
                             filters=dflt, das_keys=rowkeys)
                 except Exception as exc:
+                    msg = "Fail to pkey.split('.') for pkey=%s" % pkey
+                    print msg
                     print_exc(exc)
                     pass
         return page
@@ -388,7 +390,10 @@ class CMSRepresentation(DASRepresentation):
                     row['das']['system'] == [u'combined']:
                     if  lkey:
                         rowsystems = DotDict(row).get('%s.combined' % lkey) 
-                        systems = self.systems(rowsystems)
+                        try:
+                            systems = self.systems(rowsystems)
+                        except TypeError as _err:
+                            systems = self.systems(['combined'])
             except KeyError:
                 systems = "" # we don't store systems for aggregated records
             except Exception as exc:
