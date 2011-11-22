@@ -102,7 +102,7 @@ def parse_filter(spec, flt):
     Parse given filter and return MongoDB key/value dictionary.
     Be smart not to overwrite spec condition of DAS query.
     """
-    if  flt.find('=') != -1 and \
+    if  flt.find('=') != -1 and flt.find('!=') == -1 and\
        (flt.find('<') == -1 and flt.find('>') == -1):
         key, val = flt.split('=')
         if  int_number_pattern.match(str(val)):
@@ -113,6 +113,17 @@ def parse_filter(spec, flt):
             if  val.find('*') != -1:
                 val = re.compile('%s' % val.replace('*', '.*'))
         return {key:val}
+    elif flt.find('!=') != -1 and \
+       (flt.find('<') == -1 and flt.find('>') == -1):
+        key, val = flt.split('!=')
+        if  int_number_pattern.match(str(val)):
+            val = int(val)
+        if  float_number_pattern.match(str(val)):
+            val = float(val)
+        if  isinstance(val, str) or isinstance(val, unicode):
+            if  val.find('*') != -1:
+                val = re.compile('%s' % val.replace('*', '.*'))
+        return {key: {'$ne': val}}
     elif  flt.find('<=') != -1:
         key, val = flt.split('<=')
         if  int_number_pattern.match(str(val)):

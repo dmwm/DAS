@@ -194,8 +194,8 @@ class QLManager(object):
                 if  set(keys) & set(daskeys) and service not in slist:
                     slist.append(service)
         # look-up special key condition
-        if  cond.has_key('system'):
-            requested_system = cond['system']
+        requested_system = query.get('system', None)
+        if  requested_system:
             if  isinstance(requested_system, str):
                 requested_system = [requested_system]
             return list( set(slist) & set(requested_system) )
@@ -207,8 +207,6 @@ class QLManager(object):
         Return a map of found services and their apis.
         """
         skeys, cond = decompose(query)
-        if  cond.has_key('system'):
-            del cond['system'] # ignore request for system
         if  not skeys:
             skeys = []
         if  isinstance(skeys, str):

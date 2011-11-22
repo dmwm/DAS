@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - add support for != operator in DAS filters and precise match of
+    value in array, via filter=[X] syntax, ticket #2884
   - match nresults with get_from_cache method, i.e. apply similar techniques
     for different types of DAS queries, w/ filters, aggregators, etc.
   - properly encode/decode DAS queries with value patterns

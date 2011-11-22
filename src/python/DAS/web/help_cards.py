@@ -42,7 +42,7 @@ For more details please read DAS
 
     card = """
 <h3 class="big">Help: DAS filters</h3>
-Do you know that DAS supports filters? You can apply
+DAS supports <b>grep</b> and <b>unique</b> filters. You can apply
 <b>grep</b> filter to select part of the DAS record. For example,
 if you look for a given dataset pattern, e.g. dataset=*RelVal*, 
 you can select number of events as simple as
@@ -51,7 +51,7 @@ dataset=*RelVal* | grep dataset.nevents
 </pre>
 Multiple filters can be applied together, for instance
 <pre>
-dataset=*RelVal* | grep dataset.name, dataset.nevents, dataset.nfiles
+dataset=*RelVal* | unique | grep dataset.name, dataset.nevents
 </pre>
     """
     card += hide
@@ -59,11 +59,12 @@ dataset=*RelVal* | grep dataset.name, dataset.nevents, dataset.nfiles
 
     card = """
 <h3 class="big">Help: DAS filters and conditions</h3>
-Do you know that DAS filters supports conditions? Their usage is trivial:
+DAS supports the following condition operators in filters:
+&lt;, &gt;, != and =. Their usage is trivial:
 <pre>
 file dataset=/a/b/c | grep file.name, file.size>3000000, file.size<6000000
 </pre>
-The DAS filters support: &lt;, &gt; and =. The usage of wild-card
+The usage of wild-card
 is allowed for string patterns. For example, you can select record
 attribute and apply a wild-card condition at the same time:
 <pre>
@@ -118,9 +119,9 @@ records | grep file.name
 
     card = """
 <h3 class="big">Help: DAS command line interface</h3>
-Do you know that you can use DAS from your terminal? Go to
-<b><a href="%s/cli">CLI</a></b> link and save it on your disk, e.g. as <em>das_cli</em>.
-Then you can use it as simple as
+DAS CLI tools is available at <b><a href="%s/cli">CLI</a></b>.
+You may download and save it on your disk, e.g. as <em>das_cli</em>,
+and use it in the following way:
 <pre>
 python das_cli --query="dataset=/ExpressPhysics*"
 </pre>

@@ -217,6 +217,7 @@ class DASCore(object):
         """
         Get results either from cache or from explicit call
         """
+        self.logger.info('input query=%s' % query)
         results = []
         query   = self.adjust_query(query)
         # check if we have any service which cover the query
@@ -314,6 +315,7 @@ class DASCore(object):
         Return status 0/1 depending on success of the calls, can be
         used by workers on cache server.
         """
+        self.logger.info('input query=%s' % query)
         das_timer('DASCore::call', self.verbose)
         services = []
         # adjust query first, since rawcache.similar_queries
@@ -321,10 +323,8 @@ class DASCore(object):
         # this also guarantees the query in question hits
         # analytics
         query  = self.adjust_query(query, add_to_analytics)
-        self.logger.info('input query=%s' % query)
-        if  query['spec'].has_key('system'):
-            system = query['spec']['system']
-            query['system'] = system
+        if  query.has_key('system'):
+            system = query['system']
             if  isinstance(system, str) or isinstance(system, unicode):
                 services = [system]
             elif isinstance(system, list):
@@ -333,7 +333,6 @@ class DASCore(object):
                 msg = 'Unsupported system=%s type=%s in DAS query' \
                         % (system, type(system))
                 raise Exception(msg)
-            del query['spec']['system']
         spec   = query.get('spec')
         fields = query.get('fields')
         if  fields == ['records']:

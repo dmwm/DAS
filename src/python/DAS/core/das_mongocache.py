@@ -89,6 +89,8 @@ def loose(query):
     """
     spec    = query.get('spec', {})
     fields  = query.get('fields', None)
+    system  = query.get('system', None)
+    inst    = query.get('instance', None)
     newspec = {}
     for key, val in spec.items():
         if  key != '_id' and \
@@ -96,7 +98,12 @@ def loose(query):
             if  val[-1] != '*':
                 val += '*' # add pattern
         newspec[key] = val
-    return dict(spec=newspec, fields=fields)
+    lquery = dict(spec=newspec, fields=fields)
+    if  system:
+        lquery.update({'system': system})
+    if  inst:
+        lquery.update({'instance': inst})
+    return lquery
 
 def encode_mongo_query(query, pattern=False):
     """
@@ -154,6 +161,7 @@ def convert2pattern(query):
     filters = query.get('filters', None)
     aggs    = query.get('aggregators', None)
     inst    = query.get('instance', None)
+    system  = query.get('system', None)
     newspec = {}
     verspec = {}
     for key, val in spec.items():
@@ -200,6 +208,9 @@ def convert2pattern(query):
     if  inst:
         newquery.update({'instance': inst})
         newdquery.update({'instance': inst})
+    if  system:
+        newquery.update({'system': system})
+        newdquery.update({'system': system})
     return newquery, newdquery
 
 def compare_dicts(input_dict, exist_dict):
@@ -525,11 +536,6 @@ class DASMongocache(object):
             fields = None # look-up all records
             query['fields'] = None # reset query field part
         spec = query.get('spec', {})
-        if  spec.has_key('system'):
-            del spec['system']
-        if  query.has_key('system'):
-            spec.update({'das.system' : query['system']})
-            del query['system']
         if  spec == dict(records='*'):
             spec  = {} # we got request to get everything
             query['spec'] = spec
@@ -566,11 +572,6 @@ class DASMongocache(object):
             for dasfilter in filters:
                 if  dasfilter == 'unique':
                     continue
-                for oper in ['>', '<', '=']:
-                    if  dasfilter.find(oper) != -1:
-                        fname = dasfilter.split(oper)[0]
-                        if  fname not in fields and fname not in new_fields:
-                            new_fields.append(fname)
                 if  dasfilter not in fields and \
                     dasfilter not in new_fields:
                     if  dasfilter.find('=') == -1 and dasfilter.find('<') == -1\
@@ -589,8 +590,10 @@ class DASMongocache(object):
                 if  filter_dict:
                     query['spec'].update(filter_dict)
 
+        if  query.has_key('system'):
+            spec.update({'das.system' : query['system']})
         msg = 'execution query %s' % query
-        self.logger.debug(msg)
+        self.logger.info(msg)
         return query
 
     def remove_expired(self, collection):
@@ -745,6 +748,9 @@ class DASMongocache(object):
                     prim_keys.append(prim_key)
             if  prim_keys:
                 spec.update({'das.primary_key': {'$in': prim_keys}})
+        system = query.get('system', None)
+        if  system:
+            spec.update({'das.system': system})
         res    = col.find(spec=spec, fields=fields).count()
         msg    = "(%s, coll=%s) found %s results" % (query, collection, res)
         self.logger.info(msg)
@@ -911,9 +917,10 @@ class DASMongocache(object):
                 spec = {'das_id': str(row['_id'])}
                 for row in self.col.find(spec, fields):
                     err += 1
-                    msg = 'For query %s, found %s' % (orig_query, row)
-                    print dastimestamp('DAS WARNING '), msg
-                    yield row
+                    msg = '\nfor query %s\nfound %s' % (orig_query, row)
+                    prf = 'DAS WARNING, monogocache:get_from_cache '
+                    print dastimestamp(prf), msg
+#                    yield row
 
             if  err:
                 msg = "found %s error record(s)" % counter

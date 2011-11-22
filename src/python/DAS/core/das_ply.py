@@ -118,7 +118,7 @@ class DASPLY(object):
     ]
 
     t_EQUAL = r'='
-    t_FILTER_OPERATOR = r'<=|>=|>|<'
+    t_FILTER_OPERATOR = r'!=|<=|>=|>|<'
     t_PIPE = r'\|'
     t_COMMA    = r'\,'
     t_LSQUARE = r'\['
@@ -368,6 +368,7 @@ class DASPLY(object):
                   | DASKEY EQUAL NUMBER
                   | DASKEY FILTER_OPERATOR VALUE
                   | DASKEY FILTER_OPERATOR NUMBER
+                  | DASKEY_ATTR EQUAL LSQUARE VALUE RSQUARE
                   | DASKEY_ATTR EQUAL VALUE
                   | DASKEY_ATTR EQUAL NUMBER
                   | DASKEY_ATTR FILTER_OPERATOR VALUE
@@ -474,10 +475,14 @@ def ply2mongo(query):
                 mongodict['mapreduce'] = name
     fields = []
     spec   = {}
-    inst   = ""
+    inst   = None
+    system = None
     for _, name, oper, val in query['keys']:
         if  name == 'instance':
             inst = val
+            continue
+        if  name == 'system':
+            system = val
             continue
         dasname = name 
         if  oper and val: # real condition
@@ -528,6 +533,8 @@ def ply2mongo(query):
     mongodict['spec'] = spec
     if  inst:
         mongodict['instance'] = inst
+    if  system:
+        mongodict['system'] = system
     if  len(spec.keys()) == 1 and spec.values() == ['*'] and \
         spec.keys()[0] not in ['records', 'queries', 'status']:
         msg = 'Single DAS key with no conditions'
