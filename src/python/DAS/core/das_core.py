@@ -274,7 +274,8 @@ class DASCore(object):
         query  = self.bare_query(query)
         record = self.rawcache.find(query)
         try:
-            if  record:
+            if  record and record.has_key('das') and \
+                record['das'].has_key('status'):
                 status = record['das']['status']
                 return status
         except:
@@ -283,7 +284,8 @@ class DASCore(object):
         similar_query = self.rawcache.similar_queries(query)
         if  similar_query:
             record = self.rawcache.find(similar_query)
-            if  record:
+            if  record and record.has_key('das') and \
+                record['das'].has_key('status'):
                 similar_query_status = record['das']['status']
                 return similar_query_status
         return status
