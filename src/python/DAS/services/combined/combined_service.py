@@ -12,6 +12,11 @@ We use the following definitions for dataset presence:
   divided by total number of files in a dataset
 - block_fraction is a total number of blocks at a site X
   divided by total number of blocks in a dataset
+- block_completion is a total number of blocks fully transferred to site X
+  divided by total number of blocks at a site X
+- replica_fraction (defined in services/phedex/phedex_service.py)
+  is a total number of files at a site X
+  divided by total number of in all block at this site
 """
 __author__ = "Valentin Kuznetsov"
 
@@ -176,26 +181,31 @@ class CombinedService(DASAbstractService):
                 for row in ddict.get('block.replica'):
                     node = row['node']
                     files = int(row['files'])
+                    complete = 1 if row['complete'] == 'y' else 0
                     if  site_info.has_key(node):
                         nfiles = site_info[node]['files'] + files
                         nblks  = site_info[node]['blocks'] + 1
-                        site_info[node] = {'files': nfiles, 'blocks': nblks}
+                        bc_val = site_info[node]['blocks_complete']
+                        b_complete = bc_val+1 if complete else val
                     else:
-                        site_info[node] = {'files': files, 'blocks': 1}
+                        b_complete = 1 if complete else 0
+                        nblks = 1
+                    site_info[node] = {'files': files, 'blocks': nblks,
+                                'blocks_complete': b_complete}
             row = {}
             for key, val in site_info.items():
                 if  totfiles:
-                    nfiles = \
-                    '%5.2f%%' % (100*float(site_info[key]['files'])/totfiles)
+                    nfiles = '%5.2f%%' % (100*float(val['files'])/totfiles)
                 else:
                     nfiles = 'N/A'
                 if  totblocks:
-                    nblks  = \
-                    '%5.2f%%' % (100*float(site_info[key]['blocks'])/totblocks)
+                    nblks  = '%5.2f%%' % (100*float(val['blocks'])/totblocks)
                 else:
                     nblks = 'N/A'
+                ratio = float(val['blocks_complete'])/val['blocks']
+                b_completion = '%5.2f%%' % (100*ratio)
                 row = {'site':{'name':key, 'dataset_fraction': nfiles,
-                        'block_fraction': nblks}}
+                    'block_fraction': nblks, 'block_completion': b_completion}}
                 yield row
 
     def apicall(self, query, url, api, args, dformat, expire):

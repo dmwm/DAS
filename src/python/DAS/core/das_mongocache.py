@@ -724,13 +724,14 @@ class DASMongocache(object):
             self.col.update({'query': enc_query, 'das.system':'das'},
                     {'$set': {'das.status': status}})
 
-    def incache(self, query, collection='merge'):
+    def incache(self, iquery, collection='merge'):
         """
         Check if we have query results in cache, otherwise return null.
         Please note, input parameter query means MongoDB query, please
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
+        query  = deepcopy(iquery)
         self.remove_expired(collection)
         col    = self.mdb[collection]
         query  = adjust_id(query)

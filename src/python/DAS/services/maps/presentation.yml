@@ -146,6 +146,7 @@ site : [
         }, 
         {"das":"site.dataset_fraction", "ui":"Dataset presence"},
         {"das":"site.block_fraction", "ui":"Block presence"},
+        {"das":"site.block_completion", "ui":"Block completion"},
         {"das":"site.replica_fraction", "ui":"File-replica presence"},
         {"das":"site.admin.email", "ui":"Admin Email"},
         {"das":"site.error", "ui":"Error"}, 

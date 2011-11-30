@@ -157,7 +157,7 @@ class DASAbstractService(object):
         qhash = genkey(enc_query)
         dasquery = {'spec': {'das.qhash': qhash, 'das.system': self.name}, 
                     'fields': None}
-        if  self.localcache.incache(query=dasquery, collection='cache'):
+        if  self.localcache.incache(dasquery, collection='cache'):
             msg  = "found records in local cache. Update analytics"
             self.logger.info(msg)
             self.analytics.update(self.name, query)
