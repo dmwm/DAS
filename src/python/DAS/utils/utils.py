@@ -862,6 +862,17 @@ def trace(source):
         print item
         yield item
 
+def gen_counter(gen, cdict):
+    """
+    Trace a generator and count number of records. We use dictionary
+    as persistent data storage and yield back the generator items.
+    """
+    count = 1 if isinstance(cdict, dict) else 0
+    for item in gen:
+        if  count:
+            cdict['counter'] += 1
+        yield item
+
 def access(data, elem):
     """
     Access elements of the dict (data). The element can be supplied in dotted form, e.g.

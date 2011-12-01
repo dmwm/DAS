@@ -15,7 +15,7 @@ import tempfile
 # das modules
 from DAS.utils.utils import cartesian_product, deepcopy, identical_data_records
 from DAS.utils.utils import genresults, transform_dict2list, size_format
-from DAS.utils.utils import sitename, add2dict, map_validator
+from DAS.utils.utils import sitename, add2dict, map_validator, gen_counter
 from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
@@ -30,6 +30,13 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_gen_counter(self):
+        """Tests gen_counter function"""
+        gen  = (i for i in xrange(0, 10))
+        cdict = {'counter':0}
+        gen = gen_counter(gen, cdict)
+        self.assertEqual(len([i for i in gen]), cdict['counter'])
+
     def test_identical_data_records(self):
         """Tests identical_data_records function"""
         old = {'das_id':1, 'test':1, 'das':1}

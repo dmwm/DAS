@@ -29,26 +29,10 @@ class testDASCore(unittest.TestCase):
         connection = Connection(dburi)
         connection.drop_database('das') 
 
-#    def testAddressService(self):
-#        """test DASCore with as address service, via google_maps"""
-#        query  = "city=Ithaca"
-#        query  = self.das.adjust_query(query)
-#        result = self.das.call(query)
-#        expect = 1
-#        self.assertEqual(expect, result)
-
-#        query  = "city=Ithaca | grep city.Placemark.address"
-#        query  = self.das.adjust_query(query)
-#        result = self.das.get_from_cache(query)
-#        result = [r for r in result][0]
-#        result = DotDict(result).get('city.Placemark.address')
-#        expect = 'Ithaca'
-#        self.assertEqual(expect, result.split(',')[0])
-
     def testAggregators(self):
         """test DASCore aggregators via zip service"""
         # test DAS workflow
-        query  = "zip=10000 | grep zip.Placemark.address | count(zip.Placemark.address)"
+        query  = "zip=14850 | grep zip.Placemark.address | count(zip.Placemark.address)"
         query  = self.das.adjust_query(query)
         result = self.das.call(query)
         result = self.das.get_from_cache(query)

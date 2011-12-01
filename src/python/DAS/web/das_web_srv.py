@@ -16,6 +16,7 @@ import urllib
 import urlparse
 import cherrypy
 
+from datetime import date
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from pymongo.objectid import ObjectId
@@ -25,6 +26,7 @@ import DAS
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators, das_filters
 from DAS.core.das_ply import das_parser_error
+from DAS.core.das_mongocache import DASLogdb
 from DAS.utils.utils import getarg
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import genkey, print_exc
@@ -119,18 +121,8 @@ class DASWebService(DASWebManager):
 
     def init(self):
         """Init DAS web server, connect to DAS Core"""
-        capped_size = self.dasconfig['loggingdb']['capped_size']
-        logdbname   = self.dasconfig['loggingdb']['dbname']
-        logdbcoll   = self.dasconfig['loggingdb']['collname']
         try:
-            self.con        = db_connection(self.dburi)
-            if  logdbname not in self.con.database_names():
-                dbname      = self.con[logdbname]
-                options     = {'capped':True, 'size': capped_size}
-                dbname.create_collection('db', **options)
-                self.warning('Created %s.%s, size=%s' \
-                % (logdbname, logdbcoll, capped_size))
-            self.logcol     = self.con[logdbname][logdbcoll]
+            self.logcol     = DASLogdb(self.dasconfig)
             self.reqmgr     = RequestManager(self.dburi, lifetime=self.lifetime)
             self.dasmgr     = DASCore(engine=self.engine)
             self.repmgr     = CMSRepresentation(self.dasconfig, self.dasmgr)
@@ -154,6 +146,7 @@ class DASWebService(DASWebManager):
         """
         qhash = genkey(query)
         doc = dict(qhash=qhash, timestamp=time.time(),
+                date=int(str(date.fromtimestamp(time.time())).replace('-', '')),
                 headers=cherrypy.request.headers,
                 method=cherrypy.request.method,
                 path=cherrypy.request.path_info,
@@ -161,7 +154,7 @@ class DASWebService(DASWebManager):
                 ip=cherrypy.request.remote.ip,
                 hostname=cherrypy.request.remote.name,
                 port=cherrypy.request.remote.port)
-        self.logcol.insert(doc)
+        self.logcol.insert('web', doc)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)

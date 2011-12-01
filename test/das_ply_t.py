@@ -82,7 +82,7 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "site=T1_CH_CERN system=sitedb"
-        mongo = {'fields': None, 'spec': {'site': 'T1_CH_CERN', 'system': 'sitedb'}}
+        mongo = {'fields': ['site'], 'spec': {'site': 'T1_CH_CERN'}, 'system': 'sitedb'}
         self.queries[query] = mongo
 
         query = "zip=10000 | grep zip.Placemark.address | count(zip.Placemark.address)"

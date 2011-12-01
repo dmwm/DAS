@@ -7,6 +7,13 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Move creation of logdb from web server into mongocache (mongodb layer);
+    created new DASLogdb class which will responsible for logdb;
+    add insert/deletion records into logdb;
+    change record in logdb to carry type (e.g. web, cache, merge) and
+    date (in a form of yyyymmdd) for better querying
+  - add gen_counter function to count number of records in generator
+    and yield back records themselves
   - add support for != operator in DAS filters and precise match of
     value in array, via filter=[X] syntax, ticket #2884
   - match nresults with get_from_cache method, i.e. apply similar techniques

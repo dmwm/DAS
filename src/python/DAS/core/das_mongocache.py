@@ -19,6 +19,7 @@ __author__ = "Valentin Kuznetsov"
 import re
 import time
 from   types import GeneratorType
+import datetime
 import itertools
 import fnmatch
 
@@ -28,7 +29,7 @@ from DAS.utils.ddict import convert_dot_notation
 from DAS.utils.utils import genkey, aggregator, unique_filter
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.utils.utils import parse_filters, expire_timestamp
-from DAS.utils.utils import dastimestamp, deepcopy
+from DAS.utils.utils import dastimestamp, deepcopy, gen_counter
 from DAS.utils.das_db import db_connection
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
@@ -423,6 +424,41 @@ def compare_specs(input_query, exist_query):
                     return False
     return True
 
+def logdb_record(coll, doc):
+    "Return logdb record"
+    timestamp = time.time()
+    date = int(str(datetime.date.fromtimestamp(time.time())).replace('-', ''))
+    rec = {'type':coll, 'date':date, 'timestamp':timestamp}
+    rec.update(doc)
+    return rec
+
+class DASLogdb(object):
+    """DASLogdb"""
+    def __init__(self, config):
+        super(DASLogdb, self).__init__()
+        capped_size = config['loggingdb']['capped_size']
+        logdbname   = config['loggingdb']['dbname']
+        logdbcoll   = config['loggingdb']['collname']
+        dburi       = config['mongodb']['dburi']
+        try:
+            conn    = db_connection(dburi)
+            if  logdbname not in conn.database_names():
+                dbname      = conn[logdbname]
+                options     = {'capped':True, 'size': capped_size}
+                dbname.create_collection('db', **options)
+                self.warning('Created %s.%s, size=%s' \
+                % (logdbname, logdbcoll, capped_size))
+            self.logcol     = conn[logdbname][logdbcoll]
+        except Exception as exc:
+            print_exc(exc)
+            self.logcol     = None
+
+    def insert(self, coll, doc):
+        "Insert record to logdb"
+        if  self.logcol:
+            rec = logdb_record(coll, doc)
+            self.logcol.insert(rec)
+
 class DASMongocache(object):
     """
     DAS cache based MongoDB. 
@@ -443,6 +479,8 @@ class DASMongocache(object):
         self.mrcol   = self.mdb[config['dasdb']['mrcollection']]
         self.merge   = self.mdb[config['dasdb']['mergecollection']]
         self.gfs     = db_gridfs(self.dburi)
+
+        self.logdb   = DASLogdb(config)
 
         self.das_internal_keys = ['das_id', 'das', 'cache_id']
 
@@ -1021,6 +1059,7 @@ class DASMongocache(object):
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
         inserted = 0
+        cdict = {'counter':0}
         for pkey in lookup_keys:
             skey = [(pkey, DESCENDING)]
             # lookup all service records
@@ -1040,6 +1079,7 @@ class DASMongocache(object):
             create_indexes(self.merge, skey)
             # insert all records into das.merge using bulk insert
             size = self.cache_size
+            gen  = gen_counter(gen, cdict)
             try:
                 while True:
                     if  self.merge.insert(itertools.islice(gen, size)):
@@ -1059,7 +1099,9 @@ class DASMongocache(object):
                     self.merge.insert(row)
             except InvalidOperation:
                 pass
-        if  not inserted: # we didn't merge anything, it DB look-up failure
+        if  inserted:
+            self.logdb.insert('merge', {'insert': cdict['counter']})
+        else: # we didn't merge anything, it DB look-up failure
             empty_expire = 20 # secs, short enough to expire
             empty_record = {'das':{'expire':empty_expire,
                                    'primary_key':lookup_keys,
@@ -1089,14 +1131,21 @@ class DASMongocache(object):
         lkeys = list(set(k for i in rec for k in i))
         index_list = [(key, DESCENDING) for key in lkeys]
         create_indexes(self.col, index_list)
-        gen = self.update_records(query, results, header)
+        gen  = self.update_records(query, results, header)
+        cdict = {'counter':0}
+        gen  = gen_counter(gen, cdict)
+        inserted = 0
         # bulk insert
         try:
             while True:
-                if  not self.col.insert(itertools.islice(gen, self.cache_size)):
+                if  self.col.insert(itertools.islice(gen, self.cache_size)):
+                    inserted = 1
+                else:
                     break
         except InvalidOperation:
             pass
+        if  inserted:
+            self.logdb.insert('cache', {'insert': cdict['counter']})
 
     def insert_query_record(self, query, header):
         """
@@ -1169,7 +1218,9 @@ class DASMongocache(object):
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
         spec = {'das_id':{'$in':id_list}}
+        self.logdb.insert('merge', {'delete': self.col.find(spec).count()})
         self.merge.remove(spec)
+        self.logdb.insert('cache', {'delete': self.col.find(spec).count()})
         self.col.remove(spec)
         self.col.remove({'query':encode_mongo_query(query)})
 
@@ -1179,7 +1230,9 @@ class DASMongocache(object):
         """
         current_time = time.time()
         query = {'das.expire': { '$lt':current_time} }
+        self.logdb.insert('merge', {'delete': self.merge.find(query).count()})
         self.merge.remove(query)
+        self.logdb.insert('cache', {'delete': self.col.find(query).count()})
         self.col.remove(query)
 
     def delete_cache(self):
@@ -1187,14 +1240,15 @@ class DASMongocache(object):
         Delete all results in DAS cache/merge collection, including
         internal indexes.
         """
+        self.logdb.insert('cache', {'delete': self.col.count()})
         self.col.remove({})
         try: 
             self.col.drop_indexes()
         except:
             pass
+        self.logdb.insert('merge', {'delete': self.merge.count()})
         self.merge.remove({})
         try:
             self.merge.drop_indexes()
         except:
             pass
-
