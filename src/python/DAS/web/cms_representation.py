@@ -169,7 +169,6 @@ def adjust_values(func, gen, links):
                     else:
                         value = '<span %s>%s</span>' % (red, value)
                 key = tooltip_helper(key)
-                print "\n### tooltip", key
             to_show.append((key, value))
         else:
             if  key == 'result' and isinstance(val, dict) and \
