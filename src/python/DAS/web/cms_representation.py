@@ -75,6 +75,29 @@ def add_filter_values(row, filters):
                     page += "<br />Filter <em>%s</em>" % flt
     return page
 
+def tooltip_helper(title):
+    "Tooltip helper for block/dataset/file definitions"
+    page  = ''
+    if  title == 'Dataset presence':
+        tooltip = title + ' is defined as a number of files\
+ at a site X divided by total number of files in a dataset'
+    elif title == 'Block presence':
+        tooltip = title + ' is a total number of blocks at a site X\
+ divided by total number of blocks in a dataset'
+    elif title == 'File-replica presence':
+        tooltip = title + 'is a total number of files at a site X\
+ divided by total number of in all block at this site'
+    elif title == 'Block completion':
+        tooltip = title + 'is a total number of blocks fully transferred to site X\
+ divided by total number of blocks at a site X'
+    else:
+        title = ''
+    if  title:
+        page = \
+ """<span class="tooltip">%s<span class="classic">%s</span></span>""" \
+        % (title, tooltip)
+    return page
+
 def adjust_values(func, gen, links):
     """
     Helper function to adjust values in UI.
@@ -145,6 +168,8 @@ def adjust_values(func, gen, links):
                         value = '<span %s>100%%</span>' % green
                     else:
                         value = '<span %s>%s</span>' % (red, value)
+                key = tooltip_helper(key)
+                print "\n### tooltip", key
             to_show.append((key, value))
         else:
             if  key == 'result' and isinstance(val, dict) and \
