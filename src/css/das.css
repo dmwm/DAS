@@ -437,7 +437,8 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
 .ac-extra {color: #708090; padding-left: 12px; }
 .autocomplete {padding-bottom: 2em;}
 
-/* tooltip */
+/* tooltip, ideas taken from http://sixrevisions.com/css/css-only-tooltips/
+ */
 .tooltip {
     border-bottom: 1px dotted #000000;
     color: #000000;
