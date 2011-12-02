@@ -183,7 +183,7 @@ class CombinedService(DASAbstractService):
                     files = int(row['files'])
                     complete = 1 if row['complete'] == 'y' else 0
                     if  site_info.has_key(node):
-                        nfiles = site_info[node]['files'] + files
+                        files = site_info[node]['files'] + files
                         nblks  = site_info[node]['blocks'] + 1
                         bc_val = site_info[node]['blocks_complete']
                         b_complete = bc_val+1 if complete else val
