@@ -39,9 +39,9 @@ class Worker(Thread):
             task = self._tasks.get()
             if  task == None:
                 return
-            evt, pid, func, args = task
+            evt, pid, func, args, kwargs = task
             try:
-                func(*args)
+                func(*args, **kwargs)
                 self._pids.discard(pid)
             except Exception as err: 
                 self._pids.discard(pid)
@@ -76,12 +76,12 @@ class TaskManager:
         """Return number of workers associated with this manager"""
         return len(self._workers)
 
-    def spawn(self, func, *args):
+    def spawn(self, func, *args, **kwargs):
         """Spawn new process for given function"""
         pid = genkey(str(args))
         self._pids.add(pid)
         ready = Event()
-        self._tasks.put((ready, pid, func, args))
+        self._tasks.put((ready, pid, func, args, kwargs))
         return ready, pid
 
     def is_alive(self, pid):
