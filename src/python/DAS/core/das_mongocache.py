@@ -646,6 +646,7 @@ class DASMongocache(object):
             msg  = "will remove %s records" % nrec
             msg += ", localtime=%s" % timestamp
             self.logger.debug(msg)
+        self.logdb.insert(collection, {'delete': self.col.find(spec).count()})
         col.remove(spec)
 
     def find(self, query):
