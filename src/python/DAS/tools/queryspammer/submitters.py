@@ -122,7 +122,7 @@ class DASWebSubmitter(HTTPSubmitter):
     "DAS Web submitter class"
     def __init__(self, producer, **kwargs):
         HTTPSubmitter.__init__(self, producer, 
-                               baseurl='http://localhost:8212/das/jsonview',
+                               baseurl='http://localhost:8212/das/request',
                                queryarg='input', **kwargs)
 
 class DASSubmitter(Submitter):
@@ -134,14 +134,9 @@ class DASSubmitter(Submitter):
         self.skey = kwargs.get('skey', None)
         self.sorder = kwargs.get('sorder', 'asc')
         Submitter.__init__(self, producer, **kwargs)
-        self.das = DASCore()
     def submit(self, query):
         """submit query"""
-        result = self.das.result(query, 
-                                 self.idx, 
-                                 self.limit, 
-                                 self.skey, 
-                                 self.sorder)
+        result = DASCore().result(query)
         count = 0
         for _ in result:
             count += 1

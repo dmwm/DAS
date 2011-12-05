@@ -142,7 +142,7 @@ class RandomData(object):
         self.keygen = {
                         'block': ('block',),
                         'run': ('run_number',),
-                        'site': ('se', 'ce', 'node'),
+                        'site': ('node'),
                         'file': ('file',),
                         'dataset': ('dataset',),
                         'release': ('release',),

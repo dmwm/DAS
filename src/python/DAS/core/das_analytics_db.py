@@ -149,7 +149,8 @@ class DASAnalytics(object):
         self.logger.debug(msg)
         
         # clean-up analyzer records whose start timestamp is too old
-        spec = {'start':{'$lt':time.time()-self.history}}
+        spec = {'start':{'$lt':time.time()-self.history},
+                'analyzer': {'$exists': True}}
         self.col.remove(spec)
 
         # insert new analyzer record
