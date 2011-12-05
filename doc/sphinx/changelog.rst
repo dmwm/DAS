@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Add new tool, das_stats.py, which dumps DAS statistics from DAS logdb
   - Add tooltip template and tooltips for block/dataset/replica presence; ticket #2946
   - Move creation of logdb from web server into mongocache (mongodb layer);
     created new DASLogdb class which will responsible for logdb;
