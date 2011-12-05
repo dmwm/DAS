@@ -497,6 +497,7 @@ class DASWebService(DASWebManager):
         self.adjust_input(kwargs)
         pid    = kwargs.get('pid', '')
         uinput = kwargs.get('input', '').strip()
+        self.logdb(uinput)
         inst   = kwargs.get('instance', self.dbs_global)
         if  inst:
             uinput = ' instance=%s %s' % (inst, uinput)

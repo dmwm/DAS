@@ -428,7 +428,7 @@ def logdb_record(coll, doc):
     "Return logdb record"
     timestamp = time.time()
     date = int(str(datetime.date.fromtimestamp(time.time())).replace('-', ''))
-    rec = {'type':coll, 'date':date, 'timestamp':timestamp}
+    rec = {'type':coll, 'date':date, 'ts':timestamp}
     rec.update(doc)
     return rec
 
