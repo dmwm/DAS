@@ -79,17 +79,17 @@ def tooltip_helper(title):
     "Tooltip helper for block/dataset/file definitions"
     page  = ''
     if  title == 'Dataset presence':
-        tooltip = title + ' is defined as a number of files\
- at a site X divided by total number of files in a dataset'
+        tooltip = title + ' is a total number of files\
+ at the site divided by total number of files in a dataset'
     elif title == 'Block presence':
-        tooltip = title + ' is a total number of blocks at a site X\
+        tooltip = title + ' is a total number of blocks at the site\
  divided by total number of blocks in a dataset'
     elif title == 'File-replica presence':
-        tooltip = title + 'is a total number of files at a site X\
- divided by total number of in all block at this site'
+        tooltip = title + 'is a total number of files at the site\
+ divided by total number of files in all block at this site'
     elif title == 'Block completion':
-        tooltip = title + 'is a total number of blocks fully transferred to site X\
- divided by total number of blocks at a site X'
+        tooltip = title + 'is a total number of blocks fully transferred to the site\
+ divided by total number of blocks at this site'
     else:
         title = ''
     if  title:
