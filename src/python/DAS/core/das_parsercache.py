@@ -10,6 +10,7 @@ __author__ = "Gordon Ball"
 from DAS.utils.utils import genkey
 from DAS.utils.das_db import db_connection
 from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
+from DAS.utils.logger import PrintManager
 
 PARSERCACHE_NOTFOUND = 5
 PARSERCACHE_INVALID = 17
@@ -21,7 +22,7 @@ class DASParserDB(object):
     """
     def __init__(self, config):
         self.verbose  = config['verbose']
-        self.logger   = config['logger']
+        self.logger   = PrintManager('DASParserDB', self.verbose)
         self.dburi    = config['mongodb']['dburi']
         self.dbname   = config['parserdb']['dbname']
         self.sizecap  = config['parserdb']['sizecap']

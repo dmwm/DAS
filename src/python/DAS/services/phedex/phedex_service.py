@@ -6,7 +6,7 @@ Phedex service
 We use the following definitions for dataset presence (see other
 definition in services/combined/combined_service.py):
 - replica_fraction is a total number of files at a site X
-  divided by total number of in all block at this site
+  divided by total number of files in all blocks at this site
 """
 __author__ = "Valentin Kuznetsov"
 
