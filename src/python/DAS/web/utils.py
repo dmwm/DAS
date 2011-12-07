@@ -26,7 +26,7 @@ from   pymongo.objectid import ObjectId
 import DAS.utils.jsonwrapper as json
 from   DAS.utils.utils import print_exc
 from   DAS.utils.regex import number_pattern, web_arg_pattern
-from   DAS.utils.das_db import db_connection
+from   DAS.utils.das_db import db_connection, is_db_alive
 from   DAS.web.das_codes import web_code
 from   DAS.utils.das_config import das_readconfig
 
@@ -130,14 +130,14 @@ def db_monitor(uri, func, sleep=5):
     """
     conn = db_connection(uri)
     while True:
-        time.sleep(sleep)
-        if  not conn:
-            conn = db_connection(uri)
+        if  not conn or not is_db_alive(uri):
             try:
+                conn = db_connection(uri)
                 func()
+                print "\n### re-established connection %s" % conn
             except:
                 pass
-            print "\n### re-established connection %s" % conn
+        time.sleep(sleep)
 
 def dascore_monitor(cdict, func, sleep=5):
     """

@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Fix bug in db_monitor who should check if DB connection is alive and reset DB cursor, ticket #2986
   - Changes for new analytics (das_singleton, etc.)
   - Add new tool, das_stats.py, which dumps DAS statistics from DAS logdb
   - Add tooltip template and tooltips for block/dataset/replica presence; ticket #2946

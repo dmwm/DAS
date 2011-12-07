@@ -62,6 +62,21 @@ class _DBConnectionSingleton(object):
                 return None
         return self.conndict[key]
 
+    def is_alive(self, uri):
+        "Check if DB connection is alive"
+        key = genkey(str(uri))
+        try:
+            conn, _ = self.connection(uri)
+            if  conn:
+                dbnames = conn.database_names()
+            else:
+                return False
+        except:
+            if  self.conndict.has_key(key):
+                del self.conndict[key]
+            return False
+        return True
+
 DB_CONN_SINGLETON = _DBConnectionSingleton()
 
 def db_connection(uri):
@@ -72,6 +87,10 @@ def db_connection(uri):
     except:
         pass
     return dbinst
+
+def is_db_alive(uri):
+    "Check if DB is alive"
+    return DB_CONN_SINGLETON.is_alive(uri)
 
 def db_gridfs(uri):
     """

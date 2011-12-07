@@ -21,7 +21,7 @@ from pymongo import ASCENDING
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
-from DAS.utils.das_db import db_connection, create_indexes
+from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.web.utils import db_monitor
 
 def dbs_instance(dbsurl):
@@ -59,7 +59,7 @@ class DBSDaemon(object):
 
     def init(self):
         """
-        Init db connection
+        Init db connection and check that it is alive
         """
         try:
             conn = db_connection(self.dburi)
@@ -68,6 +68,8 @@ class DBSDaemon(object):
             create_indexes(self.col, indexes)
             self.col.remove()
         except Exception as _exp:
+            self.col = None
+        if  not is_db_alive(self.dburi):
             self.col = None
 
     def update(self):
