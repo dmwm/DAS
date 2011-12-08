@@ -12,6 +12,7 @@ __author__ = "Valentin Kuznetsov"
 import re
 import time
 import urllib
+from DAS.utils.das_config import das_readconfig
 from DAS.core.das_ql import das_filters, das_aggregators, das_reserved
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
@@ -57,7 +58,9 @@ class QLManager(object):
     """
     DAS QL manager.
     """
-    def __init__(self, config):
+    def __init__(self, config=None):
+        if  not config:
+            config = das_readconfig()
         if  not config['dasmapping']:
             msg = "No mapping found in provided config=%s" % config
             raise Exception(msg)
