@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Fix issue with XML parser when data stream does not come from data-service,
+    e.g. data-service through HTTP error and DAS data layer creates HTTP JSON record
   - Fix bug in db_monitor who should check if DB connection is alive and reset DB cursor, ticket #2986
   - Changes for new analytics (das_singleton, etc.)
   - Add new tool, das_stats.py, which dumps DAS statistics from DAS logdb

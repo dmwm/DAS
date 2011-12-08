@@ -100,7 +100,7 @@ def getdata(url, params, headers=None, expire=3600, post=None,
             data.update({'httperror': None})
             msg += '\n' + str(exp)
         print msg
-        data = str(data)
+        data = json.dumps(data)
         expire = expire_timestamp(error_expire)
     except Exception as exp:
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
