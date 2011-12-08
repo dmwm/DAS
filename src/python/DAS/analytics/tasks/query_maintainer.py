@@ -14,11 +14,15 @@ from DAS.core.das_mongocache import decode_mongo_query
 
 class QueryMaintainer(object):
     "Ensures a query remains in the cache"
+    task_options=[{'name':'query', 'type':'string', 'default':None,
+                   'help':'The query to be maintained'},
+                  {'name':'preempt', 'type':'int', 'default':60,
+                   'help':'Number of seconds before expiry we try and refresh the data'}]
     def __init__(self, **kwargs):
         self.logger = kwargs['logger']
         self.das = kwargs['DAS']
         self.query = kwargs['query']
-        self.preempt = kwargs.get('preempt', 300) #default 5 minutes
+        self.preempt = kwargs.get('preempt', 60) #default 1 minute
         
     def __call__(self):
         """

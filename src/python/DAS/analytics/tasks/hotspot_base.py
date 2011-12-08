@@ -8,6 +8,7 @@ __author__ = "Gordon Ball"
 
 import time
 import collections
+from DAS.utils.logger import PrintManager
 
 class HotspotBase(object):
     """
@@ -17,13 +18,13 @@ class HotspotBase(object):
     for further attention.
     """
     def __init__(self, **kwargs):
-        self.logger = kwargs['logger']
+        self.logger = PrintManager('HotspotBase', kwargs.get('verbose', 0))
         self.das = kwargs['DAS']        
-        self.fraction = kwargs.get('fraction', 0.15)
+        self.fraction = float(kwargs.get('fraction', 0.15))
         self.mode = kwargs.get('mode','calls').lower()
-        self.period = kwargs.get('period', 86400*30)
+        self.period = int(kwargs.get('period', 86400*30))
         self.interval = kwargs['interval']
-        self.allowed_gap = kwargs.get('allowed_gap', 3600)
+        self.allowed_gap = int(kwargs.get('allowed_gap', 3600))
         self.identifier = kwargs['identifier']
         
     def __call__(self):
@@ -32,45 +33,39 @@ class HotspotBase(object):
         need to reimplement this method.
         """
         
-        self.logger.info("HotspotBase::__call__")
         epoch_end = time.time()
         epoch_start = epoch_end - self.period
         
         summaries = self.get_summaries(epoch_start, epoch_end)
-        self.logger.info("HotspotBase::__call__ Got %s summaries",
-                len(summaries))
+        self.logger.info("Got %s summaries" % len(summaries))
         
         items = self.get_all_items(summaries)
-        self.logger.info("HotspotBase::__call__ Got %s items",
-                len(items))
+        self.logger.info("Got %s items" % len(items))
         
         items = self.preselect_items(items)
-        self.logger.info("HotspotBase::__call__ Preselected to %s items",
-                len(items))
+        self.logger.info("Preselected to %s items" % len(items))
         
         items = self.select_items(items)
-        self.logger.info("HotspotBase::__call__ Selected %s items (%s:%s)", 
-                         len(items), self.mode, self.fraction)
+        self.logger.info("Selected %s items (%s:%s)" \
+                         % (len(items), self.mode, self.fraction))
         
         items = self.mutate_items(items)
-        self.logger.info("HotspotBase::__call__ Mutated to %s items", 
-                len(items))
+        self.logger.info("Mutated to %s items" % len(items))
         
         retval = {'mode': self.mode,
                   'fraction': self.fraction,
                   'epoch_start': epoch_start,
                   'epoch_end': epoch_end,
                   'summaries': len(summaries),
-                  'selected': dict(items)}
+                  'selected': dict(items).items()}
         
         new_tasks = []
         failed_items = []
         for item, count in items.items():
             try:
-                self.logger.info("HotspotBase::__call__ Generating task for %s",
-                                 item)
-                task = self.generate_task(item, count, epoch_start, epoch_end)
-                if task:
+                self.logger.info("Generating task for %s" % item)
+                for task in \
+                    self.generate_task(item, count, epoch_start, epoch_end):
                     new_tasks.append(task)
             except Exception as exc:
                 failed_items.append((item, count, str(exc)))
@@ -85,6 +80,8 @@ class HotspotBase(object):
         """
         For the given selected key, generate an appropriate task
         dictionary as understood by taskscheduler.
+        
+        Should be a generator or return an iterable
         """
         raise NotImplementedError
     
@@ -151,10 +148,13 @@ class HotspotBase(object):
         and determine if any need to be constructed at this time.
         """
         #get all the summaries we can from this time
-        summaries = self.das.analytics.get_summary(self.identifier, 
-                                                   after=epoch_start,
-                                                   before=epoch_end)
-        self.logger.info("Found %s summary documents.", len(summaries)) 
+        try:
+            summaries = self.das.analytics.get_summary(self.identifier, 
+                                                       after=epoch_start,
+                                                       before=epoch_end)
+            self.logger.info("Found %s summary documents." % len(summaries)) 
+        except:
+            summaries = []
         #see how much coverage of the requested period we have
         summaries = sorted(summaries, key=lambda x: x['start'])
         extra_summaries = []
@@ -176,8 +176,8 @@ class HotspotBase(object):
         Split the summarise requests into interval-sized chunks and decide
         if they're necessary at all.
         """
-        self.logger.info("Found summary gap: %s->%s (%s)", 
-                         start, finish, finish-start)
+        self.logger.info("Found summary gap: %s->%s (%s)" \
+                         % (start, finish, finish-start))
         result = []
         delta = finish - start
         if delta > self.allowed_gap:
@@ -185,24 +185,29 @@ class HotspotBase(object):
                 blocks = int(delta/self.interval)
                 span = delta/blocks
                 self.logger.info("Gap longer than interval, " +\
-                                 "creating %s summaries.", 
-                                 blocks)
+                                 "creating %s summaries." % blocks)
                 for i in range(blocks):
-                    summary = self.make_one_summary(start+span*i, 
-                                                    start+span*(i+1))
-                    self.das.analytics.add_summary(self.identifier,
-                                                   start+span*i,
-                                                   start+span*(i+1),
-                                                   keys=(dict(summary)).items())
-                    result.append(summary)
+                    try:
+                        summary = self.make_one_summary(start+span*i, 
+                                                        start+span*(i+1))
+                        self.das.analytics.add_summary(self.identifier,
+                                               start+span*i,
+                                               start+span*(i+1),
+                                               keys=(dict(summary)).items())
+                        result.append(summary)
+                    except:
+                        pass
                     
             else:
-                summary = self.make_one_summary(start, finish)
-                self.das.analytics.add_summary(self.identifier,
-                                               start,
-                                               finish,
-                                               keys=(dict(summary)).items())
-                result.append(summary)
+                try:
+                    summary = self.make_one_summary(start, finish)
+                    self.das.analytics.add_summary(self.identifier,
+                                                   start,
+                                                   finish,
+                                                   keys=(dict(summary)).items())
+                    result.append(summary)
+                except:
+                    pass
         else:
             self.logger.info("...short enough to ignore.")
             

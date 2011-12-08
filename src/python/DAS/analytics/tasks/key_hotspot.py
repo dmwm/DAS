@@ -1,5 +1,5 @@
 import collections
-from DAS.analytics.tasks.HotspotBase import HotspotBase
+from DAS.analytics.tasks.hotspot_base import HotspotBase
 
 class KeyHotspot(HotspotBase):
     """
@@ -19,7 +19,7 @@ class KeyHotspot(HotspotBase):
     def generate_task(self, item, count, epoch_start, epoch_end):
         only_before = epoch_end + self.interval
         itemname = item.replace(r'.','-')
-        return {'classname': 'ValueHotspot',
+        yield {'classname': 'ValueHotspot',
                 'name': '%s-valuehotspot-%s' % (self.identifier, itemname),
                 'only_before': only_before,
                 'interval': self.child_interval,

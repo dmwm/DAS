@@ -12,20 +12,20 @@ import json
 import optparse
 import sys
 import pprint
-from DAS.analytics.analytics_utils import parse_time
+from DAS.analytics.utils import parse_time
 from DAS.utils.utils import print_exc
 
 def main():
     "Main function"
     parser = optparse.OptionParser()
-    
+
     group_host = optparse.OptionGroup(parser, "Host")
     msg  = "Analytics host including protocol, port and path,"
     msg += " e.g http://localhost:8213/analytics (default)"
     group_host.add_option("--host", help=msg,
           default="http://localhost:8213/analytics")
     parser.add_option_group(group_host)
-    
+
     group_task = optparse.OptionGroup(parser, "New Task")
     group_task.add_option("--name",
                           help="Name of the new task")
@@ -37,8 +37,6 @@ def main():
                           help="Query (convenience)")
     group_task.add_option("--key", metavar='STR/JSON',
                           help="Key (convenience)")
-    group_task.add_option("--once", action="store_true",
-                          help="Only run once")
     group_task.add_option("--runs", metavar="N", type="int",
                           help="Only run N times")
     group_task.add_option("--before", metavar="TIMEISH",
@@ -46,7 +44,7 @@ def main():
     group_task.add_option("--options", metavar="JSON",
                           help="JSON options dictionary")
     parser.add_option_group(group_task)
-    
+
     group_info = optparse.OptionGroup(parser, "Information")
     group_info.add_option("--schedule", action="store_true",
                           help="Print the current schedule")
@@ -100,13 +98,10 @@ def main():
             print "There was an error decoding the response as JSON"
             print "Response was:"
             print result
-    
-    
     if opts.name:
         if not opts.klass:
             print "You must supply a classname"
             sys.exit(0)
-        
         kwargs = {}
         if opts.options:
             try:
@@ -138,41 +133,30 @@ def main():
             else:
                 print "Assuming that key should be interpreted as a string"
                 kwargs['key'] = key
-        
         form =  {'name': opts.name,
                  'classname': opts.klass,
                  'interval': opts.interval}
-        if opts.once:
-            form['only_once'] = json.dumps(opts.only_once)
         if opts.runs:
             form['max_runs'] = opts.runs
         if opts.before:
             form['only_before'] = parse_time(opts.before)
         if kwargs:
             form['kwargs'] = json.dumps(kwargs)
-        
         pprint.pprint(get_json('add_task', form))
-            
     elif opts.schedule:
         pprint.pprint(get_json('schedule'))
-            
     elif opts.results:
         pprint.pprint(get_json('results'))
-        
     elif opts.result:
         pprint.pprint(get_json('result', {'id': opts.result}))
-        
     elif opts.task and opts.remove:
         pprint.pprint(get_json('remove_task', {'id': opts.task}))
-        
     elif opts.task and opts.reschedule:
         pprint.pprint(get_json('reschedule_task',
                                {'id': opts.task,
                                 'at': parse_time(opts.reschedule)}))
-    
     elif opts.task:
         pprint.pprint(get_json('task', {'id': opts.task}))
-        
     else:
         print "No action requested. Game over."
 

@@ -12,47 +12,60 @@ import logging
 import time
 import multiprocessing
 import copy
+import threading
+import signal
 
 # DAS modules
-from DAS.analytics.analytics_config import DASAnalyticsConfig
-from DAS.analytics.analytics_task import Task
-from DAS.utils.utils import dastimestamp, print_exc
+from DAS.analytics.config import DASAnalyticsConfig
+from DAS.analytics.task import Task
+from DAS.utils.utils import print_exc
+from cherrypy.process import plugins
 
-DASAnalyticsConfig.add_option("max_retries",
-                              type=int,
-                              default=1,
-                              help="Number of times the task scheduler will retry a failed task before abandoning it.")
-DASAnalyticsConfig.add_option("retry_delay",
-                              type=int,
-                              default=60,
-                              help="Seconds to wait before retrying a failed job.")
-DASAnalyticsConfig.add_option("minimum_interval",
-                              type=int,
-                              default=60,
-                              help="Minimum repeat interval allowed for a task.")
-DASAnalyticsConfig.add_option("workers",
-                              type=int,
-                              default=4,
-                              help="Number of workers to use for tasks.")
+#prevent the worker catching SIGINT, which causes a deadlock in
+#multiprocessing.Pool - workaround from
+#http://stackoverflow.com/questions/1408356/keyboard-interrupts-with-pythons-multiprocessing-pool
+#this arises because not isinstance(KeyboardInterrupt, Exception)
+#Disabling catching SIGINT is apparently also a viable solution
+def poolsafe(func):
+    "Poolsafe wrapper"
+    def wrapper(*args, **kwargs):
+        #some redundancy here, but just trapping KeyboardInterrupt didn't seem to work
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        "Worker wrapper"
+        try:
+            return func(*args, **kwargs)
+        except KeyboardInterrupt:
+            #raise Exception("KeyboardInterrupt as Exception")
+            return
+    return wrapper
+#monkey-patch multiprocessing worker function
+from multiprocessing.pool import worker
+multiprocessing.pool.worker = poolsafe(worker) 
 
-class TaskScheduler(object):
+DASAnalyticsConfig.add_option("max_retries", type=int, default=1,
+    help="Number of times the task scheduler will retry a failed task before abandoning it.")
+DASAnalyticsConfig.add_option("retry_delay", type=int, default=60,
+    help="Seconds to wait before retrying a failed job.")
+DASAnalyticsConfig.add_option("minimum_interval", type=int, default=60,
+    help="Minimum repeat interval allowed for a task.")
+DASAnalyticsConfig.add_option("workers", type=int, default=4,
+    help="Number of workers to use for tasks.")
+class TaskScheduler(plugins.SimplePlugin):
     """
     This is a cron-like thread which keeps track of all the tasks to
     be run, and dispatches them to the worker pool at the appropriate
     time.
-    
-    Originally this was an independent thread, the loop is now run
-    as a call from the main loop to avoid unnecessary thread
-    duplication.
     
     A completed job calls back to this thread to request that it be
     re-scheduled at some point in the future.
     
     A job that fails will be retried a specified number of times before
     being prevented from being resubmitted.
+    
+    This attaches to the cherrypy bus to receive start and stop signals.
     """
-    def __init__(self, controller, config):
-        self.controller = controller
+    def __init__(self, config, engine):
+        plugins.SimplePlugin.__init__(self, engine)
         self.logger = logging.getLogger("DASAnalytics.TaskScheduler")
                 
         self.scheduled = [] # -> (time, task)
@@ -61,13 +74,12 @@ class TaskScheduler(object):
         self.max_retries = config.max_retries
         self.retry_delay = config.retry_delay
         self.minimum_interval = config.minimum_interval
+        self.workers = config.workers
         
-        self.pool = multiprocessing.Pool(processes=config.workers)
+        self.pool = None
         
         self.registry = {}
-        
         self.callbacks = []
-        
         self.running = {}
         
         #since this handles requests from the web threads,
@@ -75,48 +87,86 @@ class TaskScheduler(object):
         #to lock access
         self.lock = multiprocessing.Lock()
         
-        #self.loghandler = RunningJobHandler()
-        #self.loghandler.addFilter(logging.Filter("DASAnalytics.Task"))
-        #self.controller.logger.addHandler(self.loghandler)
+        #whether we should kill the main loop
+        self.terminate = False
     
+    def start(self):
+        "Receive the start signal from cherrypy bus and run the main loop."
+        self.pool = multiprocessing.Pool(processes=self.workers)
+        self.terminate = False
+        #this may be meant to run in a new thread
+        #note that we don't get a lock here, since run() subsequently gets the lock
+        #and this should be occurring once before anything else
+        thread = threading.Thread(target=self.run)
+        thread.start()
+    
+    def stop(self):
+        "Set the termination signal and request the pool terminate gracefully."
+        #unclear what the correct locking should be here
+        #since holding the lock for join() would prevent any callbacks running
+        self.terminate = True
+        if self.pool:
+            self.pool.terminate() #sod it, kill it anyway
+            self.pool.join()
+            self.pool = None
+    
+    exit = stop
+ 
+    def run(self):
+        """
+        Called by the controller main loop. Checks if there is
+        a job due to be dispatched and dispatches it.
+        """
+        while True:
+            with self.lock:
+                if self.terminate:
+                    return
+                
+                now = time.time()
+                if self.wakeup_at and now > self.wakeup_at:
+                    while self.scheduled and self.scheduled[0]['at'] < now:
+                        self._submit_task()
+                        self._set_next_task()
+            time.sleep(1)
+        
     def add_callback(self, callback):
         "Add a callback to be dispatched when a job result returns."
         self.callbacks.append(callback)
     
     def get_scheduled(self):
         "Get a de-classed list of current tasks for web interface."
-        self.lock.acquire()
-        try:
+        with self.lock:
             return copy.deepcopy(self.scheduled)
-        finally:
-            self.lock.release()
     
     def get_task(self, master_id):
         "Get a dict describing a single task from the registry"
-        self.lock.acquire()
-        try:
+        with self.lock:
             task = self.registry.get(master_id, None)
             if task:
                 return task.get_dict()
             else:
                 return None
-        finally:
-            self.lock.release()
+            
+    def get_children(self, master_id):
+        "Get task children"
+        with self.lock:
+            return [m_id for m_id, task in self.registry.items() 
+                    if master_id in task.parent]
     
     def add_task(self, task, when=None, offset=None):
         """
         Wrapper around _add_task (which can be called from an
         already locked context or an external context)
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
             self._add_task(task, when, offset)
             return True
-        finally:
-            self.lock.release()
     
     def _add_task(self, task, when=None, offset=None):
-        "Add a new task, specifying either an absolute time or an offset from now."
+        """
+        Add a new task, specifying either an absolute time
+        or an offset from now.
+        """
         if not when:
             when = time.time() + self.minimum_interval
         if offset:
@@ -135,8 +185,7 @@ class TaskScheduler(object):
         Request the task with given ID be removed from the schedule
         Note, does not work if the task has already started running
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
             if master_id in [x['master_id'] for x in self.scheduled]:
                 self.scheduled = filter(lambda x: x['master_id'] != master_id,
                                         self.scheduled)
@@ -144,23 +193,18 @@ class TaskScheduler(object):
                 return True
             else:
                 return False
-        finally:
-            self.lock.release()
             
     def reschedule_task(self, masterid, when):
         """
         Request the task be moved to a different scheduled time.
         """
-        self.lock.acquire()
-        try:
+        with self.lock:
             for item in self.scheduled:
                 if item['master_id'] == masterid:
                     item['at'] = when
                     self._set_next_task()
                     return True
             return False
-        finally:
-            self.lock.release()
     
     def _set_next_task(self):
         """
@@ -170,23 +214,7 @@ class TaskScheduler(object):
             self.scheduled = sorted(self.scheduled, key=lambda x: x['at'])
             self.wakeup_at = self.scheduled[0]['at']
         else:
-            self.wakeup_at = None
-        
-    def run(self):
-        """
-        Called by the controller main loop. Checks if there is
-        a job due to be dispatched and dispatches it.
-        """
-        self.lock.acquire()
-        try:
-            
-            now = time.time()
-            if self.wakeup_at and now > self.wakeup_at:
-                self._submit_task()
-                self._set_next_task()
-        finally:
-            self.lock.release()
-        
+            self.wakeup_at = None        
     
     def _submit_task(self):
         "Do job submission."
@@ -196,18 +224,15 @@ class TaskScheduler(object):
             master_id = item['master_id']
             task = self.registry[master_id]
             self.logger.info('Submitting Task "%s".', task.name)
-            tstamp = dastimestamp()
             runnable = task.spawn()
-            task_id = runnable.get_task_id()
-            #self.loghandler.add_watch(task_id)
-            self.logger.info('Task "%s" has TaskID %s',
-                             runnable.name, task_id)
-            msg = '%s task=%s, id=%s' % (tstamp, runnable.name, task_id)
-            print msg
+            task_id = (runnable.master_id, runnable.index)
+            self.logger.info('Spawning Task "%s:%s"',
+                             runnable.name, runnable.index)
             self.running[task_id] = {'master_id':master_id,
                                      'name':task.name,
                                      'classname':task.classname,
-                                     'started': now}
+                                     'started': now,
+                                     'index': runnable.index}
             self.pool.apply_async(runnable,
                                   callback=self.task_finished_callback)
             task.last_run_at = now
@@ -216,22 +241,23 @@ class TaskScheduler(object):
         """
         Get a list of the currently running tasks.
         """
-        self.lock.acquire()
-        try:
-            result = []
-            for task_id, item in self.running.items():
-                item['task_id'] = task_id
-                result.append(item)
-            return result
-        finally:
-            self.lock.release()
+        with self.lock:
+            return self.running.values()
+        
+    def get_registry(self):
+        """
+        Get all known tasks (which may not necessarily be scheduled
+        or running)
+        """
+        with self.lock:
+            return dict([(mid, self.registry[mid].get_dict()) \
+                        for mid in self.registry])
             
     def task_finished_callback(self, result):
         "Callback each finished job hits."
-        self.lock.acquire()
-        try:
+        with self.lock:
             now = time.time()
-            task_id = result.get('task_id', None)
+            task_id = (result.get('master_id', None), result.get('index', None))
             success = result.get('success', False)
             resubmit = result.get('resubmit', True)
             new_tasks = result.get('new_tasks', [])
@@ -243,11 +269,9 @@ class TaskScheduler(object):
             self.logger.info('Finished Task "%s" (%s) success=%s.',
                              task.name, task_id, success)
             
-            result['log'] = []#self.loghandler.get(task_id)
-            
             if 'next' in result:
                 self.logger.info('Task "%s" (%s) requesting resubmission at %s',
-                             task.name, task_id, result['next'])
+                                 task.name, task_id, result['next'])
                 interval = max(self.minimum_interval, result['next'] - now)
             else:
                 interval = task.interval
@@ -260,16 +284,18 @@ class TaskScheduler(object):
                         when = now + self.minimum_interval
                     if task.can_respawn(when):
                         self.logger.info('..scheduling next run.')
-                        self._add_task(task, when=task.last_run_at + interval)
+                        self._add_task(task, when=when)
                     else:
-                        self.logger.info('...exceeded maximum runs or time cutoff, not scheduling.')
+                        msg = '...exceeded maximum runs or time cutoff, not scheduling.'
+                        self.logger.info(msg)
                 else:
                     if task.retries <= self.max_retries:
                         self.logger.info('...retrying in %s.', self.retry_delay)
                         task.retries += 1
                         self._add_task(task, offset=self.retry_delay)
                     else:
-                        self.logger.info('...failed and no more retries remaining.')
+                        msg = '...failed and no more retries remaining.'
+                        self.logger.info(msg)
             else:
                 self.logger.info('...rescheduling disabled by task.')
         
@@ -280,22 +306,18 @@ class TaskScheduler(object):
                                    classname=new['classname'],
                                    interval=new['interval'],
                                    kwargs=new.get('kwargs', {}),
-                                   only_once=new.get('only_once', False),
                                    max_runs=new.get('max_runs', None),
                                    only_before=new.get('only_before', None),
-                                   parent=task.master_id)
+                               parent=result.get('parent',())+(task.master_id,))
                     self._add_task(newtask, offset=new['interval'])
                 else:
-                    self.logger.error('New task contained insuffient arguments to be created: %s', new)
+                    self.logger.error('New task contained insufficient arguments to be created: %s', new)
                 
             for callback in self.callbacks:
                 try:
                     callback(result)
                 except Exception as exc:
-                    msg = 'ERROR: dispatch for task=%s, id=%s' \
-                        % (task.name, task_id)
-                    print msg
+                    msg = 'ERROR: dispatch for task=%s, id=%s, error=%s' \
+                        % (task.name, task_id, exc[0])
+                    self.logger.error(msg)
                     print_exc(exc)
-        finally:
-            self.lock.release()
-        

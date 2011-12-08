@@ -1,7 +1,12 @@
+"""
+Keylearning task manager
+"""
+
 import collections
 from pymongo.objectid import ObjectId
+from DAS.utils.logger import PrintManager
 
-class KeyLearning:
+class KeyLearning(object):
     """
     This is the asynchronous part of the key-learning system, intended
     to run probably not much more than daily once the key learning DB is
@@ -17,48 +22,44 @@ class KeyLearning:
     names they contained, which are then injected into the DAS keylearning
     system.
     """
+    task_options = [{'name':'redundancy', 'type':'int', 'default':2,
+                     'help':'Number of records to examine per DAS primary key'}]
     def __init__(self, **kwargs):
-        self.logger = kwargs['logger']
-        self.DAS = kwargs['DAS']
+        self.logger = PrintManager('KeyLearning', kwargs.get('verbose', 0))
+        self.das = kwargs['DAS']
         self.redundancy = kwargs.get('redundancy', 2)
         
         
     def __call__(self):
-        
-        self.logger.info("KeyLearning::__call__")
-        
-        self.DAS.rawcache.remove_expired("cache")
+        "__call__ implementation"
+        self.das.rawcache.remove_expired("cache")
         
         autodeque = lambda: collections.deque(maxlen=self.redundancy)
         found_ids = collections.defaultdict(autodeque)
         
-        self.logger.info("KeyLearning::__call__ finding das_ids")
-        for doc in self.DAS.rawcache.col.find({'das.empty_record': 0,
-                                               'das.primary_key': {'$exists': True}},
-                                               fields=['das.primary_key',
-                                                       'das_id']):
+        self.logger.info("finding das_ids")
+        for doc in self.das.rawcache.col.find(\
+            {'das.empty_record': 0, 'das.primary_key': {'$exists': True}},
+            fields=['das.primary_key', 'das_id']):
             found_ids[doc['das']['primary_key']].append(doc['das_id'])
         
         hit_ids = set()
         
-        self.logger.info("KeyLearning::__call__ found %s primary_keys",
-                         len(found_ids))
+        self.logger.info("found %s primary_keys" % len(found_ids))
         
         for key in found_ids:
-            self.logger.info("KeyLearning::__call__ primary_key=%s",
-                             key)
+            self.logger.info("primary_key=%s" % key)
             for das_id in found_ids[key]:
                 if not das_id in hit_ids:
-                    self.logger.info("KeyLearning::__call__ das_id=%s",
-                                     das_id)
+                    self.logger.info("das_id=%s" % das_id)
                     hit_ids.add(das_id)
-                    doc = self.DAS.rawcache.col.find_one({'_id': ObjectId(das_id)})
+                    doc = self.das.rawcache.col.find_one(\
+                        {'_id': ObjectId(das_id)})
                     if doc:
                         self.process_query_record(doc)
                     else:
-                        self.logger.warning("KeyLearning::__call__ no record found for das_id=%s",
-                                            das_id)
-        
+                        self.logger.warning(\
+                        "no record found for das_id=%s" % das_id)
         return {}
     
     def process_query_record(self, doc):
@@ -66,20 +67,17 @@ class KeyLearning:
         Process a rawcache document, extracting the called
         system, urn and url, then looking up the individual data records.
         """
-        
-        self.logger.info("KeyLearning::process_query_record")
-        
         das_id = str(doc['_id'])
         systems = doc['das']['system']
         urns = doc['das']['urn']
         
-        result = self.DAS.rawcache.find_records(das_id)        
+        result = self.das.rawcache.find_records(das_id)        
         
         if len(systems)==len(urns) and len(systems)==result.count():
             for i, record in enumerate(result):
                 self.process_document(systems[i], urns[i], record)
         else:
-            self.logger.warning("KeyLearning::process_query_record got inconsistent system/urn/das_id length")
+            self.logger.warning("got inconsistent system/urn/das_id length")
             
             
     def process_document(self, system, urn, doc):
@@ -88,15 +86,13 @@ class KeyLearning:
         data members and inserting them into the cache.
         """
         
-        self.logger.info("KeyLearning::process_document %s::%s",
-                         system, urn)
-        
+        self.logger.info("%s::%s" % (system, urn))
         members = set()
         for key in doc.keys():
             if not key in ('das', '_id', 'das_id'):
                 members |= self._process_document_recursor(doc[key], key)
         
-        self.DAS.keylearning.add_members(system, urn, list(members))
+        self.das.keylearning.add_members(system, urn, list(members))
         
     def _process_document_recursor(self, doc, prefix):
         """

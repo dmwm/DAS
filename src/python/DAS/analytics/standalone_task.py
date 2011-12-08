@@ -9,7 +9,9 @@ import optparse
 import logging
 import pprint
 import time
-from DAS.core.das_core import DASCore
+#from DAS.core.das_core import DASCore
+from DAS.analytics.utils import TASK_CLASSES
+from DAS.analytics.das_singleton import das_singleton
 
 def main():
     "Main routine"
@@ -34,6 +36,7 @@ def main():
     module = __import__('DAS.analytics.tasks.%s' % opts.klass, 
                         fromlist=[opts.klass])
     klass = getattr(module, opts.klass)
+    klass = TASK_CLASSES[opts.klass]
 
     if opts.name == None:
         opts.name = "CLI%s" % opts.klass
@@ -48,7 +51,8 @@ def main():
     logger = logging.getLogger(opts.name)
     daslogger = logging.getLogger(opts.name + '_DAS')
 
-    dascore = DASCore(logger=daslogger, multitask=None)
+#    dascore = DASCore(logger=daslogger, multitask=None)
+    dascore = das_singleton.create(multitask=None)
 
     instance = klass(logger=logger, DAS=dascore, name=opts.name,
                      taskid=opts.id, index=0, interval=opts.interval,

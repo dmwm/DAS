@@ -12,6 +12,10 @@ class AnalyticsCleanup(object):
     "Analyzer" intended for infrequent (~weekly) running, which cleans up
     analysis summaries (from any analyser) older than "cutoff" seconds.
     """
+    task_options = [{'name':'cutoff', 'type':'int', 
+                     'default':60*60*24*60,
+    'help':'Delete analysis summaries older than this many seconds.'}]
+    
     
     def __init__(self, **kwargs):
         self.logger = kwargs['logger']
