@@ -109,8 +109,12 @@ class QLManager(object):
         mongo_query = self.mongo_query(query)
         self.convert2skeys(mongo_query)
         if  add_to_analytics:
-            self.analytics.add_query(query, mongo_query)
+            self.add_to_analytics(query, mongo_query)
         return mongo_query
+
+    def add_to_analytics(self, query, mongo_query):
+        "Add DAS query to analytics DB"
+        self.analytics.add_query(query, mongo_query)
 
     def mongo_query(self, query):
         """

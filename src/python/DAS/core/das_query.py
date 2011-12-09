@@ -24,63 +24,78 @@ class DASQuery(object):
     such as to_bare_query return a new DASQuery, modified
     appropriately.
     """
-    def __init__(self, query=None, storage_query=None, 
-                 mongo_query=None, **flags):
+    def __init__(self, query, **flags):
         """
-        Accepts either "query", which it will determine
-        whether is a storage or mongo query, or either or
-        both mongo_query and storage_query. It is assumed
-        if you supply them they are equivalent.
+        Accepts general form of DAS query, supported formats are
+        DAS input query, DAS mongo query, DAS storage query. The
+        supplied flags can carry any query attributes, e.g.
+        filters, aggregators, system, instance, etc.
         """
-        assert bool(query) ^ bool(storage_query or mongo_query)
-        self.mongoparser = QLManager()
-        self._query = None
+        self.mongoparser    = QLManager()
+        self._query         = None
         self._storage_query = None
-        self._mongo_query = None
-        self._flags = flags
-        self._qhash = None
-        self._system = None
-        self._instance = None
-        self._filters = []
+        self._mongo_query   = None
+        self._qhash         = None
+        self._system        = None
+        self._instance      = None
+        self._loose_query   = None
+        self._pattern_query = None
+        self._filters       = []
+        self._mapreduce     = []
+        self._aggregators   = []
+        self._flags         = flags
+
+        # loop over flags and set available attributes
         for key, val in flags.items():
             setattr(self, '_%s' % key, val)
 
-        if  mongo_query:
-            assert isinstance(mongo_query, dict)
-            if  not 'spec' in mongo_query:
-                mongo_query['spec'] = {}
-            if  not 'fields' in mongo_query:
-                mongo_query['fields'] = None
-            self._mongo_query = mongo_query
-            self._instance = self._mongo_query.get('instance', None)
-            self._system = self._mongo_query.get('system', None)
-            self._filters = self._mongo_query.get('filters', None)
-        if  storage_query:
-            assert isinstance(storage_query, dict)
-            if  not 'spec' in storage_query:
-                storage_query['spec'] = []
-            if  not 'fields' in storage_query:
-                storage_query['fields'] = None
-            self._storage_query = storage_query
-        if  query:
+        # test data type of input query and apply appropriate initialization
+        if  isinstance(query, basestring):
             self._query = query
             try:
-                add_to_analytics = \
-                    True if hasattr(self, '_add_to_analytics') else False
-                self._mongo_query = self.mongoparser.parse(query, 
-                            add_to_analytics)
-                self._instance = self._mongo_query.get('instance', None)
-                self._system = self._mongo_query.get('system', None)
-                self._filters = self._mongo_query.get('filters', None)
+                self._mongo_query = self.mongoparser.parse(query)
             except Exception as exp:
                 msg = "Fail to process query='%s'" % query
                 print_exc(msg)
                 raise exp
+        elif isinstance(query, dict):
+            spec   = query.get('spec', {})
+            fields = query.get('fields', None)
+            if  isinstance(spec, dict): # mongo query
+                self._mongo_query = dict(fields=fields, spec=spec)
+            else: # storage query
+                self._storage_query = dict(fields=fields, spec=spec)
+        elif isinstance(query, object) and hasattr(query, '__class__')\
+            and query.__class__.__name__ == 'DASQuery':
+            self._query = query.query
+            self._mongo_query = query.mongo_query
+            self._storage_query = query.storage_query
+        else:
+            raise Exception('Unsupport data type of DAS query')
+        # setup DAS query attributes if they were supplied in input query
+        # for instance if input query is mongo query
+        self._instance    = self.mongo_query.get('instance', None)
+        self._system      = self.mongo_query.get('system', None)
+        self._filters     = self.mongo_query.get('filters', [])
+        self._aggregators = self.mongo_query.get('aggregators', [])
+        self._mapreduce   = self.mongo_query.get('mapreduce', [])
+
+    ### Class properties ###
 
     @property
     def filters(self):
         "filters property of the DAS query"
         return self._filters
+
+    @property
+    def mapreduce(self):
+        "mapreduce property of the DAS query"
+        return self._mapreduce
+
+    @property
+    def aggregators(self):
+        "aggregators property of the DAS query"
+        return self._aggregators
 
     @property
     def system(self):
@@ -109,7 +124,7 @@ class DASQuery(object):
         Read only storage query, generated on demand.
         """
         if  not self._storage_query:
-            self._storage_query = deepcopy(self._mongo_query)
+            self._storage_query = deepcopy(self.mongo_query)
             speclist = []
             for key, val in self._storage_query.pop('spec').items():
                 if  str(type(val)) == "<type '_sre.SRE_Pattern'>":
@@ -127,7 +142,7 @@ class DASQuery(object):
         Read only mongo query, generated on demand.
         """
         if  not self._mongo_query:
-            self._mongo_query = deepcopy(self._storage_query)
+            self._mongo_query = deepcopy(self.storage_query)
             spec = {}
             for item in self._mongo_query.pop('spec'):
                 val = json.loads(item['value'])
@@ -145,7 +160,67 @@ class DASQuery(object):
         if  not self._qhash:
             self._qhash = genkey(self.storage_query)
         return self._qhash
+
+    @property
+    def loose_query(self):
+        """
+        Construct loose version of the query. That means add 
+        pattern '*' to string type values for all conditions.
+        """
+        if  not self._loose_query:
+            query   = deepcopy(self.mongo_query)
+            spec    = query.get('spec', {})
+            fields  = query.get('fields', None)
+            system  = query.get('system', None)
+            inst    = query.get('instance', None)
+            newspec = {}
+            for key, val in spec.items():
+                if  key != '_id' and \
+                isinstance(val, str) or isinstance(val, unicode):
+                    if  val[-1] != '*':
+                        val += '*' # add pattern
+                newspec[key] = val
+            self._loose_query = dict(spec=newspec, fields=fields)
+        return self._loose_query
+
+    @property
+    def pattern_query(self):
+        """
+        Patter property for DAS query whose spec is modified
+        to regexes and $exists keys
+        """
+        if  not self._pattern_query:
+            nmq = deepcopy(self.loose_query)
             
+            def edit_dict(old):
+                """
+                Inner recursive dictionary manipulator
+                """
+                result = {}
+                for key, val in old.items():
+                    if isinstance(val, basestring):
+                        if  '*' in val:
+                            if len(val) == 1:
+                                result[key] = {'$exists': True}
+                            else:
+                                result[key] = \
+                                    re.compile('^%s' % val.replace('*', '.*'))
+                    elif isinstance(val, dict):
+                        result[key] = edit_dict(val)
+                    else:
+                        result[key] = val
+                return result
+            
+            nmq['spec'] = edit_dict(nmq['spec'])    
+            self._pattern_query = nmq
+        return self._pattern_query
+    
+    ### Class method ###
+
+    def add_to_analytics(self):
+        "Add DAS query to analytics DB"
+        self.mongoparser.add_to_analytics(self.query, self.mongo_query)
+
     def is_bare_query(self):
         """
         Return true if we only have 'fields' and 'spec' keys.
@@ -161,36 +236,8 @@ class DASQuery(object):
             return self
         mongo_query = {'fields': copy.deepcopy(self.mongo_query['fields']),
                 'spec': deepcopy(self.mongo_query['spec'])}
-        return DASQuery(mongo_query=mongo_query, **self._flags)
+        return DASQuery(mongo_query, **self._flags)
 
-    def is_loose_query(self):
-        """
-        Check if all text values in the spec are wildcarded.
-        """
-        return all([v[-1] == '*' 
-                    for v in self.mongo_query['spec'].values() 
-                    if isinstance(v, basestring)])
-
-    def to_loose_query(self):
-        """
-        Construct loose version of the query. That means add 
-        pattern '*' to string type values for all conditions.
-        """
-        query   = deepcopy(self.mongo_query)
-        spec    = query.get('spec', {})
-        fields  = query.get('fields', None)
-        system  = query.get('system', None)
-        inst    = query.get('instance', None)
-        newspec = {}
-        for key, val in spec.items():
-            if  key != '_id' and \
-            isinstance(val, str) or isinstance(val, unicode):
-                if  val[-1] != '*':
-                    val += '*' # add pattern
-            newspec[key] = val
-        mongo_query = dict(spec=newspec, fields=fields)
-        return DASQuery(mongo_query=mongo_query, system=system, instance=inst)
-    
     def has_id(self):
         """
         Check if there is an _id key in the spec.
@@ -227,44 +274,13 @@ class DASQuery(object):
                 nmq['spec']['_id'] = result
             else:
                 raise Exception("non str|unicode|list _id")
-        return DASQuery(mongo_query=nmq, **self._flags)
+        return DASQuery(nmq, **self._flags)
     
     def flag(self, name):
         """
         Test the state of any flags that were set.
         """
         return self._flags.get(name, False)
-    
-    def to_pattern(self):
-        """
-        Return a new DASQuery with the spec modified with
-        $exists keys and regexes. This should replicate
-        convert2pattern[0] - convert2pattern[1] doesn't seem
-        to be used anywhere.
-        """
-        nmq = deepcopy(self.mongo_query)
-        
-        def edit_dict(old):
-            """
-            Inner recursive dictionary manipulator
-            """
-            result = {}
-            for key, val in old.items():
-                if isinstance(val, basestring):
-                    if '*' in val:
-                        if len(val) == 1:
-                            result[key] = {'$exists': True}
-                        else:
-                            result[key] = \
-                                re.compile('^%s' % val.replace('*', '.*'))
-                elif isinstance(val, dict):
-                    result[key] = edit_dict(val)
-                else:
-                    result[key] = val
-            return result
-        
-        nmq['spec'] = edit_dict(nmq['spec'])    
-        return DASQuery(mongo_query=nmq, **self._flags)
     
     def is_superset_of(self, other):
         """
