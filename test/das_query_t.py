@@ -50,8 +50,10 @@ class testDASQuery(unittest.TestCase):
         self.assertEqual(msg, repr(query))
         sys.stdout = StringIO()
         print query, # do not append new line
-        expect = sys.stdout.getvalue()
-        self.assertEqual(expect, iquery)
+        result = sys.stdout.getvalue()
+        msg = "<DASQuery: %s>" % iquery
+        self.assertEqual(msg, result)
+        self.assertEqual(msg, str(query))
 
     def test_query_representations(self):
         "Test different DAS query representations"

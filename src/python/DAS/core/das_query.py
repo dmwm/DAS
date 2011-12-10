@@ -296,16 +296,21 @@ class DASQuery(object):
         return compare_specs(self.mongo_query, other.mongo_query)
     
     def __gt__(self, other):
+        "Query comparision operator"
         return self.is_superset_of(other)
     
     def __lt__(self, other):
+        "Query comparision operator"
         return self.is_subset_of(other)
     
     def __eq__(self, other):
+        "Query comparision operator"
         return self.qhash == other.qhash
     
     def __str__(self):
-        return self.query
+        "Query string representation"
+        msg = "<DASQuery: %s>" % self.query
+        return msg
 
     def __repr__(self):
         "Query representation"
