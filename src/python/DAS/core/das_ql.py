@@ -18,7 +18,7 @@ from DAS.utils.das_db import db_connection
 DAS_FILTERS   = ['grep', 'unique']
 DAS_OPERATORS = ['=', 'between', 'last']
 DAS_SPECIALS  = ['date', 'system', 'instance']
-DAS_DB_KEYWORDS = ['records', 'queries', 'popular']
+DAS_DB_KEYWORDS = ['records', 'queries', 'popular', '_id']
 DAS_RESERVED  = DAS_FILTERS + DAS_OPERATORS + DAS_SPECIALS
 URL_MAP       = {
     '!=' : '%21%3D',

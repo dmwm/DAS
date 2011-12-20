@@ -28,7 +28,8 @@
 #if $success
 <div>Showing successful jobs only</div>
 #end if
-<div><table>
+#set row_class='odd'
+<table class="das_table">
 <tr>
 <th>Name</th>
 <th>Index</th>
@@ -41,19 +42,32 @@
 </tr>
 #import time
 #for $result in $results
-<tr>
-<td><a href='$base/result?id=$quote_plus($result.task_id)'>$quote($result.name)</a></td>
-<td>$quote($result.index)</td>
-<td>#echo time.strftime('%H:%M:%S', time.localtime($result.start_time))#</td>
-<td>#echo time.strftime('%H:%M:%S', time.localtime($result.finish_time))#</td>
-<td>#echo time.strftime('%H:%M:%S', time.gmtime($result.finish_time-$result.start_time))#</td>
-<td>$quote($result.success)</td>
-<td><a href='$base/task?id=$quote_plus($result.master_id)'>Task</a></td>
+#set task_id = $str($result.get('_id'))
+#set name = $str($result.get('name'))
+#set index = $str($result.get('index'))
+#set success = $str($result.get('success'))
+#set master_id = $str($result.get('master_id'))
+#set parent = $str($result.get('parent'))
+#set start_time = $float($result.get('start_time'))
+#set finish_time = $float($result.get('finish_time'))
+<tr class=$row_class>
+<td><a href='$base/result?id=$quote_plus($master_id)&amp;index=$quote($index)'>$quote($name)</a></td>
+<td>$quote($index)</td>
+<td>#echo time.strftime('%Y-%m-%d %H:%M:%S', time.localtime($start_time))#</td>
+<td>#echo time.strftime('%Y-%m-%d %H:%M:%S', time.localtime($finish_time))#</td>
+<td>#echo time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime($finish_time-$start_time))#</td>
+<td>$quote($success)</td>
+<td><a href='$base/task?id=$quote_plus($master_id)'>Task</a></td>
 <td>
-#if $result.parent
-<a href='$base/task?id=$quote_plus($result.parent)'>Parent</a>
+#if $parent
+<a href='$base/task?id=$quote_plus($parent)'>Parent</a>
 #end if
 </td>
 </tr>
+#if $row_class=='odd':
+#set row_class='even'
+#else
+#set row_class='odd'
+#end if
 #end for
-</table></div>
+</table>

@@ -123,7 +123,7 @@ def adjust_values(func, gen, links):
     error = 0
     green = 'style="color:green"'
     red = 'style="color:red"'
-    for key, val in rdict.items():
+    for key, val in rdict.iteritems():
         lookup = func(key)
         if  key.lower() == 'reason':
             continue
@@ -226,15 +226,19 @@ class CMSRepresentation(DASRepresentation):
             tdict[uikey] = mapkey
         return tdict
 
-    def get_one_row(self, query):
+    def get_one_row(self, dasquery):
         """
         Invoke DAS workflow and get one row from the cache.
         """
-        if  query.has_key('aggregators'):
-            del query['aggregators']
-        if  query.has_key('filters'):
-            del query['filters']
-        data = [r for r in self.dasmgr.get_from_cache(query, idx=0, limit=1)]
+        # do not use filters/aggregators to get the record
+        filters = list(dasquery.filters)
+        aggregators = list(dasquery.aggregators)
+        dasquery._filters = []
+        dasquery._aggregators = []
+        data = [r for r in self.dasmgr.get_from_cache(dasquery, idx=0, limit=1)]
+        # put back filters/aggregators
+        dasquery._filters = filters
+        dasquery._aggregators = aggregators
         if  len(data):
             return data[0]
 
@@ -295,13 +299,13 @@ class CMSRepresentation(DASRepresentation):
         """
         Represent data in list view.
         """
-        kwargs  = head['args']
-        total   = head.get('nresults', 0)
-        inst    = getarg(kwargs, 'instance', self.dbs_global)
-        query   = getarg(kwargs, 'query', {})
-        uinput  = kwargs.get('input', '')
-        filters = query.get('filters')
-        main    = self.pagination(total, kwargs)
+        kwargs   = head['args']
+        total    = head.get('nresults', 0)
+        dasquery = head['dasquery']
+        inst     = dasquery.instance
+        uinput   = dasquery.query
+        filters  = dasquery.filters
+        main     = self.pagination(total, kwargs)
         if  main.find('das_noresults') == -1:
             main += self.templatepage('das_colors', colors=self.colors)
         style   = 'white'
@@ -309,13 +313,13 @@ class CMSRepresentation(DASRepresentation):
         if  uinput.find('|') != -1:
             # if we have filter/aggregator get one row from the given query
             try:
-                if  query:
-                    fltpage = self.fltpage(self.get_one_row(query))
+                if  dasquery.mongo_query:
+                    fltpage = self.fltpage(self.get_one_row(dasquery))
                 else:
                     fltpage = uinput.split('|')[-1]
             except Exception as exc:
                 fltpage = 'N/A, please check DAS record for errors'
-                msg = 'Fail to apply filter to query=%s' % query
+                msg = 'Fail to apply filter to query=%s' % dasquery.query
                 print msg
                 print_exc(exc)
         else:
@@ -449,18 +453,19 @@ class CMSRepresentation(DASRepresentation):
         """
         Represent data in tabular view.
         """
-        kwargs  = head['args']
-        total   = head['nresults']
-        uinput  = getarg(kwargs, 'input', '').strip()
-        idx     = getarg(kwargs, 'idx', 0)
-        limit   = getarg(kwargs, 'limit', 10)
-        sdir    = getarg(kwargs, 'dir', '')
-        inst    = getarg(kwargs, 'instance', self.dbs_global)
-        query   = kwargs['query']
-        titles  = []
-        page    = self.pagination(total, kwargs)
-        if  query.has_key('filters'):
-            for flt in query['filters']:
+        kwargs   = head['args']
+        total    = head['nresults']
+        dasquery = head['dasquery']
+        uinput   = dasquery.query
+        inst     = dasquery.instance
+        filters  = dasquery.filters
+        idx      = getarg(kwargs, 'idx', 0)
+        limit    = getarg(kwargs, 'limit', 10)
+        sdir     = getarg(kwargs, 'dir', '')
+        titles   = []
+        page     = self.pagination(total, kwargs)
+        if  filters:
+            for flt in filters:
                 if  flt.find('=') != -1 or flt.find('>') != -1 or \
                     flt.find('<') != -1:
                     continue
@@ -473,15 +478,15 @@ class CMSRepresentation(DASRepresentation):
             if  not pkey and row.has_key('das') and \
                 row['das'].has_key('primary_key'):
                 pkey = row['das']['primary_key'].split('.')[0]
-            if  query.has_key('filters'):
-                for flt in query['filters']:
+            if  filters:
+                for flt in filters:
                     rec.append(DotDict(row).get(flt))
             else:
                 gen = self.convert2ui(row)
                 titles = []
                 for uikey, val in gen:
                     skip = 0
-                    if  not query.has_key('filters'):
+                    if  not filters:
                         if  uikey in titles:
                             skip = 1
                         else:
@@ -527,10 +532,10 @@ class CMSRepresentation(DASRepresentation):
         """
         Represent data in DAS plain view for queries with filters.
         """
-        query   = head['args']['query']
-        fields  = query.get('fields', None)
-        filters = query.get('filters', None)
-        results = ""
+        dasquery = head['dasquery']
+        fields   = dasquery.mongo_query.get('fields', [])
+        filters  = dasquery.filters
+        results  = ""
         for row in data:
             if  filters:
                 for flt in filters:
@@ -542,7 +547,6 @@ class CMSRepresentation(DASRepresentation):
                             results += str(obj) + '\n'
                     except:
                         pass
-                results += '\n'
             else:
                 for item in fields:
                     systems = self.dasmgr.systems
@@ -554,12 +558,10 @@ class CMSRepresentation(DASRepresentation):
                         if  row.has_key(key):
                             val = row[key]
                             if  isinstance(val, dict):
-                                results += val.get(att, '')
+                                results += val.get(att, '') + '\n'
                             elif isinstance(val, list):
-                                for item in val:
-                                    results += item.get(att, '')
-                                    results += '\n'
+                                results += \
+                                '\n'.join([i.get(att, '') for i in val]) + '\n'
                     except:
                         pass
-                results += '\n'
         return results

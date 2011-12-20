@@ -23,7 +23,7 @@ from   DAS.core.das_ql import das_db_keywords
 
 def das_parser_error(query, error):
     """Return DAS keyword which cause parser to burk"""
-    print "ERROR", error
+    print "DAS PARSER ERROR", error
     try:
         # LexToken returns tok.type, tok.value, tok.lineno, and tok.lexpos
         _msg, tok = error.split("LexToken")
@@ -432,14 +432,16 @@ class DASPLY(object):
     def p_error(self, p):
         """Error rule for syntax errors"""
         if  p:
-            raise Exception("Syntax error in input, %s" % p)
+            raise Exception("DASPLY, syntax error in input, %s" % p)
         raise Exception("DAS unable to parse input query")
 
     def build(self, **kwargs):
         """Dynamic lexer/parser builder"""
-        self.lexer  = ply.lex.lex(module=self, **kwargs)
-        self.parser = ply.yacc.yacc(module=self, outputdir=self.parsertab_dir, 
-                        debug=self.verbose, **kwargs)
+        if  not self.lexer:
+            self.lexer  = ply.lex.lex(module=self, **kwargs)
+        if  not self.parser:
+            self.parser = ply.yacc.yacc(module=self, outputdir=self.parsertab_dir,
+                            debug=self.verbose, **kwargs)
         
 def ply2mongo(query):
     """

@@ -9,7 +9,7 @@ __author__ = "Gordon Ball"
 
 from DAS.utils.utils import genkey
 from DAS.utils.das_db import db_connection
-from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
+from DAS.utils.query_utils import encode_mongo_query, decode_mongo_query
 from DAS.utils.logger import PrintManager
 
 PARSERCACHE_NOTFOUND = 5

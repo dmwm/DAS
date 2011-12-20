@@ -11,6 +11,7 @@ import unittest
 from urllib2 import URLError
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
+from DAS.utils.utils import deepcopy
 from DAS.utils.url_utils import urllib2_request
 
 class testDASCache(unittest.TestCase):
@@ -22,7 +23,7 @@ class testDASCache(unittest.TestCase):
         set up DAS core module
         """
         debug    = 0
-        config   = das_readconfig()
+        config   = deepcopy(das_readconfig())
         logger   = PrintManager('TestDASCache', verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug

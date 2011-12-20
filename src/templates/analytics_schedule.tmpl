@@ -6,8 +6,9 @@
 <div><table>
 <tr><th>Scheduled</th><th>Name</th><th>Class</th><th>Commands</th><th></th></tr>
 #import time
+#set now=time.time()
 #for $task in $schedule
-<tr><td>#echo time.strftime('%H:%M:%S',time.localtime($task.at))# (#echo int($task.at - $now)# sec)</td>
+<tr><td>#echo time.strftime('%Y-%m-%d %H:%M:%S',time.localtime($task.at))# (#echo int($task.at - $now)# sec)</td>
 <td><a href='$base/task?id=$quote_plus($task.master_id)'>$quote($task.name)</a></td>
 <td>$quote($task.classname)</td>
 <td><a href='$base/remove_task?id=$quote_plus($task.master_id)'>Remove</a></td>
@@ -26,7 +27,7 @@
 <div><table>
 <tr><th>Started</th><th>Name</th><th>Class</th></tr>
 #for $task in $running
-<tr><td>#echo time.strftime('%H:%M:%S',time.localtime($task.started))# (#echo int($now - $task.started)# sec)</td>
+<tr><td>#echo time.strftime('%Y-%m-%d %H:%M:%S',time.localtime($task.started))# (#echo int($now - $task.started)# sec)</td>
 <td><a href='$base/task?id=$quote_plus($task.master_id)'>$quote($task.name)</a></td>
 <td>$quote($task.classname)</td></tr>
 #end for

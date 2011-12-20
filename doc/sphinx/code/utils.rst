@@ -30,11 +30,6 @@ DAS option utils
 .. automodule:: DAS.utils.das_option
         :members:
 
-DAS query utils
----------------
-.. automodule:: DAS.utils.das_query
-        :members:
-
 DAS timer utils
 ---------------
 .. automodule:: DAS.utils.das_timer

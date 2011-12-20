@@ -6,37 +6,37 @@ DAS Analytics classes
 
 Analytics cli module
 --------------------
-.. automodule:: DAS.analytics.analytics_cli
+.. automodule:: DAS.analytics.cli
       :members:
 
 Analytics config module
 -----------------------
-.. automodule:: DAS.analytics.analytics_config
+.. automodule:: DAS.analytics.config
       :members:
 
 Analytics controller module
 ---------------------------
-.. automodule:: DAS.analytics.analytics_controller
+.. automodule:: DAS.analytics.controller
       :members:
 
 Analytics schedule module
 -------------------------
-.. automodule:: DAS.analytics.analytics_scheduler
+.. automodule:: DAS.analytics.scheduler
       :members:
 
 Analytics task module
 ---------------------
-.. automodule:: DAS.analytics.analytics_task
+.. automodule:: DAS.analytics.task
       :members:
 
 Analytics utils module
 ----------------------
-.. automodule:: DAS.analytics.analytics_utils
+.. automodule:: DAS.analytics.utils
       :members:
 
 Analytics web module
 --------------------
-.. automodule:: DAS.analytics.analytics_web
+.. automodule:: DAS.analytics.web
       :members:
 
 Analytics task module
@@ -46,30 +46,30 @@ Analytics task module
 
 Analytics HotspotBase module
 ----------------------------
-.. automodule:: DAS.analytics.tasks.HotspotBase
+.. automodule:: DAS.analytics.tasks.hotspot_base
       :members:
 
 Analytics KeyHotspot module
 ---------------------------
-.. automodule:: DAS.analytics.tasks.KeyHotspot
+.. automodule:: DAS.analytics.tasks.key_hotspot
       :members:
 
 Analytics KeyLearning module
 ----------------------------
-.. automodule:: DAS.analytics.tasks.KeyLearning
+.. automodule:: DAS.analytics.tasks.key_learning
       :members:
 
 Analytics QueryMaintainer module
 --------------------------------
-.. automodule:: DAS.analytics.tasks.QueryMaintainer
+.. automodule:: DAS.analytics.tasks.query_maintainer
       :members:
 
 Analytics QueryRunner module
 ----------------------------
-.. automodule:: DAS.analytics.tasks.QueryRunner
+.. automodule:: DAS.analytics.tasks.query_runner
       :members:
 
 Analytics ValueHotspot task
 ---------------------------
-.. automodule:: DAS.analytics.tasks.ValueHotspot
+.. automodule:: DAS.analytics.tasks.value_hotspot
       :members:

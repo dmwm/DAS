@@ -11,6 +11,7 @@ import unittest
 import traceback
 from   DAS.utils.das_db import db_connection, make_uri, db_gridfs
 from   DAS.utils.das_config import das_readconfig
+from DAS.utils.utils import deepcopy
 
 class testDAS_DB(unittest.TestCase):
     """
@@ -21,7 +22,7 @@ class testDAS_DB(unittest.TestCase):
         set up DAS core module
         """
         self.debug  = 0
-        dasconfig   = das_readconfig()
+        dasconfig   = deepcopy(das_readconfig())
         self.dburi  = dasconfig['mongodb']['dburi']
         self.dbhost = 'localhost'
         self.dbport = 27017

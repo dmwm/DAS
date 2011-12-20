@@ -62,7 +62,7 @@ def getdata(url, params, headers=None, expire=3600, post=None,
     if  verbose:
         print '+++ getdata, url=%s, headers=%s' % (url, headers)
     req = urllib2.Request(url)
-    for key, val in headers.items():
+    for key, val in headers.iteritems():
         req.add_header(key, val)
     if  verbose > 1:
         handler = urllib2.HTTPHandler(debuglevel=1)
@@ -171,7 +171,7 @@ class UrlProxy(object):
 
     def headers(self):
         """Get URL headers""" 
-        return dict(self._url.headers.items()) 
+        return dict(self._url.headers.iteritems())
 
     def get(self): 
         """Get URL data"""

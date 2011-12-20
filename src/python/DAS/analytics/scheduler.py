@@ -11,14 +11,13 @@ __author__ = "Gordon Ball"
 import logging
 import time
 import multiprocessing
-import copy
 import threading
 import signal
 
 # DAS modules
 from DAS.analytics.config import DASAnalyticsConfig
 from DAS.analytics.task import Task
-from DAS.utils.utils import print_exc
+from DAS.utils.utils import print_exc, deepcopy
 from cherrypy.process import plugins
 
 #prevent the worker catching SIGINT, which causes a deadlock in
@@ -136,7 +135,7 @@ class TaskScheduler(plugins.SimplePlugin):
     def get_scheduled(self):
         "Get a de-classed list of current tasks for web interface."
         with self.lock:
-            return copy.deepcopy(self.scheduled)
+            return deepcopy(self.scheduled)
     
     def get_task(self, master_id):
         "Get a dict describing a single task from the registry"

@@ -8,20 +8,18 @@ TODO: Atomic updates, instead of delete-then-requery
 """
 
 import time
-import copy
-from DAS.utils.utils import genkey
-from DAS.core.das_mongocache import decode_mongo_query
+from DAS.core.das_query import DASQuery
 
 class QueryMaintainer(object):
     "Ensures a query remains in the cache"
-    task_options=[{'name':'query', 'type':'string', 'default':None,
-                   'help':'The query to be maintained'},
-                  {'name':'preempt', 'type':'int', 'default':60,
-                   'help':'Number of seconds before expiry we try and refresh the data'}]
+    task_options = [{'name':'query', 'type':'string', 'default':None,
+                     'help':'The query to be maintained'},
+                    {'name':'preempt', 'type':'int', 'default':60,
+     'help':'Number of seconds before expiry we try and refresh the data'}]
     def __init__(self, **kwargs):
         self.logger = kwargs['logger']
         self.das = kwargs['DAS']
-        self.query = kwargs['query']
+        self.dasquery = DASQuery(kwargs['dasquery'])
         self.preempt = kwargs.get('preempt', 60) #default 1 minute
         
     def __call__(self):
@@ -32,29 +30,30 @@ class QueryMaintainer(object):
         itself to run shortly before the next expiry time.
         """
         
-        qhash = genkey(self.query)
-        self.logger.info("Query %s QHash %s", self.query, qhash)
-        mongoquery = decode_mongo_query(copy.deepcopy(self.query))
+        self.logger.info(\
+        "Query %s QHash %s", self.dasquery, self.dasquery.qhash)
         
         #delete old data from cache, if any
-        self.logger.info("Deleting query %s", mongoquery)
-        self.das.remove_from_cache(mongoquery)
+        self.logger.info("Deleting query %s", self.dasquery)
+        self.das.remove_from_cache(self.dasquery)
         
         #remake query
         
-        self.logger.info("Re-issuing query %s", mongoquery)
-        status = self.das.call(mongoquery, add_to_analytics=False)
+        self.logger.info("Re-issuing query %s", self.dasquery)
+        status = self.das.call(self.dasquery, add_to_analytics=False)
         if status:
             
             #read result for expiry            
             expiries = [result.get('apicall', {}).get('expire', 0) 
-                        for result in self.das.analytics.list_apicalls(qhash=qhash)]
+                        for result in \
+                self.das.analytics.list_apicalls(qhash=self.dasquery.qhash)]
             
             if expiries:
                 expiry_time = min(expiries)
                 now = time.time()
                 schedule = max(now, expiry_time - self.preempt)
-                self.logger.info("Found minimum expiry time %s (%s), scheduling at %s (%s)", 
+                self.logger.info(\
+                "Found minimum expiry time %s (%s), scheduling at %s (%s)", 
                                  expiry_time, int(expiry_time - now),
                                  schedule, int(schedule - now))
                 
@@ -70,5 +69,3 @@ class QueryMaintainer(object):
         else:
             self.logger.warning("Query failed, status=%s", status)
             raise Exception("query-failed")
-        
-            

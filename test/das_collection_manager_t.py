@@ -12,6 +12,7 @@ import unittest
 
 from pymongo.connection import Connection
 from DAS.utils.das_config import das_readconfig
+from DAS.utils.utils import deepcopy
 from DAS.utils.logger import PrintManager
 from DAS.core.das_collection_manager import make_dbname, DASCollectionManager
 
@@ -24,7 +25,7 @@ class testDASCollectionManager(unittest.TestCase):
         set up DAS
         """
         debug    = 0
-        config   = das_readconfig()
+        config   = deepcopy(das_readconfig())
         logger   = PrintManager('TestDASCollectionManager', verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug

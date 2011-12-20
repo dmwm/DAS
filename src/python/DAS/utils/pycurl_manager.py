@@ -73,7 +73,7 @@ class RequestHandler(object):
             curl.setopt(pycurl.POST, 1)
         curl.setopt(pycurl.URL, url)
         curl.setopt(pycurl.HTTPHEADER, \
-                ["%s: %s" % (k, v) for k, v in headers.items()])
+                ["%s: %s" % (k, v) for k, v in headers.iteritems()])
         bbuf = StringIO.StringIO()
         hbuf = StringIO.StringIO()
         curl.setopt(pycurl.WRITEFUNCTION, bbuf.write)

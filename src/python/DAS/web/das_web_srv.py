@@ -25,7 +25,9 @@ from pymongo.objectid import ObjectId
 import DAS
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators, das_filters
+from DAS.core.das_ql import DAS_DB_KEYWORDS
 from DAS.core.das_ply import das_parser_error
+from DAS.core.das_query import DASQuery
 from DAS.core.das_mongocache import DASLogdb
 from DAS.utils.utils import getarg
 from DAS.utils.ddict import DotDict
@@ -232,7 +234,7 @@ class DASWebService(DASWebManager):
         """
         dasdict = {}
         daskeys = []
-        for system, keys in self.dasmgr.mapping.daskeys().items():
+        for system, keys in self.dasmgr.mapping.daskeys().iteritems():
             if  system not in self.dasmgr.systems:
                 continue
             tmpdict = {}
@@ -266,13 +268,37 @@ class DASWebService(DASWebManager):
         """
         return self.index(args, kwargs)
 
-    def check_input(self, uinput):
+    def adjust_input(self, kwargs):
+        """
+        Adjust user input wrt common DAS keyword patterns, e.g.
+        Zee -> dataset=*Zee*, T1_US_XXX -> site=T1_US_XXX*. This method
+        only works if self.adjust is set in configuration of DAS server.
+        This method can be customization for concrete DAS applications via
+        external free_text_parser function (part of DAS.web.utils module)
+        """
+        if  not self.adjust:
+            return
+        uinput = kwargs.get('input', '')
+        query_part = uinput.split('|')[0]
+        if  query_part == 'queries' or query_part == 'records':
+            return
+        new_input = free_text_parser(uinput, self.daskeys)
+        if  new_input == uinput:
+            selkey = choose_select_key(uinput, self.daskeys, 'dataset')
+            if  selkey and len(new_input) > len(selkey) and \
+                new_input[:len(selkey)] != selkey:
+                new_input = selkey + ' ' + new_input
+        kwargs['input'] = new_input
+
+    def generate_dasquery(self, uinput, inst, html_error=True):
         """
         Check provided input as valid DAS input query.
-        Returns status and content.
+        Returns status and content (either error message or valid DASQuery)
         """
-        def helper(msg):
+        def helper(msg, html_error):
             """Helper function which provide error template"""
+            if  not html_error:
+                return msg
             guide = self.templatepage('dbsql_vs_dasql', 
                         operators=', '.join(das_operators()))
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
@@ -280,40 +306,44 @@ class DASWebService(DASWebManager):
             return page
         if  not uinput:
             return 1, helper('No input query')
-        # check provided input. If at least one word is not part of das_keys
-        # return ambiguous template.
+        # Generate DASQuery object, if it fails we catch the exception and
+        # wrap it for upper layer (web interface)
         try:
-            mongo_query = self.dasmgr.mongoparser.parse(uinput, \
-                                add_to_analytics=False)
-        except Exception as exc:
-            return 1, helper(das_parser_error(uinput, str(exc)))
-        fields = mongo_query.get('fields', [])
+            dasquery = DASQuery(uinput, instance=inst)
+        except Exception as err:
+            return 1, helper(das_parser_error(uinput, str(err)), html_error)
+        fields = dasquery.mongo_query.get('fields', [])
         if  not fields:
             fields = []
-        spec   = mongo_query.get('spec', {})
-        if  not fields+spec.keys():
-            msg = 'Provided input does not resolve into a valid set of keys'
-            return 1, helper(msg)
+        spec   = dasquery.mongo_query.get('spec', {})
         for word in fields+spec.keys():
             found = 0
-            if  word == 'queries':
+            if  word in DAS_DB_KEYWORDS:
                 found = 1
             for key in self.daskeys:
                 if  word.find(key) != -1:
                     found = 1
             if  not found:
                 msg = 'Provided input does not contain a valid DAS key'
-                return 1, helper(msg)
-        try:
-            service_map = self.dasmgr.mongoparser.service_apis_map(mongo_query)
-            if  uinput.find('queries') != -1:
-                pass
-            elif  uinput.find('records') == -1 and not service_map:
-                return 1, helper(\
-                "None of the API's registered in DAS can resolve this query")
-        except Exception as exc:
-            print_exc(exc)
-        return 0, mongo_query
+                return 1, helper(msg, html_error)
+        if  isinstance(uinput, dict): # DASQuery w/ {'spec':{'_id:id}}
+            pass
+        elif uinput.find('queries') != -1:
+            pass
+        elif uinput.find('records') != -1:
+            pass
+        else: # normal user DAS query
+            try:
+                service_map = dasquery.service_apis_map()
+            except Exception as exc:
+                msg = 'Fail to lookup DASQuery service API map'
+                print msg
+                print_exc(exc)
+                return 1, helper(msg, html_error)
+            if  not service_map:
+                msg = "None of the API's registered in DAS can resolve this query"
+                return 1, helper(msg, html_error)
+        return 0, dasquery
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -396,10 +426,16 @@ class DASWebService(DASWebManager):
             time0    = time.time()
             idx      = getarg(kwargs, 'idx', 0)
             limit    = getarg(kwargs, 'limit', 10)
-            coll     = getarg(kwargs, 'collection', 'merge')
-            nresults = self.dasmgr.rawcache.nresults(query, coll)
+            coll     = kwargs.get('collection', 'merge')
+            inst     = kwargs.get('instance', self.dbs_global)
+            form     = self.form(uinput="")
+            check, content = self.generate_dasquery(query, inst)
+            if  check:
+                return self.page(form + content, ctime=time.time()-time0)
+            dasquery = content # returned content is valid DAS query
+            nresults = self.dasmgr.rawcache.nresults(dasquery, coll)
             gen      = self.dasmgr.rawcache.get_from_cache\
-                (query, idx=idx, limit=limit, collection=coll)
+                (dasquery, idx=idx, limit=limit, collection=coll)
             if  recordid: # we got id
                 for row in gen:
                     res += das_json(row)
@@ -420,7 +456,6 @@ class DASWebService(DASWebManager):
                     page = 'No results found, nresults=%s' % nresults
                 page += res
 
-            form    = self.form(uinput="")
             ctime   = (time.time()-time0)
             page = self.page(form + page, ctime=ctime)
             return page
@@ -432,6 +467,11 @@ class DASWebService(DASWebManager):
     def datastream(self, kwargs):
         """Stream DAS data into JSON format"""
         head = kwargs.get('head', request_headers())
+        if  not head.has_key('mongo_query'):
+            head['mongo_query'] = head['dasquery'].mongo_query \
+                if head.has_key('dasquery') else {}
+        if  head.has_key('dasquery'):
+            del head['dasquery']
         data = kwargs.get('data', [])
         return head, data
 
@@ -439,29 +479,32 @@ class DASWebService(DASWebManager):
         """
         Invoke DAS workflow and get data from the cache.
         """
-        self.adjust_input(kwargs)
         head   = request_headers()
         head['args'] = kwargs
         uinput = getarg(kwargs, 'input', '') 
         inst   = kwargs.get('instance', self.dbs_global)
-        if  inst:
-            uinput = ' instance=%s %s' % (inst, uinput)
         idx    = getarg(kwargs, 'idx', 0)
         limit  = getarg(kwargs, 'limit', 0) # do not impose limit
         skey   = getarg(kwargs, 'skey', '')
         sdir   = getarg(kwargs, 'dir', 'asc')
         coll   = getarg(kwargs, 'collection', 'merge')
         time0  = time.time()
+        check, content = self.generate_dasquery(uinput, inst, html_error=False)
+        if  check:
+            head.update({'status': 'fail', 'reason': content,
+                         'ctime': time.time()-time0, 'input': uinput})
+            data = []
+            return head, data
+        dasquery = content # returned content is valid DAS query
         try:
-            mquery = self.dasmgr.mongoparser.parse(uinput, False) 
-            data   = self.dasmgr.result(mquery, idx, limit, skey, sdir)
-            nres   = self.dasmgr.nresults(mquery, coll)
-            head.update({'status':'ok', 'nresults':nres, 
-                         'mongo_query': mquery, 'ctime': time.time()-time0})
+            data   = self.dasmgr.result(dasquery, idx, limit, skey, sdir)
+            nres   = self.dasmgr.nresults(dasquery, coll)
+            head.update({'status':'ok', 'nresults':nres,
+                         'ctime': time.time()-time0, 'dasquery': dasquery})
         except Exception as exc:
             print_exc(exc)
             head.update({'status': 'fail', 'reason': str(exc),
-                         'ctime': time.time()-time0})
+                         'ctime': time.time()-time0, 'dasquery': dasquery})
             data = []
         return head, data
 
@@ -496,11 +539,16 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Pragma'] = 'no-cache'
         self.adjust_input(kwargs)
         pid    = kwargs.get('pid', '')
+        inst   = kwargs.get('instance', self.dbs_global)
         uinput = kwargs.get('input', '').strip()
         self.logdb(uinput)
-        inst   = kwargs.get('instance', self.dbs_global)
-        if  inst:
-            uinput = ' instance=%s %s' % (inst, uinput)
+        check, content = self.generate_dasquery(uinput, inst)
+        if  check:
+            head = request_headers()
+            head.update({'status': 'fail', 'reason': 'Fail to create DASQuery object',
+                         'ctime': 0})
+            return self.datastream(dict(head=head, data=data))
+        dasquery = content # returned content is valid DAS query
         if  not pid and self.busy():
             data = []
             head = request_headers()
@@ -516,7 +564,7 @@ class DASWebService(DASWebManager):
                 return self.datastream(dict(head=head, data=data))
         else:
             addr = cherrypy.request.headers.get('Remote-Addr')
-            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput, addr)
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery, addr)
             self.reqmgr.add(pid, kwargs)
             return pid
 
@@ -547,12 +595,11 @@ class DASWebService(DASWebManager):
         if  not pat.match(dataset):
             msg = 'Invalid dataset name'
             return self.error(msg)
-        query = "file dataset=%s instance=%s | grep file.name" \
-                % (dataset, instance)
+        query = "file dataset=%s | grep file.name" % dataset
         try:
-            mquery = self.dasmgr.mongoparser.parse(query, False) 
-            data   = self.dasmgr.result(mquery, idx=0, limit=0)
+            data   = self.dasmgr.result(query, idx=0, limit=0)
         except Exception as exc:
+            print_exc(exc)
             msg    = 'Exception: %s\n' % str(exc)
             msg   += 'Unable to retrieve data for query=%s' % query
             return self.error(msg)
@@ -565,26 +612,6 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Content-Type'] = "text/plain"
         return page
 
-    def adjust_input(self, kwargs):
-        """
-        Adjust user input if self.adjust flag is enable it. 
-        This method can be customization for concrete DAS applications via
-        external free_text_parser function (part of DAS.web.utils module)
-        """
-        if  not self.adjust:
-            return
-        uinput = kwargs.get('input', '')
-        query_part = uinput.split('|')[0]
-        if  query_part == 'queries' or query_part == 'records':
-            return
-        new_input = free_text_parser(uinput, self.daskeys)
-        if  new_input == uinput:
-            selkey = choose_select_key(uinput, self.daskeys, 'dataset')
-            if  selkey and len(new_input) > len(selkey) and \
-                new_input[:len(selkey)] != selkey:
-                new_input = selkey + ' ' + new_input
-        kwargs['input'] = new_input
-
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def request(self, **kwargs):
@@ -596,30 +623,28 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Pragma'] = 'no-cache'
 
         time0   = time.time()
-        self.adjust_input(kwargs)
         uinput  = getarg(kwargs, 'input', '').strip()
-        inst    = kwargs.get('instance', self.dbs_global)
         view    = kwargs.get('view', 'list')
+        inst    = kwargs.get('instance', self.dbs_global)
         form    = self.form(uinput=uinput, instance=inst, view=view)
-        if  inst:
-            uinput = ' instance=%s %s' % (inst, uinput)
-        self.logdb(uinput)
+        self.adjust_input(kwargs)
+        uinput  = kwargs.get('input') # read new adjusted user input
         if  self.busy():
             return self.busy_page(uinput)
-        check, content = self.check_input(uinput)
+        self.logdb(uinput)
+        check, content = self.generate_dasquery(uinput, inst)
         if  check:
             if  view == 'list' or view == 'table':
                 return self.page(form + content, ctime=time.time()-time0)
             else:
                 return content
-        mongo_query = content # check_input will return mongo_query upon success
-        kwargs['query'] = mongo_query
-        status = self.dasmgr.get_status(mongo_query)
+        dasquery = content # returned content is valid DAS query
+        status = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
             page = self.get_page_content(kwargs)
         else: 
             addr = cherrypy.request.headers.get('Remote-Addr')
-            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, uinput, addr)
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery, addr)
             self.reqmgr.add(pid, kwargs)
             if  self.taskmgr.is_alive(pid):
                 # no data in raw cache
@@ -646,7 +671,7 @@ class DASWebService(DASWebManager):
         """Return list of all current requests in DAS queue"""
         page = ""
         count = 0
-        for row in self.reqmgr.items():
+        for row in self.reqmgr.iteritems():
             page += '<li>%s placed at %s<br/>%s</li>' \
                         % (row['_id'], row['timestamp'], row['kwds'])
             count += 1
@@ -684,6 +709,7 @@ class DASWebService(DASWebManager):
                 for key, val in \
                 urlparse.parse_qsl(urlparse.urlparse(url).query):
                     kwargs[key] = val
+                self.adjust_input(kwargs)
                 page = self.get_page_content(kwargs)
             else:
                 page = "Request %s not found, please reload the page" % pid

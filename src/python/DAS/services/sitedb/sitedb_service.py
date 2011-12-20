@@ -30,7 +30,7 @@ class SiteDBService(DASAbstractService):
         """
         Adjust Phedex parameters for specific query requests
         """
-        for key, val in kwds.items():
+        for key, val in kwds.iteritems():
             kwds[key] = val.replace('*', '')
 
     def parser(self, query, dformat, source, api):
@@ -51,7 +51,7 @@ class SiteDBService(DASAbstractService):
             self.logger.warning(msg)
             jsondict = eval(data, { "__builtins__": None }, {})
         pat = cms_tier_pattern
-        for key, val in jsondict.items():
+        for key, val in jsondict.iteritems():
             if  api == 'CMSNametoAdmins':
                 row = {'admin':val}
             elif api == 'SEtoCMSName':

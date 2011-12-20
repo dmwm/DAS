@@ -13,7 +13,9 @@ import os
 import re
 import sys
 import time
+import copy
 from   types import GeneratorType, InstanceType
+import inspect
 import hashlib
 import plistlib
 import calendar
@@ -44,17 +46,20 @@ def identical_data_records(old, row):
             return False
     return True
 
-def deepcopy(query):
-    """Perform full copy of given query into new dict object"""
-    obj = {}
-    for key, val in query.items():
-        if  isinstance(val, dict):
-            obj[key] = deepcopy(val)
-        elif isinstance(val, list):
-            obj[key] = list(val)
-        else:
-            obj[key] = val
-    return obj
+def deepcopy(obj):
+    """Perform full copy of given object into new object"""
+    if  isinstance(obj, dict):
+        newobj = {}
+        for key, val in obj.iteritems():
+            if  isinstance(val, dict):
+                newobj[key] = deepcopy(val)
+            elif isinstance(val, list):
+                newobj[key] = list(val)
+            else:
+                newobj[key] = val
+    else:
+        newobj = copy.deepcopy(obj)
+    return newobj
 
 def dastimestamp(msg='DAS '):
     """
@@ -66,11 +71,21 @@ def dastimestamp(msg='DAS '):
         return msg + tstamp
     return tstamp
 
-def print_exc(exc):
+def inspect_module(msg=None):
+    "Printout function stack calls"
+    if  msg:
+        print msg
+    for item in inspect.stack():
+        print item # stack item
+
+def print_exc(exc, print_traceback=True):
     """Standard way to print exceptions"""
-    print dastimestamp('DAS ERROR '), type(exc), str(exc)
-    _type, _value, exc_traceback = sys.exc_info()
-    traceback.print_tb(exc_traceback, file=sys.stdout)
+    stack = inspect.stack()[1]
+    caller = "%s:%s" % (stack[1], stack[2])
+    print dastimestamp('DAS ERROR '), type(exc), str(exc), caller
+    if  print_traceback:
+        _type, _value, exc_traceback = sys.exc_info()
+        traceback.print_tb(exc_traceback, file=sys.stdout)
 
 def parse_filters(query):
     """
@@ -82,7 +97,7 @@ def parse_filters(query):
     mdict = {}
     existance = {'$exists': True}
     for flt in filters:
-        for key, val in parse_filter(spec, flt).items():
+        for key, val in parse_filter(spec, flt).iteritems():
             if  mdict.has_key(key):
                 value = mdict[key]
                 if  isinstance(value, dict) and isinstance(val, dict):
@@ -337,10 +352,10 @@ def adjust_mongo_keyvalue(value):
     newdict = value
     if  isinstance(value, dict):
         newdict = {}
-        for key, val in value.items():
+        for key, val in value.iteritems():
             newval = val
             if  isinstance(val, dict):
-                for kkk, vvv in val.items():
+                for kkk, vvv in val.iteritems():
                     if  kkk == '$in':
                         newval = vvv
                     elif  kkk == '$lte' or kkk == '$gte':
@@ -395,14 +410,14 @@ def merge_dict(dict1, dict2):
 
         merged_dict = {}
         for dictionary in [dict1, dict2]:
-            for key, value in dictionary.items():
+            for key, value in dictionary.iteritems():
                 merged_dict.setdefault(key,[]).append(value) 
         return merged_dict
 
     where I changed append(value) on merging lists or adding new
     value into the list based on value type.
     """
-    for key, value in dict2.items():
+    for key, value in dict2.iteritems():
         if  dict1.has_key(key):
             val = dict1[key]
             if  val == value:
@@ -503,9 +518,9 @@ def cartesian_product(ilist1, ilist2):
 
     # find relation keys between two dicts (rows) in lists
     row1  = master_list[0]
-    keys1 = [k for k, v in row1.items() if v and k != 'system']
+    keys1 = [k for k, v in row1.iteritems() if v and k != 'system']
     row2  = slave_list[0]
-    keys2 = [k for k, v in row2.items() if v and k != 'system']
+    keys2 = [k for k, v in row2.iteritems() if v and k != 'system']
     rel_keys = list( set(keys1) & set(keys2) )
     ins_keys = set(keys2) - set(rel_keys)
     
@@ -558,7 +573,7 @@ def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
             if  match != len(rel_keys): # not all keys are matched
                 continue
             newrow = dict(row)
-            for k, val in row_match.items():
+            for k, val in row_match.iteritems():
                 if  val:
                     if  k == 'system':
                         if  newrow[k].find(val) == -1:
@@ -641,14 +656,15 @@ def genresults(system, results, collect_list):
 
 def transform_dict2list(indict):
     """
-    transform input dictionary into list of dictionaries, e.g.::
+    transform input dictionary into list of dictionaries, e.g.
 
+    .. doctest::
         d=['a':1, 'b':[1,2]}
         output list = [{'a':1,'b':1}, {'a':1,'b':2}]
     """
     foundlist = 0
     row  = {}
-    for kkk, vvv in indict.items():
+    for kkk, vvv in indict.iteritems():
         row[kkk] = None
         if  isinstance(vvv, list):
             if  foundlist and foundlist != len(vvv):
@@ -659,7 +675,7 @@ def transform_dict2list(indict):
     if  foundlist:
         for idx in range(0, foundlist):
             newrow = dict(row)
-            for kkk, vvv in indict.items():
+            for kkk, vvv in indict.iteritems():
                 if  isinstance(vvv, list):
                     newrow[kkk] = vvv[idx]
                 else:
@@ -965,7 +981,7 @@ def dict_helper(idict, notations):
         return _dict_handler(idict, notations)
     except:
         child_dict = {}
-        for kkk, vvv in idict.items():
+        for kkk, vvv in idict.iteritems():
             child_dict[notations.get(kkk, kkk)] = adjust_value(vvv)
         return child_dict
 
@@ -1173,7 +1189,7 @@ def row2das(mapper, system, api, row):
     """
     if  not isinstance(row, dict):
         return
-    for key, val in row.items():
+    for key, val in row.iteritems():
         newkey = mapper(system, key, api)
         if  newkey != key:
             row.pop(key)
@@ -1204,7 +1220,7 @@ def aggregator(results, expire):
                 _ids = [_ids]
         rec['cache_id'] = list(set(_ids))
         rec['das']['empty_record'] = 0
-        for key, val in rec.items():
+        for key, val in rec.iteritems():
             if  key not in ['das_id', 'das', 'cache_id', '_id']:
                 if  isinstance(val, dict):
                     rec[key] = [val]
@@ -1340,7 +1356,7 @@ def extract_http_error(err):
             value = err['message']
             if  isinstance(value, dict):
                 msg = ''
-                for key, val in value.items():
+                for key, val in value.iteritems():
                     msg += '%s: %s. ' % (key, val)
             else:
                 msg = str(value)

@@ -5,9 +5,9 @@
 <div><table>
 #import json
 <tr><td><b>Error</b></td><td>$error</td></tr>
+#for $key, $value in $extra.items()
 #set key = $quote($key)
 #set value = $quote($value)
-#for $key, $value in $extra.items()
 <tr><td><b>$key</b></td>
 <td><pre>$quote($json.dumps($value, indent=4, default=str))</pre></td></tr>
 #end for 

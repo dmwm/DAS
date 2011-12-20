@@ -21,13 +21,13 @@ import itertools
 
 # DAS modules
 from DAS.core.das_ql import das_operators, das_special_keys
+from DAS.core.das_query import DASQuery
 from DAS.core.das_parser import QLManager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_keylearning import DASKeyLearning
-from DAS.core.das_mongocache import DASMongocache, loose, convert2pattern
-from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
-from DAS.core.das_mongocache import compare_specs
+from DAS.core.das_mongocache import DASMongocache
+from DAS.utils.query_utils import compare_specs, decode_mongo_query
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
 from DAS.utils.utils import genkey, unique_filter, parse_filters
@@ -39,19 +39,18 @@ from DAS.utils.das_timer import das_timer, get_das_timer
 import DAS.utils.jsonwrapper as json
 import DAS.core.das_aggregators as das_aggregator
 
-def dasheader(system, query, expire, api=None, url=None, ctime=None):
+def dasheader(system, dasquery, expire, api=None, url=None, ctime=None):
     """
     Return DAS header (dict) wrt DAS specifications, see
     https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
     """
-    query   = encode_mongo_query(query)
     if  not api:
         dasdict = dict(system=[system], timestamp=time.time(),
-                    qhash=genkey(query), expire=expire_timestamp(expire),
+                    qhash=dasquery.qhash, expire=expire_timestamp(expire),
                     status="requested")
     else:
         dasdict = dict(system=[system], timestamp=time.time(),
-                    url=[url], ctime=[ctime], qhash=genkey(query), 
+                    url=[url], ctime=[ctime], qhash=dasquery.qhash,
                     expire=expire_timestamp(expire), urn=[api],
                     api=[api], status="requested")
     return dict(das=dasdict)
@@ -192,37 +191,18 @@ class DASCore(object):
                     _keys.append(key)
         return _keys
 
-    def adjust_query(self, query, add_to_analytics=True):
-        """Check that provided query is indeed in MongoDB format"""
-        err = '\nDASCore::result unable to load the input query: "%s"' % query
-        if  isinstance(query, str) or isinstance(query, unicode): # DAS-QL
-            try:
-                query = json.loads(query)
-            except:
-                try:
-                    query = self.mongoparser.parse(query, 
-                                add_to_analytics)
-                except Exception as exp:
-                    print "Fail to process query='%s'" % query
-                    raise exp
-        err = '\nDASCore::result query not in MongoDB format, %s' % query
-        if  not isinstance(query, dict):
-            raise Exception(err)
-        else:
-            if  not query.has_key('fields') and not query.has_key('spec'):
-                raise Exception(err)
-        return query
-
     def result(self, query, idx=0, limit=None, skey=None, sorder='asc'):
         """
         Get results either from cache or from explicit call
         """
         self.logger.info('input query=%s' % query)
         results = []
-        query   = self.adjust_query(query)
+        dasquery = DASQuery(query, mongoparser=self.mongoparser)
+        dasquery.add_to_analytics()
+        query    = dasquery.mongo_query
         # check if we have any service which cover the query
         # otherwise decompose it into list of queries
-        service_map = self.mongoparser.service_apis_map(query)
+        service_map = dasquery.service_apis_map()
         if  not service_map:
             msg  = 'no APIs found to answer input query, will decompose it'
             self.logger.info(msg)
@@ -230,49 +210,36 @@ class DASCore(object):
             if  not skeys:
                 skeys = []
             for key in skeys:
-                newquery = dict(fields=[key], spec=query['spec'])
+                newquery = DASQuery(dict(fields=[key], spec=query['spec']),
+                                        mongoparser=self.mongoparser)
                 self.call(newquery) # process query
         else:
-            self.call(query) # process query
+            self.call(dasquery) # process query
 
         # lookup provided query in a cache
         if  not self.noresults:
-            results = self.get_from_cache(query, idx, limit, skey, sorder)
+            results = self.get_from_cache(dasquery, idx, limit, skey, sorder)
         return results
 
-    def remove_from_cache(self, query):
+    def remove_from_cache(self, dasquery):
         """
         Delete in cache entries about input query
         """
-        self.rawcache.remove_from_cache(query)
+        self.rawcache.remove_from_cache(dasquery)
 
-    def bare_query(self, iquery):
-        """
-        Remove from provided query filters/mapreduce, etc. and leave
-        only bare query.
-        """
-        query = dict(iquery)
-        for key in query.keys():
-            if  key not in ['spec', 'fields', 'instance']:
-                del query[key]
-        msg = 'input query=%s, output query =%s' % (iquery, query)
-        self.logger.debug(msg)
-        return query
-
-    def get_status(self, query):
+    def get_status(self, dasquery):
         """
         Look-up status of provided query in a cache. For completed
         queries or (popular) queries requests, return status=ok.
         Such status is generated by self.call method upon completion
         of the request.
         """
-        if  query and query.has_key('fields'):
-            fields = query['fields']
+        if  dasquery and dasquery.mongo_query.has_key('fields'):
+            fields = dasquery.mongo_query['fields']
             if  fields and isinstance(fields, list) and 'queries' in fields:
                 return 'ok'
         status = 0
-        query  = self.bare_query(query)
-        record = self.rawcache.find(query)
+        record = self.rawcache.find(dasquery)
         try:
             if  record and record.has_key('das') and \
                 record['das'].has_key('status'):
@@ -281,25 +248,20 @@ class DASCore(object):
         except:
             pass
 
-        similar_query = self.rawcache.similar_queries(query)
-        if  similar_query:
-            record = self.rawcache.find(similar_query)
+        similar_dasquery = self.rawcache.similar_queries(dasquery)
+        if  similar_dasquery:
+            record = self.rawcache.find(similar_dasquery)
             if  record and record.has_key('das') and \
                 record['das'].has_key('status'):
                 similar_query_status = record['das']['status']
                 return similar_query_status
         return status
 
-    def in_raw_cache(self, query):
-        """Check if input query exists in raw-cache"""
-        query, _dquery = convert2pattern(loose(query))
-        return self.rawcache.incache(query, collection='merge')
-
-    def worker(self, srv, query):
-        """Main worker function which call data-srv call function"""
+    def worker(self, srv, dasquery):
+        """Main worker function which calls data-srv call function"""
         self.logger.info('##### %s ######\n' % srv)
         das_timer(srv, self.verbose)
-        getattr(getattr(self, srv), 'call')(query)
+        getattr(getattr(self, srv), 'call')(dasquery)
         das_timer(srv, self.verbose)
 
     def call(self, query, add_to_analytics=True):
@@ -320,12 +282,15 @@ class DASCore(object):
         self.logger.info('input query=%s' % query)
         das_timer('DASCore::call', self.verbose)
         services = []
-        # adjust query first, since rawcache.similar_queries
-        # expects a mongo query (this could be a string)
-        # this also guarantees the query in question hits
-        # analytics
-        query  = self.adjust_query(query, add_to_analytics)
-        if  query.has_key('system'):
+        if  isinstance(query, object) and hasattr(query, '__class__')\
+            and query.__class__.__name__ == 'DASQuery':
+            dasquery = query
+        else:
+            dasquery = DASQuery(query, mongoparser=self.mongoparser)
+        if  add_to_analytics:
+            dasquery.add_to_analytics()
+        query = dasquery.mongo_query
+        if  dasquery.mongo_query.has_key('system'):
             system = query['system']
             if  isinstance(system, str) or isinstance(system, unicode):
                 services = [system]
@@ -345,22 +310,23 @@ class DASCore(object):
             self.logger.info("look-up everything in cache")
             return 1
         status = 0
-        for record in self.rawcache.find_specs(query):
+        for record in self.rawcache.find_specs(dasquery):
             status = record['das']['status']
             msg = 'found query %s in cache, status=%s\n' \
                         % (record['query'], status)
             mongo_query = decode_mongo_query(record['query'])
-            if  not compare_specs(query, mongo_query):
+            if  not compare_specs(dasquery.mongo_query, mongo_query):
                 status = 0
             self.logger.info(msg)
-            if  status == 'ok' and self.in_raw_cache(query):
+            if  status == 'ok' and \
+                self.rawcache.incache(dasquery, collection='merge'):
                 # update analytics for all systems (None)
                 self.analytics.update(None, query)
                 das_timer('DASCore::call', self.verbose)
                 return 1
-        similar_query = self.rawcache.similar_queries(query)
-        if  similar_query:
-            for record in self.rawcache.find_specs(similar_query):
+        similar_dasquery = self.rawcache.similar_queries(dasquery)
+        if  similar_dasquery:
+            for record in self.rawcache.find_specs(similar_dasquery):
                 status = 0
                 if  record:
                     try:
@@ -372,67 +338,64 @@ class DASCore(object):
                 msg  = 'found SIMILAR query in cache,'
                 msg += 'query=%s, status=%s\n' % (record['query'], status)
                 self.logger.info(msg)
-                if  status == 'ok' and self.in_raw_cache(similar_query):
+                if  status == 'ok' and \
+                    self.rawcache.incache(similar_dasquery, collection='merge'):
                     # update analytics for all systems (None)
                     self.analytics.update(None, query)
                     das_timer('DASCore::call', self.verbose)
                     return 1
 
-        msg = 'query=%s' % query
-        self.logger.info(msg)
-        params = self.mongoparser.params(query)
+        self.logger.info(dasquery)
+        params = dasquery.params()
         if  not services:
             services = params['services']
         self.logger.info('services = %s' % services)
         das_timer('das_record', self.verbose)
         # initial expire tstamp 1 day (long enough to be overwriten by data-srv)
         expire = expire_timestamp(time.time()+1*24*60*60)
-        header = dasheader("das", query, expire)
+        header = dasheader("das", dasquery, expire)
         header['lookup_keys'] = []
-        self.rawcache.insert_query_record(query, header)
+        self.rawcache.insert_query_record(dasquery, header)
         das_timer('das_record', self.verbose)
         try:
             if  self.multitask:
                 jobs = []
                 for srv in services:
-                    jobs.append(self.taskmgr.spawn(self.worker, srv, query))
+                    jobs.append(self.taskmgr.spawn(self.worker, srv, dasquery))
                 self.taskmgr.joinall(jobs)
             else:
                 for srv in services:
-                    self.worker(srv, query)
+                    self.worker(srv, dasquery)
         except Exception as exc:
             print_exc(exc)
             return 0
         self.logger.info('\n##### merging ######\n')
-        self.rawcache.update_query_record(query, 'merging')
+        self.rawcache.update_query_record(dasquery, 'merging')
         das_timer('merge', self.verbose)
-        self.rawcache.merge_records(query)
+        self.rawcache.merge_records(dasquery)
         das_timer('merge', self.verbose)
-        self.rawcache.update_query_record(query, 'ok')
+        self.rawcache.update_query_record(dasquery, 'ok')
         self.rawcache.add_to_record(\
-                query, {'das.timer': get_das_timer()}, system='das')
+                dasquery, {'das.timer': get_das_timer()}, system='das')
         das_timer('DASCore::call', self.verbose)
         return 1
 
-    def nresults(self, orig_query, coll='merge'):
+    def nresults(self, dasquery, coll='merge'):
         """
         Return total number of results (count) for provided query
         Code should match body of get_from_cache method.
         """
-        query       = self.rawcache.execution_query(orig_query)
-        aggregators = query.get('aggregators', None)
-        mapreduce   = query.get('mapreduce', None)
-        fields      = query.get('fields', None)
-        spec        = query.get('spec', {})
-        if  mapreduce:
-            return len([1 for _ in self.rawcache.map_reduce(mapreduce, spec)])
-        elif aggregators:
-            return len(query['aggregators'])
+        fields = dasquery.mongo_query.get('fields', None)
+        if  dasquery.mapreduce:
+            result = self.rawcache.map_reduce(mapreduce, dasquery)
+            return len([1 for _ in result])
+        elif dasquery.aggregators:
+            return len(dasquery.aggregators)
         elif isinstance(fields, list) and 'queries' in fields:
-            return len([1 for _ in self.get_queries(query)])
-        return self.rawcache.nresults(query, coll)
+            return len([1 for _ in self.get_queries(dasquery)])
+        return self.rawcache.nresults(dasquery, coll)
 
-    def get_from_cache(self, orig_query, idx=0, limit=None, skey=None,
+    def get_from_cache(self, dasquery, idx=0, limit=None, skey=None,
                         sorder='asc', collection='merge'):
         """
         Look-up results from the merge cache and yield them for
@@ -440,43 +403,41 @@ class DASCore(object):
         """
         das_timer('DASCore::get_from_cache', self.verbose)
         msg = 'col=%s, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
-                % (collection, orig_query, idx, limit, skey, sorder)
+                % (collection, dasquery, idx, limit, skey, sorder)
         self.logger.info(msg)
 
-        query       = self.rawcache.execution_query(orig_query)
-        aggregators = query.get('aggregators', None)
-        mapreduce   = query.get('mapreduce', None)
+        query       = self.rawcache.execution_query(dasquery)
         fields      = query.get('fields', None)
         spec        = query.get('spec', {})
 
-        if  mapreduce:
-            res = self.rawcache.map_reduce(mapreduce, spec)
-        elif aggregators:
+        if  dasquery.mapreduce:
+            res = self.rawcache.map_reduce(dasquery.mapreduce, dasquery)
+        elif dasquery.aggregators:
             res = []
             _id = 0
-            for func, key in aggregators:
+            for func, key in dasquery.aggregators:
                 rows = self.rawcache.get_from_cache(\
-                        query, collection=collection, skey=skey)
+                        dasquery, collection=collection, skey=skey)
                 data = getattr(das_aggregator, 'das_%s' % func)(key, rows)
                 res += \
                 [{'_id':_id, 'function': func, 'key': key, 'result': data}]
                 _id += 1
         elif isinstance(fields, list) and 'queries' in fields:
-            res = itertools.islice(self.get_queries(query), idx, idx+limit)
+            res = itertools.islice(self.get_queries(dasquery), idx, idx+limit)
         else:
-            res = self.rawcache.get_from_cache(query, idx, limit, skey, \
+            res = self.rawcache.get_from_cache(dasquery, idx, limit, skey, \
                     sorder, collection=collection)
         for row in res:
             yield row
         das_timer('DASCore::get_from_cache', self.verbose)
 
-    def get_queries(self, query):
+    def get_queries(self, dasquery):
         """
         Look-up (popular) queries in DAS analytics/logging db
         """
         das_timer('DASCore::get_queries', self.verbose)
-        fields = query.get('fields')
-        spec   = query.get('spec')
+        fields = dasquery.mongo_query.get('fields')
+        spec   = dasquery.mongo_query.get('spec')
         if  'popular' in fields:
             res = self.analytics.get_popular_queries(spec)
         else:

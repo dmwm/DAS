@@ -40,7 +40,7 @@ class MonitorService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def parser(self, query, dformat, source, args):
+    def parser(self, dasquery, dformat, source, args):
         """
         Data parser for Monitor service.
         """
@@ -68,7 +68,7 @@ class MonitorService(DASAbstractService):
             for row in items:
                 interval = row['time']
                 dataval  = row['data']
-                for key, val in dataval.items():
+                for key, val in dataval.iteritems():
                     newrow = {'time': interval}
                     newrow[args['grouping']] = key
                     newrow['rate'] = val
@@ -76,13 +76,13 @@ class MonitorService(DASAbstractService):
         except:
             yield dict(monitor=row)
 
-    def apicall(self, query, url, api, args, dformat, expire):
+    def apicall(self, dasquery, url, api, args, dformat, expire):
         """
         An overview data-service worker.
         """
         keys = [key for key in self.map[api]['keys'] for api in self.map.keys()]
-        cond = query['spec']
-        for key, value in cond.items():
+        cond = dasquery.mongo_query['spec']
+        for key, value in cond.iteritems():
             if  key.find('.') != -1:
                 args['grouping'] = key.split('.')[-1]
                 key, _attr = key.split('.', 1)
@@ -118,8 +118,8 @@ class MonitorService(DASAbstractService):
                     raise Exception(err)
             time0   = time.time()
             res, expire = self.getdata(url, args, expire)
-            genrows = self.parser(query, dformat, res, args)
-            dasrows = self.set_misses(query, api, genrows)
+            genrows = self.parser(dasquery, dformat, res, args)
+            dasrows = self.set_misses(dasquery, api, genrows)
             ctime   = time.time() - time0
-            self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
+            self.write_to_cache(dasquery, expire, url, api, args, dasrows, ctime)
 

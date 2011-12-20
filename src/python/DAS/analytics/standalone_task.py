@@ -11,7 +11,7 @@ import pprint
 import time
 #from DAS.core.das_core import DASCore
 from DAS.analytics.utils import TASK_CLASSES
-from DAS.analytics.das_singleton import das_singleton
+from DAS.utils.das_singleton import das_singleton
 
 def main():
     "Main routine"
@@ -49,10 +49,8 @@ def main():
         opts.opts = {}
 
     logger = logging.getLogger(opts.name)
-    daslogger = logging.getLogger(opts.name + '_DAS')
 
-#    dascore = DASCore(logger=daslogger, multitask=None)
-    dascore = das_singleton.create(multitask=None)
+    dascore = das_singleton(multitask=None)
 
     instance = klass(logger=logger, DAS=dascore, name=opts.name,
                      taskid=opts.id, index=0, interval=opts.interval,

@@ -14,7 +14,7 @@ from   pymongo.objectid import ObjectId
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from   DAS.utils.utils import genkey, deepcopy, print_exc
-from   DAS.core.das_mongocache import compare_specs
+from   DAS.utils.query_utils import compare_specs
 from   DAS.core.das_parser import QLManager
 
 class DASQuery(object):
@@ -31,10 +31,13 @@ class DASQuery(object):
         supplied flags can carry any query attributes, e.g.
         filters, aggregators, system, instance, etc.
         """
-        self.mongoparser    = QLManager()
-        self._query         = None
-        self._storage_query = None
-        self._mongo_query   = None
+        self._mongoparser   = None
+        self._params        = {}
+        self._service_apis_map = {}
+        self._str           = ''
+        self._query         = ''
+        self._storage_query = {}
+        self._mongo_query   = {}
         self._qhash         = None
         self._system        = None
         self._instance      = None
@@ -46,7 +49,7 @@ class DASQuery(object):
         self._flags         = flags
 
         # loop over flags and set available attributes
-        for key, val in flags.items():
+        for key, val in flags.iteritems():
             setattr(self, '_%s' % key, val)
 
         # test data type of input query and apply appropriate initialization
@@ -54,17 +57,23 @@ class DASQuery(object):
             self._query = query
             try:
                 self._mongo_query = self.mongoparser.parse(query)
+                for key, val in flags.iteritems():
+                    if  key in ['mongoparser']:
+                        continue
+                    if  not self._mongo_query.has_key(key):
+                        self._mongo_query[key] = val
             except Exception as exp:
-                msg = "Fail to process query='%s'" % query
-                print_exc(msg)
+                msg = "Fail to parse DAS query='%s'" % query
+                print_exc(msg, print_traceback=False)
                 raise exp
         elif isinstance(query, dict):
-            spec   = query.get('spec', {})
-            fields = query.get('fields', None)
-            if  isinstance(spec, dict): # mongo query
-                self._mongo_query = dict(fields=fields, spec=spec)
+            newquery = {}
+            for key, val in query.iteritems():
+                newquery[key] = val
+            if  isinstance(newquery.get('spec'), dict): # mongo query
+                self._mongo_query = newquery
             else: # storage query
-                self._storage_query = dict(fields=fields, spec=spec)
+                self._storage_query = newquery
         elif isinstance(query, object) and hasattr(query, '__class__')\
             and query.__class__.__name__ == 'DASQuery':
             self._query = query.query
@@ -74,18 +83,30 @@ class DASQuery(object):
             raise Exception('Unsupport data type of DAS query')
         # setup DAS query attributes if they were supplied in input query
         # for instance if input query is mongo query
-        self._instance    = self.mongo_query.get('instance', None)
-        self._system      = self.mongo_query.get('system', None)
-        self._filters     = self.mongo_query.get('filters', [])
-        self._aggregators = self.mongo_query.get('aggregators', [])
-        self._mapreduce   = self.mongo_query.get('mapreduce', [])
+        self._instance    = self.mongo_query.get('instance', self._instance)
+        self._system      = self.mongo_query.get('system', self._system)
+        self._filters     = self.mongo_query.get('filters', self._filters)
+        self._aggregators = self.mongo_query.get('aggregators', self._aggregators)
+        self._mapreduce   = self.mongo_query.get('mapreduce', self._mapreduce)
 
     ### Class properties ###
+
+    @property
+    def mongoparser(self):
+        "mongoparser property of the DAS query"
+        if  not self._mongoparser:
+            self._mongoparser = QLManager()
+        return self._mongoparser
 
     @property
     def filters(self):
         "filters property of the DAS query"
         return self._filters
+
+    @property
+    def unique_filter(self):
+        "Check if DAS query has unique filter"
+        return True if 'unique' in self.filters else False
 
     @property
     def mapreduce(self):
@@ -111,10 +132,13 @@ class DASQuery(object):
     def query(self):
         "query property of the DAS query (human readble form)"
         if  not self._query:
-            query  = ' '.join(self.mongo_query.get('fields', []))
+            fields = self.mongo_query.get('fields', [])
+            if  not fields:
+                fields = [] # will use empty list for conversion
+            query  = ' '.join(fields)
             query += ' ' # space between fields and spec values
-            query += ' '.join(['%s=%s' % (k.split('.')[0], v) for k, v \
-                        in self.mongo_query.get('spec', {}).items()])
+            query += ' '.join(['%s=%s' % (k, v) for k, v \
+                        in self.mongo_query.get('spec', {}).iteritems()])
             self._query = query.strip()
         return self._query
 
@@ -126,7 +150,7 @@ class DASQuery(object):
         if  not self._storage_query:
             self._storage_query = deepcopy(self.mongo_query)
             speclist = []
-            for key, val in self._storage_query.pop('spec').items():
+            for key, val in self._storage_query.pop('spec').iteritems():
                 if  str(type(val)) == "<type '_sre.SRE_Pattern'>":
                     val = json.dumps(val.pattern)
                     speclist.append({"key":key, "value":val, "pattern":1})
@@ -141,6 +165,9 @@ class DASQuery(object):
         """
         Read only mongo query, generated on demand.
         """
+        system = self._mongo_query.get('system', [])
+        filters = self._mongo_query.get('filters', [])
+        aggregators = self._mongo_query.get('aggregators', [])
         if  not self._mongo_query:
             self._mongo_query = deepcopy(self.storage_query)
             spec = {}
@@ -150,6 +177,21 @@ class DASQuery(object):
                     val = re.compile(val)
                 spec.update({item['key'] : val})
             self._mongo_query['spec'] = spec
+        # special case when user asks for all records
+        fields = self._mongo_query.get('fields', None)
+        if  fields and fields == ['records']:
+            self._mongo_query['fields'] = None
+            spec = {}
+            for key, val in self._mongo_query['spec'].iteritems():
+                if  key != 'records':
+                    spec[key] = val
+            self._mongo_query = dict(fields=None, spec=spec)
+        if  filters:
+            self._mongo_query.update({'filters':filters})
+        if  aggregators:
+            self._mongo_query.update({'aggregators':aggregators})
+        if  system:
+            self._mongo_query.update({'system':system})
         return self._mongo_query
     
     @property
@@ -174,7 +216,7 @@ class DASQuery(object):
             system  = query.get('system', None)
             inst    = query.get('instance', None)
             newspec = {}
-            for key, val in spec.items():
+            for key, val in spec.iteritems():
                 if  key != '_id' and \
                 isinstance(val, str) or isinstance(val, unicode):
                     if  val[-1] != '*':
@@ -197,7 +239,7 @@ class DASQuery(object):
                 Inner recursive dictionary manipulator
                 """
                 result = {}
-                for key, val in old.items():
+                for key, val in old.iteritems():
                     if isinstance(val, basestring):
                         if  '*' in val:
                             if len(val) == 1:
@@ -219,7 +261,25 @@ class DASQuery(object):
 
     def add_to_analytics(self):
         "Add DAS query to analytics DB"
-        self.mongoparser.add_to_analytics(self.query, self.mongo_query)
+        if  self.mongoparser:
+            self.mongoparser.add_to_analytics(self.query, self.mongo_query)
+
+    def params(self):
+        "Extract params (selection keys, conditions and services) from mongo query"
+        if  self._params:
+            return self._params
+        if  self.mongoparser:
+            self._params = self.mongoparser.params(self.mongo_query)
+        return self._params
+
+    def service_apis_map(self):
+        "Return data service APIs map who may answer DAS query"
+        if  self._service_apis_map:
+            return self._service_apis_map
+        if  self.mongoparser:
+            self._service_apis_map = \
+                self.mongoparser.service_apis_map(self.mongo_query)
+        return self._service_apis_map
 
     def is_bare_query(self):
         """
@@ -236,7 +296,15 @@ class DASQuery(object):
             return self
         mongo_query = {'fields': copy.deepcopy(self.mongo_query['fields']),
                 'spec': deepcopy(self.mongo_query['spec'])}
-        return DASQuery(mongo_query, **self._flags)
+        return mongo_query
+
+    def to_dict(self):
+        "Convert DAS query into dictionary"
+        obj = dict(query=self.query, mongo_query=self.mongo_query,
+                   instance=self.instance, filters=self.filters,
+                   aggregators=self.aggregators, system=self.system,
+                   qhash=self.qhash, mapreduce=self.mapreduce)
+        return obj
 
     def has_id(self):
         """
@@ -309,10 +377,9 @@ class DASQuery(object):
     
     def __str__(self):
         "Query string representation"
-        msg = "<DASQuery: %s>" % self.query
-        return msg
-
-    def __repr__(self):
-        "Query representation"
-        msg = "<query: %s, mongo_query: %s>" % (self.query, self.mongo_query)
+        if  self._str:
+            return self._str
+        msg = """<DASQuery@%s: query='''%s''' instance=%s>""" \
+        % (repr(self).split()[-1].replace('>', ''), self.query, self.instance)
+        self._str = msg
         return msg

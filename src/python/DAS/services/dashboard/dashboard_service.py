@@ -55,7 +55,7 @@ class DashboardService(DASAbstractService):
                             name = k.tag
                             row[name] = k.text
                         if  params:
-                            for key, val in params.items():
+                            for key, val in params.iteritems():
                                 if  not row.has_key(key):
                                     row[key] = val
                         rowkey = self.map[api]['keys'][0]
@@ -65,14 +65,14 @@ class DashboardService(DASAbstractService):
         if  close:
             source.close()
 
-    def apicall(self, query, url, api, args, dformat, expire):
+    def apicall(self, dasquery, url, api, args, dformat, expire):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
-        cond   = query['spec']
+        cond   = dasquery.mongo_query['spec']
         count  = 0
-        for key, value in cond.items():
+        for key, value in cond.iteritems():
             err = 'JobSummary does not support key=%s, value=%s' \
                     % (key, value)
             if  not isinstance(value, dict): # we got equal condition
@@ -123,9 +123,9 @@ class DashboardService(DASAbstractService):
         res, expire = self.getdata(url, args, expire, headers=self.headers)
         rawrows = self.parser(res, api, args)
         genrows = self.translator(api, rawrows)
-        dasrows = self.set_misses(query, api, genrows)
+        dasrows = self.set_misses(dasquery, api, genrows)
         ctime = time.time() - time0
         try:
-            self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
+            self.write_to_cache(dasquery, expire, url, api, args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)

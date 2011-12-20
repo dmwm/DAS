@@ -7,18 +7,18 @@ import threading
 import logging
 import time
 import re
-import copy
 import os.path
 import glob
 import sys
 from types import ClassType, TypeType
 from DAS.utils.das_config import das_readconfig
+from DAS.utils.utils import deepcopy
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_mongocache import decode_mongo_query
 
 def get_mongo_query(query):
     "Get DAS query in MongoDB format and remove DAS look-up keys from it"
-    mongoquery = decode_mongo_query(copy.deepcopy(query))
+    mongoquery = decode_mongo_query(deepcopy(query))
     if  isinstance(mongoquery, dict) and mongoquery.has_key('spec'):
         for key in mongoquery['spec'].keys():
             if  key.find('das') != -1:
@@ -37,7 +37,7 @@ class MultiprocessingLoggerClient(object):
     def __init__(self, name, queue, **kwargs):
         self.name = name
         self.queue = queue
-        self.extra = copy.deepcopy(kwargs)
+        self.extra = deepcopy(kwargs)
         
     def dispatch(self, lvl, msg, *args):
         """
@@ -193,7 +193,7 @@ def get_analytics_interface():
     loading the rest of DAS, that logs to our global logger.
     """
     global DAS_CONFIG
-    config = copy.deepcopy(DAS_CONFIG)
+    config = deepcopy(DAS_CONFIG)
     config['logger'] = logging.getLogger("DASAnalytics.AnalyticsDB")
     return DASAnalytics(config)
 

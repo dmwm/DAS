@@ -10,7 +10,7 @@
 <tr><td>Arguments</td><td><pre>$quote($json.dumps($kwargs, indent=2, default=str))</pre></td></tr>
 <tr><td>Run Count</td><td>$quote($run_count)</td></tr>
 #if $last_run_at
-<tr><td>Last run</td><td>#echo time.strftime('%d/%m/%y %H:%M:%S', time.localtime($last_run_at))#</td></tr>
+<tr><td>Last run</td><td>#echo time.strftime('%Y-%m-%d %H:%M:%S', time.localtime($last_run_at))#</td></tr>
 #end if
 #if $parent
 <tr><td>Parent</td><td><a href='$base/task?id=$quote_plus($parent)'>$quote($parent)</a></td></tr>

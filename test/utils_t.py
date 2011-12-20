@@ -58,6 +58,13 @@ class testUtils(unittest.TestCase):
         del query['spec']['das.primary_key']
         self.assertNotEqual(query, obj)
 
+        obj = 1
+        self.assertEqual(deepcopy(obj), obj)
+        obj = (1,2)
+        self.assertEqual(deepcopy(obj), obj)
+        obj = [1,2]
+        self.assertEqual(deepcopy(obj), obj)
+
     def test_das_diff(self):
         """Test das_diff function"""
         rec1 = dict(name='abc', size=1, system='dbs')

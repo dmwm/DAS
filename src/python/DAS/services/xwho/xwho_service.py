@@ -21,7 +21,7 @@ class XWhoService(DASAbstractService):
         self.re_find_email = re.compile(r'<a href=mailto:(.*?)>')
         self.re_find_phone = re.compile(r'<b>Tel:</b>([0-9 ]+)')
     
-    def api(self, query):
+    def api(self, dasquery):
         """API implementation"""
         api = 'people' #this is the only API provided
         url = self.map[api]['url']
@@ -29,21 +29,21 @@ class XWhoService(DASAbstractService):
         fakeargs = dict(self.map[api]['params'])
         realargs = {}
         
-        name = query['spec'].get('person.name', None)
+        name = dasquery.mongo_query['spec'].get('person.name', None)
         if name: 
             fakeargs['name'] = name
             realargs['-notag'] = name
-        phone = query['spec'].get('person.phone', None)
+        phone = dasquery.mongo_query['spec'].get('person.phone', None)
         if phone: 
             fakeargs['phone'] = phone
             realargs['-phone'] = phone
-        login = query['spec'].get('person.login', None)
+        login = dasquery.mongo_query['spec'].get('person.login', None)
         if login:
             fakeargs['login'] = login
             realargs['-loginid'] = login
         
         self.logger.info("XWhoService::api(%s), name=%s, phone=%s, login=%s"\
-                %(query, name, phone, login))
+                %(dasquery, name, phone, login))
         
         start_time = time.time()
         try:
@@ -57,7 +57,7 @@ class XWhoService(DASAbstractService):
         
         end_time = time.time()
         
-        self.write_to_cache(query, expire, url, api, 
+        self.write_to_cache(dasquery, expire, url, api, 
                             fakeargs, results, end_time-start_time)
         
         

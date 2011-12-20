@@ -23,16 +23,23 @@
 <a href='$path/$quote($filter)'>$quote($filter)</a>&nbsp;
 #end for
 </div>
-<div><table>
+<table class="das_table">
 <tr><th>Component</th><th>Time</th><th>Message</th></tr>
 #import time
+#set row_class='odd'
 #for $entry in $entries
-#set name=$quote($entry.name)
-#set created=$quote($entry.created)
-#set msg=$quote($entry.getMessage())
-<tr><td>$name</td>
-<td>#echo time.strftime('%d/%m/%y %H:%M:%S',time.localtime($created))#</td>
-<td>$msg</td></tr>
+#set name=$quote($entry.get('log'))
+#set created=$float($entry.get('time'))
+#set msg=$quote($entry.get('msg'))
+<tr class=$row_class>
+<td>$name</td>
+<td>#echo time.strftime('%Y-%m-%d %H:%M:%S',time.localtime($created))#</td>
+<td>$msg</td>
+</tr>
+#if $row_class=='odd':
+#set row_class='even'
+#else
+#set row_class='odd'
+#end if
 #end for
-
-</table></div>
+</table>

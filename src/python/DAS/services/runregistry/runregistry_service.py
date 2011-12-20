@@ -111,13 +111,13 @@ class RunRegistryService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def apicall(self, query, url, api, args, dformat, expire):
+    def apicall(self, dasquery, url, api, args, dformat, expire):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
         _query  = ""
-        for key, val in query['spec'].items():
+        for key, val in dasquery.mongo_query['spec'].iteritems():
             if  key == 'run.run_number':
                 if  isinstance(val, int):
 # this query provides different output
@@ -129,7 +129,7 @@ class RunRegistryService(DASAbstractService):
                 elif isinstance(val, dict):
                     minrun = 0
                     maxrun = 0
-                    for kkk, vvv in val.items():
+                    for kkk, vvv in val.iteritems():
                         if  kkk == '$in':
                             if len(vvv) == 2:
                                 minrun, maxrun = vvv
@@ -186,10 +186,10 @@ class RunRegistryService(DASAbstractService):
         time0   = time.time()
         rawrows = worker(url, _query)
         genrows = self.translator(api, rawrows)
-        dasrows = self.set_misses(query, api, run_duration(genrows))
+        dasrows = self.set_misses(dasquery, api, run_duration(genrows))
         ctime   = time.time() - time0
         try:
-            self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
+            self.write_to_cache(dasquery, expire, url, api, args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)
 

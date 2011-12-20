@@ -98,10 +98,6 @@ class ResultManager(logging.Handler):
                         'Result contained invalid Mongo names, dropped.'}
             if  self.col:
                 self.col.insert(result)
-#        if  self.col:
-#            self.col.ensure_index([('index', ASCENDING),
-#                                   ('master_id', ASCENDING),
-#                                   ('type', ASCENDING)])
 
     def receive_task_log(self, record):
         """Receive a task-associated log message, and store it."""
@@ -117,9 +113,6 @@ class ResultManager(logging.Handler):
                   'parent': record.task_parent}
         if  self.col:
             self.col.insert(result)
-#            self.col.ensure_index([('index', ASCENDING),
-#                                   ('master_id', ASCENDING),
-#                                   ('type', ASCENDING)])
 
     def receive_log(self, record):
         """Receive a general log message, and store it."""

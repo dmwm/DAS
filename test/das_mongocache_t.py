@@ -14,8 +14,10 @@ from pymongo.connection import Connection
 
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
+from DAS.utils.utils import deepcopy
+from DAS.core.das_query import DASQuery
 from DAS.core.das_mapping_db import DASMapping
-from DAS.core.das_mongocache import DASMongocache, loose
+from DAS.core.das_mongocache import DASMongocache
 from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
 from DAS.core.das_mongocache import convert2pattern, compare_specs
 
@@ -28,7 +30,7 @@ class testDASMongocache(unittest.TestCase):
         set up DAS core module
         """
         debug    = 0
-        config   = das_readconfig()
+        config   = deepcopy(das_readconfig())
         logger   = PrintManager('TestDASMongocache', verbose=debug)
         config['logger']  = logger
         config['verbose'] = debug
@@ -59,13 +61,6 @@ class testDASMongocache(unittest.TestCase):
         self.assertEqual(expect['fields'], query['fields'])
         self.assertEqual(expect['spec']['dataset.name'].pattern,
                          query['spec']['dataset.name'].pattern)
-
-    def test_loose(self):
-        """Test loose function"""
-        query  = {'fields': ['block'], 'spec': {}}
-        result = loose(query)
-        expect = query
-        self.assertEqual(expect, result)
 
     def test_compare_specs(self):
         """
@@ -186,7 +181,6 @@ class testDASMongocache(unittest.TestCase):
         result = compare_specs(input_query, exist_query)
         self.assertEqual(True, result)
 
-        # test that str and unicode will agree
         input_query = {'spec': {u'api':u'a', u'lfn':'test'}}
         exist_query = {'spec': {u'api':u'a', u'lfn':u'test'}}
         result = compare_specs(input_query, exist_query)
@@ -194,7 +188,6 @@ class testDASMongocache(unittest.TestCase):
 
     def test_str_vs_unicode_compare_specs(self):
         """Test compare_specs with str/unicode dicts"""
-        # test equivalent queries
         input_query = {u'fields': [u'zip'], 'spec': {u'zip.code': 10000}, u'filters': [u'zip.Placemark.address']}
         exist_query = {'fields': ['zip'], 'spec': {'zip.code': 10000}, 'filters': ['zip.Placemark.address']}
         result = compare_specs(input_query, exist_query)
@@ -310,15 +303,16 @@ class testDASMongocache(unittest.TestCase):
         query1 = {'fields':None, 'spec':{'block.name':'ABC'}}
         self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
         query2 = {'fields':None, 'spec':{'block.name':'ABC*'}}
-        result = self.dasmongocache.similar_queries(query2)
+        dasquery = DASQuery(query2)
+        result = self.dasmongocache.similar_queries(DASQuery(query2))
         self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
         query1 = {'fields':None, 'spec':{'block.name':'ABC*'}}
         self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
         query2 = {'fields':None, 'spec':{'block.name':'ABC'}}
-        result = self.dasmongocache.similar_queries(query2)
-        self.assertEqual(query1, result)
+        result = self.dasmongocache.similar_queries(DASQuery(query2))
+        self.assertEqual(DASQuery(query1), result)
         self.dasmongocache.delete_cache()
 
     def test_similar_queries(self):                          
@@ -326,43 +320,43 @@ class testDASMongocache(unittest.TestCase):
         query1 = {'fields':None, 'spec':{'block.name':'ABC#123'}}
         self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
         query2 = {'fields':None, 'spec':{'block.name':'ABC'}}
-        result = self.dasmongocache.similar_queries(query2)
+        result = self.dasmongocache.similar_queries(DASQuery(query2))
         self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
         query1 = {'fields':None, 'spec':{'dataset.name':'ABC'}}
         self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
         query2 = {'fields':['dataset'], 'spec':{'dataset.name':'ABC'}}
-        result = self.dasmongocache.similar_queries(query2)
+        result = self.dasmongocache.similar_queries(DASQuery(query2))
         self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
         query1 = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
         self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
         query2 = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
-        result = self.dasmongocache.similar_queries(query2)
-        self.assertEqual(query1, result)
+        result = self.dasmongocache.similar_queries(DASQuery(query2))
+        self.assertEqual(DASQuery(query1), result)
         self.dasmongocache.delete_cache()
 
         query1 = {'fields':None, 'spec':{'block.name':'ABCDEFG'}}
         self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
         query2 = {'fields':None, 'spec':{'block.name':'ABCDE*'}}
-        result = self.dasmongocache.similar_queries(query2)
+        result = self.dasmongocache.similar_queries(DASQuery(query2))
         self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
         query1 = {'fields':None, 'spec':{'run.number':20853}}
         self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
         query2 = {'fields':None, 'spec':{'run.number': {'$gte':20853, '$lte':20859}}}
-        result = self.dasmongocache.similar_queries(query2)
+        result = self.dasmongocache.similar_queries(DASQuery(query2))
         self.assertEqual(False, result)
         self.dasmongocache.delete_cache()
 
         query1 = {'fields':None, 'spec':{'run.number': {'$gte':20853, '$lte':20859}}}
         self.dasmongocache.col.insert({"query":encode_mongo_query(query1)})
         query2 = {'fields':None, 'spec':{'run.number':20853}}
-        result = self.dasmongocache.similar_queries(query2)
-        self.assertEqual(query1, result)
+        result = self.dasmongocache.similar_queries(DASQuery(query2))
+        self.assertEqual(DASQuery(query1), result)
         self.dasmongocache.delete_cache()
 #
 # main

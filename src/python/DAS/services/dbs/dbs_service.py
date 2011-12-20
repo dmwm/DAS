@@ -225,7 +225,7 @@ class DBSService(DASAbstractService):
                 kwds['query'] = 'required'
         if  api == 'fakeDatasetSummary':
             value = ""
-            for key, val in kwds.items():
+            for key, val in kwds.iteritems():
                 if  key == 'dataset' and val:
                     value += ' and dataset=%s' % val
                 if  key == 'primary_dataset' and val:
@@ -299,10 +299,11 @@ where %s" % value[4:]
                 kwds['query'] = 'required'
             kwds.pop('date')
             
-    def parser(self, query, dformat, source, api):
+    def parser(self, dasquery, dformat, source, api):
         """
         DBS data-service parser.
         """
+        query = dasquery.mongo_query
         if  api == 'listBlocks':
             prim_key = 'block'
         elif api == 'listBlocks4path':

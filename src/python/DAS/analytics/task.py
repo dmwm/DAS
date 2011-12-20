@@ -7,12 +7,10 @@ Task class for analytics.
 
 # system modules
 import time
-import copy
 
 # DAS modules
-from DAS.utils.utils import genkey, print_exc
+from DAS.utils.utils import genkey, print_exc, deepcopy
 from DAS.analytics.utils import multilogging, DAS_CONFIG, TASK_CLASSES
-#from DAS.core.das_core import DASCore
 from DAS.utils.das_singleton import das_singleton
 from DAS.utils.logger import PrintManager
 
@@ -97,14 +95,13 @@ class RunnableTask(object):
     def __init__(self, name, classname, master_id, kwargs, 
                  index, interval, parent):
         self.classname = classname
-        self.kwargs = copy.deepcopy(kwargs)
+        self.kwargs = deepcopy(kwargs)
         self.name = name
         self.index = index
         self.interval = interval
-        self.parent = copy.deepcopy(parent)
+        self.parent = deepcopy(parent)
         self.master_id = master_id
         self.logger = None
-#        self.logger = PrintManager('RunnableTask', kwargs.get('verbose', 0))
 
     def __call__(self):
         "Callable that the worker process will run."
@@ -133,10 +130,8 @@ class RunnableTask(object):
                                                task_master=self.master_id, 
                                                task_parent=self.parent)
         
-#        das = DASCore(config=copy.deepcopy(DAS_CONFIG), multitask=None, debug=2)
-#        das = DASCore(multitask=None, debug=1)
         try:
-            das = das_singleton(multitask=None, debug=1)
+            das = das_singleton(multitask=None)
         except Exception as exp:
             msg = 'ERROR: task=%s:%s failed to instantiate, aborting' \
                          % (self.name, self.index)

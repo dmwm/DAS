@@ -45,6 +45,8 @@ class DASMapping(object):
         self.reverse_presentation = {} # to be filled at run time
         self.notationcache = {}        # to be filled at run time
         self.diffkeycache = {}         # to be filled at run time
+        self.apicache = {}             # to be filled at run time
+        self.apiinfocache = {}         # to be filled at run time
         self.init_notationcache()
         self.init_presentationcache()
 
@@ -55,7 +57,7 @@ class DASMapping(object):
         """
         Initialize notation cache by reading notations.
         """
-        for system, notations in self.notations().items():
+        for system, notations in self.notations().iteritems():
             for row in notations:
                 key = system, row['notation']
                 if  self.notationcache.has_key(key):
@@ -71,7 +73,7 @@ class DASMapping(object):
         data  = self.col.find_one(query)
         if  data:
             self.presentationcache = data['presentation']
-            for daskey, uilist in self.presentationcache.items():
+            for daskey, uilist in self.presentationcache.iteritems():
                 for row in uilist:
                     link = None
                     if  row.has_key('link'):
@@ -180,23 +182,26 @@ class DASMapping(object):
         """
         List all APIs.
         """
+        if  self.apicache and self.apicache.has_key(system):
+            return self.apicache[system]
         cond = { 'urn' : { '$ne' : None } }
         if  system:
             cond['system'] = system
         gen  = (row['urn'] for row in self.col.find(cond, ['urn']))
-        return gen2list(gen)
+        self.apicache[system] = gen2list(gen)
+        return self.apicache[system]
 
     def api_info(self, api_name):
         """
         Return full API info record.
         """
-        return self.col.find_one({'urn':api_name})
+        return self.apiinfocache.get(api_name, self.col.find_one({'urn':api_name}))
 
     def relational_keys(self, system1, system2):
         """
         Return a list of relational keys between provided systems
         """
-        for system, keys in self.daskeys().items():
+        for system, keys in self.daskeys().iteritems():
             if  system == system1:
                 keys1 = keys
             if  system == system2:

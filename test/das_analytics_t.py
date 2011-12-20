@@ -10,6 +10,7 @@ import time
 import unittest
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
+from DAS.utils.utils import deepcopy
 from DAS.core.das_analytics_db import DASAnalytics
 
 class testDASAnalytics(unittest.TestCase):
@@ -22,7 +23,7 @@ class testDASAnalytics(unittest.TestCase):
         """
         debug    = 0
         self.db  = 'test_analytics.db'
-        config   = das_readconfig()
+        config   = deepcopy(das_readconfig())
         dburi    = config['mongodb']['dburi']
         logger   = PrintManager('TestDASAnalytics', verbose=debug)
         config['logger']  = logger

@@ -23,7 +23,7 @@ class ReqMgrService(DASAbstractService):
         """URL call wrapper"""
         if  url[-1] == '/':
             url = url[:-1]
-        for key, _val in params.items():
+        for key, _val in params.iteritems():
             url = '/'.join([url, params[key]])
         params = {}
         return getdata(url, params, headers, expire, post,

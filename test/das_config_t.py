@@ -10,6 +10,7 @@ import types
 import unittest
 from tempfile import NamedTemporaryFile
 from DAS.utils.das_config import das_configfile, das_readconfig, write_configparser
+from DAS.utils.utils import deepcopy
 
 class testDASConfig(unittest.TestCase):
     """
@@ -30,7 +31,7 @@ class testDASConfig(unittest.TestCase):
         os.environ['DAS_CONFIG'] = fds.name
         dasconfig = das_configfile()
         write_configparser(dasconfig, True)
-        readdict = das_readconfig()
+        readdict = deepcopy(das_readconfig())
         self.assertEqual(types.DictType, type(readdict))
 #
 # main

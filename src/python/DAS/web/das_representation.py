@@ -68,13 +68,14 @@ class DASRepresentation(DASWebManager):
         """
         Represent data in tabular view.
         """
-        kwargs  = head['args']
-        total   = head['nresults']
-        query   = kwargs['query']
-        titles  = []
-        page    = self.pagination(total, kwargs)
-        if  query.has_key('filters'):
-            for flt in query['filters']:
+        kwargs   = head['args']
+        total    = head['nresults']
+        dasquery = kwargs['dasquery']
+        filters  = dasquery.filters
+        titles   = []
+        page     = self.pagination(total, kwargs)
+        if  filters:
+            for flt in filters:
                 if  flt.find('=') != -1 or flt.find('>') != -1 or \
                     flt.find('<') != -1:
                     continue
@@ -92,9 +93,9 @@ class DASRepresentation(DASWebManager):
                     rec.append(DotDict(row).get(flt))
             else:
                 titles = []
-                for key, val in row.items():
+                for key, val in row.iteritems():
                     skip = 0
-                    if  not query.has_key('filters'):
+                    if  not filters:
                         if  key in titles:
                             skip = 1
                         else:
@@ -128,12 +129,11 @@ class DASRepresentation(DASWebManager):
         """
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
-        query   = getarg(kwargs, 'query', {})
         uinput  = getarg(kwargs, 'input', '')
         page    = ''
         if  total > 0:
             params = {} # will keep everything except idx/limit
-            for key, val in kwargs.items():
+            for key, val in kwargs.iteritems():
                 if  key != 'idx' and key != 'limit' and key != 'query':
                     params[key] = val
             url   = "%s/request?%s" \
@@ -141,10 +141,6 @@ class DASRepresentation(DASWebManager):
             page += self.templatepage('das_pagination', \
                 nrows=total, idx=idx, limit=limit, url=url)
         else:
-            try:
-                del query['spec']['das.primary_key'] # this is used for look-up
-            except:
-                pass
             page = self.templatepage('das_noresults', query=uinput)
         return page
 
@@ -153,9 +149,9 @@ class DASRepresentation(DASWebManager):
         """
         Represent data in DAS plain view for queries with filters.
         """
-        query   = head['args']['query']
-        fields  = query.get('fields', None)
-        filters = query.get('filters', None)
+        dasquery = head['dasquery']
+        fields   = dasquery.mongo_query.get('fields', [])
+        filters  = dasquery.filters
         results = ""
         for row in data:
             if  filters:
@@ -189,18 +185,22 @@ class DASRepresentation(DASWebManager):
 
     @exposedasplist
     def xmlview(self, head, data):
-        """
-        Represent data in XML data format
-        """
+        "Represent data in XML data format"
+        try: # remove DASQuery object from the head before serialization
+            del head['dasquery']
+        except:
+            pass
         result = dict(head)
         result['data'] = [r for r in data]
         return result
 
     @exposedasjson
     def jsonview(self, head, data):
-        """
-        Represent data in JSON data format
-        """
+        "Represent data in JSON data format"
+        try: # remove DASQuery object from the head before serialization
+            del head['dasquery']
+        except:
+            pass
         result = dict(head)
         result['data'] = [r for r in data]
         return result

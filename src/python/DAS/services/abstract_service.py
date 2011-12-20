@@ -19,11 +19,12 @@ from DAS.utils.utils import getarg, genkey, print_exc
 from DAS.utils.utils import row2das, make_headers, get_key_cert
 from DAS.utils.utils import xml_parser, json_parser
 from DAS.utils.utils import yield_rows
-from DAS.core.das_mongocache import compare_specs, encode_mongo_query
+from DAS.utils.query_utils import compare_specs
 from DAS.utils.url_utils import getdata
 from DAS.utils.das_db import db_gridfs, parse2gridfs
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_core import dasheader
+from DAS.core.das_query import DASQuery
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.logger import PrintManager
 
@@ -96,7 +97,7 @@ class DASAbstractService(object):
         if  self._keys:
             return self._keys
         srv_keys = []
-        for api, params in self.map.items():
+        for api, params in self.map.iteritems():
             for key in params['keys']:
                 if  not key in srv_keys:
                     srv_keys.append(key)
@@ -110,7 +111,7 @@ class DASAbstractService(object):
         if  self._params:
             return self._params
         srv_params = []
-        for api, params in self.map.items():
+        for api, params in self.map.iteritems():
             for key in params['params']:
                 param_list = self.dasmapping.api2das(self.name, key)
                 for par in param_list:
@@ -125,7 +126,7 @@ class DASAbstractService(object):
         """
         if  self._notations:
             return self._notations
-        for _, rows in self.dasmapping.notations(self.name).items():
+        for _, rows in self.dasmapping.notations(self.name).iteritems():
             for row in rows:
                 api = row['api']
                 map = row['map']
@@ -145,48 +146,45 @@ class DASAbstractService(object):
             return getdata(url, params, headers, expire, post,
                             self.error_expire, self.verbose)
 
-    def call(self, query):
+    def call(self, dasquery):
         """
         Invoke service API to execute given query.
         Return results as a collect list set.
         """
-        self.logger.info('query=%s' % query)
+        self.logger.info(dasquery)
 
         # check the cache for records with given query/system
-        enc_query = encode_mongo_query(query)
-        qhash = genkey(enc_query)
-        dasquery = {'spec': {'das.qhash': qhash, 'das.system': self.name}, 
+        query = {'spec': {'das.qhash': dasquery.qhash, 'das.system': self.name},
                     'fields': None}
-        if  self.localcache.incache(dasquery, collection='cache'):
+        if  self.localcache.incache(DASQuery(query), collection='cache'):
             msg  = "found records in local cache. Update analytics"
             self.logger.info(msg)
             self.analytics.update(self.name, query)
             return
         # ask data-service api to get results, they'll be store them in
         # cache, so return at the end what we have in cache.
-        result = self.api(query)
+        result = self.api(dasquery)
 
-    def write_to_cache(self, query, expire, url, api, args, result, ctime):
+    def write_to_cache(self, dasquery, expire, url, api, args, result, ctime):
         """
         Write provided result set into DAS cache. Update analytics
         db appropriately.
         """
         if  not self.write2cache:
             return
-        self.analytics.add_api(self.name, query, api, args)
+        self.analytics.add_api(self.name, dasquery.mongo_query, api, args)
         msg  = 'added to Analytics DB'
-        msg += ' query=%s, api=%s, args=%s' % (query, api, args)
+        msg += ' query=%s, api=%s, args=%s' % (dasquery, api, args)
         self.logger.debug(msg)
-        header  = dasheader(self.name, query, expire, api, url, ctime)
+        header  = dasheader(self.name, dasquery, expire, api, url, ctime)
         header['lookup_keys'] = self.lookup_keys(api)
 
         # check that apicall record is present in analytics DB
-        qhash = genkey(encode_mongo_query(query))
-        self.analytics.insert_apicall(self.name, query, 
+        self.analytics.insert_apicall(self.name, dasquery.mongo_query,
                                       url, api, args, expire)
 
         # update the cache
-        self.localcache.update_cache(query, result, header)
+        self.localcache.update_cache(dasquery, result, header)
 
         msg  = 'cache has been updated,\n'
         self.logger.debug(msg)
@@ -201,7 +199,7 @@ class DASAbstractService(object):
         """
         pass
 
-    def pass_apicall(self, query, url, api, api_params):
+    def pass_apicall(self, dasquery, url, api, api_params):
         """
         Filter provided apicall wrt existing apicall records in Analytics DB.
         """
@@ -223,7 +221,7 @@ class DASAbstractService(object):
                         record['das'].has_key('expire'):
                         expire = record['das']['expire']
                         self.write_to_cache(\
-                                query, expire, url, api, args, [], 0)
+                                dasquery, expire, url, api, args, [], 0)
                 except Exception as exc:
                     print_exc(exc)
                     msg  = 'failed api %s\n' % api
@@ -251,11 +249,11 @@ class DASAbstractService(object):
         Perform API parameter inspection. Check if API accept a range
         of parameters, etc.
         """
-        for key, value in args.items():
+        for key, value in args.iteritems():
             if  isinstance(value, dict):
                 minval = None
                 maxval = None
-                for oper, val in value.items():
+                for oper, val in value.iteritems():
                     if  oper == '$in':
                         minval = int(val[0])
                         maxval = int(val[-1])
@@ -291,7 +289,7 @@ class DASAbstractService(object):
                 notations.update(notationmap[api])
         return notations
 
-    def parser(self, query, dformat, data, api):
+    def parser(self, dasquery, dformat, data, api):
         """
         DAS data parser. Input parameters:
 
@@ -316,11 +314,11 @@ class DASAbstractService(object):
             das_dict = {}
             for row in gen:
                 if  dformat.lower() == 'dasjson':
-                    for key, val in row.items():
+                    for key, val in row.iteritems():
                         if  key != 'results':
                             das_dict[key] = val
                     row = row['results']
-                    self.analytics.update_apicall(query, das_dict)
+                    self.analytics.update_apicall(dasquery.mongo_query, das_dict)
                 if  apitag and row.has_key(apitag):
                     row = row[apitag]
                 if  isinstance(row, list):
@@ -369,7 +367,7 @@ class DASAbstractService(object):
         msg = "yield %s rows" % count
         self.logger.debug(msg)
 
-    def set_misses(self, query, api, genrows):
+    def set_misses(self, dasquery, api, genrows):
         """
         Check and adjust DAS records wrt input query. If some of the DAS
         keys are missing, add it with its value to the DAS record.
@@ -382,7 +380,7 @@ class DASAbstractService(object):
         map_key = self.dasmapping.primary_mapkey(self.name, api)
         genrows = parse2gridfs(self.gfs, map_key, genrows, self.logger)
 
-        spec  = query['spec']
+        spec  = dasquery.mongo_query['spec']
         skeys = spec.keys()
         row   = genrows.next()
         ddict = DotDict(row)
@@ -448,29 +446,29 @@ class DASAbstractService(object):
         msg   = "yield %s rows" % count
         self.logger.debug(msg)
             
-    def api(self, query):
+    def api(self, dasquery):
         """
         Data service api method, can be defined by data-service class.
         It parse input query and invoke appropriate data-service API
         call. All results are stored into the DAS cache along with
         api call inserted into Analytics DB.
         """
-        self.logger.info('query=%s' % query)
+        self.logger.info(dasquery)
         result  = False
-        genrows = self.apimap(query)
+        genrows = self.apimap(dasquery)
         if  not genrows:
             return
         jobs = []
         for url, api, args, dformat, expire in genrows:
             if  self.multitask:
                 jobs.append(self.taskmgr.spawn(self.apicall, \
-                            query, url, api, args, dformat, expire))
+                            dasquery, url, api, args, dformat, expire))
             else:
-                self.apicall(query, url, api, args, dformat, expire)
+                self.apicall(dasquery, url, api, args, dformat, expire)
         if  self.multitask:
             self.taskmgr.joinall(jobs)
 
-    def apicall(self, query, url, api, args, dformat, expire):
+    def apicall(self, dasquery, url, api, args, dformat, expire):
         """
         Data service api method, can be defined by data-service class.
         It parse input query and invoke appropriate data-service API
@@ -481,16 +479,16 @@ class DASAbstractService(object):
             mkey    = self.dasmapping.primary_mapkey(self.name, api)
             args    = self.inspect_params(api, args)
             time0   = time.time()
-            self.analytics.insert_apicall(self.name, query, url, 
+            self.analytics.insert_apicall(self.name, dasquery.mongo_query, url,
                                           api, args, expire)
             headers = make_headers(dformat)
             data, expire = self.getdata(url, args, expire, headers)
             self.logger.info("%s expire %s" % (api, expire))
-            rawrows = self.parser(query, dformat, data, api)
+            rawrows = self.parser(dasquery, dformat, data, api)
             dasrows = self.translator(api, rawrows)
-            dasrows = self.set_misses(query, api, dasrows)
+            dasrows = self.set_misses(dasquery, api, dasrows)
             ctime   = time.time() - time0
-            self.write_to_cache(query, expire, url, api, args, 
+            self.write_to_cache(dasquery, expire, url, api, args,
                     dasrows, ctime)
         except Exception as exc:
             msg  = 'Fail to process: url=%s, api=%s, args=%s' \
@@ -514,25 +512,25 @@ class DASAbstractService(object):
             url = self.url_instance(url, instance)
         return url
 
-    def apimap(self, query):
+    def apimap(self, dasquery):
         """
         Analyze input query and yield url, api, args, format, expire
         for further processing.
         """
-        cond  = getarg(query, 'spec', {})
-        instance = query.get('instance', self.dbs_global)
-        skeys = getarg(query, 'fields', [])
+        cond  = getarg(dasquery.mongo_query, 'spec', {})
+        instance = dasquery.mongo_query.get('instance', self.dbs_global)
+        skeys = getarg(dasquery.mongo_query, 'fields', [])
         if  not skeys:
             skeys = []
         self.logger.info("\n")
-        for api, value in self.map.items():
+        for api, value in self.map.iteritems():
             expire = value['expire']
             iformat = value['format']
             url    = self.adjust_url(value['url'], instance)
             args   = dict(value['params']) # make new copy, since we'll adjust
             wild   = value.get('wild_card', '*')
             found  = 0
-            for key, val in cond.items():
+            for key, val in cond.iteritems():
                 # check if key is a special one
                 if  key in das_special_keys():
                     found += 1
@@ -569,7 +567,7 @@ class DASAbstractService(object):
                 continue
             # adjust pattern symbols in arguments
             if  wild != '*':
-                for key, val in args.items():
+                for key, val in args.iteritems():
                     if  isinstance(val, str) or isinstance(val, unicode):
                         val   = val.replace('*', wild)
                     args[key] = val

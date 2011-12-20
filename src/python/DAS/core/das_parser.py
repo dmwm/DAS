@@ -13,6 +13,8 @@ import re
 import time
 import urllib
 from DAS.utils.das_config import das_readconfig
+from DAS.core.das_mapping_db import DASMapping
+from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_ql import das_filters, das_aggregators, das_reserved
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
@@ -61,12 +63,10 @@ class QLManager(object):
     def __init__(self, config=None):
         if  not config:
             config = das_readconfig()
-        if  not config['dasmapping']:
-            msg = "No mapping found in provided config=%s" % config
-            raise Exception(msg)
-        if  not config['dasanalytics']:
-            msg = "No analytics found in provided config=%s" % config
-            raise Exception(msg)
+        if  not config.has_key('dasmapping'):
+            config['dasmapping'] = DASMapping(config)
+        if  not config.has_key('dasanalytics'):
+            config['dasanalytics'] = DASAnalytics(config)
         if  not config['dasmapping'].check_maps():
             msg = "No DAS maps found in MappingDB"
             raise Exception(msg)
@@ -89,27 +89,13 @@ class QLManager(object):
         if  self.enabledb:
             self.parserdb = DASParserDB(config)
 
-    def parse(self, query, add_to_analytics=True):
+    def parse(self, query):
         """
         Parse input query and return query in MongoDB form.
         Optionally parsed query can be written into analytics DB.
         """
-        if  query and isinstance(query, str) and \
-            query[0] == "{" and query[-1] == "}":
-            mongo_query = json.loads(query)
-            if  mongo_query.keys() != ['fields', 'spec']:
-                raise Exception('Invalid MongoDB query %s' % query)
-            if  not mongo_query['fields'] and \
-                len(mongo_query['spec'].keys()) > 1:
-                msg = ambiguous_msg(query, mongo_query['spec'].keys())
-                raise Exception(msg)
-            if  add_to_analytics:
-                self.analytics.add_query(query, mongo_query)
-            return mongo_query
         mongo_query = self.mongo_query(query)
         self.convert2skeys(mongo_query)
-        if  add_to_analytics:
-            self.add_to_analytics(query, mongo_query)
         return mongo_query
 
     def add_to_analytics(self, query, mongo_query):
@@ -148,16 +134,16 @@ class QLManager(object):
                 ply_query   = self.dasply.parser.parse(query)
                 mongo_query = ply2mongo(ply_query)
             except Exception as exc:
-                print "Unable to convert input query='%s' into MongoDB format" \
+                msg = "Fail to convert input query='%s' into MongoDB format" \
                     % query
-                print_exc(exc)
-                raise
+                print_exc(msg, print_traceback=False)
+                raise exc
         if  set(mongo_query.keys()) & set(['fields','spec']) != \
                 set(['fields', 'spec']):
             raise Exception('Invalid MongoDB query %s' % mongo_query)
         if  not mongo_query['fields'] and len(mongo_query['spec'].keys()) > 1:
             raise Exception(ambiguous_msg(query, mongo_query['spec'].keys()))
-        for key, val in mongo_query['spec'].items():
+        for key, val in mongo_query['spec'].iteritems():
             if  isinstance(val, list):
                 raise Exception(ambiguos_val_msg(query, key, val))
         return mongo_query
@@ -193,7 +179,7 @@ class QLManager(object):
         slist = []
         # look-up services from Mapping DB
         for key in skeys + [i for i in cond.keys()]:
-            for service, keys in self.daskeysmap.items():
+            for service, keys in self.daskeysmap.iteritems():
                 if  service not in self.dasservices:
                     continue
                 value = cond.get(key, None)
@@ -245,4 +231,3 @@ class QLManager(object):
             if  srv not in services:
                 services.append(srv)
         return dict(selkeys=skeys, conditions=cond, services=services)
-

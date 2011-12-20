@@ -231,7 +231,7 @@ def checkargs(supported):
                     jsondict = json.loads(body, encoding='latin-1')
                 else:
                     jsondict = kwds
-                for key, val in jsondict.items():
+                for key, val in jsondict.iteritems():
                     kwds[str(key)] = str(val)
 
             pat = web_arg_pattern
@@ -361,7 +361,7 @@ def json2html(idict, pad="", ref=None):
     newline = '\n'
     orig_pad = pad
     sss = pad + '{' + newline
-    for key, val in idict.items():
+    for key, val in idict.iteritems():
         if  key == 'das_id' or key == 'cache_id':
             if  isinstance(val, list):
                 value = '['
@@ -485,7 +485,7 @@ def gen_error_msg(kwargs):
     """
     error  = "My request to DAS is failed\n\n"
     error += "Input parameters:\n"
-    for key, val in kwargs.items():
+    for key, val in kwargs.iteritems():
         error += '%s: %s\n' % (key, val)
     error += "Exception type: %s\nException value: %s\nTime: %s" \
                 % (sys.exc_info()[0], sys.exc_info()[1], web_time())

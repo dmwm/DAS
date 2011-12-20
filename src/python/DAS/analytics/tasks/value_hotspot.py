@@ -9,6 +9,7 @@ import time
 import collections
 import fnmatch
 from DAS.utils.utils import genkey
+from DAS.core.das_core import DASQuery
 from DAS.analytics.tasks.hotspot_base import HotspotBase
 from DAS.analytics.utils import get_mongo_query
 from DAS.utils.logger import PrintManager
@@ -108,7 +109,8 @@ class ValueHotspot(HotspotBase):
             query = {'fields': [field],
                      'spec':[{'key':self.key, 'value': item}], 
                      'instance':self.instance}
-            expiry = self.get_query_expiry(query)
+            dasquery = DASQuery(query)
+            expiry = self.get_query_expiry(dasquery)
             schedule = expiry - self.preempt
             if  schedule < time.time() + 60:
                 schedule = time.time() + 60
@@ -119,7 +121,7 @@ class ValueHotspot(HotspotBase):
                         'name': '%s-%s-%s' % (self.identifier, itemname, field),
                         'only_before': only_before,
                         'interval': interval,
-                        'kwargs':{'query':query,
+                        'kwargs':{'dasquery':dasquery.storage_query,
                                   'preempt':self.preempt}}
     
     def preselect_items(self, items):
@@ -171,22 +173,19 @@ class ValueHotspot(HotspotBase):
                         break
         return keys
     
-    def get_query_expiry(self, query):
+    def get_query_expiry(self, dasquery):
         "Extract analytics apicall the expire timestamp for given query"
-        qhash = genkey(query)
-        mongoquery = get_mongo_query(query)
         err_return = time.time() + (2*self.preempt)
-        print "\n### get_query_expiry", query, mongoquery
         try:
-            if not self.das.rawcache.incache(mongoquery):
+            if not self.das.rawcache.incache(dasquery):
                 try:
-                    self.das.call(mongoquery, add_to_analytics=False)
+                    self.das.call(dasquery, add_to_analytics=False)
                 except Exception as err:
-                    print "\n### FAIL input query=%s, mongo=%s, err=%s" \
-                            % (query, mongoquery, str(err))
+                    print "\n### FAIL input query=%s, err=%s" \
+                            % (dasquery, str(err))
                     raise err
             expiries = [result.get('apicall', {}).get('expire', 0) for result in \
-                            self.das.analytics.list_apicalls(qhash=qhash)]
+                            self.das.analytics.list_apicalls(qhash=dasquery.qhash)]
             if  not expiries:
                 return err_return
             return min(expiries)

@@ -381,15 +381,16 @@ class AnalyticsWeb(DASWebManager):
                 kwargs[key.encode('ascii')] = val
             for key, val in attrs.items():
                 if key.startswith('kwarg_'):
-                    #if loading the string evaluates to JSON != string, use that type
-                    #otherwise, treat it as a string (avoiding the need to explicitly quote strings)
+                    #if loading the string evaluates to JSON != string,
+                    #use that type otherwise, treat it as a string 
+                    #(avoiding the need to explicitly quote strings)
                     try:
                         if not isinstance(json.loads(v), basestring):
-                            kwargs[k[6:].encode('ascii')] = json.loads(v)
+                            kwargs[key[6:].encode('ascii')] = json.loads(val)
                         else:
-                            kwargs[k[6:].encode('ascii')] = v
+                            kwargs[key[6:].encode('ascii')] = val
                     except:    
-                        kwargs[k[6:].encode('ascii')] = v
+                        kwargs[key[6:].encode('ascii')] = val
             task = Task(name=attrs['name'],
                     classname=attrs['classname'],
                     interval=float(attrs['interval']),

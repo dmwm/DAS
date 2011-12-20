@@ -11,6 +11,7 @@ import traceback
 from   DAS.utils.das_db import db_connection
 from   DAS.utils.das_config import das_readconfig
 from   DAS.web.request_manager import RequestManager
+from   DAS.utils.utils import deepcopy
 
 class testDAS_RegMgr(unittest.TestCase):
     """
@@ -21,7 +22,7 @@ class testDAS_RegMgr(unittest.TestCase):
         set up stuff
         """
         self.debug  = 0
-        dasconfig   = das_readconfig()
+        dasconfig   = deepcopy(das_readconfig())
         self.dburi  = dasconfig['mongodb']['dburi']
         self.reqmgr = RequestManager(self.dburi)
 

@@ -18,7 +18,7 @@ from pymongo.objectid import ObjectId
 
 # DAS modules
 from DAS.utils.utils import gen2list, genkey, expire_timestamp
-from DAS.core.das_mongocache import encode_mongo_query
+from DAS.utils.query_utils import encode_mongo_query
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.utils.logger import PrintManager
@@ -67,7 +67,7 @@ class DASAnalytics(object):
         """
         self.conn.drop_collection(self.colname)
 
-    def add_query(self, dasquery, mongoquery):
+    def add_query(self, query, mongoquery):
         """
         Add DAS-QL/MongoDB-QL queries into analytics.
         
@@ -76,21 +76,15 @@ class DASAnalytics(object):
         """
         if  isinstance(mongoquery, dict):
             mongoquery = encode_mongo_query(mongoquery)
-        msg = 'dasquery=%s, mongoquery=%s' % (dasquery, mongoquery)
+        msg = 'query=%s, mongoquery=%s' % (query, mongoquery)
         self.logger.debug(msg)
-        dhash = genkey(dasquery)
+        dhash = genkey(query)
         qhash = genkey(mongoquery)
 
         now = time.time()
 
         existing = self.col.find_one({'qhash': qhash, 'dhash': dhash})
         if existing:
-            #self.col.update({'_id': existing['_id']},
-            #                {'$push': {'times': now},
-            #                 '$pull': {'times': {'$lt': now - self.history}}})
-            # the above is not possible - mongo disallows push and pull
-            # on same field in one update operation (as of 1.7.1)
-
             # check if times contains very old timestamps
             rec = self.col.find({'_id': ObjectId(existing['_id']), 
                                  'times':{'$lt' : now - self.history}})
@@ -101,7 +95,7 @@ class DASAnalytics(object):
             self.col.update({'_id': ObjectId(existing['_id'])},
                             {'$push': {'times': now}})
         else:
-            record = dict(dasquery=dasquery, mongoquery=mongoquery,
+            record = dict(query=query, mongoquery=mongoquery,
                         qhash=qhash, dhash=dhash, times=[now])
             self.col.insert(record)
 
@@ -359,6 +353,6 @@ class DASAnalytics(object):
         """
         cond = {'api.name': api}
         if  args:
-            for key, val in args.items():
+            for key, val in args.iteritems():
                 cond[key] = val
         return self.col.find_one(cond, ['counter'])['counter']

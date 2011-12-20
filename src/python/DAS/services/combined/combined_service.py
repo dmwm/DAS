@@ -156,7 +156,7 @@ class CombinedService(DASAbstractService):
                         'files': val['files'] + files}
                 else:
                     found[found_dataset] = {'bytes': bbytes, 'files': files}
-            for name, val in found.items():
+            for name, val in found.iteritems():
                 record = dict(name=name, size=val['bytes'], files=val['files'],
                                 combined=['dbs', 'phedex']) 
                 yield {'dataset':record}
@@ -178,7 +178,10 @@ class CombinedService(DASAbstractService):
             site_info = {}
             for rec in xml_parser(source, prim_key, tags):
                 ddict = DotDict(rec)
-                for row in ddict.get('block.replica'):
+                replicas = ddict.get('block.replica')
+                if  not isinstance(replicas, list):
+                    replicas = [replicas]
+                for row in replicas:
                     node = row['node']
                     files = int(row['files'])
                     complete = 1 if row['complete'] == 'y' else 0
@@ -193,7 +196,7 @@ class CombinedService(DASAbstractService):
                     site_info[node] = {'files': files, 'blocks': nblks,
                                 'blocks_complete': b_complete}
             row = {}
-            for key, val in site_info.items():
+            for key, val in site_info.iteritems():
                 if  totfiles:
                     nfiles = '%5.2f%%' % (100*float(val['files'])/totfiles)
                 else:
@@ -208,7 +211,7 @@ class CombinedService(DASAbstractService):
                     'block_fraction': nblks, 'block_completion': b_completion}}
                 yield row
 
-    def apicall(self, query, url, api, args, dformat, expire):
+    def apicall(self, dasquery, url, api, args, dformat, expire):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
@@ -236,11 +239,11 @@ class CombinedService(DASAbstractService):
             genrows = parse_data(datastream)
 
         # proceed with standard workflow
-        dasrows = self.set_misses(query, api, genrows)
+        dasrows = self.set_misses(dasquery, api, genrows)
         ctime   = time.time() - time0
         try:
             if  isinstance(url, dict):
                 url = "combined: %s" % url.values()
-            self.write_to_cache(query, expire, url, api, args, dasrows, ctime)
+            self.write_to_cache(dasquery, expire, url, api, args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)

@@ -12,7 +12,8 @@ import time
 from pprint import pformat
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
-from DAS.core.das_mongocache import convert2pattern, encode_mongo_query
+from DAS.core.das_query import DASQuery
+#from DAS.utils.query_utils import convert2pattern, encode_mongo_query
 from DAS.utils.utils import dump, genkey
 from DAS.utils.das_timer import get_das_timer
 
@@ -107,10 +108,11 @@ if __name__ == '__main__':
     debug = opts.verbose
     DAS = DASCore(debug=debug, nores=opts.noresults)
     if  opts.hash:
-        mongo_query = DAS.mongoparser.parse(query, add_to_analytics=False)
-        service_map = DAS.mongoparser.service_apis_map(mongo_query)
-        enc_query   = encode_mongo_query(mongo_query)
-        loose_query_pat, loose_query = convert2pattern(mongo_query)
+        dasquery = DASQuery(query)
+        mongo_query = dasquery.mongo_query
+        service_map = dasquery.service_apis_map()
+        enc_query   = dasquery.storage_query
+        loose_query = dasquery.loose_query
         print "---------------"
         print "DAS-QL query  :", query
         print "Mongo query   :", mongo_query

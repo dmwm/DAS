@@ -25,7 +25,7 @@ def run_summary_url(url, params):
     if  url[-1] == '?':
         url = url[:-1]
     paramstr = ''
-    for key, val in params.items():
+    for key, val in params.iteritems():
         if  isinstance(val, list):
             paramstr += '%s=%s&' % (key, urllib.quote(val))
         elif key.find('TIME') != -1:
@@ -50,16 +50,16 @@ class RunSummaryService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def apicall(self, query, url, api, args, dformat, expire):
+    def apicall(self, dasquery, url, api, args, dformat, expire):
         """
         Invoke DBS API to execute given query.
         Return results as a list of dict, e.g.
         [{'run':1,'dataset':/a/b/c'}, ...]
         """
         # translate selection keys into ones data-service APIs provides
-        cond = query['spec']
+        cond = dasquery.mongo_query['spec']
         args = dict(self.params)
-        for key, value in cond.items():
+        for key, value in cond.iteritems():
             if  isinstance(value, dict): # we got equal condition
                 if  key == 'date':
                     if  isinstance(value, list) and len(value) != 2:
@@ -75,7 +75,7 @@ class RunSummaryService(DASAbstractService):
             elif key == 'run.number' or key == 'run.run_number': # make exception
                 minrun = None
                 maxrun = None
-                for oper, val in value.items():
+                for oper, val in value.iteritems():
                     if  oper == '$in':
                         minrun = int(val[0])
                         maxrun = int(val[-1])
@@ -120,7 +120,7 @@ class RunSummaryService(DASAbstractService):
             data    = get_data(run_summary_url(url, args), key, cert, debug)
             genrows = self.parser(data, api)
             ctime   = time.time()-time0
-            self.write_to_cache(query, expire, url, api, args, genrows, ctime)
+            self.write_to_cache(dasquery, expire, url, api, args, genrows, ctime)
         except:
             traceback.print_exc()
             msg = 'Fail to process: url=%s, api=%s, args=%s' \

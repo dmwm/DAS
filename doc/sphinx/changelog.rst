@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Switch to generic DASQuery interface. A new class is used as a placeholder
+    for all DAS queries. Code has been refactored to accept new DASQuery interface
   - Revisited analytics code based on Gordon submission: code-refactoring;
     new tasks (QueryMaitainer, QueryRunner, AnalyticsClenup, etc);
     code alignment with DAS core reorganization, ticket #1974

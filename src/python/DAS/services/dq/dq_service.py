@@ -50,7 +50,7 @@ class DQService(DASAbstractService):
         Data-service specific parser to adjust parameters according to
         specifications.
         """
-        for key, val in kwds.items():
+        for key, val in kwds.iteritems():
             kwds[key] = param_parser(val)
 
     def parser(self, dformat, source, api):

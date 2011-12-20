@@ -40,7 +40,7 @@ class CMSSWConfigsService(DASAbstractService):
                 self.managers[release] = MongoQuery(release)
         self.releases = self.managers.keys()
 
-    def api(self, query):
+    def api(self, dasquery):
         """
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
@@ -50,15 +50,15 @@ class CMSSWConfigsService(DASAbstractService):
         expire  = self.map[api]['expire']
         args    = dict(self.map[api]['params'])
 
-        search  = query['spec'].get('search', None)
-        release = query['spec'].get('release.name', None)
+        search  = dasquery.mongo_query['spec'].get('search', None)
+        release = dasquery.mongo_query['spec'].get('release.name', None)
         msg = "CMSSWConfigsService::api(%s), release=%s, search=%s" \
-                % (query, release, search)
+                % (dasquery, release, search)
         self.logger.info(msg)
         time0   = time.time()
         genrows = self.worker(release, search)
         ctime   = time.time() - time0
-        self.write_to_cache(query, expire, url, api, args, genrows, ctime)
+        self.write_to_cache(dasquery, expire, url, api, args, genrows, ctime)
 
     def worker(self, release, query):
         """

@@ -75,7 +75,7 @@ def autocomplete_helper(query, dasmgr, daskeys):
                 
                 key_search = dasmgr.keylearning.key_search(daskey)
                 #do a key search, and add info elements for them here
-                for keys, members in key_search.items():
+                for keys, members in key_search.iteritems():
                     result.append({'css': 'ac-info', 'value': ' '.join(keys),
                                    'info': 'Possible keys <b>%s</b> (matching %s).' % (', '.join(keys), ', '.join(members))})
                 if not key_search:
@@ -98,7 +98,7 @@ def autocomplete_helper(query, dasmgr, daskeys):
                 result.append({'css': 'ac-warning sign', 'value': subkey,
                                'info': "Correct DAS query, but <b>%s</b> is not known in DAS keylearning system" % subkey})
                 key_search = dasmgr.keylearning.key_search(subkey, daskey)
-                for keys, members in key_search.items():
+                for keys, members in key_search.iteritems():
                     for member in members:
                         result.append({'css': 'ac-info', 'value':'%s' % member,
                                        'info': 'Possible member match <b>%s</b> (for daskey <b>%s</b>)' % (member, daskey)})
