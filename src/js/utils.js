@@ -116,6 +116,8 @@ function AddFilters() {
                 alert('Cannot mix grep and aggregator function');
                 newval = uin.value;
             }
+        } else if (uin.value.indexOf('| unique') != -1 || uin.value.indexOf('|unique') != -1) {
+            newval = uin.value + ' | grep ' + val.value;
         } else {
             if (flt.value == 'grep') {
                 alert('Cannot mix grep and aggregator functions');

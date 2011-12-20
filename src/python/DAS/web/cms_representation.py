@@ -14,9 +14,10 @@ from itertools import groupby
 
 # DAS modules
 from DAS.core.das_ql import das_aggregators, das_filters
+from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import print_exc, getarg, size_format, access
-from DAS.utils.utils import identical_data_records
+from DAS.utils.utils import identical_data_records, deepcopy
 from DAS.web.utils import das_json, quote, gen_color
 from DAS.web.utils import not_to_link
 from DAS.web.tools import exposetext
@@ -230,15 +231,9 @@ class CMSRepresentation(DASRepresentation):
         """
         Invoke DAS workflow and get one row from the cache.
         """
-        # do not use filters/aggregators to get the record
-        filters = list(dasquery.filters)
-        aggregators = list(dasquery.aggregators)
-        dasquery._filters = []
-        dasquery._aggregators = []
-        data = [r for r in self.dasmgr.get_from_cache(dasquery, idx=0, limit=1)]
-        # put back filters/aggregators
-        dasquery._filters = filters
-        dasquery._aggregators = aggregators
+        mongo_query = deepcopy(dasquery.to_bare_query())
+        data = [r for r in self.dasmgr.get_from_cache(\
+                DASQuery(mongo_query), idx=0, limit=1)]
         if  len(data):
             return data[0]
 
