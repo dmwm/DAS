@@ -81,8 +81,13 @@ class DASQuery(object):
             self._storage_query = query.storage_query
         else:
             raise Exception('Unsupport data type of DAS query')
-        # setup DAS query attributes if they were supplied in input query
-        # for instance if input query is mongo query
+        self.update_attr()
+
+    def update_attr(self):
+        """
+        setup DAS query attributes if they were supplied in input query
+        for instance if input query is mongo query/storage_query
+        """
         self._instance    = self.mongo_query.get('instance', self._instance)
         self._system      = self.mongo_query.get('system', self._system)
         self._filters     = self.mongo_query.get('filters', self._filters)
@@ -170,6 +175,9 @@ class DASQuery(object):
         aggregators = self._mongo_query.get('aggregators', [])
         if  not self._mongo_query:
             self._mongo_query = deepcopy(self.storage_query)
+            for key, val in self._mongo_query.iteritems():
+                if  key not in ['fields', 'spec']:
+                    setattr(self, '_%s' % key, val)
             spec = {}
             for item in self._mongo_query.pop('spec'):
                 val = json.loads(item['value'])

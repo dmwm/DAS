@@ -140,10 +140,9 @@ class DASMongocache(object):
 
         # ensure that we have the following indexes
         index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                      ('query.spec.key', ASCENDING), ('das.ts', ASCENDING),
-                      ('das.qhash', DESCENDING),
-                      ('das.empty_record', ASCENDING),
-                      ('query', DESCENDING), ('query.spec', DESCENDING)]
+                      ('das.ts', ASCENDING), ('das.system', ASCENDING),
+                      ('qhash', DESCENDING),
+                      ('das.empty_record', ASCENDING)]
         create_indexes(self.col, index_list)
         index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
                       ('das.empty_record', ASCENDING), ('das.ts', ASCENDING)]
@@ -300,7 +299,7 @@ class DASMongocache(object):
         """
         Find provided query in DAS cache.
         """
-        cond = {'query': dasquery.storage_query, 'das.system':'das'}
+        cond = {'qhash': dasquery.qhash, 'das.system':'das'}
         return self.col.find_one(cond)
 
     def find_specs(self, dasquery, system='das'):
@@ -308,16 +307,9 @@ class DASMongocache(object):
         Check if cache has query whose specs are identical to provided query.
         Return all matches.
         """
-        inst = dasquery.instance
+        cond = {'qhash': dasquery.qhash}
         if  system:
-            cond = {'query.spec': dasquery.storage_query['spec'],
-                    'query.fields': dasquery.storage_query['fields'],
-                    'das.system':'das'}
-        else:
-            cond = {'query.spec': dasquery.storage_query['spec'],
-                    'query.fields': dasquery.storage_query['fields']}
-        if  inst:
-            cond.update({'query.instance':inst})
+            cond.update({'das.system': system})
         return self.col.find(cond)
 
     def get_das_ids(self, dasquery):
@@ -350,7 +342,7 @@ class DASMongocache(object):
         """
         Retrieve DAS record for given query.
         """
-        return self.col.find_one({'das.qhash': dasquery.qhash})
+        return self.col.find_one({'qhash': dasquery.qhash})
     
     def find_records(self, das_id):
         """
@@ -372,9 +364,9 @@ class DASMongocache(object):
         "Update DAS record for provided query"
         if  header:
             system = header['das']['system']
-            spec1  = {'query': dasquery.storage_query, 'das.system': 'das'}
+            spec1  = {'qhash': dasquery.qhash, 'das.system': 'das'}
             dasrecord = self.col.find_one(spec1)
-            spec2  = {'query': dasquery.storage_query, 'das.system': system}
+            spec2  = {'qhash': dasquery.qhash, 'das.system': system}
             sysrecord = self.col.find_one(spec2)
             if  dasrecord and sysrecord:
                 if  header['das']['expire'] < dasrecord['das']['expire']:
@@ -696,7 +688,7 @@ class DASMongocache(object):
         expire  = 9999999999 # future
         skey    = None # sort key
         # get all API records for given DAS query
-        records = self.col.find({'query':dasquery.storage_query})
+        records = self.col.find({'qhash':dasquery.qhash})
         for row in records:
             if  not row.has_key('das'):
                 continue
@@ -811,7 +803,7 @@ class DASMongocache(object):
         dasheader  = header['das']
         lkeys      = header['lookup_keys']
         # check presence of API record in a cache
-        spec = {'spec' : {'query':dasquery.storage_query,
+        spec = {'spec' : {'qhash':dasquery.qhash,
                           'das.system':dasheader['system']}}
         if  not self.incache(DASQuery(spec), collection='cache'):
             msg = "query=%s, header=%s" % (dasquery, header)
@@ -821,6 +813,7 @@ class DASMongocache(object):
             q_record['das']['empty_record'] = 0
             q_record['das']['status'] = "requested"
             q_record['das']['qhash'] = dasquery.qhash
+            q_record['qhash'] = dasquery.qhash
             self.col.insert(q_record)
 
     def update_records(self, dasquery, results, header):
@@ -838,7 +831,7 @@ class DASMongocache(object):
         cond_keys  = dasquery.mongo_query['spec'].keys()
         daststamp  = time.time()
         # get API record id
-        spec       = {'query':dasquery.storage_query, 'das.system':system}
+        spec       = {'qhash':dasquery.qhash, 'das.system':system}
         record     = self.col.find_one(spec, fields=['_id'])
         counter    = 0
         prim_key   = rec[0][0]#use rec instead of lkeys[0] which re-order items
@@ -868,7 +861,7 @@ class DASMongocache(object):
         Remove query from DAS cache. To do so, we retrieve API record
         and remove all data records from das.cache and das.merge
         """
-        records = self.col.find({'query':dasquery.storage_query})
+        records = self.col.find({'qhash':dasquery.qhash})
         id_list = []
         for row in records:
             if  row['_id'] not in id_list:
@@ -878,7 +871,7 @@ class DASMongocache(object):
         self.merge.remove(spec)
         self.logdb.insert('cache', {'delete': self.col.find(spec).count()})
         self.col.remove(spec)
-        self.col.remove({'query':dasquery.storage_query})
+        self.col.remove({'qhash':dasquery.qhash})
 
     def clean_cache(self):
         """

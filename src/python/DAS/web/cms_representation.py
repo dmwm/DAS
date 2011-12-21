@@ -295,10 +295,10 @@ class CMSRepresentation(DASRepresentation):
         Represent data in list view.
         """
         kwargs   = head['args']
+        uinput   = kwargs.get('input', '')
         total    = head.get('nresults', 0)
         dasquery = head['dasquery']
         inst     = dasquery.instance
-        uinput   = dasquery.query
         filters  = dasquery.filters
         main     = self.pagination(total, kwargs)
         if  main.find('das_noresults') == -1:

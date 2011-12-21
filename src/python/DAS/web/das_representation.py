@@ -12,7 +12,7 @@ import urllib
 # DAS modules
 from DAS.utils.ddict import DotDict
 from DAS.utils.das_config import das_readconfig
-from DAS.utils.utils import getarg
+from DAS.utils.utils import getarg, deepcopy
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.tools import exposedasjson, exposetext, exposedasplist
 from DAS.web.utils import quote, json2html, das_json
@@ -120,13 +120,16 @@ class DASRepresentation(DASWebManager):
                 % head['ctime']
         return page
 
-    def pagination(self, total, kwargs):
+    def pagination(self, total, kwds):
         """
         Construct pagination part of the page. It accepts total as a
         total number of result as well as dict of kwargs which
         contains idx/limit/query/input parameters, as well as other
         parameters used in URL by end-user.
         """
+        kwargs  = deepcopy(kwds)
+        if  kwargs.has_key('dasquery'):
+            del kwargs['dasquery'] # we don't need it
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
         uinput  = getarg(kwargs, 'input', '')

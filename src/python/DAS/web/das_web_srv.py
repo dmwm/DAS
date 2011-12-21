@@ -59,7 +59,7 @@ class DASWebService(DASWebManager):
         DASWebManager.__init__(self, dasconfig)
         config = dasconfig['web_server']
         self.base        = config['url_base']
-        self.interval    = 3000 # initial update interval in msec
+        self.interval    = config.get('status_update', 2500)
         self.engine      = config.get('engine', None)
         nworkers         = config['number_of_workers']
         self.dasconfig   = dasconfig
@@ -481,24 +481,34 @@ class DASWebService(DASWebManager):
         """
         head   = request_headers()
         head['args'] = kwargs
-        uinput = getarg(kwargs, 'input', '') 
+        uinput = kwargs.get('input', '')
         inst   = kwargs.get('instance', self.dbs_global)
         idx    = getarg(kwargs, 'idx', 0)
         limit  = getarg(kwargs, 'limit', 0) # do not impose limit
-        skey   = getarg(kwargs, 'skey', '')
-        sdir   = getarg(kwargs, 'dir', 'asc')
-        coll   = getarg(kwargs, 'collection', 'merge')
+        skey   = kwargs.get('skey', '')
+        sdir   = kwargs.get('dir', 'asc')
+        coll   = kwargs.get('collection', 'merge')
+        dasquery = kwargs.get('dasquery', None)
         time0  = time.time()
-        check, content = self.generate_dasquery(uinput, inst, html_error=False)
-        if  check:
-            head.update({'status': 'fail', 'reason': content,
-                         'ctime': time.time()-time0, 'input': uinput})
-            data = []
-            return head, data
-        dasquery = content # returned content is valid DAS query
+        if  dasquery:
+            dasquery = DASQuery(dasquery)
+        else:
+            check, content = \
+                    self.generate_dasquery(uinput, inst, html_error=False)
+            if  check:
+                head.update({'status': 'fail', 'reason': content,
+                             'ctime': time.time()-time0, 'input': uinput})
+                data = []
+                return head, data
+            dasquery = content # returned content is valid DAS query
         try:
-            data   = self.dasmgr.result(dasquery, idx, limit, skey, sdir)
-            nres   = self.dasmgr.nresults(dasquery, coll)
+            nres = self.dasmgr.nresults(dasquery, coll)
+            if  nres:
+                data = \
+                    self.dasmgr.get_from_cache(dasquery, idx, limit, skey, sdir)
+            else: # if no results found, run again
+                data = self.dasmgr.result(dasquery, idx, limit, skey, sdir)
+                nres = self.dasmgr.nresults(dasquery, coll)
             head.update({'status':'ok', 'nresults':nres,
                          'ctime': time.time()-time0, 'dasquery': dasquery})
         except Exception as exc:
@@ -540,7 +550,7 @@ class DASWebService(DASWebManager):
         self.adjust_input(kwargs)
         pid    = kwargs.get('pid', '')
         inst   = kwargs.get('instance', self.dbs_global)
-        uinput = kwargs.get('input', '').strip()
+        uinput = kwargs.get('input', '')
         self.logdb(uinput)
         check, content = self.generate_dasquery(uinput, inst)
         if  check:
@@ -549,6 +559,7 @@ class DASWebService(DASWebManager):
                          'ctime': 0})
             return self.datastream(dict(head=head, data=data))
         dasquery = content # returned content is valid DAS query
+        kwargs['dasquery'] = dasquery.storage_query
         if  not pid and self.busy():
             data = []
             head = request_headers()
@@ -623,15 +634,14 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Pragma'] = 'no-cache'
 
         time0   = time.time()
-        uinput  = getarg(kwargs, 'input', '').strip()
+        self.adjust_input(kwargs)
         view    = kwargs.get('view', 'list')
         inst    = kwargs.get('instance', self.dbs_global)
-        form    = self.form(uinput=uinput, instance=inst, view=view)
-        self.adjust_input(kwargs)
-        uinput  = kwargs.get('input') # read new adjusted user input
+        uinput  = kwargs.get('input', '')
         if  self.busy():
             return self.busy_page(uinput)
         self.logdb(uinput)
+        form    = self.form(uinput=uinput, instance=inst, view=view)
         check, content = self.generate_dasquery(uinput, inst)
         if  check:
             if  view == 'list' or view == 'table':
@@ -639,6 +649,7 @@ class DASWebService(DASWebManager):
             else:
                 return content
         dasquery = content # returned content is valid DAS query
+        kwargs['dasquery'] = dasquery.storage_query
         status = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
             page = self.get_page_content(kwargs)
