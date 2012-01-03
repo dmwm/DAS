@@ -61,26 +61,18 @@ def worker(url, query):
     server    = xmlrpclib.ServerProxy(url)
     namespace = 'GLOBAL'
     if  isinstance(query, str) or isinstance(query, unicode):
-        data = server.RunLumiSectionRangeTable.exportJson(namespace, query)
+        try:
+            data = server.RunLumiSectionRangeTable.exportJson(namespace, query)
+        except Exception as _err:
+            data = "{}" # empty response
         for row in json.loads(data):
             yield row
     elif isinstance(query, dict):
-
-        # example of using xml_all
-#        format = 'xml_all'
-#        data = server.RunDatasetTable.export(namespace, format, query)
-#        handle, tname = tempfile.mkstemp()
-#        fds = open(tname, 'w')
-#        fds.write(data)
-#        fds.close()
-#        with open(tname) as source:
-#            gen = xml_parser(source, prim_key='RUN')
-#            for row in gen:
-#                yield row
-#        os.remove(tname)
-
-        iformat = 'tsv_runs' # other formats are xml_all, csv_runs
-        data   = server.RunDatasetTable.export(namespace, iformat, query)
+        iformat  = 'tsv_runs' # other formats are xml_all, csv_runs
+        try:
+            data = server.RunDatasetTable.export(namespace, iformat, query)
+        except Exception as _err:
+            data = "" # empty response
         titles = []
         for line in data.split('\n'):
             if  not line:
