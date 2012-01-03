@@ -276,6 +276,8 @@ class DASMongocache(object):
 
         if  query.has_key('system'):
             spec.update({'das.system' : query['system']})
+        if  dasquery.instance:
+            spec.update({'das.instance' : dasquery.instance})
         msg = 'execution query %s' % query
         self.logger.info(msg)
         return query
@@ -842,6 +844,7 @@ class DASMongocache(object):
                     counter += 1
                     item['das'] = dict(expire=expire, primary_key=prim_key,
                                        condition_keys=cond_keys, ts=daststamp,
+                                       instance=dasquery.instance,
                                        system=system, empty_record=0)
                     item['das_id'] = str(objid)
                     yield item

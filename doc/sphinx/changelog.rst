@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Fix issue with data look-up from different DBS instances (introduce
+    instance in das part of the record), ticket #3058
   - Switch to generic DASQuery interface. A new class is used as a placeholder
     for all DAS queries. Code has been refactored to accept new DASQuery interface
   - Revisited analytics code based on Gordon submission: code-refactoring;
