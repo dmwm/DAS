@@ -67,10 +67,13 @@ class DASWebService(DASWebManager):
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
         self.queue_limit = config.get('queue_limit', 50)
         if  self.engine:
-            self.taskmgr = PluginTaskManager(bus=self.engine, nworkers=nworkers)
+            thr_name = 'DASWebService:PluginTaskManager'
+            self.taskmgr = PluginTaskManager(\
+                        bus=self.engine, nworkers=nworkers, name=thr_name)
             self.taskmgr.subscribe()
         else:
-            self.taskmgr = TaskManager(nworkers=nworkers)
+            thr_name = 'DASWebService:TaskManager'
+            self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
         self.adjust      = config.get('adjust_input', False)
 
         self.init()

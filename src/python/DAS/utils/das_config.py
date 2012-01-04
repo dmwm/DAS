@@ -160,6 +160,10 @@ DASOption('das', 'emptyset_expire', 'int', 5),
 # list of data services participated in DAS
 DASOption('das', 'services', 'list', 
                 ['google_maps', 'ip', 'postalcode'], destination='services'),
+# number of DASCore workers (defines how many data-service calls will run at onces)
+DASOption('das', 'core_workers', 'int', 5),
+# number of API workers (defines how many data-service API calls will run at onces)
+DASOption('das', 'api_workers', 'int', 5),
 
 # DAS dbs_phedex service options
 DASOption('dbs_phedex', 'urls', 'list',[]),

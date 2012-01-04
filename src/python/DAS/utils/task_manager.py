@@ -19,8 +19,8 @@ from DAS.utils.utils import genkey, print_exc
 
 class Worker(Thread):
     """Thread executing worker from a given tasks queue"""
-    def __init__(self, taskq, pidq):
-        Thread.__init__(self)
+    def __init__(self, name, taskq, pidq):
+        Thread.__init__(self, name=name)
         self.exit   = 0
         self._tasks = taskq
         self._pids  = pidq
@@ -69,7 +69,7 @@ class TaskManager:
         self.debug  = debug
         self._pids  = set()
         self._tasks = Queue()
-        self._workers = [Worker(self._tasks, self._pids) \
+        self._workers = [Worker(name, self._tasks, self._pids) \
                         for _ in xrange(0, nworkers)]
 
     def nworkers(self):

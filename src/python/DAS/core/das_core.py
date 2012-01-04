@@ -90,11 +90,15 @@ class DASCore(object):
             dasconfig['das']['multitask'] = False
         dasconfig['engine'] = engine
         if  self.multitask:
+            nworkers = dasconfig['das'].get('core_workers', 5)
             if  engine:
-                self.taskmgr = PluginTaskManager(engine)
+                thr_name = 'DASCore:PluginTaskManager'
+                self.taskmgr = PluginTaskManager(\
+                        engine, nworkers=nworkers, name=thr_name)
                 self.taskmgr.subscribe()
             else:
-                self.taskmgr = TaskManager()
+                thr_name = 'DASCore:TaskManager'
+                self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
         else:
             self.taskmgr = None
 

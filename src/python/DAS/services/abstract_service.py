@@ -65,11 +65,15 @@ class DASAbstractService(object):
             self.cert = None
 
         if  self.multitask:
+            nworkers = config['das'].get('api_workers', 3)
             if  engine:
-                self.taskmgr      = PluginTaskManager(engine)
+                thr_name = 'DASAbstractService:%s:PluginTaskManager' % self.name
+                self.taskmgr = PluginTaskManager(\
+                        engine, nworkers=nworkers, name=thr_name)
                 self.taskmgr.subscribe()
             else:
-                self.taskmgr      = TaskManager()
+                thr_name = 'DASAbstractService:%s:TaskManager' % self.name
+                self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
         else:
             self.taskmgr = None
 

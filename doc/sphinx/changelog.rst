@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Reduce number of DAS threads by half (the default values for workers was too high)
+  - Name all TaskManagers to simplify their debugging
+  - Configure number of TaskManager for DASCore/DASAbstractService via
+    das configuration file
   - Fix issue with data look-up from different DBS instances (introduce
     instance in das part of the record), ticket #3058
   - Switch to generic DASQuery interface. A new class is used as a placeholder
