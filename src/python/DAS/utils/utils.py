@@ -46,6 +46,14 @@ def identical_data_records(old, row):
             return False
     return True
 
+def delete_keys(rec, value):
+    "Delete dict keys whose values equal to a given one"
+    if  value in rec.values():
+        to_delete = [k for k, v in rec.iteritems() if v == value]
+        for key in to_delete:
+            if  rec.has_key(key):
+                del rec[key]
+
 def deepcopy(obj):
     """Perform full copy of given object into new object"""
     if  isinstance(obj, dict):
@@ -1241,7 +1249,7 @@ def aggregator_helper(results, expire):
     prim_key  = record['das']['primary_key']
     cond_keys = record['das']['condition_keys']
     system    = record['das']['system']
-    instance  = record['das']['instance']
+    instance  = record['das'].get('instance', None)
     tstamp    = time.time()
     record.pop('das')
     update = 1

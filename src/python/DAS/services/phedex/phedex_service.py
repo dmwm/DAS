@@ -11,7 +11,7 @@ definition in services/combined/combined_service.py):
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, xml_parser
+from DAS.utils.utils import map_validator, xml_parser, delete_keys
 import types
 import DAS.utils.jsonwrapper as json
 
@@ -51,9 +51,7 @@ class PhedexService(DASAbstractService):
         """
         if  api.find('blockReplicas') != -1 or \
             api.find('fileReplicas') != -1:
-            for key, val in kwds.items():
-                if  val == '*':
-                    del kwds[key]
+            delete_keys(kwds, '*')
         if  kwds.has_key('node') and kwds['node'].find('*') == -1:
             if  not api == 'tfc' and kwds['node'] != 'required':
                 kwds['node'] = kwds['node'] + '*'

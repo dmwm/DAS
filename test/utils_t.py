@@ -25,11 +25,18 @@ from DAS.utils.utils import filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
+from DAS.utils.utils import delete_keys
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_delete_keys(self):
+        """Tests gen_counter function"""
+        rec = {'a':1, 'b':1, 'c':2}
+        delete_keys(rec, 1)
+        self.assertEqual(rec.keys(), ['c'])
+
     def test_gen_counter(self):
         """Tests gen_counter function"""
         gen  = (i for i in xrange(0, 10))
@@ -283,7 +290,8 @@ class testUtils(unittest.TestCase):
     def test_aggregator(self):
         """Test aggregator function"""
         # 1 row in results
-        das  = {'expire': 10, 'primary_key':'vk', 'empty_record': 0, 'system':['foo'], 'condition_keys':['run']}
+        das  = {'expire': 10, 'primary_key':'vk', 'empty_record': 0,
+                'system':['foo'], 'condition_keys':['run'], 'instance':None}
         row  = {'run':10, 'das':das, '_id':1, 'das_id':1}
         rows = (row for i in range(0,1))
         result = [r for r in aggregator(rows, das['expire'])]
@@ -306,7 +314,8 @@ class testUtils(unittest.TestCase):
         self.assertEqual(result, expect)
 
         # 2 rows with common value for common key
-        das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0, 'system':['foo'], 'condition_keys':['run']}
+        das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0,
+                'system':['foo'], 'condition_keys':['run'], 'instance':None}
         rows = []
         row  = {'run':{'a':1,'b':1}, 'das':das, '_id':1, 'das_id':1}
         rows.append(row)
@@ -323,7 +332,7 @@ class testUtils(unittest.TestCase):
     def test_aggregator_duplicates(self):
         """Test aggregator function"""
         das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0,
-                'system':['foo'], 'condition_keys':['run']}
+                'system':['foo'], 'condition_keys':['run'], 'instance':None}
         rows = []
         row  = {'run':{'a':1,'b':1}, 'das':das, '_id':1, 'das_id':1}
         rows.append(row)

@@ -160,14 +160,18 @@ class QLManager(object):
                         mongo_query['spec'][mapkey] = '*'
             return
         spec = mongo_query['spec']
-        for key, val in spec.items():
+        to_replace = []
+        for key, val in spec.iteritems():
             for system in self.map.list_systems():
                 mapkey = self.map.find_mapkey(system, key, val)
                 if  mapkey and mapkey != key and \
                     mongo_query['spec'].has_key(key):
-                    mongo_query['spec'][mapkey] = mongo_query['spec'][key]
-                    del mongo_query['spec'][key]
+                    to_replace.append((key, mapkey))
                     continue
+        for key, mapkey in to_replace:
+            if  mongo_query['spec'].has_key(key):
+                mongo_query['spec'][mapkey] = mongo_query['spec'][key]
+                del mongo_query['spec'][key]
         
     def services(self, query):
         """Find out DAS services to use for provided query"""

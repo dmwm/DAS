@@ -18,7 +18,7 @@ from DAS.utils.ddict import DotDict
 from DAS.utils.utils import getarg, genkey, print_exc
 from DAS.utils.utils import row2das, make_headers, get_key_cert
 from DAS.utils.utils import xml_parser, json_parser
-from DAS.utils.utils import yield_rows
+from DAS.utils.utils import yield_rows, delete_keys
 from DAS.utils.query_utils import compare_specs
 from DAS.utils.url_utils import getdata
 from DAS.utils.das_db import db_gridfs, parse2gridfs
@@ -553,10 +553,8 @@ class DASAbstractService(object):
                 msg = 'args=%s' % args
                 self.logger.debug(msg)
                 continue
-            if 'optional' in args.values():
-                for key, val in args.items():
-                    if  val == 'optional':
-                        del args[key]
+            # delete args keys whose value is optional
+            delete_keys(args, 'optional')
             # check that there is no "required" parameter left in args,
             # since such api will not work
             if 'required' in args.values():
