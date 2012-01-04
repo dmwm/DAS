@@ -154,7 +154,8 @@ class DotDict(dict):
                 elif isinstance(item, list):
                     for elem in item:
                         if  isinstance(elem, dict):
-                            yield '%s.%s' % (ckey, elem)
+                            for kkk in elem.keys():
+                                yield '%s.%s' % (ckey, kkk)
                         else:
                             yield ckey
                 else: # basic type, so we reach the end

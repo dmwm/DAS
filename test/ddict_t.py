@@ -35,6 +35,28 @@ class Test_DotDict(unittest.TestCase):
         result.sort()
         self.assertEqual(expect, result)
 
+        doc = {"site": [{"mapping": { "pfn": [
+                    {
+                     "protocol": "direct",
+                     "result": "/store/$1",
+                     "path": "/+hadoop/cms/store/(.*)"
+                    },
+                    {
+                     "protocol": "direct",
+                     "result": "/store/$1",
+                     "path": "/+hadoop/cms/store/(.*)"
+                    }]
+                }}]
+        }
+        result = DotDict(doc).get_keys()
+        result.sort()
+        expect = ['site.mapping',
+                  'site.mapping.pfn',
+                  'site.mapping.pfn.path',
+                  'site.mapping.pfn.protocol',
+                  'site.mapping.pfn.result']
+        self.assertEqual(expect, result)
+
     def test_get(self):
         """test get method"""
         rec = DotDict(self.rec1)
