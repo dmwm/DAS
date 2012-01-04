@@ -163,7 +163,7 @@ DASOption('das', 'services', 'list',
 # number of DASCore workers (defines how many data-service calls will run at onces)
 DASOption('das', 'core_workers', 'int', 5),
 # number of API workers (defines how many data-service API calls will run at onces)
-DASOption('das', 'api_workers', 'int', 5),
+DASOption('das', 'api_workers', 'int', 3),
 
 # DAS dbs_phedex service options
 DASOption('dbs_phedex', 'urls', 'list',[]),

@@ -15,6 +15,7 @@ import os
 import sys
 import yaml
 import logging 
+import threading
 from pprint import pformat
 from optparse import OptionParser
 
@@ -100,12 +101,17 @@ class Root(object):
             tree.mount(obj, '/dbs_phedex')
             print "### DAS web server mounted /dbs_phedex service"
 
-        print "### DAS web server, PID=%s" % self.pid
+        print "### DAS web server, PID=%s, #threads=%s" \
+                % (self.pid, threading.active_count())
+        for thr in threading.enumerate():
+            print thr
         print pformat(tree.apps)
         print pformat(self.config)
         pid = PIDFile(engine, self.pid)
         pid.subscribe()
         engine.start()
+        print "### number of threads with web engine %s" \
+                % threading.active_count()
         if  blocking:
             engine.block()
         
