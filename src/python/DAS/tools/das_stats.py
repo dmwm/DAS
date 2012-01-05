@@ -5,6 +5,7 @@ DAS statistics tool based on results of DAS logdb, see
 DAS/core/das_mongocache.py
 """
 
+import datetime
 from optparse import OptionParser
 from pymongo.connection import Connection
 try:
@@ -98,6 +99,14 @@ class LogdbManager(object):
         res.update({'type': coll})
         return res
 
+def dateobj(some_date):
+    "Return dateime date object for given YYYYMMDD number"
+    str_date = str(some_date)
+    year  = int(str_date[:4])
+    month = int(str_date[4:6])
+    day   = int(str_date[6:8])
+    return datetime.date(year, month, day)
+
 def collector(dbhost, dbport, logdb, logcol, date):
     "Generator which collect results"
     mgr = LogdbManager(dbhost, dbport, logdb, logcol)
@@ -108,7 +117,10 @@ def collector(dbhost, dbport, logdb, logcol, date):
             yield res
     else:
         min_date, max_date = mgr.dates()
-        for date in range(min_date, max_date+1):
+        dates = dateobj(max_date) - dateobj(min_date)
+        for delta in range(0, dates.days+1):
+            datestr = dateobj(min_date) + datetime.timedelta(days=delta)
+            date = int(str(datestr).replace('-', ''))
             for coll in ['web', 'cache', 'merge']:
                 res = mgr.stats(coll, date)
                 res.update({'date':date})
