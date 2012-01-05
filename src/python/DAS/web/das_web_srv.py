@@ -494,7 +494,7 @@ class DASWebService(DASWebManager):
         dasquery = kwargs.get('dasquery', None)
         time0  = time.time()
         if  dasquery:
-            dasquery = DASQuery(dasquery)
+            dasquery = DASQuery(dasquery, instance=inst)
         else:
             check, content = \
                     self.generate_dasquery(uinput, inst, html_error=False)
