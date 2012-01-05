@@ -145,8 +145,9 @@ class PhedexService(DASAbstractService):
                     if  result not in site_names:
                         site_names.append(result)
             elif  api == 'dataset4site' or api == 'dataset4se':
-                dataset = row['block']['name'].split('#')[0]
-                seen.add(dataset)
+                if  row.has_key('block'):
+                    dataset = row['block']['name'].split('#')[0]
+                    seen.add(dataset)
             else:
                 yield row
         if  api == 'site4dataset' or api == 'site4block':
