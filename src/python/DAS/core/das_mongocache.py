@@ -768,6 +768,10 @@ class DASMongocache(object):
                     newkey, newval = convert_dot_notation(key, val)
                     empty_record[newkey] = adjust_mongo_keyvalue(newval)
             self.merge.insert(empty_record)
+            # update DAS records
+            newval  = {'$set': {'das.expire':empty_expire}}
+            spec = {'_id' : {'$in': [ObjectId(i) for i in id_list]}}
+            self.col.update(spec, newval, multi=True)
 
     def update_cache(self, dasquery, results, header):
         """
