@@ -71,7 +71,13 @@ class RequestHandler(object):
             url = url + '?' + encoded_data
         if  post:
             curl.setopt(pycurl.POST, 1)
-        curl.setopt(pycurl.URL, url)
+        if  isinstance(url, str):
+            curl.setopt(pycurl.URL, url)
+        elif isinstance(url, unicode):
+            curl.setopt(pycurl.URL, url.encode('ascii', 'ignore'))
+        else:
+            raise TypeError('Wrong type for url="%s", type="%s"' \
+                % (url, type(url)))
         curl.setopt(pycurl.HTTPHEADER, \
                 ["%s: %s" % (k, v) for k, v in headers.iteritems()])
         bbuf = StringIO.StringIO()
@@ -85,7 +91,8 @@ class RequestHandler(object):
             curl.setopt(pycurl.SSLCERT, cert)
         if  verbose:
             curl.setopt(pycurl.VERBOSE, 1)
-            curl.setopt(pycurl.DEBUGFUNCTION, self.debug)
+            if  isinstance(verbose, int) and verbose > 1:
+                curl.setopt(pycurl.DEBUGFUNCTION, self.debug)
         return bbuf, hbuf
 
     def debug(self, debug_type, debug_msg):
@@ -99,11 +106,14 @@ class RequestHandler(object):
         bbuf, hbuf = self.set_opts(curl, url, params, headers,
                 ckey, cert, verbose, post, doseq)
         curl.perform()
-        data = parse_body(bbuf.getvalue())
+#        data = parse_body(bbuf.getvalue())
+#        data = bbuf.getvalue() # read entire content
+#        bbuf.flush()
+        bbuf.seek(0)# to use file description seek to the beggning of the stream
+        data = bbuf # leave StringIO object, which will serve as file descriptor
         expire = get_expire(hbuf.getvalue(), error_expire, verbose)
-        bbuf.flush()
         hbuf.flush()
-        return (data, expire)
+        return data, expire
 
     def multirequest(self, url, parray, headers=None,
                 ckey=None, cert=None, verbose=None):

@@ -1009,6 +1009,7 @@ def qlxml_parser(source, prim_key):
     """
     notations = {}
     context   = ET.iterparse(source, events=("start", "end"))
+
     root = None
     row = {}
     row[prim_key]={}

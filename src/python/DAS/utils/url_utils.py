@@ -16,6 +16,7 @@ import httplib
 # DAS modules
 from   DAS.utils.das_timer import das_timer
 from   DAS.utils.utils import expire_timestamp, extract_http_error
+from   DAS.utils.pycurl_manager import RequestHandler
 import DAS.utils.jsonwrapper as json
 
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
@@ -45,7 +46,22 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
                                                 cert_file=self.cert)
         return httplib.HTTPSConnection(host)
 
-def getdata(url, params, headers=None, expire=3600, post=None, 
+def getdata(url, params, headers=None, expire=3600, post=None,
+                error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
+    return getdata_urllib(url, params, headers, expire, post, \
+                error_expire, verbose, ckey, cert, doseq)
+#    return getdata_pycurl(url, params, headers, expire, post, \
+#                error_expire, verbose, ckey, cert, doseq)
+
+def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
+                error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
+    "Fetch data via pycurl library"
+    reqmgr  = RequestHandler()
+    data, expire = reqmgr.getdata(url, params, headers, expire, post, \
+                error_expire, verbose, ckey, cert, doseq)
+    return data, expire
+
+def getdata_urllib(url, params, headers=None, expire=3600, post=None,
                 error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
     """
     Invoke URL call and retrieve data from data-service based
