@@ -3,7 +3,7 @@ system: sitedb2
 format: JSON
 --- 
 urn : resource_pledges
-url : "https://cmsweb.cern.ch/sitedb/data/prod/resource_pledges"
+url : "https://cmsweb.cern.ch/sitedb/data/prod/resource-pledges"
 expire : 3600
 params : {"match":"optional"}
 daskeys : [
@@ -26,7 +26,7 @@ das2api : [
     {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
 ]
 ---
-urn : site-names
+urn : site_names
 url : "https://cmsweb.cern.ch/sitedb/data/prod/site-names"
 expire : 3600
 params : {"name":"optional"}
@@ -39,7 +39,7 @@ das2api : [
     {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
 ]
 ---
-urn : site-resources
+urn : site_resources
 url : "https://cmsweb.cern.ch/sitedb/data/prod/site-resources"
 expire : 3600
 params : {"name":"optional"}
@@ -52,7 +52,7 @@ das2api : [
     {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
 ]
 ---
-urn : site-associations
+urn : site_associations
 url : "https://cmsweb.cern.ch/sitedb/data/prod/site-associations"
 expire : 3600
 params : {"name":"optional"}
@@ -65,7 +65,7 @@ das2api : [
     {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
 ]
 ---
-urn : site-responsibilities
+urn : site_responsibilities
 url : "https://cmsweb.cern.ch/sitedb/data/prod/site-responsibilities"
 expire : 3600
 params : {"name":"optional"}
