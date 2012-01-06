@@ -31,8 +31,8 @@ from DAS.core.das_query import DASQuery
 from DAS.core.das_mongocache import DASLogdb
 from DAS.utils.utils import getarg
 from DAS.utils.ddict import DotDict
-from DAS.utils.utils import genkey, print_exc
-from DAS.utils.das_db import db_connection, db_gridfs
+from DAS.utils.utils import genkey, print_exc, dastimestamp
+from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import free_text_parser
 from DAS.web.utils import checkargs, das_json, gen_error_msg
@@ -103,7 +103,8 @@ class DASWebService(DASWebManager):
             main_dbs_url = self.dasconfig['dbs']['dbs_global_url']
             self.dbs_urls = []
             for inst in self.dbs_instances:
-              self.dbs_urls.append(main_dbs_url.replace(self.dbs_global, inst))
+                self.dbs_urls.append(\
+                        main_dbs_url.replace(self.dbs_global, inst))
             interval  = config.get('dbs_daemon_interval', 3600)
             dbsexpire = config.get('dbs_daemon_expire', 3600)
             self.dbsmgr = {} # dbs_urls vs dbs_daemons
@@ -274,7 +275,7 @@ class DASWebService(DASWebManager):
     def adjust_input(self, kwargs):
         """
         Adjust user input wrt common DAS keyword patterns, e.g.
-        Zee -> dataset=*Zee*, T1_US_XXX -> site=T1_US_XXX*. This method
+        Zee -> dataset=*Zee*, T1_US -> site=T1_US*. This method
         only works if self.adjust is set in configuration of DAS server.
         This method can be customization for concrete DAS applications via
         external free_text_parser function (part of DAS.web.utils module)
@@ -298,7 +299,7 @@ class DASWebService(DASWebManager):
         Check provided input as valid DAS input query.
         Returns status and content (either error message or valid DASQuery)
         """
-        def helper(msg, html_error):
+        def helper(msg, html_error=None):
             """Helper function which provide error template"""
             if  not html_error:
                 return msg
@@ -344,7 +345,8 @@ class DASWebService(DASWebManager):
                 print_exc(exc)
                 return 1, helper(msg, html_error)
             if  not service_map:
-                msg = "None of the API's registered in DAS can resolve this query"
+                msg  = "None of the API's registered in DAS "
+                msg += "can resolve this query"
                 return 1, helper(msg, html_error)
         return 0, dasquery
 
@@ -554,17 +556,18 @@ class DASWebService(DASWebManager):
         pid    = kwargs.get('pid', '')
         inst   = kwargs.get('instance', self.dbs_global)
         uinput = kwargs.get('input', '')
+        data   = []
         self.logdb(uinput)
         check, content = self.generate_dasquery(uinput, inst)
         if  check:
             head = request_headers()
-            head.update({'status': 'fail', 'reason': 'Fail to create DASQuery object',
+            head.update({'status': 'fail',
+                         'reason': 'Fail to create DASQuery object',
                          'ctime': 0})
             return self.datastream(dict(head=head, data=data))
         dasquery = content # returned content is valid DAS query
         kwargs['dasquery'] = dasquery.storage_query
         if  not pid and self.busy():
-            data = []
             head = request_headers()
             head.update({'status': 'busy', 'reason': 'DAS server is busy',
                          'ctime': 0})
@@ -609,7 +612,8 @@ class DASWebService(DASWebManager):
         if  not pat.match(dataset):
             msg = 'Invalid dataset name'
             return self.error(msg)
-        query = "file dataset=%s | grep file.name" % dataset
+        query = "file dataset=%s instance=%s | grep file.name" \
+                % (dataset, instance)
         try:
             data   = self.dasmgr.result(query, idx=0, limit=0)
         except Exception as exc:
@@ -685,7 +689,7 @@ class DASWebService(DASWebManager):
         """Return list of all current requests in DAS queue"""
         page = ""
         count = 0
-        for row in self.reqmgr.iteritems():
+        for row in self.reqmgr.items():
             page += '<li>%s placed at %s<br/>%s</li>' \
                         % (row['_id'], row['timestamp'], row['kwds'])
             count += 1
@@ -707,26 +711,34 @@ class DASWebService(DASWebManager):
         """
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        doc = self.reqmgr.get(pid)
         img = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
-        if  doc:
-            kwargs = doc
-            if  self.taskmgr.is_alive(pid):
-                page = img + " processing PID=%s" % pid
+        try:
+            doc = self.reqmgr.get(pid)
+            if  doc:
+                kwargs = doc
+                if  self.taskmgr.is_alive(pid):
+                    page = img + " processing PID=%s" % pid
+                else:
+                    page = self.get_page_content(kwargs)
+                    self.reqmgr.remove(pid)
             else:
-                page = self.get_page_content(kwargs)
-                self.reqmgr.remove(pid)
-        else:
-            url = cherrypy.request.headers.get('Referer')
-            if  url:
-                kwargs = {}
-                for key, val in \
-                urlparse.parse_qsl(urlparse.urlparse(url).query):
-                    kwargs[key] = val
-                self.adjust_input(kwargs)
-                page = self.get_page_content(kwargs)
-            else:
-                page = "Request %s not found, please reload the page" % pid
+                url = cherrypy.request.headers.get('Referer')
+                if  url:
+                    kwargs = {}
+                    for key, val in \
+                    urlparse.parse_qsl(urlparse.urlparse(url).query):
+                        kwargs[key] = val
+                    self.adjust_input(kwargs)
+                    page = self.get_page_content(kwargs)
+                else:
+                    page = "Request %s not found, please reload the page" % pid
+        except Exception as err:
+            msg = 'check_pid fails for pid=%s' % pid
+            print dastimestamp('DAS WEB ERROR '), msg
+            print_exc(err)
+            self.reqmgr.remove(pid)
+            self.taskmgr.remove(pid)
+            page = "check_pid fails, pid=%s, please submit bug report" % pid
         return page
     
     def listview(self, head, data):

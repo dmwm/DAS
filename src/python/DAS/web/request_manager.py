@@ -8,9 +8,11 @@ Description: Persistent request manager for DAS web server
 
 import time
 from pymongo import ASCENDING
+from pymongo.errors import OperationFailure
 import DAS.utils.jsonwrapper as json
 from DAS.utils.das_db import db_connection
 from DAS.utils.das_db import create_indexes
+from DAS.utils.utils import print_exc, dastimestamp
 
 class RequestManager(object):
     """
@@ -37,12 +39,36 @@ class RequestManager(object):
         tstamp = time.strftime("%Y%m%d %H:%M:%S", time.localtime())
         doc = dict(_id=pid, kwds=json.dumps(kwds),
                 ts=time.time(), timestamp=tstamp)
-        self.col.insert(doc)
+        attempts = 0
+        while True:
+            try:
+                self.col.insert(doc, safe=True)
+                break
+            except OperationFailure as err:
+                print_exc(err)
+                time.sleep(0.01)
+            attempts += 1
+            if  attempts > 2:
+                msg = '%s unable to remove pid=%s' % (self.col, pid)
+                print dastimestamp('DAS ERROR '), msg
+                break
         self.col.remove({'ts':{'$lt':time.time()-self.lifetime}})
         
     def remove(self, pid):
         """Remove given pid"""
-        self.col.remove(dict(_id=pid))
+        attempts = 0
+        while True:
+            try:
+                self.col.remove(dict(_id=pid), safe=True)
+                break
+            except OperationFailure as err:
+                print_exc(err)
+                time.sleep(0.01)
+            attempts += 1
+            if  attempts > 2:
+                msg = '%s unable to remove pid=%s' % (self.col, pid)
+                print dastimestamp('DAS ERROR '), msg
+                break
         
     def items(self):
         """Return list of current requests"""

@@ -78,11 +78,15 @@ class TaskManager:
 
     def spawn(self, func, *args, **kwargs):
         """Spawn new process for given function"""
-        pid = genkey(str(args))
+        pid = genkey(str(args) + str(kwargs))
         self._pids.add(pid)
         ready = Event()
         self._tasks.put((ready, pid, func, args, kwargs))
         return ready, pid
+
+    def remove(self, pid):
+        """Remove pid and associative process from the queue"""
+        self._pids.discard(pid)
 
     def is_alive(self, pid):
         """Check worker queue if given pid of the process is still running"""
