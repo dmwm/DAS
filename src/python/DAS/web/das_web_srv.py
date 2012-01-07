@@ -738,7 +738,7 @@ class DASWebService(DASWebManager):
             print_exc(err)
             self.reqmgr.remove(pid)
             self.taskmgr.remove(pid)
-            page = "check_pid fails, pid=%s, please submit bug report" % pid
+            return self.error(gen_error_msg({'pid':pid}), wrap=False)
         return page
     
     def listview(self, head, data):
