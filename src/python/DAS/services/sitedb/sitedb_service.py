@@ -13,7 +13,7 @@ from   types import InstanceType
 
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import add2dict, map_validator
-from   DAS.utils.utils import row2das
+from   DAS.utils.utils import row2das, print_exc
 from   DAS.utils.regex import cms_tier_pattern
 import DAS.utils.jsonwrapper as json
 
@@ -42,14 +42,14 @@ class SiteDBService(DASAbstractService):
             source.close()
         else:
             data = source
-
+        # SiteDB incorrectly decode json. So instead of trying json.loads
+        # I switched directly to eval its data (brrr, I know its bad)
+        # but barking json is not good either
         try:
-            jsondict = json.loads(data)
-        except:
-            msg  = "SiteDBService::parser,"
-            msg += "WARNING, fail to JSON'ify data:\n%s" % data
-            self.logger.warning(msg)
             jsondict = eval(data, { "__builtins__": None }, {})
+        except Exception as err:
+            print_exc(err)
+            jsondict = {}
         pat = cms_tier_pattern
         for key, val in jsondict.iteritems():
             if  api == 'CMSNametoAdmins':
