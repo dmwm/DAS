@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Extend not equal filter to support patterns, ticket #3078
   - Reduce number of DAS threads by half (the default values for workers was too high)
   - Name all TaskManagers to simplify their debugging
   - Configure number of TaskManager for DASCore/DASAbstractService via

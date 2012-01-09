@@ -145,7 +145,11 @@ def parse_filter(spec, flt):
             val = float(val)
         if  isinstance(val, str) or isinstance(val, unicode):
             if  val.find('*') != -1:
-                val = re.compile('%s' % val.replace('*', '.*'))
+#                val = re.compile('%s' % val.replace('*', '.*'))
+                val = re.compile('^(?:(?!%s).)*$' % val.replace('*', '.*'))
+            else:
+                val = re.compile('^(?:(?!%s).)*$' % val)
+            return {key: val}
         return {key: {'$ne': val}}
     elif  flt.find('<=') != -1:
         key, val = flt.split('<=')

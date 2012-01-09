@@ -20,6 +20,7 @@ from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_mongocache import DASMongocache
 from DAS.core.das_mongocache import encode_mongo_query, decode_mongo_query
 from DAS.core.das_mongocache import convert2pattern, compare_specs
+from DAS.core.das_mongocache import update_query_spec
 
 class testDASMongocache(unittest.TestCase):
     """
@@ -41,6 +42,17 @@ class testDASMongocache(unittest.TestCase):
         dasmapping = DASMapping(config)
         config['dasmapping'] = dasmapping
         self.dasmongocache = DASMongocache(config)
+
+    def test_update_query_spec(self):
+        "Test update_query_spec function"
+        spec   = {'a':1}
+        result = update_query_spec(spec, {'a':10})
+        expect = {'$and': [{'a':1}, {'a':10}]}
+        self.assertEqual(expect, spec)
+
+        result = update_query_spec(spec, {'a':100})
+        expect = {'$and': [{'a':1}, {'a':10}, {'a':100}]}
+        self.assertEqual(expect, spec)
 
     def test_encode_decode(self):
         """Test encode/decode_query functions"""

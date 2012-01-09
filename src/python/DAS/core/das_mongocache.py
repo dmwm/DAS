@@ -45,6 +45,36 @@ from pymongo import DESCENDING, ASCENDING
 from pymongo.errors import InvalidOperation
 from bson.errors import InvalidDocument
 
+def update_query_spec(spec, fdict):
+    """
+    Update spec dict with given dictionary. If fdict
+    keys overlap with spec dict, we construct and $and condition.
+    Please note we update given query spec!!!
+    """
+    keys = spec.keys()
+    and_list = spec.get('$and', None)
+    if  set(keys) & set(fdict.keys()):
+        for key, val in fdict.iteritems():
+            if  key in keys:
+                qvalue = spec[key]
+                if  isinstance(qvalue, list):
+                    qvalue.add({key:val})
+                    cond = {'$and' : qvalue}
+                else:
+                    cond = {'$and' : [{key:qvalue}, {key:val}]}
+                del spec[key]
+                spec.update(cond)
+            else:
+                spec.update({key:val})
+    elif and_list:
+        for key, val in fdict.iteritems():
+            if  key in [k for d in and_list for k in d.keys()]:
+                and_list.append({key:val})
+            else:
+                spec.update({key:val})
+    else: # set of keys do not overlap
+        spec.update(fdict)
+
 def adjust_id(query):
     """
     We need to adjust input query who has '_id' as a string to ObjectId
@@ -272,7 +302,7 @@ class DASMongocache(object):
             if  query.has_key('filters'):
                 filter_dict = parse_filters(query)
                 if  filter_dict:
-                    query['spec'].update(filter_dict)
+                    update_query_spec(query['spec'], filter_dict)
 
         if  query.has_key('system'):
             spec.update({'das.system' : query['system']})
