@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703
+#pylint: disable-msg=W0703,R0913,R0912,R0914,R0915,R0902,R0903,R0904
 
 """
 DAS mongocache manager.
@@ -29,14 +29,13 @@ from DAS.core.das_query import DASQuery
 from DAS.utils.query_utils import compare_specs, convert2pattern
 from DAS.utils.query_utils import encode_mongo_query, decode_mongo_query
 from DAS.utils.ddict import convert_dot_notation
-from DAS.utils.utils import genkey, aggregator, unique_filter
+from DAS.utils.utils import aggregator, unique_filter
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.utils.utils import parse_filters, expire_timestamp
 from DAS.utils.utils import dastimestamp, deepcopy, gen_counter
 from DAS.utils.das_db import db_connection
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
-import DAS.utils.jsonwrapper as json
 
 # monogo db modules
 from pymongo.objectid import ObjectId
@@ -123,10 +122,10 @@ class DASLogdb(object):
             conn    = db_connection(dburi)
             if  logdbname not in conn.database_names():
                 dbname      = conn[logdbname]
-                options     = {'capped':True, 'size': capped_size}
-                dbname.create_collection('db', **options)
-                self.warning('Created %s.%s, size=%s' \
-                % (logdbname, logdbcoll, capped_size))
+                dbname.create_collection('db', \
+                        {'capped':True, 'size': capped_size})
+                print 'Created %s.%s, size=%s' \
+                % (logdbname, logdbcoll, capped_size)
             self.logcol     = conn[logdbname][logdbcoll]
         except Exception as exc:
             print_exc(exc)
@@ -275,8 +274,6 @@ class DASMongocache(object):
                         prim_keys.append(prim_key)
             if  prim_keys:
                 query['spec'].update({"das.primary_key": {"$in":prim_keys}})
-        aggregators = query.get('aggregators', None)
-        mapreduce   = query.get('mapreduce', None)
         filters     = query.get('filters', None)
         if  filters:
             fields  = query['fields']
@@ -400,15 +397,20 @@ class DASMongocache(object):
             dasrecord = self.col.find_one(spec1)
             spec2  = {'qhash': dasquery.qhash, 'das.system': system}
             sysrecord = self.col.find_one(spec2)
-            if  dasrecord and sysrecord:
-                if  header['das']['expire'] < dasrecord['das']['expire']:
-                    expire = header['das']['expire']
-                else:
-                    expire = dasrecord['das']['expire']
-                api = header['das']['api']
-                url = header['das']['url']
-                if  set(api) & set(sysrecord['das']['api']) == set(api) and \
-                    set(url) & set(sysrecord['das']['url']) == set(url):
+            hexpire = header['das']['expire']
+            if  dasrecord.has_key('das'):
+                dexpire = dasrecord['das'].get('expire', None)
+            if  dexpire and hexpire > dexpire:
+                expire = dexpire
+            else:
+                expire = hexpire
+            if  sysrecord:
+                api  = header['das']['api']
+                url  = header['das']['url']
+                sapi = sysrecord['das'].get('api', [])
+                surl = sysrecord['das'].get('url', [])
+                if  set(api) & set(sapi) == set(api) and \
+                    set(url) & set(surl) == set(url):
                     self.col.update({'_id':ObjectId(sysrecord['_id'])},
                          {'$set': {'das.expire':expire, 'das.status':status}})
                 else:
@@ -420,6 +422,7 @@ class DASMongocache(object):
                                      'das.lookup_keys':header['lookup_keys'],
                                     },
                          '$set': {'das.expire':expire, 'das.status':status}})
+            if  dasrecord:
                 self.col.update({'_id':ObjectId(dasrecord['_id'])},
                      {'$set': {'das.expire':expire, 'das.status':status}})
         else:
@@ -543,7 +546,6 @@ class DASMongocache(object):
                 if  key not in self.das_internal_keys and \
                     not spec.has_key(key):
                     spec.update({key: {'$exists':True}})
-        res = []
         try:
             res = col.find(spec=spec, fields=fields)
             if  skeys:
@@ -556,6 +558,7 @@ class DASMongocache(object):
         except Exception as exp:
             print_exc(exp)
             row = {'exception': str(exp)}
+            res = []
             yield row
         if  unique:
             if  limit:
