@@ -122,8 +122,7 @@ class DASLogdb(object):
             conn    = db_connection(dburi)
             if  logdbname not in conn.database_names():
                 dbname      = conn[logdbname]
-                dbname.create_collection('db', \
-                        {'capped':True, 'size': capped_size})
+                dbname.create_collection('db', capped=True, size=capped_size)
                 print 'Created %s.%s, size=%s' \
                 % (logdbname, logdbcoll, capped_size)
             self.logcol     = conn[logdbname][logdbcoll]
@@ -426,7 +425,7 @@ class DASMongocache(object):
                 self.col.update({'_id':ObjectId(dasrecord['_id'])},
                      {'$set': {'das.expire':expire, 'das.status':status}})
         else:
-            self.col.update({'query': dasquery.storage_query,
+            self.col.update({'qhash': dasquery.qhash,
                              'das.system':'das'},
                             {'$set': {'das.status': status}})
 
