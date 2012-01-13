@@ -6,7 +6,7 @@ if [ "$#" -gt 2 ]; then
 fi 
 
 if [ "$#" -eq 0 ]; then
-thr=8
+thr=9
 else
 thr=$1
 fi

@@ -22,27 +22,31 @@ from cherrypy.process import plugins
 
 #prevent the worker catching SIGINT, which causes a deadlock in
 #multiprocessing.Pool - workaround from
-#http://stackoverflow.com/questions/1408356/keyboard-interrupts-with-pythons-multiprocessing-pool
+# http://stackoverflow.com/
+# questions/1408356/keyboard-interrupts-with-pythons-multiprocessing-pool
 #this arises because not isinstance(KeyboardInterrupt, Exception)
 #Disabling catching SIGINT is apparently also a viable solution
 def poolsafe(func):
     "Poolsafe wrapper"
     def wrapper(*args, **kwargs):
-        #some redundancy here, but just trapping KeyboardInterrupt didn't seem to work
+        "decorator wrapper"
+        # some redundancy here, but just trapping
+        # KeyboardInterrupt didn't seem to work
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-        "Worker wrapper"
         try:
             return func(*args, **kwargs)
         except KeyboardInterrupt:
             #raise Exception("KeyboardInterrupt as Exception")
             return
     return wrapper
+
 #monkey-patch multiprocessing worker function
 from multiprocessing.pool import worker
 multiprocessing.pool.worker = poolsafe(worker) 
 
 DASAnalyticsConfig.add_option("max_retries", type=int, default=1,
-    help="Number of times the task scheduler will retry a failed task before abandoning it.")
+    help="Number of times the task scheduler will \
+retry a failed task before abandoning it.")
 DASAnalyticsConfig.add_option("retry_delay", type=int, default=60,
     help="Seconds to wait before retrying a failed job.")
 DASAnalyticsConfig.add_option("minimum_interval", type=int, default=60,
@@ -94,15 +98,15 @@ class TaskScheduler(plugins.SimplePlugin):
         self.pool = multiprocessing.Pool(processes=self.workers)
         self.terminate = False
         #this may be meant to run in a new thread
-        #note that we don't get a lock here, since run() subsequently gets the lock
-        #and this should be occurring once before anything else
+        #note that we don't get a lock here, since run() subsequently
+        #gets the lock and this should be occurring once before anything else
         thread = threading.Thread(target=self.run)
         thread.start()
     
     def stop(self):
         "Set the termination signal and request the pool terminate gracefully."
-        #unclear what the correct locking should be here
-        #since holding the lock for join() would prevent any callbacks running
+        #unclear what the correct locking should be here since holding the 
+        #lock for join() would prevent any callbacks running
         self.terminate = True
         if self.pool:
             self.pool.terminate() #sod it, kill it anyway
@@ -285,7 +289,8 @@ class TaskScheduler(plugins.SimplePlugin):
                         self.logger.info('..scheduling next run.')
                         self._add_task(task, when=when)
                     else:
-                        msg = '...exceeded maximum runs or time cutoff, not scheduling.'
+                        msg = \
+                    '...exceeded maximum runs or time cutoff, not scheduling.'
                         self.logger.info(msg)
                 else:
                     if task.retries <= self.max_retries:
@@ -310,7 +315,8 @@ class TaskScheduler(plugins.SimplePlugin):
                                parent=result.get('parent',())+(task.master_id,))
                     self._add_task(newtask, offset=new['interval'])
                 else:
-                    self.logger.error('New task contained insufficient arguments to be created: %s', new)
+                    self.logger.error('New task contained insufficient \
+arguments to be created: %s', new)
                 
             for callback in self.callbacks:
                 try:

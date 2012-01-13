@@ -1,3 +1,7 @@
+"""
+Query report class
+"""
+
 from DAS.analytics.utils import Report, get_analytics_interface
 from DAS.analytics.utils import nested_to_baobab
 import time

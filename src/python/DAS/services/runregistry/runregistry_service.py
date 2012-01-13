@@ -181,16 +181,21 @@ class RunRegistryService(DASAbstractService):
         dasrows = self.set_misses(dasquery, api, run_duration(genrows))
         ctime   = time.time() - time0
         try:
-            self.write_to_cache(dasquery, expire, url, api, args, dasrows, ctime)
+            self.write_to_cache(\
+                dasquery, expire, url, api, args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)
 
-if __name__ == '__main__':
-    QUERY = "{runNumber} >= 135230 and {runNumber} <= 135230"
-    QUERY = {'runStartTime': '>= 2010-10-18 and < 2010-10-22'}
-    QUERY = {'runNumber': '>= 137081 and < 137088'}
-    QUERY = {'runNumber': '>= 147623 and <= 147623'}
-    QUERY = {'runNumber': '147623'}
-    URL = 'http://localhost:8081/runregistry_api/xmlrpc'
-    for row in worker(URL, QUERY):
+def test():
+    "Test function"
+    query = "{runNumber} >= 135230 and {runNumber} <= 135230"
+    query = {'runStartTime': '>= 2010-10-18 and < 2010-10-22'}
+    query = {'runNumber': '>= 137081 and < 137088'}
+    query = {'runNumber': '>= 147623 and <= 147623'}
+    query = {'runNumber': '147623'}
+    url = 'http://localhost:8081/runregistry_api/xmlrpc'
+    for row in worker(url, query):
         print row, type(row)
+
+if __name__ == '__main__':
+    test()

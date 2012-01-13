@@ -83,7 +83,7 @@ def das_aggregators():
     which represents DAS aggregator functions
     """
     alist = []
-    for name, ftype in inspect.getmembers(ResultObject):
+    for name, _ftype in inspect.getmembers(ResultObject):
         if  name.find("__") != -1:
             continue
         alist.append(name)

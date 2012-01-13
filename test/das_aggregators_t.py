@@ -65,7 +65,7 @@ class testDASAggregators(unittest.TestCase):
 
         expect = {'result': 20, '_id': 2}
         robj = das_func('max', 'block.replica.size', rows)
-        self.assertEqual(expect, dict(result=robj.result, _id=robj._id))
+        self.assertEqual(expect, dict(result=robj.result, _id=robj.obj_id))
 
     def test_das_aggregators(self):
         """test das aggregator functions"""

@@ -77,10 +77,10 @@ class DASOptionParser:
 
 def iterate(input_results):
     """Just iterate over generator, but don't print it out"""
-    for elem in input_results:
+    for _ in input_results:
         pass
 
-def run(DAS, query, idx, limit, skey, sorder, nooutput, plain, debug):
+def run(DAS, query, idx, limit, skey, sorder, nooutput, plain):
     """
     Execute DAS workflow for given set of parameters.
     We use this function in main and in profiler.
@@ -96,12 +96,10 @@ def run(DAS, query, idx, limit, skey, sorder, nooutput, plain, debug):
         results = DAS.call(query)
         print "\n### DAS.call returns", results
 
-#
-# main
-#
-if __name__ == '__main__':
-    optManager  = DASOptionParser()
-    (opts, args) = optManager.getOpt()
+def main():
+    "Main function"
+    optmgr = DASOptionParser()
+    (opts, _args) = optmgr.getOpt()
 
     t0 = time.time()
     query = opts.query
@@ -156,7 +154,7 @@ if __name__ == '__main__':
             info.sort_stats('cumulative')
             info.print_stats()
         else:
-            run(DAS, query, idx, limit, skey, sorder, output, plain, debug)
+            run(DAS, query, idx, limit, skey, sorder, output, plain)
     elif opts.dasconfig:
         print pformat(DAS.dasconfig)
     else:
@@ -168,7 +166,7 @@ if __name__ == '__main__':
     print "\nDAS execution time:\n"
     if  debug:
         timelist = []
-        for hash, timerdict in timer.items():
+        for _hash, timerdict in timer.items():
             counter = timerdict['counter']
             tag = timerdict['tag']
             exetime = timerdict['time']
@@ -177,3 +175,8 @@ if __name__ == '__main__':
         for _, tag, exetime in timelist:
             print "%s %s sec" % (tag, round(exetime, 2))
     print "Total %s sec, %s" % (round(time.time()-t0, 2), timestamp)
+#
+# main
+#
+if __name__ == '__main__':
+    main()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703
+#pylint: disable-msg=W0703,R0912,R0913,R0914,R0902,R0915
 
 """
 Abstract interface for DAS service
@@ -15,7 +15,7 @@ import DAS.utils.jsonwrapper as json
 
 # DAS modules
 from DAS.utils.ddict import DotDict
-from DAS.utils.utils import getarg, genkey, print_exc
+from DAS.utils.utils import getarg, print_exc
 from DAS.utils.utils import row2das, make_headers, get_key_cert
 from DAS.utils.utils import xml_parser, json_parser
 from DAS.utils.utils import yield_rows, delete_keys
@@ -66,6 +66,11 @@ class DASAbstractService(object):
 
         if  self.multitask:
             nworkers = config['das'].get('api_workers', 3)
+            thr_weights = config['das'].get('thread_weights', [])
+            for system_weight in thr_weights:
+                system, weight = system_weight.split(':')
+                if  system == self.name:
+                    nworkers *= int(weight)
             if  engine:
                 thr_name = 'DASAbstractService:%s:PluginTaskManager' % self.name
                 self.taskmgr = PluginTaskManager(\
@@ -101,7 +106,7 @@ class DASAbstractService(object):
         if  self._keys:
             return self._keys
         srv_keys = []
-        for api, params in self.map.iteritems():
+        for _api, params in self.map.iteritems():
             for key in params['keys']:
                 if  not key in srv_keys:
                     srv_keys.append(key)
@@ -115,7 +120,7 @@ class DASAbstractService(object):
         if  self._params:
             return self._params
         srv_params = []
-        for api, params in self.map.iteritems():
+        for _api, params in self.map.iteritems():
             for key in params['params']:
                 param_list = self.dasmapping.api2das(self.name, key)
                 for par in param_list:
@@ -132,20 +137,20 @@ class DASAbstractService(object):
             return self._notations
         for _, rows in self.dasmapping.notations(self.name).iteritems():
             for row in rows:
-                api = row['api']
-                map = row['map']
+                api  = row['api']
+                nmap = row['map']
                 notation = row['notation']
                 if  self._notations.has_key(api):
-                    self._notations[api].update({notation:map})
+                    self._notations[api].update({notation:nmap})
                 else:
-                    self._notations[api] = {notation:map}
+                    self._notations[api] = {notation:nmap}
         return self._notations
 
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""
         if  url.find('https:') != -1:
             return getdata(url, params, headers, expire, post,
-                            self.error_expire, self.verbose, self.ckey, self.cert)
+                    self.error_expire, self.verbose, self.ckey, self.cert)
         else:
             return getdata(url, params, headers, expire, post,
                             self.error_expire, self.verbose)
@@ -167,7 +172,7 @@ class DASAbstractService(object):
             return
         # ask data-service api to get results, they'll be store them in
         # cache, so return at the end what we have in cache.
-        result = self.api(dasquery)
+        self.api(dasquery)
 
     def write_to_cache(self, dasquery, expire, url, api, args, result, ctime):
         """
@@ -304,7 +309,6 @@ class DASAbstractService(object):
         - *api* is API name
         """
         prim_key  = self.dasmapping.primary_key(self.name, api)
-        notations = self.get_notations(api)
         apitag    = self.dasmapping.apitag(self.name, api)
         counter   = 0
         if  dformat.lower() == 'xml':
@@ -322,7 +326,8 @@ class DASAbstractService(object):
                         if  key != 'results':
                             das_dict[key] = val
                     row = row['results']
-                    self.analytics.update_apicall(dasquery.mongo_query, das_dict)
+                    self.analytics.update_apicall(\
+                        dasquery.mongo_query, das_dict)
                 if  apitag and row.has_key(apitag):
                     row = row[apitag]
                 if  isinstance(row, list):
@@ -385,7 +390,6 @@ class DASAbstractService(object):
         genrows = parse2gridfs(self.gfs, map_key, genrows, self.logger)
 
         spec  = dasquery.mongo_query['spec']
-        skeys = spec.keys()
         row   = genrows.next()
         ddict = DotDict(row)
         keys2adjust = []
@@ -422,9 +426,7 @@ class DASAbstractService(object):
                         elif isinstance(value, dict) and \
                         value.has_key('$lte') and value.has_key('$gte'):
                             # we got a between range
-                            min = value['$gte']
-                            max = value['$lte']
-                            value = [min, max]
+                            value = [value['$gte'], value['$lte']]
                         else: 
                             value = json.dumps(value) 
                     elif existing_value and value != existing_value:
@@ -458,7 +460,6 @@ class DASAbstractService(object):
         api call inserted into Analytics DB.
         """
         self.logger.info(dasquery)
-        result  = False
         genrows = self.apimap(dasquery)
         if  not genrows:
             return
@@ -480,7 +481,6 @@ class DASAbstractService(object):
         api call inserted into Analytics DB.
         """
         try:
-            mkey    = self.dasmapping.primary_mapkey(self.name, api)
             args    = self.inspect_params(api, args)
             time0   = time.time()
             self.analytics.insert_apicall(self.name, dasquery.mongo_query, url,
@@ -573,17 +573,6 @@ class DASAbstractService(object):
                     if  isinstance(val, str) or isinstance(val, unicode):
                         val   = val.replace('*', wild)
                     args[key] = val
-            # check if analytics db has a similar API call
-#TODO: I commented this part on 2011-02-03 since I found that das record can be
-# wiped out sooner then data/analytics records. It carries the smallest expire 
-# timestamp among all, so checking analytics can lead to the case when records
-# in analytics are present, while das record is gone. As consequence it leads to
-# situation when I don't get any records during merging step (since new data
-# records are not created due to this miss)
-#            if  not self.pass_apicall(query, url, api, args):
-#                continue
-
-#            self.adjust_params(api, args)
 
             prim_key = self.dasmapping.primary_key(self.name, api)
             if  prim_key not in skeys:

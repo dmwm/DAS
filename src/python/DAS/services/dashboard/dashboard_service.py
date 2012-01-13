@@ -126,6 +126,7 @@ class DashboardService(DASAbstractService):
         dasrows = self.set_misses(dasquery, api, genrows)
         ctime = time.time() - time0
         try:
-            self.write_to_cache(dasquery, expire, url, api, args, dasrows, ctime)
+            self.write_to_cache(\
+                dasquery, expire, url, api, args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)

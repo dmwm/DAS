@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703
+#pylint: disable-msg=W0703,R0912,R0913,R0914,R0915
 """
 File: url_utils.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>
@@ -48,6 +48,7 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
 
 def getdata(url, params, headers=None, expire=3600, post=None,
                 error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
+    "Fetch data from remote URL for given set of parameters"
     return getdata_urllib(url, params, headers, expire, post, \
                 error_expire, verbose, ckey, cert, doseq)
 #    return getdata_pycurl(url, params, headers, expire, post, \

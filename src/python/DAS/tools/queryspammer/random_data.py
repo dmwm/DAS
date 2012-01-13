@@ -1,3 +1,4 @@
+#pylint: disable-msg=C0301,C0103,C0111
 "Random data generation and storage for queryspammer"
 
 import multiprocessing
@@ -11,7 +12,8 @@ LOG = multiprocessing.get_logger()
 
 class WeightedDistribution:
     """
-    Expects a dictionary of "result"->"probability" pairs. Probabilities will be normalised to one.
+    Expects a dictionary of "result"->"probability" pairs.
+    Probabilities will be normalised to one.
     If result is callable, then return result()
     """
     @staticmethod
@@ -23,7 +25,8 @@ class WeightedDistribution:
         ie, weights 1**1.5, 2**1.5, ... n**1.5
         """
         random.shuffle(items)
-        values = dict([(i,(j+1)**power) for i,  j in zip(items, range(len(items)))])
+        values = dict([(i, (j+1)**power) \
+                for i,  j in zip(items, range(len(items)))])
         return WeightedDistribution(values)
     
     def __init__(self, values):
@@ -86,7 +89,7 @@ class RandomData(object):
         LOG.info('Fetching blocks')
         blocks = []
         base_url = 'http://cmsweb.cern.ch/phedex/datasvc/json/prod/blockreplicas?'
-        for node in [random.choice(self._node) for i in range(16)]:
+        for node in [random.choice(self._node) for _ in range(16)]:
             if node[1] in ('2','3'):
                 LOG.info('Fetching blocks node=%s' % node)
                 url = base_url + 'node=%s' % node

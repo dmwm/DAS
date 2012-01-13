@@ -1,3 +1,4 @@
+#pylint: disable-msg=R0903
 """
 DAS Analytics task test class
 """

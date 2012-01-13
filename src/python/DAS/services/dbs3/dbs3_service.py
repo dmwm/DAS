@@ -8,8 +8,6 @@ __revision__ = "$Id: dbs_service.py,v 1.24 2010/04/09 19:41:23 valya Exp $"
 __version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
-import re
-import time
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, json_parser
 from DAS.utils.url_utils import getdata
@@ -47,7 +45,7 @@ class DBS3Service(DASAbstractService):
         if  api == 'acquisitioneras':
             try:
                 del kwds['era']
-            except:
+            except KeyError:
                 pass
         if  api == 'datasets':
             if  kwds['dataset'][0] == '*':
@@ -56,7 +54,7 @@ class DBS3Service(DASAbstractService):
                 kwds['dataset'] = kwds['block_name'].split('#')[0]
             try:
                 del kwds['block_name']
-            except:
+            except KeyError:
                 pass
         if  api == 'runs':
             val = kwds['minrun']

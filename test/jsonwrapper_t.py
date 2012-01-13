@@ -18,11 +18,11 @@ class testUtils(unittest.TestCase):
         set up DAS core module
         """
         self.data = {'a':1, 'b':[{'c':1, 'd':['1','2']}]}
-        self.module = myjson._module
+        self.module = myjson.MODULE
 
     def test_json(self):
         """Test json wrapper"""
-        myjson._module = 'json'
+        myjson.MODULE = 'json'
         expect  = self.data
         result  = myjson.loads(myjson.dumps(self.data))
         self.assertEqual(expect, result)
@@ -38,11 +38,11 @@ class testUtils(unittest.TestCase):
         result2 = myjson.JSONEncoder(**kwds).encode(data)
         self.assertEqual(result1, result2)
 
-        myjson._module = self.module
+        myjson.MODULE = self.module
 
     def test_cjson(self):
         """Test cjson wrapper"""
-        myjson._module = 'cjson'
+        myjson.MODULE = 'cjson'
         expect  = self.data
         result  = myjson.loads(myjson.dumps(self.data))
         self.assertEqual(expect, result)
@@ -51,11 +51,11 @@ class testUtils(unittest.TestCase):
         result  = myjson.JSONDecoder().decode(myjson.JSONEncoder().encode(self.data))
         self.assertEqual(expect, result)
 
-        myjson._module = self.module
+        myjson.MODULE = self.module
 
     def test_yajl(self):
         """Test yajl wrapper"""
-        myjson._module = 'yajl'
+        myjson.MODULE = 'yajl'
         expect  = self.data
         result  = myjson.loads(myjson.dumps(self.data))
         self.assertEqual(expect, result)
@@ -87,7 +87,7 @@ class testUtils(unittest.TestCase):
         result2 = myjson.loads(result1)
         self.assertEqual(data, result2)
 
-        myjson._module = self.module
+        myjson.MODULE = self.module
 
 #
 # main

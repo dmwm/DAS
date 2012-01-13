@@ -121,5 +121,6 @@ class MonitorService(DASAbstractService):
             genrows = self.parser(dasquery, dformat, res, args)
             dasrows = self.set_misses(dasquery, api, genrows)
             ctime   = time.time() - time0
-            self.write_to_cache(dasquery, expire, url, api, args, dasrows, ctime)
+            self.write_to_cache(\
+                dasquery, expire, url, api, args, dasrows, ctime)
 

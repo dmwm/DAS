@@ -68,7 +68,7 @@ class _DBConnectionSingleton(object):
         try:
             conn, _ = self.connection(uri)
             if  conn:
-                dbnames = conn.database_names()
+                _dbnames = conn.database_names()
             else:
                 return False
         except:

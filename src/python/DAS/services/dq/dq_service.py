@@ -9,12 +9,10 @@ __version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
-import types
-import urllib2
 #import DAS.utils.jsonwrapper as json
 import json
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import genkey, map_validator
+from DAS.utils.utils import map_validator
 
 def param_parser(param_str):
     """
@@ -26,10 +24,10 @@ def param_parser(param_str):
     olist = []
     if  pat.search(param_str):
         for cond in param_str.split('&'):
-            for op in ['<=', '>=', '!=', '<', '>', '=']:
-                if  cond.find(op) != -1:
-                    key, val = cond.split(op)
-                    olist.append(dict(Name=key, Value=val, Oper=op))
+            for oper in ['<=', '>=', '!=', '<', '>', '=']:
+                if  cond.find(oper) != -1:
+                    key, val = cond.split(oper)
+                    olist.append(dict(Name=key, Value=val, Oper=oper))
                     break
     if  olist:
         return olist

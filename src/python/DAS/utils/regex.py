@@ -93,8 +93,10 @@ PAT_SLASH = re.compile('^/.*')
 PAT_BLOCK = re.compile('^/.*/.*/.*\#.*')
 PAT_RUN  = re.compile('^[0-9]{3,10}')
 PAT_FILE = re.compile('^/.*\.root$')
-PAT_RELEASE = re.compile('^CMSSW_|^[0-9]_$|^[0-9]_[0-9]|' + word_chars('CMSSW_'))
+PAT_RELEASE = \
+    re.compile('^CMSSW_|^[0-9]_$|^[0-9]_[0-9]|' + word_chars('CMSSW_'))
 PAT_SITE = re.compile('^T[0-3]')
 PAT_SE = re.compile('([a-zA-Z0-9-_]+\\.){1,4}')
 PAT_DATATYPE = re.compile('^mc$|^calib$|^data$|^raw$|^cosmic$', re.I)
-PAT_TIERS = re.compile('gen|sim|raw|digi|reco|alcoreco|hlt|fevt|alcaprompt|dqm', re.I)
+PAT_TIERS = \
+    re.compile('gen|sim|raw|digi|reco|alcoreco|hlt|fevt|alcaprompt|dqm', re.I)

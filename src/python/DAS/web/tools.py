@@ -104,23 +104,23 @@ class TemplatedPage(Page):
             self.warning("%s not found at %s" % (ifile, self.templatedir))
             return "Template %s not known" % ifile
 
-def auth(func):
-    """CherryPy expose auth decorator"""
-    @expose
-    def wrapper (self, *args, **kwds):
-        """Decorator wrapper"""
-        headers = cherrypy.request.headers
-        if  cherrypy.request.method == 'POST' or\
-            cherrypy.request.method == 'PUT':
-            body = cherrypy.request.body.read()
-        print "\n### auth::header", headers
-        redirect_to = 'http://localhost:8400/'
-        raise cherrypy.HTTPRedirect(redirect_to)
-        raise cherrpypy.HTTPError(401, 'You are not authorized to access \
-                this resource')
-        data = func (self, *args, **kwds)
-        return data
-    return wrapper
+#def auth(func):
+#    """CherryPy expose auth decorator"""
+#    @expose
+#    def wrapper (self, *args, **kwds):
+#        """Decorator wrapper"""
+#        headers = cherrypy.request.headers
+#        if  cherrypy.request.method == 'POST' or\
+#            cherrypy.request.method == 'PUT':
+#            body = cherrypy.request.body.read()
+#        print "\n### auth::header", headers
+#        redirect_to = 'http://localhost:8400/'
+#        raise cherrypy.HTTPRedirect(redirect_to)
+#        raise cherrypy.HTTPError(401, 'You are not authorized to access \
+#                this resource')
+#        data = func (self, *args, **kwds)
+#        return data
+#    return wrapper
 
 def request_headers():
     """

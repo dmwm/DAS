@@ -10,16 +10,13 @@ __revision__ = "$Id: das_mapping_db.py,v 1.36 2010/04/14 16:56:28 valya Exp $"
 __version__ = "$Revision: 1.36 $"
 __author__ = "Valentin Kuznetsov"
 
-import os
 import re
-import time
-import types
 
 # monogo db modules
 from pymongo import DESCENDING
 
 # DAS modules
-from DAS.utils.utils import gen2list, access
+from DAS.utils.utils import gen2list
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.utils.logger import PrintManager
 
@@ -195,7 +192,8 @@ class DASMapping(object):
         """
         Return full API info record.
         """
-        return self.apiinfocache.get(api_name, self.col.find_one({'urn':api_name}))
+        return self.apiinfocache.get(\
+                api_name, self.col.find_one({'urn':api_name}))
 
     def relational_keys(self, system1, system2):
         """
@@ -287,10 +285,8 @@ class DASMapping(object):
         """
         msg   = 'system=%s\n' % das_system
         cond  = { 'system' : das_system, 'daskeys.key': das_key }
-        mapkeys = []
         for row in self.col.find(cond, ['daskeys', 'urn']):
             if  row and row.has_key('daskeys'):
-                urn = row['urn']
                 for key in row['daskeys']:
                     if  key.has_key('map') and key['key'] == das_key:
                         if  value:

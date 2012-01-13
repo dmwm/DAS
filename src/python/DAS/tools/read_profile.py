@@ -4,15 +4,13 @@
 """
 Read profile.dat file and dump its content
 """
-__revision__ = "$Id: read_profile.py,v 1.2 2010/01/19 18:45:37 valya Exp $"
-__version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
 
-import cProfile # python profiler
 import pstats   # profiler statistics
 from optparse import OptionParser
 
 def profiler(fname, sort=None, strip=False):
+    "Print profiler stats"
     stats = pstats.Stats(fname)
     if  sort:
         stats.sort_stats(sort)

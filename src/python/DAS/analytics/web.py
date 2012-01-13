@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0613,W0511
+#pylint: disable-msg=W0613,W0511,W0703
 """
 DAS Analytics web server
 """
@@ -124,16 +124,16 @@ class AnalyticsWeb(DASWebManager):
         """
         Show the currently scheduled and running tasks.
         TODO: Move away from using master_id/uuid to friendly naming scheme.
-        TODO: Highlight jobs being retried.
-        TODO: Better reschedule interface.
+              Highlight jobs being retried.
+              Better reschedule interface.
         """
         task_schedule = self._scheduler.get_scheduled()
         task_schedule = sorted(task_schedule, key=lambda x: x['at'])
-        next = None
+        next_attr = None
         now = time.time()
         if 'next' in attrs:
-            next = int(attrs['next'])
-            before = now + next
+            next_attr = int(attrs['next'])
+            before = now + next_attr
             task_schedule = filter(lambda x: x['at'] < before, 
                                    task_schedule)
         
@@ -385,7 +385,7 @@ class AnalyticsWeb(DASWebManager):
                     #use that type otherwise, treat it as a string 
                     #(avoiding the need to explicitly quote strings)
                     try:
-                        if not isinstance(json.loads(v), basestring):
+                        if not isinstance(json.loads(val), basestring):
                             kwargs[key[6:].encode('ascii')] = json.loads(val)
                         else:
                             kwargs[key[6:].encode('ascii')] = val

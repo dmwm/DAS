@@ -8,43 +8,43 @@ We use simplejson (json), cjson and yajl JSON implementation.
 
 __author__ = "Valentin Kuznetsov <vkuznet@gmail.com>"
 
-_module = None
+MODULE = None
 try:
     import yajl
-    _module = "yajl"
+    MODULE = "yajl"
 except:
     pass
 
 try:
     import cjson
-    _module = "cjson"
+    MODULE = "cjson"
 except:
     pass
 
 import json
-if  not _module: # use default JSON module
-    _module = "json"
+if  not MODULE: # use default JSON module
+    MODULE = "json"
 
 # stick so far with cjson, until yajl will be fully tested
-#_module = "cjson"
-_module = "yajl"
+#MODULE = "cjson"
+MODULE = "yajl"
 
 def loads(idict, **kwargs):
     """
-    Based on default _module invoke appropriate JSON decoding API call
+    Based on default MODULE invoke appropriate JSON decoding API call
     """
-    if  _module == 'json':
+    if  MODULE == 'json':
         return json.loads(idict, **kwargs)
-    elif _module == 'cjson':
+    elif MODULE == 'cjson':
         return cjson.decode(idict)
-    elif _module == 'yajl':
+    elif MODULE == 'yajl':
         try: # yajl.loads("123") will fail
             res = yajl.loads(idict)
         except: # fall back into default python JSON
             res = json.loads(idict, **kwargs)
         return res
     else:
-        raise Exception("Not support JSON module: %s" % _module)
+        raise Exception("Not support JSON module: %s" % MODULE)
 
 def load(source):
     """
@@ -52,28 +52,28 @@ def load(source):
     provide this method. The load method works on file-descriptor
     objects.
     """
-    if  _module == 'json':
+    if  MODULE == 'json':
         return json.load(source)
-    elif _module == 'cjson':
+    elif MODULE == 'cjson':
         data = source.read()
         return cjson.decode(data)
-    elif _module == 'yajl':
+    elif MODULE == 'yajl':
         return yajl.load(source)
     else:
-        raise Exception("Not support JSON module: %s" % _module)
+        raise Exception("Not support JSON module: %s" % MODULE)
 
 def dumps(idict, **kwargs):
     """
-    Based on default _module invoke appropriate JSON encoding API call
+    Based on default MODULE invoke appropriate JSON encoding API call
     """
-    if  _module == 'json':
+    if  MODULE == 'json':
         return json.dumps(idict, **kwargs)
-    elif _module == 'cjson':
+    elif MODULE == 'cjson':
         return cjson.encode(idict)
-    elif _module == 'yajl':
+    elif MODULE == 'yajl':
         return yajl.dumps(idict)
     else:
-        raise Exception("JSON module %s is not supported" % _module)
+        raise Exception("JSON module %s is not supported" % MODULE)
 
 def dump(doc, source):
     """
@@ -81,15 +81,15 @@ def dump(doc, source):
     provide this method. The dump method works on file-descriptor
     objects.
     """
-    if  _module == 'json':
+    if  MODULE == 'json':
         return json.dump(doc, source)
-    elif _module == 'cjson':
+    elif MODULE == 'cjson':
         stj = cjson.encode(doc)
         return source.write(stj)
-    elif _module == 'yajl':
+    elif MODULE == 'yajl':
         return yajl.dump(doc, source)
     else:
-        raise Exception("JSON module %s is not supported" % _module)
+        raise Exception("JSON module %s is not supported" % MODULE)
 
 class JSONEncoder(object):
     """
@@ -100,7 +100,7 @@ class JSONEncoder(object):
         if  kwargs and kwargs.has_key('sort_keys'):
             self.module = 'default'
         else:
-            self.module = _module
+            self.module = MODULE
 
     def encode(self, idict):
         """Decode JSON method"""
@@ -111,6 +111,7 @@ class JSONEncoder(object):
         return self.encoder.encode(idict)
 
     def iterencode(self, idict):
+        "Encode input dict"
         return self.encoder.iterencode(idict)
 
 class JSONDecoder(object):
@@ -122,16 +123,17 @@ class JSONDecoder(object):
         if  kwargs:
             self.module = 'default'
         else:
-            self.module = _module
+            self.module = MODULE
 
     def decode(self, istring):
         """Decode JSON method"""
-        if  _module == 'cjson':
+        if  MODULE == 'cjson':
             return cjson.decode(istring)
-        elif _module == 'yajl':
+        elif MODULE == 'yajl':
             return yajl.Decoder().decode(istring)
         return self.decoder.decode(istring)
 
     def raw_decode(self, istring):
+        "Decode given string"
         return self.decoder.raw_decode(istring)
 

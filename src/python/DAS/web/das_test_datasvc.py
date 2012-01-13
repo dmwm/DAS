@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-
+#pylint: disable-msg=W0702,R0201,R0904,C0103
 """
 DAS web interface to test various CMS data services
 """
@@ -51,7 +51,6 @@ class DASTestDataService(DASWebManager):
     """
     def __init__(self, config):
         DASWebManager.__init__(self, config)
-        logfile      = config.get('logfile', None)
         loglevel     = config.get('loglevel', 0)
         self.logger  = logging.getLogger('DASTestDataService')
         hdlr = logging.StreamHandler()
@@ -87,14 +86,14 @@ class DASTestDataService(DASWebManager):
         return page
 
     @expose
-    def dbs(self, **kwargs):
+    def dbs(self, **_kwargs):
         """
         Test DBS data-service
         """
         try:
             cherrypy.response.headers['Content-Type'] = "application/xml"
             data = """<?xml version='1.0' standalone='yes'?><dbs>
-                    <primary_dataset id='0' primary_name='abc'/><SUCCESS/></dbs>"""
+            <primary_dataset id='0' primary_name='abc'/><SUCCESS/></dbs>"""
         except:
             data = ""
         return data

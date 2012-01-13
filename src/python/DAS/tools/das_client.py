@@ -63,10 +63,10 @@ def size_format(uinput):
     """
     try:
         num = float(uinput)
-    except Exception as exc:
+    except Exception as _exc:
         return uinput
     base = 1000. # power of 10, or use 1024. for power of 2
-    for xxx in ['','KB','MB','GB','TB','PB']:
+    for xxx in ['', 'KB', 'MB', 'GB', 'TB', 'PB']:
         if  num < base:
             return "%3.1f%s" % (num, xxx)
         num /= base

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0301
+#pylint: disable-msg=C0301,W0702
 """
 ValueHotspot implementation
 """
@@ -8,10 +8,8 @@ ValueHotspot implementation
 import time
 import collections
 import fnmatch
-from DAS.utils.utils import genkey
 from DAS.core.das_core import DASQuery
 from DAS.analytics.tasks.hotspot_base import HotspotBase
-from DAS.analytics.utils import get_mongo_query
 from DAS.utils.logger import PrintManager
 
 class ValueHotspot(HotspotBase):
@@ -104,6 +102,7 @@ class ValueHotspot(HotspotBase):
                     
     
     def generate_task(self, item, count, epoch_start, epoch_end):
+        "Generate task"
         only_before = epoch_end + self.interval
         for field in self.fields:
             query = {'fields': [field],
@@ -125,6 +124,7 @@ class ValueHotspot(HotspotBase):
                                   'preempt':self.preempt}}
     
     def preselect_items(self, items):
+        "Select items"
         if not self.allow_wildcarding:
             for key in items.keys():
                 if '*' in key:
@@ -132,6 +132,7 @@ class ValueHotspot(HotspotBase):
         return items
     
     def mutate_items(self, items):
+        "Mutate items"
         if self.find_supersets:
             new_keys = self.get_superset_keys(items.keys())
             return dict([(k, items.get(k, 0)) for k in new_keys])

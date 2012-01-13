@@ -1,10 +1,10 @@
+"""
+Example of CENR xwho data-service
+"""
+
 import re
-import types
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import add2dict, map_validator
-from DAS.utils.utils import row2das
-from DAS.utils.regex import cms_tier_pattern
-import DAS.utils.jsonwrapper as json
+from DAS.utils.utils import map_validator
 import urllib, urllib2
 import time
 

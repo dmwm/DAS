@@ -15,7 +15,6 @@ import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, print_exc, genkey, expire_timestamp
 from   DAS.utils.url_utils import getdata
-from   DAS.core.das_core import dasheader
 
 def rowdict(columns, row):
     """Convert given row list into dict with column keys"""

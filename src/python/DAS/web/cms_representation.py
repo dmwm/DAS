@@ -89,7 +89,8 @@ def tooltip_helper(title):
         tooltip = title + 'is a total number of files at the site\
  divided by total number of files in all block at this site'
     elif title == 'Block completion':
-        tooltip = title + 'is a total number of blocks fully transferred to the site\
+        tooltip = title + \
+        'is a total number of blocks fully transferred to the site\
  divided by total number of blocks at this site'
     else:
         title = ''
@@ -148,7 +149,8 @@ def adjust_values(func, gen, links):
                 value = int(val)
             elif  key.find('Creation time') != -1 and val:
                 try:
-                    value = time.strftime('%d/%b/%Y %H:%M:%S GMT', time.gmtime(val))
+                    value = time.strftime('%d/%b/%Y %H:%M:%S GMT', \
+                                time.gmtime(val))
                 except:
                     value = val
             else:
@@ -424,7 +426,8 @@ class CMSRepresentation(DASRepresentation):
                 print_exc(exc)
                 systems = "" # we don't store systems for aggregated records
             jsonhtml = das_json(row, pad)
-            jsonhtml = jsonhtml.replace('request?', 'request?instance=%s&' % inst)
+            jsonhtml = jsonhtml.replace(\
+                'request?', 'request?instance=%s&' % inst)
             if  not links:
                 page += '<br />'
             if  row.has_key('das') and row['das'].has_key('conflict'):

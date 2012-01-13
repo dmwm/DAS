@@ -24,7 +24,7 @@ class ResultObject(object):
     """
     def __init__(self):
         self.result = 'Not available'
-        self._id = None
+        self.obj_id = None
         self.rec_count = 0
     def sum(self, obj):
         """Sum function for this object"""
@@ -35,7 +35,7 @@ class ResultObject(object):
         self.rec_count += 1
     def count(self, obj):
         """Count function for this object"""
-        value, _ = obj
+        _value, _id = obj
         if  self.result == 'Not available':
             self.result = 0
         self.result += 1
@@ -48,7 +48,7 @@ class ResultObject(object):
         if  value > self.result:
             self.result = value
             if  _id:
-                self._id = _id
+                self.obj_id = _id
         self.rec_count += 1
     def min(self, obj):
         """Min function for this object"""
@@ -58,7 +58,7 @@ class ResultObject(object):
         if  value < self.result:
             self.result = value
             if  _id:
-                self._id = _id
+                self.obj_id = _id
         self.rec_count += 1
     def avg(self, obj):
         """
@@ -152,19 +152,19 @@ def cochain(ckey, data_name, sink_name):
 
     """
     code  = "decomposer(%s," % data_name 
-    count = 1 # open brackets already
+    count_bracket = 1 # bracket is open
     for key in ckey.split('.'):
         code  += "selector('%s'," % key
-        count += 1
+        count_bracket += 1
     code += sink_name
-    for idx in range(0, count):
+    for _idx in range(0, count_bracket):
         code += ")"
     return code
 
 def das_func(func, ckey, genrows):
     """DAS aggregator function"""
     robj = ResultObject()
-    sink = das_action(robj, func)
+    sink = das_action(robj, func) # coroutine sink
     for row in genrows:
         code = cochain(ckey, 'row', 'sink')
         obj  = compile(code, '<string>', 'exec')
@@ -211,14 +211,14 @@ def das_min(key, rows):
     robj = das_func('min', key, rows)
     if  not robj:
         return {'value': 'N/A'}
-    return {'value': robj.result, '_id': robj._id}
+    return {'value': robj.result, '_id': robj.obj_id}
 
 def das_max(key, rows):
     """DAS max aggregator function"""
     robj = das_func('max', key, rows)
     if  not robj:
         return {'value': 'N/A'}
-    return {'value': robj.result, '_id': robj._id}
+    return {'value': robj.result, '_id': robj.obj_id}
 
 def das_sum(key, rows):
     """DAS sum aggregator function"""

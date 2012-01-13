@@ -1,3 +1,4 @@
+#pylint: disable-msg=R0903
 "Random data producers for queryspammer"
 
 import multiprocessing
@@ -103,7 +104,7 @@ class MappingProducer(Producer):
         self.multiple_chance = kwargs.get('multiple_chance', 0.4)
         self.unique_chance = kwargs.get('unique_chance', 0.2)
         self.grep_chance = kwargs.get('grep_chance', 0.2)
-        self.aggregate_chance = kwargs.get('aggregate_chance',0.2)
+        self.aggregate_chance = kwargs.get('aggregate_chance', 0.2)
         
         
         LOG.info("MappingProducer has %s primary keys", len(self.keys))
@@ -123,7 +124,9 @@ class MappingProducer(Producer):
             api_map_keys = [k['map'] for k in api_info['daskeys']]
             #print 'api',api,'api_map_keys',api_map_keys
             if all([mk in api_map_keys for mk in map_keys]):
-                possible_das_keys += [k['key'] for k in api_info['daskeys'] if not k['map'] in map_keys]
+                possible_das_keys += \
+                        [k['key'] for k in api_info['daskeys'] \
+                                if not k['map'] in map_keys]
             #print 'possible_das_keys',possible_das_keys
         
         return possible_das_keys
@@ -172,15 +175,17 @@ class MappingProducer(Producer):
         while random.random() < self.multiple_chance:
             #print 'adding secondary key'
             possible_das_keys = self.find_secondary_keys(map_keys)
-            possible_das_keys = list(set(possible_das_keys) & set(self.data.get_keys()))
+            possible_das_keys = \
+                list(set(possible_das_keys) & set(self.data.get_keys()))
             if possible_das_keys:
                 secondary_key = random.choice(possible_das_keys)
                 #print 'secondary key',secondary_key
                 query += ' %s' % secondary_key
                 secondary_value = self.data.get_random(secondary_key)
                 query += ' = %s' % secondary_value
-                secondary_mapping_key = self.dascore.mapping.find_mapkey({'$ne':None},
-                                                                         secondary_key)
+                secondary_mapping_key = \
+                    self.dascore.mapping.find_mapkey({'$ne':None}, \
+                        secondary_key)
                 #print 'secondary map', secondary_mapping_key
                 das_keys += [secondary_key]
                 map_keys += [secondary_mapping_key]
@@ -206,11 +211,13 @@ class MappingProducer(Producer):
                 query += ' %s' % ', '.join(grep_keys)
         if random.random() < self.aggregate_chance:
             if presentation_keys:
-                query += ' | %s(%s)' % (random.choice(('sum','min','max','avg')),
+                query += ' | %s(%s)' \
+                        % (random.choice(('sum', 'min', 'max' ,'avg')),
                                         random.choice(presentation_keys))
                 while random.random() < self.multiple_chance:
-                    query += ', %s(%s)' % (random.choice(('sum','min','max','avg')),
-                                           random.choice(presentation_keys))
+                    query += ', %s(%s)' \
+                        % (random.choice(('sum', 'min', 'max', 'avg')),
+                                       random.choice(presentation_keys))
         
         return query
 
@@ -239,17 +246,17 @@ class YAMLProducer(Producer):
         self.generator = dict([(sk, None) 
                                for sk in all_subkeys]) #subkey->function()
         self.valid_operators = dict([(sk, {'=':1}) 
-                                     for sk in all_subkeys]) #subkey->operator->probability
+                 for sk in all_subkeys]) #subkey->operator->probability
         self.grep_target = dict([(k, [sk 
-                                      for sk in all_subkeys 
-                                      if '.' in sk and sk.split('.')[0]==k]) 
-                                 for k in self.keys]) #key->[grep targets]
+                      for sk in all_subkeys 
+                      if '.' in sk and sk.split('.')[0]==k]) 
+                 for k in self.keys]) #key->[grep targets]
         self.aggregator_target = dict([(k, []) 
-                                       for k in self.keys]) #key->[valid_operators]
+                           for k in self.keys]) #key->[valid_operators]
         self.p_key = dict([(k, 1) for k in self.keys]) #key->probability 
         self.p_subkey = dict([(k, dict([(sk, 1./len(self.keys[k])) 
-                            for sk in self.keys[k]])) 
-                            for k in self.keys]) #key->subkey->ind probability
+                for sk in self.keys[k]])) 
+                for k in self.keys]) #key->subkey->ind probability
         self.p_grep_op = 0.2
         self.p_aggr_op = 0.2
         self.p_set_primary = 0.4
@@ -262,7 +269,8 @@ class YAMLProducer(Producer):
         if random.random() < self.p_set_primary \
                 and self.generator[self.keymap[key]] != None:
             effective_subkey = self.keymap[key]
-            operator = WeightedDistribution(self.valid_operators[effective_subkey])()
+            operator = WeightedDistribution(\
+                self.valid_operators[effective_subkey])()
             query = '%s %s %s' % (key,
                                   operator,
                                   self.generator[effective_subkey]())
@@ -288,7 +296,8 @@ class YAMLProducer(Producer):
                 query += ' | grep '
                 g_targets = []
                 r_grep = r_suffix
-                while r_grep < self.p_grep_op and len(available_grep_targets) > 0:
+                while r_grep < self.p_grep_op and \
+                len(available_grep_targets) > 0:
                     g_targets.append(available_grep_targets.pop())
                     r_grep = random.random()
                 query += ','.join(g_targets)
@@ -320,7 +329,8 @@ class PhedexProducer(YAMLProducer):
         self.generator['block.name'] = self.data.block
         self.generator['site.name'] = self.data.node
         self.generator['site.se'] = self.data.se
-        self.generator['site'] = lambda: self.data.node() if random.random()>0.5 else self.data.se()
+        self.generator['site'] = \
+        lambda: self.data.node() if random.random()>0.5 else self.data.se()
         self.generator['file.name'] = self.data.file
         self.generator['group.name'] = self.data.group
         self.generator['group'] = self.data.group

@@ -1,3 +1,7 @@
+"""
+KeyHotspot analyzer
+"""
+
 import collections
 from DAS.analytics.tasks.hotspot_base import HotspotBase
 
@@ -17,6 +21,7 @@ class KeyHotspot(HotspotBase):
                              **kwargs)
     
     def generate_task(self, item, count, epoch_start, epoch_end):
+        "Generate task"
         only_before = epoch_end + self.interval
         itemname = item.replace(r'.','-')
         yield {'classname': 'ValueHotspot',

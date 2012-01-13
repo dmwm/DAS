@@ -91,7 +91,8 @@ class DASQuery(object):
         self._instance    = self.mongo_query.get('instance', self._instance)
         self._system      = self.mongo_query.get('system', self._system)
         self._filters     = self.mongo_query.get('filters', self._filters)
-        self._aggregators = self.mongo_query.get('aggregators', self._aggregators)
+        self._aggregators = \
+                self.mongo_query.get('aggregators', self._aggregators)
         self._mapreduce   = self.mongo_query.get('mapreduce', self._mapreduce)
 
     ### Class properties ###
@@ -221,8 +222,6 @@ class DASQuery(object):
             query   = deepcopy(self.mongo_query)
             spec    = query.get('spec', {})
             fields  = query.get('fields', None)
-            system  = query.get('system', None)
-            inst    = query.get('instance', None)
             newspec = {}
             for key, val in spec.iteritems():
                 if  key != '_id' and \
@@ -273,7 +272,7 @@ class DASQuery(object):
             self.mongoparser.add_to_analytics(self.query, self.mongo_query)
 
     def params(self):
-        "Extract params (selection keys, conditions and services) from mongo query"
+        "Extract params (keys, conditions and services) from mongo query"
         if  self._params:
             return self._params
         if  self.mongoparser:

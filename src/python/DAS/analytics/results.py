@@ -8,7 +8,7 @@ import thread
 import logging
 
 # DAS modules
-from pymongo import DESCENDING, ASCENDING
+from pymongo import DESCENDING
 from pymongo.errors import InvalidName
 from bson.errors import InvalidDocument, InvalidStringData
 from DAS.utils.das_db import db_connection, is_db_alive

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703
+#pylint: disable-msg=W0703,R0912,R0913,R0914,R0915,W0702,R0902
 
 """
 Core class for Data Aggregation Service (DAS) framework.
@@ -30,13 +30,11 @@ from DAS.core.das_mongocache import DASMongocache
 from DAS.utils.query_utils import compare_specs, decode_mongo_query
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
-from DAS.utils.utils import genkey, unique_filter, parse_filters
 from DAS.utils.utils import expire_timestamp, print_exc
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.das_timer import das_timer, get_das_timer
 
 # DAS imports
-import DAS.utils.jsonwrapper as json
 import DAS.core.das_aggregators as das_aggregator
 
 def dasheader(system, dasquery, expire, api=None, url=None, ctime=None):
@@ -391,7 +389,7 @@ class DASCore(object):
         """
         fields = dasquery.mongo_query.get('fields', None)
         if  dasquery.mapreduce:
-            result = self.rawcache.map_reduce(mapreduce, dasquery)
+            result = self.rawcache.map_reduce(dasquery.mapreduce, dasquery)
             return len([1 for _ in result])
         elif dasquery.aggregators:
             return len(dasquery.aggregators)
@@ -410,9 +408,8 @@ class DASCore(object):
                 % (collection, dasquery, idx, limit, skey, sorder)
         self.logger.info(msg)
 
-        query       = self.rawcache.execution_query(dasquery)
-        fields      = query.get('fields', None)
-        spec        = query.get('spec', {})
+        query   = self.rawcache.execution_query(dasquery)
+        fields  = query.get('fields', None)
 
         if  dasquery.mapreduce:
             res = self.rawcache.map_reduce(dasquery.mapreduce, dasquery)

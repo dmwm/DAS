@@ -44,17 +44,13 @@ class DASOptionParser:
         Returns parse list of options
         """
         return self.parser.parse_args()
-#
-# main
-#
-if __name__ == '__main__':
-    optManager  = DASOptionParser()
-    (opts, args) = optManager.getOpt()
 
-    if  opts.config:
-        dasconfig = das_readconfig(opts.config)
-    else:
-        dasconfig = {}
+def main():
+    "Main function"
+    optmgr = DASOptionParser()
+    (opts, args) = optmgr.getOpt()
+
+    dasconfig = das_readconfig()
     robot = Robot(config=dasconfig, query=opts.query, sleep=opts.sleep)
     if  opts.start:
         robot.start()
@@ -68,3 +64,8 @@ if __name__ == '__main__':
     else:
         print "Unknown operation, please use --start|stop|restart|status options"
 
+#
+# main
+#
+if __name__ == '__main__':
+    main()

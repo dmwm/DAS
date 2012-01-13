@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703
+#pylint: disable-msg=W0703,R0911,R0912,R0914,R0915
 
 """
 DAS query utils.
@@ -11,7 +11,7 @@ import re
 # DAS modules
 import DAS.utils.jsonwrapper as json
 
-def encode_mongo_query(query, pattern=False):
+def encode_mongo_query(query):
     """
     Encode mongo query into storage format. MongoDB does not allow storage of
     dict with keys containing "." or MongoDB operators, e.g. $lt. So we

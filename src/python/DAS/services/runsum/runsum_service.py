@@ -8,9 +8,8 @@ __revision__ = "$Id: runsum_service.py,v 1.21 2010/05/03 14:59:13 valya Exp $"
 __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
-import os
 import time
-import ConfigParser
+import urllib
 import traceback
 import xml.etree.cElementTree as ET
 
@@ -72,7 +71,7 @@ class RunSummaryService(DASAbstractService):
                 else:
                     for param in self.dasmapping.das2api(self.name, key):
                         args[param] = value
-            elif key == 'run.number' or key == 'run.run_number': # make exception
+            elif key == 'run.number' or key == 'run.run_number':
                 minrun = None
                 maxrun = None
                 for oper, val in value.iteritems():
@@ -120,7 +119,8 @@ class RunSummaryService(DASAbstractService):
             data    = get_data(run_summary_url(url, args), key, cert, debug)
             genrows = self.parser(data, api)
             ctime   = time.time()-time0
-            self.write_to_cache(dasquery, expire, url, api, args, genrows, ctime)
+            self.write_to_cache(\
+                dasquery, expire, url, api, args, genrows, ctime)
         except:
             traceback.print_exc()
             msg = 'Fail to process: url=%s, api=%s, args=%s' \

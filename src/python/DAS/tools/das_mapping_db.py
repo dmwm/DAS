@@ -56,18 +56,15 @@ class DASOptionParser:
 
 def nooutput(results):
     """Just iterate over generator, but don't print it out"""
-    for row in results:
+    for _ in results:
         pass
-#
-# main
-#
-if __name__ == '__main__':
-    optManager  = DASOptionParser()
-    (opts, args) = optManager.getOpt()
+def main():
+    "Main function"
+    optmgr = DASOptionParser()
+    (opts, _args) = optmgr.getOpt()
 
     dburi     = 'mongodb://%s:%s' % (opts.host, opts.port)
     dasconfig = das_readconfig()
-    logfile   = dasconfig['das'].get('logfile', None)
     dbname, colname = opts.db.split('.')
     mongodb   = dict(dburi=dburi)
     mappingdb = dict(dbname=dbname, collname=colname)
@@ -125,3 +122,8 @@ if __name__ == '__main__':
 
     if  opts.remove:
         mgr.remove(opts.remove)
+#
+# main
+#
+if __name__ == '__main__':
+    main()

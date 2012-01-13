@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0703
 """
 General utilities for DAS analytics.
 """
@@ -22,10 +25,12 @@ def get_mongo_query(query):
     if  isinstance(mongoquery, dict) and mongoquery.has_key('spec'):
         for key in mongoquery['spec'].keys():
             if  key.find('das') != -1:
-                del mongoquery['spec'][key] # remove DAS keys, e.g. das.primary_key
+                # remove DAS keys, e.g. das.primary_key
+                del mongoquery['spec'][key]
     return mongoquery
 
-#adapted from http://stackoverflow.com/questions/641420/how-should-i-log-while-using-multiprocessing-in-python
+#adapted from http://stackoverflow.com/
+#questions/641420/how-should-i-log-while-using-multiprocessing-in-python
 class MultiprocessingLoggerClient(object):
     """
     _logger_ object that will be passed to the client.
@@ -279,31 +284,32 @@ def get_classes_by_path(path):
             print msg
     return result
 
-TASK_CLASSES = get_classes_by_path("DAS.analytics.tasks")
-REPORT_CLASSES = get_classes_by_path("DAS.analytics.reports")
-
-REPORT_GROUPS = {}
-for name, obj in REPORT_CLASSES.items():
-    group = getattr(obj, "report_group") \
-                if hasattr(obj, "report_group") else "General"
-    title = getattr(obj, "report_title") \
-                if hasattr(obj, "report_title") else name
-    info = getattr(obj, "report_info") \
-                if hasattr(obj, "report_info") \
-                else (obj.__doc__ if obj.__doc__ else "")
-    REPORT_GROUPS[group] = \
-        REPORT_GROUPS.get(group, []) + [(name, title, info)]
+def get_globals():
+    "Define globals dictionaries"
+    task_classes = get_classes_by_path("DAS.analytics.tasks")
+    report_classes = get_classes_by_path("DAS.analytics.reports")
+    report_groups = {}
+    for name, obj in report_classes.items():
+        group = getattr(obj, "report_group") \
+                    if hasattr(obj, "report_group") else "General"
+        title = getattr(obj, "report_title") \
+                    if hasattr(obj, "report_title") else name
+        info = getattr(obj, "report_info") \
+                    if hasattr(obj, "report_info") \
+                    else (obj.__doc__ if obj.__doc__ else "")
+        report_groups[group] = \
+            report_groups.get(group, []) + [(name, title, info)]
+    task_info = {}
+    for name, obj in task_classes.items():
+        title = getattr(obj, "task_title") \
+                    if hasattr(obj, "task_title") else name
+        info = getattr(obj, "task_info") \
+                    if hasattr(obj, "task_info") \
+                    else (obj.__doc__ if obj.__doc__ else "")
+        options = getattr(obj, "task_options") \
+                    if hasattr(obj, "task_options") else None
+        task_info[name] = (title, info, options)
+    return task_classes, report_classes, report_groups, task_info
     
-TASK_INFO = {}
-for name, obj in TASK_CLASSES.items():
-    title = getattr(obj, "task_title") \
-                if hasattr(obj, "task_title") else name
-    info = getattr(obj, "task_info") \
-                if hasattr(obj, "task_info") \
-                else (obj.__doc__ if obj.__doc__ else "")
-    options = getattr(obj, "task_options") \
-                if hasattr(obj, "task_options") else None
-    TASK_INFO[name] = (title, info, options)
-    
+TASK_CLASSES, REPORT_CLASSES, REPORT_GROUPS, TASK_INFO = get_globals()
 DAS_CONFIG = das_readconfig()
-

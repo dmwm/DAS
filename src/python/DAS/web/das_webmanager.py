@@ -14,7 +14,6 @@ __email__ = "vkuznet@gmail.com"
 # system modules
 import os
 import sys
-import time
 
 # cherrypy modules
 import cherrypy
@@ -132,7 +131,7 @@ class DASWebManager(TemplatedPage):
         Serve static images.
         """
         args = list(args)
-        scripts = self.check_scripts(args, self.imgmap, self.imgdir)
+        self.check_scripts(args, self.imgmap, self.imgdir)
         mime_types = ['*/*', 'image/gif', 'image/png', 
                       'image/jpg', 'image/jpeg']
         accepts = cherrypy.request.headers.elements('Accept')
@@ -156,7 +155,6 @@ class DASWebManager(TemplatedPage):
         build/container/container.js
         """
         args = ['/'.join(args)] # preserve YUI dir structure
-        datatype = args[-1].split('.')[-1]
         scripts = self.check_scripts(args, self.yuimap, self.yuidir)
         return self.serve_files(args, scripts, self.yuimap)
         

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+#pylint: disable-msg=W0141
 """
 Task manager
 
@@ -146,7 +146,9 @@ class PluginTaskManager(TaskManager, plugins.SimplePlugin):
         Implementation for external bus, e.g. cherrypy.engine.
         When external bus will exit this method will be invoked.
         """
-        self.stop
+        if  self.debug:
+            print "%s exit" % self.name
+        self.stop()
 
     def graceful(self):
         """

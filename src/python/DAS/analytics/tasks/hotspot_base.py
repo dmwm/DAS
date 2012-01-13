@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-
+#pylint: disable-msg=W0702,W0703
 """
 Base class for scheduling analyzers
 """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703
+#pylint: disable-msg=W0703,W0702,R0911,R0912,R0913,R0914,R0915,C0302
 
 """
 General set of useful utilities used by DAS
@@ -130,9 +130,9 @@ def parse_filter(spec, flt):
         key, val = flt.split('=')
         if  int_number_pattern.match(str(val)):
             val = int(val)
-        if  float_number_pattern.match(str(val)):
+        elif float_number_pattern.match(str(val)):
             val = float(val)
-        if  isinstance(val, str) or isinstance(val, unicode):
+        elif isinstance(val, str) or isinstance(val, unicode):
             if  val.find('*') != -1:
                 val = re.compile('%s' % val.replace('*', '.*'))
         return {key:val}
@@ -141,9 +141,9 @@ def parse_filter(spec, flt):
         key, val = flt.split('!=')
         if  int_number_pattern.match(str(val)):
             val = int(val)
-        if  float_number_pattern.match(str(val)):
+        elif float_number_pattern.match(str(val)):
             val = float(val)
-        if  isinstance(val, str) or isinstance(val, unicode):
+        elif isinstance(val, str) or isinstance(val, unicode):
             if  val.find('*') != -1:
 #                val = re.compile('%s' % val.replace('*', '.*'))
                 val = re.compile('^(?:(?!%s).)*$' % val.replace('*', '.*'))
@@ -197,7 +197,7 @@ def size_format(uinput):
         print_exc(exc)
         return "N/A"
     base = 1000. # power of 10, or use 1024. for power of 2
-    for xxx in ['','KB','MB','GB','TB','PB']:
+    for xxx in ['', 'KB', 'MB', 'GB', 'TB', 'PB']:
         if  num < base: 
             return "%3.1f%s" % (num, xxx)
         num /= base
@@ -297,8 +297,8 @@ def datestamp(das_date):
 
 def next_day(das_date):
     """Return next date provided DAS date""" 
-    next  = datestamp(das_date) + datetime.timedelta(days=1)
-    return int(time.strftime("%Y%m%d", next.timetuple()))
+    nextd = datestamp(das_date) + datetime.timedelta(days=1)
+    return int(time.strftime("%Y%m%d", nextd.timetuple()))
     
 def prev_day(das_date):
     """Return previous date provided DAS date""" 
@@ -313,7 +313,8 @@ def expire_timestamp(expire):
     # check if we provided with HTTP header string
     if  isinstance(expire, str) and \
         expire.find(',') != -1 and expire.find(':') != -1:
-        return calendar.timegm(time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z'))
+        return calendar.timegm(\
+                time.strptime(expire, '%a, %d %b %Y %H:%M:%S %Z'))
     if  isinstance(expire, str):
         expire = long(expire)
     tstamp = time.time()
@@ -378,9 +379,9 @@ def adjust_mongo_keyvalue(value):
                     newdict[key] = newval
     return newdict
 
-class dict_of_none (dict):
+class DictOfNone(dict):
     """Define new dict type whose missing keys always assigned to None"""
-    def __missing__ (self, key):
+    def __missing__ (self, _key):
         """Assign missing key to None"""
         return None
 
@@ -1016,7 +1017,7 @@ def qlxml_parser(source, prim_key):
 
     root = None
     row = {}
-    row[prim_key]={}
+    row[prim_key] = {}
     for item in context:
         event, elem = item
         key = elem.tag
@@ -1265,7 +1266,8 @@ def aggregator_helper(results, expire):
         row_system    = row['das']['system']
         row.pop('das')
         if  row_prim_key != prim_key:
-            record.update(helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            record.update(\
+                helper(expire, prim_key, system, cond_keys, tstamp, instance))
             yield record
             prim_key = row_prim_key
             record = row
@@ -1275,7 +1277,8 @@ def aggregator_helper(results, expire):
         try:
             val1 = dict_value(record, prim_key)
         except:
-            record.update(helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            record.update(\
+                helper(expire, prim_key, system, cond_keys, tstamp, instance))
             yield record
             record = dict(row)
             system = row_system
@@ -1285,7 +1288,8 @@ def aggregator_helper(results, expire):
         try:
             val2 = dict_value(row, prim_key)
         except:
-            row.update(helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            row.update(\
+                helper(expire, prim_key, system, cond_keys, tstamp, instance))
             yield row
             record = dict(row)
             system = row_system
@@ -1298,17 +1302,20 @@ def aggregator_helper(results, expire):
             cond_keys = list( set(cond_keys+row_cond_keys) )
             update = 1
         else:
-            record.update(helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            record.update(\
+                helper(expire, prim_key, system, cond_keys, tstamp, instance))
             yield record
             record = dict(row)
             system = row_system
             cond_keys = list( set(cond_keys+row_cond_keys) )
             update = 0
     if  update: # check if we did update for last row
-        record.update(helper(expire, prim_key, system, cond_keys, tstamp, instance))
+        record.update(\
+                helper(expire, prim_key, system, cond_keys, tstamp, instance))
         yield record
     else:
-        row.update(helper(expire, prim_key, system, cond_keys, tstamp, instance))
+        row.update(\
+                helper(expire, prim_key, system, cond_keys, tstamp, instance))
         yield row
 
 def das_diff(rows, compare_keys):

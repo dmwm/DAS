@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0702,E1101
+#pylint: disable-msg=W0702,E1101,R0903
 """
 Base classes to serve CMSSW config service.
 """

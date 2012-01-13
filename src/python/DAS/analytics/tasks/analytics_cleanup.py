@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=R0903
 """
 File: AnalyticsCleanup.py
 Author: Gordon Ball <gordon.ball@cern.ch>

@@ -6,7 +6,8 @@ from DAS.analytics.utils import Report, get_analytics_interface
 import time
 import collections
 
-gen_identifier = lambda task: "valuehotspot-%s" % (task['kwargs'].get('key','').replace('.','-'))
+gen_identifier = \
+lambda task: "valuehotspot-%s" % (task['kwargs'].get('key','').replace('.','-'))
 
 class HotspotReport(Report):
     """

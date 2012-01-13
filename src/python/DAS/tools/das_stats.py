@@ -9,12 +9,11 @@ import datetime
 from optparse import OptionParser
 from pymongo.connection import Connection
 try:
-    import numpy as np
+#    import numpy as np
     from pylab import plt
     PLOT_ALLOWED = True
 except:
     PLOT_ALLOWED = False
-    pass
 
 class DASOptionParser: 
     """
@@ -219,7 +218,8 @@ def plot_stat(rows, cache):
              date_range, req_out, 'gv-',
     )
     plt.grid(True)
-    plt.axis([min(date_range), max(date_range), 0, max([max(req_in), max(req_out)])])
+    plt.axis([min(date_range), max(date_range), \
+                0, max([max(req_in), max(req_out)])])
     plt.xticks(date_range, tuple(formated_dates), rotation=17)
 #    plt.xlabel('dates [%s, %s]' % (date_range[0], date_range[-1]))
     plt.ylabel('DAS %s behavior' % cache)

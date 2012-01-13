@@ -47,14 +47,14 @@ DAS_WEB_CODES = [
 ]
 def decode_code(code):
     """Return human readable string for provided code ID"""
-    for id, msg in DAS_WEB_CODES:
-        if  code == id:
+    for idx, msg in DAS_WEB_CODES:
+        if  code == idx:
             return msg
     return 'N/A'
 
 def web_code(error):
     """Return DAS WEB code for provided error string"""
-    for id, msg in DAS_WEB_CODES:
+    for idx, msg in DAS_WEB_CODES:
         if  msg.lower() == error.lower():
-            return id
+            return idx
     return -1

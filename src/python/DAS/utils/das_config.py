@@ -5,8 +5,6 @@
 Config utilities
 """
 
-__revision__ = "$Id: das_config.py,v 1.39 2010/04/15 18:01:27 valya Exp $"
-__version__ = "$Revision: 1.39 $"
 __author__ = "Valentin Kuznetsov"
 
 import os
@@ -108,7 +106,7 @@ DASOption('web_server', 'number_of_workers', 'int', 10),
 # limit number of peding jobs in DAS server queue
 DASOption('web_server', 'queue_limit', 'int', 50),
 # The adjust_input function can be implemented for concrete use case
-# In CMS we can adjust input values to regex certain things, like dataset/run/etc.
+# In CMS we can adjust input values to regex certain things, like dataset/run.
 DASOption('web_server', 'adjust_input', 'bool', False),
 # DBS dataset daemon fetch list of known DBS datasets and keep them
 # in separate collection, to be used by DAS web server for autocompletion
@@ -160,10 +158,16 @@ DASOption('das', 'emptyset_expire', 'int', 5),
 # list of data services participated in DAS
 DASOption('das', 'services', 'list', 
                 ['google_maps', 'ip', 'postalcode'], destination='services'),
-# number of DASCore workers (defines how many data-service calls will run at onces)
+# number of DASCore workers
+# defines how many data-service calls will run at onces
 DASOption('das', 'core_workers', 'int', 5),
-# number of API workers (defines how many data-service API calls will run at onces)
+# number of API workers 
+# defines how many data-service API calls will run at onces
 DASOption('das', 'api_workers', 'int', 3),
+# weights for API worker threads (some srvs need more threads then others)
+# list contains service_name:weight pairs as a single strings
+# we use this format due to option parser constains
+DASOption('das', 'thread_weights', 'list', ['dbs:3', 'phedex:3']),
 
 # DAS dbs_phedex service options
 DASOption('dbs_phedex', 'urls', 'list',[]),

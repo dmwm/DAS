@@ -104,6 +104,7 @@ def check(host, port, release):
     return False
 
 def releases(host, port):
+    "List CMSSW releases"
     db = connect(host, port)
     names = db.collection_names() 
     return filter(lambda x: x.startswith('CMSSW') and not x.endswith('index'),
@@ -178,10 +179,8 @@ def inject(path, release, debug=0):
     index.generate_index()
     print 'Indexing took %s seconds' % (time.time() - time0)
 
-#
-# MAIN
-#
-if __name__ == '__main__':
+def main():
+    "Main function"
 
     if sys.version_info < (2, 6):
         raise Exception("This script requires python 2.6 or greater")
@@ -219,3 +218,8 @@ if __name__ == '__main__':
         print "Please specify either:\n\t--path and --release\n\t--release and --delete\n\t--release and --check\n\t--list."
         sys.exit(1)
 
+#
+# MAIN
+#
+if __name__ == '__main__':
+    main()

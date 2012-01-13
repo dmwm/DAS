@@ -5,28 +5,18 @@
 DAS Query Language parser.
 """
 
-__revision__ = "$Id: das_parser.py,v 1.7 2010/05/03 19:47:25 valya Exp $"
-__version__ = "$Revision: 1.7 $"
 __author__ = "Valentin Kuznetsov"
 
-import re
-import time
-import urllib
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
-from DAS.core.das_ql import das_filters, das_aggregators, das_reserved
-from DAS.core.das_ql import das_special_keys
-from DAS.core.das_ql import das_operators, MONGO_MAP, URL_MAP
+from DAS.core.das_ql import das_special_keys, das_operators
 from DAS.core.das_ply import DASPLY, ply2mongo
-from DAS.utils.utils import adjust_value, convert2date, das_dateformat
 from DAS.utils.utils import print_exc
-from DAS.utils.regex import key_attrib_pattern, last_key_pattern
-from DAS.utils.regex import int_number_pattern, float_number_pattern
+from DAS.utils.regex import last_key_pattern
 from DAS.utils.logger import PrintManager
-from DAS.core.das_parsercache import DASParserDB, PARSERCACHE_NOTFOUND
+from DAS.core.das_parsercache import DASParserDB
 from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
-import DAS.utils.jsonwrapper as json
 
 def decompose(query):
     """Extract selection keys and conditions from input query"""
@@ -138,7 +128,7 @@ class QLManager(object):
                     % query
                 print_exc(msg, print_traceback=False)
                 raise exc
-        if  set(mongo_query.keys()) & set(['fields','spec']) != \
+        if  set(mongo_query.keys()) & set(['fields', 'spec']) != \
                 set(['fields', 'spec']):
             raise Exception('Invalid MongoDB query %s' % mongo_query)
         if  not mongo_query['fields'] and len(mongo_query['spec'].keys()) > 1:

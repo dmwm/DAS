@@ -53,6 +53,7 @@ class DBSDaemon(object):
         self.cache_size = cache_size
         self.dbs_url = dbs_url
         self.expire = expire
+        self.col = None # to be defined in self.init
         self.init()
         # Monitoring thread which performs auto-reconnection to MongoDB
         thread.start_new_thread(db_monitor, (dburi, self.init))
@@ -135,7 +136,8 @@ class DBSDaemon(object):
         Retrieve a list of DBS datasets (DBS2)
         """
         query = 'find dataset,dataset.status'
-        params = {'api': 'executeQuery', 'apiversion': 'DBS_2_0_9', 'query':query}
+        params = {'api': 'executeQuery', 'apiversion': 'DBS_2_0_9',
+                  'query':query}
         encoded_data = urllib.urlencode(params, doseq=True)
         url = self.dbs_url + '?' + encoded_data
         req = urllib2.Request(url)
@@ -166,6 +168,7 @@ class DBSDaemon(object):
         stream.close()
         
 def test(dbs_url):
+    "Test function"
     uri = 'mongodb://localhost:8230'
     mgr = DBSDaemon(dbs_url, uri)
     mgr.update()
@@ -174,7 +177,15 @@ def test(dbs_url):
     for row in mgr.find('zee*summer', idx, limit):
         print row
 
+def test_dbs2():
+    "Test dbs2 service"
+    url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+    test(url)
+
+def test_dbs3():
+    "Test dbs3 service"
+    url = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/'
+    test(url)
+
 if __name__ == '__main__':
-    DBS2_URL = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
-    DBS3_URL = 'http://localhost:8989/dbs/DBSReader/datasets/'
-    test(DBS2_URL)
+    test_dbs2()

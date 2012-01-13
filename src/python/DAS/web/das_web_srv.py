@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0201,W0703
+#pylint: disable-msg=W0201,W0703,R0914
 """
 DAS web interface, based on WMCore/WebTools
 """

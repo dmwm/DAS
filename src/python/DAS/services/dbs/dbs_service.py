@@ -4,12 +4,8 @@
 """
 DBS service
 """
-__revision__ = "$Id: dbs_service.py,v 1.24 2010/04/09 19:41:23 valya Exp $"
-__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
-import re
-import time
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import dbsql_opt_map, convert_datetime
@@ -42,7 +38,7 @@ class DBSService(DASAbstractService):
             return url.replace(self.prim_instance, instance)
         return url
             
-    def adjust_params(self, api, kwds, inst):
+    def adjust_params(self, api, kwds, inst=None):
         """
         Adjust DBS2 parameters for specific query requests
         """
@@ -94,7 +90,9 @@ class DBSService(DASAbstractService):
             kwds.pop('dataset')
         if  api == 'fakeConfig':
             val = kwds['dataset']
-            sel = 'config.name, config.content, config.version, config.type, config.annotation, config.createdate, config.createby, config.moddate, config.modby'
+            sel = 'config.name, config.content, config.version, config.type, \
+ config.annotation, config.createdate, config.createby, config.moddate, \
+ config.modby'
             if  val != 'required':
                 kwds['query'] = 'find %s where dataset=%s' % (sel, val)
             else:
@@ -110,7 +108,7 @@ class DBSService(DASAbstractService):
         if  api == 'fakeListDataset4File':
             val = kwds['file']
             if  val != 'required':
-                kwds['query'] = "find dataset , count(block), count(file.size), \
+                kwds['query'] = "find dataset, count(block), count(file.size), \
   sum(block.size), sum(block.numfiles), sum(block.numevents) \
   where file=%s and dataset.status like VALID*" % val
             else:
@@ -119,7 +117,7 @@ class DBSService(DASAbstractService):
         if  api == 'fakeListDataset4Block':
             val = kwds['block']
             if  val != 'required':
-                kwds['query'] = "find dataset , count(block), count(file.size), \
+                kwds['query'] = "find dataset, count(block), count(file.size), \
   sum(block.size), sum(block.numfiles), sum(block.numevents) \
   where block=%s and dataset.status like VALID*" % val
             else:
@@ -129,14 +127,15 @@ class DBSService(DASAbstractService):
             val = kwds['run']
             if  val != 'required':
                 if  isinstance(val, dict):
-                    minR = 0
-                    maxR = 0
+                    min_run = 0
+                    max_run = 0
                     if  val.has_key('$lte'):
-                        maxR = val['$lte']
+                        max_run = val['$lte']
                     if  val.has_key('$gte'):
-                        minR = val['$gte']
-                    if  minR and maxR:
-                        arr = ','.join((str(r) for r in range(minR, maxR)))
+                        min_run = val['$gte']
+                    if  min_run and max_run:
+                        arr = \
+                        ','.join((str(r) for r in range(min_run, max_run)))
                         val = "run in (%s)" % arr
                     elif val.has_key('$in'):
                         arr = ','.join((str(r) for r in val['$in']))
@@ -176,14 +175,15 @@ class DBSService(DASAbstractService):
             qlist = []
             if  val != 'required':
                 if  isinstance(val, dict):
-                    minR = 0
-                    maxR = 0
+                    min_run = 0
+                    max_run = 0
                     if  val.has_key('$lte'):
-                        maxR = val['$lte']
+                        max_run = val['$lte']
                     if  val.has_key('$gte'):
-                        minR = val['$gte']
-                    if  minR and maxR:
-                        arr = ','.join((str(r) for r in range(minR, maxR)))
+                        min_run = val['$gte']
+                    if  min_run and max_run:
+                        arr = \
+                        ','.join((str(r) for r in range(min_run, max_run)))
                         val = "run in (%s)" % arr
                     elif val.has_key('$in'):
                         arr = ','.join((str(r) for r in val['$in']))
@@ -375,8 +375,9 @@ where %s" % value[4:]
             gen = qlxml_parser(source, prim_key)
         else:
             gen = xml_parser(source, prim_key)
-        useless_run_atts = ['number_of_events', 'number_of_lumi_sections', 'id',\
-                'total_luminosity', 'store_number', 'end_of_run', 'start_of_run']
+        useless_run_atts = ['number_of_events', 'number_of_lumi_sections', \
+                'id', 'total_luminosity', 'store_number', 'end_of_run', \
+                'start_of_run']
         for row in gen:
             if  not row:
                 continue
@@ -395,11 +396,11 @@ where %s" % value[4:]
                 del row['algorithm']['ps_content']
             if  row.has_key('processed_dataset') and \
                 row['processed_dataset'].has_key('path'):
-                    if  isinstance(row['processed_dataset']['path'], dict) \
-                    and row['processed_dataset']['path'].has_key('dataset_path'):
-                        path = row['processed_dataset']['path']['dataset_path']
-                        del row['processed_dataset']['path']
-                        row['processed_dataset']['name'] = path
+                if  isinstance(row['processed_dataset']['path'], dict) \
+                and row['processed_dataset']['path'].has_key('dataset_path'):
+                    path = row['processed_dataset']['path']['dataset_path']
+                    del row['processed_dataset']['path']
+                    row['processed_dataset']['name'] = path
             # case for fake apis
             # remove useless attribute from results
             if  row.has_key('dataset'):
@@ -430,8 +431,8 @@ where %s" % value[4:]
             if  row.has_key('site'):
                 row['site']['se'] = row['site']['site']
                 del row['site']['site']
-            attrs = ['config.name', 'config.content', 'config.version',\
-                     'config.type', 'config.annotation', 'config.createdate',\
+            attrs = ['config.name', 'config.content', 'config.version', \
+                     'config.type', 'config.annotation', 'config.createdate', \
                      'config.createby', 'config.moddate', 'config.modby']
             convert_dot(row, 'config', attrs)
             convert_dot(row, 'file', ['file.name'])

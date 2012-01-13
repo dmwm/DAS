@@ -9,10 +9,6 @@ __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
 import time
-import types
-import urllib
-import xmlrpclib
-import xml.etree.cElementTree as ET
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator
 from DAS.services.cmsswconfigs.base import MongoQuery

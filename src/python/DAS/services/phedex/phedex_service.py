@@ -12,8 +12,6 @@ __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, delete_keys
-import types
-import DAS.utils.jsonwrapper as json
 
 def get_replica_info(replica):
     """

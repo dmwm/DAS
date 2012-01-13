@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0613,W0622,W0702
+#pylint: disable-msg=W0613,W0622,W0702,R0903
 
 """
 DAS timer
 """
 
-__revision__ = "$Id: das_db.py,v 1.9 2010/05/04 21:12:19 valya Exp $"
-__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -22,12 +20,13 @@ class _DASTimerSingleton(object):
         self.counter = 0
     def record(self, tag):
         """Record time for given tag"""
-        hash = genkey(tag)
-        if  self.timer.has_key(hash):
-            time0 = self.timer[hash]['time']
-            self.timer[hash]['time'] = time.time() - time0
+        thash = genkey(tag)
+        if  self.timer.has_key(thash):
+            time0 = self.timer[thash]['time']
+            self.timer[thash]['time'] = time.time() - time0
         else:
-            self.timer[hash] = {'tag': tag, 'time': time.time(), 'counter': self.counter}
+            self.timer[thash] = \
+                {'tag': tag, 'time': time.time(), 'counter': self.counter}
             self.counter += 1
 
 DAS_TIMER_SINGLETON = _DASTimerSingleton()

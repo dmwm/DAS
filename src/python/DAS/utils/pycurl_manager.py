@@ -17,7 +17,6 @@ given dataset. So we invoke 1 request to datasets API
 followed by N requests to filesummaries API.
 """
 
-import time
 import pycurl
 import urllib
 from DAS.utils.jsonwrapper import json
@@ -161,7 +160,7 @@ def datasets(url, cert, ckey, pattern, verbose=None):
     params  = {'dataset':pattern, 'dataset_access_type': 'PRODUCTION'}
     headers = {'Accept':'text/json;application/json'}
     reqmgr  = RequestHandler()
-    data, expire = reqmgr.getdata(url, params, headers, \
+    data, _expire = reqmgr.getdata(url, params, headers, \
                 ckey=ckey, cert=cert, verbose=verbose)
     furl = url.replace('datasets', 'filesummaries')
     res = reqmgr.multirequest(furl, data, headers, \
@@ -172,12 +171,16 @@ def datasets(url, cert, ckey, pattern, verbose=None):
         row['name'] = name
         yield dict(dataset=row)
 
-if __name__ == '__main__':
+def test():
+    "Test function"
     import os
-    CERT = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
-    CKEY = os.path.join(os.environ['HOME'], '.globus/userkey.pem')
-    URL  = 'https://localhost:8979/dbs/prod/global/DBSReader/datasets'
-    PAT  = '/RelValSingleElectronPt10/CMSSW_3_9_0*'
-    PAT  = '/RelValSingle*'
-    data = [r for r in datasets(URL, CERT, CKEY, PAT)]
+    cert = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
+    ckey = os.path.join(os.environ['HOME'], '.globus/userkey.pem')
+    url  = 'https://localhost:8979/dbs/prod/global/DBSReader/datasets'
+    pat  = '/RelValSingleElectronPt10/CMSSW_3_9_0*'
+    pat  = '/RelValSingle*'
+    data = [r for r in datasets(url, cert, ckey, pat)]
     print data
+
+if __name__ == '__main__':
+    test()

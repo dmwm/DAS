@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+Controller class which starts analytics
+"""
+
 from DAS.analytics.config import DASAnalyticsConfig
 from DAS.analytics.scheduler import TaskScheduler
 from DAS.analytics.web import AnalyticsWeb
@@ -29,7 +33,8 @@ DASAnalyticsConfig.add_option('logfile', group="Logging", type=basestring,
 DASAnalyticsConfig.add_option('logfile_mode', group="Logging", type=basestring,
       default=None,
       help="Mode for rotating logs, if any. \
-Numbers postfixed 'h' or 'd' indicate timed rotation, 'k' or 'm' size rotation.")
+Numbers postfixed 'h' or 'd' indicate timed rotation, \
+'k' or 'm' size rotation.")
 DASAnalyticsConfig.add_option('logfile_rotates', group="Logging", type=int,
       default=5, help="Number of rotating logfiles.")
 DASAnalyticsConfig.add_option('log_format', group="Logging", type=basestring,
@@ -59,14 +64,15 @@ class DASAnalyticsLogging(object):
             self.configure_file()
         
     def configure_file(self):
+        "File configuration method"
         match_time = RE_TIMEROTATE.match(self.config.logfile_mode.lower())
         match_size = RE_SIZEROTATE.match(self.config.logfile_mode.lower())
         if match_time:
             handler = logging.handlers.TimedRotatingFileHandler(
-                                        filename=self.config.logfile,
-                                        when=match_time.group(2),
-                                        interval=float(match_time.group(1)),
-                                        backupCount=self.config.logfile_rotates)
+                                filename=self.config.logfile,
+                                when=match_time.group(2),
+                                interval=float(match_time.group(1)),
+                                backupCount=self.config.logfile_rotates)
         elif match_size:
             size = float(match_size.group(1))
             if match_size.group(2) == 'm':
@@ -82,6 +88,7 @@ class DASAnalyticsLogging(object):
         self.add_handler(handler)
         
     def add_handler(self, handler):
+        "Add new handler to the logger"
         if self.config.verbose:
             handler.setLevel(logging.DEBUG)
         else:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-
+#pylint: disable-msg=R0912,R0915,W0702,R0914
 """
 Set of useful utilities used by DAS web applications
 """
@@ -217,7 +217,6 @@ def checkargs(supported):
             """Wrap function arguments"""
             # check request headers. For methods POST/PUT
             # we need to read request body to get parameters
-            headers = cherrypy.request.headers
             if  cherrypy.request.method == 'POST' or\
                 cherrypy.request.method == 'PUT':
                 try:

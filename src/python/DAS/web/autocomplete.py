@@ -11,8 +11,7 @@ __author__ = "Gordon Ball and Valentin Kuznetsov"
 import re
 from DAS.utils.regex import RE_DBSQL_0, RE_DBSQL_1, RE_DBSQL_2
 from DAS.utils.regex import RE_SITE, RE_SUBKEY, RE_KEYS
-from DAS.utils.regex import RE_HASPIPE, RE_PIPECMD, RE_AGGRECMD
-from DAS.utils.regex import RE_FILTERCMD, RE_K_SITE, RE_K_FILE
+from DAS.utils.regex import RE_HASPIPE, RE_K_SITE, RE_K_FILE
 from DAS.utils.regex import RE_K_PR_DATASET, RE_K_PARENT, RE_K_CHILD
 from DAS.utils.regex import RE_K_CONFIG, RE_K_GROUP, RE_K_DATASET
 from DAS.utils.regex import RE_K_BLOCK, RE_K_RUN, RE_K_RELEASE, RE_K_STATUS

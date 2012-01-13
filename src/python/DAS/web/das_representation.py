@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0702,R0912,R0914,R0904,R0201
 """
 File: das_representation.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>
@@ -15,7 +16,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.utils import getarg, deepcopy
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.tools import exposedasjson, exposetext, exposedasplist
-from DAS.web.utils import quote, json2html, das_json
+from DAS.web.utils import quote, das_json
 
 class DASRepresentation(DASWebManager):
     """
@@ -88,8 +89,8 @@ class DASRepresentation(DASWebManager):
             if  not pkey and row.has_key('das') and \
                 row['das'].has_key('primary_key'):
                 pkey = row['das']['primary_key'].split('.')[0]
-            if  query.has_key('filters'):
-                for flt in query['filters']:
+            if  dasquery.filters:
+                for flt in dasquery.filters:
                     rec.append(DotDict(row).get(flt))
             else:
                 titles = []

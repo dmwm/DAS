@@ -11,8 +11,6 @@ __version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
-import os
-import sys
 import yaml
 import logging 
 import threading
@@ -25,7 +23,6 @@ from cherrypy import config as cpconfig
 
 # DAS modules
 from DAS.utils.das_config import das_readconfig
-from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_web_srv import DASWebService
 from cherrypy.process.plugins import PIDFile
 from DAS.services.combined.dbs_phedex import DBSPhedexService

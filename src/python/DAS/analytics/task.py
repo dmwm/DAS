@@ -1,5 +1,5 @@
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0301
+#pylint: disable-msg=C0301,W0703,R0913
 
 """
 Task class for analytics.
@@ -10,9 +10,8 @@ import time
 
 # DAS modules
 from DAS.utils.utils import genkey, print_exc, deepcopy
-from DAS.analytics.utils import multilogging, DAS_CONFIG, TASK_CLASSES
+from DAS.analytics.utils import multilogging, TASK_CLASSES
 from DAS.utils.das_singleton import das_singleton
-from DAS.utils.logger import PrintManager
 
 class Task(object):
     "Representation of a repeatedly-run task with access to DAS"
