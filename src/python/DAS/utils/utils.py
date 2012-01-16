@@ -1159,9 +1159,11 @@ def json_parser(source, logger=None):
         data = source
         # to prevent unicode/ascii errors like
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
-        if  isinstance(data, str):
+        if  isinstance(data, basestring):
             data = unicode(data, errors='ignore')
             res  = data.replace('null', '\"null\"')
+        elif isinstance(data, object) and hasattr(data, 'read'): # StringIO
+            res = data.read()
         else:
             res  = data
         try:

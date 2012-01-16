@@ -5,6 +5,17 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.2.X
+  - Resolved issue with duplicates of competing, but similar queries at web UI.
+  - Changed task manager to accept given pid for tasks.
+  - Generated pid at web layer; check status of input query in a cache and
+    find similar one (if found check status of similar request and generate
+    results upon its completion); moved check_pid code from web server into
+    its one template; adjusted ajaxCheckPid call to accept external method
+    parameter (such that I can use different methods, e.g. check_pid and
+    check_similar_pid)
+  - Fixed several issues with handling StringIO (delivered by pycurl)
+
 - 1.1.X
 
   - Extend not equal filter to support patterns, ticket #3078

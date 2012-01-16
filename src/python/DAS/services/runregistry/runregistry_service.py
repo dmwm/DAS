@@ -193,7 +193,8 @@ def test():
     query = {'runNumber': '>= 137081 and < 137088'}
     query = {'runNumber': '>= 147623 and <= 147623'}
     query = {'runNumber': '147623'}
-    url = 'http://localhost:8081/runregistry_api/xmlrpc'
+    query = {'runNumber': '165103'}
+    url = 'http://localhost:8081/cms-service-runregistry-api/xmlrpc'
     for row in worker(url, query):
         print row, type(row)
 

@@ -51,6 +51,9 @@ class MonitorService(DASAbstractService):
                 source.close()
                 raise
             source.close()
+        elif isinstance(source, object) and hasattr(source, 'read'): # StringIO
+            data = source.read()
+            source.close()
         else:
             data = source
         try:

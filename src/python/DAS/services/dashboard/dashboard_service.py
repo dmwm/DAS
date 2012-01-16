@@ -42,6 +42,9 @@ class DashboardService(DASAbstractService):
         if  isinstance(source, InstanceType):
             data = source.read()
             close = True
+        elif isinstance(source, object) and hasattr(source, 'read'): # StringIO
+            data = source.read()
+            close = True
         else:
             data = source
 

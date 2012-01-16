@@ -77,8 +77,9 @@ class RequestHandler(object):
         else:
             raise TypeError('Wrong type for url="%s", type="%s"' \
                 % (url, type(url)))
-        curl.setopt(pycurl.HTTPHEADER, \
-                ["%s: %s" % (k, v) for k, v in headers.iteritems()])
+        if  headers:
+            curl.setopt(pycurl.HTTPHEADER, \
+                    ["%s: %s" % (k, v) for k, v in headers.iteritems()])
         bbuf = StringIO.StringIO()
         hbuf = StringIO.StringIO()
         curl.setopt(pycurl.WRITEFUNCTION, bbuf.write)
