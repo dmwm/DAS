@@ -109,8 +109,8 @@ class DBSService(DASAbstractService):
             val = kwds['file']
             if  val != 'required':
                 kwds['query'] = "find dataset, count(block), count(file.size), \
-  sum(block.size), sum(block.numfiles), sum(block.numevents) \
-  where file=%s and dataset.status like VALID*" % val
+  sum(block.size), sum(block.numfiles), sum(block.numevents), dataset.status \
+  where file=%s" % val
             else:
                 kwds['query'] = 'required'
             kwds.pop('file')

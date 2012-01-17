@@ -6,6 +6,10 @@ Release 1.X.Y series
 This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
+  - Parse Phedex checksum and split its value into adler32/checksum, ticket #3119, 3120
+  - Remove from dataset look-up for a given file constrain to look-up
+    only VALID datasets, when user provide a file I need to look-up
+    dataset and provide its status, ticket #3123
   - Resolved issue with duplicates of competing, but similar queries at web UI.
   - Changed task manager to accept given pid for tasks.
   - Generated pid at web layer; check status of input query in a cache and
