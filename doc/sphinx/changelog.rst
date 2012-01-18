@@ -6,6 +6,7 @@ Release 1.X.Y series
 This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
+  - Fix DBSDaemon to work with https for DBS3
   - Add ability to DAS CLI to show duplicates in records, ticket #3120
   - Parse Phedex checksum and split its value into adler32/checksum, ticket #3119, 3120
   - Remove from dataset look-up for a given file constrain to look-up

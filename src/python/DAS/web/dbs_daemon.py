@@ -23,6 +23,8 @@ import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.web.utils import db_monitor
+from DAS.utils.utils import get_key_cert
+from DAS.utils.url_utils import HTTPSClientAuthHandler
 
 def dbs_instance(dbsurl):
     """Parse dbs instance from provided DBS url"""
@@ -32,8 +34,8 @@ def dbs_instance(dbsurl):
         # http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet
         dbsinst = dbsurl.split('/')[-3]
     elif dbsurl.find('DBSReader') != -1:
-        # http://vocms09.cern.ch:8989/dbs/DBSReader
-        dbsinst = dbsurl.split('/')[-2]
+        # http://cmsweb.cern.ch/dbs/prod/global/DBSReader
+        dbsinst = dbsurl.split('/')[-3]
     else:
         msg = 'Unable to parse dbs instance from provided url %s' % dbsurl
         raise Exception(msg)
@@ -94,7 +96,7 @@ class DBSDaemon(object):
                     self.col.update(spec, {'$set':{'ts':time0}})
             # remove records with old ts
             self.col.remove({'ts':{'$lt':time0-self.expire}})
-            print "%s DBSDaemon updated in %s sec, collection=%s, nrec=%s" \
+            print "%s DBSDaemon updated %s collection in %s sec, nrec=%s" \
             % (dastimestamp(), self.dbcoll, time.time()-time0, self.col.count())
 
     def find(self, pattern, idx=0, limit=10):
@@ -159,8 +161,12 @@ class DBSDaemon(object):
         """
         params = {'dataset_access_type':'PRODUCTION'}
         encoded_data = urllib.urlencode(params, doseq=True)
-        url = self.dbs_url + '?' + encoded_data
+        url = self.dbs_url + '/datasets?' + encoded_data
         req = urllib2.Request(url)
+        ckey, cert = get_key_cert()
+        handler = HTTPSClientAuthHandler(ckey, cert)
+        opener  = urllib2.build_opener(handler)
+        urllib2.install_opener(opener)
         stream = urllib2.urlopen(req)
         gen = json.load(stream)
         for row in gen:
