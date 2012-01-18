@@ -107,6 +107,7 @@ def get_value(data, filters):
         if  ftr.find('>') != -1 or ftr.find('<') != -1 or ftr.find('=') != -1:
             continue
         row = dict(data)
+        values = set()
         for key in ftr.split('.'):
             if  isinstance(row, dict) and row.has_key(key):
                 if  key == 'creation_time':
@@ -124,8 +125,11 @@ def get_value(data, filters):
                             row = size_format(item[key])
                         else:
                             row = item[key]
-                        break
-        yield str(row)
+                        values.add(row)
+        if  len(values) == 1:
+            yield str(values.pop())
+        else:
+            yield str(list(values))
 
 def get_data(host, query, idx, limit, debug):
     """Contact DAS server and retrieve data for given DAS query"""
