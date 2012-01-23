@@ -252,7 +252,7 @@ class DBSService(DASAbstractService):
                     pass
             if  value:
                 kwds['query'] = "find dataset, datatype, dataset.status, \
-dataset.createdate, dataset.createby, dataset.moddate, dataset.modby, \
+procds.createdate, procds.createby, procds.moddate, procds.modby, \
 sum(block.numfiles), sum(block.numevents), count(block), sum(block.size) \
 where %s" % value[4:]
             else:
