@@ -123,17 +123,8 @@ def auth(func):
     return wrapper
 
 def request_headers():
-    """
-    Return dict with cherrypy request headers
-    """
-    doc   = dict(timestamp=time.time(),
-            headers=cherrypy.request.headers,
-            method=cherrypy.request.method,
-            path=cherrypy.request.path_info,
-            args=cherrypy.request.params,
-            ip=cherrypy.request.remote.ip, 
-            hostname=cherrypy.request.remote.name,
-            port=cherrypy.request.remote.port)
+    "Return request headers"
+    doc   = dict(timestamp=time.time(), args=cherrypy.request.params)
     return doc
 
 def exposetext (func):
