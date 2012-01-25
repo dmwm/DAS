@@ -38,7 +38,7 @@ from DAS.web.utils import free_text_parser
 from DAS.web.utils import checkargs, das_json, gen_error_msg
 from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson
-from DAS.web.tools import request_headers, jsonstreamer
+from DAS.web.tools import jsonstreamer
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 from DAS.web.autocomplete import autocomplete_helper
@@ -471,12 +471,14 @@ class DASWebService(DASWebManager):
     @jsonstreamer
     def datastream(self, kwargs):
         """Stream DAS data into JSON format"""
-        head = kwargs.get('head', request_headers())
+        head = kwargs.get('head', dict(timestamp=time.time()))
         if  not head.has_key('mongo_query'):
             head['mongo_query'] = head['dasquery'].mongo_query \
                 if head.has_key('dasquery') else {}
         if  head.has_key('dasquery'):
             del head['dasquery']
+        if  head.has_key('args'):
+            del head['args']
         data = kwargs.get('data', [])
         return head, data
 
@@ -484,7 +486,7 @@ class DASWebService(DASWebManager):
         """
         Invoke DAS workflow and get data from the cache.
         """
-        head   = request_headers()
+        head   = dict(timestamp=time.time())
         head['args'] = kwargs
         uinput = kwargs.get('input', '')
         inst   = kwargs.get('instance', self.dbs_global)
@@ -556,7 +558,7 @@ class DASWebService(DASWebManager):
         self.logdb(uinput)
         check, content = self.generate_dasquery(uinput, inst)
         if  check:
-            head = request_headers()
+            head = dict(timestamp=time.time())
             head.update({'status': 'fail',
                          'reason': 'Fail to create DASQuery object',
                          'ctime': 0})
@@ -564,7 +566,7 @@ class DASWebService(DASWebManager):
         dasquery = content # returned content is valid DAS query
         kwargs['dasquery'] = dasquery.storage_query
         if  not pid and self.busy():
-            head = request_headers()
+            head = dict(timestamp=time.time())
             head.update({'status': 'busy', 'reason': 'DAS server is busy',
                          'ctime': 0})
             return self.datastream(dict(head=head, data=data))

@@ -1218,7 +1218,7 @@ def row2das(mapper, system, api, row):
                 if  isinstance(item, dict):
                     row2das(mapper, system, api, item)
 
-def aggregator(results, expire):
+def aggregator(dasquery, results, expire):
     """
     High-level API, DAS aggregator function.
     """
@@ -1236,6 +1236,7 @@ def aggregator(results, expire):
                 _ids = [_ids]
         rec['cache_id'] = list(set(_ids))
         rec['das']['empty_record'] = 0
+        rec['qhash'] = dasquery.qhash
         for key, val in rec.iteritems():
             if  key not in ['das_id', 'das', 'cache_id', '_id']:
                 if  isinstance(val, dict):

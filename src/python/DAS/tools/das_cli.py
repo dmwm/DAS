@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-#pylint: disable-msg=C0301,C0103
+#pylint: disable-msg=C0301,C0103,R0903,R0912,R0913,R0914,R0915
 
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_cli.py,v 1.28 2010/04/05 19:10:45 valya Exp $"
-__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -80,20 +78,20 @@ def iterate(input_results):
     for _ in input_results:
         pass
 
-def run(DAS, query, idx, limit, skey, sorder, nooutput, plain):
+def run(dascore, query, idx, limit, skey, sorder, nooutput, plain):
     """
     Execute DAS workflow for given set of parameters.
     We use this function in main and in profiler.
     """
     if  not nooutput:
-        results = DAS.result(query, idx, limit, skey, sorder)
+        results = dascore.result(query, idx, limit, skey, sorder)
         if  plain:
             for item in results:
                 print item
         else:
             dump(results, idx)
     else:
-        results = DAS.call(query)
+        results = dascore.call(query)
         print "\n### DAS.call returns", results
 
 def main():
@@ -104,7 +102,7 @@ def main():
     t0 = time.time()
     query = opts.query
     debug = opts.verbose
-    DAS = DASCore(debug=debug, nores=opts.noresults)
+    dascore = DASCore(debug=debug, nores=opts.noresults)
     if  opts.hash:
         dasquery = DASQuery(query)
         mongo_query = dasquery.mongo_query
@@ -119,7 +117,7 @@ def main():
         print "enc_query hash:", genkey(enc_query)
         print "Services      :\n%s" % pformat(service_map) 
         sys.exit(0)
-    sdict = DAS.keys()
+    sdict = dascore.keys()
     if  opts.services:
         msg = "DAS services:" 
         print msg
@@ -148,15 +146,15 @@ def main():
         if  opts.profile:
             import cProfile # python profiler
             import pstats   # profiler statistics
-            cmd  = 'run(DAS,query,idx,limit,skey,sorder,output,plain,debug)'
-            cProfile.run(cmd, 'profile.dat')
+            cmd  = 'run(dascore,query,idx,limit,skey,sorder,output,plain)'
+            cProfile.runctx(cmd, globals(), locals(), 'profile.dat')
             info = pstats.Stats('profile.dat')
             info.sort_stats('cumulative')
             info.print_stats()
         else:
-            run(DAS, query, idx, limit, skey, sorder, output, plain)
+            run(dascore, query, idx, limit, skey, sorder, output, plain)
     elif opts.dasconfig:
-        print pformat(DAS.dasconfig)
+        print pformat(dascore.dasconfig)
     else:
         print
         print "DAS CLI interface, no actions found,"

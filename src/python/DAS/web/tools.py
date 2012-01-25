@@ -104,38 +104,6 @@ class TemplatedPage(Page):
             self.warning("%s not found at %s" % (ifile, self.templatedir))
             return "Template %s not known" % ifile
 
-#def auth(func):
-#    """CherryPy expose auth decorator"""
-#    @expose
-#    def wrapper (self, *args, **kwds):
-#        """Decorator wrapper"""
-#        headers = cherrypy.request.headers
-#        if  cherrypy.request.method == 'POST' or\
-#            cherrypy.request.method == 'PUT':
-#            body = cherrypy.request.body.read()
-#        print "\n### auth::header", headers
-#        redirect_to = 'http://localhost:8400/'
-#        raise cherrypy.HTTPRedirect(redirect_to)
-#        raise cherrypy.HTTPError(401, 'You are not authorized to access \
-#                this resource')
-#        data = func (self, *args, **kwds)
-#        return data
-#    return wrapper
-
-def request_headers():
-    """
-    Return dict with cherrypy request headers
-    """
-    doc   = dict(timestamp=time.time(),
-            headers=cherrypy.request.headers,
-            method=cherrypy.request.method,
-            path=cherrypy.request.path_info,
-            args=cherrypy.request.params,
-            ip=cherrypy.request.remote.ip, 
-            hostname=cherrypy.request.remote.name,
-            port=cherrypy.request.remote.port)
-    return doc
-
 def exposetext (func):
     """CherryPy expose Text decorator"""
     @expose

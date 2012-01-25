@@ -127,7 +127,7 @@ def adjust_values(func, gen, links):
     red = 'style="color:red"'
     for key, val in rdict.iteritems():
         lookup = func(key)
-        if  key.lower() == 'reason':
+        if  key.lower() == 'reason' or key.lower() == 'qhash':
             continue
         if  key.lower() == 'error':
             key = '<span %s>Error</span>' % red

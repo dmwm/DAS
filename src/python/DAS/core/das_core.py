@@ -398,7 +398,7 @@ class DASCore(object):
             return len([1 for _ in self.get_queries(dasquery)])
         return self.rawcache.nresults(dasquery, coll)
 
-    def get_from_cache(self, dasquery, idx=0, limit=None, skey=None,
+    def get_from_cache(self, dasquery, idx=0, limit=0, skey=None,
                         sorder='asc', collection='merge'):
         """
         Look-up results from the merge cache and yield them for
@@ -409,8 +409,7 @@ class DASCore(object):
                 % (collection, dasquery, idx, limit, skey, sorder)
         self.logger.info(msg)
 
-        query   = self.rawcache.execution_query(dasquery)
-        fields  = query.get('fields', None)
+        fields  = dasquery.mongo_query.get('fields', None)
 
         if  dasquery.mapreduce:
             res = self.rawcache.map_reduce(dasquery.mapreduce, dasquery)

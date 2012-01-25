@@ -161,14 +161,10 @@ class DASAbstractService(object):
         Return results as a collect list set.
         """
         self.logger.info(dasquery)
-
         # check the cache for records with given query/system
-        query = {'spec': {'das.qhash': dasquery.qhash, 'das.system': self.name},
-                    'fields': None}
-        if  self.localcache.incache(DASQuery(query), collection='cache'):
-            msg  = "found records in local cache. Update analytics"
+        if  self.localcache.incache(dasquery, collection='cache', system=self.name):
+            msg  = "found records in local cache"
             self.logger.info(msg)
-            self.analytics.update(self.name, query)
             return
         # ask data-service api to get results, they'll be store them in
         # cache, so return at the end what we have in cache.

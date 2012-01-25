@@ -160,6 +160,8 @@ class DASQuery(object):
                 if  str(type(val)) == "<type '_sre.SRE_Pattern'>":
                     val = json.dumps(val.pattern)
                     speclist.append({"key":key, "value":val, "pattern":1})
+                elif isinstance(val, ObjectId):
+                    speclist.append({"key":key, "value":str(val)})
                 else:
                     val = json.dumps(val)
                     speclist.append({"key":key, "value":val})
@@ -209,7 +211,11 @@ class DASQuery(object):
         Read only qhash, generated on demand.
         """
         if  not self._qhash:
-            self._qhash = genkey(self.storage_query)
+            sdict = deepcopy(self.storage_query)
+            for key in ['filters', 'aggregators', 'mapreduce']:
+                if  sdict.has_key(key):
+                    del sdict[key]
+            self._qhash = genkey(sdict)
         return self._qhash
 
     @property

@@ -6,6 +6,9 @@ Release 1.X.Y series
 This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
+  - Switch to qhash look-up procedure, ticket #3153
+  - Fix DBS summary info, ticket #3146
+  - Do not reflect request headers, ticket #3147
   - Fix DBSDaemon to work with https for DBS3
   - Add ability to DAS CLI to show duplicates in records, ticket #3120
   - Parse Phedex checksum and split its value into adler32/checksum, ticket #3119, 3120

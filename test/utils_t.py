@@ -26,6 +26,7 @@ from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 from DAS.utils.utils import delete_keys
+from DAS.core.das_query import DASQuery
 
 class testUtils(unittest.TestCase):
     """
@@ -290,13 +291,15 @@ class testUtils(unittest.TestCase):
     def test_aggregator(self):
         """Test aggregator function"""
         # 1 row in results
+        dasquery = DASQuery(dict(fields=None, spec={'dataset':'/a/b/c'}))
+        qhash = dasquery.qhash
         das  = {'expire': 10, 'primary_key':'vk', 'empty_record': 0,
                 'system':['foo'], 'condition_keys':['run'], 'instance':None}
         row  = {'run':10, 'das':das, '_id':1, 'das_id':1}
         rows = (row for i in range(0,1))
-        result = [r for r in aggregator(rows, das['expire'])]
+        result = [r for r in aggregator(dasquery, rows, das['expire'])]
         del result[0]['das']['ts'] # we don't need record timestamp
-        expect = [{'run': 10, 'das':das, 'cache_id': [1], 'das_id': [1]}]
+        expect = [{'run': 10, 'das':das, 'cache_id': [1], 'das_id': [1], 'qhash':qhash}]
         self.assertEqual(result, expect)
 
         # 2 rows with different values for common key
@@ -306,11 +309,11 @@ class testUtils(unittest.TestCase):
         row  = {'run':2, 'das':das, '_id':1, 'das_id':1}
         rows.append(row)
         res  = (r for r in rows)
-        result = [r for r in aggregator(res, das['expire'])]
+        result = [r for r in aggregator(dasquery, res, das['expire'])]
         for r in result:
             del r['das']['ts'] # we don't need record timestamp
-        expect = [{'run': 1, 'das':das, 'das_id': [1], 'cache_id': [1]}, 
-                  {'run': 2, 'das':das, 'das_id': [1], 'cache_id': [1]}]
+        expect = [{'run': 1, 'das':das, 'das_id': [1], 'cache_id': [1], 'qhash':qhash}, 
+                  {'run': 2, 'das':das, 'das_id': [1], 'cache_id': [1], 'qhash':qhash}]
         self.assertEqual(result, expect)
 
         # 2 rows with common value for common key
@@ -322,15 +325,17 @@ class testUtils(unittest.TestCase):
         row  = {'run':{'a':1,'b':2}, 'das':das, '_id':1, 'das_id':1}
         rows.append(row)
         res  = (r for r in rows)
-        result = [r for r in aggregator(res, das['expire'])]
+        result = [r for r in aggregator(dasquery, res, das['expire'])]
         for r in result:
             del r['das']['ts'] # we don't need record timestamp
         expect = [{'run': [{'a': 1, 'b': 1}, {'a': 1, 'b': 2}], 'das':das,
-                   'das_id': [1], 'cache_id': [1]}]
+                   'das_id': [1], 'cache_id': [1], 'qhash':qhash}]
         self.assertEqual(result, expect)
 
     def test_aggregator_duplicates(self):
         """Test aggregator function"""
+        dasquery = DASQuery(dict(fields=None, spec={'dataset':'/a/b/c'}))
+        qhash = dasquery.qhash
         das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0,
                 'system':['foo'], 'condition_keys':['run'], 'instance':None}
         rows = []
@@ -339,10 +344,10 @@ class testUtils(unittest.TestCase):
         row  = {'run':{'a':1,'b':1}, 'das':das, '_id':2, 'das_id':2}
         rows.append(row)
         res  = (r for r in rows)
-        result = [r for r in aggregator(res, das['expire'])]
+        result = [r for r in aggregator(dasquery, res, das['expire'])]
         for r in result:
             del r['das']['ts'] # we don't need record timestamp
-        expect = [{'run': [{'a': 1, 'b': 1}], 'das':das,
+        expect = [{'run': [{'a': 1, 'b': 1}], 'das':das, 'qhash':qhash,
                    'das_id': [1, 2], 'cache_id': [1, 2]}]
         self.assertEqual(result, expect)
 
