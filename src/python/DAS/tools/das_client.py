@@ -45,6 +45,9 @@ class DASOptionParser:
         msg  = 'specify return data format (json or plain), default plain.'
         self.parser.add_option("--format", action="store", type="string", 
                                default="plain", dest="format", help=msg)
+        msg  = 'query waiting threshold in sec, default is 5 minutes'
+        self.parser.add_option("--threshold", action="store", type="int",
+                               default=300, dest="threshold", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
@@ -131,7 +134,7 @@ def get_value(data, filters):
         else:
             yield str(list(values))
 
-def get_data(host, query, idx, limit, debug):
+def get_data(host, query, idx, limit, debug, threshold=300):
     """Contact DAS server and retrieve data for given DAS query"""
     params  = {'input':query, 'idx':idx, 'limit':limit}
     path    = '/das/cache'
@@ -158,8 +161,9 @@ def get_data(host, query, idx, limit, debug):
         pid = data
     else:
         pid = None
-    count = 1  # initial waiting time in seconds
-    timeout = 30 # final waiting time in seconds
+    sleep   = 1  # initial waiting time in seconds
+    wtime   = 30 # final waiting time in seconds
+    time0   = time.time()
     while pid:
         params.update({'pid':data})
         encoded_data = urllib.urlencode(params, doseq=True)
@@ -170,17 +174,19 @@ def get_data(host, query, idx, limit, debug):
             data = fdesc.read()
             fdesc.close()
         except urllib2.HTTPError as err:
-            print str(err)
-            return ""
+            return json.dumps({"status":"fail", "reason":str(err)})
         if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
             pid = data
         else:
             pid = None
-        time.sleep(count)
-        if  count < timeout:
-            count *= 2
+        time.sleep(sleep)
+        if  sleep < wtime:
+            sleep *= 2
         else:
-            count = timeout
+            sleep = wtime
+        if  (time.time()-time0) > threshold:
+            reason = "client timeout after %s sec" % int(time.time()-time0)
+            return json.dumps({"status":"fail", "reason":reason})
     return data
 
 def prim_value(row):
@@ -205,9 +211,16 @@ def main():
     limit   = opts.limit
     if  not query:
         raise Exception('You must provide input query')
-    data    = get_data(host, query, idx, limit, debug)
+    data    = get_data(host, query, idx, limit, debug, opts.threshold)
     if  opts.format == 'plain':
         jsondict = json.loads(data)
+        if  not jsondict.has_key('status'):
+            print 'DAS record without status field:\n%s' % jsondict
+            return
+        if  jsondict['status'] != 'ok':
+            print "status: %s reason: %s" \
+                % (jsondict.get('status'), jsondict.get('reason', 'N/A'))
+            return
         nres = jsondict['nresults']
         if  not limit:
             drange = '%s' % nres
@@ -253,6 +266,7 @@ def main():
             data = jsondict['data']
             if  isinstance(data, list):
                 old = None
+                val = None
                 for row in data:
                     val = prim_value(row)
                     if  not opts.limit:
