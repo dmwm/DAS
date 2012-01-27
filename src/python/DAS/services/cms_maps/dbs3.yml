@@ -215,6 +215,20 @@ das2api : [
         {"das_key":"block.name", "api_param": "block_name", "pattern":""},
 ]
 ---
+urn: files
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files/"
+expire : 900
+params : {
+        "logical_file_name":"required",
+        "detail":"True",
+}
+daskeys : [
+        {"key": "file", "map":"file.name", "pattern":""},
+]
+das2api : [
+        {"das_key":"file.name", "api_param":"logical_file_name", "pattern":""},
+]
+---
 urn: files_via_dataset
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files/"
 expire : 900
