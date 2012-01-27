@@ -132,8 +132,7 @@ class SiteDBService(DASAbstractService):
                 forename = row.get('forename', None)
                 surname  = row.get('surname', None)
                 email    = row.get('email', None)
-                if  username and qname.find(username.lower()) != -1 or \
-                    forename and qname.find(forename.lower()) != -1 or \
-                    surname and qname.find(surname.lower()) != -1 or \
-                    email and qname.find(email.lower()) != -1:
+                if  username and qname == username.lower() or \
+                    forename and qname == forename.lower() or \
+                    surname and qname == surname.lower():
                     yield dict(user=row)

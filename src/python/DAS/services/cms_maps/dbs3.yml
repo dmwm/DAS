@@ -66,7 +66,7 @@ params : {
         "dataset":"*",
         "primary_ds_name":"*",
         "detail":"True",
-        "dataset_access_type": "PRODUCTION", # RO must be default accorging to Yuyi, but it is not exists yet in DBS3
+        "dataset_access_type": "optional",
         "block_name":"optional",
         "data_tier_name":"optional",
         "release_version": "optional",
@@ -159,7 +159,7 @@ expire : 900
 params : {
         "detail":"True",
         "dataset":"*",
-        "dataset_access_type": "PRODUCTION",
+        "dataset_access_type": "optional",
 }
 daskeys : [
         {"key": "site", "map":"site.name", "pattern":""},
@@ -176,7 +176,7 @@ params : {
         "block_name":"*",
         "detail":"True",
         "dataset":"optional",
-        "dataset_access_type": "PRODUCTION",
+        "dataset_access_type": "optional",
 }
 daskeys : [
         {"key": "block", "map":"block.name", "pattern":""},

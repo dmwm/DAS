@@ -1205,8 +1205,9 @@ def row2das(mapper, system, api, row):
     """
     if  not isinstance(row, dict):
         return
-    for key, val in row.iteritems():
+    for key in row.keys():
         newkey = mapper(system, key, api)
+        val = row[key]
         if  newkey != key:
             row.pop(key)
             nkey, nval = convert_dot_notation(newkey, val)

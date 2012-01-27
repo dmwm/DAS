@@ -277,7 +277,8 @@ class CMSRepresentation(DASRepresentation):
                         continue
                     uikey  = item['ui']
                     for value in access(idict, daskey):
-                        yield uikey, value
+                        if  value:
+                            yield uikey, value
                 except:
                     yield key, idict[key]
 

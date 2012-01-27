@@ -91,8 +91,8 @@ class DBS3Service(DASAbstractService):
                         if  orig_site not in sites:
                             sites.add(orig_site)
                 else:
-                    orig_site = row['origin_site_name']
-                    if  orig_site not in sites:
+                    orig_site = rec.get('origin_site_name', None)
+                    if  orig_site and orig_site not in sites:
                         sites.add(orig_site)
             for site in sites:
                 yield {'site': {'name': site}}
@@ -108,8 +108,19 @@ class DBS3Service(DASAbstractService):
                 except:
                     pass
                 yield row
+        elif api == 'fileparents':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                parent = row['parent']
+                for val in parent['parent_logical_file_name']:
+                    yield dict(name=val)
+        elif api == 'filechildren':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                parent = row['child']
+                for val in parent['child_logical_file_name']:
+                    yield dict(name=val)
         else:
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 yield row
-
