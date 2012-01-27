@@ -158,7 +158,7 @@ class DASPLY(object):
         return t
 
     def t_VALUE(self, t):
-        r'''[a-zA-Z/*][a-zA-Z_0-9/*\-#\.]+|'.*?'|".*?"|y|n|\*'''
+        r'''[a-zA-Z/*][a-zA-Z_0-9@/*\-#\.]+|'.*?'|".*?"|y|n|\*'''
         # test if query starts with find and/or contains where (DBS-QL)
         if  t.value == 'find' or t.value == 'where':
             msg = 'Not a valid DAS query, DBS-QL keyword: %s' % t.value

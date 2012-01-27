@@ -98,25 +98,42 @@ class SiteDBService(DASAbstractService):
             except:
                 pass
 
-    def parser(self, query, dformat, source, api):
+    def parser(self, dasquery, dformat, source, api):
         """
         SiteDB data-service parser.
         """
-        spec = query.get('spec')
+        spec = dasquery.mongo_query.get('spec')
         if  spec.has_key('site.name'):
             for row in sitedb_parser(source):
                 name = row.get('name', None)
                 if  name and spec['site.name'].find(name) != -1:
                     yield dict(site=row)
+        elif spec.has_key('group.name'):
+            for row in sitedb_parser(source):
+                group = spec['group.name'].lower()
+                name = row.get('name', None)
+                if  not name:
+                    name = row.get('user_group', None)
+                if  name and group.find(name.lower()) != -1:
+                    if  row.has_key('user_group'):
+                        row['name'] = row['user_group']
+                        del row['user_group']
+                    yield row
+        elif spec.has_key('user.email'):
+            for row in sitedb_parser(source):
+                uemail = spec['user.email'].lower()
+                email = row.get('email', None)
+                if  email and uemail.find(email.lower()) != -1:
+                    yield row
         elif spec.has_key('user.name'):
-            qname = spec['user.name']
+            qname = spec['user.name'].lower()
             for row in sitedb_parser(source):
                 username = row.get('username', None)
                 forename = row.get('forename', None)
                 surname  = row.get('surname', None)
                 email    = row.get('email', None)
-                if  username and qname.find(username) != -1 or \
-                    forename and qname.find(forename) != -1 or \
-                    surname and qname.find(surname) != -1 or \
-                    email and qname.find(email) != -1:
+                if  username and qname.find(username.lower()) != -1 or \
+                    forename and qname.find(forename.lower()) != -1 or \
+                    surname and qname.find(surname.lower()) != -1 or \
+                    email and qname.find(email.lower()) != -1:
                     yield dict(user=row)
