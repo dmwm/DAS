@@ -168,7 +168,7 @@ class DASMongocache(object):
 
         # ensure that we have the following indexes
         index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                      ('das.ts', ASCENDING), ('das.system', ASCENDING),
+                      ('das.system', ASCENDING),
                       ('qhash', DESCENDING),
                       ('das.empty_record', ASCENDING)]
         create_indexes(self.col, index_list)
@@ -758,7 +758,6 @@ class DASMongocache(object):
         system     = dasheader['system']
         rec        = [k for i in header['lookup_keys'] for k in i.values()]
         cond_keys  = dasquery.mongo_query['spec'].keys()
-        daststamp  = time.time()
         # get API record id
         spec       = {'qhash':dasquery.qhash, 'das.system':system}
         record     = self.col.find_one(spec, fields=['_id'])
@@ -770,7 +769,7 @@ class DASMongocache(object):
                 for item in results:
                     counter += 1
                     item['das'] = dict(expire=expire, primary_key=prim_key,
-                                       condition_keys=cond_keys, ts=daststamp,
+                                       condition_keys=cond_keys,
                                        instance=dasquery.instance,
                                        system=system, empty_record=0)
                     item['das_id'] = str(objid)
