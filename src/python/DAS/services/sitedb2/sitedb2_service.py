@@ -98,10 +98,10 @@ class SiteDBService(DASAbstractService):
             for row in sitedb_parser(data):
                 row['name'] = row['alias']
                 del row['alias']
-                row['person'] = []
+                row['admin'] = []
                 for rec in sitedb_parser(rdata):
                     if  rec['site'] == row['site_name']:
-                        row['person'].append(\
+                        row['admin'].append(\
                                 dict(role=rec['role'], email=rec['email']))
                 result.append(row)
             # get sites info
@@ -147,12 +147,13 @@ class SiteDBService(DASAbstractService):
         """
         spec = dasquery.mongo_query.get('spec')
         if  spec.has_key('site.name'):
+            spec_name = spec['site.name'].replace('*', '')
             for row in sitedb_parser(source):
                 name  = row.get('name', None)
                 alias = row.get('alias', None)
-                if  name and spec['site.name'].find(name) != -1:
+                if  name and name.find(spec_name) != -1:
                     yield dict(site=row)
-                elif alias and spec['site.name'].find(alias) != -1:
+                elif alias and alias.find(spec_name) != -1:
                     yield dict(site=row)
         elif spec.has_key('group.name'):
             for row in sitedb_parser(source):
