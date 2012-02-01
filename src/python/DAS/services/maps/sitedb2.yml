@@ -1,30 +1,30 @@
 # SiteDB API mapping to DAS
 system: sitedb2
 format: JSON
----
-urn : resource_pledges
-url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/resource-pledges"
-expire : 3600
-params : {"match":"optional"}
-daskeys : [
-    {"key":"pledge", "map":"pledge.name", "pattern":""},
-]
-das2api : [
-    {"das_key":"pledge.name", "api_param":"match", "pattern":""}
-]
----
-urn : sites
-url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/sites"
-expire : 3600
-params : {"name":"optional"}
-daskeys : [
-    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
-    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
-]
-das2api : [
-    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
-    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
-]
+#---
+#urn : resource_pledges
+#url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/resource-pledges"
+#expire : 3600
+#params : {"match":"optional"}
+#daskeys : [
+#    {"key":"pledge", "map":"pledge.name", "pattern":""},
+#]
+#das2api : [
+#    {"das_key":"pledge.name", "api_param":"match", "pattern":""}
+#]
+#---
+#urn : sites
+#url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/sites"
+#expire : 3600
+#params : {"name":"optional"}
+#daskeys : [
+#    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
+#    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+#]
+#das2api : [
+#    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
+#    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+#]
 ---
 urn : site_names
 url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/site-names"
@@ -38,45 +38,45 @@ das2api : [
     {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
     {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
 ]
----
-urn : site_resources
-url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/site-resources"
-expire : 3600
-params : {"name":"optional"}
-daskeys : [
-    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
-    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
-]
-das2api : [
-    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
-    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
-]
----
-urn : site_associations
-url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/site-associations"
-expire : 3600
-params : {"name":"optional"}
-daskeys : [
-    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
-    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
-]
-das2api : [
-    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
-    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
-]
----
-urn : site_responsibilities
-url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/site-responsibilities"
-expire : 3600
-params : {"name":"optional"}
-daskeys : [
-    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
-    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
-]
-das2api : [
-    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
-    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
-]
+#---
+#urn : site_resources
+#url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/site-resources"
+#expire : 3600
+#params : {"name":"optional"}
+#daskeys : [
+#    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
+#    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+#]
+#das2api : [
+#    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
+#    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+#]
+#---
+#urn : site_associations
+#url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/site-associations"
+#expire : 3600
+#params : {"name":"optional"}
+#daskeys : [
+#    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
+#    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+#]
+#das2api : [
+#    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
+#    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+#]
+#---
+#urn : site_responsibilities
+#url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/site-responsibilities"
+#expire : 3600
+#params : {"name":"optional"}
+#daskeys : [
+#    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
+#    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+#]
+#das2api : [
+#    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
+#    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+#]
 ---
 urn : groups
 url : "https://cmsweb-testbed.cern.ch/sitedb/data/prod/groups"
@@ -139,4 +139,5 @@ das2api : [
 notations : [
         {"notation": "site.cms_name", "map":"site.name", "api":""},
         {"notation": "user_group", "map":"name", "api":"group_responsibilities"},
+        {"notation": "alias", "map":"name", "api":""},
 ]

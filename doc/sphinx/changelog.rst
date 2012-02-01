@@ -6,6 +6,7 @@ Release 1.X.Y series
 This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
+  - Provide match between various SiteDB2 APIs in order to build combined record
   - Remove ts field and its index from das.cache collection, it is only needed for das.merge
   - Work on integration with new SiteDB, ticket #2514
   - Switch to qhash look-up procedure, ticket #3153

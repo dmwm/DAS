@@ -57,8 +57,8 @@ class SiteDBService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def getdata(self, url, params, expire, headers=None, post=None):
-        """URL call wrapper"""
+    def getdata_helper(self, url, params, expire, headers=None, post=None):
+        "Helper function to get data from SiteDB or local cache"
         cname = genkey(url)
         col   = self.localcache.conn[self.name][cname]
         local = col.find_one({'expire':{'$gt':expire_timestamp(time.time())}})
@@ -85,6 +85,49 @@ class SiteDBService(DASAbstractService):
                 print_exc(exc)
         return data, expire
 
+    def getdata(self, url, params, expire, headers=None, post=None):
+        "SiteDB call wrapper"
+        if  url.split('/')[-1] == 'site-names':
+            data, expire = self.getdata_helper(\
+                        url, params, expire, headers, post)
+            result = [] # output results
+            # get site personel info
+            newurl = url.replace('site-names', 'site-responsibilities')
+            rdata, expire = self.getdata_helper(\
+                        newurl, params, expire, headers, post)
+            for row in sitedb_parser(data):
+                row['name'] = row['alias']
+                del row['alias']
+                row['person'] = []
+                for rec in sitedb_parser(rdata):
+                    if  rec['site'] == row['site_name']:
+                        row['person'].append(\
+                                dict(role=rec['role'], email=rec['email']))
+                result.append(row)
+            # get sites info
+            newurl = url.replace('site-names', 'sites')
+            rdata, expire = self.getdata_helper(\
+                        newurl, params, expire, headers, post)
+            for row in result:
+                row['info'] = []
+                for rec in sitedb_parser(rdata):
+                    if  rec['name'] == row['site_name']:
+                        del rec['name']
+                        row['info'].append(rec)
+            # get site resource info
+            newurl = url.replace('site-names', 'site-resources')
+            rdata, expire = self.getdata_helper(\
+                        newurl, params, expire, headers, post)
+            for row in result:
+                row['resources'] = []
+                for rec in sitedb_parser(rdata):
+                    if  rec['name'] == row['site_name']:
+                        del rec['name']
+                        row['resources'].append(rec)
+            return dict(result=result), expire
+        else:
+            return self.getdata_helper(url, params, expire, headers, post)
+
     def adjust_params(self, api, kwds, _inst=None):
         """
         Adjust SiteDB parameters for specific query requests
@@ -105,8 +148,11 @@ class SiteDBService(DASAbstractService):
         spec = dasquery.mongo_query.get('spec')
         if  spec.has_key('site.name'):
             for row in sitedb_parser(source):
-                name = row.get('name', None)
+                name  = row.get('name', None)
+                alias = row.get('alias', None)
                 if  name and spec['site.name'].find(name) != -1:
+                    yield dict(site=row)
+                elif alias and spec['site.name'].find(alias) != -1:
                     yield dict(site=row)
         elif spec.has_key('group.name'):
             for row in sitedb_parser(source):
