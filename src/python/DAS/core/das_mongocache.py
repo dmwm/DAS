@@ -231,7 +231,10 @@ class DASMongocache(object):
             fields = None # look-up all records
         filters    = dasquery.filters
         if  filters:
-            new_fields = []
+            if  fields:
+                new_fields = list(fields)
+            else:
+                new_fields = []
             for dasfilter in filters:
                 if  dasfilter == 'unique':
                     continue
