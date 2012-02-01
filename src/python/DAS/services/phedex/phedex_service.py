@@ -148,6 +148,19 @@ class PhedexService(DASAbstractService):
                 if  row.has_key('block'):
                     dataset = row['block']['name'].split('#')[0]
                     seen.add(dataset)
+            elif  api == 'fileReplicas' or api == 'fileReplicas4file' or \ 
+                  api == 'fileReplicas4dataset': 
+                  try: 
+                      if  row.has_key('file') and isinstance(row['file'], dict): 
+                          rec = row['file'] 
+                          cksum = rec['checksum'] 
+                          if  cksum.find(',') != -1: 
+                              adler, cksum = cksum.split(',') 
+                              rec['adler32'] = adler.replace('adler32:', '') 
+                              rec['checksum'] = int(cksum.replace('cksum:', '')) 
+                  except: 
+                      pass 
+                  yield row 
             else:
                 yield row
         if  api == 'site4dataset' or api == 'site4block':
