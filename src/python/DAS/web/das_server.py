@@ -100,8 +100,8 @@ class Root(object):
 
         print "### DAS web server, PID=%s, #threads=%s" \
                 % (self.pid, threading.active_count())
-        for thr in threading.enumerate():
-            print thr
+#        for thr in threading.enumerate():
+#            print thr
         print pformat(tree.apps)
         print pformat(self.config)
         pid = PIDFile(engine, self.pid)

@@ -227,6 +227,7 @@ class CombinedService(DASAbstractService):
         # proper expire timestamp. Moreover I use HTTP header to look
         # at expires and adjust my expire parameter accordingly
         if  api == 'combined_dataset4site':
+            print "\n### call combined_dataset4site", dasquery, url, api, args
             headers = {'Accept': 'application/json;text/json'}
             datastream, expire = self.getdata(url, args, expire, headers)
             try: # get HTTP header and look for Expires

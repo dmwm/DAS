@@ -58,6 +58,7 @@ class DASWebService(DASWebManager):
     def __init__(self, dasconfig):
         DASWebManager.__init__(self, dasconfig)
         config = dasconfig['web_server']
+        self.pid_pat     = re.compile(r'^[a-z0-9]{32}')
         self.base        = config['url_base']
         self.interval    = config.get('status_update', 2500)
         self.engine      = config.get('engine', None)
@@ -571,7 +572,12 @@ class DASWebService(DASWebManager):
                          'ctime': 0})
             return self.datastream(dict(head=head, data=data))
         if  pid:
-            if  self.taskmgr.is_alive(pid):
+            if  not self.pid_pat.match(str(pid)) or len(str(pid)) != 32:
+                head = {'status': 'fail', 'reason': 'Invalid pid',
+                        'args': kwargs, 'ctime': 0, 'input': uinput}
+                data = []
+                return self.datastream(dict(head=head, data=data))
+            elif self.taskmgr.is_alive(pid):
                 return pid
             else: # process is done, get data
                 self.reqmgr.remove(pid)
@@ -579,7 +585,8 @@ class DASWebService(DASWebManager):
                 return self.datastream(dict(head=head, data=data))
         else:
             addr = cherrypy.request.headers.get('Remote-Addr')
-            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery, addr)
+            _evt, pid = self.taskmgr.spawn(\
+                self.dasmgr.call, dasquery, addr, pid=dasquery.qhash)
             self.reqmgr.add(pid, kwargs)
             return pid
 

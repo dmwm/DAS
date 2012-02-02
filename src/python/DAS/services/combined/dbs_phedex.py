@@ -138,9 +138,9 @@ def update_db(urls, uri, db_name, coll_name):
             dataset.update({'timestamp':tst})
             spec = dict(name=dataset['name'])
             coll.update(spec, dataset, upsert=True)
+        coll.remove({'timestamp': {'$lt': tst}})
     else:
         raise AutoReconnect('could not establish connection')
-    coll.remove({'timestamp': {'$lt': tst}})
 
 def find_dataset(coll, site, operation="mapreduce"):
     """
@@ -220,6 +220,7 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
     conn_interval = 3 # default connection failure sleep interval
     threshold = 60 # 1 minute is threashold to check connections
     time0 = time.time()
+    print "### Start dbs_phedex worker with interval=%s" % interval
     while True:
         if  conn_interval > threshold:
             conn_interval = threshold

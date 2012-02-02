@@ -6,8 +6,12 @@ Author: Valentin Kuznetsov <vkuznet@gmail.com>
 Description: Persistent request manager for DAS web server
 """
 
+# system modules
 import time
 from pymongo import ASCENDING
+from pymongo.errors import DuplicateKeyError
+
+# DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.utils.das_db import db_connection
 from DAS.utils.das_db import create_indexes
@@ -42,6 +46,8 @@ class RequestManager(object):
         while True:
             try:
                 self.col.insert(doc, safe=True)
+                break
+            except DuplicateKeyError as err:
                 break
             except Exception as err:
                 print_exc(err)
