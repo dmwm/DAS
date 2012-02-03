@@ -6,6 +6,7 @@ Release 1.X.Y series
 This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
+  - Fix IP look-up for das_stats, ticket #3208
   - Provide match between various SiteDB2 APIs in order to build combined record
   - Remove ts field and its index from das.cache collection, it is only needed for das.merge
   - Work on integration with new SiteDB, ticket #2514

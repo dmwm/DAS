@@ -83,12 +83,12 @@ class LogdbManager(object):
                     addrs = pdict['ip']
                     queries = pdict['queries']
                     queries.add(row['args']['input'])
-                    addrs.add(row['headers']['Remote-Addr'])
+                    addrs.add(row['ip'])
                 else:
                     queries = set()
                     addrs   = set()
                     queries.add(row['args']['input'])
-                    addrs.add(row['headers']['Remote-Addr'])
+                    addrs.add(row['ip'])
                     path_info[path] = {'ip': addrs, 'queries': queries}
             for key, val in path_info.items():
                 path_info[key] = \
