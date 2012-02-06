@@ -6,6 +6,8 @@ Release 1.X.Y series
 This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
+  - Add support for dataset group=X site=T3_XX_XXXX or
+    dataset group=X site=a.b.com queries via blockreplicas Phedex API, ticket #3209
   - Fix IP look-up for das_stats, ticket #3208
   - Provide match between various SiteDB2 APIs in order to build combined record
   - Remove ts field and its index from das.cache collection, it is only needed for das.merge
