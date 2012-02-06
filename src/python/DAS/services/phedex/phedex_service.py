@@ -155,7 +155,7 @@ class PhedexService(DASAbstractService):
                 if  row.has_key('block'):
                     dataset = row['block']['name'].split('#')[0]
                     seen.add(dataset)
-            elif  api == 'fileReplicas' or api == 'fileReplicas4file' or \ 
+            elif  api == 'fileReplicas' or api == 'fileReplicas4file' or \
                   api == 'fileReplicas4dataset': 
                   try: 
                       if  row.has_key('file') and isinstance(row['file'], dict): 
