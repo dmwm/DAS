@@ -78,6 +78,12 @@ class PhedexService(DASAbstractService):
         elif api == 'dataset4se':
             prim_key = 'block'
             tags = 'block'
+        elif api == 'dataset4site_group':
+            prim_key = 'block'
+            tags = 'block'
+        elif api == 'dataset4se_group':
+            prim_key = 'block'
+            tags = 'block'
         elif api == 'site4dataset':
             prim_key = 'block'
             tags = 'block.replica.node'
@@ -144,7 +150,8 @@ class PhedexService(DASAbstractService):
                     result = get_replica_info(replica)
                     if  result not in site_names:
                         site_names.append(result)
-            elif  api == 'dataset4site' or api == 'dataset4se':
+            elif  api == 'dataset4site' or api == 'dataset4se' or \
+                api == 'dataset4site_group' or api == 'dataset4se_group':
                 if  row.has_key('block'):
                     dataset = row['block']['name'].split('#')[0]
                     seen.add(dataset)

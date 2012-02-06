@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Backport ticket 3209 (support for dataset group=X site=Y queries)
+  - Backport tickets 3119, 3123
   - Extend not equal filter to support patterns, ticket #3078
   - Reduce number of DAS threads by half (the default values for workers was too high)
   - Name all TaskManagers to simplify their debugging
