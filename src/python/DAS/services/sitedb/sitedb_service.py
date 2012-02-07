@@ -46,7 +46,7 @@ class SiteDBService(DASAbstractService):
         # I switched directly to eval its data (brrr, I know its bad)
         # but barking json is not good either
         try:
-            jsondict = eval(data, { "__builtins__": None }, {})
+            jsondict = dict(eval(data, { "__builtins__": None }, {}))
         except Exception as err:
             print_exc(err)
             jsondict = {}

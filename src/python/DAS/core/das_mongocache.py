@@ -397,7 +397,8 @@ class DASMongocache(object):
             spec2  = {'qhash': dasquery.qhash, 'das.system': system}
             sysrecord = self.col.find_one(spec2)
             hexpire = header['das']['expire']
-            if  dasrecord.has_key('das'):
+            dexpire = hexpire
+            if  dasrecord and dasrecord.has_key('das'):
                 dexpire = dasrecord['das'].get('expire', None)
             if  dexpire and hexpire > dexpire:
                 expire = dexpire
