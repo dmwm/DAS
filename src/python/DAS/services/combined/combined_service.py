@@ -182,6 +182,8 @@ class CombinedService(DASAbstractService):
                 if  not isinstance(replicas, list):
                     replicas = [replicas]
                 for row in replicas:
+                    if  not row or not row.has_key('node'):
+                        continue
                     node = row['node']
                     files = int(row['files'])
                     complete = 1 if row['complete'] == 'y' else 0
@@ -189,7 +191,7 @@ class CombinedService(DASAbstractService):
                         files = site_info[node]['files'] + files
                         nblks  = site_info[node]['blocks'] + 1
                         bc_val = site_info[node]['blocks_complete']
-                        b_complete = bc_val+1 if complete else val
+                        b_complete = bc_val+1 if complete else bc_val
                     else:
                         b_complete = 1 if complete else 0
                         nblks = 1
