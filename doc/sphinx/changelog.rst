@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.1.X
 
+  - Fix issue with recursive calls while retrieve dict keys
   - Backport ticket 3209 (support for dataset group=X site=Y queries)
   - Backport tickets 3119, 3123
   - Extend not equal filter to support patterns, ticket #3078
