@@ -6,6 +6,7 @@ Release 1.X.Y series
 This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
+  - Fix fakeFiles4DatasetRunLumis API call and check its required parameters
   - Fix plain view with filter usage, ticket #3216
   - Add support for dataset group=X site=T3_XX_XXXX or
     dataset group=X site=a.b.com queries via blockreplicas Phedex API, ticket #3209

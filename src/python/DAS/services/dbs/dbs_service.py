@@ -208,15 +208,15 @@ class DBSService(DASAbstractService):
         if  api == 'fakeFiles4DatasetRunLumis':
             cond = ""
             val = kwds['dataset']
-            if  val:
+            if  val and val != 'required':
                 cond = " and dataset=%s" % val
                 kwds.pop('dataset')
             val = kwds['run']
-            if  val:
+            if  val and val != 'required':
                 cond += " and run=%s" % val
                 kwds.pop('run')
             val = kwds['lumi']
-            if  val:
+            if  val and val != 'required':
                 cond += " and lumi=%s" % val
                 kwds.pop('lumi')
             if  cond:
