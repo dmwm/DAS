@@ -529,14 +529,13 @@ class CMSRepresentation(DASRepresentation):
         """
         dasquery = head['dasquery']
         fields   = dasquery.mongo_query.get('fields', [])
-        filters  = dasquery.filters
+        filters  = [f for f in dasquery.filters if f != 'unique' and \
+                        f.find('=') == -1 and f.find('<') == -1 and \
+                        f.find('>') == -1]
         results  = ""
         for row in data:
             if  filters:
                 for flt in filters:
-                    if  flt.find('=') != -1 or flt.find('>') != -1 or \
-                        flt.find('<') != -1:
-                        continue
                     try:
                         for obj in DotDict(row).get_values(flt):
                             results += str(obj) + '\n'
