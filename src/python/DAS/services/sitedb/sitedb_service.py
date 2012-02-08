@@ -37,12 +37,12 @@ class SiteDBService(DASAbstractService):
         """
         Parser for SiteDB JSON data-services
         """
-        if  isinstance(source, InstanceType):
+        if  isinstance(source, InstanceType) or isinstance(source, file):
             data = source.read()
             source.close()
         else:
             data = source
-        # SiteDB incorrectly decode json. So instead of trying json.loads
+        # SiteDB supplies unparseable json. So instead of trying json.loads
         # I switched directly to eval its data (brrr, I know its bad)
         # but barking json is not good either
         try:
@@ -69,4 +69,5 @@ class SiteDBService(DASAbstractService):
             else:
                 raise Exception('Not implemented yet')
             yield {'site': row}
-
+        if  isinstance(source, InstanceType) or isinstance(source, file):
+            source.close()

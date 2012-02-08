@@ -246,8 +246,11 @@ class CMSRepresentation(DASRepresentation):
             if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
                 try:
                     mkey = pkey.split('.')[0]
-                    rowkeys = [k for k in \
-                        set(DotDict(row).get_keys(mkey))]
+                    if  isinstance(row[mkey], list):
+                        rowkeys = []
+                    else:
+                        rowkeys = [k for k in \
+                            set(DotDict(row).get_keys(mkey))]
                     rowkeys.sort()
                     rowkeys += ['das.conflict']
                     dflt = das_filters() + das_aggregators()
