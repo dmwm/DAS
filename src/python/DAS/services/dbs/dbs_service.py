@@ -136,11 +136,10 @@ class DBSService(DASAbstractService):
                     if  val.has_key('$gte'):
                         minR = val['$gte']
                     if  minR and maxR:
-                        arr = ','.join((str(r) for r in range(minR, maxR)))
-                        val = "run in (%s)" % arr
+                        val = "run >=%s and run <= %s" % (minR, maxR)
                     elif val.has_key('$in'):
-                        arr = ','.join((str(r) for r in val['$in']))
-                        val = 'run in (%s)' % arr
+                        arr = [r for r in val['$in']]
+                        val = "run >=%s and run <= %s" % (arr[0], arr[-1])
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 kwds['query'] = "find run where %s" % val
@@ -183,11 +182,10 @@ class DBSService(DASAbstractService):
                     if  val.has_key('$gte'):
                         minR = val['$gte']
                     if  minR and maxR:
-                        arr = ','.join((str(r) for r in range(minR, maxR)))
-                        val = "run in (%s)" % arr
+                        val = "run >=%s and run <= %s" % (minR, maxR)
                     elif val.has_key('$in'):
-                        arr = ','.join((str(r) for r in val['$in']))
-                        val = 'run in (%s)' % arr
+                        arr = [r for r in val['$in']]
+                        val = "run >=%s and run <= %s" % (arr[0], arr[-1])
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 if  kwds.has_key('dataset') and kwds['dataset']:
