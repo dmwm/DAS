@@ -247,10 +247,14 @@ class CMSRepresentation(DASRepresentation):
                 try:
                     mkey = pkey.split('.')[0]
                     if  isinstance(row[mkey], list):
-                        rowkeys = []
+                        # take first five or less entries from the list to cover
+                        # possible aggregated records and extract row keys
+                        lmax    = len(row[mkey]) if len(row[mkey]) < 5 else 5
+                        sublist = [row[mkey][i] for i in range(0, lmax)]
+                        ndict   = DotDict({mkey:sublist})
+                        rowkeys = [k for k in ndict.get_keys(mkey)]
                     else:
-                        rowkeys = [k for k in \
-                            set(DotDict(row).get_keys(mkey))]
+                        rowkeys = [k for k in DotDict(row).get_keys(mkey)]
                     rowkeys.sort()
                     rowkeys += ['das.conflict']
                     dflt = das_filters() + das_aggregators()
@@ -561,4 +565,5 @@ class CMSRepresentation(DASRepresentation):
                                 '\n'.join([i.get(att, '') for i in val]) + '\n'
                     except:
                         pass
+        results = '\n'.join(set([r for r in results.split('\n') if r]))
         return results
