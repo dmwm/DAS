@@ -34,7 +34,7 @@ class SiteDBService(DASAbstractService):
         """
         Parser for SiteDB JSON data-services
         """
-        if  isinstance(source, InstanceType):
+        if  isinstance(source, InstanceType) or isinstance(source, file):
             data = source.read()
             source.close()
         else:
@@ -65,4 +65,5 @@ class SiteDBService(DASAbstractService):
             else:
                 raise Exception('Not implemented yet')
             yield {'site': row}
-
+        if  isinstance(source, InstanceType) or isinstance(source, file):
+            source.close()

@@ -32,7 +32,7 @@ from DAS.utils.ddict import convert_dot_notation
 from DAS.utils.utils import aggregator, unique_filter
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.utils.utils import parse_filters, expire_timestamp
-from DAS.utils.utils import dastimestamp, deepcopy, gen_counter
+from DAS.utils.utils import dastimestamp, deepcopy
 from DAS.utils.das_db import db_connection
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
@@ -640,7 +640,6 @@ class DASMongocache(object):
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
         inserted = 0
-        cdict = {'counter':0}
         lookup_keys = set()
         fields = dasquery.mongo_query.get('fields')
         if  not fields: # Mongo
@@ -665,11 +664,11 @@ class DASMongocache(object):
             gen  = das_diff(agen, self.mapping.diff_keys(pkey.split('.')[0]))
             # insert all records into das.merge using bulk insert
             size = self.cache_size
-            gen  = gen_counter(gen, cdict)
             try:
                 while True:
-                    if  self.merge.insert(itertools.islice(gen, size)):
-                        inserted = 1
+                    nres = self.merge.insert(itertools.islice(gen, size))
+                    if  nres and isinstance(nres, list):
+                        inserted += len(nres)
                     else:
                         break
             except InvalidDocument as exp:
@@ -686,7 +685,7 @@ class DASMongocache(object):
             except InvalidOperation:
                 pass
         if  inserted:
-            self.logdb.insert('merge', {'insert': cdict['counter']})
+            self.logdb.insert('merge', {'insert': inserted})
         elif  not lookup_keys: # we get query w/o fields
             pass
         else: # we didn't merge anything, it is DB look-up failure
@@ -717,20 +716,19 @@ class DASMongocache(object):
 
         # update results records in DAS cache
         gen  = self.update_records(dasquery, results, header)
-        cdict = {'counter':0}
-        gen  = gen_counter(gen, cdict)
         inserted = 0
         # bulk insert
         try:
             while True:
-                if  self.col.insert(itertools.islice(gen, self.cache_size)):
-                    inserted = 1
+                nres = self.col.insert(itertools.islice(gen, self.cache_size))
+                if  nres and isinstance(nres, list):
+                    inserted += len(nres)
                 else:
                     break
         except InvalidOperation:
             pass
         if  inserted:
-            self.logdb.insert('cache', {'insert': cdict['counter']})
+            self.logdb.insert('cache', {'insert': inserted})
 
     def insert_query_record(self, dasquery, header):
         """
