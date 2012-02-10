@@ -9,6 +9,7 @@ __author__ = "Valentin Kuznetsov"
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import dbsql_opt_map, convert_datetime
+from DAS.utils.url_utils import getdata
 
 def convert_dot(row, key, attrs):
     """Convert dot notation key.attr into storage one"""
@@ -37,7 +38,7 @@ class DBSService(DASAbstractService):
         if  instance in self.instances:
             return url.replace(self.prim_instance, instance)
         return url
-            
+
     def adjust_params(self, api, kwds, inst=None):
         """
         Adjust DBS2 parameters for specific query requests
@@ -134,12 +135,10 @@ class DBSService(DASAbstractService):
                     if  val.has_key('$gte'):
                         min_run = val['$gte']
                     if  min_run and max_run:
-                        arr = \
-                        ','.join((str(r) for r in range(min_run, max_run)))
-                        val = "run in (%s)" % arr
+                        val = "run >=%s and run <= %s" % (min_run, max_run)
                     elif val.has_key('$in'):
-                        arr = ','.join((str(r) for r in val['$in']))
-                        val = 'run in (%s)' % arr
+                        arr = [r for r in val['$in']]
+                        val = "run >=%s and run <= %s" % (arr[0], arr[-1])
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 kwds['query'] = "find run where %s" % val
@@ -182,12 +181,10 @@ class DBSService(DASAbstractService):
                     if  val.has_key('$gte'):
                         min_run = val['$gte']
                     if  min_run and max_run:
-                        arr = \
-                        ','.join((str(r) for r in range(min_run, max_run)))
-                        val = "run in (%s)" % arr
+                        val = "run >=%s and run <= %s" % (min_run, max_run)
                     elif val.has_key('$in'):
-                        arr = ','.join((str(r) for r in val['$in']))
-                        val = 'run in (%s)' % arr
+                        arr = [r for r in val['$in']]
+                        val = "run >=%s and run <= %s" % (arr[0], arr[-1])
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 if  kwds.has_key('dataset') and kwds['dataset']:

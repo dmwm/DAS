@@ -6,7 +6,8 @@ Release 1.X.Y series
 This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
-  - Fix issue with recursive calls while retrieve dict keys\
+  - Fix DBS run in query with wide run range, use gte/lte operators instead
+  - Fix issue with recursive calls while retrieve dict keys
   - Eliminate duplicates in plain view, ticket 3222
   - Fix fakeFiles4DatasetRunLumis API call and check its required parameters
   - Fix plain view with filter usage, ticket #3216
