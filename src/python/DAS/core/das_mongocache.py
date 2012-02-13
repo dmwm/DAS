@@ -675,10 +675,12 @@ class DASMongocache(object):
                 msg = "Caught bson error: " + str(exp)
                 self.logger.info(msg)
                 records = self.col.find(spec).sort(skey)
-                gen = aggregator(records, expire)
+                gen = aggregator(dasquery, records, expire)
                 genrows = parse2gridfs(self.gfs, pkey, gen, self.logger)
-                das_dict = {'das':{'expire':expire, 'primary_key':lookup_keys,
-                        'empty_record': 0}, 'cache_id':[], 'das_id': id_list}
+                das_dict = {'das':{'expire':expire, 'empty_record': 0,
+                        'primary_key':[k for k in lookup_keys],
+                        'system': ['gridfs']}, 'qhash':dasquery.qhash,
+                        'cache_id':[], 'das_id': id_list}
                 for row in genrows:
                     row.update(das_dict)
                     self.merge.insert(row)

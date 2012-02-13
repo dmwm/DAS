@@ -118,18 +118,11 @@ def parse2gridfs(gfs, prim_key, genrows, logger=None):
         else:
             fid = gfs.put(str(row))
             gfs_rec = {key: {'gridfs_id': str(fid)}}
-            ddict = DotDict(row)
-            val = ddict.get(prim_key)
             if  logger:
                 msg = 'parse2gridfs record size %s, replace with %s'\
                 % (row_size, gfs_rec)
                 logger.info(msg)
-            if  val != row and sys.getsizeof(str(val)) < MONGODB_LIMIT:
-                drec = DotDict(gfs_rec)
-                drec.set(prim_key, val)
-                yield drec
-            else:
-                yield gfs_rec
+            yield gfs_rec
 
 def create_indexes(coll, index_list):
     """

@@ -46,6 +46,7 @@ from DAS.web.help_cards import help_cards
 from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
+import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 
         'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
@@ -399,14 +400,13 @@ class DASWebService(DASWebManager):
         data = {'status':'requested', 'fid':fid}
         try:
             fds = self.gfs.get(ObjectId(fid))
-            data['status'] = 'success'
-            data['data']   = fds.read()
+            return fds.read()
         except Exception as exc:
             print_exc(exc)
             code = web_code('Exception')
             raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
-        return data
+        return json.dumps(data)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
