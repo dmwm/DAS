@@ -219,6 +219,18 @@ class DASWebService(DASWebManager):
         return serve_file(clifile, content_type='text/plain')
 
     @expose
+    def movetodas(self):
+        "Placeholder page for DBS to DAS migration"
+        style = "width:600px;margin-left:auto;margin-right:auto;padding-top:20px"
+        page  = """<div style="%s">""" % style
+        page += "Dear user,<br/>DBS Data Discovery page is depricated.<br/>"
+        page += "Please migrate to Data Aggregation Service located at"
+        page += "<p>https://cmsweb.cern.ch/das/</p>"
+        page += "<em>CMS HTTP group.</em>"
+        page += "</div>"""
+        return page
+
+    @expose
     def opensearch(self):
         """
         Serve DAS opensearch file.
