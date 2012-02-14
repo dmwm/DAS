@@ -386,8 +386,9 @@ def json2html(idict, pad="", ref=None):
             sss += pad + """ <code class="key">"%s": </code>%s""" \
                 % (quote(key), value)
         elif key == 'gridfs_id':
-            value = "<a href=\"/das/gridfs/%s\">%s</das>" \
+            value = "<a href=\"/das/gridfs?fid=%s\">%s</a>" \
                 % (quote_plus(val), quote(val))
+            sss += pad + value
         elif isinstance(val, list):
             if  len(val) == 1:
                 nline = ''

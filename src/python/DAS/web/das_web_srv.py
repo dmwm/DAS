@@ -217,6 +217,18 @@ class DASWebService(DASWebManager):
         return serve_file(clifile, content_type='text/plain')
 
     @expose
+    def movetodas(self):
+        "Placeholder page for DBS to DAS migration"
+        style = "width:600px;margin-left:auto;margin-right:auto;padding-top:20px"
+        page  = """<div style="%s">""" % style
+        page += "Dear user,<br/>DBS Data Discovery page is depricated.<br/>"
+        page += "Please migrate to Data Aggregation Service located at"
+        page += "<p>https://cmsweb.cern.ch/das/</p>"
+        page += "<em>CMS HTTP group.</em>"
+        page += "</div>"""
+        return page
+
+    @expose
     def opensearch(self):
         """
         Serve DAS opensearch file.
@@ -398,14 +410,13 @@ class DASWebService(DASWebManager):
         data = {'status':'requested', 'fid':fid}
         try:
             fds = self.gfs.get(ObjectId(fid))
-            data['status'] = 'success'
-            data['data']   = fds.read()
+            return fds.read()
         except Exception as exc:
             print_exc(exc)
             code = web_code('Exception')
             raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
-        return data
+        return json.dumps(data)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
