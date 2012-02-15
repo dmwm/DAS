@@ -111,6 +111,11 @@ DASOption('web_server', 'adjust_input', 'bool', False),
 # DBS dataset daemon fetch list of known DBS datasets and keep them
 # in separate collection, to be used by DAS web server for autocompletion
 DASOption('web_server', 'dbs_daemon', 'bool', False),
+# Onhold daemon used to process onhold request, those requests
+# are made by DAS server against DDoS clients
+DASOption('web_server', 'onhold_daemon', 'bool', False),
+# Threshold for DDoS clients
+DASOption('web_server', 'hot_threshold', 'int', 100),
 # DBS dataset daemon update interval in seconds
 DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
 # DBS dataset daemon expire timestamp (in seconds)

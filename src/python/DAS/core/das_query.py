@@ -392,7 +392,7 @@ class DASQuery(object):
         "Query string representation"
         if  self._str:
             return self._str
-        msg = """<DASQuery@%s: query='''%s''' instance=%s>""" \
-        % (repr(self).split()[-1].replace('>', ''), self.query, self.instance)
+        msg = """<query='''%s''' instance=%s qhash=%s>""" \
+            % (self.query, self.instance, self.qhash)
         self._str = msg
         return msg

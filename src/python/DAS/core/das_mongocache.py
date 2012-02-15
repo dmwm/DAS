@@ -136,6 +136,14 @@ class DASLogdb(object):
             rec = logdb_record(coll, doc)
             self.logcol.insert(rec)
 
+    def find(self, coll, spec, count=False):
+        "Find record in logdb"
+        if  self.logcol:
+            if  count:
+                return self.logcol.find(spec).count()
+            return self.logcol.find(spec)
+        return False
+
 class DASMongocache(object):
     """
     DAS cache based MongoDB. 
@@ -546,16 +554,12 @@ class DASMongocache(object):
 
         # if no raw records were yield we look-up possible error records
         if  not counter:
-            err = 0
-            for row in self.col.find({'qhash':dasquery.qhash}):
-                err += 1
-                msg = '\nfor query %s\nfound %s' % (dasquery, row)
+            nrec = self.col.find({'qhash':dasquery.qhash}).count()
+            if  nrec:
+                msg = "for query %s, found %s non-result record(s)" \
+                        % (dasquery, nrec)
                 prf = 'DAS WARNING, monogocache:get_from_cache '
                 print dastimestamp(prf), msg
-
-            if  err:
-                msg = "found %s error record(s)" % counter
-                self.logger.info(msg)
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
         """
@@ -568,9 +572,7 @@ class DASMongocache(object):
         Input dasquery which is applied to first
         iteration of map/reduce functions.
         """
-        # NOTE: I probably need to convert dasquery to
-        # execution query, but since this method is not used so
-        # often I need to revisit mapreduce.
+        # NOTE: I need to revisit mapreduce.
         spec = dasquery.mongo_query['spec']
         if  not isinstance(mr_input, list):
             mrlist = [mr_input]

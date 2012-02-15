@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
 
+  - Implement onhold request queue. This will be used to slow down users
+    who sequentially abuse DAS server. See ticket #3145 for details.
+  - Add qhash into DASquery __str__
   - Fix issue with downloading config from gridfs, ticket 3245
   - Fix DBS run in query with wide run range, use gte/lte operators instead
   - Fix issue with recursive calls while retrieve dict keys

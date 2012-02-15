@@ -26,9 +26,11 @@ class RequestManager(object):
     json dumps/loads method to serialize kwds.
     """
     def __init__(self, dburi, dbname='das', dbcoll='requests', lifetime=86400):
-        self.con = db_connection(dburi)
-        self.col = self.con[dbname][dbcoll]
-        create_indexes(self.col, [('ts', ASCENDING)])
+        self.con  = db_connection(dburi)
+        self.col  = self.con[dbname][dbcoll]
+        self.hold = self.con[dbname][dbcoll + '_onhold']
+        create_indexes(self.col , [('ts', ASCENDING)])
+        create_indexes(self.hold, [('ts', ASCENDING)])
         self.lifetime = lifetime # default 1 hour
 
     def get(self, pid):
@@ -78,6 +80,26 @@ class RequestManager(object):
     def items(self):
         """Return list of current requests"""
         for row in self.col.find():
+            row['_id'] = str(row['_id'])
+            yield row
+
+    def add_onhold(self, pid, uinput, addr, future_tstamp):
+        """Add user input to onhold collection"""
+        tstamp = time.strftime("%Y%m%d %H:%M:%S", time.localtime())
+        doc = dict(_id=pid, ip=addr, uinput=uinput, \
+                        ts=future_tstamp, timestamp=tstamp)
+        try:
+            self.hold.insert(doc, safe=True)
+        except Exception as err:
+            print_exc(err)
+
+    def remove_onhold(self, pid):
+        """Remove pid item from onhold collection"""
+        self.hold.remove({'_id':pid})
+
+    def items_onhold(self):
+        """Return list of current onhold requests"""
+        for row in self.hold.find({'ts':{'$lte':time.time()}}):
             row['_id'] = str(row['_id'])
             yield row
 
