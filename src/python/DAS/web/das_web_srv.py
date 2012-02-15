@@ -200,7 +200,6 @@ class DASWebService(DASWebManager):
                  'args.pid': {'$exists': False}, # do not count pid requests
                  'path': '/cache'} # requests from das_client calls
         nhits = self.logcol.find('web', spec, count=True)
-        print "\n### get_nhits", nhits
         return nhits
 
     @expose
