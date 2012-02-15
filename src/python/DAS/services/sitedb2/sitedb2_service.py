@@ -100,7 +100,7 @@ class SiteDBService(DASAbstractService):
                 del row['alias']
                 row['admin'] = []
                 for rec in sitedb_parser(rdata):
-                    if  rec['site'] == row['site_name']:
+                    if  rec['site_name'] == row['site_name']:
                         row['admin'].append(\
                                 dict(role=rec['role'], email=rec['email']))
                 result.append(row)
@@ -111,8 +111,7 @@ class SiteDBService(DASAbstractService):
             for row in result:
                 row['info'] = []
                 for rec in sitedb_parser(rdata):
-                    if  rec['name'] == row['site_name']:
-                        del rec['name']
+                    if  rec['site_name'] == row['site_name']:
                         row['info'].append(rec)
             # get site resource info
             newurl = url.replace('site-names', 'site-resources')
@@ -121,8 +120,7 @@ class SiteDBService(DASAbstractService):
             for row in result:
                 row['resources'] = []
                 for rec in sitedb_parser(rdata):
-                    if  rec['name'] == row['site_name']:
-                        del rec['name']
+                    if  rec['site_name'] == row['site_name']:
                         row['resources'].append(rec)
             return dict(result=result), expire
         else:
