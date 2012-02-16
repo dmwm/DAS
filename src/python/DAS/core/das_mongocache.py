@@ -238,10 +238,7 @@ class DASMongocache(object):
         filters    = dasquery.filters
         cond       = {}
         if  filters:
-            if  fields:
-                new_fields = list(fields)
-            else:
-                new_fields = []
+            new_fields = []
             for dasfilter in filters:
                 if  dasfilter == 'unique':
                     continue
@@ -252,6 +249,8 @@ class DASMongocache(object):
                         new_fields.append(dasfilter)
                     else:
                         cond = parse_filters(dasquery.mongo_query)
+            if  not new_fields and fields:
+                new_fields = list(fields)
             return new_fields, cond
         return fields, cond
 
