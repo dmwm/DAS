@@ -398,8 +398,9 @@ class CMSRepresentation(DASRepresentation):
                             if  path:
                                 links += ', ' + self.templatepage(\
                                     'makepy', path=path, inst=inst)
-                                links += ', ' + self.templatepage(\
-                                    'phedex_subscription', path=path, inst=inst)
+                                if  inst == self.dbs_global:
+                                    links += ', ' + self.templatepage(\
+                                        'phedex_subscription', path=path)
                         except:
                             pass
                     if  pkey and pkey == 'release.name':
