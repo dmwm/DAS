@@ -199,7 +199,7 @@ class DASWebService(DASWebManager):
         spec  = {'ip': cherrypy.request.remote.ip, 'ts': {'$gte': tsec},
                  'args.pid': {'$exists': False}, # do not count pid requests
                  'path': '/cache'} # requests from das_client calls
-        nhits = self.logcol.find('web', spec, count=True)
+        nhits = self.logcol.find(spec, count=True)
         return nhits
 
     @expose

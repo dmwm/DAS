@@ -16,7 +16,6 @@ __revision__ = "$Id: das_mongocache.py,v 1.86 2010/05/03 19:14:06 valya Exp $"
 __version__ = "$Revision: 1.86 $"
 __author__ = "Valentin Kuznetsov"
 
-import re
 import time
 from   types import GeneratorType
 import datetime
@@ -26,13 +25,12 @@ import fnmatch
 # DAS modules
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.core.das_query import DASQuery
-from DAS.utils.query_utils import compare_specs, convert2pattern
-from DAS.utils.query_utils import encode_mongo_query, decode_mongo_query
+from DAS.utils.query_utils import decode_mongo_query
 from DAS.utils.ddict import convert_dot_notation
 from DAS.utils.utils import aggregator, unique_filter
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.utils.utils import parse_filters, expire_timestamp
-from DAS.utils.utils import dastimestamp, deepcopy
+from DAS.utils.utils import dastimestamp
 from DAS.utils.das_db import db_connection
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
@@ -136,7 +134,7 @@ class DASLogdb(object):
             rec = logdb_record(coll, doc)
             self.logcol.insert(rec)
 
-    def find(self, coll, spec, count=False):
+    def find(self, spec, count=False):
         "Find record in logdb"
         if  self.logcol:
             if  count:
@@ -238,6 +236,7 @@ class DASMongocache(object):
         if  fields == ['records']:
             fields = None # look-up all records
         filters    = dasquery.filters
+        cond       = {}
         if  filters:
             if  fields:
                 new_fields = list(fields)
@@ -251,8 +250,10 @@ class DASMongocache(object):
                     if  dasfilter.find('=') == -1 and dasfilter.find('<') == -1\
                     and dasfilter.find('>') == -1:
                         new_fields.append(dasfilter)
-            return new_fields
-        return fields
+                    else:
+                        cond = parse_filters(dasquery.mongo_query)
+            return new_fields, cond
+        return fields, cond
 
     def remove_expired(self, collection):
         """
@@ -404,11 +405,13 @@ class DASMongocache(object):
         # usage of fields in find doesn't account for counting, since it
         # is a view over records found with spec, so we don't need to use it.
         col  = self.mdb[collection]
-        fields  = self.get_fields(dasquery)
+        fields, filter_cond = self.get_fields(dasquery)
         if  not fields:
-           spec = dasquery.mongo_query.get('spec', {})
+            spec = dasquery.mongo_query.get('spec', {})
         else:
-           spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
+            spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
+        if  filter_cond:
+            spec.update(filter_cond)
         if  dasquery.unique_filter:
             skeys = self.find_sort_keys(collection, dasquery)
             if  skeys:
@@ -530,12 +533,14 @@ class DASMongocache(object):
                 % (dasquery, idx, limit, skey, order, collection)
         self.logger.info(msg)
 
-        idx     = int(idx)
-        fields  = self.get_fields(dasquery)
+        idx = int(idx)
+        fields, filter_cond = self.get_fields(dasquery)
         if  not fields:
-           spec = dasquery.mongo_query.get('spec', {})
+            spec = dasquery.mongo_query.get('spec', {})
         else:
-           spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
+            spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
+        if  filter_cond:
+            spec.update(filter_cond)
         if  fields: # be sure to extract das internal keys
             fields += self.das_internal_keys
         # try to get sort keys all the time to get ordered list of
