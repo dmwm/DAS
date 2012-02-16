@@ -462,7 +462,7 @@ class CMSRepresentation(DASRepresentation):
         kwargs   = head['args']
         total    = head['nresults']
         dasquery = head['dasquery']
-        uinput   = dasquery.query
+        uinput   = kwargs.get('input', dasquery.query)
         inst     = dasquery.instance
         filters  = dasquery.filters
         idx      = getarg(kwargs, 'idx', 0)
@@ -480,6 +480,10 @@ class CMSRepresentation(DASRepresentation):
         tpage   = ""
         pkey    = None
         for row in data:
+            try: # we don't need to show qhash in table view
+                del row['qhash']
+            except:
+                pass
             rec  = []
             if  not pkey and row.has_key('das') and \
                 row['das'].has_key('primary_key'):

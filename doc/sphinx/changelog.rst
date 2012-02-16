@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
 
+  - Fix issue with invalid query while doing sort in tableview (ticket #3281)
+    discard qhash from the tableview presentation layer
   - Implement onhold request queue. This will be used to slow down users
     who sequentially abuse DAS server. See ticket #3145 for details.
   - Add qhash into DASquery __str__
