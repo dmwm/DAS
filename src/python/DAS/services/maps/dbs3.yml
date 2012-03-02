@@ -64,7 +64,7 @@ url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
 expire : 900
 params : {
         "dataset":"*",
-        "primary_ds_name":"*",
+        "primary_ds_name":"optional",
         "detail":"True",
         "dataset_access_type": "optional",
         "block_name":"optional",
@@ -175,7 +175,7 @@ urn: blocks
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blocks/"
 expire : 900
 params : {
-        "block_name":"*",
+        "block_name":"optional",
         "detail":"True",
         "dataset":"optional",
         "dataset_access_type": "optional",
@@ -406,7 +406,7 @@ urn: file4DatasetRunLumi
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files/"
 expire : 900
 params : {
-        "dataset":"required", "run":"", "lumi_list":[]
+        "dataset":"required", "run":"required", "lumi_list":[]
 }
 daskeys : [
     {"key": "file", "map":"file.name", "pattern":""},
