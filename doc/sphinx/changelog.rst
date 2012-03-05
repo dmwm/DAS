@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
 
+  - Switch to new REST RunRegistry API
   - Remove dbs instance from phedex subscription URL and only allow DBS global link, ticket #3284
   - Fix issue with invalid query while doing sort in tableview (ticket #3281)
     discard qhash from the tableview presentation layer

@@ -8,10 +8,12 @@ __revision__ = "$Id"
 __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
+import os
 import time
 import calendar
 import datetime
 import xmlrpclib
+import urllib
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
@@ -25,19 +27,22 @@ def rr_date(timestamp):
         return time.strftime("%Y-%m-%d", time.gmtime(timestamp))
     return timestamp
 
-def duration(ctime, etime):
+def duration(ctime, etime, api_ver=2):
     """
     Calculate run duration.
     """
     if  not ctime or not etime:
         return 'N/A'
-    dformat = "%Y-%m-%dT%H:%M:%S" # 2010-10-09T17:39:51.0
+    if  api_ver == 2:
+        dformat = "%Y-%m-%dT%H:%M:%S" # 2010-10-09T17:39:51.0
+    else:
+        dformat = "%a %d-%m-%y %H:%M:%S" # Sun 15-05-11 17:25:00
     csec = time.strptime(ctime.split('.')[0], dformat)
     esec = time.strptime(etime.split('.')[0], dformat)
     tot  = calendar.timegm(csec) - calendar.timegm(esec)
     return str(datetime.timedelta(seconds=abs(tot)))
 
-def run_duration(records):
+def run_duration(records, api_ver=2):
     """
     Custom parser to produce run duration out of RR records
     """
@@ -52,7 +57,7 @@ def run_duration(records):
                 run['duration'] = duration(ctime, etime)
         yield row
 
-def worker(url, query):
+def worker_v2(url, query):
     """
     Query RunRegistry service, see documentation at
     https://twiki.cern.ch/twiki/bin/viewauth/CMS/DqmRrApi
@@ -93,6 +98,57 @@ def worker(url, query):
                 record[key] = adjust_value(val[idx])
             yield dict(run=record)
 
+def worker_v3(url, query):
+    """
+    Query RunRegistry service, see documentation at
+    https://twiki.cern.ch/twiki/bin/viewauth/CMS/DqmRrApi
+    url=http://runregistry.web.cern.ch/runregistry/
+    """
+    workspace = 'GLOBAL'
+    table = 'runsummary'
+    template = 'json'
+    columns = ['number', 'startTime', 'stopTime', 'triggers',
+               'runClassName', 'runStopReason', 'bfield',
+               'l1Menu', 'hltkey', 'lhcFill', 'lhcEnergy',
+               'runCreated', 'modified', 'lsCount', 'lsRanges']
+    sdata = json.dumps({'filter':query})
+    path = 'api/GLOBAL/%s/%s/%s/none/data' \
+                % (table, template, urllib.quote(','.join(columns)))
+    callurl = os.path.join(url, path)
+    result = urllib.urlopen(callurl, sdata)
+    record = json.load(result)
+    notations = {'lsRanges':'lumi_section_ranges',
+            'number':'run_number', 'runCreated':'create_time',
+            'stopTime': 'end_time', 'startTime': 'start_time',
+            'lsCount': 'lumi_sections', 'runStopReason': 'stop_reason',
+            'lhcEnergy': 'beam_e', 'l1Menu': 'l1key',
+            'modified': 'modify_time', 'runClassName': 'group_name'}
+    for rec in record:
+        for key, val in rec.items():
+            if  notations.has_key(key):
+                rec[notations[key]] = val
+                del rec[key]
+        yield dict(run=rec)
+
+def worker(url, query, api_ver):
+    "Call RunRegistry APIs"
+    if  api_ver == 2:
+        for row in worker_v2(url, query):
+            yield row
+    elif api_ver == 3:
+        for key, val in query.items():
+            if  key == 'runNumber':
+                query['number'] = val
+                del query['runNumber']
+            if  key == 'runStartTime':
+                query['startTime'] = val
+                del query['runStartTime']
+        for row in worker_v3(url, query):
+            yield row
+    else:
+        msg = 'Unsupported RunRegistry API, version=%s' % api_ver
+        raise Exception(msg)
+
 class RunRegistryService(DASAbstractService):
     """
     Helper class to provide RunRegistry service
@@ -112,11 +168,6 @@ class RunRegistryService(DASAbstractService):
         for key, val in dasquery.mongo_query['spec'].iteritems():
             if  key == 'run.run_number':
                 if  isinstance(val, int):
-# this query provides different output
-# see RunLumiSectionRangeTable API
-#                    _query += "{runNumber} >= %s and {runNumber} <= %s" \
-#                                % (val, val)
-# this query provides short output more suitable for physicists
                     _query = {'runNumber': '%s' % val}
                 elif isinstance(val, dict):
                     minrun = 0
@@ -133,8 +184,6 @@ class RunRegistryService(DASAbstractService):
                             maxrun = vvv
                         elif kkk == '$gte':
                             minrun = vvv
-#                    _query += "{runNumber} >= %s and {runNumber} <= %s" \
-#                            % (minrun, maxrun)
                     _query = {'runNumber': '>= %s and < %s' % (minrun, maxrun)}
             elif key == 'date':
                 if  isinstance(val, dict):
@@ -176,9 +225,10 @@ class RunRegistryService(DASAbstractService):
         msg = "DASAbstractService:RunRegistry, query=%s" % _query
         self.logger.info(msg)
         time0   = time.time()
-        rawrows = worker(url, _query)
+        api_ver = 3 # API version for RunRegistry, v2 is xmlrpc, v3 is REST
+        rawrows = worker(url, _query, api_ver)
         genrows = self.translator(api, rawrows)
-        dasrows = self.set_misses(dasquery, api, run_duration(genrows))
+        dasrows = self.set_misses(dasquery, api, run_duration(genrows, api_ver))
         ctime   = time.time() - time0
         try:
             self.write_to_cache(\
@@ -194,8 +244,14 @@ def test():
     query = {'runNumber': '>= 147623 and <= 147623'}
     query = {'runNumber': '147623'}
     query = {'runNumber': '165103'}
+    ver = 2
     url = 'http://localhost:8081/cms-service-runregistry-api/xmlrpc'
-    for row in worker(url, query):
+    query = {'startTime': '>= 2010-10-18 and < 2010-10-22'}
+    query = {'number': '165103'}
+    query = {'number': '>= 165103 and <= 165110'}
+    url = 'http://localhost:8081/runregistry/'
+    ver = 3
+    for row in worker(url, query, ver):
         print row, type(row)
 
 if __name__ == '__main__':

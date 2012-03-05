@@ -3,7 +3,8 @@ format : JSON
 ---
 urn : rr_xmlrpc
 #url : "http://cms-service-runregistry-api.web.cern.ch/cms-service-runregistry-api/xmlrpc"
-url : "http://localhost:8081/cms-service-runregistry-api/xmlrpc"
+#url : "http://localhost:8081/cms-service-runregistry-api/xmlrpc"
+url : "http://localhost:8081/runregistry"
 expire : 900
 params : {"run": "", "date": ""}
 daskeys : [
