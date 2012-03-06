@@ -25,13 +25,29 @@ from DAS.utils.utils import filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
-from DAS.utils.utils import delete_keys
+from DAS.utils.utils import delete_keys, parse_filter_string
 from DAS.core.das_query import DASQuery
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_parse_filter_string(self):
+        "Test parse_filter_string function"
+        val = "phedex"
+        result = parse_filter_string(val)
+        self.assertEqual(val, result)
+
+        val = "[phedex]"
+        result = parse_filter_string(val)
+        expect = ["phedex"]
+        self.assertEqual(expect, result)
+
+        val = "[phedex,dbs]"
+        result = parse_filter_string(val)
+        expect = ["phedex", "dbs"]
+        self.assertEqual(expect, result)
+
     def test_delete_keys(self):
         """Tests gen_counter function"""
         rec = {'a':1, 'b':1, 'c':2}

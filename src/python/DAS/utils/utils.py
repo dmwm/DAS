@@ -120,6 +120,14 @@ def parse_filters(query):
                 mdict.update({key:val})
     return mdict
 
+def parse_filter_string(val):
+    "Parse filter string value"
+    val = val.strip()
+    if  val and val[0] == '[' and  val[-1] == ']':
+        val = val.replace('[', '').replace(']', '')
+        val = val.split(',')
+    return val
+
 def parse_filter(spec, flt):
     """
     Parse given filter and return MongoDB key/value dictionary.
@@ -135,6 +143,7 @@ def parse_filter(spec, flt):
         elif isinstance(val, str) or isinstance(val, unicode):
             if  val.find('*') != -1:
                 val = re.compile('%s' % val.replace('*', '.*'))
+            val = parse_filter_string(val)
         return {key:val}
     elif flt.find('!=') != -1 and \
        (flt.find('<') == -1 and flt.find('>') == -1):
@@ -149,6 +158,7 @@ def parse_filter(spec, flt):
                 val = re.compile('^(?:(?!%s).)*$' % val.replace('*', '.*'))
             else:
                 val = re.compile('^(?:(?!%s).)*$' % val)
+            val = parse_filter_string(val)
             return {key: val}
         return {key: {'$ne': val}}
     elif  flt.find('<=') != -1:
