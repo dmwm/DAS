@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
 
+  - Update TFC API rules (fix its regex in phedex mapping)
+  - Init site.name with node.name when appropriate
+  - Fill admin info in new SiteDB when user look-up the site
+  - Switch to new SiteDB
   - Switch to new REST RunRegistry API
   - Remove dbs instance from phedex subscription URL and only allow DBS global link, ticket #3284
   - Fix issue with invalid query while doing sort in tableview (ticket #3281)

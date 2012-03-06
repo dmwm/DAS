@@ -48,6 +48,14 @@ def sitedb_parser(source):
         for row in data['result']:
             yield row
 
+def user_data(username, sitedb_dict):
+    "Find user data in SiteDB dict"
+    columns = sitedb_dict['desc']['columns']
+    for row in sitedb_dict['result']:
+        idx = columns.index('username')
+        if  row[idx] == username:
+            return dict(zip(columns, row))
+
 class SiteDBService(DASAbstractService):
     """
     Helper class to provide DBS service
@@ -91,6 +99,10 @@ class SiteDBService(DASAbstractService):
             data, expire = self.getdata_helper(\
                         url, params, expire, headers, post)
             result = [] # output results
+            # get site user info
+            newurl = url.replace('site-names', 'people')
+            udata, expire = self.getdata_helper(\
+                        newurl, params, expire, headers, post)
             # get site personel info
             newurl = url.replace('site-names', 'site-responsibilities')
             rdata, expire = self.getdata_helper(\
@@ -101,8 +113,11 @@ class SiteDBService(DASAbstractService):
                 row['admin'] = []
                 for rec in sitedb_parser(rdata):
                     if  rec['site_name'] == row['site_name']:
-                        row['admin'].append(\
-                                dict(role=rec['role'], email=rec['email']))
+                        username = rec['username']
+                        admin = dict(role=rec['role'], username=username)
+                        user_info = user_data(username, udata)
+                        if  user_info:
+                            row['admin'].append(user_info)
                 result.append(row)
             # get sites info
             newurl = url.replace('site-names', 'sites')

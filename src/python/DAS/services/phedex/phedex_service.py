@@ -113,6 +113,9 @@ class PhedexService(DASAbstractService):
         tot_files  = 0
         site_info_dict = {}
         for row in gen:
+            if  api == 'nodeusage':
+                if  row.has_key('node') and row['node'].has_key('name'):
+                    row['name'] = row['node']['name']
             if  row.has_key('block') and row['block'].has_key('name'):
                 if  not row['block'].has_key('dataset'):
                     dataset = row['block']['name'].split('#')[0]

@@ -208,10 +208,10 @@ urn : tfc
 url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/TFC"
 expire : 3600
 params : {"node":"required"}
-daskeys : [{"key":"site", "map":"site.name", "pattern":"^T[0-3]_"}]
+daskeys : [{"key":"site", "map":"site.name", "pattern":"^T[0-3]_[A-Z]{2,2}_[A-Z0-9a-z]+[^*]$"}]
 das2api : [
-        {"das_key":"site", "api_param":"node", "pattern":"^T[0-3]_"},
-        {"das_key":"site.name", "api_param":"node", "pattern":"^T[0-3]_"},
+        {"das_key":"site", "api_param":"node", "pattern":"^T[0-3]_[A-Z]{2,2}_[A-Z0-9a-z]+[^*]$"},
+        {"das_key":"site.name", "api_param":"node", "pattern":"^T[0-3]_[A-Z]{2,2}_[A-Z0-9a-z]+[^*]$"},
 ]
 ---
 notations : [
