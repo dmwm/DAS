@@ -54,7 +54,7 @@ def run_duration(records, api_ver=2):
             if  run.has_key('create_time') and run.has_key('end_time'):
                 ctime = run['create_time']
                 etime = run['end_time']
-                run['duration'] = duration(ctime, etime)
+                run['duration'] = duration(ctime, etime, api_ver)
         yield row
 
 def worker_v2(url, query):
