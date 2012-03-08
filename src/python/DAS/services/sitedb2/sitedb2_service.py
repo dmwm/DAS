@@ -174,7 +174,15 @@ class SiteDBService(DASAbstractService):
                 name = row.get('name', None)
                 if  not name:
                     name = row.get('user_group', None)
-                if  name and group.find(name.lower()) != -1:
+                cond = name and group.find(name.lower()) != -1
+                if  group.find('*') != -1: # pattern:
+                    if  group[0] != '*':
+                        cond = name.lower().startswith(group.replace('*', ''))
+                    elif  group[-1] != '*':
+                        cond = name.lower().endswith(group.replace('*', ''))
+                    else:
+                        cond = name.lower().find(group.replace('*', '')) != -1
+                if  cond:
                     if  row.has_key('user_group'):
                         row['name'] = row['user_group']
                         del row['user_group']

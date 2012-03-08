@@ -158,6 +158,7 @@ monitor : [
         ],
 group : [
         {"das":"group.name", "ui":"Group name"},
+        {"das":"group.username", "ui":"Member(s)"},
         {"das":"group.node_files", "ui":"# of files archived on this node"},
         {"das":"group.dest_files", "ui":"# of approved files for this group"},
         {"das":"group.dest_bytes", "ui":"# of approved bytes for this group"},

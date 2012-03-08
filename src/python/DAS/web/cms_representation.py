@@ -19,7 +19,7 @@ from DAS.utils.ddict import DotDict
 from DAS.utils.utils import print_exc, getarg, size_format, access
 from DAS.utils.utils import identical_data_records, deepcopy
 from DAS.web.utils import das_json, quote, gen_color
-from DAS.web.utils import not_to_link
+from DAS.web.utils import not_to_link, quote
 from DAS.web.tools import exposetext
 from DAS.web.das_representation import DASRepresentation
 
@@ -133,6 +133,14 @@ def adjust_values(func, gen, links):
             key = '<span %s>Error</span>' % red
             error = 1
         if  lookup:
+            if  key.find('Member') != -1 and val:
+                link = '/das/request?input=user%3D'
+                if  isinstance(val, list):
+                    val = ['<a href="%s%s">%s</a>' \
+                    % (link, quote(v), quote(v)) for v in val]
+                elif isinstance(val, basestring):
+                    val = '<a href="%s%s">%s</a>' \
+                        % (link, quote(val), quote(val))
             if  isinstance(val, list):
                 value = ', '.join([str(v) for v in val])
                 if  len(set(val)) > 1 and \
