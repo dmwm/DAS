@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
 
+  - Show data-service name in error message
+  - Show dataset status field
   - Add support to pass array of values into DAS filter, ticket #3350
     but so far array needs to consist of single element (still need to fix PLY)
   - Update TFC API rules (fix its regex in phedex mapping)

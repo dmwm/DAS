@@ -27,7 +27,8 @@ class ReqMgrService(DASAbstractService):
             url = '/'.join([url, params[key]])
         params = {}
         return getdata(url, params, headers, expire, post,
-                self.error_expire, self.verbose, self.ckey, self.cert)
+                self.error_expire, self.verbose, self.ckey, self.cert,
+                system=self.name)
 
     def parser(self, query, dformat, source, api):
         """

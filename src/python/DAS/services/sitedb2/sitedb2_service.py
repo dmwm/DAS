@@ -82,8 +82,10 @@ class SiteDBService(DASAbstractService):
                 data = {}
         if  not data or not local:
             headers = {'Accept':'application/json'}
-            datastream, expire = getdata(url, params, headers, expire, post,
-                    self.error_expire, self.verbose, self.ckey, self.cert)
+            datastream, expire = getdata(\
+                    url, params, headers, expire, post,
+                    self.error_expire, self.verbose, self.ckey, self.cert,
+                    system=self.name)
             try: # read data and write it to local cache
                 data = json.load(datastream)
                 col.remove()

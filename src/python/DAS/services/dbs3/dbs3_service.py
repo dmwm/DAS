@@ -28,7 +28,7 @@ class DBS3Service(DASAbstractService):
         """URL call wrapper"""
         return getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert,
-                doseq=False)
+                doseq=False, system=self.name)
 
     def url_instance(self, url, instance):
         """

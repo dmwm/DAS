@@ -9,7 +9,6 @@ __author__ = "Valentin Kuznetsov"
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import dbsql_opt_map, convert_datetime
-from DAS.utils.url_utils import getdata
 
 def convert_dot(row, key, attrs):
     """Convert dot notation key.attr into storage one"""
@@ -264,9 +263,9 @@ where %s" % value[4:]
             query_for_single = "find dataset, datatype, dataset.status, \
   count(block), sum(block.size), sum(block.numfiles), sum(block.numevents), \
   dataset.createdate where dataset.createdate %s %s " + value
-            query_for_double = "find dataset , count(block), sum(block.size),\
-  sum(block.numfiles), sum(block.numevents), dataset.createdate \
-  where dataset.createdate %s %s \
+            query_for_double = "find dataset, datatype, dataset.status, \
+  count(block), sum(block.size), sum(block.numfiles), sum(block.numevents), \
+  dataset.createdate where dataset.createdate %s %s \
   and dataset.createdate %s %s " + value
             val = kwds['date']
             qlist = []

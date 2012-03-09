@@ -150,10 +150,11 @@ class DASAbstractService(object):
         """URL call wrapper"""
         if  url.find('https:') != -1:
             return getdata(url, params, headers, expire, post,
-                    self.error_expire, self.verbose, self.ckey, self.cert)
+                self.error_expire, self.verbose, self.ckey, self.cert,
+                system=self.name)
         else:
             return getdata(url, params, headers, expire, post,
-                            self.error_expire, self.verbose)
+                self.error_expire, self.verbose, system=self.name)
 
     def call(self, dasquery):
         """

@@ -47,11 +47,11 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
         return httplib.HTTPSConnection(host)
 
 def getdata(url, params, headers=None, expire=3600, post=None,
-                error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
+    error_expire=300, verbose=0, ckey=None, cert=None, doseq=True, system=None):
     "Fetch data from remote URL for given set of parameters"
     return getdata_urllib(url, params, headers, expire, post, \
-                error_expire, verbose, ckey, cert, doseq)
-#    return getdata_pycurl(url, params, headers, expire, post, \
+                error_expire, verbose, ckey, cert, doseq, system)
+#    return getdata_pycurl(system, url, params, headers, expire, post, \
 #                error_expire, verbose, ckey, cert, doseq)
 
 def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
@@ -63,12 +63,15 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
     return data, expire
 
 def getdata_urllib(url, params, headers=None, expire=3600, post=None,
-                error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
+    error_expire=300, verbose=0, ckey=None, cert=None, doseq=True, system=None):
     """
     Invoke URL call and retrieve data from data-service based
     on provided URL and set of parameters. Use post=True to
     invoke POST request.
     """
+    contact = 'data-service.'
+    if  system:
+        contact = system + ' ' + contact
     timer_key = '%s?%s' % (url, urllib.urlencode(params, doseq=True))
     das_timer(timer_key, verbose)
     encoded_data = urllib.urlencode(params, doseq=doseq)
@@ -108,7 +111,7 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
     except urllib2.HTTPError as httperror:
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                     % (url, params, headers)
-        data = {'error': 'Unable to contact data-service.', 'reason': msg}
+        data = {'error': 'Unable to contact %s' % contact, 'reason': msg}
         try:
             err  = httperror.read()
             data.update({'httperror':extract_http_error(err)})
@@ -123,7 +126,7 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                     % (url, params, headers)
         print msg + '\n' + str(exp)
-        data = {'error': 'Unable to contact data-service.', 'reason': msg}
+        data = {'error': 'Unable to contact %s' % contact, 'reason': msg}
         data = json.dumps(data)
         expire = expire_timestamp(error_expire)
     das_timer(timer_key, verbose)

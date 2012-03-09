@@ -43,6 +43,7 @@ dataset : [
         {"das":"dataset.nevents", "ui":"Number of events"}, 
         {"das":"dataset.size", "ui":"Dataset size"},
         {"das":"dataset.datatype", "ui":"Type"},
+        {"das":"dataset.status", "ui":"Status"},
         {"das":"dataset.creation_time", "ui":"Creation time"},
         {"das":"dataset.primary_datatset_name", "ui":"Primary dataset"},
         {"das":"dataset.processed_datatset_name", "ui":"Processed dataset"},
