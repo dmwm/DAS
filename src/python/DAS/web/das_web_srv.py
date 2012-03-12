@@ -724,26 +724,17 @@ class DASWebService(DASWebManager):
                 return content
         dasquery = content # returned content is valid DAS query
         kwargs['dasquery'] = dasquery.storage_query
-        status, qhash = self.dasmgr.get_status(dasquery)
-        if  status: # similar query request has found
-            if  status == 'ok':
-                page = self.get_page_content(kwargs)
-            else: # it is not yet processed
-                page = self.templatepage('das_check_pid',
-                        method='check_similar_pid', uinput=uinput,
-                        base=self.base, pid=qhash, interval=self.interval)
-        else: 
-            addr = cherrypy.request.headers.get('Remote-Addr')
-            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery, addr,
-                                pid=dasquery.qhash)
-            self.reqmgr.add(pid, kwargs)
-            if  self.taskmgr.is_alive(pid):
-                page = self.templatepage('das_check_pid',
-                        method='check_pid', uinput=uinput,
-                        base=self.base, pid=pid, interval=self.interval)
-            else:
-                page = self.get_page_content(kwargs)
-                self.reqmgr.remove(pid)
+        addr = cherrypy.request.headers.get('Remote-Addr')
+        _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery, addr,
+                            pid=dasquery.qhash)
+        self.reqmgr.add(pid, kwargs)
+        if  self.taskmgr.is_alive(pid):
+            page = self.templatepage('das_check_pid',
+                    method='check_pid', uinput=uinput,
+                    base=self.base, pid=pid, interval=self.interval)
+        else:
+            page = self.get_page_content(kwargs)
+            self.reqmgr.remove(pid)
         ctime = (time.time()-time0)
         if  view == 'list' or view == 'table':
             return self.page(form + page, ctime=ctime)
@@ -785,16 +776,11 @@ class DASWebService(DASWebManager):
         cherrypy.response.headers['Pragma'] = 'no-cache'
         img = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         try:
-            doc = self.reqmgr.get(pid)
-            if  doc:
-                kwargs = doc
-                if  self.taskmgr.is_alive(pid):
-                    page = img + " processing PID=%s" % pid
-                else:
-                    page = self.get_page_content(kwargs)
-                    self.reqmgr.remove(pid)
+            if  self.taskmgr.is_alive(pid):
+                page = img + " processing PID=%s" % pid
             else:
                 page = self.get_page_content(self.get_referer_kwargs())
+                self.reqmgr.remove(pid)
         except Exception as err:
             msg = 'check_pid fails for pid=%s' % pid
             print dastimestamp('DAS WEB ERROR '), msg

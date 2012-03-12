@@ -25,7 +25,7 @@ class DASParserDB(object):
         self.logger   = PrintManager('DASParserDB', self.verbose)
         self.dburi    = config['mongodb']['dburi']
         self.dbname   = config['parserdb']['dbname']
-        self.sizecap  = config['parserdb']['sizecap']
+        self.sizecap  = config['parserdb'].get('sizecap', 5*1024*1024)
         self.colname  = config['parserdb']['collname']
         
         msg = "DASParserCache::__init__ %s@%s" % (self.dburi, self.dbname)
@@ -40,7 +40,7 @@ class DASParserDB(object):
         """
         conn = db_connection(self.dburi)
         dbn  = conn[self.dbname]
-        if self.colname not in dbn.collection_names() and self.sizecap > 0:
+        if  self.colname not in dbn.collection_names():
             dbn.create_collection(self.colname, capped=True, size=self.sizecap)
         self.col = dbn[self.colname]
 
@@ -96,4 +96,3 @@ class DASParserDB(object):
             encquery = ""
         self.col.insert({'raw':rawtext, 'hash':genkey(rawtext),
                          'query':encquery, 'error':str(error)})
-        self.col.ensure_index('hash', unique=True, drop_dups=True)

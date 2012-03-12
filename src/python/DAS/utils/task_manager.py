@@ -79,10 +79,13 @@ class TaskManager:
     def spawn(self, func, *args, **kwargs):
         """Spawn new process for given function"""
         pid = kwargs.get('pid', genkey(str(args) + str(kwargs)))
-        self._pids.add(pid)
-        ready = Event()
-        self._tasks.put((ready, pid, func, args, kwargs))
-        return ready, pid
+        if  not pid in self._pids:
+            self._pids.add(pid)
+            ready = Event()
+            self._tasks.put((ready, pid, func, args, kwargs))
+            return ready, pid
+        else:
+            return 'in set', pid
 
     def remove(self, pid):
         """Remove pid and associative process from the queue"""

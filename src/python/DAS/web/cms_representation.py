@@ -320,7 +320,10 @@ class CMSRepresentation(DASRepresentation):
         kwargs   = head['args']
         uinput   = kwargs.get('input', '')
         total    = head.get('nresults', 0)
-        dasquery = head['dasquery']
+        dasquery = head.get('dasquery', None)
+        if  not dasquery:
+            inst     = head.get('instance', self.dbs_global)
+            dasquery = DASQuery(uinput, instance=inst)
         inst     = dasquery.instance
         filters  = dasquery.filters
         main     = self.pagination(total, kwargs)

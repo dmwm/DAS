@@ -28,10 +28,11 @@ class ResultObject(object):
         self.rec_count = 0
     def sum(self, obj):
         """Sum function for this object"""
-        value, _ = obj
         if  self.result == 'Not available':
             self.result = 0
-        self.result += value
+        value, _ = obj
+        if  value:
+            self.result += value
         self.rec_count += 1
     def count(self, obj):
         """Count function for this object"""
@@ -68,8 +69,9 @@ class ResultObject(object):
         value, _ = obj
         if  self.result == 'Not available':
             self.result = 0
-        self.result += float(value)
-        self.rec_count += 1
+        if  value != None:
+            self.result += float(value)
+            self.rec_count += 1
     def median(self, obj):
         """
         Median function for this object, we store all values as array, such
@@ -78,8 +80,9 @@ class ResultObject(object):
         value, _ = obj
         if  self.result == 'Not available':
             self.result = []
-        self.result.append(value)
-        self.rec_count += 1
+        if  value != None:
+            self.result.append(value)
+            self.rec_count += 1
     
 def coroutine(func):
     """Coroutine helper, to be used as decorator"""

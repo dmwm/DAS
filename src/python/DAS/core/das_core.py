@@ -22,7 +22,7 @@ import itertools
 # DAS modules
 from DAS.core.das_ql import das_operators, das_special_keys
 from DAS.core.das_query import DASQuery
-from DAS.core.das_parser import QLManager
+from DAS.core.das_parser import DAS_QL_MANAGER
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_keylearning import DASKeyLearning
@@ -114,7 +114,7 @@ class DASCore(object):
         self.analytics = DASAnalytics(dasconfig)
         dasconfig['dasanalytics'] = self.analytics
 
-        self.mongoparser = QLManager(dasconfig)
+        self.mongoparser = DAS_QL_MANAGER
         dasconfig['mongoparser'] = self.mongoparser
 
         self.keylearning = DASKeyLearning(dasconfig)
@@ -308,45 +308,30 @@ class DASCore(object):
         if  fields == ['records']:
             msg = 'look-up all records in cache'
             self.logger.info(msg)
-            return 1
+            return 'in cache'
         if  spec == dict(records='*'):
             self.logger.info("look-up everything in cache")
-            return 1
-        status = 0
+            return 'in cache'
         for record in self.rawcache.find_specs(dasquery):
             status = record['das']['status']
             msg = 'found query %s in cache, status=%s\n' \
                         % (record['query'], status)
-            mongo_query = decode_mongo_query(record['query'])
-            if  not compare_specs(dasquery.mongo_query, mongo_query):
-                status = 0
             self.logger.info(msg)
-            if  status == 'ok' and \
-                self.rawcache.incache(dasquery, collection='merge'):
-                # update analytics for all systems (None)
-                self.analytics.update(None, query)
-                das_timer('DASCore::call', self.verbose)
-                return 1
+            return status
         similar_dasquery = self.rawcache.similar_queries(dasquery)
         if  similar_dasquery:
             for record in self.rawcache.find_specs(similar_dasquery):
-                status = 0
                 if  record:
                     try:
                         status = record['das']['status']
                     except:
-                        status = 0
+                        status = 'N/A'
                         msg = 'Fail to look-up das.status, record=%s' % record
                         self.logger.info(msg)
                 msg  = 'found SIMILAR query in cache,'
                 msg += 'query=%s, status=%s\n' % (record['query'], status)
                 self.logger.info(msg)
-                if  status == 'ok' and \
-                    self.rawcache.incache(similar_dasquery, collection='merge'):
-                    # update analytics for all systems (None)
-                    self.analytics.update(None, query)
-                    das_timer('DASCore::call', self.verbose)
-                    return 1
+                return status
 
         self.logger.info(dasquery)
         params = dasquery.params()
@@ -371,7 +356,7 @@ class DASCore(object):
                     self.worker(srv, dasquery)
         except Exception as exc:
             print_exc(exc)
-            return 0
+            return 'fail'
         self.logger.info('\n##### merging ######\n')
         self.rawcache.update_query_record(dasquery, 'merging')
         das_timer('merge', self.verbose)
@@ -381,7 +366,7 @@ class DASCore(object):
         self.rawcache.add_to_record(\
                 dasquery, {'das.timer': get_das_timer()}, system='das')
         das_timer('DASCore::call', self.verbose)
-        return 1
+        return 'ok'
 
     def nresults(self, dasquery, coll='merge'):
         """

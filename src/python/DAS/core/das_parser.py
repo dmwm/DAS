@@ -225,3 +225,6 @@ class QLManager(object):
             if  srv not in services:
                 services.append(srv)
         return dict(selkeys=skeys, conditions=cond, services=services)
+
+# Invoke QLManager once (singleton)
+DAS_QL_MANAGER = QLManager()

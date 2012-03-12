@@ -7,6 +7,17 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
 
+  - Add qhash into data records (simplify their look-up in mongocache manager)
+  - Simplify query submission for web interface (removed obsolete code from
+    web server)
+  - Fix issue with sum coroutines (handle None values)
+  - Avoid unnecessary updates for DAS meta-records
+  - Made das core status code more explicit
+  - Remove ensure_index from parser.db since it's capped collection
+  - Made QLManager being a singleton
+  - Add safe=True for all inserts into das.cache/merge collection to avoid
+    late records arrival in busy multithreaded environment
+  - Add trailing slash for condDB URL (to avoid redirection)
   - Show data-service name in error message
   - Show dataset status field
   - Add support to pass array of values into DAS filter, ticket #3350

@@ -30,8 +30,7 @@ def das_parser_error(query, error):
         tokarr = tok.split(',')
         pos = int(tokarr[3].split(')')[0])
         return 'DAS could not parse your query at %s ' % query[pos:].split()[0]
-    except Exception as exc:
-        print_exc(exc)
+    except Exception as _exc:
         return error
 
 def parser_error(error):

@@ -3,7 +3,7 @@ system : conddb
 format : JSON
 ---
 urn: "get_run_info"
-url : "http://cms-conddb.cern.ch/getLumi"
+url : "http://cms-conddb.cern.ch/getLumi/"
 expire : 3600
 params : {
     "Runs":"",
@@ -20,7 +20,7 @@ das2api: [
 ]
 ---
 urn: "get_lumi_info"
-url : "http://cms-conddb.cern.ch/getLumi"
+url : "http://cms-conddb.cern.ch/getLumi/"
 expire : 3600
 params : {
     "Runs":"",
