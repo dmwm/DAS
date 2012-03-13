@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.2.X
 
+  - Pass instance parameter into das_duplicates template, ticket #3338
   - Add qhash into data records (simplify their look-up in mongocache manager)
   - Simplify query submission for web interface (removed obsolete code from
     web server)

@@ -466,7 +466,8 @@ class CMSRepresentation(DASRepresentation):
             old = row
         main += fltpage
         if  dup:
-            main += self.templatepage('das_duplicates', uinput=uinput)
+            main += self.templatepage('das_duplicates', uinput=uinput,
+                        instance=inst)
         main += page
         main += '<div align="right">DAS cache server time: %5.3f sec</div>' \
                 % head['ctime']
