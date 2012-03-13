@@ -22,7 +22,7 @@ import itertools
 # DAS modules
 from DAS.core.das_ql import das_operators, das_special_keys
 from DAS.core.das_query import DASQuery
-from DAS.core.das_parser import DAS_QL_MANAGER
+from DAS.core.das_parser import ql_manager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_keylearning import DASKeyLearning
@@ -114,7 +114,7 @@ class DASCore(object):
         self.analytics = DASAnalytics(dasconfig)
         dasconfig['dasanalytics'] = self.analytics
 
-        self.mongoparser = DAS_QL_MANAGER
+        self.mongoparser = ql_manager(dasconfig)
         dasconfig['mongoparser'] = self.mongoparser
 
         self.keylearning = DASKeyLearning(dasconfig)

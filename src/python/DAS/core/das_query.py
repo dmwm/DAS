@@ -15,7 +15,7 @@ from   pymongo.objectid import ObjectId
 import DAS.utils.jsonwrapper as json
 from   DAS.utils.utils import genkey, deepcopy, print_exc
 from   DAS.utils.query_utils import compare_specs
-from   DAS.core.das_parser import DAS_QL_MANAGER
+from   DAS.core.das_parser import ql_manager
 
 class DASQuery(object):
     """
@@ -101,7 +101,7 @@ class DASQuery(object):
     def mongoparser(self):
         "mongoparser property of the DAS query"
         if  not self._mongoparser:
-            self._mongoparser = DAS_QL_MANAGER
+            self._mongoparser = ql_manager()
         return self._mongoparser
 
     @property

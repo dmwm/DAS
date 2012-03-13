@@ -16,6 +16,7 @@ from DAS.utils.ddict import DotDict
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
 from DAS.utils.utils import deepcopy
+from DAS.core.das_parser import ql_manager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.web.das_test_datasvc import DASTestDataService, Root
 from DAS.services.map_reader import read_service_map
@@ -58,7 +59,11 @@ class testCMSFakeDataServices(unittest.TestCase):
         config['keylearningdb'] = {'collname': collname, 'dbname': 'keylearning'}
         config['parserdb'] = {'collname': collname, 'dbname': 'parser', 
                                 'enable': True, 'sizecap': 10000}
-        config['services'] = ['dbs', 'phedex', 'sitedb', 'zip', 'ip']
+        config['services'] = ['dbs', 'phedex', 'sitedb', 'google_maps', 'ip']
+
+        # mongo parser
+        self.mongoparser = ql_manager(config)
+        config['mongoparser'] = self.mongoparser
 
         # setup DAS mapper
         self.mgr = DASMapping(config)
@@ -70,7 +75,7 @@ class testCMSFakeDataServices(unittest.TestCase):
 
         # Add fake mapping records
         self.add_service('ip', 'ip.yml')
-        self.add_service('zip', 'google_maps.yml')
+        self.add_service('google_maps', 'google_maps.yml')
         self.add_service('dbs', 'dbs.yml')
         self.add_service('phedex', 'phedex.yml')
         self.add_service('sitedb', 'sitedb.yml')
@@ -120,13 +125,13 @@ class testCMSFakeDataServices(unittest.TestCase):
     def testDBSService(self):
         """test DASCore with test DBS service"""
         query  = "primary_dataset=abc" # invoke query to fill DAS cache
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.call(dquery)
-        expect = 1
+        expect = "ok"
         self.assertEqual(expect, result)
 
         query  = "primary_dataset=abc" # invoke query to get results from DAS cache
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         result = [r for r in result]
         result = DotDict(result[0]).get('primary_dataset.name')
@@ -136,13 +141,13 @@ class testCMSFakeDataServices(unittest.TestCase):
     def testPhedexAndSiteDBServices(self):
         """test DASCore with test PhEDEx and SiteDB services"""
         query  = "site=T3_US_Cornell" # invoke query to fill DAS cache
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.call(dquery)
-        expect = 1
+        expect = "ok"
         self.assertEqual(expect, result)
 
         query  = "site=T3_US_Cornell | grep site.name" # invoke query to get results from DAS cache
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         result = [r for r in result]
         expect = 'T3_US_Cornell'
@@ -156,13 +161,13 @@ class testCMSFakeDataServices(unittest.TestCase):
     def testAggregators(self):
         """test DASCore aggregators via zip service"""
         query  = "zip=1000"
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.call(dquery)
-        expect = 1
+        expect = "ok"
         self.assertEqual(expect, result)
 
         query  = "zip=1000 | count(zip.place.city)"
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         result = [r for r in result]
         expect = {"function": "count", "result": {"value": 2}, 
@@ -172,13 +177,13 @@ class testCMSFakeDataServices(unittest.TestCase):
     def testIPService(self):
         """test DASCore with IP service"""
         query  = "ip=137.138.141.145"
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.call(dquery)
-        expect = 1
+        expect = "ok"
         self.assertEqual(expect, result)
 
         query  = "ip=137.138.141.145 | grep ip.address"
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         result = [r for r in result]
         result = DotDict(result[0]).get('ip.address')
@@ -188,19 +193,19 @@ class testCMSFakeDataServices(unittest.TestCase):
     def testRecords(self):
         """test records DAS keyword with all services"""
         query  = "ip=137.138.141.145"
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.call(dquery)
-        expect = 1
+        expect = "ok"
         self.assertEqual(expect, result)
 
         query  = "site=T3_US_Cornell"
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.call(dquery)
-        expect = 1
+        expect = "ok"
         self.assertEqual(expect, result)
 
         query  = "records | grep ip.address"
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         result = [r for r in result]
         result = DotDict(result[0]).get('ip.address')
@@ -208,14 +213,14 @@ class testCMSFakeDataServices(unittest.TestCase):
         self.assertEqual(expect, result)
 
         query  = "records | grep site.name"
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         result = [r for r in result]
         expect = 'T3_US_Cornell'
         self.assertEqual(expect, DotDict(result[0]).get('site.name'))
 
         query  = "records"
-        dquery = DASQuery(query)
+        dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         res    = []
         for row in result:

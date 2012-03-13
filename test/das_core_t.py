@@ -49,7 +49,7 @@ class testDASCore(unittest.TestCase):
         query  = "ip=137.138.141.145"
         dquery = DASQuery(query)
         result = self.das.call(dquery)
-        expect = 1
+        expect = "ok"
         self.assertEqual(expect, result)
 
         # test results

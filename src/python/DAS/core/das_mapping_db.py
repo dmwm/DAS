@@ -147,7 +147,7 @@ class DASMapping(object):
              ]
         """
         msg = 'record=%s' % record
-        self.logger.info(msg)
+        self.logger.debug(msg)
         self.col.insert(record)
         index = None
         if  record.has_key('urn'):

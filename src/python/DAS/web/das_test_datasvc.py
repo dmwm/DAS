@@ -142,7 +142,7 @@ class DASTestDataService(DASWebManager):
         return wrap2dasjson(data)
 
     @expose
-    def zip(self, **kwargs):
+    def google_maps(self, **kwargs):
         """
         Test Google maps geo zip data-service
         """
@@ -153,11 +153,14 @@ class DASTestDataService(DASWebManager):
         except:
             data = {}
         return wrap2dasjson(data)
+def main():
+    "Main function"
+    # start TestDataService
+    config = dict(logfile='', loglevel=1)
+    server = Root(config)
+    server.start(blocking=true)
 #
 # main
 #
 if  __name__ == '__main__':
-    # start TestDataService
-    CONFIG = dict(logfile='', loglevel=1)
-    SERVER = Root(CONFIG)
-    SERVER.start(blocking=True)
+    main()

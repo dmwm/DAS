@@ -12,7 +12,7 @@ from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_ql import das_special_keys, das_operators
 from DAS.core.das_ply import DASPLY, ply2mongo
-from DAS.utils.utils import print_exc
+from DAS.utils.utils import print_exc, genkey
 from DAS.utils.regex import last_key_pattern
 from DAS.utils.logger import PrintManager
 from DAS.core.das_parsercache import DASParserDB
@@ -227,4 +227,14 @@ class QLManager(object):
         return dict(selkeys=skeys, conditions=cond, services=services)
 
 # Invoke QLManager once (singleton)
-DAS_QL_MANAGER = QLManager()
+QL_MANAGER_OBJECTS = {}
+
+def ql_manager(config=None):
+    "Return QLManager instance"
+    key = genkey(str(config))
+    if  QL_MANAGER_OBJECTS.has_key(key):
+        obj = QL_MANAGER_OBJECTS[key]
+    else:
+        obj = QLManager(config)
+        QL_MANAGER_OBJECTS[key] = obj
+    return obj
