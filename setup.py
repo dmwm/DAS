@@ -1,7 +1,18 @@
 #!/usr/bin/env python
 
+"""
+Standard python setup.py file for DAS
+to build     : python setup.py build
+to install   : python setup.py install --prefix=<some dir>
+to clean     : python setup.py clean
+to build doc : python setup.py doc
+to run tests : python setup.py test
+"""
+__author__ = "Valentin Kuznetsov"
+
 import sys
 import os
+import subprocess
 from unittest import TextTestRunner, TestLoader
 from glob import glob
 from os.path import splitext, basename, join as pjoin, walk
@@ -70,9 +81,10 @@ class CleanCommand(Command):
         """Init method"""
         self._clean_me = [ ]
         for root, dirs, files in os.walk('.'):
-            for f in files:
-                if f.endswith('.pyc'):
-                    self._clean_me.append(pjoin(root, f))
+            for fname in files:
+                if  fname.endswith('.pyc') or fname. endswith('.py~') or \
+                    fname.endswith('.rst~'):
+                    self._clean_me.append(pjoin(root, fname))
 
     def finalize_options(self):
         """Finalize method"""
@@ -85,6 +97,32 @@ class CleanCommand(Command):
                 os.unlink(clean_me)
             except:
                 pass
+
+class DocCommand(Command):
+    """
+    Class which build documentation
+    """
+    user_options = [ ]
+
+    def initialize_options(self):
+        """Init method"""
+        pass
+
+    def finalize_options(self):
+        """Finalize method"""
+        pass
+
+    def run(self):
+        """Run method"""
+        cdir = os.getcwd()
+        os.chdir(os.path.join(cdir, 'doc'))
+        if  os.environ.has_key('PYTHONPATH'):
+            os.environ['PYTHONPATH'] = os.path.join(cdir, 'src/python') \
+                + ':' + os.environ['PYTHONPATH']
+        else:
+            os.environ['PYTHONPATH'] = os.path.join(cdir, 'src/python')
+        subprocess.call('make html', shell=True)
+        os.chdir(cdir)
 
 class BuildExtCommand(build_ext):
     """
@@ -223,7 +261,8 @@ def main():
                                sources=['src/python/DAS/extensions/dict_handler.c'])],
         classifiers          = classifiers,
         cmdclass             = {'build_ext': BuildExtCommand,
-                                'test': TestCommand, 
+                                'test': TestCommand,
+                                'doc': DocCommand,
                                 'clean': CleanCommand},
         author               = author,
         author_email         = author_email,

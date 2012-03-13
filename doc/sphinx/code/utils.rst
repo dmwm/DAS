@@ -20,19 +20,19 @@ DAS DB utils
 .. automodule:: DAS.utils.das_db
         :members:
 
-DAS json wrapper
-----------------
-.. automodule:: DAS.utils.jsonwrapper
-        :members:
-
-DAS option utils
-----------------
+DAS option module
+-----------------
 .. automodule:: DAS.utils.das_option
         :members:
 
-DAS timer utils
----------------
+DAS timer module
+----------------
 .. automodule:: DAS.utils.das_timer
+        :members:
+
+DAS json wrapper
+----------------
+.. automodule:: DAS.utils.jsonwrapper
         :members:
 
 DAS logger
@@ -43,6 +43,16 @@ DAS logger
 DAS mongosearch utils
 ---------------------
 .. automodule:: DAS.utils.mongosearch
+        :members:
+
+DAS pycurl manager
+------------------
+.. automodule:: DAS.utils.pycurl_manager
+        :members:
+
+DAS query utils
+---------------
+.. automodule:: DAS.utils.query_utils
         :members:
 
 DAS regex expressions
@@ -60,8 +70,12 @@ DAS threadpool utils
 .. automodule:: DAS.utils.threadpool
         :members:
 
+URL utils
+---------
+.. automodule:: DAS.utils.url_utils
+        :members:
+
 Generic utils
 -------------
 .. automodule:: DAS.utils.utils
         :members:
-

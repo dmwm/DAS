@@ -9,9 +9,19 @@ DAS autocomplete module
 .. automodule:: DAS.web.autocomplete
         :members:
 
+DAS cms representation module
+-----------------------------
+.. automodule:: DAS.web.cms_representation
+        :members:
+
 Set of DAS codes
 ----------------
 .. automodule:: DAS.web.das_codes
+        :members:
+
+DAS das representation module
+-----------------------------
+.. automodule:: DAS.web.das_representation
         :members:
 
 DAS server
@@ -32,6 +42,11 @@ DAS web server
 DAS web manager
 ---------------
 .. automodule:: DAS.web.das_webmanager
+        :members:
+
+DAS dbs daemon module
+---------------------
+.. automodule:: DAS.web.dbs_daemon
         :members:
 
 DAS web tools

@@ -44,11 +44,11 @@ def dasheader(system, dasquery, expire, api=None, url=None, ctime=None):
     """
     if  not api:
         dasdict = dict(system=[system], timestamp=time.time(),
-                    qhash=dasquery.qhash, expire=expire_timestamp(expire),
+                    expire=expire_timestamp(expire),
                     status="requested")
     else:
         dasdict = dict(system=[system], timestamp=time.time(),
-                    url=[url], ctime=[ctime], qhash=dasquery.qhash,
+                    url=[url], ctime=[ctime],
                     expire=expire_timestamp(expire), urn=[api],
                     api=[api], status="requested")
     return dict(das=dasdict)

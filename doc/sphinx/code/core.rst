@@ -14,24 +14,9 @@ DAS analytics module
 .. automodule:: DAS.core.das_analytics_db
         :members:
 
-DAS cache module
-----------------
-.. automodule:: DAS.core.das_cache
-        :members:
-
-DAS collection manager
-----------------------
-.. automodule:: DAS.core.das_collection_manager
-        :members:
-
 DAS core module
 ---------------
 .. automodule:: DAS.core.das_core
-        :members:
-
-DAS functions
--------------
-.. automodule:: DAS.core.das_functions
         :members:
 
 DAS key learning module
@@ -64,6 +49,11 @@ DAS QL module
 .. automodule:: DAS.core.das_ql
         :members:
 
+DAS Query module
+----------------
+.. automodule:: DAS.core.das_query
+        :members:
+
 DAS robot module
 ----------------
 .. automodule:: DAS.core.das_robot
@@ -73,9 +63,3 @@ DAS SON manipulator
 -------------------
 .. automodule:: DAS.core.das_son_manipulator
         :members:
-
-DAS query utils
----------------
-.. automodule:: DAS.core.das_query
-        :members:
-
