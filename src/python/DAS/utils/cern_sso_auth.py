@@ -57,15 +57,28 @@ def get_data(url, key, cert, debug=0):
     data   = fdesc.read()
     fdesc.close()
 
-    # now, request authentication at CERN login page where I'll be redirected
-    params = dict(wa='wsignin1.0', 
-                  wreply='https://cmswbm.web.cern.ch/Shibboleth.sso/ADFS', 
-                  wct=timestamp(), wctx='cookie', 
-                  wtrealm='urn:federation:self')
-    params = urllib.urlencode(params, doseq=True)
+    # extract redirect parameters
+    # Here is an example what should be sent to login.cern.ch via GET method
+    # https://login.cern.ch/adfs/ls/auth/sslclient/?
+    #    wa=wsignin1.0&
+    #    wreply=https%3A%2F%2Fcmswbm.web.cern.ch%2FShibboleth.sso%2FADFS&
+    #    wct=2012-03-13T20%3A21%3A51Z&
+    #    wtrealm=https%3A%2F%2Fcmswbm.web.cern.ch%2FShibboleth.sso%2FADFS&
+    #    wctx=cookie%3Ab6cd5965
+    params = {}
+    for line in data.split('\n'):
+        if  line.find('Sign in using your Certificate</a>') != -1:
+            args = line.split('href=')[-1].split('"')[1].\
+                        replace('auth/sslclient/?', '')
+            kwds = urllib.url2pathname(args).split('&amp;')
+            params = dict([i.split('=') for i in kwds])
+            break
 
+
+    # now, request authentication at CERN login page where I'll be redirected
+    params = urllib.urlencode(params, doseq=True)
     url    = 'https://login.cern.ch/adfs/ls/auth/sslclient/'
-    fdesc  = opener.open(url, params)
+    fdesc  = opener.open(url+'?'+params)
     data   = fdesc.read()
     fdesc.close()
 
