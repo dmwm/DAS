@@ -88,6 +88,7 @@ class SiteDBService(DASAbstractService):
                     system=self.name)
             try: # read data and write it to local cache
                 data = json.load(datastream)
+                datastream.close()
                 col.remove()
                 col.insert(data)
                 col.insert({'expire':expire_timestamp(expire)})

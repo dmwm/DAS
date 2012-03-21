@@ -12,6 +12,7 @@ import time
 import urllib
 import urllib2
 import httplib
+from   types import InstanceType
 
 # DAS modules
 from   DAS.utils.das_timer import das_timer
@@ -212,3 +213,7 @@ class UrlRequest(urllib2.Request):
         """Return request method"""
         return self._method
 
+def close(stream):
+    "Close given stream"
+    if  isinstance(stream, InstanceType) or isinstance(stream, file):
+        stream.close()

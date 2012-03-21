@@ -20,7 +20,7 @@ from DAS.utils.utils import row2das, make_headers, get_key_cert
 from DAS.utils.utils import xml_parser, json_parser
 from DAS.utils.utils import yield_rows, delete_keys
 from DAS.utils.query_utils import compare_specs
-from DAS.utils.url_utils import getdata
+from DAS.utils.url_utils import getdata, close
 from DAS.utils.das_db import db_gridfs, parse2gridfs
 from DAS.core.das_ql import das_special_keys
 from DAS.core.das_core import dasheader
@@ -476,16 +476,21 @@ class DASAbstractService(object):
         It parse input query and invoke appropriate data-service API
         call. All results are stored into the DAS cache along with
         api call inserted into Analytics DB.
+
+        We invoke explicitly close call for our datastream instead
+        of using context manager since this method as well as
+        getdata/parser can be overwritten by child classes.
         """
+        datastream  = None
         try:
             args    = self.inspect_params(api, args)
             time0   = time.time()
             self.analytics.insert_apicall(self.name, dasquery.mongo_query, url,
                                           api, args, expire)
             headers = make_headers(dformat)
-            data, expire = self.getdata(url, args, expire, headers)
+            datastream, expire = self.getdata(url, args, expire, headers)
             self.logger.info("%s expire %s" % (api, expire))
-            rawrows = self.parser(dasquery, dformat, data, api)
+            rawrows = self.parser(dasquery, dformat, datastream, api)
             dasrows = self.translator(api, rawrows)
             dasrows = self.set_misses(dasquery, api, dasrows)
             ctime   = time.time() - time0
@@ -496,6 +501,7 @@ class DASAbstractService(object):
                     % (url, api, args)
             print msg
             print_exc(exc)
+        close(datastream)
 
     def url_instance(self, url, _instance):
         """

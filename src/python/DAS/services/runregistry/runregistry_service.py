@@ -117,6 +117,7 @@ def worker_v3(url, query):
     callurl = os.path.join(url, path)
     result = urllib.urlopen(callurl, sdata)
     record = json.load(result)
+    result.close()
     notations = {'lsRanges':'lumi_section_ranges',
             'number':'run_number', 'runCreated':'create_time',
             'stopTime': 'end_time', 'startTime': 'start_time',
