@@ -16,6 +16,11 @@ class HotspotBase(object):
     analyzers that want to examine the moving average
     of some key->counter map, and pick the top few
     for further attention.
+
+    DASQueries are extracted from analytics DB. The selected items
+    are passed to generate_task callback implemented in subclasses.
+    It look-up DAS query expiration timestamp and if necessary
+    calls DAS to get it (along with results of the query).
     """
     def __init__(self, **kwargs):
         self.logger = PrintManager('HotspotBase', kwargs.get('verbose', 0))
@@ -31,6 +36,12 @@ class HotspotBase(object):
         """
         Perform a hotspot-like analysis. Subclasses shouldn't
         need to reimplement this method.
+
+        We start with building selection chain. It consists of
+        analytics summaries -> items -> preselected items ->
+        mutable items. The final set of items is passed to
+        task generation step (implemented in subclasses).
+        The final report is generated and returned back.
         """
         
         epoch_end = time.time()
@@ -93,14 +104,23 @@ class HotspotBase(object):
     
     def preselect_items(self, items):
         """
+        This is a part of selection chain.
+
         Optionally, preselect the items for consideration.
         A subclass wishing to exclude certain key types could
-        do so here (but could also do so in make_one_summary)
+        do so here (but could also do so in make_one_summary).
+
+        This is a good place to implement clustering algorithm
+        for selected items. For example, if several queries are
+        selected, we may analyze who has more weight and only
+        pass those for task generation step.
         """
         return items
     
     def mutate_items(self, items):
         """
+        This is a last part of selection chain.
+
         Optionally, mutate the selected items.
         A subclass wishing to merge together keys should
         do so here.

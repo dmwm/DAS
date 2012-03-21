@@ -102,7 +102,11 @@ class ValueHotspot(HotspotBase):
                     
     
     def generate_task(self, item, count, epoch_start, epoch_end):
-        "Generate task"
+        """
+        Generate task callback function. It loop over internal fields, e.g.
+        dataset, file, etc., build DAS query and requests its expiration
+        timestamp. For scheduled queries it yields QueryMaintainer task.
+        """
         only_before = epoch_end + self.interval
         for field in self.fields:
             query = {'fields': [field],
@@ -124,7 +128,12 @@ class ValueHotspot(HotspotBase):
                                   'preempt':self.preempt}}
     
     def preselect_items(self, items):
-        "Select items"
+        """
+        Select items for task generation.
+
+        TODO: it would be nice to implement clustering algorithm
+        which will pass only items with higher weight.
+        """
         if not self.allow_wildcarding:
             for key in items.keys():
                 if '*' in key:
@@ -132,7 +141,10 @@ class ValueHotspot(HotspotBase):
         return items
     
     def mutate_items(self, items):
-        "Mutate items"
+        """
+        Mutate items for task generation. This is a last call in
+        selection chain.
+        """
         if self.find_supersets:
             new_keys = self.get_superset_keys(items.keys())
             return dict([(k, items.get(k, 0)) for k in new_keys])
@@ -175,7 +187,10 @@ class ValueHotspot(HotspotBase):
         return keys
     
     def get_query_expiry(self, dasquery):
-        "Extract analytics apicall the expire timestamp for given query"
+        """
+        Extract analytics apicall the expire timestamp for given query.
+        If query is not found in DAS cache, it invokes DAS call.
+        """
         err_return = time.time() + (2*self.preempt)
         try:
             if not self.das.rawcache.incache(dasquery):
