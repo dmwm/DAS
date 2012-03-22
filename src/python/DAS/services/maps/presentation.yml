@@ -140,6 +140,11 @@ site : [
          "link":[
                  {"name":"Datasets", "query":"dataset site=%s*"},
                 ]},
+        {"das":"site.se", "ui":"StorageElement",
+         "link":[
+                 {"name":"Site", "query":"site=%s"},
+                ]
+        },
         {"das":"site.dataset_fraction", "ui":"Dataset presence"},
         {"das":"site.block_fraction", "ui":"Block presence"},
         {"das":"site.block_completion", "ui":"Block completion"},
