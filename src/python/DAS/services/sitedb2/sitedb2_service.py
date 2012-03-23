@@ -13,7 +13,7 @@ from   types import InstanceType
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
-from   DAS.utils.utils import map_validator, print_exc, genkey, expire_timestamp
+from   DAS.utils.utils import map_validator, print_exc, expire_timestamp
 from   DAS.utils.url_utils import getdata
 
 def rowdict(columns, row):
@@ -67,7 +67,7 @@ class SiteDBService(DASAbstractService):
 
     def getdata_helper(self, url, params, expire, headers=None, post=None):
         "Helper function to get data from SiteDB or local cache"
-        cname = genkey(url)
+        cname = url.split('/')[-1].replace('-', '_')
         col   = self.localcache.conn[self.name][cname]
         local = col.find_one({'expire':{'$gt':expire_timestamp(time.time())}})
         data  = None
