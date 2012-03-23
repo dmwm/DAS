@@ -171,6 +171,14 @@ class SiteDBService(DASAbstractService):
                     yield dict(site=row)
                 elif alias and alias.find(spec_name) != -1:
                     yield dict(site=row)
+        elif spec.has_key('site.se'):
+            site_se = spec['site.se'].replace('*', '')
+            for row in sitedb_parser(source):
+                if  row.has_key('resources'):
+                    for rec in row['resources']:
+                        if  rec.get('fqdn', '').find(site_se) != -1:
+                            if  row.has_key('name'):
+                                yield dict(site=row)
         elif spec.has_key('group.name'):
             for row in sitedb_parser(source):
                 group = spec['group.name'].lower()
