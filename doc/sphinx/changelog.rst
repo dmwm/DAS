@@ -5,6 +5,12 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.3.X
+
+  - fix ddict internal loop
+  - add reprentation of dict/list values for given key attributes, e.g.
+    user will be able to select block.replica and see list of dicts on web page
+
 - 1.2.X
 
   - Pass instance parameter into das_duplicates template, ticket #3338

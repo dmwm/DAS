@@ -9,6 +9,7 @@ Description: CMS DAS records representation
 
 # system modules
 import time
+import json
 import urllib
 from itertools import groupby
 
@@ -17,7 +18,7 @@ from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import print_exc, getarg, size_format, access
-from DAS.utils.utils import identical_data_records, deepcopy
+from DAS.utils.utils import identical_data_records
 from DAS.web.utils import das_json, quote, gen_color
 from DAS.web.utils import not_to_link, quote
 from DAS.web.tools import exposetext
@@ -59,21 +60,39 @@ def make_links(links, value, inst):
                 url = """<a href="%s">%s</a>""" % (quote(url), key)
                 yield url
 
+def repr_val(val):
+    "Represent given value in appropriate form"
+    if  isinstance(val, dict) or isinstance(val, list):
+        val = '<pre>%s</pre>' % json.dumps(val, indent=2)
+    else:
+        val = str(val)
+    return val
+
+def repr_values(row, flt):
+    "Represent values of given row/filter in appropriate form"
+    values = [r for r in DotDict(row).get_values(flt)]
+    if  not len(values):
+        val = ''
+    elif len(values) == 1:
+        val = repr_val(values[0])
+    else:
+        if  isinstance(values[0], dict) or isinstance(values[0], list):
+            val = repr_val(values)
+        else:
+            val = ', '.join(set([str(v) for v in values]))
+    if  flt.lower() == 'run.run_number':
+        if  isinstance(val, basestring):
+            val = int(val.split('.')[0])
+    return val
+
 def add_filter_values(row, filters):
     """Add filter values for a given row"""
     page = ''
     if filters:
         for flt in filters:
             if  flt.find('<') == -1 and flt.find('>') == -1:
-                values = set([str(r) for r in DotDict(row).get_values(flt)])
-                val = ', '.join(values)
-                if  val:
-                    if  flt.lower() == 'run.run_number':
-                        if  isinstance(val, str) or isinstance(val, unicode):
-                            val = int(val.split('.')[0])
-                    page += "<br />Filter <em>%s:</em> %s" % (flt, val)
-                else:
-                    page += "<br />Filter <em>%s</em>" % flt
+                val = repr_values(row, flt)
+                page += "<br />Filter <em>%s:</em> %s" % (flt, val)
     return page
 
 def tooltip_helper(title):
@@ -246,7 +265,7 @@ class CMSRepresentation(DASRepresentation):
         """
         Invoke DAS workflow and get one row from the cache.
         """
-        mongo_query = deepcopy(dasquery.to_bare_query())
+        mongo_query = {'spec':{'qhash':dasquery.qhash}}
         data = [r for r in self.dasmgr.get_from_cache(\
                 DASQuery(mongo_query), idx=0, limit=1)]
         if  len(data):
