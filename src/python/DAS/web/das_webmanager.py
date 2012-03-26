@@ -5,11 +5,7 @@
 DAS web server.
 """
 
-__license__ = "GPL"
-__revision__ = "$Id: das_webmanager.py,v 1.3 2010/03/15 02:44:09 valya Exp $"
-__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
-__email__ = "vkuznet@gmail.com"
 
 # system modules
 import os
@@ -51,13 +47,6 @@ def update_map(emap, mapdir, entry):
     """Update entry map for given entry and mapdir"""
     if  not emap.has_key():
         emap[entry] = mapdir + entry
-
-def parse_args(params):
-    """
-    Return list of arguments for provided set, where elements in a set
-    can be in a form of file1_and_file2_and_file3
-    """
-    return [arg for s in params for arg in s.split('_and_')]
 
 class DASWebManager(TemplatedPage):
     """
@@ -147,38 +136,44 @@ class DASWebManager(TemplatedPage):
     @exposecss
     @exposejs
     @tools.gzip()
-    def yui(self, *args, **kwargs):
+    def serve(self, kwds, imap, idir, datatype='', minimize=False):
+        "Serve files for high level APIs (yui/css/js)"
+        args = []
+        for _, val in kwds.items():
+            if  isinstance(val, list):
+                args += val
+            else:
+                args.append(val)
+        scripts = self.check_scripts(args, imap, idir)
+        return self.serve_files(args, scripts, imap, datatype, minimize)
+
+    @exposecss
+    @exposejs
+    @tools.gzip()
+    def yui(self, **kwargs):
         """
-        Serve YUI library. YUI files has disperse directory structure, so
-        input args can be in a form of (build, container, container.js)
-        which corresponds to a single YUI JS file
-        build/container/container.js
+        Serve YUI library files. Files can be passed via f parameter, e.g.
+        f=build/container/container.js or f=build/fonts/fonts-min.css
         """
-        args = ['/'.join(args)] # preserve YUI dir structure
-        scripts = self.check_scripts(args, self.yuimap, self.yuidir)
-        return self.serve_files(args, scripts, self.yuimap)
+        return self.serve(kwargs, self.yuimap, self.yuidir)
         
     @exposecss
     @tools.gzip()
-    def css(self, *args, **kwargs):
+    def css(self, **kwargs):
         """
-        Cat together the specified css files and return a single css include.
-        Multiple files can be supplied in a form of file1&file2&file3
+        Serve provided CSS files. They can be passed as
+        f=file1.css&f=file2.css
         """
-        args = parse_args(args)
-        scripts = self.check_scripts(args, self.cssmap, self.cssdir)
-        return self.serve_files(args, scripts, self.cssmap, 'css', True)
+        return self.serve(kwargs, self.cssmap, self.cssdir, 'css', True)
         
     @exposejs
     @tools.gzip()
-    def js(self, *args, **kwargs):
+    def js(self, **kwargs):
         """
-        Cat together the specified js files and return a single js include.
-        Multiple files can be supplied in a form of file1&file2&file3
+        Serve provided JS scripts. They can be passed as
+        f=file1.js&f=file2.js
         """
-        args = parse_args(args)
-        scripts = self.check_scripts(args, self.jsmap, self.jsdir)
-        return self.serve_files(args, scripts, self.jsmap)
+        return self.serve(kwargs, self.jsmap, self.jsdir)
 
     def serve_files(self, args, scripts, resource, datatype='', minimize=False):
         """
