@@ -230,7 +230,7 @@ def adjust_values(func, gen, links):
             rlist.sort()
             page += ', '.join(rlist)
     if  links and not error:
-        page += '<br />' + links
+        page += '<br />' + ', '.join(links)
     return page
 
 class CMSRepresentation(DASRepresentation):
@@ -380,7 +380,7 @@ class CMSRepresentation(DASRepresentation):
                 msg += 'Fail to process row\n%s' % str(row)
                 raise Exception(msg)
             page += '<div class="%s"><hr class="line" />' % style
-            links = ""
+            links = []
             pkey  = None
             lkey  = None
             if  row.has_key('das') and row['das'].has_key('primary_key'):
@@ -421,13 +421,13 @@ class CMSRepresentation(DASRepresentation):
                             break
                     if  linkrec and pval and pval != 'N/A' and \
                         not isinstance(pval, list) and not error:
-                        links = ', '.join(make_links(linkrec, pval, inst))
+                        links += [l for l in make_links(linkrec, pval, inst)]
                     if  pkey and pkey == 'file.name':
                         try:
                             lfn = DotDict(row).get('file.name')
                             val = self.templatepage(\
                                 'filemover', lfn=lfn) if lfn else ''
-                            links += ', ' + val if links else val
+                            if  val: links.append(val)
                         except:
                             pass
                     if  pkey and pkey == 'site.name':
@@ -435,7 +435,7 @@ class CMSRepresentation(DASRepresentation):
                             site = DotDict(row).get('site.name')
                             val = self.templatepage(\
                             'sitedb', item=site, api="sites") if site else ''
-                            links += ', ' + val if links else val
+                            if  val: links.append(val)
                         except:
                             pass
                     if  pkey and pkey == 'user.name':
@@ -443,25 +443,25 @@ class CMSRepresentation(DASRepresentation):
                             user = DotDict(row).get('user.username')
                             val = self.templatepage(\
                             'sitedb', item=user, api="people") if user else ''
-                            links += ', ' + val if links else val
+                            if  val: links.append(val)
                         except:
                             pass
                     if  pkey and pkey == 'dataset.name':
                         try:
                             path = DotDict(row).get('dataset.name')
                             if  path:
-                                links += ', ' + self.templatepage(\
-                                    'makepy', path=path, inst=inst)
+                                links.append(self.templatepage(\
+                                    'makepy', path=path, inst=inst))
                                 if  inst == self.dbs_global:
-                                    links += ', ' + self.templatepage(\
-                                        'phedex_subscription', path=path)
+                                    links.append(self.templatepage(\
+                                        'phedex_subscription', path=path))
                         except:
                             pass
                     if  pkey and pkey == 'release.name':
                         rel  = '["%s"]' % DotDict(row).get('release.name')
                         url  = 'https://cmstags.cern.ch/tc/py_getReleasesTags?'
                         url += 'diff=false&releases=%s' % urllib.quote(rel)
-                        links += ', <a href="%s">Packages</a>' % url
+                        links.append('<a href="%s">Packages</a>' % url)
                 except:
                     pval = 'N/A'
             gen   = self.convert2ui(row, pkey)
