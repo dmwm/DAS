@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.3.X
 
+  - Add sitedb links for site/user DAS queries
   - Re-factor code which serves JS/CSS/YUI files; reduce number of client/server
     round-trips to load those files on a page
   - fix ddict internal loop

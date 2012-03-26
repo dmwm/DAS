@@ -425,9 +425,25 @@ class CMSRepresentation(DASRepresentation):
                     if  pkey and pkey == 'file.name':
                         try:
                             lfn = DotDict(row).get('file.name')
-                            if  lfn:
-                                links += ', ' + \
-                                        self.templatepage('filemover', lfn=lfn)
+                            val = self.templatepage(\
+                                'filemover', lfn=lfn) if lfn else ''
+                            links += ', ' + val if links else val
+                        except:
+                            pass
+                    if  pkey and pkey == 'site.name':
+                        try:
+                            site = DotDict(row).get('site.name')
+                            val = self.templatepage(\
+                            'sitedb', item=site, api="sites") if site else ''
+                            links += ', ' + val if links else val
+                        except:
+                            pass
+                    if  pkey and pkey == 'user.name':
+                        try:
+                            user = DotDict(row).get('user.username')
+                            val = self.templatepage(\
+                            'sitedb', item=user, api="people") if user else ''
+                            links += ', ' + val if links else val
                         except:
                             pass
                     if  pkey and pkey == 'dataset.name':
