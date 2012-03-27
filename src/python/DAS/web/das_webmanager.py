@@ -23,6 +23,7 @@ from cherrypy import config as cherryconf
 #    from DAS.web.tools import exposecss, exposejs, TemplatedPage
 import DAS
 from DAS.web.tools import exposecss, exposejs, TemplatedPage
+from DAS.web.utils import checkargs
 
 def set_headers(itype, size=0):
     """
@@ -133,47 +134,46 @@ class DASWebManager(TemplatedPage):
                 cherrypy.response.headers['Content-type'] = ctype
                 return serve_file(image, content_type=ctype)
 
-    @exposecss
-    @exposejs
-    @tools.gzip()
     def serve(self, kwds, imap, idir, datatype='', minimize=False):
         "Serve files for high level APIs (yui/css/js)"
         args = []
-        for _, val in kwds.items():
-            if  isinstance(val, list):
-                args += val
-            else:
-                args.append(val)
+        for key, val in kwds.items():
+            if  key == 'f': # we only look-up files from given kwds dict
+                if  isinstance(val, list):
+                    args += val
+                else:
+                    args.append(val)
         scripts = self.check_scripts(args, imap, idir)
         return self.serve_files(args, scripts, imap, datatype, minimize)
 
     @exposecss
-    @exposejs
     @tools.gzip()
-    def yui(self, **kwargs):
-        """
-        Serve YUI library files. Files can be passed via f parameter, e.g.
-        f=build/container/container.js or f=build/fonts/fonts-min.css
-        """
-        return self.serve(kwargs, self.yuimap, self.yuidir)
-        
-    @exposecss
-    @tools.gzip()
+    @checkargs(['f', 'resource'])
     def css(self, **kwargs):
         """
         Serve provided CSS files. They can be passed as
         f=file1.css&f=file2.css
         """
-        return self.serve(kwargs, self.cssmap, self.cssdir, 'css', True)
+        resource = kwargs.get('resource', 'css')
+        if  resource == 'css':
+            return self.serve(kwargs, self.cssmap, self.cssdir, 'css', True)
+        elif resource == 'yui':
+            return self.serve(kwargs, self.yuimap, self.yuidir)
         
     @exposejs
     @tools.gzip()
+    @checkargs(['f', 'resource'])
     def js(self, **kwargs):
         """
         Serve provided JS scripts. They can be passed as
-        f=file1.js&f=file2.js
+        f=file1.js&f=file2.js with optional resource parameter
+        to speficy type of JS files, e.g. resource=yui.
         """
-        return self.serve(kwargs, self.jsmap, self.jsdir)
+        resource = kwargs.get('resource', 'js')
+        if  resource == 'js':
+            return self.serve(kwargs, self.jsmap, self.jsdir)
+        elif resource == 'yui':
+            return self.serve(kwargs, self.yuimap, self.yuidir)
 
     def serve_files(self, args, scripts, resource, datatype='', minimize=False):
         """
