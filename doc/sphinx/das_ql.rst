@@ -25,8 +25,11 @@ the *file* key, e.g. *file.md5*. But the attributes cannot appear in look-up
 part of the query.
 
 The DAS query can be supplemented either by filters or aggregator functions.
-The filter consists of *key/key.attributes* value pair or 
-*key/key.attributes* fields. The supported aggregator functions are: 
+The filter consists of filter name and *key/key.attributes* value pair or
+*key/key.attributes* fields. The support filters are: *grep, unique, sort*.
+To *unique* filter does not require a *key*.
+
+The supported aggregator functions are:
 *sum, count, min, max, avg, median*. A wild-card patterns are supported 
 via asterisk character. 
 
@@ -35,7 +38,10 @@ file and dataset keys and file.size, dataset.name key attributes:
 
 .. doctest::
 
-    file dataset=/a/b/c | grep file.size, dataset.name
+    file dataset=/a/b/c | unique
+    file dataset=/a/b/c | grep file.name, file.size
+    file dataset=/a/b/c | sort file.name
+    file dataset=/a/b/c | grep file.name, file.size, | sort file.size
     file dataset=/a/b/c | sum(file.size)
     file dataset=/a/b/c | grep file.size>1 | sum(file.size)
     file dataset=/a/b*

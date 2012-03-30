@@ -454,26 +454,26 @@ def ply2mongo(query):
                      'aggregators': [('sum', 'file.size')]}
     """
     mongodict = {}
+    filters = {}
     if  query.has_key('pipe'):
         for item in query['pipe']:
             if  item[0] == 'filter':
                 dasfilter, name, args = item
-                if  dasfilter == 'filter' and name == 'grep':
-                    if  mongodict.has_key('filters'):
-                        mongodict['filters'] += args
+                if  dasfilter == 'filter' and name in ['grep', 'sort']:
+                    if  filters.has_key(name):
+                        filters[name] += args
                     else:
-                        mongodict['filters']  = args
+                        filters[name]  = args
                 if  dasfilter == 'filter' and name == 'unique':
-                    if  mongodict.has_key('filters'):
-                        mongodict['filters'] += ['unique']
-                    else:
-                        mongodict['filters']  = ['unique']
+                    filters['unique'] = 1
             if  item[0] == 'aggregators':
                 aggs = [(k[1], k[2]) for k in item[1:]]
                 mongodict['aggregators'] = aggs
             if  item[0] == 'mapreduce':
                 _, name, _ = item
                 mongodict['mapreduce'] = name
+        if  filters:
+            mongodict['filters'] = filters
     fields = []
     spec   = {}
     inst   = None

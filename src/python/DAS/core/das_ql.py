@@ -15,7 +15,7 @@ from DAS.core.das_aggregators import ResultObject
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
 
-DAS_FILTERS   = ['grep', 'unique']
+DAS_FILTERS   = ['grep', 'unique', 'sort']
 DAS_OPERATORS = ['=', 'between', 'last']
 DAS_SPECIALS  = ['date', 'system', 'instance']
 DAS_DB_KEYWORDS = ['records', 'queries', 'popular', '_id']

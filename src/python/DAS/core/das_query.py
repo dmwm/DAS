@@ -43,7 +43,8 @@ class DASQuery(object):
         self._instance      = None
         self._loose_query   = None
         self._pattern_query = None
-        self._filters       = []
+        self._sortkeys      = []
+        self._filters       = {}
         self._mapreduce     = []
         self._aggregators   = []
         self._flags         = flags
@@ -107,12 +108,20 @@ class DASQuery(object):
     @property
     def filters(self):
         "filters property of the DAS query"
-        return self._filters
+        filters = self._mongo_query.get('filters', {})
+        return filters.get('grep', [])
+
+    @property
+    def sortkeys(self):
+        "sortkeys property of the DAS query"
+        filters = self._mongo_query.get('filters', {})
+        return filters.get('sort', [])
 
     @property
     def unique_filter(self):
         "Check if DAS query has unique filter"
-        return True if 'unique' in self.filters else False
+        filters = self._mongo_query.get('filters', {})
+        return True if 'unique' in filters.keys() else False
 
     @property
     def mapreduce(self):
@@ -174,7 +183,7 @@ class DASQuery(object):
         Read only mongo query, generated on demand.
         """
         system = self._mongo_query.get('system', [])
-        filters = self._mongo_query.get('filters', [])
+        filters = self._mongo_query.get('filters', {})
         aggregators = self._mongo_query.get('aggregators', [])
         if  not self._mongo_query:
             self._mongo_query = deepcopy(self.storage_query)

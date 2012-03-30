@@ -193,7 +193,7 @@ class DASCore(object):
                     _keys.append(key)
         return _keys
 
-    def result(self, query, idx=0, limit=None, skey=None, sorder='asc'):
+    def result(self, query, idx=0, limit=None):
         """
         Get results either from cache or from explicit call
         """
@@ -220,7 +220,7 @@ class DASCore(object):
 
         # lookup provided query in a cache
         if  not self.noresults:
-            results = self.get_from_cache(dasquery, idx, limit, skey, sorder)
+            results = self.get_from_cache(dasquery, idx, limit)
         return results
 
     def remove_from_cache(self, dasquery):
@@ -383,15 +383,14 @@ class DASCore(object):
             return len([1 for _ in self.get_queries(dasquery)])
         return self.rawcache.nresults(dasquery, coll)
 
-    def get_from_cache(self, dasquery, idx=0, limit=0, skey=None,
-                        sorder='asc', collection='merge'):
+    def get_from_cache(self, dasquery, idx=0, limit=0, collection='merge'):
         """
         Look-up results from the merge cache and yield them for
         further processing.
         """
         das_timer('DASCore::get_from_cache', self.verbose)
-        msg = 'col=%s, query=%s, idx=%s, limit=%s, skey=%s, order=%s'\
-                % (collection, dasquery, idx, limit, skey, sorder)
+        msg = 'col=%s, query=%s, idx=%s, limit=%s'\
+                % (collection, dasquery, idx, limit)
         self.logger.info(msg)
 
         fields  = dasquery.mongo_query.get('fields', None)
@@ -403,7 +402,7 @@ class DASCore(object):
             _id = 0
             for func, key in dasquery.aggregators:
                 rows = self.rawcache.get_from_cache(\
-                        dasquery, collection=collection, skey=skey)
+                        dasquery, collection=collection)
                 data = getattr(das_aggregator, 'das_%s' % func)(key, rows)
                 res += \
                 [{'_id':_id, 'function': func, 'key': key, 'result': data}]
@@ -411,8 +410,8 @@ class DASCore(object):
         elif isinstance(fields, list) and 'queries' in fields:
             res = itertools.islice(self.get_queries(dasquery), idx, idx+limit)
         else:
-            res = self.rawcache.get_from_cache(dasquery, idx, limit, skey, \
-                    sorder, collection=collection)
+            res = self.rawcache.get_from_cache(dasquery, idx, limit, \
+                    collection=collection)
         for row in res:
             yield row
         das_timer('DASCore::get_from_cache', self.verbose)

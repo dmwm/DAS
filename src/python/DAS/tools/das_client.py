@@ -231,12 +231,12 @@ def main():
             msg += ", for more results use --idx/--limit options\n"
             print msg
         mongo_query = jsondict['mongo_query']
-        unique = False
-        filters = mongo_query.get('filters', [])
+        unique  = False
+        fdict   = mongo_query.get('filters', {})
+        filters = fdict.get('filters', [])
         aggregators = mongo_query.get('aggregators', [])
-        if  'unique' in filters:
+        if  'unique' in fdict.keys():
             unique = True
-            filters.remove('unique')
         if  filters and not aggregators:
             data = jsondict['data']
             if  isinstance(data, dict):

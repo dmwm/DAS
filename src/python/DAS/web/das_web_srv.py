@@ -48,8 +48,10 @@ from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
 import DAS.utils.jsonwrapper as json
 
+# NOTE: I can remove dir/skey once changes with sort filter will be propagated
+# to production server
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 
-        'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
+'reason', 'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
 class DASWebService(DASWebManager):
@@ -204,11 +206,12 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def redirect(self, *args, **kwargs):
+    def redirect(self, **kwargs):
         """
         Represent DAS redirect page
         """
-        msg  = kwargs.get('reason', '')
+        dmsg = 'You do not have permission to access the resource requested.'
+        msg  = kwargs.get('reason', dmsg)
         if  msg:
             msg = 'Reason: ' + msg
         page = self.templatepage('das_redirect', msg=msg)
@@ -339,7 +342,7 @@ class DASWebService(DASWebManager):
         if  query_part == 'queries' or query_part == 'records':
             return
         new_input = free_text_parser(uinput, self.daskeys)
-        if  new_input == uinput:
+        if  uinput and new_input == uinput:
             selkey = choose_select_key(uinput, self.daskeys, 'dataset')
             if  selkey and len(new_input) > len(selkey) and \
                 new_input[:len(selkey)] != selkey:
@@ -543,8 +546,6 @@ class DASWebService(DASWebManager):
         inst   = kwargs.get('instance', self.dbs_global)
         idx    = getarg(kwargs, 'idx', 0)
         limit  = getarg(kwargs, 'limit', 0) # do not impose limit
-        skey   = kwargs.get('skey', '')
-        sdir   = kwargs.get('dir', 'asc')
         coll   = kwargs.get('collection', 'merge')
         dasquery = kwargs.get('dasquery', None)
         time0  = time.time()
@@ -562,7 +563,7 @@ class DASWebService(DASWebManager):
         try:
             nres = self.dasmgr.nresults(dasquery, coll)
             data = \
-                self.dasmgr.get_from_cache(dasquery, idx, limit, skey, sdir)
+                self.dasmgr.get_from_cache(dasquery, idx, limit)
             head.update({'status':'ok', 'nresults':nres,
                          'ctime': time.time()-time0, 'dasquery': dasquery})
         except Exception as exc:
@@ -601,6 +602,12 @@ class DASWebService(DASWebManager):
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
+        uinput = kwargs.get('input', '').strip()
+        if  not uinput:
+            head = {'status': 'fail', 'reason': 'No input found',
+                    'args': kwargs, 'ctime': 0, 'input': uinput}
+            data = []
+            return self.datastream(dict(head=head, data=data))
         self.adjust_input(kwargs)
         pid    = kwargs.get('pid', '')
         inst   = kwargs.get('instance', self.dbs_global)
@@ -706,6 +713,11 @@ class DASWebService(DASWebManager):
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
+
+        uinput  = kwargs.get('input', '').strip()
+        if  not uinput:
+            kwargs['reason'] = 'No input found'
+            return self.redirect(**kwargs)
 
         time0   = time.time()
         self.adjust_input(kwargs)

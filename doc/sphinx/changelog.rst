@@ -7,6 +7,14 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.3.X
 
+  - Add sort filter, users will be able to use it as following
+    file dataset=/a/b/c | sort file.size,
+    file dataset=/a/b/c | sort file.size-
+    The default order is ascending. To reverse it, user will need to add
+    minus sign at the end of the sort key, e.g. file.size-
+  - Re-factor code to support multiple filters. They now part of DASQuery
+    object. All filters are stored as a dict, e.g. {'grep': <filter list>,
+    'unique': 1, 'sort': 'file.size}
   - Add sitedb links for site/user DAS queries
   - Re-factor code which serves JS/CSS/YUI files; reduce number of client/server
     round-trips to load those files on a page

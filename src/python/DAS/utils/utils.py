@@ -101,7 +101,8 @@ def parse_filters(query):
     Be smart not to overwrite spec condition of DAS query.
     """
     spec  = query.get('spec', {})
-    filters = query.get('filters', [])
+    filters = query.get('filters', {})
+    filters = filters.get('grep', [])
     mdict = {}
     existance = {'$exists': True}
     for flt in filters:
@@ -118,6 +119,11 @@ def parse_filters(query):
                     raise Exception(msg)
             else:
                 mdict.update({key:val})
+    # clean-up exists conditions
+    for key, val in mdict.items():
+        if  isinstance(val, dict) and len(val.keys()) > 1 and \
+            val.has_key('$exists'):
+            del val['$exists']
     return mdict
 
 def parse_filter_string(val):

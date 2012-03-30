@@ -404,7 +404,7 @@ class DASMongocache(object):
         if  filter_cond:
             spec.update(filter_cond)
         if  dasquery.unique_filter:
-            skeys = self.find_sort_keys(collection, dasquery)
+            skeys = self.mongo_sort_keys(collection, dasquery)
             if  skeys:
                 gen = col.find(spec=spec).sort(skeys)
             else:
@@ -416,21 +416,24 @@ class DASMongocache(object):
         self.logger.info(msg)
         return res
 
-    def find_sort_keys(self, collection, dasquery, skey=None, order='asc'):
+    def mongo_sort_keys(self, collection, dasquery):
         """
         Find list of sort keys for a given DAS query. Check existing
         indexes and either use fields or spec keys to find them out.
+        Return list of mongo sort keys in a form of (key, order).
         """
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
         fields = dasquery.mongo_query.get('fields')
         spec   = dasquery.mongo_query.get('spec')
-        skeys  = []
-        if  skey:
-            if  order == 'asc':
-                skeys = [(skey, ASCENDING)]
-            else:
-                skeys = [(skey, DESCENDING)]
+        skeys  = dasquery.sortkeys
+        mongo_skeys = []
+        if  skeys:
+            for key in skeys:
+                if  key.find('-') != -1: # reverse order, e.g. desc
+                    mongo_skeys.append((key.replace('-', ''), DESCENDING))
+                else:
+                    mongo_skeys.append((key, ASCENDING))
         else:
             existing_idx = [i for i in self.existing_indexes(collection)]
             if  fields:
@@ -444,8 +447,8 @@ class DASMongocache(object):
             keys = [k for k in lkeys \
                 if k.find('das') == -1 and k.find('_id') == -1 and \
                         k in existing_idx]
-            skeys = [(k, ASCENDING) for k in keys]
-        return skeys
+            mongo_skeys = [(k, ASCENDING) for k in keys]
+        return mongo_skeys
 
     def existing_indexes(self, collection='merge'):
         """
@@ -496,12 +499,10 @@ class DASMongocache(object):
             for row in res:
                 yield row
 
-    def get_from_cache(self, dasquery, idx=0, limit=0, skey=None, order='asc',
-                        collection='merge'):
+    def get_from_cache(self, dasquery, idx=0, limit=0, collection='merge'):
         "Generator which retrieves results from the cache"
         if  dasquery.service_apis_map(): # valid DAS query
-            result = self.get_das_records\
-                        (dasquery, idx, limit, skey, order, collection)
+            result = self.get_das_records(dasquery, idx, limit, collection)
         else: # pure MongoDB query
             coll    = self.mdb[collection]
             fields  = dasquery.mongo_query.get('fields', None)
@@ -511,17 +512,16 @@ class DASMongocache(object):
                     fields = dasquery.filters
                 else:
                     fields += dasquery.filters
-            result  = self.get_records(coll, spec, fields, skey, \
+            skeys   = self.mongo_sort_keys(collection, dasquery)
+            result  = self.get_records(coll, spec, fields, skeys, \
                             idx, limit, dasquery.unique_filter)
         for row in result:
             yield row
 
-    def get_das_records(self, dasquery, idx=0, limit=0, skey=None, order='asc',
-                        collection='merge'):
+    def get_das_records(self, dasquery, idx=0, limit=0, collection='merge'):
         "Generator which retrieves DAS records from the cache"
         col = self.mdb[collection]
-        msg = "(%s, %s, %s, %s, %s, coll=%s)"\
-                % (dasquery, idx, limit, skey, order, collection)
+        msg = "(%s, %s, %s, coll=%s)" % (dasquery, idx, limit, collection)
         self.logger.info(msg)
 
         idx = int(idx)
@@ -536,7 +536,7 @@ class DASMongocache(object):
             fields += self.das_internal_keys
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
-        skeys   = self.find_sort_keys(collection, dasquery, skey, order)
+        skeys   = self.mongo_sort_keys(collection, dasquery)
         res     = self.get_records(col, spec, fields, skeys, \
                         idx, limit, dasquery.unique_filter)
         counter = 0

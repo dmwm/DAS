@@ -55,12 +55,6 @@ class DASOptionParser:
         self.parser.add_option("--limit", action="store", type="int", 
                                           default=0, dest="limit",
              help="limit number of returned results")
-        self.parser.add_option("--sort-key", action="store", type="string", 
-                                          default=None, dest="skey",
-             help="specify sorting key, please use dot notation for compound keys")
-        self.parser.add_option("--sort-order", action="store", type="string", 
-                                          default='asc', dest="sorder",
-             help="specify sorting order, e.g. asc/desc")
         self.parser.add_option("--no-output", action="store_true", 
                                           dest="nooutput",
              help="run DAS workflow but don't print results")
@@ -78,13 +72,13 @@ def iterate(input_results):
     for _ in input_results:
         pass
 
-def run(dascore, query, idx, limit, skey, sorder, nooutput, plain):
+def run(dascore, query, idx, limit, nooutput, plain):
     """
     Execute DAS workflow for given set of parameters.
     We use this function in main and in profiler.
     """
     if  not nooutput:
-        results = dascore.result(query, idx, limit, skey, sorder)
+        results = dascore.result(query, idx, limit)
         if  plain:
             for item in results:
                 print item
@@ -140,19 +134,17 @@ def main():
         limit  = opts.limit
         output = opts.nooutput
         plain  = opts.plain
-        skey   = opts.skey
-        sorder = opts.sorder
 
         if  opts.profile:
             import cProfile # python profiler
             import pstats   # profiler statistics
-            cmd  = 'run(dascore,query,idx,limit,skey,sorder,output,plain)'
+            cmd  = 'run(dascore,query,idx,limit,output,plain)'
             cProfile.runctx(cmd, globals(), locals(), 'profile.dat')
             info = pstats.Stats('profile.dat')
             info.sort_stats('cumulative')
             info.print_stats()
         else:
-            run(dascore, query, idx, limit, skey, sorder, output, plain)
+            run(dascore, query, idx, limit, output, plain)
     elif opts.dasconfig:
         print pformat(dascore.dasconfig)
     else:
