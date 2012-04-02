@@ -18,8 +18,8 @@ This release series is targeted to DAS production stability and quality.
   - Add sitedb links for site/user DAS queries
   - Re-factor code which serves JS/CSS/YUI files; reduce number of client/server
     round-trips to load those files on a page
-  - fix ddict internal loop
-  - add reprentation of dict/list values for given key attributes, e.g.
+  - fix ddict internal loop bug
+  - add representation of dict/list values for given key attributes, e.g.
     user will be able to select block.replica and see list of dicts on web page
 
 - 1.2.X
