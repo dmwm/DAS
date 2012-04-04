@@ -60,24 +60,13 @@ function load(url) {
     window.location.href=url;
 }
 function reload() {
-    var url = window.location.href;
-    var newurl;
-    if (url.search("ajax=1")>0) {
-        newurl = url.replace(/ajax=1/g,'ajax=0');
-    } else if (url.search("ajax=0")>0) {
-        newurl = url;
-    } else {
-        newurl = window.location.href + '&ajax=0';
-    }
-    load(newurl);
+    load(window.location.href);
 }
 function UrlParams() {
     var url=window.location.href;
     var arr=url.split('&');
     var first = arr[0].split('?');
     arr[0]=first[1];
-//    return arr;
-
     var options = {};
     for (var i=0; i<arr.length; i++) {
         var params = arr[i].split('=');
@@ -108,29 +97,45 @@ function AddFilters() {
     var flt=document.getElementById('filters');
     var val=document.getElementById('das_keys');
     var newval = '';
-    if (uin.value.indexOf('|') != -1) {
-        if (uin.value.indexOf(' grep') != -1) {
+    if (uin.value.lastIndexOf('|') != -1) {
+        if (uin.value.lastIndexOf('grep ') != -1) {
             if (flt.value == 'grep') {
                 newval = uin.value + ', ' + val.value;
+            } else if (flt.value == 'sort') {
+                newval = uin.value + ' | sort ' + val.value;
             } else {
                 alert('Cannot mix grep and aggregator function');
                 newval = uin.value;
             }
-        } else if (uin.value.indexOf('| unique') != -1 || uin.value.indexOf('|unique') != -1) {
-            newval = uin.value + ' | grep ' + val.value;
-        } else {
+        } else if (uin.value.lastIndexOf('sort ') != -1) {
             if (flt.value == 'grep') {
-                alert('Cannot mix grep and aggregator functions');
+                newval = uin.value + ' | grep ' + val.value;
+            } else if (flt.value == 'sort') {
+                alert('Repeated sort filter');
                 newval = uin.value;
             } else {
-                newval = uin.value + ', ' + flt.value + '(' +val.value +')';
+                newval = uin.value + ' | ' + flt.value + '(' +val.value +')';
+            }
+        } else if (uin.value.lastIndexOf('| unique') != -1 || uin.value.lastIndexOf('|unique') != -1) {
+            if (flt.value == 'grep' || flt.value == 'sort') {
+                newval = uin.value + ' | ' + flt.value + ' ' + val.value;
+            } else {
+                newval = uin.value + ' | ' + flt.value + '(' +val.value +')';
+            }
+        } else {
+            if (flt.value == 'grep' || flt.value == 'sort') {
+                alert('Cannot mix grep/sort filters with aggregator functions');
+                newval = uin.value;
+            } else {
+                newval = uin.value + ' | ' + flt.value + '(' +val.value +')';
             }
         }
     } else {
-        if (flt.value == 'grep')
+        if (flt.value == 'grep' || flt.value == 'sort') {
             newval = uin.value + ' | ' + flt.value+' ' + val.value;
-        else
+        } else {
             newval = uin.value + ' | ' + flt.value + '(' + val.value+')';
+        }
     }
     updateTag('input', newval);
     load('/das/request?'+$('das_search').serialize());

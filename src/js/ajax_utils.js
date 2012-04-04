@@ -8,6 +8,12 @@ function ajaxCheckPid(base, method, pid, interval) {
     { method: 'get' ,
       parameters : {'pid': pid},
       onException: function() {return;},
+      onComplete : function() {
+        var url = window.location.href;
+        if (url.indexOf('view=xml') != -1 ||
+            url.indexOf('view=json') != -1 ||
+            url.indexOf('view=plain') != -1) window.location.href=url; // reload the page
+      },
       onSuccess : function(transport) {
         var sec = wait/1000;
         var msg = ', next check in '+sec.toString()+' sec, please wait..., <a href="/das/">stop</a> request';

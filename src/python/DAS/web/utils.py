@@ -249,18 +249,6 @@ def checkargs(supported):
             if  checkarg(kwds, 'query') and not len(kwds['query']):
                 code  = web_code('Invalid query')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'expire') and not pat.match(str(kwds['expire'])):
-                code  = web_code('Unsupported expire value')
-                raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'order'):
-                if  kwds['order'] not in ['asc', 'desc']:
-                    code  = web_code('Unsupported order value')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'skey'):
-                if  not (isinstance(kwds['skey'], str) or \
-                    isinstance(kwds['skey'], unicode)):
-                    code  = web_code('Unsupported skey value')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
             if  kwds.has_key('input'):
                 if  not (isinstance(kwds['input'], str) or \
                     isinstance(kwds['input'], unicode)):
@@ -272,47 +260,14 @@ def checkargs(supported):
             if  checkarg(kwds, 'limit') and not pat.match(str(kwds['limit'])):
                 code  = web_code('Unsupported limit value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'method'):
-                if  kwds['method'] not in ['GET', 'PUT', 'DELETE', 'POST']:
-                    code  = web_code('Unsupported method')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'dir'):
-                if  kwds['dir'] not in ['asc', 'desc']:
-                    code  = web_code('Unsupported dir value')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'sort'):
-                if  kwds['sort'] not in ['true', 'false']:
-                    code  = web_code('Unsupported sort value')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'view'):
                 if  kwds['view'] not in \
                         ['list', 'xml', 'json', 'plain', 'table']:
                     code  = web_code('Unsupported view')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'format'):
-                if  kwds['format'] not in ['xml', 'json']:
-                    code  = web_code('Unsupported format')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'database') and \
-                not isinstance(kwds['database'], str):
-                if  kwds['database'] not in \
-                    ['das', 'analytics', 'admin', 'logging', 'mapping']:
-                    code  = web_code('Unsupported database')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'collection'):
                 if  kwds['collection'] not in ['cache', 'merge']:
                     code  = web_code('Unsupported collection')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'ajax'):
-                if  str(kwds['ajax']) not in ['0', '1']:
-                    code  = web_code('Unsupported ajax value')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'dasquery') and not len(kwds['dasquery']):
-                code = web_code('Unsupported dasquery value')
-                raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'dbcoll'):
-                if  kwds['dbcoll'].find('.') == -1:
-                    code = web_code('Unsupported dbcoll value')
                     raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'msg') and not isinstance(kwds['msg'], str):
                 code = web_code('Unsupported msg value')

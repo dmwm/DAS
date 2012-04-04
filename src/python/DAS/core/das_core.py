@@ -244,7 +244,7 @@ class DASCore(object):
             if  record and record.has_key('das') and \
                 record['das'].has_key('status'):
                 status = record['das']['status']
-                return status, record['das']['qhash']
+                return status, record['qhash']
         except:
             pass
 
@@ -254,7 +254,7 @@ class DASCore(object):
             if  record and record.has_key('das') and \
                 record['das'].has_key('status'):
                 similar_query_status = record['das']['status']
-                return similar_query_status, record['das']['qhash']
+                return similar_query_status, record['qhash']
         return status, 0
 
     def worker(self, srv, dasquery):

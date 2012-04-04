@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.3.X
 
+  - Fix plain view, ticket #3509
+  - Fix xml/json/plain requests via direct URL call
+  - Clean-up web server and checkargs
+  - Add sort filer to web UI
   - Add sort filter, users will be able to use it as following
     file dataset=/a/b/c | sort file.size,
     file dataset=/a/b/c | sort file.size-

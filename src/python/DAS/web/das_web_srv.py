@@ -48,10 +48,8 @@ from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
 import DAS.utils.jsonwrapper as json
 
-# NOTE: I can remove dir/skey once changes with sort filter will be propagated
-# to production server
-DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'dir', 
-'reason', 'instance', 'format', 'view', 'skey', 'query', 'fid', 'pid', 'next']
+DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
+            'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
 class DASWebService(DASWebManager):
@@ -659,16 +657,20 @@ class DASWebService(DASWebManager):
             self.reqmgr.add(pid, kwargs)
             return pid
 
-    def get_page_content(self, kwargs):
+    def get_page_content(self, kwargs, complete_msg=True):
         """Retrieve page content for provided set of parameters"""
+        page = ''
         try:
             view = kwargs.get('view', 'list')
             if  view == 'plain':
                 if  kwargs.has_key('limit'):
                     del kwargs['limit']
-            head, data = self.get_data(kwargs)
-            func = getattr(self, view + "view") 
-            page = func(head, data)
+            if  view in ['json', 'xml', 'plain'] and complete_msg:
+                page = 'Request comlpeted. Reload the page ...'
+            else:
+                head, data = self.get_data(kwargs)
+                func = getattr(self, view + "view")
+                page = func(head, data)
         except HTTPError as _err:
             raise 
         except Exception as exc:
@@ -735,22 +737,28 @@ class DASWebService(DASWebManager):
             else:
                 return content
         dasquery = content # returned content is valid DAS query
-        kwargs['dasquery'] = dasquery.storage_query
-        addr = cherrypy.request.headers.get('Remote-Addr')
-        _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery, addr,
-                            pid=dasquery.qhash)
-        self.reqmgr.add(pid, kwargs)
-        if  self.taskmgr.is_alive(pid):
-            page = self.templatepage('das_check_pid',
-                    method='check_pid', uinput=uinput,
-                    base=self.base, pid=pid, interval=self.interval)
+        status, qhash = self.dasmgr.get_status(dasquery)
+        if  status == 'ok':
+            page = self.get_page_content(kwargs, complete_msg=False)
+            ctime = (time.time()-time0)
+            if  view == 'list' or view == 'table':
+                return self.page(form + page, ctime=ctime)
+            return page
         else:
-            page = self.get_page_content(kwargs)
-            self.reqmgr.remove(pid)
+            kwargs['dasquery'] = dasquery.storage_query
+            addr = cherrypy.request.headers.get('Remote-Addr')
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery, addr,
+                                pid=dasquery.qhash)
+            self.reqmgr.add(pid, kwargs)
+            if  self.taskmgr.is_alive(pid):
+                page = self.templatepage('das_check_pid',
+                        method='check_pid', uinput=uinput, view=view,
+                        base=self.base, pid=pid, interval=self.interval)
+            else:
+                page = self.get_page_content(kwargs)
+                self.reqmgr.remove(pid)
         ctime = (time.time()-time0)
-        if  view == 'list' or view == 'table':
-            return self.page(form + page, ctime=ctime)
-        return page
+        return self.page(form + page, ctime=ctime)
 
     @expose
     def requests(self):
@@ -786,42 +794,20 @@ class DASWebService(DASWebManager):
         """
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        img = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
+        img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
+        page = ''
         try:
             if  self.taskmgr.is_alive(pid):
                 page = img + " processing PID=%s" % pid
             else:
-                page = self.get_page_content(self.get_referer_kwargs())
                 self.reqmgr.remove(pid)
+                page = self.get_page_content(self.get_referer_kwargs())
         except Exception as err:
             msg = 'check_pid fails for pid=%s' % pid
             print dastimestamp('DAS WEB ERROR '), msg
             print_exc(err)
             self.reqmgr.remove(pid)
             self.taskmgr.remove(pid)
-            return self.error(gen_error_msg({'pid':pid}), wrap=False)
-        return page
-    
-    @expose
-    @checkargs(['pid'])
-    def check_similar_pid(self, pid):
-        """
-        Check status of given pid and return appropriate page content.
-        This is a server callback function for ajaxSimilarCheckPid, see
-        js/ajax_utils.js
-        """
-        cherrypy.response.headers['Cache-Control'] = 'no-cache'
-        cherrypy.response.headers['Pragma'] = 'no-cache'
-        img = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
-        try:
-            if  self.taskmgr.is_alive(pid):
-                page = img + " processing PID=%s" % pid
-            else:
-                page = self.get_page_content(self.get_referer_kwargs())
-        except Exception as err:
-            msg = 'check_similar_pid fails for pid=%s' % pid
-            print dastimestamp('DAS WEB ERROR '), msg
-            print_exc(err)
             return self.error(gen_error_msg({'pid':pid}), wrap=False)
         return page
 
