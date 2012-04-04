@@ -128,10 +128,11 @@ def parse_filters(query):
 
 def parse_filter_string(val):
     "Parse filter string value"
-    val = val.strip()
-    if  val and val[0] == '[' and  val[-1] == ']':
-        val = val.replace('[', '').replace(']', '')
-        val = val.split(',')
+    if  isinstance(val, basestring):
+        val = val.strip()
+        if  val and val[0] == '[' and  val[-1] == ']':
+            val = val.replace('[', '').replace(']', '')
+            val = val.split(',')
     return val
 
 def parse_filter(spec, flt):

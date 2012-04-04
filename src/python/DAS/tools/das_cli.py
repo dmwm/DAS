@@ -11,7 +11,6 @@ from pprint import pformat
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
 from DAS.core.das_query import DASQuery
-#from DAS.utils.query_utils import convert2pattern, encode_mongo_query
 from DAS.utils.utils import dump, genkey
 from DAS.utils.das_timer import get_das_timer
 
@@ -101,15 +100,15 @@ def main():
         dasquery = DASQuery(query)
         mongo_query = dasquery.mongo_query
         service_map = dasquery.service_apis_map()
-        enc_query   = dasquery.storage_query
-        loose_query = dasquery.loose_query
+        str_query   = dasquery.storage_query
         print "---------------"
         print "DAS-QL query  :", query
+        print "DAS query     :", dasquery
         print "Mongo query   :", mongo_query
-        print "Loose query   :", loose_query
-        print "Encoded query :", enc_query
-        print "enc_query hash:", genkey(enc_query)
-        print "Services      :\n%s" % pformat(service_map) 
+        print "Storage query :", str_query
+        print "Services      :\n"
+        for srv, val in service_map.items():
+            print "%s : %s\n" % (srv, ', '.join(val))
         sys.exit(0)
     sdict = dascore.keys()
     if  opts.services:
