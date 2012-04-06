@@ -182,7 +182,7 @@ class DASWebService(DASWebManager):
         Make entry in Logging DB
         """
         qhash = genkey(query)
-        doc = dict(qhash=qhash, timestamp=time.time(),
+        doc = dict(qhash=qhash,
                 date=int(str(date.fromtimestamp(time.time())).replace('-', '')),
                 headers=cherrypy.request.headers,
                 method=cherrypy.request.method,

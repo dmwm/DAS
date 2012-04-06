@@ -90,6 +90,8 @@ class RequestManager(object):
                         ts=future_tstamp, timestamp=tstamp)
         try:
             self.hold.insert(doc, safe=True)
+        except DuplicateKeyError:
+            pass
         except Exception as err:
             print_exc(err)
 
