@@ -116,6 +116,8 @@ DASOption('web_server', 'dbs_daemon', 'bool', False),
 DASOption('web_server', 'onhold_daemon', 'bool', False),
 # Threshold for DDoS clients
 DASOption('web_server', 'hot_threshold', 'int', 100),
+# onhold_daemon option
+DASOption('web_server', 'onhold_daemon', 'bool', False),
 # DBS dataset daemon update interval in seconds
 DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
 # DBS dataset daemon expire timestamp (in seconds)
