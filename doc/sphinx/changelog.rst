@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.3.X
 
+  - Do not rely on Referrer settings, ticket #3563
   - Fix tickets #3555, #3556
   - Fix plain view, ticket #3509
   - Fix xml/json/plain requests via direct URL call

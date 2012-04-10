@@ -777,13 +777,6 @@ class DASWebService(DASWebManager):
             page += '<div>Total: %s requests</div>' % count
         return self.page(page)
 
-    def get_referer_kwargs(self):
-        "Get list of passed arguments from referer url"
-        url = cherrypy.request.headers.get('Referer')
-        kwargs = dict(urlparse.parse_qsl(urlparse.urlparse(url).query))
-        self.adjust_input(kwargs)
-        return kwargs
-
     @expose
     @checkargs(['pid'])
     def check_pid(self, pid):
@@ -800,8 +793,11 @@ class DASWebService(DASWebManager):
             if  self.taskmgr.is_alive(pid):
                 page = img + " processing PID=%s" % pid
             else:
+                kwargs = self.reqmgr.get(pid)
+                if  kwargs.has_key('dasquery'):
+                    del kwargs['dasquery']
                 self.reqmgr.remove(pid)
-                page = self.get_page_content(self.get_referer_kwargs())
+                page = self.get_page_content(kwargs)
         except Exception as err:
             msg = 'check_pid fails for pid=%s' % pid
             print dastimestamp('DAS WEB ERROR '), msg
