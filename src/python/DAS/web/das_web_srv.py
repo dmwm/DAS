@@ -20,6 +20,7 @@ from datetime import date
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from pymongo.objectid import ObjectId
+from pymongo import DESCENDING
 
 # DAS modules
 import DAS
@@ -182,12 +183,13 @@ class DASWebService(DASWebManager):
         Make entry in Logging DB
         """
         qhash = genkey(query)
+        args  = cherrypy.request.params
         doc = dict(qhash=qhash,
                 date=int(str(date.fromtimestamp(time.time())).replace('-', '')),
                 headers=cherrypy.request.headers,
                 method=cherrypy.request.method,
                 path=cherrypy.request.path_info,
-                args=cherrypy.request.params,
+                args=args, ahash=genkey(args),
                 ip=cherrypy.request.remote.ip,
                 hostname=cherrypy.request.remote.name,
                 port=cherrypy.request.remote.port)
@@ -728,6 +730,7 @@ class DASWebService(DASWebManager):
         uinput  = kwargs.get('input', '')
         if  self.busy():
             return self.busy_page(uinput)
+        ahash    = genkey(cherrypy.request.params)
         self.logdb(uinput)
         form    = self.form(uinput=uinput, instance=inst, view=view)
         check, content = self.generate_dasquery(uinput, inst)
@@ -751,8 +754,8 @@ class DASWebService(DASWebManager):
                                 pid=dasquery.qhash)
             self.reqmgr.add(pid, kwargs)
             if  self.taskmgr.is_alive(pid):
-                page = self.templatepage('das_check_pid',
-                        method='check_pid', uinput=uinput, view=view,
+                page = self.templatepage('das_check_pid', method='check_pid',
+                        uinput=uinput, view=view, ahash=ahash,
                         base=self.base, pid=pid, interval=self.interval)
             else:
                 page = self.get_page_content(kwargs)
@@ -778,8 +781,8 @@ class DASWebService(DASWebManager):
         return self.page(page)
 
     @expose
-    @checkargs(['pid'])
-    def check_pid(self, pid):
+    @checkargs(['pid', 'ahash'])
+    def check_pid(self, pid, ahash):
         """
         Check status of given pid and return appropriate page content.
         This is a server callback function for ajaxCheckPid, see
@@ -794,8 +797,16 @@ class DASWebService(DASWebManager):
                 page = img + " processing PID=%s" % pid
             else:
                 kwargs = self.reqmgr.get(pid)
-                if  kwargs.has_key('dasquery'):
+                if  kwargs and kwargs.has_key('dasquery'):
                     del kwargs['dasquery']
+                # if no kwargs (another request delete it)
+                # use logging DB to look-up user request via ahash
+                if  not kwargs:
+                    spec = {'ahash':ahash}
+                    skey = [('ts', DESCENDING)]
+                    res  = [r for r in self.logcol.find(spec).sort(skey)]
+                    kwargs = res[0]['args']
+                    self.adjust_input(kwargs)
                 self.reqmgr.remove(pid)
                 page = self.get_page_content(kwargs)
         except Exception as err:

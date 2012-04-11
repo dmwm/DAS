@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.3.X
 
+  - Extend check_pid to use argument hash (resolve issue with
+    compeing queries who can use different filters)
   - Do not rely on Referrer settings, ticket #3563
   - Fix tickets #3555, #3556
   - Fix plain view, ticket #3509

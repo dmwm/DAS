@@ -278,6 +278,9 @@ def checkargs(supported):
             if  checkarg(kwds, 'pid') and len(str(kwds['pid'])) != 32:
                 code  = web_code('Unsupported pid value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'ahash') and len(str(kwds['ahash'])) != 32:
+                code  = web_code('Unsupported ahash value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'instance'):
                 if  kwds['instance'] not in DBS_INSTANCES:
                     code  = web_code('Unsupported dbs instance')
