@@ -42,12 +42,14 @@ For more details please read DAS
 
     card = """
 <h3 class="big">Help: DAS filters</h3>
-DAS supports <b>grep</b> and <b>unique</b> filters. You can apply
+DAS supports <b>grep</b>, <b>sort</b> and <b>unique</b> filters. You can use
 <b>grep</b> filter to select part of the DAS record. For example,
-if you look for a given dataset pattern, e.g. dataset=*RelVal*, 
-you can select number of events as simple as
 <pre>
 dataset=*RelVal* | grep dataset.nevents
+</pre>
+To sort your results use sort filter
+<pre>
+dataset=*RelVal* | sort dataset.nevents
 </pre>
 Multiple filters can be applied together, for instance
 <pre>

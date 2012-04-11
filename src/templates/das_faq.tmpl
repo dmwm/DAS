@@ -135,6 +135,7 @@ Here are few examples of DAS cli usage:
 ./das_client.py --query="dataset=/EG/Run2010A*/AOD"
 ./das_client.py --query="dataset=/EG/Run2010A*/AOD" --verbose=1
 ./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name"
+./das_client.py --query="dataset=/EG/Run2010A*/AOD | sort dataset.nevents"
 ./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name, dataset.nevents" --format=plain
 </pre>
 Please note, the --format option can only be used together with DAS filters, since
@@ -390,6 +391,28 @@ Please note that multiple grep operators, e.g.
 are not supported. The DAS grep function
 is not equivalent to UNIX grep.
 </p>
+
+<ul>
+<li>
+How can I sort my results?
+</li>
+</ul>
+<p>
+The sorting is part of DAS query language. Just provide a sort filter, for example
+</p>
+<div class="example">
+file dataset=/a/b/c | sort file.nevents
+</div>
+this query will sort output records by number of events in file. The default
+sort order is ascending. To reverse the sort order use minus sign at the end of
+sort key, e.g.
+<div class="example">
+file dataset=/a/b/c | sort file.nevents-
+</div>
+Please note that you can combined both grep and sort filters, e.g.
+<div class="example">
+file dataset=/a/b/c | grep file.name, file.nevents | sort file.size
+</div>
 
 <ul>
 <li>
