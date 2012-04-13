@@ -35,7 +35,7 @@ from DAS.utils.ddict import DotDict
 from DAS.utils.utils import genkey, print_exc, dastimestamp
 from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
-from DAS.web.utils import free_text_parser
+from DAS.web.utils import free_text_parser, threshold
 from DAS.web.utils import checkargs, das_json, gen_error_msg
 from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson
@@ -47,6 +47,7 @@ from DAS.web.help_cards import help_cards
 from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
+from DAS.services.sitedb2.sitedb2_service import SiteDBService
 import DAS.utils.jsonwrapper as json
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
@@ -66,6 +67,7 @@ class DASWebService(DASWebManager):
         self.engine      = config.get('engine', None)
         nworkers         = config['number_of_workers']
         self.hot_thr     = config.get('hot_threshold', 100)
+        self.super_thr   = config.get('super_hot_threshold', 10000)
         self.dasconfig   = dasconfig
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
@@ -172,6 +174,7 @@ class DASWebService(DASWebManager):
             self.colors = {}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
+            self.sitedbmgr   = SiteDBService(self.dasconfig)
         except Exception as exc:
             print_exc(exc)
             self.dasmgr = None
@@ -602,6 +605,7 @@ class DASWebService(DASWebManager):
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
+        thr = threshold(self.sitedbmgr, self.hot_thr, self.super_thr)
         uinput = kwargs.get('input', '').strip()
         if  not uinput:
             head = {'status': 'fail', 'reason': 'No input found',

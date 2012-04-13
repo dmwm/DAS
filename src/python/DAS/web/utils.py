@@ -36,6 +36,33 @@ from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
 
 DBS_INSTANCES = das_readconfig()['dbs']['dbs_instances']
 
+def parse_dn(user_dn):
+    """
+    Parse user DN and return login/name of the user
+    /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=user/CN=123/CN=First Last Name
+    """
+    parts = user_dn.split('/')
+    user  = genkey(user_dn)
+    name  = parts[-1].replace('CN=', '')
+    name_parts = []
+    pat   = re.compile(r'(^[0-9-]$|^[0-9-][0-9]*$)')
+    for item in name.split():
+        if  not pat.match(item):
+            name_parts.append(item)
+    return user, ' '.join(name_parts)
+
+def threshold(sitedbmgr, thr, super_thr):
+    "Return query threshold for cache clients"
+    if  hasattr(cherrypy.request, 'user'):
+        user, name = parse_dn(cherrypy.request.user['dn'])
+        print "\n### threshold", user, name
+        data = sitedbmgr.api_data('group_responsibilities')
+        for uname, group, role in data['result']:
+            print "name,group,role", uname, group, role
+            if  uname == user and group == 'DASSuperUser':
+                thr = super_thr
+    return thr
+
 def free_text_parser(sentence, daskeys, default_key="dataset"):
     """Parse sentence and construct DAS QL expresion"""
     found = 0

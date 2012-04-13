@@ -7,6 +7,12 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.3.X
 
+  - Add new method for SiteDB2 which returns api data from DAS cache
+  - Add parse_dn function to get user info from user DN
+  - Add new threshold function which parse user DN and return threshold
+    (it consults sitedb and look-up user role, if role is DASSuperUser it
+    assigns new threshold)
+  - Add suport_hot_threshold config parameter to specify hot threshold for super users
   - Extend check_pid to use argument hash (resolve issue with
     compeing queries who can use different filters)
   - Do not rely on Referrer settings, ticket #3563

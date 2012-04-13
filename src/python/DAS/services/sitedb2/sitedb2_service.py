@@ -65,6 +65,14 @@ class SiteDBService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
+    def api_data(self, api):
+        "Return group_responsibilities dict"
+        url = self.map[api]['url']
+        params = {}
+        expire = 300 # not important here
+        data, expire = self.getdata_helper(url, params, expire)
+        return data
+
     def getdata_helper(self, url, params, expire, headers=None, post=None):
         "Helper function to get data from SiteDB or local cache"
         cname = url.split('/')[-1].replace('-', '_')
@@ -140,6 +148,21 @@ class SiteDBService(DASAbstractService):
                 for rec in sitedb_parser(rdata):
                     if  rec['site_name'] == row['site_name']:
                         row['resources'].append(rec)
+            return dict(result=result), expire
+        elif url.split('/')[-1] == 'people':
+            data, expire = self.getdata_helper(\
+                        url, params, expire, headers, post)
+            result = [] # output results
+            # get group-responsibilities
+            newurl = url.replace('people', 'group-responsibilities')
+            gdata, expire = self.getdata_helper(\
+                        newurl, params, expire, headers, post)
+            for row in sitedb_parser(data):
+                for rec in sitedb_parser(gdata):
+                    if  rec['username'] == row['username']:
+                        row['user_group'] = rec['user_group']
+                        row['role'] = rec['role']
+                result.append(row)
             return dict(result=result), expire
         else:
             return self.getdata_helper(url, params, expire, headers, post)
