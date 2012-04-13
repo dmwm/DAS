@@ -628,8 +628,6 @@ class DASWebService(DASWebManager):
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
-        self.authmgr.callable()
-        thr = threshold(self.sitedbmgr, self.hot_thr, self.super_thr)
         uinput = kwargs.get('input', '').strip()
         if  not uinput:
             head = {'status': 'fail', 'reason': 'No input found',
@@ -669,10 +667,11 @@ class DASWebService(DASWebManager):
                 head, data = self.get_data(kwargs)
                 return self.datastream(dict(head=head, data=data))
         else:
+            self.authmgr.callable()
+            thr = threshold(self.sitedbmgr, self.hot_thr, self.super_thr)
             nhits = self.get_nhits()
-            if  nhits > self.hot_thr: # put request onhold
-                tstamp = time.time() + 60*(nhits/self.hot_thr) \
-                                     + (nhits%self.hot_thr)
+            if  nhits > thr: # put request onhold
+                tstamp = time.time() + 60*(nhits/thr) + (nhits%thr)
                 pid  = dasquery.qhash
                 self.reqmgr.add_onhold(\
                         pid, uinput, cherrypy.request.remote.ip, tstamp)
