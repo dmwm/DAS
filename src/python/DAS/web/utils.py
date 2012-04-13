@@ -55,7 +55,14 @@ def parse_dn(user_dn):
 def threshold(sitedbmgr, thr, super_thr):
     "Return query threshold for cache clients"
     if  hasattr(cherrypy.request, 'user'):
-        user, name = parse_dn(cherrypy.request.user['dn'])
+        data = sitedbmgr.api_data('people_via_name')
+        cols = data['desc']['columns']
+        user = None
+        for row in data['result']:
+            rec = dict(zip(cols, row))
+            if  rec['dn'] == cherrypy.request.user['dn']:
+                user = rec['username']
+                break
         data = sitedbmgr.api_data('group_responsibilities')
         for uname, group, role in data['result']:
             if  uname == user and group == 'DAS':
