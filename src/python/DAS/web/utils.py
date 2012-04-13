@@ -10,6 +10,7 @@ __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 from   types import NoneType
+import re
 import sys
 import cgi
 import time
@@ -24,7 +25,7 @@ from   pymongo.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from   DAS.utils.utils import print_exc
+from   DAS.utils.utils import print_exc, genkey
 from   DAS.utils.regex import number_pattern, web_arg_pattern
 from   DAS.utils.das_db import db_connection, is_db_alive
 from   DAS.web.das_codes import web_code
@@ -55,12 +56,15 @@ def threshold(sitedbmgr, thr, super_thr):
     "Return query threshold for cache clients"
     if  hasattr(cherrypy.request, 'user'):
         user, name = parse_dn(cherrypy.request.user['dn'])
-        print "\n### threshold", user, name
         data = sitedbmgr.api_data('group_responsibilities')
         for uname, group, role in data['result']:
-            print "name,group,role", uname, group, role
-            if  uname == user and group == 'DASSuperUser':
-                thr = super_thr
+            if  uname == user and group == 'DAS':
+                if  role.lower().find('super user') != -1:
+                    if  role.lower().find('threshold') != -1:
+                        thr = role.lower().split('threshold')
+                        thr = int(thr.replace('=', '').strip())
+                    else:
+                        thr = super_thr
     return thr
 
 def free_text_parser(sentence, daskeys, default_key="dataset"):

@@ -225,14 +225,19 @@ def das_configfile():
     else:
         raise EnvironmentError('DAS_CONFIG environment is not set up')
 
+def wmcore_config(filename):
+    "Return WMCore config object for given file name"
+    from WMCore.Configuration import loadConfigurationFile
+    config = loadConfigurationFile(filename)
+    return config
+
 def read_wmcore(filename):
     """
     Read DAS python configuration file and store DAS parameters into
     returning dictionary.
     """
-    from WMCore.Configuration import loadConfigurationFile
     configdict = {} # output dictionary
-    config = loadConfigurationFile(filename)
+    config = wmcore_config(filename)
     for option in DAS_OPTIONS:
         value = option.get_from_wmcore(config)
         if option.destination:
@@ -267,6 +272,7 @@ def das_readconfig_helper():
     if  not configdict:
         msg = 'Unable to read DAS configuration'
         raise Exception(msg)
+    configdict['das_config_file'] = dasconfig
     return configdict
 
 class _DASConfigSingleton(object):
