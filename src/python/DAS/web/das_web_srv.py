@@ -55,27 +55,6 @@ DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
-try:
-    from WMCore.WebTools.FrontEndAuth import FrontEndAuth
-except:
-    class FrontEndAuth():
-        "WMCore FrontEndAuth fallback class"
-        def __init__(self, config):
-            self.config = config
-        def callable(self, role=[], group=[], site=[], authzfunc=None):
-            "WMCore FrontEndAuth callable method"
-            pass
-
-class FrontEndAuthWrapper(FrontEndAuth):
-    "Wrapper class for WMCore FrontEndAuth"
-    def __init__(self, dasconfig):
-        try:
-            config = wmcore_config(dasconfig['das_config_file'])
-            config = config.component_("SecurityModule")
-        except:
-            config = dasconfig
-        FrontEndAuth.__init__(self, config)
-
 class DASWebService(DASWebManager):
     """
     DAS web service interface.
@@ -94,7 +73,6 @@ class DASWebService(DASWebManager):
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
         self.queue_limit = config.get('queue_limit', 50)
-        self.authmgr     = FrontEndAuthWrapper(dasconfig)
         if  self.engine:
             thr_name = 'DASWebService:PluginTaskManager'
             self.taskmgr = PluginTaskManager(\
@@ -667,7 +645,6 @@ class DASWebService(DASWebManager):
                 head, data = self.get_data(kwargs)
                 return self.datastream(dict(head=head, data=data))
         else:
-            self.authmgr.callable()
             thr = threshold(self.sitedbmgr, self.hot_thr, self.super_thr)
             nhits = self.get_nhits()
             if  nhits > thr: # put request onhold
