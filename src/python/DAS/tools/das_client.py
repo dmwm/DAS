@@ -10,12 +10,41 @@ import sys
 if  sys.version_info < (2, 6):
     raise Exception("DAS requires python 2.6 or greater")
 
+import os
 import re
 import time
 import json
 import urllib
 import urllib2
+import httplib
 from   optparse import OptionParser
+
+class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
+    """
+    Simple HTTPS client authentication class based on provided
+    key/ca information
+    """
+    def __init__(self, key=None, cert=None, level=0):
+        if  level:
+            urllib2.HTTPSHandler.__init__(self, debuglevel=1)
+        else:
+            urllib2.HTTPSHandler.__init__(self)
+        self.key = key
+        self.cert = cert
+
+    def https_open(self, req):
+        """Open request method"""
+        #Rather than pass in a reference to a connection class, we pass in
+        # a reference to a function which, for all intents and purposes,
+        # will behave as a constructor
+        return self.do_open(self.get_connection, req)
+
+    def get_connection(self, host, timeout=300):
+        """Connection method"""
+        if  self.key:
+            return httplib.HTTPSConnection(host, key_file=self.key,
+                                                cert_file=self.cert)
+        return httplib.HTTPSConnection(host)
 
 class DASOptionParser: 
     """
@@ -43,17 +72,63 @@ class DASOptionParser:
         self.parser.add_option("--limit", action="store", type="int", 
                                default=10, dest="limit", help=msg)
         msg  = 'specify return data format (json or plain), default plain.'
-        self.parser.add_option("--format", action="store", type="string", 
+        self.parser.add_option("--format", action="store", type="string",
                                default="plain", dest="format", help=msg)
         msg  = 'query waiting threshold in sec, default is 5 minutes'
         self.parser.add_option("--threshold", action="store", type="int",
                                default=300, dest="threshold", help=msg)
+        msg  = 'specify private key file name'
+        self.parser.add_option("--key", action="store", type="string",
+                               default="", dest="ckey", help=msg)
+        msg  = 'specify private certificate file name'
+        self.parser.add_option("--cert", action="store", type="string",
+                               default="", dest="cert", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
         """
         return self.parser.parse_args()
 
+def get_key_cert():
+    """
+    Get user key/certificate
+    """
+    key  = None
+    cert = None
+    globus_key  = os.path.join(os.environ['HOME'], '.globus/userkey.pem')
+    globus_cert = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
+    if  os.path.isfile(globus_key):
+        key  = globus_key
+    if  os.path.isfile(globus_cert):
+        cert  = globus_cert
+
+    # First presendence to HOST Certificate, RARE
+    if  os.environ.has_key('X509_HOST_CERT'):
+        cert = os.environ['X509_HOST_CERT']
+        key  = os.environ['X509_HOST_KEY']
+
+    # Second preference to User Proxy, very common
+    elif os.environ.has_key('X509_USER_PROXY'):
+        cert = os.environ['X509_USER_PROXY']
+        key  = cert
+
+    # Third preference to User Cert/Proxy combinition
+    elif os.environ.has_key('X509_USER_CERT'):
+        cert = os.environ['X509_USER_CERT']
+        key  = os.environ['X509_USER_KEY']
+
+    # Worst case, look for cert at default location /tmp/x509up_u$uid
+    elif not key or not cert:
+        uid  = os.getuid()
+        cert = '/tmp/x509up_u'+str(uid)
+        key  = cert
+
+    if  not os.path.exists(cert):
+        raise Exception("Certificate PEM file %s not found" % key)
+    if  not os.path.exists(key):
+        raise Exception("Key PEM file %s not found" % key)
+
+    return key, cert
 def convert_time(val):
     "Convert given timestamp into human readable format"
     if  isinstance(val, int) or isinstance(val, float):
@@ -134,7 +209,7 @@ def get_value(data, filters):
         else:
             yield str(list(values))
 
-def get_data(host, query, idx, limit, debug, threshold=300):
+def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None):
     """Contact DAS server and retrieve data for given DAS query"""
     params  = {'input':query, 'idx':idx, 'limit':limit}
     path    = '/das/cache'
@@ -147,11 +222,10 @@ def get_data(host, query, idx, limit, debug, threshold=300):
     encoded_data = urllib.urlencode(params, doseq=True)
     url += '?%s' % encoded_data
     req  = urllib2.Request(url=url, headers=headers)
-    if  debug:
-        hdlr = urllib2.HTTPHandler(debuglevel=1)
-        opener = urllib2.build_opener(hdlr)
-    else:
-        opener = urllib2.build_opener()
+    if  not ckey or not cert:
+        ckey, cert = get_key_cert()
+    hdlr = HTTPSClientAuthHandler(ckey, cert, debug)
+    opener = urllib2.build_opener(hdlr)
     fdesc = opener.open(req)
     data = fdesc.read()
     fdesc.close()
@@ -209,9 +283,12 @@ def main():
     query   = opts.query
     idx     = opts.idx
     limit   = opts.limit
+    thr     = opts.threshold
+    ckey    = opts.ckey
+    cert    = opts.cert
     if  not query:
         raise Exception('You must provide input query')
-    data    = get_data(host, query, idx, limit, debug, opts.threshold)
+    data    = get_data(host, query, idx, limit, debug, thr, ckey, cert)
     if  opts.format == 'plain':
         jsondict = json.loads(data)
         if  not jsondict.has_key('status'):
