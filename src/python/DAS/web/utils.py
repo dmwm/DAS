@@ -53,7 +53,9 @@ def threshold(sitedbmgr, thr, super_thr):
             data = sitedbmgr.api_data('group_responsibilities')
             for uname, group, role in data['result']:
                 if  uname == user and group == 'DAS':
-                    if  role.lower().find('super user') != -1:
+                    if  role.lower().find('super user') != -1 or \
+                        role.lower() == 'admin' or \
+                        role.lower() == 'productionaccess':
                         if  role.lower().find('threshold') != -1:
                             thr = role.lower().split('threshold')
                             thr = int(thr.replace('=', '').strip())
