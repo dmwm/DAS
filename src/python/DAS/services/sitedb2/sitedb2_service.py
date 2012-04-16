@@ -160,8 +160,9 @@ class SiteDBService(DASAbstractService):
             for row in sitedb_parser(data):
                 for rec in sitedb_parser(gdata):
                     if  rec['username'] == row['username']:
-                        row['user_group'] = rec['user_group']
-                        row['role'] = rec['role']
+                        row.setdefault('user_group', [])\
+                                .append(rec['user_group'])
+                        row.setdefault('role', []).append(rec['role'])
                 result.append(row)
             return dict(result=result), expire
         else:
