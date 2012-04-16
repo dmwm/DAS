@@ -116,14 +116,18 @@ DASOption('web_server', 'dbs_daemon', 'bool', False),
 DASOption('web_server', 'onhold_daemon', 'bool', False),
 # Threshold for DAS normal clients
 DASOption('web_server', 'hot_threshold', 'int', 100),
-# Threshold for DAS super clients
-DASOption('web_server', 'super_hot_threshold', 'int', 5000),
 # onhold_daemon option
 DASOption('web_server', 'onhold_daemon', 'bool', False),
 # DBS dataset daemon update interval in seconds
 DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
 # DBS dataset daemon expire timestamp (in seconds)
 DASOption('web_server', 'dbs_daemon_expire', 'int', 3600),
+
+# cacherequests section of DAS config
+DASOption('cacherequests', 'Admin', 'int', 5000),
+DASOption('cacherequests', 'ProductionAccess', 'int', 3000),
+DASOption('cacherequests', 'Unlimited', 'int', 10000),
+
 # DBS section of DAS config
 # list of dbs instances
 DASOption('dbs', 'dbs_instances', 'list', \

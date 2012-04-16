@@ -67,8 +67,7 @@ class DASWebService(DASWebManager):
         self.interval    = config.get('status_update', 2500)
         self.engine      = config.get('engine', None)
         nworkers         = config['number_of_workers']
-        self.hot_thr     = config.get('hot_threshold', 100)
-        self.super_thr   = config.get('super_hot_threshold', 10000)
+        self.hot_thr     = config.get('hot_threshold', 3000)
         self.dasconfig   = dasconfig
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
@@ -617,7 +616,6 @@ class DASWebService(DASWebManager):
         inst   = kwargs.get('instance', self.dbs_global)
         uinput = kwargs.get('input', '')
         data   = []
-        self.logdb(uinput)
         check, content = self.generate_dasquery(uinput, inst)
         if  check:
             head = dict(timestamp=time.time())
@@ -645,7 +643,9 @@ class DASWebService(DASWebManager):
                 head, data = self.get_data(kwargs)
                 return self.datastream(dict(head=head, data=data))
         else:
-            thr = threshold(self.sitedbmgr, self.hot_thr, self.super_thr)
+#            config = self.dasconfig.get('cacherequests', {})
+#            thr = threshold(self.sitedbmgr, self.hot_thr, config)
+            thr = self.hot_thr
             nhits = self.get_nhits()
             if  nhits > thr: # put request onhold
                 tstamp = time.time() + 60*(nhits/thr) + (nhits%thr)
@@ -660,6 +660,7 @@ class DASWebService(DASWebManager):
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(\
                 self.dasmgr.call, dasquery, addr, pid=dasquery.qhash)
+            self.logdb(uinput) # put entry in log DB once we place a request
             self.reqmgr.add(pid, kwargs)
             return pid
 

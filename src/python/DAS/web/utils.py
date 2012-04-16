@@ -34,8 +34,11 @@ from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
 
 DBS_INSTANCES = das_readconfig()['dbs']['dbs_instances']
 
-def threshold(sitedbmgr, thr, super_thr):
+def threshold(sitedbmgr, thr, config):
     "Return query threshold for cache clients"
+    # NOTE: once DAS authentication will be in place
+    # the group/roles will be provided in HTTP headers
+    # (authn/authz values) and most of this code will go away
     try:
         user_dn = None
         for key, val in cherrypy.request.headers.items():
@@ -53,14 +56,7 @@ def threshold(sitedbmgr, thr, super_thr):
             data = sitedbmgr.api_data('group_responsibilities')
             for uname, group, role in data['result']:
                 if  uname == user and group == 'DAS':
-                    if  role.lower().find('super user') != -1 or \
-                        role.lower() == 'admin' or \
-                        role.lower() == 'productionaccess':
-                        if  role.lower().find('threshold') != -1:
-                            thr = role.lower().split('threshold')
-                            thr = int(thr.replace('=', '').strip())
-                        else:
-                            thr = super_thr
+                    thr = int(config.get(role, 5000))
     except:
         pass
     return thr

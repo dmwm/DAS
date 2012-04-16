@@ -209,6 +209,14 @@ def get_value(data, filters):
         else:
             yield str(list(values))
 
+def fullpath(path):
+    "Expand path to full path"
+    if  path and path[0] == '~':
+        path = path.replace('~', '')
+        path = path[1:] if path[0] == '/' else path
+        path = os.path.join(os.environ['HOME'], path)
+    return path
+
 def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None):
     """Contact DAS server and retrieve data for given DAS query"""
     params  = {'input':query, 'idx':idx, 'limit':limit}
@@ -222,7 +230,10 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None
     encoded_data = urllib.urlencode(params, doseq=True)
     url += '?%s' % encoded_data
     req  = urllib2.Request(url=url, headers=headers)
-    if  not ckey or not cert:
+    if  ckey or cert:
+        ckey = fullpath(ckey)
+        cert = fullpath(cert)
+    else:
         ckey, cert = get_key_cert()
     hdlr = HTTPSClientAuthHandler(ckey, cert, debug)
     opener = urllib2.build_opener(hdlr)
