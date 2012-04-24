@@ -5,6 +5,9 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.4.X
+
+  - Fix tickets #3636, #3639
 - 1.3.X
 
   - Add new method for SiteDB2 which returns api data from DAS cache

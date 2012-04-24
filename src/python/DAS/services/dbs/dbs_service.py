@@ -42,6 +42,13 @@ class DBSService(DASAbstractService):
         """
         Adjust DBS2 parameters for specific query requests
         """
+        if  api == 'runs_via_block':
+            val = kwds['block']
+            if  val != 'required':
+                kwds['query'] = 'find run where block=%s' % val
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('block')
         if  api == 'fakeStatus':
             val = kwds['status']
             if  val:
@@ -363,6 +370,8 @@ where %s" % value[4:]
             prim_key = 'status'
         elif api == 'fakeFiles4DatasetRunLumis':
             prim_key = 'file'
+        elif api == 'runs_via_block':
+            prim_key = 'run'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)

@@ -332,6 +332,24 @@ class CMSRepresentation(DASRepresentation):
                 % (self.colors[system], pads)
         return page
 
+    def filter_bar(self, dasquery):
+        "Construct filter bar UI element and returned for given input"
+        if  dasquery.filters:
+            # if we have filter/aggregator get one row from the given query
+            try:
+                if  dasquery.mongo_query:
+                    fltpage = self.fltpage(self.get_one_row(dasquery))
+                else:
+                    fltpage = uinput.split('|')[-1]
+            except Exception as exc:
+                fltpage = 'N/A, please check DAS record for errors'
+                msg = 'Fail to apply filter to query=%s' % dasquery.query
+                print msg
+                print_exc(exc)
+        else:
+            fltpage = ''
+        return fltpage
+
     def listview(self, head, data):
         """
         Represent data in list view.
@@ -350,23 +368,10 @@ class CMSRepresentation(DASRepresentation):
             main += self.templatepage('das_colors', colors=self.colors)
         style   = 'white'
         rowkeys = []
-        if  uinput.find('|') != -1:
-            # if we have filter/aggregator get one row from the given query
-            try:
-                if  dasquery.mongo_query:
-                    fltpage = self.fltpage(self.get_one_row(dasquery))
-                else:
-                    fltpage = uinput.split('|')[-1]
-            except Exception as exc:
-                fltpage = 'N/A, please check DAS record for errors'
-                msg = 'Fail to apply filter to query=%s' % dasquery.query
-                print msg
-                print_exc(exc)
-        else:
-            fltpage = ''
-        page = ''
-        old  = None
-        dup  = False
+        fltpage = self.filter_bar(dasquery)
+        page    = ''
+        old     = None
+        dup     = False
         for row in data:
             if  not row:
                 continue
@@ -523,6 +528,7 @@ class CMSRepresentation(DASRepresentation):
         sdir     = getarg(kwargs, 'dir', '')
         titles   = []
         page     = self.pagination(total, kwargs)
+        fltbar   = self.filter_bar(dasquery)
         if  filters:
             for flt in filters:
                 if  flt.find('=') != -1 or flt.find('>') != -1 or \
@@ -533,6 +539,8 @@ class CMSRepresentation(DASRepresentation):
         tpage   = ""
         pkey    = None
         for row in data:
+            if  not fltbar:
+                fltbar = self.fltpage(row)
             try: # we don't need to show qhash in table view
                 del row['qhash']
             except:
@@ -572,17 +580,15 @@ class CMSRepresentation(DASRepresentation):
         else: # default sort direction
             sdir = 'asc' 
         args   = {'input':uinput, 'idx':idx, 'limit':limit, 'instance':inst, \
-                         'view':'table', 'dir': sdir}
+                         'view':'table'}
         theads = []
         for title in titles:
-            args.update({'skey':sdict[title]})
-            url = '<a href="/das/request?%s">%s</a>' \
-                % (urllib.urlencode(args), title)
-            theads.append(url)
+            theads.append(title)
         theads.append('Record')
         thead = self.templatepage('das_table_row', rec=theads, tag='th', \
                         style=0, encode=0, record=0)
         self.sort_dict(titles, pkey)
+        page += fltbar
         page += '<br />'
         page += '<table class="das_table">' + thead + tpage + '</table>'
         page += '<br />'
