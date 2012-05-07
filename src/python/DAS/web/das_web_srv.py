@@ -643,9 +643,8 @@ class DASWebService(DASWebManager):
                 head, data = self.get_data(kwargs)
                 return self.datastream(dict(head=head, data=data))
         else:
-#            config = self.dasconfig.get('cacherequests', {})
-#            thr = threshold(self.sitedbmgr, self.hot_thr, config)
-            thr = self.hot_thr
+            config = self.dasconfig.get('cacherequests', {})
+            thr = threshold(self.sitedbmgr, self.hot_thr, config)
             nhits = self.get_nhits()
             if  nhits > thr: # put request onhold
                 tstamp = time.time() + 60*(nhits/thr) + (nhits%thr)

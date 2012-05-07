@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.4.X
 
+  - Enable cache threshold reading via SiteDB group authorization
   - Add support for block dataset=/bla run=123 query, ticket #3688
   - Fix tickets #3636, #3639
 
