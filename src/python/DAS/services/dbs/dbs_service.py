@@ -155,7 +155,7 @@ class DBSService(DASAbstractService):
             dataset = kwds.get('dataset', 'required')
             run = kwds.get('run', 'required')
             if  dataset != 'required' and run != 'required':
-                kwds['query'] = 'find block where dataset=%s and run=%s'\
+                kwds['query'] = 'find block.name where dataset=%s and run=%s'\
                         % (dataset, run)
             else:
                 kwds['query'] = 'required'
@@ -451,6 +451,7 @@ where %s" % value[4:]
                      'config.createby', 'config.moddate', 'config.modby']
             convert_dot(row, 'config', attrs)
             convert_dot(row, 'file', ['file.name'])
+            convert_dot(row, 'block', ['block.name'])
             # remove DBS2 run attributes (to be consistent with DBS3 output)
             # and let people extract this info from CondDB/LumiDB.
             if  row.has_key('run'):
