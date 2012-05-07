@@ -19,6 +19,14 @@ class ReqMgrService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
+    def adjust_params(self, api, kwds, inst=None):
+        """
+        Adjust parameters for specific query requests
+        """
+        if  api == 'inputdataset':
+            if  kwds.get('dataset', 'required').find('*') != -1:
+                kwds['dataset'] = 'required' # we skip patterns
+
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""
         if  url[-1] == '/':
