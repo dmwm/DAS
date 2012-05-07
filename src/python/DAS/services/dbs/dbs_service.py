@@ -151,6 +151,14 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('run')
+        if  api == 'fakeBlock4DatasetRun':
+            dataset = kwds.get('dataset', 'required')
+            run = kwds.get('run', 'required')
+            if  dataset != 'required' and run != 'required':
+                kwds['query'] = 'find block where dataset=%s and run=%s'\
+                        % (dataset, run)
+            else:
+                kwds['query'] = 'required'
         if  api == 'fakeGroup4Dataset':
             val = kwds['dataset']
             if  val != 'required':
@@ -372,6 +380,8 @@ where %s" % value[4:]
             prim_key = 'file'
         elif api == 'runs_via_block':
             prim_key = 'run'
+        elif api == 'fakeBlock4DatasetRun':
+            prim_key = 'block'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)

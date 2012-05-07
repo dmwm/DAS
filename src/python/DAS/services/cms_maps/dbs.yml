@@ -242,6 +242,23 @@ das2api : [
     {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
 ]
 ---
+urn : fakeBlock4DatasetRun
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "run": "required", "dataset": "required",
+}
+daskeys : [
+    {"key":"block", "map":"block.name", "pattern":""},
+    {"key":"run", "map":"run.run_number", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"run.run_number", "api_param":"run", "pattern":""},
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+]
+---
 urn : fakeRun4File
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600

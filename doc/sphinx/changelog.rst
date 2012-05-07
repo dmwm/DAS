@@ -7,7 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.4.X
 
+  - Add support for block dataset=/bla run=123 query, ticket #3688
   - Fix tickets #3636, #3639
+
 - 1.3.X
 
   - Add new method for SiteDB2 which returns api data from DAS cache
