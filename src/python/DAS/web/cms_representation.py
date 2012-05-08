@@ -149,7 +149,7 @@ def adjust_values(func, gen, links):
         if  key.lower() == 'reason' or key.lower() == 'qhash':
             continue
         if  key.lower() == 'error':
-            key = '<span %s>Error</span>' % red
+            key = '<span %s>External service error</span>' % red
             error = 1
         if  lookup:
             if  key.find('Member') != -1 and val:

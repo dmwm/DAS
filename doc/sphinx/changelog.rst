@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.4.X
 
+  - Change Error to External service error message, see ticket #3697
   - Skip reqmgr API call if user provide dataset pattern, ticket #3691
   - Enable cache threshold reading via SiteDB group authorization
   - Add support for block dataset=/bla run=123 query, ticket #3688
