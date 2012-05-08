@@ -281,7 +281,7 @@ def main():
         mongo_query = jsondict['mongo_query']
         unique  = False
         fdict   = mongo_query.get('filters', {})
-        filters = fdict.get('filters', [])
+        filters = fdict.get('grep', [])
         aggregators = mongo_query.get('aggregators', [])
         if  'unique' in fdict.keys():
             unique = True

@@ -197,7 +197,7 @@ das2api : [
     {"das_key":"dataset.name", "api_param":"path", "pattern":""},
 ]
 ---
-urn : runs_via_block
+urn : fakeRun4Block
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
