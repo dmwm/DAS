@@ -114,7 +114,7 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
                     % (url, params, headers)
         data = {'error': 'Unable to contact %s' % contact, 'reason': msg}
         try:
-            err  = '%s: %s' % (contact, extract_http_error(httperror.read()))
+            err  = '%s %s' % (contact, extract_http_error(httperror.read()))
             data.update({'error':err})
             msg += '\n' + err
         except Exception as exp:
