@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.4.X
 
+  - Update error message with HTTPError thrown by data-provider, ticket #3718
   - Fix das_client to proper handle DAS filters, ticket #3706
   - Change Error to External service error message, see ticket #3697
   - Skip reqmgr API call if user provide dataset pattern, ticket #3691
