@@ -149,8 +149,10 @@ def adjust_values(func, gen, links):
         if  key.lower() == 'reason' or key.lower() == 'qhash':
             continue
         if  key.lower() == 'error':
-            key = '<span %s>External service error</span>' % red
+            key = '<span %s>WARNING</span>' % red
             error = 1
+            if  val and isinstance(val, basestring):
+                val += '<br/>'
         if  lookup:
             if  key.find('Member') != -1 and val:
                 link = '/das/request?input=user%3D'
@@ -229,6 +231,7 @@ def adjust_values(func, gen, links):
                 % (k[0].capitalize()+k[1:], v) for k, v in to_show]
             rlist.sort()
             page += ', '.join(rlist)
+            page  = page.replace('<br/>,', '<br/>')
     if  links and not error:
         page += '<br />' + ', '.join(links)
     return page
