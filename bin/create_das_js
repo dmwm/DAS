@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# build DAS JSON maps out of DAS YML files
+cmd="python src/python/DAS/tools/das_drop_maps.py"
+dir="src/python/DAS/services/cms_maps/"
+map_file="$PWD/das_maps.js"
+rm -f $map_file
+export PYTHONPATH=$PYTHONPATH:$PWD/src/python
+for amap in `ls $dir/*.yml`
+do
+    $cmd --uri-map=$amap >> $map_file
+    $cmd --notation-map=$amap >> $map_file
+    $cmd --presentation-map=$amap >> $map_file
+done
+
