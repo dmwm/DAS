@@ -383,6 +383,12 @@ class DASCore(object):
             return len([1 for _ in self.get_queries(dasquery)])
         return self.rawcache.nresults(dasquery, coll)
 
+    def incache(self, dasquery, coll='merge'):
+        """
+        Answer the question if given query in DAS cache or not
+        """
+        return self.rawcache.incache(dasquery, collection=coll)
+
     def get_from_cache(self, dasquery, idx=0, limit=0, collection='merge'):
         """
         Look-up results from the merge cache and yield them for
