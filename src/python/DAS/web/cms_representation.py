@@ -357,16 +357,17 @@ class CMSRepresentation(DASRepresentation):
         """
         Represent data in list view.
         """
-        kwargs   = head['args']
+        kwargs   = head.get('args')
         uinput   = kwargs.get('input', '')
         total    = head.get('nresults', 0)
+        incache  = head.get('incache')
         dasquery = head.get('dasquery', None)
         if  not dasquery:
             inst     = head.get('instance', self.dbs_global)
             dasquery = DASQuery(uinput, instance=inst)
         inst     = dasquery.instance
         filters  = dasquery.filters
-        main     = self.pagination(total, kwargs)
+        main     = self.pagination(total, incache, kwargs)
         if  main.find('das_noresults') == -1:
             main += self.templatepage('das_colors', colors=self.colors)
         style   = 'white'
@@ -520,9 +521,10 @@ class CMSRepresentation(DASRepresentation):
         """
         Represent data in tabular view.
         """
-        kwargs   = head['args']
-        total    = head['nresults']
-        dasquery = head['dasquery']
+        kwargs   = head.get('args')
+        total    = head.get('nresults', 0)
+        incache  = head.get('incache')
+        dasquery = head.get('dasquery')
         uinput   = kwargs.get('input', dasquery.query)
         inst     = dasquery.instance
         filters  = dasquery.filters
@@ -530,7 +532,7 @@ class CMSRepresentation(DASRepresentation):
         limit    = getarg(kwargs, 'limit', 10)
         sdir     = getarg(kwargs, 'dir', '')
         titles   = []
-        page     = self.pagination(total, kwargs)
+        page     = self.pagination(total, incache, kwargs)
         fltbar   = self.filter_bar(dasquery)
         if  filters:
             for flt in filters:
