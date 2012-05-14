@@ -690,7 +690,7 @@ class DASMongocache(object):
         elif  not lookup_keys: # we get query w/o fields
             pass
         else: # we didn't merge anything, it is DB look-up failure
-            empty_expire = 20 # secs, short enough to expire
+            empty_expire = time.time() + 20 # secs, short enough to expire
             empty_record = {'das':{'expire':empty_expire,
                                    'primary_key':list(lookup_keys),
                                    'empty_record': 1},
