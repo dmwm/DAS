@@ -31,9 +31,10 @@ class DASRepresentation(DASWebManager):
         """
         Represent data in list view.
         """
-        kwargs  = head['args']
+        kwargs  = head.get('args')
         total   = head.get('nresults', 0)
-        main    = self.pagination(total, kwargs)
+        incache = head.get('incache')
+        main    = self.pagination(total, incache, kwargs)
         style   = 'white'
         page    = ''
         pad     = ''
@@ -69,12 +70,13 @@ class DASRepresentation(DASWebManager):
         """
         Represent data in tabular view.
         """
-        kwargs   = head['args']
-        total    = head['nresults']
+        kwargs   = head.get('args')
+        total    = head.get('nresults', 0)
         dasquery = kwargs['dasquery']
         filters  = dasquery.filters
         titles   = []
-        page     = self.pagination(total, kwargs)
+        incache  = head.get('incache')
+        page     = self.pagination(total, incache, kwargs)
         if  filters:
             for flt in filters:
                 if  flt.find('=') != -1 or flt.find('>') != -1 or \
@@ -121,7 +123,7 @@ class DASRepresentation(DASWebManager):
                 % head['ctime']
         return page
 
-    def pagination(self, total, kwds):
+    def pagination(self, total, incache, kwds):
         """
         Construct pagination part of the page. It accepts total as a
         total number of result as well as dict of kwargs which
@@ -145,7 +147,8 @@ class DASRepresentation(DASWebManager):
             page += self.templatepage('das_pagination', \
                 nrows=total, idx=idx, limit=limit, url=url)
         else:
-            page = self.templatepage('das_noresults', query=uinput)
+            page = self.templatepage('das_noresults', query=uinput,
+                        incache=incache)
         return page
 
     @exposetext
