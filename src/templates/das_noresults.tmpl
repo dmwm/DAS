@@ -4,11 +4,13 @@
 <!-- das_noresults.tmpl -->
 <div>
 DAS unable to find any results for this query.
+#if not $incache
 <br />
-Please note, that underlying data-service(s) may
-experience a technical problem at this time and
-you may try later, otherwise feel free to report the problem
-<a href="https://svnweb.cern.ch/trac/CMSDMWM/newticket?component=DAS&amp;description=No+results+for+$query&amp;summary=Empty+result+set&amp;owner=valya">here</a>
+None of the participated data-providers match their APIs with
+given query. If you believe that this query should be answered
+by DAS feel free to submit a new
+<a href="https://github.com/vkuznet/DAS/issues/new">ticket</a>.
+#end if
 </div>
 <hr class="line" />
 <!-- end of das_noresults.tmpl -->
