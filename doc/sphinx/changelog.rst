@@ -8,6 +8,9 @@ This release series is targeted to DAS production stability and quality.
 - 1.4.X
 
   - Move code to github
+  - Call clean-up method upon request/cache web methods.
+  - Add htlKeyDescription, gtKey into RunRegistry, ticket #3735
+  - Improve no result message, ticket #3724
   - Update error message with HTTPError thrown by data-provider, ticket #3718
   - Fix das_client to proper handle DAS filters, ticket #3706
   - Change Error to External service error message, see ticket #3697
