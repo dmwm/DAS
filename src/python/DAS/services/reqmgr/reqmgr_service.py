@@ -52,3 +52,11 @@ class ReqMgrService(DASAbstractService):
                     yield data
                 except:
                     yield row
+        elif api == 'configIDs':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                try:
+                    for key, val in row['dataset'].iteritems():
+                        yield dict(request_name=key, config_files=val)
+                except:
+                    pass

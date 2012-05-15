@@ -13,6 +13,17 @@ das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":"/.*/.*/.*"},
 ]
 ---
+urn: configIDs
+url : "https://cmsweb.cern.ch/reqmgr/rest/configIDs"
+expire : 900
+params : {"dataset": "required"}
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":"/.*/.*/.*"},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":"/.*/.*/.*"},
+]
+---
 notations : [
         {"notation": "primary_ds_name", "map": "name", "api": "primarydatasets"},
 ]
