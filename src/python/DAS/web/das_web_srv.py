@@ -603,6 +603,9 @@ class DASWebService(DASWebManager):
         Since query are cached the repeated call with the same query
         has no cost to DAS core.
         """
+        # remove expires records from merge collection
+        self.dasmgr.rawcache.remove_expired('merge')
+
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
@@ -719,6 +722,9 @@ class DASWebService(DASWebManager):
         """
         Request data from DAS cache.
         """
+        # remove expires records from merge collection
+        self.dasmgr.rawcache.remove_expired('merge')
+
         # do not allow caching
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
         cherrypy.response.headers['Pragma'] = 'no-cache'
