@@ -108,8 +108,8 @@ def worker_v3(url, query):
     table = 'runsummary'
     template = 'json'
     columns = ['number', 'startTime', 'stopTime', 'triggers',
-               'runClassName', 'runStopReason', 'bfield',
-               'l1Menu', 'hltkey', 'lhcFill', 'lhcEnergy',
+               'runClassName', 'runStopReason', 'bfield', 'gtKey',
+               'l1Menu', 'hltKeyDescription', 'lhcFill', 'lhcEnergy',
                'runCreated', 'modified', 'lsCount', 'lsRanges']
     sdata = json.dumps({'filter':query})
     path = 'api/GLOBAL/%s/%s/%s/none/data' \
@@ -122,6 +122,7 @@ def worker_v3(url, query):
             'number':'run_number', 'runCreated':'create_time',
             'stopTime': 'end_time', 'startTime': 'start_time',
             'lsCount': 'lumi_sections', 'runStopReason': 'stop_reason',
+            'hltKeyDescription': 'hltkey', 'gtKey': 'gtkey',
             'lhcEnergy': 'beam_e', 'l1Menu': 'l1key',
             'modified': 'modify_time', 'runClassName': 'group_name'}
     for rec in record:
