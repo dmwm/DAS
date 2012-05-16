@@ -49,6 +49,11 @@ class ReqMgrService(DASAbstractService):
                     data = row['dataset']
                     data = \
                     data['WMCore.RequestManager.DataStructs.Request.Request']
+                    if  data.has_key('InputDatasetTypes'):
+                        arr = []
+                        for key, val in data['InputDatasetTypes'].iteritems():
+                            arr.append({'dataset':key, 'type':val})
+                        data['InputDatasetTypes'] = arr
                     yield data
                 except:
                     yield row
