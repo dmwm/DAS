@@ -332,11 +332,13 @@ def json2html(idict, pad="", ref=None):
     quote function for HTML content (see in this module) and quote_plus
     (from urllib) for URL context.
     """
-    def is_number(number):
+    def is_number(val):
         """Check if provided input is a number: int, long, float"""
         pat = number_pattern
-        test = isinstance(number, int) or isinstance(number, float) or\
-                isinstance(number, long) or pat.match(str(number))
+        test = isinstance(val, int) or isinstance(val, float) or\
+                isinstance(val, long) or \
+                (isinstance(val, basestring) and \
+                    pat.match(val.encode('ascii', 'ignore')))
         return test
 
     width = 100
