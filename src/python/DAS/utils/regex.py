@@ -25,6 +25,8 @@ def word_chars(word, equal=True):
         pat += '|^%s=' % word
     return pat
 
+http_pattern = \
+    re.compile(r"http://.*|https://.*")
 ip_address_pattern = \
     re.compile(r"^([0-9]{1,3}\.){3,3}[0-9]{1,3}$")
 last_time_pattern = \
