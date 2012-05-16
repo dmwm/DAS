@@ -8,6 +8,8 @@ This release series is targeted to DAS production stability and quality.
 - 1.4.X
 
   - Move code to github
+  - Fix bug in testing for numbers, SiteDB now contains unicode entries
+  - Add HTTP links into record UI representation
   - Call clean-up method upon request/cache web methods.
   - Add htlKeyDescription, gtKey into RunRegistry, ticket #3735
   - Improve no result message, ticket #3724
