@@ -23,7 +23,7 @@ from   pymongo.objectid import ObjectId
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from   DAS.utils.utils import print_exc
-from   DAS.utils.regex import number_pattern, web_arg_pattern
+from   DAS.utils.regex import number_pattern, web_arg_pattern, http_pattern
 from   DAS.utils.das_db import db_connection, is_db_alive
 from   DAS.web.das_codes import web_code
 from   DAS.utils.das_config import das_readconfig
@@ -394,6 +394,10 @@ def json2html(idict, pad="", ref=None):
                     elif  is_number(item):
                         sss += """%s<code class="number">%s</code>""" \
                                 % (quote(ppp), quote(item))
+                    elif isinstance(item, basestring) \
+                        and http_pattern.match(item):
+                        sss += """%s<a href="%s">%s</a>""" \
+                                % (quote(ppp), item, item)
                     else:
                         sss += """%s<code class="string">"%s"</code>""" \
                                 % (quote(ppp), quote(item))
@@ -447,6 +451,9 @@ def json2html(idict, pad="", ref=None):
                         % (urllib.urlencode({'input':query}), val)
             elif is_number(val):
                 sss += """: <code class="number">%s</code>""" % quote(val)
+            elif isinstance(val, basestring) \
+                and http_pattern.match(val):
+                sss += """: <a href="%s">%s</a>""" % (val, val)
             else:
                 sss += """: <code class="string">"%s"</code>""" % quote(val)
         if  key != idict.keys()[-1]:
