@@ -12,6 +12,10 @@ your question here or required more knowledge about DAS, please refer to
 <br/>
 <br/>
 We recommend to use Firefox/Safari browsers for better experience with DAS web pages.
+<br/>
+We also recommend to download latest version of
+<a href="/das/cli">DAS client</a> script in order to perform
+outlined in this FAQ DAS queries.
 
 <!-- BEGIN NEW SECTION -->
 <h3>General questions about DAS</h3>
@@ -143,7 +147,7 @@ tabulated format requires knowledge of columns (which are fields you specify in 
 <br/>
 <br/>
 
-<b>DAS CLI from DAS 1.0.X release will behave in the following way:</b>
+<b>DAS CLI from DAS 1.0.X release and above has the following syntax:</b>
 <pre class="example">
 Usage: das_client.py [options]
 For more help please visit https://cmsweb.cern.ch/das/faq
@@ -161,6 +165,10 @@ Options:
                         --limit=0 to show all results
   --format=FORMAT       specify return data format (json or plain), default
                         plain.
+  --threshold=THRESHOLD
+                        query waiting threshold in sec, default is 5 minutes
+  --key=CKEY            specify private key file name
+  --cert=CERT           specify private certificate file name
 </pre>
 Its usage is slightly different! By default, it uses <em>plain</em>
 format instead of <em>JSON</em>, and prints out the default record key value, e.g.
@@ -333,7 +341,7 @@ Can I use conditions in filters?
 Yes you can, here is an example:
 </p>
 <div class="example">
-file dataset=/a/b/c | grep file.size&gt;1, file.size&lt;100
+file dataset=/a/b/c | grep file.name, file.size&gt;1, file.size&lt;100
 </div>
 
 <ul>
@@ -342,20 +350,13 @@ How do I combine conditions or specify multiple DAS keys?
 </li>
 </ul>
 <p>
-Yes, you can, the following forms
+You can combine multiple conditions in a single query, e.g.
 </p>
 <div class="example">
-site=T1_CH_CERN block=/a/b/c
+block site=T1_CH_CERN block=/a/b/c
 </div>
-<p>
-or
-</p>
-<div class="example">
-site=T1_CH_CERN, block=/a/b/c
-</div>
-<p>
-are equivalent.
-</p>
+be sure to specify correct select key for your query, in this case it is a
+<em>block</em> key
 
 <ul>
 <li>
@@ -384,13 +385,8 @@ You can also provide multiple fields to the grep filter, e.g.
 </p>
 <div class="example">
 block=/a/b/c#123 | grep block.name, block.size
+block=/a/b/c#123 | grep block.name | grep block.size
 </div>
-<p>
-Please note that multiple grep operators, e.g. 
-<em>... | grep something | grep something_else</em>
-are not supported. The DAS grep function
-is not equivalent to UNIX grep.
-</p>
 
 <ul>
 <li>
@@ -409,7 +405,7 @@ sort key, e.g.
 <div class="example">
 file dataset=/a/b/c | sort file.nevents-
 </div>
-Please note that you can combined both grep and sort filters, e.g.
+Please note that you can combined both grep and sort filters together, e.g.
 <div class="example">
 file dataset=/a/b/c | grep file.name, file.nevents | sort file.size
 </div>
