@@ -21,4 +21,6 @@ notations : [
     {"notation":"runNumber", "map":"run_number", "api":""},
     {"notation":"events", "map":"nevents", "api":""},
     {"notation":"lumi_sections", "map":"nlumis", "api":""},
+    {"notation":"create_time", "map":"creation_time", "api":""},
+    {"notation":"modify_time", "map":"modification_time", "api":""},
 ]
