@@ -77,7 +77,7 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "dataset=/a/b/c run=123 | grep dataset.size"
-        mongo = {'filters': ['dataset.size'], 'fields': None, 
+        mongo = {'filters': {'grep': ['dataset.size']}, 'fields': None, 
                  'spec': {'dataset': '/a/b/c', 'run': 123}}
         self.queries[query] = mongo
 
@@ -87,7 +87,7 @@ class testDASPLY(unittest.TestCase):
 
         query = "zip=10000 | grep zip.Placemark.address | count(zip.Placemark.address)"
         mongo = {'fields': ['zip'], 'spec': {'zip': 10000}, 
-                 'filters': ['zip.Placemark.address'],
+                 'filters': {'grep': ['zip.Placemark.address']},
                  'aggregators': [('count', 'zip.Placemark.address')] }
         self.queries[query] = mongo
 
@@ -100,7 +100,8 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "ip=137.138.141.145 | grep ip.City"
-        mongo = {'fields': ['ip'], 'spec': {'ip': '137.138.141.145'}, 'filters': ['ip.City']}
+        mongo = {'fields': ['ip'], 'spec': {'ip': '137.138.141.145'},
+                 'filters': {'grep': ['ip.City']}}
         self.queries[query] = mongo
 
         query = 'latitude=11.1 longitude=-72'
@@ -120,7 +121,8 @@ class testDASPLY(unittest.TestCase):
         self.queries[query] = mongo
 
         query = "file block=123 | grep file.size | sum(file.size)"
-        mongo = {'fields': ['file'], 'spec': {'block': 123}, 'filters': ['file.size'],
+        mongo = {'fields': ['file'], 'spec': {'block': 123},
+                 'filters': {'grep': ['file.size']},
                  'aggregators': [('sum', 'file.size')]}
         self.queries[query] = mongo
 
@@ -148,7 +150,7 @@ class testDASPLY(unittest.TestCase):
         query = "dataset file=/a/b run between [1,2] | grep file.name, file.age | unique | sum(file.size),max(file.size)"
         mongo = {'fields': ['dataset'], 'spec': 
                         {'run': {'$lte': 2, '$gte': 1}, 'file': '/a/b'}, 
-                 'filters': ['file.name', 'file.age', 'unique'],
+                 'filters': {'grep': ['file.name', 'file.age'], 'unique': 1},
                  'aggregators': [('sum', 'file.size'), ('max', 'file.size')]}
         self.queries[query] = mongo
         
@@ -185,13 +187,14 @@ class testDASPLY(unittest.TestCase):
 
         # query w/ filter which contains a key/value pair
         query = 'block=/a/b/c | grep site=T1 '
-        mongo = {'fields': ['block'], 'spec': {'block': '/a/b/c'}, 'filters': ['site=T1']}
+        mongo = {'fields': ['block'], 'spec': {'block': '/a/b/c'},
+                 'filters': {'grep': ['site=T1']}}
         self.queries[query] = mongo
 
         # query w/ filter which contains a filter conditions
         query = 'run dataset=/a/b/c | grep run.run_number>1, run.run_number<10 '
         mongo = {'fields': ['run'], 'spec': {'dataset': '/a/b/c'}, 
-                        'filters': ['run.run_number>1', 'run.run_number<10']}
+                 'filters': {'grep': ['run.run_number>1', 'run.run_number<10']}}
         self.queries[query] = mongo
 
         # query with DASKEY, date=value
@@ -231,6 +234,11 @@ class testDASPLY(unittest.TestCase):
 
         query = 'file=abcdeasdf file dataset dataset=abcdes date = 20080201'
         mongo = {'fields': ['file', 'dataset'], 'spec': {'date': 1201824000, 'file': 'abcdeasdf', 'dataset': 'abcdes'}}
+        self.queries[query] = mongo
+
+        query = 'file dataset=bla | grep file.creation_time<20080201'
+        mongo = {'fields': ['file'], 'spec': {'dataset': 'bla'},
+                 'filters': {'grep': ['file.creation_time<1201824000']}}
         self.queries[query] = mongo
 
     def test_instance(self):
