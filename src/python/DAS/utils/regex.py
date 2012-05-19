@@ -31,6 +31,10 @@ ip_address_pattern = \
     re.compile(r"^([0-9]{1,3}\.){3,3}[0-9]{1,3}$")
 last_time_pattern = \
     re.compile('^[0-9][0-9](h|m)$') # 24h or 12m
+rr_time_pattern = \
+    re.compile('^[A-Za-z]{3} [0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
+das_time_pattern = \
+    re.compile('^[0-9]{8} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
 date_yyyymmdd_pattern = \
     re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
 key_attrib_pattern = \
