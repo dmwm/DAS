@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bn/env python
 #pylint: disable-msg=C0301,C0103
 
 """
@@ -6,6 +6,7 @@ Unit test for DAS QL parser
 """
 
 # system modules
+import re
 import json
 import time
 import unittest
@@ -26,12 +27,23 @@ from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 from DAS.utils.utils import delete_keys, parse_filter_string
+from DAS.utils.utils import fix_times
+from DAS.utils.regex import das_time_pattern
 from DAS.core.das_query import DASQuery
 
 class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_fix_times(self):
+        "Test fix_dates function"
+        for val in [20110101, time.time(), 'Sun 20-03-11 03:11:16']:
+            row = {'creation_time': val}
+            fix_times(row)
+            val = row['creation_time']
+            res = True if das_time_pattern.match(val) else False
+            self.assertEqual(res, True)
+
     def test_parse_filter_string(self):
         "Test parse_filter_string function"
         val = "phedex"
@@ -152,7 +164,7 @@ class testUtils(unittest.TestCase):
 
     def test_parse_filters(self):
         """Test parse_filters function"""
-        filters = ['monitor', 'file.size=1']
+        filters = {'grep': ['monitor', 'file.size=1']}
         spec    = {'monitor': {'$exists':True}, 'file.size': 1}
         query   = {'spec': spec, 'filters': filters}
         expect  = {'file.size': 1}
@@ -163,7 +175,7 @@ class testUtils(unittest.TestCase):
         query.update({'filters': filters})
         self.assertRaises(Exception, parse_filters, query)
 
-        filters = ['file.size>1', 'file.size<=10']
+        filters = {'grep': ['file.size>1', 'file.size<=10']}
         expect  = {'file.size': {'$gt':1, '$lte':10}}
         query.update({'filters': filters})
         result  = parse_filters(query)

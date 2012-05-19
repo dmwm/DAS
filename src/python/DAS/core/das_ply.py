@@ -362,6 +362,16 @@ class DASPLY(object):
             p.error += "please explore date info via attribute in filter"
         raise Exception(p.error)
 
+    def p_date_for_filter(self, p):
+        """oneexp : DASKEY EQUAL DATE
+                  | DASKEY FILTER_OPERATOR DATE
+                  | DASKEY_ATTR EQUAL DATE
+                  | DASKEY_ATTR FILTER_OPERATOR DATE"""
+        val = ''
+        if len(p) == 4:
+            val += str(p[1]) + str(p[2]) + str(das_dateformat(p[3]))
+        p[0] = [val]
+
     def p_list_for_filter(self, p):
         """oneexp : DASKEY EQUAL VALUE
                   | DASKEY EQUAL NUMBER
@@ -376,14 +386,6 @@ class DASPLY(object):
         for idx in range(0, len(p)):
             if  p[idx]:
                 val += str(p[idx])
-        p[0] = [val]
-
-    def p_date_for_filter(self, p):
-        """oneexp : DASKEY EQUAL DATE
-                  | DASKEY FILTER_OPERATOR DATE"""
-        val = ''
-        if len(p) == 4:
-            val += str(p[1]) + str(p[2]) + str(das_dateformat(p[3]))
         p[0] = [val]
 
     def p_key_for_filter(self, p):
