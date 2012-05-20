@@ -34,7 +34,7 @@ last_time_pattern = \
 rr_time_pattern = \
     re.compile('^[A-Za-z]{3} [0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
 das_time_pattern = \
-    re.compile('^[0-9]{8} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
+    re.compile('^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
 date_yyyymmdd_pattern = \
     re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
 key_attrib_pattern = \
