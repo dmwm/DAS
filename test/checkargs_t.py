@@ -29,8 +29,7 @@ class testCheckArgs(unittest.TestCase):
 
         arg    = [0]
         kwds   = dict(idx='1', limit='1', 
-                input='site=T1', collection='merge',
-                format='xml', dir='asc', view='list')
+                input='site=T1', collection='merge', view='list')
         result = func_web(arg, **kwds)
         expect = None
         self.assertEqual(result, expect)
