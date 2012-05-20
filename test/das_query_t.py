@@ -38,7 +38,7 @@ class testDASQuery(unittest.TestCase):
 
         iquery = 'records | grep site.name'
         dquery = DASQuery(iquery)
-        expect = dict(fields=None, spec={}, filters=['site.name'])
+        expect = dict(fields=None, spec={}, filters={'grep': ['site.name']})
         self.assertEqual(expect, dquery.mongo_query)
 
 #    def test_query_filters_aggregators(self):
