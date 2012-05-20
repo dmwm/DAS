@@ -80,6 +80,10 @@ class Test_DotDict(unittest.TestCase):
         self.assertEqual(rec['a.d'], 111)
         self.assertRaises(Exception, rec.set, ('a.c.d', 1))
 
+        rec = DotDict(self.rec2)
+        rec['a.b'] = 111
+        self.assertEqual(rec['a.b'], 111)
+
     def test_delete(self):
         """test delete method"""
         rec = DotDict(self.rec1)

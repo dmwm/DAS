@@ -134,7 +134,14 @@ class DotDict(dict):
                         obj = obj[key]
                     except:
                         raise
-                if  not isinstance(obj, dict):
+                if  isinstance(obj, list):
+                    for rec in obj:
+                        attr = keys[-1]
+                        if  isinstance(rec, dict) and \
+                            rec.has_key(attr): # last attr
+                            rec[attr] = value
+                    return
+                elif not isinstance(obj, dict):
                     msg = 'Cannot assign new value, internal obj is not dict'
                     raise Exception(msg)
         if  isinstance(obj, DotDict):
