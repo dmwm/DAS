@@ -31,6 +31,7 @@ from   DAS.utils.regex import float_number_pattern, int_number_pattern
 from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
+from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 import DAS.utils.jsonwrapper as json
 
 def identical_data_records(old, row):
@@ -271,6 +272,45 @@ def convert_datetime(sec):
     else:
         msg = 'Unacceptable date format, value=%s, type=%s' % (sec, type(sec))
         raise Exception(msg)
+
+def presentation_datetime(val):
+    """
+    Convert input value into DAS presentation datetime format
+    (YYYY-MM-DD HH:MM:SS)
+    """
+    das_format = "%Y-%m-%d %H:%M:%S"
+    value = str(val)
+    pat   = date_yyyymmdd_pattern
+    pat2  = unix_time_pattern
+    pat3  = rr_time_pattern
+    if pat.match(value): # we accept YYYYMMDD
+        res = "%s-%s-%s 00:00:00" % (value[:4], value[4:6], value[6:8])
+    elif pat2.match(value):
+        res = time.strftime(das_format, time.gmtime(val))
+    elif pat3.match(value):
+        dformat = "%a %d-%m-%y %H:%M:%S" # Sun 15-05-11 17:25:00
+        tup = time.strptime(value.split('.')[0], dformat)
+        res = time.strftime(das_format, tup)
+    else:
+        msg = 'Unacceptable date format, value=%s, type=%s' % (val, type(val))
+        raise Exception(msg)
+    if  das_time_pattern.match(res):
+        return res
+    else:
+        msg = 'Fail to convert input value="%s" into DAS date format res="%s"' \
+                % (val, res)
+        raise Exception(msg)
+
+def fix_times(row):
+    "Convert creation/modification times into DAS time format"
+    rec = DotDict(row)
+    for key in rec.get_keys():
+        if  key.find('creation_time') != -1 or \
+            key.find('modification_time') != -1 or \
+            key.find('start_time') != -1 or \
+            key.find('end_time') != -1:
+            val = rec.get(key)
+            rec[key] = presentation_datetime(val)
 
 def dbsql_opt_map(operator):
     """

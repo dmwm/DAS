@@ -38,9 +38,9 @@ class testUtils(unittest.TestCase):
     def test_fix_times(self):
         "Test fix_dates function"
         for val in [20110101, time.time(), 'Sun 20-03-11 03:11:16']:
-            row = {'creation_time': val}
+            row = {'file': [{'creation_time': val}, {'foo': 1}]}
             fix_times(row)
-            val = row['creation_time']
+            val = row['file'][0]['creation_time']
             res = True if das_time_pattern.match(val) else False
             self.assertEqual(res, True)
 
