@@ -263,6 +263,7 @@ class DBSService(DASAbstractService):
                     pass
             if  value:
                 kwds['query'] = "find dataset, datatype, dataset.status, \
+dataset.tag, \
 procds.createdate, procds.createby, procds.moddate, procds.modby, \
 sum(block.numfiles), sum(block.numevents), count(block), sum(block.size) \
 where %s" % value[4:]
@@ -276,9 +277,11 @@ where %s" % value[4:]
                 value = ' and dataset.status like VALID*'
 #           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124} 
             query_for_single = "find dataset, datatype, dataset.status, \
+  dataset.tag, \
   count(block), sum(block.size), sum(block.numfiles), sum(block.numevents), \
   dataset.createdate where dataset.createdate %s %s " + value
             query_for_double = "find dataset, datatype, dataset.status, \
+  dataset.tag, \
   count(block), sum(block.size), sum(block.numfiles), sum(block.numevents), \
   dataset.createdate where dataset.createdate %s %s \
   and dataset.createdate %s %s " + value
@@ -393,6 +396,9 @@ where %s" % value[4:]
         useless_run_atts = ['number_of_events', 'number_of_lumi_sections', \
                 'id', 'total_luminosity', 'store_number', 'end_of_run', \
                 'start_of_run']
+        config_attrs = ['config.name', 'config.content', 'config.version', \
+                 'config.type', 'config.annotation', 'config.createdate', \
+                 'config.createby', 'config.moddate', 'config.modby']
         for row in gen:
             if  not row:
                 continue
@@ -400,10 +406,6 @@ where %s" % value[4:]
                 row['status'].has_key('dataset.status'):
                 row['status']['name'] = row['status']['dataset.status']
                 del row['status']['dataset.status']
-            if  row.has_key('dataset') and \
-                row['dataset'].has_key('dataset.status'):
-                row['dataset']['status'] = row['dataset']['dataset.status']
-                del row['dataset']['dataset.status']
             if  row.has_key('file_lumi_section'):
                 row['lumi'] = row['file_lumi_section']
                 del row['file_lumi_section']
@@ -446,12 +448,10 @@ where %s" % value[4:]
             if  row.has_key('site'):
                 row['site']['se'] = row['site']['site']
                 del row['site']['site']
-            attrs = ['config.name', 'config.content', 'config.version', \
-                     'config.type', 'config.annotation', 'config.createdate', \
-                     'config.createby', 'config.moddate', 'config.modby']
-            convert_dot(row, 'config', attrs)
+            convert_dot(row, 'config', config_attrs)
             convert_dot(row, 'file', ['file.name'])
             convert_dot(row, 'block', ['block.name'])
+            convert_dot(row, 'dataset', ['dataset.tag', 'dataset.status'])
             # remove DBS2 run attributes (to be consistent with DBS3 output)
             # and let people extract this info from CondDB/LumiDB.
             if  row.has_key('run'):
