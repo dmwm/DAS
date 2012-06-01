@@ -42,19 +42,28 @@ def duration(ctime, etime, api_ver=2):
     tot  = calendar.timegm(csec) - calendar.timegm(esec)
     return str(datetime.timedelta(seconds=abs(tot)))
 
+def convert_time(ctime):
+    "Convert RR timestamp into sec since epoch"
+    dformat = "%a %d-%m-%y %H:%M:%S" # Sun 15-05-11 17:25:00
+    sec = time.strptime(ctime.split('.')[0], dformat)
+    return long(calendar.timegm(sec))
+
 def run_duration(records, api_ver=2):
     """
-    Custom parser to produce run duration out of RR records
+    Custom parser to produce run duration out of RR records and
+    convert time stamps into DAS notations.
     """
+    times = ['start_time', 'end_time', 'creation_time', 'modification_time']
     for row in records:
         if  not row.has_key('run'):
             continue
         run = row['run']
         if  isinstance(run, dict):
-            if  run.has_key('create_time') and run.has_key('end_time'):
-                ctime = run['create_time']
-                etime = run['end_time']
-                run['duration'] = duration(ctime, etime, api_ver)
+            for key in times:
+                if  run.has_key(key):
+                    run[key] = convert_time(run[key])
+            tot = abs(run['creation_time']-run['end_time'])
+            run['duration'] = str(datetime.timedelta(seconds=tot))
         yield row
 
 def worker_v2(url, query):
