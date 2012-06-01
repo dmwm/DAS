@@ -304,13 +304,18 @@ def presentation_datetime(val):
 def fix_times(row):
     "Convert creation/modification times into DAS time format"
     rec = DotDict(row)
+    times = ['creation_time', 'modification_time', 'create_time', 'end_time']
+    def callback(elem, key):
+#        print "\n### callback", key, elem
+        val = elem[key]
+        if  val:
+            elem[key] = presentation_datetime(val)
     for key in rec.get_keys():
         if  key.find('creation_time') != -1 or \
             key.find('modification_time') != -1 or \
             key.find('start_time') != -1 or \
             key.find('end_time') != -1:
-            val = rec.get(key)
-            rec[key] = presentation_datetime(val)
+            rec.set_values(key, callback)
 
 def dbsql_opt_map(operator):
     """
