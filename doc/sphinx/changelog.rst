@@ -5,6 +5,12 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.5.X
+
+  - Set DAS times, ticket #3758
+  - Convert RR times into DAS date format
+  - Fix ticket #3796
+
 - 1.4.X
 
   - Move code to github
