@@ -250,6 +250,28 @@ class DotDict(dict):
                         else:
                             yield att
 
+    def set_values(self, ckey, callback):
+        """
+        Set values for compound key. This method works similar
+        to get_values, it loops over DotDict structure and
+        invoke callback function which will set a value for given
+        key.
+        """
+        for next_key, item in yield_obj(self, ckey):
+            if  isdictinstance(item):
+                for final, elem in yield_obj(item, next_key):
+                    if  isdictinstance(elem) and elem.has_key(final):
+                        callback(elem, final)
+                    else:
+                        callback(item, next_key)
+            elif isinstance(item, list) or isinstance(item, GeneratorType):
+                for final, elem in item:
+                    for last, att in yield_obj(elem, final):
+                        if  isdictinstance(att) and att.has_key(last):
+                            callback(att, last)
+                        else:
+                            callback(elem, final)
+
     def get_keys(self, ckey=None):
         """Return all keys for a starting ckey"""
         if  ckey:
