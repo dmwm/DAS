@@ -30,7 +30,7 @@ from DAS.core.das_mongocache import DASMongocache
 from DAS.utils.query_utils import compare_specs, decode_mongo_query
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
-from DAS.utils.utils import expire_timestamp, print_exc
+from DAS.utils.utils import expire_timestamp, print_exc, fix_times
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.das_timer import das_timer, get_das_timer
 
@@ -419,6 +419,7 @@ class DASCore(object):
             res = self.rawcache.get_from_cache(dasquery, idx, limit, \
                     collection=collection)
         for row in res:
+            fix_times(row)
             yield row
         das_timer('DASCore::get_from_cache', self.verbose)
 
