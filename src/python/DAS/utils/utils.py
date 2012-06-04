@@ -278,7 +278,7 @@ def presentation_datetime(val):
     Convert input value into DAS presentation datetime format
     (YYYY-MM-DD HH:MM:SS)
     """
-    das_format = "%Y-%m-%d %H:%M:%S GMT"
+    das_format = "%Y-%m-%d %H:%M:%S"
     value = str(val)
     pat   = date_yyyymmdd_pattern
     pat2  = unix_time_pattern
