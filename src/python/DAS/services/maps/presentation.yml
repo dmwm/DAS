@@ -62,6 +62,7 @@ block : [
          "link":[
                 {"name":"Dataset", "query":"dataset block=%s"},
                 {"name":"Files", "query":"file block=%s"},
+                {"name":"Runs", "query":"run block=%s"},
                 {"name":"Sites", "query":"site block=%s"},
                 ]}, 
         {"das":"block.size", "ui":"Block size"},
