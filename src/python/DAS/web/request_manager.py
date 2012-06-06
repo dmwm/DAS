@@ -33,6 +33,10 @@ class RequestManager(object):
         create_indexes(self.hold, [('ts', ASCENDING)])
         self.lifetime = lifetime # default 1 hour
 
+    def clean(self):
+        """Clean on hold collection"""
+        self.col.remove({'ts':{'$lt':time.time()-self.lifetime}})
+
     def get(self, pid):
         """Get params for a given pid"""
         doc = self.col.find_one(dict(_id=pid))
@@ -41,6 +45,9 @@ class RequestManager(object):
         
     def add(self, pid, kwds):
         """Add new pid/kwds"""
+        self.clean()
+        if  not kwds:
+            return
         tstamp = time.strftime("%Y%m%d %H:%M:%S", time.localtime())
         doc = dict(_id=pid, kwds=json.dumps(kwds),
                 ts=time.time(), timestamp=tstamp)
@@ -59,10 +66,10 @@ class RequestManager(object):
                 msg = '%s unable to add pid=%s' % (self.col, pid)
                 print dastimestamp('DAS ERROR '), msg
                 break
-        self.col.remove({'ts':{'$lt':time.time()-self.lifetime}})
         
     def remove(self, pid):
         """Remove given pid"""
+        self.clean()
         attempts = 0
         while True:
             try:
@@ -79,6 +86,7 @@ class RequestManager(object):
         
     def items(self):
         """Return list of current requests"""
+        self.clean()
         for row in self.col.find():
             row['_id'] = str(row['_id'])
             yield row
@@ -111,4 +119,5 @@ class RequestManager(object):
 
     def size(self):
         """Return size of the request cache"""
+        self.clean()
         return self.col.count()
