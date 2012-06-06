@@ -385,6 +385,8 @@ where %s" % value[4:]
             prim_key = 'run'
         elif api == 'fakeBlock4DatasetRun':
             prim_key = 'block'
+        elif api == 'fakeSite4Dataset':
+            prim_key = 'site'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
