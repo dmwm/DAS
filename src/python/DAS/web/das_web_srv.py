@@ -117,7 +117,9 @@ class DASWebService(DASWebManager):
                         for rec in reqmgr.items_onhold():
                             dasquery  = DASQuery(rec['uinput'])
                             addr      = rec['ip']
-                            kwargs    = {}
+                            kwargs    = {'input':rec['uinput'],
+                                         'instance': self.dbs_global,
+                                         'view': 'list'}
                             _evt, pid = taskmgr.spawn(\
                                 dasmgr.call, dasquery, addr, pid=dasquery.qhash)
                             reqmgr.add(pid, kwargs)
