@@ -110,26 +110,33 @@ class DASWebService(DASWebManager):
     def process_requests_onhold(self):
         "Process requests which are on hold"
         try:
-            def onhold_worker(dasmgr, taskmgr, reqmgr):
+            def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
                 "Worker daemon to process onhold requests"
+                jobs = []
                 while True:
                     try:
+                        while jobs:
+                            try:
+                                reqmgr.remove(jobs.pop(0))
+                            except:
+                                break
+                        nrequests = reqmgr.size()
                         for rec in reqmgr.items_onhold():
                             dasquery  = DASQuery(rec['uinput'])
                             addr      = rec['ip']
-                            kwargs    = {'input':rec['uinput'],
-                                         'instance': self.dbs_global,
-                                         'view': 'list'}
-                            _evt, pid = taskmgr.spawn(\
-                                dasmgr.call, dasquery, addr, pid=dasquery.qhash)
-                            reqmgr.add(pid, kwargs)
-                            reqmgr.remove_onhold(str(rec['_id']))
+                            kwargs    = {'input':rec['uinput']}
+                            if  (nrequests - taskmgr.nworkers()) < limit:
+                                _evt, pid = taskmgr.spawn(\
+                                    dasmgr.call, dasquery, \
+                                        addr, pid=dasquery.qhash)
+                                jobs.append(pid)
+                                reqmgr.remove_onhold(str(rec['_id']))
                     except Exception as err:
                         print_exc(err)
                         pass
                     time.sleep(5)
             thread.start_new_thread(onhold_worker, \
-                (self.dasmgr, self.taskmgr, self.reqmgr))
+                (self.dasmgr, self.taskmgr, self.reqmgr, self.queue_limit/2))
         except Exception as exc:
             print_exc(exc)
 
