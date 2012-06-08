@@ -66,7 +66,7 @@ DASOption('parserdb', 'sizecap', 'int', 1048576*5),
 # Loggind DB options
 #
 # default db name
-DASOption('loggingdb', 'dbname', 'string', 'parser'),
+DASOption('loggingdb', 'dbname', 'string', 'logging'),
 # default collection name
 DASOption('loggingdb', 'collname', 'string', 'db'),
 # size of logging db (MongoDB capped collection)
