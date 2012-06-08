@@ -4,17 +4,41 @@
 """
 DAS config generator
 """
-__revision__ = "$Id: create_das_config.py,v 1.3 2009/04/29 19:52:12 valya Exp $"
-__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
-from DAS.utils.das_config import write_configparser, das_configfile
+# system modules
+import os
+import ConfigParser
+from optparse import OptionParser
 
-#
-# main
-#
+# DAS modules
+from DAS.utils.das_config import DAS_OPTIONS, das_configfile
+
+class ConfigOptionParser:
+    "option parser"
+    def __init__(self):
+        self.parser = OptionParser()
+        self.parser.add_option("-i", "--in", action="store", type="string",
+        default="", dest="uinput", help="input file, default $DAS_CONFIG")
+        self.parser.add_option("-o", "--out", action="store", type="string",
+        default="", dest="output", help="output file")
+
+    def get_opt(self):
+        "Returns parse list of options"
+        return self.parser.parse_args()
+
+def main():
+    "Main function"
+    optmgr = ConfigOptionParser()
+    opts, _args = optmgr.get_opt()
+    dasconfig = opts.uinput if opts.uinput else das_configfile()
+    outconfig = opts.output if opts.output else \
+                os.path.join(os.getcwd(), 'das_cms.cfg')
+    config = ConfigParser.ConfigParser()
+    for option in DAS_OPTIONS:
+        option.write_to_configparser(config, use_default=False)
+    config.write(open(outconfig, 'wb'))
+    print "Created DAS configuration file", outconfig
+
 if __name__ == '__main__':
-    dasconfig = das_configfile()
-    write_configparser(dasconfig, True)
-    print "DAS configuration file has been created"
-    print dasconfig
+   main()
