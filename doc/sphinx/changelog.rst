@@ -7,6 +7,13 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.5.X
 
+  - Revisit onhold daemon and cache requests flaw
+
+      - Start onhold daemon within init call (ensure MongoDB connection)
+      - Check DAS cache first for CLI requests regardless if pid presence in a request
+      - Put requests on hold only if user exceeds its threshold and server is busy,
+        otherwise pass it through
+
   - Set DAS times, ticket #3758
   - Convert RR times into DAS date format
   - Fix ticket #3796
