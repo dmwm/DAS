@@ -6,8 +6,6 @@
 Regular expression patterns
 """
 
-__revision__ = "$Id: regex.py,v 1.3 2010/04/13 14:58:15 valya Exp $"
-__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -33,6 +31,7 @@ last_time_pattern = \
     re.compile('^[0-9][0-9](h|m)$') # 24h or 12m
 rr_time_pattern = \
     re.compile('^[A-Za-z]{3} [0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
+# das time should be in isoformat, see datetime.isoformat()
 das_time_pattern = \
     re.compile('^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
 date_yyyymmdd_pattern = \

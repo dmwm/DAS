@@ -15,7 +15,7 @@ This release series is targeted to DAS production stability and quality.
         otherwise pass it through
 
   - Set DAS times, ticket #3758
-  - Convert RR times into DAS date format
+  - Convert RR times into DAS date format (isoformat)
   - Fix ticket #3796
 
 - 1.4.X
