@@ -21,6 +21,7 @@ from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from pymongo.objectid import ObjectId
 from pymongo import DESCENDING
+from pymongo.errors import AutoReconnect
 
 # DAS modules
 import DAS
@@ -54,6 +55,38 @@ import DAS.utils.jsonwrapper as json
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
 DAS_PIPECMDS = das_aggregators() + das_filters()
+
+def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
+    "Worker daemon to process onhold requests"
+    if  not dasmgr or not taskmgr or not reqmgr:
+        return
+    print "### START onhold_worker", time.time()
+    jobs = []
+    while True:
+        try:
+            while jobs:
+                try:
+                    reqmgr.remove(jobs.pop(0))
+                except:
+                    break
+            nrequests = reqmgr.size()
+            for rec in reqmgr.items_onhold():
+                dasquery  = DASQuery(rec['uinput'])
+                addr      = rec['ip']
+                kwargs    = {'input':rec['uinput']}
+                if  (nrequests - taskmgr.nworkers()) < limit:
+                    _evt, pid = taskmgr.spawn(\
+                        dasmgr.call, dasquery, \
+                            addr, pid=dasquery.qhash)
+                    jobs.append(pid)
+                    reqmgr.remove_onhold(str(rec['_id']))
+        except AutoReconnect:
+            pass
+        except Exception as err:
+            print_exc(err)
+            pass
+        time.sleep(5)
+    print "### END onhold_worker", time.time()
 
 class DASWebService(DASWebManager):
     """
@@ -103,40 +136,12 @@ class DASWebService(DASWebManager):
         if  self.dataset_daemon:
             self.dbs_daemon(config)
 
-        # Start Onhold_request daemon
-        if  config.get('onhold_daemon', False):
-            self.process_requests_onhold()
-
     def process_requests_onhold(self):
         "Process requests which are on hold"
         try:
-            def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
-                "Worker daemon to process onhold requests"
-                jobs = []
-                while True:
-                    try:
-                        while jobs:
-                            try:
-                                reqmgr.remove(jobs.pop(0))
-                            except:
-                                break
-                        nrequests = reqmgr.size()
-                        for rec in reqmgr.items_onhold():
-                            dasquery  = DASQuery(rec['uinput'])
-                            addr      = rec['ip']
-                            kwargs    = {'input':rec['uinput']}
-                            if  (nrequests - taskmgr.nworkers()) < limit:
-                                _evt, pid = taskmgr.spawn(\
-                                    dasmgr.call, dasquery, \
-                                        addr, pid=dasquery.qhash)
-                                jobs.append(pid)
-                                reqmgr.remove_onhold(str(rec['_id']))
-                    except Exception as err:
-                        print_exc(err)
-                        pass
-                    time.sleep(5)
+            limit = self.queue_limit/2
             thread.start_new_thread(onhold_worker, \
-                (self.dasmgr, self.taskmgr, self.reqmgr, self.queue_limit/2))
+                (self.dasmgr, self.taskmgr, self.reqmgr, limit))
         except Exception as exc:
             print_exc(exc)
 
@@ -189,6 +194,10 @@ class DASWebService(DASWebManager):
             self.dasmgr = None
             self.daskeys = []
             self.colors = {}
+            return
+        # Start Onhold_request daemon
+        if  self.dasconfig['web_server'].get('onhold_daemon', False):
+            self.process_requests_onhold()
 
     def logdb(self, query):
         """
@@ -637,6 +646,11 @@ class DASWebService(DASWebManager):
                          'ctime': 0})
             return self.datastream(dict(head=head, data=data))
         dasquery = content # returned content is valid DAS query
+        status, qhash = self.dasmgr.get_status(dasquery)
+        if  status == 'ok':
+            self.reqmgr.remove(dasquery.qhash)
+            head, data = self.get_data(kwargs)
+            return self.datastream(dict(head=head, data=data))
         kwargs['dasquery'] = dasquery.storage_query
         if  not pid and self.busy():
             head = dict(timestamp=time.time())
@@ -659,16 +673,18 @@ class DASWebService(DASWebManager):
             config = self.dasconfig.get('cacherequests', {})
             thr = threshold(self.sitedbmgr, self.hot_thr, config)
             nhits = self.get_nhits()
-            if  nhits > thr: # put request onhold
-                tstamp = time.time() + 60*(nhits/thr) + (nhits%thr)
-                pid  = dasquery.qhash
-                self.reqmgr.add_onhold(\
+            if  nhits > thr: # exceed threshold
+                if  self.busy(): # put request onhold, server is busy
+                    tstamp = time.time() + 60*(nhits/thr) + (nhits%thr)
+                    pid  = dasquery.qhash
+                    self.reqmgr.add_onhold(\
                         pid, uinput, cherrypy.request.remote.ip, tstamp)
-                head = {'status':'onhold', 'mongo_query':dasquery.mongo_query,
-                        'pid':pid, 'nresults':0, 'ctime':0,
-                        'timestamp':time.time()}
-                data = []
-                return self.datastream(dict(head=head, data=data))
+                    head = {'status':'onhold',
+                            'mongo_query':dasquery.mongo_query,
+                            'pid':pid, 'nresults':0, 'ctime':0,
+                            'timestamp':time.time()}
+                    data = []
+                    return self.datastream(dict(head=head, data=data))
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(\
                 self.dasmgr.call, dasquery, addr, pid=dasquery.qhash)
