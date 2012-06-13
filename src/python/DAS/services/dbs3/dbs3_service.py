@@ -42,6 +42,10 @@ class DBS3Service(DASAbstractService):
         """
         Adjust DBS2 parameters for specific query requests
         """
+        if  api == 'site4dataset':
+            # skip API call if inst is global one (data provided by phedex)
+            if  inst == self.prim_instance:
+                kwds['dataset'] = 'required' # we skip
         if  api == 'acquisitioneras':
             try:
                 del kwds['era']
