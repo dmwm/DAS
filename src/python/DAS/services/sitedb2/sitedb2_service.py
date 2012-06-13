@@ -65,6 +65,23 @@ class SiteDBService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
+    def site_info(self, site):
+        "Get information about given site"
+        url = None
+        site_names = self.map.get('site_names', None)
+        if  site_names:
+            url = site_names.get('url', None)
+        if  not url:
+            return
+        params = {}
+        expire = 3600 # not important
+        data, expire = self.getdata(url, params, expire)
+        for row in data['result']:
+            if  row['resources']:
+                for rec in row['resources']:
+                    if  rec['fqdn'] == site:
+                        return row
+
     def api_data(self, api):
         "Return group_responsibilities dict"
         url = self.map[api]['url']
