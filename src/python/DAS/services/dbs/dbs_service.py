@@ -9,6 +9,7 @@ __author__ = "Valentin Kuznetsov"
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import dbsql_opt_map, convert_datetime
+from DAS.utils.global_scope import SERVICES
 
 def convert_dot(row, key, attrs):
     """Convert dot notation key.attr into storage one"""
@@ -317,6 +318,7 @@ where %s" % value[4:]
         """
         DBS data-service parser.
         """
+        sitedb = SERVICES.get('sitedb2', None) # look-up SiteDB from global scope
         query = dasquery.mongo_query
         if  api == 'listBlocks':
             prim_key = 'block'
@@ -462,4 +464,11 @@ where %s" % value[4:]
                         del row['run'][att]
                     except:
                         pass
+            if  api == 'fakeSite4Dataset' and sitedb:
+                site = row.get('site', None)
+                if  site and isinstance(site, dict):
+                    sename = site.get('se', None)
+                    info = sitedb.site_info(sename)
+                    if  info:
+                        row['site'].update(info)
             yield row
