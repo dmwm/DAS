@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.5.X
 
+  - Add SERVICES into global scope to allow cross service usage, e.g.
+    site look-up for DBS dataset records
+  - Add site look-up for user based datasets, ticket #3432
   - Revisit onhold daemon and cache requests flaw
 
       - Start onhold daemon within init call (ensure MongoDB connection)
