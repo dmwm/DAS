@@ -5,6 +5,10 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.6.X
+
+  - move DAS into github.com/dmwm organization
+
 - 1.5.X
 
   - Add SERVICES into global scope to allow cross service usage, e.g.
