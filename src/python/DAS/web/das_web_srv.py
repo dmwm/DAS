@@ -441,6 +441,8 @@ class DASWebService(DASWebManager):
         """
         provide input DAS search form
         """
+        if  "'" in uinput: # e.g. file.creation_date>'20120101 12:01:01'
+            uinput = uinput.replace("'", '"')
         if  not instance:
             instance = self.dbs_global
         cards = self.templatepage('das_cards', base=self.base, show=cards, \

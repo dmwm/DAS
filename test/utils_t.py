@@ -27,7 +27,7 @@ from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 from DAS.utils.utils import delete_keys, parse_filter_string
-from DAS.utils.utils import fix_times
+from DAS.utils.utils import fix_times, das_dateformat
 from DAS.utils.regex import das_time_pattern
 from DAS.core.das_query import DASQuery
 
@@ -35,6 +35,19 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_das_dateformat(self):
+        "Test das_dateformat function"
+        obj1  = '20120101'
+        obj2  = '20120101 00:00:01'
+        time1 = das_dateformat(obj1)
+        time2 = das_dateformat(obj2)
+        self.assertEqual(time1, 1325376000)
+        self.assertEqual(time2, 1325376001)
+        wrong = '2012'
+        self.assertRaises(Exception, das_dateformat, wrong)
+        wrong = '20120101 12'
+        self.assertRaises(Exception, das_dateformat, wrong)
+
     def test_fix_times(self):
         "Test fix_dates function"
         for val in [20110101, time.time(), 'Sun 20-03-11 03:11:16']:

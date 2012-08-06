@@ -20,6 +20,7 @@ from   DAS.utils.utils import das_dateformat, print_exc
 from   DAS.core.das_ql import das_filters, das_operators, das_mapreduces
 from   DAS.core.das_ql import das_aggregators, das_special_keys
 from   DAS.core.das_ql import das_db_keywords
+from   DAS.utils.regex import date_yyyymmdd_pattern
 
 def das_parser_error(query, error):
     """Return DAS keyword which cause parser to burk"""
@@ -136,8 +137,8 @@ class DASPLY(object):
         return t
 
     def t_DATE(self, t):
-        r'20\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])'
-        t.value = int(t.value)
+        r"20\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])|'20\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])\s[0-2]\d:[0-6]\d:[0-6]\d'|\"20\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])\s[0-2]\d:[0-6]\d:[0-6]\d\""
+        t.value = t.value.replace("'", "").replace('"', '')
         return t
 
     def t_DATE_STR(self, t):

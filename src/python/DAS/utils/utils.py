@@ -247,15 +247,27 @@ def convert2date(value):
 
 def das_dateformat(value):
     """Check if provided value in expected DAS date format."""
+    msg = 'Unacceptable date format, supported formats are YYYYMMDD or' \
+        + " 'YYYMMDD HH:MM:SS'"
     value = str(value)
     pat = date_yyyymmdd_pattern
     if  pat.match(value): # we accept YYYYMMDD
-        ddd = datetime.date(int(value[0:4]), # YYYY
-                            int(value[4:6]), # MM
-                            int(value[6:8])) # DD
+        if  len(value) == 8: # YYYYMMDD
+            ddd = datetime.date(int(value[0:4]), # YYYY
+                                int(value[4:6]), # MM
+                                int(value[6:8])) # DD
+        elif len(value) == 17: # YYYYMMDD HH:MM:SS
+            ddd = datetime.datetime(\
+                    int(value[0:4]),   ## YYYY
+                    int(value[4:6]),   ## MM
+                    int(value[6:8]),   ## DD
+                    int(value[9:11]),  ## HH
+                    int(value[12:14]), ## MM
+                    int(value[15:17])) ## SS
+        else:
+            raise Exception(msg)
         return calendar.timegm((ddd.timetuple()))
     else:
-        msg = 'Unacceptable date format'
         raise Exception(msg)
 
 def convert_datetime(sec):
