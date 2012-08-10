@@ -72,8 +72,9 @@ class QLManager(object):
             for item in val:
                 self.daskeys.append(item)
         parserdir   = config['das']['parserdir']
+        verbose = 1 if config['parserdb']['enable'] else 0
         self.dasply = DASPLY(parserdir, self.daskeys, self.dasservices, 
-                verbose=self.verbose)
+                verbose=verbose)
 
         self.enabledb = config['parserdb']['enable']
         if  self.enabledb:
