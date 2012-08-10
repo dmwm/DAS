@@ -7,11 +7,12 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.6.X
 
-  - move DAS into github.com/dmwm organization
+  - Move DAS into github.com/dmwm organization
   - Extend das_dateformat to accept full timestamp (isoformat); provide set of
     unit tests for das_dateformat; fix web UI to accept date in full isoformat
     (user will need to provide quotes around timestamp, e.g.
     '20120101 01:01:01'); fixes #3931
+  - Set verbose mode only when parserdb option is enabled
 
 - 1.5.X
 
