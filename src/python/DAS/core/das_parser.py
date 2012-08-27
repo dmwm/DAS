@@ -72,9 +72,8 @@ class QLManager(object):
             for item in val:
                 self.daskeys.append(item)
         parserdir   = config['das']['parserdir']
-        verbose = 1 if config['parserdb']['enable'] else 0
         self.dasply = DASPLY(parserdir, self.daskeys, self.dasservices, 
-                verbose=verbose)
+                verbose=self.verbose)
 
         self.enabledb = config['parserdb']['enable']
         if  self.enabledb:
@@ -115,18 +114,22 @@ class QLManager(object):
                 try:
                     ply_query = self.dasply.parser.parse(query)
                     mongo_query = ply2mongo(ply_query)
+                except Exception as exc:
+#                    self.parserdb.insert_invalid_query(query, exp)
+                    print "Fail to parse query=%s" % query
+                    raise exc
+                try:
                     self.parserdb.insert_valid_query(query, mongo_query)
-                except Exception as exp:
-                    self.parserdb.insert_invalid_query(query, exp)
-                    print "Input query=%s" % query
-                    raise exp
+                except Exception as exc:
+                    msg = "Fail to insert into parserdb"
+                    print_exc(msg, print_traceback=True)
+                    raise exc
         else:
             try:
                 ply_query   = self.dasply.parser.parse(query)
                 mongo_query = ply2mongo(ply_query)
             except Exception as exc:
-                msg = "Fail to convert input query='%s' into MongoDB format" \
-                    % query
+                msg = "Fail to parse query='%s'" % query
                 print_exc(msg, print_traceback=False)
                 raise exc
         if  set(mongo_query.keys()) & set(['fields', 'spec']) != \
