@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.6.X
 
+  - Introduce new dataset populator tool which should fetch all DBS
+    datasets and keep them alive in DAS cache (not yet enabled)
   - Move DAS into github.com/dmwm organization
   - Extend das_dateformat to accept full timestamp (isoformat); provide set of
     unit tests for das_dateformat; fix web UI to accept date in full isoformat
