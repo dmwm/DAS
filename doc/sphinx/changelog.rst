@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.6.X
 
+  - Change pymongo.objectid to bson.objectid, pymongo.code to bson.code since
+    pymongo structure has been changed (since 2.2.1 pymongo version)
   - Introduce new dataset populator tool which should fetch all DBS
     datasets and keep them alive in DAS cache (not yet enabled)
   - Move DAS into github.com/dmwm organization
