@@ -284,6 +284,8 @@ class DASCore(object):
         kwds is provided for compatibility with web layer, e.g. it
         may invoke this method with additional pid parameter.
         """
+        for col in ['merge', 'cache']:
+            self.rawcache.remove_expired(col)
         self.logger.info('input query=%s' % query)
         das_timer('DASCore::call', self.verbose)
         services = []
