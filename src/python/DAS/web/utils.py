@@ -18,7 +18,7 @@ import plistlib
 from   cherrypy import HTTPError
 from   json import JSONEncoder
 from   urllib import quote_plus
-from   pymongo.objectid import ObjectId
+from   bson.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json

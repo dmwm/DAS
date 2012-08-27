@@ -14,7 +14,7 @@ import time
 
 # monogo db modules
 from pymongo import DESCENDING, ASCENDING
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 
 # DAS modules
 from DAS.utils.utils import gen2list, genkey, expire_timestamp

@@ -9,7 +9,7 @@ Description: Main class to hold DAS query object
 # system modules
 import re
 import copy
-from   pymongo.objectid import ObjectId
+from   bson.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json

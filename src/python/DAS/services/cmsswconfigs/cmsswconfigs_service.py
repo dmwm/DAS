@@ -14,7 +14,7 @@ from DAS.utils.utils import map_validator
 from DAS.services.cmsswconfigs.base import MongoQuery
 from DAS.utils.das_db import db_connection
 
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 
 class CMSSWConfigsService(DASAbstractService):
     """

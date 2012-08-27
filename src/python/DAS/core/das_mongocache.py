@@ -36,8 +36,8 @@ from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
 
 # monogo db modules
-from pymongo.objectid import ObjectId
-from pymongo.code import Code
+from bson.objectid import ObjectId
+from bson.code import Code
 from pymongo import DESCENDING, ASCENDING
 from pymongo.errors import InvalidOperation
 from bson.errors import InvalidDocument

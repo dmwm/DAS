@@ -3,7 +3,7 @@ Keylearning task manager
 """
 
 import collections
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 from DAS.utils.logger import PrintManager
 
 class KeyLearning(object):
