@@ -17,6 +17,7 @@ from   types import InstanceType
 # DAS modules
 from   DAS.utils.das_timer import das_timer
 from   DAS.utils.utils import expire_timestamp, extract_http_error
+from   DAS.utils.utils import http_timestamp
 from   DAS.utils.pycurl_manager import RequestHandler
 import DAS.utils.jsonwrapper as json
 
@@ -64,7 +65,8 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
     return data, expire
 
 def getdata_urllib(url, params, headers=None, expire=3600, post=None,
-    error_expire=300, verbose=0, ckey=None, cert=None, doseq=True, system=None):
+    error_expire=300, verbose=0, ckey=None, cert=None, doseq=True, system=None,
+    tstamp=None):
     """
     Invoke URL call and retrieve data from data-service based
     on provided URL and set of parameters. Use post=True to
@@ -80,6 +82,8 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
         url = url + '?' + encoded_data
     if  not headers:
         headers = {}
+    if  tstamp and 'If-Modified-Since' not in headers.keys():
+        headers['If-Modified-Since'] = http_timestamp(tstamp)
     if  verbose:
         print '+++ getdata, url=%s, headers=%s' % (url, headers)
     req = urllib2.Request(url)
@@ -100,9 +104,14 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
         else:
             data = urllib2.urlopen(req)
         data_srv_time = time.time()-time0
+        info = data.info()
+        code = data.getcode()
+        if  verbose:
+            print "+++ response code:", code
+            print "+++ response info\n", info
         try: # get HTTP header and look for Expires
             e_time = expire_timestamp(\
-                data.info().__dict__['dict']['expires'])
+                info.__dict__['dict']['expires'])
             if  e_time < expire_timestamp(data_srv_time):
                 expire = max(e_time, expire_timestamp(expire))
             elif e_time > time.time():
