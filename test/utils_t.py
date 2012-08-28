@@ -27,7 +27,7 @@ from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 from DAS.utils.utils import delete_keys, parse_filter_string
-from DAS.utils.utils import fix_times, das_dateformat
+from DAS.utils.utils import fix_times, das_dateformat, http_timestamp
 from DAS.utils.regex import das_time_pattern
 from DAS.core.das_query import DASQuery
 
@@ -35,6 +35,18 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_httptimestamp(self):
+        "Test httptimestamp function"
+        day = 'Tue, 28 Aug 2012 16:50:29 GMT'
+        self.assertEqual(http_timestamp(day), day)
+        gmtime = time.gmtime()
+        tstamp = time.strftime('%a, %d %b %Y %H:%M:%S GMT', gmtime)
+        self.assertEqual(http_timestamp(gmtime), tstamp)
+        ltime  = time.time()
+        gmtime = time.gmtime(ltime)
+        tstamp = time.strftime('%a, %d %b %Y %H:%M:%S GMT', gmtime)
+        self.assertEqual(http_timestamp(gmtime), tstamp)
+
     def test_das_dateformat(self):
         "Test das_dateformat function"
         obj1  = '20120101'

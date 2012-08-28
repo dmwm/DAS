@@ -32,6 +32,7 @@ from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 from   DAS.utils.regex import rr_time_pattern, das_time_pattern
+from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
 
 def identical_data_records(old, row):
@@ -79,6 +80,17 @@ def dastimestamp(msg='DAS '):
     if  msg:
         return msg + tstamp
     return tstamp
+
+def http_timestamp(tstamp=None):
+    "Return HTTP complaint time stamp"
+    if  isinstance(tstamp, float) or isinstance(tstamp, long) or \
+        isinstance(tstamp, int):
+        tstamp = time.gmtime(tstamp)
+    elif isinstance(tstamp, basestring) and http_ts_pattern.match(tstamp):
+        return tstamp
+    else:
+        tstamp = time.gmtime()
+    return time.strftime('%a, %d %b %Y %H:%M:%S GMT', tstamp)
 
 def inspect_module(msg=None):
     "Printout function stack calls"
