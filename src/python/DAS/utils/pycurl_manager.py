@@ -116,7 +116,7 @@ class RequestHandler(object):
         return data, expire
 
     def multirequest(self, url, parray, headers=None,
-                ckey=None, cert=None, verbose=None):
+                ckey=None, cert=None, verbose=None, decoder='json'):
         """Fetch data for given set of parameters"""
         multi = pycurl.CurlMulti()
         for params in parray:
@@ -138,19 +138,22 @@ class RequestHandler(object):
                         break
             _numq, response, _err = multi.info_read()
             for _cobj in response:
-                data = json.loads(bbuf.getvalue())
-                if  isinstance(data, dict):
-                    data.update(params)
-                    yield data
-                if  isinstance(data, list):
-                    for item in data:
-                        if  isinstance(item, dict):
-                            item.update(params)
-                            yield item
-                        else:
-                            err = 'Unsupported data format: data=%s, type=%s'\
-                                % (item, type(item))
-                            raise Exception(err)
+                if  decoder == 'json':
+                    data = json.loads(bbuf.getvalue())
+                    if  isinstance(data, dict):
+                        data.update(params)
+                        yield data
+                    if  isinstance(data, list):
+                        for item in data:
+                            if  isinstance(item, dict):
+                                item.update(params)
+                                yield item
+                            else:
+                                err = 'Unsupported data format: data=%s, type=%s'\
+                                    % (item, type(item))
+                                raise Exception(err)
+                else:
+                    yield bbuf.getvalue()
                 bbuf.flush()
                 hbuf.flush()
 
@@ -163,8 +166,9 @@ def datasets(url, cert, ckey, pattern, verbose=None):
     reqmgr  = RequestHandler()
     data, _expire = reqmgr.getdata(url, params, headers, \
                 ckey=ckey, cert=cert, verbose=verbose)
+    params = json.load(data)
     furl = url.replace('datasets', 'filesummaries')
-    res = reqmgr.multirequest(furl, data, headers, \
+    res = reqmgr.multirequest(furl, params, headers, \
                 ckey=ckey, cert=cert, verbose=verbose)
     for row in res:
         name = row['dataset']
@@ -177,9 +181,8 @@ def test():
     import os
     cert = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
     ckey = os.path.join(os.environ['HOME'], '.globus/userkey.pem')
-    url  = 'https://localhost:8979/dbs/prod/global/DBSReader/datasets'
-    pat  = '/RelValSingleElectronPt10/CMSSW_3_9_0*'
-    pat  = '/RelValSingle*'
+    url  = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets'
+    pat  = '/RelVal*'
     data = [r for r in datasets(url, cert, ckey, pat)]
     print data
 
