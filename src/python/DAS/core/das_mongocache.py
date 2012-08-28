@@ -162,6 +162,7 @@ class DASMongocache(object):
         self.col     = self.mdb[config['dasdb']['cachecollection']]
         self.mrcol   = self.mdb[config['dasdb']['mrcollection']]
         self.merge   = self.mdb[config['dasdb']['mergecollection']]
+        self.logging = config['dasdb'].get('logging', False)
         self.gfs     = db_gridfs(self.dburi)
 
         self.logdb   = DASLogdb(config)
@@ -267,7 +268,8 @@ class DASMongocache(object):
             msg  = "will remove %s records" % nrec
             msg += ", localtime=%s" % timestamp
             self.logger.debug(msg)
-        self.logdb.insert(collection, {'delete': self.col.find(spec).count()})
+        if  self.logging:
+            self.logdb.insert(collection, {'delete': col.find(spec).count()})
         col.remove(spec)
 
     def find(self, dasquery):
@@ -685,7 +687,7 @@ class DASMongocache(object):
                     self.merge.insert(row, safe=True)
             except InvalidOperation:
                 pass
-        if  inserted:
+        if  inserted and self.logging:
             self.logdb.insert('merge', {'insert': inserted})
         elif  not lookup_keys: # we get query w/o fields
             pass
@@ -729,7 +731,7 @@ class DASMongocache(object):
                     break
         except InvalidOperation:
             pass
-        if  inserted:
+        if  inserted and self.logging:
             self.logdb.insert('cache', {'insert': inserted})
 
     def insert_query_record(self, dasquery, header):
@@ -800,9 +802,11 @@ class DASMongocache(object):
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
         spec = {'das_id':{'$in':id_list}}
-        self.logdb.insert('merge', {'delete': self.col.find(spec).count()})
+        if  self.logging:
+            self.logdb.insert('merge', {'delete': self.col.find(spec).count()})
         self.merge.remove(spec)
-        self.logdb.insert('cache', {'delete': self.col.find(spec).count()})
+        if  self.logging:
+            self.logdb.insert('cache', {'delete': self.col.find(spec).count()})
         self.col.remove(spec)
         self.col.remove({'qhash':dasquery.qhash})
 
@@ -812,9 +816,11 @@ class DASMongocache(object):
         """
         current_time = time.time()
         query = {'das.expire': { '$lt':current_time} }
-        self.logdb.insert('merge', {'delete': self.merge.find(query).count()})
+        if  self.logging:
+            self.logdb.insert('merge', {'delete': self.merge.find(query).count()})
         self.merge.remove(query)
-        self.logdb.insert('cache', {'delete': self.col.find(query).count()})
+        if  self.logging:
+            self.logdb.insert('cache', {'delete': self.col.find(query).count()})
         self.col.remove(query)
 
     def delete_cache(self):
@@ -822,13 +828,15 @@ class DASMongocache(object):
         Delete all results in DAS cache/merge collection, including
         internal indexes.
         """
-        self.logdb.insert('cache', {'delete': self.col.count()})
+        if  self.logging:
+            self.logdb.insert('cache', {'delete': self.col.count()})
         self.col.remove({})
         try: 
             self.col.drop_indexes()
         except:
             pass
-        self.logdb.insert('merge', {'delete': self.merge.count()})
+        if  self.logging:
+            self.logdb.insert('merge', {'delete': self.merge.count()})
         self.merge.remove({})
         try:
             self.merge.drop_indexes()

@@ -83,6 +83,8 @@ DASOption('dasdb', 'cachecollection', 'string', 'cache'),
 DASOption('dasdb', 'mergecollection', 'string', 'merge'),
 # default map reduce collecion name
 DASOption('dasdb', 'mrcollection', 'string', 'mapreduce'),
+# enable logging of DAS db operation, put insert/delete into logging db
+DASOption('dasdb', 'logging', 'bool', False),
 
 #
 # DAS web server options
