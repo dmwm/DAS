@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.6.X
 
+  - Add new logging flag to enable/disable logging DAS DB requests into logging
+    db (new flag is dasdb.logging and its values either True or False)
   - Change pymongo.objectid to bson.objectid, pymongo.code to bson.code since
     pymongo structure has been changed (since 2.2.1 pymongo version)
   - Introduce new dataset populator tool which should fetch all DBS
