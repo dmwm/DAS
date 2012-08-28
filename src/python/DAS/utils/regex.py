@@ -10,6 +10,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import re
+import calendar
 
 def word_chars(word, equal=True):
     """
@@ -22,6 +23,11 @@ def word_chars(word, equal=True):
     if  equal:
         pat += '|^%s=' % word
     return pat
+
+days = [d for d in calendar.day_abbr if d]
+months = [m for m in calendar.month_abbr if m]
+pattern = '(%s), \d\d (%s) 20\d\d \d\d:\d\d:\d\d GMT' % ('|'.join(days), '|'.join(months))
+http_ts_pattern = re.compile(pattern)
 
 http_pattern = \
     re.compile(r"http://.*|https://.*")
