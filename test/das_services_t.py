@@ -224,6 +224,9 @@ class testCMSFakeDataServices(unittest.TestCase):
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         res    = []
         for row in result:
+            if  row.has_key('das') and row['das'].has_key('empty_record'):
+                if  row['das'].get('empty_record'):
+                    continue
             if  row.has_key('ip'):
                 res.append(DotDict(row).get('ip.address'))
             if  row.has_key('site'):
