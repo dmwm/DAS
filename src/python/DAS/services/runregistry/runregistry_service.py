@@ -44,6 +44,8 @@ def duration(ctime, etime, api_ver=2):
 
 def convert_time(ctime):
     "Convert RR timestamp into sec since epoch"
+    if  not ctime:
+        return ctime
     dformat = "%a %d-%m-%y %H:%M:%S" # Sun 15-05-11 17:25:00
     sec = time.strptime(ctime.split('.')[0], dformat)
     return long(calendar.timegm(sec))
@@ -62,8 +64,14 @@ def run_duration(records, api_ver=2):
             for key in times:
                 if  run.has_key(key):
                     run[key] = convert_time(run[key])
-            tot = abs(run['creation_time']-run['end_time'])
-            run['duration'] = str(datetime.timedelta(seconds=tot))
+            if  run['creation_time'] and run['end_time']:
+                tot = abs(run['creation_time']-run['end_time'])
+                run['duration'] = str(datetime.timedelta(seconds=tot))
+            elif run['start_time'] and run['end_time']:
+                tot = abs(run['start_time']-run['end_time'])
+                run['duration'] = str(datetime.timedelta(seconds=tot))
+            else:
+                run['duration'] = None
         yield row
 
 def worker_v2(url, query):
