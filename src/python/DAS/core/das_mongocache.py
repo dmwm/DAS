@@ -687,8 +687,11 @@ class DASMongocache(object):
                     self.merge.insert(row, safe=True)
             except InvalidOperation:
                 pass
-        if  inserted and self.logging:
-            self.logdb.insert('merge', {'insert': inserted})
+        if  inserted:
+            # use explicit if statement, due to inserted condition
+            # with outside scope meaning
+            if  self.logging:
+                self.logdb.insert('merge', {'insert': inserted})
         elif  not lookup_keys: # we get query w/o fields
             pass
         else: # we didn't merge anything, it is DB look-up failure
