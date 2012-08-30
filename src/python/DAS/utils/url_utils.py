@@ -106,7 +106,7 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
         data_srv_time = time.time()-time0
         info = data.info()
         code = data.getcode()
-        if  verbose:
+        if  verbose > 1:
             print "+++ response code:", code
             print "+++ response info\n", info
         try: # get HTTP header and look for Expires
