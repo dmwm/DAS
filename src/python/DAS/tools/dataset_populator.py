@@ -108,9 +108,11 @@ def main():
         print q
     print "Fetch %s datasets from %s DBS collection" % (len(queries), inst)
     # Populator thread which feeds DAS cache with data
-    print "start populator job", time.time()
+    time0 = time.time()
+    print "start populator job", time0
 #    thread.start_new_thread(mgr.run, (queries,))
-    mgr.run(queries)
+    mgr.run(queries[:100])
+    print "stop populator job, elapsed time", time.time()-time0
     sys.exit(0)
     print "start maintainer job", time.time()
     # Maintainer thread which update records in DAS cache
