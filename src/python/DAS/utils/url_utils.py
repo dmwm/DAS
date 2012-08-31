@@ -19,6 +19,7 @@ from   DAS.utils.das_timer import das_timer
 from   DAS.utils.utils import expire_timestamp, extract_http_error
 from   DAS.utils.utils import http_timestamp
 from   DAS.utils.pycurl_manager import RequestHandler
+from   DAS.utils.pycurl_manager import REQUEST_HANDLER
 import DAS.utils.jsonwrapper as json
 
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
@@ -54,14 +55,42 @@ def getdata(url, params, headers=None, expire=3600, post=None,
     return getdata_urllib(url, params, headers, expire, post, \
                 error_expire, verbose, ckey, cert, doseq, system)
 #    return getdata_pycurl(url, params, headers, expire, post, \
-#                error_expire, verbose, ckey, cert, doseq)
+#                error_expire, verbose, ckey, cert, doseq, system)
 
 def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
-                error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
+    error_expire=300, verbose=0, ckey=None, cert=None, doseq=True, system=None):
     "Fetch data via pycurl library"
-    reqmgr  = RequestHandler()
-    data, expire = reqmgr.getdata(url, params, headers, expire, post, \
-                error_expire, verbose, ckey, cert, doseq)
+    contact = 'data-service.'
+    if  system:
+        contact = system + ' ' + contact
+    timer_key = '%s?%s' % (url, urllib.urlencode(params, doseq=True))
+    das_timer(timer_key, verbose)
+    reqmgr = REQUEST_HANDLER
+    try:
+        data, expire = reqmgr.getdata(url, params, headers, expire, post, \
+                    error_expire, verbose, ckey, cert, doseq)
+    except urllib2.HTTPError as httperror:
+        msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
+                    % (url, params, headers)
+        data = {'error': 'Unable to contact %s' % contact, 'reason': msg}
+        try:
+            err  = '%s %s' % (contact, extract_http_error(httperror.read()))
+            data.update({'error':err})
+            msg += '\n' + err
+        except Exception as exp:
+            data.update({'httperror': None})
+            msg += '\n' + str(exp)
+        print msg
+        data = json.dumps(data)
+        expire = expire_timestamp(error_expire)
+    except Exception as exp:
+        msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
+                    % (url, params, headers)
+        print msg + '\n' + str(exp)
+        data = {'error': 'Unable to contact %s' % contact, 'reason': msg}
+        data = json.dumps(data)
+        expire = expire_timestamp(error_expire)
+    das_timer(timer_key, verbose)
     return data, expire
 
 def getdata_urllib(url, params, headers=None, expire=3600, post=None,
