@@ -783,7 +783,8 @@ class DASMongocache(object):
                     item['das'] = dict(expire=expire, primary_key=prim_key,
                                        condition_keys=cond_keys,
                                        instance=dasquery.instance,
-                                       system=system, empty_record=0)
+                                       system=system, empty_record=0,
+                                       ts=time.time())
                     item['das_id'] = str(objid)
                     item['qhash'] = dasquery.qhash
                     yield item
