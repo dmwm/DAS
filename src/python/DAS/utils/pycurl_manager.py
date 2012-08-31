@@ -17,13 +17,19 @@ given dataset. So we invoke 1 request to datasets API
 followed by N requests to filesummaries API.
 """
 
+# system modules
+import re
 import pycurl
 import urllib
-from DAS.utils.jsonwrapper import json
+from   urllib2 import HTTPError
+import threading
 try:
     import cStringIO as StringIO
 except:
     import StringIO
+
+# DAS modules
+from DAS.utils.jsonwrapper import json
 
 def parse_body(data):
     """Parse body part of URL request"""
@@ -55,6 +61,7 @@ class RequestHandler(object):
         self.connecttimeout = config.get('connecttimeout', 30)
         self.followlocation = config.get('followlocation', 1)
         self.maxredirs = config.get('maxredirs', 5)
+        self.cache = {}
 
     def set_opts(self, curl, url, params, headers,
                  ckey=None, cert=None, verbose=None, post=None, doseq=True):
@@ -70,6 +77,7 @@ class RequestHandler(object):
             url = url + '?' + encoded_data
         if  post:
             curl.setopt(pycurl.POST, 1)
+            curl.setopt(pycurl.POSTFIELDS, encoded_data)
         if  isinstance(url, str):
             curl.setopt(pycurl.URL, url)
         elif isinstance(url, unicode):
@@ -102,17 +110,42 @@ class RequestHandler(object):
     def getdata(self, url, params, headers=None, expire=3600, post=None,
                 error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
         """Fetch data for given set of parameters"""
-        curl = pycurl.Curl()
+        thread = threading.current_thread().ident
+        if  self.cache.has_key(thread):
+            curl = self.cache.get(thread)
+        else:
+            curl = pycurl.Curl()
+            self.cache[thread] = curl
+#        print "\n+++ getdata curl cache", len(self.cache.keys())
+#        curl = pycurl.Curl()
         bbuf, hbuf = self.set_opts(curl, url, params, headers,
                 ckey, cert, verbose, post, doseq)
         curl.perform()
+
+        http_header = hbuf.getvalue()
+
 #        data = parse_body(bbuf.getvalue())
 #        data = bbuf.getvalue() # read entire content
 #        bbuf.flush()
         bbuf.seek(0)# to use file description seek to the beggning of the stream
         data = bbuf # leave StringIO object, which will serve as file descriptor
-        expire = get_expire(hbuf.getvalue(), error_expire, verbose)
+        expire = get_expire(http_header, error_expire, verbose)
         hbuf.flush()
+
+        # check for HTTP error
+        http_code = curl.getinfo(pycurl.HTTP_CODE)
+
+        # get HTTP status message
+        status_line = http_header.splitlines()[0]
+        msg = re.match(r'HTTP\/\S*\s*\d+\s*(.*?)\s*$', status_line)
+        if  msg:
+            http_msg = msg.groups(1)
+        else:
+            http_msg = ''
+
+        if  http_code < 200 or http_code >=300:
+            effective_url = curl.getinfo(pycurl.EFFECTIVE_URL)
+            raise HTTPError(effective_url, http_code, http_msg, http_header, data)
         return data, expire
 
     def multirequest(self, url, parray, headers=None,
@@ -156,6 +189,9 @@ class RequestHandler(object):
                     yield bbuf.getvalue()
                 bbuf.flush()
                 hbuf.flush()
+
+# singleton
+REQUEST_HANDLER = RequestHandler()
 
 def datasets(url, cert, ckey, pattern, verbose=None):
     """Look-up dataset and its details for a given dataset pattern"""
