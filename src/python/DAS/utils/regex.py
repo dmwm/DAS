@@ -29,6 +29,11 @@ months = [m for m in calendar.month_abbr if m]
 pattern = '(%s), \d\d (%s) 20\d\d \d\d:\d\d:\d\d GMT' % ('|'.join(days), '|'.join(months))
 http_ts_pattern = re.compile(pattern)
 
+# HTTP header message
+pat_http_msg = re.compile(r'HTTP\/\S*\s*\d+\s*(.*?)\s*$')
+# HTTP header Expires message
+pat_expires  = re.compile(r'Expires:')
+
 http_pattern = \
     re.compile(r"http://.*|https://.*")
 ip_address_pattern = \
