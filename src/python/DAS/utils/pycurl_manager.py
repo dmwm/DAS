@@ -19,6 +19,7 @@ followed by N requests to filesummaries API.
 
 # system modules
 import re
+import time
 import pycurl
 import urllib
 from   urllib2 import HTTPError
@@ -30,6 +31,8 @@ except:
 
 # DAS modules
 from DAS.utils.jsonwrapper import json
+from DAS.utils.regex import pat_http_msg, pat_expires
+from DAS.utils.utils import expire_timestamp
 
 def parse_body(data):
     """Parse body part of URL request"""
@@ -110,6 +113,7 @@ class RequestHandler(object):
     def getdata(self, url, params, headers=None, expire=3600, post=None,
                 error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
         """Fetch data for given set of parameters"""
+        time0 = time.time()
         thread = threading.current_thread().ident
         if  self.cache.has_key(thread):
             curl = self.cache.get(thread)
@@ -135,13 +139,19 @@ class RequestHandler(object):
         # check for HTTP error
         http_code = curl.getinfo(pycurl.HTTP_CODE)
 
-        # get HTTP status message
-        status_line = http_header.splitlines()[0]
-        msg = re.match(r'HTTP\/\S*\s*\d+\s*(.*?)\s*$', status_line)
-        if  msg:
-            http_msg = msg.groups(1)
-        else:
-            http_msg = ''
+        # get HTTP status message and Expires
+        http_expire  = ''
+        http_msg = ''
+        for item in http_header.splitlines():
+            if  pat_http_msg.match(item):
+                http_msg = item
+            if  pat_expires.match(item):
+                http_expire = item.split('Expires:')[-1].strip()
+                e_time = expire_timestamp(http_expire)
+                if  e_time < expire_timestamp(time0):
+                    expire = max(e_time, expire_timestamp(expire))
+                elif e_time > time.time():
+                    expire = e_time
 
         if  http_code < 200 or http_code >=300:
             effective_url = curl.getinfo(pycurl.EFFECTIVE_URL)
