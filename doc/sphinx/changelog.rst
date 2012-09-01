@@ -5,6 +5,10 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.7.X
+
+  - Work on pycurl_manager to make it complaint with httplib counterpart
+
 - 1.6.X
 
   - Add new logging flag to enable/disable logging DAS DB requests into logging
