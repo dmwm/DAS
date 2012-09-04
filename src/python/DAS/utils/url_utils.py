@@ -52,10 +52,10 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
 def getdata(url, params, headers=None, expire=3600, post=None,
     error_expire=300, verbose=0, ckey=None, cert=None, doseq=True, system=None):
     "Fetch data from remote URL for given set of parameters"
-    return getdata_urllib(url, params, headers, expire, post, \
-                error_expire, verbose, ckey, cert, doseq, system)
-#    return getdata_pycurl(url, params, headers, expire, post, \
+#    return getdata_urllib(url, params, headers, expire, post, \
 #                error_expire, verbose, ckey, cert, doseq, system)
+    return getdata_pycurl(url, params, headers, expire, post, \
+                error_expire, verbose, ckey, cert, doseq, system)
 
 def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
     error_expire=300, verbose=0, ckey=None, cert=None, doseq=True, system=None):
