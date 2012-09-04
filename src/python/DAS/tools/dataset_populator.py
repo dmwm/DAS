@@ -1,7 +1,15 @@
 #!/usr/bin/env python
 #pylint: disable-msg=R0903
 """
-DAS dataset populator
+DAS dataset populator. It splits into two parts:
+    - Populator class which feeds DAS with dataset info
+    - Maintainer class which keeps dataset info in DAS cache up-to-date
+      ----------------- IMPORTANT -----------------
+      - to keep queries in DAS cache it needs to be initialized
+        with query_pattern. For example, to keep dataset queries we
+        provide {'das.system':'dbs', 'das.primary_key':'dataset.name'}
+        pattern. It implies that we need to maintain pattern indexes
+        in order to efficiently look-up patterns in MongoDB cache.
 """
 
 # system modules
@@ -134,6 +142,7 @@ def daemon(config):
     mworkers = config.get('mworkers')
     pworkers = config.get('pworkers')
     # Run maintainer thread which updates records in DAS cache
+#    print "start maintainer job", time.time()
 #    config = {'sleep': interval, 'nworkers':mworkers}
 #    maintainer = Maintainer(config)
 #    maintainer.update()
@@ -151,8 +160,6 @@ def daemon(config):
 #    thread.start_new_thread(mgr.run, (queries,))
     mgr.run(queries[:100])
     print "stop populator job, elapsed time", time.time()-time0
-    sys.exit(0)
-    print "start maintainer job", time.time()
 #
 # main
 #
