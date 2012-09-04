@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.7.X
 
+  - Switch to pycurl HTTP manager, which shows significant performance boost
   - Work on pycurl_manager to make it complaint with httplib counterpart
 
 - 1.6.X
