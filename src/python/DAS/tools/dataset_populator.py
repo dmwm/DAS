@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+#pylint: disable-msg=R0903
 """
 DAS dataset populator
 """
@@ -8,6 +8,7 @@ DAS dataset populator
 import sys
 import time
 import thread
+from optparse import OptionParser
 
 # DAS modules
 from DAS.utils.das_config import das_readconfig
@@ -15,6 +16,34 @@ from DAS.utils.das_db import db_connection
 from DAS.core.das_core import DASCore
 from DAS.core.das_query import DASQuery
 from DAS.utils.task_manager import TaskManager
+
+if sys.version_info < (2, 6):
+    raise Exception("DAS requires python 2.6 or greater")
+
+class DASOptionParser:
+    """
+    DAS cli option parser
+    """
+    def __init__(self):
+        self.parser = OptionParser()
+        self.parser.add_option("-v", "--verbose", action="store",
+            type="int", default=0, dest="verbose", help="verbose output")
+        self.parser.add_option("--inst", action="store", type="string",
+            default="cms_dbs_prod_global", dest="instance",
+            help="specify DBS instance, default cms_dbs_prod_global")
+        self.parser.add_option("--mworkers", action="store", type="int",
+            default=10, dest="mworkers",
+            help="specify number of maintainer workers to run")
+        self.parser.add_option("--pworkers", action="store", type="int",
+            default=10, dest="pworkers",
+            help="specify number of populator workers to run")
+        self.parser.add_option("--sleep", action="store", type="int",
+            default=5, dest="interval",
+            help="specify sleep interval for maintainer worker")
+
+    def get_opt(self):
+        "Returns parse list of options"
+        return self.parser.parse_args()
 
 def datasets(inst='cms_dbs_prod_global'):
     "Provide list of datasets"
@@ -27,14 +56,16 @@ def datasets(inst='cms_dbs_prod_global'):
 class Maintainer(object):
     "Maintainer keeps alive data records in DAS cache"
     def __init__(self, config):
-        self.sleep = config.get('sleep', 5)
-        nworkers = int(config.get('nworkers', 4))
-        name = config.get('name', 'das_populator')
-        dasconfig = das_readconfig()
-        debug = False
+        self.sleep   = config.get('sleep', 5)
+        pattern      = {'das.system':'dbs', 'das.primary_key': 'dataset.name'}
+        self.pattern = config.get('query_pattern', pattern)
+        nworkers     = int(config.get('nworkers', 10))
+        name         = config.get('name', 'dataset_keeper')
+        dasconfig    = das_readconfig()
+        debug        = False
         self.dascore = DASCore(config=dasconfig, nores=True, debug=debug)
         self.taskmgr = TaskManager(nworkers=nworkers, name=name)
-        self.conn = db_connection(dasconfig['mongodb']['dburi'])
+        self.conn    = db_connection(dasconfig['mongodb']['dburi'])
 
     def check_records(self):
         "Check and return list of DAS records which require update"
@@ -80,10 +111,10 @@ class Populator(object):
     The run method accepts list of DAS queries.
     """
     def __init__(self, config):
-        nworkers = int(config.get('nworkers', 4))
-        name = config.get('name', 'das_populator')
-        dasconfig = das_readconfig()
-        debug = False
+        nworkers     = int(config.get('nworkers', 10))
+        name         = config.get('name', 'dataset_populator')
+        dasconfig    = das_readconfig()
+        debug        = False
         self.dascore = DASCore(config=dasconfig, nores=True, debug=debug)
         self.taskmgr = TaskManager(nworkers=nworkers, name=name)
 
@@ -96,17 +127,24 @@ class Populator(object):
                     self.dascore.call, DASQuery(query), add_to_analytics))
         self.taskmgr.joinall(jobs)
 
-def main():
+def daemon(config):
     "Populator daemon"
-    mgr = Populator({'nworkers':100})
-    inst = 'cms_dbs_prod_global'
+    instance = config.get('instance')
+    interval = config.get('interval')
+    mworkers = config.get('mworkers')
+    pworkers = config.get('pworkers')
+    # Run maintainer thread which updates records in DAS cache
+#    config = {'sleep': interval, 'nworkers':mworkers}
+#    maintainer = Maintainer(config)
+#    maintainer.update()
+#    thread.start_new_thread(maintainer.update, ())
+
+    mgr = Populator({'nworkers':pworkers})
     queries = []
     for dataset in datasets():
         if  dataset and dataset != '*':
-            queries.append('dataset=%s instance=%s' % (dataset, inst))
-    for q in queries[:5]:
-        print q
-    print "Fetch %s datasets from %s DBS collection" % (len(queries), inst)
+            queries.append('dataset=%s instance=%s' % (dataset, instance))
+    print "Fetch %s datasets from %s DBS collection" % (len(queries), instance)
     # Populator thread which feeds DAS cache with data
     time0 = time.time()
     print "start populator job", time0
@@ -115,12 +153,18 @@ def main():
     print "stop populator job, elapsed time", time.time()-time0
     sys.exit(0)
     print "start maintainer job", time.time()
-    # Maintainer thread which update records in DAS cache
-    maintainer = Maintainer({})
-    maintainer.update()
-#    thread.start_new_thread(maintainer.update, ())
 #
 # main
 #
+def main():
+    "Main function"
+    mgr = DASOptionParser()
+    opts, _ = mgr.get_opt()
+    config  = dict(instance=opts.instance,
+            interval=opts.interval,
+            mworkers=opts.mworkers,
+            pworkers=opts.pworkers,)
+    daemon(config)
+
 if __name__ == '__main__':
     main()
