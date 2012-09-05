@@ -507,12 +507,14 @@ class DASMapping(object):
             wild = row.get('wild_card', '*')
             ckey = row.get('ckey')
             cert = row.get('cert')
+            services = row.get('services', '')
             keys = []
             for entry in row['daskeys']:
                 keys.append(entry['key'])
             params = dict(row['params'])
             smap[api] = dict(keys=keys, params=params, url=url, expire=exp,
-                            format=ext, wild_card=wild, ckey=ckey, cert=cert)
+                            format=ext, wild_card=wild, ckey=ckey, cert=cert,
+                            services=services)
         return smap
 
     def presentation(self, daskey):
