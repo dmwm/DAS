@@ -1,16 +1,18 @@
 # Combined API Mapping to DAS
 system : combined
-format : XML
----
-urn : combined_dataset4site_release
+format : JSON
 # DBS3 url
-# "dbs": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets",
+# "dbs": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
 # DBS2 url
 # "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
-url : {
+services : {
     "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
-    "phedex": "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
+    "phedex": "https://cmsweb.cern.ch/phedex/datasvc/json/prod",
+    "conddb": "https://cms-conddb.cern.ch",
 }
+---
+urn : combined_dataset4site_release
+url : "http://localhost:8212/dbs_phedex"
 expire : 3600
 params : {
      "release":"required", "site":"required"
@@ -44,14 +46,7 @@ das2api : [
 ]
 ---
 urn : combined_site4dataset
-# DBS3 url
-# "dbs": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filesummaries",
-# DBS2 url
-# "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
-url : {
-    "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
-    "phedex": "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockReplicas"
-}
+url : "http://localhost:8212/dbs_phedex"
 expire : 3600
 params : {
      "dataset":"required"
