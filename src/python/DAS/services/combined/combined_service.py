@@ -31,7 +31,8 @@ from DAS.utils.utils import expire_timestamp, print_exc
 #
 # NOTE:
 # DBS3 will provide datasets API, once this API will support POST request
-# and multiple datasets, I need to epxlore revert logic for combined_dataset4site
+# and multiple datasets, I need to epxlore revert logic for
+# combined_dataset4site
 # API. First find all blocks at given site, then strip off dataset info
 # and ask DBS to provide dataset info for found dataset.
 #
@@ -55,6 +56,7 @@ def which_dbs(dbs_url):
     return 'dbs3'
 
 def dbs_dataset4site_release(dbs_url, getdata, release):
+    "Get dataset for given site and release"
     expire = 600 # set some expire since we're not going to use it
     if  which_dbs(dbs_url) == 'dbs2':
         # in DBS3 I'll use datasets API and pass release over there
@@ -64,7 +66,6 @@ def dbs_dataset4site_release(dbs_url, getdata, release):
         headers = {'Accept': 'text/xml'}
         source, expire = getdata(dbs_url, dbs_args, expire, headers)
         prim_key = 'dataset'
-        datasets = set()
         for row in qlxml_parser(source, prim_key):
             dataset = row['dataset']['dataset']
             yield dataset
@@ -93,7 +94,6 @@ def dataset_summary(dbs_url, getdata, dataset):
         headers = {'Accept': 'text/xml'}
         source, expire = getdata(dbs_url, dbs_args, expire, headers)
         prim_key = 'dataset'
-        datasets = set()
         for row in qlxml_parser(source, prim_key):
             totfiles  = row['dataset']['count_file.name']
             totblocks = row['dataset']['count_block.name']
@@ -129,7 +129,8 @@ class CombinedService(DASAbstractService):
         if  api == 'combined_dataset4site_release':
             # DBS part
             datasets = set()
-            for row in dbs_dataset4site_release(dbs_url, self.getdata, args['release']):
+            for row in dbs_dataset4site_release(\
+                    dbs_url, self.getdata, args['release']):
                 datasets.add(row)
             # Phedex part
             if  args['site'].find('.') != -1: # it is SE
@@ -239,6 +240,10 @@ class CombinedService(DASAbstractService):
             except:
                 pass
             genrows = parse_data(datastream)
+        if  api == 'combined_lumi4dataset':
+            headers = {'Accept': 'application/json;text/json'}
+            data, expire = self.getdata(url, args, expire, headers)
+            genrows = json_parser(data, None)
 
         # proceed with standard workflow
         dasrows = self.set_misses(dasquery, api, genrows)
@@ -246,6 +251,7 @@ class CombinedService(DASAbstractService):
         try:
             if  isinstance(url, dict):
                 url = "combined: %s" % url.values()
-            self.write_to_cache(dasquery, expire, url, api, args, dasrows, ctime)
+            self.write_to_cache(dasquery, expire, url, api, \
+                    args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)
