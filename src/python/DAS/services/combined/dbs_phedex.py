@@ -8,8 +8,6 @@ DAS DBS/Phedex combined service to fetch dataset/site information.
 import re
 import time
 import thread
-import urllib
-import urllib2
 import cherrypy
 
 # pymongo modules
@@ -23,6 +21,8 @@ from   DAS.utils.url_utils import getdata
 from   DAS.web.tools import exposejson
 from   DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from   DAS.utils.utils import get_key_cert
+from   DAS.core.das_mapping_db import DASMapping
+from   DAS.utils.das_config import das_readconfig
 import DAS.utils.jsonwrapper as json
 
 PAT = re.compile("^T[0-3]_")
@@ -72,7 +72,8 @@ def datasets_dbs2(urls, verbose=0):
     headers = {'Accept':'application/xml;text/xml'}
     records = []
     url     = urls.get('dbs')
-    query   = 'find dataset,dataset.tier,dataset.era where dataset.status like VALID*'
+    query   = \
+        'find dataset,dataset.tier,dataset.era where dataset.status like VALID*'
     params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
     stream, _ = getdata(url, params, headers, verbose=verbose)
     records = [r for r in qlxml_parser(stream, 'dataset')]
@@ -100,10 +101,10 @@ def dataset_info(urls, datasetdict, verbose=0):
     Update MongoDB with aggregated information about dataset:
     site, size, nfiles, nblocks.
     """
-    url = urls.get('phedex')
-    params = {'dataset': [d for d in datasetdict.keys()]}
-    headers = {'Accept':'application/json;text/json'}
-    data, _ = getdata(url, params, headers, post=True, verbose=verbose)
+    url      = urls.get('phedex') + '/blockReplicas'
+    params   = {'dataset': [d for d in datasetdict.keys()]}
+    headers  = {'Accept':'application/json;text/json'}
+    data, _  = getdata(url, params, headers, post=True, verbose=verbose)
     jsondict = json.load(data)
     data.close()
     for row in jsondict['phedex']['block']:
@@ -117,6 +118,7 @@ def dataset_info(urls, datasetdict, verbose=0):
                         custodial=rep['custodial'])
             rec.update(datasetdict[name])
             yield rec
+    data.close()
 
 def collection(uri):
     """
@@ -256,20 +258,29 @@ def conn_monitor(uri, func, sleep=5):
 
 class DBSPhedexService(object):
     """DBSPhedexService"""
-    def __init__(self, uri, urls, expire=3600):
+    def __init__(self, config=None):
+        if  not config:
+            config    = {}
         super(DBSPhedexService, self).__init__()
         self.dbname   = 'dbs_phedex'
         self.collname = 'datasets'
-        self.expired  = expire
-        self.uri      = uri
+        dasconfig     = das_readconfig()
+        dasmapping    = DASMapping(dasconfig)
+        self.uri      = dasconfig['mongodb']['dburi']
+        service_name  = config.get('name', 'combined')
+        service_api   = config.get('api', 'combined_dataset4site_release')
+        mapping       = dasmapping.servicemap(service_name)
+        self.urls     = mapping[service_api]['services']
+        self.expire   = mapping[service_api]['expire']
+        self.coll     = None # define at run-time via self.init()
         self.init()
 
         # Monitoring thread which performs auto-reconnection
-        thread.start_new_thread(conn_monitor, (uri, self.init, 5))
+        thread.start_new_thread(conn_monitor, (self.uri, self.init, 5))
 
         # Worker thread which update dbs/phedex DB
         thread.start_new_thread(worker, \
-            (urls, uri, self.dbname, self.collname, self.expired))
+            (self.urls, self.uri, self.dbname, self.collname, self.expire))
 
     def init(self):
         """Takes care of MongoDB connection"""
@@ -287,7 +298,7 @@ class DBSPhedexService(object):
         """
         Check if data is expired in DB.
         """
-        spec = {'timestamp': {'$lt': time.time() + self.expired}}
+        spec = {'timestamp': {'$lt': time.time() + self.expire}}
         if  self.coll and self.coll.find_one(spec):
             return False
         return True
@@ -320,17 +331,13 @@ class DBSPhedexService(object):
         if  len(records) == 1 and records[0]['dataset'].has_key('reason'):
             expires = 60 # in seconds
         else:
-            expires = self.expired
+            expires = self.expire
         cherrypy.lib.caching.expires(secs=expires, force = True)
         return records
         
-def main():
+def test():
     """Test main function"""
-    uri = 'mongodb://localhost:8230'
-#    urls = {'dbs':'http://localhost:8989/dbs/DBSReader/datasets',
-    urls = {'dbs':'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet',
-    'phedex':'https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockReplicas'}
-    cherrypy.quickstart(DBSPhedexService(uri, urls), '/')
+    cherrypy.quickstart(DBSPhedexService({}), '/')
 
 if __name__ == '__main__':
-    main()
+    test()
