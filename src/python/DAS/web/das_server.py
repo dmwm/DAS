@@ -84,23 +84,15 @@ class Root(object):
         obj = DASWebService(self.config)
         tree.mount(obj, url_base) # mount web server
 
-        # DBS/Phedex Service
-        if  self.config.has_key('dbs_phedex') and \
-            self.config['dbs_phedex']['urls']:
-            uri  = self.config['mongodb']['dburi']
-            urls = {}
-            for url in self.config['dbs_phedex']['urls']:
-                if  url.find('phedex') != -1:
-                    urls['phedex'] = url
-                else:
-                    urls['dbs'] = url
-            expire = self.config['dbs_phedex'].get('expire', 3600)
-            obj = DBSPhedexService(uri, urls, expire)
-            tree.mount(obj, '/dbs_phedex')
-            print "### DAS web server mounted /dbs_phedex service"
-            obj = LumiService(urls)
-            tree.mount(obj, '/dbs_lumi')
-            print "### DAS web server mounted /dbs_lumi service"
+        # Mount local services, e.g. dbs_phedex, dbs_lumi
+        for srv in self.config['web_server'].get('services', []):
+            print "### DAS web server mounted %s service" % srv
+            if  srv == 'dbs_phedex':
+                obj = DBSPhedexService()
+                tree.mount(obj, '/' + srv)
+            elif srv == 'dbs_lumi':
+                obj = LumiService()
+                tree.mount(obj, '/' + srv)
 
         print "### DAS web server, PID=%s, #threads=%s" \
                 % (self.pid, threading.active_count())
