@@ -26,6 +26,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.web.das_web_srv import DASWebService
 from cherrypy.process.plugins import PIDFile
 from DAS.services.combined.dbs_phedex import DBSPhedexService
+from DAS.services.combined.lumi_service import LumiService
 
 class Root(object):
     """
@@ -97,6 +98,9 @@ class Root(object):
             obj = DBSPhedexService(uri, urls, expire)
             tree.mount(obj, '/dbs_phedex')
             print "### DAS web server mounted /dbs_phedex service"
+            obj = LumiService(urls)
+            tree.mount(obj, '/dbs_lumi')
+            print "### DAS web server mounted /dbs_lumi service"
 
         print "### DAS web server, PID=%s, #threads=%s" \
                 % (self.pid, threading.active_count())
