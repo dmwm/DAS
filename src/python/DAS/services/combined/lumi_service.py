@@ -15,6 +15,8 @@ from   DAS.utils.url_utils import getdata_urllib as getdata
 from   DAS.web.tools import exposejson
 from   DAS.utils.utils import qlxml_parser
 from   DAS.utils.utils import get_key_cert
+from   DAS.core.das_mapping_db import DASMapping
+from   DAS.utils.das_config import das_readconfig
 import DAS.utils.jsonwrapper as json
 
 def lumilist(ilumi):
@@ -79,16 +81,23 @@ def run_lumis_dbs3(url, dataset, ckey, cert):
 
 class LumiService(object):
     """LumiService"""
-    def __init__(self, urls, expire=3600):
+    def __init__(self, config=None):
         super(LumiService, self).__init__()
-        self.expired  = expire
-        self.urls = urls
+        if  not config:
+            config   = {}
+        dasconfig    = das_readconfig()
+        dasmapping   = DASMapping(dasconfig)
+        service_name = config.get('name', 'combined')
+        service_api  = config.get('api', 'combined_lumi4dataset')
+        mapping      = dasmapping.servicemap(service_name)
+        self.urls    = mapping[service_api]['services']
+        self.expire  = mapping[service_api]['expire']
         self.ckey, self.cert = get_key_cert()
 
     @cherrypy.expose
     def index(self):
         "Default path"
-        msg = 'LumiService, URLs=%s, expire=%s' % (self.urls, self.expired)
+        msg = 'LumiService, URLs=%s, expire=%s' % (self.urls, self.expire)
         return msg
 
     @exposejson
@@ -97,26 +106,15 @@ class LumiService(object):
         res = run_lumis(self.urls['dbs'], dataset, self.ckey, self.cert)
         # call conddb to get int.lumi or run lumiCalc2.py script
         int_lumi = 1
-        cherrypy.lib.caching.expires(secs=self.expired, force = True)
-        data = {'lumi' : {'integration': int_lumi, 'runlumis': res},
+        cherrypy.lib.caching.expires(secs=self.expire, force = True)
+        data = {'lumi' : {'integrated': int_lumi, 'runlumis': res},
                 'dataset': {'name': dataset}}
         return data
         
 def test():
     """Test main function"""
-    urls = \
-    {'dbs':'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet',
-    'dbs3': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader',
-    'conddb':'https://cms-conddb-int.cern.ch/getLumi'}
-#    cherrypy.quickstart(LumiService(urls), '/')
-    dataset = '/Cosmics/CMSSW_3_11_1-GR_R_311_V1_RelVal_cos2010A_64bit-v1/RECO'
-    ckey, cert = get_key_cert()
-    res = run_lumis_dbs2(urls['dbs'], dataset, ckey, cert)
-    parse_run_dict(res)
-    print "DBS2", res
-    res = run_lumis_dbs3(urls['dbs3'], dataset, ckey, cert)
-    parse_run_dict(res)
-    print "DBS3", res
+    config = {'name': 'combined', 'api': 'combined_lumi4dataset'}
+    cherrypy.quickstart(LumiService(config), '/')
 
 if __name__ == '__main__':
     test()
