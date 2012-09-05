@@ -64,3 +64,18 @@ das2api : [
     {"das_key":"site.name", "api_param":"site", "pattern":""},
     {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
 ]
+---
+urn : combined_lumi4dataset
+url : "http://localhost:8212/dbs_lumi/lumi"
+format : JSON
+expire : 3600
+params : {
+     "dataset":"required"
+}
+daskeys : [
+    {"key":"lumi", "map":"lumi.runlumis", "pattern":""},
+    {"key":"dataset", "map":"dataset.name", "pattern":""},
+]
+das2api : [
+    {"das_key":"dataset.name", "api_param":"dataset", "pattern":""},
+]
