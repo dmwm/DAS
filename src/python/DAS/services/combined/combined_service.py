@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=R0914,R0904,R0912,R0915,R0913,W0702,W0703
 
 """
 Combined DAS service (DBS+Phedex). It can be used to get
@@ -71,6 +72,7 @@ def dbs_dataset4site_release(dbs_url, getdata, release):
             yield dataset
     else:
         # we call datasets?release=release to get list of datasets
+        dbs_url += dbs_url + '/datasets'
         dbs_args = \
         {'release_version': release, 'dataset_access_type':'PRODUCTION'}
         headers = {'Accept': 'application/json;text/json'}
@@ -100,6 +102,7 @@ def dataset_summary(dbs_url, getdata, dataset):
             return totblocks, totfiles
     else:
         # we call filesummaries?dataset=dataset to get number of files/blks
+        dbs_url += dbs_url + '/filesummaries'
         dbs_args = {'dataset': dataset}
         headers = {'Accept': 'application/json;text/json'}
         source, expire = getdata(dbs_url, dbs_args, expire, headers)
@@ -117,15 +120,17 @@ class CombinedService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
-    def helper(self, url, api, args, expire):
+    def helper(self, api, args, expire):
         """
         Class helper function which yields results for given
         set of input parameters. It yeilds the data record which
         must contain combined attribute corresponding to systems
         used to produce record content.
         """
-        dbs_url = url['dbs']
-        phedex_url = url['phedex']
+        dbs_url = self.map[api]['services']['dbs']
+        phedex_url = self.map[api]['services']['phedex']
+        # make phedex_api from url, but use xml version for processing
+        phedex_api = phedex_url.replace('/json/', '/xml/') + '/blockReplicas'
         if  api == 'combined_dataset4site_release':
             # DBS part
             datasets = set()
@@ -141,7 +146,7 @@ class CombinedService(DASAbstractService):
                                 'node': '%s*' % args['site']}
             headers = {'Accept': 'text/xml'}
             source, expire = \
-            self.getdata(phedex_url, phedex_args, expire, headers, post=True)
+            self.getdata(phedex_api, phedex_args, expire, headers, post=True)
             prim_key = 'block'
             tags = 'block.replica.node'
             found = {}
@@ -172,7 +177,7 @@ class CombinedService(DASAbstractService):
             phedex_args = {'dataset':args['dataset']}
             headers = {'Accept': 'text/xml'}
             source, expire = \
-            self.getdata(phedex_url, phedex_args, expire, headers, post=True)
+            self.getdata(phedex_api, phedex_args, expire, headers, post=True)
             prim_key = 'block'
             tags = 'block.replica.node'
             found = {}
@@ -225,7 +230,7 @@ class CombinedService(DASAbstractService):
         time0 = time.time()
         if  api == 'combined_dataset4site_release' or \
             api == 'combined_site4dataset':
-            genrows = self.helper(url, api, args, expire)
+            genrows = self.helper(api, args, expire)
         # here I use directly the call to the service which returns
         # proper expire timestamp. Moreover I use HTTP header to look
         # at expires and adjust my expire parameter accordingly
