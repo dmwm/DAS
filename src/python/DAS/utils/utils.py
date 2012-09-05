@@ -848,7 +848,7 @@ def map_validator(smap):
     if  not isinstance(smap.keys(), list):
         raise Exception(msg)
     possible_keys = ['api', 'keys', 'params', 'url', 'expire', 
-                        'format', 'wild_card', 'ckey', 'cert']
+                        'format', 'wild_card', 'ckey', 'cert', 'services']
     for item in smap.values():
         if  not isinstance(item, dict):
             raise Exception(msg)
