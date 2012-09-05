@@ -7,6 +7,12 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.7.X
 
+  - Change DAS configuration to accept web_service.services who lists
+    local DAS service, e.g. dbs_phedex, dbs_lumi
+  - Modify dbs_phedex service to initialize via DAS maps
+  - Add lumi_service into combined module
+  - Introduced services mapping key
+  - Adjust combined map file to use services mapping key
   - Switch to pycurl HTTP manager, which shows significant performance boost
   - Work on pycurl_manager to make it complaint with httplib counterpart
 
