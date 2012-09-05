@@ -124,6 +124,8 @@ DASOption('web_server', 'onhold_daemon', 'bool', False),
 DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
 # DBS dataset daemon expire timestamp (in seconds)
 DASOption('web_server', 'dbs_daemon_expire', 'int', 3600),
+# local DAS services
+DASOption('web_server', 'services', 'list', []),
 
 # cacherequests section of DAS config
 DASOption('cacherequests', 'Admin', 'int', 5000),
@@ -184,10 +186,6 @@ DASOption('das', 'api_workers', 'int', 3),
 # we use this format due to option parser constains
 DASOption('das', 'thread_weights', 'list', ['dbs:3', 'phedex:3']),
 
-# DAS dbs_phedex service options
-DASOption('dbs_phedex', 'urls', 'list',[]),
-# DAS dbs_phedex expiration
-DASOption('dbs_phedex', 'expire', 'int', 3600),
 ] # end of DAS_OPTIONS list
 
 def read_configparser(dasconfig):
