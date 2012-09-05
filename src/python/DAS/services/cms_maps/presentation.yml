@@ -114,6 +114,8 @@ run_status: [
         ],
 lumi : [
         {"das": "lumi.number", "ui": "Luminosiy number"},
+        {"das": "lumi.delivered", "ui": "Delivered luminosiy"},
+        {"das": "lumi.integrated", "ui": "Integrated luminosiy"},
         {"das": "lumi.run_number", "ui": "Run number"},
         {"das": "lumi.start_event", "ui": "Start event"},
         {"das": "lumi.end_event", "ui": "End event"},
