@@ -43,6 +43,7 @@ class DBSService(DASAbstractService):
         """
         Adjust DBS2 parameters for specific query requests
         """
+        sitedb = SERVICES.get('sitedb2', None) # look-up SiteDB from global scope
         if  api == 'fakeRun4Block':
             val = kwds['block']
             if  val != 'required':
@@ -113,6 +114,20 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('dataset')
+        if  api == 'fakeDataset4Site' and inst and inst != self.prim_instance:
+            val = kwds['site']
+            if  val != 'required':
+                sinfo = sitedb.site_info(val)
+                if  sinfo and sinfo.has_key('resources'):
+                    for row in sinfo['resources']:
+                        if  row['type'] == 'SE' and row.has_key('fqdn'):
+                            sename = row['fqdn']
+                            kwds['query'] = \
+                                    "find dataset,site where site=%s" % sename
+                            break
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('site')
         if  api == 'fakeListDataset4File':
             val = kwds['file']
             if  val != 'required':
@@ -377,8 +392,6 @@ where %s" % value[4:]
             prim_key = 'child'
         elif api == 'fakeChild4Dataset':
             prim_key = 'child'
-        elif api == 'fakeSite4Dataset':
-            prim_key = 'site'
         elif api == 'fakeStatus':
             prim_key = 'status'
         elif api == 'fakeFiles4DatasetRunLumis':
@@ -389,6 +402,8 @@ where %s" % value[4:]
             prim_key = 'block'
         elif api == 'fakeSite4Dataset':
             prim_key = 'site'
+        elif api == 'fakeDataset4Site':
+            prim_key = 'dataset'
         else:
             msg = 'DBSService::parser, unsupported %s API %s' \
                 % (self.name, api)
@@ -450,8 +465,9 @@ where %s" % value[4:]
                 row['release']['name'] = row['release']['release']
                 del row['release']['release']
             if  row.has_key('site'):
-                row['site']['se'] = row['site']['site']
-                del row['site']['site']
+                if  row['site'].has_key('site'):
+                    row['site']['se'] = row['site']['site']
+                    del row['site']['site']
             convert_dot(row, 'config', config_attrs)
             convert_dot(row, 'file', ['file.name'])
             convert_dot(row, 'block', ['block.name'])
@@ -471,4 +487,8 @@ where %s" % value[4:]
                     info = sitedb.site_info(sename)
                     if  info:
                         row['site'].update(info)
+            if  api == 'fakeDataset4Site':
+                sename = row['dataset'].get('site')
+                row.update({'site':{'se':sename}})
+                del row['dataset']['site']
             yield row

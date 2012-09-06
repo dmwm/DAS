@@ -104,6 +104,11 @@ class DBS3Service(DASAbstractService):
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 yield row['dataset']
+        elif api == 'blocks4site':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                print row # TODO: this need to be revisited once DBS3 provides new API
+                yield row
         elif api == 'blockparents':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:

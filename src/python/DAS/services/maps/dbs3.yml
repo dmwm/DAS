@@ -189,6 +189,23 @@ das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
 ]
 ---
+urn: blocks4site
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blocks/"
+expire : 900
+params : {
+        "origin_site_name":"required",
+        "detail":"True",
+        "dataset":"optional",
+}
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"site.se", "api_param": "origin_site_name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
+]
+---
 urn: blockparents
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blockparents/"
 expire : 900
