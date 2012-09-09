@@ -236,6 +236,8 @@ class DASCore(object):
         Look-up status of provided query in a cache.
         Return status of the query request and its hash.
         """
+        for col in ['merge', 'cache']:
+            self.rawcache.remove_expired(col)
         if  dasquery and dasquery.mongo_query.has_key('fields'):
             fields = dasquery.mongo_query['fields']
             if  fields and isinstance(fields, list) and 'queries' in fields:
