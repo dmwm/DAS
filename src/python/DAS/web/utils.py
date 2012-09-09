@@ -34,6 +34,19 @@ from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
 
 DBS_INSTANCES = das_readconfig()['dbs']['dbs_instances']
 
+def set_no_cache_flags():
+    "Set cherrypy flags to prevent caching"
+    cherrypy.response.headers['Cache-Control'] = 'no-cache'
+    cherrypy.response.headers['Pragma'] = 'no-cache'
+    cherrypy.response.headers['Expires'] = 'Sat, 01 Dec 2001 00:00:00 GMT'
+
+def set_cache_flags():
+    "Set cherrypy flags to prevent caching"
+    headers = cherrypy.response.headers
+    for key in ['Cache-Control', 'Pragma']:
+        if  headers.has_key(key):
+            del headers[key]
+
 def threshold(sitedbmgr, thr, config):
     "Return query threshold for cache clients"
     # NOTE: once DAS authentication will be in place
