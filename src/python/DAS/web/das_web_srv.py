@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0201,W0703,R0914
+#pylint: disable-msg=W0201,W0703,R0914,R0902
 """
 DAS web interface, based on WMCore/WebTools
 """
@@ -38,6 +38,7 @@ from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.das_config import wmcore_config
 from DAS.web.utils import free_text_parser, threshold
+from DAS.web.utils import set_no_cache_flags, set_cache_flags
 from DAS.web.utils import checkargs, das_json, gen_error_msg
 from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson
@@ -73,7 +74,6 @@ def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
             for rec in reqmgr.items_onhold():
                 dasquery  = DASQuery(rec['uinput'])
                 addr      = rec['ip']
-                kwargs    = {'input':rec['uinput']}
                 if  (nrequests - taskmgr.nworkers()) < limit:
                     _evt, pid = taskmgr.spawn(\
                         dasmgr.call, dasquery, \
@@ -623,12 +623,9 @@ class DASWebService(DASWebManager):
         Since query are cached the repeated call with the same query
         has no cost to DAS core.
         """
-        # remove expires records from merge collection
-        self.dasmgr.rawcache.remove_expired('merge')
-
         # do not allow caching
-        cherrypy.response.headers['Cache-Control'] = 'no-cache'
-        cherrypy.response.headers['Pragma'] = 'no-cache'
+        set_no_cache_flags()
+
         uinput = kwargs.get('input', '').strip()
         if  not uinput:
             head = {'status': 'fail', 'reason': 'No input found',
@@ -749,12 +746,8 @@ class DASWebService(DASWebManager):
         """
         Request data from DAS cache.
         """
-        # remove expires records from merge collection
-        self.dasmgr.rawcache.remove_expired('merge')
-
         # do not allow caching
-        cherrypy.response.headers['Cache-Control'] = 'no-cache'
-        cherrypy.response.headers['Pragma'] = 'no-cache'
+        set_no_cache_flags()
 
         uinput  = kwargs.get('input', '').strip()
         if  not uinput:
@@ -826,8 +819,9 @@ class DASWebService(DASWebManager):
         This is a server callback function for ajaxCheckPid, see
         js/ajax_utils.js
         """
-        cherrypy.response.headers['Cache-Control'] = 'no-cache'
-        cherrypy.response.headers['Pragma'] = 'no-cache'
+        # do not allow caching
+        set_no_cache_flags()
+
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         page = ''
         try:
