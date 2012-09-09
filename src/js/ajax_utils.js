@@ -14,10 +14,9 @@ function ajaxCheckPid(base, method, pid, ahash, interval) {
       parameters : {'pid': pid, 'ahash': ahash},
       onException: function() {return;},
       onComplete : function() {
-        var url = window.location.href;
         if (url.indexOf('view=xml') != -1 ||
             url.indexOf('view=json') != -1 ||
-            url.indexOf('view=plain') != -1) window.location.href=url; // reload the page
+            url.indexOf('view=plain') != -1) reload();
       },
       onSuccess : function(transport) {
         var sec = wait/1000;
@@ -27,6 +26,8 @@ function ajaxCheckPid(base, method, pid, ahash, interval) {
         if (transport.responseText.match(/processing PID/)) {
             transport.responseText += msg;
             setTimeout('ajaxCheckPid("'+base+'","'+method+'","'+pid+'","'+ahash+'","'+wait+'")', wait);
+        } else {
+            reload();
         }
       }
     });
