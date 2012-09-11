@@ -10,6 +10,10 @@ This release series is targeted to DAS production stability and quality.
   - Fix issue with forward/backward calls in a browser which cause existing
     page to use ajaxCheckPid. I added reload call which enforces browser to
     load page content with actual data
+
+    - revisit ajaxCheckPid and check_pid functions. Removed ahash, simplify
+      check_pid, use reload at the end of the request/check_pid handshake
+
   - Add fakeDataset4Site DBS2 API to look-up datasets for a given site, ticket
     #3084
     - DBS3 will provide new API for that
