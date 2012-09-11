@@ -827,6 +827,8 @@ class DASWebService(DASWebManager):
                 page = img + " processing PID=%s" % pid
             else:
                 self.reqmgr.remove(pid)
+                page  = 'Request PID=%s is completed' %pid
+                page += ', please wait for results to load'
         except Exception as err:
             msg = 'check_pid fails for pid=%s' % pid
             print dastimestamp('DAS WEB ERROR '), msg
