@@ -26,6 +26,7 @@ class DBS3Service(DASAbstractService):
 
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""
+        headers =  {'Accept': 'application/json' } # DBS3 always needs that
         return getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert,
                 doseq=False, system=self.name)
