@@ -179,14 +179,17 @@ params : {
         "detail":"True",
         "dataset":"optional",
         "dataset_access_type": "optional",
+        "run_num": "optional",
 }
 daskeys : [
         {"key": "block", "map":"block.name", "pattern":""},
         {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "run", "map":"run.run_number", "pattern":""},
 ]
 das2api : [
         {"das_key":"block.name", "api_param": "block_name", "pattern":""},
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"run.run_number", "api_param":"run_num", "pattern":""},
 ]
 ---
 urn: blocks4site
@@ -464,6 +467,7 @@ notations : [
     {"notation": "logical_file_name", "map": "name", "api": "files_via_dataset"},
     {"notation": "logical_file_name", "map": "name", "api": "files_via_block"},
     {"notation": "logical_file_name", "map": "name", "api": "filelumis"},
+    {"notation": "logical_file_name", "map": "name", "api": "file4DatasetRunLumi"},
     {"notation": "file.logical_file_name", "map": "file.name", "api": ""},
     {"notation": "file_type", "map": "type", "api": "files"},
     {"notation": "file_type", "map": "type", "api": "files_via_dataset"},
