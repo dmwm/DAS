@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.7.X
 
+  - Work on DBS3 APIs
   - Fix issue with forward/backward calls in a browser which cause existing
     page to use ajaxCheckPid. I added reload call which enforces browser to
     load page content with actual data
