@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0201,W0703,W0702,R0914,R0912,R0904,R0915,W0107
+#pylint: disable-msg=W0201,W0703,W0702,R0914,R0912,R0904,R0915,W0107,C0321
 """
 File: cms_representation.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>
@@ -19,8 +19,7 @@ from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import print_exc, getarg, size_format, access
 from DAS.utils.utils import identical_data_records
-from DAS.web.utils import das_json, quote, gen_color
-from DAS.web.utils import not_to_link, quote
+from DAS.web.utils import das_json, quote, gen_color, not_to_link
 from DAS.web.tools import exposetext
 from DAS.web.das_representation import DASRepresentation
 
@@ -342,8 +341,6 @@ class CMSRepresentation(DASRepresentation):
             try:
                 if  dasquery.mongo_query:
                     fltpage = self.fltpage(self.get_one_row(dasquery))
-                else:
-                    fltpage = uinput.split('|')[-1]
             except Exception as exc:
                 fltpage = 'N/A, please check DAS record for errors'
                 msg = 'Fail to apply filter to query=%s' % dasquery.query
@@ -417,9 +414,10 @@ class CMSRepresentation(DASRepresentation):
                                 '<a href="/das/request?%s">%s</a></span>'\
                                 % (make_args(lkey, i, inst), i) for i in pval])
                         else:
+                            args  = make_args(lkey, pval, inst)
                             page += '<span class="highlight">'+\
                                 '<a href="/das/request?%s">%s</a></span>'\
-                                % (make_args(lkey, pval, inst), pval)
+                                % (args, pval)
                     else:
                         page += '%s: N/A' % lkey.capitalize()
                     plist = self.dasmgr.mapping.presentation(lkey)
@@ -525,11 +523,7 @@ class CMSRepresentation(DASRepresentation):
         total    = head.get('nresults', 0)
         incache  = head.get('incache')
         dasquery = head.get('dasquery')
-        uinput   = kwargs.get('input', dasquery.query)
-        inst     = dasquery.instance
         filters  = dasquery.filters
-        idx      = getarg(kwargs, 'idx', 0)
-        limit    = getarg(kwargs, 'limit', 10)
         sdir     = getarg(kwargs, 'dir', '')
         titles   = []
         page     = self.pagination(total, incache, kwargs)
@@ -577,22 +571,18 @@ class CMSRepresentation(DASRepresentation):
                         % quote(str(row['_id'])) # cgi.escape the id
             tpage += self.templatepage('das_table_row', rec=rec, tag='td', \
                         style=style, encode=1, record=link)
-        sdict  = self.sort_dict(titles, pkey)
         if  sdir == 'asc':
             sdir = 'desc'
         elif sdir == 'desc':
             sdir = 'asc'
         else: # default sort direction
             sdir = 'asc' 
-        args   = {'input':uinput, 'idx':idx, 'limit':limit, 'instance':inst, \
-                         'view':'table'}
         theads = []
         for title in titles:
             theads.append(title)
         theads.append('Record')
         thead = self.templatepage('das_table_row', rec=theads, tag='th', \
                         style=0, encode=0, record=0)
-        self.sort_dict(titles, pkey)
         page += fltbar
         page += '<br />'
         page += '<table class="das_table">' + thead + tpage + '</table>'
