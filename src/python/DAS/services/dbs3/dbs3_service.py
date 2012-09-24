@@ -124,6 +124,15 @@ class DBS3Service(DASAbstractService):
                 parent = row['parent']
                 for val in parent['parent_logical_file_name']:
                     yield dict(name=val)
+        elif api == 'runs_via_dataset':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                values = row['run']['run_num']
+                if  isinstance(values, list):
+                    for val in values:
+                        yield dict(run_number=val)
+                else:
+                    yield dict(run_number=values)
         elif api == 'filechildren':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
