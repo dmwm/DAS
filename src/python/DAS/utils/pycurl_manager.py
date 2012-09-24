@@ -18,7 +18,6 @@ followed by N requests to filesummaries API.
 """
 
 # system modules
-import re
 import time
 import pycurl
 import urllib
@@ -40,7 +39,7 @@ def parse_body(data):
 
 def get_expire(data, error_expire=300, verbose=0):
     """Parser header part of URL request and return expires timestamp"""
-    if  verbose:
+    if  verbose > 1:
         print data
     for item in data.split('\n'):
         if  item.find('Expires') != -1:
@@ -101,8 +100,8 @@ class RequestHandler(object):
         if  cert:
             curl.setopt(pycurl.SSLCERT, cert)
         if  verbose:
-            curl.setopt(pycurl.VERBOSE, 1)
             if  isinstance(verbose, int) and verbose > 1:
+                curl.setopt(pycurl.VERBOSE, 1)
                 curl.setopt(pycurl.DEBUGFUNCTION, self.debug)
         return bbuf, hbuf
 
@@ -153,9 +152,10 @@ class RequestHandler(object):
                 elif e_time > time.time():
                     expire = e_time
 
-        if  http_code < 200 or http_code >=300:
+        if  http_code < 200 or http_code >= 300:
             effective_url = curl.getinfo(pycurl.EFFECTIVE_URL)
-            raise HTTPError(effective_url, http_code, http_msg, http_header, data)
+            raise HTTPError(effective_url, http_code, http_msg, \
+                    http_header, data)
         return data, expire
 
     def multirequest(self, url, parray, headers=None,
@@ -192,8 +192,8 @@ class RequestHandler(object):
                                 item.update(params)
                                 yield item
                             else:
-                                err = 'Unsupported data format: data=%s, type=%s'\
-                                    % (item, type(item))
+                                err = 'Unsupported data format: '
+                                err += 'data=%s, type=%s' % (item, type(item))
                                 raise Exception(err)
                 else:
                     yield bbuf.getvalue()
