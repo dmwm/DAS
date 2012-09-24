@@ -259,8 +259,9 @@ def convert2date(value):
 
 def das_dateformat(value):
     """Check if provided value in expected DAS date format."""
-    msg = 'Unacceptable date format, supported formats are YYYYMMDD or' \
-        + " 'YYYMMDD HH:MM:SS'"
+    msg  = 'Unacceptable date format, value=%s, type=%s,' \
+            % (value, type(value))
+    msg += " supported formats are YYYYMMDD or 'YYYMMDD HH:MM:SS'"
     value = str(value)
     pat = date_yyyymmdd_pattern
     if  pat.match(value): # we accept YYYYMMDD
