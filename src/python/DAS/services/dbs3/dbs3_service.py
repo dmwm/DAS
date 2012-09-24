@@ -57,6 +57,19 @@ class DBS3Service(DASAbstractService):
                 kwds['dataset'] = '/' + kwds['dataset']
             if  kwds['dataset'] == '*' and kwds['block_name']:
                 kwds['dataset'] = kwds['block_name'].split('#')[0]
+            if  kwds['cdate']:
+                min_date = None
+                max_date = None
+                if  isinstance(kwds['cdate'], int):
+                    min_date = kwds['cdate']
+                    max_date = min_date + 24*60*60
+                elif isinstance(kwds['cdate'], dict): # we got date range
+                    min_date = kwds['cdate']['$gte']
+                    max_date = kwds['cdate']['$lte']
+                if  min_date and max_date:
+                    kwds['min_cdate'] = min_date
+                    kwds['max_cdate'] = max_date
+                del kwds['cdate']
             try:
                 del kwds['block_name']
             except KeyError:
