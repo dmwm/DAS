@@ -1,12 +1,9 @@
 # Combined API Mapping to DAS
 system : combined
 format : JSON
-# DBS3 url
-# "dbs": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
-# DBS2 url
-# "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
 services : {
     "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
+    "dbs3": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
     "phedex": "https://cmsweb.cern.ch/phedex/datasvc/json/prod",
     "conddb": "https://cms-conddb.cern.ch",
 }
