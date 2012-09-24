@@ -28,6 +28,7 @@ from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import json_parser
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import expire_timestamp, print_exc
+from DAS.utils.global_scope import SERVICES
 
 #
 # NOTE:
@@ -53,13 +54,13 @@ def parse_data(data):
 def which_dbs(dbs_url):
     """Determine DBS version based on given DBS url"""
     if  dbs_url.find('servlet') != -1:
-        return 'dbs2'
+        return 'dbs'
     return 'dbs3'
 
 def dbs_dataset4site_release(dbs_url, getdata, release):
     "Get dataset for given site and release"
     expire = 600 # set some expire since we're not going to use it
-    if  which_dbs(dbs_url) == 'dbs2':
+    if  which_dbs(dbs_url) == 'dbs':
         # in DBS3 I'll use datasets API and pass release over there
         query = 'find dataset where release=%s' % release
         dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
@@ -72,7 +73,7 @@ def dbs_dataset4site_release(dbs_url, getdata, release):
             yield dataset
     else:
         # we call datasets?release=release to get list of datasets
-        dbs_url += dbs_url + '/datasets'
+        dbs_url += '/datasets'
         dbs_args = \
         {'release_version': release, 'dataset_access_type':'PRODUCTION'}
         headers = {'Accept': 'application/json;text/json'}
@@ -87,7 +88,7 @@ def dataset_summary(dbs_url, getdata, dataset):
     number of filesi/blocks in a given dataset.
     """
     expire = 600 # set some expire since we're not going to use it
-    if  which_dbs(dbs_url) == 'dbs2':
+    if  which_dbs(dbs_url) == 'dbs':
         # DBS2 call
         query = 'find count(file.name), count(block.name) where dataset=%s'\
                  % dataset
@@ -127,7 +128,13 @@ class CombinedService(DASAbstractService):
         must contain combined attribute corresponding to systems
         used to produce record content.
         """
-        dbs_url = self.map[api]['services']['dbs']
+        if  SERVICES.has_key('dbs'):
+            dbs = 'dbs'
+        elif SERVICES.has_key('dbs3'):
+            dbs = 'dbs3'
+        else:
+            raise Exception('Unsupport DBS system')
+        dbs_url = self.map[api]['services'][dbs]
         phedex_url = self.map[api]['services']['phedex']
         # make phedex_api from url, but use xml version for processing
         phedex_api = phedex_url.replace('/json/', '/xml/') + '/blockReplicas'
@@ -139,10 +146,10 @@ class CombinedService(DASAbstractService):
                 datasets.add(row)
             # Phedex part
             if  args['site'].find('.') != -1: # it is SE
-                phedex_args = {'dataset':list(datasets), 
+                phedex_args = {'dataset':list(datasets),
                                 'se': '%s' % args['site']}
             else:
-                phedex_args = {'dataset':list(datasets), 
+                phedex_args = {'dataset':list(datasets),
                                 'node': '%s*' % args['site']}
             headers = {'Accept': 'text/xml'}
             source, expire = \
@@ -164,7 +171,7 @@ class CombinedService(DASAbstractService):
                     found[found_dataset] = {'bytes': bbytes, 'files': files}
             for name, val in found.iteritems():
                 record = dict(name=name, size=val['bytes'], files=val['files'],
-                                combined=['dbs', 'phedex']) 
+                                combined=[which_dbs(dbs_url), 'phedex'])
                 yield {'dataset':record}
             del datasets
             del found
@@ -221,7 +228,7 @@ class CombinedService(DASAbstractService):
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
         """
-        A service worker. It parses input query, invoke service API 
+        A service worker. It parses input query, invoke service API
         and return results in a list with provided row.
         """
         # NOTE: I use helper function since it is 2 step process
