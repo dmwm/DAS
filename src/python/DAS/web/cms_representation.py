@@ -487,7 +487,8 @@ class CMSRepresentation(DASRepresentation):
                             systems = self.systems(rowsystems)
                         except TypeError as _err:
                             systems = self.systems(['combined'])
-            except KeyError:
+            except KeyError as exc:
+                print_exc(exc)
                 systems = "" # we don't store systems for aggregated records
             except Exception as exc:
                 print_exc(exc)
