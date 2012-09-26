@@ -2,16 +2,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Python.h>
+#define SIZE 16
 /*
  * C-version of das_hash function, see
  * http://www.cse.yorku.ca/~oz/hash.html
  */
+/* sdbm implementation
 static unsigned long das_hash(unsigned char *str)
 {
     unsigned long hash = 0;
     int c;
     while( (c = *str++) )
         hash = c + (hash << 6) + (hash << 16) - hash;
+    return hash;
+}
+*/
+/* djb2 implementation */
+static unsigned long das_hash(unsigned char *str)
+{
+    unsigned long hash = 5381;
+    int c;
+    while( (c = *str++) )
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
     return hash;
 }
 
@@ -24,7 +36,10 @@ _das_hash(PyObject *self, PyObject *args)
             return NULL;
 
     /* create PyString object from das hash */
-    PyObject* data = PyString_FromFormat("%x", (unsigned int)das_hash(user_input));
+    unsigned long res = das_hash(user_input);
+    char buf[SIZE+1];
+    sprintf(buf, "%lx", res);
+    PyObject* data = PyString_FromStringAndSize(buf, SIZE);
 
     PyErr_Clear();
     return data;
