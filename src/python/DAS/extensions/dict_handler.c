@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Python.h>
-/* 
+/*
  * C-version of dict_helper from utils/utils.py
  * We need to perform mapping of parsed record into DAS notations
  * Can be used similar to dict_helper, e.g.
@@ -43,17 +43,17 @@ _dict_handler(PyObject *self, PyObject *args)
             res  = val;
             decr = 0; /* if we unable to convert decrement ref counter */
         }
-    
-        if  (mkey != NULL) { 
-            PyDict_SetItem(data, mkey, res); 
+
+        if  (mkey != NULL) {
+            PyDict_SetItem(data, mkey, res);
             Py_XDECREF(mkey);
-        } else { 
+        } else {
             PyDict_SetItem(data, key, res);
-        }   
+        }
         if (decr == 1) {
             Py_XDECREF(res);
         }
-    }       
+    }
     PyErr_Clear();
     return data;
 }
@@ -81,4 +81,6 @@ main(int argc, char *argv[])
 
     /* Add a static module */
     initdas_speed_utils();
+
+    return 0;
 }
