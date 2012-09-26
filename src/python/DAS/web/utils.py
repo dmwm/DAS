@@ -313,7 +313,8 @@ def checkargs(supported):
             if  checkarg(kwds, 'fid') and len(kwds['fid']) != 24:
                 code = web_code('Unsupported id value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'pid') and len(str(kwds['pid'])) != 32:
+            if  checkarg(kwds, 'pid') and \
+                    len(str(kwds['pid'])) not in [16, 24, 32]:
                 code  = web_code('Unsupported pid value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'ahash') and len(str(kwds['ahash'])) != 32:
