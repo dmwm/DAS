@@ -6,8 +6,20 @@
 /*
  * C-version of das_hash function, see
  * http://www.cse.yorku.ca/~oz/hash.html
+ * The both implementation sdbm and djb2 compute a polynomial function of
+ * given power by use of Horner's rule, e.g. if power is 33 then formula is
+ * h[i] = h[i-1]*33 + c, see
+ * http://en.wikipedia.org/wiki/Horner's_method
  */
+
 /* sdbm implementation
+ * hash[i] = hash[i-1]*65599 + c
+ * this formula can be represented as
+ * hash = c + (hash<<6) + (hash<<16) - hash
+ * which is eqivalent to
+ * hash = c + hash*(2**6 + 2**16 - 1)
+ */
+/*
 static unsigned long das_hash(unsigned char *str)
 {
     unsigned long hash = 0;
@@ -17,13 +29,19 @@ static unsigned long das_hash(unsigned char *str)
     return hash;
 }
 */
-/* djb2 implementation */
+/* djb2 implementation
+ * hash[i] = hash[i-1]*33 + c
+ * this formula can be represented as
+ * hash = c + (hash+(hash<<5))
+ * which is eqivalent to
+ * hash = c + hash*(1+2**5)
+ */
 static unsigned long das_hash(unsigned char *str)
 {
     unsigned long hash = 5381;
     int c;
     while( (c = *str++) )
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+        hash = ((hash << 5) + hash) + c;
     return hash;
 }
 
