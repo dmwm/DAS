@@ -38,7 +38,7 @@ _das_hash(PyObject *self, PyObject *args)
     /* create PyString object from das hash */
     unsigned long res = das_hash(user_input);
     char buf[SIZE+1];
-    sprintf(buf, "%lx", res);
+    sprintf(buf, "%016lx", res); /* always get 16 digits for hex, fill with leading zeros */
     PyObject* data = PyString_FromStringAndSize(buf, SIZE);
 
     PyErr_Clear();
