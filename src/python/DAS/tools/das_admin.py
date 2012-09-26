@@ -186,6 +186,8 @@ class DASMongoDB(object):
 #        dbname = 'analytics'
 #        dbcoll = 'db'
 #        self.clean(dbname, dbcoll)
+        # dbs database
+        self.conn.drop_database('dbs')
 
     def clean(self, dbname, dbcoll):
         """
