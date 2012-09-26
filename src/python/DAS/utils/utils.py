@@ -552,11 +552,15 @@ def genkey(query):
     Generate a new key-hash for a given query. We use md5 hash for the
     query and key is just hex representation of this hash.
     """
-    keyhash = hashlib.md5()
     if  isinstance(query, dict):
         query = json.JSONEncoder(sort_keys=True).encode(query)
-    keyhash.update(query)
-    return keyhash.hexdigest()
+    try:
+        from DAS.extensions.das_hash import _das_hash
+        return _das_hash(query)
+    except:
+        keyhash = hashlib.md5()
+        keyhash.update(query)
+        return keyhash.hexdigest()
 
 def gen2list(results):
     """
