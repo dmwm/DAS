@@ -49,7 +49,7 @@ class DBSService(DASAbstractService):
         self.prim_instance = config['dbs']['dbs_global_instance']
         self.instances = config['dbs']['dbs_instances']
         self.extended_expire = \
-                expire_timestamp(config.get('extended_expire', 86400))
+                expire_timestamp(config['dbs'].get('extended_expire', 86400))
 
     def url_instance(self, url, instance):
         """
