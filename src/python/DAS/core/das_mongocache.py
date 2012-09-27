@@ -798,9 +798,6 @@ class DASMongocache(object):
         self.logger.debug("(%s) store to cache" % dasquery)
         if  not results:
             return
-        # update das record with new status
-        status = 'Update DAS cache, %s API' % header['das']['api'][0]
-        self.update_query_record(dasquery, status, header)
 
         dasheader  = header['das']
         expire     = dasheader['expire']
@@ -817,6 +814,8 @@ class DASMongocache(object):
             if  isinstance(results, list) or isinstance(results, GeneratorType):
                 for item in results:
                     counter += 1
+                    if  item.has_key('das'):
+                        expire = item.get('das').get('expire', expire)
                     item['das'] = dict(expire=expire, primary_key=prim_key,
                                        condition_keys=cond_keys,
                                        instance=dasquery.instance,
@@ -828,8 +827,13 @@ class DASMongocache(object):
             else:
                 print "\n\n ### results = ", str(results)
                 raise Exception('Provided results is not a list/generator type')
-        self.logger.info("\n")
-        msg = "%s yield %s rows" % (dasheader['system'], counter)
+        if  expire != dasheader['expire']: # update DAS records
+            header['das']['expire'] = expire
+        # update das record with new status
+        status = 'Update DAS cache, %s API' % header['das']['api'][0]
+        self.update_query_record(dasquery, status, header)
+
+        msg = "\n%s yield %s rows" % (dasheader['system'], counter)
         self.logger.info(msg)
 
     def remove_from_cache(self, dasquery):
