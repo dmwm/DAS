@@ -6,10 +6,28 @@ DBS service
 """
 __author__ = "Valentin Kuznetsov"
 
+# system modules
+import time
+
+# DAS modules
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import dbsql_opt_map, convert_datetime
+from DAS.utils.utils import expire_timestamp
 from DAS.utils.global_scope import SERVICES
+
+def get_modification_time(record):
+    "Get modification timestamp from DBS record"
+    if  record.has_key('dataset'):
+        if  record['dataset'].has_key('procds.moddate'):
+            return record['dataset']['procds.moddate']
+    return None
+
+def old_timestamp(tstamp, threshold=86400):
+    "Check if given timestamp is old enough"
+    if  tstamp < (time.mktime(time.gmtime())-threshold):
+        return True
+    return False
 
 def convert_dot(row, key, attrs):
     """Convert dot notation key.attr into storage one"""
@@ -30,6 +48,8 @@ class DBSService(DASAbstractService):
         map_validator(self.map)
         self.prim_instance = config['dbs']['dbs_global_instance']
         self.instances = config['dbs']['dbs_instances']
+        self.extended_expire = \
+                expire_timestamp(config.get('extended_expire', 86400))
 
     def url_instance(self, url, instance):
         """
@@ -491,4 +511,7 @@ where %s" % value[4:]
                 sename = row['dataset'].get('site')
                 row.update({'site':{'se':sename}})
                 del row['dataset']['site']
+            mod_time = get_modification_time(row)
+            if  mod_time and old_timestamp(mod_time):
+                row.update({'das':{'expire': self.extended_expire}})
             yield row
