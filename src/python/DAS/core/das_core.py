@@ -349,8 +349,7 @@ class DASCore(object):
             services = params['services']
         self.logger.info('services = %s' % services)
         das_timer('das_record', self.verbose)
-        # initial expire tstamp 1 day (long enough to be overwriten by data-srv)
-        expire = expire_timestamp(time.time()+1*24*60*60)
+        expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
         header = dasheader("das", dasquery, expire)
         header['lookup_keys'] = []
         self.rawcache.insert_query_record(dasquery, header)
