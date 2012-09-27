@@ -146,9 +146,12 @@ DASOption('dbs', 'dbs_global_url', 'string', \
 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'),
 # name of dbs global instance
 DASOption('dbs', 'dbs_global_instance', 'string', 'cms_dbs_prod_global'),
-# extended expire timestamp in seconds, it can be used to extende
+# extended expire timestamp in seconds, it can be used to extend
 # lifetime of DBS record in DAS cache based on their modification time stamp
 DASOption('dbs', 'extended_expire', 'int', 7200),
+# extended threshold in seconds, it can be used to trigger
+# extended timestamp usage, default is 1 month
+DASOption('dbs', 'extended_threshold', 'int', 2592000),
 
 #
 # DAS test server options

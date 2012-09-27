@@ -23,7 +23,7 @@ def get_modification_time(record):
             return record['dataset']['procds.moddate']
     return None
 
-def old_timestamp(tstamp, threshold=86400):
+def old_timestamp(tstamp, threshold=2592000):
     "Check if given timestamp is old enough"
     if  tstamp < (time.mktime(time.gmtime())-threshold):
         return True
@@ -50,6 +50,8 @@ class DBSService(DASAbstractService):
         self.instances = config['dbs']['dbs_instances']
         self.extended_expire = \
                 expire_timestamp(config['dbs'].get('extended_expire', 86400))
+        self.extended_threshold = \
+                config['dbs'].get('extended_threshold', 2592000) # 1 month
 
     def url_instance(self, url, instance):
         """
@@ -512,6 +514,6 @@ where %s" % value[4:]
                 row.update({'site':{'se':sename}})
                 del row['dataset']['site']
             mod_time = get_modification_time(row)
-            if  mod_time and old_timestamp(mod_time):
+            if  mod_time and old_timestamp(mod_time, self.extended_threshold):
                 row.update({'das':{'expire': self.extended_expire}})
             yield row
