@@ -150,7 +150,7 @@ def daemon(config):
 
     mgr = Populator({'nworkers':pworkers})
     queries = []
-    for dataset in datasets():
+    for dataset in datasets(instance):
         if  dataset and dataset != '*':
             queries.append('dataset=%s instance=%s' % (dataset, instance))
     print "Fetch %s datasets from %s DBS collection" % (len(queries), instance)
