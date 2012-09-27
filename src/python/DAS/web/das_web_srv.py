@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0201,W0703,R0914,R0902
+#pylint: disable-msg=W0201,W0703,R0914,R0902,W0702,R0201,R0904,R0912,R0911
 """
 DAS web interface, based on WMCore/WebTools
 """
@@ -12,15 +12,12 @@ import os
 import re
 import time
 import thread
-import urllib
-import urlparse
 import cherrypy
 
 from datetime import date
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
-from pymongo import DESCENDING
 from pymongo.errors import AutoReconnect
 
 # DAS modules
@@ -36,9 +33,8 @@ from DAS.utils.ddict import DotDict
 from DAS.utils.utils import genkey, print_exc, dastimestamp
 from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
-from DAS.utils.das_config import wmcore_config
 from DAS.web.utils import free_text_parser, threshold
-from DAS.web.utils import set_no_cache_flags, set_cache_flags
+from DAS.web.utils import set_no_cache_flags
 from DAS.web.utils import checkargs, das_json, gen_error_msg
 from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson
@@ -84,7 +80,6 @@ def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
             pass
         except Exception as err:
             print_exc(err)
-            pass
         time.sleep(5)
     print "### END onhold_worker", time.time()
 
@@ -156,9 +151,10 @@ class DASWebService(DASWebManager):
             interval  = config.get('dbs_daemon_interval', 3600)
             dbsexpire = config.get('dbs_daemon_expire', 3600)
             self.dbsmgr = {} # dbs_urls vs dbs_daemons
+            dbs_config  = {'expire': dbsexpire}
             if  self.dataset_daemon:
                 for dbs_url in self.dbs_urls:
-                    dbsmgr = DBSDaemon(dbs_url, self.dburi, expire=dbsexpire)
+                    dbsmgr = DBSDaemon(dbs_url, self.dburi, dbs_config)
                     self.dbsmgr[dbs_url] = dbsmgr
                     def dbs_updater(_dbsmgr, interval):
                         """DBS updater daemon"""
@@ -257,7 +253,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS + ['section', 'highlight'])
-    def faq(self, *args, **kwargs):
+    def faq(self, **kwargs):
         """
         represent DAS FAQ.
         """
@@ -283,7 +279,8 @@ class DASWebService(DASWebManager):
     @expose
     def movetodas(self):
         "Placeholder page for DBS to DAS migration"
-        style = "width:600px;margin-left:auto;margin-right:auto;padding-top:20px"
+        style = \
+            "width:600px;margin-left:auto;margin-right:auto;padding-top:20px"
         page  = """<div style="%s">""" % style
         page += "Dear user,<br/>DBS Data Discovery page is depricated.<br/>"
         page += "Please migrate to Data Aggregation Service located at"
@@ -308,7 +305,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def services(self, *args, **kwargs):
+    def services(self):
         """
         represent DAS services
         """
@@ -331,7 +328,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def api(self, name, **kwargs):
+    def api(self, name):
         """
         Return DAS mapping record about provided API.
         """
@@ -464,7 +461,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def gridfs(self, *args, **kwargs):
+    def gridfs(self, **kwargs):
         """
         Retieve records from GridFS
         """
@@ -645,7 +642,7 @@ class DASWebService(DASWebManager):
                          'ctime': 0})
             return self.datastream(dict(head=head, data=data))
         dasquery = content # returned content is valid DAS query
-        status, qhash = self.dasmgr.get_status(dasquery)
+        status, _qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
             kwargs['dasquery'] = dasquery
             self.reqmgr.remove(dasquery.qhash)
@@ -771,7 +768,7 @@ class DASWebService(DASWebManager):
             else:
                 return content
         dasquery = content # returned content is valid DAS query
-        status, qhash = self.dasmgr.get_status(dasquery)
+        status, _qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
             kwargs['dasquery'] = dasquery
             page = self.get_page_content(kwargs, complete_msg=False)
@@ -829,7 +826,7 @@ class DASWebService(DASWebManager):
                 page = img + " processing PID=%s" % pid
             else:
                 self.reqmgr.remove(pid)
-                page  = 'Request PID=%s is completed' %pid
+                page  = 'Request PID=%s is completed' % pid
                 page += ', please wait for results to load'
         except Exception as err:
             msg = 'check_pid fails for pid=%s' % pid
