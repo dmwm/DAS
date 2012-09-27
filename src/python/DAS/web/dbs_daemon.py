@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=R0913,W0703,W0702
 """
 File: dbs_daemon.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>
@@ -23,7 +24,7 @@ import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.web.utils import db_monitor
-from DAS.utils.utils import get_key_cert
+from DAS.utils.utils import get_key_cert, genkey
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 
 def dbs_instance(dbsurl):
@@ -47,14 +48,16 @@ class DBSDaemon(object):
     and store them in separate collection to be used by
     DAS autocomplete web interface.
     """
-    def __init__(self, dbs_url, dburi, dbname='dbs', cache_size=1000,
-                        expire=3600):
-        self.dburi  = dburi
-        self.dbname = dbname
-        self.dbcoll = dbs_instance(dbs_url)
-        self.cache_size = cache_size
-        self.dbs_url = dbs_url
-        self.expire = expire
+    def __init__(self, dbs_url, dburi, config=None):
+        if  not config:
+            config = {}
+        self.dburi      = dburi
+        self.dbcoll     = dbs_instance(dbs_url)
+        self.dbs_url    = dbs_url
+        self.dbname     = config.get('dbname', 'dbs')
+        self.cache_size = config.get('cache_size', 1000)
+        self.expire     = config.get('expire', 3600)
+        self.write_hash = config.get('write_hash', False)
         self.col = None # to be defined in self.init
         self.init()
         # Monitoring thread which performs auto-reconnection to MongoDB
@@ -101,7 +104,7 @@ class DBSDaemon(object):
 
     def find(self, pattern, idx=0, limit=10):
         """
-        Find datasets for a given pattern. The idx/limit parameters 
+        Find datasets for a given pattern. The idx/limit parameters
         control number of retrieved records (aka pagination). The
         limit=-1 means no pagination (get all records).
         """
@@ -151,8 +154,16 @@ class DBSDaemon(object):
             raise Exception(msg)
         gen = qlxml_parser(stream, 'dataset')
         for row in gen:
+            dataset = row['dataset']['dataset']
+            rec = {'dataset': dataset}
+            if  self.write_hash:
+                storage_query = {"fields": ["dataset"],
+                     "spec": [{"key": "dataset.name",
+                               "value": "\"%s\"" % dataset}],
+                     "instance": self.dbcoll}
+                rec.update({'qhash': genkey(storage_query)})
             if  row['dataset']['dataset.status'] == 'VALID':
-                yield dict(dataset=row['dataset']['dataset'])
+                yield rec
         stream.close()
 
     def datasets_dbs3(self):
@@ -170,9 +181,17 @@ class DBSDaemon(object):
         stream = urllib2.urlopen(req)
         gen = json.load(stream)
         for row in gen:
-            yield row
+            dataset = row['dataset']
+            rec = {'dataset': dataset}
+            if  self.write_hash:
+                storage_query = {"fields": ["dataset"],
+                     "spec": [{"key": "dataset.name",
+                               "value": "\"%s\"" % dataset}],
+                     "instance": self.dbcoll}
+                rec.update({'qhash': genkey(storage_query)})
+            yield rec
         stream.close()
-        
+
 def test(dbs_url):
     "Test function"
     uri = 'mongodb://localhost:8230'
