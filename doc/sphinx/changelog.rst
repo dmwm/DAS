@@ -7,6 +7,15 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.7.X
 
+  - Adjust das_core and das_mongocache to optionally use dasquery.hashes
+
+    - hashes can be assigned at run-time for pattern queries, e.g.
+      dataset=/*abc*
+    - hashes can be used to look-up data once this field is filled up
+
+  - Let DBSDaemon optionally write dataset hashes, this can be used to enhance
+    dataset pattern look-up in DAS cache, see ticket #3932
+  - Add hashes data member and property to DASQuery class
   - Work on DBS3 APIs
   - Fix issue with forward/backward calls in a browser which cause existing
     page to use ajaxCheckPid. I added reload call which enforces browser to
@@ -17,7 +26,9 @@ This release series is targeted to DAS production stability and quality.
 
   - Add fakeDataset4Site DBS2 API to look-up datasets for a given site, ticket
     #3084
+
     - DBS3 will provide new API for that
+
   - Change DAS configuration to accept web_service.services who lists
     local DAS service, e.g. dbs_phedex, dbs_lumi
   - Modify dbs_phedex service to initialize via DAS maps
