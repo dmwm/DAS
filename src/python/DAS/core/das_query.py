@@ -39,6 +39,7 @@ class DASQuery(object):
         self._storage_query = {}
         self._mongo_query   = {}
         self._qhash         = None
+        self._hashes        = None
         self._system        = None
         self._instance      = None
         self._loose_query   = None
@@ -78,6 +79,7 @@ class DASQuery(object):
         elif isinstance(query, object) and hasattr(query, '__class__')\
             and query.__class__.__name__ == 'DASQuery':
             self._query = query.query
+            self._hashes = query.hashes
             self._mongo_query = query.mongo_query
             self._storage_query = query.storage_query
         else:
@@ -97,6 +99,10 @@ class DASQuery(object):
         self._mapreduce   = self.mongo_query.get('mapreduce', self._mapreduce)
 
     ### Class properties ###
+    @property
+    def hashes(self):
+        "hashes property of the DAS query"
+        return self._hashes
 
     @property
     def mongoparser(self):
