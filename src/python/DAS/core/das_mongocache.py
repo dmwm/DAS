@@ -16,6 +16,7 @@ __revision__ = "$Id: das_mongocache.py,v 1.86 2010/05/03 19:14:06 valya Exp $"
 __version__ = "$Revision: 1.86 $"
 __author__ = "Valentin Kuznetsov"
 
+import re
 import time
 from   types import GeneratorType
 import datetime
@@ -145,7 +146,7 @@ class DASLogdb(object):
 
 class DASMongocache(object):
     """
-    DAS cache based MongoDB. 
+    DAS cache based MongoDB.
     """
     def __init__(self, config):
         self.emptyset_expire = expire_timestamp(\
@@ -184,7 +185,7 @@ class DASMongocache(object):
                       ('qhash', DESCENDING),
                       ('das.empty_record', ASCENDING), ('das.ts', ASCENDING)]
         create_indexes(self.merge, index_list)
-        
+
     def add_manipulator(self):
         """
         Add DAS-specific MongoDB SON manipulator to perform
@@ -196,15 +197,44 @@ class DASMongocache(object):
         % das_son_manipulator
         self.logger.debug(msg)
 
+    def get_dataset_hashes(self, dasquery):
+        "Get dataset hashes from DBS database"
+        spec = dasquery.mongo_query.get('spec', {})
+        inst = dasquery.instance
+        if  spec and inst:
+            dataset = spec.get('dataset.name', None)
+            if  dataset:
+                if  dataset.find('*') != -1:
+                    cond = {'dataset':re.compile(dataset.replace('*', '.*'))}
+                else:
+                    cond = {'dataset': dataset}
+                for row in self.conn['dbs'][inst].find(cond):
+                    if  row.has_key('qhash'):
+                        yield row['qhash']
+
+    def check_datasets(self, dasquery):
+        "Check dataset presence in DAS cache for given das query"
+        hashes = [r for r in self.get_dataset_hashes(dasquery)]
+        if  hashes:
+            spec = {'qhash': {'$in': hashes}}
+            if  len(hashes) == self.merge.find(spec).count():
+                dasquery._hashes = hashes
+
     def similar_queries(self, dasquery):
         """
         Check if we have query results in cache whose conditions are
         superset of provided query. The method only works for single
         key whose value is substring of value in input query.
-        For example, if cache contains records about T1 sites, 
+        For example, if cache contains records about T1 sites,
         then input query T1_CH_CERN is subset of results stored in cache.
         """
         spec = dasquery.mongo_query.get('spec', {})
+        # look-up DBS datasets in DAS cache, if found consistent set
+        # it will assign dasquery.hashes to appropriate values
+        if  spec.has_key('dataset.name'):
+            self.check_datasets(dasquery)
+            if  dasquery.hashes:
+                return True
         cond = {'query.spec.key': {'$in' : spec.keys()}, 'qhash':dasquery.qhash}
         for row in self.col.find(cond):
             found_query = DASQuery(row['query'])
@@ -213,7 +243,7 @@ class DASMongocache(object):
                 self.logger.info(msg)
                 return found_query
         return False
-    
+
     def get_superset_keys(self, key, value):
         """
         This is a special-case version of similar_keys,
@@ -221,7 +251,7 @@ class DASMongocache(object):
         find possible superset queries of a simple
         query of the form key=value.
         """
-        
+
         msg = "%s=%s" % (key, value)
         self.logger.debug(msg)
         cond = {'query.spec.key': key}
@@ -284,7 +314,10 @@ class DASMongocache(object):
         Check if cache has query whose specs are identical to provided query.
         Return all matches.
         """
-        cond = {'qhash': dasquery.qhash}
+        if dasquery.hashes:
+            cond = {'qhash':{'$in':dasquery.hashes}}
+        else:
+            cond = {'qhash': dasquery.qhash}
         if  system:
             cond.update({'das.system': system})
         return self.col.find(cond)
@@ -311,7 +344,7 @@ class DASMongocache(object):
     def das_record(self, dasquery):
         "Retrieve DAS record for given query"
         return self.col.find_one({'qhash': dasquery.qhash})
-    
+
     def find_records(self, das_id):
         " Return all the records matching a given das_id"
         return self.col.find({'das_id': das_id})
@@ -401,6 +434,8 @@ class DASMongocache(object):
         fields, filter_cond = self.get_fields(dasquery)
         if  not fields:
             spec = dasquery.mongo_query.get('spec', {})
+        elif dasquery.hashes:
+            spec = {'qhash':{'$in':dasquery.hashes}, 'das.empty_record':0}
         else:
             spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
         if  filter_cond:
@@ -530,6 +565,8 @@ class DASMongocache(object):
         fields, filter_cond = self.get_fields(dasquery)
         if  not fields:
             spec = dasquery.mongo_query.get('spec', {})
+        elif dasquery.hashes:
+            spec = {'qhash':{'$in':dasquery.hashes}, 'das.empty_record':0}
         else:
             spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
         if  filter_cond:
@@ -562,7 +599,7 @@ class DASMongocache(object):
     def map_reduce(self, mr_input, dasquery, collection='merge'):
         """
         Wrapper around _map_reduce to allow sequential map/reduce
-        operations, e.g. map/reduce out of map/reduce. 
+        operations, e.g. map/reduce out of map/reduce.
 
         mr_input is either alias name or list of alias names for
         map/reduce functions.
@@ -653,7 +690,7 @@ class DASMongocache(object):
             spec = {'das_id': {'$in': id_list}, 'das.primary_key': pkey}
             if  self.verbose:
                 nrec = self.col.find(spec).sort(skey).count()
-                msg  = "merging %s records, for %s key" % (nrec, pkey) 
+                msg  = "merging %s records, for %s key" % (nrec, pkey)
             else:
                 msg  = "merging records, for %s key" % pkey
             self.logger.debug(msg)
@@ -816,7 +853,7 @@ class DASMongocache(object):
 
     def clean_cache(self):
         """
-        Clean expired docs in das.cache and das.merge. 
+        Clean expired docs in das.cache and das.merge.
         """
         current_time = time.time()
         query = {'das.expire': { '$lt':current_time} }
@@ -835,7 +872,7 @@ class DASMongocache(object):
         if  self.logging:
             self.logdb.insert('cache', {'delete': self.col.count()})
         self.col.remove({})
-        try: 
+        try:
             self.col.drop_indexes()
         except:
             pass
