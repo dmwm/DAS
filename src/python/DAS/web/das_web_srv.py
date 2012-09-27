@@ -647,6 +647,7 @@ class DASWebService(DASWebManager):
         dasquery = content # returned content is valid DAS query
         status, qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
+            kwargs['dasquery'] = dasquery
             self.reqmgr.remove(dasquery.qhash)
             head, data = self.get_data(kwargs)
             return self.datastream(dict(head=head, data=data))
@@ -772,6 +773,7 @@ class DASWebService(DASWebManager):
         dasquery = content # returned content is valid DAS query
         status, qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
+            kwargs['dasquery'] = dasquery
             page = self.get_page_content(kwargs, complete_msg=False)
             ctime = (time.time()-time0)
             if  view == 'list' or view == 'table':
