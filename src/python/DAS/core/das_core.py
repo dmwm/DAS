@@ -252,9 +252,11 @@ class DASCore(object):
         except:
             pass
 
-        similar_dasquery = self.rawcache.similar_queries(dasquery)
-        if  similar_dasquery:
-            record = self.rawcache.find(similar_dasquery)
+        similar_result = self.rawcache.similar_queries(dasquery)
+        if  similar_result:
+            if  isinstance(similar_result, bool) and dasquery.hashes:
+                return 'ok', dasquery.hashes
+            record = self.rawcache.find(similar_result)
             if  record and record.has_key('das') and \
                 record['das'].has_key('status'):
                 similar_query_status = record['das']['status']
@@ -324,9 +326,11 @@ class DASCore(object):
                         % (record['query'], status)
             self.logger.info(msg)
             return status
-        similar_dasquery = self.rawcache.similar_queries(dasquery)
-        if  similar_dasquery:
-            for record in self.rawcache.find_specs(similar_dasquery):
+        similar_result = self.rawcache.similar_queries(dasquery)
+        if  similar_result:
+            if  isinstance(similar_result, bool) and dasquery.hashes:
+                return similar_result, dasquery.hashes
+            for record in self.rawcache.find_specs(similar_result):
                 if  record:
                     try:
                         status = record['das']['status']
