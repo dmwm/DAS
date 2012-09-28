@@ -1,16 +1,48 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-
+#pylint: disable-msg=W0702,R0913,R0912,R0915,R0904
 """
-DBS service
+DBS3 data-service plugin.
+NOTE: DBS3 APIs provide flat namespace JSON records. It means
+      that data record contains all keys at one level, e.g
+      {dataset:value, files:10}. This creates a problem in DAS
+      since DAS data-record is nested dictionaries, e.g.
+      {dataset:{name:value}}. To resolve the issue we need to
+      re-map flat namespace key, e.g. dataset, into its appropriate
+      DAS meaning, e.g. name. This can be done either at dbs3.yml
+      map or explicitly here in parser method. Due to this fact
+      extended timestamp assignment will only work for DAS data-records,
+      nested dicts and therefore it is better to re-map DBS3 data-records
+      directly in a code.
 """
-__revision__ = "$Id: dbs_service.py,v 1.24 2010/04/09 19:41:23 valya Exp $"
-__version__ = "$Revision: 1.24 $"
 __author__ = "Valentin Kuznetsov"
 
+# system modules
+import time
+
+# DAS modules
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, json_parser
+from DAS.utils.utils import expire_timestamp
 from DAS.utils.url_utils import getdata
+
+def get_modification_time(record):
+    "Get modification timestamp from DBS data-record"
+    for key in ['dataset', 'block', 'file']:
+        if  record.has_key(key):
+            if  record[key].has_key('last_modification_date'):
+                return record[key]['last_modification_date']
+    if  record.has_key('last_modification_date'):
+        return record['last_modification_date']
+    return None
+
+def old_timestamp(tstamp, threshold=2592000):
+    "Check if given timestamp is old enough"
+    if  not threshold:
+        return False
+    if  tstamp < (time.mktime(time.gmtime())-threshold):
+        return True
+    return False
 
 class DBS3Service(DASAbstractService):
     """
@@ -23,6 +55,10 @@ class DBS3Service(DASAbstractService):
         map_validator(self.map)
         self.prim_instance = config['dbs']['dbs_global_instance']
         self.instances = config['dbs']['dbs_instances']
+        self.extended_expire = \
+                expire_timestamp(config['dbs'].get('extended_expire', 86400))
+        self.extended_threshold = \
+                config['dbs'].get('extended_threshold', 2592000) # 1 month
 
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""
@@ -38,7 +74,7 @@ class DBS3Service(DASAbstractService):
         if  instance in self.instances:
             return url.replace(self.prim_instance, instance)
         return url
-            
+
     def adjust_params(self, api, kwds, inst=None):
         """
         Adjust DBS2 parameters for specific query requests
@@ -100,6 +136,27 @@ class DBS3Service(DASAbstractService):
         """
         DBS3 data-service parser.
         """
+        for row in self.parser_helper(query, dformat, source, api):
+            mod_time = get_modification_time(row)
+            if  mod_time and self.extended_expire and \
+                old_timestamp(mod_time, self.extended_threshold):
+                row.update({'das':{'expire': self.extended_expire}})
+            # filesummaries is summary DBS API about dataset,
+            # it collects information about number of files/blocks/events
+            # for given dataset and therefore will be merged with datasets
+            # API record. To make a proper merge with extended
+            # timestamp/threshold options I need explicitly assign
+            # das.expire=extended_timestamp, otherwise
+            # the merged record will pick-up smallest between
+            # filesummaries and datasets records.
+            if  api == 'filesummaries' and self.extended_expire:
+                row.update({'das': {'expire': self.extended_expire}})
+            yield row
+
+    def parser_helper(self, query, dformat, source, api):
+        """
+        DBS3 data-service parser helper, it is used by parser method.
+        """
         if  api == 'site4dataset':
             sites = set()
             for rec in json_parser(source, self.logger):
@@ -114,14 +171,22 @@ class DBS3Service(DASAbstractService):
                         sites.add(orig_site)
             for site in sites:
                 yield {'site': {'name': site}}
-        elif api == 'filesummaries':
+        elif api == 'datasets':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
-                yield row['dataset']
+                row['name'] = row['dataset']
+                del row['dataset']
+                yield {'dataset':row}
+        elif api == 'filesummaries':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            name = query.mongo_query['spec']['dataset.name']
+            for row in gen:
+                row['dataset']['name'] = name
+                yield row
         elif api == 'blocks4site':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
-                print row # TODO: this need to be revisited once DBS3 provides new API
+                print "\n### please revisit, row=", row
                 yield row
         elif api == 'blockparents':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
