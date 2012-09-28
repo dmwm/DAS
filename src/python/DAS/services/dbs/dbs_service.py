@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0702,R0914,R0912,R0915
 
 """
 DBS service
@@ -21,10 +22,16 @@ def get_modification_time(record):
     if  record.has_key('dataset'):
         if  record['dataset'].has_key('procds.moddate'):
             return record['dataset']['procds.moddate']
+    for key in ['block', 'file_lfn']:
+        if  record.has_key(key):
+            if  record[key].has_key('last_modification_date'):
+                return record[key]['last_modification_date']
     return None
 
 def old_timestamp(tstamp, threshold=2592000):
     "Check if given timestamp is old enough"
+    if  not threshold:
+        return False
     if  tstamp < (time.mktime(time.gmtime())-threshold):
         return True
     return False
@@ -65,7 +72,7 @@ class DBSService(DASAbstractService):
         """
         Adjust DBS2 parameters for specific query requests
         """
-        sitedb = SERVICES.get('sitedb2', None) # look-up SiteDB from global scope
+        sitedb = SERVICES.get('sitedb2', None) # SiteDB from global scope
         if  api == 'fakeRun4Block':
             val = kwds['block']
             if  val != 'required':
@@ -355,7 +362,7 @@ where %s" % value[4:]
         """
         DBS data-service parser.
         """
-        sitedb = SERVICES.get('sitedb2', None) # look-up SiteDB from global scope
+        sitedb = SERVICES.get('sitedb2', None) # SiteDB from global scope
         query = dasquery.mongo_query
         if  api == 'listBlocks':
             prim_key = 'block'
