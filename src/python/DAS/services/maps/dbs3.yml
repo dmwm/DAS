@@ -454,8 +454,6 @@ notations : [
     {"notation": "primary_ds_type", "map": "datatype", "api": ""},
     {"notation": "primary_ds_id", "map": "id", "api": "primarydatasets"},
     {"notation": "primary_ds_id", "map": "primary_dataset.id", "api": ""},
-    {"notation": "dataset", "map": "name", "api": "datasets"},
-    {"notation": "dataset", "map": "dataset.name", "api": ""},
     {"notation": "child_dataset", "map": "name", "api": ""},
     {"notation": "parent_dataset", "map": "name", "api": ""},
     {"notation": "parent_block_name", "map": "name", "api": ""},
