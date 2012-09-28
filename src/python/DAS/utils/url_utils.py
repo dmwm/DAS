@@ -65,9 +65,9 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
         contact = system + ' ' + contact
     timer_key = '%s?%s' % (url, urllib.urlencode(params, doseq=True))
     das_timer(timer_key, verbose)
-    reqmgr = REQUEST_HANDLER
+    handler = REQUEST_HANDLER
     try:
-        data, expire = reqmgr.getdata(url, params, headers, expire, post, \
+        data, expire = handler.getdata(url, params, headers, expire, post, \
                     error_expire, verbose, ckey, cert, doseq)
     except urllib2.HTTPError as httperror:
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
