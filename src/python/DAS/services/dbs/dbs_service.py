@@ -362,6 +362,17 @@ where %s" % value[4:]
         """
         DBS data-service parser.
         """
+        for row in self.parser_helper(dasquery, dformat, source, api):
+            mod_time = get_modification_time(row)
+            if  mod_time and self.extended_expire and \
+                old_timestamp(mod_time, self.extended_threshold):
+                row.update({'das':{'expire': self.extended_expire}})
+            yield row
+
+    def parser_helper(self, dasquery, dformat, source, api):
+        """
+        DBS data-service parser.
+        """
         sitedb = SERVICES.get('sitedb2', None) # SiteDB from global scope
         query = dasquery.mongo_query
         if  api == 'listBlocks':
@@ -520,7 +531,4 @@ where %s" % value[4:]
                 sename = row['dataset'].get('site')
                 row.update({'site':{'se':sename}})
                 del row['dataset']['site']
-            mod_time = get_modification_time(row)
-            if  mod_time and old_timestamp(mod_time, self.extended_threshold):
-                row.update({'das':{'expire': self.extended_expire}})
             yield row
