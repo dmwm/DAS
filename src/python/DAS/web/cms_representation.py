@@ -104,11 +104,11 @@ def tooltip_helper(title):
         tooltip = title + ' is a total number of blocks at the site\
  divided by total number of blocks in a dataset'
     elif title == 'File-replica presence':
-        tooltip = title + 'is a total number of files at the site\
+        tooltip = title + ' is a total number of files at the site\
  divided by total number of files in all block at this site'
     elif title == 'Block completion':
         tooltip = title + \
-        'is a total number of blocks fully transferred to the site\
+        ' is a total number of blocks fully transferred to the site\
  divided by total number of blocks at this site'
     else:
         title = ''
