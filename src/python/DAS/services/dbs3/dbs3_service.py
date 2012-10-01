@@ -55,10 +55,8 @@ class DBS3Service(DASAbstractService):
         map_validator(self.map)
         self.prim_instance = config['dbs']['dbs_global_instance']
         self.instances = config['dbs']['dbs_instances']
-        self.extended_expire = \
-                expire_timestamp(config['dbs'].get('extended_expire', 86400))
-        self.extended_threshold = \
-                config['dbs'].get('extended_threshold', 2592000) # 1 month
+        self.extended_expire = config['dbs'].get('extended_expire', 0)
+        self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""
@@ -138,19 +136,21 @@ class DBS3Service(DASAbstractService):
         """
         for row in self.parser_helper(query, dformat, source, api):
             mod_time = get_modification_time(row)
-            if  mod_time and self.extended_expire and \
-                old_timestamp(mod_time, self.extended_threshold):
-                row.update({'das':{'expire': self.extended_expire}})
-            # filesummaries is summary DBS API about dataset,
-            # it collects information about number of files/blocks/events
-            # for given dataset and therefore will be merged with datasets
-            # API record. To make a proper merge with extended
-            # timestamp/threshold options I need explicitly assign
-            # das.expire=extended_timestamp, otherwise
-            # the merged record will pick-up smallest between
-            # filesummaries and datasets records.
-            if  api == 'filesummaries' and self.extended_expire:
-                row.update({'das': {'expire': self.extended_expire}})
+            if  self.extended_expire:
+                new_expire = expire_timestamp(self.extended_expire)
+                if  mod_time and \
+                    old_timestamp(mod_time, self.extended_threshold):
+                    row.update({'das':{'expire': self.new_expire}})
+                # filesummaries is summary DBS API about dataset,
+                # it collects information about number of files/blocks/events
+                # for given dataset and therefore will be merged with datasets
+                # API record. To make a proper merge with extended
+                # timestamp/threshold options I need explicitly assign
+                # das.expire=extended_timestamp, otherwise
+                # the merged record will pick-up smallest between
+                # filesummaries and datasets records.
+                if  api == 'filesummaries':
+                    row.update({'das': {'expire': new_expire}})
             yield row
 
     def parser_helper(self, query, dformat, source, api):

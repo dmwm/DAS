@@ -55,10 +55,8 @@ class DBSService(DASAbstractService):
         map_validator(self.map)
         self.prim_instance = config['dbs']['dbs_global_instance']
         self.instances = config['dbs']['dbs_instances']
-        self.extended_expire = \
-                expire_timestamp(config['dbs'].get('extended_expire', 86400))
-        self.extended_threshold = \
-                config['dbs'].get('extended_threshold', 2592000) # 1 month
+        self.extended_expire = config['dbs'].get('extended_expire', 0)
+        self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
     def url_instance(self, url, instance):
         """
@@ -363,10 +361,12 @@ where %s" % value[4:]
         DBS data-service parser.
         """
         for row in self.parser_helper(dasquery, dformat, source, api):
-            mod_time = get_modification_time(row)
-            if  mod_time and self.extended_expire and \
-                old_timestamp(mod_time, self.extended_threshold):
-                row.update({'das':{'expire': self.extended_expire}})
+            if  self.extended_expire:
+                new_expire = expire_timestamp(self.extended_expire)
+                mod_time = get_modification_time(row)
+                if  mod_time and \
+                    old_timestamp(mod_time, self.extended_threshold):
+                    row.update({'das':{'expire': new_expire}})
             yield row
 
     def parser_helper(self, dasquery, dformat, source, api):

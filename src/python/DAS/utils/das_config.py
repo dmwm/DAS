@@ -148,10 +148,10 @@ DASOption('dbs', 'dbs_global_url', 'string', \
 DASOption('dbs', 'dbs_global_instance', 'string', 'cms_dbs_prod_global'),
 # extended expire timestamp in seconds, it can be used to extend
 # lifetime of DBS record in DAS cache based on their modification time stamp
-DASOption('dbs', 'extended_expire', 'int', 7200),
+DASOption('dbs', 'extended_expire', 'int', 0),
 # extended threshold in seconds, it can be used to trigger
-# extended timestamp usage, default is 1 month
-DASOption('dbs', 'extended_threshold', 'int', 2592000),
+# extended timestamp usage, default is zero
+DASOption('dbs', 'extended_threshold', 'int', 0),
 
 #
 # DAS test server options
