@@ -1,0 +1,1613 @@
+#LyX file created by tex2lyx 2.0.2
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+
+% twocolumn
+\usepackage{fullpage}% \usepackage{times}
+\@ifundefined{definecolor}
+ {\usepackage{color}}{}
+\usepackage{titlesec}
+
+
+\bibliographystyle{alpha} 
+ 
+% usually first paragraph is NOT indented, so this is commented out: 
+% \usepackage{indentfirst} 
+ 
+
+\end_preamble
+\options draft
+\use_default_options false
+\language english
+\language_package none
+\inputencoding auto
+\fontencoding default
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\paperfontsize 11
+\spacing single
+\use_hyperref 0
+\papersize a4paper
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 0
+\use_mathdots 0
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 0
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+% Article top matter
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Title
+
+Master thesis problem statement
+\end_layout
+
+\begin_layout Standard
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%
+\backslash
+LaTeX is a macro for printing the Latex logo
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Author
+
+Vidmantas Zemleris
+\end_layout
+
+\begin_layout Standard
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%
+\backslash
+texttt formats the text to a typewriter style font
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Date
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+today
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%
+\backslash
+today is replaced with the current date
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%
+\backslash
+maketitle
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+centerline{
+\end_layout
+
+\end_inset
+
+
+\size larger
+
+\series bold
+Master thesis problem statement 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%% Paper title
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset VSpace medskip
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+centerline{
+\end_layout
+
+\end_inset
+
+Vidmantas Zemleris, 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+today
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%% Author name(s)
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset VSpace medskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+
+\series bold
+
+Introduction
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+At large scientific collaborations like the CMS Experiment at CERN's LHC that includes more than 3000 collaborators data usually resides on a fair number of autonomous and heterogeneous proprietary systems each serving it's own purpose 
+\begin_inset Foot
+status collapsed
+
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+For instance, at CERN, due to many reasons (e.g. research and need of freedom, politics of institutes involved) software projects usually evolve in independent fashion resulting in fair number of proprietary systems
+\begin_inset CommandInset citation
+LatexCommand cite
+after ""
+key "Koch00CERN"
+
+\end_inset
+
+. Further high turnover makes it harder extending these systems
+\end_layout
+
+\end_inset
+
+. As data stored on one system may be related to data residing on other systems (for instance, datasets containing physics events are registered at DBS, while the physical location of files is tracked by Phedex which also takes care of their transfers within the worldwide grid storage), users are in need of a centralized and easy-to-use solution for locating and combining data from all these multiple services.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Using a highly structured language like SQL is problematic because users need to know not only the language but also where to find the information and also lots of technical details like schema. A system supporting simplified structured queries is already in place, while 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+{
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+color{red}
+\end_layout
+
+\end_inset
+
+various improvements to the system including support
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+}
+\end_layout
+
+\end_inset
+
+ for less restricted keyword queries and possible improvements to system's performance still have to be researched.
+\end_layout
+
+\begin_layout Subsection*
+
+\series bold
+
+Users' information need
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Users' information need may vary greatly depending on their role, however most of the time they are interested in locating full set of entities matching some selection criteria, e.g.: 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%
+\backslash
+footnote{in contrary to exploratory approach where  a subset of best matches is enough}
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+find all files from dataset(s) matching wild-card query each containing some of the 'interesting' runs from a list provided (Release validation teams) 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+find (all) datasets related some specific physics phenomena
+\begin_inset Foot
+status collapsed
+
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+in case of dataset this data is present in filename or run
+\end_layout
+
+\end_inset
+
+ together with conditions describing how this data was recorded by detector or simulated which are present in separate autonomous system than the datasets (Physicists) 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+find all datasets that match a wild-card query located at particular site 
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+% In such dynamic environment it is preferred to choose local-as-view approach for information integration instead of creating a global schemata
+\backslash
+cite{Koch00CERN}.
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+For more use-cases of data retrieval at CMS Experiment see 
+\begin_inset CommandInset citation
+LatexCommand cite
+after ""
+key "CMS_data08"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%Following a similar approach a 
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\size default
+
+\end_layout
+
+\begin_layout Subsection
+
+\series bold
+
+Current status of The Data Aggregation System
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+The Data Aggregation System (DAS)
+\begin_inset CommandInset citation
+LatexCommand cite
+after ""
+key "Kuznetsov2010, Kuznetsov2011"
+
+\end_inset
+
+ was created which allows integrated access to a number of proprietary data-sources by processing user's queries on demand - it queries the data-sources, merges the results, and caches them for subsequent uses.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Currently the queries specify what entity the user is interested in (dataset, file, etc) and provide selection criteria (attribute=value, name BETWEEN [v1, v2]) operators. The combined query results could be later 'pipped' for further filtering and aggregation (min, avg, etc), e.g.:
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\size footnotesize
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+begin{verbatim}
+\end_layout
+
+\end_inset
+
+ dataset=*RelVal* | grep dataset.nevents >1000 | avg(dataset.size), median(dataset.size) 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+end{verbatim}
+\end_layout
+
+\end_inset
+
+ 
+\size larger
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+The query above would return average and median datasets sizes of ones containing 
+\shape italic
+RelVal
+\shape default
+ in their name having more than 1000 events.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Queries could be run either from web browser or through command line interface where the results could be fed into another application (e.g. program doing physics analysis or automatic software release validation).
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\series bold
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+color{red}
+\end_layout
+
+\end_inset
+
+Examples of more general uses: Digital libraries, Stock markets, [ Weather, Flight costs]
+\series bold
+
+\end_layout
+
+\begin_layout Section
+
+\series bold
+
+Problem statement
+\end_layout
+
+\begin_layout Subsection
+
+\series bold
+
+Ease of use
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Query Language and Mediated Schema: query language and 
+\series bold
+keywords
+\series bold
+ referring to data entities (i.e. the mediated schema) are may seem hard to learn. Further a specific set of minimum search predicates is imposed by APIs and user has to know that is expected to provide these. On the other hand, at CERN the entity names in the mediated schema are referring to entities that are fairly consistently named, even though there may exist slight differences in their naming on different data-sources.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+Performance issues: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+more intelligent caching needed 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+how to handle distributed search effectively through these APIs? -- A problem could be that APIs couldn't be changed easily... [e.g. after migration to DBS3 interdatabase link will be removed] 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+? with current API's for aggregation service has to fetch ALL records not just the first page.. 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+??? do we have cases then multiple APIs of the same service could be called for the same data, can we choose just one??? 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+? showing partial results 
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+datasource constraints ? 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+
+\size larger
+
+handle input ambiguity, typos
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%
+\backslash
+item if we allowed free text search:
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%    
+\backslash
+begin{itemize}
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%	
+\backslash
+end{itemize}
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Subsubsection
+
+\series bold
+
+Integrating distributed information efficiently
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Opportunities: ability to test ideas on a sample of 3000 people
+\end_layout
+
+\begin_layout Section
+
+\series bold
+
+Preliminary Literature review
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+% Overview: keyword search is good for non-structured documents, it is not [as] effective with structured sources
+\backslash
+cite{Levy96}, therefore the keyword search on relational databases approach is good then no specific APIs exist and it's there are no resources to do 
+\backslash
+textbf{a full integration} .
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\series bold
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+color{red}
+\end_layout
+
+\end_inset
+
+TODO: Overview
+\series bold
+
+\end_layout
+
+\begin_layout Subsection
+
+\series bold
+
+Keyword search over DBs
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community in the last ten years. There exist many papers and a couple of quite comprehensive PhD. dissertations
+\begin_inset CommandInset citation
+LatexCommand cite
+after ""
+key "PhD_2011, PhD_2012"
+
+\end_inset
+
+ describing performance optimization details, etc.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+There was a number of variations of the problem including returning of only Top-k results expecting that users only care about the quality of limited number of results but not completeness of results, ... 
+\series bold
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+color{red}
+\end_layout
+
+\end_inset
+
+describe this in details
+\series bold
+
+\end_layout
+
+\begin_layout Subsubsection*
+
+\series bold
+
+Query Template ranking based on keyword query
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+A simple way to access relational database could be through a set of predefined named query templates (SQL with selection parameters or operators still to be specified) exposed to a user as a Form that the user has to fill in.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+after ""
+key "forms_kws"
+
+\end_inset
+
+ proposes alternative approach for processing keyword queries over relational databases: given a keyword query, instead of returning database tuples one could rank query forms that best matches the query for user to choose the right one (if they are properly named this is fairly easy). The ranking is done by 
+\series bold
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+color{red}
+\end_layout
+
+\end_inset
+
+TODO
+\series bold
+.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+An interesting feature of this approach is that a Query Template is functionally similar to any autonomous web service (which given the parameters would in turn execute that query on its database). In case of the Data Aggregation System, a user after entering a keyword query could be provided with a ranked list of structured queries (attribute=value) that could be processed given data source constraints (e.g. parameters required) and if needed he could refine his search (e.g. provide more parameters).
+\end_layout
+
+\begin_layout Subsubsection*
+
+\series bold
+
+Semantic approach
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Researchers at ETHZ investigated Generation of SQL for Business users in collaboration with 
+\shape italic
+Credit Suisse
+\shape default
+. They took a semantic approach to converting natural language queries (that in addition to keyword search could convey some semantic structure) into SQL statements by employing meta-data extensively describing the schema and the domain. Even on a large data-warehouse of 
+\begin_inset space ~
+
+\end_inset
+
+220GB data with a complex schema of 300 tables they reported promising results making it 'much easier for business users to interactively explore highly-complex data warehouses' 
+\begin_inset CommandInset citation
+LatexCommand cite
+after "p.932"
+key "ethz2012"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection*
+
+\series bold
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+color{red}
+\end_layout
+
+\end_inset
+
+Question Answering
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+% See Appendix #1, for evaluation of they Demo system.
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+
+\series bold
+
+Searching Heterogeneous web services
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+{
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+color{red}
+\end_layout
+
+\end_inset
+
+There doesn't seem to be much of recent papers going towards this direction (except from specific search systems like flight fare comparisons), however these are based on structured arguments.
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+In 1990s there were was a considerable amount of research on service integration systems, for instance 
+\shape italic
+Information Manifold
+\shape default
+ following Local-as-View approach and 
+\shape italic
+TSIMMIS
+\shape default
+ developed at Stanford following Global-as-View approach.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+The first one is fairly similar to DAS.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+begin{verbatim}
+\end_layout
+
+\end_inset
+
+ - Structured (entity) search - Query Forms and suggesting them given keyword query - Keyword search for relational databases - Search Databases through natural language and NLP [ETHZ with Credit suisse] - Search heterogeneous ... [Alan ...]
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+par 
+\end_layout
+
+\end_inset
+
+Some other approaches could include:
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+par 
+\end_layout
+
+\end_inset
+
+- creating virtual documents offline by joining tables, for instantaneous search results by employing IR techniques (Indexing Relational Database Content Offline for Efficient Keyword-Based Search, 2003)
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+par 
+\end_layout
+
+\end_inset
+
+- (Efficient Keyword Search Across Heterogeneous Relational Databases, 2007) : combines schema matching and structure discovery techniques to ï¬nd approximate foreign-key joins across heterogeneous databases
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+par 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+end{verbatim}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+
+\series bold
+
+Possible/suggested approaches
+\end_layout
+
+\begin_layout Subsection
+
+\series bold
+
+Ease of use
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+begin{verbatim}
+\end_layout
+
+\end_inset
+
+ - javascript interpreter : field + description -- dropdown searcheable list - if entered keyword query suggest a structured query, optionally with description in natural language 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+end{verbatim}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%(could use Natural Language Generation)
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+
+\series bold
+
+Performance
+\end_layout
+
+\begin_layout Subsubsection
+
+\series bold
+
+Continuous view maintenance at Data providers with large DBs
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Use either 
+\shape italic
+materialized refresh fast views with query rewriting
+\shape default
+ (Oracle; completely transparent for proprietary apps)
+\begin_inset CommandInset citation
+LatexCommand cite
+after ""
+key "Oracle11"
+
+\end_inset
+
+ or some other continuous view maintenance tool (e.g. DBToaster
+\begin_inset Foot
+status collapsed
+
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+http://www.dbtoaster.org that is being developed at EPFL
+\end_layout
+
+\end_inset
+
+) to improve performance of heavy queries containing joins and/or aggregations.
+\end_layout
+
+\begin_layout Subsection
+
+\series bold
+
+Integrating distributed information efficiently
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Bloom-join (which could be quite transparent and implemented even on DB side [pure SQL is possible for MySQL, to check for Oracle]- take a query and bit-vector as parameter) , lazy pagination (and order required for aggregation) - this is not yet supported by any of the data-service APIs
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%
+\backslash
+newline
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+integration at DAS level. (at source DB could be more performant a little)
+\end_layout
+
+\begin_layout Subsection
+
+\series bold
+
+More intelligent caching
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Some of the data entities instances changing very rarely, for example in DBS system old datasets would never change, while new ones are constantly added (still some of their attributes may change, in this example validity).
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+Cached copy may be shown before hand while up to date results could be retrieved on user's request.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\series bold
+Decide if to cache or not...
+\series bold
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+An automatic change rate prediction could be useful to efficiently balance between caching and retrieving results.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+begin{verbatim}
+\end_layout
+
+\end_inset
+
+ Also: Caching of intermediary results, not only the queries 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+end{verbatim}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+% ---  Bibliography
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+bibliographystyle{unsrt}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+addcontentsline{toc}{chapter}{
+\end_layout
+
+\end_inset
+
+Bibliography
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+
+\size larger
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+%
+\backslash
+nocite{*}
+\end_layout
+
+\begin_layout Standard
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Standard
+
+
+\backslash
+thispagestyle{empty}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "refs"
+options "unsrt"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
