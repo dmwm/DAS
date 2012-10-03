@@ -5,10 +5,9 @@
 %\usepackage{fullpage} 
 \usepackage[cm]{fullpage}
 %\usepackage[margin=0.5in]{geometry}
-% \usepackage{times}
+%\usepackage{times}
 \usepackage{color}
-\usepackage{titlesec}
-
+%\usepackage[small,compact]{titlesec}
 
 \bibliographystyle{alpha} 
  
@@ -80,6 +79,9 @@ Queries could be run either from web browser or through  command line interface 
 % \textbf{\color{red}Examples of more general uses: Digital libraries, Stock markets, [ Weather, Flight costs]}
 
 \section{Problem statement}
+
+\textbf{\color{red}DO WE also have proprietary big databases that could be useful to be searched, but the standard integration work would be to heavy (or sub-parts of existing systems that are not covered by APIs, and could be accessible through DBs directly -- these potentially more expensive queries could processed with lower priority)}
+
 \subsection{Ease of use: Query Language over the mediated schema}
 	Even a very simple structured query language that also contain entity names over the mediated schema may seem {\color{red}hard} to learn, especially in the beginning.
    On the other hand, at CERN the names in  the mediated schema are referring to real-world entities that {\color{red}are fairly consistently named} (even though there may exist slight differences in their naming on different data-sources). 
@@ -99,6 +101,9 @@ Also to consider:
 
 \subsubsection{Other performance issues}
 	     \begin{itemize}
+	     					\item  {\color{red}maybe we could have prioritization in general, the heavier your query is the more you have to wait in favour of  the light queries}: 
+	     					(we could have some sort of query cost evaluation based on history or manually predefined scores per API)
+	     					
 	                		\item more intelligent caching needed:
 	                			\begin{itemize}
 	                			\item given an entity received from provider, determining if it is useful to cache for long-term
@@ -106,6 +111,7 @@ Also to consider:
 	                			\item could make use of even older information warning user
 	                			\item could also have different validity dates for certain fields. if certain field is not explicitly requested, even a very old cache could be used.
 	                			\end{itemize}
+	                	  
 	                		\item query rewriting then used with grep=smf then the same item is available as selection key. check how many instances.
 	                		\item pre-fetching common (sub-)queries: determining manually and/or automatically
 	                		\item scale testing - if we are storing lots of historical info. MongoDB is not so performant if DB cant fit in memory. One of well known solutions is installing SSD.
@@ -120,46 +126,67 @@ Also to consider:
 
 % Overview: keyword search is good for non-structured documents, it is not [as] effective with structured sources\cite{Levy96}, therefore the keyword search on relational databases approach is good then no specific APIs exist and it's there are no resources to do \textbf{a full integration} .
 
-\textbf{\color{red}TODO: Overview}
+\textbf{\color{red}TODO: Overview; evaluate performance}
 
 
 \subsection{Keyword search over DBs}
-The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community over the last decade. There exist many papers and a couple of quite comprehensive PhD. dissertations\cite{PhD_2011, PhD_2012} describing performance optimization details, etc. 
+The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community over the last decade. 
 
-There was a number of variations of the problem including returning of only Top-k results expecting that users only care about the quality of limited number of results but not completeness of results, ... \textbf{\color{red}describe this in details}
+The basic approach would first build an inverted index on database tables (usually only text columns). Then after finding all occurrences of the keywords, would try to construct join paths (based on Foreign keys) that would unite tuples containing the keywords.
+
+% In addition to many papers the PhD dissertations \cite{PhD_2011, PhD_2012} describe the approaches in details including performance optimization details (e.g. generating materialized views), etc. 
+% 
+A number of variations exist:  returning only the Top-k results by some ranking function, SQAK and SODA would allow generating even more complex queries including aggregations.
+
+
 
 \subsubsection*{Ranking Query Templates based on keyword query}
 A simple way to access relational database could  be through a set of predefined named query templates (SQL with selection parameters or operators still to be specified) exposed to a user as a Form that the user has to fill in.
 
-\cite{forms_kws} proposes alternative approach for processing keyword queries over relational databases: given a keyword query, instead of returning database tuples one could rank query forms that best matches the query for user to choose the right one (if they are properly named this is fairly easy). The ranking is done by \textbf{\color{red}TODO}.
+\cite{forms_kws} proposes alternative approach for processing keyword queries over relational databases: given a keyword query, instead of returning database tuples one could rank query forms that best matches the query for user to choose the right one (if they are properly named this is fairly easy). The ranking is based on checking matching of keywords to table names in templates and to column values (could be implemented with inverted index).\textbf{\color{red}TODO: more detailed and our limitations (after reading keyword cleaning)}.
 
 An interesting feature of this approach is that a Query Template is functionally similar to any autonomous web service (which given the parameters would in turn execute that query on its database).  In case of the Data Aggregation System, a user after entering a keyword query could be provided with a ranked list of structured queries (attribute=value) that could be processed given data source constraints (e.g. parameters required) and if needed he could refine his search (e.g. provide more parameters).
 
-\subsubsection*{Semantic approach}
 
-Researchers from \textit{ETHZ} have been investigating Generation of SQL for Business users in collaboration with \textit{Credit Suisse}.  To converting natural language queries (that in addition to keyword search could convey some semantic structure) into SQL statements they employed some natural language processing and used meta-data describing the schema and the domain (ontologies at multiple levels). 
+\subsubsection*{Keyword query cleaning}
+{\color{red} From first sight looks fairly cool. Build index with some powerful fulltext search engine (e.g. Xapian) and use it to generate mapping to structured queries}
 
-Even on a large data-warehouse of ~220GB data with a complex schema of 300 tables they reported fairly promising results that proves that if good meta-data is available, generating even quite complex SQL  (n-way joins with aggregations, etc) is quite feasible for computer making it 'much easier for business users to interactively explore highly-complex data warehouses' \cite[p.932]{ethz2012}. 
 
-\subsubsection*{Automatic mapping between distributed services}
-{\color{red}an interesting approach but not for CERN...}
 
-\subsubsection*{\color{red}Question Answering}
+
+\subsubsection*{Meta-data approach}
+
+With a goal to bridge the increasing gap between high-level (conceptual, business) and low level (physical) representations of data, researchers from \textit{ETHZ} have been investigating Generation of SQL for Business users at \textit{Credit Suisse}.  For converting natural language queries 
+% (that in addition to keyword search could convey some semantic structure)
+ into SQL statements, in addition to what used by earlier approaches they used meta-data describing the schema (at multiple representation levels) and the domain (ontologies) and some natural language processing.
+
+Even on a large data-warehouse of ~220GB data with a complex schema of 400+ tables they reported that if good meta-data is available, generating even quite complex SQL  (n-way joins with aggregations, etc) is quite feasible for computer. That would making it 'much easier for business users to interactively explore highly-complex data warehouses' \cite[p.932]{ethz2012}. 
+
+
+\subsubsection*{Then there is no access to index data terms}
+{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a suboptimal solution as indexing terms improves results. }
+
+
+%\subsubsection*{Automatic mapping between distributed services}
+%{\color{red} TODO: an interesting approach but not for CERN...}
+
+
+
+%\subsubsection*{\color{red}Question Answering}
 
 
 % See Appendix #1, for evaluation of they Demo system.
 
 
-\subsection{Searching Heterogeneous web services}
+
+\subsection{Searching 'Deep Web' and Heterogeneous web services}
 {\color{red}There doesn't seem to be much of recent papers going towards this direction (except from specific search systems like flight fare comparisons), however these are based on structured arguments.} 
 
 In 1990s there were was much research on search based service integration systems, for instance \textit{Information Manifold} following Local-as-View approach and \textit{TSIMMIS} developed at Stanford following Global-as-View approach. 
 
 The \textit{Information Manifold} is quite resembling to DAS {\color{red},  so it could be useful checking it's papers. TODO: finish}
 
-
-
-
+{\color{red}Check deep web (also recent research exist)}
 {\color{red}Performance: Answering Queries using Views}
 
 
@@ -183,7 +210,10 @@ Some other approaches could include:
 - javascript interpreter
     : field + description -- dropdown searcheable list
     
-- if entered keyword query suggest a structured query, optionally with description in natural language
+- if entered keyword query suggest a structured query
+	based on 'Query forms' and 'Keyword cleaning' approaches
+	--> evaluate different approaches (HMM, etc) and implementations
+	optionally with description in natural language
 - select entity (e.g. dataset) --> give all available keys from forms, however there are still combinations which are enforced
 \end{verbatim}
 %(could use Natural Language Generation)
