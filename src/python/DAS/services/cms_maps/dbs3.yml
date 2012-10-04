@@ -66,7 +66,7 @@ params : {
         "dataset":"*",
         "primary_ds_name":"optional",
         "detail":"True",
-        "dataset_access_type": "optional",
+        "dataset_access_type": "VALID",
         "block_name":"optional",
         "data_tier_name":"optional",
         "release_version": "optional",
@@ -74,6 +74,7 @@ params : {
         "logical_file_name": "optional",
         "acquisition_era_name": "optional",
         "physics_group_name": "optional",
+        "cdate": "optional",
 }
 daskeys : [
         {"key": "dataset", "map":"dataset.name", "pattern":""},
@@ -86,6 +87,7 @@ daskeys : [
         {"key": "era", "map":"era", "pattern":""},
         {"key": "group", "map":"group.name", "pattern":""},
         {"key": "status", "map":"status.name", "pattern":""},
+        {"key": "date", "map":"date", "pattern":""},
 ]
 das2api : [
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
@@ -98,6 +100,7 @@ das2api : [
         {"das_key":"era", "api_param": "acquisition_era_name", "pattern":""},
         {"das_key":"group.name", "api_param": "physics_group_name", "pattern":""},
         {"das_key":"status.name", "api_param": "dataset_access_type", "pattern":""},
+        {"das_key":"date", "api_param":"cdate", "pattern":""},
 ]
 ---
 urn: filesummaries
@@ -160,7 +163,7 @@ url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blocks/"
 expire : 900
 params : {
         "detail":"True",
-        "dataset":"*",
+        "dataset":"required",
         "dataset_access_type": "optional",
 }
 daskeys : [
@@ -179,14 +182,34 @@ params : {
         "detail":"True",
         "dataset":"optional",
         "dataset_access_type": "optional",
+        "run_num": "optional",
 }
 daskeys : [
         {"key": "block", "map":"block.name", "pattern":""},
         {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "run", "map":"run.run_number", "pattern":""},
 ]
 das2api : [
         {"das_key":"block.name", "api_param": "block_name", "pattern":""},
         {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"run.run_number", "api_param":"run_num", "pattern":""},
+]
+---
+urn: blocks4site
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blocks/"
+expire : 900
+params : {
+        "origin_site_name":"required",
+        "detail":"True",
+        "dataset":"optional",
+}
+daskeys : [
+        {"key": "dataset", "map":"dataset.name", "pattern":""},
+        {"key": "site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
+]
+das2api : [
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":""},
+        {"das_key":"site.se", "api_param": "origin_site_name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
 ]
 ---
 urn: blockparents
@@ -431,8 +454,6 @@ notations : [
     {"notation": "primary_ds_type", "map": "datatype", "api": ""},
     {"notation": "primary_ds_id", "map": "id", "api": "primarydatasets"},
     {"notation": "primary_ds_id", "map": "primary_dataset.id", "api": ""},
-    {"notation": "dataset", "map": "name", "api": "datasets"},
-    {"notation": "dataset", "map": "dataset.name", "api": ""},
     {"notation": "child_dataset", "map": "name", "api": ""},
     {"notation": "parent_dataset", "map": "name", "api": ""},
     {"notation": "parent_block_name", "map": "name", "api": ""},
@@ -447,6 +468,7 @@ notations : [
     {"notation": "logical_file_name", "map": "name", "api": "files_via_dataset"},
     {"notation": "logical_file_name", "map": "name", "api": "files_via_block"},
     {"notation": "logical_file_name", "map": "name", "api": "filelumis"},
+    {"notation": "logical_file_name", "map": "name", "api": "file4DatasetRunLumi"},
     {"notation": "file.logical_file_name", "map": "file.name", "api": ""},
     {"notation": "file_type", "map": "type", "api": "files"},
     {"notation": "file_type", "map": "type", "api": "files_via_dataset"},
