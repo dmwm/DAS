@@ -75,7 +75,7 @@ def dbs_dataset4site_release(dbs_url, getdata, release):
         # we call datasets?release=release to get list of datasets
         dbs_url += '/datasets'
         dbs_args = \
-        {'release_version': release, 'dataset_access_type':'PRODUCTION'}
+        {'release_version': release, 'dataset_access_type':'VALID'}
         headers = {'Accept': 'application/json;text/json'}
         source, expire = getdata(dbs_url, dbs_args, expire, headers)
         for rec in json_parser(source, None):

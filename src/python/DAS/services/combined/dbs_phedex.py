@@ -47,7 +47,7 @@ def datasets_dbs3(urls, verbose=0):
     headers = {'Accept':'application/json;text/json'}
     records = []
     url     = urls.get('dbs')
-    params  = {'detail':'True', 'dataset_access_type':'PRODUCTION'}
+    params  = {'detail':'True', 'dataset_access_type':'VALID'}
     ckey, cert = get_key_cert()
     data, _ = getdata(url, params, headers, verbose=verbose,
                 ckey=ckey, cert=cert, doseq=False)
