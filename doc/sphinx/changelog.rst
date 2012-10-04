@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.7.X
 
+  - Switch from PRODUCTION to VALID dataset access type in DBS3
   - Adjust das_core and das_mongocache to optionally use dasquery.hashes
 
     - hashes can be assigned at run-time for pattern queries, e.g.
