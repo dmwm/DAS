@@ -207,7 +207,7 @@ def datasets(url, cert, ckey, pattern, verbose=None):
     """Look-up dataset and its details for a given dataset pattern"""
     # NOTE: DBS3 API does not allow to pass details parameter for
     # dataset patterns, only for fully qualified dataset.
-    params  = {'dataset':pattern, 'dataset_access_type': 'PRODUCTION'}
+    params  = {'dataset':pattern, 'dataset_access_type': 'VALID'}
     headers = {'Accept':'text/json;application/json'}
     reqmgr  = RequestHandler()
     data, _expire = reqmgr.getdata(url, params, headers, \
