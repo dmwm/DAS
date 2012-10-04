@@ -197,6 +197,8 @@ class DASRepresentation(DASWebManager):
             del head['dasquery']
         except:
             pass
+        if  head.has_key('args') and head['args'].has_key('dasquery'):
+            del head['args']['dasquery']
         result = dict(head)
         result['data'] = [r for r in data]
         return result
@@ -208,6 +210,8 @@ class DASRepresentation(DASWebManager):
             del head['dasquery']
         except:
             pass
+        if  head.has_key('args') and head['args'].has_key('dasquery'):
+            del head['args']['dasquery']
         result = dict(head)
         result['data'] = [r for r in data]
         return result
