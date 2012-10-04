@@ -170,7 +170,7 @@ class DBSDaemon(object):
         """
         Retrieve a list of DBS datasets (DBS3)
         """
-        params = {'dataset_access_type':'PRODUCTION'}
+        params = {'dataset_access_type':'VALID'}
         encoded_data = urllib.urlencode(params, doseq=True)
         url = self.dbs_url + '/datasets?' + encoded_data
         req = urllib2.Request(url)
