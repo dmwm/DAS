@@ -63,7 +63,7 @@ For more use-cases of data retrieval at CMS Experiment see \cite{CMS_data08}.
 
 The Data Aggregation System (DAS)\cite{Kuznetsov2010, Kuznetsov2011} was created which allows integrated access to a number of proprietary data-sources by processing user's queries on demand - it queries the data-sources, merges the results, and caches them for subsequent uses. 
 
-Currently the queries specify what entity the user is interested in (dataset, file, etc) and provide selection criteria (attribute=value, name BETWEEN [v1, v2]) operators. The combined query results could be later 'pipped' for further filtering and aggregation (min, avg, etc), e.g.:
+Currently the queries specify what entity the user is interested in (dataset, file, etc) and provide selection criteria (attribute=value, name BETWEEN [v1, v2]) operators. The combined query results could be later 'piped' for further filtering and aggregation (min, avg, etc), e.g.:
 
 {\footnotesize 
 \begin{verbatim}
@@ -128,6 +128,32 @@ Also to consider:
 
 \textbf{\color{red}TODO: Overview; evaluate performance}
 
+\subsection{Data integration}
+\subsubsection*{Virtual integration}
+In Virtual Integration, multiple data-sources are integrated with help of a mediator containing source descriptions and probably some schema mappings, while data is left at the sources. This is mainly the approach taken by our DAS.
+
+
+\subsubsection*{Large scale search}
+[multiple papers from Google] discusses various ways for implementing data integration in terms of large-scale search engine (Google) Virtual integration vs. surfacing. They also present ways for integrating systems without human intervention through use of statistical 'mediator'.
+
+There two approaches to web scale search for deep-web (Google mostly cares about web forms):
+
+\textit{Runtime query reformulation} - 'leaves data at the sources and routes queries to appropriate services'\cite[p. 1]{paygo_integration} 
+
+\textit{Deep-web surfacing} - tries to add content from the deep-web into search index. There are algorithms which allow to iteratively choose input parameters to forms to surface most of the 'hidden' data without loosing much (i.e. if choosing parameters in not smart way the web form could yield as many results as a cross product of all input combinations).
+
+PayGo approach - there is NO single mediated schema over which users pose queries. Queries are routed to to the relevant sources. Statistical methods used to model uncertainty at all levels: queries, mappings and underlying data.
+
+
+\subsubsection*{Then there is no access to index data terms}
+{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a very suboptimal solution as indexing terms improves results (mention evaluation from SODA paper). It works only then keywords map entity names.
+
+some hybrid approaches: 
+index if exists
+regexp
+some string similarity measure based on historical data (e.g. even edit-distance would work for many items, like site)}
+
+
 
 \subsection{Keyword search over DBs}
 The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community over the last decade. 
@@ -136,9 +162,7 @@ The basic approach would first build an inverted index on database tables (usual
 
 % In addition to many papers the PhD dissertations \cite{PhD_2011, PhD_2012} describe the approaches in details including performance optimization details (e.g. generating materialized views), etc. 
 % 
-A number of variations exist:  returning only the Top-k results by some ranking function, SQAK and SODA would allow generating even more complex queries including aggregations.
-
-
+A number of problem variations exist:  returning only the ranked Top-k results vs. returning ranked list of possible queries, while some systems would even allow generating more complex queries including aggregations, etc (SQAK, SODA\cite{ethz2012}).
 
 \subsubsection*{Ranking Query Templates based on keyword query}
 A simple way to access relational database could  be through a set of predefined named query templates (SQL with selection parameters or operators still to be specified) exposed to a user as a Form that the user has to fill in.
@@ -149,8 +173,13 @@ An interesting feature of this approach is that a Query Template is functionally
 
 
 \subsubsection*{Keyword query cleaning}
-{\color{red} From first sight looks fairly cool. Build index with some powerful fulltext search engine (e.g. Xapian) and use it to generate mapping to structured queries}
+Keyword queries are often ambiguous, may contain misspellings or multiple keywords that refer to the same attribute value,  therefore \cite{kw_cleaning} suggested to perform query cleaning before proceeding to subsequent more computationally expensive steps (e.g. exploring all the possible join paths).
 
+Further employing some machine learning method like HMM\cite{kw_cleaning_hmm} would allow to incorporate user's feedback (even the fact that user has chosen n-th result as a query to be executed is a good clue).
+
+{\color{red} In terms of virtual integration of services via system like our DAS, one could employ query cleaning process to suggest possible queries.
+
+Inverted index could be built with some powerful full-text search engine (e.g. Xapian) and used to generate mapping to structured queries}
 
 
 
@@ -163,8 +192,6 @@ With a goal to bridge the increasing gap between high-level (conceptual, busines
 Even on a large data-warehouse of ~220GB data with a complex schema of 400+ tables they reported that if good meta-data is available, generating even quite complex SQL  (n-way joins with aggregations, etc) is quite feasible for computer. That would making it 'much easier for business users to interactively explore highly-complex data warehouses' \cite[p.932]{ethz2012}. 
 
 
-\subsubsection*{Then there is no access to index data terms}
-{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a suboptimal solution as indexing terms improves results. }
 
 
 %\subsubsection*{Automatic mapping between distributed services}
@@ -186,8 +213,8 @@ In 1990s there were was much research on search based service integration system
 
 The \textit{Information Manifold} is quite resembling to DAS {\color{red},  so it could be useful checking it's papers. TODO: finish}
 
-{\color{red}Check deep web (also recent research exist)}
-{\color{red}Performance: Answering Queries using Views}
+%{\color{red}Check deep web (also recent research exist)}
+%{\color{red}Performance: Answering Queries using Views}
 
 
 \begin{verbatim}
@@ -266,6 +293,59 @@ Upcomming Work items:
 %\nocite{*}
 \thispagestyle{empty}
 \bibliography{refs}
+
+\pagebreak
+\appendix
+\section{DAS Query logs}
+
+non parsible queries: 98923
+
+\subsection*{Most common query patterns (Feb 2012-June 2012)}
+\begin{verbatim}
+total valid queries: 569408
+
+50.16% (285605) :	dataset dataset.name=?
+13.54% (77071)  :	site dataset.name=?
+8.96%  (51035) 	:	file dataset.name=?
+5.88%  (33504) 	:	run dataset.name=?
+2.59%  (14739) 	:	release dataset.name=?
+2.11%  (12036) 	:	config dataset.name=?
+1.65%  (9420) 	:	dataset run.run_number=?
+1.34%  (7642) 	:	block dataset.name=?
+1.24%  (7084) 	:	dataset site.name=?
+1.15%  (6562) 	:	dataset dataset.name=? release.name=?
+1.10%  (6287) 	:	parent dataset.name=?
+0.96%  (5488) 	:	file file.name=?
+0.92%  (5245) 	:	dataset dataset.name=? status.name=?
+0.77%  (4363) 	:	dataset release.name=?
+0.75%  (4257) 	:	file dataset.name=? run.run_number=?
+0.68%  (3874) 	:	run run.run_number=?
+0.53%  (2994) 	:	site site.name=?
+0.45%  (2576) 	:	site file.name=?
+0.45%  (2556) 	:	dataset file.name=?
+0.43%  (2438) 	:	lumi file.name=?
+0.40%  (2282) 	:	dataset dataset.name=? site.name=?
+0.35%  (1999) 	:	file block.name=?
+0.35%  (1970) 	:	dataset dataset.name=? run.run_number=?
+0.29%  (1640) 	:	group dataset.name=?
+0.29%  (1631) 	:	lumi run.run_number=?
+0.25%  (1402) 	:	child dataset.name=?
+0.22%  (1268) 	:	run file.name=?
+0.21%  (1204) 	:	block block.name=?
+0.19%  (1088) 	:	release release.name=?
+0.16%  (936) 	:	site block.name=?
+0.12%  (703) 	:	file dataset.name=? lumi.number=? run.run_number=?
+0.10%  (594) 	:	parent file.name=?
+0.08%  (455) 	:	dataset block.name=?
+0.06%  (365) 	:	dataset dataset.name=? datatype.name=? release.name=?
+0.06%  (360) 	:	file dataset.name=? site.name=?
+
+Interesting non structured queries:
+py dataset=/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
+T!_CERN
+*herwig*/AODSIM
+
+\end{verbatim}
 
 
 \end{document}
