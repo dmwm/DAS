@@ -45,7 +45,7 @@ Using a highly structured language like SQL is problematic because users need to
 
 
 \section{Case study: the CMS Experiment at CERN}
-Users' information need may vary greatly depending on their role, however most of the time they are interested in locating full set of entities matching some selection criteria, e.g.:
+Users' information need may vary greatly depending on their role, however most of the time they are interested in locating a \textit{full set} of entities matching some selection criteria, e.g.:
 %\footnote{in contrary to exploratory approach where  a subset of best matches is enough}
    \begin{itemize}
   		\item find all \textit{files} from \textit{dataset(s)} matching wild-card query each containing some of the 'interesting' \textit{runs} from a list provided (Release validation teams)
@@ -61,7 +61,7 @@ For more use-cases of data retrieval at CMS Experiment see \cite{CMS_data08}.
 %Following a similar approach a 
 \subsection*{The Data Aggregation System}
 
-The Data Aggregation System (DAS)\cite{Kuznetsov2010, Kuznetsov2011} was created which allows integrated access to a number of proprietary data-sources by processing user's queries on demand - it queries the data-sources, merges the results, and caches them for subsequent uses. 
+The Data Aggregation System (DAS)\cite{Kuznetsov2010, Kuznetsov2011} was created which allows integrated access to a number of proprietary data-sources by processing user's queries on demand - it queries the data-sources, merges the results, and caches them for subsequent use. DAS uses \textit{Boolean retrieval model} as users are often interested in retrieving ALL the items matching their query.
 
 Currently the queries specify what entity the user is interested in (dataset, file, etc) and provide selection criteria (attribute=value, name BETWEEN [v1, v2]) operators. The combined query results could be later 'piped' for further filtering and aggregation (min, avg, etc), e.g.:
 
@@ -80,195 +80,65 @@ Queries could be run either from web browser or through  command line interface 
 
 \section{Problem statement}
 
-\textbf{\color{red}DO WE also have proprietary big databases that could be useful to be searched, but the standard integration work would be to heavy (or sub-parts of existing systems that are not covered by APIs, and could be accessible through DBs directly -- these potentially more expensive queries could processed with lower priority)}
+DAS is based on \textit{Virtual Integration} where data is left at the sources allowing data to be volatile (e.g. new records gathered or existing records updated; service descriptions may be changed; new services added), while some subsets of the data could be fairly static (e.g. datasets stored at DBS do not change often). 
+Further as the total data that is being queried could be fairly large (with growth of order of 1TB per year) and the data-services may have certain constraints (e.g. only certain queries allowed) as their main goal is supporting production (data taking from the CMS detector).
+
+Therefore, it is important to balance between returning locally cached query results quickly   and between issuing queries to slow data-services to get up to date results.
+It is also not less important to provide users with easy to use interface having a fairly flat learning curve, while at the same time not loosing the functionality of fairly complex queries. % expressive power.
+\textbf{\color{red}Another issue is about handling distributed queries, where either selection criteria or selection values could come from distributed sources -- the biggest problem could be in the APIs they [DO NOT] provide}.
+
+%TODO: Further it has to comply with dataset constraints
+
+% \textbf{\color{red}DO WE also have proprietary big databases that could be useful to be searched, but the standard integration work would be to heavy (or sub-parts of existing systems that are not covered by APIs, and could be accessible through DBs directly -- these potentially more expensive queries could processed with lower priority)}
+
+
 
 \subsection{Ease of use: Query Language over the mediated schema}
 	Even a very simple structured query language that also contain entity names over the mediated schema may seem {\color{red}hard} to learn, especially in the beginning.
    On the other hand, at CERN the names in  the mediated schema are referring to real-world entities that {\color{red}are fairly consistently named} (even though there may exist slight differences in their naming on different data-sources). 
-   So some sort of guiding helping user to build the query shall be useful.
+   So some sort of guiding helping user to build the query shall be useful. 
+   
+   Supporting non-structured keyword queries is also worth investigation as many users reporting they are missing this Google-like search experience. {\color{red}Because DAS uses Boolean IR we could only rank specific structured queries.}
         
 	Further a minimum set of search predicates is imposed by APIs (mainly because of performance reasons) and user has to be at least informed what is he expected to provide.
                 
                 
-Also to consider:
-\begin{itemize}         
-       \item input ambiguity, typos
-       \item {\color{red} what about ranked search?}
-\end{itemize}
+Also to consider: input ambiguity and typos, some queries are more common than others.
 
 \subsection{Performance}
-\subsubsection{Handling distributed search efficiently}
 
-\subsubsection{Other performance issues}
-	     \begin{itemize}
-	     					\item  {\color{red}maybe we could have prioritization in general, the heavier your query is the more you have to wait in favour of  the light queries}: 
+\begin{itemize}
+	     					\item  Query prioritization: {\color{red}maybe we could have prioritization in general, the heavier your query is the more you have to wait in favour of  the light queries}: 
 	     					(we could have some sort of query cost evaluation based on history or manually predefined scores per API)
 	     					
-	                		\item more intelligent caching needed:
-	                			\begin{itemize}
-	                			\item given an entity received from provider, determining if it is useful to cache for long-term
-	                			\item \textbf{\color{red}At what level are we caching now? query or individual query results?}
-	                			\item could make use of even older information warning user
-	                			\item could also have different validity dates for certain fields. if certain field is not explicitly requested, even a very old cache could be used.
-	                			\end{itemize}
+                		\item Explore more intelligent caching
 	                	  
-	                		\item query rewriting then used with grep=smf then the same item is available as selection key. check how many instances.
-	                		\item pre-fetching common (sub-)queries: determining manually and/or automatically
-	                		\item scale testing - if we are storing lots of historical info. MongoDB is not so performant if DB cant fit in memory. One of well known solutions is installing SSD.
-                        \item ? with current API's for aggregation service has to fetch ALL records not just the first page..
-                        \item ??? do we have cases then multiple APIs of the same service could be called for the same data, can we choose just one???
-                        \item ? showing partial results
-        \end{itemize}
+	                		% TODO: \item query rewriting then used with grep=smf then the same item is available as selection key. check how many instances.
+	                		
 
+					\item Could displaying Partial Results improve performance?
+					\begin{itemize}
+					     \item given current APIs to do aggregation over data sources, DAS has to fetch ALL records matching the query instead of only the first page.
+%                        \item ??? do we have cases then multiple APIs of the same service could be called for the same data, can we choose just one???
+                        \item {\color{red}e.g. intermediary aggregation results while still calculating}
+                        
+					\end{itemize}
 
+                        
+	                	 \item scale testing - if we are storing lots of historical info. MongoDB is not so performant if DB cant fit in memory. One of well known solutions is installing SSD.                        
+\end{itemize}
 
-\section{Preliminary Literature review}
+\subsection{Handling distributed search efficiently}
 
-% Overview: keyword search is good for non-structured documents, it is not [as] effective with structured sources\cite{Levy96}, therefore the keyword search on relational databases approach is good then no specific APIs exist and it's there are no resources to do \textbf{a full integration} .
 
-\textbf{\color{red}TODO: Overview; evaluate performance}
+\pagebreak
+\include{proposed_solutions}
 
-\subsection{Data integration}
-\subsubsection*{Virtual integration}
-In Virtual Integration, multiple data-sources are integrated with help of a mediator containing source descriptions and probably some schema mappings, while data is left at the sources. This is mainly the approach taken by our DAS.
 
+\pagebreak
+\include{literature_review}
 
-\subsubsection*{Large scale search}
-[multiple papers from Google] discusses various ways for implementing data integration in terms of large-scale search engine (Google) Virtual integration vs. surfacing. They also present ways for integrating systems without human intervention through use of statistical 'mediator'.
 
-There two approaches to web scale search for deep-web (Google mostly cares about web forms):
-
-\textit{Runtime query reformulation} - 'leaves data at the sources and routes queries to appropriate services'\cite[p. 1]{paygo_integration} 
-
-\textit{Deep-web surfacing} - tries to add content from the deep-web into search index. There are algorithms which allow to iteratively choose input parameters to forms to surface most of the 'hidden' data without loosing much (i.e. if choosing parameters in not smart way the web form could yield as many results as a cross product of all input combinations).
-
-PayGo approach - there is NO single mediated schema over which users pose queries. Queries are routed to to the relevant sources. Statistical methods used to model uncertainty at all levels: queries, mappings and underlying data.
-
-
-\subsubsection*{Then there is no access to index data terms}
-{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a very suboptimal solution as indexing terms improves results (mention evaluation from SODA paper). It works only then keywords map entity names.
-
-some hybrid approaches: 
-index if exists
-regexp
-some string similarity measure based on historical data (e.g. even edit-distance would work for many items, like site)}
-
-
-
-\subsection{Keyword search over DBs}
-The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community over the last decade. 
-
-The basic approach would first build an inverted index on database tables (usually only text columns). Then after finding all occurrences of the keywords, would try to construct join paths (based on Foreign keys) that would unite tuples containing the keywords.
-
-% In addition to many papers the PhD dissertations \cite{PhD_2011, PhD_2012} describe the approaches in details including performance optimization details (e.g. generating materialized views), etc. 
-% 
-A number of problem variations exist:  returning only the ranked Top-k results vs. returning ranked list of possible queries, while some systems would even allow generating more complex queries including aggregations, etc (SQAK, SODA\cite{ethz2012}).
-
-\subsubsection*{Ranking Query Templates based on keyword query}
-A simple way to access relational database could  be through a set of predefined named query templates (SQL with selection parameters or operators still to be specified) exposed to a user as a Form that the user has to fill in.
-
-\cite{forms_kws} proposes alternative approach for processing keyword queries over relational databases: given a keyword query, instead of returning database tuples one could rank query forms that best matches the query for user to choose the right one (if they are properly named this is fairly easy). The ranking is based on checking matching of keywords to table names in templates and to column values (could be implemented with inverted index).\textbf{\color{red}TODO: more detailed and our limitations (after reading keyword cleaning)}.
-
-An interesting feature of this approach is that a Query Template is functionally similar to any autonomous web service (which given the parameters would in turn execute that query on its database).  In case of the Data Aggregation System, a user after entering a keyword query could be provided with a ranked list of structured queries (attribute=value) that could be processed given data source constraints (e.g. parameters required) and if needed he could refine his search (e.g. provide more parameters).
-
-
-\subsubsection*{Keyword query cleaning}
-Keyword queries are often ambiguous, may contain misspellings or multiple keywords that refer to the same attribute value,  therefore \cite{kw_cleaning} suggested to perform query cleaning before proceeding to subsequent more computationally expensive steps (e.g. exploring all the possible join paths).
-
-Further employing some machine learning method like HMM\cite{kw_cleaning_hmm} would allow to incorporate user's feedback (even the fact that user has chosen n-th result as a query to be executed is a good clue).
-
-{\color{red} In terms of virtual integration of services via system like our DAS, one could employ query cleaning process to suggest possible queries.
-
-Inverted index could be built with some powerful full-text search engine (e.g. Xapian) and used to generate mapping to structured queries}
-
-
-
-\subsubsection*{Meta-data approach}
-
-With a goal to bridge the increasing gap between high-level (conceptual, business) and low level (physical) representations of data, researchers from \textit{ETHZ} have been investigating Generation of SQL for Business users at \textit{Credit Suisse}.  For converting natural language queries 
-% (that in addition to keyword search could convey some semantic structure)
- into SQL statements, in addition to what used by earlier approaches they used meta-data describing the schema (at multiple representation levels) and the domain (ontologies) and some natural language processing.
-
-Even on a large data-warehouse of ~220GB data with a complex schema of 400+ tables they reported that if good meta-data is available, generating even quite complex SQL  (n-way joins with aggregations, etc) is quite feasible for computer. That would making it 'much easier for business users to interactively explore highly-complex data warehouses' \cite[p.932]{ethz2012}. 
-
-
-
-
-%\subsubsection*{Automatic mapping between distributed services}
-%{\color{red} TODO: an interesting approach but not for CERN...}
-
-
-
-%\subsubsection*{\color{red}Question Answering}
-
-
-% See Appendix #1, for evaluation of they Demo system.
-
-
-
-\subsection{Searching 'Deep Web' and Heterogeneous web services}
-{\color{red}There doesn't seem to be much of recent papers going towards this direction (except from specific search systems like flight fare comparisons), however these are based on structured arguments.} 
-
-In 1990s there were was much research on search based service integration systems, for instance \textit{Information Manifold} following Local-as-View approach and \textit{TSIMMIS} developed at Stanford following Global-as-View approach. 
-
-The \textit{Information Manifold} is quite resembling to DAS {\color{red},  so it could be useful checking it's papers. TODO: finish}
-
-%{\color{red}Check deep web (also recent research exist)}
-%{\color{red}Performance: Answering Queries using Views}
-
-
-\begin{verbatim}
-Some other approaches could include: 
-
-- creating virtual documents offline by joining tables, for instantaneous search results by employing IR techniques
-(Indexing Relational Database Content Offline for Efficient Keyword-Based Search, 2003)
-
-
-- (Efficient Keyword Search Across Heterogeneous Relational Databases, 2007)
- : combines schema matching and structure discovery techniques to ﬁnd approximate foreign-key joins across heterogeneous databases
-\end{verbatim}
-
-
-\section{Possible approaches}
-
-
-\subsection{Ease of use}
-\begin{verbatim}
-- javascript interpreter
-    : field + description -- dropdown searcheable list
-    
-- if entered keyword query suggest a structured query
-	based on 'Query forms' and 'Keyword cleaning' approaches
-	--> evaluate different approaches (HMM, etc) and implementations
-	optionally with description in natural language
-- select entity (e.g. dataset) --> give all available keys from forms, however there are still combinations which are enforced
-\end{verbatim}
-%(could use Natural Language Generation)
-
-\subsection{Performance}
-\subsubsection{Continuous view maintenance at Data providers with large DBs}
-Use either \textit{materialized refresh fast views with query rewriting} (Oracle; completely transparent for proprietary apps)\cite{Oracle11}
- or some other continuous view maintenance tool (e.g. DBToaster\footnote{http://www.dbtoaster.org that is being developed at EPFL}) to improve performance of heavy queries containing joins and/or aggregations.
-
-\subsection{Integrating distributed information efficiently}
-Bloom-join (which could be quite transparent and implemented even on DB side [pure SQL is possible for MySQL, to check for Oracle]- take a query and bit-vector as parameter) , lazy pagination (and order required for aggregation) - this is not yet supported by any of the data-service APIs
-
-%\newline
-integration at DAS level. (at source DB could be more performant a little)
-
-\subsection{More intelligent caching}
-Some of the data entities instances changing very rarely, for example in DBS system old datasets would never change, while new ones are constantly added (still some of their attributes may change, in this example validity).
-
-Cached copy may be shown before hand while up to date results could be retrieved on user's request.
-
-\textbf{Decide if to cache or not...}
-
-
-An automatic change rate prediction could be useful to efficiently balance between caching and retrieving results.
-
-\begin{verbatim}
-Also: Caching of intermediary results, not only the queries
-\end{verbatim}
 
 \section{Work status}
 TODO
@@ -341,11 +211,11 @@ total valid queries: 569408
 0.06%  (360) 	:	file dataset.name=? site.name=?
 
 Interesting non structured queries:
-py dataset=/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 T!_CERN
 *herwig*/AODSIM
 
 \end{verbatim}
+% py dataset=/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 
 
 \end{document}
