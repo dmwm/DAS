@@ -13,6 +13,7 @@ from   bson.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
+from   DAS.utils.regex import RE_3SLAHES
 from   DAS.utils.utils import genkey, deepcopy, print_exc
 from   DAS.utils.query_utils import compare_specs
 from   DAS.core.das_parser import ql_manager
@@ -85,6 +86,16 @@ class DASQuery(object):
         else:
             raise Exception('Unsupport data type of DAS query')
         self.update_attr()
+        # check dataset wild-cards
+        msg  = 'Dataset value requires 3 slashes.'
+        for key, val in self._mongo_query['spec'].items():
+            if  key.find('dataset.name') != -1:
+                if  not RE_3SLAHES.match(val):
+                    # TODO: apply 3 slash pattern look-up
+                    # here, ticket #3071, if no 3-slash pattern
+                    # found we will raise exception
+                    # raise Exception(msg)
+                    pass
 
     def update_attr(self):
         """
