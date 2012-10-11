@@ -41,7 +41,11 @@ There two approaches to web scale search for deep-web (Google mostly cares about
 \textit{Deep-web surfacing} - tries to add content from the deep-web into search index. There are algorithms which allow to iteratively choose input parameters to forms to surface a considerable part of the 'hidden' data without large overhead%
 	\footnote{i.e. if choosing parameters in not smart way, a web form with just a couple of free inputs (or even dropdowns that's easier case), could yield as many results as a cross product of all input combinations.}.
 
-\textit{PayGo approach}\cite{webscale_paygo}  - there is NO single mediated schema over which users pose queries. Queries are routed to to the relevant sources with help statistical methods that are used to model uncertainty at all levels: queries, mappings and underlying data.
+\textit{PayGo approach}\cite{webscale_paygo}  - With this approach, 'a system starts with
+very few (or inaccurate) semantic mappings and these mappings
+are improved over time as deemed necessary'.
+% TODO: cite{bootstraping}
+there is NO single mediated schema over which users pose queries. Queries are routed to to the relevant sources with help statistical methods that are used to model uncertainty at all levels: queries, mappings and underlying data. 
 
 %{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a very suboptimal solution as indexing terms improves results (mention evaluation from SODA paper). It works only then keywords map entity names. some hybrid approaches: 
 %index if exists, regexp, some string similarity measure based on historical data (e.g. even edit-distance would work for many items, like site)}
