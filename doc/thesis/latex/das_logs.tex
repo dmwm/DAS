@@ -1,0 +1,76 @@
+\appendix
+\section{DAS Query logs}
+
+\subsection*{Most common query patterns (from 2011-06-21 to 2012-10-01)}
+\begin{verbatim}
+total valid queries: 569,408
+not well formed queries (e.g. free text or with typing mistakes): 98,923
+
+50.16% (285605):	dataset dataset.name=?
+13.54% (77071) :	site dataset.name=?
+8.96%  (51035) :	file dataset.name=?
+5.88%  (33504) :	run dataset.name=?
+2.59%  (14739) :	release dataset.name=?
+2.11%  (12036) :	config dataset.name=?
+1.65%  (9420) 	:	dataset run.run_number=?
+1.34%  (7642) 	:	block dataset.name=?
+1.24%  (7084) 	:	dataset site.name=?
+1.15%  (6562) 	:	dataset dataset.name=? release.name=?
+1.10%  (6287) 	:	parent dataset.name=?
+0.96%  (5488) 	:	file file.name=?
+0.92%  (5245) 	:	dataset dataset.name=? status.name=?
+0.77%  (4363) 	:	dataset release.name=?
+0.75%  (4257) 	:	file dataset.name=? run.run_number=?
+0.68%  (3874) 	:	run run.run_number=?
+0.53%  (2994) 	:	site site.name=?
+0.45%  (2576) 	:	site file.name=?
+0.45%  (2556) 	:	dataset file.name=?
+0.43%  (2438) 	:	lumi file.name=?
+0.40%  (2282) 	:	dataset dataset.name=? site.name=?
+0.35%  (1999) 	:	file block.name=?
+0.35%  (1970) 	:	dataset dataset.name=? run.run_number=?
+0.29%  (1640) 	:	group dataset.name=?
+0.29%  (1631) 	:	lumi run.run_number=?
+0.25%  (1402) 	:	child dataset.name=?
+0.22%  (1268) 	:	run file.name=?
+0.21%  (1204) 	:	block block.name=?
+0.19%  (1088) 	:	release release.name=?
+0.16%  (936) 	:	site block.name=?
+0.12%  (703) 	:	file dataset.name=? lumi.number=? run.run_number=?
+0.10%  (594) 	:	parent file.name=?
+0.08%  (455) 	:	dataset block.name=?
+0.06%  (365) 	:	dataset dataset.name=? datatype.name=? release.name=?
+0.06%  (360) 	:	file dataset.name=? site.name=?
+
+Interesting non-valid queries:
+T!_CERN
+*herwig*/AODSIM
+--> keyword search
+lumi file = (file dataset=/RelValProdTTbar/JobRobot-MC_42_V12_JobRobot-v1/GEN-SIM-RECO)
+file,lumi dataset=/RelValProdTTbar/JobRobot-MC_42_V12_JobRobot-v1/GEN-SIM-RECO
+--> Users may like more complex combined queries
+file dataset=/MuEG/Run2011B-PromptReco-v1/AOD, file.size >1
+file dataset=/MinimumBias/Run2010A-valskim-v6/RAW-RECO* | grep run between  [138923, 144086] 
+--> Users mixing up the post and pre filters
+\end{verbatim}
+% 
+% Possible keyword search test cases:
+% run duration run_number between [195100,195200] 
+%
+% py dataset=/DYJetsToLL_M-50_TuneZ2Star_8TeV-madgraph-tarball/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
+%dataset dataset=*Run2011* datatype=data dataset=*RAW*
+
+\appendix
+\section{Data providers statistics}
+\begin{verbatim}
+(Some of the largest ones)
+
+DBS:
+    DB  size: 80GB + 200GB indexes, not many changes to existing  (old) records
+    Largest tables: 
+      Dataset (164K rows) -> Block (2M) -> Files (31M) -> FileRunLumi (902M) <- Runs (65K)
+
+Phedex: ~7GB, more often changes to existing (even old) records
+    change rate: 2,359,934 file transfers last month (from site A to site B; 
+                 change rate on the DB to be found out)
+\end{verbatim}

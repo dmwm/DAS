@@ -2,36 +2,53 @@
 
 % Overview: keyword search is good for non-structured documents, it is not [as] effective with structured sources\cite{Levy96}, therefore the keyword search on relational databases approach is good then no specific APIs exist and it's there are no resources to do \textbf{a full integration} .
 
-\textbf{\color{red}TODO: Overview; evaluate performance}
+\subsection{Overview}
 
-\subsection{Searching 'Deep Web' and Heterogeneous web services}
 
-In 1990s there were was much research on search based service integration systems, for instance \textit{Information Manifold} following Local-as-View approach and \textit{TSIMMIS} developed at Stanford following Global-as-View approach. The \textit{Information Manifold} is quite resembling to DAS {\color{red},  so it could be useful checking it's papers. TODO: finish}
+The problem of keyword search over \textit{relational and other structured databases} is widely covered,  including even keyword search directly over distributed relational databases\cite[ch.16]{principles_data_integration} and some approaches for automatic schema matching has been discussed also. Such search is however very ambiguous and has quite large search space over the possible join paths, therefore most approaches rely on returning the top-k results.
+
+Regarding the Boolean retrieval that we are the most interested, keyword query could be translated into list of best structured queries (e.g. SODA system proposing SQL over complex schemas, while Query Forms would propose mappings from keywords to parameters in SQL templates, Keymantic tries to achieve this without having access to Data itself). 
+% TODO: Keymantic would propose SQL queries knowing only schema but no index
+
+%  TODO: Further, {\color{red} in theory,} Google's Deep-web crawl techniques initially designed for accessing content hidden behind html forms could be used to effectively index the contents even of  data providers that do not provide a specific interface to do so.
+
+{\color{red}Current research trends seem to fall on methods of automatic integration (e.g. statistical mediator), and pay-as-you-go integration. (TODO: see future chapter of \cite{principles_data_integration})}
+
+%\textbf{\color{red}TODO: Overview; evaluate performance}
+
+\subsection{Searching 'Deep Web' and web services}
+
+In 1990s there were was much research on search based service integration systems, for instance \textit{Information Manifold} quite resembling DAS {\color{red},  so it could be useful checking it's papers.}.
+% following Local-as-View approach
+%and \textit{TSIMMIS} developed at Stanford following Global-as-View approach. The \textit{Information Manifold} is 
+
+\subsubsection*{No access to index data terms}
+
+\cite{Keymantic10, semantics_without_access} explores the case then there is no possibility to index the data terms, e.g. then a DB is behind a wrapper (e.g. accessible only through a \textit{Web form} in “Hidden Web” or \textit{a web-service}) then crawling is generally not possible.
+
+In Keymantic\cite{Keymantic10} a 'keyword query is processed as follows: First, all keywords that correspond to metadata items (e.g., field names) are extracted. The remaining
+keywords are considered as possible input fields. Second, the likelihood of a remaining keyword to a metadata item is computed in order to rank different options to execute the keyword query on the
+“Hidden Web” database'\cite[p.942]{ethz2012}.
 
 
 \subsubsection*{Deep web search at Google}
-[multiple papers from Google] discusses various ways for implementing data integration in terms of large-scale search engine (Google) Virtual integration vs. surfacing. They also present ways for integrating systems without human intervention through use of statistical 'mediator'.
+[multiple papers from Google] discusses various ways for implementing data integration in terms of large-scale search engine (Google): Virtual integration vs. Surfacing. They also present ways for integrating systems without human intervention through use of statistical 'mediator'.
 
 There two approaches to web scale search for deep-web (Google mostly cares about web forms):
 
-\textit{Runtime query reformulation} - 'leaves data at the sources and routes queries to appropriate services'\cite[p. 1]{paygo_integration} 
+\textit{Runtime query reformulation} - 'leaves data at the sources and routes queries to appropriate services'\cite[p. 1]{webscale_paygo} 
 
-\textit{Deep-web surfacing} - tries to add content from the deep-web into search index. There are algorithms which allow to iteratively choose input parameters to forms to surface most of the 'hidden' data without loosing much (i.e. if choosing parameters in not smart way the web form could yield as many results as a cross product of all input combinations).
+\textit{Deep-web surfacing} - tries to add content from the deep-web into search index. There are algorithms which allow to iteratively choose input parameters to forms to surface a considerable part of the 'hidden' data without large overhead%
+	\footnote{i.e. if choosing parameters in not smart way, a web form with just a couple of free inputs (or even dropdowns that's easier case), could yield as many results as a cross product of all input combinations.}.
 
-PayGo approach - there is NO single mediated schema over which users pose queries. Queries are routed to to the relevant sources. Statistical methods used to model uncertainty at all levels: queries, mappings and underlying data.
+\textit{PayGo approach}\cite{webscale_paygo}  - there is NO single mediated schema over which users pose queries. Queries are routed to to the relevant sources with help statistical methods that are used to model uncertainty at all levels: queries, mappings and underlying data.
 
-
-\subsubsection*{Then there is no access to index data terms}
-{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a very suboptimal solution as indexing terms improves results (mention evaluation from SODA paper). It works only then keywords map entity names.
-
-some hybrid approaches: 
-index if exists
-regexp
-some string similarity measure based on historical data (e.g. even edit-distance would work for many items, like site)}
+%{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a very suboptimal solution as indexing terms improves results (mention evaluation from SODA paper). It works only then keywords map entity names. some hybrid approaches: 
+%index if exists, regexp, some string similarity measure based on historical data (e.g. even edit-distance would work for many items, like site)}
 
 
 
-\subsection{Keyword search over DBs}
+\subsection{Keyword search over relational Database}
 The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community over the last decade. 
 
 The basic approach would first build an inverted index on database tables (usually only text columns). Then after finding all occurrences of the keywords, would try to construct join paths (based on Foreign keys) that would unite tuples containing the keywords.
@@ -54,13 +71,18 @@ Keyword queries are often ambiguous, may contain misspellings or multiple keywor
 Further employing some machine learning method like HMM\cite{kw_cleaning_hmm} would allow to incorporate user's feedback (even the fact that user has chosen n-th result as a query to be executed is a good clue).
 
 
-\subsubsection*{Meta-data approach}
+\subsubsection*{SODA: Meta-data approach}
 
-With a goal to bridge the increasing gap between high-level (conceptual, business) and low level (physical) representations of data, researchers from \textit{ETHZ} have been investigating Generation of SQL for Business users at \textit{Credit Suisse}.  For converting natural language queries 
+With a goal to bridge the increasing gap between high-level (conceptual, business) and low level (physical) representations of data, researchers from \textit{ETHZ} have been investigating Generation of SQL for Business users over a very complex data warehouse at \textit{Credit Suisse}.  For converting natural language queries 
 % (that in addition to keyword search could convey some semantic structure)
- into SQL statements, in addition to what used by earlier approaches they used meta-data describing the schema (at multiple representation levels) and the domain (ontologies) and some natural language processing.
+ into SQL statements, in addition to what used by earlier approaches they used meta-data describing the schema at both physical, conceptual and logical levels extended with DBpedia (for synonyms, etc) and domain ontologies (to capture business concepts like 'wealthy customer').
+%and some natural language processing
 
-Even on a large data-warehouse of ~220GB data with a complex schema of 400+ tables they reported that if good meta-data is available, generating even quite complex SQL  (n-way joins with aggregations, etc) is quite feasible for computer. That would making it 'much easier for business users to interactively explore highly-complex data warehouses' \cite[p.932]{ethz2012}. 
+Even on a large data-warehouse of ~220GB data with a complex schema of 400+ tables they reported that if good meta-data is available, generating even fairly complex SQL  (e.g. n-way joins with aggregations) is quite feasible for a computer. That would make it 'much easier for business users to interactively explore highly-complex data warehouses' \cite[p.932]{ethz2012}. The users also reported system's potential a) for analysing the schema and learning patterns about it and b) as tool to help documenting legacy systems.
+
+
+\subsection{Keyword search: integration on demand}
+{\color{red}TODO?: \cite[ch.16]{principles_data_integration}}
 
 
 
