@@ -17,7 +17,7 @@
 	\item build an inverted index of attribute values with some good full-text search toolkit\footnote{e.g. Xapian (http://xapian.org/) implemented in C++ which that is known for its flexibility, or Sphinx (http://sphinxsearch.com/)}. If no match found (e.g. new entry not yet in our cache) pattern matching could be used to make a best guess.
 	\item ranking could be based on: how closely keywords are matching (some or all) required API's input parameters, popularity of certain queries and users feedback
 	
-	\item {\color{red} evaluate different user feedback approaches (e.g. HMM)
+	\item {\color{red} TODO: evaluate different user feedback approaches (e.g. HMM) {\color{green} please elaborate how?}
 	\item multi-wildcard queries (e.g. dataset=*Zmm*special*RECO*) are common at CMS that will need special attention\footnote{Matching to structured query will be harder and guessing even worse. Also for performance reasons some web-services will introduce limitations on the format of wilcard queries, while DAS wants still to be flexible at least for datasets}.}
 	
 \item making use of direct access to database {\color{red}(if available; in theory)}
@@ -29,7 +29,9 @@
 \end{itemize}
 	\end{itemize}
 \item (?) JavaScript-based query interpreter to ease query writing: could suggest search attribute and entity attribute names. also taking into account some possible ambiguous namings (auto completion)
-	
+
++\item {\color{green} Build series of queries which will answer the given user question, e.g. user asks {\it I want to find files which contains runs taken with magnetic field 4T for given dataset at site X}. This should be decomposed somehow (subject to research) into series of quries, e.g. Find datasets at site X; find files for given dataset list; find runs for found files; filter runs with magnetic field 4T}
+ 		
 	
 \end{itemize}
 
@@ -53,6 +55,8 @@ Also consider:
                 			%\item could cache even \textit{expired} data, but warning user
                 			\item could also have different validity dates for certain fields. if no volatile fields are not explicitly requested, even a very old cache could be used. 
                 			\item Can we automatically figure which fields are static and which are changing?
+                			 {\color{green} Yes, if we enfore APIs to record modification timestamp}
+                			 {\color{red} I also meant some automatic algorithm, however that would be more complex and less reliable}
                 			\item pre-fetching common (sub-)queries: determining manually and/or automatically
                 			\end{itemize}
 
