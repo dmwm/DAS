@@ -108,7 +108,7 @@ Further as the total data that is being queried could be fairly large (with grow
 Therefore, it is important to balance between returning locally cached query results quickly   and between issuing queries to slow data-services to get up to date results.
 
 \begin{itemize}
-						\item Low data providers performance (e.g. on DBS some queries requires joining many large tables)
+						\item Bad data providers performance (e.g. on DBS some queries requires joining many very large tables)
 	     				\item At the moment all queries are put into one pool and has to wait until some threads are available. If a couple of heavy queries were submitted before hand, even very light queries would have to wait long. Explore more advanced Query prioritization 
 	     					(e.g. we could have some query cost model based on history or predefined scores per API)
 	     					
