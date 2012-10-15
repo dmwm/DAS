@@ -5,6 +5,15 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.8.X
+
+  - enable dbs_phedex combined engine
+  - add new thread module to deal with threads in DAS
+  - switch from low-level thread.start_new_thread to new DAS thread
+    module, assign each thread a name
+  - properly handle MongoDB connection errors and print out nice
+    output about their failure (thread name, time stamps, etc.)
+
 - 1.7.X
 
   - Switch from PRODUCTION to VALID dataset access type in DBS3
