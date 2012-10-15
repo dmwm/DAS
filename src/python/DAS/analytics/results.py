@@ -14,6 +14,7 @@ from bson.errors import InvalidDocument, InvalidStringData
 from DAS.utils.das_db import db_connection, is_db_alive
 from DAS.analytics.config import DASAnalyticsConfig
 from DAS.web.utils import db_monitor
+from DAS.utils.thread import start_new_thread
 
 DASAnalyticsConfig.add_option("db_uri", type=basestring,
       default="mongodb://localhost:27017/",
@@ -48,7 +49,8 @@ class ResultManager(logging.Handler):
 
         # Monitoring thread which performs MongoDB connection
         self.init()
-        thread.start_new_thread(db_monitor, (self.dburi, self.init, 5))
+        thname = 'analytics_results'
+        start_new_thread(thname, db_monitor, (self.dburi, self.init, 5))
 
     def init(self):
         "Initialize connection to MongoDB"
