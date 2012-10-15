@@ -16,12 +16,14 @@ __revision__ = "$Id: das_mongocache.py,v 1.86 2010/05/03 19:14:06 valya Exp $"
 __version__ = "$Revision: 1.86 $"
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import re
 import time
 from   types import GeneratorType
 import datetime
 import itertools
 import fnmatch
+import threading
 
 # DAS modules
 from DAS.core.das_son_manipulator import DAS_SONManipulator
@@ -42,7 +44,7 @@ from bson.code import Code
 from pymongo import DESCENDING, ASCENDING
 from pymongo.errors import InvalidOperation
 from bson.errors import InvalidDocument
-from pymongo.errors import OperationFailure
+from pymongo.errors import OperationFailure, ConnectionFailure
 
 def update_query_spec(spec, fdict):
     """
@@ -120,12 +122,19 @@ class DASLogdb(object):
         dburi       = config['mongodb']['dburi']
         try:
             conn    = db_connection(dburi)
+            if  not conn:
+                raise ConnectionFailure()
             if  logdbname not in conn.database_names():
                 dbname      = conn[logdbname]
                 dbname.create_collection('db', capped=True, size=capped_size)
                 print 'Created %s.%s, size=%s' \
                 % (logdbname, logdbcoll, capped_size)
             self.logcol     = conn[logdbname][logdbcoll]
+        except Exception as ConnectionFailure:
+            tstamp = dastimestamp('')
+            thread = threading.current_thread()
+            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                    % (thread.name, thread.ident, tstamp)
         except Exception as exc:
             print_exc(exc)
             self.logcol     = None
