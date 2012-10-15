@@ -9,7 +9,7 @@ Description: Persistent request manager for DAS web server
 # system modules
 import time
 from pymongo import ASCENDING
-from pymongo.errors import DuplicateKeyError
+from pymongo.errors import DuplicateKeyError, ConnectionFailure
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
@@ -27,6 +27,8 @@ class RequestManager(object):
     """
     def __init__(self, dburi, dbname='das', dbcoll='requests', lifetime=86400):
         self.con  = db_connection(dburi)
+        if  not self.con:
+            raise ConnectionFailure()
         self.col  = self.con[dbname][dbcoll]
         self.hold = self.con[dbname][dbcoll + '_onhold']
         create_indexes(self.col , [('ts', ASCENDING)])
