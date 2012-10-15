@@ -12,15 +12,17 @@ import cherrypy
 
 # pymongo modules
 from   pymongo import Connection, DESCENDING
-from   pymongo.connection import AutoReconnect
+from   pymongo.errors import AutoReconnect, ConnectionFailure
 from   bson.code import Code
 
 # DAS modules
 from   DAS.utils.das_db import db_connection, create_indexes
 from   DAS.utils.url_utils import getdata
 from   DAS.web.tools import exposejson
+from   DAS.web.utils import db_monitor
 from   DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from   DAS.utils.utils import get_key_cert
+from   DAS.utils.thread import set_thread_name, start_new_thread
 from   DAS.core.das_mapping_db import DASMapping
 from   DAS.utils.das_config import das_readconfig
 import DAS.utils.jsonwrapper as json
@@ -142,7 +144,7 @@ def update_db(urls, uri, db_name, coll_name):
             coll.update(spec, dataset, upsert=True)
         coll.remove({'timestamp': {'$lt': tst}})
     else:
-        raise AutoReconnect('could not establish connection')
+        raise ConnectionFailure('could not establish connection')
 
 def find_dataset(coll, site, operation="mapreduce"):
     """
@@ -222,7 +224,7 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
     conn_interval = 3 # default connection failure sleep interval
     threshold = 60 # 1 minute is threashold to check connections
     time0 = time.time()
-    print "### Start dbs_phedex worker with interval=%s" % interval
+    print "\n### Start dbs_phedex worker"
     while True:
         if  conn_interval > threshold:
             conn_interval = threshold
@@ -231,8 +233,10 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
             print "%s update dbs_phedex DB %s sec" \
                 % (dastimestamp(), time.time()-time0)
             time.sleep(interval)
-        except AutoReconnect as err:
-            print_exc(err)
+        except AutoReconnect as _err:
+            time.sleep(conn_interval) # handles broken connection
+            conn_interval *= 2
+        except ConnectionFailure as _err:
             time.sleep(conn_interval) # handles broken connection
             conn_interval *= 2
         except Exception as exp:
@@ -240,47 +244,28 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
             time.sleep(conn_interval)
             conn_interval *= 2
 
-def conn_monitor(uri, func, sleep=5):
-    """
-    Daemon which ensures MongoDB connection
-    """
-    conn = db_connection(uri)
-    while True:
-        time.sleep(sleep)
-        if  not conn:
-            conn = db_connection(uri)
-            print "\n### re-establish connection to %s" % conn
-            try:
-                if  conn:
-                    func() # re-initialize DB connection
-            except Exception as err:
-                print_exc(err)
-
 class DBSPhedexService(object):
     """DBSPhedexService"""
     def __init__(self, config=None):
         if  not config:
-            config    = {}
+            config = {}
         super(DBSPhedexService, self).__init__()
-        self.dbname   = 'dbs_phedex'
-        self.collname = 'datasets'
-        dasconfig     = das_readconfig()
-        dasmapping    = DASMapping(dasconfig)
-        self.uri      = dasconfig['mongodb']['dburi']
-        service_name  = config.get('name', 'combined')
-        service_api   = config.get('api', 'combined_dataset4site_release')
-        mapping       = dasmapping.servicemap(service_name)
-        self.urls     = mapping[service_api]['services']
-        self.expire   = mapping[service_api]['expire']
-        self.coll     = None # define at run-time via self.init()
+        self.config     = config
+        self.dbname     = 'dbs_phedex'
+        self.collname   = 'datasets'
+        self.dasconfig  = das_readconfig()
+        self.uri        = self.dasconfig['mongodb']['dburi']
+        self.urls       = None # defined at run-time via self.init()
+        self.expire     = None # defined at run-time via self.init()
+        self.coll       = None # defined at run-time via self.init()
+        self.worker_thr = None # defined at run-time via self.init()
         self.init()
 
         # Monitoring thread which performs auto-reconnection
-        thread.start_new_thread(conn_monitor, (self.uri, self.init, 5))
-
-        # Worker thread which update dbs/phedex DB
-        thread.start_new_thread(worker, \
-            (self.urls, self.uri, self.dbname, self.collname, self.expire))
+        name = 'dbs_phedex_monitor'
+        start_new_thread(name, db_monitor, (self.uri, self.init, 5))
+#        thr = thread.start_new_thread(db_monitor, (self.uri, self.init, 5))
+#        set_thread_name(thr, 'dbs_phedex_monitor')
 
     def init(self):
         """Takes care of MongoDB connection"""
@@ -291,8 +276,23 @@ class DBSPhedexService(object):
                        ('timestamp', DESCENDING)]
             for index in indexes:
                 create_indexes(self.coll, [index])
-        except Exception, _exp:
-            self.coll = None
+            dasmapping   = DASMapping(self.dasconfig)
+            service_name = self.config.get('name', 'combined')
+            service_api  = \
+                    self.config.get('api', 'combined_dataset4site_release')
+            mapping      = dasmapping.servicemap(service_name)
+            self.urls    = mapping[service_api]['services']
+            self.expire  = mapping[service_api]['expire']
+            if  not self.worker_thr:
+                # Worker thread which update dbs/phedex DB
+                self.worker_thr = thread.start_new_thread(worker, \
+                (self.urls, self.uri, self.dbname, self.collname, self.expire))
+                set_thread_name(self.worker_thr, 'dbs_phedex_worker')
+        except Exception as exc:
+            self.urls       = None
+            self.expire     = None
+            self.coll       = None
+            self.worker_thr = None
 
     def isexpired(self):
         """
