@@ -6,14 +6,16 @@ about datasets.
 """
 
 # system modules
+import thread
 import cherrypy
 import itertools
 
 # DAS modules
 from   DAS.utils.url_utils import getdata_urllib as getdata
-#from   DAS.utils.url_utils import getdata
 from   DAS.web.tools import exposejson
+from   DAS.web.utils import db_monitor
 from   DAS.utils.utils import qlxml_parser
+from   DAS.utils.thread import start_new_thread
 from   DAS.utils.utils import get_key_cert
 from   DAS.core.das_mapping_db import DASMapping
 from   DAS.utils.das_config import das_readconfig
@@ -85,15 +87,28 @@ class LumiService(object):
         super(LumiService, self).__init__()
         if  not config:
             config   = {}
-        dasconfig    = das_readconfig()
-        dasmapping   = DASMapping(dasconfig)
-        service_name = config.get('name', 'combined')
-        service_api  = config.get('api', 'combined_lumi4dataset')
-        mapping      = dasmapping.servicemap(service_name)
-        self.urls    = mapping[service_api]['services']
-        self.expire  = mapping[service_api]['expire']
+        self.dasconfig = das_readconfig()
+        service_name   = config.get('name', 'combined')
+        service_api    = config.get('api', 'combined_lumi4dataset')
+        self.uri       = self.dasconfig['mongodb']['dburi']
+        self.urls      = None # defined at run-time via self.init()
+        self.expire    = None # defined at run-time via self.init()
         self.ckey, self.cert = get_key_cert()
+        self.init()
 
+        # Monitoring thread which performs auto-reconnection
+        thname = 'lumi_service'
+        start_new_thread(thname, db_monitor, (self.uri, self.init, 5))
+
+    def init(self):
+        "Takes care of MongoDB connection since DASMapping requires it"
+        try:
+            dasmapping  = DASMapping(self.dasconfig)
+            mapping     = dasmapping.servicemap(service_name)
+            self.urls   = mapping[service_api]['services']
+            self.expire = mapping[service_api]['expire']
+        except Exception, _exp:
+            self.coll = None
     @cherrypy.expose
     def index(self):
         "Default path"
