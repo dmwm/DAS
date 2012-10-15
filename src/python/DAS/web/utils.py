@@ -172,7 +172,10 @@ def db_monitor(uri, func, sleep=5):
             try:
                 conn = db_connection(uri)
                 func()
-                print "\n### re-established connection %s" % conn
+                if  conn:
+                    print "### db_monitor re-established connection %s" % conn
+                else:
+                    print "### db_monitor, lost connection"
             except:
                 pass
         time.sleep(sleep)
@@ -199,8 +202,11 @@ def dascore_monitor(cdict, func, sleep=5):
                     das = False
             except:
                 das = False
-            print "\n### re-established connection %s, mapping.db records %s" \
-                % (conn, das)
+            if  conn:
+                print "### dascore_monitor, re-established connection \
+                        %s, mapping.db records %s" % (conn, das)
+            else:
+                print "### dascore_monitor, lost connection"
 
 def quote(data):
     """
