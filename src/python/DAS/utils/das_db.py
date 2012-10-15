@@ -8,14 +8,18 @@ DAS DB utilities.
 
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import sys
+import time
+import threading
 
 # monogo db modules
 from pymongo.connection import Connection
+from pymongo.errors import AutoReconnect
 import gridfs
 
 # DAS modules
-from DAS.utils.utils import genkey, print_exc
+from DAS.utils.utils import genkey, print_exc, dastimestamp
 from DAS.utils.ddict import DotDict
 
 # MongoDB does not allow to store documents whose size more then 4MB
@@ -57,6 +61,11 @@ class _DBConnectionSingleton(object):
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
+            except AutoReconnect as err:
+                tstamp = dastimestamp('')
+                thread = threading.current_thread()
+                print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                        % (thread.name, thread.ident, tstamp)
             except Exception as exc:
                 print_exc(exc)
                 return None
