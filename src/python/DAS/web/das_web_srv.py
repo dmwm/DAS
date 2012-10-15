@@ -13,6 +13,7 @@ import re
 import time
 import thread
 import cherrypy
+import threading
 
 from datetime import date
 from cherrypy import expose, HTTPError
@@ -31,6 +32,7 @@ from DAS.core.das_mongocache import DASLogdb
 from DAS.utils.utils import getarg
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import genkey, print_exc, dastimestamp
+from DAS.utils.thread import start_new_thread
 from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import free_text_parser, threshold
@@ -57,7 +59,7 @@ def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
     "Worker daemon to process onhold requests"
     if  not dasmgr or not taskmgr or not reqmgr:
         return
-    print "### START onhold_worker", time.time()
+    print "\n### Start onhold_worker"
     jobs = []
     while True:
         try:
@@ -109,11 +111,15 @@ class DASWebService(DASWebManager):
             thr_name = 'DASWebService:TaskManager'
             self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
         self.adjust      = config.get('adjust_input', False)
-
+        self.dasmgr      = None # defined at run-time via self.init()
+        self.reqmgr      = None # defined at run-time via self.init()
+        self.daskeys     = []   # defined at run-time via self.init()
+        self.colors      = {}   # defined at run-time via self.init()
         self.init()
 
         # Monitoring thread which performs auto-reconnection
-        thread.start_new_thread(dascore_monitor, \
+        thname = 'dbscore_monitor'
+        start_new_thread(thname, dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
 
         # Obtain DBS global instance or set it as None
@@ -135,7 +141,7 @@ class DASWebService(DASWebManager):
         "Process requests which are on hold"
         try:
             limit = self.queue_limit/2
-            thread.start_new_thread(onhold_worker, \
+            start_new_thread('onhold_monitor', onhold_worker, \
                 (self.dasmgr, self.taskmgr, self.reqmgr, limit))
         except Exception as exc:
             print_exc(exc)
@@ -165,7 +171,8 @@ class DASWebService(DASWebManager):
                                 pass
                             time.sleep(interval)
                     print "Start DBSDaemon for %s" % dbs_url
-                    thread.start_new_thread(dbs_updater, (dbsmgr, interval, ))
+                    thname = 'dbs_updater'
+                    start_new_thread(thname, dbs_updater, (dbsmgr, interval, ))
         except Exception as exc:
             print_exc(exc)
 
@@ -185,11 +192,17 @@ class DASWebService(DASWebManager):
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
             self.sitedbmgr   = SiteDBService(self.dasconfig)
+        except Exception as ConnectionFailure:
+            tstamp = dastimestamp('')
+            thread = threading.current_thread()
+            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                    % (thread.name, thread.ident, tstamp)
         except Exception as exc:
             print_exc(exc)
-            self.dasmgr = None
+            self.dasmgr  = None
+            self.reqmgr  = None
             self.daskeys = []
-            self.colors = {}
+            self.colors  = {}
             return
         # Start Onhold_request daemon
         if  self.dasconfig['web_server'].get('onhold_daemon', False):
