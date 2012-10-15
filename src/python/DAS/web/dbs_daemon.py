@@ -25,6 +25,7 @@ from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.web.utils import db_monitor
 from DAS.utils.utils import get_key_cert, genkey
+from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 
 def dbs_instance(dbsurl):
@@ -61,7 +62,7 @@ class DBSDaemon(object):
         self.col = None # to be defined in self.init
         self.init()
         # Monitoring thread which performs auto-reconnection to MongoDB
-        thread.start_new_thread(db_monitor, (dburi, self.init))
+        start_new_thread('dbs_monitor', db_monitor, (dburi, self.init))
 
     def init(self):
         """
