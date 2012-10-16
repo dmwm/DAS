@@ -45,23 +45,30 @@ class ReqMgrService(DASAbstractService):
         if  api == 'inputdataset':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
+                key = 'WMCore.RequestManager.DataStructs.Request.Request'
                 try:
                     data = row['dataset']
-                    data = \
-                    data['WMCore.RequestManager.DataStructs.Request.Request']
-                    if  data.has_key('InputDatasetTypes'):
-                        arr = []
-                        for key, val in data['InputDatasetTypes'].iteritems():
-                            arr.append({'dataset':key, 'type':val})
-                        data['InputDatasetTypes'] = arr
-                    yield data
+                    if  isinstance(data, dict) and data.has_key('error'):
+                        yield row
+                    else:
+                        data = data[key]
+                        if  data.has_key('InputDatasetTypes'):
+                            arr = []
+                            for key, val in data['InputDatasetTypes'].iteritems():
+                                arr.append({'dataset':key, 'type':val})
+                            data['InputDatasetTypes'] = arr
+                        yield data
                 except:
                     yield row
         elif api == 'configIDs':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 try:
-                    for key, val in row['dataset'].iteritems():
-                        yield dict(request_name=key, config_files=val)
+                    data = row['dataset']
+                    if  isinstance(data, dict) and data.has_key('error'):
+                        yield row
+                    else:
+                        for key, val in data.iteritems():
+                            yield dict(request_name=key, config_files=val)
                 except:
                     pass
