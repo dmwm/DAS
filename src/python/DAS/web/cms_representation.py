@@ -185,7 +185,7 @@ def adjust_values(func, gen, links):
                 value = val
             if  isinstance(value, list) and isinstance(value[0], str):
                 value = ', '.join(value)
-            if  key == 'Open':
+            if  key == 'Open' or key == 'Custodial':
                 if  value == 'n':
                     value = '<span %s>%s</span>' % (green, value)
                 else:
