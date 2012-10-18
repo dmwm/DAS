@@ -264,8 +264,6 @@ class DBSPhedexService(object):
         # Monitoring thread which performs auto-reconnection
         name = 'dbs_phedex_monitor'
         start_new_thread(name, db_monitor, (self.uri, self.init, 5))
-#        thr = thread.start_new_thread(db_monitor, (self.uri, self.init, 5))
-#        set_thread_name(thr, 'dbs_phedex_monitor')
 
     def init(self):
         """Takes care of MongoDB connection"""
