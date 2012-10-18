@@ -4,55 +4,59 @@
 
 \subsection{Overview}
 
+% Data Integration is about balancing between Virtual integration and data warehousing.
 
-The problem of keyword search over \textit{relational and other structured databases} is widely covered,  including even keyword search directly over distributed relational databases\cite[ch.16]{principles_data_integration} and some approaches for automatic schema matching has been discussed also. Such search is however very ambiguous and has quite large search space over the possible join paths, therefore most approaches rely on returning the top-k results.
-
-Regarding the Boolean retrieval that we are the most interested, keyword query could be translated into list of best structured queries (e.g. SODA system proposing SQL over complex schemas, while Query Forms would propose mappings from keywords to parameters in SQL templates, Keymantic tries to achieve this without having access to Data itself). 
-% TODO: Keymantic would propose SQL queries knowing only schema but no index
-
-%  TODO: Further, {\color{red} in theory,} Google's Deep-web crawl techniques initially designed for accessing content hidden behind html forms could be used to effectively index the contents even of  data providers that do not provide a specific interface to do so.
-
-{\color{red}Current research trends seem to fall on methods of automatic integration (e.g. statistical mediator), and pay-as-you-go integration. (TODO: see future chapter of \cite{principles_data_integration})}
-
-%\textbf{\color{red}TODO: Overview; evaluate performance}
-
-\subsection{Searching 'Deep Web' and web services}
-
-In 1990s there were was much research on search based service integration systems, for instance \textit{Information Manifold} quite resembling DAS {\color{red},  so it could be useful checking it's papers.}.
-% following Local-as-View approach
-%and \textit{TSIMMIS} developed at Stanford following Global-as-View approach. The \textit{Information Manifold} is 
-
-\subsubsection*{No access to index data terms}
-
-\cite{Keymantic10, semantics_without_access} explores the case then there is no possibility to index the data terms, e.g. then a DB is behind a wrapper (e.g. accessible only through a \textit{Web form} in “Hidden Web” or \textit{a web-service}) then crawling is generally not possible.
-
-In Keymantic\cite{Keymantic10} a 'keyword query is processed as follows: First, all keywords that correspond to metadata items (e.g., field names) are extracted. The remaining
-keywords are considered as possible input fields. Second, the likelihood of a remaining keyword to a metadata item is computed in order to rank different options to execute the keyword query on the
-“Hidden Web” database'\cite[p.942]{ethz2012}.
+Since the late 1990's, several Enterprise Information Integration\footnote{%
+	Enterprise Information Integration (EII) is about 'integrating data from 
+	multiple sources 	\textit{without} having to to first load data into
+	 a central warehouse'\cite[p.1]{eii_2005}}
+ (EII) products have appeared in the market (e.g. \textit{Information Manifold} by AT\&T Lab) and an significant experience has been accumulated on: data integration formalisms, ways of describing of heterogeneous data sources and their abilities (e.g. RDBMS vs web form), query optimization (combining sources efficiently, source overlap, data quality, etc)\cite{eii_2005}. 
+%
+Recent research in data integration mostly focused on methods of automatic, uncertainty and feedback  driven (e.g. though statistical mediator) semi-automatic pay-as-you-go approaches\cite[ch.19]{principles_data_integration}).
 
 
-\subsubsection*{Deep web search at Google}
-[multiple papers from Google] discusses various ways for implementing data integration in terms of large-scale search engine (Google): Virtual integration vs. Surfacing. They also present ways for integrating systems without human intervention through use of statistical 'mediator'.
+The problem of keyword search over structured sources received significant attention within the last decade. Keyword search over relational, XML and other databases was explored form a number of perspectives: returning top-k ranked result tuples vs suggesting structured queries as SQL, performance optimization, user feedback mechanisms, as well as keyword searching over distributed sources. 
+It is worth noting that when there is no need for 100\% result exactness keyword search combined with probabilistic schema matching allows lightweight (pay-as-you-go) data integration with minimal human effort upfront\cite[ch.16]{principles_data_integration} but could improve its quality with time by using users' feedback.
 
-There two approaches to web scale search for deep-web (Google mostly cares about web forms):
+In the setting of Boolean Keyword-based Retrieval over heterogeneous sources a keyword query could be translated into a ranked list of structured queries (similarly as SODA system that propose SQL, Query Forms that propose SQL templates or Keymantic trying to achieve this without accessing the data).
+In the extreme case of having no control over a web-service that do not publish its contents, techniques like Google's Deep-web crawl could index a subset of its contents enabling keyword search to some extent.
 
-\textit{Runtime query reformulation} - 'leaves data at the sources and routes queries to appropriate services'\cite[p. 1]{webscale_paygo} 
+\subsection{Composing multiple data sources efficiently: Query translation using Logical Views}
+The \textit{Information Manifold}\cite{Levy96} is virtual integration (EII) system that uses CARIN dialect of \textit{description logics} (could be though as simplified datalog) for queries and for source descriptions. It describes each source as logical view over the global (mediated) schema, augmented with source capabilities (e.g. what are possible and the required input parameters for a view to do selections\footnote{this makes these logical views quite similar to source APIs used by DAS, with difference that DAS currently only describe the parameters APIs and only partially the results (as an entity type)}).
+%
+This allows designing algorithms that could allow efficiently answering complex queries that require composing multiple the data sources by finding maximally contained rewriting of (conjunctive) input query in terms of logical views provided by sources (that is, finding an optimal way to compose the sources).
 
-\textit{Deep-web surfacing} - tries to add content from the deep-web into search index. There are algorithms which allow to iteratively choose input parameters to forms to surface a considerable part of the 'hidden' data without large overhead%
-	\footnote{i.e. if choosing parameters in not smart way, a web form with just a couple of free inputs (or even dropdowns that's easier case), could yield as many results as a cross product of all input combinations.}.
+For example (based on \cite{integr_views2000}), consider such sources as expressed as views (on the left) in terms of global predicates of the mediated schema (on the right) in datalog notation:
+%
+{\small
+\begin{verbatim}
+v1(E, P, M) :- emp(E) & phone(E, P) & mgr(E, M). # employees, their phones and managers
+v2(E, O, D) :- emp(E) & office(E, O) & dept(E, D). # offices and departments of employees
+v3(E, P) :- emp(E) & phone(E, P) & dept(E, toy_dept). # phones of employees only in Toys dept.
+\end{verbatim}
+}
+%
+Suppose we wanted to know Sally's phone and office. We express this by datalog in global predicates:
+{\small\begin{verbatim}
+q1(P,O) :- phone(sally,P) & office(sally,O).
+\end{verbatim}}
+There are two minimal solutions (as the sources could be incomplete the full solutionis union of the two):
+{\small
+\begin{verbatim}
+answer1(P,O) :- v1(sally,P,M) & v2(sally,O,D).
+answer2(P,O) :- v3(sally,P) & v2(sally,O,D).
+\end{verbatim}}
+Notice that the expansions of these solutions (e.g. answer1\_exp) are not equivalent to $q_1$, but the conjunctive queries that are closest and still contained in $q_1$ (as these are the only usable views at sources):
+{\footnotesize\begin{verbatim}
+answer1_exp(P,O) :- emp(sally) & phone(sally,P) & mgr(sally,M) & emp(sally) & office(sally,O) & dept(sally,D).
+\end{verbatim}
+}
+After this \textit{Information Manifold} would find an executable order that adheres the capabilities of the sources, by iteratively considering any sources whose input parameters are satisfied. 
+% \subsection{Keyword search: integration on demand}
+% {\color{red}TODO?: \cite[ch.16]{principles_data_integration}}
 
-\textit{PayGo approach}\cite{webscale_paygo}  - With this approach, 'a system starts with
-very few (or inaccurate) semantic mappings and these mappings
-are improved over time as deemed necessary'.
-% TODO: cite{bootstraping}
-there is NO single mediated schema over which users pose queries. Queries are routed to to the relevant sources with help statistical methods that are used to model uncertainty at all levels: queries, mappings and underlying data. 
 
-%{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a very suboptimal solution as indexing terms improves results (mention evaluation from SODA paper). It works only then keywords map entity names. some hybrid approaches: 
-%index if exists, regexp, some string similarity measure based on historical data (e.g. even edit-distance would work for many items, like site)}
-
-
-
-\subsection{Keyword search over relational Database}
+\subsection{Keyword search over a Relational Database}
 The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community over the last decade. 
 
 The basic approach would first build an inverted index on database tables (usually only text columns). Then after finding all occurrences of the keywords, would try to construct join paths (based on Foreign keys) that would unite tuples containing the keywords.
@@ -64,7 +68,7 @@ A number of problem variations exist:  returning only the ranked Top-k results v
 \subsubsection*{Ranking Query Templates based on keyword query}
 A simple way to access relational database could  be through a set of predefined named query templates (SQL with selection parameters or operators still to be specified) exposed to a user as a Form that the user has to fill in.
 
-\cite{forms_kws} proposes alternative approach for processing keyword queries over relational databases: given a keyword query, instead of returning database tuples one could rank query forms that best matches the query for user to choose the right one (if they are properly named this is fairly easy). The ranking is based on checking matching of keywords to table names in templates and to column values (could be implemented with inverted index).\textbf{\color{red}TODO: more detailed and our limitations (after reading keyword cleaning)}.
+\cite{forms_kws} proposes alternative approach for processing keyword queries over relational databases: given a keyword query, instead of returning database tuples one could rank query forms that best matches the query for user to choose the right one (if they are properly named this is fairly easy). The ranking is based on checking matching of keywords to table names in templates and to column values.
 
 An interesting feature of this approach is that a Query Template is functionally similar to any autonomous web service (which given the parameters would in turn execute that query on its database).  In case of the Data Aggregation System, a user after entering a keyword query could be provided with a ranked list of structured queries (attribute=value) that could be processed given data source constraints (e.g. parameters required) and if needed he could refine his search (e.g. provide more parameters).
 
@@ -85,8 +89,32 @@ With a goal to bridge the increasing gap between high-level (conceptual, busines
 Even on a large data-warehouse of ~220GB data with a complex schema of 400+ tables they reported that if good meta-data is available, generating even fairly complex SQL  (e.g. n-way joins with aggregations) is quite feasible for a computer. That would make it 'much easier for business users to interactively explore highly-complex data warehouses' \cite[p.932]{ethz2012}. The users also reported system's potential a) for analysing the schema and learning patterns about it and b) as tool to help documenting legacy systems.
 
 
-\subsection{Keyword search: integration on demand}
-{\color{red}TODO?: \cite[ch.16]{principles_data_integration}}
+\subsection{Keyword search over web services}
+
+
+\subsubsection*{What if there is no access to index data terms}
+\cite{Keymantic10, semantics_without_access} explores the case then there is no possibility to index the data terms, e.g. then a DB is behind a wrapper (e.g. accessible only through a \textit{Web form} in “Hidden Web” or \textit{a web-service}) then crawling is generally not possible.
+%
+In Keymantic\cite{Keymantic10} a 'keyword query is processed as follows: First, all keywords that  correspond to metadata items (e.g., field names) are extracted. The remaining
+keywords are considered as possible input fields. Second, the likelihood of a remaining keyword to a metadata item is computed in order to rank different options to execute the keyword query on the
+“Hidden Web” database'\cite[p.942]{ethz2012}.
+
+\subsubsection*{Deep web search at Google}
+%[multiple papers from Google] discusses various ways for implementing data integration in terms of large-scale search engine (Google): Virtual integration vs. Surfacing. They also present ways for integrating systems without human intervention through use of statistical 'mediator'.
+
+There are two approaches to web scale search over deep-web (here Google mostly cares about web forms): \marginpar{\scriptsize\color{red}TODO: how does google use PayGo?} 
+%\textit{Runtime query reformulation} - 'leaves data at the sources and routes queries to appropriate services'\cite[p. 1]{webscale_paygo} 
+
+\textit{Deep-web surfacing} - surface deep-web (e.g. web forms) adding their results into the standard search index  easily allowing to using existing IR technology that scales well. There exist algorithms which allow to iteratively choose input parameters to the forms to surface a considerable part of the 'hidden' data without large overhead%
+	\footnote{i.e. if choosing parameters in not smart way, a web form with just a couple of free inputs (or even dropdowns that's easier case), could yield as many results as a cross product of all input combinations.}.
+
+\textit{Pay-as-you-go approach}\cite{webscale_paygo} - With this approach, 'a system starts with
+very few (or inaccurate) semantic mappings and these mappings are improved over time as deemed necessary';
+% TODO: cite{bootstraping}
+there is NO single mediated schema over which users pose queries: queries are routed to to the relevant sources with help statistical methods that are used to model uncertainty at all levels: queries, mappings and underlying data. 
+
+%{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a very suboptimal solution as indexing terms improves results (mention evaluation from SODA paper). It works only then keywords map entity names. some hybrid approaches: 
+%index if exists, regexp, some string similarity measure based on historical data (e.g. even edit-distance would work for many items, like site)}
 
 
 
