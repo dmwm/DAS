@@ -692,7 +692,7 @@ class DASWebService(DASWebManager):
                     head = {'status':'onhold',
                             'mongo_query':dasquery.mongo_query,
                             'pid':pid, 'nresults':0, 'ctime':0,
-                            'timestamp':time.time()}
+                            'ts':time.time()}
                     data = []
                     return self.datastream(dict(head=head, data=data))
             addr = cherrypy.request.headers.get('Remote-Addr')
@@ -811,8 +811,9 @@ class DASWebService(DASWebManager):
         page = ""
         count = 0
         for row in self.reqmgr.items():
+            tst = time.strftime("%Y%m%d %H:%M:%S GMT", time.gmtime(row['ts']))
             page += '<li>%s placed at %s<br/>%s</li>' \
-                        % (row['_id'], row['timestamp'], row['kwds'])
+                        % (row['_id'], tst, row['kwds'])
             count += 1
         if  page:
             page = "<ul>%s</ul>" % page

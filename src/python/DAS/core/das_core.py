@@ -44,11 +44,11 @@ def dasheader(system, dasquery, expire, api=None, url=None, ctime=None):
     https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
     """
     if  not api:
-        dasdict = dict(system=[system], timestamp=time.time(),
+        dasdict = dict(system=[system], ts=time.time(),
                     expire=expire_timestamp(expire),
                     status="requested")
     else:
-        dasdict = dict(system=[system], timestamp=time.time(),
+        dasdict = dict(system=[system], ts=time.time(),
                     url=[url], ctime=[ctime],
                     expire=expire_timestamp(expire), urn=[api],
                     api=[api], status="requested")

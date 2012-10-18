@@ -692,23 +692,6 @@ def timestamp():
     """Generate timestamp"""
     return int(str(time.time()).split('.')[0])
         
-def results2couch(query, results, expire=600):
-    """
-    Modify results and add to each row dict the query and timestamp
-    to be used by couch db.
-    """
-    resdict = {}
-    resdict['query'] = query
-    resdict['hash'] = genkey(query)
-    tstamp = timestamp()
-    resdict['timestamp'] = tstamp
-    resdict['expire'] = tstamp + expire
-    if  isinstance(results, GeneratorType):
-        resdict['results'] = [res for res in results]
-    else:
-        resdict['results'] = results
-    return resdict
-
 # NOTE: I can use genresults generator implementation only if
 # I'll solve the problem with das_core.py:find_cond_dict since it's used
 # to read results from first data-service and pass found relative keys

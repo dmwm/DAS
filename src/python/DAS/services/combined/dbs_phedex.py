@@ -139,10 +139,10 @@ def update_db(urls, uri, db_name, coll_name):
     if  conn:
         coll = conn[db_name][coll_name]
         for dataset in datasets(urls):
-            dataset.update({'timestamp':tst})
+            dataset.update({'ts':tst})
             spec = dict(name=dataset['name'])
             coll.update(spec, dataset, upsert=True)
-        coll.remove({'timestamp': {'$lt': tst}})
+        coll.remove({'ts': {'$lt': tst}})
     else:
         raise ConnectionFailure('could not establish connection')
 
@@ -273,7 +273,7 @@ class DBSPhedexService(object):
             conn = db_connection(self.uri)
             self.coll = conn[self.dbname][self.collname]
             indexes = [('name', DESCENDING), ('site', DESCENDING), 
-                       ('timestamp', DESCENDING)]
+                       ('ts', DESCENDING)]
             for index in indexes:
                 create_indexes(self.coll, [index])
             dasmapping   = DASMapping(self.dasconfig)
@@ -298,7 +298,7 @@ class DBSPhedexService(object):
         """
         Check if data is expired in DB.
         """
-        spec = {'timestamp': {'$lt': time.time() + self.expire}}
+        spec = {'ts': {'$lt': time.time() + self.expire}}
         if  self.coll and self.coll.find_one(spec):
             return False
         return True
