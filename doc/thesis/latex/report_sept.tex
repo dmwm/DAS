@@ -18,6 +18,7 @@
 % fancy verbatim
 \usepackage{fancyvrb}
 \usepackage{appendix}
+\usepackage[usenames,dvipsnames]{xcolor}
 
 
 %\usepackage{alltt}
@@ -164,13 +165,12 @@ Issues to be addressed includes:
 	              %\item {\color{red}scale testing - if we are storing lots of historical info. MongoDB is not so performant if DB cant fit in memory. One of well known solutions is installing SSD.                        }
 \end{compactitem}
 
-
+{\color{gray}
 \subsection{Generic connector accessing relational databases}
-{\color{red}Generic connector able to access relational databases with minimal manual integration could be useful for integrating proprietary systems that were not yet integrated and there's no resources available to build APIs. A possible use-case could be the \textit{Prep} database, but this still has to be discussed. 
+Generic connector able to access relational databases with minimal manual integration could be useful for integrating proprietary systems that were not yet integrated and there's no resources available to build APIs. A possible use-case could be the \textit{Prep} database, but this still has to be discussed. 
 %
-Depending on the needs it could be either of exploratory or API/Query Forms based approach, where fake APIs are defined in terms of SQL queries (or even better in a simplified form that would generate SQL by taking schema into account)}
-{
-There was a project\footnote{\url{https://github.com/vkuznet/PyQueryBuilder}}   at CERN which tried to generalize DBS-Query Language for any database.}
+Depending on the needs it could be either of exploratory or API/Query Forms based approach, where fake APIs are defined in terms of SQL queries (or even better in a simplified form that would generate SQL by taking schema into account).
+There was a project\footnote{\url{https://github.com/vkuznet/PyQueryBuilder}}   at CERN which tried to generalize DBS-Query Language for any database that could be used for this.}
 
 % \color{green} Indeed, an dthat was the topic of research for another DAS student, Liang Dong. The idea was to generalize DBS-QL to any DB back-end and provide common package which will do a job. The work is done over here . Feel free to check it out and we can discuss it more.}
 

@@ -14,7 +14,7 @@
  	\footnote{As DAS uses Boolean IR model we could only rank specific structured queries, but not the results itself.}:
 	\begin{itemize}
 	\item the algorithm will generate mappings between each keyword to either an entity name, selection attribute name or its value (resembling 'Query forms' and 'Keyword cleaning' approaches)
-	\item ranking could be based on: how closely keywords are matching (some or all) required API's input parameters, popularity of certain queries and users feedback	
+	\item ranking could be based on: how closely keywords are matching (some or all) required API's input parameters, popularity of certain queries, users' feedback	 and user's personal profile (e.g. search history, department, etc)
 	\item build an inverted index of attribute values with some good full-text search toolkit%
 				\footnote{e.g. Xapian (http://xapian.org/) implemented in C++ which that is known for its flexibility, or Sphinx (http://sphinxsearch.com/)}. 
 	If no match found (e.g. new entry not yet in our cache) pattern matching could be used to make a best guess
