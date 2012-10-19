@@ -15,13 +15,13 @@ Since the late 1990's, several Enterprise Information Integration\footnote{%
 Recent research in data integration mostly focused on methods of automatic, uncertainty and feedback  driven (e.g. though statistical mediator) semi-automatic pay-as-you-go approaches\cite[ch.19]{principles_data_integration}).
 
 
-The problem of keyword search over structured sources received significant attention within the last decade. Keyword search over relational, XML and other databases was explored form a number of perspectives: returning top-k ranked result tuples vs suggesting structured queries as SQL, performance optimization, user feedback mechanisms, as well as keyword searching over distributed sources. 
-It is worth noting that when there is no need for 100\% result exactness keyword search combined with probabilistic schema matching allows lightweight (pay-as-you-go) data integration with minimal human effort upfront\cite[ch.16]{principles_data_integration} but could improve its quality with time by using users' feedback.
+The problem of keyword search over structured sources received significant attention within the last decade. Keyword search over relational, XML and other databases was explored from a number of perspectives: returning top-k ranked result tuples vs suggesting structured queries as SQL, performance optimization, user feedback mechanisms, as well as keyword searching over distributed sources. 
+If there is no need for 100\% result exactness keyword search combined with probabilistic schema matching provides lightweight (pay-as-you-go) exploratory data integration with almost no human effort upfront still improving its results' quality with time adjusting to users' feedback\cite[ch.16]{principles_data_integration}. On the other hand, SODA has shown that if enough meta-data is in place, fairly complex queries over large and complex warehouses could be answered.
 
 In the setting of Boolean Keyword-based Retrieval over heterogeneous sources a keyword query could be translated into a ranked list of structured queries (similarly as SODA system that propose SQL, Query Forms that propose SQL templates or Keymantic trying to achieve this without accessing the data).
-In the extreme case of having no control over a web-service that do not publish its contents, techniques like Google's Deep-web crawl could index a subset of its contents enabling keyword search to some extent.
+In the extreme case of having no control over a web-service that do not publish its contents, techniques like Google's Deep-web surfacing could index a subset of its contents enabling keyword search to some extent.
 
-\subsection{Composing multiple data sources efficiently: Query translation using Logical Views}
+\subsection{Composing multiple data sources efficiently: Query translation using Logical Views\label{IM_query_translation}}
 The \textit{Information Manifold}\cite{Levy96} is virtual integration (EII) system that uses CARIN dialect of \textit{description logics} (could be though as simplified datalog) for queries and for source descriptions. It describes each source as logical view over the global (mediated) schema, augmented with source capabilities (e.g. what are possible and the required input parameters for a view to do selections\footnote{this makes these logical views quite similar to source APIs used by DAS, with difference that DAS currently only describe the parameters APIs and only partially the results (as an entity type)}).
 %
 This allows designing algorithms that could allow efficiently answering complex queries that require composing multiple the data sources by finding maximally contained rewriting of (conjunctive) input query in terms of logical views provided by sources (that is, finding an optimal way to compose the sources).
@@ -57,13 +57,13 @@ After this \textit{Information Manifold} would find an executable order that adh
 
 
 \subsection{Keyword search over a Relational Database}
-The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community over the last decade. 
+%The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community over the last decade. 
 
 The basic approach would first build an inverted index on database tables (usually only text columns). Then after finding all occurrences of the keywords, would try to construct join paths (based on Foreign keys) that would unite tuples containing the keywords.
 
 % In addition to many papers the PhD dissertations \cite{PhD_2011, PhD_2012} describe the approaches in details including performance optimization details (e.g. generating materialized views), etc. 
 % 
-A number of problem variations exist:  returning only the ranked Top-k results vs. returning ranked list of possible queries, while some systems would even allow generating more complex queries including aggregations, etc (SQAK, SODA\cite{ethz2012}).
+%A number of problem variations exist:  returning only the ranked Top-k results vs. returning ranked list of possible queries, while some systems would even allow generating more complex queries including aggregations, etc (SQAK, SODA\cite{ethz2012}).
 
 \subsubsection*{Ranking Query Templates based on keyword query}
 A simple way to access relational database could  be through a set of predefined named query templates (SQL with selection parameters or operators still to be specified) exposed to a user as a Form that the user has to fill in.
@@ -99,6 +99,7 @@ In Keymantic\cite{Keymantic10} a 'keyword query is processed as follows: First, 
 keywords are considered as possible input fields. Second, the likelihood of a remaining keyword to a metadata item is computed in order to rank different options to execute the keyword query on the
 “Hidden Web” database'\cite[p.942]{ethz2012}.
 
+{\color{gray}
 \subsubsection*{Deep web search at Google}
 %[multiple papers from Google] discusses various ways for implementing data integration in terms of large-scale search engine (Google): Virtual integration vs. Surfacing. They also present ways for integrating systems without human intervention through use of statistical 'mediator'.
 
@@ -112,29 +113,6 @@ There are two approaches to web scale search over deep-web (here Google mostly c
 very few (or inaccurate) semantic mappings and these mappings are improved over time as deemed necessary';
 % TODO: cite{bootstraping}
 there is NO single mediated schema over which users pose queries: queries are routed to to the relevant sources with help statistical methods that are used to model uncertainty at all levels: queries, mappings and underlying data. 
-
-%{\color{red} TODO: Describe Keymantic\cite{Keymantic10}. This is a very suboptimal solution as indexing terms improves results (mention evaluation from SODA paper). It works only then keywords map entity names. some hybrid approaches: 
-%index if exists, regexp, some string similarity measure based on historical data (e.g. even edit-distance would work for many items, like site)}
-
-
-
-
-%\subsubsection*{Automatic mapping between distributed services}
-%{\color{red} TODO: an interesting approach but not for CERN...}
-
-
-
-%\subsubsection*{\color{red}Question Answering}
-
+}
 
 % See Appendix #1, for evaluation of they Demo system.
-
-
-
-% {\color{red}There doesn't seem to be much of recent papers going towards this direction (except from specific search systems like flight fare comparisons), however these are based on structured arguments.} 
-
-% Some other approaches could include: - creating virtual documents offline by joining tables, for instantaneous search results by employing IR techniques
-% (Indexing Relational Database Content Offline for Efficient Keyword-Based Search, 2003)
-
-% TODO: (Efficient Keyword Search Across Heterogeneous Relational Databases, 2007) : combines schema matching and structure discovery techniques to ﬁnd approximate foreign-key joins across heterogeneous databases
-

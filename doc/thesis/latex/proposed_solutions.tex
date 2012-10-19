@@ -36,7 +36,17 @@
 
 
 \subsection{Supporting complex queries}
-As most entities in the mediated schema (27 of them) are already mapped to multiple services (see the mapping here: \url{https://cmsweb.cern.ch/das/services}) in theory these could be taken as a graph could to build (some of) the more complex queries. {\color{red}At the moment this still needs some further consideration/planning, as the source descriptions we have are not so detailed as for example \textit{Information Manifold's}.}
+{\color{red}At the moment this still needs some further analysis/consideration, however it seems even with current data-source definitions could be used for building more complex queries.}
+
+DAS Service definitions contain for each data service (API): mapping of its parameters and result type into entities of mediated schema (but NOT ALL their fields are defined a priori). ]
+From theoretical (correctness) stand point, this seems mappable  into \textit{Information Manifold's} data source definitions described on Ch.\ref{IM_query_translation} of Literature review. 
+
+Other issues to think about contain:
+\begin{itemize}
+\item how these queries shall be entered by the user and how ambiguity shall be handled especially if queries entered in some simplified (semi-structured) language like DAS Query Language currently is
+\item any optimizations/heuristics if multiple possible solutions exist
+\item handling complex and heavy queries with large number of results, e.g. lazy loading with pagination (at least at the level of service composition as APIs do not yet support pagination/sorting)
+\end{itemize}
 
 \subsection{Performance}
 

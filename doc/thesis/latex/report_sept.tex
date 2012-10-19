@@ -5,8 +5,8 @@
 %\usepackage{fullpage} 
 \usepackage[cm]{fullpage}
 
-\addtolength{\topmargin}{-5mm}
-\addtolength{\topskip}{-5mm}
+\addtolength{\topmargin}{-10mm}
+\addtolength{\topskip}{-10mm}
 
 %\usepackage[margin=0.5in]{geometry}
 %\usepackage{sans}
@@ -95,96 +95,15 @@ Queries could be run either from web browser or through  command line interface 
 
 % \textbf{\color{red}Examples of more general uses: Digital libraries, Stock markets, [ Weather, Flight costs]}
 
-\section{Problem statement}
-\subsection{User Interface and ease of use}
-
-For an IR system with wide variety of users, it important to provide an easy to use interface with fairly flat learning curve, while at the same time not loosing support of fairly complex queries.
-%
-	Even a simple structured query language and entity names over the mediated schema  at first may seem hard to learn%
-%	\footnote{On the other hand, at CERN the names in  the mediated schema are referring to real-world entities that {\color{red}are fairly consistently named} (even though there may exist slight differences in their naming on different data-sources).}%
-	\footnote{on the other hand, at CERN, the names in the mediated schema are refer to entities that in the real-world are fairly consistently named (though there may exist slight differences in their naming, whereas DAS is to provide the 'golden' naming convention).}. Therefore, it shall be useful to guide new users interactively through the process of building of their query.
-%   
-   Supporting non-structured keyword queries is also worth investigation as quite many users reported they are missing this Google-like search experience.
-        
-        
-\subsection{Supporting complex queries}
-Currently DAS can only process queries that could be directly mapped to data providers' APIs, but not the queries where results of one API need to be fed into another APIs 
-	%\footnote{this is partially because of performance reasons {\color{red}and the fact that DAS is mainly schema-less (the mediated schema is only in terms of entities, their mappings to APIs and API parameters)}}%
-	\footnote{except a couple of manually hard-coded "views" in a virtual \textit{"combined"} data provider}%
-. %In such case, the user  is forced to write some code to submit and process the sub-queries himself. 
-Further, to be flexible DAS only keeps a list of 'mediated entities' and how they could be retrieved, but do not enforce any predefined schema (i.e. entity fields/attributes) nor exposes it\footnote{%
-	Actually the fields of each API  (an entity could be mapped to a number of these) could be inferred 
-	from past queries or by predefined 'bootstrap' queries. Currently the field lists may differ slightly depending on the parameters}
-before querying for some particular entity(-ies). 
-%
-This makes it fairly hard to execute complex queries  without a priori knowledge.
-User has to know what queries and how have to be combined (depends on the mediated schema and what APIs are available), and has either to combine the results by hand or to write a program does that.
-%
-Some of the questions to be answered:
-
-	\begin{compactitem}
-		\item could we select  meaningful and sufficiently efficient composition of services even using less detailed source descriptions than those used in Information Manifold (see Literature Review)?
-		\item could we use the current descriptions that only define entity the result and API parameters?
-%		\item how to present the results (as a sequence of DAS queries or implemented within DAS)
-	\end{compactitem}
-	
-%+\item {\color{green} Build series of queries which will answer the given user question, e.g. user asks {\it I want to find files which contains runs taken with magnetic field 4T for given dataset at site X}. This should be decomposed somehow (subject to research) into series of quries, e.g. Find datasets at site X; find files for given dataset list; find runs for found files; filter runs with magnetic field 4T}
-
-
-% It would be nice to {\color{green} Build series of queries which will answer the given user question, e.g. user asks {\it I want to find files which contains runs taken with magnetic field 4T for given dataset at site X}. This should be decomposed somehow (subject to research) into series of quries, e.g. Find datasets at site X; find files for given dataset list; find runs for found files; filter runs with magnetic field 4T}
-
-
-% TODO:	Further a minimum set of search predicates is imposed by APIs (mainly because of performance reasons) and user has to be informed what extra is he expected to provide.
-       
-% TODO:	Even in structured query mode users are prone to typos, use either autocompletion where possible or suggest alternative queries.                            
-
-\subsection{Performance}
-
-DAS is based on \textit{Virtual Integration} where data is left at the sources allowing data to be volatile (e.g. new records gathered or existing records updated; service descriptions may be changed; new services added), while some subsets of the data could be fairly static (e.g. datasets stored at DBS do not change often). 
-%
-Further as the total data that is stored at data-providers could be fairly large (order of 1TB per year) and as their main goal is supporting production (data taking from the CMS detector), the providers may impose some constraints (e.g. only certain queries allowed).
-%
-Therefore, it is important to balance between returning locally cached query results quickly   and between issuing queries to slow data-services to get fresh results.
-%
-Issues to be addressed includes:
-\begin{compactitem}
-						\item Low data providers' performance (e.g. on DBS some queries requires joining many very large tables)
-	     				\item At the moment all queries are put into one pool and has to wait until some threads are available. If a couple of heavy queries were submitted earlier, even light queries would have to wait long. Explore more advanced Query prioritization 
-	     					(e.g. we could have some query cost model based on history or predefined scores per API)
-	     					
-                		\item Currently result items are cached for a fairly short period of time (5min-1h) and then completely discarded, however many entities are not changing that often - Explore more intelligent caching
-	                	  
-	                		% TODO: \item query rewriting then used with grep=smf then the same item is available as selection key. check how many instances.
-	                		
-
-					\item Since DAS does aggregation across multiple data providers, given their current APIs (with no ordering and limit functionality), DAS has to fetch ALL records matching the query instead of only the first page. Although it would be possible to do partial results for data coming from a single data-source (while still loading in background, or the providers (or us) would have to modify their APIs).
-					
-					
-					\item Efficient distributed search: as filtering criteria may reside on two or more autonomous sources, given the current APIs much more items than in the final result may need to be fetched from each source. Items that do not meet all selection criteria could be filtered out only afterwards in DAS. To improve the performance, data provider's APIs for the most used queries may need to be redesigned.
-                        % \item {\color{red}e.g. displaying intermediary results of aggregation while still calculating with statistical bounds -- however statistical bounds are much meaningful only if items are well snuffled/randomized -- people could stop the query if they see a non-sense}
-	              %\item {\color{red}scale testing - if we are storing lots of historical info. MongoDB is not so performant if DB cant fit in memory. One of well known solutions is installing SSD.                        }
-\end{compactitem}
-
-{\color{gray}
-\subsection{Generic connector accessing relational databases}
-Generic connector able to access relational databases with minimal manual integration could be useful for integrating proprietary systems that were not yet integrated and there's no resources available to build APIs. A possible use-case could be the \textit{Prep} database, but this still has to be discussed. 
-%
-Depending on the needs it could be either of exploratory or API/Query Forms based approach, where fake APIs are defined in terms of SQL queries (or even better in a simplified form that would generate SQL by taking schema into account).
-There was a project\footnote{\url{https://github.com/vkuznet/PyQueryBuilder}}   at CERN which tried to generalize DBS-Query Language for any database that could be used for this.}
-
-% \color{green} Indeed, an dthat was the topic of research for another DAS student, Liang Dong. The idea was to generalize DBS-QL to any DB back-end and provide common package which will do a job. The work is done over here . Feel free to check it out and we can discuss it more.}
-
-
+\input{problem_statement}
 
 \input{proposed_solutions}
-
 
 \include{literature_review}
 
 
-
 \section{Work status}
-
+{\color{red}
 \begin{verbatim}
 - obtained DB copy of biggest data provider DBS (currently 80 GB + 200 GB indexes)
 - preliminary literature review (to be continued deeper)
@@ -195,7 +114,7 @@ Upcomming Work items:
 - check performance improvements after creation of materialized view(s)
 - interview more DAS users
 \end{verbatim}
-
+}
 % ---  Bibliography
 \bibliographystyle{unsrt}
 \addcontentsline{toc}{chapter}{Bibliography}
