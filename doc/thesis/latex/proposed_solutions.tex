@@ -60,7 +60,7 @@ Cached copy may be shown by default while up to date results could be retrieved 
 %
 On the other hand some result items may not make sense to be cached, as there may be too many of valid input parameter combinations (e.g. now there are 900M of \textit{(run, file)} combinations).
 
-Other way to boost performance is pre-fetching most common queries from time to time (determined manually and/or automatically). Also it's possible have different validity dates for certain fields. if no volatile fields are not explicitly requested, even a very old cache could be used
+Other way to boost performance is pre-fetching most common queries from time to time (determined manually and/or automatically). Also it's possible have different validity dates for certain fields. If no volatile fields are explicitly requested, even a very old cache could be used.
 
 %%%%%  -------------------------------------------
 \subsubsection*{Data providers' performance issues}
@@ -79,4 +79,4 @@ For Oracle \textit{materialized refresh fast views with query rewriting} would b
 %%%%%  -------------------------------------------
 
 \subsubsection*{Integrating distributed information efficiently}
-Bloom-join (which could be quite transparent and implemented even on DB side (efficient pure SQL is doable for MySQL, and probably for Oracle too) quite almost transparently (a helper function could take the initial query and bloom-filter's bit-vector as parameters). 
+Bloom-join (which could be quite transparent and implemented even on DB side (efficient pure SQL is doable for MySQL, and probably for Oracle too) quite transparently (a helper function could take the initial query and bloom-filter's bit-vector as parameters). 

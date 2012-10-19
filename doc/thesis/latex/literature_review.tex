@@ -18,7 +18,7 @@ The problem of keyword search over structured sources received significant atten
 %
 If there is no need for 100\% result exactness, keyword search combined with probabilistic schema matching provides lightweight exploratory data integration with almost no human effort upfront with ability to improve the results by adjusting to users' feedback\cite[ch.16]{principles_data_integration}. On the other hand, the \textit{SODA} system has shown that if enough meta-data is in place, even quite complex queries given in bussiness terms could be answered over a large and complex warehouse.
 
-In the setting of Boolean Keyword-based Retrieval over heterogeneous sources a keyword query could be translated into a ranked list of structured queries (similarly as \textit{SODA} system that propose SQL, \textit{Query Forms} approach that propose SQL templates or Keymantic trying to achieve this without accessing the data).
+In the setting of Boolean Keyword-based Retrieval over heterogeneous sources, a keyword query could be translated into a ranked list of structured queries (similarly as \textit{SODA} system that propose SQL, \textit{Query Forms} approach that propose SQL templates or Keymantic trying to achieve this without accessing the data).
 In the extreme case of having no control over a web-service that do not publish its contents, techniques like Google's Deep-web surfacing could index a subset of its contents enabling keyword search to some extent.
 
 \subsection{Composing multiple data sources efficiently: Query translation using Logical Views\label{IM_query_translation}}
@@ -95,7 +95,5 @@ Even on a large data-warehouse of ~220GB data with a complex schema of 400+ tabl
 \subsubsection*{What if there is no access to index data terms?}
 \cite{Keymantic10, semantics_without_access} explores the case then there is no possibility to index the data terms, e.g. then a DB is behind a wrapper (e.g. accessible only through a \textit{Web form} in “Hidden Web” or \textit{a web-service}) then crawling is generally not possible.
 %
-In Keymantic\cite{Keymantic10} a keyword query is processed as follows: First, all keywords that  correspond to metadata items (e.g., field names) are extracted. The remaining keywords are considered as possible parameters to the input fields in the web form. Second, the likelihood of a remaining keyword to matching a metadata item is computed in order to rank different options of executing this keyword query on the "Hidden Web"\cite[p.942]{ethz2012}.
-
-
+In Keymantic\cite{Keymantic10} a keyword query is processed as follows: First, all keywords that  correspond to metadata items (e.g., field names) are extracted. The remaining keywords are considered as possible parameters to the input fields in the web form. Second, the likelihood of a remaining keyword to matching a metadata item is computed in order to rank different options of executing this keyword query on the "Hidden Web"\cite[p.942]{ethz2012}. Because of no access to the actual data, results of this method were reported considerably worse on queries containing data terms, even if all metadata (e.g. business ontology) is given\cite{ethz2012}, therefore it is helpful to have at least some insight on the data behind a webservice.
 % See Appendix #1, for evaluation of they Demo system.
