@@ -1,4 +1,5 @@
-\documentclass[a4paper,11pt,draft]{article}
+\documentclass[a4paper,11pt]{article}
+% ,draft
 \special{papersize=210mm,297mm}
 
 % twocolumn
@@ -10,6 +11,7 @@
 
 %\usepackage[margin=0.5in]{geometry}
 %\usepackage{sans}
+%\usepackage{lmodern}
 \usepackage{paralist}
 \usepackage{color}
 
@@ -95,23 +97,30 @@ Queries are executed either from web browser or through a command line interface
 % \textbf{\color{red}Examples of more general uses: Digital libraries, Stock markets, [ Weather, Flight costs]}
 \input{problem_statement}
 
-\input{proposed_solutions}
-
 \include{literature_review}
 
+\input{proposed_solutions}
 
+
+
+\newpage
 \section{Work status}
-{\color{red}
+{\begin{footnotesize}
 \begin{verbatim}
-- obtained DB copy of biggest data provider DBS (currently 80 GB + 200 GB indexes)
+- set-up of development environment
 - preliminary literature review (to be continued deeper)
 - initial analysis of DAS logs
+- obtained DB copy of biggest data provider DBS (currently 80 GB + 200 GB indexes)
+- some work done on solving wildcard query restrictions
 
 Upcomming Work items:
+- benchmark data provider's performance (per API based on historical queries)
 - couple of fairly simple prototypes of UI/access patters for simpler DAS querying
 - check performance improvements after creation of materialized view(s)
-- interview more DAS users
+- look into possible implementations for combined queries
+
 \end{verbatim}
+\end{footnotesize}
 }
 % ---  Bibliography
 \bibliographystyle{unsrt}
@@ -124,8 +133,26 @@ Upcomming Work items:
 \end{small}
 
 \pagebreak
-\include{das_logs}
+\input{milestones}
 
+\pagebreak
+\input{das_logs}
 
+{\color{gray}
+\subsubsection*{Not so relevant from Literature Review: Deep web search at Google}
+%[multiple papers from Google] discusses various ways for implementing data integration in terms of large-scale search engine (Google): Virtual integration vs. Surfacing. They also present ways for integrating systems without human intervention through use of statistical 'mediator'.
+
+There are two approaches to web scale search over deep-web (here Google mostly cares about web forms): 
+%\marginpar{\scriptsize\color{red}TODO: how does google use PayGo?} 
+%\textit{Runtime query reformulation} - 'leaves data at the sources and routes queries to appropriate services'\cite[p. 1]{webscale_paygo} 
+
+\textit{Deep-web surfacing} - surface deep-web (e.g. web forms) adding their results into the standard search index  easily allowing to using existing IR technology that scales well. There exist algorithms which allow to iteratively choose input parameters to the forms to surface a considerable part of the 'hidden' data without large overhead%
+	\footnote{i.e. if choosing parameters in not smart way, a web form with just a couple of free inputs (or even dropdowns that's easier case), could yield as many results as a cross product of all input combinations.}.
+
+\textit{Pay-as-you-go approach}\cite{webscale_paygo} - With this approach, 'a system starts with
+very few (or inaccurate) semantic mappings and these mappings are improved over time as deemed necessary';
+% TODO: cite{bootstraping}
+there is NO single mediated schema over which users pose queries: queries are routed to the relevant sources with help statistical methods that are used to model uncertainty at all levels: queries, mappings and underlying data. 
+}
 
 \end{document}
