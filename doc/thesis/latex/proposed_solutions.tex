@@ -9,6 +9,7 @@
 \item What do you want to do with these results (after seeing the results)? Possible options: list items; select only specific columns; do aggregation; use in command line/another program
 \end{enumerate}
 
+\item JavaScript-based query interpreter with auto completion to ease query writing: could suggest searchable entities and maybe even entity attribute names. 
 
 \item Given a keyword query, suggest the best matching structured queries (as a ranked list)%
  	\footnote{As DAS uses Boolean IR model we could only rank specific structured queries, but not the results itself.}:
@@ -16,32 +17,31 @@
 	\item the algorithm will generate mappings between each keyword to either an entity name, selection attribute name or its value (resembling 'Query forms' and 'Keyword cleaning' approaches)
 	\item ranking could be based on: how closely keywords are matching (some or all) required API's input parameters, popularity of certain queries, users' feedback	 and user's personal profile (e.g. search history, department, etc)
 	\item build an inverted index of attribute values with some good full-text search toolkit%
-				\footnote{e.g. Xapian (http://xapian.org/) implemented in C++ which that is known for its flexibility, or Sphinx (http://sphinxsearch.com/)}. 
+				\footnote{e.g. Xapian (http://xapian.org/) that is known for its flexibility, or Sphinx (http://sphinxsearch.com/)}. 
 	If no match found (e.g. new entry not yet in our cache) pattern matching could be used to make a best guess
-	\item the system could improve its results from users' feedback (e.g. by HMM, will need to decide)
-	\item multi-wildcard queries (e.g. dataset=*Zmm*special*RECO*) are common at CMS that will need special attention\footnote{Matching to structured query will be harder and guessing even worse. Also for performance reasons some web-services will introduce limitations on the format of wilcard queries, while DAS wants still to be flexible at least for datasets}.
+	\item the system could improve its results from users' feedback through machine learning (e.g. HMM)
+	\item multi-wildcard queries (e.g. dataset=*Zmm*special*RECO*) are common at CMS that will need special attention\footnote{%
+		Matching a wildcard query into a schema field will be harder. Also for performance reasons some web-services will introduce limitations on the format of wilcard queries, while DAS wants to allow more flexible queries, at least for \textit{datasets}}.
 	
-\item knowing all possible APIs parameter values would be beneficial ({\color{red}but not yet sure if available}%
-		\footnote{problem: the owners of services may not want to provide direct access to DB because of no trust, security or performance issues. Otherwise, specific APIs could be developed to return possible parameter values but this is quite an overhead}) and could be used to improve the keyword search (better mapping from keywords to API inputs) or even the structured search (e.g. query cleaning/term auto-completion)
+\item knowing all possible APIs' parameter values, in addition to historical values seen so far, would improve quality of the keyword search (better mapping from keywords to these values) or even the structured search e.g. through query cleaning \& auto-completion. {\color{red}Not yet known if available}%
+		\footnote{problem: the owners of services may not want to provide direct access to DB because of no trust, security or performance issues. Otherwise, specific APIs could be developed to return possible parameter values but this is quite an overhead}.
 \begin{itemize}
 \item having direct access to DB, one could incrementally index target database\footnote{%
-			E.g. an inverted index of values in Oracle/MySQL DB tables can be built to keep the list of possible terms. For instance, Sphinx full text search engine can access DBs directly and also supports incremental indexing but it needs a bit of manual configuration {http://sphinxsearch.com/docs/current.html\#delta-updates} }%
-	tables mapping it's columns into API parameters (manually or automatically). 
+			E.g. an inverted index of values in Oracle/MySQL DB tables can be built to keep the list of possible terms. For instance, Sphinx full text search engine can access DBs directly and also supports incremental indexing but it needs a bit of manual configuration {http://sphinxsearch.com/docs/current.html\#delta-updates} }
+	tables semi-automatically mapping it's columns into API parameters.
 
 %\item may need to exclude very large tables
 \end{itemize}
 	\end{itemize}
-\item (?) JavaScript-based query interpreter to ease query writing: could suggest search attribute and entity attribute names. also taking into account some possible ambiguous namings (auto completion)
 \end{itemize}
 
 
 \subsection{Supporting complex queries}
-{\color{red}At the moment this still needs some further analysis/consideration, however it seems even with current data-source definitions could be used for building more complex queries.}
+{\color{red}At the moment this still needs some further analysis/consideration, however it seems even the existing data-source definitions could be used for building more complex queries.}
 
-DAS Service definitions contain for each data service (API): mapping of its parameters and result type into entities of mediated schema (but NOT ALL their fields are defined a priori). ]
-From theoretical (correctness) stand point, this seems mappable  into \textit{Information Manifold's} data source definitions described on Ch.\ref{IM_query_translation} of Literature review. 
+DAS Service definitions contain: for each data service (API), mapping of its parameters and result type into entities of mediated schema (but NOT ALL their fields are defined a priori). Even if DAS definitions do not describe every attribute of API result, as all input parameters are attributed to a mediated schema entity, these definitions seem mappable  into \textit{Information Manifold's} data source definitions described on Sec.\ref{IM_query_translation} of Literature review.
 
-Other issues to think about contain:
+Other issues to consider:
 \begin{itemize}
 \item how these queries shall be entered by the user and how ambiguity shall be handled especially if queries entered in some simplified (semi-structured) language like DAS Query Language currently is
 \item any optimizations/heuristics if multiple possible solutions exist
@@ -54,32 +54,17 @@ Other issues to think about contain:
 %%%%%  -------------------------------------------
 
 \subsubsection*{More intelligent caching}
-Some of the data entities instances changes very rarely. For example in DBS system old datasets would never change, while new entities are constantly added (still some of their attributes may change, e.g.  validity of a dataset). 
+Some of the data instances changes very rarely. For example in DBS system old datasets would never change, while new entities are constantly added (some of their attributes may change, but only rarely, e.g.  validity of a dataset). 
 %
 Cached copy may be shown by default while up to date results could be retrieved on user's request. An automatic change rate prediction could be useful to efficiently balance between caching and retrieving results.
 %
 On the other hand some result items may not make sense to be cached, as there may be too many of valid input parameter combinations (e.g. now there are 900M of \textit{(run, file)} combinations).
 
-Also consider that:
-                			\begin{itemize}
-                			%\item given an entity received from provider, determining if it is useful to cache for long-term
-%	                			\item \textbf{\color{red}At what level are we caching now? query or individual query results?}
-                			%\item could cache even \textit{expired} data, but warning user
-                			\item we could also have different validity dates for certain fields. if no volatile fields are not explicitly requested, even a very old cache could be used. 
-                			% \item Can we automatically figure which fields are static and which are changing?    			 {\color{green} Yes, if we enfore APIs to record modification timestamp} {\color{red} I also meant some automatic algorithm, however that would be more complex and less reliable}
-                			\item pre-fetching common queries: determining manually and/or automatically
-                			\end{itemize}
-
-
-
-
+Other way to boost performance is pre-fetching most common queries from time to time (determined manually and/or automatically). Also it's possible have different validity dates for certain fields. if no volatile fields are not explicitly requested, even a very old cache could be used
 
 %%%%%  -------------------------------------------
-\subsubsection*{Data providers performance issues}
-In the cases when new records are coming but the existing ones are not changing much, continuous view maintenance that computes only differences from earlier results could be a good solution to improve the performance especially for often used queries. 
-
-Use either \textit{materialized refresh fast views with query rewriting} (Oracle; completely transparent for proprietary apps)\cite{Oracle11}
- or some other continuous view maintenance tool (e.g. DBToaster\footnote{http://www.dbtoaster.org that is being developed at EPFL}) to improve performance of heavy queries containing joins and/or aggregations.
+\subsubsection*{Data providers' performance issues}
+In the cases when new records are coming but the existing ones are not changing much, continuous view maintenance that computes only differences from earlier results could be a good solution to improve the performance especially for popular and heavy queries containing joins and/or aggregations. 
 
 This is exactly the case for the most popular expensive query (see \hyperref[run_dataset_heavy]{query \#\ref{run_dataset_heavy} in \ref{appendix_das_cli_logs} DAS log analysis}) over DBS system (80GB + 280GB indexes): 'find files where run in [r1, r2, r3] and dataset=X' that needs to join all the biggest tables in that database.
 
@@ -87,14 +72,11 @@ This is exactly the case for the most popular expensive query (see \hyperref[run
 Dataset (164K rows) -> Block (2M) -> Files (31M) -> FileRunLumi (902M) <- Runs (65K)
 \end{verbatim}
 
-Having a materialized view with all these tables joined together would allow answering such queries much quicker. Given low change rates (in comparison to data already present), maintaining the view should be also comparatively cheap with only expense of just couple of times of space.
+Having a materialized view with all these tables joined together would allow answering such queries much quicker. Given low change rates (in comparison to data already present), maintaining the view should be also comparatively cheap with the only expense of just couple of times of storage space (storage is bound by the size of the largest table anyway).
 
+For Oracle \textit{materialized refresh fast views with query rewriting} would be completely transparent and would not need any changes to proprietary systems, but it has a couple of limitations on the queries\cite{Oracle11}. Otherwise some other continuous view maintenance tool (e.g. DBToaster\footnote{http://www.dbtoaster.org that is being developed at EPFL}) could be used, however this wouldn't be as transparent.
 
 %%%%%  -------------------------------------------
 
 \subsubsection*{Integrating distributed information efficiently}
-Bloom-join (which could be quite transparent and implemented even on DB side [pure SQL is possible for MySQL, to check for Oracle]- take a query and bit-vector as parameter) , lazy pagination (and order required for aggregation) - this is not yet supported by any of the data-service APIs
-
-%\newline
-% integration at DAS level. (at source DB could be more performant a little)
-
+Bloom-join (which could be quite transparent and implemented even on DB side (efficient pure SQL is doable for MySQL, and probably for Oracle too) quite almost transparently (a helper function could take the initial query and bloom-filter's bit-vector as parameters). 
