@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Python.h>
-#define SIZE 16
+#define SIZE 32
 /*
  * C-version of das_hash function, see
  * http://www.cse.yorku.ca/~oz/hash.html
@@ -56,7 +56,9 @@ _das_hash(PyObject *self, PyObject *args)
     /* create PyString object from das hash */
     unsigned long res = das_hash(user_input);
     char buf[SIZE+1];
-    sprintf(buf, "%016lx", res); /* always get 16 digits for hex, fill with leading zeros */
+    /* we will output 32 char hex with result hash which is composed by
+     * its negative part and hash itself */
+    sprintf(buf, "%016lx%016lx", ~res, res);
     PyObject* data = PyString_FromStringAndSize(buf, SIZE);
 
     PyErr_Clear();
