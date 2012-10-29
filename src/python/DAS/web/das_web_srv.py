@@ -380,6 +380,23 @@ class DASWebService(DASWebManager):
                 new_input = selkey + ' ' + new_input
         kwargs['input'] = new_input
 
+
+
+    def _get_dbsmgr_for_db_instance(self, str_dbsinst):
+        """
+        Given a string representation of DBS instance, returns DBSManager
+        instance which "knows" how to look up datasets
+        (further for performance reasons of searching by wildcard and substring,
+        we may want to store then even outside MongoDB).
+        """
+        # TODO: instance selection shall be more clean
+        if  self.dataset_daemon:
+            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(str_dbsinst) != -1]
+            if  len(dbs_urls) == 1:
+                return self.dbsmgr[dbs_urls[0]]
+        return None
+
+
     def generate_dasquery(self, uinput, inst, html_error=True):
         """
         Check provided input as valid DAS input query.
@@ -399,7 +416,7 @@ class DASWebService(DASWebManager):
         # Generate DASQuery object, if it fails we catch the exception and
         # wrap it for upper layer (web interface)
         try:
-            dasquery = DASQuery(uinput, instance=inst)
+            dasquery = DASQuery(uinput, instance=inst, active_dbsmgr = self._get_dbsmgr_for_db_instance(inst))
         except Exception as err:
             return 1, helper(das_parser_error(uinput, str(err)), html_error)
         fields = dasquery.mongo_query.get('fields', [])

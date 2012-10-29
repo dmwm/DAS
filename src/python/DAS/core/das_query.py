@@ -18,6 +18,10 @@ from   DAS.utils.utils import genkey, deepcopy, print_exc
 from   DAS.utils.query_utils import compare_specs
 from   DAS.core.das_parser import ql_manager
 
+from  DAS.core.das_process_dataset_wildcards import *
+
+
+
 class DASQuery(object):
     """
     Wrapper around base query. Uses properties to calculate
@@ -25,6 +29,9 @@ class DASQuery(object):
     such as to_bare_query return a new DASQuery, modified
     appropriately.
     """
+
+    NON_CACHEABLE_FLAGS = ['mongoparser', 'active_dbsmgr']
+
     def __init__(self, query, **flags):
         """
         Accepts general form of DAS query, supported formats are
@@ -51,6 +58,12 @@ class DASQuery(object):
         self._aggregators   = []
         self._flags         = flags
 
+        # Wildcard processing needs to know current DBS instance
+        # it's more clean to use DBS manager directly
+        # OR even better, DBS manager may implement the wildcards?
+        # TODO: is it all fine with threading like this?
+        self._active_dbsmgr = None
+
         # loop over flags and set available attributes
         for key, val in flags.iteritems():
             setattr(self, '_%s' % key, val)
@@ -61,7 +74,7 @@ class DASQuery(object):
             try:
                 self._mongo_query = self.mongoparser.parse(query)
                 for key, val in flags.iteritems():
-                    if  key in ['mongoparser']:
+                    if  key in self.NON_CACHEABLE_FLAGS:
                         continue
                     if  not self._mongo_query.has_key(key):
                         self._mongo_query[key] = val
@@ -88,14 +101,39 @@ class DASQuery(object):
         self.update_attr()
         # check dataset wild-cards
         msg  = 'Dataset value requires 3 slashes.'
+
         for key, val in self._mongo_query['spec'].items():
             if  key.find('dataset.name') != -1:
                 if  not RE_3SLAHES.match(val):
+                    if not self._active_dbsmgr:
+                        continue
+                        # raise Exception(msg)
+
                     # TODO: apply 3 slash pattern look-up
                     # here, ticket #3071, if no 3-slash pattern
                     # found we will raise exception
                     # raise Exception(msg)
-                    pass
+
+                    print msg, ':', val
+                    # TODO: the exceptional cases are: 1) no match 2) multiple matches
+                    #try:
+                    dataset_matches = process_dataset_wildcards(val, self._active_dbsmgr)
+                    #except Exception, e:
+                    #    print e
+                    #    dataset_matches = []
+                    print "Matching wildcard query=%s into dataset patterns=%s" % (val, dataset_matches)
+
+                    if not len(dataset_matches):
+                        # TODO: fuzzy matching to propose fixes? This also could be done for any dataset...
+                        raise Exception( msg + ' We tried making things easier for you, but the pattern you specified did not match any datasets we know.\n'+
+                                        'Please check for misspellings or (if you know it\'s exists) provide it in the standard format with 3 slashes: \n /primary_dataset/processed_daset/data_tier')
+                    if len(dataset_matches) > 1:
+                         raise Exception(msg + ' Your query is matching more than one such dataset pattern.\n'+
+                                         'Please choose one from these:\n' + '\n'.join(dataset_matches))
+
+                    # If there's only one match all is fine, and we continue with query execution
+                    print "Matching wildcard query=%s into dataset pattern=%s" % (val, dataset_matches)
+                    self._mongo_query['spec'][key] = dataset_matches[0]
 
     def update_attr(self):
         """

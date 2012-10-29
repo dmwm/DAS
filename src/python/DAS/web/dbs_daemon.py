@@ -28,6 +28,11 @@ from DAS.utils.utils import get_key_cert, genkey
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 
+
+# Shall we keep existing Datasets on server restart (very useful for debuging)
+KEEP_EXISTING_RECORDS_ON_RESTART = 1
+SKIP_UPDATES = 1
+
 def dbs_instance(dbsurl):
     """Parse dbs instance from provided DBS url"""
     if  dbsurl[-1] == '/':
@@ -73,7 +78,9 @@ class DBSDaemon(object):
             self.col = conn[self.dbname][self.dbcoll]
             indexes = [('dataset', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
-            self.col.remove()
+
+            if not KEEP_EXISTING_RECORDS_ON_RESTART:
+                self.col.remove()
         except Exception as _exp:
             self.col = None
         if  not is_db_alive(self.dburi):
@@ -83,6 +90,9 @@ class DBSDaemon(object):
         """
         Update DBS collection with a fresh copy of datasets
         """
+        if SKIP_UPDATES:
+            return None
+
         if  self.col:
             time0 = time.time()
             gen = self.datasets()
