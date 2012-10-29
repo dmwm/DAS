@@ -129,6 +129,12 @@ class DBS3Service(DASAbstractService):
             val = kwds['lumi_list']
             if  val:
                 kwds['lumi_list'] = [val]
+        if  api == 'files' or api == 'files_via_dataset' or \
+            api == 'files_via_block':
+            # we can't pass status input parameter to DBS3 API since
+            # it does not accepted, instead it will be used for filtering
+            # end-results
+            del kwds['status']
 
     def parser(self, query, dformat, source, api):
         """
@@ -214,14 +220,21 @@ class DBS3Service(DASAbstractService):
                 parent = row['child']
                 for val in parent['child_logical_file_name']:
                     yield dict(name=val)
-        elif api == 'files':
+        elif api == 'files' or api == 'files_via_dataset' or \
+            api == 'files_via_block':
+            mongo_query = query.mongo_query
+            status = 'VALID'
             for row in gen:
-                if  query.has_key('spec'):
-                    if  query['spec'].has_key('status.name') and \
-                        query['spec']['status.name'] == 'INVALID':
-                        file_status = row['is_files_valid']
-                        if  int(file_status) == 1:# valid status
-                            row = None
+                if  query.mongo_query.has_key('spec'):
+                    if  query.mongo_query['spec'].has_key('status.name'):
+                        status = query.mongo_query['spec']['status.name']
+                file_status = row['file']['is_file_valid']
+                if  status == 'INVALID': # filter out valid files
+                    if  int(file_status) == 1:# valid status
+                        row = None
+                else: # filter out invalid files
+                    if  int(file_status) == 0:# invalid status
+                        row = None
                 if  row:
                     yield row
         else:
