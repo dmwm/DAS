@@ -87,51 +87,47 @@ def run(dascore, query, idx, limit, nooutput, plain):
         results = dascore.call(query)
         print "\n### DAS.call returns", results
 
-def main():
+#
+def run_query(query, debug = 2):
+    # OPTS:
+
+    # do not write to cache
+    no_results=True
+    nooutput = True
+
+
     "Main function"
     optmgr = DASOptionParser()
     (opts, _args) = optmgr.getOpt()
 
-    t0 = time.time()
-    query = opts.query
-    debug = opts.verbose
-    dascore = DASCore(debug=debug, nores=opts.noresults)
-    if  opts.hash:
-        dasquery = DASQuery(query)
-        mongo_query = dasquery.mongo_query
-        service_map = dasquery.service_apis_map()
-        str_query   = dasquery.storage_query
-        print "---------------"
-        print "DAS-QL query  :", query
-        print "DAS query     :", dasquery
-        print "Mongo query   :", mongo_query
-        print "Storage query :", str_query
-        print "Services      :\n"
-        for srv, val in service_map.items():
-            print "%s : %s\n" % (srv, ', '.join(val))
-        sys.exit(0)
-    sdict = dascore.keys()
-    if  opts.services:
-        msg = "DAS services:" 
-        print msg
-        print "-"*len(msg)
-        keys = sdict.keys()
-        keys.sort()
-        for key in keys:
-            print key
-    elif  opts.service:
-        msg = "DAS service %s:" % opts.service
-        print msg
-        print "-"*len(msg)
-        keys = sdict[opts.service]
-        keys.sort()
-        for key in keys:
-            print key
-    elif query:
+    # TODO: wipe the cache
 
+
+    t0 = time.time()
+    #query = opts.query
+    #debug = opts.verbose
+    dascore = DASCore(debug=debug, nores=no_results)
+#    if  opts.hash:
+#        dasquery = DASQuery(query)
+#        mongo_query = dasquery.mongo_query
+#        service_map = dasquery.service_apis_map()
+#        str_query   = dasquery.storage_query
+#        print "---------------"
+#        print "DAS-QL query  :", query
+#        print "DAS query     :", dasquery
+#        print "Mongo query   :", mongo_query
+#        print "Storage query :", str_query
+#        print "Services      :\n"
+#        for srv, val in service_map.items():
+#            print "%s : %s\n" % (srv, ', '.join(val))
+#        sys.exit(0)
+#    sdict = dascore.keys()
+
+
+    if query:
         idx    = opts.idx
         limit  = opts.limit
-        output = opts.nooutput
+        output = nooutput
         plain  = opts.plain
 
         if  opts.profile:
@@ -144,16 +140,13 @@ def main():
             info.print_stats()
         else:
             run(dascore, query, idx, limit, output, plain)
-    elif opts.dasconfig:
-        print pformat(dascore.dasconfig)
-    else:
-        print
-        print "DAS CLI interface, no actions found,"
-        print "please use --help for more options."
+
+
+
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
     timer = get_das_timer()
     print "\nDAS execution time:\n"
-    if  debug:
+    if  debug or True:
         timelist = []
         for _hash, timerdict in timer.items():
             counter = timerdict['counter']
@@ -168,4 +161,4 @@ def main():
 # main
 #
 if __name__ == '__main__':
-    main()
+    run_query(query="dataset dataset=/MinBias_TuneZ2_7TeV-pythia6/Summer11-PU_S4_START42_V11-v*/GEN-SIM-RECO")
