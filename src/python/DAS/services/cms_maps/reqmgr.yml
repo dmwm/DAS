@@ -7,10 +7,10 @@ url : "https://cmsweb.cern.ch/reqmgr/rest/inputdataset"
 expire : 900
 params : {"dataset": "required"}
 daskeys : [
-        {"key": "dataset", "map":"dataset.name", "pattern":"/[a-zA-Z0-9_-]+.*/[a-zA-Z0-9_-]+.*/[A-Z-]+"},
+        {"key": "dataset", "map":"dataset.name", "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 das2api : [
-        {"das_key":"dataset.name", "api_param": "dataset", "pattern":"/[a-zA-Z0-9_-]+.*/[a-zA-Z0-9_-]+.*/[A-Z-]+"},
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn: configIDs
@@ -18,10 +18,10 @@ url : "https://cmsweb.cern.ch/reqmgr/rest/configIDs"
 expire : 900
 params : {"dataset": "required"}
 daskeys : [
-        {"key": "dataset", "map":"dataset.name", "pattern":"/[a-zA-Z0-9_-]+.*/[a-zA-Z0-9_-]+.*/[A-Z-]+"},
+        {"key": "dataset", "map":"dataset.name", "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 das2api : [
-        {"das_key":"dataset.name", "api_param": "dataset", "pattern":"/[a-zA-Z0-9_-]+.*/[a-zA-Z0-9_-]+.*/[A-Z-]+"},
+        {"das_key":"dataset.name", "api_param": "dataset", "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 notations : [
