@@ -7,7 +7,7 @@ conn = Connection('localhost', 8230)
 import re
 
 
-REPLACE_IF_STRINGS_SAME = 1
+REPLACE_IF_STRINGS_SAME = 0
 DEBUG = 0
 
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
@@ -40,33 +40,6 @@ def substitute_multiple(target, what ='*', replacements= []):
     return result
 
 
-
-
-"""
-def __init__(self, config = None):
-    # self.dbcoll     = dbs_instance(dbs_url)
-    self.dbname = config.get('dbname', 'dbs')
-    self.dburi = self.dasconfig['mongodb']['dburi']
-    self.conn = db_connection(self.dburi)
-"""
-
-
-def test_standalone(pattern):
-    db = conn.dbs
-
-    if not '*' in pattern:
-        pattern = '*' + pattern + '*'
-
-    pat_re = '^'+ pattern.replace('*', '(.*)') + '$'
-    #pat_re_compiled = re.compile(pat_re, re.IGNORECASE)
-
-    # DAS regexp as total datasets DB is only 8MB ;)
-
-    # takes < 2secs for 700results but that is quite normal (Zmm) because of MongoDB
-    r = db.cms_dbs_prod_global.find({ 'dataset' : { '$regex' : pat_re, '$options': 'i' } } );
-    r = [item['dataset'] for item in r]
-
-    return r
 
 def get_global_dbs_mngr():
     from DAS.web.dbs_daemon import DBSDaemon
@@ -139,7 +112,7 @@ def process_dataset_wildcards(pattern, dbs_mngr):
 
     """
 
-    # TODO: it is quite probably people event by writing Zmm mean *Zmm*, how to handle this?
+    # TODO: it is quite probable that people by writing Zmm mean *Zmm*, so we may need to handle this
     # while however if they end it by RECO, it signifies the end
     # especially if it do not start with /, it's 100% *
 
