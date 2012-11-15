@@ -129,6 +129,12 @@ class DBS3Service(DASAbstractService):
             val = kwds['lumi_list']
             if  val:
                 kwds['lumi_list'] = [val]
+        if  api == 'files' or api == 'files_via_dataset' or \
+            api == 'files_via_block':
+            # we can't pass status input parameter to DBS3 API since
+            # it does not accepted, instead it will be used for filtering
+            # end-results
+            del kwds['status']
 
     def parser(self, query, dformat, source, api):
         """
@@ -158,8 +164,12 @@ class DBS3Service(DASAbstractService):
         DBS3 data-service parser helper, it is used by parser method.
         """
         if  api == 'site4dataset':
+            gen = json_parser(source, self.logger)
+        else:
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+        if  api == 'site4dataset':
             sites = set()
-            for rec in json_parser(source, self.logger):
+            for rec in gen:
                 if  isinstance(rec, list):
                     for row in rec:
                         orig_site = row['origin_site_name']
@@ -172,24 +182,20 @@ class DBS3Service(DASAbstractService):
             for site in sites:
                 yield {'site': {'name': site}}
         elif api == 'datasets':
-            gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 row['name'] = row['dataset']
                 del row['dataset']
                 yield {'dataset':row}
         elif api == 'filesummaries':
-            gen = DASAbstractService.parser(self, query, dformat, source, api)
             name = query.mongo_query['spec']['dataset.name']
             for row in gen:
                 row['dataset']['name'] = name
                 yield row
         elif api == 'blocks4site':
-            gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 print "\n### please revisit, row=", row
                 yield row
         elif api == 'blockparents':
-            gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 try:
                     del row['parent']['this_block_name']
@@ -197,13 +203,11 @@ class DBS3Service(DASAbstractService):
                     pass
                 yield row
         elif api == 'fileparents':
-            gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 parent = row['parent']
                 for val in parent['parent_logical_file_name']:
                     yield dict(name=val)
         elif api == 'runs_via_dataset':
-            gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 values = row['run']['run_num']
                 if  isinstance(values, list):
@@ -212,12 +216,27 @@ class DBS3Service(DASAbstractService):
                 else:
                     yield dict(run_number=values)
         elif api == 'filechildren':
-            gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 parent = row['child']
                 for val in parent['child_logical_file_name']:
                     yield dict(name=val)
+        elif api == 'files' or api == 'files_via_dataset' or \
+            api == 'files_via_block':
+            mongo_query = query.mongo_query
+            status = 'VALID'
+            for row in gen:
+                if  query.mongo_query.has_key('spec'):
+                    if  query.mongo_query['spec'].has_key('status.name'):
+                        status = query.mongo_query['spec']['status.name']
+                file_status = row['file']['is_file_valid']
+                if  status == 'INVALID': # filter out valid files
+                    if  int(file_status) == 1:# valid status
+                        row = None
+                else: # filter out invalid files
+                    if  int(file_status) == 0:# invalid status
+                        row = None
+                if  row:
+                    yield row
         else:
-            gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 yield row

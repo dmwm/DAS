@@ -60,7 +60,8 @@ def datasets_dbs3(urls, verbose=0):
     for row in records:
         if  not data.has_key(row['dataset']):
             data[row['dataset']] = \
-            dict(era=row['acquisition_era_name'], tier=row['data_tier_name'])
+                dict(era=row['acquisition_era_name'],
+                        tier=row['data_tier_name'], status='VALID')
         if  len(data.keys()) > size:
             for rec in dataset_info(urls, data):
                 yield rec
@@ -86,7 +87,8 @@ def datasets_dbs2(urls, verbose=0):
         dataset = row['dataset']
         if  not data.has_key(dataset['dataset']):
             data[dataset['dataset']] = \
-            dict(era=dataset['dataset.era'], tier=dataset['dataset.tier'])
+                dict(era=dataset['dataset.era'],
+                        tier=dataset['dataset.tier'], status='VALID')
         if  len(data.keys()) > size:
             for rec in dataset_info(urls, data):
                 yield rec

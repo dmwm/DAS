@@ -355,6 +355,12 @@ where %s" % value[4:]
             else:
                 kwds['query'] = 'required'
             kwds.pop('date')
+        if  api == 'listFiles':
+            status = kwds['status']
+            if  status and status.lower() == 'invalid':
+                kwds['retrive_list'] = \
+                    ['retrive_invalid_files,retrive_status,retrive_date,retrive_person']
+            del kwds['status']
             
     def parser(self, dasquery, dformat, source, api):
         """
@@ -531,4 +537,12 @@ where %s" % value[4:]
                 sename = row['dataset'].get('site')
                 row.update({'site':{'se':sename}})
                 del row['dataset']['site']
-            yield row
+            if  api == 'listFiles':
+                if  query.has_key('spec'):
+                    if  query['spec'].has_key('status.name') and \
+                        query['spec']['status.name'] == 'INVALID':
+                        file_status = row['file']['status']
+                        if  file_status == 'VALID':
+                            row = None
+            if  row:
+                yield row
