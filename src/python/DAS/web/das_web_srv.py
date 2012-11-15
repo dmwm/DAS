@@ -51,6 +51,12 @@ from DAS.web.cms_representation import CMSRepresentation
 from DAS.services.sitedb2.sitedb2_service import SiteDBService
 import DAS.utils.jsonwrapper as json
 
+from DAS.core.das_query import WildcardMultipleMatchesException
+import urllib
+
+# TODO: move this to an appropriate place
+from DAS.web.utils import HtmlString
+
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
 DAS_PIPECMDS = das_aggregators() + das_filters()
@@ -380,6 +386,23 @@ class DASWebService(DASWebManager):
                 new_input = selkey + ' ' + new_input
         kwargs['input'] = new_input
 
+
+
+    def _get_dbsmgr_for_db_instance(self, str_dbsinst):
+        """
+        Given a string representation of DBS instance, returns DBSManager
+        instance which "knows" how to look up datasets
+        (further for performance reasons of searching by wildcard and substring,
+        we may want to store then even outside MongoDB).
+        """
+        # TODO: instance selection shall be more clean
+        if  self.dataset_daemon:
+            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(str_dbsinst) != -1]
+            if  len(dbs_urls) == 1:
+                return self.dbsmgr[dbs_urls[0]]
+        return None
+
+
     def generate_dasquery(self, uinput, inst, html_error=True):
         """
         Check provided input as valid DAS input query.
@@ -399,9 +422,32 @@ class DASWebService(DASWebManager):
         # Generate DASQuery object, if it fails we catch the exception and
         # wrap it for upper layer (web interface)
         try:
-            dasquery = DASQuery(uinput, instance=inst)
+            dasquery = DASQuery(uinput, instance=inst, active_dbsmgr = self._get_dbsmgr_for_db_instance(inst))
         except Exception as err:
-            return 1, helper(das_parser_error(uinput, str(err)), html_error)
+            # allow html in the exception message
+            exc_message = str(err)
+            if isinstance(err.message, HtmlString):
+                exc_message = err.message
+
+            # Wildcard exception has to be processed here, because only this class knows about Web UI!
+            if isinstance(err, WildcardMultipleMatchesException):
+                options = []
+                for (dataset_pattern, query) in err.options.items():
+                    # TODO: get view and limit
+                    params = cherrypy.request.params.copy()
+                    params['input'] = query
+                    das_url = '/das/request?' + urllib.urlencode(params)
+
+                    make_link_to_query = lambda q: "<a href='%s'>%s</a>"\
+                                                   % (das_url,  q.replace(dataset_pattern, '<b>%s</b>' % dataset_pattern))
+                    options.append(make_link_to_query(query))
+
+                exc_message = HtmlString('<br>\n'.join(options))
+
+
+            return 1, helper(das_parser_error(uinput, exc_message), html_error)
+
+
         fields = dasquery.mongo_query.get('fields', [])
         if  not fields:
             fields = []
@@ -770,9 +816,12 @@ class DASWebService(DASWebManager):
         view    = kwargs.get('view', 'list')
         inst    = kwargs.get('instance', self.dbs_global)
         uinput  = kwargs.get('input', '')
+
         if  self.busy():
             return self.busy_page(uinput)
+
         self.logdb(uinput)
+
         form    = self.form(uinput=uinput, instance=inst, view=view)
         check, content = self.generate_dasquery(uinput, inst)
         if  check:

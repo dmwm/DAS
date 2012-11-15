@@ -34,6 +34,18 @@ from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
 
 DBS_INSTANCES = das_readconfig()['dbs']['dbs_instances']
 
+class HtmlString(object):
+    """
+    a class which embeds a string to be displayed in html mode (quote() will not modify it).
+    Precaution: all escaping has to be done before hand.
+    """
+    def __init__(self, str):
+        self.str = str
+    def __unicode__(self):
+        return self.str
+    __str__ = __unicode__
+
+
 def set_no_cache_flags():
     "Set cherrypy flags to prevent caching"
     cherrypy.response.headers['Cache-Control'] = 'no-cache'
@@ -212,6 +224,9 @@ def quote(data):
     """
     Sanitize the data using cgi.escape.
     """
+
+
+
     if  isinstance(data, int) or isinstance(data, float):
         res = data
     elif  isinstance(data, dict):
@@ -223,6 +238,8 @@ def quote(data):
         res = data
     elif  isinstance(data, ObjectId):
         res = str(data)
+    elif isinstance(data, HtmlString):
+        res = unicode(data)
     else:
         try:
             if  data:
