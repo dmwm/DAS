@@ -22,6 +22,7 @@ class testDBS(unittest.TestCase):
             "urn": "CMSNametoSE",
             "format": "XML", "wild_card": "*",
             "params": {"name": ""}, 
+            "services": "",
             "expire": 3600, 
             "apitag": None,
             "daskeys": [{"map": "site.name", "key": "site", "pattern": ""}],
