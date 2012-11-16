@@ -73,7 +73,6 @@ class DBSDaemon(object):
             self.col = conn[self.dbname][self.dbcoll]
             indexes = [('dataset', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
-            self.col.remove()
         except Exception as _exp:
             self.col = None
         if  not is_db_alive(self.dburi):
@@ -97,7 +96,7 @@ class DBSDaemon(object):
             else: # we already have records, update their ts
                 for row in gen:
                     spec = dict(dataset=row['dataset'])
-                    self.col.update(spec, {'$set':{'ts':time0}})
+                    self.col.update(spec, {'$set':{'ts':time0}}, upsert=True)
             # remove records with old ts
             self.col.remove({'ts':{'$lt':time0-self.expire}})
             print "%s DBSDaemon updated %s collection in %s sec, nrec=%s" \
@@ -130,11 +129,14 @@ class DBSDaemon(object):
         """
         Retrieve a list of DBS datasets (DBS2)
         """
+        time0 = time.time()
         if  self.dbs_url.find('DBSServlet') != -1: # DBS2
             for rec in self.datasets_dbs():
+                rec.update({'ts':time0})
                 yield rec
         else: # DBS3
             for rec in self.datasets_dbs3():
+                rec.update({'ts':time0})
                 yield rec
 
     def datasets_dbs(self):
