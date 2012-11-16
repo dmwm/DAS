@@ -73,6 +73,7 @@ class testDASMapping(unittest.TestCase):
         self.assertEqual(True, res)
         smap = {api: {'url':url, 'expire':expire, 'keys': ['run'], 
                 'format': dformat, "wild_card":"*", 'cert':None, 'ckey': None,
+                'services': '',
                 'params': {'path': 'required', 'api': api, 
                            'apiversion': 'DBS_2_0_8'}
                      }
@@ -151,6 +152,7 @@ class testDASMapping(unittest.TestCase):
         # build service map
         smap.update({api: {'url':url, 'expire':expire, 'cert':None, 'ckey': None,
                 'keys': ['block'], 'format':dformat, "wild_card": "*",
+                'services': '',
                 'params': {'storage_element_name': '*', 'api':api, 
                            'block_name': '*', 'user_type': 'NORMAL', 
                            'apiversion': 'DBS_2_0_8'}
