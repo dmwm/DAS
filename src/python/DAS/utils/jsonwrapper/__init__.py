@@ -22,8 +22,8 @@ if  not MODULE:
     except:
         pass
 
+import json
 if  not MODULE: # use default JSON module
-    import json
     MODULE = "json"
 
 def loads(idict, **kwargs):
