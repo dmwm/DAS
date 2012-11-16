@@ -1,16 +1,12 @@
 import pymongo
 from pymongo import Connection
-
-# TODO: use global connection
-conn = Connection('localhost', 8230)
+from DAS.web.dbs_daemon import DBSDaemon
 
 import re
 
 
-REPLACE_IF_STRINGS_SAME = 0
+REPLACE_IF_STRINGS_SAME = 1
 DEBUG = 0
-
-from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 
 
 from string import Template
@@ -42,7 +38,10 @@ def substitute_multiple(target, what ='*', replacements= []):
 
 
 def get_global_dbs_mngr():
-    from DAS.web.dbs_daemon import DBSDaemon
+    """
+    Gets a new instance of DBSDaemon for global DBS for testing purposes.
+    TODO: make sure it does not run simultaneously with other DBSDaemon from website
+    """
 
     dburi = 'localhost:8230'
     main_dbs_url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
@@ -79,7 +78,10 @@ def process_dataset_wildcards(pattern, dbs_mngr):
     Tests:
 
     setup: we use global DBS instance for the tests
-    >>> dbsmgr = get_global_dbs_mngr()
+    >>> dbsmgr = get_global_dbs_mngr() #doctest: +ELLIPSIS
+    Reading DAS configuration from ...
+    DAS ... DBSDaemon updated cms_dbs_prod_global collection in ... sec, nrec=...
+
     >>> process_dataset_wildcards('*Zmm*special*RECO*', dbsmgr)
     [u'/RelValZmm/*special*/*RECO']
 
@@ -228,8 +230,8 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod()
 
-    dbsmgr = get_global_dbs_mngr()
-    print process_dataset_wildcards('*Zmm*', dbsmgr)
+    #dbsmgr = get_global_dbs_mngr()
+    #print process_dataset_wildcards('*Zmm*', dbsmgr)
     #DEBUG = 1
     #print process_dataset_wildcards('*Zmm*special*RECO*')
 

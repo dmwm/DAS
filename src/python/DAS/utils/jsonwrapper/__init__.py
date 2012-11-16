@@ -9,15 +9,16 @@ We use simplejson (json), cjson and yajl JSON implementation.
 __author__ = "Valentin Kuznetsov <vkuznet@gmail.com>"
 
 MODULE = None
-try:
-    import yajl
-    MODULE = "yajl"
-except:
-    pass
 
 try:
     import cjson
     MODULE = "cjson"
+except:
+    pass
+
+try:
+    import yajl
+    MODULE = "yajl"
 except:
     pass
 
@@ -27,7 +28,7 @@ if  not MODULE: # use default JSON module
 
 # stick so far with cjson, until yajl will be fully tested
 #MODULE = "cjson"
-MODULE = "yajl"
+#MODULE = "yajl"
 
 def loads(idict, **kwargs):
     """

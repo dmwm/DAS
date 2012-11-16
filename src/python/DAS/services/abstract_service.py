@@ -28,9 +28,6 @@ from DAS.core.das_query import DASQuery
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.logger import PrintManager
 
-
-COUNT_N_RESULTS_PER_API = False
-
 class DASAbstractService(object):
     """
     Abstract class describing DAS service. It initialized with a name who
@@ -189,21 +186,8 @@ class DASAbstractService(object):
         header['lookup_keys'] = self.lookup_keys(api)
 
         # check that apicall record is present in analytics DB
-
-        n_results = None
-
-        # count the number of results only if needed
-        # TODO: check if this could be used then processing the queries
-        if COUNT_N_RESULTS_PER_API:
-            # for not to loose the results of generator
-            result = [item for item in result]
-            n_results = len(result)
-            # TODO: look into how to get the count without materializing all generator's items
-            # (but as long as we use this for services' API benchmarking, there's no problem)
-
         self.analytics.insert_apicall(self.name, dasquery.mongo_query,
-                                      url, api, args, expire, execution_time=ctime,
-                                      n_results = n_results)
+                                      url, api, args, expire)
 
         # update the cache
         self.localcache.update_cache(dasquery, result, header)
