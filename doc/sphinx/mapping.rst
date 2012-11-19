@@ -10,18 +10,39 @@ Therefore we need to define certain mappings between DAS QL and
 data-provider API calls as well as DAS QL and data records in DAS cache.
 To serve this goal DAS relies on its Mapping DB which holds information
 about all the data-service APIs which are used by DAS, and the necessary
-mappings between DAS and API records::
+mappings between DAS and API records
 
 .. figure:: _images/das_mappings.png
 
-Each mapping holds the following entries:
+Each mapping file holds the following schema:
 
-- The daskeys mapping is used to transform keys entered by a user into 
-  the keys that DAS uses internally to identify data in the cache.
-- The das2api mapping converts between internal DAS keys and the names
-  required by the data service query.
-- The notation map transforms the keys in the data service response
-  into the appropriate DAS equivalents.
+- **system**, the name of data-provider
+- **format**, the data format used by data-provider, e.g. XML or JSON
+- series of maps for APIs used in DAS workflow, where each API map has the
+  following entries
+
+    - **urn**, API alias name
+    - **url**, the API URL
+    - **params**, the set of input parameters for API in question
+    - **lookup**, the name of DAS look-up key the given API serves
+    - **das_map**, the list of maps which covers DAS QL keys, record names and
+      API input argument, along with optional pattern; every map
+      has the following parameters
+
+      - **das_key**, the name of DAS QL key, e.g. run
+      - **rec_key**, the DAS record key name, e.g. run.number
+      - **api_arg**, the corresponding API input argument name, e.g. run_number
+      - **pattern**, optional regex for input argument
+
+    - **wild_card**, the optional notation for wild-card usage in given API, e.g.
+      ``*`` or ``%``
+    - ckey and cert, the path to GRID credentials
+- **notations** map which transforms API output into das record keys;
+  this map consists of maps with the following structure
+
+  - **api_output**, the key name returned by API record
+  - **das_key**, the DAS record key
+  - **api**, the name of API this mapping should be applied for
 
 DAS also uses presentation map to translate DAS records into human readable
 form, e.g. to translate *file.nevents* into *Number of events*
@@ -42,46 +63,41 @@ timestamp, etc. For example here is a simple mapping file for google map APIs
     url : "http://maps.google.com/maps/geo"
     expire : 30
     params : { "q" : "required", "output": "json" }
-    daskeys : [
-        {"key":"city","map":"city.name","pattern":""},
-    ]
-    das2api : [
-        {"das_key":"city.name","api_param":"q","pattern":""},
+    lookup : city
+    das_map : [
+        {"das_key":"city","rec_key":"city.name","api_arg":"q"},
     ]
     ---
     urn : google_geo_maps_zip
     url : "http://maps.google.com/maps/geo"
     expire : 30
     params : { "q" : "required", "output": "json" }
-    daskeys : [
-        {"key":"zip","map":"zip.code","pattern":""},
-    ]
-    das2api : [
-        {"das_key":"zip.code","api_param":"q","pattern":""},
+    lookup : zip
+    das_map : [
+        {"das_key":"zip","rec_key":"zip.code","api_arg":"q"},
     ]
     ---
     notations : [
-        {"notation":"zip.name", "map":"zip.code", "api":""},
-        {"notation":"name", "map":"code", "api":"google_geo_maps_zip"},
+        {"api_output":"zip.name", "rec_key":"zip.code", "api":""},
+        {"api_output":"name", "rec_key":"code", "api":"google_geo_maps_zip"},
     ]
 
 As you can see it defines the data-provider name, ``google_maps`` (DAS call it
 system), the data format ``JSON`` used by this data-provider as well as three
-maps, separated by tripple dashes.  The first one defines mapping for API which
-provides information about geo location for a given city key, the second
-defines geo location for a given zip key and mapping for notations used by DAS
-workflow. In particulat, DAS will map ``zip.name`` into ``zip.code`` for any
-api, and ``name`` into ``code`` for ``google_geo_maps_zip`` api (the meaning of
-these translation will become clear when we will discuss concrete example
-below).
+maps (for each API usage), separated by tripple dashes.  The first one defines
+mapping for geo location for a given city key, the second defines geo location
+for a given zip key and mapping for notations used by DAS workflow. In
+particulat, DAS will map ``zip.name`` into ``zip.code`` for any api, and
+``name`` into ``code`` for ``google_geo_maps_zip`` api (the meaning of these
+translation will become clear when we will discuss concrete example below).
 
 As you may noticed, every mapping (the code between tripple dashes) has
-repeated strucute. It defines *urn, url, expire, params, daskeys, das2api*
+repeated strucute. It defines *urn, url, expire, params, lookup, das_map*
 values. The *urn* stands for uniform resource name, this alias is used by DAS
 to distinguish APIs and their usage pattern, the *url* is canonical URL for API
 in question, the *params* defines a dictionary of input parameters accepted by
-API, the *daskeys* is mapping from DAS keys into DAS data records, and finally,
-*das2api* is mapping between DAS data and API records.
+API, the *das_map* is mapping from DAS keys into DAS data records, and finally,
+*lookup* is the name of DAS key this map is designed for.
 
 To accommodate different use cases of API usage the ``params`` structure may
 contain three types of parameter values: the **default**, **required** and
@@ -126,13 +142,12 @@ provide the data for given DAS query).
             "detail":"True",
             "status": "optional",
     }
-    daskeys : [
-            {"key": "file", "map":"file.name", "pattern":""},
-            {"key": "status", "map":"status.name", "pattern":""},
-    ]
-    das2api : [
-            {"das_key":"file.name", "api_param":"logical_file_name", "pattern":""},
-            {"das_key": "status.name", "api_param":"status", "pattern":""},
+    lookup : file
+    das_map : [
+        {"das_key": "file", "rec_key":"file.name", "api_arg":"logical_file_name",
+         "pattern": "/.*.root"},
+        {"das_key": "status", "rec_key":"status.name", "api_arg":"status",
+         "pattern": "(VALID|INVALID)"},
     ]
 
 This record defines ``files`` API with given URL and expire timestamp. It
