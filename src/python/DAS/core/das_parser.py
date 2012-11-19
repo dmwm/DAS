@@ -208,8 +208,8 @@ class QLManager(object):
         for srv in services:
             alist = self.map.list_apis(srv)
             for api in alist:
-                daskeys = self.map.api_info(api)['daskeys']
-                maps = [r['map'] for r in daskeys]
+                daskeys = self.map.api_info(api)['das_map']
+                maps = [r['rec_key'] for r in daskeys]
                 if  set(mapkeys) & set(maps) == set(mapkeys): 
                     if  adict.has_key(srv):
                         new_list = adict[srv] + [api]
