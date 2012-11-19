@@ -7,6 +7,12 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - New schema for DAS maps
+
+    - re-factor code to handle new schema
+    - change all maps/cms_maps according to new schema
+    - add new documentation for new schame, see mappings.rst
+
   - Add support to look-up INVALID files in DBS2/DBS3
   - Enable dbs_phedex combined engine
   - Add new thread module to deal with threads in DAS
