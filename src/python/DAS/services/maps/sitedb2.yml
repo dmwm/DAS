@@ -6,75 +6,63 @@ urn : site_names
 url : "https://cmsweb.cern.ch/sitedb/data/prod/site-names"
 expire : 3600
 params : {"name":"optional"}
-daskeys : [
-    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
-    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
-]
-das2api : [
-    {"das_key":"site.name", "api_param":"name", "pattern":"^T[0-3]"},
-    {"das_key":"site.se", "api_param":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+lookup : site
+das_map : [
+    {"das_key":"site", "rec_key":"site.name", "api_arg":"name", "pattern":"^T[0-3]"},
+    {"das_key":"site", "rec_key":"site.se", "api_arg":"name", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
 ]
 ---
+# NOTE: all APIs shown below don't accept any parameters
+# but in order to leverage the work we pass artificial match
+# input parameter which is correctly handled by sitedb2_service.py module
 urn : groups
 url : "https://cmsweb.cern.ch/sitedb/data/prod/groups"
 expire : 3600
 params : {"match":"optional"}
-daskeys : [
-    {"key":"group", "map":"group.name", "pattern":""},
-]
-das2api : [
-    {"das_key":"group.name", "api_param":"match", "pattern":""}
+lookup : group
+das_map : [
+    {"das_key":"group", "rec_key":"group.name", "api_arg":"match"},
 ]
 ---
-# please note that we this API doesn't accept any parameters
-# but in order to work we pass match input parameter while
-# sitedb2_service.py reject it
 urn : group_responsibilities
 url : "https://cmsweb.cern.ch/sitedb/data/prod/group-responsibilities"
 expire : 3600
 params : {"match":"optional"}
-daskeys : [
-    {"key":"group", "map":"group.name", "pattern":""},
-]
-das2api : [
-    {"das_key":"group.name", "api_param":"match", "pattern":""}
+lookup : group
+das_map : [
+    {"das_key":"group", "rec_key":"group.name", "api_arg":"match"},
 ]
 ---
 urn : people_via_email
 url : "https://cmsweb.cern.ch/sitedb/data/prod/people"
 expire : 3600
 params : {"match":"optional"}
-daskeys : [
-    {"key":"user", "map":"user.email", "pattern":"[a-zA-Z0-9]+@[a-zA-Z0-9]+\\.[a-zA-Z]{2,4}"},
-]
-das2api : [
-    {"das_key":"user.email", "api_param":"match", "pattern":""},
+lookup : user
+das_map : [
+    {"das_key":"user", "rec_key":"user.email", "api_arg":"match",
+     "pattern":"[a-zA-Z0-9]+@[a-zA-Z0-9]+\\.[a-zA-Z]{2,4}"},
 ]
 ---
 urn : people_via_name
 url : "https://cmsweb.cern.ch/sitedb/data/prod/people"
 expire : 3600
 params : {"match":"optional"}
-daskeys : [
-    {"key":"user", "map":"user.name", "pattern":""},
-]
-das2api : [
-    {"das_key":"user.name", "api_param":"match", "pattern":""},
+lookup : user
+das_map : [
+    {"das_key":"user", "rec_key":"user.name", "api_arg":"match"},
 ]
 ---
 urn : roles
 url : "https://cmsweb.cern.ch/sitedb/data/prod/roles"
 expire : 3600
 params : {"match":"optional"}
-daskeys : [
-    {"key":"role", "map":"user.role", "pattern":""},
-]
-das2api : [
-    {"das_key":"user.role", "api_param":"match", "pattern":""}
+lookup : role
+das_map : [
+    {"das_key":"role", "rec_key":"user.role", "api_arg":"match"},
 ]
 ---
 notations : [
-        {"notation": "site.cms_name", "map":"site.name", "api":""},
-        {"notation": "user_group", "map":"name", "api":"group_responsibilities"},
-        {"notation": "alias", "map":"name", "api":""},
+        {"api_output": "site.cms_name", "rec_key":"site.name", "api":""},
+        {"api_output": "user_group", "rec_key":"name", "api":"group_responsibilities"},
+        {"api_output": "alias", "rec_key":"name", "api":""},
 ]
