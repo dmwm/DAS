@@ -20,13 +20,13 @@ class testDBS(unittest.TestCase):
         self.apimap  = {
             "url": "https://a.b.com", "system": "sitedb", 
             "urn": "CMSNametoSE",
-            "format": "XML", "wild_card": "*",
+            "format": "XML",
             "params": {"name": ""}, 
             "services": "",
             "expire": 3600, 
-            "apitag": None,
-            "daskeys": [{"map": "site.name", "key": "site", "pattern": ""}],
-            "das2api": [{"pattern": "", "das_key": "site", "api_param": "name"}], 
+            "wild_card": "*",
+            "lookup": "site",
+            "das_map": [{"rec_key": "site.name", "das_key": "site", "api_arg": "name"}],
             "created": 123
         }
         self.presentation = {"presentation": 
@@ -34,8 +34,8 @@ class testDBS(unittest.TestCase):
                           {"ui": "Address", "das": "city.Placemark.address"}]},
                 "created":123}
         self.notations = {"notations": 
-                [{"map": "name", "api": "", "notation": "cmsname"}, 
-                 {"map": "name", "api": "", "notation": "cms_name"}], 
+                [{"rec_key": "name", "api": "", "api_output": "cmsname"}, 
+                 {"rec_key": "name", "api": "", "api_output": "cms_name"}], 
                 "system": "sitedb", "created": 123}
 
     def testReader(self): 
