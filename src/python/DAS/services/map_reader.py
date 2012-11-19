@@ -3,9 +3,21 @@
 #pylint: disable-msg=R0912
 """
 Data-provider map reader. Service maps are represented in YAML format.
+Each map should provide the following fields:
+
+    - system name, a common name of the data-provider
+    - url, the URL of the API
+    - expire, the expiration time in seconds
+    - urn, alias to identify uniquely API/URL pair
+    - lookup, the name of das key this entry covers
+    - das_map, the DAS map list of dictionaries, where each entry consists of
+      - das_key, the key name used in DAS QL
+      - rec_key, the key name used in DAS data records
+      - api_arg, the name of API argument
+      - pattern, optional pattern
+    - notations (the map of notations)
+    - presentation (the map for presentation layer)
 """
-__revision__ = "$Id: map_reader.py,v 1.9 2010/03/25 20:51:31 valya Exp $"
-__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 import yaml
@@ -19,9 +31,10 @@ def read_service_map(filename, field="uri"):
     system = ''
     url    = ''
     frmt   = ''
+    lookup = ''
+    wild   = '*'
     notations = ''
     services = ''
-    wild   = '*'
     with open(filename, 'r') as apimap:
         for metric in yaml.load_all(apimap.read()):
             if  metric.has_key('system'):
@@ -34,24 +47,21 @@ def read_service_map(filename, field="uri"):
                 wild   = metric['wild_card']
             if  metric.has_key('format'):
                 frmt = metric['format']
+            if  metric.has_key('lookup'):
+                lookup = metric['lookup']
             if  field == 'uri' and metric.has_key('urn'):
                 params = metric['params']
                 urn    = metric['urn']
                 expire = metric.get('expire', 600) # default 10 minutes
-                apitag = metric.get('apitag', None)
                 record = dict(url=url, system=system, expire=expire,
-                                urn=urn, params=params, apitag=apitag,
-                                format=frmt, wild_card=wild,
+                                urn=urn, params=params,
+                                format=frmt, wild_card=wild, lookup=lookup,
                                 services=services,
                                 created=time.time())
-                if  metric.has_key('das2api'):
-                    record['das2api'] = metric['das2api']
+                if  metric.has_key('das_map'):
+                    record['das_map'] = metric['das_map']
                 else:
-                    record['das2api'] = []
-                if  metric.has_key('daskeys'):
-                    record['daskeys'] = metric['daskeys']
-                else:
-                    msg = "map doesn't provide daskeys"
+                    msg = "map doesn't provide das_map"
                     print metric
                     raise Exception(msg)
                 if  validator(record):
@@ -81,8 +91,8 @@ def validator(record):
     elif record.has_key('presentation'):
         must_have_keys = ['presentation', 'created']
     else:
-        must_have_keys = ['system', 'format', 'urn', 'url', 'expire', 
-                            'params', 'daskeys', 'created']
+        must_have_keys = ['system', 'format', 'urn', 'url', 'expire',
+                            'params', 'das_map', 'created']
     if  set(record.keys()) & set(must_have_keys) != set(must_have_keys):
         return False
     return True
