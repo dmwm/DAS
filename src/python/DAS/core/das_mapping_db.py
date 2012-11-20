@@ -145,7 +145,10 @@ class DASMapping(object):
         self.col.insert(record)
         index = None
         if  record.has_key('urn'):
-            index = [('system', DESCENDING), ('das_map', DESCENDING),
+            index = [('system', DESCENDING),
+                     ('das_map.das_key', DESCENDING),
+                     ('das_map.rec_key', DESCENDING),
+                     ('das_map.api_arg', DESCENDING),
                      ('urn', DESCENDING) ]
         elif record.has_key('notations'):
             index = [('system', DESCENDING), 
