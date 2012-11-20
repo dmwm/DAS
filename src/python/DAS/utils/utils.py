@@ -226,7 +226,7 @@ def size_format(uinput):
     except Exception as exc:
         print_exc(exc)
         return "N/A"
-    base = 1000. # power of 10, or use 1024. for power of 2
+    base = 1024. # power of 10, or use 1024. for power of 2
     for xxx in ['', 'KB', 'MB', 'GB', 'TB', 'PB']:
         if  num < base: 
             return "%3.1f%s" % (num, xxx)
@@ -836,7 +836,7 @@ def map_validator(smap):
     if  not isinstance(smap.keys(), list):
         raise Exception(msg)
     possible_keys = ['api', 'keys', 'params', 'url', 'expire', 
-                        'format', 'wild_card', 'ckey', 'cert', 'services']
+        'lookup', 'format', 'wild_card', 'ckey', 'cert', 'services']
     for item in smap.values():
         if  not isinstance(item, dict):
             raise Exception(msg)

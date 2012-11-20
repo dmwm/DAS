@@ -21,23 +21,18 @@ params : {
     "tier": "",
     "check": "submitted",
 }
-daskeys : [
-    {"key":"jobsummary", "map":"jobsummary.name", "pattern":""},
-    {"key":"site", "map":"site.se", "pattern":"([a-zA-Z0-9]+\\.){2}"},
-    {"key":"site", "map":"site.name", "pattern":"^T[0-3]"},
-    {"key":"user", "map":"user.name", "pattern":""},
-    {"key":"date", "map":"date", "pattern":""},
-    {"key":"application", "map":"release.name", "pattern":""},
-]
-das2api : [
-    {"das_key":"user.name", "api_param":"user", "pattern":""},
-    {"das_key":"site.se", "api_param":"ce", "pattern":"([a-zA-Z0-9]+\\.){2}"},
-    {"das_key":"site.name", "api_param":"site", "pattern":"^T[0-3]_"},
-    {"das_key":"release.name", "api_param":"application", "pattern":""},
+lookup: jobsummary
+das_map : [
+    {"das_key":"jobsummary", "rec_key":"jobsummary.name", "api_arg":""},
+    {"das_key":"site", "rec_key":"site.se", "api_arg":"ce", "pattern":"([a-zA-Z0-9]+\\.){2}"},
+    {"das_key":"site", "rec_key":"site.name", "api_arg":"site", "pattern":"^T[0-3]"},
+    {"das_key":"user", "rec_key":"user.name", "api_arg":"user"},
+    {"das_key":"date", "rec_key":"date"},
+    {"das_key":"release", "rec_key":"release.name", "api_arg":"application"},
 ]
 ---
 notations : [
-    {"notation":"bField", "map":"bfield", "api":""},
-    {"notation":"hltKey", "map":"hlt", "api":""},
-    {"notation":"runNumber", "map":"run_number", "api":""},
+    {"api_output":"bField", "rec_key":"bfield", "api":""},
+    {"api_output":"hltKey", "rec_key":"hlt", "api":""},
+    {"api_output":"runNumber", "rec_key":"run_number", "api":""},
 ]

@@ -17,9 +17,8 @@ params : {
     "to": "",
     "type": "json",
 }
-daskeys : [
-        {"key":"monitor", "map":"monitor", "pattern":""},
-        {"key":"date", "map":"date", "pattern":""},
-]
-das2api : [
+lookup : monitor
+das_map : [
+        {"das_key":"monitor", "rec_key":"monitor"},
+        {"das_key":"date", "rec_key":"date"},
 ]
