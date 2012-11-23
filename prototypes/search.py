@@ -538,7 +538,7 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws, values
        validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity):
 
         # Adjust the final score to favour mappings that cover most keywords
-        N_keywords = len(schema_ws)
+        N_keywords = len(schema_ws.keys())
         adjusted_score = probability * len(keywords_used) / N_keywords
         if not requested_entity:
             # if not entity was guessed, infer it from service parameters
@@ -600,65 +600,107 @@ def generate_schema_mappings(requested_entity, fields_included, schema_ws, value
     # TODO: it would be better to consider all items in decreasing scores
     global final_mappings
 
-    # TODO: check if required fields are functioning properly !!!
-    if validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity):
-        if UGLY_DEBUG: print 'MATCH:', (requested_entity, fields_included), validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity)
-        #yield (requested_entity, fields_included)
-        # TODO: for now, we immediately do recursion on values mappings, but this could be separated into two steps
+
+    if keyword_index + 1  == len(keywords_list):
+
+        # TODO: check if required fields are functioning properly !!!
+        if validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity):
+            if UGLY_DEBUG: print 'MATCH:', (requested_entity, fields_included), validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity)
+            #yield (requested_entity, fields_included)
+            # TODO: for now, we immediately do recursion on values mappings, but this could be separated into two steps
 
 
-        if not fields_included: # to be final answer fields must be covered by keywords that represent values
-            # and as currently no APIs without parameters are supported, we just skip this...
-            #final_mappings.append( (probability, requested_entity, tuple(set(fields_included))) )
-            pass
+            if not fields_included: # to be final answer fields must be covered by keywords that represent values
+                # and as currently no APIs without parameters are supported, we just skip this...
+                #final_mappings.append( (probability, requested_entity, tuple(set(fields_included))) )
+                pass
 
-    # try to map values based on this
-    generate_value_mappings(requested_entity, fields_included, schema_ws, values_ws, probability, keywords_used = keywords_used)
+        # try to map values based on this
+        generate_value_mappings(requested_entity, fields_included, schema_ws, values_ws, probability, keywords_used = keywords_used)
 
-    # TODO: I'm still unable to validate some options because the value attributes are missing (if not specified explicitly!)
-    # E.G. dataset provided but no keyword 'dataset'
+        # TODO: I'm still unable to validate some options because the value attributes are missing (if not specified explicitly!)
+        # E.G. dataset provided but no keyword 'dataset'
 
-    if len(keywords_used) == len(schema_ws.items()):
+        if len(keywords_used) == len(schema_ws.items()):
+            return
+
+        if UGLY_DEBUG: print (requested_entity, fields_included, schema_ws, values_ws)
         return
 
-    if UGLY_DEBUG: print (requested_entity, fields_included, schema_ws, values_ws)
 
+
+    """ At keyword position (i) we can either:
+        1) leave it out (a value, or non relevant/not mappable)
+        2) take keyword i and map it to:
+            a) requested entity (result type)
+            b) schema entity (api input param)
+            c) both
+
+    """
+    # TODO: later we may consider more complex options -- aggregation, ordering
 
     #
     #for keyword,schema_w  in schema_ws.items():
-    for index, keyword in enumerate(keywords_list):
-        # so we visit every combination only once
-        if index < keyword_index:
-            return
+    #for index, keyword in enumerate(keywords_list):
+    #    # so we visit every combination only once
+    #    if index < keyword_index:
+    #        return
 
-        schema_w = schema_ws[keyword]
 
-        if keyword in keywords_used:
-            #print 'exclud'
+    keyword = keywords_list[keyword_index]
+    schema_w = schema_ws[keyword]
+
+    #if keyword in keywords_used:
+    #    #print 'exclud'
+    #    pass
+    #print 'keyword:', keyword
+
+
+    # opt 1) do not take keyword[i]
+    generate_schema_mappings(requested_entity, fields_included, schema_ws, values_ws,
+        keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability,\
+        keywords_used = keywords_used)
+
+    # opt 2) take it:
+    for score, possible_mapping in schema_w:
+        if possible_mapping in fields_included:
             continue
-        #print 'keyword:', keyword
 
-        for score, possible_mapping in schema_w:
-            if possible_mapping in fields_included:
-                continue
+        f = fields_included[:]
+        f.append(possible_mapping)
+        #print 'validating', (f, requested_entity)
 
-            f = fields_included[:]
-            f.append(possible_mapping)
-            #print 'validating', (f, requested_entity)
-            if validate_input_params_mapping(f, entity=requested_entity):
-                if UGLY_DEBUG: print 'validated', (requested_entity, f)
-                # | set([keyword]
-                generate_schema_mappings(requested_entity, f, schema_ws, values_ws,
-                    keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability + score, keywords_used = keywords_used)
+        # opt 2.a) take as api input param entity
+        if validate_input_params_mapping(f, entity=requested_entity):
+            if UGLY_DEBUG: print 'validated', (requested_entity, f)
+            # | set([keyword]
+            generate_schema_mappings(requested_entity, f, schema_ws, values_ws,
+                keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability + score, keywords_used = keywords_used)
 
-            if not requested_entity and validate_input_params_mapping(fields_included, entity=possible_mapping):
-                    if UGLY_DEBUG:  print 'validated', (possible_mapping, fields_included)
-                    #  could this be final mapping
-                    # TODO: req ent
-                    generate_schema_mappings(possible_mapping, fields_included, schema_ws, values_ws,
-                        keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability +score, \
-                        keywords_used = keywords_used | set([keyword]))
-    # TODO: we may need some extra stop condition...
+
+        # opt 2.b) take as requested entity (result type)
+        if not requested_entity:
+            if validate_input_params_mapping(fields_included, entity=possible_mapping):
+                if UGLY_DEBUG:  print 'validated', (possible_mapping, fields_included)
+                #  could this be final mapping
+                # TODO: req ent
+                generate_schema_mappings(possible_mapping, fields_included, schema_ws, values_ws,
+                    keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability +score, \
+                    keywords_used = keywords_used | set([keyword]))
+
+            # opt 2.c) take both as requested entity (result type) and  input param entity
+            if validate_input_params_mapping(fields_included, entity=possible_mapping):
+                if UGLY_DEBUG:  print 'validated', (possible_mapping, f)
+                #  could this be final mapping
+                # TODO: req ent
+                generate_schema_mappings(possible_mapping, f, schema_ws, values_ws,
+                    keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability + 1.6 * score,\
+                    keywords_used = keywords_used | set([keyword]))
+
+
+
+
+# TODO: we may need some extra stop condition...
 
 
 
@@ -687,19 +729,38 @@ def search(query):
 
     print '============= Schema mappings (TODO) =========='
     pprint.pprint(schema_ws)
+    print '=============== Values mappings (TODO) ============'
+    pprint.pprint(values_ws)
 
     global final_mappings
     final_mappings = []
     generate_schema_mappings(None, [], schema_ws, values_ws,  keywords_list=keywords, keyword_index=0, probability = 0)
 
-    print "results!!!!"
+    print "============= Results for: %s ===" % query
     final_mappings = list(set(final_mappings))
     final_mappings.sort(key=lambda item: item[0], reverse=True)
-    for schema_mapping in final_mappings:
-        print schema_mapping
 
-    print '=============== Values mappings (TODO) ============'
-    pprint.pprint(values_ws)
+    best_scores = {}
+
+    for (score, result_type, input_params) in final_mappings:
+        # short entity names
+        s_result_type = entity_names[result_type]
+        s_input_params = [(entity_names[field], value) for (field, value) in input_params]
+        s_input_params.sort(key=lambda item: item[0])
+
+        s_query = s_result_type + ' ' +  ' '.join(['%s=%s' % (field, value) for (field, value) in s_input_params])
+        best_scores[s_query] = max(best_scores.get(s_query, 0.0), score)
+
+        # TODO: print debuging info of how scores were composed!!!
+        # print "%.2f: %s %s" % (score, result_type, ' '.join(['%s=%s' % (field, value) for (field, value) in input_params]))
+        #print schema_mapping
+    best_scores = best_scores.items()
+    best_scores.sort(key=lambda item: item[1], reverse=True)
+
+    print '\n'.join(['%.2f: %s' % (score, query) for (query, score) in best_scores ])
+
+    return ''
+
 
 def crap(query):
     keyword = query
