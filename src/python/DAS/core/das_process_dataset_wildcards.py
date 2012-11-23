@@ -37,7 +37,7 @@ def substitute_multiple(target, what ='*', replacements= []):
 
 
 
-def get_global_dbs_mngr():
+def get_global_dbs_mngr(force_update=True):
     """
     Gets a new instance of DBSDaemon for global DBS for testing purposes.
     TODO: make sure it does not run simultaneously with other DBSDaemon from website
@@ -54,7 +54,8 @@ def get_global_dbs_mngr():
     dbsmgr = DBSDaemon(main_dbs_url, dburi, dbs_config)
 
     # TODO: update if only needed
-    dbsmgr.update()
+    if force_update:
+        dbsmgr.update()
     return dbsmgr
 
 def process_dataset_wildcards(pattern, dbs_mngr):

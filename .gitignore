@@ -25,3 +25,9 @@ config
 das_usage.py
 src/python/parser/parsetab.py
 MANIFEST
+*.bak
+*.aux
+*.dvi
+*.spl
+*.fdb_latexmk
+*.blg
