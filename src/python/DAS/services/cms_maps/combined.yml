@@ -40,14 +40,3 @@ das_map : [
     {"das_key":"site", "rec_key":"site.name", "pattern":"^T[0-3]_"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
 ]
----
-urn : combined_lumi4dataset
-url : "http://localhost:8212/dbs_lumi/lumi"
-format : JSON
-expire : 3600
-params : {"dataset":"required"}
-lookup : lumi
-das_map : [
-    {"das_key":"lumi", "rec_key":"lumi.runlumis"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
-]
