@@ -249,7 +249,8 @@ params : {
 lookup: parent
 das_map : [
     {"das_key":"parent", "rec_key":"parent.name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path",
+     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeChild4Dataset
@@ -262,7 +263,8 @@ params : {
 lookup: child
 das_map : [
     {"das_key":"child", "rec_key":"child.name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset", "pattern":"/.*/.*/.*"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : listBlocks
@@ -375,7 +377,8 @@ params : {
 lookup: site
 das_map : [
     {"das_key":"site", "rec_key":"site.name", "api_arg":""},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset", "pattern":"/.*/.*/.*"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeDataset4Site
