@@ -485,12 +485,15 @@ def entities_for_input_params(params):
     """
     returns the list of entities that could be returned with given parameter set
     """
-    entities = []
+    entities = {}
     for (api_entity, api_params_set, api_required_params_set) in api_input_params:
     #print set(params), api_params_set, ' api ent:', api_entity
         if set(params).issubset(api_params_set)\
            and set(params).issuperset( api_required_params_set):
-            yield (api_entity, api_params_set, api_required_params_set)
+            # yield (api_entity, api_params_set, api_required_params_set)
+            entities.get(api_entity, []).append( (api_entity, api_params_set, api_required_params_set) )
+    return entities
+
 
 
 def validate_input_params_mapping(params, entity=None, final_step=False):
@@ -539,9 +542,12 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws, values
         adjusted_score = probability * len(keywords_used) / N_keywords
         if not requested_entity:
             # if not entity was guessed, infer it from service parameters
-            requested_entity = tuple([tuple(e) for e in entities_for_input_params(fields_included)])
+            entities = entities_for_input_params(fields_included)
+            for requested_entity in entities.keys():
+                final_mappings.append( (adjusted_score, requested_entity, tuple(values_mapping.items())) )
+        else:
+            final_mappings.append( (adjusted_score, requested_entity, tuple(values_mapping.items())) )
 
-        final_mappings.append( (adjusted_score, requested_entity, tuple(values_mapping.items())) )
 
         if UGLY_DEBUG: print 'MATCH:', (requested_entity, fields_included, values_mapping ), \
                                 validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity)
@@ -618,8 +624,15 @@ def generate_schema_mappings(requested_entity, fields_included, schema_ws, value
     if UGLY_DEBUG: print (requested_entity, fields_included, schema_ws, values_ws)
 
 
+    #
+    #for keyword,schema_w  in schema_ws.items():
+    for index, keyword in enumerate(keywords_list):
+        # so we visit every combination only once
+        if index < keyword_index:
+            return
 
-    for keyword,schema_w  in schema_ws.items():
+        schema_w = schema_ws[keyword]
+
         if keyword in keywords_used:
             #print 'exclud'
             continue
@@ -635,13 +648,15 @@ def generate_schema_mappings(requested_entity, fields_included, schema_ws, value
             if validate_input_params_mapping(f, entity=requested_entity):
                 if UGLY_DEBUG: print 'validated', (requested_entity, f)
                 # | set([keyword]
-                generate_schema_mappings(requested_entity, f, schema_ws, values_ws, probability = probability + score, keywords_used = keywords_used)
+                generate_schema_mappings(requested_entity, f, schema_ws, values_ws,
+                    keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability + score, keywords_used = keywords_used)
 
             if not requested_entity and validate_input_params_mapping(fields_included, entity=possible_mapping):
                     if UGLY_DEBUG:  print 'validated', (possible_mapping, fields_included)
                     #  could this be final mapping
                     # TODO: req ent
-                    generate_schema_mappings(possible_mapping, fields_included, schema_ws, values_ws, probability = probability +score, \
+                    generate_schema_mappings(possible_mapping, fields_included, schema_ws, values_ws,
+                        keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability +score, \
                         keywords_used = keywords_used | set([keyword]))
     # TODO: we may need some extra stop condition...
 
