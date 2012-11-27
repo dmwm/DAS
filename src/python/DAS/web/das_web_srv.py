@@ -20,6 +20,8 @@ from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
 from pymongo.errors import AutoReconnect
+import urllib
+
 
 # DAS modules
 import DAS
@@ -51,8 +53,11 @@ from DAS.web.cms_representation import CMSRepresentation
 from DAS.services.sitedb2.sitedb2_service import SiteDBService
 import DAS.utils.jsonwrapper as json
 
-from DAS.core.das_query import WildcardMultipleMatchesException
-import urllib
+from DAS.core.das_query import WildcardMultipleMatchesException, WildcardMatchingException
+
+# keyword search
+from DAS.core.das_parser import DASQueryParseException
+from DAS.keyword_search.search import search as keyword_search
 
 # TODO: move this to an appropriate place
 from DAS.web.utils import HtmlString
@@ -384,7 +389,15 @@ class DASWebService(DASWebManager):
             if  selkey and len(new_input) > len(selkey) and \
                 new_input[:len(selkey)] != selkey:
                 new_input = selkey + ' ' + new_input
-        kwargs['input'] = new_input
+        # TODO: kwargs['input'] = new_input
+
+
+
+    def _get_link_to_query(self, query):
+        params = cherrypy.request.params.copy()
+        params['input'] = query
+        das_url = '/das/request?' + urllib.urlencode(params)
+        return das_url
 
 
 
@@ -443,6 +456,28 @@ class DASWebService(DASWebManager):
                     options.append(make_link_to_query(query))
 
                 exc_message = HtmlString('<br>\n'.join(options))
+
+
+
+
+            if not isinstance(err, WildcardMatchingException):
+                # TODO: DBS instance
+                proposed_queries = keyword_search(uinput, inst)
+                msg = '<b>DAS is unable to interpret your query.<br>' \
+                                    ' Is any of the queries below what you meant?</b><br>\n'
+
+                make_link_to_query = lambda q: "<a href='%s'>%s</a>"\
+                                               % (das_url,  q.replace(dataset_pattern, '<b>%s</b>' % dataset_pattern))
+
+                msg += '<br>\n'.join(["%.2f: <a href='%s'>%s</a>" % (score, self._get_link_to_query(query), query)
+                                      for (query, score) in proposed_queries ])
+
+
+                msg += '<br>\n<br>\nError message: ' + exc_message
+                #msg = '<br>\n'.join(proposed_queries)
+                # TODO: html links
+                exc_message = HtmlString(msg)
+
 
 
             return 1, helper(das_parser_error(uinput, exc_message), html_error)
