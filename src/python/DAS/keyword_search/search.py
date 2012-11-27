@@ -123,6 +123,8 @@ mappings = dascore.mapping
 
 DEBUG = False
 
+
+# TODO: if field has fairly static values, then given value is not in there, is shall be penalized
 static_field_values = {
     'site': [],
     'tier': [],
@@ -136,7 +138,8 @@ entity_wordnet_synsets = {
     'dataset': wordnet.synset('datum.n.01'), # an item of factual information derived from measurement or research (TODO: actually it is a set of these)
     'date': wordnet.synset('date.n.01'),
     'config': wordnet.synset('configuration.n.01'),
-    'block':wordnet.synset('block.n.06'),
+    'block': wordnet.synset('block.n.06'),
+    'lumi': wordnet.synset('luminosity.n.01'),
     # ("Synset('block.n.06')",
     #'(computer science) a sector or group of sectors that function as the smallest data unit permitted',
     #["since blocks are often defined as a single sector, the terms `block' and `sector' are sometimes used interchangeably"]),
@@ -221,7 +224,7 @@ def discover_apis_and_fields():
                                if param.has_key('api_arg') and param['api_arg'] in api_params_required]
             #print required_params
 
-            if not UGLY_DEBUG:
+            if UGLY_DEBUG:
                 print '--------------------------'
                 #print 'api: %s(%s) --> %s' %(api, ','.join(parameters), entity_long)
                 print 'api: %s(%s) --> %s' % (api, ','.join([p['rec_key'] for p in api_params]), entity_long)
@@ -242,13 +245,13 @@ def discover_apis_and_fields():
                     {'api': api, 'system': system, 'key': param['das_key'], 'entity_long': param['rec_key'] , 'constr': param_constraint})
 
 
-
-            api_def = (entity_long, set([param['rec_key'] for param in api_params]), set(required_params))
+            # response entity, fields (entity.attr), required_params
+            api_def = (entity_long, set([param['rec_key'] for param in api_params]), set(required_params), api)
             if not api_def in api_input_params:
                 api_input_params.append(api_def)
 
             #mappings.das2api()
-            print '\n'
+            if DEBUG: print '\n'
 
 
             # we want both global (DAS) naming (smf.smf + das key) + TODO: naming at the service (with lower priority)
@@ -258,6 +261,13 @@ def discover_apis_and_fields():
 
 discover_apis_and_fields()
 search_field_names = set(entity_names.values())
+
+
+print "APIS without required params:"
+print '\n'.join(["%s(%s) --> %s" % (api, ','.join(params), entity)
+                                        for (entity, params, required, api_name) in api_input_params
+                                        if not required])
+
 
 
 # inverted term frequency in the schema, to lower the importance of very common term (e.g. name (dataset.name, file.name)
@@ -279,7 +289,7 @@ N = len(idf)
 for (term, frequency) in idf.items():
     idf[term] = math.log(float(N) / frequency)
 
-# normalize them
+# TODO: normalize them
 min_idf = min(idf.values())
 for (term, idf_value) in idf.items():
     idf[term] = idf_value / min_idf
@@ -301,7 +311,7 @@ pprint.pprint(search_field_names)
 
 # TODO: use mapping to entity attributes even independent of the entity itself (idf-like inverted index)
 
-def string_distance(keyword, match_to, semantic=False):
+def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
     # TODO: use some good string similarity metrics: string edit distance, jacard, levenshtein, hamming, etc
     # TODO: use ontology
 
@@ -337,7 +347,10 @@ def string_distance(keyword, match_to, semantic=False):
                 else:
                     score = max(semantic_score, (score + 2*semantic_score)/3)
 
-    return score if score > 0.5 else 0
+    if allow_low_scores:
+        return score if score > 0.1 else  0
+    else:
+        return score if score > 0.5 else  0
 
 
 
@@ -416,7 +429,37 @@ def keyword_value_weights(keyword, api_results_allowed=False):
     scores = filter(lambda item: item[0]>0, scores)
     scores = list(set(scores))
 
-    # check for existing datasets
+    # check for matching of existing datasets
+    # TODO: use instance from elsewhere
+    from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr, process_dataset_wildcards
+    import DAS.web.dbs_daemon
+    DAS.web.dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART = 1
+    DAS.web.dbs_daemon.SKIP_UPDATES = 1
+    dbsmgr = get_global_dbs_mngr()
+
+
+    dataset_score = None
+    adj_keyword = keyword
+
+
+    # dbsmgr.find returns a generator, to check if it's non empty we have to access it's entities
+    if next(dbsmgr.find(pattern=keyword, limit=1), False):
+        # TODO: if contains wildcards score shall be a bit lower
+        if '*' in keyword and not '/' in keyword:
+            dataset_score = 0.8
+        elif '*' in keyword and '/' in keyword:
+            dataset_scores = 0.9
+        elif not '*' in keyword:
+            if next(dbsmgr.find(pattern='*%s*' % keyword, limit=1), False):
+                dataset_score = 0.7
+                adj_keyword = '*%s*' % keyword
+        else:
+                dataset_score = 1.0
+
+
+
+
+    found = 0
     for (index, (score, entity)) in enumerate(scores):
         # TODO: check for other static entities
 
@@ -426,21 +469,12 @@ def keyword_value_weights(keyword, api_results_allowed=False):
             # TODO: check for existence
             # TODO: patterns like *Zmm*, attention: this may be quite expensive
             # TODO: fuzzy matching
-            from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr, process_dataset_wildcards
-            import DAS.web.dbs_daemon
-            DAS.web.dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART = 1
-            DAS.web.dbs_daemon.SKIP_UPDATES = 1
 
-            # TODO: use instance from elsewhere
-            dbsmgr = get_global_dbs_mngr()
-            if dbsmgr.find(pattern=keyword, limit=1):
-                # TODO: if contains wildcards score shall be a bit lower
-                if '*' in keyword and not '/' in keyword:
-                    scores[index] = (0.8, entity)
-                elif '*' in keyword and '/' in keyword:
-                    scores[index] = (0.9, entity)
-                else:
-                    scores[index] = (1.0, entity)
+            scores[index] = (max(score, dataset_score) or score, {'map_to': 'dataset.name', 'adjusted_keyword': adj_keyword})
+
+    if dataset_score and not found:
+        scores.append(   (dataset_score, {'map_to': 'dataset.name', 'adjusted_keyword': adj_keyword}) )
+
 
     scores.sort(key=lambda item: item[0], reverse=True)
     return scores
@@ -454,14 +488,16 @@ def keyword_regexp_weights(keyword):
 
     for (constraint, apis) in apis_by_their_input_contraints.items():
     #print (constraint, apis)
+
+
         # TODO: I've hacked file/dataset regexps to be more restrictive as these are well defined
-        if not '^' in constraint and not '$' in constraint and apis[0]['key'] in ['dataset', 'file']:
+        if not '^' in constraint and not '$' in constraint and apis[0]['key'] in ['dataset', 'file',]:
             constraint = '^' + constraint + '$'
         score = 0
 
         # We shall prefer non empty constraints
         # We may also have different weights for different types of regexps
-        if re.match(constraint, keyword):
+        if re.search(constraint, keyword):
             #print apis
 
             if constraint.startswith('^') and  constraint.endswith('$'):
@@ -485,13 +521,22 @@ def entities_for_input_params(params):
     """
     returns the list of entities that could be returned with given parameter set
     """
+
     entities = {}
-    for (api_entity, api_params_set, api_required_params_set) in api_input_params:
+    for (api_entity, api_params_set, api_required_params_set, api) in api_input_params:
     #print set(params), api_params_set, ' api ent:', api_entity
-        if set(params).issubset(api_params_set)\
-           and set(params).issuperset( api_required_params_set):
+        if params.issubset(api_params_set)\
+           and params.issuperset( api_required_params_set):
             # yield (api_entity, api_params_set, api_required_params_set)
+            #print 'ok', api_entity
+            if api_entity is None:
+                print 'API RESULT TYPE IS NONE:',(api_entity, api_params_set, api_required_params_set)
+                continue
+
+            entities[api_entity] = entities.get(api_entity, [])
             entities.get(api_entity, []).append( (api_entity, api_params_set, api_required_params_set) )
+    #print entities
+
     return entities
 
 
@@ -500,12 +545,13 @@ def validate_input_params_mapping(params, entity=None, final_step=False):
     """
     input parameters mapping (from keywords to input parameters) is that there must exist an API
     """
+    # TODO: this could also check if actual values are matching API input param requirements
     if final_step:
         # TODO: check that all required params are included
         #print 'validate_input_params_mapping(final):',params, entity
         # currently - a valid mapping shall contain attributes from some api and must satisfy it's minimum input requirements
         # TODO: at the moment we do not allow additional selection
-        for (api_entity, api_params_set, api_required_params_set) in api_input_params:
+        for (api_entity, api_params_set, api_required_params_set, api) in api_input_params:
             #print set(params), api_params_set, ' api ent:', api_entity
             if set(params).issubset(api_params_set) \
                 and set(params).issuperset( api_required_params_set) \
@@ -513,7 +559,7 @@ def validate_input_params_mapping(params, entity=None, final_step=False):
                     return api_entity, api_params_set, api_required_params_set
     else:
         # requirement for any params mapping is that there must exist such a
-        for (api_entity, api_params_set,  api_required_params_set) in api_input_params:
+        for (api_entity, api_params_set,  api_required_params_set, api) in api_input_params:
             if set(params).issubset(api_params_set) and (entity is None or entity == api_entity):
                 return True
 
@@ -521,65 +567,93 @@ def validate_input_params_mapping(params, entity=None, final_step=False):
 
 
 
-def generate_value_mappings(requested_entity, fields_included, schema_ws, values_ws, probability, values_mapping = {}, keywords_used = set([])):
+def generate_value_mappings(requested_entity, fields_included, schema_ws, values_ws, probability, values_mapping = {}, keywords_used = set([]), keywords_list=[], keyword_index=0,):
+    SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT = 1.5
+
     # TODO: modify the value and schema mappings weights according to previous mappings
     global final_mappings
     UGLY_DEBUG = False
 
     fields_included = set(fields_included)
+    fields_covered_by_values_set = set(values_mapping.keys())
 
     # (as a final condition) now every field in fields_included that were guessed in earlier step, has to be covered by values
     # newones could still be added
 
-    values_covered_fields_set = set(values_mapping.keys())
+    if UGLY_DEBUG:
+        print 'generate_value_mappings(', requested_entity, fields_included, schema_ws, values_ws, probability, values_mapping, keywords_used, keywords_list, keyword_index,')'
 
-    # DAS requires at least one filtering attribute
-    if values_covered_fields_set and values_covered_fields_set.issuperset(fields_included) and \
-       validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity):
+    if keyword_index == len(keywords_list):
+        #print keyword_index, 'final'
+        # DAS requires at least one filtering attribute
+        if fields_covered_by_values_set and fields_covered_by_values_set.issuperset(fields_included) and \
+           validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity):
+            if UGLY_DEBUG: print 'VALUES MATCH:', (requested_entity, fields_included, values_mapping ),\
+            validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity)
 
-        # Adjust the final score to favour mappings that cover most keywords
-        N_keywords = len(schema_ws.keys())
-        adjusted_score = probability * len(keywords_used) / N_keywords
-        if not requested_entity:
-            # if not entity was guessed, infer it from service parameters
-            entities = entities_for_input_params(fields_included)
-            for requested_entity in entities.keys():
+            # Adjust the final score to favour mappings that cover most keywords
+            N_keywords = len(schema_ws.keys())
+
+            if not requested_entity:
+                # if not entity was guessed, infer it from service parameters
+                entities = entities_for_input_params(fields_included)
+                if UGLY_DEBUG: print 'Result entities matching:', entities
+
+                for requested_entity in entities.keys():
+                    adjusted_score = probability * len(keywords_used) / N_keywords
+                    if requested_entity in values_mapping.keys():
+                        adjusted_score *= SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
+                    final_mappings.append( (adjusted_score, requested_entity, tuple(values_mapping.items())) )
+            else:
+                adjusted_score = probability * len(keywords_used) / N_keywords
                 final_mappings.append( (adjusted_score, requested_entity, tuple(values_mapping.items())) )
-        else:
-            final_mappings.append( (adjusted_score, requested_entity, tuple(values_mapping.items())) )
-
-
-        if UGLY_DEBUG: print 'MATCH:', (requested_entity, fields_included, values_mapping ), \
-                                validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity)
 
 
 
-    for keyword, keyword_weights in values_ws.items():
-        if keyword in keywords_used:
-            continue
+
+        return
+
+    #print 'continuing at index:', keyword_index
+
+    # we either take keyword[i] or not
+    keyword = keywords_list[keyword_index]
+    keyword_weights = values_ws[keyword]
+
+    # case 1) we do not take keyword[i]:
+    generate_value_mappings(requested_entity, fields_included, schema_ws, values_ws, probability, values_mapping,
+        keywords_used, keywords_list, keyword_index=keyword_index+1,)
+
+    # case 2) we do take keyword[i]:
+    if keyword not in keywords_used:
+
         for score, possible_mapping in keyword_weights:
+            keyword_adjusted = keyword
+            if isinstance(possible_mapping, dict):
+                keyword_adjusted = possible_mapping['adjusted_keyword']
+                possible_mapping = possible_mapping['map_to']
+
             # currently we do not allow mapping two keywords to the same value
             # TODO: It could be in theory useful combining a number of consecutive keywords refering to the same value
-            if possible_mapping in values_covered_fields_set:
+            if possible_mapping in fields_covered_by_values_set:
                 continue
 
             vm_new = values_mapping.copy()
-            vm_new[possible_mapping] = keyword
+            vm_new[possible_mapping] = keyword_adjusted
 
             new_score = probability + score
-            new_fields = fields_included | set([possible_mapping])
 
             # we favour the values mappings that have also been refered in schema mapping (e.g. dataset *Zmm*)
+            # TODO: It could be in theory useful combining a number of consecutive keywords refering to the same value
             if possible_mapping in fields_included:
-                new_score += 0.6
+                new_score *= SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
 
-            if validate_input_params_mapping(fields_included, final_step=False, entity=requested_entity):
+            new_fields = fields_included | set([possible_mapping])
+
+            if validate_input_params_mapping(new_fields, final_step=False, entity=requested_entity):
                 generate_value_mappings(requested_entity, fields_included = new_fields, \
                     values_mapping = vm_new,\
                     probability=new_score, keywords_used = keywords_used | set([keyword]),\
-                    schema_ws=schema_ws, values_ws=values_ws)
-
-
+                    schema_ws=schema_ws, values_ws=values_ws, keyword_index=keyword_index+1, keywords_list=keywords_list)
 
 
             # (as a final condition) now every field in fields_included that were guessed in earlier step, has to be covered by values
@@ -589,8 +663,8 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws, values
 
 
 
-# TODO: the recursion is dumb
-def generate_schema_mappings(requested_entity, fields_included, schema_ws, values_ws, probability, keywords_list=[], keyword_index=0, keywords_used = set([])):
+# TODO: the recursion is dumb, we could at least use some pruning
+def generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws, probability, keywords_list=[], keyword_index=0, keywords_used = set([])):
     # TODO: keyword order is important
     UGLY_DEBUG = False
 
@@ -601,30 +675,31 @@ def generate_schema_mappings(requested_entity, fields_included, schema_ws, value
     global final_mappings
 
 
-    if keyword_index + 1  == len(keywords_list):
+    if keyword_index  == len(keywords_list):
 
         # TODO: check if required fields are functioning properly !!!
-        if validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity):
-            if UGLY_DEBUG: print 'MATCH:', (requested_entity, fields_included), validate_input_params_mapping(fields_included, final_step=True, entity=requested_entity)
+        if validate_input_params_mapping(fields_old, final_step=True, entity=requested_entity):
+            if UGLY_DEBUG: print 'SCHEMA MATCH:', (requested_entity, fields_old), validate_input_params_mapping(fields_old, final_step=True, entity=requested_entity)
             #yield (requested_entity, fields_included)
             # TODO: for now, we immediately do recursion on values mappings, but this could be separated into two steps
 
 
-            if not fields_included: # to be final answer fields must be covered by keywords that represent values
+            if not fields_old: # to be final answer fields must be covered by keywords that represent values
                 # and as currently no APIs without parameters are supported, we just skip this...
                 #final_mappings.append( (probability, requested_entity, tuple(set(fields_included))) )
                 pass
 
         # try to map values based on this
-        generate_value_mappings(requested_entity, fields_included, schema_ws, values_ws, probability, keywords_used = keywords_used)
+        generate_value_mappings(requested_entity, fields_old, schema_ws, values_ws, probability,
+            keywords_used = keywords_used, keywords_list=keywords_list)
 
         # TODO: I'm still unable to validate some options because the value attributes are missing (if not specified explicitly!)
         # E.G. dataset provided but no keyword 'dataset'
 
-        if len(keywords_used) == len(schema_ws.items()):
-            return
+        #if len(keywords_used) == len(schema_ws.items()):
+        #    return
 
-        if UGLY_DEBUG: print (requested_entity, fields_included, schema_ws, values_ws)
+        if UGLY_DEBUG: print (requested_entity, fields_old, schema_ws, values_ws)
         return
 
 
@@ -657,44 +732,53 @@ def generate_schema_mappings(requested_entity, fields_included, schema_ws, value
 
 
     # opt 1) do not take keyword[i]
-    generate_schema_mappings(requested_entity, fields_included, schema_ws, values_ws,
+    generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws,
         keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability,\
         keywords_used = keywords_used)
 
     # opt 2) take it:
     for score, possible_mapping in schema_w:
-        if possible_mapping in fields_included:
+        if possible_mapping in fields_old:
             continue
 
-        f = fields_included[:]
-        f.append(possible_mapping)
+        fields_new = fields_old[:]
+        fields_new.append(possible_mapping)
         #print 'validating', (f, requested_entity)
 
         # opt 2.a) take as api input param entity
-        if validate_input_params_mapping(f, entity=requested_entity):
-            if UGLY_DEBUG: print 'validated', (requested_entity, f)
+        if validate_input_params_mapping(fields_new, entity=requested_entity):
+            if UGLY_DEBUG: print 'validated', (requested_entity, fields_new)
             # | set([keyword]
-            generate_schema_mappings(requested_entity, f, schema_ws, values_ws,
+            generate_schema_mappings(requested_entity, fields_new, schema_ws, values_ws,
                 keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability + score, keywords_used = keywords_used)
+
+
 
 
         # opt 2.b) take as requested entity (result type)
         if not requested_entity:
-            if validate_input_params_mapping(fields_included, entity=possible_mapping):
-                if UGLY_DEBUG:  print 'validated', (possible_mapping, fields_included)
-                #  could this be final mapping
-                # TODO: req ent
-                generate_schema_mappings(possible_mapping, fields_included, schema_ws, values_ws,
-                    keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability +score, \
+            entity_score = score
+            # if this is the first keyword mapped to schema (we expect entity name to come first)
+            if not keywords_used and keyword_index * 1.5 < len(keywords_list):
+                entity_score *= 1.8 * (float(len(keywords_list)) - keyword_index) / len(keywords_list)
+
+            if validate_input_params_mapping(fields_old, entity=possible_mapping):
+                if UGLY_DEBUG:  print 'validated', (possible_mapping, fields_old)
+
+                # TODO: currently the score is anyway being increased if a value is being mapped...
+                generate_schema_mappings(possible_mapping, fields_old, schema_ws, values_ws,
+                    keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability + entity_score, \
                     keywords_used = keywords_used | set([keyword]))
 
             # opt 2.c) take both as requested entity (result type) and  input param entity
-            if validate_input_params_mapping(fields_included, entity=possible_mapping):
-                if UGLY_DEBUG:  print 'validated', (possible_mapping, f)
+            if validate_input_params_mapping(fields_new, entity=possible_mapping):
+                if UGLY_DEBUG:  print 'validated', (possible_mapping, fields_new)
                 #  could this be final mapping
-                # TODO: req ent
-                generate_schema_mappings(possible_mapping, f, schema_ws, values_ws,
-                    keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability + 1.6 * score,\
+
+                # TODO: currently the score is anyway being increased if a value is being mapped...
+                # as later we may need promote items mapped to operators, we may need to increase the score either here or there
+                generate_schema_mappings(possible_mapping, fields_new, schema_ws, values_ws,
+                    keywords_list=keywords_list, keyword_index=keyword_index + 1, probability = probability + entity_score,\
                     keywords_used = keywords_used | set([keyword]))
 
 
@@ -706,18 +790,23 @@ def generate_schema_mappings(requested_entity, fields_included, schema_ws, value
 
 
 
-def search(query):
+def search(query, inst= None):
     """
     unit tests
     >>> search('vidmasze@cern.ch')
     user user=vidmasze@cern.ch
     """
+
+    # TODO: add DBS instance as parameter
+
+    DEBUG = True
+
     weight_matrix = []
     weight_columns = []
     schema_ws = {}
     values_ws = {}
 
-    print 'Query:', query
+    if DEBUG: print 'Query:', query
 
     # TODO: some of EN 'stopwords' may be quite important e.g. 'at', 'between', 'where'
     en_stopwords = stopwords.words('english')
@@ -727,10 +816,12 @@ def search(query):
         schema_ws[keyword] = keyword_schema_weights(keyword, include_fields=True)
         values_ws[keyword] = keyword_value_weights(keyword)
 
-    print '============= Schema mappings (TODO) =========='
-    pprint.pprint(schema_ws)
-    print '=============== Values mappings (TODO) ============'
-    pprint.pprint(values_ws)
+    print '============= Q: %s ==========' % query
+    if DEBUG:
+        print '============= Schema mappings (TODO) =========='
+        pprint.pprint(schema_ws)
+        print '=============== Values mappings (TODO) ============'
+        pprint.pprint(values_ws)
 
     global final_mappings
     final_mappings = []
@@ -745,7 +836,7 @@ def search(query):
     for (score, result_type, input_params) in final_mappings:
         # short entity names
         s_result_type = entity_names[result_type]
-        s_input_params = [(entity_names[field], value) for (field, value) in input_params]
+        s_input_params = [(entity_names.get(field, field), value) for (field, value) in input_params]
         s_input_params.sort(key=lambda item: item[0])
 
         s_query = s_result_type + ' ' +  ' '.join(['%s=%s' % (field, value) for (field, value) in s_input_params])
@@ -759,7 +850,7 @@ def search(query):
 
     print '\n'.join(['%.2f: %s' % (score, query) for (query, score) in best_scores ])
 
-    return ''
+    return best_scores
 
 
 def crap(query):
@@ -815,3 +906,35 @@ if __name__ == '__main__':
 
     # jobsummary  last 24h  --> jobsummary date last 24h
     # infer date
+
+    """
+    Not working queries:
+    /*Zmm*/*/*
+    /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO
+    """
+
+    print search('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO')
+    print search('/*Zmm*/*/*')
+
+    # use stopwords
+    # TODO: luminosity value is not mapped
+    print search('files /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO   run 12345 lumi 666702')
+
+
+    print search('name of vidmantas.zemleris@cern.ch')
+    print search('username of vidmantas.zemleris@cern.ch')
+
+    # statistics for Run/lumi
+
+    # TODO: IT IS QUITE SAFE TO DISPLAY RESULTS OF A QUERY THAT JUST FINDS AN ENTITY
+    # (especially if only one api param which is same as the result)
+
+    # TODO: allow combining keyword query and structured query
+
+
+    # TODO: we may wish to be able to interpret the semantics behind the dataset...
+    """
+    the only numbers in preconditions are lumi and run
+
+    old the others are post-conditions...
+    """

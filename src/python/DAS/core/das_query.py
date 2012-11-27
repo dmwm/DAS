@@ -21,8 +21,10 @@ from   DAS.core.das_parser import ql_manager
 from  DAS.core.das_process_dataset_wildcards import *
 
 
+class WildcardMatchingException(Exception):
+    pass
 
-class WildcardMultipleMatchesException (Exception):
+class WildcardMultipleMatchesException (WildcardMatchingException):
 
     def __init__(self, message, options = {}):
         self.message =  message
@@ -133,7 +135,7 @@ class DASQuery(object):
 
                     if not len(dataset_matches):
                         # TODO: fuzzy matching to propose fixes? This also could be done for any dataset...
-                        raise Exception(' The pattern you specified did not match any datasets in DAS cache.\n'+
+                        raise WildcardMatchingException(' The pattern you specified did not match any datasets in DAS cache.\n'+
                                         'Check for misspellings or if you know it exists, provide it with three slashes: \n /primary_dataset/processed_daset/data_tier')
 
                     if len(dataset_matches) > 1:
