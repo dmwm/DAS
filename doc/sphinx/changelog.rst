@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Fix issue with DBS3 global instance look-up
+  - Switch to HTML5 doctype
   - New schema for DAS maps
 
     - re-factor code to handle new schema
