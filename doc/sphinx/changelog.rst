@@ -7,6 +7,12 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - DAS CLI changes:
+    
+    - Add exit codes
+    - Add --retry option which allows user to decide if s/he wants to
+      proceed with request when DAS server is busy; retry follows log^5 function
+
   - Fix issue with DBS3 global instance look-up
   - Switch to HTML5 doctype
   - New schema for DAS maps
