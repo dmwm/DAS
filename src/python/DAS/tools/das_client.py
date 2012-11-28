@@ -18,6 +18,26 @@ import urllib
 import urllib2
 import httplib
 from   optparse import OptionParser
+from   math import log
+
+# define exit codes according to Linux sysexists.h
+EX_OK           = 0  # successful termination
+EX__BASE        = 64 # base value for error messages
+EX_USAGE        = 64 # command line usage error
+EX_DATAERR      = 65 # data format error
+EX_NOINPUT      = 66 # cannot open input
+EX_NOUSER       = 67 # addressee unknown
+EX_NOHOST       = 68 # host name unknown
+EX_UNAVAILABLE  = 69 # service unavailable
+EX_SOFTWARE     = 70 # internal software error
+EX_OSERR        = 71 # system error (e.g., can't fork)
+EX_OSFILE       = 72 # critical OS file missing
+EX_CANTCREAT    = 73 # can't create (user) output file
+EX_IOERR        = 74 # input/output error
+EX_TEMPFAIL     = 75 # temp failure; user is invited to retry
+EX_PROTOCOL     = 76 # remote error in protocol
+EX_NOPERM       = 77 # permission denied
+EX_CONFIG       = 78 # configuration error
 
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     """
@@ -83,6 +103,9 @@ class DASOptionParser:
         msg  = 'specify private certificate file name'
         self.parser.add_option("--cert", action="store", type="string",
                                default="", dest="cert", help=msg)
+        msg = 'specify number of retries upon busy DAS server message'
+        self.parser.add_option("--retry", action="store", type="string",
+                               default=0, dest="retry", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
@@ -258,17 +281,33 @@ def main():
     ckey    = opts.ckey
     cert    = opts.cert
     if  not query:
-        raise Exception('You must provide input query')
+#        raise Exception('You must provide input query')
+        print 'Input query is missing'
+        sys.exit(EX_USAGE)
     data    = get_data(host, query, idx, limit, debug, thr, ckey, cert)
     if  opts.format == 'plain':
         jsondict = json.loads(data)
         if  not jsondict.has_key('status'):
             print 'DAS record without status field:\n%s' % jsondict
-            return
+            sys.exit(EX_PROTOCOL)
         if  jsondict['status'] != 'ok':
-            print "status: %s reason: %s" \
+            print "status: %s, reason: %s" \
                 % (jsondict.get('status'), jsondict.get('reason', 'N/A'))
-            return
+            if  opts.retry:
+                found = False
+                for attempt in range(1, int(opts.retry)):
+                    interval = log(attempt)**5
+                    print "Retry in %5.3f sec" % interval
+                    time.sleep(interval)
+                    data = get_data(host, query, idx, limit, debug, thr, ckey, cert)
+                    jsondict = json.loads(data)
+                    if  jsondict.get('status', 'fail') == 'ok':
+                        found = True
+                        break
+            else:
+                sys.exit(EX_TEMPFAIL)
+            if  not found:
+                sys.exit(EX_TEMPFAIL)
         nres = jsondict['nresults']
         if  not limit:
             drange = '%s' % nres
