@@ -7,6 +7,12 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Switch to new PyMongo driver, version 2.4
+
+    - change Connection to MongoClient
+    - remove safe=True for all insert/update/remove operation on
+      mongo db collection, since it is default with MongoClient
+
   - DAS CLI changes:
     
     - Add exit codes
