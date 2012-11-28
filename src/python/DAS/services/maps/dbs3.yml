@@ -60,6 +60,7 @@ params : {
         "acquisition_era_name": "optional",
         "physics_group_name": "optional",
         "cdate": "optional",
+        "create_by": "optional",
 }
 lookup : dataset
 das_map : [
@@ -74,6 +75,7 @@ das_map : [
     {"das_key": "group", "rec_key":"group.name", "api_arg":"physics_group_name"},
     {"das_key": "status", "rec_key":"status.name", "api_arg":"dataset_access_type"},
     {"das_key": "date", "rec_key":"date", "api_arg":"cdate"},
+    {"das_key": "user", "rec_key":"user.name", "api_arg":"create_by"},
 ]
 ---
 urn: filesummaries
