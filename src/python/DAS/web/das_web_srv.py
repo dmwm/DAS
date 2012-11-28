@@ -56,7 +56,7 @@ import DAS.utils.jsonwrapper as json
 from DAS.core.das_query import WildcardMultipleMatchesException, WildcardMatchingException
 
 # keyword search
-from DAS.keyword_search.search import search as keyword_search
+from DAS.keywordsearch.search import search as keyword_search
 
 # TODO: move this to an appropriate place
 from DAS.web.utils import HtmlString
