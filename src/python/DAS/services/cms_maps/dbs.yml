@@ -201,6 +201,19 @@ das_map : [
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
 ]
 ---
+urn : fakeDataset4User
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "dataset": "", "user": "required",
+}
+lookup: dataset
+das_map : [
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key":"user", "rec_key":"user.name", "api_arg":"user"},
+]
+---
 urn : fakeBlock4DatasetRun
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
@@ -249,7 +262,8 @@ params : {
 lookup: parent
 das_map : [
     {"das_key":"parent", "rec_key":"parent.name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path",
+     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeChild4Dataset
@@ -262,7 +276,8 @@ params : {
 lookup: child
 das_map : [
     {"das_key":"child", "rec_key":"child.name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset", "pattern":"/.*/.*/.*"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : listBlocks
@@ -375,7 +390,8 @@ params : {
 lookup: site
 das_map : [
     {"das_key":"site", "rec_key":"site.name", "api_arg":""},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset", "pattern":"/.*/.*/.*"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeDataset4Site
