@@ -255,7 +255,9 @@ def main():
         scripts              = datafiles('bin'),
         requires             = ['python (>=2.6)', 'pymongo (>=1.6)', 'ply (>=3.3)',
                                 'sphinx (>=1.0.4)', 'cherrypy (>=3.1.2)',
-                                'Cheetah (>=2.4)', 'yaml (>=3.09)'],
+                                'Cheetah (>=2.4)', 'yaml (>=3.09)',
+                                # keyword search
+                                'jellyfish', 'nltk'],
         ext_modules          = [Extension('DAS.extensions.das_speed_utils',
                                    include_dirs=['extensions'],
                                    sources=['src/python/DAS/extensions/dict_handler.c']),
