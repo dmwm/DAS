@@ -56,7 +56,7 @@ class RequestManager(object):
         attempts = 0
         while True:
             try:
-                self.col.insert(doc, safe=True)
+                self.col.insert(doc)
                 break
             except DuplicateKeyError as err:
                 break
@@ -75,7 +75,7 @@ class RequestManager(object):
         attempts = 0
         while True:
             try:
-                self.col.remove(dict(_id=pid), safe=True)
+                self.col.remove(dict(_id=pid))
                 break
             except Exception as err:
                 print_exc(err)
@@ -99,7 +99,7 @@ class RequestManager(object):
         doc = dict(_id=pid, ip=addr, uinput=uinput, \
                         ts=future_tstamp, timestamp=tstamp)
         try:
-            self.hold.insert(doc, safe=True)
+            self.hold.insert(doc)
         except DuplicateKeyError:
             pass
         except Exception as err:

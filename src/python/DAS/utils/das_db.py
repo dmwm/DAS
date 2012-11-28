@@ -14,7 +14,7 @@ import time
 import threading
 
 # monogo db modules
-from pymongo.connection import Connection
+from pymongo import MongoClient
 from pymongo.errors import AutoReconnect
 import gridfs
 
@@ -57,7 +57,7 @@ class _DBConnectionSingleton(object):
         key = genkey(str(uri))
         if  not self.conndict.has_key(key):
             try:
-                dbinst = Connection(host=uri)
+                dbinst = MongoClient(host=uri)
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)

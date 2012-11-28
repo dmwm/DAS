@@ -347,8 +347,8 @@ class DASMongocache(object):
         "Update timestamp of all DAS data records for given query"
         nval = {'$set': {'das.expire':timestamp}}
         spec = {'qhash' : dasquery.qhash}
-        self.col.update(spec, nval, multi=True, safe=True)
-        self.merge.update(spec, nval, multi=True, safe=True)
+        self.col.update(spec, nval, multi=True)
+        self.merge.update(spec, nval, multi=True)
 
     def das_record(self, dasquery):
         "Retrieve DAS record for given query"
@@ -363,10 +363,10 @@ class DASMongocache(object):
         if  system:
             self.col.update({'query': dasquery.storage_query,
                              'das.system':system},
-                            {'$set': info}, upsert=True, safe=True)
+                            {'$set': info}, upsert=True)
         else:
             self.col.update({'query': dasquery.storage_query},
-                            {'$set': info}, upsert=True, safe=True)
+                            {'$set': info}, upsert=True)
 
     def update_query_record(self, dasquery, status, header=None):
         "Update DAS record for provided query"
@@ -392,8 +392,7 @@ class DASMongocache(object):
                 if  set(api) & set(sapi) == set(api) and \
                     set(url) & set(surl) == set(url):
                     self.col.update({'_id':ObjectId(sysrecord['_id'])},
-                        {'$set': {'das.expire':expire, 'das.status':status}},
-                        safe=True)
+                        {'$set': {'das.expire':expire, 'das.status':status}})
                 else:
                     self.col.update({'_id':ObjectId(sysrecord['_id'])},
                         {'$pushAll':{'das.api':header['das']['api'],
@@ -401,15 +400,14 @@ class DASMongocache(object):
                                      'das.url':header['das']['url'],
                                      'das.ctime':header['das']['ctime'],
                                     },
-                         '$set': {'das.expire':expire, 'das.status':status}},
-                        safe=True)
+                         '$set': {'das.expire':expire, 'das.status':status}})
             if  dasrecord:
                 self.col.update({'_id':ObjectId(dasrecord['_id'])},
-                     {'$set': {'das.expire':expire}}, safe=True)
+                     {'$set': {'das.expire':expire}})
         else:
             self.col.update({'qhash': dasquery.qhash,
                              'das.system':'das'},
-                            {'$set': {'das.status': status}}, safe=True)
+                            {'$set': {'das.status': status}})
 
     def incache(self, dasquery, collection='merge', system=None):
         """
@@ -712,8 +710,7 @@ class DASMongocache(object):
             size = self.cache_size
             try:
                 while True:
-                    nres = self.merge.insert(\
-                        itertools.islice(gen, size), safe=True)
+                    nres = self.merge.insert(itertools.islice(gen, size))
                     if  nres and isinstance(nres, list):
                         inserted += len(nres)
                     else:
@@ -730,7 +727,7 @@ class DASMongocache(object):
                         'cache_id':[], 'das_id': id_list}
                 for row in genrows:
                     row.update(das_dict)
-                    self.merge.insert(row, safe=True)
+                    self.merge.insert(row)
             except InvalidOperation:
                 pass
         if  inserted:
@@ -752,11 +749,11 @@ class DASMongocache(object):
                 else: # it is compound key, e.g. site.name
                     newkey, newval = convert_dot_notation(key, val)
                     empty_record[newkey] = adjust_mongo_keyvalue(newval)
-            self.merge.insert(empty_record, safe=True)
+            self.merge.insert(empty_record)
             # update DAS records (both meta and data ones, by using qhash)
             nval = {'$set': {'das.expire':empty_expire}}
             spec = {'qhash':dasquery.qhash}
-            self.col.update(spec, nval, multi=True, safe=True)
+            self.col.update(spec, nval, multi=True)
 
     def update_cache(self, dasquery, results, header):
         """
@@ -772,8 +769,7 @@ class DASMongocache(object):
         # bulk insert
         try:
             while True:
-                nres = self.col.insert(\
-                        itertools.islice(gen, self.cache_size), safe=True)
+                nres = self.col.insert(itertools.islice(gen, self.cache_size))
                 if  nres and isinstance(nres, list):
                     inserted += len(nres)
                 else:
@@ -797,7 +793,7 @@ class DASMongocache(object):
             q_record['das']['empty_record'] = 0
             q_record['das']['status'] = "requested"
             q_record['qhash'] = dasquery.qhash
-            self.col.insert(q_record, safe=True)
+            self.col.insert(q_record)
 
     def generate_records(self, dasquery, results, header):
         """

@@ -11,7 +11,7 @@ import thread
 import cherrypy
 
 # pymongo modules
-from   pymongo import Connection, DESCENDING
+from   pymongo import MongoClient, DESCENDING
 from   pymongo.errors import AutoReconnect, ConnectionFailure
 from   bson.code import Code
 
@@ -128,7 +128,7 @@ def collection(uri):
     """
     Return collection cursor
     """
-    conn = Connection(uri)
+    conn = MongoClient(uri)
     coll = conn['db']['datasets']
     return coll
 

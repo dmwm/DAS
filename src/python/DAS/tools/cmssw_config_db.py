@@ -15,7 +15,7 @@ import hashlib
 from optparse import OptionParser
 
 # pymongo modules
-from pymongo.connection import Connection
+from pymongo import MongoClient
 
 from DAS.services.cmsswconfigs.base import CMSSWConfig
 
@@ -81,7 +81,7 @@ def connect(host, port):
     """
     Connect to MongoDB database.
     """
-    connection = Connection(host, port)
+    connection = MongoClient(host, port)
     db = connection.configdb
     return db
 
