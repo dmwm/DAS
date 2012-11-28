@@ -2,7 +2,7 @@
  * DAS specific utilities
  * Author: Valentin Kuznetsov, 2009
  */ 
-function updateInput(myinput) {
+function updateInput(myinput, dbs_global_inst) {
    if  (myinput) updateTag('input', myinput);
    else updateTag('input', '');
 
@@ -16,7 +16,7 @@ function updateInput(myinput) {
 
    var uinstance = gup('instance');
    if  (uinstance) updateTag('instance', uinstance);
-   else updateTag('instance', 'cms_dbs_prod_global');
+   else updateTag('instance', dbs_global_inst);
 }
 function getTagValue(tag)
 {
