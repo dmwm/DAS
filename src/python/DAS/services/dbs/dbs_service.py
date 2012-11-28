@@ -252,6 +252,23 @@ class DBSService(DASAbstractService):
                 kwds['query'] = 'required'
             kwds.pop('run')
             kwds.pop('dataset')
+        if  api == 'fakeDataset4User':
+            user = kwds['user']
+            if  user == 'required':
+                kwds['query'] = 'required'
+            else:
+                val = sitedb.user_dn(kwds['user'])
+                if  val:
+                    # DBS-QL does not allow = or spaces, so we'll tweak the DN
+                    val = val.replace('=', '*').replace(' ', '*')
+                    kwds['query'] = "find dataset, dataset.createby " + \
+                            "where dataset.createby=%s" % val
+                    if  kwds.has_key('dataset') and kwds['dataset']:
+                        kwds['query'] += ' and dataset=%s' % kwds['dataset']
+                else:
+                    kwds['query'] = 'required'
+            kwds.pop('user')
+            kwds.pop('dataset')
         if  api == 'fakeRun4File':
             val = kwds['file']
             if  val != 'required':
@@ -429,6 +446,8 @@ where %s" % value[4:]
         elif  api == 'fakeDatasetSummary':
             prim_key = 'dataset'
         elif  api == 'fakeDataset4Run':
+            prim_key = 'dataset'
+        elif  api == 'fakeDataset4User':
             prim_key = 'dataset'
         elif  api == 'fakeRun4File':
             prim_key = 'run'
