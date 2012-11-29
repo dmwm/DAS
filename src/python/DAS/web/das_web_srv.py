@@ -438,6 +438,7 @@ class DASWebService(DASWebManager):
         except Exception as err:
             # allow html in the exception message
             exc_message = str(err)
+            print exc_message
             if isinstance(err.message, HtmlString):
                 exc_message = err.message
 
@@ -454,7 +455,7 @@ class DASWebService(DASWebManager):
                                                    % (das_url,  q.replace(dataset_pattern, '<b>%s</b>' % dataset_pattern))
                     options.append(make_link_to_query(query))
 
-                exc_message = HtmlString('<br>\n'.join(options))
+                exc_message = HtmlString(err.message + '<br>\n'.join(options))
 
 
 
