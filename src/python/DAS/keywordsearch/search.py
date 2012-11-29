@@ -430,7 +430,7 @@ def keyword_value_weights(keyword, api_results_allowed=False):
     scores = list(set(scores))
 
     # check for matching of existing datasets
-    # TODO: use instance from elsewhere
+    # TODO: use instance from elsewhere (from web server if available)
     from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr, process_dataset_wildcards
     import DAS.web.dbs_daemon
     DAS.web.dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART = 1

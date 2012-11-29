@@ -31,7 +31,7 @@ from DAS.utils.url_utils import HTTPSClientAuthHandler
 
 # Shall we keep existing Datasets on server restart (very useful for debuging)
 KEEP_EXISTING_RECORDS_ON_RESTART = 1
-SKIP_UPDATES = 1
+SKIP_UPDATES = 0
 
 def dbs_instance(dbsurl):
     """Parse dbs instance from provided DBS url"""
