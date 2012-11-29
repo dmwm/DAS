@@ -5,8 +5,8 @@
 Unit test for jsonwrapper
 """
 
-import cjson
-import yajl
+
+
 import unittest
 import urllib2, urllib
 import DAS.utils.jsonwrapper as myjson
@@ -44,6 +44,7 @@ class testUtils(unittest.TestCase):
 
     def test_cjson(self):
         """Test cjson wrapper"""
+        import cjson
         myjson.MODULE = 'cjson'
         myjson.cjson = cjson
         expect  = self.data
@@ -58,6 +59,7 @@ class testUtils(unittest.TestCase):
 
     def test_yajl(self):
         """Test yajl wrapper"""
+        import yajl
         myjson.MODULE = 'yajl'
         expect  = self.data
         result  = myjson.loads(myjson.dumps(self.data))
