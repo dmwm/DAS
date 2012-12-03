@@ -203,7 +203,7 @@ def process_dataset_wildcards(pattern, dbs_mngr):
     # TODO: it is quite probable that people writing Zmm actually mean *Zmm*
 
     if pattern.count('/') == 3:
-        return pattern
+        return [pattern]
 
     # clean up any not allowed symbols in pattern that could mess up our regexps
     pattern = re.sub(DATASET_FORBIDDEN_SYMBOLS, '', pattern)

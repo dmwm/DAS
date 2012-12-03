@@ -440,16 +440,19 @@ def keyword_value_weights(keyword, api_results_allowed=False):
 
     dataset_score = None
     adj_keyword = keyword
-
-
     # dbsmgr.find returns a generator, to check if it's non empty we have to access it's entities
+    # TODO: check for full and partial match
+    # e.g. /DoubleMu/Run2012A-Zmmg-13Jul2012-v1 --> /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/*
+    # DoubleMu -> *DoubleMu*
+
+
     if next(dbsmgr.find(pattern=keyword, limit=1), False):
         # TODO: if contains wildcards score shall be a bit lower
         if '*' in keyword and not '/' in keyword:
             dataset_score = 0.8
         elif '*' in keyword and '/' in keyword:
             dataset_scores = 0.9
-        elif not '*' in keyword:
+        elif not '*' in keyword and not '/' in keyword:
             if next(dbsmgr.find(pattern='*%s*' % keyword, limit=1), False):
                 dataset_score = 0.7
                 adj_keyword = '*%s*' % keyword
@@ -566,9 +569,30 @@ def validate_input_params_mapping(params, entity=None, final_step=False):
     return False
 
 
+def penalize_highly_possible_schema_terms_as_values(keyword, new_score,
+                                                    schema_ws):
+    # e.g. configuration of dataset Zmmg-13Jul2012-v1 site=T1_* location is at T1_*
+    # 4.37: dataset dataset=*Zmmg-13Jul2012-v1* site=T1_*
+    # 4.37: dataset dataset=*dataset* site=T1_*
+    # I should look at distribution and compare with other keywords
+    f_avg_ = lambda items: len(items) and sum(items) / len(items) or None
+    f_avg = lambda items: f_avg_(filter(None, items))
+    f_avg_score = lambda interpretations: f_avg(
+        map(lambda item: item[0], interpretations))
+    # global average schema score
+    avg_score = f_avg([f_avg_score(keyword_scores)
+                       for keyword_scores in schema_ws.values()]) or 0.0
+    # average score for this keyword
+    keyword_schema_score = f_avg_score(schema_ws[keyword]) or 0.0
+    print "avg schema score for '%s' is %.2f; avg schema = %.2f " % (
+        keyword, keyword_schema_score, avg_score)
+    if avg_score - keyword_schema_score < 0.5:
+        new_score += avg_score - keyword_schema_score
+        return new_score
+
 
 def generate_value_mappings(requested_entity, fields_included, schema_ws, values_ws, probability, values_mapping = {}, keywords_used = set([]), keywords_list=[], keyword_index=0,):
-    SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT = 1.5
+    SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT = 0.3
 
     # TODO: modify the value and schema mappings weights according to previous mappings
     global final_mappings
@@ -579,6 +603,7 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws, values
 
     # (as a final condition) now every field in fields_included that were guessed in earlier step, has to be covered by values
     # newones could still be added
+
 
     if UGLY_DEBUG:
         print 'generate_value_mappings(', requested_entity, fields_included, schema_ws, values_ws, probability, values_mapping, keywords_used, keywords_list, keyword_index,')'
@@ -602,7 +627,7 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws, values
                 for requested_entity in entities.keys():
                     adjusted_score = probability * len(keywords_used) / N_keywords
                     if requested_entity in values_mapping.keys():
-                        adjusted_score *= SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
+                        adjusted_score += SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
                     final_mappings.append( (adjusted_score, requested_entity, tuple(values_mapping.items())) )
             else:
                 adjusted_score = probability * len(keywords_used) / N_keywords
@@ -645,7 +670,12 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws, values
             # we favour the values mappings that have also been refered in schema mapping (e.g. dataset *Zmm*)
             # TODO: It could be in theory useful combining a number of consecutive keywords refering to the same value
             if possible_mapping in fields_included:
-                new_score *= SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
+                new_score += SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
+
+
+            # TODO: penalize keywords that are mapping well to the schema entities
+            #new_score = penalize_highly_possible_schema_terms_as_values(keyword,
+            #    new_score, schema_ws)
 
             new_fields = fields_included | set([possible_mapping])
 
