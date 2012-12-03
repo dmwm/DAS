@@ -166,6 +166,8 @@ class PhedexService(DASAbstractService):
                             adler, cksum = cksum.split(',')
                             rec['adler32'] = adler.replace('adler32:', '')
                             rec['checksum'] = int(cksum.replace('cksum:', ''))
+                        if  cksum.find(':') != -1:
+                            rec['checksum'] = int(cksum.replace('cksum:', ''))
                 except:
                     pass
                 yield row
