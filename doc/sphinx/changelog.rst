@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Fix Phedex checksum parsing
   - Switch to new PyMongo driver, version 2.4
 
     - change Connection to MongoClient
