@@ -162,12 +162,12 @@ class PhedexService(DASAbstractService):
                     if  row.has_key('file') and isinstance(row['file'], dict):
                         rec = row['file']
                         cksum = rec['checksum']
-                        if  cksum.find(',') != -1:
-                            adler, cksum = cksum.split(',')
-                            rec['adler32'] = adler.replace('adler32:', '')
-                            rec['checksum'] = int(cksum.replace('cksum:', ''))
-                        if  cksum.find(':') != -1:
-                            rec['checksum'] = int(cksum.replace('cksum:', ''))
+                        for item in cksum.split(','):
+                            key, val = item.split(':')
+                            if  key == 'cksum':
+                                rec['checksum'] = int(val)
+                            else:
+                                rec[key] = val
                 except:
                     pass
                 yield row
