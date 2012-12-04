@@ -15,7 +15,7 @@ import threading
 
 # monogo db modules
 from pymongo import MongoClient
-from pymongo.errors import AutoReconnect
+from pymongo.errors import AutoReconnect, ConnectionFailure
 import gridfs
 
 # DAS modules
@@ -61,7 +61,7 @@ class _DBConnectionSingleton(object):
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
-            except AutoReconnect as err:
+            except (ConnectionFailure, AutoReconnect):
                 tstamp = dastimestamp('')
                 thread = threading.current_thread()
                 print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
