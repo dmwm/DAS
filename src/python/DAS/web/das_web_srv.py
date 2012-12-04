@@ -609,8 +609,8 @@ class DASWebService(DASWebManager):
 
     def busy(self):
         """
-        Check number server load and report busy status if it's
-        above threashold = queue size - nworkers
+        Check server load and report busy status if
+        nrequests - nworkers > queue limit
         """
         nrequests = self.reqmgr.size()
         if  (nrequests - self.taskmgr.nworkers()) > self.queue_limit:
