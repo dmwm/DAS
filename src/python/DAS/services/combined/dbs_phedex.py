@@ -22,7 +22,8 @@ from   DAS.web.tools import exposejson
 from   DAS.web.utils import db_monitor
 from   DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from   DAS.utils.utils import get_key_cert
-from   DAS.utils.thread import set_thread_name, start_new_thread
+from   DAS.utils.thread import start_new_thread
+#from   DAS.utils.thread import set_thread_name, start_new_thread
 from   DAS.core.das_mapping_db import DASMapping
 from   DAS.utils.das_config import das_readconfig
 import DAS.utils.jsonwrapper as json
@@ -285,9 +286,11 @@ class DBSPhedexService(object):
             self.expire  = mapping[service_api]['expire']
             if  not self.worker_thr:
                 # Worker thread which update dbs/phedex DB
-                self.worker_thr = thread.start_new_thread(worker, \
+                self.worker_thr = start_new_thread('dbs_phedex_worker', worker, \
                 (self.urls, self.uri, self.dbname, self.collname, self.expire))
-                set_thread_name(self.worker_thr, 'dbs_phedex_worker')
+#                self.worker_thr = thread.start_new_thread(worker, \
+#                (self.urls, self.uri, self.dbname, self.collname, self.expire))
+#                set_thread_name(self.worker_thr, 'dbs_phedex_worker')
         except Exception as exc:
             self.urls       = None
             self.expire     = None
