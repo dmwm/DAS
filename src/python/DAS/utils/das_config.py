@@ -103,8 +103,8 @@ DASOption('web_server', 'socket_queue_size', 'int', 100),
 DASOption('web_server', 'url_base', 'string', '/das'),
 # status_update controls how often AJAX calls should be invoked (in milsec)
 DASOption('web_server', 'status_update', 'int', 3000),
-# number of workers to serve user queries in DAS server
-DASOption('web_server', 'number_of_workers', 'int', 10),
+# number of web workers to serve user queries in DAS server
+DASOption('web_server', 'web_workers', 'int', 10),
 # limit number of peding jobs in DAS server queue
 DASOption('web_server', 'queue_limit', 'int', 50),
 # The adjust_input function can be implemented for concrete use case
