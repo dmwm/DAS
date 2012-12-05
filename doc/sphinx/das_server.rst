@@ -23,15 +23,18 @@ stay in cache for period of time determined by data-providers, see Figure:
 
 .. figure:: _images/das_server.png
 
+Thread structure of DAS server
+------------------------------
+
 Below we outline a typical layout of DAS server threads:
 
 - 1 main thread
-- 1 dummy
-- 1 TimeoutMonitor thread
-- 1 HTTP server thread
-- 1 dbs_phedex_monitor thread
-- 1 lumi_service thread
-- n_cp-CherryPy threads 
+- 1 HTTP server thread (CherryPy)
+- 1 TimeoutMonitor thread (CherryPy)
+- 1 dbs_phedex_monitor thread (dbs_phedex combined service)
+- 1 dbs_phedex worker thread (dbs_phedex combined service)
+- 1 lumi_service thread (lumi service)
+- n_cp CherryPy threads
 - n_das worker threads, they are divided as following:
 
   - n_web allocated for web workers
@@ -50,3 +53,27 @@ and it is determined by the following formula
     n_web is defined in DAS config file, see web_server.web_workers
     n_core is defined in DAS config file, see das.core_workers
     n_api is defined in DAS config file, see das.api_workers
+
+Debugging DAS server
+--------------------
+
+There is nice way to get a snapshot of current activity of DAS server by
+sending SIGQUIT signal to DAS server, e.g.  upon the following command
+`kill -3 <PID>` you'll get the following output in DAS log
+
+.. doctest::
+
+    # Thread: DASAbstractService:dbs:PluginTaskManager(4706848768)
+    File: "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 524, in __bootstrap
+      self.__bootstrap_inner()
+    File: "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 551, in __bootstrap_inner
+      self.run()
+    File: "/Users/vk/CMS/GIT/github/DAS/src/python/DAS/utils/task_manager.py", line 39, in run
+      task = self._tasks.get()
+    File: "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/Queue.py", line 168, in get
+      self.not_empty.wait()
+    File: "/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/threading.py", line 243, in wait
+      waiter.acquire()
+    ....
+    .... and similar output for all other DAS threads
+    ....
