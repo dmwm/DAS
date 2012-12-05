@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Apply Vidmantas wildcard patch to improve usage of dataset patterns
+    on web UI
   - Fix Phedex checksum parsing
   - Switch to new PyMongo driver, version 2.4
 
