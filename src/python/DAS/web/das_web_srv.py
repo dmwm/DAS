@@ -49,6 +49,7 @@ from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
 from DAS.services.sitedb2.sitedb2_service import SiteDBService
+from DAS.utils.global_scope import SERVICES
 import DAS.utils.jsonwrapper as json
 
 from DAS.core.das_query import WildcardMultipleMatchesException
@@ -102,7 +103,7 @@ class DASWebService(DASWebManager):
         self.base        = config['url_base']
         self.interval    = config.get('status_update', 2500)
         self.engine      = config.get('engine', None)
-        nworkers         = config['number_of_workers']
+        nworkers         = config['web_workers']
         self.hot_thr     = config.get('hot_threshold', 3000)
         self.dasconfig   = dasconfig
         self.dburi       = self.dasconfig['mongodb']['dburi']
@@ -197,7 +198,7 @@ class DASWebService(DASWebManager):
             self.colors = {}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
-            self.sitedbmgr   = SiteDBService(self.dasconfig)
+            self.sitedbmgr = SERVICES.get('sitedb2', None) # SiteDB from global scope
         except Exception as ConnectionFailure:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
