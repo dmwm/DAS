@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Add capability to dump DAS status stack by sending SIGQUIT signal to DAS
+    server, e.g. upon the following call `kill -3 <PID>` DAS server will dump
+    into its logs the current snapshot of all its threads
   - Apply Vidmantas wildcard patch to improve usage of dataset patterns
     on web UI
   - Fix Phedex checksum parsing
