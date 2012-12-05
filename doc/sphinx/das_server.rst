@@ -13,6 +13,15 @@ framework. It consists of the following main componens:
 - DAS command-line client
 - Data-provider daemons, e.g. DBS daemon, etc.
 - Various monitors, e.g. MongoDB connection monitor, etc.
+- MongoDB
+
+Upon user request, the front-end validates user input and pass it to DAS web
+server. It decompose user query into series of requests to underlying core
+engine, who by itself invokes multiple APIs to fetch data from data-provider
+and place them into MongoDB. Later this data are serverd back to the user and
+stay in cache for period of time determined by data-providers, see Figure:
+
+.. figure:: _images/das_server.png
 
 Below we outline a typical layout of DAS server threads:
 
@@ -29,7 +38,8 @@ Below we outline a typical layout of DAS server threads:
   - n_core allocated for DAS core workers
   - n_api allocated for DAS service APIs
 
-Therefore the total number of threads is determined by the following formula
+Therefore the total number of threads is quite hight (range in first hundred)
+and it is determined by the following formula
 
 .. doctest::
 

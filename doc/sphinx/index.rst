@@ -21,6 +21,7 @@ Contents:
    das_client.rst
    architecture.rst
    workflow.rst
+   das_server.rst
    das_records.rst
    mapping.rst
    analytics.rst
