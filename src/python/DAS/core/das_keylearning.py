@@ -50,7 +50,7 @@ class DASKeyLearning(object):
         
         result = self.col.find_one({'system': system, 'urn': urn})
         if result:       
-            self.col.update({'_id': result['_id']},
+            self.col.update({'_id': ObjectId(result['_id'])},
                             {'$addToSet': {'members': {'$each': members}}})
         else:
             keys = self.mapping.api2daskey(system, urn)
