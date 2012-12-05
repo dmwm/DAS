@@ -117,3 +117,10 @@ PAT_SE = re.compile('([a-zA-Z0-9-_]+\\.){1,4}')
 PAT_DATATYPE = re.compile('^mc$|^calib$|^data$|^raw$|^cosmic$', re.I)
 PAT_TIERS = \
     re.compile('gen|sim|raw|digi|reco|alcoreco|hlt|fevt|alcaprompt|dqm', re.I)
+
+
+
+# slashes handling in dataset Wildcard queries
+
+# allowed characters: letters, numbers, dashes and obviously  *
+DATASET_FORBIDDEN_SYMBOLS = re.compile(r'[^a-zA-Z0-9_\-*]*')
