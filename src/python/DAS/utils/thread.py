@@ -38,8 +38,8 @@ def dumpstacks(signal, frame):
         code.append("\n# Thread: %s(%d)" % (id2name.get(threadId,""), threadId))
         for filename, lineno, name, line in traceback.extract_stack(stack):
             code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
-            if line:
+            if  line:
                 code.append("  %s" % (line.strip()))
     print "\n".join(code)
 
-signal.signal(signal.SIGQUIT, dumpstacks)
+signal.signal(signal.SIGUSR1, dumpstacks)

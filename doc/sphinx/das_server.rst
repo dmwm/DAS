@@ -58,8 +58,8 @@ Debugging DAS server
 --------------------
 
 There is nice way to get a snapshot of current activity of DAS server by
-sending SIGQUIT signal to DAS server, e.g.  upon the following command
-`kill -3 <PID>` you'll get the following output in DAS log
+sending SIGUSR1 signal to DAS server, e.g. upon executing `kill -SIGUSR1 <PID>`
+command you'll get the following output in DAS log
 
 .. doctest::
 
