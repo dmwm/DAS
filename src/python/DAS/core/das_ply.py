@@ -384,7 +384,7 @@ class DASPLY(object):
                   | DASKEY_ATTR FILTER_OPERATOR VALUE
                   | DASKEY_ATTR FILTER_OPERATOR NUMBER"""
         val = ''
-        for idx in range(0, len(p)):
+        for idx in xrange(0, len(p)):
             if  p[idx]:
                 val += str(p[idx])
         p[0] = [val]

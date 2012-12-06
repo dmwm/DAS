@@ -118,7 +118,7 @@ def inject(path, release, debug=0):
     
     content_translate = '?????????\t\n??\r??'+\
                         ''.join(['?']*16+\
-                                [chr(i) for i in range(32,128)]+\
+                                [chr(i) for i in xrange(32, 128)]+\
                                 ['?']*128)
     
     if  not os.environ.has_key('SCRAM_ARCH'):

@@ -26,7 +26,7 @@ class WeightedDistribution:
         """
         random.shuffle(items)
         values = dict([(i, (j+1)**power) \
-                for i,  j in zip(items, range(len(items)))])
+                for i,  j in zip(items, xrange(len(items)))])
         return WeightedDistribution(values)
     
     def __init__(self, values):
@@ -89,7 +89,7 @@ class RandomData(object):
         LOG.info('Fetching blocks')
         blocks = []
         base_url = 'http://cmsweb.cern.ch/phedex/datasvc/json/prod/blockreplicas?'
-        for node in [random.choice(self._node) for _ in range(16)]:
+        for node in [random.choice(self._node) for _ in xrange(16)]:
             if node[1] in ('2','3'):
                 LOG.info('Fetching blocks node=%s' % node)
                 url = base_url + 'node=%s' % node
@@ -102,7 +102,7 @@ class RandomData(object):
         LOG.info('Fetching files')
         files = []
         base_url = 'http://cmsweb.cern.ch/phedex/datasvc/json/prod/filereplicas?'
-        for dataset in [random.choice(self._dataset) for i in range(16)]:
+        for dataset in [random.choice(self._dataset) for i in xrange(16)]:
             LOG.info('Fetching files dataset=%s' % dataset)
             url = base_url + 'dataset=%s' % dataset
             for block in json.load(urllib.urlopen(url))['phedex']['block']:
@@ -111,7 +111,7 @@ class RandomData(object):
         LOG.info('Fetching SEs')
         ses = []
         base_url = 'http://cmsweb.cern.ch/sitedb/json/index/CMSNametoSE?'
-        for node in [random.choice(self._node) for i in range(16)]:
+        for node in [random.choice(self._node) for i in xrange(16)]:
             LOG.info('Fetching SE(s) for node=%s' % node)
             url = base_url + 'name=%s' % node
             ses += [se['name'] for se in json.loads(\
@@ -120,7 +120,7 @@ class RandomData(object):
         LOG.info('Fetching CEs')
         ces = []
         base_url = 'http://cmsweb.cern.ch/sitedb/json/index/CMSNametoCE?'
-        for node in [random.choice(self._node) for i in range(16)]:
+        for node in [random.choice(self._node) for i in xrange(16)]:
             LOG.info('Fetching CE(s) for node=%s' % node)
             url = base_url + 'name=%s' % node
             ces += [se['name'] for se in json.loads(\

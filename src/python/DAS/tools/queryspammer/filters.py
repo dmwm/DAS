@@ -37,7 +37,7 @@ class RandomSpacesFilter(Filter):
     "Either doubles or removes a space"
     def filter(self, arg):
         """Filter method"""
-        space_index = [i for i in range(len(arg)) if arg[i] == ' ']
+        space_index = [i for i in xrange(len(arg)) if arg[i] == ' ']
         if len(space_index)>0:
             index = random.choice(space_index)
             if random.random()>0.5:
@@ -51,7 +51,7 @@ class WrongQuotationFilter(Filter):
     "Swaps single and double quotes"
     def filter(self, arg):
         """Filter method"""
-        quote_index = [i for i in range(len(arg)) if arg[i] in ('"',"'")]
+        quote_index = [i for i in xrange(len(arg)) if arg[i] in ('"',"'")]
         if len(quote_index)>0:
             index = random.choice(quote_index)
             if arg[index] == '"':
@@ -71,7 +71,7 @@ class BadSpellingFilter(Filter):
     "Switches alphabetic characters"
     def filter(self, arg):
         """Filter method"""
-        char_index = [i for i in range(len(arg)) if arg[i] in string.letters]
+        char_index = [i for i in xrange(len(arg)) if arg[i] in string.letters]
         if len(char_index)>0:
             index = random.choice(char_index)
             return arg[:index] + random.choice(string.letters) + arg[index+1:]

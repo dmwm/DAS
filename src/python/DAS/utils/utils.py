@@ -540,7 +540,7 @@ def splitlist(ilist, nentries):
     """
     Split input list into a list of lists with nentries
     """
-    for step in range(0, len(ilist), nentries):
+    for step in xrange(0, len(ilist), nentries):
         idx = step
         jdx = idx+nentries
         if  jdx > len(ilist):
@@ -630,9 +630,9 @@ def cartesian_product(ilist1, ilist2):
     
     # loop over largest list and insert
     master_len = len(master_list)
-    for idx in range(0, master_len):
+    for idx in xrange(0, master_len):
         idict = master_list[idx]
-        for jdx in range(0, len(slave_list)):
+        for jdx in xrange(0, len(slave_list)):
             jdict = slave_list[jdx]
             found = 0
             for key in rel_keys:
@@ -712,7 +712,7 @@ def genresults_gen(system, results, collect_list):
 
     for res in results:
         rowdict = dict(rdict)
-        for idx in range(0, len(collect_list)):
+        for idx in xrange(0, len(collect_list)):
             key = collect_list[idx]
             if  res.has_key(key):
                 rowdict[key] = res[key]
@@ -734,7 +734,7 @@ def genresults(system, results, collect_list):
     olist = []
     for res in results:
         rowdict = dict(rdict)
-        for idx in range(0, len(collect_list)):
+        for idx in xrange(0, len(collect_list)):
             key = collect_list[idx]
             if  res.has_key(key):
                 rowdict[key] = res[key]
@@ -760,7 +760,7 @@ def transform_dict2list(indict):
 
     olist = []
     if  foundlist:
-        for idx in range(0, foundlist):
+        for idx in xrange(0, foundlist):
             newrow = dict(row)
             for kkk, vvv in indict.iteritems():
                 if  isinstance(vvv, list):
@@ -881,7 +881,7 @@ def oneway_permutations(ilist):
     Example: ilist=[a,b,c] and this function returns
     (a,b), (a,c), (b,c)
     """
-    for idx in range(0, len(ilist)):
+    for idx in xrange(0, len(ilist)):
         key = ilist[idx]
         try:
             tmp = list(ilist[idx+1:])
@@ -943,7 +943,7 @@ def gen_key_tuples(data, key):
     """
     Generator function to yield (value, id) pairs for provided key
     """
-    for idx in range(0, len(data)):
+    for idx in xrange(0, len(data)):
         row = data[idx]
         tup = (row[key], idx)
         yield tup

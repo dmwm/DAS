@@ -422,7 +422,7 @@ def json2html(idict, pad="", ref=None):
             ppp  = pad
             if  not nline:
                 ppp  = ''
-            for idx in range(0, len(val)):
+            for idx in xrange(0, len(val)):
                 item = val[idx]
                 if  isinstance(item, dict):
                     sss += json2html(item, pad, ref=key)

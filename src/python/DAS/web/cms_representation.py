@@ -286,7 +286,7 @@ class CMSRepresentation(DASRepresentation):
                         # take first five or less entries from the list to cover
                         # possible aggregated records and extract row keys
                         lmax    = len(row[mkey]) if len(row[mkey]) < 5 else 5
-                        sublist = [row[mkey][i] for i in range(0, lmax)]
+                        sublist = [row[mkey][i] for i in xrange(0, lmax)]
                         ndict   = DotDict({mkey:sublist})
                         rowkeys = [k for k in ndict.get_keys(mkey)]
                     else:

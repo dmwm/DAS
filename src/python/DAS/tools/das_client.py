@@ -295,7 +295,7 @@ def main():
                 % (jsondict.get('status'), jsondict.get('reason', 'N/A'))
             if  opts.retry:
                 found = False
-                for attempt in range(1, int(opts.retry)):
+                for attempt in xrange(1, int(opts.retry)):
                     interval = log(attempt)**5
                     print "Retry in %5.3f sec" % interval
                     time.sleep(interval)
