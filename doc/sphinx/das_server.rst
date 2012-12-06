@@ -34,25 +34,66 @@ Below we outline a typical layout of DAS server threads:
 - 1 dbs_phedex_monitor thread (dbs_phedex combined service)
 - 1 dbs_phedex worker thread (dbs_phedex combined service)
 - 1 lumi_service thread (lumi service)
-- n_cp CherryPy threads
-- n_das worker threads, they are divided as following:
+- :math:`N_{CP}` CherryPy threads
+- :math:`N_{DAS}` worker threads, they are allocated as following:
 
-  - n_web allocated for web workers
-  - n_core allocated for DAS core workers
-  - n_api allocated for DAS service APIs
+  - :math:`N_{web}` threads for web workers
+  - :math:`N_{core}` threads for DAS core workers
+  - :math:`N_{api}` threads for DAS service APIs
+
+In addition DAS configuration uses das.thread_weights parameter to weight
+certain API threads. It is defined as a list of srv:weight pairs where
+each service gets :math:`N_{api}\timesweight` number of threads.
 
 Therefore the total number of threads is quite hight (range in first hundred)
 and it is determined by the following formula
 
+.. math::
+
+    N_{threads} = N_{main} + N_{CP} + N_{DAS}
+
+    N_{DAS} = N_{web} + N_{core} + N_{api}
+
+:math:`N_{main}` equals to sum of main, timeout, http, dbs_phedex and lumi threads
+:math:`N_{CP}` is defined in DAS configuration file, typical value is 30
+:math:`N_{web}` is defined in DAS config file, see web_server.web_workers
+:math:`N_{core}` is defined in DAS config file, see das.core_workers
+:math:`N_{api}` is defined in DAS config file, see das.api_workers
+
+For example, usig the following configuration parameters
+
 .. doctest::
 
-    tot_threads = n_main + n_cp + n_das
-    n_main = (main + timeout + http + dbs_phedex + lumi) threads
-    n_cp is defined in DAS configuration file, typical value is 30
-    n_das = n_web + n_core + n_api
-    n_web is defined in DAS config file, see web_server.web_workers
-    n_core is defined in DAS config file, see das.core_workers
-    n_api is defined in DAS config file, see das.api_workers
+    [das]
+    multitask = True         # enable multitasking for DAS core (threading)
+    core_workers = 10        # number of DAS core workers who contact data-providers
+    api_workers = 2          # number of API workers who run simultaneously
+    thread_weights = 'dbs:3','phedex:3' # thread weight for given services
+    das.services = dbs,phedex,dashboard,monitor,runregistry,sitedb2,tier0,conddb,google_maps,postalcode,ip_service,combined,reqmgr
+
+    [web_server]             # DAS web server configruation parameters
+    thread_pool = 30         # number of threads for CherryPy
+    web_workers = 10         # Number of DAS web server workers who handle user requests
+    dbs_daemon = True        # Run DBSDaemon (boolean)
+    onhold_daemon = True     # Run onhold daemon for queries which put on hold after hot threshold
+
+we get the DAS server running with 151 threads
+
+.. math::
+
+    N_{main}=7, \; N_{CP}=30, \; N_{DAS}=114
+
+where :math:`N_{DAS}` has the following breakdown
+
+.. math::
+
+    N_{web}=20, \; N_{core}=60, \; N_{api}= 34
+
+here we calculated :math:`N_{api}` as following: we have 13 services, each of
+them uses 2 API workers (as specified in das configuration), but dbs and phedex
+data-services are weighed with weight 3, therefore the total number of dbs and
+phedex workers is 6, respectively. To sum up the numbers we have: 11 services
+with 2 API workers plus 6 workers for dbs and 6 workers for phedex.
 
 Debugging DAS server
 --------------------
