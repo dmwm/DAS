@@ -62,7 +62,8 @@ class DBSDaemon(object):
         self.col = None # to be defined in self.init
         self.init()
         # Monitoring thread which performs auto-reconnection to MongoDB
-        start_new_thread('dbs_monitor', db_monitor, (dburi, self.init))
+        thname = 'dbs_monitor:%s' % dbs_url
+        start_new_thread(thname, db_monitor, (dburi, self.init))
 
     def init(self):
         """

@@ -178,7 +178,7 @@ class DASWebService(DASWebManager):
                                 pass
                             time.sleep(interval)
                     print "Start DBSDaemon for %s" % dbs_url
-                    thname = 'dbs_updater'
+                    thname = 'dbs_updater:%s' % dbs_url
                     start_new_thread(thname, dbs_updater, (dbsmgr, interval, ))
         except Exception as exc:
             print_exc(exc)
