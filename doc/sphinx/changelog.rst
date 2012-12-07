@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Remove dataset summary look-up information for dataset pattern queries to
+    match DBS2 behavior and reduce DAS/DBS latency, see 9254ae2..86138bd
   - Replace range with xrange since later returns generator rather than list
   - Add capability to dump DAS status stack by sending SIGQUIT signal to DAS
     server, e.g. upon the following call `kill -3 <PID>` DAS server will dump
