@@ -423,32 +423,31 @@ class DASWebService(DASWebManager):
         # Generate DASQuery object, if it fails we catch the exception and
         # wrap it for upper layer (web interface)
         try:
-            dasquery = DASQuery(uinput, instance=inst, active_dbsmgr = self._get_dbsmgr_for_db_instance(inst))
+            dasquery = DASQuery(uinput, instance=inst,
+                    active_dbsmgr = self._get_dbsmgr_for_db_instance(inst))
         except Exception as err:
             # allow html in the exception message
             exc_message = str(err)
-            print exc_message
-            if isinstance(err.message, HtmlString):
+            if  isinstance(err.message, HtmlString):
                 exc_message = err.message
 
-            # Wildcard exception has to be processed here, because only this class knows about Web UI!
-            if isinstance(err, WildcardMultipleMatchesException):
+            # Wildcard exception has to be processed here,
+            # because only this class knows about Web UI!
+            if  isinstance(err, WildcardMultipleMatchesException):
                 options = []
-                for (dataset_pattern, query) in err.options.items():
+                for dpat, query in err.options.items():
                     # TODO: get view and limit
                     params = cherrypy.request.params.copy()
                     params['input'] = query
                     das_url = '/das/request?' + urllib.urlencode(params)
-
-                    make_link_to_query = lambda q: "<a href='%s'>%s</a>"\
-                                                   % (das_url,  q.replace(dataset_pattern, '<b>%s</b>' % dataset_pattern))
+                    make_link_to_query = \
+                        lambda q: "<a href='%s'>%s</a>"\
+                           % (das_url,  q.replace(dpat, '<b>%s</b>' % dpat))
                     options.append(make_link_to_query(query))
 
                 exc_message = HtmlString(err.message + '<br>\n'.join(options))
-
-
-            return 1, helper(das_parser_error(uinput, exc_message), html_error)
-
+            das_parser_error(uinput, 'WildcardMultipleMatchedException')
+            return 1, helper(exc_message, html_error)
 
         fields = dasquery.mongo_query.get('fields', [])
         if  not fields:
