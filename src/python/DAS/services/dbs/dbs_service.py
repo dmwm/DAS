@@ -69,6 +69,9 @@ class DBSService(DASAbstractService):
     def adjust_params(self, api, kwds, inst=None):
         """
         Adjust DBS2 parameters for specific query requests
+        To mimic DBS3 behavior we only allow dataset summary information
+        for fakeDatasetSummary and fakeListDataset4Block APIs who uses
+        full dataset and block name, respectively.
         """
         sitedb = SERVICES.get('sitedb2', None) # SiteDB from global scope
         if  api == 'fakeRun4Block':
@@ -159,7 +162,6 @@ class DBSService(DASAbstractService):
             val = kwds['file']
             if  val != 'required':
                 kwds['query'] = "find dataset, count(block), count(file.size), \
-  sum(block.size), sum(block.numfiles), sum(block.numevents), dataset.status \
   where file=%s" % val
             else:
                 kwds['query'] = 'required'
@@ -296,9 +298,13 @@ class DBSService(DASAbstractService):
                 kwds['query'] = 'required'
         if  api == 'fakeDatasetSummary':
             value = ""
+            path = False
             for key, val in kwds.iteritems():
                 if  key == 'dataset' and val:
                     value += ' and dataset=%s' % val
+                    if  len(val.split('/')) == 4: # /a/b/c -> ['', 'a', 'b', 'c']
+                        if  val.find('*') == -1:
+                            path = True
                 if  key == 'primary_dataset' and val:
                     value += ' and primds=%s' % val
                 if  key == 'release' and val:
@@ -322,11 +328,14 @@ class DBSService(DASAbstractService):
                 except:
                     pass
             if  value:
-                kwds['query'] = "find dataset, datatype, dataset.status, \
-dataset.tag, \
-procds.createdate, procds.createby, procds.moddate, procds.modby, \
-sum(block.numfiles), sum(block.numevents), count(block), sum(block.size) \
-where %s" % value[4:]
+                query  = "find dataset, datatype, dataset.status, dataset.tag"
+                query += ", procds.createdate, procds.createby, procds.moddate"
+                query += ", procds.modby"
+                if  path: # we have full path, ask for summary information
+                    query += ", sum(block.numfiles), sum(block.numevents)"
+                    query += ", count(block), sum(block.size)"
+                query += " where %s" % value[4:]
+                kwds['query'] = query
             else:
                 kwds['query'] = 'required'
         if  api == 'fakeListDatasetbyDate':
@@ -338,11 +347,9 @@ where %s" % value[4:]
 #           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124} 
             query_for_single = "find dataset, datatype, dataset.status, \
   dataset.tag, \
-  count(block), sum(block.size), sum(block.numfiles), sum(block.numevents), \
   dataset.createdate where dataset.createdate %s %s " + value
             query_for_double = "find dataset, datatype, dataset.status, \
   dataset.tag, \
-  count(block), sum(block.size), sum(block.numfiles), sum(block.numevents), \
   dataset.createdate where dataset.createdate %s %s \
   and dataset.createdate %s %s " + value
             val = kwds['date']
