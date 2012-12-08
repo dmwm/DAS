@@ -16,6 +16,7 @@ Contents:
    :maxdepth: 2
 
    introduction.rst
+   installation.rst
    das_ql.rst
    das_queries.rst
    das_client.rst

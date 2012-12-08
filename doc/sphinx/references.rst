@@ -3,7 +3,7 @@ References
 
 .. [CMS] http://cms.web.cern.ch/cms/
 .. [LHC] http://en.wikipedia.org/wiki/Lhc
-.. [DAS] https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService
+.. [DAS] https://github.com/dmwm/das/
 .. [Python] http://www.python.org/, version 2.6
 .. [CPF] http://www.cherrypy.org/, version 3.1.2
 .. [YUI] http://developer.yahoo.com/yui/, version 2
@@ -25,3 +25,8 @@ References
 .. [PLY] http://www.dabeaz.com/ply/
 .. [Gevent] http://www.gevent.org/
 .. [YAJL] http://lloyd.github.com/yajl/
+.. [CURL] http://curl.haxx.se/download.html
+.. [PyCurl] http://pycurl.sourceforge.net/
+.. [PyYAML] http://pyyaml.org/
+.. [VENV] https://raw.github.com/pypa/virtualenv/master/virtualenv.py
+.. [GIT] http://git-scm.com/
