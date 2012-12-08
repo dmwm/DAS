@@ -6,7 +6,6 @@ about datasets.
 """
 
 # system modules
-import thread
 import cherrypy
 import itertools
 
@@ -88,11 +87,12 @@ class LumiService(object):
         if  not config:
             config   = {}
         self.dasconfig = das_readconfig()
-        service_name   = config.get('name', 'combined')
-        service_api    = config.get('api', 'combined_lumi4dataset')
+        self.service_name = config.get('name', 'combined')
+        self.service_api  = config.get('api', 'combined_lumi4dataset')
         self.uri       = self.dasconfig['mongodb']['dburi']
         self.urls      = None # defined at run-time via self.init()
         self.expire    = None # defined at run-time via self.init()
+        self.coll      = None # defined at run-time via self.init()
         self.ckey, self.cert = get_key_cert()
         self.init()
 
@@ -104,9 +104,9 @@ class LumiService(object):
         "Takes care of MongoDB connection since DASMapping requires it"
         try:
             dasmapping  = DASMapping(self.dasconfig)
-            mapping     = dasmapping.servicemap(service_name)
-            self.urls   = mapping[service_api]['services']
-            self.expire = mapping[service_api]['expire']
+            mapping     = dasmapping.servicemap(self.service_name)
+            self.urls   = mapping[self.service_api]['services']
+            self.expire = mapping[self.service_api]['expire']
         except Exception, _exp:
             self.coll = None
     @cherrypy.expose

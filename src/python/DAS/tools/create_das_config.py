@@ -31,7 +31,7 @@ def main():
     "Main function"
     optmgr = ConfigOptionParser()
     opts, _args = optmgr.get_opt()
-    dasconfig = opts.uinput if opts.uinput else das_configfile()
+    _dasconfig = opts.uinput if opts.uinput else das_configfile()
     outconfig = opts.output if opts.output else \
                 os.path.join(os.getcwd(), 'das_cms.cfg')
     config = ConfigParser.ConfigParser()
@@ -41,4 +41,4 @@ def main():
     print "Created DAS configuration file", outconfig
 
 if __name__ == '__main__':
-   main()
+    main()

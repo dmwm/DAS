@@ -1,3 +1,5 @@
+# pymongo modules
+from bson.objectid import ObjectId
 # DAS modules
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.utils.logger import PrintManager

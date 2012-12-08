@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0511
 """
 File: das_process_dataset_wildcards.py
 Author: Vidmantas Zemleris
@@ -246,14 +247,17 @@ def process_dataset_wildcards(pattern, dbs_mngr):
     return results
 
 
-if __name__ == "__main__":
+def test():
+    "Local test function"
     # TODO: init  DAS:   Reading DAS configuration from ...
     print 'setUp: getting dbs manager to access current datasets ' \
           '(and fetching them if needed)'
 
     dbsmgr = get_global_dbs_mngr(update_required=False)
     import doctest
-    globals = globals()
-    globals['dbsmgr'] = dbsmgr
-    doctest.testmod(globs = globals, verbose=True)
+    myglobals = globals()
+    myglobals['dbsmgr'] = dbsmgr
+    doctest.testmod(globs = myglobals, verbose=True)
 
+if __name__ == "__main__":
+    test()
