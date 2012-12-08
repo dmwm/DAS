@@ -82,7 +82,7 @@ def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
                 if  (nrequests - taskmgr.nworkers()) < limit:
                     _evt, pid = taskmgr.spawn(\
                         dasmgr.call, dasquery, \
-                            addr, pid=dasquery.qhash)
+                            uid=addr, pid=dasquery.qhash)
                     jobs.append(pid)
                     reqmgr.remove_onhold(str(rec['_id']))
         except AutoReconnect:
@@ -744,7 +744,7 @@ class DASWebService(DASWebManager):
                     return self.datastream(dict(head=head, data=data))
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(\
-                self.dasmgr.call, dasquery, addr, pid=dasquery.qhash)
+                self.dasmgr.call, dasquery, uid=addr, pid=dasquery.qhash)
             self.logdb(uinput) # put entry in log DB once we place a request
             self.reqmgr.add(pid, kwargs)
             return pid
@@ -842,8 +842,8 @@ class DASWebService(DASWebManager):
         else:
             kwargs['dasquery'] = dasquery.storage_query
             addr = cherrypy.request.headers.get('Remote-Addr')
-            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery, addr,
-                                pid=dasquery.qhash)
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery,
+                    uid=addr, pid=dasquery.qhash)
             self.reqmgr.add(pid, kwargs)
             if  self.taskmgr.is_alive(pid):
                 page = self.templatepage('das_check_pid', method='check_pid',
