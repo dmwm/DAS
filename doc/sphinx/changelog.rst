@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Revert default to cjson instead of yajl module, since later contains a bug
+    which incorrectly rounds off large numbers; there is also an outstanding
+    issue with potential memory leak
   - Remove dataset summary look-up information for dataset pattern queries to
     match DBS2 behavior and reduce DAS/DBS latency, see 9254ae2..86138bd
   - Replace range with xrange since later returns generator rather than list
@@ -27,6 +30,9 @@ This release series is targeted to DAS production stability and quality.
     - Add exit codes
     - Add --retry option which allows user to decide if s/he wants to
       proceed with request when DAS server is busy; retry follows log^5 function
+    - Set init waiting time to 2 sec and max to 20 sec; use cycle for sleep
+      time, e.g. when we reach the max drop to init waiting time and start
+      cycle again.  This behavior reduce overall waiting time for end-users
 
   - Fix issue with DBS3 global instance look-up
   - Switch to HTML5 doctype
