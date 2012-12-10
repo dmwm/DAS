@@ -229,8 +229,9 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None
         pid = data
     else:
         pid = None
-    sleep   = 1  # initial waiting time in seconds
-    wtime   = 30 # final waiting time in seconds
+    iwtime  = 2  # initial waiting time in seconds
+    wtime   = 20 # final waiting time in seconds
+    sleep   = iwtime
     time0   = time.time()
     while pid:
         params.update({'pid':data})
@@ -250,6 +251,8 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None
         time.sleep(sleep)
         if  sleep < wtime:
             sleep *= 2
+        elif sleep == wtime:
+            sleep = iwtime # start new cycle
         else:
             sleep = wtime
         if  (time.time()-time0) > threshold:
