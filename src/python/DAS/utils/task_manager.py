@@ -26,7 +26,7 @@ class UidSet():
         "Add given uid or increment uid occurence in a set"
         if  not uid:
             return
-        if  uid in self._set:
+        if  uid in self._set.keys():
             self._set[uid] += 1
         else:
             self._set[uid]  = 1
@@ -35,7 +35,7 @@ class UidSet():
         "Either discard or downgrade uid occurence in a set"
         if  self._set.has_key(uid):
             self._set[uid] -= 1
-        if  not self._set[uid]:
+        if  self._set.has_key(uid) and not self._set[uid]:
             del self._set[uid]
 
     def __contains__(self, uid):
