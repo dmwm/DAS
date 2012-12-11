@@ -14,6 +14,14 @@ from multiprocessing import Array
 from DAS.utils.task_manager import TaskManager, PluginTaskManager, UidSet
 from DAS.web.das_test_datasvc import Root
 
+class TestQueue():
+    "Test queue class which implements empty method. Ctor accepts queue status"
+    def __init__(self, empty):
+        self.status = empty
+    def empty(self):
+        "Empty method implementation"
+        return self.status
+
 def daemon():
     """Simple daemon which doing nothing"""
     while True:
@@ -77,6 +85,21 @@ class testUtils(unittest.TestCase):
         self.assertEqual(tasks.get(1), 1) # now we should have 1 value of 1
         tasks.discard(1)
         self.assertEqual(1 in tasks, False)
+
+    def test_assign_priority(self):
+        """Test priority assignment"""
+        tasks  = TaskManager(qtype='PriorityQueue')
+        uid1   = '1.1.1.1'
+        tasks._uids.add(uid1)
+        uid2   = '2.2.2.2'
+        tasks._uids.add(uid1)
+        result = tasks.assign_priority(uid1) # no tasks in a queue
+        self.assertEqual(result, 0)
+        tasks._tasks = TestQueue(empty=False)
+        res1   = [tasks._uids.add(uid1) for r in xrange(20)]
+        self.assertEqual(tasks.assign_priority(uid1), 2)
+        res2   = [tasks._uids.add(uid2) for r in xrange(50)]
+        self.assertEqual(tasks.assign_priority(uid2), 5)
 
     def test_priority_task_manager(self):
         """Test priority task manager"""
