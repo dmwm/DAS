@@ -62,7 +62,7 @@ from DAS.keywordsearch.search import search as keyword_search
 from DAS.web.utils import HtmlString
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
-            'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
+            'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next', 'kwquery']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
 def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
@@ -392,9 +392,14 @@ class DASWebService(DASWebManager):
 
 
 
-    def _get_link_to_query(self, query):
+    def _get_link_to_query(self, query, kw_query=''):
         params = cherrypy.request.params.copy()
         params['input'] = query
+
+        # preserve keyword query which led to certain structured query
+        if kw_query:
+            params['kwquery'] = kw_query
+
         das_url = '/das/request?' + urllib.urlencode(params)
         return das_url
 
@@ -459,19 +464,18 @@ class DASWebService(DASWebManager):
 
 
 
-
+            # Keyword Search
             if not isinstance(err, WildcardMatchingException):
                 # TODO: DBS instance
                 proposed_queries = keyword_search(uinput, inst)
                 msg = '<b>DAS is unable to interpret your query.<br>' \
                                     ' Is any of the queries below what you meant?</b><br>\n'
 
-                make_link_to_query = lambda q: "<a href='%s'>%s</a>"\
-                                               % (das_url,  q.replace(dataset_pattern, '<b>%s</b>' % dataset_pattern))
 
-                msg += '<br>\n'.join(["%.2f: <a href='%s'>%s</a>" % (score, self._get_link_to_query(query), query)
+                msg += '<br>\n'.join(["%.2f: <a href='%s'>%s</a>" % \
+                                        (score, self._get_link_to_query(query, kw_query=uinput), query)
                                       for (query, score) in proposed_queries ])
-
+                # TODO: add user info to logs if available (e.g. certificate auth, to filter out queries submitted by developers)
 
                 msg += '<br>\n<br>\nError message: ' + exc_message
                 #msg = '<br>\n'.join(proposed_queries)
