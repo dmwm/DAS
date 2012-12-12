@@ -13,6 +13,9 @@ import json
 import urllib
 from itertools import groupby
 
+# mongodb modules
+from bson.objectid import ObjectId
+
 # DAS modules
 from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.core.das_query import DASQuery
@@ -373,6 +376,7 @@ class CMSRepresentation(DASRepresentation):
         page    = ''
         old     = None
         dup     = False
+        tstamp  = None
         for row in data:
             if  not row:
                 continue
@@ -385,6 +389,12 @@ class CMSRepresentation(DASRepresentation):
                 msg  = 'Exception: %s\n' % str(exc)
                 msg += 'Fail to process row\n%s' % str(row)
                 raise Exception(msg)
+            if  not tstamp:
+                try:
+                    oid = ObjectId(mongo_id)
+                    tstamp = time.mktime(oid.generation_time.timetuple())
+                except:
+                    pass
             page += '<div class="%s"><hr class="line" />' % style
             links = []
             pkey  = None
@@ -512,8 +522,15 @@ class CMSRepresentation(DASRepresentation):
             main += self.templatepage('das_duplicates', uinput=uinput,
                         instance=inst)
         main += page
-        main += '<div align="right">DAS cache server time: %5.3f sec</div>' \
-                % head['ctime']
+        msg   = ''
+        if  tstamp:
+            try:
+                msg += 'request time: %s sec, ' \
+                        % (time.mktime(time.gmtime())-tstamp)
+            except:
+                pass
+        msg  += 'cache server time: %5.3f sec' % head['ctime']
+        main += '<div align="right">%s</div>' % msg
         return main
 
     def tableview(self, head, data):

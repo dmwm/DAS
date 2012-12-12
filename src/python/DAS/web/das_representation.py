@@ -10,6 +10,9 @@ Description: Abstract interface to represent DAS records
 # system modules
 import urllib
 
+# mongodb modules
+from bson.objectid import ObjectId
+
 # DAS modules
 from DAS.utils.ddict import DotDict
 from DAS.utils.das_config import das_readconfig
@@ -38,6 +41,7 @@ class DASRepresentation(DASWebManager):
         style   = 'white'
         page    = ''
         pad     = ''
+        tstamp  = None
         for row in data:
             if  not row:
                 continue
@@ -51,6 +55,12 @@ class DASRepresentation(DASWebManager):
                 msg  = str(exc)
                 msg += '\nFail to process row\n%s' % str(row)
                 raise Exception(msg)
+            if  not tstamp:
+                try:
+                    oid = ObjectId(mongo_id)
+                    tstamp = time.mktime(oid.generation_time.timetuple())
+                except:
+                    pass
             page += '<div class="%s"><hr class="line" />' % style
             jsonhtml = das_json(row, pad)
             if  row.has_key('das') and row['das'].has_key('conflict'):
@@ -62,8 +72,15 @@ class DASRepresentation(DASWebManager):
                     conflict=conflict)
             page += '</div>'
         main += page
-        main += '<div align="right">DAS cache server time: %5.3f sec</div>' \
-                % head['ctime']
+        msg   = ''
+        if  tstamp:
+            try:
+                msg += 'request time: %s sec, ' \
+                        % (time.mktime(time.gmtime())-tstamp)
+            except:
+                pass
+        msg  += 'cache server time: %5.3f sec' % head['ctime']
+        main += '<div align="right">%s</div>' % msg
         return main
 
     def tableview(self, head, data):
