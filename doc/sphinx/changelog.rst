@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Queue type can be specified via qtype parameter in web section of DAS
+    configuration file
   - Extend task_manager to support PriorityQueue
   - Revert default to cjson instead of yajl module, since later contains a bug
     which incorrectly rounds off large numbers; there is also an outstanding
