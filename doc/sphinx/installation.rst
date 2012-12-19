@@ -55,6 +55,8 @@ and then invoke pip:
     pip install PyYAML
     pip install yajl
     pip install pymongo
+    pip install ply
+    pip install pycurl
 
 
 DAS installation and configuration
