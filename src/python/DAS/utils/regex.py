@@ -71,7 +71,7 @@ dataset_path = \
 last_key_pattern = \
     re.compile('date\s+last')
 unix_time_pattern = \
-    re.compile('[0-9]{10}')
+    re.compile('^\d{10}$|^\d{10}\.\d+$')
 
 # To be used in web module
 RE_DBSQL_0 = re.compile(r"^find")
