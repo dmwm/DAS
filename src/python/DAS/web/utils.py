@@ -22,7 +22,7 @@ from   bson.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from   DAS.utils.utils import print_exc
+from   DAS.utils.utils import print_exc, presentation_datetime
 from   DAS.utils.regex import number_pattern, web_arg_pattern, http_pattern
 from   DAS.utils.das_db import db_connection, is_db_alive
 from   DAS.web.das_codes import web_code
@@ -406,6 +406,10 @@ def json2html(idict, pad="", ref=None):
             # it constructs sanitized URLs, see block above
             sss += pad + """ <code class="key">"%s": </code>%s""" \
                 % (quote(key), value)
+        elif key == 'das':
+            val['ts'] = presentation_datetime(val['ts'])
+            val['expire'] = presentation_datetime(val['expire'])
+            sss += ' "<b>das</b>": ' + json2html(val, pad=" "*3, ref=key)
         elif key == 'gridfs_id':
             value = "<a href=\"/das/gridfs?fid=%s\">%s</a>" \
                 % (quote_plus(val), quote(val))
