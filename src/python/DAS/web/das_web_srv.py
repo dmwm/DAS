@@ -109,14 +109,19 @@ class DASWebService(DASWebManager):
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
         self.queue_limit = config.get('queue_limit', 50)
+        qtype            = config.get('qtype', 'Queue')
+        if  qtype not in ['Queue', 'PriorityQueue']:
+            msg = 'Wrong queue type, qtype=%s' % qtype
+            raise Exception(msg)
         if  self.engine:
             thr_name = 'DASWebService:PluginTaskManager'
-            self.taskmgr = PluginTaskManager(\
-                        bus=self.engine, nworkers=nworkers, name=thr_name)
+            self.taskmgr = PluginTaskManager(bus=self.engine, \
+                    nworkers=nworkers, name=thr_name, qtype=qtype)
             self.taskmgr.subscribe()
         else:
             thr_name = 'DASWebService:TaskManager'
-            self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
+            self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name, \
+                    qtype=qtype)
         self.adjust      = config.get('adjust_input', False)
         self.dasmgr      = None # defined at run-time via self.init()
         self.reqmgr      = None # defined at run-time via self.init()
