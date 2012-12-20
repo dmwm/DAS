@@ -119,17 +119,63 @@ Also some of the data may be changing often, services have limitations on
 Finally, we evaluate the system developed.
 \end_layout
 
+\begin_layout Abstract
+
+\color red
+TODO: abstract shall be shorter: 50-100 words
+\end_layout
+
+\begin_layout Keywords
+Keyword-based Search; Natural Language Search; Data Services; Enterprise
+ Information Integration
+\end_layout
+
 \begin_layout Section
 Introduction
 \end_layout
 
 \begin_layout Standard
-TODO: introduce the paper
+Data integration provides a centralized solution for locating and combining
+ data from multiple sources.
+ The complexity of writing structured-queries is impacting not only simple
+ users who are forced to learn the schema and the query language, but also
+ the tech-savvy users who may have only a vague idea of where exactly to
+ find the data they need.
+ 
 \end_layout
 
 \begin_layout Standard
-motivation: usefulness of KWS/NLs, contradicting results; lack of research
- in the field of KW/NL Search over Web Services; needs of CMS
+In this paper we explore more intuitive alternatives such as keyword and
+ natural language search, which, in fact, received fairly little attention
+ in the field of data services integration.
+ 
+\end_layout
+
+\begin_layout Standard
+First, we review the state-of-the-art of approaches to searching data services
+ including ways how these systems could self-adapt to users’ needs by taking
+ into account historical queries and their results.
+ 
+\end_layout
+
+\begin_layout Standard
+Then, we a keyword search system over enterprise data integration is presented
+ that was developed in the setting of a scientific collaboration of over
+ 3,000 physicists at the CMS Experiment, CERN.
+ Given a keyword query the system proposes top-k most probable structured
+ queries which could be later answered using current data integration infrastruc
+ture.
+ 
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+TODO:
+\series default
+ introduce the paper; add motivation: usefulness of KWS/NLs, contradicting
+ results; lack of research in the field of KW/NL Search over Web Services;
+ needs of CMS
 \end_layout
 
 \begin_layout Section
