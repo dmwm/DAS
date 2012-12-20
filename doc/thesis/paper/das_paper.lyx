@@ -1,0 +1,335 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass elsarticle
+\options ecrc
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine natbib_authoryear
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Keyword Search over Data Services
+\end_layout
+
+\begin_layout Author
+Vidmantas, Zemleris
+\end_layout
+
+\begin_layout Abstract
+Data integration provides a centralized solution for locating and combining
+ data from multiple sources.
+ The complexity of writing structured-queries is impacting not only simple
+ users who are forced to learn the schema and the query language, but also
+ the tech-savvy users who may have only a vague idea of where exactly to
+ find the data they need.
+ 
+\end_layout
+
+\begin_layout Abstract
+In this paper we explore more intuitive alternatives such as keyword and
+ natural language search, which, in fact, received fairly little attention
+ in the field of data services integration.
+ 
+\end_layout
+
+\begin_layout Abstract
+First, we review the state-of-the-art of approaches to searching data services
+ including ways how these systems could self-adapt to users’ needs by taking
+ into account historical queries and their results.
+ 
+\end_layout
+
+\begin_layout Abstract
+Then, we a keyword search system over enterprise data integration is presented
+ that was developed in the setting of a scientific collaboration of over
+ 3,000 physicists at the CMS Experiment, CERN.
+ Given a keyword query the system proposes top-k most probable structured
+ queries which could be later answered using current data integration infrastruc
+ture.
+ 
+\end_layout
+
+\begin_layout Abstract
+
+\color yellow
+Also some of the data may be changing often, services have limitations on
+ their interfaces, and users are interested in complete and up-to-date answers
+ (i.e.
+ Boolean Retrieval), the problem of keyword search becomes more complex
+ as it is hard or even impossible to materialize/index all the contents
+ in one central place.
+ 
+\end_layout
+
+\begin_layout Abstract
+Finally, we evaluate the system developed.
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+TODO: introduce the paper
+\end_layout
+
+\begin_layout Standard
+motivation: usefulness of KWS/NLs, contradicting results; lack of research
+ in the field of KW/NL Search over Web Services; needs of CMS
+\end_layout
+
+\begin_layout Section
+Keyword and Natural Language Search over Data Services
+\end_layout
+
+\begin_layout Subsection
+Keyword Search
+\end_layout
+
+\begin_layout Subsection
+Natural Language (NL) Processing and NL Search
+\end_layout
+
+\begin_layout Standard
+semantic distance, string dist WSD (word sense d..,) focus extraction (1 NP
+ or last NP) 
+\end_layout
+
+\begin_layout Standard
+E.g.
+ what is the Total size of all Zmm datasets 
+\end_layout
+
+\begin_layout Standard
+what is the size of /Zmm/.,X datasets --- parsing of the query file Zmm 
+\end_layout
+
+\begin_layout Standard
+figuring out between KWS and NL search
+\end_layout
+
+\begin_layout Subsection
+Adapting to Users' Needs and using Historical Knowledge
+\end_layout
+
+\begin_layout Standard
+also Keyword Search combining services? try bootstrapping the results (but
+ they count be different) understanding relationships between services (e.g.
+ through existing queries?) evaluation of degradation of ranking quality
+ with expansion of search space (operators: aggression, min, max, post-filtering
+ through result fields) interaction with the user e.g.
+ creation time/ modification time dataset taken on 1/Jan/2013 dataset -
+ F size, type, I n_events decrease false positives via machine learning?
+ dateset with more than 100 event avg, sum Limitations of aproach: control
+ statements? controlled statements: top 10, rank by, aggregate by etc
+\end_layout
+
+\begin_layout Standard
+Examples our domain? different domain? Evalution/usability study by end-users
+\end_layout
+
+\begin_layout Section
+Related work / Existing Research
+\end_layout
+
+\begin_layout Subsection
+DAS at CERN
+\end_layout
+
+\begin_layout Subsection
+NL Search over Webservices
+\end_layout
+
+\begin_layout Subsection
+KWS over webservices
+\end_layout
+
+\begin_layout Subsection
+NL S over Ontologies and Semantic Web / Semantic DBs
+\end_layout
+
+\begin_layout Subsection
+KWS over Databases
+\end_layout
+
+\begin_layout Section
+Real-world use-case of CMS Experiment, CERN
+\end_layout
+
+\begin_layout Standard
+Problem
+\end_layout
+
+\begin_layout Standard
+amount of data; description of services; contstraints; DAS; targeting simplifica
+tion of simple-users; why new system is hard; why structured language is
+ hard; powerful users vs simple users why IR is not applicable here.
+ number and it’s meaning?
+\end_layout
+
+\begin_layout Standard
+feedback from Users
+\end_layout
+
+\begin_layout Standard
+consider relationships between services explicit (PK dataset.name) implicit
+ - even more ambigouty and complexity
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+loose coupling of proprietary services / systems
+\end_layout
+
+\begin_layout Standard
+Current implementation / Solution developed? 
+\end_layout
+
+\begin_layout Section
+Evaluation
+\end_layout
+
+\begin_layout Standard
+The evaluation was performed at the CMS Experiment described earlier.
+ 
+\end_layout
+
+\begin_layout Standard
+......
+\end_layout
+
+\begin_layout Subsection
+Usability
+\end_layout
+
+\begin_layout Subsection
+Usefulness of KWS
+\end_layout
+
+\begin_layout Standard
+KWS vs NL vs Structured language
+\end_layout
+
+\begin_layout Section
+Future work
+\end_layout
+
+\begin_layout Standard
+Because of the project was fairly short and the author had to follow some
+ of priorities of the CMS Experiment, some parts of the research work had
+ to be excluded, including: TODO.
+\end_layout
+
+\begin_layout Section
+Conclusions
+\end_layout
+
+\begin_layout Standard
+NL and KW Search over Web Services is still lacking attention from research
+ community.
+\end_layout
+
+\begin_layout Standard
+In addition to QL this could help in learning and get results more quickly
+ (immediately) proprietary systems with … rules of changing them; would
+ ease adoption of Struct L and fit naturally with existing contrains.
+\end_layout
+
+\begin_layout Standard
+TODO: try to find out few cases of mapping NL to other existing services.
+ (e.g.
+ proprietary + public services)
+\end_layout
+
+\begin_layout Section*
+Acknowledgements
+\end_layout
+
+\begin_layout Standard
+The authors of this paper are thankful to Robert Gwadera and prof.
+ Karl Aberer who were supervising the Master Thesis project of the first
+ author at the Swiss Federal Institute of Technology in Lausanne.
+\end_layout
+
+\begin_layout Standard
+The work was supported by the CMS Computing group, at the Compact Muon Experimen
+t at European Organization for Nuclear Research (CERN).
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "refs"
+options "plainnat"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Appendix: Statistics Analysis
+\end_layout
+
+\begin_layout Standard
+Appendix: Proposed solutions for CMS?
+\end_layout
+
+\end_body
+\end_document

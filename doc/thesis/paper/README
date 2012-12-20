@@ -1,0 +1,34 @@
+This is a slightly edited version of the package "ecrc-piutam" for generating CRC journal articles using the Elsevier LaTeX document class elsarticle.
+
+The content was adapted specifically for the ICCS 2013 conference.
+
+The package incorporates customisations for the Elsevier CRC journal 
+Procedia Computer Science
+This version 1.2 dated 09 May 2011
+************************************************************
+
+The following files are included:
+* The elsarticle document class, elsarticle.cls
+* A bibliographic style file for the numbered reference style, elsarticle-num.bst
+* The package file for Elsevier CRC, ecrc.sty
+* Sample journal logo files elsevier-logo-3p, SDlogo-3p (in PDF and PS format)
+
+* A template manuscript file, procs-template_new.tex
+
+To use:
+1. Unpack all the files into the same folder
+2. Edit the manuscript file procs-template_new.tex according to the instructions in that file, and save with a new name
+3. Compile with PDFLaTeX or LaTeX (and BibTeX if desired)
+
+
+**************************************************************
+*                                                            *
+* Important note on usage                                    *
+* -----------------------                              	     *
+* Files using ecrc should normally be compiled with PDFLaTeX *
+* Using standard LaTeX should work, but may produce clashes  *
+*                                                            *
+**************************************************************
+
+
+

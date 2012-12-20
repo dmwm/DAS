@@ -1,0 +1,31 @@
+\newcommand{\noopsort}[1]{} \newcommand{\printfirst}[2]{#1}
+  \newcommand{\singleletter}[1]{#1} \newcommand{\switchargs}[2]{#2#1}
+\begin{thebibliography}{1}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\expandafter\ifx\csname href\endcsname\relax
+  \def\href#1#2{#2} \def\path#1{#1}\fi
+
+\bibitem{article-minimal}
+L.~A. Aamport, The gnats and gnus document preparation system,
+  \mbox{G-Animal's} Journal.
+
+\bibitem{article-full}
+L.~A. Aamport, The gnats and gnus document preparation system,
+  \mbox{G-Animal's} Journal 41~(7) (1986) 73, this is a full ARTICLE entry.
+
+\bibitem{article-crossref}
+L.~A. Aamport, The gnats and gnus document preparation system, in:
+  \mbox{G-Animal's} Journal \cite{whole-journal}, pp. 73+ (1986) 73+, this is a
+  cross-referencing ARTICLE entry.
+
+\bibitem{whole-journal}
+\mbox{G-Animal's} Journal 41~(7), the entire issue is devoted to gnats and gnus
+  (this entry is a cross-referenced ARTICLE (journal)).
+
+\bibitem{inbook-minimal}
+D.~E. Knuth, Fundamental Algorithms, Addison-Wesley, {\noopsort{1973b}}1973,
+  Ch. 1.2.
+
+\end{thebibliography}
