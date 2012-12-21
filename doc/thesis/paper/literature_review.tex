@@ -1,0 +1,63 @@
+% Overview: keyword search is good for non-structured documents, it is not [as] effective with structured sources\cite{Levy96}, therefore the keyword search on relational databases approach is good then no specific APIs exist and it's there are no resources to do \textbf{a full integration} .
+
+\subsection{Overview}
+
+% Data Integration is about balancing between Virtual integration and data warehousing.
+
+Since the late 1990's, several \textit{Enterprise Information Integration}\footnote{%
+	Enterprise Information Integration (EII) is about 'integrating data from 
+	multiple sources 	\textit{without} having to to first load data into
+	 a central warehouse'\cite[p.1]{eii_2005}}
+ (EII) products have appeared in the market (e.g. \textit{Information Manifold} by AT\&T Lab) and an significant experience has been accumulated on data integration formalisms, ways of describing heterogeneous data sources and their abilities (e.g. RDBMS vs web form), query optimization (combining sources efficiently, source overlap, data quality, etc)\cite{eii_2005}. 
+%
+Recent research in  Enterprise Information Integration mostly focused on approaches minimizing  human efforts on source integration, e.g. on uncertainty based self-improving systems\cite[ch.19]{principles_data_integration}.  {\color{red} cite from survey: \cite{IIHet_survey08}}
+
+The problem of keyword search over structured sources received significant attention within the last decade. Keyword search over relational, XML and other databases was explored from a number of perspectives: returning top-k ranked result tuples vs suggesting structured queries as SQL, performance optimization, user feedback mechanisms, as well as keyword searching over distributed sources. 
+%
+If there is no need for 100\% result exactness, keyword search combined with probabilistic schema matching provides lightweight exploratory data integration with almost no human effort upfront with ability to improve the results by adjusting to users' feedback\cite[ch.16]{principles_data_integration}. On the other hand, the \textit{SODA} system has shown that if enough meta-data is in place, even quite complex queries given in bussiness terms could be answered over a large and complex warehouse.
+
+In the setting of Boolean Keyword-based Retrieval over heterogeneous sources, a keyword query could be translated into a ranked list of structured queries (similarly as \textit{SODA} system that propose SQL, \textit{Query Forms} approach that propose SQL templates or Keymantic trying to achieve this without accessing the data).
+In the extreme case of having no control over a web-service that do not publish its contents, techniques like Google's Deep-web surfacing could index a subset of its contents enabling keyword search to some extent.
+
+
+
+\subsection{Keyword search over web services}
+
+\subsubsection*{What if there is no access to index data terms?}
+\cite{Keymantic10, semantics_without_access} explores the case then there is no possibility to index the data terms, e.g. then a DB is behind a wrapper (e.g. accessible only through a \textit{Web form} in “Hidden Web” or \textit{a web-service}) then crawling is generally not possible.
+%
+In Keymantic\cite{Keymantic10} a keyword query is processed as follows: First, all keywords that  correspond to metadata items (e.g., field names) are extracted. The remaining keywords are considered as possible parameters to the input fields in the web form. Second, the likelihood of a remaining keyword to matching a metadata item is computed in order to rank different options of executing this keyword query on the "Hidden Web"\cite[p.942]{ethz2012}. Because of no access to the actual data, results of this method were reported considerably worse on queries containing data terms, even if all metadata (e.g. business ontology) is given\cite{ethz2012}, therefore it is helpful to have at least some insight on the data behind a webservice.
+% See Appendix #1, for evaluation of they Demo system.
+
+\subsection{Keyword search over a Relational Database}
+%The problem of Keyword search over Relational Databases (or also semi-structured sources like XML) has received a significant attention by the research community over the last decade. 
+
+The basic approach would first build an inverted index on values in database specifying where each comes from (usually only on text columns), as well as schema items (table and column names). 
+%
+Then, given a keyword query, the occurrences of the keywords would serve as entry points for the search, from where it would try to construct join paths (based on Foreign keys) that would unite tuples containing these keywords.
+% In addition to many papers the PhD dissertations \cite{PhD_2011, PhD_2012} describe the approaches in details including performance optimization details (e.g. generating materialized views), etc. 
+% 
+%A number of problem variations exist:  returning only the ranked Top-k results vs. returning ranked list of possible queries, while some systems would even allow generating more complex queries including aggregations, etc (SQAK, SODA\cite{ethz2012}).
+
+\subsubsection*{Ranking Query Templates based on keyword query}
+A simple way to access relational database could  be through a predefined set of named query templates (SQL with selection parameters or operators still to be specified) exposed to a user as a Form that the user has to fill in.
+
+\cite{forms_kws} proposes to use this for answering keyword queries: instead of returning database tuples one could rank query forms and the user could choose the intended one (if they are properly named this is fairly easy). The ranking is based on how well the given keywords match table names and column values contained in each template.
+
+Actually, a \textit{Query Template} is functionally similar to any autonomous web service (which given the parameters would in turn execute that query on its database), with the only difference that access to potentially complex web service is often more expensive than to a database entry.  In case of DAS, a user after providing a query, could be provided with a ranked list of structured queries (attribute=value) that could be processed given data source constraints (e.g. parameters required) and if needed he could refine his search (e.g. provide more parameters).
+
+\subsubsection*{Keyword query cleaning}
+Keyword queries are often ambiguous, may contain misspellings or multiple keywords that refer to the same attribute value,  therefore \cite{kw_cleaning} suggested to perform query cleaning before proceeding to subsequent more computationally expensive steps (e.g. exploring all the possible join paths).
+
+Further employing some machine learning method like HMM\cite{kw_cleaning_hmm} would allow to incorporate user's feedback (even the fact that user has chosen n-th result as a query to be executed is a good clue).
+
+\subsubsection*{SODA: Meta-data approach}
+
+With a goal to bridge the increasing gap between high-level (conceptual, business) and low level (physical) representations of data, researchers from \textit{ETHZ} have been investigating Generation of SQL for Business users over a very complex data warehouse at \textit{Credit Suisse}.  For converting natural language queries 
+% (that in addition to keyword search could convey some semantic structure)
+ into SQL statements, in addition to what used by earlier approaches they used meta-data describing the schema at both physical, conceptual and logical levels extended with DBpedia (for synonyms, etc) and domain ontologies (to capture business concepts like 'wealthy customer').
+%and some natural language processing
+
+Even on a large data-warehouse of ~220GB data with a complex schema of 400+ tables they reported that if good meta-data is available, generating even fairly complex SQL  (e.g. n-way joins with aggregations) is quite feasible for a computer. That would make it 'much easier for business users to interactively explore highly-complex data warehouses' \cite[p.932]{ethz2012}. The users also reported system's potential a) for analysing the schema and learning patterns about it and b) as tool to help documenting legacy systems.
+
+
