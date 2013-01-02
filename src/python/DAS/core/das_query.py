@@ -162,7 +162,7 @@ class DASQuery(object):
 
         # check dataset wild-cards
         for key, val in self._mongo_query['spec'].items():
-            if  key.find('dataset.name') != -1:
+            if  key == 'dataset.name': # only match dataset.name but do not primary_dataset.name
                 if  not RE_3SLAHES.match(val):
 
                     # TODO: we currently do not support wildcard matching from command line interface
