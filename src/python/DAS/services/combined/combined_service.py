@@ -25,10 +25,11 @@ import time
 import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
-from DAS.utils.utils import json_parser
+from DAS.utils.utils import json_parser, get_key_cert
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import expire_timestamp, print_exc
 from DAS.utils.global_scope import SERVICES
+from DAS.utils.url_utils import getdata
 
 #
 # NOTE:
@@ -38,6 +39,8 @@ from DAS.utils.global_scope import SERVICES
 # API. First find all blocks at given site, then strip off dataset info
 # and ask DBS to provide dataset info for found dataset.
 #
+
+CKEY, CERT = get_key_cert()
 
 def parse_data(data):
     """
@@ -57,7 +60,7 @@ def which_dbs(dbs_url):
         return 'dbs'
     return 'dbs3'
 
-def dbs_dataset4site_release(dbs_url, getdata, release):
+def dbs_dataset4site_release(dbs_url, release):
     "Get dataset for given site and release"
     expire = 600 # set some expire since we're not going to use it
     if  which_dbs(dbs_url) == 'dbs':
@@ -66,7 +69,8 @@ def dbs_dataset4site_release(dbs_url, getdata, release):
         dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
                     'query':query}
         headers = {'Accept': 'text/xml'}
-        source, expire = getdata(dbs_url, dbs_args, expire, headers)
+        source, expire = \
+            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
             dataset = row['dataset']['dataset']
@@ -77,12 +81,13 @@ def dbs_dataset4site_release(dbs_url, getdata, release):
         dbs_args = \
         {'release_version': release, 'dataset_access_type':'VALID'}
         headers = {'Accept': 'application/json;text/json'}
-        source, expire = getdata(dbs_url, dbs_args, expire, headers)
+        source, expire = \
+            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
         for rec in json_parser(source, None):
             for row in rec:
                 yield row['dataset']
 
-def dataset_summary(dbs_url, getdata, dataset):
+def dataset_summary(dbs_url, dataset):
     """
     Invoke DBS2/DBS3 call to get information about total
     number of filesi/blocks in a given dataset.
@@ -95,7 +100,8 @@ def dataset_summary(dbs_url, getdata, dataset):
         dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
                     'query':query}
         headers = {'Accept': 'text/xml'}
-        source, expire = getdata(dbs_url, dbs_args, expire, headers)
+        source, expire = \
+            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
             totfiles  = row['dataset']['count_file.name']
@@ -106,7 +112,8 @@ def dataset_summary(dbs_url, getdata, dataset):
         dbs_url += dbs_url + '/filesummaries'
         dbs_args = {'dataset': dataset}
         headers = {'Accept': 'application/json;text/json'}
-        source, expire = getdata(dbs_url, dbs_args, expire, headers)
+        source, expire = \
+            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
         for row in json_parser(source, None):
             totfiles  = row[0]['num_file']
             totblocks = row[0]['num_block']
@@ -141,8 +148,7 @@ class CombinedService(DASAbstractService):
         if  api == 'combined_dataset4site_release':
             # DBS part
             datasets = set()
-            for row in dbs_dataset4site_release(\
-                    dbs_url, self.getdata, args['release']):
+            for row in dbs_dataset4site_release(dbs_url, args['release']):
                 datasets.add(row)
             # Phedex part
             if  args['site'].find('.') != -1: # it is SE
@@ -153,7 +159,7 @@ class CombinedService(DASAbstractService):
                                 'node': '%s*' % args['site']}
             headers = {'Accept': 'text/xml'}
             source, expire = \
-            self.getdata(phedex_api, phedex_args, expire, headers, post=True)
+                getdata(phedex_api, phedex_args, headers, expire, post=True)
             prim_key = 'block'
             tags = 'block.replica.node'
             found = {}
@@ -178,13 +184,12 @@ class CombinedService(DASAbstractService):
         if  api == 'combined_site4dataset':
             # DBS part
             dataset = args['dataset']
-            totblocks, totfiles = \
-                dataset_summary(dbs_url, self.getdata, dataset)
+            totblocks, totfiles = dataset_summary(dbs_url, dataset)
             # Phedex part
             phedex_args = {'dataset':args['dataset']}
             headers = {'Accept': 'text/xml'}
             source, expire = \
-            self.getdata(phedex_api, phedex_args, expire, headers, post=True)
+                getdata(phedex_api, phedex_args, headers, expire, post=True)
             prim_key = 'block'
             tags = 'block.replica.node'
             found = {}
@@ -243,7 +248,7 @@ class CombinedService(DASAbstractService):
         # at expires and adjust my expire parameter accordingly
         if  api == 'combined_dataset4site':
             headers = {'Accept': 'application/json;text/json'}
-            datastream, expire = self.getdata(url, args, expire, headers)
+            datastream, expire = getdata(url, args, headers, expire)
             try: # get HTTP header and look for Expires
                 e_time = expire_timestamp(\
                     datastream.info().__dict__['dict']['expires'])
@@ -254,7 +259,7 @@ class CombinedService(DASAbstractService):
             genrows = parse_data(datastream)
         if  api == 'combined_lumi4dataset':
             headers = {'Accept': 'application/json;text/json'}
-            data, expire = self.getdata(url, args, expire, headers)
+            data, expire = getdata(url, args, headers, expire)
             genrows = json_parser(data, None)
 
         # proceed with standard workflow
