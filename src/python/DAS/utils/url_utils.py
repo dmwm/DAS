@@ -49,7 +49,7 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
                                                 cert_file=self.cert)
         return httplib.HTTPSConnection(host)
 
-def getdata(url, params, headers=None, expire=3600, post=None,
+def getdata(url, params, headers=None, expire=3600, post=False,
     error_expire=300, verbose=0, ckey=None, cert=None, doseq=True, system=None):
     "Fetch data from remote URL for given set of parameters"
 #    return getdata_urllib(url, params, headers, expire, post, \
