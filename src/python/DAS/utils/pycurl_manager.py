@@ -68,6 +68,10 @@ class RequestHandler(object):
     def set_opts(self, curl, url, params, headers,
                  ckey=None, cert=None, verbose=None, post=False, doseq=True):
         """Set options for given curl object"""
+        # reset all options
+        curl.reset()
+
+        # set new options
         curl.setopt(pycurl.NOSIGNAL, self.nosignal)
         curl.setopt(pycurl.TIMEOUT, self.timeout)
         curl.setopt(pycurl.CONNECTTIMEOUT, self.connecttimeout)
@@ -81,8 +85,8 @@ class RequestHandler(object):
             curl.setopt(pycurl.POST, 1)
             curl.setopt(pycurl.POSTFIELDS, encoded_data)
         else:
-            curl.setopt(pycurl.POST, 0)
-            curl.setopt(pycurl.POSTFIELDS, "")
+            curl.unsetopt(pycurl.POST)
+            curl.unsetopt(pycurl.POSTFIELDS)
             url = url + '?' + encoded_data
         if  isinstance(url, str):
             curl.setopt(pycurl.URL, url)
