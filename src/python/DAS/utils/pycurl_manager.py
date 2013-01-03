@@ -85,8 +85,8 @@ class RequestHandler(object):
             curl.setopt(pycurl.POST, 1)
             curl.setopt(pycurl.POSTFIELDS, encoded_data)
         else:
-            curl.unsetopt(pycurl.POST)
-            curl.unsetopt(pycurl.POSTFIELDS)
+            curl.setopt(pycurl.POST, 0)
+            curl.setopt(pycurl.POSTFIELDS, "")
             url = url + '?' + encoded_data
         if  isinstance(url, str):
             curl.setopt(pycurl.URL, url)
