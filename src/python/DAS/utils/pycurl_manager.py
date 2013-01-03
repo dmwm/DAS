@@ -66,7 +66,7 @@ class RequestHandler(object):
         self.cache = {}
 
     def set_opts(self, curl, url, params, headers,
-                 ckey=None, cert=None, verbose=None, post=None, doseq=True):
+                 ckey=None, cert=None, verbose=None, post=False, doseq=True):
         """Set options for given curl object"""
         curl.setopt(pycurl.NOSIGNAL, self.nosignal)
         curl.setopt(pycurl.TIMEOUT, self.timeout)
@@ -75,11 +75,11 @@ class RequestHandler(object):
         curl.setopt(pycurl.MAXREDIRS, self.maxredirs)
 
         encoded_data = urllib.urlencode(params, doseq=doseq)
-        if  not post:
-            url = url + '?' + encoded_data
         if  post:
             curl.setopt(pycurl.POST, 1)
             curl.setopt(pycurl.POSTFIELDS, encoded_data)
+        else:
+            url = url + '?' + encoded_data
         if  isinstance(url, str):
             curl.setopt(pycurl.URL, url)
         elif isinstance(url, unicode):
@@ -109,7 +109,7 @@ class RequestHandler(object):
         """Debug callback implementation"""
         print "debug(%d): %s" % (debug_type, debug_msg)
 
-    def getdata(self, url, params, headers=None, expire=3600, post=None,
+    def getdata(self, url, params, headers=None, expire=3600, post=False,
                 error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
         """Fetch data for given set of parameters"""
         time0 = time.time()
