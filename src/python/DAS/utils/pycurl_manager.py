@@ -75,10 +75,14 @@ class RequestHandler(object):
         curl.setopt(pycurl.MAXREDIRS, self.maxredirs)
 
         encoded_data = urllib.urlencode(params, doseq=doseq)
+        # be explicit and set POST option for both requests, since
+        # we use caching mechanism for curl object
         if  post:
             curl.setopt(pycurl.POST, 1)
             curl.setopt(pycurl.POSTFIELDS, encoded_data)
         else:
+            curl.setopt(pycurl.POST, 0)
+            curl.setopt(pycurl.POSTFIELDS, "")
             url = url + '?' + encoded_data
         if  isinstance(url, str):
             curl.setopt(pycurl.URL, url)
