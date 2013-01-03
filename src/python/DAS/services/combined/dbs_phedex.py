@@ -29,6 +29,7 @@ from   DAS.utils.das_config import das_readconfig
 import DAS.utils.jsonwrapper as json
 
 PAT = re.compile("^T[0-3]_")
+CKEY, CERT = get_key_cert()
         
 def datasets(urls, verbose=0):
     """
@@ -51,9 +52,8 @@ def datasets_dbs3(urls, verbose=0):
     records = []
     url     = urls.get('dbs')
     params  = {'detail':'True', 'dataset_access_type':'VALID'}
-    ckey, cert = get_key_cert()
-    data, _ = getdata(url, params, headers, verbose=verbose,
-                ckey=ckey, cert=cert, doseq=False)
+    data, _ = getdata(url, params, headers, post=False, verbose=verbose,
+                ckey=CKEY, cert=CERT, doseq=False)
     records = json.load(data)
     data.close()
     data = {}
@@ -79,7 +79,8 @@ def datasets_dbs2(urls, verbose=0):
     query   = \
         'find dataset,dataset.tier,dataset.era where dataset.status like VALID*'
     params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
-    stream, _ = getdata(url, params, headers, verbose=verbose)
+    stream, _ = getdata(url, params, headers, post=False, \
+            ckey=CKEY, cert=CERT, verbose=verbose)
     records = [r for r in qlxml_parser(stream, 'dataset')]
     stream.close()
     data = {}
@@ -109,7 +110,8 @@ def dataset_info(urls, datasetdict, verbose=0):
     url      = urls.get('phedex') + '/blockReplicas'
     params   = {'dataset': [d for d in datasetdict.keys()]}
     headers  = {'Accept':'application/json;text/json'}
-    data, _  = getdata(url, params, headers, post=True, verbose=verbose)
+    data, _  = getdata(url, params, headers, post=True, \
+            ckey=CKEY, cert=CERT, verbose=verbose)
     jsondict = json.load(data)
     data.close()
     for row in jsondict['phedex']['block']:
