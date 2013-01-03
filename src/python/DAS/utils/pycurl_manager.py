@@ -63,14 +63,12 @@ class RequestHandler(object):
         self.connecttimeout = config.get('connecttimeout', 30)
         self.followlocation = config.get('followlocation', 1)
         self.maxredirs = config.get('maxredirs', 5)
-        self.cache = {}
+        self.gcache = {} # cache for GET requests
+        self.pcache = {} # cache for POST requests
 
     def set_opts(self, curl, url, params, headers,
                  ckey=None, cert=None, verbose=None, post=False, doseq=True):
         """Set options for given curl object"""
-        # reset all options
-        curl.reset()
-
         # set new options
         curl.setopt(pycurl.NOSIGNAL, self.nosignal)
         curl.setopt(pycurl.TIMEOUT, self.timeout)
@@ -79,14 +77,10 @@ class RequestHandler(object):
         curl.setopt(pycurl.MAXREDIRS, self.maxredirs)
 
         encoded_data = urllib.urlencode(params, doseq=doseq)
-        # be explicit and set POST option for both requests, since
-        # we use caching mechanism for curl object
         if  post:
             curl.setopt(pycurl.POST, 1)
             curl.setopt(pycurl.POSTFIELDS, encoded_data)
         else:
-            curl.setopt(pycurl.POST, 0)
-            curl.setopt(pycurl.POSTFIELDS, "")
             url = url + '?' + encoded_data
         if  isinstance(url, str):
             curl.setopt(pycurl.URL, url)
@@ -120,15 +114,19 @@ class RequestHandler(object):
     def getdata(self, url, params, headers=None, expire=3600, post=False,
                 error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
         """Fetch data for given set of parameters"""
-        time0 = time.time()
-        thread = threading.current_thread().ident
-        if  self.cache.has_key(thread):
-            curl = self.cache.get(thread)
+        time0     = time.time()
+        thread    = threading.current_thread().ident
+        if  post:
+            cache = self.pcache
         else:
-            curl = pycurl.Curl()
-            self.cache[thread] = curl
-#        print "\n+++ getdata curl cache", len(self.cache.keys())
-#        curl = pycurl.Curl()
+            cache = self.gcache
+        if  cache.has_key(thread):
+            curl  = cache.get(thread)
+        else:
+            curl  = pycurl.Curl()
+            cache[thread] = curl
+#        print "\n+++ getdata curl gcache", self.gcache.keys()
+#        print "+++ getdata curl pcache", self.pcache.keys()
         bbuf, hbuf = self.set_opts(curl, url, params, headers,
                 ckey, cert, verbose, post, doseq)
         curl.perform()
