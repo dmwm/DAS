@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Separate curl cache into get/post instances to avoid racing condition
+    for cached curl objects
   - Convert das timestamp into presentation datetime format
   - Queue type can be specified via qtype parameter in web section of DAS
     configuration file
