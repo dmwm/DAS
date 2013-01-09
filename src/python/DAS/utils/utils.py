@@ -1087,7 +1087,19 @@ def qlxml_parser(source, prim_key):
     
     """
     notations = {}
-    context   = ET.iterparse(source, events=("start", "end"))
+    try:
+        context   = ET.iterparse(source, events=("start", "end"))
+    except IOError as exc: # given source is not parseable
+        # try different data format, it can be an HTTP error
+        try:
+            if  isinstance(source, str):
+                data = json.loads(source)
+                yield data
+        except:
+            pass
+        msg = 'XML parser, data stream is not parseable: %s' % str(exc)
+        print_exc(msg)
+        context = []
 
     root = None
     row = {}
@@ -1107,8 +1119,8 @@ def qlxml_parser(source, prim_key):
             yield row
     if  root:
         root.clear()
-    source.close()
-
+    if  isinstance(source, InstanceType) or isinstance(source, file):
+        source.close()
 
 def xml_parser(source, prim_key, tags=None):
     """
