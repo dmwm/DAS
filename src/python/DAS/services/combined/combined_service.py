@@ -73,8 +73,13 @@ def dbs_dataset4site_release(dbs_url, release):
             getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
-            dataset = row['dataset']['dataset']
-            yield dataset
+            if  row.has_key('dataset'):
+                dataset = row['dataset']['dataset']
+                yield dataset
+            elif row.has_key('error'):
+                err = row.get('reason', None)
+                err = err if err else row['error']
+                yield 'DBS error: %' % err
     else:
         # we call datasets?release=release to get list of datasets
         dbs_url += '/datasets'
@@ -104,9 +109,12 @@ def dataset_summary(dbs_url, dataset):
             getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
-            totfiles  = row['dataset']['count_file.name']
-            totblocks = row['dataset']['count_block.name']
-            return totblocks, totfiles
+            if  row.has_key('dataset'):
+                totfiles  = row['dataset']['count_file.name']
+                totblocks = row['dataset']['count_block.name']
+                return totblocks, totfiles
+            elif row.has_key('error'):
+                return 0, 0
     else:
         # we call filesummaries?dataset=dataset to get number of files/blks
         dbs_url += dbs_url + '/filesummaries'
