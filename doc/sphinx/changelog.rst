@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Catch error in combined data-service and report them to UI
+  - Protect qxml_parser from stream errors
   - Convert regex strings into raw strings
   - Separate curl cache into get/post instances to avoid racing condition
     for cached curl objects
