@@ -1,0 +1,17 @@
+from math import *
+# stored in DB
+n = 0
+mean = 0
+stddev = 0
+M2 = 0  # intermediate result, the sum of squares of differences from the (current) mean
+
+def update_stddev(x):
+    global n, mean, stddev, M2
+    n += 1
+    delta = x - mean
+    mean += delta/n
+    M2 += delta*(x - mean)
+    variance = M2/n
+    stddev = sqrt(variance)
+    
+    return stddev

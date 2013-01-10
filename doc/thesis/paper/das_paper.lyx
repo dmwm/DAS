@@ -3,12 +3,47 @@
 \begin_document
 \begin_header
 \textclass elsarticle
-\options ecrc
+\begin_preamble
+%\documentclass[3p,times,procedia]{elsarticle}
+\usepackage{ecrc}
+
+%% The ecrc package defines commands needed for running heads and logos.
+%% For running heads, you can set the journal name, the volume, the starting page and the authors
+
+%% set the volume if you know. Otherwise `00'
+\volume{00}
+
+%% set the starting page if not 1
+\firstpage{1}
+
+%% Give the name of the journal
+\journalname{Procedia Computer Science}
+
+%% Give the author list to appear in the running head
+%% Example \runauth{C.V. Radhakrishnan et al.}
+\runauth{V. Zemleris, V.Kuznetsov, R.Gwadera}
+
+%% Provide the copyright line to appear in the abstract
+%% Usage:
+%   \CopyrightLine[<text-before-year>]{<year>}{<restt-of-the-copyright-text>}
+%   \CopyrightLine[Crown copyright]{2011}{Published by Elsevier Ltd.}
+%   \CopyrightLine{2011}{Elsevier Ltd. All rights reserved}
+%\CopyrightLine{2012}{The Authors. Published by Elsevier B.V.}
+
+
+
+% enable Hyperlinks
+\usepackage{hyperref}
+% fancy verbatim
+\usepackage{fancyvrb}
+\usepackage{appendix}
+\end_preamble
+\options 3p,times,procedia,elsarticle
 \use_default_options true
 \maintain_unincluded_children false
-\language english
+\language british
 \language_package default
-\inputencoding auto
+\inputencoding utf8
 \fontencoding global
 \font_roman default
 \font_sans default
@@ -66,7 +101,17 @@ Keyword Search over Data Services
 \end_layout
 
 \begin_layout Author
-Vidmantas, Zemleris
+Vidmantas Zemleris
+\end_layout
+
+\begin_layout Author
+Valentin Kuznetsov
+\end_layout
+
+\begin_layout Author
+
+\color red
+Robert Gwadera
 \end_layout
 
 \begin_layout Abstract
@@ -83,51 +128,69 @@ Data integration provides a centralized solution for locating and combining
 In this paper we explore more intuitive alternatives such as keyword and
  natural language search, which, in fact, received fairly little attention
  in the field of data services integration.
- 
-\end_layout
-
-\begin_layout Abstract
-First, we review the state-of-the-art of approaches to searching data services
+ First, we review the state-of-the-art of approaches to searching data services
  including ways how these systems could self-adapt to users’ needs by taking
  into account historical queries and their results.
- 
-\end_layout
+ Then, a keyword search system over enterprise data integration is presented
+ that, given a keyword query, proposes top-k most probable structured queries
+ which could be later answered using current data integration infrastructure.
+ The system was developed and evaluated in the setting of a scientific collabora
+tion of over 3,000 physicists at the CMS Experiment, CERN.
 
-\begin_layout Abstract
-Then, we a keyword search system over enterprise data integration is presented
- that was developed in the setting of a scientific collaboration of over
- 3,000 physicists at the CMS Experiment, CERN.
- Given a keyword query the system proposes top-k most probable structured
- queries which could be later answered using current data integration infrastruc
-ture.
- 
-\end_layout
-
-\begin_layout Abstract
-
-\color yellow
-Also some of the data may be changing often, services have limitations on
- their interfaces, and users are interested in complete and up-to-date answers
- (i.e.
- Boolean Retrieval), the problem of keyword search becomes more complex
- as it is hard or even impossible to materialize/index all the contents
- in one central place.
- 
-\end_layout
-
-\begin_layout Abstract
-Finally, we evaluate the system developed.
-\end_layout
-
-\begin_layout Abstract
-
+\series bold
 \color red
-TODO: abstract shall be shorter: 50-100 words
+ TODO: abstract shall be shorter: 50-100 words
+\end_layout
+
+\begin_layout Abstract
+
+\series bold
+\color red
+_
 \end_layout
 
 \begin_layout Keywords
-Keyword-based Search; Natural Language Search; Data Services; Enterprise
+Keyword-based Search; Natural-Language Search; Data Services; Enterprise
  Information Integration
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+newpage
+\end_layout
+
+\end_inset
+
+ 
+\color red
+(this page only for the thesis report)
+\color inherit
+
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+newpage
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -135,8 +198,8 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-Data integration provides a centralized solution for locating and combining
- data from multiple sources.
+Enterprise Information Integration provides a centralized solution for locating
+ and combining data from multiple sources.
  The complexity of writing structured-queries is impacting not only simple
  users who are forced to learn the schema and the query language, but also
  the tech-savvy users who may have only a vague idea of where exactly to
@@ -145,27 +208,17 @@ Data integration provides a centralized solution for locating and combining
 \end_layout
 
 \begin_layout Standard
-In this paper we explore more intuitive alternatives such as keyword and
+In this work we explore more intuitive alternatives such as keyword and
  natural language search, which, in fact, received fairly little attention
  in the field of data services integration.
- 
-\end_layout
-
-\begin_layout Standard
-First, we review the state-of-the-art of approaches to searching data services
+ First, we review the state-of-the-art of approaches to searching data services
  including ways how these systems could self-adapt to users’ needs by taking
  into account historical queries and their results.
- 
-\end_layout
-
-\begin_layout Standard
-Then, we a keyword search system over enterprise data integration is presented
- that was developed in the setting of a scientific collaboration of over
- 3,000 physicists at the CMS Experiment, CERN.
- Given a keyword query the system proposes top-k most probable structured
- queries which could be later answered using current data integration infrastruc
-ture.
- 
+ Then, a keyword search system over enterprise data integration is presented
+ that, given a keyword query, proposes top-k most probable structured queries
+ which could be later answered using current data integration infrastructure.
+ The system was developed and evaluated in the setting of a scientific collabora
+tion of over 3,000 physicists at the CMS Experiment, CERN.
 \end_layout
 
 \begin_layout Standard
@@ -176,18 +229,561 @@ TODO:
  introduce the paper; add motivation: usefulness of KWS/NLs, contradicting
  results; lack of research in the field of KW/NL Search over Web Services;
  needs of CMS
+\color yellow
+.
+ 
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+Also some of the data may be changing often, services have limitations on
+ their interfaces, and users are interested in complete and up-to-date answers
+ (i.e.
+ Boolean Retrieval), the problem of keyword search becomes more complex
+ as it is hard or even impossible to materialize/index all the contents
+ in one central place.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+TODO
+\series default
+: present the problem in general, setting at CMS and our solution
+\end_layout
+
+\begin_layout Standard
+Major problems:
+\end_layout
+
+\begin_layout Itemize
+what is better suitable for querying information: keywords, full sentence,
+ or restricted structured language
+\end_layout
+
+\begin_layout Itemize
+keyword search is too much ambiguous (for searching structured data)
+\end_layout
+
+\begin_layout Itemize
+full sentences are long to write, and often hard to process as there are
+ many ways of expressing same idea
+\end_layout
+
+\begin_layout Itemize
+structured language must be learned, including schema terms and its 
+\begin_inset Quotes eld
+\end_inset
+
+grammar
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Intro, Usability issues
+\end_layout
+
+\begin_layout Standard
+TODO: discuss differences between Structured, Keyword and NL Search
+\end_layout
+
+\begin_layout Standard
+refer to Paper...
+\end_layout
+
+\begin_layout Subsection
+Our work
 \end_layout
 
 \begin_layout Section
-Keyword and Natural Language Search over Data Services
+Problem definition
+\end_layout
+
+\begin_layout Standard
+The problem in more generic sense is satisfying users' information need
+ expressed in any of many possible ways, either as natural language (NL),
+ keyword (KW), structured query or other interfaces such as predefined Query
+ Forms.
+ 
 \end_layout
 
 \begin_layout Subsection
-Keyword Search
+Communicating User's intent
+\end_layout
+
+\begin_layout Standard
+Figuring out what is the best suited for 
+\series bold
+communicating user's intent
+\series default
+ is another sub-problem, where recent studies are reported disagreement
+ in their results.
+ Some users prefer the complete sentences (or even speech) being more natural
+ and 
+\series bold
+expressive
+\series default
+
+\begin_inset CommandInset citation
+LatexCommand citep
+key "2011natural,ethz_kaufmann2007nl_int"
+
+\end_inset
+
+, or the shorter keyword queries that are more ambiguous, while others prefer
+ the structured languages that are 
+\series bold
+easiest
+\series default
+ to process by a machine, but requires learning the grammar and 
+\begin_inset Quotes eld
+\end_inset
+
+lexicon
+\begin_inset Quotes erd
+\end_inset
+
+ (for instance, the ones who already know the language).
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Quotes eld
+\end_inset
+
+The research suggests people prefer to state their information need rather
+ than use keywords.
+ § But after first using a search engine they quickly learned that full
+ questions resulted in failure.
+\begin_inset Quotes erd
+\end_inset
+
+ http://people.ischool.berkeley.edu/~hearst/talks/upitt.pdf
 \end_layout
 
 \begin_layout Subsection
-Natural Language (NL) Processing and NL Search
+From keywords to queries
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+We believe that supporting a combination of these is closest the the optimal
+ solution.
+ 
+\series default
+An input that is not conforming to the requirements of some structured query
+ language, 
+\series bold
+could be processed as input in natural language if it conforms to its grammar
+ or as a keyword query otherwise.
+\end_layout
+
+\begin_layout Standard
+Then we define our problem as translating user's query (expressed either
+ as sequence of keywords or as a sentence in a natural language) into a
+ structured query that is referring to data-services (or their composition).
+\end_layout
+
+\begin_layout Standard
+We are given: the users query, an integration schema (consisting of entity
+ names, their attributes, regular expressions defining the types of values
+ accepted, and in some cases a list of possible input/output values), query
+ log 
+\color blue
+(in the beginning only for structured queries; but after the service is
+ deployed we will have query log for keyword queries as well)
+\color inherit
+,
+\color magenta
+ as well as a number of services with their Interface definitions (or a
+ structured QL that could access that -- DAS, YQL) that could be composed
+ if needed
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+composing services is of secondary importance
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Possible approaches (?Preliminaries: Searching Data Services)
+\end_layout
+
+\begin_layout Subsection
+Keyword Search: Heuristic based
+\end_layout
+
+\begin_layout Standard
+(mainly based on meta-data i.e.
+ without access to the instance (that could include web-services)
+\end_layout
+
+\begin_layout Subsection
+Keyword Search: HMM based
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset citation
+LatexCommand citeauthor
+key "semantics_without_access"
+
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand citep
+key "semantics_without_access"
+
+\end_inset
+
+
+\series bold
+ 
+\series default
+approached the same problem through Hidden Markov Model (HMM) and allow
+ taking into account the query logs.
+ Keywords that are near to each other are expected to represent interrelated
+ concepts, which motivates the application of an HMM as it can efficiently
+ model such kind of interdependences 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "semantics_without_access"
+
+\end_inset
+
+.
+ Their approach was designed for Relational Databases (then access to the
+ instance is limited), but it could be also adapted for data integration
+ over data services.
+\end_layout
+
+\begin_layout Standard
+An HMM models a stochastic process that could not be observed directly (it
+ is hidden, in our case, it is mapping to schema entities), but observable
+ indirectly through observations symbols (keywords in our case) produced
+ by another stochastic process.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename 1000px-HMMsequence.svg.png
+	lyxscale 30
+	width 40text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+HMM
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this approach, HMM is used as described below:
+\end_layout
+
+\begin_layout Itemize
+keywords are represented as a sequence of
+\emph on
+ observations
+\emph default
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+\begin_inset Formula $O=\left\{ o_{t}\right\} $
+\end_inset
+
+, from the set of observation symbols 
+\begin_inset Formula $V=\left\{ v_{j}\right\} $
+\end_inset
+
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+a set of
+\emph on
+ states 
+\emph default
+
+\begin_inset Formula $S=\left\{ s_{i}\right\} $
+\end_inset
+
+, each representing mapping of keywords into a schema 
+\series bold
+term
+\series default
+ (entity, their attributes, operators
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+operators only in DAS
+\end_layout
+
+\end_inset
+
+).
+ These are 
+\begin_inset Quotes eld
+\end_inset
+
+hidden
+\begin_inset Quotes erd
+\end_inset
+
+ and have to be decoded by HMM into 
+\begin_inset Formula $Q=\left\{ q_{i}\right\} $
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+transition 
+\emph default
+probabilities, 
+\begin_inset Formula $a_{ij}=P(q_{t+1}=s_{j}\mid q_{t}=s_{i})$
+\end_inset
+
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+use heuristics taking into account semantic relationships between database
+ terms 
+\color red
+(aggregation, generalization, inclusion)
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+Initially: with the goal to foster transition between terms belonging to
+ the same table or tables connected via FK.
+\end_layout
+
+\begin_layout Itemize
+Our: with the goal to foster transition between:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+terms belonging to the same entity (entity and it's attribute, attribute
+ and it's value)
+\end_layout
+
+\begin_layout Itemize
+terms that are commonly referred by same API call (as inputs or outputs)
+\end_layout
+
+\begin_layout Itemize
+terms belonging to requested answer type 
+\series bold
+(not possible with HMM, but maybe possible with CRF)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+
+\emph on
+emission
+\emph default
+ probabilities - prob.
+ of observing keyword 
+\begin_inset Formula $v_{m}$
+\end_inset
+
+ given schema term 
+\begin_inset Formula $q_{t}$
+\end_inset
+
+: 
+\begin_inset Formula $b_{i}(m)=P(o_{t}=v_{m}\mid q_{t}=s_{i})$
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+computed on the basis of similarity measures
+\end_layout
+
+\begin_layout Itemize
+edit-distance between keywords and each term (and it's 
+\series bold
+synonyms
+\series default
+) in schema vocabulary
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+domain vocabulary: domain compatibilities and regular expressions
+\end_layout
+
+\begin_layout Itemize
+then use calculated similarity as 
+\series bold
+an estimate
+\series default
+ for conditional probability 
+\begin_inset Formula $P(q_{t}=s_{i}|o_{t}=v_{m})$
+\end_inset
+
+, then using Bayes theorem calculate emission probability is
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+\color red
+are these calculated live or stored, or combination of the two !? how expensive
+ would be the storage then?
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\emph on
+initial state
+\emph default
+ probabilities - in initial implementation HITS algorithm is used to estimate
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+authority
+\begin_inset Quotes erd
+\end_inset
+
+ of each entity (~how much valuable information it contains) based on number
+ of attributes and links (foreign keys) to other tables 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "p.150"
+key "semantics_without_access"
+
+\end_inset
+
+.
+ 
+\series bold
+\color red
+This do not seem not so relevant without modification for data services,
+ where better measures could be:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+how often an entity is accessed by users
+\end_layout
+
+\begin_layout Itemize
+what's the probability that it could start a query? e.g.
+ if that's 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+TODO: what are the initial state probs defining?
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+\color red
+TODO: how does it work? It hopefully doesn't need instantiating all schema
+ terms?
+\end_layout
+
+\begin_layout Subsubsection*
+Initialization: Setting HMM parameters
+\end_layout
+
+\begin_layout Standard
+This approach could be also used even when query log is not yet available
+ by estimating the HMM parameters by applying similar heuristics as in the
+ earlier chapter (Heuristic based KWS).
+\end_layout
+
+\begin_layout Subsubsection*
+In Action: Decoding HMM
+\end_layout
+
+\begin_layout Standard
+A List Viterbi could provide a list of most probable mappings (in contrast
+ to standard Viterbi returning only the most probable result).
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+The limitation of HMM is that decision for the current label may only depend
+ on a fixed number of earlier labels and input keywords.
+\end_layout
+
+\begin_layout Subsubsection*
+
+\series bold
+CRF?
+\end_layout
+
+\begin_layout Subsection
+Natural Language (NL) Processing and Full sentence Search
 \end_layout
 
 \begin_layout Standard
@@ -209,55 +805,104 @@ figuring out between KWS and NL search
 \end_layout
 
 \begin_layout Subsection
-Adapting to Users' Needs and using Historical Knowledge
+Subtask: Matching keywords to entities (string matching)
 \end_layout
 
-\begin_layout Standard
-also Keyword Search combining services? try bootstrapping the results (but
- they count be different) understanding relationships between services (e.g.
- through existing queries?) evaluation of degradation of ranking quality
- with expansion of search space (operators: aggression, min, max, post-filtering
- through result fields) interaction with the user e.g.
+\begin_layout Itemize
+String similarity (edit-distance)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+need to alter the weights...
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+cheap removing from the end
+\end_layout
+
+\begin_layout Itemize
+expensive mutations, removals from inside
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+matching the entity and attribute names
+\end_layout
+
+\begin_layout Itemize
+values with small edit-distance (spelling-correction)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Semantic distance
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+could also match the possible values
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Regular expressions
+\end_layout
+
+\begin_layout Itemize
+Matching keyword into an sample of values (guessing which is the best attribute
+ without having all of it's values)
+\end_layout
+
+\begin_layout Subsection
+TODO: Other
+\end_layout
+
+\begin_layout Itemize
+also Keyword Search combining services? 
+\end_layout
+
+\begin_layout Itemize
+try bootstrapping the results (but they count be different)
+\end_layout
+
+\begin_layout Itemize
+understanding relationships between services (e.g.
+ through existing queries?) 
+\end_layout
+
+\begin_layout Itemize
+evaluation of degradation of ranking quality with expansion of search space
+ (operators: aggression, min, max, post-filtering through result fields)
+\end_layout
+
+\begin_layout Itemize
+interaction with the user e.g.
  creation time/ modification time dataset taken on 1/Jan/2013 dataset -
  F size, type, I n_events decrease false positives via machine learning?
- dateset with more than 100 event avg, sum Limitations of aproach: control
- statements? controlled statements: top 10, rank by, aggregate by etc
+ 
+\end_layout
+
+\begin_layout Itemize
+dateset with more than 100 event avg, sum 
+\end_layout
+
+\begin_layout Itemize
+Limitations of the approach: control statements? controlled statements:
+ top 10, rank by, aggregate by etc
 \end_layout
 
 \begin_layout Standard
-Examples our domain? different domain? Evalution/usability study by end-users
+Examples our domain? different domain? Evaluation/usability study by end-users
 \end_layout
 
 \begin_layout Section
-Related work / Existing Research
+Our contribution
 \end_layout
 
 \begin_layout Subsection
-DAS at CERN
-\end_layout
-
-\begin_layout Subsection
-NL Search over Webservices
-\end_layout
-
-\begin_layout Subsection
-KWS over webservices
-\end_layout
-
-\begin_layout Subsection
-NL S over Ontologies and Semantic Web / Semantic DBs
-\end_layout
-
-\begin_layout Subsection
-KWS over Databases
-\end_layout
-
-\begin_layout Section
-Real-world use-case of CMS Experiment, CERN
-\end_layout
-
-\begin_layout Standard
-Problem
+The use-case of CMS Experiment at CERN: Problem definition
 \end_layout
 
 \begin_layout Standard
@@ -273,7 +918,7 @@ feedback from Users
 
 \begin_layout Standard
 consider relationships between services explicit (PK dataset.name) implicit
- - even more ambigouty and complexity
+ - even more ambiguity and complexity
 \end_layout
 
 \begin_layout Standard
@@ -284,6 +929,142 @@ loose coupling of proprietary services / systems
 
 \begin_layout Standard
 Current implementation / Solution developed? 
+\end_layout
+
+\begin_layout Subsection
+a Hybrid approach
+\end_layout
+
+\begin_layout Subsection
+Incorporating User Feedback
+\end_layout
+
+\begin_layout Standard
+promote/demote query suggestions
+\end_layout
+
+\begin_layout Subsection
+Personalizing to Users' Needs
+\end_layout
+
+\begin_layout Standard
+First the most common queries may be promoted in the results, maximizing
+ the .
+\end_layout
+
+\begin_layout Standard
+Information need among different user roles (department, function) differs
+ a lot.
+ Most of the time many users are interested only in a few types of queries
+ or entities that they are interacting with the most.
+\end_layout
+
+\begin_layout Standard
+Prioritization may promote queries related to what user (or his group?)
+ has previously used.
+\end_layout
+
+\begin_layout Subsection
+Improving the Performance
+\end_layout
+
+\begin_layout Subsubsection*
+Estimating query running time
+\end_layout
+
+\begin_layout Standard
+Tracking of the execution time of each data-service, have been implemented,
+ that allows a) informing user of long lasting queries, and running them
+ only with his confirmation b) pre-running the speedy queries even before
+ user has explicitly selected them (e.g.
+ the top few queries proposed).
+\end_layout
+
+\begin_layout Standard
+It has been chosen to track the mean of execution time, and it's standard
+ deviation.
+ Knuth has shown that the standard deviation can be efficiently computed
+ in an online fashion without need to store each individual value, nor recomputi
+ng everything from scratch 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "p. 232"
+key "knuth1998stdev"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Because input parameters passed to the service may heavily impact the service
+ performance, we differentiate between these parameter types: 1) some specific
+ value, 2) a value with wild-card (presumably returning more results than
+ specific value as it may match multiple values), 3) not provided (matches
+ all values).
+ So we store only four values per data-service input parameter's combination
+ (Algorithm
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:online-variance"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand verbatiminput
+filename "stddev.txt"
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Calculating the Standard-Deviation in online fashion
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:online-variance"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Proposals for service providers
+\end_layout
+
+\begin_layout Standard
+Pagination & Ordering
+\end_layout
+
+\begin_layout Standard
+Incremental view maintenance
+\end_layout
+
+\begin_layout Standard
+? Bloomjoin ?
 \end_layout
 
 \begin_layout Section
@@ -299,16 +1080,239 @@ The evaluation was performed at the CMS Experiment described earlier.
 ......
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection
 Usability
 \end_layout
 
-\begin_layout Subsection
-Usefulness of KWS
+\begin_layout Subsubsection
+Usefulness of KWS / NL / DAS QL
 \end_layout
 
 \begin_layout Standard
 KWS vs NL vs Structured language
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+TODO: evaluation strategy
+\end_layout
+
+\begin_layout Section
+Related work / Literature Review
+\end_layout
+
+\begin_layout Standard
+
+\color red
+TODO: plug in old and update the literature review
+\end_layout
+
+\begin_layout Subsection
+DAS at CERN
+\end_layout
+
+\begin_layout Subsection
+KWS based on metadata
+\end_layout
+
+\begin_layout Standard
+i.e.
+ without access to the instance (that could include webservices)
+\end_layout
+
+\begin_layout Subsubsection*
+Heuristic based
+\end_layout
+
+\begin_layout Subsubsection*
+HMM
+\end_layout
+
+\begin_layout Standard
+CRF?
+\end_layout
+
+\begin_layout Subsection
+NL Search over Webservices
+\end_layout
+
+\begin_layout Subsection
+Question Answering (QA) and Natural Language Processing
+\end_layout
+
+\begin_layout Standard
+In early days of question answering these systems were conceived as natural
+ language interfaces to (relational) Databases such as 
+\series bold
+[1-2]
+\series default
+.
+ 'These early QA systems worked by translating the natural-language question
+ into a formal structured query and issuing it against a pre-compiled database
+ of knowledge in order to arrive at the answer.' 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ibm2012structured"
+
+\end_inset
+
+.
+ There, the translation is usually based on predefined rules / templates
+ representing semantic relations between concepts in the question (called
+ Relation Extraction).
+ Similarly more recent works also employs predefined rules for QA over Databases
+\series bold
+ [TODO...].
+\end_layout
+
+\begin_layout Standard
+The IBM Watson that currently is a state-of-the-art open-domain QA system,
+ also employs Relation Extraction, but in addition to structured sources
+ it heavily relies on using text passages as an evidence for answering the
+ questions (which is inevitable for answering open domain questions in a
+ self-contained way).
+\end_layout
+
+\begin_layout Standard
+The stages of QA that are relevant to our system includes:
+\end_layout
+
+\begin_layout Itemize
+Deep Parsing
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Predicate Argument Structure
+\series default
+, that normalizes and simplifies the results removing semantically irrelevant
+ details such changing passive voice in active (
+\begin_inset Quotes eld
+\end_inset
+
+it was bought by CERN
+\begin_inset Quotes erd
+\end_inset
+
+ into 
+\begin_inset Quotes eld
+\end_inset
+
+CERN bought it
+\begin_inset Quotes erd
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Itemize
+Answer Typing - figuring out the requested Answer type
+\end_layout
+
+\begin_layout Itemize
+Relation Extraction (Rule-based with handcrafted rules; or Statistical of
+ lower precision)
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+Keyword Extraction -- the words extracted as 
+\begin_inset Quotes eld
+\end_inset
+
+keywords
+\begin_inset Quotes erd
+\end_inset
+
+ would be given higher score than others
+\end_layout
+
+\begin_layout Itemize
+Entity disambiguation and Matching
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+TODO: QA systems over Databses that use rule-based mappings to structured
+ Q
+\end_layout
+
+\begin_layout Subsection
+NL S over Ontologies and Semantic Web / Semantic DBs
+\end_layout
+
+\begin_layout Subsection
+KWS over Databases / Semantic KWS over Datawarehouses + Ontology
+\end_layout
+
+\begin_layout Standard
+SODA and other; SODA includes user feedback.
+ Instead of trying to interpret natural language, SODA uses predefined patterns
+ for more complex operations (returning top-k results, aggregation) 
+\color red
+as there are many ways of expressing these
+\color inherit
+;
+\end_layout
+
+\begin_layout Subsection
+Keyword query cleaning
+\end_layout
+
+\begin_layout Subsection
+Other approaches:
+\end_layout
+
+\begin_layout Subsubsection
+Showing results in natural language too!!!
+\end_layout
+
+\begin_layout Subsubsection
+Faceted navig.
+\end_layout
+
+\begin_layout Subsubsection
+Refinement of User's Intent?!
+\end_layout
+
+\begin_layout Subsubsection
+Real-time suggestions
+\end_layout
+
+\begin_layout Subsection
+Usability aspects of QA, KWS, Structured search
+\end_layout
+
+\begin_layout Subsection
+User's Feedback
+\end_layout
+
+\begin_layout Standard
+SODA uses Like/So So/Wrong feedback next to each result (a proposed structured
+ query).
+ They incorporate it by using the feedback as a component of score used
+ for ranking result candidates [Add citation: SODA master thesis ethz].
+ The formula used is:
+\end_layout
+
+\begin_layout Standard
+.....
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset citation
+LatexCommand citet
+key "semantics_without_access"
+
+\end_inset
+
+proposed using an HMM, that could adapt to query logs (while the HMM parameters
+ could be be 'bootstrapped' by applying a couple of heuristics even if the
+ logs are unavailable).
 \end_layout
 
 \begin_layout Section
@@ -318,11 +1322,20 @@ Future work
 \begin_layout Standard
 Because of the project was fairly short and the author had to follow some
  of priorities of the CMS Experiment, some parts of the research work had
- to be excluded, including: TODO.
+ to be excluded, including: 
+\series bold
+\color red
+TODO
+\series default
+.
 \end_layout
 
 \begin_layout Section
-Conclusions
+Other applications?
+\end_layout
+
+\begin_layout Section
+Conclusion
 \end_layout
 
 \begin_layout Standard
@@ -347,15 +1360,11 @@ Acknowledgements
 \end_layout
 
 \begin_layout Standard
-The authors of this paper are thankful to Robert Gwadera and prof.
+This work was financially supported by the CMS Computing group, at the Compact
+ Muon Experiment at European Organization for Nuclear Research (CERN).
+ The authors of this paper are thankful to Robert Gwadera and prof.
  Karl Aberer who were supervising the Master Thesis project of the first
  author at the Swiss Federal Institute of Technology in Lausanne.
-\end_layout
-
-\begin_layout Standard
-The work was supported by the CMS Computing group, at the Compact Muon Experimen
-t at European Organization for Nuclear Research (CERN).
- 
 \end_layout
 
 \begin_layout Standard
@@ -369,8 +1378,12 @@ options "plainnat"
 
 \end_layout
 
+\begin_layout Section*
+Appendices
+\end_layout
+
 \begin_layout Standard
-Appendix: Statistics Analysis
+Appendix: Logs Analysis (thesis only?)
 \end_layout
 
 \begin_layout Standard
