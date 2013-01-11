@@ -143,7 +143,6 @@ def adjust_values(func, gen, links):
             rdict[uikey] = val
     page = ""
     to_show = []
-    error = 0
     green = 'style="color:green"'
     red = 'style="color:red"'
     for key, val in rdict.iteritems():
@@ -152,7 +151,6 @@ def adjust_values(func, gen, links):
             continue
         if  key.lower() == 'error':
             key = '<span %s>WARNING</span>' % red
-            error = 1
             if  val and isinstance(val, basestring):
                 val += '<br/>'
         if  lookup:
@@ -234,7 +232,7 @@ def adjust_values(func, gen, links):
             rlist.sort()
             page += ', '.join(rlist)
             page  = page.replace('<br/>,', '<br/>')
-    if  links and not error:
+    if  links:
         page += '<br />' + ', '.join(links)
     return page
 
