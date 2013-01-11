@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Keep links around even if data service reports the error
   - Catch error in combined data-service and report them to UI
   - Protect qxml_parser from stream errors
   - Convert regex strings into raw strings
