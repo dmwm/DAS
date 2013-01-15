@@ -489,7 +489,7 @@ def ply2mongo(query):
             system = val
             continue
         dasname = name 
-        if  oper and val: # real condition
+        if  (oper and val) or (oper and val==0): # real condition
             value = val
             if  name == 'date' and oper == '=':
                 value = das_dateformat(value)
