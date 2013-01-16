@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Extend DAS support for file dataset=/a/b/c run between [1,2] queries
   - Keep links around even if data service reports the error
   - Catch error in combined data-service and report them to UI
   - Protect qxml_parser from stream errors
