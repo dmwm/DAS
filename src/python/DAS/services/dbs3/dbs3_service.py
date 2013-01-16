@@ -118,14 +118,19 @@ class DBS3Service(DASAbstractService):
                     kwds['minrun'] = val['$gte']
                     kwds['maxrun'] = val['$lte']
         if  api == 'file4DatasetRunLumi':
-            val = kwds['run']
+            val = kwds.get('run', None)
             if  val:
-                kwds['minrun'] = val
-                kwds['maxrun'] = val
-            try:
+                if  isinstance(val, dict): # we got a run range
+                    if  val.has_key('$in'):
+                        kwds['minrun'] = val['$in'][0]
+                        kwds['maxrun'] = val['$in'][-1]
+                    if  val.has_key('$lte'):
+                        kwds['minrun'] = val['$gte']
+                        kwds['maxrun'] = val['$lte']
+                else:
+                    kwds['minrun'] = val
+                    kwds['maxrun'] = val
                 del kwds['run']
-            except:
-                pass
             val = kwds['lumi_list']
             if  val:
                 kwds['lumi_list'] = [val]

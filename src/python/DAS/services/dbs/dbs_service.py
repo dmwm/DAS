@@ -344,7 +344,7 @@ class DBSService(DASAbstractService):
                 value = ' and dataset.status=%s' % kwds['status']
             else:
                 value = ' and dataset.status like VALID*'
-#           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124} 
+#           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124}
             query_for_single = "find dataset, datatype, dataset.status, \
   dataset.tag, \
   dataset.createdate where dataset.createdate %s %s " + value
@@ -384,8 +384,41 @@ class DBSService(DASAbstractService):
             if  status and status.lower() == 'invalid':
                 kwds['retrive_list'] = \
                     ['retrive_invalid_files,retrive_status,retrive_date,retrive_person']
+            val = kwds.get('run', None)
+            if  isinstance(val, dict):
+                # listFiles does not support run range, see
+                # fakeFiles4DatasetRun API
+                kwds.pop('run')
             del kwds['status']
-            
+        if  api == 'fakeFiles4DatasetRun':
+            cond = ""
+            val = kwds['dataset']
+            if  val and val != 'required':
+                cond = " and dataset=%s" % val
+                kwds.pop('dataset')
+            val = kwds['run']
+            if  val and val != 'required':
+                if  isinstance(val, dict):
+                    min_run = 0
+                    max_run = 0
+                    if  val.has_key('$lte'):
+                        max_run = val['$lte']
+                    if  val.has_key('$gte'):
+                        min_run = val['$gte']
+                    if  min_run and max_run:
+                        val = "run >=%s and run <= %s" % (min_run, max_run)
+                    elif val.has_key('$in'):
+                        arr = [r for r in val['$in']]
+                        val = "run >=%s and run <= %s" % (arr[0], arr[-1])
+                elif isinstance(val, int):
+                    val = "run = %d" % val
+                cond += " and %s" % val
+                kwds.pop('run')
+            if  cond:
+                kwds['query'] = "find file.name where %s" % cond[4:]
+            else:
+                kwds['query'] = 'required'
+
     def parser(self, dasquery, dformat, source, api):
         """
         DBS data-service parser.
@@ -415,6 +448,8 @@ class DBSService(DASAbstractService):
         elif api == 'listBlockProvenance4child':
             prim_key = 'block'
         elif api == 'listFiles':
+            prim_key = 'file'
+        elif api == 'fakeFiles4DatasetRun':
             prim_key = 'file'
         elif api == 'listLFNs':
             prim_key = 'file_lfn'

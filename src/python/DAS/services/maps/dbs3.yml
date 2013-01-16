@@ -197,13 +197,14 @@ das_map : [
     {"das_key": "status", "rec_key":"status.name", "api_arg":"status"},
 ]
 ---
+### NOTE: we don't use minrun parameter here since it is covered by
+### file4DatasetRunLumi API
 urn: files_via_dataset
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files/"
 expire : 900
 params : {
         "dataset":"required",
         "detail":"True",
-        "minrun": "optional",
         "release_version": "optional",
         "status": "optional",
 }
@@ -211,7 +212,6 @@ lookup : file
 das_map : [
     {"das_key": "file", "rec_key":"file.name"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"minrun"},
     {"das_key": "release", "rec_key":"release.name", "api_arg":"release_version"},
     {"das_key": "status", "rec_key":"status.name", "api_arg":"status"},
 ]
@@ -277,6 +277,18 @@ das_map : [
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
 ]
 ---
+urn: file4DatasetRunLumi
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files/"
+expire : 900
+params : {"dataset":"required", "run":"required", "lumi_list":[]}
+lookup : file
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi_list"},
+]
+---
 urn: runs
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/runs/"
 expire : 900
@@ -323,18 +335,6 @@ params : {"physics_group_name":"optional"}
 lookup : group
 das_map : [
     {"das_key": "group", "rec_key":"group.name", "api_arg":"physics_group_name"},
-]
----
-urn: file4DatasetRunLumi
-url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files/"
-expire : 900
-params : {"dataset":"required", "run":"required", "lumi_list":[]}
-lookup : file
-das_map : [
-    {"das_key": "file", "rec_key":"file.name"},
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
-    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi_list"},
 ]
 ---
 notations : [
