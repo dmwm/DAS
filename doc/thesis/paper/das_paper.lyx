@@ -137,7 +137,7 @@ tion of over 3,000 physicists at the CMS Experiment, CERN.
 Keywords:
 \series default
  Keyword-based Search; Natural-Language Search; Data Services; Enterprise
- Information Integration
+ Information Integration; Natural Language Processing
 \end_layout
 
 \begin_layout Standard
@@ -340,6 +340,10 @@ grammar
 \end_layout
 
 \begin_layout Subsection
+Background
+\end_layout
+
+\begin_layout Subsubsection
 Intro, Usability issues
 \end_layout
 
@@ -349,6 +353,71 @@ TODO: discuss differences between Structured, Keyword and NL Search
 
 \begin_layout Standard
 refer to Paper...
+\end_layout
+
+\begin_layout Subsubsection
+Data Integration
+\end_layout
+
+\begin_layout Subsubsection
+Semantic Web Services
+\end_layout
+
+\begin_layout Standard
+Having detailed semantic Web Service descriptions would help interpreting
+ more complex queries (in example of CMS Experiment, such as 'smallest 
+\series bold
+file
+\series default
+ in /SingleElectron/Run2011A-WElectron-*/RAW-RECO with 
+\series bold
+number of events
+\series default
+ between 100 and 1000', where 'number of events' is actually referring to
+ an attribute 
+\emph on
+nevents
+\emph default
+ of a file (file.nevents).
+\end_layout
+
+\begin_layout Standard
+
+\color magenta
+Domain ontology is needed
+\end_layout
+
+\begin_layout Standard
+There is a number of technologies that allow data and service providers
+ to describe semantically services their services and resources, such as
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+Simple Semantic Web Architecture and Protocol
+\begin_inset Quotes erd
+\end_inset
+
+ (SSWAP) that uses third-party ontologies.
+\end_layout
+
+\begin_layout Standard
+Gessler DDG, Schiltz GS, May GD, Avraham S, Town CD, Grant D, Nelson RT:
+ SSWAP: A Simple Semantic Web Architecture and Protocol for semantic web
+ services.
+ BMC Bioinformatics 2009, 10:309.
+\end_layout
+
+\begin_layout Standard
+
+\color magenta
+In this work, we assume that the extensive service semantic descriptions
+ are already existing, or are not needed, and focus on the process of translatio
+n between keyword queries and the structured ones.
+\end_layout
+
+\begin_layout Standard
+http://www.jbiomedsem.com/content/pdf/2041-1480-2-8.pdf
 \end_layout
 
 \begin_layout Subsection
@@ -703,7 +772,17 @@ Something in between? A UI?
 \end_layout
 
 \begin_layout Section
-Non-structured Search over Data Services
+Search over Data Services 
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+a better synonym for: Non-structured?
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -887,6 +966,27 @@ data service constraints must be satisfied
 : we could also include identifying interpretations that achieve high rank
  even if they do not satisfy some constraint (e.g.
  a mandatory filter is missing), and informing the user
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+boost important keywords (see Keyword Extraction, in Sec.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Keyword-extraction"
+
+\end_inset
+
+)!
+\end_layout
+
+\begin_layout Itemize
+promote data service inputs than filters on their results: 1) it's more
+ efficient, especially when this is possible; 2) there are much more of
+ possible entities to filter, so the false matches are expected higher,
+ while the service inputs shall cover large part of cases
 \end_layout
 
 \begin_layout Standard
@@ -1412,10 +1512,245 @@ The limitation of HMM is that decision for the current label may only depend
  for keyword search, but is more complex for NL search.
 \end_layout
 
-\begin_layout Subsubsection*
+\begin_layout Subsection
 
 \series bold
-CRF?
+Conditional Random Fields
+\end_layout
+
+\begin_layout Subsubsection
+
+\series bold
+notes on CRF
+\end_layout
+
+\begin_layout Standard
+x input, y output
+\end_layout
+
+\begin_layout Standard
+conditional likelihood of O given data x & y: L(O; y|x) ~= f(y|x; O), y
+ follows x, but x itself is never unknown, so there is no need to have a
+ probabilistic model of it.
+\end_layout
+
+\begin_layout Standard
+conditional models do not require x and y to have the same distributions
+\end_layout
+
+\begin_layout Standard
+as long as Ys do not depend on itself, it is enough that y|x, we don't have
+ to worry about dependencies between Xes.
+\end_layout
+
+\begin_layout Subsubsection
+[EARLY] Ideas on how our Heuristics could be mapped into CRF features could
+ be mapped:
+\end_layout
+
+\begin_layout Itemize
+skip word (tag - OTHER) -- penalize not matched tags 
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+do we need a feature for that? just the transition function could have low...
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula $f_{1}(s,i,l_{i},l_{i-1})$
+\end_inset
+
+=0, if 
+\begin_inset Formula $l_{i}$
+\end_inset
+
+= OTHER, 0.5 otherwise (actually weights shall normalize it automatically)
+\end_layout
+
+\begin_layout Itemize
+also after some words this may be prefered, e.g.:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+stopwords!
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+prefer referring to related entities:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula $f_{1}(s,i,l_{i},l_{i-1})$
+\end_inset
+
+=1, if 
+\begin_inset Formula $l_{i}\thickapprox l_{i-1}\mathcircumflex l_{i}\neq$
+\end_inset
+
+OTHER, 0 otherwise
+\end_layout
+
+\begin_layout Itemize
+or even better multiple features:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+if X0=entity.attribute name and X=value --> 1
+\end_layout
+
+\begin_layout Itemize
+if X0=entity name and X=value --> 0.8
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+how about same entity twice? multiple words could refer to the exactly same
+ term (these are over-specified queries)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\series bold
+first, I must not be summed twice!)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+this could be generalized for longer distances...
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+requested entity and filter condition on the same entity (small increase)
+ -- this is because these are often used queries, even QL is designed such
+ that PK is inferred from entity name (e.g.
+ 
+\emph on
+dataset=Zmm
+\emph default
+ indicates 
+\emph on
+dataset.name=Zmm
+\emph default
+)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula $f_{1}(s,i,l_{i},l_{i-1},l_{i-2},...,l_{1})$
+\end_inset
+
+=0.3, if 
+\begin_inset Formula $\exists j:\, l_{j}=$
+\end_inset
+
+same entity and 
+\begin_inset Formula $l_{i}$
+\end_inset
+
+is it's filter, 0 otherwise
+\end_layout
+
+\begin_layout Itemize
+entity and it's primary key (primary filter) -- higher
+\end_layout
+
+\begin_layout Itemize
+entity and some of it's other attributes as filter, if any -- lower...
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+semi-structured input, e.g.
+ username=zemleris (while correct one would be user)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+either take or tokenize like this (username=, zemleris), and have to rules:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+if s[i].endswith('='), boost score for schema term
+\end_layout
+
+\begin_layout Itemize
+if s[i-1].endswith('='): boost score for value especially if that's the same
+ label (schema term matching is more guaranteed than of the values)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+boost important keywords!
+\end_layout
+
+\begin_layout Itemize
+
+\color magenta
+a feature function to specify external features
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+word similarity
+\end_layout
+
+\begin_layout Itemize
+
+\color magenta
+???could try to cheat feeding analysis results from Question Type extractor,
+ E.g.
+ s[0] -- expected question type.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\color magenta
+finally....how about related entities (input and output) -- but these don't
+ fit into linear-chain CRF
+\end_layout
+
+\begin_layout Standard
+NLTK with mallets (Java) CRF: 
+\begin_inset Quotes eld
+\end_inset
+
+A user-supplied feature detector function is used to convert each token
+ to a featureset.
+ Each feature/value pair is then encoded as a single binary feature for
+ Mallet.
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.crf-module.html
+\end_layout
+
+\begin_layout Standard
+feature_detector(tokens, index) -> featureset 
 \end_layout
 
 \begin_layout Subsection
@@ -1423,20 +1758,172 @@ Natural Language (NL) Processing and Full sentence Search
 \end_layout
 
 \begin_layout Standard
+Do not try to gain complete understanding (concept of so successful Watson).
+\end_layout
+
+\begin_layout Subsubsection
+Identifying if full sentences
+\end_layout
+
+\begin_layout Standard
+A keyword query that is not a well-formed sentence, e.g.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+file dataset Zmm
+\begin_inset Quotes erd
+\end_inset
+
+ parsed by Standford parser gives 
+\begin_inset Quotes eld
+\end_inset
+
+file/VB dataset/JJ Zmm/NN
+\begin_inset Quotes erd
+\end_inset
+
+, where dataset/JJ is a wrong tag.
+ Applying the keyword extraction would down-rank this term without any good
+ reason.
+\end_layout
+
+\begin_layout Standard
+Simple approach could be checking if sentence starts with a Wh-word (what,
+ where, when).
+\end_layout
+
+\begin_layout Subsubsection
+Keyword extraction
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Keyword-extraction"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\color red
+the words extracted as 
+\begin_inset Quotes eld
+\end_inset
+
+keywords
+\begin_inset Quotes erd
+\end_inset
+
+ would be given higher score than others, different scores for different
+ POS.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+See NLP class, slides on keyword extraction.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\bar under
+\color magenta
+TODO: WE HAVE TO Evaluate each sub-approach!!!
+\end_layout
+
+\begin_layout Subsubsection
+Answer Type
+\end_layout
+
+\begin_layout Itemize
+Answer Type Detection - figuring out the requested Answer type
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+take question headword: first NP after wh-word
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+simple directly answerable by Services: where are files of Zmm located?
+\end_layout
+
+\begin_layout Itemize
+complex, needs filtering: what is the total size of datasets that ....
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+patterns to interpret wh-words
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+when --> date e.g.
+ (created|modified...
+ etc)
+\end_layout
+
+\begin_layout Itemize
+where --> location
+\end_layout
+
+\begin_layout Itemize
+how many, big/large
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Subsubsection
+Relation extraction and Deep Parsing + Predicate Argument Structure (but
+ probably no time for this)
+\end_layout
+
+\begin_layout Standard
+interesting demo: http://www.nactem.ac.uk/enju/demo.html
+\end_layout
+
+\begin_layout Standard
+biomedical paper works not so bad.
+\end_layout
+
+\begin_layout Standard
+
+\bar under
+\color magenta
+----
+\end_layout
+
+\begin_layout Standard
+
+\bar under
+\color magenta
 semantic distance, string dist WSD (word sense d..,) focus extraction (1 NP
  or last NP) 
 \end_layout
 
 \begin_layout Standard
+
+\bar under
+\color magenta
 E.g.
  what is the Total size of all Zmm datasets 
 \end_layout
 
 \begin_layout Standard
+
+\bar under
+\color magenta
 what is the size of /Zmm/.,X datasets --- parsing of the query file Zmm 
 \end_layout
 
 \begin_layout Standard
+
+\bar under
+\color magenta
 figuring out between KWS and NL search
 \end_layout
 
@@ -1496,6 +1983,57 @@ Regular expressions
 \begin_layout Itemize
 Matching keyword into an sample of values (guessing which is the best attribute
  without having all of it's values)
+\end_layout
+
+\begin_layout Subsection
+Parsing Control Statements
+\end_layout
+
+\begin_layout Standard
+there are quite a many ways of expressing operations (such as ordering,
+ min, max, etc), and often these may look ambiguous, for instance a query
+ 
+\begin_inset Quotes eld
+\end_inset
+
+
+\bar under
+smallest file
+\bar default
+ in Zmmg with 100 or more events
+\begin_inset Quotes erd
+\end_inset
+
+ is asking for 
+\series bold
+the smallest file
+\series default
+ (order by file size), but 
+\series bold
+not
+\series default
+ what is smallest file size (that would be min(file.size)).
+\end_layout
+
+\begin_layout Standard
+Answer type resolving could help a little (answer type: NP: 
+\begin_inset Quotes eld
+\end_inset
+
+Adj: smallest N:file
+\begin_inset Quotes erd
+\end_inset
+
+), but we are still left in a quite complex situation.
+\end_layout
+
+\begin_layout Standard
+Templates / Regexps
+\end_layout
+
+\begin_layout Standard
+Predicate Argument Structure + Relation Extraction Rules(proLog) -- however
+ too expensive given time constraints...
 \end_layout
 
 \begin_layout Subsection
@@ -1869,10 +2407,6 @@ CERN bought it
 \end_layout
 
 \begin_layout Itemize
-Answer Typing - figuring out the requested Answer type
-\end_layout
-
-\begin_layout Itemize
 Relation Extraction (Rule-based with handcrafted rules; or Statistical of
  lower precision)
 \end_layout
@@ -1893,6 +2427,10 @@ keywords
 
 \begin_layout Itemize
 Entity disambiguation and Matching
+\end_layout
+
+\begin_layout Standard
+
 \end_layout
 
 \begin_layout Standard
@@ -2188,6 +2726,61 @@ http://knight.cis.temple.edu/~yates/cis8538/sp11/
 \end_layout
 
 \end_deeper
+\begin_layout Itemize
+CRF survey:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+http://blog.echen.me/2012/01/03/introduction-to-conditional-random-fields/
+\end_layout
+
+\begin_layout Itemize
+http://onionesquereality.wordpress.com/2011/08/20/conditional-random-fields-a-begi
+nners-survey/
+\end_layout
+
+\begin_layout Itemize
+http://stackoverflow.com/questions/80089/anyone-recommend-a-good-tutorial-on-cond
+itional-random-fields
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+in python:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+http://github.com/shuyo/iir/blob/master/sequence/crf.py
+\end_layout
+
+\begin_layout Itemize
+http://blog.echen.me/2012/01/03/introduction-to-conditional-random-fields/
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+lingPIpe?
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+also supports CRF: http://alias-i.com/lingpipe/demos/tutorial/crf/read-me.html
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Problems with complex queries:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+give me sizes for RAW, RECO, AOD for /SingleMu/Run2012B-PromptReco-v1/RECO
+ dataset and run 195529
+\end_layout
+
 \end_deeper
 \begin_layout Plain Layout
 

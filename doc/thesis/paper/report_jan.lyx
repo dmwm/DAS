@@ -102,6 +102,140 @@ Vidmantas Zemleris
 \end_layout
 
 \begin_layout Section
+TO Discuss
+\end_layout
+
+\begin_layout Subsection
+CRF
+\end_layout
+
+\begin_layout Standard
+how long the chain...
+ 1,2,3...
+ longer - training problem; vs dependencies
+\end_layout
+
+\begin_layout Subsection
+present NLP in more depth
+\end_layout
+
+\begin_layout Standard
+converting question into Logics is also ~possible (but complex), so not
+ useful in this context with very limited resources.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Keyword Extraction / Scoring
+\end_layout
+
+\begin_layout Standard
+Keyword selection algorithm:
+\end_layout
+
+\begin_layout Enumerate
+Select all non-stop words in quotations
+\end_layout
+
+\begin_layout Enumerate
+Select all NNP words in recognized named entities
+\end_layout
+
+\begin_layout Enumerate
+Select all complex nominals with their adjectival modifiers
+\end_layout
+
+\begin_layout Enumerate
+Select all other complex nominals
+\end_layout
+
+\begin_layout Enumerate
+Select all nouns with their adjectival modifiers
+\end_layout
+
+\begin_layout Enumerate
+Select all other nouns
+\end_layout
+
+\begin_layout Enumerate
+Select all verbs
+\end_layout
+
+\begin_layout Enumerate
+Select all adverbs 
+\end_layout
+
+\begin_layout Enumerate
+Select the QFW word (skipped in all previous steps) 
+\end_layout
+
+\begin_layout Enumerate
+Select all other words 
+\end_layout
+
+\begin_layout Standard
+http://trec.nist.gov/pubs/trec8/papers/smu.pdf
+\end_layout
+
+\begin_layout Subsubsection
+Answer Type Extraction
+\end_layout
+
+\begin_layout Standard
+first non prepositional NP, e.g.
+ http://www.nactem.ac.uk/enju/demo.html
+\end_layout
+
+\begin_layout Standard
+tell me what is the
+\series bold
+ smallest file
+\series default
+ in /SingleElectron/Run2011A-WElectron-*/RAW-RECO with number of events
+ between 100 and 1000
+\end_layout
+
+\begin_layout Subsubsection
+Complex queries
+\end_layout
+
+\begin_layout Standard
+wh-questionmarks
+\end_layout
+
+\begin_layout Standard
+simple rules...
+\end_layout
+
+\begin_layout Standard
+smallest file in /SingleElectron/Run2011A-WElectron-*/RAW-RECO with 100
+ or more events
+\end_layout
+
+\begin_layout Subsection
+Evaluation
+\end_layout
+
+\begin_layout Itemize
+ask people to produce some queries (for development evaluation, evaluate
+ usefulness components)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+types of queries that work well and that do not work yet
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+blind verification?
+\end_layout
+
+\begin_layout Itemize
+questionnaire of satisfaction
+\end_layout
+
+\begin_layout Section
 From Keywords to Structured Queries
 \end_layout
 
