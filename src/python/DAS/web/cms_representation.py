@@ -623,9 +623,10 @@ class CMSRepresentation(DASRepresentation):
                 for flt in filters:
                     try:
                         for obj in DotDict(row).get_values(flt):
-                            results += str(obj) + '\n'
+                            results += str(obj) + ' '
                     except:
                         pass
+                results += '\n'
             else:
                 for item in fields:
                     systems = self.dasmgr.systems
