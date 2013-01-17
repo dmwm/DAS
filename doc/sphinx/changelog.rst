@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.8.X
 
+  - Do not check field keys in a query, e.g. allow to get partial results
+  - Fix plain web view when using DAS filters
   - Extend DAS support for file dataset=/a/b/c run between [1,2] queries
   - Keep links around even if data service reports the error
   - Catch error in combined data-service and report them to UI
