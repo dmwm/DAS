@@ -513,11 +513,6 @@ class DASMongocache(object):
 
     def get_records(self, col, spec, fields, skeys, idx, limit, unique=False):
         "Generator to get records from MongoDB. It correctly applies"
-        if  fields:
-            for key in fields: # ensure that fields keys will be presented
-                if  key not in self.das_internal_keys and \
-                    not spec.has_key(key):
-                    spec.update({key: {'$exists':True}})
         try:
             res = col.find(spec=spec, fields=fields)
             if  skeys:
