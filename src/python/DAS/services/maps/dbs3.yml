@@ -140,12 +140,14 @@ params : {
         "dataset":"optional",
         "dataset_access_type": "optional",
         "run_num": "optional",
+        "logical_file_name": "optional"
 }
 lookup : block
 das_map : [
     {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key": "file", "rec_key":"file.name", "api_arg":"logical_file_name"},
 ]
 ---
 urn: blocks4site

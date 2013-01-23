@@ -306,6 +306,19 @@ das_map : [
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path"},
 ]
 ---
+urn : fakeBlock4file
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", 
+     "query":"", "file":"required"
+}
+lookup: block
+das_map : [
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name"},
+    {"das_key":"file", "rec_key":"file.name", "api_arg":"file", "pattern":"/.*/.*/.*\\.root"},
+]
+---
 urn : listBlockProvenance
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
@@ -433,6 +446,19 @@ lookup: lumi
 das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number"},
     {"das_key":"file", "rec_key":"file.name", "api_arg":"lfn"},
+]
+---
+urn : fakeLumis4block
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "block":"required",
+     "query":""
+}
+lookup: lumi
+das_map : [
+    {"das_key":"lumi", "rec_key":"lumi.number"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block"},
 ]
 ---
 urn : listLFNs

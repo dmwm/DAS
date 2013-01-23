@@ -161,7 +161,7 @@ class DBSService(DASAbstractService):
         if  api == 'fakeListDataset4File':
             val = kwds['file']
             if  val != 'required':
-                kwds['query'] = "find dataset, count(block), count(file.size), \
+                kwds['query'] = "find dataset, count(block), count(file.size) \
   where file=%s" % val
             else:
                 kwds['query'] = 'required'
@@ -196,6 +196,18 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('run')
+        if  api == 'fakeBlock4file':
+            lfn = kwds.get('file', 'required')
+            if  lfn != 'required':
+                kwds['query'] = 'find block.name where file=%s' % lfn
+            else:
+                kwds['query'] = 'required'
+        if  api == 'fakeLumis4block':
+            block = kwds.get('block', 'required')
+            if  block != 'required':
+                kwds['query'] = 'find lumi where block=%s' % block
+            else:
+                kwds['query'] = 'required'
         if  api == 'fakeBlock4DatasetRun':
             dataset = kwds.get('dataset', 'required')
             run = kwds.get('run', 'required')
@@ -443,6 +455,8 @@ class DBSService(DASAbstractService):
         elif api == 'listBlocks4path':
             api = 'listBlocks'
             prim_key = 'block'
+        elif api == 'fakeBlock4file':
+            prim_key = 'block'
         elif api == 'listBlockProvenance':
             prim_key = 'block'
         elif api == 'listBlockProvenance4child':
@@ -471,6 +485,8 @@ class DBSService(DASAbstractService):
             prim_key = 'release'
         elif api == 'listRuns':
             prim_key = 'run'
+        elif api == 'fakeLumis4block':
+            prim_key = 'lumi'
         elif  api == 'fakeRelease4File':
             prim_key = 'release'
         elif  api == 'fakeRelease4Dataset':
