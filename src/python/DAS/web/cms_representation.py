@@ -121,7 +121,7 @@ def tooltip_helper(title):
         % (title, tooltip)
     return page
 
-def adjust_values(func, gen, links):
+def adjust_values(func, gen, links, pkey):
     """
     Helper function to adjust values in UI.
     It groups values for identical key, make links for provided mapped function,
@@ -167,7 +167,8 @@ def adjust_values(func, gen, links):
                 if  len(set(val)) > 1 and \
                     (key.lower().find('number') != -1 or \
                         key.lower().find('size') != -1):
-                    value = '<span %s>%s</span>' % (red, value)
+                    if  pkey != 'lumi.number':
+                        value = '<span %s>%s</span>' % (red, value)
             elif  key.lower().find('size') != -1 and val:
                 value = size_format(val)
             elif  key.find('Number of ') != -1 and val:
@@ -407,7 +408,8 @@ class CMSRepresentation(DASRepresentation):
                     if  len(pval) == 1:
                         pval = pval[0]
                     if  pkey == 'run.run_number' or pkey == 'lumi.number':
-                        pval = int(pval)
+                        if  isinstance(pval, basestring):
+                            pval = int(pval)
                     if  pval:
                         page += '%s: ' % lkey.capitalize()
                         if  lkey == 'parent' or lkey == 'child':
@@ -483,7 +485,7 @@ class CMSRepresentation(DASRepresentation):
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
                 page += add_filter_values(row, filters)
-                page += adjust_values(func, gen, links)
+                page += adjust_values(func, gen, links, pkey)
             pad   = ""
             try:
                 systems = self.systems(row['das']['system'])

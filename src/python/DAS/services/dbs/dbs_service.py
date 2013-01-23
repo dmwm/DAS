@@ -205,7 +205,7 @@ class DBSService(DASAbstractService):
         if  api == 'fakeLumis4block':
             block = kwds.get('block', 'required')
             if  block != 'required':
-                kwds['query'] = 'find lumi where block=%s' % block
+                kwds['query'] = 'find lumi.number, run.number, file.name where block=%s' % block
             else:
                 kwds['query'] = 'required'
         if  api == 'fakeBlock4DatasetRun':
@@ -603,6 +603,15 @@ class DBSService(DASAbstractService):
                         del row['run'][att]
                     except:
                         pass
+            if  api == 'fakeLumis4block':
+                if  row.has_key('lumi'):
+                    row = row['lumi']
+                    row['lumi'] = {'number': row['lumi.number'],
+                                   'run_number': row['run.number'],
+                                   'file': row['file.name']}
+                    del row['lumi.number']
+                    del row['run.number']
+                    del row['file.name']
             if  api == 'fakeSite4Dataset' and sitedb:
                 site = row.get('site', None)
                 if  site and isinstance(site, dict):
