@@ -5,6 +5,12 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.9.X
+
+  - Collapse lumi list from DBS3, ticket #3954
+  - Remove dbs url/instances from DAS configuration and read this information
+    directly from DAS maps; fixed #3955
+
 - 1.8.X
 
   - Add support of lumi block=/a/b/c#123 and block file=/path/f.root
