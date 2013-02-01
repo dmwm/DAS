@@ -7,35 +7,22 @@ about datasets.
 
 # system modules
 import cherrypy
-import itertools
 
 # DAS modules
 from   DAS.utils.url_utils import getdata_urllib as getdata
 from   DAS.web.tools import exposejson
 from   DAS.web.utils import db_monitor
-from   DAS.utils.utils import qlxml_parser
+from   DAS.utils.utils import qlxml_parser, convert2ranges
 from   DAS.utils.thread import start_new_thread
 from   DAS.utils.utils import get_key_cert
 from   DAS.core.das_mapping_db import DASMapping
 from   DAS.utils.das_config import das_readconfig
 import DAS.utils.jsonwrapper as json
 
-def lumilist(ilumi):
-    """
-    Convert input list into list of ranges.
-    http://stackoverflow.com/questions/4628333/converting-a-list-of-integers-into-range-in-python
-    """
-    # right now just sort input list and return it
-    ilumi.sort()
-    res = [[t[0][1], t[-1][1]] for t in \
-            (tuple(g[1]) for g in \
-                itertools.groupby(enumerate(ilumi), lambda (i, x): i - x))]
-    return res
-
 def parse_run_dict(rdict):
     "Parser input run dict and normalize lumi lists"
     for key, val in rdict.items():
-        rdict[key] = lumilist(val)
+        rdict[key] = convert2ranges(val)
 
 def run_lumis(url, dataset, ckey, cert):
     """

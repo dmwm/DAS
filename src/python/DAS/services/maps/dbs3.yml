@@ -1,6 +1,7 @@
 # DBS3 API mapping to DAS
 system : dbs3
 format : JSON
+instances: ["prod", "dev", "int"]
 ---
 urn: acquisitioneras
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/acquisitioneras/"
@@ -84,7 +85,8 @@ expire : 900
 params : {"dataset":"required"}
 lookup : dataset
 das_map : [
-    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset", "pattern":"/.*/.*/.*"},
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn: datasetparents

@@ -23,7 +23,7 @@ import time
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, json_parser
-from DAS.utils.utils import expire_timestamp
+from DAS.utils.utils import expire_timestamp, convert2ranges
 from DAS.utils.url_utils import getdata
 
 def get_modification_time(record):
@@ -53,8 +53,8 @@ class DBS3Service(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.prim_instance = config['dbs']['dbs_global_instance']
-        self.instances = config['dbs']['dbs_instances']
+        self.prim_instance = self.dasmapping.dbs_global_instance()
+        self.instances = self.dasmapping.dbs_instances()
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
@@ -241,6 +241,15 @@ class DBS3Service(DASAbstractService):
                     if  int(file_status) == 0:# invalid status
                         row = None
                 if  row:
+                    yield row
+        elif api == 'filelumis' or api == 'filelumis4block':
+            for row in gen:
+                if  row.has_key('lumi'):
+                    if  row['lumi'].has_key('lumi_section_num'):
+                        val = row['lumi']['lumi_section_num']
+                        row['lumi']['lumi_section_num'] = convert2ranges(val)
+                    yield row
+                else:
                     yield row
         else:
             for row in gen:

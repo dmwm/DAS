@@ -127,22 +127,14 @@ class DASWebService(DASWebManager):
         self.reqmgr      = None # defined at run-time via self.init()
         self.daskeys     = []   # defined at run-time via self.init()
         self.colors      = {}   # defined at run-time via self.init()
+        self.dbs_url     = None # defined at run-time via self.init()
+        self.dbs_global  = None # defined at run-time via self.init()
         self.init()
 
         # Monitoring thread which performs auto-reconnection
         thname = 'dbscore_monitor'
         start_new_thread(thname, dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
-
-        # Obtain DBS global instance or set it as None
-        if  self.dasconfig.has_key('dbs'):
-            self.dbs_global = \
-                self.dasconfig['dbs'].get('dbs_global_instance', None)
-            self.dbs_instances = \
-                self.dasconfig['dbs'].get('dbs_instances', [])
-        else:
-            self.dbs_global = None
-            self.dbs_instances = []
 
         # Start DBS daemon
         self.dataset_daemon = config.get('dbs_daemon', False)
@@ -161,7 +153,7 @@ class DASWebService(DASWebManager):
     def dbs_daemon(self, config):
         """Start DBS daemon if it is requested via DAS configuration"""
         try:
-            main_dbs_url = self.dasconfig['dbs']['dbs_global_url']
+            main_dbs_url = self.dbs_url
             self.dbs_urls = []
             for inst in self.dbs_instances:
                 self.dbs_urls.append(\
@@ -199,6 +191,9 @@ class DASWebService(DASWebManager):
             self.gfs        = db_gridfs(self.dburi)
             self.daskeys.sort()
             self.dasmapping = self.dasmgr.mapping
+            self.dbs_url    = self.dasmapping.dbs_url()
+            self.dbs_global = self.dasmapping.dbs_global_instance()
+            self.dbs_instances = self.dasmapping.dbs_instances()
             self.dasmapping.init_presentationcache()
             self.colors = {}
             for system in self.dasmgr.systems:
@@ -213,6 +208,9 @@ class DASWebService(DASWebManager):
             print_exc(exc)
             self.dasmgr  = None
             self.reqmgr  = None
+            self.dbs_url = None
+            self.dbs_global = None
+            self.dbs_instances = []
             self.daskeys = []
             self.colors  = {}
             return

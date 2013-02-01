@@ -14,7 +14,7 @@ import re
 from pymongo import DESCENDING
 
 # DAS modules
-from DAS.utils.utils import gen2list
+from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.utils.logger import PrintManager
 
@@ -42,6 +42,8 @@ class DASMapping(object):
         self.diffkeycache = {}         # to be filled at run time
         self.apicache = {}             # to be filled at run time
         self.apiinfocache = {}         # to be filled at run time
+        self.dbs_global_url = None     # to be determined at run time
+        self.dbs_inst_names = None     # to be determined at run time
         self.init_notationcache()
         self.init_presentationcache()
 
@@ -164,6 +166,38 @@ class DASMapping(object):
     # ==================
     # Informational APIs
     # ==================
+    def dbs_global_instance(self):
+        "Retrive from mapping DB DBS url and extract DBS instance"
+        url = self.dbs_url()
+        return get_dbs_instance(url)
+
+    def dbs_url(self):
+        "Retrive from mapping DB DBS url"
+        if  self.dbs_global_url:
+            return self.dbs_global_url
+        url = None
+        for srv in self.list_systems():
+            if  srv.find('dbs') != -1:
+                apis = self.list_apis(srv)
+                url  = self.api_info(apis[0])['url']
+                url  = parse_dbs_url(srv, url)
+                self.dbs_global_url = url
+                return url
+        return url
+
+    def dbs_instances(self):
+        "Retrive from mapping DB DBS instances"
+        if  self.dbs_inst_names:
+            return self.dbs_inst_names
+        insts = []
+        for srv in self.list_systems():
+            if  srv.find('dbs') != -1:
+                apis  = self.list_apis(srv)
+                insts = self.api_info(apis[0])['instances']
+                self.dbs_inst_names = insts
+                return insts
+        return insts
+
     def list_systems(self):
         """
         List all DAS systems.

@@ -46,7 +46,7 @@ class DASAbstractService(object):
             self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
             if  config.has_key('dbs'):
-                self.dbs_global = config['dbs'].get('dbs_global_instance', None)
+                self.dbs_global = self.dasmapping.dbs_global_instance()
             else:
                 self.dbs_global = None
             dburi             = config['mongodb']['dburi']

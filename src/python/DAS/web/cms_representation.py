@@ -246,7 +246,7 @@ class CMSRepresentation(DASRepresentation):
         self.dasmgr     = dasmgr
         self.dasmapping = self.dasmgr.mapping
         if  config.has_key('dbs'):
-            self.dbs_global = config['dbs'].get('dbs_global_instance', None)
+            self.dbs_global = self.dasmapping.dbs_global_instance()
         else:
             self.dbs_global = None
         self.colors     = {}

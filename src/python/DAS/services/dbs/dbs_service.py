@@ -53,8 +53,8 @@ class DBSService(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.prim_instance = config['dbs']['dbs_global_instance']
-        self.instances = config['dbs']['dbs_instances']
+        self.prim_instance = self.dasmapping.dbs_global_instance()
+        self.instances = self.dasmapping.dbs_instances()
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 

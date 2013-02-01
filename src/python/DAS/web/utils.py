@@ -32,8 +32,6 @@ from   DAS.utils.das_config import das_readconfig
 from DAS.utils.regex import PAT_BLOCK, PAT_RUN, PAT_FILE, PAT_RELEASE
 from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
 
-DBS_INSTANCES = das_readconfig()['dbs']['dbs_instances']
-
 class HtmlString(object):
     """
     a class which embeds a string to be displayed in html mode (quote() will not modify it).
@@ -343,10 +341,6 @@ def checkargs(supported):
             if  checkarg(kwds, 'ahash') and len(str(kwds['ahash'])) != 32:
                 code  = web_code('Unsupported ahash value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'instance'):
-                if  kwds['instance'] not in DBS_INSTANCES:
-                    code  = web_code('Unsupported dbs instance')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
             data = func (self, *args, **kwds)
             return data
         wrapped_f.__doc__  = func.__doc__

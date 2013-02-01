@@ -21,6 +21,7 @@ import plistlib
 import calendar
 import datetime
 import traceback
+import itertools
 import xml.etree.cElementTree as ET
 from   itertools import groupby
 from   bson.objectid import ObjectId
@@ -34,6 +35,40 @@ from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
+
+def get_dbs_instance(url):
+    "Extract from DBS url its instance name"
+    if  url.find('cmsweb') != -1: # DBS3
+        return url.split('/')[4]
+    elif url.find('cmsdbsprod') != -1: # DBS2
+        return url.split('/')[3]
+    else:
+        msg = 'Unsupported DBS url=%s' % url
+        raise Exception(msg)
+
+def parse_dbs_url(dbs, url):
+    """
+    Parse and return main DBS url for given dbs system type and DBS url from
+    DAS maps
+    """
+    if  dbs == 'dbs3':
+        parts = url.split('/')
+        if  not parts[-1]:
+            parts = parts[:-1]
+        url = '%s//%s' % (parts[0], '/'.join(parts[2:-1]))
+    return url
+
+def convert2ranges(ilist):
+    """
+    Convert input list into list of ranges.
+    http://stackoverflow.com/questions/4628333/converting-a-list-of-integers-into-range-in-python
+    """
+    # right now just sort input list and return it
+    ilist.sort()
+    res = [[t[0][1], t[-1][1]] for t in \
+            (tuple(g[1]) for g in \
+                itertools.groupby(enumerate(ilist), lambda (i, x): i - x))]
+    return res
 
 def identical_data_records(old, row):
     """Checks if 2 DAS records are identical"""
