@@ -524,14 +524,14 @@ class DASMongocache(object):
                     if  row.has_key(key):
                         row = row[key]
                     else:
-                        err = 'Key "%s" not found' % fltr
+                        err = "Key %s not found" % fltr
                         raise Exception(err)
                 elif isinstance(row, list):
                     row = row[0]
                     if  row.has_key(key):
                         row = row[key]
                     else:
-                        err = 'Key "%s" not found' % fltr
+                        err = "Key %s not found" % fltr
                         raise Exception(err)
 
     def get_records(self, col, spec, fields, skeys, idx, limit, unique=False):
