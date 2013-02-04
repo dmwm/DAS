@@ -174,6 +174,13 @@ class DASQuery(object):
                     self._handle_dataset_slashes(key, val)
 
 
+    def update_filters(self):
+        "Update filters with spec keys of DAS query"
+        filters = self.mongo_query.get('filters', {}).get('grep', [])
+        for key in self.mongo_query.get('spec', {}).keys():
+            if  key not in filters:
+                filters.append(key)
+
     def update_attr(self):
         """
         setup DAS query attributes if they were supplied in input query
