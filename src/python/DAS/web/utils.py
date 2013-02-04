@@ -424,6 +424,8 @@ def json2html(idict, pad="", ref=None):
                 item = val[idx]
                 if  isinstance(item, dict):
                     sss += json2html(item, pad, ref=key)
+                elif isinstance(item, list):
+                    sss += str(item)
                 else:
                     if  isinstance(item, NoneType):
                         sss += """%s<code class="null">None</code>""" \
