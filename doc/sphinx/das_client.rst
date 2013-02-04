@@ -90,3 +90,96 @@ done as following
    # invoke DAS CLI call for given host/query
    data = get_data(host, query, idx, limit, debug)
 
+Please note, that aforementioned code snippet requires to load `das_client.py`
+which is distributed within CMSSW. Due to CMSSW install policies the version of
+`das_client.py` may be quite old. If you need up-to-date `das_client.py`
+functionality you can follow this recipe. The code below download
+`das_client.py` directly from cmsweb site, compile it and use it in your
+application:
+
+.. code::
+
+    import os
+    import json
+    import urllib2
+    import httplib
+    import tempfile
+
+    class HTTPSClientHdlr(urllib2.HTTPSHandler):
+        """
+        Simple HTTPS client authentication class based on provided
+        key/ca information
+        """
+        def __init__(self, key=None, cert=None, level=0):
+            if  level:
+                urllib2.HTTPSHandler.__init__(self, debuglevel=1)
+            else:
+                urllib2.HTTPSHandler.__init__(self)
+            self.key = key
+            self.cert = cert
+
+        def https_open(self, req):
+            """Open request method"""
+            #Rather than pass in a reference to a connection class, we pass in
+            # a reference to a function which, for all intents and purposes,
+            # will behave as a constructor
+            return self.do_open(self.get_connection, req)
+
+        def get_connection(self, host, timeout=300):
+            """Connection method"""
+            if  self.key:
+                return httplib.HTTPSConnection(host, key_file=self.key,
+                                                    cert_file=self.cert)
+            return httplib.HTTPSConnection(host)
+
+    class DASClient(object):
+        """DASClient object"""
+        def __init__(self, debug=0):
+            super(DASClient, self).__init__()
+            self.debug = debug
+            self.get_data = self.load_das_client()
+
+        def get_das_client(self, debug=0):
+            "Download das_client code from cmsweb"
+            url  = 'https://cmsweb.cern.ch/das/cli'
+            ckey = os.path.join(os.environ['HOME'], '.globus/userkey.pem')
+            cert = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
+            req  = urllib2.Request(url=url, headers={})
+            if  ckey and cert:
+                hdlr = HTTPSClientHdlr(ckey, cert, debug)
+            else:
+                hdlr = urllib2.HTTPHandler(debuglevel=debug)
+            opener = urllib2.build_opener(hdlr)
+            fdesc = opener.open(req)
+            cli = fdesc.read()
+            fdesc.close()
+            return cli
+
+        def load_das_client(self):
+            "Load DAS client module"
+            cli = self.get_das_client()
+            # compile python code as exec statement
+            obj   = compile(cli, '<string>', 'exec')
+            # define execution namespace
+            namespace = {}
+            # execute compiled python code in given namespace
+            exec obj in namespace
+            # return get_data object from namespace
+            return namespace['get_data']
+
+        def call(self, query, idx=0, limit=0, debug=0):
+            "Query DAS data-service"
+            host = 'https://cmsweb.cern.ch'
+            data = self.get_data(host, query, idx, limit, debug)
+            return json.loads(data)
+
+    if __name__ == '__main__':
+        das      = DASClient()
+        query    = "/ZMM*/*/*"
+        result   = das.call(query)
+        if  result['status'] == 'ok':
+            nres = result['nresults']
+            data = result['data']
+            print "Query=%s, #results=%s" % (query, nres)
+            print data
+
