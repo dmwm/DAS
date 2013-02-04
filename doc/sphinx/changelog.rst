@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - add update_filters method to DASQuery class to allow upgrade its filters
+    with spec keys; this is useful on web UI, when end-user specifies a filter
+    and we need to show primary key of the record
   - Wrote check_filters function to test applied filters in a given query and
     invoke it within nresults method, ticket #3958
   - Collapse lumi list from DBS3, ticket #3954
