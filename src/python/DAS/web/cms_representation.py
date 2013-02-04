@@ -376,6 +376,12 @@ class CMSRepresentation(DASRepresentation):
         old     = None
         dup     = False
         tstamp  = None
+        status  = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            print head
+            if  reason:
+                page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             if  not row:
                 continue
