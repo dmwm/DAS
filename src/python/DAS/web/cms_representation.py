@@ -409,7 +409,9 @@ class CMSRepresentation(DASRepresentation):
                     fltpage = self.fltpage(row)
                 try:
                     lkey = pkey.split('.')[0]
-                    pval = list(set(DotDict(row).get_values(pkey)))
+                    pval = [i for i in DotDict(row).get_values(pkey)]
+                    if  not isinstance(pval, list):
+                        pval = list(set(pval))
                     if  len(pval) == 1:
                         pval = pval[0]
                     if  pkey == 'run.run_number' or pkey == 'lumi.number':
@@ -484,7 +486,8 @@ class CMSRepresentation(DASRepresentation):
                         url  = 'https://cmstags.cern.ch/tc/py_getReleasesTags?'
                         url += 'diff=false&releases=%s' % urllib.quote(rel)
                         links.append('<a href="%s">Packages</a>' % url)
-                except:
+                except Exception as exc:
+                    print_exc(exc)
                     pval = 'N/A'
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
