@@ -834,6 +834,12 @@ class DASWebService(DASWebManager):
             else:
                 return content
         dasquery = content # returned content is valid DAS query
+        # update filters of DASQuery to include spec fields, this is useful
+        # for end-users since DAS web UI always shows primary key
+        # Please note, this is not done for CLI requests, where users
+        # are more explicit with their intention
+        dasquery.update_filters()
+
         status, _qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
             kwargs['dasquery'] = dasquery
