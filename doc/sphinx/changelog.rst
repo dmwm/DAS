@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - Wrote check_filters function to test applied filters in a given query and
+    invoke it within nresults method, ticket #3958
   - Collapse lumi list from DBS3, ticket #3954
   - Remove dbs url/instances from DAS configuration and read this information
     directly from DAS maps; fixed #3955
