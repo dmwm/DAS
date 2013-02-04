@@ -447,6 +447,7 @@ class DASMongocache(object):
             spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
         if  filter_cond:
             spec.update(filter_cond)
+        self.check_filters(col, spec, fields)
         if  dasquery.unique_filter:
             skeys = self.mongo_sort_keys(collection, dasquery)
             if  skeys:
@@ -510,6 +511,28 @@ class DASMongocache(object):
         for val in col.index_information().values():
             for idx in val['key']:
                 yield idx[0] # index name
+
+    def check_filters(self, col, spec, fields):
+        "Check that given filters can be applied to records found with spec"
+        if  not fields:
+            return
+        data = col.find_one(spec)
+        for fltr in fields:
+            row = dict(data)
+            for key in fltr.split('.'):
+                if  isinstance(row, dict):
+                    if  row.has_key(key):
+                        row = row[key]
+                    else:
+                        err = 'Key "%s" not found' % fltr
+                        raise Exception(err)
+                elif isinstance(row, list):
+                    row = row[0]
+                    if  row.has_key(key):
+                        row = row[key]
+                    else:
+                        err = 'Key "%s" not found' % fltr
+                        raise Exception(err)
 
     def get_records(self, col, spec, fields, skeys, idx, limit, unique=False):
         "Generator to get records from MongoDB. It correctly applies"
