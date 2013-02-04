@@ -42,6 +42,11 @@ class DASRepresentation(DASWebManager):
         page    = ''
         pad     = ''
         tstamp  = None
+        status  = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             if  not row:
                 continue
@@ -103,6 +108,11 @@ class DASRepresentation(DASWebManager):
         style  = 1
         tpage  = ""
         pkey   = None
+        status = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             rec  = []
             if  not pkey and row.has_key('das') and \
@@ -176,7 +186,12 @@ class DASRepresentation(DASWebManager):
         dasquery = head['dasquery']
         fields   = dasquery.mongo_query.get('fields', [])
         filters  = dasquery.filters
-        results = ""
+        results  = ""
+        status   = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                results += 'ERROR: %s' % reason
         for row in data:
             if  filters:
                 for flt in filters:

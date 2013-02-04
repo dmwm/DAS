@@ -379,7 +379,6 @@ class CMSRepresentation(DASRepresentation):
         status  = head.get('status', None)
         if  status == 'fail':
             reason = head.get('reason', '')
-            print head
             if  reason:
                 page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
@@ -561,6 +560,11 @@ class CMSRepresentation(DASRepresentation):
         style   = 1
         tpage   = ""
         pkey    = None
+        status  = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             if  not fltbar:
                 fltbar = self.fltpage(row)
@@ -626,6 +630,11 @@ class CMSRepresentation(DASRepresentation):
                         f.find('=') == -1 and f.find('<') == -1 and \
                         f.find('>') == -1]
         results  = ""
+        status   = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                results += 'ERROR: %s' % reason
         for row in data:
             if  filters:
                 for flt in filters:
