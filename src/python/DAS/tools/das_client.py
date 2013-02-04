@@ -284,7 +284,6 @@ def main():
     ckey    = opts.ckey
     cert    = opts.cert
     if  not query:
-#        raise Exception('You must provide input query')
         print 'Input query is missing'
         sys.exit(EX_USAGE)
     data    = get_data(host, query, idx, limit, debug, thr, ckey, cert)
