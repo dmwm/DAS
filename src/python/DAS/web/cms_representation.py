@@ -249,7 +249,7 @@ class CMSRepresentation(DASRepresentation):
             self.dbs_global = self.dasmapping.dbs_global_instance()
         else:
             self.dbs_global = None
-        self.colors     = {}
+        self.colors = {}
         for system in self.dasmgr.systems:
             self.colors[system] = gen_color(system)
 
@@ -330,10 +330,11 @@ class CMSRepresentation(DASRepresentation):
         page = ""
         if  not self.colors:
             return page
-        pads = "padding-left:7px; padding-right:7px"
+        pads = "padding:2px"
         for system in slist:
-            page += '<span style="background-color:%s;%s">&nbsp;</span>' \
-                % (self.colors[system], pads)
+            bkg, col = self.colors[system]
+            page += '<span style="background-color:%s;color:%s;%s">%s</span>' \
+                % (bkg, col, pads, system)
         return page
 
     def filter_bar(self, dasquery):
@@ -367,16 +368,14 @@ class CMSRepresentation(DASRepresentation):
         inst     = dasquery.instance
         filters  = dasquery.filters
         main     = self.pagination(total, incache, kwargs)
-        if  main.find('das_noresults') == -1:
-            main += self.templatepage('das_colors', colors=self.colors)
-        style   = 'white'
-        rowkeys = []
-        fltpage = self.filter_bar(dasquery)
-        page    = ''
-        old     = None
-        dup     = False
-        tstamp  = None
-        status  = head.get('status', None)
+        style    = 'white'
+        rowkeys  = []
+        fltpage  = self.filter_bar(dasquery)
+        page     = ''
+        old      = None
+        dup      = False
+        tstamp   = None
+        status   = head.get('status', None)
         if  status == 'fail':
             reason = head.get('reason', '')
             if  reason:
@@ -410,7 +409,10 @@ class CMSRepresentation(DASRepresentation):
                 try:
                     lkey = pkey.split('.')[0]
                     pval = [i for i in DotDict(row).get_values(pkey)]
-                    if  not isinstance(pval, list):
+                    if  isinstance(pval, list):
+                        if  not isinstance(pval[0], list):
+                            pval = list(set(pval))
+                    else:
                         pval = list(set(pval))
                     if  len(pval) == 1:
                         pval = pval[0]
