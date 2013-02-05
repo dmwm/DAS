@@ -410,7 +410,7 @@ class CMSRepresentation(DASRepresentation):
                     lkey = pkey.split('.')[0]
                     pval = [i for i in DotDict(row).get_values(pkey)]
                     if  isinstance(pval, list):
-                        if  not isinstance(pval[0], list):
+                        if  pval and not isinstance(pval[0], list):
                             pval = list(set(pval))
                     else:
                         pval = list(set(pval))
