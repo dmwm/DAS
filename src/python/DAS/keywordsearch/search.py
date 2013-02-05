@@ -567,8 +567,45 @@ def DASQL_2_NL(dasql_tuple):
     return 'RETRIEVE %(result)s WHERE %(filters)s' % locals()
 
 
-def tokenizer():
+def tokenize(query):
+    """
+    tokenizes the query retaining the phrases in brackets together
+    it also tries to group "word operator word" sequences together, such as
 
+    "number of events">10 or dataset=/Zmm/*/raw-reco
+
+    so it could be used for further processing.
+
+    special characters currently allowed in data values include: _*/-
+
+    For example:
+
+    >>> tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10 "number of events">10 /Zmm*/*/raw-reco')
+    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'nevents>10', '"number of events">10', '/Zmm*/*/raw-reco']
+
+    """
+    #TODO: if needed we may add support for parentesis e.g. sum(number of events)
+    from nltk.internals import  convert_regexp_to_nongrouping
+    query = cleanup_query(query)
+    # first remove extra spaces
+    #operators = r'[=><]{1,2}'
+    operators = r'(=|>=|<=|<|>)'
+    word = r'[a-zA-Z0-9_\-*/]+'
+    #word =
+    regexp = \
+        r"""
+        "[^"]+" %(operators)s %(word)s | # word in brackets plus operators
+        "[^"]+"  |  # word in brackets
+        %(word)s %(operators)s %(word)s | # word op word
+        %(word)s | # word
+        \S+" # any other non-whitespace sequence
+        """ % locals()
+    regexp = convert_regexp_to_nongrouping(regexp)
+    regexp = re.compile(regexp, re.VERBOSE)
+    # re.findall(regexp,  'file dataset=dataset lumi=20853 nevents>10 "number ofevents">10 /Zmm*/*/raw-reco')
+    return re.findall(regexp,  query)
+
+tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10 "number of events">10 /Zmm*/*/raw-reco')
 
 def cleanup_query(query):
     """
@@ -606,13 +643,10 @@ def cleanup_query(query):
         r'\s*<\s*': '<',
     }
     # TODO: compile regexps
-
     #TODO: this is useful for one term keywords, but more complex for multi-keyword ones (which are present for post-filters on API results)
-
     # TODO: shall we do chunking before anything else? but it is not reliable
     for regexp, repl in replacements.items():
         query = re.sub(regexp, repl, query)
-
     return query
 
 
