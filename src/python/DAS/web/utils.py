@@ -154,9 +154,33 @@ def gen_color(system):
     """
     Generate color for a system, use hash function for that
     """
-    keyhash = hashlib.md5()
-    keyhash.update(system)
-    return '#%s' % keyhash.hexdigest()[:6]
+    if  system == 'dbs':
+        bkg, col = '#008B8B', 'white'
+    elif system == 'dbs3':
+        bkg, col = '#006400', 'white'
+    elif system == 'phedex':
+        bkg, col = '#00BFBF', 'black'
+    elif system == 'sitedb2':
+        bkg, col = '#6495ED', 'black'
+    elif system == 'runregistry':
+        bkg, col = '#FF8C00', 'black'
+    elif system == 'dashboard':
+        bkg, col = '#DAA520', 'black'
+    elif system == 'conddb':
+        bkg, col = '#FFD700', 'black'
+    elif system == 'reqmgr':
+        bkg, col = '#696969', 'white'
+    elif system == 'combined':
+        bkg, col = '#FF69B4', 'black'
+    elif system == 'tier0':
+        bkg, col = '#AFEEEE', 'black'
+    elif system == 'monitor':
+        bkg, col = '#FF4500', 'black'
+    else:
+        keyhash = hashlib.md5()
+        keyhash.update(system)
+        bkg, col = '#%s' % keyhash.hexdigest()[:6], 'white'
+    return bkg, col
 
 def yui_name(name):
     """
