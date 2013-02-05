@@ -161,7 +161,7 @@ def gen_color(system):
     elif system == 'phedex':
         bkg, col = '#00BFBF', 'black'
     elif system == 'sitedb2':
-        bkg, col = '#6495ED', 'black'
+        bkg, col = '#6495ED', 'white'
     elif system == 'runregistry':
         bkg, col = '#FF8C00', 'black'
     elif system == 'dashboard':
@@ -171,7 +171,7 @@ def gen_color(system):
     elif system == 'reqmgr':
         bkg, col = '#696969', 'white'
     elif system == 'combined':
-        bkg, col = '#FF69B4', 'black'
+        bkg, col = '#7B68EE', 'white'
     elif system == 'tier0':
         bkg, col = '#AFEEEE', 'black'
     elif system == 'monitor':
