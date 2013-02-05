@@ -3,8 +3,8 @@
 #set id = $quote($id)
 #set conflict = $quote($conflict)
 <!-- das_row.tmpl -->
-Sources: $systems <a href="javascript:ShowTag('id_$id')">show</a>,
-<a href="javascript:HideTag('id_$id')">hide</a>
+Sources: $systems
+<a href="javascript:ToggleTag('id_$id', 'link_$id')" id="link_$id">show</a>
 #if  $conflict
 <span class="box_red"><b>conflict:</b> $conflict</span>
 #end if
