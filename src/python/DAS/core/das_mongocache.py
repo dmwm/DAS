@@ -517,6 +517,8 @@ class DASMongocache(object):
         if  not fields:
             return
         data = col.find_one(spec)
+        if  not data:
+            return
         for fltr in fields:
             row = dict(data)
             for key in fltr.split('.'):
