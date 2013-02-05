@@ -1,7 +1,7 @@
 /*
  * DAS specific utilities
  * Author: Valentin Kuznetsov, 2009
- */ 
+ */
 function updateInput(myinput, dbs_global_inst) {
    if  (myinput) updateTag('input', myinput);
    else updateTag('input', '');
@@ -50,9 +50,27 @@ function FlipTag(tag) {
     var id=document.getElementById(tag);
     if (id) {
         if  (id.className == "show") {
-            id.className="hide"; 
+            id.className="hide";
         } else {
-            id.className="show"; 
+            id.className="show";
+        }
+    }
+}
+function ToggleTag(tag, link_tag) {
+    var id=document.getElementById(tag);
+    if (id) {
+        if  (id.className == "show") {
+            id.className="hide";
+        } else {
+            id.className="show";
+        }
+    }
+    var lid=document.getElementById(link_tag);
+    if (lid) {
+        if  (lid.innerHTML == "show") {
+            lid.innerHTML="hide";
+        } else {
+            lid.innerHTML="show";
         }
     }
 }
