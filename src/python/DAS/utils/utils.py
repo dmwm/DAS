@@ -261,8 +261,12 @@ def size_format(uinput):
     except Exception as exc:
         print_exc(exc)
         return "N/A"
-    base = 1024. # power of 10, or use 1024. for power of 2
-    for xxx in ['', 'KB', 'MB', 'GB', 'TB', 'PB']:
+    base = 1000. # CMS convention to use power of 10
+    if  base == 1000.: # power of 10
+        xlist = ['', 'KB', 'MB', 'GB', 'TB', 'PB']
+    elif base == 1024.: # power of 2
+        xlist = ['', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
+    for xxx in xlist:
         if  num < base: 
             return "%3.1f%s" % (num, xxx)
         num /= base
