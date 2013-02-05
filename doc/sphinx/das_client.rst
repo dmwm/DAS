@@ -183,3 +183,65 @@ application:
             print "Query=%s, #results=%s" % (query, nres)
             print data
 
+Here we provide a simple example of how to use das_client to find dataset
+summary information.
+
+.. code::
+
+    # system modules
+    import os
+    import sys
+    import json
+
+    from das_client import get_data
+
+    def drop_das_fields(row):
+        "Drop DAS specific headers in given row"
+        for key in ['das', 'das_id', 'cache_id', 'qhash']:
+            if  row.has_key(key):
+                del row[key]
+
+    def get_info(query):
+        "Helper function to get information for given query"
+        host    = 'https://cmsweb.cern.ch'
+        idx     = 0
+        limit   = 0
+        debug   = False
+        dasjson = json.loads(get_data(host, query, idx, limit, debug))
+        status  = dasjson.get('status')
+        if  status == 'ok':
+            data = dasjson.get('data')
+            return data
+
+    def get_datasets(query):
+        "Helper function to get list of datasets for given query pattern"
+        for row in get_info(query):
+            for dataset in row['dataset']:
+                yield dataset['name']
+
+    def get_summary(query):
+        """
+        Helper function to get dataset summary information either for a single
+        dataset or dataset pattern
+        """
+        if  query.find('*') == -1:
+            print "\n### query", query
+            data = get_info(query)
+            for row in data:
+                drop_das_fields(row)
+                print row
+        else:
+            for dataset in get_datasets(query):
+                query = "dataset=%s" % dataset
+                data = get_info(query)
+                print "\n### dataset", dataset
+                for row in data:
+                    drop_das_fields(row)
+                    print row
+
+    if __name__ == '__main__':
+        # query dataset pattern
+        query = "dataset=/ZMM*/*/*"
+        # query specific dataset in certain DBS instance
+        query = "dataset=/8TeV_T2tt_2j_semilepts_200_75_FSim526_Summer12_minus_v2/alkaloge-MG154_START52_V9_v2/USER instance=cms_dbs_ph_analysis_02"
+        get_summary(query)
