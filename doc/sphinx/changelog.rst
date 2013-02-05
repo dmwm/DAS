@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - Switch from explicit show|hide links to dynamic show/hide which
+    switch via ToggleTag JS function
   - Adjust web UI with Eric's suggestions to show service names in color
     boxes; remove DAS color map line in result output
   - Revert to base 10 in size_format
