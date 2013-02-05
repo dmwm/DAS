@@ -142,4 +142,6 @@ class DASKeyLearning(object):
             return True
         else:
             return False
-            
+
+    def list_members(self):
+        return self.col.find({'member': {'$exists': 'True'}})

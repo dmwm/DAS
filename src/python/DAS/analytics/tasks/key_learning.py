@@ -6,7 +6,7 @@ import collections
 from bson.objectid import ObjectId
 from DAS.utils.logger import PrintManager
 
-class KeyLearning(object):
+class key_learning(object):
     """
     This is the asynchronous part of the key-learning system, intended
     to run probably not much more than daily once the key learning DB is
@@ -27,7 +27,7 @@ class KeyLearning(object):
     def __init__(self, **kwargs):
         self.logger = PrintManager('KeyLearning', kwargs.get('verbose', 0))
         self.das = kwargs['DAS']
-        self.redundancy = kwargs.get('redundancy', 2)
+        self.redundancy = kwargs.get('redundancy', 10)
         
         
     def __call__(self):
@@ -60,6 +60,15 @@ class KeyLearning(object):
                     else:
                         self.logger.warning(\
                         "no record found for das_id=%s" % das_id)
+
+
+        from pprint import pprint
+        print 'keylearning collection:', self.das.keylearning.col
+        print 'result attributes (all):'
+        for r  in self.das.keylearning.list_members():
+            #pprint(r)
+            result_type = self.das.mapping.primary_key(r['system'], r['urn'])
+            print r.get('keys', ''), '-->', result_type, ':', ', '.join([m for m in r.get('members', [])])
         return {}
     
     def process_query_record(self, doc):
@@ -71,11 +80,26 @@ class KeyLearning(object):
         systems = doc['das']['system']
         urns = doc['das']['urn']
         
-        result = self.das.rawcache.find_records(das_id)        
-        
-        if len(systems)==len(urns) and len(systems)==result.count():
+        result = self.das.rawcache.find_records(das_id)
+
+        print 'in process_query_record. (das_id, systems, urns)=', (das_id, systems, urns)
+        print 'result count=', result.count(), '~= systems=', len(systems)
+        print 'len(systems)=', len(systems), '~= len(urns)', len(urns)
+
+        from pprint import pprint
+
+        print 'doc:'
+        pprint(doc)
+        result_count = result.count()
+        result = [r for r in result]
+        print 'result:'
+        pprint(result)
+        print '-----------------------------------'
+        # TODO: it seems these conditions are non-sense!!!
+        if len(systems)==len(urns) and len(systems)==1:
             for i, record in enumerate(result):
-                self.process_document(systems[i], urns[i], record)
+                self.process_document(systems[0], urns[0], record)
+
         else:
             self.logger.warning("got inconsistent system/urn/das_id length")
             
