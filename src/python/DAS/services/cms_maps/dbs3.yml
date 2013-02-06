@@ -374,6 +374,7 @@ notations : [
     {"api_output": "file.file_type", "rec_key": "file.type", "api": ""},
     {"api_output": "file.block_name", "rec_key": "file.block.name", "api": ""},
     {"api_output": "file_size", "rec_key": "size", "api": "files"},
+    {"api_output": "file_size", "rec_key": "size", "api": "filesummaries"},
     {"api_output": "file_size", "rec_key": "size", "api": "files_via_dataset"},
     {"api_output": "file_size", "rec_key": "size", "api": "files_via_block"},
     {"api_output": "file.file_size", "rec_key": "file.size", "api": ""},
