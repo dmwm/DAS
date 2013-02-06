@@ -9,14 +9,18 @@ DAS mapping DB module
 __author__ = "Valentin Kuznetsov"
 
 import re
+import threading
 
 # monogo db modules
 from pymongo import DESCENDING
+from pymongo.errors import ConnectionFailure
 
 # DAS modules
+from DAS.utils.utils import dastimestamp, print_exc
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
-from DAS.utils.das_db import db_connection, create_indexes
+from DAS.utils.das_db import db_connection, create_indexes, db_monitor
 from DAS.utils.logger import PrintManager
+from DAS.utils.thread import start_new_thread
 
 class DASMapping(object):
     """
@@ -33,7 +37,11 @@ class DASMapping(object):
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         
-        self.create_db()
+        self.init()
+
+        # Monitoring thread which performs auto-reconnection to MongoDB
+        thname = 'mappingdb_monitor'
+        start_new_thread(thname, db_monitor, (self.dburi, self.init))
 
         self.keymap = {}               # to be filled at run time
         self.presentationcache = {}    # to be filled at run time
@@ -84,13 +92,22 @@ class DASMapping(object):
                         self.reverse_presentation[row['ui']] = \
                                 {daskey : {'mapkey': row['das'], 'link': link}}
 
-    def create_db(self):
+    def init(self):
         """
         Establish connection to MongoDB back-end and create DB.
         """
-        self.conn = db_connection(self.dburi)
-        self.db   = self.conn[self.dbname]
-        self.col  = self.db[self.colname]
+        try:
+            self.conn = db_connection(self.dburi)
+            self.dbc  = self.conn[self.dbname]
+            self.col  = self.dbc[self.colname]
+        except ConnectionFailure as _err:
+            tstamp = dastimestamp('')
+            thread = threading.current_thread()
+            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                    % (thread.name, thread.ident, tstamp)
+        except Exception as exc:
+            print_exc(exc)
+            self.col = None
 
     def delete_db(self):
         """
@@ -102,7 +119,7 @@ class DASMapping(object):
         """
         Delete mapping DB collection in MongoDB.
         """
-        self.db.drop_collection(self.colname)
+        self.dbc.drop_collection(self.colname)
 
     def check_maps(self):
         """
@@ -337,7 +354,8 @@ class DASMapping(object):
         mapkeys = []
         for row in self.col.find(spec, ['das_map']):
             for kmap in row['das_map']:
-                if  kmap['das_key'] == daskey and kmap['rec_key'] not in mapkeys:
+                if  kmap['das_key'] == daskey and \
+                    kmap['rec_key'] not in mapkeys:
                     mapkeys.append(kmap['rec_key'])
         self.keymap[daskey] = mapkeys
         return self.keymap[daskey]
@@ -361,7 +379,7 @@ class DASMapping(object):
         it against pattern in DB.
         """
         if  not value:
-            cond   = { 'system' : system, 'das_map.rec_key' : das_map, 'urn': urn }
+            cond   = {'system':system, 'das_map.rec_key':das_map, 'urn':urn}
             return self.col.find(cond).count()
         cond = { 'system' : system, 'das_map.rec_key' : das_map, 'urn': urn }
         for row in self.col.find(cond, ['das_map']):
