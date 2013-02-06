@@ -23,7 +23,7 @@ from pymongo import ASCENDING
 import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
-from DAS.web.utils import db_monitor
+from DAS.utils.das_db import db_monitor
 from DAS.utils.utils import get_key_cert, genkey
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
