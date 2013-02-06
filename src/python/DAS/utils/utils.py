@@ -38,12 +38,14 @@ import DAS.utils.jsonwrapper as json
 
 def get_dbs_instance(url):
     "Extract from DBS url its instance name"
+    msg = 'Unsupported DBS url=%s' % url
+    if  not url:
+        raise Exception(msg)
     if  url.find('cmsweb') != -1: # DBS3
         return url.split('/')[4]
     elif url.find('cmsdbsprod') != -1: # DBS2
         return url.split('/')[3]
     else:
-        msg = 'Unsupported DBS url=%s' % url
         raise Exception(msg)
 
 def parse_dbs_url(dbs, url):
@@ -1374,77 +1376,90 @@ def aggregator_helper(results, expire):
     DAS aggregator helper which iterates over all records in results set and
     perform aggregation of records on the primary_key of the record.
     """
-    def helper(expire, prim_key, system, cond_keys, tstamp, instance):
+    def helper(das_id, expire, pkey, system, api, ckeys, tstamp, inst):
         "Construct a dict out of provided values"
-        rdict = dict(expire=expire, primary_key=prim_key, system=system,
-                        condition_keys=cond_keys, ts=tstamp, instance=instance)
-        return dict(das=rdict)
+        rdict = dict(expire=expire, primary_key=pkey, system=system,
+                api=api, condition_keys=ckeys, ts=tstamp, instance=inst)
+        return dict(das=rdict, das_id=das_id)
 
-    record    = results.next()
-    prim_key  = record['das']['primary_key']
-    cond_keys = record['das']['condition_keys']
-    system    = record['das']['system']
-    instance  = record['das'].get('instance', None)
-    tstamp    = time.time()
+    record  = results.next()
+    pkey    = record['das']['primary_key']
+    ckeys   = record['das']['condition_keys']
+    system  = record['das']['system']
+    api     = record['das']['api']
+    das_id  = record['das_id']
+    inst    = record['das'].get('instance', None)
+    tstamp  = time.time()
     record.pop('das')
     update = 1
     row = {}
     for row in results:
-        row_prim_key  = row['das']['primary_key']
-        row_cond_keys = row['das']['condition_keys']
-        row_system    = row['das']['system']
+        row_pkey   = row['das']['primary_key']
+        row_ckeys  = row['das']['condition_keys']
+        row_system = row['das']['system']
+        row_api    = row['das']['api']
+        row_das_id = row['das_id']
         row.pop('das')
-        if  row_prim_key != prim_key:
-            record.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+        if  row_pkey != pkey:
+            args   = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            record.update(helper(*args))
             yield record
-            prim_key = row_prim_key
+            pkey   = row_pkey
             record = row
             system = row_system
-            cond_keys = list( set(cond_keys+row_cond_keys) )
+            api    = row_api
+            das_id = row_das_id
+            ckeys  = list( set(ckeys+row_ckeys) )
             continue
         try:
-            val1 = dict_value(record, prim_key)
+            val1 = dict_value(record, pkey)
         except:
-            record.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            record.update(helper(*args))
             yield record
             record = dict(row)
             system = row_system
-            cond_keys = list( set(cond_keys+row_cond_keys) )
+            api    = row_api
+            das_id = row_das_id
+            ckeys  = list( set(ckeys+row_ckeys) )
             update = 0
             continue
         try:
-            val2 = dict_value(row, prim_key)
+            val2 = dict_value(row, pkey)
         except:
-            row.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            row.update(helper(*args))
             yield row
             record = dict(row)
             system = row_system
-            cond_keys = list( set(cond_keys+row_cond_keys) )
+            api    = row_api
+            das_id = row_das_id
+            ckeys  = list( set(ckeys+row_ckeys) )
             update = 0
             continue
         if  val1 == val2:
             merge_dict(record, row)
-            system = list(set(system) | set(row_system))
-            cond_keys = list( set(cond_keys+row_cond_keys) )
-            update = 1
+            system += row_system
+            api    += row_api
+            das_id += row_das_id
+            ckeys   = list( set(ckeys+row_ckeys) )
+            update  = 1
         else:
-            record.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            record.update(helper(*args))
             yield record
             record = dict(row)
             system = row_system
-            cond_keys = list( set(cond_keys+row_cond_keys) )
+            api    = row_api
+            das_id = row_das_id
+            ckeys  = list( set(ckeys+row_ckeys) )
             update = 0
+    args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
     if  update: # check if we did update for last row
-        record.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+        record.update(helper(*args))
         yield record
     else:
-        row.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+        row.update(helper(*args))
         yield row
 
 def das_diff(rows, compare_keys):
