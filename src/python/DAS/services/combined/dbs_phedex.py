@@ -112,6 +112,9 @@ def dataset_info(urls, datasetdict, verbose=0):
     headers  = {'Accept':'application/json;text/json'}
     data, _  = getdata(url, params, headers, post=True, \
             ckey=CKEY, cert=CERT, verbose=verbose)
+    if  isinstance(data, basestring): # no response
+        dastimestamp('DBS_PHEDEX ERROR: %s' % data)
+        return
     jsondict = json.load(data)
     data.close()
     for row in jsondict['phedex']['block']:
