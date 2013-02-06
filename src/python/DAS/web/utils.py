@@ -195,25 +195,6 @@ def yui2das(name):
     """
     return quote(str(name.replace('__', '.')))
 
-def db_monitor(uri, func, sleep=5):
-    """
-    Check status of MongoDB connection. Invoke provided function upon 
-    successfull connection.
-    """
-    conn = db_connection(uri)
-    while True:
-        if  not conn or not is_db_alive(uri):
-            try:
-                conn = db_connection(uri)
-                func()
-                if  conn:
-                    print "### db_monitor re-established connection %s" % conn
-                else:
-                    print "### db_monitor, lost connection"
-            except:
-                pass
-        time.sleep(sleep)
-
 def dascore_monitor(cdict, func, sleep=5):
     """
     Check status of DASCore and MongoDB connection for provided
