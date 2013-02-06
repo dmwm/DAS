@@ -331,7 +331,9 @@ class CMSRepresentation(DASRepresentation):
         if  not self.colors:
             return page
         pads = "padding:2px"
-        for system in slist:
+        # at web UI we don't need to list all systems, we'll only
+        # take their unique set
+        for system in list(set(slist)):
             bkg, col = self.colors[system]
             page += '<span style="background-color:%s;color:%s;%s">%s</span>' \
                 % (bkg, col, pads, system)
