@@ -11,7 +11,7 @@ import cherrypy
 # DAS modules
 from   DAS.utils.url_utils import getdata_urllib as getdata
 from   DAS.web.tools import exposejson
-from   DAS.web.utils import db_monitor
+from   DAS.utils.das_db import db_monitor
 from   DAS.utils.utils import qlxml_parser, convert2ranges
 from   DAS.utils.thread import start_new_thread
 from   DAS.utils.utils import get_key_cert

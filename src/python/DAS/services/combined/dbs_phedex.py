@@ -16,14 +16,12 @@ from   pymongo.errors import AutoReconnect, ConnectionFailure
 from   bson.code import Code
 
 # DAS modules
-from   DAS.utils.das_db import db_connection, create_indexes
+from   DAS.utils.das_db import db_connection, create_indexes, db_monitor
 from   DAS.utils.url_utils import getdata
 from   DAS.web.tools import exposejson
-from   DAS.web.utils import db_monitor
 from   DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from   DAS.utils.utils import get_key_cert
 from   DAS.utils.thread import start_new_thread
-#from   DAS.utils.thread import set_thread_name, start_new_thread
 from   DAS.core.das_mapping_db import DASMapping
 from   DAS.utils.das_config import das_readconfig
 import DAS.utils.jsonwrapper as json
