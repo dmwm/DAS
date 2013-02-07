@@ -654,7 +654,8 @@ class DASWebService(DASWebManager):
             head.update({'status': 'fail', 'reason': str(exc),
                          'ctime': time.time()-time0, 'dasquery': dasquery})
             data = []
-        head.update({'incache':self.dasmgr.incache(dasquery, coll='cache')})
+        head.update({'incache':self.dasmgr.incache(dasquery, coll='cache'),
+                     'apilist':self.dasmgr.apilist(dasquery)})
         return head, data
 
     def busy(self):

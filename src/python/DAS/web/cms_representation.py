@@ -363,13 +363,14 @@ class CMSRepresentation(DASRepresentation):
         uinput   = kwargs.get('input', '')
         total    = head.get('nresults', 0)
         incache  = head.get('incache')
+        apilist  = head.get('apilist')
         dasquery = head.get('dasquery', None)
         if  not dasquery:
             inst     = head.get('instance', self.dbs_global)
             dasquery = DASQuery(uinput, instance=inst)
         inst     = dasquery.instance
         filters  = dasquery.filters
-        main     = self.pagination(total, incache, kwargs)
+        main     = self.pagination(total, incache, apilist, kwargs)
         style    = 'white'
         rowkeys  = []
         fltpage  = self.filter_bar(dasquery)

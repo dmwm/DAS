@@ -37,7 +37,8 @@ class DASRepresentation(DASWebManager):
         kwargs  = head.get('args')
         total   = head.get('nresults', 0)
         incache = head.get('incache')
-        main    = self.pagination(total, incache, kwargs)
+        apilist = head.get('apilist')
+        main    = self.pagination(total, incache, apilist, kwargs)
         style   = 'white'
         page    = ''
         pad     = ''
@@ -150,7 +151,7 @@ class DASRepresentation(DASWebManager):
                 % head['ctime']
         return page
 
-    def pagination(self, total, incache, kwds):
+    def pagination(self, total, incache, apilist, kwds):
         """
         Construct pagination part of the page. It accepts total as a
         total number of result as well as dict of kwargs which
@@ -174,8 +175,12 @@ class DASRepresentation(DASWebManager):
             page += self.templatepage('das_pagination', \
                 nrows=total, idx=idx, limit=limit, url=url)
         else:
-            page = self.templatepage('das_noresults', query=uinput,
-                        incache=incache)
+            # distinguish the case when no results vs no API calls
+            if  apilist == ['das_core']: # only DAS core call
+                page = self.templatepage('das_noapis', query=uinput)
+            else:
+                page = self.templatepage('das_noresults', query=uinput,
+                            incache=incache)
         return page
 
     @exposetext
