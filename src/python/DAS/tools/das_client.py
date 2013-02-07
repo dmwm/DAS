@@ -109,6 +109,9 @@ class DASOptionParser:
         msg = 'drop DAS headers'
         self.parser.add_option("--das-headers", action="store_true",
                                default=False, dest="das_headers", help=msg)
+        msg = 'specify power base for size_format, default is 10 (can be 2)'
+        self.parser.add_option("--base", action="store", type="int",
+                               default=10, dest="base", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
@@ -121,7 +124,7 @@ def convert_time(val):
         return time.strftime('%d/%b/%Y_%H:%M:%S_GMT', time.gmtime(val))
     return val
 
-def size_format(uinput):
+def size_format(uinput, ibase=10):
     """
     Format file size utility, it converts file size into KB, MB, GB, TB, PB units
     """
@@ -129,8 +132,13 @@ def size_format(uinput):
         num = float(uinput)
     except Exception as _exc:
         return uinput
-    base = 1000. # power of 10, or use 1024. for power of 2
-    for xxx in ['', 'KB', 'MB', 'GB', 'TB', 'PB']:
+    if  ibase == 2.: # power of 2
+        base  = 1024.
+        xlist = ['', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
+    else: # default base is 10
+        base  = 1000.
+        xlist = ['', 'KB', 'MB', 'GB', 'TB', 'PB']
+    for xxx in xlist:
         if  num < base:
             return "%3.1f%s" % (num, xxx)
         num /= base
@@ -165,7 +173,7 @@ def unique_filter(rows):
         old_row = row
     yield row
 
-def get_value(data, filters):
+def get_value(data, filters, base=10):
     """Filter data from a row for given list of filters"""
     for ftr in filters:
         if  ftr.find('>') != -1 or ftr.find('<') != -1 or ftr.find('=') != -1:
@@ -177,7 +185,7 @@ def get_value(data, filters):
                 if  key == 'creation_time':
                     row = convert_time(row[key])
                 elif  key == 'size':
-                    row = size_format(row[key])
+                    row = size_format(row[key], base)
                 else:
                     row = row[key]
             if  isinstance(row, list):
@@ -186,7 +194,7 @@ def get_value(data, filters):
                         if  key == 'creation_time':
                             row = convert_time(item[key])
                         elif  key == 'size':
-                            row = size_format(item[key])
+                            row = size_format(item[key], base)
                         else:
                             row = item[key]
                         values.add(row)
@@ -299,6 +307,7 @@ def main():
     ckey    = opts.ckey
     cert    = opts.cert
     das_h   = opts.das_headers
+    base    = opts.base
     if  not query:
         print 'Input query is missing'
         sys.exit(EX_USAGE)
@@ -344,13 +353,13 @@ def main():
         if  filters and not aggregators:
             data = jsondict['data']
             if  isinstance(data, dict):
-                rows = [r for r in get_value(data, filters)]
+                rows = [r for r in get_value(data, filters, base)]
                 print ' '.join(rows)
             elif isinstance(data, list):
                 if  unique:
                     data = unique_filter(data)
                 for row in data:
-                    rows = [r for r in get_value(row, filters)]
+                    rows = [r for r in get_value(row, filters, base)]
                     print ' '.join(rows)
             else:
                 print jsondict
@@ -361,7 +370,7 @@ def main():
             for row in data:
                 if  row['key'].find('size') != -1 and \
                     row['function'] == 'sum':
-                    val = size_format(row['result']['value'])
+                    val = size_format(row['result']['value'], base)
                 else:
                     val = row['result']['value']
                 print '%s(%s)=%s' \
