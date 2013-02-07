@@ -549,22 +549,29 @@ class DASMongocache(object):
         data = col.find_one(spec)
         if  not data:
             return
+        found = False
         for fltr in fields:
             row = dict(data)
             for key in fltr.split('.'):
                 if  isinstance(row, dict):
                     if  row.has_key(key):
                         row = row[key]
+                        found = True
                     else:
+                        found = False
                         err = "Key %s not found" % fltr
                         raise Exception(err)
                 elif isinstance(row, list):
-                    row = row[0]
-                    if  row.has_key(key):
-                        row = row[key]
-                    else:
-                        err = "Key %s not found" % fltr
-                        raise Exception(err)
+                    for row in list(row):
+                        if  row.has_key(key):
+                            row = row[key]
+                            found = True
+                            break
+                        else:
+                            found = False
+        if  not found:
+            err = "Key %s not found" % fltr
+            raise Exception(err)
 
     def get_records(self, col, spec, fields, skeys, idx, limit, unique=False):
         "Generator to get records from MongoDB. It correctly applies"
