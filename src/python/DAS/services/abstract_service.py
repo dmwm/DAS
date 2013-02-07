@@ -184,6 +184,7 @@ class DASAbstractService(object):
         self.logger.debug(msg)
         header  = dasheader(self.name, dasquery, expire, api, url, ctime)
         header['lookup_keys'] = self.lookup_keys(api)
+        header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
 
         # check that apicall record is present in analytics DB
         self.analytics.insert_apicall(self.name, dasquery.mongo_query,
