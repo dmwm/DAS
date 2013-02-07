@@ -88,7 +88,16 @@ done as following
    from das_client import get_data
 
    # invoke DAS CLI call for given host/query
-   data = get_data(host, query, idx, limit, debug)
+   # host: hostname of DAS server, e.g. https://cmsweb.cern.ch
+   # query: DAS query, e.g. dataset=/ZMM*/*/*
+   # idx: start index for pagination, e.g. 0
+   # limit: end index for pagination, e.g. 10, put 0 to get all results
+   # debug: True/False flag to get more debugging information
+   # das_headers: True/False flag to get DAS headers, default is False
+
+   # please note that prior 1.9.X release the return type is str
+   # while from 1.9.X and on the return type is JSON
+   data = get_data(host, query, idx, limit, debug, das_headers)
 
 Please note, that aforementioned code snippet requires to load `das_client.py`
 which is distributed within CMSSW. Due to CMSSW install policies the version of
@@ -171,7 +180,9 @@ application:
             "Query DAS data-service"
             host = 'https://cmsweb.cern.ch'
             data = self.get_data(host, query, idx, limit, debug)
-            return json.loads(data)
+            if  isinstance(data, basestring):
+                return json.loads(data)
+            return data
 
     if __name__ == '__main__':
         das      = DASClient()
@@ -187,6 +198,9 @@ Here we provide a simple example of how to use das_client to find dataset
 summary information.
 
 .. code::
+
+    # PLEASE NOTE: to use this example download das_client.py from
+    # cmsweb.cern.ch/das/cli
 
     # system modules
     import os
@@ -207,7 +221,12 @@ summary information.
         idx     = 0
         limit   = 0
         debug   = False
-        dasjson = json.loads(get_data(host, query, idx, limit, debug))
+        dasheaders = True
+        data    = get_data(host, query, idx, limit, debug, dasheaders)
+        if  isinstance(data, basestring):
+            dasjson = json.loads(data)
+        else:
+            dasjson = data
         status  = dasjson.get('status')
         if  status == 'ok':
             data = dasjson.get('data')
