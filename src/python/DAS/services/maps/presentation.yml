@@ -25,6 +25,20 @@ primary_dataset : [
         {"das":"primary_dataset.type", "ui":"Type"},
         {"das":"primary_dataset.create_by", "ui":"Created by:"},
         ],
+summary : [
+        {"das":"summary", "ui":"Summary",
+         "link":[]},
+        {"das":"summary.nfiles", "ui":"Number of files"},
+        {"das":"summary.nlumis", "ui":"Number of lumis"},
+        {"das":"summary.nblocks", "ui":"Number of blocks"},
+        {"das":"summary.nevents", "ui":"Number of events"}, 
+        {"das":"summary.file_size", "ui":"sum(file_size)"},
+        {"das":"nfiles", "ui":"Number of files"},
+        {"das":"nlumis", "ui":"Number of lumis"},
+        {"das":"nblocks", "ui":"Number of blocks"},
+        {"das":"nevents", "ui":"Number of events"}, 
+        {"das":"file_size", "ui":"sum(file_size)"},
+        ],
 dataset : [
         {"das":"dataset.name", "ui":"Dataset",
          "link":[
