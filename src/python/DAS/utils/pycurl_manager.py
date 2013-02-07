@@ -82,6 +82,8 @@ class RequestHandler(object):
             curl.setopt(pycurl.POSTFIELDS, encoded_data)
         else:
             url = url + '?' + encoded_data
+        if  verbose > 1:
+            print '\nDEBUG: pycurl call', url
         if  isinstance(url, str):
             curl.setopt(pycurl.URL, url)
         elif isinstance(url, unicode):
@@ -102,7 +104,7 @@ class RequestHandler(object):
         if  cert:
             curl.setopt(pycurl.SSLCERT, cert)
         if  verbose:
-            if  isinstance(verbose, int) and verbose > 1:
+            if  isinstance(verbose, int) and verbose > 2:
                 curl.setopt(pycurl.VERBOSE, 1)
                 curl.setopt(pycurl.DEBUGFUNCTION, self.debug)
         return bbuf, hbuf
