@@ -664,6 +664,9 @@ class DASWebService(DASWebManager):
         """
         nrequests = self.reqmgr.size()
         if  (nrequests - self.taskmgr.nworkers()) > self.queue_limit:
+            msg = '#request=%s, queue_limit=%s, #workers=%s' \
+                    % (nrequests, self.taskmgr.nworkers(), self.queue_limit)
+            print dastimestamp('DAS WEB SERVER IS BUSY '), msg
             return True
         return False
 
