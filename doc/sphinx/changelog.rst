@@ -7,6 +7,12 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - Re-factor dasmongocache code to support multiple APIs responses
+    for single DAS key
+  - Add api=das_core to dasheader when we first register query record
+  - Extend DAS aggregator utility to support multiple APIs repsonse
+    for single DAS key
+  - Add db_monitor threads to DASMapping/DASMongocache classes
   - Switch from explicit show|hide links to dynamic show/hide which
     switch via ToggleTag JS function
   - Adjust web UI with Eric's suggestions to show service names in color
