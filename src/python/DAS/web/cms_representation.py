@@ -411,7 +411,10 @@ class CMSRepresentation(DASRepresentation):
                     fltpage = self.fltpage(row)
                 try:
                     lkey = pkey.split('.')[0]
-                    pval = [i for i in DotDict(row).get_values(pkey)]
+                    if  pkey == 'summary':
+                        pval = row[pkey]
+                    else:
+                        pval = [i for i in DotDict(row).get_values(pkey)]
                     if  isinstance(pval, list):
                         if  pval and not isinstance(pval[0], list):
                             pval = list(set(pval))
