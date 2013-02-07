@@ -437,6 +437,16 @@ class DASMongocache(object):
                              'das.system':'das'},
                             {'$set': {'das.status': status}})
 
+    def apilist(self, dasquery):
+        "Return list of apis for given dasquery"
+        spec = {'qhash':dasquery.qhash, 'query':{'$exists':True}}
+        apis = []
+        for row in self.col.find(spec):
+            das = row.get('das', {})
+            for api in das.get('api', []):
+                apis.append(api)
+        return apis
+
     def incache(self, dasquery, collection='merge', system=None, api=None):
         """
         Check if we have query results in cache, otherwise return null.

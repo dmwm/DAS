@@ -392,6 +392,10 @@ class DASCore(object):
             return len([1 for _ in self.get_queries(dasquery)])
         return self.rawcache.nresults(dasquery, coll)
 
+    def apilist(self, dasquery):
+        "Return list of APIs answer given das query"
+        return self.rawcache.apilist(dasquery)
+
     def incache(self, dasquery, coll='merge'):
         """
         Answer the question if given query in DAS cache or not
