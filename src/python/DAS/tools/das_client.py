@@ -106,6 +106,9 @@ class DASOptionParser:
         msg = 'specify number of retries upon busy DAS server message'
         self.parser.add_option("--retry", action="store", type="string",
                                default=0, dest="retry", help=msg)
+        msg = 'drop DAS headers'
+        self.parser.add_option("--das-headers", action="store_true",
+                               default=False, dest="das_headers", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
@@ -200,7 +203,8 @@ def fullpath(path):
         path = os.path.join(os.environ['HOME'], path)
     return path
 
-def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None):
+def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
+        cert=None, das_headers=True):
     """Contact DAS server and retrieve data for given DAS query"""
     params  = {'input':query, 'idx':idx, 'limit':limit}
     path    = '/das/cache'
@@ -243,7 +247,7 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None
             data = fdesc.read()
             fdesc.close()
         except urllib2.HTTPError as err:
-            return json.dumps({"status":"fail", "reason":str(err)})
+            return {"status":"fail", "reason":str(err)}
         if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
             pid = data
         else:
@@ -257,8 +261,19 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None
             sleep = wtime
         if  (time.time()-time0) > threshold:
             reason = "client timeout after %s sec" % int(time.time()-time0)
-            return json.dumps({"status":"fail", "reason":reason})
-    return data
+            return {"status":"fail", "reason":reason}
+    jsondict = json.loads(data)
+    if  das_headers:
+        return jsondict
+    # drop DAS headers, users usually don't need them
+    status = jsondict.get('status')
+    if  status != 'ok':
+        return jsondict
+    drop_keys = ['das_id', 'cache_id', 'qhash', '_id', 'das']
+    for row in jsondict['data']:
+        for key in drop_keys:
+            del row[key]
+    return jsondict['data']
 
 def prim_value(row):
     """Extract primary key value from DAS record"""
@@ -283,12 +298,12 @@ def main():
     thr     = opts.threshold
     ckey    = opts.ckey
     cert    = opts.cert
+    das_h   = opts.das_headers
     if  not query:
         print 'Input query is missing'
         sys.exit(EX_USAGE)
-    data    = get_data(host, query, idx, limit, debug, thr, ckey, cert)
     if  opts.format == 'plain':
-        jsondict = json.loads(data)
+        jsondict = get_data(host, query, idx, limit, debug, thr, ckey, cert)
         if  not jsondict.has_key('status'):
             print 'DAS record without status field:\n%s' % jsondict
             sys.exit(EX_PROTOCOL)
@@ -371,7 +386,9 @@ def main():
             else:
                 print data
     else:
-        print data
+        jsondict = get_data(\
+                host, query, idx, limit, debug, thr, ckey, cert, das_h)
+        print jsondict
 
 #
 # main
