@@ -217,7 +217,7 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
         if  api == 'summary4dataset_run':
-            query = "find dataset, count(block), count(file.size), \
+            query = "find dataset, count(block), sum(file.size), \
   sum(block.numfiles), sum(block.numevents), count(lumi) \
   where "
             dval = kwds['dataset']
@@ -564,7 +564,7 @@ class DBSService(DASAbstractService):
                 row = row['row']
                 row['nblocks'] = row.pop('count_block')
                 row['nfiles'] = row.pop('sum_block.numfiles')
-                row['file_size'] = row.pop('count_file.size')
+                row['file_size'] = row.pop('sum_file.size')
                 row['nevents'] = row.pop('sum_block.numevents')
                 row['nlumis'] = row.pop('count_lumi')
                 row = dict(summary=row)
