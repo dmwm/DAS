@@ -7,6 +7,13 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - Read prim_key from mapping DB rather then lookup_keys in das_mongocache
+    module (with fallback to lookup_keys)
+  - Fix verbose printout for pycurl_manager module
+  - Add support for summary dataset=/a/b/c run=123, ticket #3960
+  - Re-factor das_client to be used in other python application; change return
+    type from str to json in get_data API; add das-headers flag to explicitly
+    ask for DAS headers, by default drop DAS headers
   - Re-factor dasmongocache code to support multiple APIs responses
     for single DAS key
   - Add api=das_core to dasheader when we first register query record
