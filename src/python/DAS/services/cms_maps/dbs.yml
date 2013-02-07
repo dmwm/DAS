@@ -101,6 +101,21 @@ das_map: [
     {"das_key":"status", "rec_key":"status.name", "api_arg":"status"},
 ]
 ---
+urn : summary4dataset_run
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
+     "dataset": "required", "run":"required"
+}
+lookup: summary
+das_map: [
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg": "dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg": "run"},
+    {"das_key":"summary", "rec_key":"summary"},
+]
+---
 urn : fakeGroup4Dataset
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600

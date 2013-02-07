@@ -196,6 +196,11 @@ class DBS3Service(DASAbstractService):
             for row in gen:
                 row['dataset']['name'] = name
                 yield row
+        elif api == 'summary4dataset_run':
+            name = query.mongo_query['spec']['dataset.name']
+            for row in gen:
+                print "\n### row", row
+                yield row
         elif api == 'blocks4site':
             for row in gen:
                 print "\n### please revisit, row=", row

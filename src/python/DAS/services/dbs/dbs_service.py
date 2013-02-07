@@ -216,6 +216,19 @@ class DBSService(DASAbstractService):
                         % (dataset, run)
             else:
                 kwds['query'] = 'required'
+        if  api == 'summary4dataset_run':
+            query = "find dataset, count(block), count(file.size), \
+  sum(block.numfiles), sum(block.numevents), count(lumi) \
+  where "
+            dval = kwds['dataset']
+            rval = kwds['run']
+            if  dval and dval != 'required' and rval and rval != 'required':
+                query += 'dataset=%s and run=%s' % (dval, rval)
+                kwds['query'] = query
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('dataset')
+            kwds.pop('run')
         if  api == 'fakeGroup4Dataset':
             val = kwds['dataset']
             if  val != 'required':
@@ -507,6 +520,8 @@ class DBSService(DASAbstractService):
             prim_key = 'dataset'
         elif  api == 'fakeDataset4User':
             prim_key = 'dataset'
+        elif  api == 'summary4dataset_run':
+            prim_key = 'row'
         elif  api == 'fakeRun4File':
             prim_key = 'run'
         elif  api == 'fakeRun4Run':
@@ -541,9 +556,18 @@ class DBSService(DASAbstractService):
         config_attrs = ['config.name', 'config.content', 'config.version', \
                  'config.type', 'config.annotation', 'config.createdate', \
                  'config.createby', 'config.moddate', 'config.modby']
+        sum_attrs = ['']
         for row in gen:
             if  not row:
                 continue
+            if  row.has_key('row') and api == 'summary4dataset_run':
+                row = row['row']
+                row['nblocks'] = row.pop('count_block')
+                row['nfiles'] = row.pop('sum_block.numfiles')
+                row['file_size'] = row.pop('count_file.size')
+                row['nevents'] = row.pop('sum_block.numevents')
+                row['nlumis'] = row.pop('count_lumi')
+                row = dict(summary=row)
             if  row.has_key('status') and \
                 row['status'].has_key('dataset.status'):
                 row['status']['name'] = row['status']['dataset.status']
