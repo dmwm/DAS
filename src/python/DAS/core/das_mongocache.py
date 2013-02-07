@@ -860,13 +860,18 @@ class DASMongocache(object):
         expire     = dasheader['expire']
         system     = dasheader['system']
         api        = dasheader['api']
-        rec        = [k for i in header['lookup_keys'] for k in i.values()]
+        prim_key   = header.get('prim_key', None)
+        if  not prim_key:
+            # get primary key from a list of lookup keys which has the
+            # following structure [{'api':[keys]}, {...}]
+            lup_keys = header['lookup_keys']
+            lkeys    = [l for i in lup_keys for k in i.values() for l in k]
+            prim_key = lkeys[0] if 'summary' not in lkeys else 'summary'
         cond_keys  = dasquery.mongo_query['spec'].keys()
         # get API record id
         spec       = {'qhash':dasquery.qhash, 'das.system':system,
                       'query':{'$exists':True}}
         counter    = 0
-        prim_key   = rec[0][0]#use rec instead of lkeys[0] which re-order items
         rids = [str(r['_id']) for r in self.col.find(spec, fields=['_id'])]
         if  rids:
             if  isinstance(results, list) or isinstance(results, GeneratorType):
