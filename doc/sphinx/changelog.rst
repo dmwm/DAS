@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - Add DAS SERVER BUSY message to web server, ticket #3945
   - Read prim_key from mapping DB rather then lookup_keys in das_mongocache
     module (with fallback to lookup_keys)
   - Fix verbose printout for pycurl_manager module
