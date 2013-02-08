@@ -301,18 +301,12 @@ def print_summary(rec):
     if  not rec.has_key('summary'):
         msg = 'Summary information is not found in record:\n', rec
         raise Exception(msg)
-    idv = 0
     for row in rec['summary']:
-        if  not idv:
-            print "Summary information:"
-        keys = [k for k in row.keys()] + ['id']
+        keys = [k for k in row.keys()]
         maxlen = max([len(k) for k in keys])
-        pkey = '%s%s' % ('id', ' '*(maxlen-len('id')))
-        print '%s: %s' % (pkey, idv)
         for key, val in row.items():
             pkey = '%s%s' % (key, ' '*(maxlen-len(key)))
             print '%s: %s' % (pkey, val)
-        idv += 1
         print
 
 def main():
