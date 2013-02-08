@@ -196,15 +196,21 @@ class DBS3Service(DASAbstractService):
             for row in gen:
                 row['dataset']['name'] = name
                 yield row
-        elif api == 'summary4dataset_run':
-            dataset = query.mongo_query['spec']['dataset.name']
-            run = query.mongo_query['spec']['run.run_number']
+        elif api == 'summary4run':
+            spec = query.mongo_query.get('spec', {})
+            dataset = spec.get('dataset.name', '')
+            block = spec.get('block.name', '')
+            run = spec.get('run.run_number', 0)
             for row in gen:
-                row.update({"dataset": dataset, "run": run})
+                if  run:
+                    row.update({"run": run})
+                if  dataset:
+                    row.update({"dataset": dataset})
+                if  block:
+                    row.update({"block": block})
                 yield row
-        elif api == 'blocks4site':
+        elif api == 'blockorigin':
             for row in gen:
-                print "\n### please revisit, row=", row
                 yield row
         elif api == 'blockparents':
             for row in gen:
