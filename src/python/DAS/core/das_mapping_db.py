@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703
+#pylint: disable-msg=W0703,R0902,R0904,R0914
 
 """
 DAS mapping DB module
@@ -37,6 +37,9 @@ class DASMapping(object):
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         
+        self.conn = None # MongoDB connection, defined at run-time
+        self.dbc  = None # MongoDB database, defined at run-time
+        self.col  = None # MongoDB collection, defined at run-time
         self.init()
 
         # Monitoring thread which performs auto-reconnection to MongoDB
@@ -98,8 +101,9 @@ class DASMapping(object):
         """
         try:
             self.conn = db_connection(self.dburi)
-            self.dbc  = self.conn[self.dbname]
-            self.col  = self.dbc[self.colname]
+            if  self.conn:
+                self.dbc  = self.conn[self.dbname]
+                self.col  = self.dbc[self.colname]
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
@@ -107,19 +111,23 @@ class DASMapping(object):
                     % (thread.name, thread.ident, tstamp)
         except Exception as exc:
             print_exc(exc)
-            self.col = None
+            self.conn = None
+            self.dbc  = None
+            self.col  = None
 
     def delete_db(self):
         """
         Delete mapping DB in MongoDB back-end.
         """
-        self.conn.drop_database(self.dbname)
+        if  self.conn:
+            self.conn.drop_database(self.dbname)
 
     def delete_db_collection(self):
         """
         Delete mapping DB collection in MongoDB.
         """
-        self.dbc.drop_collection(self.colname)
+        if  self.dbc:
+            self.dbc.drop_collection(self.colname)
 
     def check_maps(self):
         """
