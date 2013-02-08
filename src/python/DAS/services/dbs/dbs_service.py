@@ -217,7 +217,7 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
         if  api == 'summary4dataset_run':
-            query = "find dataset, count(block), sum(file.size), \
+            query = "find dataset, run, count(block), sum(file.size), \
   sum(block.numfiles), sum(block.numevents), count(lumi) \
   where "
             dval = kwds['dataset']
