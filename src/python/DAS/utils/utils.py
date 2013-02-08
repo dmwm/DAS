@@ -41,7 +41,7 @@ def get_dbs_instance(url):
     msg = 'Unsupported DBS url=%s' % url
     if  not url:
         raise Exception(msg)
-    if  url.find('cmsweb') != -1: # DBS3
+    if  url.find('DBSReader') != -1: # DBS3
         return url.split('/')[4]
     elif url.find('cmsdbsprod') != -1: # DBS2
         return url.split('/')[3]
