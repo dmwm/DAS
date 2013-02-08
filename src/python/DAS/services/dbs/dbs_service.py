@@ -205,9 +205,23 @@ class DBSService(DASAbstractService):
         if  api == 'fakeLumis4block':
             block = kwds.get('block', 'required')
             if  block != 'required':
-                kwds['query'] = 'find lumi.number, run.number, file.name where block=%s' % block
+                kwds['query'] = \
+                'find lumi.number, run.number, file.name where block=%s' % block
+                kwds.pop('block')
             else:
                 kwds['query'] = 'required'
+        if  api == 'fakeLumis4FileRun':
+            query = kwds.get('query', 'required')
+            lfn = kwds.get('lfn', 'required')
+            if  lfn != 'required':
+                query = \
+                'find lumi.number, run.number where file=%s' % lfn
+                kwds.pop('lfn')
+            run = kwds.get('run', 'optional')
+            if  run != 'optional':
+                query += ' and run=%s' % run
+                kwds.pop('run')
+            kwds['query'] = query
         if  api == 'fakeBlock4DatasetRun':
             dataset = kwds.get('dataset', 'required')
             run = kwds.get('run', 'required')
@@ -217,9 +231,8 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
         if  api == 'summary4run':
-            query = "find dataset, run, count(block), sum(file.size), \
-  sum(block.numfiles), sum(block.numevents), count(lumi) \
-  where "
+            query = "find dataset, file, run, file.size, \
+  file.numevents, count(lumi) where "
             cond = ''
             val = kwds['run']
             if  val and val != 'required':
@@ -508,6 +521,8 @@ class DBSService(DASAbstractService):
             prim_key = 'run'
         elif api == 'fakeLumis4block':
             prim_key = 'lumi'
+        elif api == 'fakeLumis4FileRun':
+            prim_key = 'lumi'
         elif  api == 'fakeRelease4File':
             prim_key = 'release'
         elif  api == 'fakeRelease4Dataset':
@@ -570,10 +585,8 @@ class DBSService(DASAbstractService):
                 continue
             if  row.has_key('row') and api == 'summary4run':
                 row = row['row']
-                row['nblocks'] = row.pop('count_block')
-                row['nfiles'] = row.pop('sum_block.numfiles')
-                row['file_size'] = row.pop('sum_file.size')
-                row['nevents'] = row.pop('sum_block.numevents')
+                row['file_size'] = row.pop('file.size')
+                row['nevents'] = row.pop('file.numevents')
                 row['nlumis'] = row.pop('count_lumi')
                 row = dict(summary=row)
             if  row.has_key('status') and \
@@ -635,6 +648,13 @@ class DBSService(DASAbstractService):
                         del row['run'][att]
                     except:
                         pass
+            if  api == 'fakeLumis4FileRun':
+                if  row.has_key('lumi'):
+                    row = row['lumi']
+                    row['lumi'] = {'number': row['lumi.number'],
+                                   'run_number': row['run.number']}
+                    del row['lumi.number']
+                    del row['run.number']
             if  api == 'fakeLumis4block':
                 if  row.has_key('lumi'):
                     row = row['lumi']

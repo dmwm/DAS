@@ -455,7 +455,8 @@ params : {
 }
 lookup: dataset
 das_map : [
-    {"das_key":"dataset", "rec_key":"dataset.name", "pattern":"/.*/.*/.*"},
+    {"das_key":"dataset", "rec_key":"dataset.name",
+     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
     {"das_key":"site", "rec_key":"site.name", "api_arg":"site"},
 ]
 ---
@@ -468,7 +469,24 @@ params : {
 lookup: lumi
 das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number"},
-    {"das_key":"file", "rec_key":"file.name", "api_arg":"lfn"},
+    {"das_key":"file", "rec_key":"file.name", "api_arg":"lfn",
+     "pattern":"/.*/.*/.*\\.root"},
+]
+---
+urn : fakeLumis4FileRun
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "lfn":"required",
+     "query":"required", "run":"optional"
+}
+lookup: lumi
+das_map : [
+    {"das_key":"lumi", "rec_key":"lumi.number"},
+    {"das_key":"file", "rec_key":"file.name", "api_arg":"lfn",
+     "pattern":"/.*/.*/.*\\.root"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run",
+     "pattern": "^[0-9]{3,10}"},
 ]
 ---
 urn : fakeLumis4block
