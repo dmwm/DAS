@@ -216,18 +216,26 @@ class DBSService(DASAbstractService):
                         % (dataset, run)
             else:
                 kwds['query'] = 'required'
-        if  api == 'summary4dataset_run':
+        if  api == 'summary4run':
             query = "find dataset, run, count(block), sum(file.size), \
   sum(block.numfiles), sum(block.numevents), count(lumi) \
   where "
-            dval = kwds['dataset']
-            rval = kwds['run']
-            if  dval and dval != 'required' and rval and rval != 'required':
-                query += 'dataset=%s and run=%s' % (dval, rval)
-                kwds['query'] = query
+            cond = ''
+            val = kwds['run']
+            if  val and val != 'required':
+                cond += 'run=%s' % val
+            val = kwds['dataset']
+            if  val and val != 'optional':
+                cond += ' and dataset=%s' % val
+            val = kwds['block']
+            if  val and val != 'optional':
+                cond += ' and block=%s' % val
+            if  cond:
+                kwds['query'] = query + cond
             else:
                 kwds['query'] = 'required'
             kwds.pop('dataset')
+            kwds.pop('block')
             kwds.pop('run')
         if  api == 'fakeGroup4Dataset':
             val = kwds['dataset']
@@ -520,7 +528,7 @@ class DBSService(DASAbstractService):
             prim_key = 'dataset'
         elif  api == 'fakeDataset4User':
             prim_key = 'dataset'
-        elif  api == 'summary4dataset_run':
+        elif  api == 'summary4run':
             prim_key = 'row'
         elif  api == 'fakeRun4File':
             prim_key = 'run'
@@ -560,7 +568,7 @@ class DBSService(DASAbstractService):
         for row in gen:
             if  not row:
                 continue
-            if  row.has_key('row') and api == 'summary4dataset_run':
+            if  row.has_key('row') and api == 'summary4run':
                 row = row['row']
                 row['nblocks'] = row.pop('count_block')
                 row['nfiles'] = row.pop('sum_block.numfiles')
