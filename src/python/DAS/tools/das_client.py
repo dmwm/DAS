@@ -296,6 +296,25 @@ def prim_value(row):
     else:
         return row[key][att]
 
+def print_summary(rec):
+    "Print summary record information on stdout"
+    if  not rec.has_key('summary'):
+        msg = 'Summary information is not found in record:\n', rec
+        raise Exception(msg)
+    idv = 0
+    for row in rec['summary']:
+        if  not idv:
+            print "Summary information:"
+        keys = [k for k in row.keys()] + ['id']
+        maxlen = max([len(k) for k in keys])
+        pkey = '%s%s' % ('id', ' '*(maxlen-len('id')))
+        print '%s: %s' % (pkey, idv)
+        for key, val in row.items():
+            pkey = '%s%s' % (key, ' '*(maxlen-len(key)))
+            print '%s: %s' % (pkey, val)
+        idv += 1
+        print
+
 def main():
     """Main function"""
     optmgr  = DASOptionParser()
@@ -383,6 +402,10 @@ def main():
                 old = None
                 val = None
                 for row in data:
+                    prim_key = row.get('das', {}).get('primary_key', None)
+                    if  prim_key == 'summary':
+                        print_summary(row)
+                        return
                     val = prim_value(row)
                     if  not opts.limit:
                         if  val != old:
