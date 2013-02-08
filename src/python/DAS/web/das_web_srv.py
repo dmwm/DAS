@@ -129,17 +129,14 @@ class DASWebService(DASWebManager):
         self.colors      = {}   # defined at run-time via self.init()
         self.dbs_url     = None # defined at run-time via self.init()
         self.dbs_global  = None # defined at run-time via self.init()
+        self.dataset_daemon = config.get('dbs_daemon', False)
+        self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
         self.init()
 
         # Monitoring thread which performs auto-reconnection
         thname = 'dbscore_monitor'
         start_new_thread(thname, dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
-
-        # Start DBS daemon
-        self.dataset_daemon = config.get('dbs_daemon', False)
-        if  self.dataset_daemon:
-            self.dbs_daemon(config)
 
     def process_requests_onhold(self):
         "Process requests which are on hold"
@@ -155,12 +152,15 @@ class DASWebService(DASWebManager):
         try:
             main_dbs_url = self.dbs_url
             self.dbs_urls = []
+            print "\n### DBS URL:", self.dbs_url
+            print "### DBS instances:", self.dbs_instances
+            if  not self.dbs_url or not self.dbs_instances:
+                return # just quit
             for inst in self.dbs_instances:
                 self.dbs_urls.append(\
                         main_dbs_url.replace(self.dbs_global, inst))
             interval  = config.get('dbs_daemon_interval', 3600)
             dbsexpire = config.get('dbs_daemon_expire', 3600)
-            self.dbsmgr = {} # dbs_urls vs dbs_daemons
             dbs_config  = {'expire': dbsexpire}
             if  self.dataset_daemon:
                 for dbs_url in self.dbs_urls:
@@ -174,7 +174,7 @@ class DASWebService(DASWebManager):
                             except:
                                 pass
                             time.sleep(interval)
-                    print "Start DBSDaemon for %s" % dbs_url
+                    print "### Start DBSDaemon for %s" % dbs_url
                     thname = 'dbs_updater:%s' % dbs_url
                     start_new_thread(thname, dbs_updater, (dbsmgr, interval, ))
         except Exception as exc:
@@ -199,6 +199,9 @@ class DASWebService(DASWebManager):
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
             self.sitedbmgr = SERVICES.get('sitedb2', None) # SiteDB from global scope
+            # Start DBS daemon
+            if  self.dataset_daemon:
+                self.dbs_daemon(self.dasconfig['web_server'])
         except Exception as ConnectionFailure:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
