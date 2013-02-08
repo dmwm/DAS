@@ -99,7 +99,8 @@ class DASRepresentation(DASWebManager):
         filters  = dasquery.filters
         titles   = []
         incache  = head.get('incache')
-        page     = self.pagination(total, incache, kwargs)
+        apilist  = head.get('apilist')
+        page     = self.pagination(total, incache, apilist, kwargs)
         if  filters:
             for flt in filters:
                 if  flt.find('=') != -1 or flt.find('>') != -1 or \
