@@ -30,9 +30,10 @@ def get_modification_time(record):
     "Get modification timestamp from DBS data-record"
     for key in ['dataset', 'block', 'file']:
         if  record.has_key(key):
-            if  record[key].has_key('last_modification_date'):
+            obj = record[key]
+            if  isinstance(obj, dict) and obj.has_key('last_modification_date'):
                 return record[key]['last_modification_date']
-    if  record.has_key('last_modification_date'):
+    if  isinstance(record, dict) and record.has_key('last_modification_date'):
         return record['last_modification_date']
     return None
 
