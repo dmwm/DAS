@@ -260,6 +260,11 @@ class DASPLY(object):
                  | SPECIALKEY EQUAL VALUE"""
         p[0] = ('keyop', p[1], p[2], p[3])
 
+    def p_err_opvalue(self, p):
+        """keyop : DASKEY EQUAL VALUE VALUE"""
+        p.error = "empty space between values: '%s' '%s'" % (p[3], p[4])
+        raise Exception(p.error)
+
     def p_opkey(self, p):
         """keyop : DASKEY EQUAL DASKEY"""
         p[0] = ('keyop', p[1], p[2], p[3])
