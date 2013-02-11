@@ -251,7 +251,8 @@ class CombinedService(DASAbstractService):
                 msg  = tstamp + ' Exception while processing DBS/Phedex info:'
                 msg += str(err)
                 row = {'site':{'name':'Fail to look-up site info',
-                    'error':msg}, 'error': msg}
+                    'error':msg, 'dataset_fraction': 'N/A',
+                    'block_fraction':'N/A', 'block_completion':'N/A'}, 'error': msg}
                 yield row
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
