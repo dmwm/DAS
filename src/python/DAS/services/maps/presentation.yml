@@ -171,7 +171,9 @@ site : [
         {"das":"site.info.usage", "ui":"Usage"},
         {"das":"site.resources.fqdn", "ui":"CE/SE's"},
         {"das":"site.error", "ui":"Error"},
-        {"das":"site.httperror", "ui":"Reason"},
+        {"das":"site.httperror", "ui":"HTTP error"},
+        {"das":"error", "ui":"Error"},
+        {"das":"reason", "ui":"Reason"},
         ],
 monitor : [
         {"das":"monitor.node", "ui":"Phedex Node"},
