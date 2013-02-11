@@ -7,6 +7,14 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - Wrap combined_site4dataset API call into try/except block and show
+    exception on web UI. This will help to catch transient missing values from
+    combined data-service for site dataset=/a/b/c queries.
+  - Add DASKEY EQUAL VALUE VALUE error condition to DAS PLY parser to cover the
+    case when user cut-and-paste some value and it has empty space, e.g.
+    dataset=/a/b/c om
+  - Always use upper() for DBS status since it is stored in upper-case in DBS
+    DB
   - Add function to print DAS summary records
   - Add DAS SERVER BUSY message to web server, ticket #3945
   - Read prim_key from mapping DB rather then lookup_keys in das_mongocache
