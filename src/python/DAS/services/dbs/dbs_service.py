@@ -85,7 +85,7 @@ class DBSService(DASAbstractService):
             val = kwds['status']
             if  val:
                 kwds['query'] = \
-                'find dataset.status where dataset.status=%s' % val
+                'find dataset.status where dataset.status=%s' % val.upper()
             else:
                 kwds['query'] = 'find dataset.status'
             val = kwds['dataset']
@@ -363,7 +363,7 @@ class DBSService(DASAbstractService):
                     value += ' and datatype=%s' % val
                 if  key == 'status':
                     if  val:
-                        value += ' and dataset.status=%s' % val
+                        value += ' and dataset.status=%s' % val.upper()
                     else:
                         value += ' and dataset.status like VALID*'
             keys = ['dataset', 'release', 'primary_dataset', 'tier', \
@@ -387,7 +387,7 @@ class DBSService(DASAbstractService):
         if  api == 'fakeListDatasetbyDate':
             value = ''
             if  kwds['status']:
-                value = ' and dataset.status=%s' % kwds['status']
+                value = ' and dataset.status=%s' % kwds['status'].upper()
             else:
                 value = ' and dataset.status like VALID*'
 #           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124}
