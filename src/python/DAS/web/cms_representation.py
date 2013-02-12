@@ -21,7 +21,7 @@ from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import print_exc, getarg, size_format, access
-from DAS.utils.utils import identical_data_records
+from DAS.utils.utils import identical_data_records, dastimestamp
 from DAS.web.utils import das_json, quote, gen_color, not_to_link
 from DAS.web.tools import exposetext
 from DAS.web.das_representation import DASRepresentation
@@ -284,6 +284,8 @@ class CMSRepresentation(DASRepresentation):
             if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
                 try:
                     mkey = pkey.split('.')[0]
+                    if  not row.has_key(mkey):
+                        return page
                     if  isinstance(row[mkey], list):
                         # take first five or less entries from the list to cover
                         # possible aggregated records and extract row keys
@@ -504,15 +506,20 @@ class CMSRepresentation(DASRepresentation):
                 page += adjust_values(func, gen, links, pkey)
             pad   = ""
             try:
-                systems = self.systems(row['das']['system'])
-                if  row['das']['system'] == ['combined'] or \
-                    row['das']['system'] == [u'combined']:
-                    if  lkey:
-                        rowsystems = DotDict(row).get('%s.combined' % lkey) 
-                        try:
-                            systems = self.systems(rowsystems)
-                        except TypeError as _err:
-                            systems = self.systems(['combined'])
+                if  row.has_key('das'):
+                    systems = self.systems(row['das']['system'])
+                    if  row['das']['system'] == ['combined'] or \
+                        row['das']['system'] == [u'combined']:
+                        if  lkey:
+                            rowsystems = DotDict(row).get('%s.combined' % lkey)
+                            try:
+                                systems = self.systems(rowsystems)
+                            except TypeError as _err:
+                                systems = self.systems(['combined'])
+                else:
+                    systems = "" # no das record
+                    print dastimestamp('DAS ERROR '), \
+                            'record withou DAS key', row
             except KeyError as exc:
                 print_exc(exc)
                 systems = "" # we don't store systems for aggregated records
