@@ -260,6 +260,24 @@ def input_value_matches(keyword):
                 scores_by_entity[field] = (match == keyword
                                            and 1.0 or 0.95, {'map_to': field, 'adjusted_keyword': match})
             # 2) TODO: partial match if no wildcard?
+            else:
+                # first try adding wildcard only to the end
+                match = next(t.find('^'+keyword+'*$', limit=-1), False)
+
+                if match:
+                    scores_by_entity[field] = (0.65, {'map_to': field,
+                                                     'adjusted_keyword':
+                                                         (keyword+'*').replace('**', '*')})
+                else:
+                    # first try adding wildcard only to the end
+                    match = next(t.find('^*'+keyword+'*$', limit=-1), False)
+
+                    if match:
+                        scores_by_entity[field] = (0.6, {'map_to': field,
+                                                          'adjusted_keyword':
+                                                              ('*'+keyword+'*').replace('**', '*')})
+
+
 
     return scores_by_entity
 

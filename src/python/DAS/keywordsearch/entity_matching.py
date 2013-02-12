@@ -14,14 +14,11 @@ from nltk.corpus import wordnet
 from DAS.keywordsearch import input_values_tracker
 from DAS.keywordsearch.das_schema_adapter import *
 
+from DAS.keywordsearch.config import mod_enabled
+
 from nltk import stem
 stemmer = stem.PorterStemmer()
 
-
-ENABLED_MODULES = {
-    'STRING_DIST_ENABLE_NLTK_SEMANTICS': True,
-    'STRING_DIST_ENABLE_NLTK_PORTER': True,
-}
 
 # TODO: use mapping to entity attributes even independent of the entity itself (idf-like inverted index)
 
@@ -37,7 +34,7 @@ def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
 
     # TODO: similarity shall not be used at all if the words are not similar enough
 
-    if ENABLED_MODULES['STRING_DIST_ENABLE_NLTK_PORTER']:
+    if mod_enabled('STRING_DIST_ENABLE_NLTK_PORTER'):
         if stemmer.stem(keyword) == stemmer.stem(match_to):
             score = max(score, 0.7)
         # TODO: shall we do string-distance on top of stemmer?
@@ -45,7 +42,7 @@ def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
 
 
     # TODO: we shall be able to handle attributes also
-    if ENABLED_MODULES['STRING_DIST_ENABLE_NLTK_SEMANTICS'] and semantic and not '.' in match_to:
+    if mod_enabled('STRING_DIST_ENABLE_NLTK_SEMANTICS') and semantic and not '.' in match_to:
         ks = wordnet.synsets(keyword)
         # TODO: we shall can select the relevant synsets for our schema entities manually for improved results
         if entity_wordnet_synsets.has_key(match_to):

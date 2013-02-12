@@ -56,7 +56,8 @@ import DAS.utils.jsonwrapper as json
 from DAS.core.das_query import WildcardMultipleMatchesException, WildcardMatchingException
 
 # keyword search
-from DAS.keywordsearch.search import search as keyword_search
+#from DAS.keywordsearch.search import search as keyword_search
+from DAS.web.das_kwd_search import KeywordSearchHandler
 
 # TODO: move this to an appropriate place
 from DAS.web.utils import HtmlString
@@ -392,16 +393,6 @@ class DASWebService(DASWebManager):
 
 
 
-    def _get_link_to_query(self, query, kw_query=''):
-        params = cherrypy.request.params.copy()
-        params['input'] = query
-
-        # preserve keyword query which led to certain structured query
-        if kw_query:
-            params['kwquery'] = kw_query
-
-        das_url = '/das/request?' + urllib.urlencode(params)
-        return das_url
 
 
 
@@ -466,23 +457,9 @@ class DASWebService(DASWebManager):
 
             # Keyword Search
             if not isinstance(err, WildcardMatchingException):
-                # TODO: DBS instance
-                proposed_queries = keyword_search(uinput, inst)
-                msg = '<b>DAS is unable to interpret your query.<br>' \
-                                    ' Is any of the queries below what you meant?</b><br>\n'
-
-
-                msg += '<br>\n'.join(["%.2f: <a href='%s'>%s</a>" % \
-                                        (score, self._get_link_to_query(query, kw_query=uinput), query)
-                                      for (query, score) in proposed_queries ])
-                # TODO: add user info to logs if available (e.g. certificate auth, to filter out queries submitted by developers)
-
-                msg += '<br>\n<br>\nError message: ' + exc_message
-                #msg = '<br>\n'.join(proposed_queries)
-                # TODO: html links
-                exc_message = HtmlString(msg)
-
-
+                return KeywordSearchHandler.handle_search(self,
+                    query=uinput, inst=inst, initial_exc_message = err.message)
+                #exc_message = HtmlString(html)
 
             return 1, helper(das_parser_error(uinput, exc_message), html_error)
 
