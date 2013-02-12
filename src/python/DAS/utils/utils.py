@@ -45,6 +45,8 @@ def get_dbs_instance(url):
         return url.split('/')[4]
     elif url.find('cmsdbsprod') != -1: # DBS2
         return url.split('/')[3]
+    elif url.find('localhost') != -1: # test instance
+        return None
     else:
         raise Exception(msg)
 
