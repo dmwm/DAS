@@ -309,7 +309,7 @@ class DASMongocache(object):
             for dasfilter in filters:
                 if  dasfilter == 'unique':
                     continue
-                if  dasfilter not in fields and \
+                if  fields and dasfilter not in fields and \
                     dasfilter not in new_fields:
                     if  dasfilter.find('=') == -1 and dasfilter.find('<') == -1\
                     and dasfilter.find('>') == -1:
@@ -614,20 +614,28 @@ class DASMongocache(object):
         "Generator which retrieves results from the cache"
         if  dasquery.service_apis_map(): # valid DAS query
             result = self.get_das_records(dasquery, idx, limit, collection)
+            for row in result:
+                yield row
         else: # pure MongoDB query
+            das_fields = ['das_id', 'cache_id', 'das', 'qhash']
             coll    = self.mdb[collection]
-            fields  = dasquery.mongo_query.get('fields', None)
+            fields  = dasquery.mongo_query.get('fields', [])
             spec    = dasquery.mongo_query.get('spec', {})
             if  dasquery.filters:
-                if  fields == None:
-                    fields = dasquery.filters
-                else:
-                    fields += dasquery.filters
+                if  not fields:
+                    fields = []
+                fields += dasquery.filters
+                pkeys   = [k.split('.')[0] for k in fields]
+                fields += das_fields
             skeys   = self.mongo_sort_keys(collection, dasquery)
             result  = self.get_records(coll, spec, fields, skeys, \
                             idx, limit, dasquery.unique_filter)
-        for row in result:
-            yield row
+            for row in result:
+                if  dasquery.filters:
+                    if  pkeys and set(pkeys) & set(row.keys()):
+                        yield row
+                else:
+                    yield row
 
     def get_das_records(self, dasquery, idx=0, limit=0, collection='merge'):
         "Generator which retrieves DAS records from the cache"
