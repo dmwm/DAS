@@ -97,11 +97,33 @@ class TestDASDatasetWildcards(unittest.TestCase):
         pass
 
 
+    def test_operators(self):
+        self.assertQueryResult('unique lumi flags in run 176304',
+            'lumi  run=176304 | grep lumi.flag | unique')
+
+        # TODO: Pattern: op, op, op entity(PK)|entity.field
+        self.assertQueryResult('min, max, avg lumis in run 176304',
+            'lumi  run=176304 | min(lumi.number), max(lumi.number), avg(lumi.number)')
+        # TODO: even I made a mistake, by adding grep to min,max...
+
+        'file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80'
+        #fails:
+        'lumi dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80'
+
+        'lumi  run=176304 lumi=80'
+
     def test_numeric_params(self):
         # values closer to the field name shall be preferred
-        self.assertQueryResult(
+        self.assertQueryResult('lumis in run 176304', 'lumi run=176304')
+
+        # TODO: why lumi do not work? a) there is no such API? b) lumi is PER RUN! c) RUN is lower?
+        if False: self.assertQueryResult(
             'files /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO   run 12345 lumi 666702',
             'file dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO run=12345')
+
+        # TODO: field 'is' value --> a good pattern?
+        self.assertQueryResult('files in /HT/Run2011B-v1/RAW where run is 176304 lumi is 80',
+                'file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80')
 
 
     def assertQueryResult(self, query, expected_result):

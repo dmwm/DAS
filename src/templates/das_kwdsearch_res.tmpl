@@ -6,19 +6,67 @@
 <!-- das_ambiguous.tmpl -->
 <div> <!-- main div -->
 
-$msg
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css" />
+    <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
 
-For more information please use <a href="$base/faq">FAQ</a> page; review
-<b>DAS query guide:</b>
-<a href="javascript:ShowTag('dbsql_vs_dasql')">show</a>
-<a href="javascript:HideTag('dbsql_vs_dasql')">hide</a>
-or submit a bug report
-#set details=$quote($msg)
-#set msg=details.replace('/', '%2F')
-<a href="https://github.com/dmwm/DAS/issues/new">here</a>.
-<div id="dbsql_vs_dasql" name="dbsql_vs_dasql" class="hide">
-$guide
-</div>
+
+    <script type="text/javascript">
+        jQuery.noConflict();
+
+        function hide(selector){
+            //jQuery(selector).hide().;
+        }
+        function filterByResultType(rt, src){
+            if (rt == 'see all') {
+                jQuery('.kws-result').show(300);
+            } else {
+                jQuery('.kws-result').hide();
+                jQuery('.result-with-entity-'+rt).show(300);
+            }
+
+            jQuery('.rt-filters a').removeClass('rtype-selected').css('font-weight', 'normal');;
+            jQuery(this).addClass('rtype-selected').css('font-weight', 'bold');
+        }
+        function showAllRT(){
+        }
+
+        jQuery(function() {
+            // do not hide debug tooltip (TODO: it should be on click actually)
+            jQuery(".debug").each(function(){
+                jQuery(this).tooltip({
+                    content: jQuery(this).attr('title'),
+                    track: true,
+                    //close: true,
+                    hide: { effect: "fade", duration: 2000 }
+                    //function( event, ui ) { jQuery(this).tooltip('open'); },
+                });
+            });
+            jQuery(".kws-link").each(function(){
+                jQuery(this).tooltip({
+                    content: jQuery(this).attr('title'),
+                });
+            });
+        });
+    </script>
+    <style type="text/css">
+        .select-result-type { margin: 20px 0; font-weight: bold; }
+
+        .kws-result a { line-height: 2em; color: #666; }
+        .kws-result a, .kws-result a:visited, .kws-result a:active {  text-decoration: none; }
+        .kws-result a:hover {  text-decoration: underline; }
+        .ui-tooltip {
+            max-width: 700px;
+            font-size: 8pt;
+        }
+        .nl-result-field {
+            color: #999;
+        }
+    </style>
+
+
+    $msg
+
 </div> <!-- end of main div -->
 <!-- end of das_ambiguous_html.tmpl -->
 

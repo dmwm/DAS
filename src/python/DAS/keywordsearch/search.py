@@ -301,11 +301,11 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
         # DAS requires at least one filtering attribute
         if fields_covered_by_values_set and fields_covered_by_values_set.issuperset(
             fields_included) and\
-           validate_input_params_mapping(fields_included, final_step=True,
+           validate_input_params(fields_included, final_step=True,
                entity=requested_entity):
             if UGLY_DEBUG: print 'VALUES MATCH:', (
                 requested_entity, fields_included, values_mapping ),\
-            validate_input_params_mapping(fields_included, final_step=True,
+            validate_input_params(fields_included, final_step=True,
                 entity=requested_entity)
 
             # Adjust the final score to favour mappings that cover most keywords
@@ -422,7 +422,7 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
             new_score = delta_score +  old_score
             new_fields = fields_included | set([possible_mapping])
 
-            if validate_input_params_mapping(new_fields, final_step=False,
+            if validate_input_params(new_fields, final_step=False,
                 entity=requested_entity):
                 generate_value_mappings(requested_entity,
                     fields_included=new_fields,\
@@ -460,10 +460,10 @@ def generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws,
 
     if keyword_index == len(keywords_list):
         # TODO: check if required fields are functioning properly !!!
-        if validate_input_params_mapping(fields_old, final_step=True,
+        if validate_input_params(fields_old, final_step=True,
             entity=requested_entity):
             if UGLY_DEBUG: print 'SCHEMA MATCH:', (
-                requested_entity, fields_old), validate_input_params_mapping(
+                requested_entity, fields_old), validate_input_params(
                 fields_old, final_step=True, entity=requested_entity)
 
 
@@ -509,7 +509,7 @@ def generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws,
         #print 'validating', (f, requested_entity)
 
         # opt 2.a) take as api input param entity
-        if validate_input_params_mapping(fields_new, entity=requested_entity):
+        if validate_input_params(fields_new, entity=requested_entity):
             if UGLY_DEBUG: print 'validated', (requested_entity, fields_new)
 
             delta_score = schema_score
@@ -535,7 +535,7 @@ def generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws,
                     float(len(keywords_list)) - keyword_index) / len(
                     keywords_list)
 
-            if validate_input_params_mapping(fields_old,
+            if validate_input_params(fields_old,
                 entity=possible_mapping):
                 if UGLY_DEBUG:  print 'validated', (
                     possible_mapping, fields_old)
@@ -553,7 +553,7 @@ def generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws,
                                                                      delta_score)]))
 
             # opt 2.c) take both as requested entity (result type) and  input param entity
-            if validate_input_params_mapping(fields_new,
+            if validate_input_params(fields_new,
                 entity=possible_mapping):
 
                 if UGLY_DEBUG: print 'valid',(possible_mapping, fields_new)

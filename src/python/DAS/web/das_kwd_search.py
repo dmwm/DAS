@@ -21,13 +21,14 @@ dbs_daemon.SKIP_UPDATES =1
 class KeywordSearchHandler:
 
     @staticmethod
-    def render(webm, msg, html_error=None):
+    def render(webm, msg, html_error=None, tmpl='das_kwdsearch_res'):
         """Helper function which provide error template"""
         if  not html_error:
             return msg
         guide = '' #webm.templatepage('dbsql_vs_dasql', operators=', '.join(das_operators()))
-        page = webm.templatepage('das_ambiguous_html', msg=msg, base=webm.base,
-            guide=guide)
+
+        page = webm.templatepage(tmpl or 'das_ambiguous_html', msg=msg,
+                                 base=webm.base, guide=guide)
         return page
 
     @staticmethod
@@ -50,62 +51,10 @@ class KeywordSearchHandler:
 
         hi_score_result_types.append('see all')
 
-        html += """
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-        <script type="text/javascript">
-            function hide(selector){
-                //jQuery(selector).hide().;
-            }
-            function filterByResultType(rt, src){
-                if (rt == 'see all') {
-                    $('.kws-result').show(300);
-                } else {
-                    $('.kws-result').hide();
-                    $('.result-with-entity-'+rt).show(300);
-                }
 
-                $('.rt-filters a').removeClass('rtype-selected').css('font-weight', 'normal');;
-                $(this).addClass('rtype-selected').css('font-weight', 'bold');
-            }
-            function showAllRT(){
-            }
-        </script>
-        <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css" />
-        <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
-        <script>
-          $(function() {
-            // do not hide debug tooltip (TODO: it should be on click actually)
-            $(".debug").each(function(){
-                $(this).tooltip({
-                  content: $(this).attr('title'),
-                  track: true,
-                  //close: true,
-                  hide: { effect: "fade", duration: 5000 }
-                  //function( event, ui ) { jQuery(this).tooltip('open'); },
-                });
-            });
-            $(".kws-link").each(function(){
-                $(this).tooltip({
-                  content: $(this).attr('title'),
-                });
-            });
-        });
-        </script>
-        <style type="text/css">
-        .select-result-type { margin: 20px 0; font-weight: bold; }
+        html += '''
 
-        .kws-result a { line-height: 2em; color: #666; }
-        .kws-result a, .kws-result a:visited, .kws-result a:active {  text-decoration: none; }
-        .kws-result a:hover {  text-decoration: underline; }
-        .ui-tooltip {
-            max-width: 700px;
-            font-size: 8pt;
-        }
-        .nl-result-field {
-            color: #999;
-        }
-        </style>
-        """
+        '''
 
         if len(hi_score_result_types) > 1:
             html += """<div class="select-result-type">Are you searching for:
@@ -142,7 +91,7 @@ class KeywordSearchHandler:
         #msg = '<br>\n'.join(proposed_queries)
         html = HtmlString(html)
 
-        return 1, KeywordSearchHandler.render(webm, html, True)
+        return 1, KeywordSearchHandler.render(webm, html, True, tmpl='das_kwdsearch_res')
         # TODO: html links
         #return html
 

@@ -233,7 +233,7 @@ def entities_for_input_params(params):
 
 
 
-def validate_input_params_mapping(params, entity=None, final_step=False):
+def validate_input_params(params, entity=None, final_step=False):
     """
     input parameters mapping (from keywords to input parameters) is that there must exist an API
     """
