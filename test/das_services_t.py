@@ -15,10 +15,9 @@ from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
-from DAS.utils.utils import deepcopy
 from DAS.core.das_parser import ql_manager
 from DAS.core.das_mapping_db import DASMapping
-from DAS.web.das_test_datasvc import DASTestDataService, Root
+from DAS.web.das_test_datasvc import Root
 from DAS.services.map_reader import read_service_map
 
 import DAS
@@ -40,7 +39,6 @@ class testCMSFakeDataServices(unittest.TestCase):
         self.dascache = 'test_cache'
         self.dasmr    = 'test_mapreduce'
         self.collname = collname
-#        config        = deepcopy(das_readconfig())
         config        = das_readconfig()
         dburi         = config['mongodb']['dburi']
         self.dburi    = dburi
@@ -61,17 +59,13 @@ class testCMSFakeDataServices(unittest.TestCase):
                                 'enable': True, 'sizecap': 10000}
         config['services'] = ['dbs', 'phedex', 'sitedb', 'google_maps', 'ip']
 
-        # mongo parser
-        self.mongoparser = ql_manager(config)
-        config['mongoparser'] = self.mongoparser
-
         # setup DAS mapper
         self.mgr = DASMapping(config)
 
         # create fresh DB
         self.clear_collections()
         self.mgr.delete_db_collection()
-        self.mgr.create_db()
+        self.mgr.init()
 
         # Add fake mapping records
         self.add_service('ip', 'ip.yml')
@@ -79,6 +73,10 @@ class testCMSFakeDataServices(unittest.TestCase):
         self.add_service('dbs', 'dbs.yml')
         self.add_service('phedex', 'phedex.yml')
         self.add_service('sitedb', 'sitedb.yml')
+
+        # mongo parser
+        self.mongoparser = ql_manager(config)
+        config['mongoparser'] = self.mongoparser
 
         # create DAS handler
         self.das = DASCore(config)
