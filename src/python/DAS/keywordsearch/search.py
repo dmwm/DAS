@@ -121,6 +121,7 @@ from DAS.keywordsearch.config import mod_enabled
 
 from DAS.keywordsearch.whoosh.service_fields import load_index, search_index
 
+from DAS.keywordsearch.value_matching import keyword_value_weights
 
 DEBUG = False
 
@@ -276,10 +277,11 @@ def penalize_non_mapped_keywords(keywords_used, keywords_list, score):
 
 def generate_value_mappings(requested_entity, fields_included, schema_ws,
                             values_ws,
-                            old_score, values_mapping={},
-                            keywords_used=set([]),
-                            keywords_list=[], keyword_index=0, chunks=[],
-                            traceability= set([])):
+                            old_score, values_mapping={}, # TODO
+                            keywords_used=set(),
+                            keywords_list= [], keyword_index=0, chunks=[],
+                            traceability= set(),
+                            result_projection_forbidden=set()):
     SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT = 0.2
 
     # TODO: modify the value and schema mappings weights according to previous mappings
@@ -337,8 +339,10 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
                     )
 
                     generate_result_filters(keywords_list, chunks,
-                        keywords_used, old_score, requested_entity,
-                        values_mapping, traceability=traceability)
+                        keywords_used | result_projection_forbidden,
+                        old_score, requested_entity,
+                        values_mapping, traceability = traceability,
+                        )
 
 
             else:
@@ -354,8 +358,10 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
 
 
                 generate_result_filters(keywords_list, chunks,
-                    keywords_used, old_score, requested_entity,
-                    values_mapping, traceability=traceability)
+                    keywords_used | result_projection_forbidden,
+                    old_score, requested_entity,
+                    values_mapping, traceability=traceability,
+                    result_fields_included = result_projection_forbidden)
 
         return
 
@@ -369,7 +375,8 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
     generate_value_mappings(requested_entity, fields_included, schema_ws,
         values_ws, old_score, values_mapping,
         keywords_used, keywords_list, keyword_index=keyword_index + 1,
-        chunks=chunks, traceability=traceability)
+        chunks=chunks, traceability=traceability,
+        result_projection_forbidden=result_projection_forbidden)
 
     # case 2) we do take keyword[i]:
     if keyword not in keywords_used:
@@ -436,7 +443,8 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
                     traceability= traceability| set([(keyword,
                                                       'value_for',
                                                       possible_mapping,
-                                                     delta_score)]))
+                                                     delta_score)]),
+                    result_projection_forbidden = result_projection_forbidden)
 
 
                 # (as a final condition) now every field in fields_included that were guessed in earlier step, has to be covered by values
@@ -470,11 +478,14 @@ def generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws,
         # if we used a compound keyword A=B for schema, its still available for values
         keywords_used_wo_operators = set([k for k in keywords_used
                               if not '=' in k])
+        result_projection_forbidden = set([k for k in keywords_used
+                                           if '=' in k])
         # try to map values based on this
         generate_value_mappings(requested_entity, fields_old, schema_ws,
             values_ws, old_score,
             keywords_used=keywords_used_wo_operators, keywords_list=keywords_list,
-            chunks=chunks,  traceability=traceability)
+            chunks=chunks,  traceability=traceability,
+            result_projection_forbidden = result_projection_forbidden)
 
 
         if UGLY_DEBUG: print (
