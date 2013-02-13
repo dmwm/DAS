@@ -1,12 +1,73 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-__author__ = 'vidma'
+'''
+Module description:
+ - first cleans up input keyword query (remove extra spaces, standardize notation)
+ - then it tokenizes the query into:
+    * individual query terms
+    * compound query terms in brackets (e.g. "number of events")
+    * strings of "terms operator value" (e.g. nevent > 1, "number of events"=100)
+'''
+
 
 import re
-
 from nltk.internals import  convert_regexp_to_nongrouping
 
+
+
 kws_operators = r'(>=|<=|<|>|=)'
+word = r'[a-zA-Z0-9_\-*/.@]+'
+
+
+
+cleanup_subs = [
+    # get rid of multiple spaces
+    (r'\s+', ' '),
+
+    # TODO: this is temporary until supporting of specific patterns
+    (r'^(find|show|display|retrieve|select)( me)?\s?', ''),
+
+    # transform word-based operators
+    (r'\s?more than (?=\d+)', '>'),
+    (r'\s?more or equal( than| to)? (?=\d+)', '>'),
+
+    (r'\s?less than (?=\d+)', '<'),
+    (r'\s?less or equal( to| than)? (?=\d+)', '<'),
+
+    (r'\s?equals?( to)? (?=\d+)', '='),
+
+    # remove extra spaces
+    (r'\s*=\s*', '='),
+    (r'\s*>\s*', '>'),
+    (r'\s*>=\s*', '>='),
+    (r'\s*<=\s*', '<='),
+    (r'\s*<\s*', '<'),
+
+    # process dates into DAS format (must be preceded by operator, as
+    # dataset may also contain dates)
+    # e.g. = 2012-02-01 --> 20120201
+    (kws_operators + r'\s?([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])', r'\1 \2\3\4')
+]
+compile_repl_pattern = lambda (regexp, repl): (re.compile(regexp), repl)
+cleanup_subs = map(compile_repl_pattern, cleanup_subs)
+
+
+#word =
+tokenizer_patterns = \
+    r'''
+    "[^"]+" %(kws_operators)s %(word)s | # word in brackets plus operators
+    "[^"]+"  |  # word in brackets
+
+    '[^']+' %(kws_operators)s %(word)s | # word in brackets plus operators
+    '[^']+'  |  # word in brackets
+
+    %(word)s %(kws_operators)s %(word)s | # word op word
+    %(word)s | # word
+    \S+" # any other non-whitespace sequence
+    ''' % locals()
+tokenizer_patterns = convert_regexp_to_nongrouping(tokenizer_patterns)
+tokenizer_patterns = re.compile(tokenizer_patterns, re.VERBOSE)
+
 
 
 def cleanup_query(query):
@@ -43,39 +104,8 @@ def cleanup_query(query):
     '>= 20120201'
 
     """
-    # TODO: preprocess the query
-    replacements = [
-        # get rid of multiple spaces
-        (r'\s+', ' '),
 
-        # TODO: this is temporary until supporting of specific patterns
-        (r'^(find|show|display|retrieve|select)( me)?\s?', ''),
-
-        # transform word-based operators
-        (r'\s?more than (?=\d+)', '>'),
-        (r'\s?more or equal( than| to)? (?=\d+)', '>'),
-
-        (r'\s?less than (?=\d+)', '<'),
-        (r'\s?less or equal( to| than)? (?=\d+)', '<'),
-
-        (r'\s?equals?( to)? (?=\d+)', '='),
-
-        # remove extra spaces
-        (r'\s*=\s*', '='),
-        (r'\s*>\s*', '>'),
-        (r'\s*>=\s*', '>='),
-        (r'\s*<=\s*', '<='),
-        (r'\s*<\s*', '<'),
-
-        # process dates into DAS format (must be preceded by operator, as
-        # dataset may also contain dates)
-        # e.g. = 2012-02-01 --> 20120201
-        (kws_operators + r'\s?([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])', r'\1 \2\3\4')
-    ]
-    compile_repl_pattern = lambda (regexp, repl): (re.compile(regexp), repl)
-    replacements = map(compile_repl_pattern, replacements)
-
-    for regexp, repl in replacements:
+    for regexp, repl in cleanup_subs:
         query = re.sub(regexp, repl, query)
     return query
 
@@ -94,8 +124,24 @@ def get_keyword_without_operator(keyword):
     >>> get_keyword_without_operator('dataset=Zmm')
     'dataset'
     '''
-    global kws_operators
+    #global kws_operators
     return re.split(kws_operators, keyword)[0].strip()
+
+def test_operator_containment(keyword):
+    '''
+    returns whether a keyword token contains an operator
+    (this is useful then processing a list of tokens,
+    as only the last token may have an operator)
+
+    >>> test_operator_containment('number of events >= 10')
+    True
+
+    >>> test_operator_containment('number')
+    False
+
+    '''
+    return bool(re.findall(kws_operators, keyword))
+
 
 
 def get_operator_and_param(keyword):
@@ -112,7 +158,7 @@ def get_operator_and_param(keyword):
     {'param': 'Zmm', 'op': '='}
 
     '''
-    global kws_operators
+
     parts = re.split(kws_operators, keyword)
     # e.g. parts = ['number of events ', '>=', ' 10']
     if len(parts) == 3:
@@ -151,34 +197,17 @@ def tokenize(query):
     """
     #TODO: if needed we may add support for parentesis e.g. sum(number of events)
 
-    global kws_operators
+    #global kws_operators
     operators = kws_operators
 
     query = cleanup_query(query)
     # first remove extra spaces
     #operators = r'[=><]{1,2}'
 
-    word = r'[a-zA-Z0-9_\-*/.@]+'
-    #word =
-    regexp =\
-    r'''
-    "[^"]+" %(operators)s %(word)s | # word in brackets plus operators
-    "[^"]+"  |  # word in brackets
-
-    '[^']+' %(operators)s %(word)s | # word in brackets plus operators
-    '[^']+'  |  # word in brackets
-
-    %(word)s %(operators)s %(word)s | # word op word
-    %(word)s | # word
-    \S+" # any other non-whitespace sequence
-    ''' % locals()
-    regexp = convert_regexp_to_nongrouping(regexp)
-    regexp = re.compile(regexp, re.VERBOSE)
-    # re.findall(regexp,  'file dataset=dataset lumi=20853 nevents>10 "number ofevents">10 /Zmm*/*/raw-reco')
 
     # TODO: remove brackets?
-    # TODO: split on operator?
-    return [m.replace('"', '').replace("'", '') for m in re.findall(regexp,  query)]
+
+    return [m.replace('"', '').replace("'", '') for m in re.findall(tokenizer_patterns,  query)]
 
 if __name__ == '__main__':
     print tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10 "number of events">10 /Zmm*/*/raw-reco')

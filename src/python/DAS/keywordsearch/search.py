@@ -119,7 +119,9 @@ from DAS.keywordsearch.entity_matching import *
 
 import DAS.keywordsearch.das_schema_adapter as integration_schema
 
-from DAS.keywordsearch.tokenizer import tokenize, get_keyword_without_operator, get_operator_and_param, cleanup_query
+from DAS.keywordsearch.tokenizer import tokenize, get_keyword_without_operator,\
+    get_operator_and_param, cleanup_query, test_operator_containment
+
 from DAS.keywordsearch.config import mod_enabled
 
 from DAS.keywordsearch.whoosh.service_fields import load_index, search_index
@@ -219,37 +221,37 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
             target = target_fieldname
 
 
+            delta_score = weight * match['score']
+
             if match['predicate']:
                 pred = match['predicate']
                 target = (target_fieldname, pred['op'], pred['param'])
 
                 # promote matches with operator
-                match['score'] *= 3.0
+                delta_score *= 2.0
 
-            delta_score = old_score + weight * match['score']
+
             if len(match['keywords_required']) == 1:
                 delta_score += penalize_highly_possible_schema_terms_as_values(
                                     match['keywords_required'][0], None)
-
-
 
             _r_filters.append(target)
 
 
             new_score = old_score + delta_score
-            
             adjusted_score_ = penalize_non_mapped_keywords(
                                 keywords_used_, keywords_list, new_score)
-                
+
 
             # TODO: do we support set literal (set([]) == {}); requires: 2.7a3+
             # http://stackoverflow.com/questions/2243049/what-do-you-think-about-pythons-new-set-literal-2-7a3
 
             _trace = traceability | set([
-                                                    (tuple(match['keywords_required']),
-                                                    'result_projection',
-                                                    target,
-                                                    delta_score), ])
+                                        (tuple(match['keywords_required']),
+                                        'result_projection',
+                                        target,
+                                         tuple({'delta_score': delta_score,
+                                          'field_score': match['score']}.items())), ])
 
             store_result(adjusted_score_, result_type,
                          values_mapping,
@@ -259,7 +261,7 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
 
             if len(keywords_used_) < len(set(keywords_list)):
                 generate_result_filters(keywords_list, chunks, keywords_used_,
-                    old_score + delta_score, result_type, values_mapping,
+                    new_score, result_type, values_mapping,
                     result_filters =_r_filters, field_idx_start=field_idx + 1,
                     traceability=_trace,
                     result_fields_included = result_fields_included | set([target_fieldname ]))
@@ -273,8 +275,6 @@ def penalize_non_mapped_keywords(keywords_used, keywords_list, score):
     # e.g. stopwords shall not be penalized, but in some cases could give increase,
     # e.g. TODO: where is smf, 'how big/large' is
 
-
-    global en_stopwords
 
     N_total_kw = len(set(keywords_used))
     N_kw_without_stopw = len(
@@ -445,9 +445,9 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
                     keywords_list=keywords_list,
                     chunks=chunks,
                     trace= trace| set([(keyword,
-                                                      'value_for',
-                                                      possible_mapping,
-                                                     delta_score)]),
+                                      'value_for',
+                                      possible_mapping,
+                                     delta_score)]),
                     result_projection_forbidden = result_projection_forbidden)
 
 
@@ -629,9 +629,14 @@ def generate_chunks(keywords):
         for start in xrange(0, max_len-l+1):
             chunk = keywords[start:start+l]
 
-            # exclude chunks with "a b c"
-            if [c for c in chunk if ' ' in c]:
+            # exclude chunks with "a b c" (as these were processed earlier)
+            if filter(lambda c:' ' in c, chunk):
                 continue
+
+            # only the last term in the chunk is allowed to contain operator
+            if filter(test_operator_containment, chunk[:-1]):
+                continue
+
 
             print 'len=', l, '; start=', start, 'chunk:', chunk
             for entity in entities:
@@ -646,9 +651,8 @@ def generate_chunks(keywords):
                     r['field'] = fields_by_entity[entity][r['field']]
                     r['keywords_required'] = chunk
 
-                    # r['score'] *= 0.5 * l # penalize partial matches and promote longer matches
 
-                    # penalize terms that have multiple matches
+                    # penalize terms that have multiple matches; longer chunks are better
                     r['score'] *= 0.5 * len(chunk) / len(res)
 
 

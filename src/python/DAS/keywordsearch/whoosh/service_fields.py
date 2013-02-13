@@ -163,7 +163,7 @@ def search_index(keywords, result_type, full_matches_only=False):
             print 'Q:'
             pprint.pprint(q)
 
-        hits = s.search(q, terms=True, optimize=False, )
+        hits = s.search(q, terms=True, optimize=True, )
 
         if _DEBUG:
             print 'OR KWS RESULTS:'
