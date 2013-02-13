@@ -21,13 +21,25 @@ primary_dataset : [
         {"das":"primary_dataset.name", "ui":"Primary dataset", 
          "link":[
                  {"name":"Datasets", "query":"dataset primary_dataset=%s"},
-                ]},
+                ],
+         "description":"is a name of primary dataset defined in DBS system",
+         "examples":[
+         "primary_dataset=Cosmics",
+         ]
+        },
         {"das":"primary_dataset.type", "ui":"Type"},
         {"das":"primary_dataset.create_by", "ui":"Created by:"},
         ],
 summary : [
         {"das":"summary", "ui":"Summary",
-         "link":[]},
+         "link":[],
+         "description":"is a DAS keyword to get summary information for certain queries, \
+right now it is only used for summary information about dataset/run pairs and include \
+information about number of files/lumis/blocks/events and file size",
+         "examples":[
+         "summary dataset=/a/b/c run=123",
+         ]
+        },
         {"das":"summary.nfiles", "ui":"Number of files"},
         {"das":"summary.nlumis", "ui":"Number of lumis"},
         {"das":"summary.nblocks", "ui":"Number of blocks"},
@@ -51,7 +63,13 @@ dataset : [
                  {"name":"Children", "query":"child dataset=%s"},
                  {"name":"Sites", "query":"site dataset=%s"},
                  {"name":"Physics Groups", "query":"group dataset=%s"},
-                ]},
+                ],
+         "description": "is a name of CMS dataset which represented as a path \
+/primary_dataset/processed_dataset/data_tier",
+         "examples":[
+         "dataset=/ZMM*/*/*",
+         ]
+        },
         {"das":"dataset.nfiles", "ui":"Number of files"},
         {"das":"dataset.nblocks", "ui":"Number of blocks"},
         {"das":"dataset.nevents", "ui":"Number of events"}, 
@@ -79,7 +97,14 @@ block : [
                 {"name":"Files", "query":"file block=%s"},
                 {"name":"Runs", "query":"run block=%s"},
                 {"name":"Sites", "query":"site block=%s"},
-                ]}, 
+                ],
+         "description":"is a name used by DBS and Phedex systems to refer \
+set of files usually associated with data transfer. It consists \
+of dataset path followed by unique block id, e.g. /prim_dataset/proc_dataset/tier#123",
+         "examples":[
+         "block=/a/b/c#123",
+         ]
+        }, 
         {"das":"block.size", "ui":"Block size"},
         {"das":"block.nevents", "ui":"Number of events"},
         {"das":"block.nfiles", "ui":"Number of files"},
@@ -93,12 +118,17 @@ file : [
          "diff":["file.size", "file.nevents"],
          "link":[
                 {"name": "Dataset", "query": "dataset file=%s"},
-                {"name":"Sites", "query":"site file=%s"},
+                {"name": "Sites", "query":"site file=%s"},
                 {"name": "Runs", "query": "run file=%s"},
                 {"name": "Parents", "query": "parent file=%s"},
                 {"name": "Children", "query": "child file=%s"},
                 {"name": "Lumis", "query": "lumi file=%s"},
-                ]},
+                ],
+        "description":"is a logical file name used in DBS/Phedex systems",
+         "examples":[
+         "file=/lfn.root",
+         ]
+        },
         {"das":"file.size", "ui":"File size"},
         {"das":"file.type", "ui":"File type"},
         {"das":"file.nevents", "ui":"Number of events"},
@@ -112,7 +142,12 @@ run : [
          "link":[
                 {"name":"Datasets", "query": "dataset run=%s"},
                 {"name":"Lumis", "query": "lumi run=%s"},
-                ]},
+                ],
+        "description":"is run number (usually six digits) used by DBS/RunRegistry/CondDB/Tier-0 systems",
+         "examples":[
+         "run=160915",
+         ]
+        },
         {"das":"run.nevents", "ui":"Number of events"},
         {"das":"run.nlumis", "ui":"Number of lumis"},
         {"das":"run.global_tag", "ui":"Global tag"},
@@ -124,11 +159,36 @@ run : [
         {"das":"run.httperror", "ui":"Reason"},
         ],
 run_status: [
+        {"das":"run_status", "ui":"Run status", "link":[],
+         "description":"is a value used by Tier-0 system for run identification",
+         "examples":[
+         "run run_status=Complete",
+         "run run_status=CloseOut",
+         ]
+        },
+        {"das":"run.run_number", "ui":"Run number"},
+        {"das":"run.start_time", "ui":"Start time"},
+        ],
+stream: [
+        {"das":"stream", "ui":"Stream name", "link":[],
+         "description":"is a value used by Tier-0 system for run identification",
+         "examples":[
+         "run stream=Express",
+         ]
+        },
         {"das":"run.run_number", "ui":"Run number"},
         {"das":"run.start_time", "ui":"Start time"},
         ],
 lumi : [
-        {"das": "lumi.number", "ui": "Luminosiy number"},
+        {"das": "lumi.number", "ui": "Luminosiy number", "link":[],
+         "description":"is used to identify luminosity block during run data-taking, it is \
+provided by DBS/CondDB/LumiDB systems",
+         "examples":[
+         "lumi run=160915",
+         "lumi file=/lfn.root",
+         "lumi block=/a/b/c#123",
+         ]
+        },
         {"das": "lumi.delivered", "ui": "Delivered luminosiy"},
         {"das": "lumi.integrated", "ui": "Integrated luminosiy"},
         {"das": "lumi.run_number", "ui": "Run number"},
@@ -138,8 +198,13 @@ lumi : [
 tier : [
         {"das":"tier.name", "ui":"Tier name",
          "link":[
-#                 {"name":"Datasets", "query": "dataset tier=%s"},
-                ]},
+                {"name":"Datasets", "query": "dataset tier=%s"},
+                ],
+         "description":"is a data tier used by DBS system to identify dataset meaning, there are different pre-defined data-tiers, such as GEN, SIM, RECO, ALCORECO, RAW and mixed one, e.g. GEN-SIM-RECO",
+         "examples":[
+         "dataset tier=*GEN*",
+         ]
+        },
         {"das":"tier.error", "ui":"Error"},
         {"das":"tier.httperror", "ui":"Reason"},
         ],
@@ -147,7 +212,12 @@ release: [
         {"das":"release.name", "ui":"Release name",
          "link":[
                  {"name":"Datasets", "query":"dataset release=%s"},
-                ]},
+                ],
+         "description":"is a name of CMSSW release, e.g. CMSSW_6_0_1",
+         "examples":[
+         "release=CMSSW_6_0_1",
+         ]
+        },
         {"das":"release.algorithm.executable", "ui":"Executable"},
         {"das":"release.algorithm.name", "ui":"Algorithm name"},
         {"das":"release.error", "ui":"Error"},
@@ -157,11 +227,20 @@ site : [
         {"das":"site.name", "ui":"Site name",
          "link":[
                  {"name":"Datasets", "query":"dataset site=%s*"},
-                ]},
+                ],
+         "description": "is CMS site name used by Phedex and SiteDB systems",
+         "examples":[
+         "site=T3_US_Cornell",
+         ]
+        },
         {"das":"site.se", "ui":"StorageElement",
          "link":[
                  {"name":"Site", "query":"site=%s"},
-                ]
+                ],
+         "description": "is a name of storage element used by Phedex/SiteDB systems",
+         "examples":[
+         "site=osg-se.cac.cornell.edu",
+         ]
         },
         {"das":"site.dataset_fraction", "ui":"Dataset presence"},
         {"das":"site.block_fraction", "ui":"Block presence"},
@@ -176,6 +255,12 @@ site : [
         {"das":"reason", "ui":"Reason"},
         ],
 monitor : [
+        {"das":"monitor", "ui":"Monitor", "link":[],
+         "description":"is a DAS keyword to find monitoring information about phedex for specific period of time",
+         "examples":[
+         "monitor date last 24h",
+         ]
+        },
         {"das":"monitor.node", "ui":"Phedex Node"},
         {"das":"monitor.rate", "ui":"Transfer rate"},
         {"das":"monitor.country", "ui":"Country"},
@@ -183,7 +268,13 @@ monitor : [
         {"das":"monitor.time", "ui":"Time interval"},
         ],
 group : [
-        {"das":"group.name", "ui":"Group name"},
+        {"das":"group.name", "ui":"Group name", "link":[],
+         "description":"is a CMS group name, e.g. Higgs, it can be used to identify CMS datasets or SiteDB groups",
+         "examples":[
+         "dataset group=Top",
+         "group=DataOps",
+         ]
+        },
         {"das":"group.username", "ui":"Member(s)"},
         {"das":"group.node_files", "ui":"# of files archived on this node"},
         {"das":"group.dest_files", "ui":"# of approved files for this group"},
@@ -191,7 +282,15 @@ group : [
         {"das":"group.node_bytes", "ui":"# of bytes archived on this node"},
         ],
 jobsummary : [
-        {"das":"jobsummary.name", "ui":"Jobsummary"},
+        {"das":"jobsummary.name", "ui":"Jobsummary", "link":[],
+         "description":"provides dashboard summary information for given conditions",
+         "examples":[
+         "jobsummary user=Oli",
+         "jobsummary date last 24h",
+         "jobsummary site=T1_DE_KIT date last 24h",
+         "jobsummary date between [20110208, 20110209]",
+         ]
+        },
         {"das":"jobsummary.terminated", "ui":"Terminated"},
         {"das":"jobsummary.running", "ui":"Running"},
         {"das":"jobsummary.submitted", "ui":"Submitted"},
@@ -211,22 +310,45 @@ city    : [
         {"das":"city.Placemark.ExtendedData.LatLonBox.south", "ui":"Location south"},
         ],
 parent  : [
-        {"das":"parent.name", "ui":"Parent name"},
+        {"das":"parent.name", "ui":"Parent name", "link":[],
+         "description":"is a DAS key to lookup parent information of dataset/file",
+         "examples":[
+         "parent dataset=/a/b/c",
+         "parent file=/lnf.root"
+         ]
+        },
         {"das":"parent.nevents", "ui":"Number of events"},
         {"das":"parent.size", "ui":"Size"},
         ],
 child : [
-        {"das":"child.name", "ui":"Child name"},
+        {"das":"child.name", "ui":"Child name", "link":[],
+         "description":"is a DAS key to lookup child information of dataset/file",
+         "examples":[
+         "child dataset=/a/b/c",
+         "child file=/lfn.root",
+         ]
+        },
         {"das":"child.nevents", "ui":"Number of events"},
         {"das":"child.size", "ui":"Size"},
         ],
 config : [
-        {"das":"config.name", "ui":"Config name"},
+        {"das":"config.name", "ui":"Config name", "link":[],
+         "description":"is a DAS key to lookup CMS configuration information about dataset",
+         "examples":[
+         "config dataset=/a/b/c",
+         ]
+        },
         {"das":"config.type", "ui":"Type"},
         {"das":"config.version", "ui":"Version"},
         ],
 user    : [
-        {"das":"user.name", "ui":"User name"},
+        {"das":"user.name", "ui":"User name", "link":[],
+         "description":"is a DAS key to specify CMS user name used in SiteDB (you can use either alias or user email)",
+         "examples":[
+         "user=oli",
+         "user=oli@a.b.com"
+         ]
+        },
         {"das":"user.forename", "ui":"Fist name"},
         {"das":"user.surname", "ui":"Last name"},
         {"das":"user.dn", "ui":"User DN"},
@@ -234,9 +356,40 @@ user    : [
         {"das":"user.phone1", "ui":"Phone"},
         {"das":"user.phone2", "ui":"Alternative Phone"},
         ],
-status: [],
+status: [
+        {"das":"status", "ui":"Status", "link":[],
+         "description":"is a special DAS key to specify dataset status information",
+         "examples":[
+         "dataset status=valid",
+         ]
+        }
+        ],
+date: [
+        {"das":"date", "ui":"", "link":[],
+         "description":"is a special DAS key to specify date stamp in DAS queries, it can be used \
+in conjunction with dataset/run/jobsummary/monitor DAS keys. The date cane be specified either \
+using between clause or in form of last keyword",
+         "examples":[
+         "dataset date=20101103",
+         "dataset date between [20101001, 20101002]",
+         "run date = 20101009",
+         "run date between [20101001, 20101002]",
+         "jobsummary date last 24h",
+         "jobsummary date between [20110208, 20110209]",
+         "monitor date last 24h",
+         ]
+         }
+        ],
 das_query : [
         {"das":"das_query.dasquery", "ui":"DAS query"},
         {"das":"das_query.counter", "ui":"Number of calls"},
+        ],
+records: [
+        {"das":"records", "ui":"Records", "link":[],
+         "description":"is a special DAS key to look-up all records in DAS cache",
+         "examples":[
+         "records",
+         ]
+        }
         ],
 }
