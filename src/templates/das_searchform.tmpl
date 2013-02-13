@@ -68,6 +68,9 @@ autocompletion
 <input type="text" name="input" id="input" style="width:100%;" />
 <div id="ac_container"></div>
 </div>
+<span>
+<a href="javascript:FlipTag('das_keys_desc');"><b>Show DAS keys description</b></a>
+</span>
 </form>
 <div class="right">
 <img src="$base/images/mongodb_logo.png" alt="Powered by MongoDB" width="5%" />
@@ -158,6 +161,12 @@ ac_init();
 
 ### Please note the cards are sanitized in das_cards template
 $cards
+<div class="hide" id="das_keys_desc">
+<div class="overlay all-side-shadow">
+<div align="right"><a href="javascript:HideTag('das_keys_desc')"><b>Hide</b></a></div>
+$daskeys
+</div>
+</div>
 
 <div id="response" name="response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
 
