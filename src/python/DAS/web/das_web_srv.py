@@ -131,6 +131,7 @@ class DASWebService(DASWebManager):
         self.dbs_global  = None # defined at run-time via self.init()
         self.dataset_daemon = config.get('dbs_daemon', False)
         self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
+        self.daskeyslist = [] # list of DAS keys
         self.init()
 
         # Monitoring thread which performs auto-reconnection
@@ -202,6 +203,10 @@ class DASWebService(DASWebManager):
             # Start DBS daemon
             if  self.dataset_daemon:
                 self.dbs_daemon(self.dasconfig['web_server'])
+            if  not self.daskeyslist:
+                keylist = [r for r in self.dasmapping.das_presentation_map()]
+                keylist.sort(key=lambda r: r['das'])
+                self.daskeyslist = keylist
         except Exception as ConnectionFailure:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
@@ -287,7 +292,8 @@ class DASWebService(DASWebManager):
         highlight = kwargs.get('highlight', None)
         guide = self.templatepage('dbsql_vs_dasql', 
                     operators=', '.join(das_operators()))
-        page = self.templatepage('das_faq', guide=guide,
+        daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
+        page = self.templatepage('das_faq', guide=guide, daskeys=daskeys,
                 section=section, highlight=highlight,
                 operators=', '.join(das_operators()), 
                 aggregators=', '.join(das_aggregators()))
