@@ -95,6 +95,16 @@ class DASMapping(object):
                         self.reverse_presentation[row['ui']] = \
                                 {daskey : {'mapkey': row['das'], 'link': link}}
 
+    def das_presentation_map(self):
+        "Read DAS presentation map"
+        query = {'presentation':{'$ne':None}}
+        data  = self.col.find_one(query)
+        if  data:
+            for daskey, uilist in data.get('presentation', {}).iteritems():
+                for row in uilist:
+                    if  row.has_key('link'):
+                        yield row
+
     def init(self):
         """
         Establish connection to MongoDB back-end and create DB.
