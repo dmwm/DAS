@@ -16,7 +16,7 @@ from nltk.internals import  convert_regexp_to_nongrouping
 
 
 kws_operators = r'(>=|<=|<|>|=)'
-word = r'[a-zA-Z0-9_\-*/.@]+'
+word = r'[a-zA-Z0-9_\-*/.@:]+'
 
 
 
@@ -26,6 +26,8 @@ cleanup_subs = [
 
     # TODO: this is temporary until supporting of specific patterns
     (r'^(find|show|display|retrieve|select)( me)?\s?', ''),
+    # simplest way to process 'when' questions (attributes *_time; date is almost useless as result type currently (?), could could be input)
+    (r'^when\s', 'time '),
 
     # transform word-based operators
     (r'\s?more than (?=\d+)', '>'),

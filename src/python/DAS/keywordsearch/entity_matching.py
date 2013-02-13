@@ -131,6 +131,9 @@ def keyword_schema_weights(keyword,  use_fields=True, include_fields =False, \
             result.extend( [(0.6, 'site.name'), ])
         if keyword == 'who':
             result.extend( [(0.5, 'user.name'),])
+
+        #if keyword == 'when':
+        #    result.extend( [(0.5, 'date'),])
         # TODO: how many [number]
         # TODO: how large/big/... [size (result attribute)]
         # when -- date

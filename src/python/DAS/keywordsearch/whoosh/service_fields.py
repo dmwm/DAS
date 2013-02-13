@@ -102,7 +102,7 @@ def load_index():
     return _ix
 
 
-def search_index(keywords, result_type, full_matches_only=False):
+def search_index(keywords, result_type, full_matches_only=False, limit=10):
     global _ix
 
     if _DEBUG:
@@ -145,9 +145,14 @@ def search_index(keywords, result_type, full_matches_only=False):
             # e.g. 'number events' and 'number of' gets the same scores,
             # while 'number events' is much more informative
             #  (so at least it is scoring more than over results)
-            # TODO: so now, the question is shall we tokenize it or not!?
-            all_fields_and_terms.append(
-                Phrase('title_exact', keyword_list, boost=2, slop=1))
+
+            # TODO: problem is that stopwords match too much ('file in|of'-> file size, replica fraction,
+            # and it seems they're not accounted in the current default ranking
+            # so we have to either change the cost model or allow only
+            # full matching (not sure if possible in whoosh)
+
+            #all_fields_and_terms.append(
+            #    Phrase('title_exact', keyword_list, boost=2, slop=1))
 
             # TODO: an easy way to check for full (complete) match is to count the unique matched terms.
 
@@ -163,7 +168,7 @@ def search_index(keywords, result_type, full_matches_only=False):
             print 'Q:'
             pprint.pprint(q)
 
-        hits = s.search(q, terms=True, optimize=True, )
+        hits = s.search(q, terms=True, optimize=True, limit=limit)
 
         if _DEBUG:
             print 'OR KWS RESULTS:'
@@ -248,5 +253,22 @@ if __name__ == '__main__':
     print 'Q: dataset part'
     pprint.pprint(
         search_index(keywords=u'dataset part', result_type=u'site'))
+
+
+
+    print '============================================'
+    print 'Q: file'
+    # TODO: maybe it's not a good idea constraining on result type?
+    pprint.pprint(
+        search_index(keywords=u'file in', result_type='file', limit=4))
+
+
+
+    print '============================================'
+    print 'Q: file in'
+    # TODO: maybe it's not a good idea constraining on result type?
+    pprint.pprint(
+        search_index(keywords=u'file in', result_type='file', limit=4))
+
 
     #  lumi flag in run 176304

@@ -137,11 +137,14 @@ DEBUG = False
 en_stopwords = stopwords.words('english')
 
 
+def filter_stopwords(kwd_list):
+    return filter(lambda k: k not in en_stopwords, kwd_list)
+
 def _get_reserved_terms():
     """
     terms that shall be down-ranked
     """
-    entities = ['dataset', 'run', 'block', 'file', 'site']
+    entities = ['dataset', 'run', 'block', 'file', 'site', 'config']
     operators = integration_schema.get_operator_synonyms()
     return set(entities) | set(operators)
 
@@ -214,14 +217,14 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
             print 'required fields available for:', match
             keywords_used_ = keywords_used | set(match['keywords_required'])
 
-            weight = match['field']['importance'] and 0.2 or 0.1
+            #weight = match['field']['importance'] and 0.2 or 0.1
 
 
             _r_filters = result_filters[:]
             target = target_fieldname
 
 
-            delta_score = weight * match['score']
+            delta_score = match['score']
 
             if match['predicate']:
                 pred = match['predicate']
@@ -231,9 +234,15 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
                 delta_score *= 2.0
 
 
-            if len(match['keywords_required']) == 1:
+            kwds = filter_stopwords(match['keywords_required'])
+            if len(kwds) == 1:
                 delta_score += penalize_highly_possible_schema_terms_as_values(
-                                    match['keywords_required'][0], None)
+                    kwds[0], None)
+            else:
+                # TODO?
+                pass
+
+
 
             _r_filters.append(target)
 
@@ -277,8 +286,7 @@ def penalize_non_mapped_keywords(keywords_used, keywords_list, score):
 
 
     N_total_kw = len(set(keywords_used))
-    N_kw_without_stopw = len(
-        filter(lambda kw: kw in en_stopwords, set(keywords_list)))
+    N_kw_without_stopw = len(filter_stopwords(set(keywords_list)))
 
     if N_kw_without_stopw:
         return score * min(len(keywords_used), N_total_kw) / N_kw_without_stopw
@@ -589,6 +597,16 @@ def generate_chunks(keywords):
     if not mod_enabled('SERVICE_RESULT_FIELDS'):
         return {}
 
+    W_PHRASE = 2.0
+
+    # TODO: These could be increased for short queries or lowered for long ones
+    RESULT_LIMIT_PHRASES = 5
+    RESULT_LIMIT_TOKEN_COMBINATION = 3
+    # max len of tokens to consider as a sequence
+    # (e.g. number of events --> "number of events")
+    MAX_TOKEN_COMBINATION_LEN =  4
+
+
     fields_by_entity = list_result_fields()
     entities = fields_by_entity.keys()
 
@@ -609,9 +627,10 @@ def generate_chunks(keywords):
 
             res = search_index(
                 keywords=phrase,
-                result_type=entity)
+                result_type=entity,
+                limit=RESULT_LIMIT_PHRASES)
             for r in res:
-                r['len'] = len(phrase.split(' '))
+                r['len'] = len(filter_stopwords(phrase.split(' ')))
                 r['field'] = fields_by_entity[entity][r['field']]
                 r['keywords_required'] = [kwd]
                 # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
@@ -619,14 +638,16 @@ def generate_chunks(keywords):
                 # TODO: shall we divide by variance or stddev?
 
                 # penalize terms that have multiple matches
-                r['score'] /= len(res)
+                r['score'] *= W_PHRASE
+
 
             matches[entity].extend(res)
 
-    # TODO: now process partial matches
-    max_len = len(keywords)
+    # now process partial matches and their combinations
+    str_len = len(keywords)
+    max_len = min(len(keywords), MAX_TOKEN_COMBINATION_LEN)
     for l in xrange(1, max_len+1):
-        for start in xrange(0, max_len-l+1):
+        for start in xrange(0, str_len-l+1):
             chunk = keywords[start:start+l]
 
             # exclude chunks with "a b c" (as these were processed earlier)
@@ -645,15 +666,17 @@ def generate_chunks(keywords):
                 s_chunk = ' '.join(chunk_kwds)
                 res = search_index(
                     keywords= s_chunk ,
-                    result_type=entity)
+                    result_type=entity,
+                    limit=RESULT_LIMIT_TOKEN_COMBINATION)
+
                 for r in res:
-                    r['len'] = len(chunk),
+                    r['len'] = len(filter_stopwords(chunk))
                     r['field'] = fields_by_entity[entity][r['field']]
                     r['keywords_required'] = chunk
 
 
                     # penalize terms that have multiple matches; longer chunks are better
-                    r['score'] *= 0.5 * len(chunk) / len(res)
+                    #r['score'] *= 0.5 * len(chunk) / len(res)
 
 
                     # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
@@ -667,7 +690,7 @@ def generate_chunks(keywords):
 
     # TODO: use SCORE!!!
     # return the matches in sorted order (per result type)
-    for entity, fields in fields_by_entity.items():
+    for entity in matches.keys():
         #print 'trying to sort:'
         #pprint.pprint(full_matches[entity])
         for m in matches[entity]:
@@ -677,6 +700,23 @@ def generate_chunks(keywords):
                 m['predicate'] = pred
 
         matches[entity].sort(key=lambda f: f['score'], reverse=True)
+
+
+    # normalize the scores (if any)
+    # TODO: actually the IR score tell something.. if it's around ~10 it's a good match
+
+    _get_max_score = lambda m_list: reduce(max, map(lambda m: m['score'], m_list), 0)
+    scores = map(_get_max_score, matches.values())
+    max_score = reduce(max, scores, 0)
+
+    print 'max_score', max_score
+    if max_score:
+        for ent_matches in matches.values():
+            for m in ent_matches:
+                print "m['score']", m['score'], 'mlen:', m['len']
+                pprint.pprint(m)
+
+                m['score'] = 1.0 * m['score'] * m['len'] / max_score
 
 
     print 'chunks generated:'
