@@ -23,15 +23,10 @@ from pymongo import ASCENDING
 import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
-from DAS.web.utils import db_monitor
+from DAS.utils.das_db import db_monitor
 from DAS.utils.utils import get_key_cert, genkey
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
-
-
-# Shall we keep existing Datasets on server restart (very useful for debuging)
-KEEP_EXISTING_RECORDS_ON_RESTART = 1
-SKIP_UPDATES = 1
 
 def dbs_instance(dbsurl):
     """Parse dbs instance from provided DBS url"""
@@ -67,7 +62,8 @@ class DBSDaemon(object):
         self.col = None # to be defined in self.init
         self.init()
         # Monitoring thread which performs auto-reconnection to MongoDB
-        start_new_thread('dbs_monitor', db_monitor, (dburi, self.init))
+        thname = 'dbs_monitor:%s' % dbs_url
+        start_new_thread(thname, db_monitor, (dburi, self.init))
 
     def init(self):
         """
@@ -78,9 +74,6 @@ class DBSDaemon(object):
             self.col = conn[self.dbname][self.dbcoll]
             indexes = [('dataset', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
-
-            if not KEEP_EXISTING_RECORDS_ON_RESTART:
-                self.col.remove()
         except Exception as _exp:
             self.col = None
         if  not is_db_alive(self.dburi):
@@ -90,9 +83,6 @@ class DBSDaemon(object):
         """
         Update DBS collection with a fresh copy of datasets
         """
-        if SKIP_UPDATES:
-            return None
-
         if  self.col:
             time0 = time.time()
             gen = self.datasets()
@@ -107,7 +97,7 @@ class DBSDaemon(object):
             else: # we already have records, update their ts
                 for row in gen:
                     spec = dict(dataset=row['dataset'])
-                    self.col.update(spec, {'$set':{'ts':time0}})
+                    self.col.update(spec, {'$set':{'ts':time0}}, upsert=True)
             # remove records with old ts
             self.col.remove({'ts':{'$lt':time0-self.expire}})
             print "%s DBSDaemon updated %s collection in %s sec, nrec=%s" \
@@ -140,11 +130,14 @@ class DBSDaemon(object):
         """
         Retrieve a list of DBS datasets (DBS2)
         """
+        time0 = time.time()
         if  self.dbs_url.find('DBSServlet') != -1: # DBS2
             for rec in self.datasets_dbs():
+                rec.update({'ts':time0})
                 yield rec
         else: # DBS3
             for rec in self.datasets_dbs3():
+                rec.update({'ts':time0})
                 yield rec
 
     def datasets_dbs(self):

@@ -49,7 +49,14 @@ from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
 from DAS.services.sitedb2.sitedb2_service import SiteDBService
+from DAS.utils.global_scope import SERVICES
 import DAS.utils.jsonwrapper as json
+
+from DAS.core.das_query import WildcardMultipleMatchesException
+import urllib
+
+# TODO: move this to an appropriate place
+from DAS.web.utils import HtmlString
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
@@ -75,7 +82,7 @@ def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
                 if  (nrequests - taskmgr.nworkers()) < limit:
                     _evt, pid = taskmgr.spawn(\
                         dasmgr.call, dasquery, \
-                            addr, pid=dasquery.qhash)
+                            uid=addr, pid=dasquery.qhash)
                     jobs.append(pid)
                     reqmgr.remove_onhold(str(rec['_id']))
         except AutoReconnect:
@@ -96,46 +103,40 @@ class DASWebService(DASWebManager):
         self.base        = config['url_base']
         self.interval    = config.get('status_update', 2500)
         self.engine      = config.get('engine', None)
-        nworkers         = config['number_of_workers']
+        nworkers         = config['web_workers']
         self.hot_thr     = config.get('hot_threshold', 3000)
         self.dasconfig   = dasconfig
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
         self.queue_limit = config.get('queue_limit', 50)
+        qtype            = config.get('qtype', 'Queue')
+        if  qtype not in ['Queue', 'PriorityQueue']:
+            msg = 'Wrong queue type, qtype=%s' % qtype
+            raise Exception(msg)
         if  self.engine:
             thr_name = 'DASWebService:PluginTaskManager'
-            self.taskmgr = PluginTaskManager(\
-                        bus=self.engine, nworkers=nworkers, name=thr_name)
+            self.taskmgr = PluginTaskManager(bus=self.engine, \
+                    nworkers=nworkers, name=thr_name, qtype=qtype)
             self.taskmgr.subscribe()
         else:
             thr_name = 'DASWebService:TaskManager'
-            self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
+            self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name, \
+                    qtype=qtype)
         self.adjust      = config.get('adjust_input', False)
         self.dasmgr      = None # defined at run-time via self.init()
         self.reqmgr      = None # defined at run-time via self.init()
         self.daskeys     = []   # defined at run-time via self.init()
         self.colors      = {}   # defined at run-time via self.init()
+        self.dbs_url     = None # defined at run-time via self.init()
+        self.dbs_global  = None # defined at run-time via self.init()
+        self.dataset_daemon = config.get('dbs_daemon', False)
+        self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
         self.init()
 
         # Monitoring thread which performs auto-reconnection
         thname = 'dbscore_monitor'
         start_new_thread(thname, dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
-
-        # Obtain DBS global instance or set it as None
-        if  self.dasconfig.has_key('dbs'):
-            self.dbs_global = \
-                self.dasconfig['dbs'].get('dbs_global_instance', None)
-            self.dbs_instances = \
-                self.dasconfig['dbs'].get('dbs_instances', [])
-        else:
-            self.dbs_global = None
-            self.dbs_instances = []
-
-        # Start DBS daemon
-        self.dataset_daemon = config.get('dbs_daemon', False)
-        if  self.dataset_daemon:
-            self.dbs_daemon(config)
 
     def process_requests_onhold(self):
         "Process requests which are on hold"
@@ -149,14 +150,17 @@ class DASWebService(DASWebManager):
     def dbs_daemon(self, config):
         """Start DBS daemon if it is requested via DAS configuration"""
         try:
-            main_dbs_url = self.dasconfig['dbs']['dbs_global_url']
+            main_dbs_url = self.dbs_url
             self.dbs_urls = []
+            print "\n### DBS URL:", self.dbs_url
+            print "### DBS instances:", self.dbs_instances
+            if  not self.dbs_url or not self.dbs_instances:
+                return # just quit
             for inst in self.dbs_instances:
                 self.dbs_urls.append(\
                         main_dbs_url.replace(self.dbs_global, inst))
             interval  = config.get('dbs_daemon_interval', 3600)
             dbsexpire = config.get('dbs_daemon_expire', 3600)
-            self.dbsmgr = {} # dbs_urls vs dbs_daemons
             dbs_config  = {'expire': dbsexpire}
             if  self.dataset_daemon:
                 for dbs_url in self.dbs_urls:
@@ -170,8 +174,8 @@ class DASWebService(DASWebManager):
                             except:
                                 pass
                             time.sleep(interval)
-                    print "Start DBSDaemon for %s" % dbs_url
-                    thname = 'dbs_updater'
+                    print "### Start DBSDaemon for %s" % dbs_url
+                    thname = 'dbs_updater:%s' % dbs_url
                     start_new_thread(thname, dbs_updater, (dbsmgr, interval, ))
         except Exception as exc:
             print_exc(exc)
@@ -187,11 +191,17 @@ class DASWebService(DASWebManager):
             self.gfs        = db_gridfs(self.dburi)
             self.daskeys.sort()
             self.dasmapping = self.dasmgr.mapping
+            self.dbs_url    = self.dasmapping.dbs_url()
+            self.dbs_global = self.dasmapping.dbs_global_instance()
+            self.dbs_instances = self.dasmapping.dbs_instances()
             self.dasmapping.init_presentationcache()
             self.colors = {}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
-            self.sitedbmgr   = SiteDBService(self.dasconfig)
+            self.sitedbmgr = SERVICES.get('sitedb2', None) # SiteDB from global scope
+            # Start DBS daemon
+            if  self.dataset_daemon:
+                self.dbs_daemon(self.dasconfig['web_server'])
         except Exception as ConnectionFailure:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
@@ -201,6 +211,9 @@ class DASWebService(DASWebManager):
             print_exc(exc)
             self.dasmgr  = None
             self.reqmgr  = None
+            self.dbs_url = None
+            self.dbs_global = None
+            self.dbs_instances = []
             self.daskeys = []
             self.colors  = {}
             return
@@ -416,9 +429,32 @@ class DASWebService(DASWebManager):
         # Generate DASQuery object, if it fails we catch the exception and
         # wrap it for upper layer (web interface)
         try:
-            dasquery = DASQuery(uinput, instance=inst, active_dbsmgr = self._get_dbsmgr_for_db_instance(inst))
+            dasquery = DASQuery(uinput, instance=inst,
+                    active_dbsmgr = self._get_dbsmgr_for_db_instance(inst))
         except Exception as err:
-            return 1, helper(das_parser_error(uinput, str(err)), html_error)
+            # allow html in the exception message
+            exc_message = str(err)
+            if  isinstance(err.message, HtmlString):
+                exc_message = err.message
+
+            # Wildcard exception has to be processed here,
+            # because only this class knows about Web UI!
+            if  isinstance(err, WildcardMultipleMatchesException):
+                options = []
+                for dpat, query in err.options.items():
+                    # TODO: get view and limit
+                    params = cherrypy.request.params.copy()
+                    params['input'] = query
+                    das_url = '/das/request?' + urllib.urlencode(params)
+                    make_link_to_query = \
+                        lambda q: "<a href='%s'>%s</a>"\
+                           % (das_url,  q.replace(dpat, '<b>%s</b>' % dpat))
+                    options.append(make_link_to_query(query))
+
+                exc_message = HtmlString(err.message + '<br>\n'.join(options))
+            das_parser_error(uinput, 'WildcardMultipleMatchedException')
+            return 1, helper(exc_message, html_error)
+
         fields = dasquery.mongo_query.get('fields', [])
         if  not fields:
             fields = []
@@ -621,16 +657,20 @@ class DASWebService(DASWebManager):
             head.update({'status': 'fail', 'reason': str(exc),
                          'ctime': time.time()-time0, 'dasquery': dasquery})
             data = []
-        head.update({'incache':self.dasmgr.incache(dasquery, coll='cache')})
+        head.update({'incache':self.dasmgr.incache(dasquery, coll='cache'),
+                     'apilist':self.dasmgr.apilist(dasquery)})
         return head, data
 
     def busy(self):
         """
-        Check number server load and report busy status if it's
-        above threashold = queue size - nworkers
+        Check server load and report busy status if
+        nrequests - nworkers > queue limit
         """
         nrequests = self.reqmgr.size()
         if  (nrequests - self.taskmgr.nworkers()) > self.queue_limit:
+            msg = '#request=%s, queue_limit=%s, #workers=%s' \
+                    % (nrequests, self.taskmgr.nworkers(), self.queue_limit)
+            print dastimestamp('DAS WEB SERVER IS BUSY '), msg
             return True
         return False
 
@@ -714,7 +754,7 @@ class DASWebService(DASWebManager):
                     return self.datastream(dict(head=head, data=data))
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(\
-                self.dasmgr.call, dasquery, addr, pid=dasquery.qhash)
+                self.dasmgr.call, dasquery, uid=addr, pid=dasquery.qhash)
             self.logdb(uinput) # put entry in log DB once we place a request
             self.reqmgr.add(pid, kwargs)
             return pid
@@ -787,9 +827,12 @@ class DASWebService(DASWebManager):
         view    = kwargs.get('view', 'list')
         inst    = kwargs.get('instance', self.dbs_global)
         uinput  = kwargs.get('input', '')
+
         if  self.busy():
             return self.busy_page(uinput)
+
         self.logdb(uinput)
+
         form    = self.form(uinput=uinput, instance=inst, view=view)
         check, content = self.generate_dasquery(uinput, inst)
         if  check:
@@ -798,6 +841,12 @@ class DASWebService(DASWebManager):
             else:
                 return content
         dasquery = content # returned content is valid DAS query
+        # update filters of DASQuery to include spec fields, this is useful
+        # for end-users since DAS web UI always shows primary key
+        # Please note, this is not done for CLI requests, where users
+        # are more explicit with their intention
+        dasquery.update_filters()
+
         status, _qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
             kwargs['dasquery'] = dasquery
@@ -809,8 +858,8 @@ class DASWebService(DASWebManager):
         else:
             kwargs['dasquery'] = dasquery.storage_query
             addr = cherrypy.request.headers.get('Remote-Addr')
-            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery, addr,
-                                pid=dasquery.qhash)
+            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery,
+                    uid=addr, pid=dasquery.qhash)
             self.reqmgr.add(pid, kwargs)
             if  self.taskmgr.is_alive(pid):
                 page = self.templatepage('das_check_pid', method='check_pid',
