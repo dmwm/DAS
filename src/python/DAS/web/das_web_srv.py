@@ -516,8 +516,9 @@ class DASWebService(DASWebManager):
             instance = self.dbs_global
         cards = self.templatepage('das_cards', base=self.base, show=cards, \
                 width=900, height=220, cards=help_cards(self.base))
+        daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
         page  = self.templatepage('das_searchform', input=uinput, \
-                init_dbses=list(self.dbs_instances), \
+                init_dbses=list(self.dbs_instances), daskeys=daskeys, \
                 base=self.base, instance=instance, view=view, cards=cards)
         return page
 
