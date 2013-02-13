@@ -6,6 +6,13 @@ ENABLED_MODULES = {
     'STRING_DIST_ENABLE_NLTK_PORTER': True,
 
     'DOWNRANK_TERMS_REFERRING_TO_SCHEMA': True,
+
+    #  fields in results (or values if specified field_name=smf,
+    # e.g. number of events > 10
+
+    'SERVICE_RESULT_FIELDS': 1,
+    'SERVICE_RESULT_FIELDS_WITH_OPERATOR_AS_VALUES': 1,
+
 }
 
 

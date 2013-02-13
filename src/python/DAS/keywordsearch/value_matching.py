@@ -83,7 +83,7 @@ def keyword_regexp_weights(keyword):
 
         # TODO: I've hacked file/dataset regexps to be more restrictive as these are well defined
         if not '^' in constraint and not '$' in constraint and apis[0]['key'] \
-            in ['dataset', 'file', 'reco_status']:
+            in ['dataset', 'file', 'reco_status', 'run']:
             constraint = '^' + constraint + '$'
         score = 0
 

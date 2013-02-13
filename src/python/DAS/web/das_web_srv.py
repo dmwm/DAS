@@ -458,7 +458,8 @@ class DASWebService(DASWebManager):
             # Keyword Search
             if not isinstance(err, WildcardMatchingException):
                 return KeywordSearchHandler.handle_search(self,
-                    query=uinput, inst=inst, initial_exc_message = err.message)
+                    query=uinput, inst=inst, initial_exc_message = err.message,
+                    dbsmngr = self._get_dbsmgr_for_db_instance(inst))
                 #exc_message = HtmlString(html)
 
             return 1, helper(das_parser_error(uinput, exc_message), html_error)

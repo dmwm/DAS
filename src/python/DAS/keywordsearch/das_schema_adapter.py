@@ -14,6 +14,11 @@ import math
 import pprint
 import itertools
 
+from cherrypy import request
+
+from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
+import DAS.web.dbs_daemon
+
 # TODO: if field has fairly static values, then given value is not in there, is shall be penalized
 static_field_values = {
     'site': [],
@@ -257,19 +262,18 @@ def validate_input_params(params, entity=None, final_step=False):
 
     return False
 
-
-def match_value_dataset(keyword, dbsmgr_ = None):
-    from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
-    import DAS.web.dbs_daemon
+# TODO: move this to value matching?
+def match_value_dataset(keyword):
     DAS.web.dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART = 1
     DAS.web.dbs_daemon.SKIP_UPDATES = 1
 
 
+    if hasattr(request, 'dbsmngr'):
+        dbsmgr = request.dbsmngr
+    else:
+        dbsmgr = request.dbsmngr = get_global_dbs_mngr()
 
-    dbsmgr = dbsmgr_
-    if not dbsmgr_:
-        dbsmgr = get_global_dbs_mngr()
-
+    print 'DBS mngr:', dbsmgr
 
     dataset_score = None
     adj_keyword = keyword

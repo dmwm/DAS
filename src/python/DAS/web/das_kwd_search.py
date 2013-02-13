@@ -32,9 +32,9 @@ class KeywordSearchHandler:
         return page
 
     @staticmethod
-    def handle_search(webm, query, inst,  initial_exc_message = ''):
+    def handle_search(webm, query, inst,  initial_exc_message = '', dbsmngr=None):
         # TODO: DBS instance
-        proposed_queries = keyword_search(query, inst)
+        proposed_queries = keyword_search(query, inst, dbsmngr= dbsmngr)
         html = '<b>DAS is unable  to unambigously interpret your query.'\
               ' Is any of the queries below what you meant?</b><br>\n'
 

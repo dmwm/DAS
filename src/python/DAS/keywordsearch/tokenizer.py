@@ -25,6 +25,7 @@ def cleanup_query(query):
     with more events than 33
     with more than 33 events
     with 100 or more events
+
     >>> cleanup_query('more than 33 events')
     '>33 events'
 
@@ -32,35 +33,49 @@ def cleanup_query(query):
     >>> cleanup_query('X more than 33 events')
     'X>33 events'
 
+    >>> cleanup_query('find datasets where X more than 33 events')
+    'datasets where X>33 events'
+
+    >>> cleanup_query('=2012-02-01')
+    '= 20120201'
+
+    >>> cleanup_query('>= 2012-02-01')
+    '>= 20120201'
 
     """
     # TODO: preprocess the query
-    replacements = {
+    replacements = [
         # get rid of multiple spaces
-        r'\s+': ' ',
+        (r'\s+', ' '),
 
-        'r(find|show|display)( me)\s?': '',
+        # TODO: this is temporary until supporting of specific patterns
+        (r'^(find|show|display|retrieve|select)( me)?\s?', ''),
 
         # transform word-based operators
-        r'\s?more than (?=\d+)': '>',
-        r'\s?more or equal( than| to)? (?=\d+)': '>',
+        (r'\s?more than (?=\d+)', '>'),
+        (r'\s?more or equal( than| to)? (?=\d+)', '>'),
 
-        r'\s?less than (?=\d+)': '<',
-        r'\s?less or equal( to| than)? (?=\d+)': '<',
+        (r'\s?less than (?=\d+)', '<'),
+        (r'\s?less or equal( to| than)? (?=\d+)', '<'),
 
-        r'\s?equals?( to)? (?=\d+)': '=',
+        (r'\s?equals?( to)? (?=\d+)', '='),
 
         # remove extra spaces
-        r'\s*=\s*': '=',
-        r'\s*>\s*': '>',
-        r'\s*>=\s*': '>=',
-        r'\s*<=\s*': '<=',
-        r'\s*<\s*': '<',
-        }
-    # TODO: compile regexps
-    #TODO: this is useful for one term keywords, but more complex for multi-keyword ones (which are present for post-filters on API results)
-    # TODO: shall we do chunking before anything else? but it is not reliable
-    for regexp, repl in replacements.items():
+        (r'\s*=\s*', '='),
+        (r'\s*>\s*', '>'),
+        (r'\s*>=\s*', '>='),
+        (r'\s*<=\s*', '<='),
+        (r'\s*<\s*', '<'),
+
+        # process dates into DAS format (must be preceded by operator, as
+        # dataset may also contain dates)
+        # e.g. = 2012-02-01 --> 20120201
+        (kws_operators + r'\s?([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])', r'\1 \2\3\4')
+    ]
+    compile_repl_pattern = lambda (regexp, repl): (re.compile(regexp), repl)
+    replacements = map(compile_repl_pattern, replacements)
+
+    for regexp, repl in replacements:
         query = re.sub(regexp, repl, query)
     return query
 

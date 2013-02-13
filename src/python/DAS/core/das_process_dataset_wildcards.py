@@ -51,22 +51,22 @@ def substitute_multiple(target, replacements, to_replace ='*',):
 
 
 
-def get_global_dbs_mngr(update_required=False):
+def get_global_dbs_mngr(update_required=False, inst = 'cms_dbs_prod_global'):
     """
     Gets a new instance of DBSDaemon for global DBS for testing purposes.
 
     """
 
     dburi = 'localhost:8230'
-    main_dbs_url = \
-            'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+    dbs_url = \
+            'http://cmsdbsprod.cern.ch/'+inst+'/servlet/DBSServlet'
     # TODO: update if only needed; access dasconfig
     # main_dbs_url = self.dasconfig['dbs']['dbs_global_url']
 
     dbsexpire = 3600 #config.get('dbs_daemon_expire', 3600)
     dbs_config  = {'expire': dbsexpire}
 
-    dbsmgr = DBSDaemon(main_dbs_url, dburi, dbs_config)
+    dbsmgr = DBSDaemon(dbs_url, dburi, dbs_config)
 
     if update_required or not [dbsmgr.find('*Zmm*')]:
         dbsmgr.update()

@@ -10,7 +10,6 @@ Description: DBS daemon, which update DAS cache with DBS datasets
 # system modules
 import re
 import time
-import thread
 import urllib
 import urllib2
 import itertools
@@ -21,18 +20,15 @@ from pymongo import ASCENDING
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
+from DAS.utils.utils import dastimestamp
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.web.utils import db_monitor
-from DAS.utils.utils import get_key_cert, genkey
+from DAS.utils.utils import get_key_cert
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 
 
 from jsonpath import jsonpath
-import os
-
-from pprint import pprint
 
 
 
@@ -228,6 +224,7 @@ def init_trackers():
     for s in service_input_value_providers:
         trackers[s['field']] = InputValuesTracker(s, dburi)
 
+# TODO: thread-unsafe!!!
 init_trackers()
 
 def get_fields_tracked():
@@ -260,7 +257,7 @@ def input_value_matches(keyword):
                 scores_by_entity[field] = (match == keyword
                                            and 1.0 or 0.95, {'map_to': field, 'adjusted_keyword': match})
             # 2) TODO: partial match if no wildcard?
-            else:
+            elif len(keyword) > 2:
                 # first try adding wildcard only to the end
                 match = next(t.find('^'+keyword+'*$', limit=-1), False)
 

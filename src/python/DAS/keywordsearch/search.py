@@ -109,6 +109,9 @@ import re
 import pprint
 import math
 
+from cherrypy import thread_data, request
+
+
 from nltk.corpus import stopwords
 
 from DAS.keywordsearch.das_schema_adapter import *
@@ -122,6 +125,9 @@ from DAS.keywordsearch.config import mod_enabled
 from DAS.keywordsearch.whoosh.service_fields import load_index, search_index
 
 from DAS.keywordsearch.value_matching import keyword_value_weights
+
+
+from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
 
 DEBUG = False
 
@@ -176,14 +182,20 @@ def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
     return 0.0
 
 
+def store_result(score, r_type, values_dict, r_filters, trace = set()):
+    result =   (score, r_type, values_dict.items(), tuple(r_filters), tuple(trace))
+    thread_data.results.append(result)
+
+
+
+
 def generate_result_filters(keywords_list, chunks, keywords_used,
-                            old_score, requested_entity, values_mapping,
+                            old_score, result_type, values_mapping,
                             result_filters=[], field_idx_start=0,
                             traceability=set(), result_fields_included = set()):
-    global final_mappings
     # try assigning result values for particular entity
     # TODO: we use greedy strategy trying to assign largest keyword sequence (field chunks are sorted)
-    requested_entity_short = requested_entity.split('.')[0]
+    requested_entity_short = result_type.split('.')[0]
     for field_idx, match in enumerate(chunks.get(requested_entity_short, [])):
         if field_idx_start > field_idx:
             continue
@@ -191,7 +203,7 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
         target_fieldname = match['field']['field']
 
         # we are anyway including this into filter
-        if target_fieldname == requested_entity:
+        if target_fieldname == result_type:
             continue
 
         # if all required keywords are still available
@@ -203,7 +215,7 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
             weight = match['field']['importance'] and 0.2 or 0.1
 
 
-            _result_filters = result_filters[:]
+            _r_filters = result_filters[:]
             target = target_fieldname
 
 
@@ -221,7 +233,7 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
 
 
 
-            _result_filters.append(target)
+            _r_filters.append(target)
 
 
             new_score = old_score + delta_score
@@ -233,26 +245,23 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
             # TODO: do we support set literal (set([]) == {}); requires: 2.7a3+
             # http://stackoverflow.com/questions/2243049/what-do-you-think-about-pythons-new-set-literal-2-7a3
 
-            _traceability = traceability | set([
+            _trace = traceability | set([
                                                     (tuple(match['keywords_required']),
                                                     'result_projection',
                                                     target,
                                                     delta_score), ])
 
-            final_mappings.append((
-                adjusted_score_, requested_entity,
-                tuple(values_mapping.items()),
-                tuple(_result_filters),
-                tuple(_traceability)
-            ))
-
+            store_result(adjusted_score_, result_type,
+                         values_mapping,
+                         _r_filters,
+                         _trace)
 
 
             if len(keywords_used_) < len(set(keywords_list)):
                 generate_result_filters(keywords_list, chunks, keywords_used_,
-                    old_score + delta_score, requested_entity, values_mapping,
-                    result_filters =_result_filters, field_idx_start=field_idx + 1,
-                    traceability=_traceability,
+                    old_score + delta_score, result_type, values_mapping,
+                    result_filters =_r_filters, field_idx_start=field_idx + 1,
+                    traceability=_trace,
                     result_fields_included = result_fields_included | set([target_fieldname ]))
 
 
@@ -264,28 +273,29 @@ def penalize_non_mapped_keywords(keywords_used, keywords_list, score):
     # e.g. stopwords shall not be penalized, but in some cases could give increase,
     # e.g. TODO: where is smf, 'how big/large' is
 
-    #N_keywords = len(keywords_list)
 
     global en_stopwords
 
     N_total_kw = len(set(keywords_used))
-    N_keywords_without_stops = sum([1  for kw in set(keywords_list)
-       if  not kw in en_stopwords ])
+    N_kw_without_stopw = len(
+        filter(lambda kw: kw in en_stopwords, set(keywords_list)))
 
-    return score * min(len(keywords_used), N_total_kw) / N_keywords_without_stops
+    if N_kw_without_stopw:
+        return score * min(len(keywords_used), N_total_kw) / N_kw_without_stopw
+
+    return score
 
 
-def generate_value_mappings(requested_entity, fields_included, schema_ws,
+def generate_value_mappings(result_type, fields_included, schema_ws,
                             values_ws,
                             old_score, values_mapping={}, # TODO
                             keywords_used=set(),
                             keywords_list= [], keyword_index=0, chunks=[],
-                            traceability= set(),
+                            trace= set(),
                             result_projection_forbidden=set()):
     SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT = 0.2
 
     # TODO: modify the value and schema mappings weights according to previous mappings
-    global final_mappings
     UGLY_DEBUG = False
 
     fields_included = set(fields_included)
@@ -296,7 +306,9 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
 
 
     if UGLY_DEBUG:
-        print 'generate_value_mappings(', requested_entity, fields_included, schema_ws, values_ws, old_score, values_mapping, keywords_used, keywords_list, keyword_index, ')'
+        print 'generate_value_mappings(', \
+            result_type, fields_included, schema_ws, values_ws, old_score,\
+            values_mapping, keywords_used, keywords_list, keyword_index, ')'
 
     if keyword_index == len(keywords_list):
         #print keyword_index, 'final'
@@ -304,25 +316,25 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
         if fields_covered_by_values_set and fields_covered_by_values_set.issuperset(
             fields_included) and\
            validate_input_params(fields_included, final_step=True,
-               entity=requested_entity):
+               entity=result_type):
             if UGLY_DEBUG: print 'VALUES MATCH:', (
-                requested_entity, fields_included, values_mapping ),\
+                result_type, fields_included, values_mapping ),\
             validate_input_params(fields_included, final_step=True,
-                entity=requested_entity)
+                entity=result_type)
 
             # Adjust the final score to favour mappings that cover most keywords
             # TODO: this could be probably better done by introducing P(Unknown)
 
 
-            if not requested_entity:
+            if not result_type:
                 # if not entity was guessed, infer it from service parameters
                 entities = entities_for_input_params(fields_included)
                 if UGLY_DEBUG: print 'Result entities matching:', entities
 
-                for requested_entity in entities.keys():
+                for result_type in entities.keys():
                     adjusted_score = old_score
 
-                    if requested_entity in values_mapping.keys():
+                    if result_type in values_mapping.keys():
                         adjusted_score += SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
 
                     # TODO: how to handle non mapped items: probablity, divide, minus??
@@ -331,17 +343,14 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
                                                                   keywords_list,
                                                                   adjusted_score)
 
-                    final_mappings.append(
-                                    (adjusted_score, requested_entity,
-                                    tuple(values_mapping.items()),
-                                    tuple([]),
-                                    tuple(traceability))
-                    )
+                    store_result(adjusted_score, result_type, values_mapping,
+                                [], trace)
+
 
                     generate_result_filters(keywords_list, chunks,
                         keywords_used | result_projection_forbidden,
-                        old_score, requested_entity,
-                        values_mapping, traceability = traceability,
+                        old_score, result_type,
+                        values_mapping, traceability = trace,
                         )
 
 
@@ -349,18 +358,13 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
                 adjusted_score = penalize_non_mapped_keywords(keywords_used,
                                     keywords_list, old_score)
 
-                final_mappings.append(
-                    (adjusted_score, requested_entity,
-                    tuple(values_mapping.items()),
-                    tuple([]),
-                    tuple(traceability))
-                )
-
+                store_result(adjusted_score, result_type, values_mapping,
+                    [], trace)
 
                 generate_result_filters(keywords_list, chunks,
                     keywords_used | result_projection_forbidden,
-                    old_score, requested_entity,
-                    values_mapping, traceability=traceability,
+                    old_score, result_type,
+                    values_mapping, traceability=trace,
                     result_fields_included = result_projection_forbidden)
 
         return
@@ -372,10 +376,10 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
     keyword_weights = values_ws.get(keyword, [])
 
     # case 1) we do not take keyword[i]:
-    generate_value_mappings(requested_entity, fields_included, schema_ws,
+    generate_value_mappings(result_type, fields_included, schema_ws,
         values_ws, old_score, values_mapping,
         keywords_used, keywords_list, keyword_index=keyword_index + 1,
-        chunks=chunks, traceability=traceability,
+        chunks=chunks, trace=trace,
         result_projection_forbidden=result_projection_forbidden)
 
     # case 2) we do take keyword[i]:
@@ -430,8 +434,8 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
             new_fields = fields_included | set([possible_mapping])
 
             if validate_input_params(new_fields, final_step=False,
-                entity=requested_entity):
-                generate_value_mappings(requested_entity,
+                entity=result_type):
+                generate_value_mappings(result_type,
                     fields_included=new_fields,\
                     values_mapping=vm_new,\
                     old_score=new_score,
@@ -440,7 +444,7 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
                     keyword_index=keyword_index + 1,
                     keywords_list=keywords_list,
                     chunks=chunks,
-                    traceability= traceability| set([(keyword,
+                    trace= trace| set([(keyword,
                                                       'value_for',
                                                       possible_mapping,
                                                      delta_score)]),
@@ -452,44 +456,42 @@ def generate_value_mappings(requested_entity, fields_included, schema_ws,
 
 
 # TODO: the recursion is dumb, we could at least use some pruning
-def generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws,
-                             old_score, keywords_list=[], keyword_index=0,
-                             keywords_used=set([]),
+def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
+                             old_score, kw_list=[], kw_index=0,
+                             kw_used=set(),
                              chunks=[],
-                             traceability= set([])):
+                             trace= set()):
     # TODO: keyword order is important
     UGLY_DEBUG = False
 
     # generate_values_mappings()
     # TODO: shall we modify the value and schema mappings weights according to previous mappings HERE or only when doing VALUE matching?
 
-    # TODO: it would be better to consider all items in decreasing scores
-    global final_mappings
+    # TODO: it would be better to consider all items in decreasing scores, so we could just quit after defined amount of time
 
-    if keyword_index == len(keywords_list):
+    if kw_index == len(kw_list):
         # TODO: check if required fields are functioning properly !!!
         if validate_input_params(fields_old, final_step=True,
-            entity=requested_entity):
+            entity=result_type):
             if UGLY_DEBUG: print 'SCHEMA MATCH:', (
-                requested_entity, fields_old), validate_input_params(
-                fields_old, final_step=True, entity=requested_entity)
+                result_type, fields_old), validate_input_params(
+                fields_old, final_step=True, entity=result_type)
 
 
         # if we used a compound keyword A=B for schema, its still available for values
-        keywords_used_wo_operators = set([k for k in keywords_used
-                              if not '=' in k])
-        result_projection_forbidden = set([k for k in keywords_used
-                                           if '=' in k])
+        keywords_used_wo_operators = set(filter(lambda k: not '=' in k, kw_used))
+        result_projection_forbidden = set(filter(lambda k: '=' in k, kw_used))
+
         # try to map values based on this
-        generate_value_mappings(requested_entity, fields_old, schema_ws,
+        generate_value_mappings(result_type, fields_old, schema_ws,
             values_ws, old_score,
-            keywords_used=keywords_used_wo_operators, keywords_list=keywords_list,
-            chunks=chunks,  traceability=traceability,
+            keywords_used=keywords_used_wo_operators, keywords_list=kw_list,
+            chunks=chunks,  trace=trace,
             result_projection_forbidden = result_projection_forbidden)
 
 
         if UGLY_DEBUG: print (
-            requested_entity, fields_old, schema_ws, values_ws)
+            result_type, fields_old, schema_ws, values_ws)
         return
 
     # At keyword position (i) we can either:
@@ -501,93 +503,91 @@ def generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws,
     #
 
 
-    keyword = keywords_list[keyword_index]
-    schema_w = schema_ws[keyword]
+    kwd = kw_list[kw_index]
+    schema_w = schema_ws[kwd]
 
     # opt 1) do not take keyword[i]
-    generate_schema_mappings(requested_entity, fields_old, schema_ws, values_ws,
-        keywords_list=keywords_list, keyword_index=keyword_index + 1,
+    generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
+        kw_list=kw_list, kw_index=kw_index + 1,
         old_score=old_score,\
-        keywords_used=keywords_used, chunks=chunks, traceability=traceability)
+        kw_used=kw_used, chunks=chunks, trace=trace)
 
     # opt 2) take it:
-    for schema_score, possible_mapping in schema_w:
-        if possible_mapping in fields_old:
+    for schema_score, target_field in schema_w:
+        if target_field in fields_old:
             continue
 
         fields_new = fields_old[:]
-        fields_new.append(possible_mapping)
+        fields_new.append(target_field)
         #print 'validating', (f, requested_entity)
 
         # opt 2.a) take as api input param entity
-        if validate_input_params(fields_new, entity=requested_entity):
-            if UGLY_DEBUG: print 'validated', (requested_entity, fields_new)
+        if validate_input_params(fields_new, entity=result_type):
+            if UGLY_DEBUG: print 'validated', (result_type, fields_new)
 
             delta_score = schema_score
-            generate_schema_mappings(requested_entity, fields_new, schema_ws,
+            generate_schema_mappings(result_type, fields_new, schema_ws,
                 values_ws,
-                keywords_list=keywords_list, keyword_index=keyword_index + 1,
-                old_score=old_score + delta_score, keywords_used=keywords_used | set([keyword]),
-                # TODO: add current core
-                chunks=chunks,  traceability=traceability | set([(keyword,
-                                                                  'schema',
-                                                                  possible_mapping,
-                                                                  delta_score)]))
+                kw_list=kw_list,
+                kw_index=kw_index + 1,
+                old_score=old_score + delta_score,
+                kw_used=kw_used | set([kwd]),
+                chunks=chunks,
+                trace=trace | set([(kwd,'schema', target_field, delta_score)]))
 
 
         # opt 2.b) take as requested entity (result type)
-        if not requested_entity:
+        if not result_type:
             delta_score = schema_score
 
             # TODO: use focus extraction instead!!!
             # if this is the first keyword mapped to schema (we expect entity name to come first)
-            if not keywords_used and (keyword_index+1) * 1.9 < len(keywords_list):
+            if not kw_used and (kw_index+1) * 1.9 < len(kw_list):
                 delta_score *= 0.5 * (
-                    float(len(keywords_list)) - keyword_index) / len(
-                    keywords_list)
+                    float(len(kw_list)) - kw_index) / len(
+                    kw_list)
 
-            if validate_input_params(fields_old,
-                entity=possible_mapping):
+            if validate_input_params(fields_old, entity=target_field):
                 if UGLY_DEBUG:  print 'validated', (
-                    possible_mapping, fields_old)
+                    target_field, fields_old)
 
                 # TODO: currently the score is anyway being increased if a value is being mapped...
-                generate_schema_mappings(possible_mapping, fields_old,
+                generate_schema_mappings(target_field, fields_old,
                     schema_ws, values_ws,
-                    keywords_list=keywords_list,
-                    keyword_index=keyword_index + 1,
+                    kw_list=kw_list,
+                    kw_index=kw_index + 1,
                     old_score=old_score + delta_score,\
-                    keywords_used=keywords_used | set([keyword]),
-                    chunks=chunks,  traceability=traceability | set([(keyword,
-                                                                      'requested_entity',
-                                                                      possible_mapping,
-                                                                     delta_score)]))
+                    kw_used=kw_used | set([kwd]),
+                    chunks=chunks,
+                    trace=trace | set([(kwd,'requested_entity',  target_field, delta_score)]))
 
             # opt 2.c) take both as requested entity (result type) and  input param entity
             if validate_input_params(fields_new,
-                entity=possible_mapping):
+                entity=target_field):
 
-                if UGLY_DEBUG: print 'valid',(possible_mapping, fields_new)
+                if UGLY_DEBUG: print 'valid',(target_field, fields_new)
 
-                generate_schema_mappings(possible_mapping, fields_new,
+                generate_schema_mappings(target_field, fields_new,
                     schema_ws, values_ws,
-                    keywords_list=keywords_list,
-                    keyword_index=keyword_index + 1,
+                    kw_list=kw_list,
+                    kw_index=kw_index + 1,
                     old_score=old_score + delta_score,\
-                    keywords_used=keywords_used | set([keyword]),
-                    chunks=chunks, traceability= traceability | set([(keyword, 'requested_entity', possible_mapping)]) |
-                                                 set([(keyword,
-                                                       'schema',
-                                                       possible_mapping)])
+                    kw_used=kw_used | set([kwd]),
+                    chunks=chunks,
+                    trace= trace | set([(kwd, 'requested_entity', target_field, delta_score)])
+                           | set([(kwd, 'schema', target_field, delta_score)])
                 )
 
 
 # TODO: we may need some extra stop condition...
 
-def generate_chunks(keywords, keywords_str):
+def generate_chunks(keywords):
     """
     params: keywords - a tokenized list of keywords (e.g. ["a b c", 'a', 'b'])
     """
+
+    if not mod_enabled('SERVICE_RESULT_FIELDS'):
+        return {}
 
     fields_by_entity = list_result_fields()
     entities = fields_by_entity.keys()
@@ -596,7 +596,7 @@ def generate_chunks(keywords, keywords_str):
     load_index()
 
     # first filter out the phrases (we wont combine them with anything)
-    phrase_kwds = [kw for kw in keywords if ' ' in kw]
+    phrase_kwds = filter(lambda kw: ' ' in kw, keywords)
 
 
     # we may also need to remove operators, e.g. "number of events">10, 'block.nevents>10'
@@ -719,7 +719,7 @@ def DASQL_2_NL(dasql_tuple, html=True):
 
 
 
-def search(query, inst=None, _DEBUG=False):
+def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     """
     unit tests
     >>> search('vidmasze@cern.ch')
@@ -744,6 +744,20 @@ def search(query, inst=None, _DEBUG=False):
 
 
     if DEBUG: print 'Query after cleanup:', query
+
+    # retrieve DBS instance, and store it in request
+    # TODO: shall not be part of this function call
+
+    if True:
+        print 'DBS inst parameter:', inst
+        if not dbsmngr:
+            if isinstance(inst, str):
+                inst = get_global_dbs_mngr(inst=inst)
+            else:
+                inst = get_global_dbs_mngr()
+
+    request.dbsmngr = dbsmngr
+
 
     # TODO: some of EN 'stopwords' may be quite important e.g.  'at', 'between', 'where'
     en_stopwords = stopwords.words('english')
@@ -774,25 +788,24 @@ def search(query, inst=None, _DEBUG=False):
         print '=============== Values mappings (TODO) ============'
         pprint.pprint(values_ws)
 
-    global final_mappings
-    final_mappings = []
 
-    chunks = generate_chunks(keywords, ' '.join(keywords))
+    thread_data.results = []
+    chunks = generate_chunks(keywords)
+
 
     generate_schema_mappings(None, [], schema_ws, values_ws,
-        keywords_list=keywords, keyword_index=0, old_score=0, chunks=chunks)
+        kw_list=keywords, kw_index=0, old_score=0, chunks=chunks)
 
-    #pprint.pprint(final_mappings)
 
     print "============= Results for: %s ===" % query
-    final_mappings = list(set(final_mappings))
-    final_mappings.sort(key=lambda item: item[0], reverse=True)
+    results =  thread_data.results[:]  # list(set(thread_data.final_mappings))
+    results.sort(key=lambda item: item[0], reverse=True)
 
     best_scores = {}
 
     first = 1
 
-    for (score, result_type, input_params, result_projections_filters, traceability) in final_mappings:
+    for (score, result_type, input_params, projections_filters, trace) in results:
         # short entity names
         s_result_type = entity_names[result_type]
         s_input_params = [(entity_names.get(field, field), value) for
@@ -802,9 +815,9 @@ def search(query, inst=None, _DEBUG=False):
         s_query = s_result_type + ' ' + ' '.join(
             ['%s=%s' % (field, value) for (field, value) in s_input_params])
 
-        result_projections = [p for p in result_projections_filters
+        result_projections = [p for p in projections_filters
                              if not isinstance(p, tuple)]
-        result_filters = [p for p in result_projections_filters
+        result_filters = [p for p in projections_filters
                              if isinstance(p, tuple)]
 
 
@@ -834,7 +847,7 @@ def search(query, inst=None, _DEBUG=False):
 
         result = {
             'result': s_query,
-            'trace': traceability,
+            'trace': trace,
             'score': score,
             'query_in_words': DASQL_2_NL(das_ql_tuple),
             'entity': s_result_type,
