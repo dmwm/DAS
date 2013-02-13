@@ -15,7 +15,7 @@ import hashlib
 from optparse import OptionParser
 
 # pymongo modules
-from pymongo.connection import Connection
+from pymongo import MongoClient
 
 from DAS.services.cmsswconfigs.base import CMSSWConfig
 
@@ -81,7 +81,7 @@ def connect(host, port):
     """
     Connect to MongoDB database.
     """
-    connection = Connection(host, port)
+    connection = MongoClient(host, port)
     db = connection.configdb
     return db
 
@@ -118,7 +118,7 @@ def inject(path, release, debug=0):
     
     content_translate = '?????????\t\n??\r??'+\
                         ''.join(['?']*16+\
-                                [chr(i) for i in range(32,128)]+\
+                                [chr(i) for i in xrange(32, 128)]+\
                                 ['?']*128)
     
     if  not os.environ.has_key('SCRAM_ARCH'):

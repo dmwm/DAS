@@ -66,6 +66,30 @@ class SiteDBService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
+    def user_dn(self, name):
+        "Get user DN for given name"
+        users = [u for u in self.user_info(name)]
+        if  len(users) == 1:
+            user = users[0]
+            return user['user'].get('dn', None)
+
+    def user_info(self, uid):
+        "Get user info for given username or user email"
+        # get user info
+        data = self.api_data('people_via_name')
+        for row in sitedb_parser(data):
+            username = row.get('username', None)
+            forename = row.get('forename', None)
+            surname  = row.get('surname', None)
+            email    = row.get('email', None)
+            userdn   = row.get('dn', None)
+            if  username and uid.lower() == username.lower() or \
+                forename and uid.lower() == forename.lower() or \
+                surname and uid.lower() == surname.lower() or \
+                userdn and userdn.find(uid) != -1 or \
+                email and uid == email:
+                yield dict(user=row)
+
     def site_info(self, site):
         "Get information about given site"
         url = None

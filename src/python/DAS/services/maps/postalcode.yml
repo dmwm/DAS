@@ -5,13 +5,11 @@ urn : postalcodes
 url : "http://ws.geonames.org/postalCodeSearchJSON"
 expire : 30
 params : { "placename" : "required" }
-daskeys : [
-    {"key":"city","map":"city.name","pattern":""},
-]
-das2api : [
-    {"das_key":"city.name","api_param":"placename","pattern":""},
+lookup : city
+das_map : [
+    {"das_key":"city","rec_key":"city.name","api_arg":"placename"},
 ]
 ---
 notatations: [
-    {"notation":"placename", "map":"name", "api":""},
+    {"api_output":"placename", "rec_key":"name", "api":""},
 ]

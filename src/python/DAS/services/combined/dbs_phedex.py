@@ -11,23 +11,23 @@ import thread
 import cherrypy
 
 # pymongo modules
-from   pymongo import Connection, DESCENDING
+from   pymongo import MongoClient, DESCENDING
 from   pymongo.errors import AutoReconnect, ConnectionFailure
 from   bson.code import Code
 
 # DAS modules
-from   DAS.utils.das_db import db_connection, create_indexes
+from   DAS.utils.das_db import db_connection, create_indexes, db_monitor
 from   DAS.utils.url_utils import getdata
 from   DAS.web.tools import exposejson
-from   DAS.web.utils import db_monitor
 from   DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from   DAS.utils.utils import get_key_cert
-from   DAS.utils.thread import set_thread_name, start_new_thread
+from   DAS.utils.thread import start_new_thread
 from   DAS.core.das_mapping_db import DASMapping
 from   DAS.utils.das_config import das_readconfig
 import DAS.utils.jsonwrapper as json
 
 PAT = re.compile("^T[0-3]_")
+CKEY, CERT = get_key_cert()
         
 def datasets(urls, verbose=0):
     """
@@ -50,9 +50,8 @@ def datasets_dbs3(urls, verbose=0):
     records = []
     url     = urls.get('dbs')
     params  = {'detail':'True', 'dataset_access_type':'VALID'}
-    ckey, cert = get_key_cert()
-    data, _ = getdata(url, params, headers, verbose=verbose,
-                ckey=ckey, cert=cert, doseq=False)
+    data, _ = getdata(url, params, headers, post=False, verbose=verbose,
+                ckey=CKEY, cert=CERT, doseq=False)
     records = json.load(data)
     data.close()
     data = {}
@@ -78,7 +77,8 @@ def datasets_dbs2(urls, verbose=0):
     query   = \
         'find dataset,dataset.tier,dataset.era where dataset.status like VALID*'
     params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
-    stream, _ = getdata(url, params, headers, verbose=verbose)
+    stream, _ = getdata(url, params, headers, post=False, \
+            ckey=CKEY, cert=CERT, verbose=verbose)
     records = [r for r in qlxml_parser(stream, 'dataset')]
     stream.close()
     data = {}
@@ -108,7 +108,11 @@ def dataset_info(urls, datasetdict, verbose=0):
     url      = urls.get('phedex') + '/blockReplicas'
     params   = {'dataset': [d for d in datasetdict.keys()]}
     headers  = {'Accept':'application/json;text/json'}
-    data, _  = getdata(url, params, headers, post=True, verbose=verbose)
+    data, _  = getdata(url, params, headers, post=True, \
+            ckey=CKEY, cert=CERT, verbose=verbose)
+    if  isinstance(data, basestring): # no response
+        dastimestamp('DBS_PHEDEX ERROR: %s' % data)
+        return
     jsondict = json.load(data)
     data.close()
     for row in jsondict['phedex']['block']:
@@ -128,7 +132,7 @@ def collection(uri):
     """
     Return collection cursor
     """
-    conn = Connection(uri)
+    conn = MongoClient(uri)
     coll = conn['db']['datasets']
     return coll
 
@@ -285,9 +289,11 @@ class DBSPhedexService(object):
             self.expire  = mapping[service_api]['expire']
             if  not self.worker_thr:
                 # Worker thread which update dbs/phedex DB
-                self.worker_thr = thread.start_new_thread(worker, \
+                self.worker_thr = start_new_thread('dbs_phedex_worker', worker, \
                 (self.urls, self.uri, self.dbname, self.collname, self.expire))
-                set_thread_name(self.worker_thr, 'dbs_phedex_worker')
+#                self.worker_thr = thread.start_new_thread(worker, \
+#                (self.urls, self.uri, self.dbname, self.collname, self.expire))
+#                set_thread_name(self.worker_thr, 'dbs_phedex_worker')
         except Exception as exc:
             self.urls       = None
             self.expire     = None

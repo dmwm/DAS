@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # find out where DAS is installed on a system
 dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
@@ -20,6 +20,12 @@ pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print 
 function das_server_status()
 {
     pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+    if  [ `uname` == "Darwin" ]; then
+        nth=`ps -M -p $pid | grep -v USER | wc -l | awk '{print $1}'`
+    else
+        nth=`ps -L -p $pid | grep -v PID | wc -l | awk '{print $1}'`
+    fi
+    echo "DAS server runs with $nth threads"
     if [ ! -z "${pid}" ]; then
         echo $"DAS web server is running, pid=${pid}"
         ps -f -wwww -p ${pid}
@@ -44,6 +50,7 @@ case "$1" in
         fi
         echo $"Restart DAS web server..."
         nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
+        sleep 3
         das_server_status
         ;;
  start)
@@ -52,6 +59,7 @@ case "$1" in
         fi
         echo $"Start DAS web server..."
         nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
+        sleep 3
         das_server_status
         ;;
  status)

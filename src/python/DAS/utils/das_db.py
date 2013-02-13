@@ -14,8 +14,8 @@ import time
 import threading
 
 # monogo db modules
-from pymongo.connection import Connection
-from pymongo.errors import AutoReconnect
+from pymongo import MongoClient
+from pymongo.errors import AutoReconnect, ConnectionFailure
 import gridfs
 
 # DAS modules
@@ -57,11 +57,11 @@ class _DBConnectionSingleton(object):
         key = genkey(str(uri))
         if  not self.conndict.has_key(key):
             try:
-                dbinst = Connection(host=uri)
+                dbinst = MongoClient(host=uri)
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
-            except AutoReconnect as err:
+            except (ConnectionFailure, AutoReconnect):
                 tstamp = dastimestamp('')
                 thread = threading.current_thread()
                 print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
@@ -153,4 +153,23 @@ def create_indexes(coll, index_list):
             coll.ensure_index([pair])
         except Exception as exp:
             print_exc(exp)
+
+def db_monitor(uri, func, sleep=5):
+    """
+    Check status of MongoDB connection. Invoke provided function upon
+    successfull connection.
+    """
+    conn = db_connection(uri)
+    while True:
+        if  not conn or not is_db_alive(uri):
+            try:
+                conn = db_connection(uri)
+                func()
+                if  conn:
+                    print "### db_monitor re-established connection %s" % conn
+                else:
+                    print "### db_monitor, lost connection"
+            except:
+                pass
+        time.sleep(sleep)
 

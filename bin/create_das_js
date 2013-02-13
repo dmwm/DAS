@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # build DAS JSON maps out of DAS YML files
 cmd="python src/python/DAS/tools/das_drop_maps.py"

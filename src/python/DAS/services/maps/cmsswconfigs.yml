@@ -1,4 +1,4 @@
-# Tier0 monitoring API mapping to DAS
+# CMSSW API mapping to DAS
 system : cmsswconfigs
 format : JSON
 ---
@@ -6,12 +6,9 @@ urn : cmssw_configs
 url : "http://localhost:8889/cmsswconfigs/express_config"
 expire : 86400
 params : {"release": "required", "query": "required"}
-daskeys : [
-        {"key":"config", "map":"config", "pattern":""},
-        {"key":"release", "map":"release.name", "pattern":""},
-        {"key":"search", "map":"search", "pattern":""},
-]
-das2api : [
-        {"das_key":"search","api_param":"query", "pattern":""},
-        {"das_key":"release.name","api_param":"release", "pattern":""},
+lookup : config
+das_map : [
+    {"das_key":"config", "rec_key":"config", "api_arg":""},
+    {"das_key":"release", "rec_key":"release.name", "api_arg":"release"},
+    {"das_key":"search", "rec_key":"search", "api_arg":"query"},
 ]

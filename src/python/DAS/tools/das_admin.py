@@ -18,7 +18,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.utils import print_exc
 
 # monogo db modules
-from pymongo.connection import Connection
+from pymongo import MongoClient
 
 class PrintManager:
     """
@@ -162,7 +162,7 @@ class DASMongoDB(object):
     def __init__(self, host, port):
         self.host   = host
         self.port   = port
-        self.conn   = Connection(host, port)
+        self.conn   = MongoClient(host, port)
         self.cache  = self.conn['das']['cache']
         self.line   = "-"*80
         self.config = das_readconfig()

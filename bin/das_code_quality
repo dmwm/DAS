@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ "$#" -gt 2 ]; then
     echo "Usage: das_code_quality.sh <optional threashold up to 10> <stop at first failure, true or false>"

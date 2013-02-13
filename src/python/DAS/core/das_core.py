@@ -350,7 +350,7 @@ class DASCore(object):
         self.logger.info('services = %s' % services)
         das_timer('das_record', self.verbose)
         expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
-        header = dasheader("das", dasquery, expire)
+        header = dasheader("das", dasquery, expire, api='das_core')
         header['lookup_keys'] = []
         self.rawcache.insert_query_record(dasquery, header)
         das_timer('das_record', self.verbose)
@@ -391,6 +391,10 @@ class DASCore(object):
         elif isinstance(fields, list) and 'queries' in fields:
             return len([1 for _ in self.get_queries(dasquery)])
         return self.rawcache.nresults(dasquery, coll)
+
+    def apilist(self, dasquery):
+        "Return list of APIs answer given das query"
+        return self.rawcache.apilist(dasquery)
 
     def incache(self, dasquery, coll='merge'):
         """

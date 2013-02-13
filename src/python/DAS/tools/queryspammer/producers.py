@@ -44,7 +44,7 @@ class WeightedKeyProducer(Producer):
         self.key = key
         
         #get random keys repeatedly to try and get the complete set
-        items = [data.get_random(key) for i in range(10000)]
+        items = [data.get_random(key) for i in xrange(10000)]
         #find the unique items
         items = list(set(items))
         
@@ -59,7 +59,7 @@ class WeightedKeyProducer(Producer):
                            * math.exp(-0.5 * i**2 / sigma**2)\
                            / (math.sqrt(2*math.pi) * sigma)\
                            + 1. / count
-        weights = [weight(i) for i in range(count)]
+        weights = [weight(i) for i in xrange(count)]
         weightdict = dict([(i, w) for i, w in zip(items, weights)])
         self.dist = WeightedDistribution(weightdict)
         

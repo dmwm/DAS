@@ -7,7 +7,7 @@ DAS/core/das_mongocache.py
 
 import datetime
 from optparse import OptionParser
-from pymongo.connection import Connection
+from pymongo import MongoClient
 try:
 #    import numpy as np
     from pylab import plt
@@ -41,7 +41,7 @@ class LogdbManager(object):
     """LogdbManager"""
     def __init__(self, dbhost, dbport, logdb, logcol):
         super(LogdbManager, self).__init__()
-        conn   = Connection(dbhost, dbport)
+        conn   = MongoClient(dbhost, dbport)
         self.coll = conn[logdb][logcol]
         
     def dates(self):
@@ -117,7 +117,7 @@ def collector(dbhost, dbport, logdb, logcol, date):
     else:
         min_date, max_date = mgr.dates()
         dates = dateobj(max_date) - dateobj(min_date)
-        for delta in range(0, dates.days+1):
+        for delta in xrange(0, dates.days+1):
             datestr = dateobj(min_date) + datetime.timedelta(days=delta)
             date = int(str(datestr).replace('-', ''))
             for coll in ['web', 'cache', 'merge']:

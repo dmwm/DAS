@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if  [ $# != 3 ]; then
    echo "Usage: das_map <location of the map directory> <dbhost> <dbport>"

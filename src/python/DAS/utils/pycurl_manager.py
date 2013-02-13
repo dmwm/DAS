@@ -63,11 +63,13 @@ class RequestHandler(object):
         self.connecttimeout = config.get('connecttimeout', 30)
         self.followlocation = config.get('followlocation', 1)
         self.maxredirs = config.get('maxredirs', 5)
-        self.cache = {}
+        self.gcache = {} # cache for GET requests
+        self.pcache = {} # cache for POST requests
 
     def set_opts(self, curl, url, params, headers,
-                 ckey=None, cert=None, verbose=None, post=None, doseq=True):
+                 ckey=None, cert=None, verbose=None, post=False, doseq=True):
         """Set options for given curl object"""
+        # set new options
         curl.setopt(pycurl.NOSIGNAL, self.nosignal)
         curl.setopt(pycurl.TIMEOUT, self.timeout)
         curl.setopt(pycurl.CONNECTTIMEOUT, self.connecttimeout)
@@ -75,11 +77,13 @@ class RequestHandler(object):
         curl.setopt(pycurl.MAXREDIRS, self.maxredirs)
 
         encoded_data = urllib.urlencode(params, doseq=doseq)
-        if  not post:
-            url = url + '?' + encoded_data
         if  post:
             curl.setopt(pycurl.POST, 1)
             curl.setopt(pycurl.POSTFIELDS, encoded_data)
+        else:
+            url = url + '?' + encoded_data
+        if  verbose > 1:
+            print '\nDEBUG: pycurl call', url
         if  isinstance(url, str):
             curl.setopt(pycurl.URL, url)
         elif isinstance(url, unicode):
@@ -100,7 +104,7 @@ class RequestHandler(object):
         if  cert:
             curl.setopt(pycurl.SSLCERT, cert)
         if  verbose:
-            if  isinstance(verbose, int) and verbose > 1:
+            if  isinstance(verbose, int) and verbose > 2:
                 curl.setopt(pycurl.VERBOSE, 1)
                 curl.setopt(pycurl.DEBUGFUNCTION, self.debug)
         return bbuf, hbuf
@@ -109,18 +113,22 @@ class RequestHandler(object):
         """Debug callback implementation"""
         print "debug(%d): %s" % (debug_type, debug_msg)
 
-    def getdata(self, url, params, headers=None, expire=3600, post=None,
+    def getdata(self, url, params, headers=None, expire=3600, post=False,
                 error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
         """Fetch data for given set of parameters"""
-        time0 = time.time()
-        thread = threading.current_thread().ident
-        if  self.cache.has_key(thread):
-            curl = self.cache.get(thread)
+        time0     = time.time()
+        thread    = threading.current_thread().ident
+        if  post:
+            cache = self.pcache
         else:
-            curl = pycurl.Curl()
-            self.cache[thread] = curl
-#        print "\n+++ getdata curl cache", len(self.cache.keys())
-#        curl = pycurl.Curl()
+            cache = self.gcache
+        if  cache.has_key(thread):
+            curl  = cache.get(thread)
+        else:
+            curl  = pycurl.Curl()
+            cache[thread] = curl
+#        print "\n+++ getdata curl gcache", self.gcache.keys()
+#        print "+++ getdata curl pcache", self.pcache.keys()
         bbuf, hbuf = self.set_opts(curl, url, params, headers,
                 ckey, cert, verbose, post, doseq)
         curl.perform()

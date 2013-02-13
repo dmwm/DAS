@@ -46,7 +46,7 @@ class DASAbstractService(object):
             self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
             if  config.has_key('dbs'):
-                self.dbs_global = config['dbs'].get('dbs_global_instance', None)
+                self.dbs_global = self.dasmapping.dbs_global_instance()
             else:
                 self.dbs_global = None
             dburi             = config['mongodb']['dburi']
@@ -138,8 +138,8 @@ class DASAbstractService(object):
         for _, rows in self.dasmapping.notations(self.name).iteritems():
             for row in rows:
                 api  = row['api']
-                nmap = row['map']
-                notation = row['notation']
+                nmap = row['rec_key']
+                notation = row['api_output']
                 if  self._notations.has_key(api):
                     self._notations[api].update({notation:nmap})
                 else:
@@ -184,6 +184,7 @@ class DASAbstractService(object):
         self.logger.debug(msg)
         header  = dasheader(self.name, dasquery, expire, api, url, ctime)
         header['lookup_keys'] = self.lookup_keys(api)
+        header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
 
         # check that apicall record is present in analytics DB
         self.analytics.insert_apicall(self.name, dasquery.mongo_query,
@@ -306,7 +307,6 @@ class DASAbstractService(object):
         - *api* is API name
         """
         prim_key  = self.dasmapping.primary_key(self.name, api)
-        apitag    = self.dasmapping.apitag(self.name, api)
         counter   = 0
         if  dformat.lower() == 'xml':
             tags = self.dasmapping.api2daskey(self.name, api)
@@ -325,8 +325,6 @@ class DASAbstractService(object):
                     row = row['results']
                     self.analytics.update_apicall(\
                         dasquery.mongo_query, das_dict)
-                if  apitag and row.has_key(apitag):
-                    row = row[apitag]
                 if  isinstance(row, list):
                     for item in row:
                         if  item.has_key(prim_key):

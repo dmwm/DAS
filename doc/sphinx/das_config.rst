@@ -15,56 +15,78 @@ shown below:
 .. doctest::
 
     [das]                    # DAS core configuration
-    logformat = %(levelname)s %(message)s # DAS logger format, python logging module
-    rawcache = DASMongocache # class name for raw cache
     verbose = 0              # verbosity level, 0 means lowest
+    parserdir = /tmp         # DAS PLY parser cache directory
+    multitask = True         # enable multitasking for DAS core (threading)
+    core_workers = 10        # number of DAS core workers who contact data-providers
+    api_workers = 2          # number of API workers who run simultaneously
+    thread_weights = 'dbs:3','phedex:3' # thread weight for given services
+    error_expire = 300       # expiration time for error records (in seconds)
+    emptyset_expire = 5      # expiration time for empty records (in seconds)
+    services = dbs,phedex    # list of participated data-providers
 
-    [cache_server]           # DAS Cache server configuration parameters
-    thread_pool = 30         # number of threads for CherryPy
-    socket_queue_size = 15   # queue size for requests while server is busy
-    n_worker_threads = 4     # number of threads for DAS workers
-    host = 0.0.0.0           # host IP, the 0.0.0.0 means visible everywhere
-    log_screen = True        # print log to stdout
-    port = 8211              # server port
-    queue_limit = 100        # CacheManager queue limit (number of pending
-                             # POST requests the server can process).
+    [cacherequests]
+    Admin = 50               # number of queries for admin user role
+    Unlimited = 10000        # number of queries for unlimited user role
+    ProductionAccess = 5000  # number of user for production user role
 
     [web_server]             # DAS web server configruation parameters
     thread_pool = 30         # number of threads for CherryPy
     socket_queue_size = 15   # queue size for requests while server is busy
     host = 0.0.0.0           # host IP, the 0.0.0.0 means visible everywhere
     log_screen = True        # print log to stdout
-    port = 8212              # server port
+    url_base = /das          # DAS server url base
+    port = 8212              # DAS server port
+    pid = /tmp/logs/dsw.pid  # DAS server pid file
+    status_update = 2500     #
+    web_workers = 10         # Number of DAS web server workers who handle user requests
+    queue_limit = 200        # DAS server queue limit
+    adjust_input = True      # Adjust user input (boolean)
+    dbs_daemon = True        # Run DBSDaemon (boolean)
+    dbs_daemon_interval = 300# interval for DBSDaemon update in sec
+    dbs_daemon_expire = 3600 # expiration timestamp for DBSDaemon records
+    hot_threshold = 100      # a hot threshold for powerful users
+    onhold_daemon = True     # Run onhold daemon for queries which put on hold after hot threshold
+
+    [dbs]                    # DBS server configuration
+    dbs_instances = prod,dev # DBS instances
+    dbs_global_instance = prod # name of the global DBS instance
+    dbs_global_url = http://a.b.c # DBS data-provider URL
 
     [mongodb]                # MongoDB configuration parameters
-    dbhost = localhost       # MongoDB host name
-    dbport = 27017           # MongoDB port number
-    dbname = das             # MongoDB database name
+    dburi = mongodb://localhost:8230 # MongoDB URI
     bulkupdate_size = 5000   # size of bulk insert/update operations
-    attempt = 3              # number of attempts to connect to MongoDB
-    capped_size = 104857600  # size of capped collection (logs), in bytes
+    dbname = das             # MongoDB database name
     lifetime = 86400         # default lifetime (in seconds) for DAS records
 
-    [analytics_db]           # AnalyticsDB configuration parameters
-    dbport = 27017           # MongoDB port number
-    dbhost = localhost       # MongoDB host name
-    dbname = analytics       # MongoDB database name
-    attempt = 3              # number of attempts to connect to MongoDB
+    [dasdb]                  # DAS DB cache parameters
+    dbname = das             # name of DAS cache database
+    cachecollection = cache  # name of cache collection
+    mergecollection = merge  # name of merge collection
+    mrcollection = mapreduce # name of mapreduce collection
 
-    [mapping_db]             # MappingDB configuration parameters
-    dbport = 27017           # MongoDB port number
-    dbhost = localhost       # MongoDB host name
-    dbname = mapping         # MongoDB database name
-    attempt = 3              # number of attempts to connect to MongoDB
+    [loggingdb]
+    capped_size = 104857600
+    collname = db
+    dbname = logging
 
-    [security]               # DAS security configuration parameters
-    mount_point = /das/auth  # mount point for authentication
-    group = das              # group name
-    enabled = True           # enable/disable security module
-    oid_server = http://a.ch # hostname of OpenID server  
-    site =                   # site configuration name
-    role =                   # role configuration name
-    store_path = /tmp        # path for cookie storage
-    session_name = SecModule # name of the session
+    [analyticsdb]            # AnalyticsDB configuration parameters
+    dbname = analytics       # name of analytics database
+    collname = db            # name of analytics collection
+    history = 5184000        # expiration time for records in an/ collection (in seconds)
 
+    [mappingdb]              # MappingDB configuration parameters
+    dbname = mapping         # name of mapping database
+    collname = db            # name of mapping collection
 
+    [parserdb]               # parserdb configuration parameters
+    dbname = parser          # parser database name
+    enable = True            # use it in DAS or not (boolean)
+    collname = db            # collection name
+    sizecap = 5242880        # size of capped collection
+
+    [dbs_phedex]             # dbs_phedex configuration parameters
+    expiration = 3600        # expiration time stamp
+    urls = http://dbs,https://phedex # DBS and Phedex URLs
+
+For up-to-date configuration parameters please see `utils/das_config.py`

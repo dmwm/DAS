@@ -139,28 +139,6 @@ python das_cli --query="dataset=/ExpressPhysics* | grep dataset.name, dataset.ne
     card_list.append(card)
 
     card = """
-<h3 class="big">Help: DAS colors</h3>
-Colored little box, e.g.
-<cite style="background-color:%s;padding-left:7px; padding-right:7px">&nbsp;</cite>
-next to the Record output 
-represents specific CMS data-services.<br />
-Please follow DAS color map: <u style="color:#8f1f08;">show</u>
-<u style="color:#8f1f08;">hide</u>
-links to find out which system it corresponds to.
-
-<br/>
-<br/>
-
-If you see several colored boxes in a row, e.g.
-<cite style="background-color:%s;padding-left:7px; padding-right:7px">&nbsp;</cite>
-<cite style="background-color:%s;padding-left:7px; padding-right:7px">&nbsp;</cite>,
-it means that this
-record is aggregated across several CMS data-services.
-    """ % (gen_color('phedex'), gen_color('dbs'), gen_color('phedex'))
-    card += hide
-    card_list.append(card)
-
-    card = """
 <h3 class="big">Help: Commonly used dataset queries</h3>
 Most physicists are interested to find their desired dataset. Here is an incomplete
 list of queries which cover this use-case:

@@ -110,7 +110,7 @@ def main():
 
     if  opts.clean:
         mgr.delete_db()
-        mgr.create_db()
+        mgr.init()
         # I need to clear DAS cache/merge since I don't know
         # a-priory what kind of changes new maps will bring
         conn   = db_connection(dburi)

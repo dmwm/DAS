@@ -157,7 +157,7 @@ def runjob(nclients, host, method, params, headers, idx, limit,
     """
     stream     = open('%s%s.log' % (logname, nclients), 'w')
     processes  = []
-    for _ in range(0, nclients):
+    for _ in xrange(0, nclients):
         if  dasquery:
             ### REPLACE THIS PART with your set of parameter
             if  dasquery.find('=') == -1:
@@ -261,14 +261,14 @@ def main():
     # perform action
     array = []
     if  nclients <= 10:
-        array += range(1, nclients+1)
+        array += xrange(1, nclients+1)
     if  nclients <= 100 and nclients > 10:
-        array  = range(1, 10)
-        array += range(10, nclients+1, 10)
+        array  = xrange(1, 10)
+        array += xrange(10, nclients+1, 10)
     if  nclients <= 1000 and nclients > 100:
-        array  = range(1, 10)
-        array += range(10, 100, 10)
-        array += range(100, nclients+1, 100)
+        array  = xrange(1, 10)
+        array += xrange(10, 100, 10)
+        array += xrange(100, nclients+1, 100)
 
     for nclients in array:
         print "Run job with %s clients" % nclients

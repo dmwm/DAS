@@ -123,9 +123,11 @@ class AnalyticsWeb(DASWebManager):
     def schedule(self, *path, **attrs):
         """
         Show the currently scheduled and running tasks.
-        TODO: Move away from using master_id/uuid to friendly naming scheme.
-              Highlight jobs being retried.
-              Better reschedule interface.
+        TODO:
+
+            - Move away from using master_id/uuid to friendly naming scheme.
+            - Highlight jobs being retried.
+            - Better reschedule interface.
         """
         task_schedule = self._scheduler.get_scheduled()
         task_schedule = sorted(task_schedule, key=lambda x: x['at'])

@@ -94,17 +94,18 @@ class Root(object):
                 obj = LumiService()
                 tree.mount(obj, '/' + srv)
 
-        print "### DAS web server, PID=%s, #threads=%s" \
-                % (self.pid, threading.active_count())
-#        for thr in threading.enumerate():
-#            print thr
+        print "### DAS web server, PID=%s" % self.pid
         print pformat(tree.apps)
         print pformat(self.config)
         pid = PIDFile(engine, self.pid)
         pid.subscribe()
         engine.start()
-        print "### number of threads with web engine %s" \
+        print "### DAS server runs with %s threads" \
                 % threading.active_count()
+        threads = threading.enumerate()
+        threads.sort()
+        for thr in threads:
+            print thr
         if  blocking:
             engine.block()
         

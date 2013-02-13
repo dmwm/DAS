@@ -103,10 +103,10 @@ DASOption('web_server', 'socket_queue_size', 'int', 100),
 DASOption('web_server', 'url_base', 'string', '/das'),
 # status_update controls how often AJAX calls should be invoked (in milsec)
 DASOption('web_server', 'status_update', 'int', 3000),
-# number of workers to serve user queries in DAS server
-DASOption('web_server', 'number_of_workers', 'int', 10),
+# number of web workers to serve user queries in DAS server
+DASOption('web_server', 'web_workers', 'int', 50),
 # limit number of peding jobs in DAS server queue
-DASOption('web_server', 'queue_limit', 'int', 50),
+DASOption('web_server', 'queue_limit', 'int', 1000),
 # The adjust_input function can be implemented for concrete use case
 # In CMS we can adjust input values to regex certain things, like dataset/run.
 DASOption('web_server', 'adjust_input', 'bool', False),
@@ -133,19 +133,6 @@ DASOption('cacherequests', 'ProductionAccess', 'int', 3000),
 DASOption('cacherequests', 'Unlimited', 'int', 10000),
 
 # DBS section of DAS config
-# list of dbs instances
-DASOption('dbs', 'dbs_instances', 'list', \
-['cms_dbs_prod_global', 'cms_dbs_caf_analysis_01', 'cms_dbs_ph_analysis_01',
- 'cms_dbs_ph_analysis_02', 'cms_dbs_prod_local_01', 'cms_dbs_prod_local_02',
- 'cms_dbs_prod_local_03', 'cms_dbs_prod_local_04', 'cms_dbs_prod_local_05',
- 'cms_dbs_prod_local_06', 'cms_dbs_prod_local_07', 'cms_dbs_prod_local_08',
- 'cms_dbs_prod_local_09', 'cms_dbs_prod_local_10',
-]),
-# dbs global instance URL
-DASOption('dbs', 'dbs_global_url', 'string', \
-'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'),
-# name of dbs global instance
-DASOption('dbs', 'dbs_global_instance', 'string', 'cms_dbs_prod_global'),
 # extended expire timestamp in seconds, it can be used to extend
 # lifetime of DBS record in DAS cache based on their modification time stamp
 DASOption('dbs', 'extended_expire', 'int', 0),
@@ -183,14 +170,14 @@ DASOption('das', 'services', 'list',
                 ['google_maps', 'ip', 'postalcode'], destination='services'),
 # number of DASCore workers
 # defines how many data-service calls will run at onces
-DASOption('das', 'core_workers', 'int', 5),
+DASOption('das', 'core_workers', 'int', 50),
 # number of API workers 
 # defines how many data-service API calls will run at onces
-DASOption('das', 'api_workers', 'int', 3),
+DASOption('das', 'api_workers', 'int', 2),
 # weights for API worker threads (some srvs need more threads then others)
 # list contains service_name:weight pairs as a single strings
 # we use this format due to option parser constains
-DASOption('das', 'thread_weights', 'list', ['dbs:3', 'phedex:3']),
+DASOption('das', 'thread_weights', 'list', ['dbs:5', 'phedex:5', 'dbs3:5']),
 
 ] # end of DAS_OPTIONS list
 

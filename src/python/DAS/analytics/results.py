@@ -11,9 +11,8 @@ import logging
 from pymongo import DESCENDING
 from pymongo.errors import InvalidName
 from bson.errors import InvalidDocument, InvalidStringData
-from DAS.utils.das_db import db_connection, is_db_alive
+from DAS.utils.das_db import db_connection, is_db_alive, db_monitor
 from DAS.analytics.config import DASAnalyticsConfig
-from DAS.web.utils import db_monitor
 from DAS.utils.thread import start_new_thread
 
 DASAnalyticsConfig.add_option("db_uri", type=basestring,

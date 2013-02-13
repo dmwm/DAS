@@ -18,7 +18,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import create_indexes
 
 # monogo db modules
-from pymongo.connection import Connection
+from pymongo import MongoClient
 from pymongo import DESCENDING
 
 # Cheetah template module
@@ -56,7 +56,7 @@ class MapReduceMgr(object):
     def __init__(self, host, port):
         self.host   = host
         self.port   = port
-        self.conn   = Connection(host, port)
+        self.conn   = MongoClient(host, port)
         self.mapreduce = self.conn['das']['mapreduce']
         self.tmpldir   = os.environ['DAS_TMPLPATH']
 

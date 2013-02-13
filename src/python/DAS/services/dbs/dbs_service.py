@@ -53,8 +53,8 @@ class DBSService(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.prim_instance = config['dbs']['dbs_global_instance']
-        self.instances = config['dbs']['dbs_instances']
+        self.prim_instance = self.dasmapping.dbs_global_instance()
+        self.instances = self.dasmapping.dbs_instances()
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
@@ -69,6 +69,9 @@ class DBSService(DASAbstractService):
     def adjust_params(self, api, kwds, inst=None):
         """
         Adjust DBS2 parameters for specific query requests
+        To mimic DBS3 behavior we only allow dataset summary information
+        for fakeDatasetSummary and fakeListDataset4Block APIs who uses
+        full dataset and block name, respectively.
         """
         sitedb = SERVICES.get('sitedb2', None) # SiteDB from global scope
         if  api == 'fakeRun4Block':
@@ -82,7 +85,7 @@ class DBSService(DASAbstractService):
             val = kwds['status']
             if  val:
                 kwds['query'] = \
-                'find dataset.status where dataset.status=%s' % val
+                'find dataset.status where dataset.status=%s' % val.upper()
             else:
                 kwds['query'] = 'find dataset.status'
             val = kwds['dataset']
@@ -158,8 +161,7 @@ class DBSService(DASAbstractService):
         if  api == 'fakeListDataset4File':
             val = kwds['file']
             if  val != 'required':
-                kwds['query'] = "find dataset, count(block), count(file.size), \
-  sum(block.size), sum(block.numfiles), sum(block.numevents), dataset.status \
+                kwds['query'] = "find dataset, count(block), count(file.size) \
   where file=%s" % val
             else:
                 kwds['query'] = 'required'
@@ -194,6 +196,32 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('run')
+        if  api == 'fakeBlock4file':
+            lfn = kwds.get('file', 'required')
+            if  lfn != 'required':
+                kwds['query'] = 'find block.name where file=%s' % lfn
+            else:
+                kwds['query'] = 'required'
+        if  api == 'fakeLumis4block':
+            block = kwds.get('block', 'required')
+            if  block != 'required':
+                kwds['query'] = \
+                'find lumi.number, run.number, file.name where block=%s' % block
+                kwds.pop('block')
+            else:
+                kwds['query'] = 'required'
+        if  api == 'fakeLumis4FileRun':
+            query = kwds.get('query', 'required')
+            lfn = kwds.get('lfn', 'required')
+            if  lfn != 'required':
+                query = \
+                'find lumi.number, run.number where file=%s' % lfn
+                kwds.pop('lfn')
+            run = kwds.get('run', 'optional')
+            if  run != 'optional':
+                query += ' and run=%s' % run
+                kwds.pop('run')
+            kwds['query'] = query
         if  api == 'fakeBlock4DatasetRun':
             dataset = kwds.get('dataset', 'required')
             run = kwds.get('run', 'required')
@@ -202,6 +230,26 @@ class DBSService(DASAbstractService):
                         % (dataset, run)
             else:
                 kwds['query'] = 'required'
+        if  api == 'summary4run':
+            query = "find dataset, file, run, file.size, \
+  file.numevents, count(lumi) where "
+            cond = ''
+            val = kwds['run']
+            if  val and val != 'required':
+                cond += 'run=%s' % val
+            val = kwds['dataset']
+            if  val and val != 'optional':
+                cond += ' and dataset=%s' % val
+            val = kwds['block']
+            if  val and val != 'optional':
+                cond += ' and block=%s' % val
+            if  cond:
+                kwds['query'] = query + cond
+            else:
+                kwds['query'] = 'required'
+            kwds.pop('dataset')
+            kwds.pop('block')
+            kwds.pop('run')
         if  api == 'fakeGroup4Dataset':
             val = kwds['dataset']
             if  val != 'required':
@@ -252,6 +300,23 @@ class DBSService(DASAbstractService):
                 kwds['query'] = 'required'
             kwds.pop('run')
             kwds.pop('dataset')
+        if  api == 'fakeDataset4User':
+            user = kwds['user']
+            if  user == 'required':
+                kwds['query'] = 'required'
+            else:
+                val = sitedb.user_dn(kwds['user'])
+                if  val:
+                    # DBS-QL does not allow = or spaces, so we'll tweak the DN
+                    val = val.replace('=', '*').replace(' ', '*')
+                    kwds['query'] = "find dataset, dataset.createby " + \
+                            "where dataset.createby=%s" % val
+                    if  kwds.has_key('dataset') and kwds['dataset']:
+                        kwds['query'] += ' and dataset=%s' % kwds['dataset']
+                else:
+                    kwds['query'] = 'required'
+            kwds.pop('user')
+            kwds.pop('dataset')
         if  api == 'fakeRun4File':
             val = kwds['file']
             if  val != 'required':
@@ -279,9 +344,13 @@ class DBSService(DASAbstractService):
                 kwds['query'] = 'required'
         if  api == 'fakeDatasetSummary':
             value = ""
+            path = False
             for key, val in kwds.iteritems():
                 if  key == 'dataset' and val:
                     value += ' and dataset=%s' % val
+                    if  len(val.split('/')) == 4: # /a/b/c -> ['', 'a', 'b', 'c']
+                        if  val.find('*') == -1:
+                            path = True
                 if  key == 'primary_dataset' and val:
                     value += ' and primds=%s' % val
                 if  key == 'release' and val:
@@ -294,7 +363,7 @@ class DBSService(DASAbstractService):
                     value += ' and datatype=%s' % val
                 if  key == 'status':
                     if  val:
-                        value += ' and dataset.status=%s' % val
+                        value += ' and dataset.status=%s' % val.upper()
                     else:
                         value += ' and dataset.status like VALID*'
             keys = ['dataset', 'release', 'primary_dataset', 'tier', \
@@ -305,27 +374,28 @@ class DBSService(DASAbstractService):
                 except:
                     pass
             if  value:
-                kwds['query'] = "find dataset, datatype, dataset.status, \
-dataset.tag, \
-procds.createdate, procds.createby, procds.moddate, procds.modby, \
-sum(block.numfiles), sum(block.numevents), count(block), sum(block.size) \
-where %s" % value[4:]
+                query  = "find dataset, datatype, dataset.status, dataset.tag"
+                query += ", procds.createdate, procds.createby, procds.moddate"
+                query += ", procds.modby"
+                if  path: # we have full path, ask for summary information
+                    query += ", sum(block.numfiles), sum(block.numevents)"
+                    query += ", count(block), sum(block.size)"
+                query += " where %s" % value[4:]
+                kwds['query'] = query
             else:
                 kwds['query'] = 'required'
         if  api == 'fakeListDatasetbyDate':
             value = ''
             if  kwds['status']:
-                value = ' and dataset.status=%s' % kwds['status']
+                value = ' and dataset.status=%s' % kwds['status'].upper()
             else:
                 value = ' and dataset.status like VALID*'
-#           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124} 
+#           20110126/{'$lte': 20110126}/{'$lte': 20110126, '$gte': 20110124}
             query_for_single = "find dataset, datatype, dataset.status, \
   dataset.tag, \
-  count(block), sum(block.size), sum(block.numfiles), sum(block.numevents), \
   dataset.createdate where dataset.createdate %s %s " + value
             query_for_double = "find dataset, datatype, dataset.status, \
   dataset.tag, \
-  count(block), sum(block.size), sum(block.numfiles), sum(block.numevents), \
   dataset.createdate where dataset.createdate %s %s \
   and dataset.createdate %s %s " + value
             val = kwds['date']
@@ -360,8 +430,41 @@ where %s" % value[4:]
             if  status and status.lower() == 'invalid':
                 kwds['retrive_list'] = \
                     ['retrive_invalid_files,retrive_status,retrive_date,retrive_person']
+            val = kwds.get('run', None)
+            if  isinstance(val, dict):
+                # listFiles does not support run range, see
+                # fakeFiles4DatasetRun API
+                kwds.pop('run')
             del kwds['status']
-            
+        if  api == 'fakeFiles4DatasetRun':
+            cond = ""
+            val = kwds['dataset']
+            if  val and val != 'required':
+                cond = " and dataset=%s" % val
+                kwds.pop('dataset')
+            val = kwds['run']
+            if  val and val != 'required':
+                if  isinstance(val, dict):
+                    min_run = 0
+                    max_run = 0
+                    if  val.has_key('$lte'):
+                        max_run = val['$lte']
+                    if  val.has_key('$gte'):
+                        min_run = val['$gte']
+                    if  min_run and max_run:
+                        val = "run >=%s and run <= %s" % (min_run, max_run)
+                    elif val.has_key('$in'):
+                        arr = [r for r in val['$in']]
+                        val = "run >=%s and run <= %s" % (arr[0], arr[-1])
+                elif isinstance(val, int):
+                    val = "run = %d" % val
+                cond += " and %s" % val
+                kwds.pop('run')
+            if  cond:
+                kwds['query'] = "find file.name where %s" % cond[4:]
+            else:
+                kwds['query'] = 'required'
+
     def parser(self, dasquery, dformat, source, api):
         """
         DBS data-service parser.
@@ -386,11 +489,15 @@ where %s" % value[4:]
         elif api == 'listBlocks4path':
             api = 'listBlocks'
             prim_key = 'block'
+        elif api == 'fakeBlock4file':
+            prim_key = 'block'
         elif api == 'listBlockProvenance':
             prim_key = 'block'
         elif api == 'listBlockProvenance4child':
             prim_key = 'block'
         elif api == 'listFiles':
+            prim_key = 'file'
+        elif api == 'fakeFiles4DatasetRun':
             prim_key = 'file'
         elif api == 'listLFNs':
             prim_key = 'file_lfn'
@@ -412,6 +519,10 @@ where %s" % value[4:]
             prim_key = 'release'
         elif api == 'listRuns':
             prim_key = 'run'
+        elif api == 'fakeLumis4block':
+            prim_key = 'lumi'
+        elif api == 'fakeLumis4FileRun':
+            prim_key = 'lumi'
         elif  api == 'fakeRelease4File':
             prim_key = 'release'
         elif  api == 'fakeRelease4Dataset':
@@ -430,6 +541,10 @@ where %s" % value[4:]
             prim_key = 'dataset'
         elif  api == 'fakeDataset4Run':
             prim_key = 'dataset'
+        elif  api == 'fakeDataset4User':
+            prim_key = 'dataset'
+        elif  api == 'summary4run':
+            prim_key = 'row'
         elif  api == 'fakeRun4File':
             prim_key = 'run'
         elif  api == 'fakeRun4Run':
@@ -464,9 +579,16 @@ where %s" % value[4:]
         config_attrs = ['config.name', 'config.content', 'config.version', \
                  'config.type', 'config.annotation', 'config.createdate', \
                  'config.createby', 'config.moddate', 'config.modby']
+        sum_attrs = ['']
         for row in gen:
             if  not row:
                 continue
+            if  row.has_key('row') and api == 'summary4run':
+                row = row['row']
+                row['file_size'] = row.pop('file.size')
+                row['nevents'] = row.pop('file.numevents')
+                row['nlumis'] = row.pop('count_lumi')
+                row = dict(summary=row)
             if  row.has_key('status') and \
                 row['status'].has_key('dataset.status'):
                 row['status']['name'] = row['status']['dataset.status']
@@ -526,6 +648,22 @@ where %s" % value[4:]
                         del row['run'][att]
                     except:
                         pass
+            if  api == 'fakeLumis4FileRun':
+                if  row.has_key('lumi'):
+                    row = row['lumi']
+                    row['lumi'] = {'number': row['lumi.number'],
+                                   'run_number': row['run.number']}
+                    del row['lumi.number']
+                    del row['run.number']
+            if  api == 'fakeLumis4block':
+                if  row.has_key('lumi'):
+                    row = row['lumi']
+                    row['lumi'] = {'number': row['lumi.number'],
+                                   'run_number': row['run.number'],
+                                   'file': row['file.name']}
+                    del row['lumi.number']
+                    del row['run.number']
+                    del row['file.name']
             if  api == 'fakeSite4Dataset' and sitedb:
                 site = row.get('site', None)
                 if  site and isinstance(site, dict):

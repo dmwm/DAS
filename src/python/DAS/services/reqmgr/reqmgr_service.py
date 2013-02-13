@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-
+#pylint: disable-msg=W0702,W0613,R0912,R0913
 """
 ReqMgr service
 """
@@ -54,7 +54,8 @@ class ReqMgrService(DASAbstractService):
                         data = data[key]
                         if  data.has_key('InputDatasetTypes'):
                             arr = []
-                            for key, val in data['InputDatasetTypes'].iteritems():
+                            for key, val in \
+                                    data['InputDatasetTypes'].iteritems():
                                 arr.append({'dataset':key, 'type':val})
                             data['InputDatasetTypes'] = arr
                         yield data

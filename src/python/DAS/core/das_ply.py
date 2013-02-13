@@ -260,6 +260,11 @@ class DASPLY(object):
                  | SPECIALKEY EQUAL VALUE"""
         p[0] = ('keyop', p[1], p[2], p[3])
 
+    def p_err_opvalue(self, p):
+        """keyop : DASKEY EQUAL VALUE VALUE"""
+        p.error = "empty space between values: '%s' '%s'" % (p[3], p[4])
+        raise Exception(p.error)
+
     def p_opkey(self, p):
         """keyop : DASKEY EQUAL DASKEY"""
         p[0] = ('keyop', p[1], p[2], p[3])
@@ -384,7 +389,7 @@ class DASPLY(object):
                   | DASKEY_ATTR FILTER_OPERATOR VALUE
                   | DASKEY_ATTR FILTER_OPERATOR NUMBER"""
         val = ''
-        for idx in range(0, len(p)):
+        for idx in xrange(0, len(p)):
             if  p[idx]:
                 val += str(p[idx])
         p[0] = [val]
@@ -489,7 +494,7 @@ def ply2mongo(query):
             system = val
             continue
         dasname = name 
-        if  oper and val: # real condition
+        if  (oper and val) or (oper and val==0): # real condition
             value = val
             if  name == 'date' and oper == '=':
                 value = das_dateformat(value)

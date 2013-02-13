@@ -16,11 +16,13 @@ Contents:
    :maxdepth: 2
 
    introduction.rst
+   installation.rst
    das_ql.rst
    das_queries.rst
    das_client.rst
    architecture.rst
    workflow.rst
+   das_server.rst
    das_records.rst
    mapping.rst
    analytics.rst
