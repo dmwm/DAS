@@ -25,12 +25,12 @@ class TestDASDatasetWildcards(unittest.TestCase):
         sets up dbs manager instance
         """
 
-        print 'setUp: getting dbs manager to access current datasets '\
+        print '\nsetUp: getting dbs manager to access current datasets '\
               '(and fetching them if needed)'
         # set up only once
         if not self.global_dbs_inst:
             self.global_dbs_inst = \
-                dataset_wildcards.get_global_dbs_mngr(update_required=False)
+                dataset_wildcards.get_global_dbs_mngr()
 
     def test_doctests(self):
         """

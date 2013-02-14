@@ -13,6 +13,9 @@ import json
 import urllib
 from itertools import groupby
 
+# mongodb modules
+from bson.objectid import ObjectId
+
 # DAS modules
 from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.core.das_query import DASQuery
@@ -118,7 +121,7 @@ def tooltip_helper(title):
         % (title, tooltip)
     return page
 
-def adjust_values(func, gen, links):
+def adjust_values(func, gen, links, pkey):
     """
     Helper function to adjust values in UI.
     It groups values for identical key, make links for provided mapped function,
@@ -140,7 +143,6 @@ def adjust_values(func, gen, links):
             rdict[uikey] = val
     page = ""
     to_show = []
-    error = 0
     green = 'style="color:green"'
     red = 'style="color:red"'
     for key, val in rdict.iteritems():
@@ -149,7 +151,6 @@ def adjust_values(func, gen, links):
             continue
         if  key.lower() == 'error':
             key = '<span %s>WARNING</span>' % red
-            error = 1
             if  val and isinstance(val, basestring):
                 val += '<br/>'
         if  lookup:
@@ -166,7 +167,8 @@ def adjust_values(func, gen, links):
                 if  len(set(val)) > 1 and \
                     (key.lower().find('number') != -1 or \
                         key.lower().find('size') != -1):
-                    value = '<span %s>%s</span>' % (red, value)
+                    if  pkey != 'lumi.number':
+                        value = '<span %s>%s</span>' % (red, value)
             elif  key.lower().find('size') != -1 and val:
                 value = size_format(val)
             elif  key.find('Number of ') != -1 and val:
@@ -231,7 +233,7 @@ def adjust_values(func, gen, links):
             rlist.sort()
             page += ', '.join(rlist)
             page  = page.replace('<br/>,', '<br/>')
-    if  links and not error:
+    if  links:
         page += '<br />' + ', '.join(links)
     return page
 
@@ -244,10 +246,10 @@ class CMSRepresentation(DASRepresentation):
         self.dasmgr     = dasmgr
         self.dasmapping = self.dasmgr.mapping
         if  config.has_key('dbs'):
-            self.dbs_global = config['dbs'].get('dbs_global_instance', None)
+            self.dbs_global = self.dasmapping.dbs_global_instance()
         else:
             self.dbs_global = None
-        self.colors     = {}
+        self.colors = {}
         for system in self.dasmgr.systems:
             self.colors[system] = gen_color(system)
 
@@ -286,7 +288,7 @@ class CMSRepresentation(DASRepresentation):
                         # take first five or less entries from the list to cover
                         # possible aggregated records and extract row keys
                         lmax    = len(row[mkey]) if len(row[mkey]) < 5 else 5
-                        sublist = [row[mkey][i] for i in range(0, lmax)]
+                        sublist = [row[mkey][i] for i in xrange(0, lmax)]
                         ndict   = DotDict({mkey:sublist})
                         rowkeys = [k for k in ndict.get_keys(mkey)]
                     else:
@@ -328,10 +330,13 @@ class CMSRepresentation(DASRepresentation):
         page = ""
         if  not self.colors:
             return page
-        pads = "padding-left:7px; padding-right:7px"
-        for system in slist:
-            page += '<span style="background-color:%s;%s">&nbsp;</span>' \
-                % (self.colors[system], pads)
+        pads = "padding:2px"
+        # at web UI we don't need to list all systems, we'll only
+        # take their unique set
+        for system in list(set(slist)):
+            bkg, col = self.colors[system]
+            page += '<span style="background-color:%s;color:%s;%s">%s</span>' \
+                % (bkg, col, pads, system)
         return page
 
     def filter_bar(self, dasquery):
@@ -358,21 +363,26 @@ class CMSRepresentation(DASRepresentation):
         uinput   = kwargs.get('input', '')
         total    = head.get('nresults', 0)
         incache  = head.get('incache')
+        apilist  = head.get('apilist')
         dasquery = head.get('dasquery', None)
         if  not dasquery:
             inst     = head.get('instance', self.dbs_global)
             dasquery = DASQuery(uinput, instance=inst)
         inst     = dasquery.instance
         filters  = dasquery.filters
-        main     = self.pagination(total, incache, kwargs)
-        if  main.find('das_noresults') == -1:
-            main += self.templatepage('das_colors', colors=self.colors)
-        style   = 'white'
-        rowkeys = []
-        fltpage = self.filter_bar(dasquery)
-        page    = ''
-        old     = None
-        dup     = False
+        main     = self.pagination(total, incache, apilist, kwargs)
+        style    = 'white'
+        rowkeys  = []
+        fltpage  = self.filter_bar(dasquery)
+        page     = ''
+        old      = None
+        dup      = False
+        tstamp   = None
+        status   = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             if  not row:
                 continue
@@ -385,6 +395,12 @@ class CMSRepresentation(DASRepresentation):
                 msg  = 'Exception: %s\n' % str(exc)
                 msg += 'Fail to process row\n%s' % str(row)
                 raise Exception(msg)
+            if  not tstamp:
+                try:
+                    oid = ObjectId(mongo_id)
+                    tstamp = time.mktime(oid.generation_time.timetuple())
+                except:
+                    pass
             page += '<div class="%s"><hr class="line" />' % style
             links = []
             pkey  = None
@@ -395,11 +411,20 @@ class CMSRepresentation(DASRepresentation):
                     fltpage = self.fltpage(row)
                 try:
                     lkey = pkey.split('.')[0]
-                    pval = list(set(DotDict(row).get_values(pkey)))
+                    if  pkey == 'summary':
+                        pval = row[pkey]
+                    else:
+                        pval = [i for i in DotDict(row).get_values(pkey)]
+                    if  isinstance(pval, list):
+                        if  pval and not isinstance(pval[0], list):
+                            pval = list(set(pval))
+                    else:
+                        pval = list(set(pval))
                     if  len(pval) == 1:
                         pval = pval[0]
                     if  pkey == 'run.run_number' or pkey == 'lumi.number':
-                        pval = int(pval)
+                        if  isinstance(pval, basestring):
+                            pval = int(pval)
                     if  pval:
                         page += '%s: ' % lkey.capitalize()
                         if  lkey == 'parent' or lkey == 'child':
@@ -469,13 +494,14 @@ class CMSRepresentation(DASRepresentation):
                         url  = 'https://cmstags.cern.ch/tc/py_getReleasesTags?'
                         url += 'diff=false&releases=%s' % urllib.quote(rel)
                         links.append('<a href="%s">Packages</a>' % url)
-                except:
+                except Exception as exc:
+                    print_exc(exc)
                     pval = 'N/A'
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
                 page += add_filter_values(row, filters)
-                page += adjust_values(func, gen, links)
+                page += adjust_values(func, gen, links, pkey)
             pad   = ""
             try:
                 systems = self.systems(row['das']['system'])
@@ -512,8 +538,15 @@ class CMSRepresentation(DASRepresentation):
             main += self.templatepage('das_duplicates', uinput=uinput,
                         instance=inst)
         main += page
-        main += '<div align="right">DAS cache server time: %5.3f sec</div>' \
-                % head['ctime']
+        msg   = ''
+        if  tstamp:
+            try:
+                msg += 'request time: %s sec, ' \
+                        % (time.mktime(time.gmtime())-tstamp)
+            except:
+                pass
+        msg  += 'cache server time: %5.3f sec' % head['ctime']
+        main += '<div align="right">%s</div>' % msg
         return main
 
     def tableview(self, head, data):
@@ -523,11 +556,12 @@ class CMSRepresentation(DASRepresentation):
         kwargs   = head.get('args')
         total    = head.get('nresults', 0)
         incache  = head.get('incache')
+        apilist  = head.get('apilist')
         dasquery = head.get('dasquery')
         filters  = dasquery.filters
         sdir     = getarg(kwargs, 'dir', '')
         titles   = []
-        page     = self.pagination(total, incache, kwargs)
+        page     = self.pagination(total, incache, apilist, kwargs)
         fltbar   = self.filter_bar(dasquery)
         if  filters:
             for flt in filters:
@@ -538,6 +572,11 @@ class CMSRepresentation(DASRepresentation):
         style   = 1
         tpage   = ""
         pkey    = None
+        status  = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             if  not fltbar:
                 fltbar = self.fltpage(row)
@@ -603,14 +642,20 @@ class CMSRepresentation(DASRepresentation):
                         f.find('=') == -1 and f.find('<') == -1 and \
                         f.find('>') == -1]
         results  = ""
+        status   = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                results += 'ERROR: %s' % reason
         for row in data:
             if  filters:
                 for flt in filters:
                     try:
                         for obj in DotDict(row).get_values(flt):
-                            results += str(obj) + '\n'
+                            results += str(obj) + ' '
                     except:
                         pass
+                results += '\n'
             else:
                 for item in fields:
                     systems = self.dasmgr.systems

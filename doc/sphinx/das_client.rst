@@ -88,5 +88,179 @@ done as following
    from das_client import get_data
 
    # invoke DAS CLI call for given host/query
-   data = get_data(host, query, idx, limit, debug)
+   # host: hostname of DAS server, e.g. https://cmsweb.cern.ch
+   # query: DAS query, e.g. dataset=/ZMM*/*/*
+   # idx: start index for pagination, e.g. 0
+   # limit: end index for pagination, e.g. 10, put 0 to get all results
+   # debug: True/False flag to get more debugging information
+   # das_headers: True/False flag to get DAS headers, default is False
 
+   # please note that prior 1.9.X release the return type is str
+   # while from 1.9.X and on the return type is JSON
+   data = get_data(host, query, idx, limit, debug, das_headers)
+
+Please note, that aforementioned code snippet requires to load `das_client.py`
+which is distributed within CMSSW. Due to CMSSW install policies the version of
+`das_client.py` may be quite old. If you need up-to-date `das_client.py`
+functionality you can follow this recipe. The code below download
+`das_client.py` directly from cmsweb site, compile it and use it in your
+application:
+
+.. code::
+
+    import os
+    import json
+    import urllib2
+    import httplib
+    import tempfile
+
+    class HTTPSClientHdlr(urllib2.HTTPSHandler):
+        """
+        Simple HTTPS client authentication class based on provided
+        key/ca information
+        """
+        def __init__(self, key=None, cert=None, level=0):
+            if  level:
+                urllib2.HTTPSHandler.__init__(self, debuglevel=1)
+            else:
+                urllib2.HTTPSHandler.__init__(self)
+            self.key = key
+            self.cert = cert
+
+        def https_open(self, req):
+            """Open request method"""
+            #Rather than pass in a reference to a connection class, we pass in
+            # a reference to a function which, for all intents and purposes,
+            # will behave as a constructor
+            return self.do_open(self.get_connection, req)
+
+        def get_connection(self, host, timeout=300):
+            """Connection method"""
+            if  self.key:
+                return httplib.HTTPSConnection(host, key_file=self.key,
+                                                    cert_file=self.cert)
+            return httplib.HTTPSConnection(host)
+
+    class DASClient(object):
+        """DASClient object"""
+        def __init__(self, debug=0):
+            super(DASClient, self).__init__()
+            self.debug = debug
+            self.get_data = self.load_das_client()
+
+        def get_das_client(self, debug=0):
+            "Download das_client code from cmsweb"
+            url  = 'https://cmsweb.cern.ch/das/cli'
+            ckey = os.path.join(os.environ['HOME'], '.globus/userkey.pem')
+            cert = os.path.join(os.environ['HOME'], '.globus/usercert.pem')
+            req  = urllib2.Request(url=url, headers={})
+            if  ckey and cert:
+                hdlr = HTTPSClientHdlr(ckey, cert, debug)
+            else:
+                hdlr = urllib2.HTTPHandler(debuglevel=debug)
+            opener = urllib2.build_opener(hdlr)
+            fdesc = opener.open(req)
+            cli = fdesc.read()
+            fdesc.close()
+            return cli
+
+        def load_das_client(self):
+            "Load DAS client module"
+            cli = self.get_das_client()
+            # compile python code as exec statement
+            obj   = compile(cli, '<string>', 'exec')
+            # define execution namespace
+            namespace = {}
+            # execute compiled python code in given namespace
+            exec obj in namespace
+            # return get_data object from namespace
+            return namespace['get_data']
+
+        def call(self, query, idx=0, limit=0, debug=0):
+            "Query DAS data-service"
+            host = 'https://cmsweb.cern.ch'
+            data = self.get_data(host, query, idx, limit, debug)
+            if  isinstance(data, basestring):
+                return json.loads(data)
+            return data
+
+    if __name__ == '__main__':
+        das      = DASClient()
+        query    = "/ZMM*/*/*"
+        result   = das.call(query)
+        if  result['status'] == 'ok':
+            nres = result['nresults']
+            data = result['data']
+            print "Query=%s, #results=%s" % (query, nres)
+            print data
+
+Here we provide a simple example of how to use das_client to find dataset
+summary information.
+
+.. code::
+
+    # PLEASE NOTE: to use this example download das_client.py from
+    # cmsweb.cern.ch/das/cli
+
+    # system modules
+    import os
+    import sys
+    import json
+
+    from das_client import get_data
+
+    def drop_das_fields(row):
+        "Drop DAS specific headers in given row"
+        for key in ['das', 'das_id', 'cache_id', 'qhash']:
+            if  row.has_key(key):
+                del row[key]
+
+    def get_info(query):
+        "Helper function to get information for given query"
+        host    = 'https://cmsweb.cern.ch'
+        idx     = 0
+        limit   = 0
+        debug   = False
+        dasheaders = True
+        data    = get_data(host, query, idx, limit, debug, dasheaders)
+        if  isinstance(data, basestring):
+            dasjson = json.loads(data)
+        else:
+            dasjson = data
+        status  = dasjson.get('status')
+        if  status == 'ok':
+            data = dasjson.get('data')
+            return data
+
+    def get_datasets(query):
+        "Helper function to get list of datasets for given query pattern"
+        for row in get_info(query):
+            for dataset in row['dataset']:
+                yield dataset['name']
+
+    def get_summary(query):
+        """
+        Helper function to get dataset summary information either for a single
+        dataset or dataset pattern
+        """
+        if  query.find('*') == -1:
+            print "\n### query", query
+            data = get_info(query)
+            for row in data:
+                drop_das_fields(row)
+                print row
+        else:
+            for dataset in get_datasets(query):
+                query = "dataset=%s" % dataset
+                data = get_info(query)
+                print "\n### dataset", dataset
+                for row in data:
+                    drop_das_fields(row)
+                    print row
+
+    if __name__ == '__main__':
+        # query dataset pattern
+        query = "dataset=/ZMM*/*/*"
+        # query specific dataset in certain DBS instance
+        query = "dataset=/8TeV_T2tt_2j_semilepts_200_75_FSim526_Summer12_minus_v2/alkaloge-MG154_START52_V9_v2/USER instance=cms_dbs_ph_analysis_02"
+        get_summary(query)

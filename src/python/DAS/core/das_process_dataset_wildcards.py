@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=W0511
 """
 File: das_process_dataset_wildcards.py
 Author: Vidmantas Zemleris
@@ -51,24 +52,26 @@ def substitute_multiple(target, replacements, to_replace ='*',):
 
 
 
-def get_global_dbs_mngr(update_required=False, inst = 'cms_dbs_prod_global'):
+def get_global_dbs_mngr(update_required=False):
     """
     Gets a new instance of DBSDaemon for global DBS for testing purposes.
 
     """
 
     dburi = 'localhost:8230'
-    dbs_url = \
-            'http://cmsdbsprod.cern.ch/'+inst+'/servlet/DBSServlet'
+    main_dbs_url = \
+            'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
     # TODO: update if only needed; access dasconfig
     # main_dbs_url = self.dasconfig['dbs']['dbs_global_url']
 
     dbsexpire = 3600 #config.get('dbs_daemon_expire', 3600)
     dbs_config  = {'expire': dbsexpire}
 
-    dbsmgr = DBSDaemon(dbs_url, dburi, dbs_config)
+    dbsmgr = DBSDaemon(main_dbs_url, dburi, dbs_config)
 
-    if update_required or not [dbsmgr.find('*Zmm*')]:
+    # if we have no datasets (fresh DB, fetch them)
+    if update_required or not next(dbsmgr.find('*Zmm*'), False):
+        print 'fetching datasets from global DBS...'
         dbsmgr.update()
     return dbsmgr
 
@@ -244,14 +247,17 @@ def process_dataset_wildcards(pattern, dbs_mngr):
     return results
 
 
-if __name__ == "__main__":
+def test():
+    "Local test function"
     # TODO: init  DAS:   Reading DAS configuration from ...
     print 'setUp: getting dbs manager to access current datasets ' \
           '(and fetching them if needed)'
 
     dbsmgr = get_global_dbs_mngr(update_required=False)
     import doctest
-    globals = globals()
-    globals['dbsmgr'] = dbsmgr
-    doctest.testmod(globs = globals, verbose=True)
+    myglobals = globals()
+    myglobals['dbsmgr'] = dbsmgr
+    doctest.testmod(globs = myglobals, verbose=True)
 
+if __name__ == "__main__":
+    test()

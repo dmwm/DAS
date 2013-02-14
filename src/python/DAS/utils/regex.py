@@ -19,14 +19,15 @@ def word_chars(word, equal=True):
     '^d$|^da$|^dat$|^data$|^datas$|^datase$|^dataset$'
     which can be used later in regular expressions
     """
-    pat = r'|'.join(['^%s$' % word[:x+1] for x in range(len(word))])
+    pat = r'|'.join(['^%s$' % word[:x+1] for x in xrange(len(word))])
     if  equal:
         pat += '|^%s=' % word
     return pat
 
 days = [d for d in calendar.day_abbr if d]
 months = [m for m in calendar.month_abbr if m]
-pattern = '(%s), \d\d (%s) 20\d\d \d\d:\d\d:\d\d GMT' % ('|'.join(days), '|'.join(months))
+pattern = r'(%s), \d\d (%s) 20\d\d \d\d:\d\d:\d\d GMT' \
+        % ('|'.join(days), '|'.join(months))
 http_ts_pattern = re.compile(pattern)
 
 # HTTP header message
@@ -39,39 +40,39 @@ http_pattern = \
 ip_address_pattern = \
     re.compile(r"^([0-9]{1,3}\.){3,3}[0-9]{1,3}$")
 last_time_pattern = \
-    re.compile('^[0-9][0-9](h|m)$') # 24h or 12m
+    re.compile(r'^[0-9][0-9](h|m)$') # 24h or 12m
 rr_time_pattern = \
-    re.compile('^[A-Za-z]{3} [0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
+    re.compile(r'^[A-Za-z]{3} [0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
 # das time should be in isoformat, see datetime.isoformat()
 das_time_pattern = \
-    re.compile('^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
+    re.compile(r'^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')
 date_yyyymmdd_pattern = \
-    re.compile('[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
+    re.compile(r'[0-2]0[0-9][0-9][0-1][0-9][0-3][0-9]')
 key_attrib_pattern = \
     re.compile(r"^([a-zA-Z_]+\.?)+(=[a-zA-Z0-9]*)?$") # match key.attrib
 #    re.compile(r"^([a-zA-Z_]+\.?)+$") # match key.attrib
 cms_tier_pattern = \
-    re.compile('T[0-9]_') # T1_CH_CERN
+    re.compile(r'T[0-9]_') # T1_CH_CERN
 float_number_pattern = \
     re.compile(r'(^[-]?\d+\.\d*$|^\d*\.{1,1}\d+$)')
 int_number_pattern = \
     re.compile(r'(^[0-9-]$|^[0-9-][0-9]*$)')
 phedex_tier_pattern = \
-    re.compile('^T[0-9]_[A-Z]+(_)[A-Z]+') # T2_UK_NO
+    re.compile(r'^T[0-9]_[A-Z]+(_)[A-Z]+') # T2_UK_NO
 se_pattern = \
-    re.compile('[a-z]+(\.)[a-z]+(\.)') # a.b.c
+    re.compile(r'[a-z]+(\.)[a-z]+(\.)') # a.b.c
 site_pattern = \
-    re.compile('^[A-Z]+') 
+    re.compile(r'^[A-Z]+')
 web_arg_pattern = \
-    re.compile('^[+]?\d*$') # used in web form, e.g idx=0
+    re.compile(r'^[+]?\d*$') # used in web form, e.g idx=0
 number_pattern = \
-    re.compile('^[-]?[0-9][0-9\.]*$') # -123
+    re.compile(r'^[-]?[0-9][0-9\.]*$') # -123
 dataset_path = \
-    re.compile('/[a-zA-Z0-9\-]+/[a-zA-Z0-9\-]+')
+    re.compile(r'/[a-zA-Z0-9\-]+/[a-zA-Z0-9\-]+')
 last_key_pattern = \
-    re.compile('date\s+last')
+    re.compile(r'date\s+last')
 unix_time_pattern = \
-    re.compile('[0-9]{10}')
+    re.compile(r'^\d{10}$|^\d{10}\.\d+$')
 
 # To be used in web module
 RE_DBSQL_0 = re.compile(r"^find")
@@ -106,17 +107,17 @@ RE_K_MONITOR = re.compile(word_chars("monitor"))
 RE_K_JOBSUMMARY = re.compile(word_chars("jobsummary"))
 
 # concrete patterns for CMS data
-PAT_SLASH = re.compile('^/.*')
-PAT_BLOCK = re.compile('^/.*/.*/.*\#.*')
-PAT_RUN  = re.compile('^[0-9]{3,10}')
-PAT_FILE = re.compile('^/.*\.root$')
+PAT_SLASH = re.compile(r'^/.*')
+PAT_BLOCK = re.compile(r'^/.*/.*/.*\#.*')
+PAT_RUN  = re.compile(r'^[0-9]{3,10}')
+PAT_FILE = re.compile(r'^/.*\.root$')
 PAT_RELEASE = \
-    re.compile('^CMSSW_|^[0-9]_$|^[0-9]_[0-9]|' + word_chars('CMSSW_'))
-PAT_SITE = re.compile('^T[0-3]')
-PAT_SE = re.compile('([a-zA-Z0-9-_]+\\.){1,4}')
-PAT_DATATYPE = re.compile('^mc$|^calib$|^data$|^raw$|^cosmic$', re.I)
+    re.compile(r'^CMSSW_|^[0-9]_$|^[0-9]_[0-9]|' + word_chars('CMSSW_'))
+PAT_SITE = re.compile(r'^T[0-3]')
+PAT_SE = re.compile(r'([a-zA-Z0-9-_]+\\.){1,4}')
+PAT_DATATYPE = re.compile(r'^mc$|^calib$|^data$|^raw$|^cosmic$', re.I)
 PAT_TIERS = \
-    re.compile('gen|sim|raw|digi|reco|alcoreco|hlt|fevt|alcaprompt|dqm', re.I)
+    re.compile(r'gen|sim|raw|digi|reco|alcoreco|hlt|fevt|alcaprompt|dqm', re.I)
 
 
 

@@ -11,14 +11,14 @@ __author__ = "Valentin Kuznetsov <vkuznet@gmail.com>"
 MODULE = None
 
 try:
-    import cjson
-    MODULE = "cjson"
+    import yajl
+    MODULE = "yajl"
 except:
     pass
 
 try:
-    import yajl
-    MODULE = "yajl"
+    import cjson
+    MODULE = "cjson"
 except:
     pass
 
@@ -26,9 +26,7 @@ import json
 if  not MODULE: # use default JSON module
     MODULE = "json"
 
-# stick so far with cjson, until yajl will be fully tested
-#MODULE = "cjson"
-#MODULE = "yajl"
+print "### DAS uses %s JSON module" % MODULE
 
 def loads(idict, **kwargs):
     """

@@ -5,8 +5,91 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.9.X
+
+  - Wrap combined_site4dataset API call into try/except block and show
+    exception on web UI. This will help to catch transient missing values from
+    combined data-service for site dataset=/a/b/c queries.
+  - Add DASKEY EQUAL VALUE VALUE error condition to DAS PLY parser to cover the
+    case when user cut-and-paste some value and it has empty space, e.g.
+    dataset=/a/b/c om
+  - Always use upper() for DBS status since it is stored in upper-case in DBS
+    DB
+  - Add function to print DAS summary records
+  - Add DAS SERVER BUSY message to web server, ticket #3945
+  - Read prim_key from mapping DB rather then lookup_keys in das_mongocache
+    module (with fallback to lookup_keys)
+  - Fix verbose printout for pycurl_manager module
+  - Add support for summary dataset=/a/b/c run=123, ticket #3960
+  - Re-factor das_client to be used in other python application; change return
+    type from str to json in get_data API; add das-headers flag to explicitly
+    ask for DAS headers, by default drop DAS headers
+  - Re-factor dasmongocache code to support multiple APIs responses
+    for single DAS key
+  - Add api=das_core to dasheader when we first register query record
+  - Extend DAS aggregator utility to support multiple APIs repsonse
+    for single DAS key
+  - Add db_monitor threads to DASMapping/DASMongocache classes
+  - Switch from explicit show|hide links to dynamic show/hide which
+    switch via ToggleTag JS function
+  - Adjust web UI with Eric's suggestions to show service names in color
+    boxes; remove DAS color map line in result output
+  - Revert to base 10 in size_format
+  - Add update_filters method to DASQuery class to allow upgrade its filters
+    with spec keys; this is useful on web UI, when end-user specifies a filter
+    and we need to show primary key of the record
+  - Wrote check_filters function to test applied filters in a given query and
+    invoke it within nresults method, ticket #3958
+  - Collapse lumi list from DBS3, ticket #3954
+  - Remove dbs url/instances from DAS configuration and read this information
+    directly from DAS maps; fixed #3955
+
 - 1.8.X
 
+  - Add support of lumi block=/a/b/c#123 and block file=/path/f.root
+    queries both in DBS and DBS3
+  - Do not check field keys in a query, e.g. allow to get partial results
+  - Fix plain web view when using DAS filters
+  - Extend DAS support for file dataset=/a/b/c run between [1,2] queries
+  - Keep links around even if data service reports the error
+  - Catch error in combined data-service and report them to UI
+  - Protect qxml_parser from stream errors
+  - Convert regex strings into raw strings
+  - Separate curl cache into get/post instances to avoid racing condition
+    for cached curl objects
+  - Convert das timestamp into presentation datetime format
+  - Queue type can be specified via qtype parameter in web section of DAS
+    configuration file
+  - Extend task_manager to support PriorityQueue
+  - Revert default to cjson instead of yajl module, since later contains a bug
+    which incorrectly rounds off large numbers; there is also an outstanding
+    issue with potential memory leak
+  - Remove dataset summary look-up information for dataset pattern queries to
+    match DBS2 behavior and reduce DAS/DBS latency, see 9254ae2..86138bd
+  - Replace range with xrange since later returns generator rather than list
+  - Add capability to dump DAS status stack by sending SIGQUIT signal to DAS
+    server, e.g. upon the following call `kill -3 <PID>` DAS server will dump
+    into its logs the current snapshot of all its threads
+  - Apply Vidmantas wildcard patch to improve usage of dataset patterns
+    on web UI
+  - Fix Phedex checksum parsing
+  - Switch to new PyMongo driver, version 2.4
+
+    - change Connection to MongoClient
+    - remove safe=True for all insert/update/remove operation on
+      mongo db collection, since it is default with MongoClient
+
+  - DAS CLI changes:
+    
+    - Add exit codes
+    - Add --retry option which allows user to decide if s/he wants to
+      proceed with request when DAS server is busy; retry follows log^5 function
+    - Set init waiting time to 2 sec and max to 20 sec; use cycle for sleep
+      time, e.g. when we reach the max drop to init waiting time and start
+      cycle again.  This behavior reduce overall waiting time for end-users
+
+  - Fix issue with DBS3 global instance look-up
+  - Switch to HTML5 doctype
   - New schema for DAS maps
 
     - re-factor code to handle new schema

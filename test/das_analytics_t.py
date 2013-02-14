@@ -46,6 +46,7 @@ class testDASAnalytics(unittest.TestCase):
         dbs_params = {'apiversion':'DBS_2_0_8',
                   'block_name':'*', 'storage_element_name':'*',
                   'user_type':'NORMAL'}
+        # add DBS api
         self.mgr.add_api('dbs', query, dbs_api, dbs_params)
 
         phedex_api = 'blockReplicas'
@@ -59,13 +60,15 @@ class testDASAnalytics(unittest.TestCase):
         res = self.mgr.list_apis('dbs')
         self.assertEqual([dbs_api], res)
 
+        # add DBS api second time
         self.mgr.add_api('dbs', query, dbs_api, dbs_params)
         res = self.mgr.api_counter(dbs_api)
-        self.assertEqual(1, res) # we invoke API twice, so should get 2
+        self.assertEqual(2, res) # we invoke API twice, so should get 2
 
+        # update DBS api
         self.mgr.update('dbs', query)
         res = self.mgr.api_counter(dbs_api)
-        self.assertEqual(2, res) # we invoke API twice, so should get 2
+        self.assertEqual(3, res) # we invoke API three times, so should get 3
         
         res = self.mgr.api_params(phedex_api)
         self.assertEqual([phedex_params], res)

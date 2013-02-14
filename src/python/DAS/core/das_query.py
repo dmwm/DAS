@@ -162,18 +162,24 @@ class DASQuery(object):
 
         # check dataset wild-cards
         for key, val in self._mongo_query['spec'].items():
-            if  key.find('dataset.name') != -1:
+            if  key == 'dataset.name': # only match dataset.name but do not primary_dataset.name
                 if  not RE_3SLAHES.match(val):
 
                     # TODO: we currently do not support wildcard matching from command line interface
                     if not self._active_dbsmgr:
                         continue
 
-
                     # apply 3 slash pattern look-up, continuing only if one interpretation existings
                     # here, ticket #3071
                     self._handle_dataset_slashes(key, val)
 
+
+    def update_filters(self):
+        "Update filters with spec keys of DAS query"
+        filters = self.mongo_query.get('filters', {}).get('grep', [])
+        for key in self.mongo_query.get('spec', {}).keys():
+            if  key not in filters:
+                filters.append(key)
 
     def update_attr(self):
         """

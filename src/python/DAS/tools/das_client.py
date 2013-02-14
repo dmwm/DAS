@@ -18,6 +18,26 @@ import urllib
 import urllib2
 import httplib
 from   optparse import OptionParser
+from   math import log
+
+# define exit codes according to Linux sysexists.h
+EX_OK           = 0  # successful termination
+EX__BASE        = 64 # base value for error messages
+EX_USAGE        = 64 # command line usage error
+EX_DATAERR      = 65 # data format error
+EX_NOINPUT      = 66 # cannot open input
+EX_NOUSER       = 67 # addressee unknown
+EX_NOHOST       = 68 # host name unknown
+EX_UNAVAILABLE  = 69 # service unavailable
+EX_SOFTWARE     = 70 # internal software error
+EX_OSERR        = 71 # system error (e.g., can't fork)
+EX_OSFILE       = 72 # critical OS file missing
+EX_CANTCREAT    = 73 # can't create (user) output file
+EX_IOERR        = 74 # input/output error
+EX_TEMPFAIL     = 75 # temp failure; user is invited to retry
+EX_PROTOCOL     = 76 # remote error in protocol
+EX_NOPERM       = 77 # permission denied
+EX_CONFIG       = 78 # configuration error
 
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     """
@@ -83,6 +103,15 @@ class DASOptionParser:
         msg  = 'specify private certificate file name'
         self.parser.add_option("--cert", action="store", type="string",
                                default="", dest="cert", help=msg)
+        msg = 'specify number of retries upon busy DAS server message'
+        self.parser.add_option("--retry", action="store", type="string",
+                               default=0, dest="retry", help=msg)
+        msg = 'drop DAS headers'
+        self.parser.add_option("--das-headers", action="store_true",
+                               default=False, dest="das_headers", help=msg)
+        msg = 'specify power base for size_format, default is 10 (can be 2)'
+        self.parser.add_option("--base", action="store", type="int",
+                               default=10, dest="base", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
@@ -95,7 +124,7 @@ def convert_time(val):
         return time.strftime('%d/%b/%Y_%H:%M:%S_GMT', time.gmtime(val))
     return val
 
-def size_format(uinput):
+def size_format(uinput, ibase=10):
     """
     Format file size utility, it converts file size into KB, MB, GB, TB, PB units
     """
@@ -103,8 +132,13 @@ def size_format(uinput):
         num = float(uinput)
     except Exception as _exc:
         return uinput
-    base = 1000. # power of 10, or use 1024. for power of 2
-    for xxx in ['', 'KB', 'MB', 'GB', 'TB', 'PB']:
+    if  ibase == 2.: # power of 2
+        base  = 1024.
+        xlist = ['', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
+    else: # default base is 10
+        base  = 1000.
+        xlist = ['', 'KB', 'MB', 'GB', 'TB', 'PB']
+    for xxx in xlist:
         if  num < base:
             return "%3.1f%s" % (num, xxx)
         num /= base
@@ -139,7 +173,7 @@ def unique_filter(rows):
         old_row = row
     yield row
 
-def get_value(data, filters):
+def get_value(data, filters, base=10):
     """Filter data from a row for given list of filters"""
     for ftr in filters:
         if  ftr.find('>') != -1 or ftr.find('<') != -1 or ftr.find('=') != -1:
@@ -151,7 +185,7 @@ def get_value(data, filters):
                 if  key == 'creation_time':
                     row = convert_time(row[key])
                 elif  key == 'size':
-                    row = size_format(row[key])
+                    row = size_format(row[key], base)
                 else:
                     row = row[key]
             if  isinstance(row, list):
@@ -160,7 +194,7 @@ def get_value(data, filters):
                         if  key == 'creation_time':
                             row = convert_time(item[key])
                         elif  key == 'size':
-                            row = size_format(item[key])
+                            row = size_format(item[key], base)
                         else:
                             row = item[key]
                         values.add(row)
@@ -177,7 +211,8 @@ def fullpath(path):
         path = os.path.join(os.environ['HOME'], path)
     return path
 
-def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None):
+def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
+        cert=None, das_headers=True):
     """Contact DAS server and retrieve data for given DAS query"""
     params  = {'input':query, 'idx':idx, 'limit':limit}
     path    = '/das/cache'
@@ -206,8 +241,9 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None
         pid = data
     else:
         pid = None
-    sleep   = 1  # initial waiting time in seconds
-    wtime   = 30 # final waiting time in seconds
+    iwtime  = 2  # initial waiting time in seconds
+    wtime   = 20 # final waiting time in seconds
+    sleep   = iwtime
     time0   = time.time()
     while pid:
         params.update({'pid':data})
@@ -219,7 +255,7 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None
             data = fdesc.read()
             fdesc.close()
         except urllib2.HTTPError as err:
-            return json.dumps({"status":"fail", "reason":str(err)})
+            return {"status":"fail", "reason":str(err)}
         if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
             pid = data
         else:
@@ -227,16 +263,31 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None, cert=None
         time.sleep(sleep)
         if  sleep < wtime:
             sleep *= 2
+        elif sleep == wtime:
+            sleep = iwtime # start new cycle
         else:
             sleep = wtime
         if  (time.time()-time0) > threshold:
             reason = "client timeout after %s sec" % int(time.time()-time0)
-            return json.dumps({"status":"fail", "reason":reason})
-    return data
+            return {"status":"fail", "reason":reason}
+    jsondict = json.loads(data)
+    if  das_headers:
+        return jsondict
+    # drop DAS headers, users usually don't need them
+    status = jsondict.get('status')
+    if  status != 'ok':
+        return jsondict
+    drop_keys = ['das_id', 'cache_id', 'qhash', '_id', 'das']
+    for row in jsondict['data']:
+        for key in drop_keys:
+            del row[key]
+    return jsondict['data']
 
 def prim_value(row):
     """Extract primary key value from DAS record"""
     prim_key = row['das']['primary_key']
+    if  prim_key == 'summary':
+        return row[prim_key]
     key, att = prim_key.split('.')
     if  isinstance(row[key], list):
         for item in row[key]:
@@ -244,6 +295,19 @@ def prim_value(row):
                 return item[att]
     else:
         return row[key][att]
+
+def print_summary(rec):
+    "Print summary record information on stdout"
+    if  not rec.has_key('summary'):
+        msg = 'Summary information is not found in record:\n', rec
+        raise Exception(msg)
+    for row in rec['summary']:
+        keys = [k for k in row.keys()]
+        maxlen = max([len(k) for k in keys])
+        for key, val in row.items():
+            pkey = '%s%s' % (key, ' '*(maxlen-len(key)))
+            print '%s: %s' % (pkey, val)
+        print
 
 def main():
     """Main function"""
@@ -257,18 +321,34 @@ def main():
     thr     = opts.threshold
     ckey    = opts.ckey
     cert    = opts.cert
+    das_h   = opts.das_headers
+    base    = opts.base
     if  not query:
-        raise Exception('You must provide input query')
-    data    = get_data(host, query, idx, limit, debug, thr, ckey, cert)
+        print 'Input query is missing'
+        sys.exit(EX_USAGE)
     if  opts.format == 'plain':
-        jsondict = json.loads(data)
+        jsondict = get_data(host, query, idx, limit, debug, thr, ckey, cert)
         if  not jsondict.has_key('status'):
             print 'DAS record without status field:\n%s' % jsondict
-            return
+            sys.exit(EX_PROTOCOL)
         if  jsondict['status'] != 'ok':
-            print "status: %s reason: %s" \
+            print "status: %s, reason: %s" \
                 % (jsondict.get('status'), jsondict.get('reason', 'N/A'))
-            return
+            if  opts.retry:
+                found = False
+                for attempt in xrange(1, int(opts.retry)):
+                    interval = log(attempt)**5
+                    print "Retry in %5.3f sec" % interval
+                    time.sleep(interval)
+                    data = get_data(host, query, idx, limit, debug, thr, ckey, cert)
+                    jsondict = json.loads(data)
+                    if  jsondict.get('status', 'fail') == 'ok':
+                        found = True
+                        break
+            else:
+                sys.exit(EX_TEMPFAIL)
+            if  not found:
+                sys.exit(EX_TEMPFAIL)
         nres = jsondict['nresults']
         if  not limit:
             drange = '%s' % nres
@@ -288,13 +368,13 @@ def main():
         if  filters and not aggregators:
             data = jsondict['data']
             if  isinstance(data, dict):
-                rows = [r for r in get_value(data, filters)]
+                rows = [r for r in get_value(data, filters, base)]
                 print ' '.join(rows)
             elif isinstance(data, list):
                 if  unique:
                     data = unique_filter(data)
                 for row in data:
-                    rows = [r for r in get_value(row, filters)]
+                    rows = [r for r in get_value(row, filters, base)]
                     print ' '.join(rows)
             else:
                 print jsondict
@@ -305,7 +385,7 @@ def main():
             for row in data:
                 if  row['key'].find('size') != -1 and \
                     row['function'] == 'sum':
-                    val = size_format(row['result']['value'])
+                    val = size_format(row['result']['value'], base)
                 else:
                     val = row['result']['value']
                 print '%s(%s)=%s' \
@@ -316,6 +396,10 @@ def main():
                 old = None
                 val = None
                 for row in data:
+                    prim_key = row.get('das', {}).get('primary_key', None)
+                    if  prim_key == 'summary':
+                        print_summary(row)
+                        return
                     val = prim_value(row)
                     if  not opts.limit:
                         if  val != old:
@@ -330,7 +414,9 @@ def main():
             else:
                 print data
     else:
-        print data
+        jsondict = get_data(\
+                host, query, idx, limit, debug, thr, ckey, cert, das_h)
+        print jsondict
 
 #
 # main

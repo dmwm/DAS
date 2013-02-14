@@ -102,9 +102,7 @@ class DASWebManager(TemplatedPage):
         """
         Provide footer for all web pages
         """
-        ctime = 0
-        return self.templatepage('das_bottom', div=div, 
-                ctime=ctime, version=DAS.version)
+        return self.templatepage('das_bottom', div=div, version=DAS.version)
 
     def page(self, content, _ctime=None, _response=False):
         """

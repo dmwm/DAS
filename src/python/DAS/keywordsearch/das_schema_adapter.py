@@ -6,8 +6,8 @@ from nltk.corpus import stopwords
 from DAS.core.das_core import DASCore
 
 
-dascore = DASCore()
-mappings = dascore.mapping
+
+
 
 DEBUG = False
 import math
@@ -43,7 +43,6 @@ entity_wordnet_synsets = {
     # ("Synset('block.n.06')",
     #'(computer science) a sector or group of sectors that function as the smallest data unit permitted',
     #["since blocks are often defined as a single sector, the terms `block' and `sector' are sometimes used interchangeably"]),
-
 }
 
 
@@ -69,8 +68,14 @@ input_output_params_by_api = {}
 
 #TODO: entities of API results !!!
 
+# a dict by entity of fields in service results
+_result_fields_by_entity = {}
+
+
+
 # Discover APIs
-def discover_apis_and_fields():
+def discover_apis_and_fields(dascore):
+    mappings = dascore.mapping
     UGLY_DEBUG = False
 
     global system, apis, api, entity_long, entity_short, parameters, api_info, api_params, p, i, param, param_constraint
@@ -161,55 +166,6 @@ def discover_apis_and_fields():
 
             # TODO: get the service result format
 
-discover_apis_and_fields()
-search_field_names = set(entity_names.values())
-
-
-print "APIS without required params:"
-print '\n'.join(["%s(%s) --> %s" % (api, ','.join(params), entity)
-                 for (entity, params, required, api_name) in api_input_params
-                 if not required])
-
-
-
-# inverted term frequency in the schema, to lower the importance of very common term (e.g. name (dataset.name, file.name)
-idf = {
-}
-
-for entity_long in entity_names.keys():
-    # TODO: stemming?
-    # term = entity_long # dataset.name
-    if '.' in entity_long:
-        term = entity_long.split('.')[1]
-        idf[term] = idf.get(entity_long, 0) + 1
-
-for term in search_field_names:
-    # TODO: stemming?
-    idf[term] = idf.get(entity_long, 0) + 1
-
-N = len(idf)
-for (term, frequency) in idf.items():
-    idf[term] = math.log(float(N) / frequency)
-
-# TODO: normalize them
-min_idf = min(idf.values())
-for (term, idf_value) in idf.items():
-    idf[term] = idf_value / min_idf
-
-
-
-# TODO: we should also include fields, but with lower importance than the search keys (entities)
-
-
-print 'entity_names'
-pprint.pprint(entity_names)
-print 'search_field_names'
-pprint.pprint(search_field_names)
-
-#print 'apis:', apis_by_their_input_contraints
-
-#from pprint import pprint
-#pprint( mappings.api_info('listFiles'))
 
 
 
@@ -265,7 +221,7 @@ def validate_input_params(params, entity=None, final_step=False):
 # TODO: move this to value matching?
 def match_value_dataset(keyword):
     DAS.web.dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART = 1
-    DAS.web.dbs_daemon.SKIP_UPDATES = 1
+    #DAS.web.dbs_daemon.SKIP_UPDATES = 1
 
 
     if hasattr(request, 'dbsmngr'):
@@ -304,11 +260,11 @@ def match_value_dataset(keyword):
 
 
 
-bootstrap_queries =     """
+    # bootstrap queries:
     # sudo python setup.py install && python -u  src/python/DAS/analytics/standalone_task.py -c key_learning
     # sudo python setup.py install && python -u  src/python/DAS/keywordsearch/das_schema_adapter.py
-    #bootstrap queries:
-    """
+
+
 """
 entity.field -- samples
 
@@ -330,7 +286,7 @@ while file dataset=/HT/Run2011B-v1/RAW --> heaps of other stuff
 
 # TODO: what is the problem with WARNING KeyLearning:process_query_record got inconsistent system/urn/das_id length
 
-def init_result_fields_list(same_entitty_prunning=False, _DEBUG=False):
+def init_result_fields_list(dascore, same_entitty_prunning=False, _DEBUG=False):
 
     # TODO: take some titles from DAS integration schema if defined, e.g.
     # site.replica_fraction -->  File-replica presence
@@ -420,7 +376,58 @@ def init_result_fields_list(same_entitty_prunning=False, _DEBUG=False):
     return results_by_entity
 
 
-_result_fields_by_entity = init_result_fields_list()
+
+def init(dascore):
+    print 'DAS CORE IS'
+    pprint.pprint(dascore)
+    discover_apis_and_fields(dascore)
+    search_field_names = set(entity_names.values())
+
+
+    print "APIS without required params:"
+    print '\n'.join(["%s(%s) --> %s" % (api, ','.join(params), entity)
+                     for (entity, params, required, api_name) in api_input_params
+                     if not required])
+
+
+    if False:
+        # TODO: this is not used (?)
+        # TODO 2: we could actually use a standard IR search engine for idf
+        # inverted term frequency in the schema, to lower the importance of
+        # very common term (e.g. name (dataset.name, file.name)
+        idf = {
+        }
+
+        for entity_long in entity_names.keys():
+            # TODO: stemming?
+            # term = entity_long # dataset.name
+            if '.' in entity_long:
+                term = entity_long.split('.')[1]
+                idf[term] = idf.get(entity_long, 0) + 1
+
+        for term in search_field_names:
+            # TODO: stemming?
+            idf[term] = idf.get(entity_long, 0) + 1
+
+        N = len(idf)
+        for (term, frequency) in idf.items():
+            idf[term] = math.log(float(N) / frequency)
+
+        # TODO: normalize them
+        min_idf = min(idf.values())
+        for (term, idf_value) in idf.items():
+            idf[term] = idf_value / min_idf
+
+    print 'entity_names'
+    pprint.pprint(entity_names)
+    print 'search_field_names'
+    pprint.pprint(search_field_names)
+
+
+
+    global _result_fields_by_entity
+    _result_fields_by_entity = init_result_fields_list(dascore)
+
 
 
 def get_result_field_title(result_entity, field, technical=False, html=True):
@@ -441,9 +448,12 @@ def get_result_field_title(result_entity, field, technical=False, html=True):
 
 
 def list_result_fields(same_entitty_prunning=False, _DEBUG=False):
-    global _result_fields_by_entity
+    #global _result_fields_by_entity
     if _result_fields_by_entity:
         return _result_fields_by_entity
+    else:
+        return {}
+        raise Exception('keyword search: das schema not loaded')
 
 
 

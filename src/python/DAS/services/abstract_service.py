@@ -46,7 +46,7 @@ class DASAbstractService(object):
             self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
             if  config.has_key('dbs'):
-                self.dbs_global = config['dbs'].get('dbs_global_instance', None)
+                self.dbs_global = self.dasmapping.dbs_global_instance()
             else:
                 self.dbs_global = None
             dburi             = config['mongodb']['dburi']
@@ -184,6 +184,7 @@ class DASAbstractService(object):
         self.logger.debug(msg)
         header  = dasheader(self.name, dasquery, expire, api, url, ctime)
         header['lookup_keys'] = self.lookup_keys(api)
+        header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
 
         # check that apicall record is present in analytics DB
         self.analytics.insert_apicall(self.name, dasquery.mongo_query,

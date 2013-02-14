@@ -23,16 +23,17 @@ import time
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, json_parser
-from DAS.utils.utils import expire_timestamp
+from DAS.utils.utils import expire_timestamp, convert2ranges
 from DAS.utils.url_utils import getdata
 
 def get_modification_time(record):
     "Get modification timestamp from DBS data-record"
     for key in ['dataset', 'block', 'file']:
         if  record.has_key(key):
-            if  record[key].has_key('last_modification_date'):
+            obj = record[key]
+            if  isinstance(obj, dict) and obj.has_key('last_modification_date'):
                 return record[key]['last_modification_date']
-    if  record.has_key('last_modification_date'):
+    if  isinstance(record, dict) and record.has_key('last_modification_date'):
         return record['last_modification_date']
     return None
 
@@ -53,8 +54,8 @@ class DBS3Service(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.prim_instance = config['dbs']['dbs_global_instance']
-        self.instances = config['dbs']['dbs_instances']
+        self.prim_instance = self.dasmapping.dbs_global_instance()
+        self.instances = self.dasmapping.dbs_instances()
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
@@ -118,14 +119,19 @@ class DBS3Service(DASAbstractService):
                     kwds['minrun'] = val['$gte']
                     kwds['maxrun'] = val['$lte']
         if  api == 'file4DatasetRunLumi':
-            val = kwds['run']
+            val = kwds.get('run', None)
             if  val:
-                kwds['minrun'] = val
-                kwds['maxrun'] = val
-            try:
+                if  isinstance(val, dict): # we got a run range
+                    if  val.has_key('$in'):
+                        kwds['minrun'] = val['$in'][0]
+                        kwds['maxrun'] = val['$in'][-1]
+                    if  val.has_key('$lte'):
+                        kwds['minrun'] = val['$gte']
+                        kwds['maxrun'] = val['$lte']
+                else:
+                    kwds['minrun'] = val
+                    kwds['maxrun'] = val
                 del kwds['run']
-            except:
-                pass
             val = kwds['lumi_list']
             if  val:
                 kwds['lumi_list'] = [val]
@@ -191,9 +197,21 @@ class DBS3Service(DASAbstractService):
             for row in gen:
                 row['dataset']['name'] = name
                 yield row
-        elif api == 'blocks4site':
+        elif api == 'summary4run':
+            spec = query.mongo_query.get('spec', {})
+            dataset = spec.get('dataset.name', '')
+            block = spec.get('block.name', '')
+            run = spec.get('run.run_number', 0)
             for row in gen:
-                print "\n### please revisit, row=", row
+                if  run:
+                    row.update({"run": run})
+                if  dataset:
+                    row.update({"dataset": dataset})
+                if  block:
+                    row.update({"block": block})
+                yield row
+        elif api == 'blockorigin':
+            for row in gen:
                 yield row
         elif api == 'blockparents':
             for row in gen:
@@ -236,6 +254,15 @@ class DBS3Service(DASAbstractService):
                     if  int(file_status) == 0:# invalid status
                         row = None
                 if  row:
+                    yield row
+        elif api == 'filelumis' or api == 'filelumis4block':
+            for row in gen:
+                if  row.has_key('lumi'):
+                    if  row['lumi'].has_key('lumi_section_num'):
+                        val = row['lumi']['lumi_section_num']
+                        row['lumi']['lumi_section_num'] = convert2ranges(val)
+                    yield row
+                else:
                     yield row
         else:
             for row in gen:

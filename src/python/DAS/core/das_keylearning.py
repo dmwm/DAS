@@ -1,3 +1,5 @@
+# pymongo modules
+from bson.objectid import ObjectId
 # DAS modules
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.utils.logger import PrintManager
@@ -50,7 +52,7 @@ class DASKeyLearning(object):
         
         result = self.col.find_one({'system': system, 'urn': urn})
         if result:       
-            self.col.update({'_id': result['_id']},
+            self.col.update({'_id': ObjectId(result['_id'])},
                             {'$addToSet': {'members': {'$each': members}}})
         else:
             keys = self.mapping.api2daskey(system, urn)
@@ -144,4 +146,7 @@ class DASKeyLearning(object):
             return False
 
     def list_members(self):
-        return self.col.find({'member': {'$exists': 'True'}})
+        return self.col.find({'members': {'$exists': 'True'},
+                              'system': {'$exists': 'True'},
+                              'urn': {'$exists': 'True'}})
+        #{ urn: {$exists: 1}, system: {$exists: 1}, members: {$exists: 1}}

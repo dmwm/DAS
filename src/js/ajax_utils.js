@@ -7,6 +7,8 @@ function ajaxCheckPid(base, method, pid, interval) {
     var wait  = parseInt(interval);
     if (wait*2 < limit) {
         wait  = wait*2;
+    } else if (wait==limit) {
+        wait  = 5000; // initial time in msec (5 sec)
     } else { wait = limit; }
     new Ajax.Updater('response', base+'/'+method,
     { method: 'get' ,

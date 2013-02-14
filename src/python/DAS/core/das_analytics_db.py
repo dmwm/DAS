@@ -190,7 +190,7 @@ class DASAnalytics(object):
                         'api.name':api, 'api.params':args}) 
         apidict = dict(name=api, params=args)
         if  record:
-            self.col.update({'_id':record['_id']}, {'$inc':{'counter':1}})
+            self.col.update({'_id':ObjectId(record['_id'])}, {'$inc':{'counter':1}})
         else:
             record = dict(system=system, api=apidict, qhash=qhash, counter=1)
             self.col.insert(record)
@@ -225,7 +225,7 @@ class DASAnalytics(object):
                                       'apicall.qhash':      qhash})
         if existing:
             self.logger.debug("updating")
-            self.col.update({'_id': existing['_id']},
+            self.col.update({'_id': ObjectId(existing['_id'])},
                             {'$set':{'apicall.expire': expire}})
         else:
             self.col.insert({'apicall':{'api_params':   api_params,

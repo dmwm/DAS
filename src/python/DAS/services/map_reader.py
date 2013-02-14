@@ -35,12 +35,15 @@ def read_service_map(filename, field="uri"):
     wild   = '*'
     notations = ''
     services = ''
+    instances = []
     with open(filename, 'r') as apimap:
         for metric in yaml.load_all(apimap.read()):
             if  metric.has_key('system'):
                 system = metric['system']
             if  metric.has_key('services'):
                 services = metric['services']
+            if  metric.has_key('instances'):
+                instances = metric['instances']
             if  metric.has_key('url'):
                 url = metric['url']
             if  metric.has_key('wild_card'):
@@ -58,6 +61,8 @@ def read_service_map(filename, field="uri"):
                                 format=frmt, wild_card=wild, lookup=lookup,
                                 services=services,
                                 created=time.time())
+                if  instances:
+                    record.update({'instances':instances})
                 if  metric.has_key('das_map'):
                     record['das_map'] = metric['das_map']
                 else:

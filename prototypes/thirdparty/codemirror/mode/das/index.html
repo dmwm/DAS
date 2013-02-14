@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>DAS test</title>
+
+<link rel=stylesheet href=../../lib/codemirror.css>
+<link rel=stylesheet href=../../doc/docs.css>
+
+<style type=text/css>
+  .CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}
+</style>
+
+<script src=../../lib/codemirror.js></script>
+
+<script src=das.js></script>
+ <script src="../../lib/util/simple-hint.js"></script>
+    <link rel="stylesheet" href="../../lib/util/simple-hint.css">
+<!--    <script src="../../lib/util/javascript-hint.js"></script> -->
+
+    <script src="das-hint.js"></script>
+
+<!-- TODO: property -->
+<h1>DAS Test</h1>
+
+<textarea id=code>
+dataset="/Cosmics/Run2010B-Tk* huhu" run in [1, 2, 3]  | grep dataset.n >1
+
+
+
+
+file dataset=/a/b/c site=T1_CH_CERN | grep file.name, file.size | unique | sum( file.), count(file.name)
+
+dataset=/Cosmics/Run2010B-Tk*  run in [1, 2, 3] | run between [1, 2] | grep dataset.nevents>1
+</textarea>
+
+
+<p>Press <strong>ctrl-space</strong> or <strong>Tab</strong>  to activate autocompletion. See
+the code (<a href="../lib/util/simple-hint.js">here</a>
+and <a href="../lib/util/javascript-hint.js">here</a>) to figure out
+how it works.</p>
+
+<script>
+  CodeMirror.commands.autocomplete = function(cm) {
+        CodeMirror.simpleHint(cm, CodeMirror.coffeescriptHint);
+      }
+  var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+    mode: 'das',
+    lineNumbers: true,
+    matchBrackets: true,
+lineWrapping: true,
+        extraKeys: {"Ctrl-Space": "autocomplete", "Tab": "autocomplete", }
+  });
+</script>
+
+

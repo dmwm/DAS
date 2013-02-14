@@ -160,7 +160,7 @@ def cochain(ckey, data_name, sink_name):
         code  += "selector('%s'," % key
         count_bracket += 1
     code += sink_name
-    for _idx in range(0, count_bracket):
+    for _idx in xrange(0, count_bracket):
         code += ")"
     return code
 

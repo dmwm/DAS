@@ -206,7 +206,7 @@ class HotspotBase(object):
                 span = delta/blocks
                 self.logger.info("Gap longer than interval, " +\
                                  "creating %s summaries." % blocks)
-                for i in range(blocks):
+                for i in xrange(blocks):
                     try:
                         summary = self.make_one_summary(start+span*i, 
                                                         start+span*(i+1))

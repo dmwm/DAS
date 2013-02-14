@@ -21,6 +21,7 @@ import plistlib
 import calendar
 import datetime
 import traceback
+import itertools
 import xml.etree.cElementTree as ET
 from   itertools import groupby
 from   bson.objectid import ObjectId
@@ -34,6 +35,42 @@ from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
+
+def get_dbs_instance(url):
+    "Extract from DBS url its instance name"
+    msg = 'Unsupported DBS url=%s' % url
+    if  not url:
+        raise Exception(msg)
+    if  url.find('DBSReader') != -1: # DBS3
+        return url.split('/')[4]
+    elif url.find('cmsdbsprod') != -1: # DBS2
+        return url.split('/')[3]
+    else:
+        raise Exception(msg)
+
+def parse_dbs_url(dbs, url):
+    """
+    Parse and return main DBS url for given dbs system type and DBS url from
+    DAS maps
+    """
+    if  dbs == 'dbs3':
+        parts = url.split('/')
+        if  not parts[-1]:
+            parts = parts[:-1]
+        url = '%s//%s' % (parts[0], '/'.join(parts[2:-1]))
+    return url
+
+def convert2ranges(ilist):
+    """
+    Convert input list into list of ranges.
+    http://stackoverflow.com/questions/4628333/converting-a-list-of-integers-into-range-in-python
+    """
+    # right now just sort input list and return it
+    ilist.sort()
+    res = [[t[0][1], t[-1][1]] for t in \
+            (tuple(g[1]) for g in \
+                itertools.groupby(enumerate(ilist), lambda (i, x): i - x))]
+    return res
 
 def identical_data_records(old, row):
     """Checks if 2 DAS records are identical"""
@@ -226,8 +263,12 @@ def size_format(uinput):
     except Exception as exc:
         print_exc(exc)
         return "N/A"
-    base = 1024. # power of 10, or use 1024. for power of 2
-    for xxx in ['', 'KB', 'MB', 'GB', 'TB', 'PB']:
+    base = 1000. # CMS convention to use power of 10
+    if  base == 1000.: # power of 10
+        xlist = ['', 'KB', 'MB', 'GB', 'TB', 'PB']
+    elif base == 1024.: # power of 2
+        xlist = ['', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
+    for xxx in xlist:
         if  num < base: 
             return "%3.1f%s" % (num, xxx)
         num /= base
@@ -540,7 +581,7 @@ def splitlist(ilist, nentries):
     """
     Split input list into a list of lists with nentries
     """
-    for step in range(0, len(ilist), nentries):
+    for step in xrange(0, len(ilist), nentries):
         idx = step
         jdx = idx+nentries
         if  jdx > len(ilist):
@@ -630,9 +671,9 @@ def cartesian_product(ilist1, ilist2):
     
     # loop over largest list and insert
     master_len = len(master_list)
-    for idx in range(0, master_len):
+    for idx in xrange(0, master_len):
         idict = master_list[idx]
-        for jdx in range(0, len(slave_list)):
+        for jdx in xrange(0, len(slave_list)):
             jdict = slave_list[jdx]
             found = 0
             for key in rel_keys:
@@ -712,7 +753,7 @@ def genresults_gen(system, results, collect_list):
 
     for res in results:
         rowdict = dict(rdict)
-        for idx in range(0, len(collect_list)):
+        for idx in xrange(0, len(collect_list)):
             key = collect_list[idx]
             if  res.has_key(key):
                 rowdict[key] = res[key]
@@ -734,7 +775,7 @@ def genresults(system, results, collect_list):
     olist = []
     for res in results:
         rowdict = dict(rdict)
-        for idx in range(0, len(collect_list)):
+        for idx in xrange(0, len(collect_list)):
             key = collect_list[idx]
             if  res.has_key(key):
                 rowdict[key] = res[key]
@@ -760,7 +801,7 @@ def transform_dict2list(indict):
 
     olist = []
     if  foundlist:
-        for idx in range(0, foundlist):
+        for idx in xrange(0, foundlist):
             newrow = dict(row)
             for kkk, vvv in indict.iteritems():
                 if  isinstance(vvv, list):
@@ -881,7 +922,7 @@ def oneway_permutations(ilist):
     Example: ilist=[a,b,c] and this function returns
     (a,b), (a,c), (b,c)
     """
-    for idx in range(0, len(ilist)):
+    for idx in xrange(0, len(ilist)):
         key = ilist[idx]
         try:
             tmp = list(ilist[idx+1:])
@@ -943,7 +984,7 @@ def gen_key_tuples(data, key):
     """
     Generator function to yield (value, id) pairs for provided key
     """
-    for idx in range(0, len(data)):
+    for idx in xrange(0, len(data)):
         row = data[idx]
         tup = (row[key], idx)
         yield tup
@@ -1087,7 +1128,19 @@ def qlxml_parser(source, prim_key):
     
     """
     notations = {}
-    context   = ET.iterparse(source, events=("start", "end"))
+    try:
+        context   = ET.iterparse(source, events=("start", "end"))
+    except IOError as exc: # given source is not parseable
+        # try different data format, it can be an HTTP error
+        try:
+            if  isinstance(source, str):
+                data = json.loads(source)
+                yield data
+        except:
+            pass
+        msg = 'XML parser, data stream is not parseable: %s' % str(exc)
+        print_exc(msg)
+        context = []
 
     root = None
     row = {}
@@ -1107,8 +1160,8 @@ def qlxml_parser(source, prim_key):
             yield row
     if  root:
         root.clear()
-    source.close()
-
+    if  isinstance(source, InstanceType) or isinstance(source, file):
+        source.close()
 
 def xml_parser(source, prim_key, tags=None):
     """
@@ -1323,77 +1376,90 @@ def aggregator_helper(results, expire):
     DAS aggregator helper which iterates over all records in results set and
     perform aggregation of records on the primary_key of the record.
     """
-    def helper(expire, prim_key, system, cond_keys, tstamp, instance):
+    def helper(das_id, expire, pkey, system, api, ckeys, tstamp, inst):
         "Construct a dict out of provided values"
-        rdict = dict(expire=expire, primary_key=prim_key, system=system,
-                        condition_keys=cond_keys, ts=tstamp, instance=instance)
-        return dict(das=rdict)
+        rdict = dict(expire=expire, primary_key=pkey, system=system,
+                api=api, condition_keys=ckeys, ts=tstamp, instance=inst)
+        return dict(das=rdict, das_id=das_id)
 
-    record    = results.next()
-    prim_key  = record['das']['primary_key']
-    cond_keys = record['das']['condition_keys']
-    system    = record['das']['system']
-    instance  = record['das'].get('instance', None)
-    tstamp    = time.time()
+    record  = results.next()
+    pkey    = record['das']['primary_key']
+    ckeys   = record['das']['condition_keys']
+    system  = record['das']['system']
+    api     = record['das']['api']
+    das_id  = record['das_id']
+    inst    = record['das'].get('instance', None)
+    tstamp  = time.time()
     record.pop('das')
     update = 1
     row = {}
     for row in results:
-        row_prim_key  = row['das']['primary_key']
-        row_cond_keys = row['das']['condition_keys']
-        row_system    = row['das']['system']
+        row_pkey   = row['das']['primary_key']
+        row_ckeys  = row['das']['condition_keys']
+        row_system = row['das']['system']
+        row_api    = row['das']['api']
+        row_das_id = row['das_id']
         row.pop('das')
-        if  row_prim_key != prim_key:
-            record.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+        if  row_pkey != pkey:
+            args   = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            record.update(helper(*args))
             yield record
-            prim_key = row_prim_key
+            pkey   = row_pkey
             record = row
             system = row_system
-            cond_keys = list( set(cond_keys+row_cond_keys) )
+            api    = row_api
+            das_id = row_das_id
+            ckeys  = list( set(ckeys+row_ckeys) )
             continue
         try:
-            val1 = dict_value(record, prim_key)
+            val1 = dict_value(record, pkey)
         except:
-            record.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            record.update(helper(*args))
             yield record
             record = dict(row)
             system = row_system
-            cond_keys = list( set(cond_keys+row_cond_keys) )
+            api    = row_api
+            das_id = row_das_id
+            ckeys  = list( set(ckeys+row_ckeys) )
             update = 0
             continue
         try:
-            val2 = dict_value(row, prim_key)
+            val2 = dict_value(row, pkey)
         except:
-            row.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            row.update(helper(*args))
             yield row
             record = dict(row)
             system = row_system
-            cond_keys = list( set(cond_keys+row_cond_keys) )
+            api    = row_api
+            das_id = row_das_id
+            ckeys  = list( set(ckeys+row_ckeys) )
             update = 0
             continue
         if  val1 == val2:
             merge_dict(record, row)
-            system = list(set(system) | set(row_system))
-            cond_keys = list( set(cond_keys+row_cond_keys) )
-            update = 1
+            system += row_system
+            api    += row_api
+            das_id += row_das_id
+            ckeys   = list( set(ckeys+row_ckeys) )
+            update  = 1
         else:
-            record.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+            args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            record.update(helper(*args))
             yield record
             record = dict(row)
             system = row_system
-            cond_keys = list( set(cond_keys+row_cond_keys) )
+            api    = row_api
+            das_id = row_das_id
+            ckeys  = list( set(ckeys+row_ckeys) )
             update = 0
+    args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
     if  update: # check if we did update for last row
-        record.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+        record.update(helper(*args))
         yield record
     else:
-        row.update(\
-                helper(expire, prim_key, system, cond_keys, tstamp, instance))
+        row.update(helper(*args))
         yield row
 
 def das_diff(rows, compare_keys):

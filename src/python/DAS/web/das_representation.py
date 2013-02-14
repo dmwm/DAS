@@ -10,6 +10,9 @@ Description: Abstract interface to represent DAS records
 # system modules
 import urllib
 
+# mongodb modules
+from bson.objectid import ObjectId
+
 # DAS modules
 from DAS.utils.ddict import DotDict
 from DAS.utils.das_config import das_readconfig
@@ -34,10 +37,17 @@ class DASRepresentation(DASWebManager):
         kwargs  = head.get('args')
         total   = head.get('nresults', 0)
         incache = head.get('incache')
-        main    = self.pagination(total, incache, kwargs)
+        apilist = head.get('apilist')
+        main    = self.pagination(total, incache, apilist, kwargs)
         style   = 'white'
         page    = ''
         pad     = ''
+        tstamp  = None
+        status  = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             if  not row:
                 continue
@@ -51,6 +61,12 @@ class DASRepresentation(DASWebManager):
                 msg  = str(exc)
                 msg += '\nFail to process row\n%s' % str(row)
                 raise Exception(msg)
+            if  not tstamp:
+                try:
+                    oid = ObjectId(mongo_id)
+                    tstamp = time.mktime(oid.generation_time.timetuple())
+                except:
+                    pass
             page += '<div class="%s"><hr class="line" />' % style
             jsonhtml = das_json(row, pad)
             if  row.has_key('das') and row['das'].has_key('conflict'):
@@ -62,8 +78,15 @@ class DASRepresentation(DASWebManager):
                     conflict=conflict)
             page += '</div>'
         main += page
-        main += '<div align="right">DAS cache server time: %5.3f sec</div>' \
-                % head['ctime']
+        msg   = ''
+        if  tstamp:
+            try:
+                msg += 'request time: %s sec, ' \
+                        % (time.mktime(time.gmtime())-tstamp)
+            except:
+                pass
+        msg  += 'cache server time: %5.3f sec' % head['ctime']
+        main += '<div align="right">%s</div>' % msg
         return main
 
     def tableview(self, head, data):
@@ -76,7 +99,8 @@ class DASRepresentation(DASWebManager):
         filters  = dasquery.filters
         titles   = []
         incache  = head.get('incache')
-        page     = self.pagination(total, incache, kwargs)
+        apilist  = head.get('apilist')
+        page     = self.pagination(total, incache, apilist, kwargs)
         if  filters:
             for flt in filters:
                 if  flt.find('=') != -1 or flt.find('>') != -1 or \
@@ -86,6 +110,11 @@ class DASRepresentation(DASWebManager):
         style  = 1
         tpage  = ""
         pkey   = None
+        status = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             rec  = []
             if  not pkey and row.has_key('das') and \
@@ -123,7 +152,7 @@ class DASRepresentation(DASWebManager):
                 % head['ctime']
         return page
 
-    def pagination(self, total, incache, kwds):
+    def pagination(self, total, incache, apilist, kwds):
         """
         Construct pagination part of the page. It accepts total as a
         total number of result as well as dict of kwargs which
@@ -147,8 +176,12 @@ class DASRepresentation(DASWebManager):
             page += self.templatepage('das_pagination', \
                 nrows=total, idx=idx, limit=limit, url=url)
         else:
-            page = self.templatepage('das_noresults', query=uinput,
-                        incache=incache)
+            # distinguish the case when no results vs no API calls
+            if  apilist == ['das_core']: # only DAS core call
+                page = self.templatepage('das_noapis', query=uinput)
+            else:
+                page = self.templatepage('das_noresults', query=uinput,
+                            incache=incache)
         return page
 
     @exposetext
@@ -159,7 +192,12 @@ class DASRepresentation(DASWebManager):
         dasquery = head['dasquery']
         fields   = dasquery.mongo_query.get('fields', [])
         filters  = dasquery.filters
-        results = ""
+        results  = ""
+        status   = head.get('status', None)
+        if  status == 'fail':
+            reason = head.get('reason', '')
+            if  reason:
+                results += 'ERROR: %s' % reason
         for row in data:
             if  filters:
                 for flt in filters:

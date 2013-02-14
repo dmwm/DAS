@@ -26,7 +26,8 @@ Below we list all dependencies clarifying their role for DAS
   and [MongodbOverview]_;
 - *pymongo*, a MongoDB python driver, see [Pymongo]_;
 - *yaml*, a human-readable data serialization format (and superset of JSON),
-  a python YAML library is used for DAS maps and server configurations, see [YAML]_;
+  a python YAML library is used for DAS maps and server configurations, see [YAML]_,
+  [PyYAML]_;
 - *Cheetah*, a python template framework, used for all DAS web templates, see
   [Cheetah]_;
 - *sphinx*, a python documentation library servers all DAS documentation, 
@@ -37,6 +38,7 @@ Below we list all dependencies clarifying their role for DAS
   [CJSON]_;
 - *yajl*, a C library providing a faster JSON decoder/encoder for python (optional), see
   [YAJL]_;
-- *gevent*, a coroutine-based Python networking library that uses greenlet to provide 
-  a high-level synchronous API on top of libevent event loop see [Gevent]_;
+- *pycurl* and *curl*, python module for libcurl library, see [PyCurl]_, [CURL]_;
+- *PLY*, python Lexer and Yacc, see [PLY]_;
+
 

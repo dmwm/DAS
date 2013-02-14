@@ -60,7 +60,7 @@ class QuerySpammer(object):
             
         submit_processes = [self.submitter(shared_maker,
                                 **copy.deepcopy(kwargs))
-                             for _ in range(self.workers)]
+                             for _ in xrange(self.workers)]
         LOG.info("Starting processes")
         map(lambda x: x.start(), submit_processes)
         LOG.info("Joining processes")

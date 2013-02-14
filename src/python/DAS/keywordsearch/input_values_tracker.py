@@ -22,7 +22,7 @@ from pymongo import ASCENDING
 import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import dastimestamp
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
-from DAS.web.utils import db_monitor
+from DAS.utils.das_db import db_monitor
 from DAS.utils.utils import get_key_cert
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
@@ -34,7 +34,7 @@ from jsonpath import jsonpath
 
 # Shall we keep existing Datasets on server restart (very useful for debuging)
 KEEP_EXISTING_RECORDS_ON_RESTART = 1
-SKIP_UPDATES = 1
+SKIP_UPDATES = 0
 
 
 DBNAME = 'inputvals'

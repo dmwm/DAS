@@ -22,7 +22,7 @@ from   bson.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from   DAS.utils.utils import print_exc
+from   DAS.utils.utils import print_exc, presentation_datetime
 from   DAS.utils.regex import number_pattern, web_arg_pattern, http_pattern
 from   DAS.utils.das_db import db_connection, is_db_alive
 from   DAS.web.das_codes import web_code
@@ -32,7 +32,17 @@ from   DAS.utils.das_config import das_readconfig
 from DAS.utils.regex import PAT_BLOCK, PAT_RUN, PAT_FILE, PAT_RELEASE
 from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
 
-DBS_INSTANCES = das_readconfig()['dbs']['dbs_instances']
+class HtmlString(object):
+    """
+    a class which embeds a string to be displayed in html mode (quote() will not modify it).
+    Precaution: all escaping has to be done before hand.
+    """
+    def __init__(self, str):
+        self.str = str
+    def __unicode__(self):
+        return self.str
+    __str__ = __unicode__
+
 
 class HtmlString(object):
     """
@@ -156,9 +166,33 @@ def gen_color(system):
     """
     Generate color for a system, use hash function for that
     """
-    keyhash = hashlib.md5()
-    keyhash.update(system)
-    return '#%s' % keyhash.hexdigest()[:6]
+    if  system == 'dbs':
+        bkg, col = '#008B8B', 'white'
+    elif system == 'dbs3':
+        bkg, col = '#006400', 'white'
+    elif system == 'phedex':
+        bkg, col = '#00BFBF', 'black'
+    elif system == 'sitedb2':
+        bkg, col = '#6495ED', 'white'
+    elif system == 'runregistry':
+        bkg, col = '#FF8C00', 'black'
+    elif system == 'dashboard':
+        bkg, col = '#DAA520', 'black'
+    elif system == 'conddb':
+        bkg, col = '#FFD700', 'black'
+    elif system == 'reqmgr':
+        bkg, col = '#696969', 'white'
+    elif system == 'combined':
+        bkg, col = '#7B68EE', 'white'
+    elif system == 'tier0':
+        bkg, col = '#AFEEEE', 'black'
+    elif system == 'monitor':
+        bkg, col = '#FF4500', 'black'
+    else:
+        keyhash = hashlib.md5()
+        keyhash.update(system)
+        bkg, col = '#%s' % keyhash.hexdigest()[:6], 'white'
+    return bkg, col
 
 def yui_name(name):
     """
@@ -172,25 +206,6 @@ def yui2das(name):
     Reverse of yui_name.
     """
     return quote(str(name.replace('__', '.')))
-
-def db_monitor(uri, func, sleep=5):
-    """
-    Check status of MongoDB connection. Invoke provided function upon 
-    successfull connection.
-    """
-    conn = db_connection(uri)
-    while True:
-        if  not conn or not is_db_alive(uri):
-            try:
-                conn = db_connection(uri)
-                func()
-                if  conn:
-                    print "### db_monitor re-established connection %s" % conn
-                else:
-                    print "### db_monitor, lost connection"
-            except:
-                pass
-        time.sleep(sleep)
 
 def dascore_monitor(cdict, func, sleep=5):
     """
@@ -343,10 +358,6 @@ def checkargs(supported):
             if  checkarg(kwds, 'ahash') and len(str(kwds['ahash'])) != 32:
                 code  = web_code('Unsupported ahash value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  checkarg(kwds, 'instance'):
-                if  kwds['instance'] not in DBS_INSTANCES:
-                    code  = web_code('Unsupported dbs instance')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
             data = func (self, *args, **kwds)
             return data
         wrapped_f.__doc__  = func.__doc__
@@ -406,6 +417,10 @@ def json2html(idict, pad="", ref=None):
             # it constructs sanitized URLs, see block above
             sss += pad + """ <code class="key">"%s": </code>%s""" \
                 % (quote(key), value)
+        elif key == 'das':
+            val['ts'] = presentation_datetime(val['ts'])
+            val['expire'] = presentation_datetime(val['expire'])
+            sss += ' "<b>das</b>": ' + json2html(val, pad=" "*3, ref=key)
         elif key == 'gridfs_id':
             value = "<a href=\"/das/gridfs?fid=%s\">%s</a>" \
                 % (quote_plus(val), quote(val))
@@ -422,10 +437,12 @@ def json2html(idict, pad="", ref=None):
             ppp  = pad
             if  not nline:
                 ppp  = ''
-            for idx in range(0, len(val)):
+            for idx in xrange(0, len(val)):
                 item = val[idx]
                 if  isinstance(item, dict):
                     sss += json2html(item, pad, ref=key)
+                elif isinstance(item, list):
+                    sss += str(item)
                 else:
                     if  isinstance(item, NoneType):
                         sss += """%s<code class="null">None</code>""" \

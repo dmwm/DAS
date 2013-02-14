@@ -94,8 +94,7 @@ block=/a/b* | sum(block.replica.size)
 #set id=$quote($row['_id'])
 <li>
 $quote($row['name']),
-<a href="javascript:ShowTag('$id')">show</a> |
-<a href="javascript:HideTag('$id')">hide</a>
+<a href="javascript:ToggleTag('$id', 'link_$id')" id="link_$id">show</a>
 <div class="hide" id="$id">
 <pre>
 Map function:

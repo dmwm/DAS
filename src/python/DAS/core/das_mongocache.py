@@ -34,9 +34,10 @@ from DAS.utils.utils import aggregator, unique_filter
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.utils.utils import parse_filters, expire_timestamp
 from DAS.utils.utils import dastimestamp
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, db_monitor
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
+from DAS.utils.thread import start_new_thread
 
 # monogo db modules
 from bson.objectid import ObjectId
@@ -44,7 +45,7 @@ from bson.code import Code
 from pymongo import DESCENDING, ASCENDING
 from pymongo.errors import InvalidOperation
 from bson.errors import InvalidDocument
-from pymongo.errors import OperationFailure, ConnectionFailure
+from pymongo.errors import ConnectionFailure
 
 def update_query_spec(spec, fdict):
     """
@@ -130,7 +131,7 @@ class DASLogdb(object):
                 print 'Created %s.%s, size=%s' \
                 % (logdbname, logdbcoll, capped_size)
             self.logcol     = conn[logdbname][logdbcoll]
-        except Exception as ConnectionFailure:
+        except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
             print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
@@ -158,42 +159,67 @@ class DASMongocache(object):
     DAS cache based MongoDB.
     """
     def __init__(self, config):
-        self.emptyset_expire = expire_timestamp(\
-            config['das'].get('emptyset_expire', 5))
+        self.config  = config
+        self.emptyset_expire = \
+                expire_timestamp(config['das'].get('emptyset_expire', 5))
         self.dburi   = config['mongodb']['dburi']
         self.cache_size = config['mongodb']['bulkupdate_size']
         self.dbname  = config['dasdb']['dbname']
         self.verbose = config['verbose']
         self.logger  = PrintManager('DASMongocache', self.verbose)
         self.mapping = config['dasmapping']
-
-        self.conn    = db_connection(self.dburi)
-        self.mdb     = self.conn[self.dbname]
-        self.col     = self.mdb[config['dasdb']['cachecollection']]
-        self.mrcol   = self.mdb[config['dasdb']['mrcollection']]
-        self.merge   = self.mdb[config['dasdb']['mergecollection']]
         self.logging = config['dasdb'].get('logging', False)
-        self.gfs     = db_gridfs(self.dburi)
 
-        self.logdb   = DASLogdb(config)
+        self.init()
+        # Monitoring thread which performs auto-reconnection to MongoDB
+        thname = 'mongocache_monitor'
+        start_new_thread(thname, db_monitor, (self.dburi, self.init))
 
-        self.das_internal_keys = ['das_id', 'das', 'cache_id', 'qhash']
+    def init(self):
+        "Initialize MongoDB connection"
+        try:
+            config       = self.config
+            self.conn    = db_connection(self.dburi)
+            self.mdb     = self.conn[self.dbname]
+            self.col     = self.mdb[config['dasdb']['cachecollection']]
+            self.mrcol   = self.mdb[config['dasdb']['mrcollection']]
+            self.merge   = self.mdb[config['dasdb']['mergecollection']]
+            self.gfs     = db_gridfs(self.dburi)
 
-        msg = "%s@%s" % (self.dburi, self.dbname)
-        self.logger.info(msg)
+            self.logdb   = DASLogdb(config)
 
-        self.add_manipulator()
+            self.das_internal_keys = ['das_id', 'das', 'cache_id', 'qhash']
 
-        # ensure that we have the following indexes
-        index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                      ('das.system', ASCENDING),
-                      ('qhash', DESCENDING),
-                      ('das.empty_record', ASCENDING)]
-        create_indexes(self.col, index_list)
-        index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                      ('qhash', DESCENDING),
-                      ('das.empty_record', ASCENDING), ('das.ts', ASCENDING)]
-        create_indexes(self.merge, index_list)
+            msg = "%s@%s" % (self.dburi, self.dbname)
+            self.logger.info(msg)
+
+            self.add_manipulator()
+
+            # ensure that we have the following indexes
+            index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
+                          ('das.system', ASCENDING),
+                          ('qhash', DESCENDING),
+                          ('das.empty_record', ASCENDING)]
+            create_indexes(self.col, index_list)
+            index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
+                          ('qhash', DESCENDING),
+                          ('das.empty_record', ASCENDING),
+                          ('das.ts', ASCENDING)]
+            create_indexes(self.merge, index_list)
+        except ConnectionFailure as _err:
+            tstamp = dastimestamp('')
+            thread = threading.current_thread()
+            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                    % (thread.name, thread.ident, tstamp)
+        except Exception as exc:
+            print_exc(exc)
+            self.conn  = None
+            self.mdb   = None
+            self.col   = None
+            self.mrcol = None
+            self.merge = None
+            self.gfs   = None
+            self.logdb = None
 
     def add_manipulator(self):
         """
@@ -347,8 +373,8 @@ class DASMongocache(object):
         "Update timestamp of all DAS data records for given query"
         nval = {'$set': {'das.expire':timestamp}}
         spec = {'qhash' : dasquery.qhash}
-        self.col.update(spec, nval, multi=True, safe=True)
-        self.merge.update(spec, nval, multi=True, safe=True)
+        self.col.update(spec, nval, multi=True)
+        self.merge.update(spec, nval, multi=True)
 
     def das_record(self, dasquery):
         "Retrieve DAS record for given query"
@@ -363,18 +389,20 @@ class DASMongocache(object):
         if  system:
             self.col.update({'query': dasquery.storage_query,
                              'das.system':system},
-                            {'$set': info}, upsert=True, safe=True)
+                            {'$set': info}, upsert=True)
         else:
             self.col.update({'query': dasquery.storage_query},
-                            {'$set': info}, upsert=True, safe=True)
+                            {'$set': info}, upsert=True)
 
     def update_query_record(self, dasquery, status, header=None):
         "Update DAS record for provided query"
         if  header:
             system = header['das']['system']
+            api    = header['das']['api']
             spec1  = {'qhash': dasquery.qhash, 'das.system': 'das'}
             dasrecord = self.col.find_one(spec1)
-            spec2  = {'qhash': dasquery.qhash, 'das.system': system}
+            spec2  = {'qhash': dasquery.qhash, 'das.system': system,
+                      'das.api': api, 'query': {'$exists':True}}
             sysrecord = self.col.find_one(spec2)
             hexpire = header['das']['expire']
             dexpire = hexpire
@@ -392,8 +420,7 @@ class DASMongocache(object):
                 if  set(api) & set(sapi) == set(api) and \
                     set(url) & set(surl) == set(url):
                     self.col.update({'_id':ObjectId(sysrecord['_id'])},
-                        {'$set': {'das.expire':expire, 'das.status':status}},
-                        safe=True)
+                        {'$set': {'das.expire':expire, 'das.status':status}})
                 else:
                     self.col.update({'_id':ObjectId(sysrecord['_id'])},
                         {'$pushAll':{'das.api':header['das']['api'],
@@ -401,17 +428,26 @@ class DASMongocache(object):
                                      'das.url':header['das']['url'],
                                      'das.ctime':header['das']['ctime'],
                                     },
-                         '$set': {'das.expire':expire, 'das.status':status}},
-                        safe=True)
+                         '$set': {'das.expire':expire, 'das.status':status}})
             if  dasrecord:
                 self.col.update({'_id':ObjectId(dasrecord['_id'])},
-                     {'$set': {'das.expire':expire}}, safe=True)
+                     {'$set': {'das.expire':expire}})
         else:
             self.col.update({'qhash': dasquery.qhash,
                              'das.system':'das'},
-                            {'$set': {'das.status': status}}, safe=True)
+                            {'$set': {'das.status': status}})
 
-    def incache(self, dasquery, collection='merge', system=None):
+    def apilist(self, dasquery):
+        "Return list of apis for given dasquery"
+        spec = {'qhash':dasquery.qhash, 'query':{'$exists':True}}
+        apis = []
+        for row in self.col.find(spec):
+            das = row.get('das', {})
+            for api in das.get('api', []):
+                apis.append(api)
+        return apis
+
+    def incache(self, dasquery, collection='merge', system=None, api=None):
         """
         Check if we have query results in cache, otherwise return null.
         Please note, input parameter query means MongoDB query, please
@@ -423,6 +459,8 @@ class DASMongocache(object):
         spec = {'qhash':dasquery.qhash}
         if  system:
             spec.update({'das.system': system})
+        if  api:
+            spec.update({'das.api': api})
         res  = col.find(spec=spec).count()
         msg  = "(%s, coll=%s) found %s results" % (dasquery, collection, res)
         self.logger.info(msg)
@@ -449,6 +487,7 @@ class DASMongocache(object):
             spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
         if  filter_cond:
             spec.update(filter_cond)
+        self.check_filters(col, spec, fields)
         if  dasquery.unique_filter:
             skeys = self.mongo_sort_keys(collection, dasquery)
             if  skeys:
@@ -513,13 +552,39 @@ class DASMongocache(object):
             for idx in val['key']:
                 yield idx[0] # index name
 
+    def check_filters(self, col, spec, fields):
+        "Check that given filters can be applied to records found with spec"
+        if  not fields:
+            return
+        data = col.find_one(spec)
+        if  not data:
+            return
+        found = False
+        for fltr in fields:
+            row = dict(data)
+            for key in fltr.split('.'):
+                if  isinstance(row, dict):
+                    if  row.has_key(key):
+                        row = row[key]
+                        found = True
+                    else:
+                        found = False
+                        err = "Key %s not found" % fltr
+                        raise Exception(err)
+                elif isinstance(row, list):
+                    for row in list(row):
+                        if  row.has_key(key):
+                            row = row[key]
+                            found = True
+                            break
+                        else:
+                            found = False
+        if  not found:
+            err = "Key %s not found" % fltr
+            raise Exception(err)
+
     def get_records(self, col, spec, fields, skeys, idx, limit, unique=False):
         "Generator to get records from MongoDB. It correctly applies"
-        if  fields:
-            for key in fields: # ensure that fields keys will be presented
-                if  key not in self.das_internal_keys and \
-                    not spec.has_key(key):
-                    spec.update({key: {'$exists':True}})
         try:
             res = col.find(spec=spec, fields=fields)
             if  skeys:
@@ -712,8 +777,7 @@ class DASMongocache(object):
             size = self.cache_size
             try:
                 while True:
-                    nres = self.merge.insert(\
-                        itertools.islice(gen, size), safe=True)
+                    nres = self.merge.insert(itertools.islice(gen, size))
                     if  nres and isinstance(nres, list):
                         inserted += len(nres)
                     else:
@@ -730,7 +794,7 @@ class DASMongocache(object):
                         'cache_id':[], 'das_id': id_list}
                 for row in genrows:
                     row.update(das_dict)
-                    self.merge.insert(row, safe=True)
+                    self.merge.insert(row)
             except InvalidOperation:
                 pass
         if  inserted:
@@ -752,11 +816,11 @@ class DASMongocache(object):
                 else: # it is compound key, e.g. site.name
                     newkey, newval = convert_dot_notation(key, val)
                     empty_record[newkey] = adjust_mongo_keyvalue(newval)
-            self.merge.insert(empty_record, safe=True)
+            self.merge.insert(empty_record)
             # update DAS records (both meta and data ones, by using qhash)
             nval = {'$set': {'das.expire':empty_expire}}
             spec = {'qhash':dasquery.qhash}
-            self.col.update(spec, nval, multi=True, safe=True)
+            self.col.update(spec, nval, multi=True)
 
     def update_cache(self, dasquery, results, header):
         """
@@ -772,8 +836,7 @@ class DASMongocache(object):
         # bulk insert
         try:
             while True:
-                nres = self.col.insert(\
-                        itertools.islice(gen, self.cache_size), safe=True)
+                nres = self.col.insert(itertools.islice(gen, self.cache_size))
                 if  nres and isinstance(nres, list):
                     inserted += len(nres)
                 else:
@@ -790,14 +853,16 @@ class DASMongocache(object):
         dasheader  = header['das']
         # check presence of API record in a cache
         system     = dasheader['system']
-        if  not self.incache(dasquery, collection='cache', system=system):
+        api        = dasheader['api']
+        collection = 'cache'
+        if  not self.incache(dasquery, collection, system, api):
             msg = "query=%s, header=%s" % (dasquery, header)
             self.logger.debug(msg)
             q_record = dict(das=dasheader, query=dasquery.storage_query)
             q_record['das']['empty_record'] = 0
             q_record['das']['status'] = "requested"
             q_record['qhash'] = dasquery.qhash
-            self.col.insert(q_record, safe=True)
+            self.col.insert(q_record)
 
     def generate_records(self, dasquery, results, header):
         """
@@ -811,15 +876,21 @@ class DASMongocache(object):
         dasheader  = header['das']
         expire     = dasheader['expire']
         system     = dasheader['system']
-        rec        = [k for i in header['lookup_keys'] for k in i.values()]
+        api        = dasheader['api']
+        prim_key   = header.get('prim_key', None)
+        if  not prim_key:
+            # get primary key from a list of lookup keys which has the
+            # following structure [{'api':[keys]}, {...}]
+            lup_keys = header['lookup_keys']
+            lkeys    = [l for i in lup_keys for k in i.values() for l in k]
+            prim_key = lkeys[0] if 'summary' not in lkeys else 'summary'
         cond_keys  = dasquery.mongo_query['spec'].keys()
         # get API record id
-        spec       = {'qhash':dasquery.qhash, 'das.system':system}
-        record     = self.col.find_one(spec, fields=['_id'])
+        spec       = {'qhash':dasquery.qhash, 'das.system':system,
+                      'query':{'$exists':True}}
         counter    = 0
-        prim_key   = rec[0][0]#use rec instead of lkeys[0] which re-order items
-        if  record:
-            objid  = record['_id']
+        rids = [str(r['_id']) for r in self.col.find(spec, fields=['_id'])]
+        if  rids:
             if  isinstance(results, list) or isinstance(results, GeneratorType):
                 for item in results:
                     counter += 1
@@ -829,8 +900,8 @@ class DASMongocache(object):
                                        condition_keys=cond_keys,
                                        instance=dasquery.instance,
                                        system=system, empty_record=0,
-                                       ts=time.time())
-                    item['das_id'] = str(objid)
+                                       ts=time.time(), api=api)
+                    item['das_id'] = rids
                     item['qhash'] = dasquery.qhash
                     yield item
             else:
@@ -871,10 +942,12 @@ class DASMongocache(object):
         current_time = time.time()
         query = {'das.expire': { '$lt':current_time} }
         if  self.logging:
-            self.logdb.insert('merge', {'delete': self.merge.find(query).count()})
+            idict = {'delete': self.merge.find(query).count()}
+            self.logdb.insert('merge', idict)
         self.merge.remove(query)
         if  self.logging:
-            self.logdb.insert('cache', {'delete': self.col.find(query).count()})
+            idict = {'delete': self.col.find(query).count()}
+            self.logdb.insert('cache', idict)
         self.col.remove(query)
 
     def delete_cache(self):

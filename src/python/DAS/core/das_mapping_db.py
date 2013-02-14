@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703
+#pylint: disable-msg=W0703,R0902,R0904,R0914
 
 """
 DAS mapping DB module
@@ -9,14 +9,18 @@ DAS mapping DB module
 __author__ = "Valentin Kuznetsov"
 
 import re
+import threading
 
 # monogo db modules
 from pymongo import DESCENDING
+from pymongo.errors import ConnectionFailure
 
 # DAS modules
-from DAS.utils.utils import gen2list
-from DAS.utils.das_db import db_connection, create_indexes
+from DAS.utils.utils import dastimestamp, print_exc
+from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
+from DAS.utils.das_db import db_connection, create_indexes, db_monitor
 from DAS.utils.logger import PrintManager
+from DAS.utils.thread import start_new_thread
 
 class DASMapping(object):
     """
@@ -33,7 +37,14 @@ class DASMapping(object):
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         
-        self.create_db()
+        self.conn = None # MongoDB connection, defined at run-time
+        self.dbc  = None # MongoDB database, defined at run-time
+        self.col  = None # MongoDB collection, defined at run-time
+        self.init()
+
+        # Monitoring thread which performs auto-reconnection to MongoDB
+        thname = 'mappingdb_monitor'
+        start_new_thread(thname, db_monitor, (self.dburi, self.init))
 
         self.keymap = {}               # to be filled at run time
         self.presentationcache = {}    # to be filled at run time
@@ -42,6 +53,8 @@ class DASMapping(object):
         self.diffkeycache = {}         # to be filled at run time
         self.apicache = {}             # to be filled at run time
         self.apiinfocache = {}         # to be filled at run time
+        self.dbs_global_url = None     # to be determined at run time
+        self.dbs_inst_names = None     # to be determined at run time
         self.init_notationcache()
         self.init_presentationcache()
 
@@ -82,25 +95,39 @@ class DASMapping(object):
                         self.reverse_presentation[row['ui']] = \
                                 {daskey : {'mapkey': row['das'], 'link': link}}
 
-    def create_db(self):
+    def init(self):
         """
         Establish connection to MongoDB back-end and create DB.
         """
-        self.conn = db_connection(self.dburi)
-        self.db   = self.conn[self.dbname]
-        self.col  = self.db[self.colname]
+        try:
+            self.conn = db_connection(self.dburi)
+            if  self.conn:
+                self.dbc  = self.conn[self.dbname]
+                self.col  = self.dbc[self.colname]
+        except ConnectionFailure as _err:
+            tstamp = dastimestamp('')
+            thread = threading.current_thread()
+            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                    % (thread.name, thread.ident, tstamp)
+        except Exception as exc:
+            print_exc(exc)
+            self.conn = None
+            self.dbc  = None
+            self.col  = None
 
     def delete_db(self):
         """
         Delete mapping DB in MongoDB back-end.
         """
-        self.conn.drop_database(self.dbname)
+        if  self.conn:
+            self.conn.drop_database(self.dbname)
 
     def delete_db_collection(self):
         """
         Delete mapping DB collection in MongoDB.
         """
-        self.db.drop_collection(self.colname)
+        if  self.dbc:
+            self.dbc.drop_collection(self.colname)
 
     def check_maps(self):
         """
@@ -145,7 +172,10 @@ class DASMapping(object):
         self.col.insert(record)
         index = None
         if  record.has_key('urn'):
-            index = [('system', DESCENDING), ('das_map', DESCENDING),
+            index = [('system', DESCENDING),
+                     ('das_map.das_key', DESCENDING),
+                     ('das_map.rec_key', DESCENDING),
+                     ('das_map.api_arg', DESCENDING),
                      ('urn', DESCENDING) ]
         elif record.has_key('notations'):
             index = [('system', DESCENDING), 
@@ -161,6 +191,38 @@ class DASMapping(object):
     # ==================
     # Informational APIs
     # ==================
+    def dbs_global_instance(self):
+        "Retrive from mapping DB DBS url and extract DBS instance"
+        url = self.dbs_url()
+        return get_dbs_instance(url)
+
+    def dbs_url(self):
+        "Retrive from mapping DB DBS url"
+        if  self.dbs_global_url:
+            return self.dbs_global_url
+        url = None
+        for srv in self.list_systems():
+            if  srv.find('dbs') != -1:
+                apis = self.list_apis(srv)
+                url  = self.api_info(apis[0])['url']
+                url  = parse_dbs_url(srv, url)
+                self.dbs_global_url = url
+                return url
+        return url
+
+    def dbs_instances(self):
+        "Retrive from mapping DB DBS instances"
+        if  self.dbs_inst_names:
+            return self.dbs_inst_names
+        insts = []
+        for srv in self.list_systems():
+            if  srv.find('dbs') != -1:
+                apis  = self.list_apis(srv)
+                insts = self.api_info(apis[0])['instances']
+                self.dbs_inst_names = insts
+                return insts
+        return insts
+
     def list_systems(self):
         """
         List all DAS systems.
@@ -300,7 +362,8 @@ class DASMapping(object):
         mapkeys = []
         for row in self.col.find(spec, ['das_map']):
             for kmap in row['das_map']:
-                if  kmap['das_key'] == daskey and kmap['rec_key'] not in mapkeys:
+                if  kmap['das_key'] == daskey and \
+                    kmap['rec_key'] not in mapkeys:
                     mapkeys.append(kmap['rec_key'])
         self.keymap[daskey] = mapkeys
         return self.keymap[daskey]
@@ -324,7 +387,7 @@ class DASMapping(object):
         it against pattern in DB.
         """
         if  not value:
-            cond   = { 'system' : system, 'das_map.rec_key' : das_map, 'urn': urn }
+            cond   = {'system':system, 'das_map.rec_key':das_map, 'urn':urn}
             return self.col.find(cond).count()
         cond = { 'system' : system, 'das_map.rec_key' : das_map, 'urn': urn }
         for row in self.col.find(cond, ['das_map']):

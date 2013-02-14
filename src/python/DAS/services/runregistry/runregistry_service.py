@@ -110,7 +110,7 @@ def worker_v2(url, query):
             if  len(val) != len(titles):
                 continue
             record = {}
-            for idx in range(0, len(titles)):
+            for idx in xrange(0, len(titles)):
                 key = titles[idx]
                 record[key] = adjust_value(val[idx])
             yield dict(run=record)

@@ -19,7 +19,7 @@ INDEX_DIR = '/home/vidma/Desktop/DAS/DAS_code/DAS/src/python/DAS/keywordsearch/w
 
 _DEBUG=False
 
-def build_index():
+def build_index(fields_by_entity):
     '''
     Schema:
 
@@ -33,7 +33,7 @@ def build_index():
 
         [optionally it could be dependent on specific api?]
     '''
-    fields_by_entity = list_result_fields()
+
     # _result_fields_by_entity[result_entity].get(field, {'title': ''})['title']
 
     print 'starting to build the index...'
