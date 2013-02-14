@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - Add Show DAS keys description to web UI
   - Wrap combined_site4dataset API call into try/except block and show
     exception on web UI. This will help to catch transient missing values from
     combined data-service for site dataset=/a/b/c queries.
