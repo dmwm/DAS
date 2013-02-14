@@ -482,7 +482,8 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
     left:15%;
     right:15%;
     height: auto;
-    background-color: rgb(223, 219, 195);
+/*    background-color: rgb(223, 219, 195);*/
+    background-color: #CCD8CF;
     color:#000;
     padding:20px;
     border:2px solid #ccc;
