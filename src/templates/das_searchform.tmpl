@@ -168,5 +168,17 @@ $daskeys
 </div>
 </div>
 
+<script type="text/javascript">
+function HideDasKeys(e) {
+    var element = Event.element(e);
+    if (e.keyCode == Event.KEY_ESC) {
+        HideTag('das_keys_desc');
+    }
+}
+document.observe('keydown', HideDasKeys);
+// It should observe given tag (code below), but somehow does not
+//\$('das_keys_desc').observe('keydown', HideDasKeys);
+</script>
+
 <div id="response" name="response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
 
