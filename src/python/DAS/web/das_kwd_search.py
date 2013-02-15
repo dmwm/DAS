@@ -5,7 +5,7 @@ import urllib
 import cgi
 from itertools import *
 
-from DAS.keywordsearch.search import search as keyword_search
+from DAS.keywordsearch.search import search as keyword_search, init as init_kws
 
 from DAS.web.utils import HtmlString
 
@@ -19,6 +19,12 @@ dbs_daemon.SKIP_UPDATES =1
 
 
 class KeywordSearchHandler:
+
+    @ staticmethod
+    def init(dascore):
+        init_kws(dascore)
+
+
 
     @staticmethod
     def render(webm, msg, html_error=None, tmpl='das_kwdsearch_res'):

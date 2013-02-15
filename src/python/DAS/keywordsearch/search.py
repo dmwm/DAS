@@ -144,7 +144,7 @@ def _get_reserved_terms():
     """
     terms that shall be down-ranked
     """
-    entities = ['dataset', 'run', 'block', 'file', 'site', 'config']
+    entities = ['dataset', 'run', 'block', 'file', 'site', 'config', 'time']
     operators = integration_schema.get_operator_synonyms()
     return set(entities) | set(operators)
 
@@ -725,6 +725,145 @@ def generate_chunks(keywords):
 
 
 
+def generate_chunks_no_ent_filter(keywords):
+    """
+    params: keywords - a tokenized list of keywords (e.g. ["a b c", 'a', 'b'])
+    """
+
+    if not mod_enabled('SERVICE_RESULT_FIELDS'):
+        return {}
+
+    W_PHRASE = 2.0
+
+    # TODO: These could be increased for short queries or lowered for long ones
+    RESULT_LIMIT_PHRASES = 5
+    RESULT_LIMIT_TOKEN_COMBINATION = 3
+    # max len of tokens to consider as a sequence
+    # (e.g. number of events --> "number of events")
+    MAX_TOKEN_COMBINATION_LEN =  4
+
+
+    fields_by_entity = list_result_fields()
+    entities = fields_by_entity.keys()
+
+
+    load_index()
+
+    # first filter out the phrases (we wont combine them with anything)
+    phrase_kwds = filter(lambda kw: ' ' in kw, keywords)
+
+
+    # we may also need to remove operators, e.g. "number of events">10, 'block.nevents>10'
+
+    matches = {}
+
+    for kwd in phrase_kwds:
+        phrase = get_keyword_without_operator(kwd)
+
+        res = search_index(
+            keywords=phrase,
+            limit=RESULT_LIMIT_PHRASES)
+        for r in res:
+            r['len'] = len(filter_stopwords(phrase.split(' ')))
+            entity = r['result_type']
+            r['field'] = fields_by_entity[entity][r['field']]
+            r['keywords_required'] = [kwd]
+            # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
+            # therefore, if nothing is pointing to block.replica we shall not choose block.replica.site
+            # TODO: shall we divide by variance or stddev?
+
+            # penalize terms that have multiple matches
+            r['score'] *= W_PHRASE
+
+            if not matches.has_key(entity):
+                matches[entity] = []
+            matches[entity].append(r)
+
+    # now process partial matches and their combinations
+    str_len = len(keywords)
+    max_len = min(len(keywords), MAX_TOKEN_COMBINATION_LEN)
+    for l in xrange(1, max_len+1):
+        for start in xrange(0, str_len-l+1):
+            chunk = keywords[start:start+l]
+
+            # exclude chunks with "a b c" (as these were processed earlier)
+            if filter(lambda c:' ' in c, chunk):
+                continue
+
+            # only the last term in the chunk is allowed to contain operator
+            if filter(test_operator_containment, chunk[:-1]):
+                continue
+
+
+            print 'len=', l, '; start=', start, 'chunk:', chunk
+
+            chunk_kwds = map(get_keyword_without_operator, chunk)
+
+            s_chunk = ' '.join(chunk_kwds)
+            res = search_index(
+                keywords= s_chunk ,
+                limit=RESULT_LIMIT_TOKEN_COMBINATION)
+
+            for r in res:
+                r['len'] = len(filter_stopwords(chunk))
+                entity = r['result_type']
+                r['field'] = fields_by_entity[entity][r['field']]
+                r['keywords_required'] = chunk
+
+
+                # penalize terms that have multiple matches; longer chunks are better
+                #r['score'] *= 0.5 * len(chunk) / len(res)
+
+
+                # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
+                # therefore, if nothing is pointing to block.replica we shall not choose block.replica.site
+                # TODO: shall we divide by variance or stddev?
+
+                if not matches.has_key(entity):
+                    matches[entity] = []
+                matches[entity].append(r)
+        # Use longest useful matching  as a heuristic to filter out crap, e.g.
+    # file Zmm number of events > 10, shall match everything,
+
+
+    # TODO: use SCORE!!!
+    # return the matches in sorted order (per result type)
+    for entity in matches.keys():
+        #print 'trying to sort:'
+        #pprint.pprint(full_matches[entity])
+        for m in matches[entity]:
+            pred = get_operator_and_param(m['keywords_required'][-1])
+            m['predicate'] = None
+            if pred:
+                m['predicate'] = pred
+
+        matches[entity].sort(key=lambda f: f['score'], reverse=True)
+
+
+    # normalize the scores (if any)
+    # TODO: actually the IR score tell something.. if it's around ~10 it's a good match
+
+    _get_max_score = lambda m_list: reduce(max, map(lambda m: m['score'], m_list), 0)
+    scores = map(_get_max_score, matches.values())
+    max_score = reduce(max, scores, 0)
+
+    print 'max_score', max_score
+    if max_score:
+        for ent_matches in matches.values():
+            for m in ent_matches:
+                print "m['score']", m['score'], 'mlen:', m['len']
+                pprint.pprint(m)
+
+                m['score'] = 1.0 * m['score'] * m['len'] / max_score
+
+
+    print 'chunks generated:'
+    pprint.pprint(matches)
+    return matches
+
+
+
+
 def DASQL_2_NL(dasql_tuple, html=True):
     #TODO: DASQL_2_NL
     """
@@ -763,6 +902,10 @@ def DASQL_2_NL(dasql_tuple, html=True):
 
 
 
+def init(dascore):
+    from DAS.keywordsearch import das_schema_adapter
+    das_schema_adapter.init(dascore)
+
 def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     """
     unit tests
@@ -778,6 +921,8 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     values_ws = {}
 
 
+    if not isinstance(query, unicode) and isinstance(query, str):
+        query = unicode(query)
 
     # query = cleanup_query(query)
     if DEBUG: print 'Query:', query
@@ -834,7 +979,8 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
 
 
     thread_data.results = []
-    chunks = generate_chunks(keywords)
+    #chunks = generate_chunks(keywords)
+    chunks = generate_chunks_no_ent_filter(keywords)
 
 
     generate_schema_mappings(None, [], schema_ws, values_ws,

@@ -14,8 +14,10 @@ from whoosh.analysis import *
 
 from DAS.keywordsearch.das_schema_adapter import *
 
+import os
 
-INDEX_DIR = '/home/vidma/Desktop/DAS/DAS_code/DAS/src/python/DAS/keywordsearch/whoosh/idx'
+
+INDEX_DIR = os.environ['DAS_KWS_IR_INDEX']
 
 _DEBUG=False
 
@@ -67,7 +69,7 @@ def build_index(fields_by_entity, remove_old = False):
                         field_boost=0.5),
 
                     entity_and_fn=ID,
-                    result_type=KEYWORD)
+                    result_type=KEYWORD(stored=True))
     idx = create_in(INDEX_DIR, schema, "idx_name")
 
     writer = idx.writer()
@@ -112,7 +114,7 @@ def load_index():
     return _ix
 
 
-def search_index(keywords, result_type, full_matches_only=False, limit=10):
+def search_index(keywords, result_type=False, full_matches_only=False, limit=10):
     global _ix
 
     if _DEBUG:
@@ -171,8 +173,11 @@ def search_index(keywords, result_type, full_matches_only=False, limit=10):
         if not all_fields_and_terms:
             return []
 
-        q = And([Term('result_type', result_type),
-                 Or(all_fields_and_terms)])
+        q = Or(all_fields_and_terms)
+
+        if result_type:
+            q = And([Term('result_type', result_type),
+                     Or(all_fields_and_terms)])
 
         if _DEBUG:
             print 'Q:'
@@ -184,7 +189,9 @@ def search_index(keywords, result_type, full_matches_only=False, limit=10):
             print 'OR KWS RESULTS:'
 
             pprint.pprint(
-                [{'result': hit['fieldname'], 'rank': hit.rank,
+                [{'result': hit['fieldname'],
+                  'result_type': hit['result_type'],
+                  'rank': hit.rank,
                   'score': hit.score,
                   'keywords_matched': hit.matched_terms(),
                   } for hit in hits])
@@ -206,6 +213,7 @@ def search_index(keywords, result_type, full_matches_only=False, limit=10):
 
         # easiest is just to require everything, but TODO: what is relevant term is somewhere really far in the query!!?
         return [{ 'field': hit['fieldname'],
+                  'result_type': hit['result_type'],
                    # 'len': len(remove_stopwords(f['title']).split(' ')),
                    'score': hit.score,
                    # TODO: shall we divide by variance or stddev?

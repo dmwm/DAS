@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#-*- coding: ISO-8859-1 -*-
+# -*- coding: utf-8 -*-
 #pylint: disable-msg=C0103, W0703, C0111, W0511
 
 """
@@ -15,22 +15,53 @@ import doctest
 from   DAS.core.das_query import DASQuery
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
 from DAS.keywordsearch import search as kwdsearch_module
-from DAS.keywordsearch.search import *
+from DAS.keywordsearch.search import search, init as init_kws, keyword_schema_weights, keyword_value_weights
+
+from DAS.core.das_core import DASCore
 
 
 class TestDASDatasetWildcards(unittest.TestCase):
     global_dbs_inst = False
+    n_queries = 0
+    n_queries_passed_at_1 = 0
+    n_queries_passed_at = {}
+
 
     def setUp(self):
         """
         sets up dbs manager instance
         """
 
-        print 'setUp: getting dbs manager to access current datasets '\
-              '(and fetching them if needed)'
+
         # set up only once
         if not self.global_dbs_inst:
+            print 'setUp: getting dbs manager to access current datasets ' \
+                  '(and fetching them if needed)'
             self.global_dbs_inst = get_global_dbs_mngr(update_required=False)
+
+            self.dascore = DASCore()
+            init_kws(self.dascore)
+
+
+
+
+
+    def assertQueryResult(self, query, expected_result):
+        self.n_queries += 1
+
+        results = search(query, dbsmngr=self.global_dbs_inst)
+        first_result = results[0]['result']
+
+        if first_result == expected_result:
+            self.n_queries_passed_at_1 += 1
+
+        # TODO: print distribution
+
+        print 'Test: ', query, '. Result: ', first_result == expected_result
+        print 'Tests so far:', self.n_queries, 'Passed at #1: ', self.n_queries_passed_at_1
+
+        self.assertEquals(first_result, expected_result)
+
 
     def test_doctests(self):
         """
@@ -70,74 +101,47 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
 
 
-    def test_dasquery(self):
-        """
-        checks integration with DASQuery
-        """
 
-        # no dataset matching
-        # more than more interpretation available
-        # only one interpretation (standard query execution)
-
-        # multiple interpretations
-        msg = ''
-        try:
-            DASQuery('dataset Zmm', active_dbsmgr=self.global_dbs_inst)
-        except Exception, exc:
-            msg = str(exc)
-
-
-        self.assertTrue('dataset dataset=*Zmm*' in msg)
-
-        # TODO: check automatic loading of first best result
-
-
-
-    def test_basic_queries(self):
-        pass
 
 
     def test_operators(self):
-        self.assertQueryResult('unique lumi flags in run 176304',
-            'lumi  run=176304 | grep lumi.flag | unique')
+        if False:
+            self.assertQueryResult('unique lumi flags in run 176304',
+                'lumi  run=176304 | grep lumi.flag | unique')
 
-        # TODO: Pattern: op, op, op entity(PK)|entity.field
-        self.assertQueryResult('min, max, avg lumis in run 176304',
-            'lumi  run=176304 | min(lumi.number), max(lumi.number), avg(lumi.number)')
-        # TODO: even I made a mistake, by adding grep to min,max...
+            # TODO: Pattern: op, op, op entity(PK)|entity.field
+            self.assertQueryResult('min, max, avg lumis in run 176304',
+                'lumi  run=176304 | min(lumi.number), max(lumi.number), avg(lumi.number)')
+            # TODO: even I made a mistake, by adding grep to min,max...
 
-        'file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80'
-        #fails:
-        'lumi dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80'
+            'file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80'
+            #fails:
+            'lumi dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80'
 
-        'lumi  run=176304 lumi=80'
+            'lumi  run=176304 lumi=80'
+
 
     def test_numeric_params(self):
         # values closer to the field name shall be preferred
         self.assertQueryResult('lumis in run 176304', 'lumi run=176304')
-
-        # TODO: why lumi do not work? a) there is no such API? b) lumi is PER RUN! c) RUN is lower?
-        if False: self.assertQueryResult(
-            'files /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO   run 12345 lumi 666702',
-            'file dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO run=12345')
 
         # TODO: field 'is' value --> a good pattern?
         self.assertQueryResult('files in /HT/Run2011B-v1/RAW where run is 176304 lumi is 80',
                 'file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80')
 
 
-    def assertQueryResult(self, query, expected_result):
-            self.assertEquals(search(query)[0][0], expected_result)
-
 
     def test_operators(self):
-        self.assertQueryResult('total number of files in Zmm',
-            'file dataset=/a/b/c | count(file.name)')
+        # operators are not implemented yet
 
-        self.assertQueryResult('count of files in /DoubleMuParked25ns/*/*',
-            'file dataset=/DoubleMuParked25ns/*/* | count(file.name)')
-        self.assertQueryResult('count of conflicting files in /DoubleMuParked25ns/*/*',
-            'file dataset=/DoubleMuParked25ns/*/* | count(das.conflict)')
+        if False:
+            self.assertQueryResult('total number of files in Zmm',
+                'file dataset=/a/b/c | count(file.name)')
+
+            self.assertQueryResult('count of files in /DoubleMuParked25ns/*/*',
+                'file dataset=/DoubleMuParked25ns/*/* | count(file.name)')
+            self.assertQueryResult('count of conflicting files in /DoubleMuParked25ns/*/*',
+                'file dataset=/DoubleMuParked25ns/*/* | count(das.conflict)')
 
     def test_das_QL(self):
         self.assertQueryResult('files of dataset=DoubleMuParked25ns',
@@ -145,10 +149,12 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
         #assert search('files in /DoubleMuParked25ns/*/* | count(das.conflict')[0] == 'file dataset=/DoubleMuParked25ns/*/* | count(das.conflict)'
 
-    def test_dataset_wildcards(self):
+    def test_das_key_synonyms(self):
         self.assertQueryResult('location of *Run2012*PromptReco*/AOD',
-            'site dataset=*Run2012*PromptReco*/AOD')
+                               'site dataset=*Run2012*PromptReco*/AOD')
 
+
+    def test_dataset_wildcards(self):
         # make sure 'dataset' is matched into entity but not its value (dataset=*dataset*)
         self.assertQueryResult('location of dataset *Run2012*PromptReco*/AOD',
             'site dataset=*Run2012*PromptReco*/AOD')
@@ -157,17 +163,12 @@ class TestDASDatasetWildcards(unittest.TestCase):
         self.assertQueryResult('location of Zmm',
         'site dataset=*Zmm*')
 
-    def test_aggregation_with_wildcards(self):
-        pass
-
-    def test_selection_with_wildcards(self):
-        pass
 
 
     def test_value_based(self):
-        self.assertQueryResult('datasets at T1_CH_CERN',
+        self.assertQueryResult(u'datasets at T1_CH_CERN',
             'dataset site=T1_CH_CERN')
-        self.assertQueryResult('datasets at T1_CH_*',
+        self.assertQueryResult(u'datasets at T1_CH_*',
             'dataset site=T1_CH_*')
 
     def test_interesting_queries(self):
@@ -187,67 +188,101 @@ class TestDASDatasetWildcards(unittest.TestCase):
             # run.start_time, run.end_time
 
 
-            "administrator of T1_CH_CERN" # do not work
-
-
             'administrator email of T1_CH_CERN' # works
             'administrator email of all T1_* sites'
 
 
-    def test_preffer_filtering_input(self):
+    def test_prefer_filtering_input(self):
         # TODO: currently we are overranking the result filters the top result is:
         # summary run=150619 | grep summary.dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO
         self.assertQueryResult('summary dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO  run 150619',
                                'summary dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO run=150619')
 
 
-    def test_simple_crap(self):
-        # TODO: can we use word sense disambiguation
-        print search('configuration of dataset /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO which location is at T1_* ')
-        # TODO: semantic similarity between different parts of speech (e.g. site, located)
-        #give me config of dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO site=T1_*
-        print search('configuration /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO')
 
-        print search('configuration of /*Zmm*/*/*')
-
-        print search('files of /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO  located at site T1_* ')
-
-        # jobsummary  last 24h  --> jobsummary date last 24h
-        # infer date
-
-        """
-        Not working queries:
-        /*Zmm*/*/*
-        /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO
-        """
-
-        print search('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO')
-        print search('/*Zmm*/*/*')
-
-        # use stopwords
-        # TODO: luminosity value is not mapped
-        print search('files /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO   run 12345 lumi 666702')
+    def test_inputs_vs_postfilters(self):
+        # Result #5 currently
+        self.assertQueryResult('files of /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO  located at site T1_*',
+                               'file dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO site=T1_*')
 
 
-        print search('name of vidmantas.zemleris@cern.ch')
-        print search('username of vidmantas.zemleris@cern.ch')
-
-        # statistics for Run/lumi
-
-        # TODO: IT IS QUITE SAFE TO DISPLAY RESULTS OF A QUERY THAT JUST FINDS AN ENTITY
-        # (especially if only one api param which is same as the result)
-
-        # TODO: allow combining keyword query and structured query
+        # currently #4
+        self.assertQueryResult('files of /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO  at site T1_*',
+                               'file dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO site=T1_*')
 
 
-        # TODO: we may wish to be able to interpret the semantics behind the dataset...
-        """
-        the only numbers in preconditions are lumi and run
+        # the query is quite ambigous...
+        self.assertQueryResult('lumis in run 176304',
 
-        old the others are post-conditions...
-        """
+                              ['run run=176304 | grep run.delivered_lumi',
+                               'lumi run=176304']
+        )
 
-        print search(query='configuration of  Zmmg-13Jul2012-v1 location=T1_*')
+    def test_inputs_non_existing_dataset(self):
+        self.assertQueryResult('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1xx/RAW-RECO',
+                               'dataset dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1xx/RAW-RECO')
+
+
+    def test_postfilters(self):
+        # 1
+        self.assertQueryResult('Zmmg magnetic field>3.5',
+                               'run dataset=*Zmmg* | grep run.run_number, run.bfield>3.5')
+
+    def test_result_field_selections(self):
+
+        self.assertQueryResult('Zmmg magnetic field',
+                               'run dataset=*Zmmg* | grep run.bfield, run.run_number')
+
+        self.assertQueryResult('Zmmg custodial file replicas',
+                               'file dataset=*Zmmg* | grep file.replica.custodial, file.name')
+
+        self.assertQueryResult('Zmmg custodial block replicas',
+                               'block dataset=*Zmmg* | grep block.replica.custodial, block.name')
+
+        self.assertQueryResult('number of lumis in run 176304',
+                               'summary run=176304 | grep summary.nlumis')
+
+    def test_result_field_selections_harder(self):
+        #2nd
+        self.assertQueryResult('delivered lumimosity in run 176304',
+                               'run run=176304 | grep run.delivered_lumi')
+
+
+
+    def test_imperative(self):
+        # 5
+        self.assertQueryResult('tell me where is dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO located',
+                               'site dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO')
+
+
+    def test_wh_words(self):
+        self.assertQueryResult(
+               'where is dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO located',
+               'site dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO'
+        )
+
+        self.assertQueryResult(
+            'where are Zmmg',
+            'site dataset=*Zmmg*'
+        )
+
+
+
+
+    def test_basic_queries(self):
+        self.assertQueryResult(
+            'configuration /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO',
+            'config dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO')
+
+        self.assertQueryResult('configuration of /*Zmm*/*/*',
+                     'config dataset=/*Zmm*/*/*')
+
+
+        self.assertQueryResult('/*Zmm*/*/*', 'dataset dataset=/*Zmm*/*/*')
+
+        self.assertQueryResult('name of vidmasze@cern.ch', '')
+
+        self.assertQueryResult('last name of vidmasze@cern.ch', '')
 
 
 if __name__ == '__main__':

@@ -228,12 +228,8 @@ class DASWebService(DASWebManager):
             self.colors  = {}
             return
 
-        # TODO: Keyword Search: init das_schema_adapter (requiring DASCore)
-        from DAS.keywordsearch import das_schema_adapter
-        das_schema_adapter.init(self.dasmgr)
-        #rfields =das_schema_adapter.list_result_fields()
-        #build_index(rfields)
-
+        # initialize the Keyword Search
+        KeywordSearchHandler.init(self.dasmgr)
 
         # Start Onhold_request daemon
         if  self.dasconfig['web_server'].get('onhold_daemon', False):
