@@ -230,10 +230,9 @@ class DASWebService(DASWebManager):
 
         # TODO: Keyword Search: init das_schema_adapter (requiring DASCore)
         from DAS.keywordsearch import das_schema_adapter
-        from DAS.keywordsearch.whoosh.service_fields import build_index
         das_schema_adapter.init(self.dasmgr)
-        rfields = das_schema_adapter.list_result_fields()
-        build_index(rfields)
+        #rfields =das_schema_adapter.list_result_fields()
+        #build_index(rfields)
 
 
         # Start Onhold_request daemon

@@ -39,6 +39,10 @@ export DAS_CONFIG=$DAS_ROOT/etc/das.cfg
 export YUI_ROOT=$DAS_ROOT/third-party/yui
 das_server start
 
+# bootstrap the values and the structure of service output (fields)
+$DAS_ROOT/bin/das_bootstrap_kws
+
+
 #finaly test:
 firefox http://localhost:8212/das/
 

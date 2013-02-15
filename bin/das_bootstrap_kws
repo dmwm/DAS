@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# To run this:
+# bash $DAS_ROOT/keywordsearch/bootstrap.sh
+
+
+# QUERIES_FILE="./bootstrap_queries.txt"
+# QUERIES_FILE="/home/vidma/Desktop/DAS/DAS_code/DAS/src/python/DAS/keywordsearch/bootstrap_queries_1r.txt"
+QUERIES_FILE="$DAS_ROOT/services/bootstrap_queries/cms_bootstrap_queries_1r.txt"
+
+# mv src/python/DAS/keywordsearch/bootstrap_queries_1r.txt etc/
+#
+
+
+# Clean up:
+mongo --port 8230 keylearning --eval "db.db.remove(); db.db.find();"
+mongo --port 8230 das --eval "db.cache.remove(); db.merge.remove();"
+
+while read query; do
+    #n=`expr $n + 1`
+    # run a query
+
+    echo "Running Query: ${query}"
+    das_cli --no-output -q "$query"
+
+    # while the results are still in raw cache, update the registry about service result structure
+    python -u  $DAS_ROOT/analytics/standalone_task.py -c key_learning
+
+done < $QUERIES_FILE
+
+# reload the fields index
+python -u  $DAS_ROOT/analytics/standalone_task.py -c update_result_field_index
+
+# Bootstrap values (release, datatype, etc)
+python $DAS_ROOT/keywordsearch/input_values_tracker.py
+
+# Bootstrap Dataset names (TODO: this should go automatically...)
+echo 'Bootstraping Dataset names'
+python $DAS_ROOT/web/dbs_daemon.py

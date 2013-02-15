@@ -178,13 +178,27 @@ class TestDASDatasetWildcards(unittest.TestCase):
             self.assertQueryResult('magnetic field of run=20853',
                    'run=20853 | grep run.bfield' )
 
+            self.assertQueryResult('administrator email of all T1 sites',
+                                   'site site=T1* | grep site.admin.email, site.name')
+
             # TODO: requires ontology run reco_status=1
             # reconstructed runs (reco_status=1) ...  (1800 results only?)
 
             # run.start_time, run.end_time
 
 
-            "administrator of T1_CH_CERN"
+            "administrator of T1_CH_CERN" # do not work
+
+
+            'administrator email of T1_CH_CERN' # works
+            'administrator email of all T1_* sites'
+
+
+    def test_preffer_filtering_input(self):
+        # TODO: currently we are overranking the result filters the top result is:
+        # summary run=150619 | grep summary.dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO
+        self.assertQueryResult('summary dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO  run 150619',
+                               'summary dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO run=150619')
 
 
     def test_simple_crap(self):

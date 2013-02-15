@@ -275,7 +275,7 @@ def input_value_matches(keyword):
                 scores_by_entity[field] = (match == keyword
                                            and 1.0 or 0.95, {'map_to': field, 'adjusted_keyword': match})
             # 2) TODO: partial match if no wildcard?
-            elif len(keyword) > 2:
+            elif len(keyword) >= 2:
                 # first try adding wildcard only to the end
                 match = check_for_unique_match(t, field, '^'+keyword+'*$')
 

@@ -19,7 +19,7 @@ INDEX_DIR = '/home/vidma/Desktop/DAS/DAS_code/DAS/src/python/DAS/keywordsearch/w
 
 _DEBUG=False
 
-def build_index(fields_by_entity):
+def build_index(fields_by_entity, remove_old = False):
     '''
     Schema:
 
@@ -38,6 +38,11 @@ def build_index(fields_by_entity):
 
     print 'starting to build the index...'
     # TODO: entity names are not so much informative here?
+
+    # remove old index. TODO: is there a better way?
+    if remove_old:
+        import shutil, os
+        shutil.rmtree(os.path.join(INDEX_DIR, '*'))
 
     # replica_fraction -> replica fraction
     # TODO: store entity as we are filtering by it?
@@ -67,10 +72,15 @@ def build_index(fields_by_entity):
 
     writer = idx.writer()
 
+
     print 'initializing service fields index'
     for result_type, fields in fields_by_entity.items():
         for field_name, field in fields.items():
             # Whoosh don't except '' as values, so we use 'or None'
+
+            writer.delete_by_term('entity_and_fn',
+                                  result_type + ':' + field_name)
+
             writer.add_document(
                 fieldname=field_name,
                 fieldname_current=field_name.split('.')[-1],

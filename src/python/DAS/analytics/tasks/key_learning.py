@@ -8,6 +8,8 @@ from DAS.utils.logger import PrintManager
 
 from pprint import pprint
 
+
+
 class key_learning(object):
     """
     This is the asynchronous part of the key-learning system, intended
@@ -53,10 +55,11 @@ class key_learning(object):
         for key in found_ids:
             self.logger.info("primary_key=%s" % key)
             for das_id in found_ids[key]:
-                print '-======= DAS ID ======'
-                pprint(das_id)
-                print '-======= HIT ID (ALREADY VISITED) ======'
-                pprint(hit_ids)
+                if False:
+                    print '-======= DAS ID ======'
+                    pprint(das_id)
+                    print '-======= HIT ID (ALREADY VISITED) ======'
+                    pprint(hit_ids)
 
                 if not das_id in hit_ids:
                     self.logger.info("das_id=%s" % das_id)
@@ -77,6 +80,7 @@ class key_learning(object):
             pprint(r)
             result_type = self.das.mapping.primary_key(r['system'], r['urn'])
             print r.get('keys', ''), '-->', result_type, ':', ', '.join([m for m in r.get('members', [])])
+
         return {}
     
     def process_query_record(self, doc):
@@ -96,12 +100,13 @@ class key_learning(object):
 
         #from pprint import pprint
 
-        print 'doc:'
-        pprint(doc)
-        result_count = result.count()
-        result = [r for r in result]
-        print 'result:'
-        pprint(result)
+        if False:
+            #print 'doc:'
+            pprint(doc)
+            result_count = result.count()
+            result = [r for r in result]
+            print 'result:'
+            pprint(result)
         print '-----------------------------------'
         # TODO: it seems these conditions are non-sense!!!
         if len(systems)==len(urns) and len(systems)==1:
@@ -124,7 +129,8 @@ class key_learning(object):
             if not key in ('das', '_id', 'das_id'):
                 members |= self._process_document_recursor(doc[key], key)
 
-        print 'process_document(): das.keylearning.add_members(system=',\
+        if False:
+            print 'process_document(): das.keylearning.add_members(system=',\
             system, ', urn=', urn , 'members:', list(members)
         self.das.keylearning.add_members(system, urn, list(members))
         

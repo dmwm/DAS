@@ -1,23 +1,24 @@
 __author__ = 'vidma'
 
-from nltk.corpus import wordnet
-from nltk.corpus import stopwords
-
-from DAS.core.das_core import DASCore
 
 
+EXCLUDE_RECORDS_WITH_ERRORS = False
 
-
-
-DEBUG = False
 import math
 import pprint
 import itertools
 
 from cherrypy import request
 
+from nltk.corpus import wordnet
+
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
 import DAS.web.dbs_daemon
+
+
+
+DEBUG = False
+
 
 # TODO: if field has fairly static values, then given value is not in there, is shall be penalized
 static_field_values = {
@@ -315,7 +316,8 @@ def init_result_fields_list(dascore, same_entitty_prunning=False, _DEBUG=False):
         if contain_errors:
             print 'WARNING: contain errors: ', result_type, '(' +  ', '.join(r.get('keys', [])) + ')', ':',\
             ', '.join(fields)
-            continue
+            if EXCLUDE_RECORDS_WITH_ERRORS:
+                continue
 
         # TODO: however not all of the "keys" are used
         if _DEBUG:

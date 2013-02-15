@@ -215,6 +215,8 @@ data_files   = [
                 ('DAS/test', datafiles('test')),
                 ('DAS/services/maps', datafiles('src/python/DAS/services/maps')),
                 ('DAS/services/cms_maps', datafiles('src/python/DAS/services/cms_maps')),
+                ('DAS/services/bootstrap_queries', 
+                                 datafiles('src/python/DAS/services/bootstrap_queries')),
                 ('DAS/web/js', datafiles('src/js')),
                 ('DAS/web/css', datafiles('src/css')),
                 ('DAS/web/images', datafiles('src/images')),

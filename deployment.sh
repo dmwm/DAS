@@ -31,6 +31,8 @@ A=/data/cfg/admin REPO="-r comp=comp.pre" VER=1207a
 $A/InstallDev -R cmsweb@$VER -s image -v hg$VER  $REPO -p "admin das dbs mongodb phedex"
 $A/InstallDev -s start
 
+# run:
+das_bootstrap_kws
 
 # test
 $A/InstallDev -s status
