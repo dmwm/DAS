@@ -275,7 +275,7 @@ dataset.datatype --> datatype
 
 # TODO: DAS Specific fields in results of every entity that signify error, etc
 # TODO: DAS conflict could be useful
-das_specific_fields = {'*.error', '*.reason',  'qhash'}
+das_specific_fields = ['*.error', '*.reason',  'qhash']
 # 'das.conflict',
 
 # TODO:
