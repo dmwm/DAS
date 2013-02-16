@@ -1565,12 +1565,15 @@ def api_rows(gen, api):
             pkey = das['primary_key'].split('.')[0]
             apis = das.get('api')
             idx  = apis.index(api)
-        data = row[pkey][idx] # get data item for given api index
-        nrow = dict(row)  # get copy of the row
-        nrow[pkey] = data # replace pkey value with data item
-        nrow['das']['system'] = [nrow['das']['system'][idx]]
-        nrow['das']['api'] = [nrow['das']['api'][idx]]
-        yield nrow
+        try:
+            data = row[pkey][idx] # get data item for given api index
+            nrow = dict(row)  # get copy of the row
+            nrow[pkey] = data # replace pkey value with data item
+            nrow['das']['system'] = [nrow['das']['system'][idx]]
+            nrow['das']['api'] = [nrow['das']['api'][idx]]
+            yield nrow
+        except:
+            pass
 
 def regen(first, gen):
     "Yield given first row and generator back to workflow"
