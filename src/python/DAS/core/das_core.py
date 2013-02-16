@@ -31,6 +31,7 @@ from DAS.utils.query_utils import compare_specs, decode_mongo_query
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
 from DAS.utils.utils import expire_timestamp, print_exc, fix_times
+from DAS.utils.utils import api_rows, das_sinfo, regen
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.das_timer import das_timer, get_das_timer
 from DAS.utils.global_scope import SERVICES
@@ -417,15 +418,31 @@ class DASCore(object):
         if  dasquery.mapreduce:
             res = self.rawcache.map_reduce(dasquery.mapreduce, dasquery)
         elif dasquery.aggregators:
+            # extract das information from rawcache
+            rows  = self.rawcache.get_from_cache(\
+                    dasquery, collection=collection)
+            first = rows.next()
+            sinfo = das_sinfo(first)
+            # to perform aggregation we need:
+            # - loop over all aggregator functions
+            # - loop over all data-services
+            # - loop over all APIs within a data-services
+            # the code below does that, it applies aggregator
+            # to selected (based on key/srv/api) records
             res = []
             _id = 0
             for func, key in dasquery.aggregators:
-                rows = self.rawcache.get_from_cache(\
-                        dasquery, collection=collection)
-                data = getattr(das_aggregator, 'das_%s' % func)(key, rows)
-                res += \
-                [{'_id':_id, 'function': func, 'key': key, 'result': data}]
-                _id += 1
+                afunc = getattr(das_aggregator, 'das_%s' % func)
+                for srv, apis, in sinfo.items():
+                    for api in apis:
+                        rows = self.rawcache.get_from_cache(\
+                                dasquery, collection=collection)
+                        gen  = api_rows(rows, api)
+                        data = afunc(key, gen)
+                        aggr = {'_id':_id, 'system': srv, 'api': api,
+                            'function': func, 'key': key, 'result': data}
+                        res.append(aggr)
+                        _id += 1
         elif isinstance(fields, list) and 'queries' in fields:
             res = itertools.islice(self.get_queries(dasquery), idx, idx+limit)
         else:
