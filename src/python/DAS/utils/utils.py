@@ -1553,3 +1553,37 @@ def filter_with_filters(rows, filters):
         flist = [(f, ddict.get(f)) for f in filters]
         for idx in flist:
             yield idx
+
+def api_rows(gen, api):
+    "Extract from given stream only rows which belong to given api"
+    das  = {}   # get from first row
+    pkey = None # get from das record
+    idx  = None # get from api list
+    for row in gen:
+        if  not das:
+            das  = row.get('das')
+            pkey = das['primary_key'].split('.')[0]
+            apis = das.get('api')
+            idx  = apis.index(api)
+        data = row[pkey][idx] # get data item for given api index
+        nrow = dict(row)  # get copy of the row
+        nrow[pkey] = data # replace pkey value with data item
+        nrow['das']['system'] = [nrow['das']['system'][idx]]
+        nrow['das']['api'] = [nrow['das']['api'][idx]]
+        yield nrow
+
+def regen(first, gen):
+    "Yield given first row and generator back to workflow"
+    yield first
+    for row in gen:
+        yield row
+
+def das_sinfo(row):
+    "Extract DAS information from given row"
+    sinfo = {}
+    das   = row.get('das')
+    apis  = das.get('api')
+    srvs  = das.get('system')
+    for api, srv in zip(apis, srvs):
+        sinfo.setdefault(srv, set()).add(api)
+    return sinfo

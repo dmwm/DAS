@@ -28,6 +28,7 @@ from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 from DAS.utils.utils import delete_keys, parse_filter_string
 from DAS.utils.utils import fix_times, das_dateformat, http_timestamp
+from DAS.utils.utils import api_rows, regen, das_sinfo
 from DAS.utils.regex import das_time_pattern
 from DAS.core.das_query import DASQuery
 
@@ -35,6 +36,34 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_regen(self):
+        "Test regen function"
+        rows   = (i for i in range(5))
+        first  = rows.next()
+        expect = [i for i in range(5)]
+        result = [i for i in regen(first, rows)]
+        self.assertEqual(result, expect)
+
+    def test_das_sinfo(self):
+        "Test das_sinfo function"
+        das = {'system':['dbs', 'dbs', 'phedex'], 'api':['one', 'two', 'thr']}
+        row = {'das':das, 'foo':[{'dbs':1}, {'a':1}, {'phedex':1}]}
+        result = das_sinfo(row)
+        expect = {'dbs':set(['one', 'two']), 'phedex':set(['three'])}
+        self.assertEqual(expect, expect)
+
+    def test_api_rows(self):
+        "Test api_rows function"
+        das  = {'system':['dbs', 'phedex'], 'api':['one', 'two'],
+                'primary_key':'foo'}
+        rows = [{'das':das, 'qhash':123, 'foo':[{'dbs':1}, {'phedex':1}]},
+                {'das':das, 'qhash':123, 'foo':[{'dbs':2}, {'phedex':2}]}]
+        result = [r for r in api_rows(rows, 'one')]
+        edas   = {'system':['dbs'], 'api':['one'], 'primary_key':'foo'}
+        expect = [{'das':edas, 'qhash':123, 'foo':{'dbs':1}},
+                  {'das':edas, 'qhash':123, 'foo':{'dbs':2}}]
+        self.assertEqual(result, expect)
+
     def test_httptimestamp(self):
         "Test httptimestamp function"
         day = 'Tue, 28 Aug 2012 16:50:29 GMT'
