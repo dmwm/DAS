@@ -431,6 +431,8 @@ class DASCore(object):
             # to selected (based on key/srv/api) records
             res = []
             _id = 0
+            time0  = time.time()
+            expire = 300 # min expire
             for func, key in dasquery.aggregators:
                 afunc = getattr(das_aggregator, 'das_%s' % func)
                 for srv, apis, in sinfo.items():
@@ -439,10 +441,15 @@ class DASCore(object):
                                 dasquery, collection=collection)
                         gen  = api_rows(rows, api)
                         data = afunc(key, gen)
-                        aggr = {'_id':_id, 'system': srv, 'api': api,
-                            'function': func, 'key': key, 'result': data}
-                        res.append(aggr)
-                        _id += 1
+                        if  isinstance(data, dict) and data['value'] != 'N/A':
+                            ctime = time.time()-time0
+                            das   = dasheader(srv, dasquery, expire, api=api,
+                                    ctime=ctime)
+                            aggr  = {'_id':_id, 'function': func,
+                                     'key': key, 'result': data}
+                            aggr.update(das)
+                            res.append(aggr)
+                            _id += 1
         elif isinstance(fields, list) and 'queries' in fields:
             res = itertools.islice(self.get_queries(dasquery), idx, idx+limit)
         else:
