@@ -19,7 +19,7 @@ import os
 
 INDEX_DIR = os.environ['DAS_KWS_IR_INDEX']
 
-_DEBUG=False
+_DEBUG= True
 
 def build_index(fields_by_entity, remove_old = False):
     '''
@@ -185,16 +185,6 @@ def search_index(keywords, result_type=False, full_matches_only=False, limit=10)
 
         hits = s.search(q, terms=True, optimize=True, limit=limit)
 
-        if _DEBUG:
-            print 'OR KWS RESULTS:'
-
-            pprint.pprint(
-                [{'result': hit['fieldname'],
-                  'result_type': hit['result_type'],
-                  'rank': hit.rank,
-                  'score': hit.score,
-                  'keywords_matched': hit.matched_terms(),
-                  } for hit in hits])
 
         if False:
             for i in range(1, 10):
@@ -211,17 +201,52 @@ def search_index(keywords, result_type=False, full_matches_only=False, limit=10)
         # TODO: problem it gives either stemmed or actual
         #filter_matched_terms = lambda (term, val): not term == 'result_type'
 
+        def get_matched_keywords(hit):
+            # which keywords have been matched
+            f_kw_stemmed = lambda kw: _text(stemmer(stopword_filter(
+                lower_filter(tokenizer(kw)))))
+            f_kw_no_stopword = lambda kw: _text(stopword_filter(
+                lower_filter(tokenizer(kw))))
+
+            keyword_list_no_stopw = _text(stopword_filter(
+                lower_filter(tokenizer(keywords))))
+
+            terms_matched = set([val for (field, val) in hit.matched_terms() ])
+
+            if _DEBUG:
+                print 'matched_terms_list', terms_matched
+
+            matched_kws = set()
+            for kw in keyword_list_no_stopw:
+                keyword_stemmed = f_kw_stemmed(kw)[0]
+
+                if _DEBUG:
+                    print 'kw', kw, 'stemmed:', keyword_stemmed, 'kw no stopw', f_kw_no_stopword(kw)
+
+                if keyword_stemmed in terms_matched or kw in terms_matched:
+                    matched_kws |= set([kw])
+
+            return matched_kws
+
+
+
         # easiest is just to require everything, but TODO: what is relevant term is somewhere really far in the query!!?
-        return [{ 'field': hit['fieldname'],
+        results =  [{ 'field': hit['fieldname'],
                   'result_type': hit['result_type'],
                    # 'len': len(remove_stopwords(f['title']).split(' ')),
                    'score': hit.score,
                    # TODO: shall we divide by variance or stddev?
-                   'keywords_matched': hit.matched_terms(),
+                   'keywords_matched': get_matched_keywords(hit),
+                   'hit_matched_terms': hit.matched_terms(),
                    'fieldname_matched': [1 for (field, val) in  hit.matched_terms()
                                         if field == 'fieldname'],
 
                    } for hit in hits ]
+
+        if _DEBUG:
+            pprint.pprint(results)
+        return results
+
 
 
 #build_index()

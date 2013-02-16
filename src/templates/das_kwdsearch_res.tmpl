@@ -6,18 +6,84 @@
 <!-- das_ambiguous.tmpl -->
 <div> <!-- main div -->
 
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css" />
-    <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/das/css/?f=jquery-ui.css" />
+    <style type="text/css">
+        .select-result-type { margin: 20px 0; font-weight: normal; }
+        .rtype-selected {
+            font-weight: bold;
+            color: #000;
+        }
+
+        .kws-result a { line-height: 2em; color: #666; }
+        .kws-result a, .kws-result a:visited, .kws-result a:active {  text-decoration: none; }
+        .kws-result a:hover {  text-decoration: underline; }
+        div.score-bar {
+            border:  1px solid #aaaaaa;
+            height: 10px;
+            display: inline-block;
+            position: relative;
+            /* float: left; */
+            background-color: #dddddd;
+            margin-right: 10px;
+        }
+
+            /* this is the colorful bar */
+        div.score-bar-inner {
+            height: 10px;
+            display: block;
+            position: relative;
+            z-index: 0;
+            background-color: #88ff88;
+        }
+            /* text (score) inside the bar */
+        div.score-bar-inner-avg {
+            background-color: #FFFF66;
+        }
+        div.score-bar-inner-low {
+            background-color: #ff6666;
+        }
+
+        div.score-bar span {
+            position: absolute;
+            font-size: 10px;
+            z-index: 1;
+            margin-left: 5px;
+            display: inline-block;
+            position: absolute;
+            top: 0;
+            width: 50px;
+        }
+        .ui-tooltip {
+            max-width: 700px;
+            font-size: 8pt;
+        }
+        .nl-result-field {
+            color: #999;
+        }
 
 
+        .kws-result .debug {
+            color: #FF9999;
+            font-size: 10px;
+            margin-left: 20px;
+        }
+
+    </style>
+
+
+
+    <script src="/das/js/?f=jquery.min.js" type="text/javascript"></script>
     <script type="text/javascript">
         jQuery.noConflict();
+    </script>
+    <script src="/das/js/?f=jquery-ui.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
 
         function hide(selector){
             //jQuery(selector).hide().;
         }
-        function filterByResultType(rt, src){
+        function filterByResultType(rt, target){
             if (rt == 'see all') {
                 jQuery('.kws-result').show(300);
             } else {
@@ -25,8 +91,8 @@
                 jQuery('.result-with-entity-'+rt).show(300);
             }
 
-            jQuery('.rt-filters a').removeClass('rtype-selected').css('font-weight', 'normal');;
-            jQuery(this).addClass('rtype-selected').css('font-weight', 'bold');
+            jQuery('.rt-filters a').removeClass('rtype-selected');
+            jQuery(target).addClass('rtype-selected')
         }
         function showAllRT(){
         }
@@ -49,21 +115,10 @@
             });
         });
     </script>
-    <style type="text/css">
-        .select-result-type { margin: 20px 0; font-weight: bold; }
 
-        .kws-result a { line-height: 2em; color: #666; }
-        .kws-result a, .kws-result a:visited, .kws-result a:active {  text-decoration: none; }
-        .kws-result a:hover {  text-decoration: underline; }
-        .ui-tooltip {
-            max-width: 700px;
-            font-size: 8pt;
-        }
-        .nl-result-field {
-            color: #999;
-        }
-    </style>
 
+    <b>DAS is unable  to unambigously interpret your query.
+        Is any of the queries below that you meant?</b><br />
 
     $msg
 

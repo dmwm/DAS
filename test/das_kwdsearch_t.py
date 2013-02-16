@@ -20,12 +20,15 @@ from DAS.keywordsearch.search import search, init as init_kws, keyword_schema_we
 from DAS.core.das_core import DASCore
 
 
+#global n_queries, n_queries_passed_at_1, n_queries_passed_at
+n_queries = 0
+n_queries_passed_at_1 = 0
+n_queries_passed_at = {}
+
+from pprint import pformat
+
 class TestDASDatasetWildcards(unittest.TestCase):
     global_dbs_inst = False
-    n_queries = 0
-    n_queries_passed_at_1 = 0
-    n_queries_passed_at = {}
-
 
     def setUp(self):
         """
@@ -46,19 +49,35 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
 
 
-    def assertQueryResult(self, query, expected_result):
-        self.n_queries += 1
+    def assertQueryResult(self, query, expected_result, query_complexity = 'general'):
+        '''
+        run a test query, and gather statistics
+        '''
+        global n_queries, n_queries_passed_at_1, n_queries_passed_at
+        n_queries += 1
 
         results = search(query, dbsmngr=self.global_dbs_inst)
         first_result = results[0]['result']
 
+
         if first_result == expected_result:
-            self.n_queries_passed_at_1 += 1
+            n_queries_passed_at_1 += 1
+
+        # count queries that contained expected answer not lower than at i-th position
+        passed_at_i = False
+        for i in xrange(0, 10):
+            if i < len(results) and results[i]['result'] == expected_result:
+                passed_at_i = True
+
+            if passed_at_i:
+                n_queries_passed_at[i] = n_queries_passed_at.get(i, 0) + 1
+
 
         # TODO: print distribution
 
         print 'Test: ', query, '. Result: ', first_result == expected_result
-        print 'Tests so far:', self.n_queries, 'Passed at #1: ', self.n_queries_passed_at_1
+        print 'Queries so far:', n_queries, 'Passed at #1: ', n_queries_passed_at_1, 'Passed at i-th:', pformat(n_queries_passed_at)
+
 
         self.assertEquals(first_result, expected_result)
 
@@ -212,11 +231,7 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
 
         # the query is quite ambigous...
-        self.assertQueryResult('lumis in run 176304',
-
-                              ['run run=176304 | grep run.delivered_lumi',
-                               'lumi run=176304']
-        )
+        self.assertQueryResult('lumis in run 176304',  'lumi run=176304')
 
     def test_inputs_non_existing_dataset(self):
         self.assertQueryResult('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1xx/RAW-RECO',

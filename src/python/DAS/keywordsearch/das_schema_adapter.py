@@ -254,6 +254,8 @@ def match_value_dataset(keyword):
         else:
             dataset_score = 1.0
 
+    # TODO: shall we check for unique matches?
+
     print 'dataset.name', dataset_score, adj_keyword
 
     return 'dataset.name', dataset_score, adj_keyword

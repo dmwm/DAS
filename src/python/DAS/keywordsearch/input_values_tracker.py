@@ -244,14 +244,17 @@ def check_for_unique_match(t, field, keyword):
     it = t.find(keyword, limit=2)
     match = next(it, False)
     if match:
-        if next(it, False):
-            return True
+        match2 = next(it, False)
+        if match2:
+            print 'non-unique match of %(keyword)s into %(match)s and %(match2)s' % locals()
+            return (True, None)
         else:
             # there's no second item -- it's unique
-            return match
+            print 'unique match of %(keyword)s into %(match)s' % locals()
+            return (True, match)
 
     else:
-        return False # no match at all
+        return (False, None) # no match at all
 
 
 
@@ -267,6 +270,11 @@ def input_value_matches(keyword):
             if next(t.find(keyword, limit=2), False):
                 scores_by_entity[field] = (0.7, {'map_to': field, })
 
+            (match, unique) = check_for_unique_match(t, field,'^'+keyword+'$')
+            if unique:
+                scores_by_entity[field] = (0.8, {'map_to': field,
+                                                 'adjusted_keyword': unique})
+
         else:
             # 1) check for exact-match (ignoring case)
             match = next(t.find('^'+keyword+'$', limit=2), False)
@@ -277,32 +285,32 @@ def input_value_matches(keyword):
             # 2) TODO: partial match if no wildcard?
             elif len(keyword) >= 2:
                 # first try adding wildcard only to the end
-                match = check_for_unique_match(t, field, '^'+keyword+'*$')
+                # (match, unique) = check_for_unique_match(t, field, '^'+keyword+'*$')
+                #
+                # if match:
+                #     kwd_new = (keyword+'*').replace('**', '*')
+                #
+                #     # a unique match
+                #     if unique:
+                #         kwd_new = unique
+                #
+                #     scores_by_entity[field] = \
+                #         (0.65, {'map_to': field,
+                #                 'adjusted_keyword':  kwd_new})
+                #
+                # otherwise, try wildcard on both sides
+                (match, unique) = check_for_unique_match(t, field,'^*'+keyword+'*$')
 
                 if match:
-                    kwd_new = (keyword+'*').replace('**', '*')
+                    kwd_new = ('*'+keyword+'*').replace('**', '*')
 
                     # a unique match
-                    if isinstance(match, str) or isinstance(match, unicode):
-                        kwd_new = keyword
+                    if unique:
+                        kwd_new = unique
 
                     scores_by_entity[field] = \
-                        (0.65, {'map_to': field,
-                                'adjusted_keyword':  kwd_new})
-                else:
-                    # otherwise, try wildcard on both sides
-                    match = check_for_unique_match(t, field,'^*'+keyword+'*$')
-
-                    if match:
-                        kwd_new = ('*'+keyword+'*').replace('**', '*')
-
-                        # a unique match
-                        if isinstance(match, str) or isinstance(match, unicode):
-                            kwd_new = match
-
-                        scores_by_entity[field] = \
-                            (0.6, {'map_to': field,
-                                    'adjusted_keyword': kwd_new})
+                        (0.6, {'map_to': field,
+                                'adjusted_keyword': kwd_new})
 
 
 

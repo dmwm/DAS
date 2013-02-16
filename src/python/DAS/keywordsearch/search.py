@@ -135,10 +135,11 @@ DEBUG = False
 
 
 en_stopwords = stopwords.words('english')
+processed_stopwords = ['where', 'when', 'who']
 
 
 def filter_stopwords(kwd_list):
-    return filter(lambda k: k not in en_stopwords, kwd_list)
+    return filter(lambda k: k not in en_stopwords or k in processed_stopwords, kwd_list)
 
 def _get_reserved_terms():
     """
@@ -274,6 +275,34 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
                     result_filters =_r_filters, field_idx_start=field_idx + 1,
                     traceability=_trace,
                     result_fields_included = result_fields_included | set([target_fieldname ]))
+
+
+def normalization_factor_by_query_len(keywords_list):
+    '''
+    provides query score normalization factor (expected very good score)
+     based on query length (excluding stopwords).
+    keywords with operators get double score (as they are scored twice in the ranking)
+
+    TODO: multi word phrases get multiplied score as well
+
+    + 0.3 extra for entity_type and other boost features
+    '''
+
+    kws_wo_stopwords = filter_stopwords(set(keywords_list))
+
+    _get_phrase_len = lambda kw: len(filter_stopwords(set(get_keyword_without_operator(kw).split(' '))))
+
+    expected_optimal_score = \
+        sum([test_operator_containment(kw) and 2.0 *_get_phrase_len(kw) \
+                or 1.0 * _get_phrase_len(kw)
+             for kw in kws_wo_stopwords]) + 0.3
+
+
+
+    if expected_optimal_score < 1.0:
+        expected_optimal_score = 1.0
+
+    return expected_optimal_score
 
 
 def penalize_non_mapped_keywords(keywords_used, keywords_list, score):
@@ -587,157 +616,25 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
                 )
 
 
-# TODO: we may need some extra stop condition...
-
-def generate_chunks(keywords):
-    """
-    params: keywords - a tokenized list of keywords (e.g. ["a b c", 'a', 'b'])
-    """
-
-    if not mod_enabled('SERVICE_RESULT_FIELDS'):
-        return {}
-
-    W_PHRASE = 2.0
-
-    # TODO: These could be increased for short queries or lowered for long ones
-    RESULT_LIMIT_PHRASES = 5
-    RESULT_LIMIT_TOKEN_COMBINATION = 3
-    # max len of tokens to consider as a sequence
-    # (e.g. number of events --> "number of events")
-    MAX_TOKEN_COMBINATION_LEN =  4
-
-
-    fields_by_entity = list_result_fields()
-    entities = fields_by_entity.keys()
-
-
-    load_index()
-
-    # first filter out the phrases (we wont combine them with anything)
-    phrase_kwds = filter(lambda kw: ' ' in kw, keywords)
-
-
-    # we may also need to remove operators, e.g. "number of events">10, 'block.nevents>10'
-
-    matches = {}
-    for entity in entities:
-        matches[entity] = []
-        for kwd in phrase_kwds:
-            phrase = get_keyword_without_operator(kwd)
-
-            res = search_index(
-                keywords=phrase,
-                result_type=entity,
-                limit=RESULT_LIMIT_PHRASES)
-            for r in res:
-                r['len'] = len(filter_stopwords(phrase.split(' ')))
-                r['field'] = fields_by_entity[entity][r['field']]
-                r['keywords_required'] = [kwd]
-                # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
-                # therefore, if nothing is pointing to block.replica we shall not choose block.replica.site
-                # TODO: shall we divide by variance or stddev?
-
-                # penalize terms that have multiple matches
-                r['score'] *= W_PHRASE
-
-
-            matches[entity].extend(res)
-
-    # now process partial matches and their combinations
-    str_len = len(keywords)
-    max_len = min(len(keywords), MAX_TOKEN_COMBINATION_LEN)
-    for l in xrange(1, max_len+1):
-        for start in xrange(0, str_len-l+1):
-            chunk = keywords[start:start+l]
-
-            # exclude chunks with "a b c" (as these were processed earlier)
-            if filter(lambda c:' ' in c, chunk):
-                continue
-
-            # only the last term in the chunk is allowed to contain operator
-            if filter(test_operator_containment, chunk[:-1]):
-                continue
-
-
-            print 'len=', l, '; start=', start, 'chunk:', chunk
-            for entity in entities:
-                chunk_kwds = map(get_keyword_without_operator, chunk)
-
-                s_chunk = ' '.join(chunk_kwds)
-                res = search_index(
-                    keywords= s_chunk ,
-                    result_type=entity,
-                    limit=RESULT_LIMIT_TOKEN_COMBINATION)
-
-                for r in res:
-                    r['len'] = len(filter_stopwords(chunk))
-                    r['field'] = fields_by_entity[entity][r['field']]
-                    r['keywords_required'] = chunk
-
-
-                    # penalize terms that have multiple matches; longer chunks are better
-                    #r['score'] *= 0.5 * len(chunk) / len(res)
-
-
-                    # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
-                    # therefore, if nothing is pointing to block.replica we shall not choose block.replica.site
-                    # TODO: shall we divide by variance or stddev?
-
-                matches[entity].extend(res)
-    # Use longest useful matching  as a heuristic to filter out crap, e.g.
-    # file Zmm number of events > 10, shall match everything,
-
-
-    # TODO: use SCORE!!!
-    # return the matches in sorted order (per result type)
-    for entity in matches.keys():
-        #print 'trying to sort:'
-        #pprint.pprint(full_matches[entity])
-        for m in matches[entity]:
-            pred = get_operator_and_param(m['keywords_required'][-1])
-            m['predicate'] = None
-            if pred:
-                m['predicate'] = pred
-
-        matches[entity].sort(key=lambda f: f['score'], reverse=True)
-
-
-    # normalize the scores (if any)
-    # TODO: actually the IR score tell something.. if it's around ~10 it's a good match
-
-    _get_max_score = lambda m_list: reduce(max, map(lambda m: m['score'], m_list), 0)
-    scores = map(_get_max_score, matches.values())
-    max_score = reduce(max, scores, 0)
-
-    print 'max_score', max_score
-    if max_score:
-        for ent_matches in matches.values():
-            for m in ent_matches:
-                print "m['score']", m['score'], 'mlen:', m['len']
-                pprint.pprint(m)
-
-                m['score'] = 1.0 * m['score'] * m['len'] / max_score
-
-
-    print 'chunks generated:'
-    pprint.pprint(matches)
-    return matches
-
-
 
 def generate_chunks_no_ent_filter(keywords):
     """
     params: keywords - a tokenized list of keywords (e.g. ["a b c", 'a', 'b'])
+    returns: a list of fields matching a combination of nearby keywords
+    {
+        '[result_type]':
+            [ matched_field, ...]
+    }
     """
 
     if not mod_enabled('SERVICE_RESULT_FIELDS'):
         return {}
 
-    W_PHRASE = 2.0
+    W_PHRASE = 1.5
 
     # TODO: These could be increased for short queries or lowered for long ones
     RESULT_LIMIT_PHRASES = 5
-    RESULT_LIMIT_TOKEN_COMBINATION = 3
+    RESULT_LIMIT_TOKEN_COMBINATION = 5
     # max len of tokens to consider as a sequence
     # (e.g. number of events --> "number of events")
     MAX_TOKEN_COMBINATION_LEN =  4
@@ -764,7 +661,10 @@ def generate_chunks_no_ent_filter(keywords):
             keywords=phrase,
             limit=RESULT_LIMIT_PHRASES)
         for r in res:
-            r['len'] = len(filter_stopwords(phrase.split(' ')))
+            #r['len'] =  1
+            r['len'] = len(r['keywords_matched'])
+
+
             entity = r['result_type']
             r['field'] = fields_by_entity[entity][r['field']]
             r['keywords_required'] = [kwd]
@@ -774,6 +674,7 @@ def generate_chunks_no_ent_filter(keywords):
 
             # penalize terms that have multiple matches
             r['score'] *= W_PHRASE
+
 
             if not matches.has_key(entity):
                 matches[entity] = []
@@ -805,14 +706,12 @@ def generate_chunks_no_ent_filter(keywords):
                 limit=RESULT_LIMIT_TOKEN_COMBINATION)
 
             for r in res:
-                r['len'] = len(filter_stopwords(chunk))
+                # TODO: use only matched keywords here
+                #r['len'] = len(filter_stopwords(chunk))
+                r['len'] = len(r['keywords_matched'])
                 entity = r['result_type']
                 r['field'] = fields_by_entity[entity][r['field']]
                 r['keywords_required'] = chunk
-
-
-                # penalize terms that have multiple matches; longer chunks are better
-                #r['score'] *= 0.5 * len(chunk) / len(res)
 
 
                 # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
@@ -851,10 +750,20 @@ def generate_chunks_no_ent_filter(keywords):
     if max_score:
         for ent_matches in matches.values():
             for m in ent_matches:
-                print "m['score']", m['score'], 'mlen:', m['len']
-                pprint.pprint(m)
+                # print "m['score']", m['score'], 'mlen:', m['len']
+                # pprint.pprint(m)
 
+                # TODO: incorporate m['len'] somehow, maybe matched/m[len]
                 m['score'] = 1.0 * m['score'] * m['len'] / max_score
+
+
+
+    # if enabled, prune low scoring chunks
+    if mod_enabled('RESULT_FIELD_CHUNKER_PRUNE_LOW_TERMS'):
+        cutoff = mod_enabled('RESULT_FIELD_CHUNKER_PRUNE_LOW_TERMS')
+        for key in matches.keys():
+            matches[key] = filter(lambda m: m['score'] > cutoff, matches[key])
+
 
 
     print 'chunks generated:'
@@ -1045,8 +954,41 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
         if best_scores.get(s_query, {'score': -float("inf")})['score'] < score:
             best_scores[s_query] = result
 
+
     best_scores = best_scores.values()
     best_scores.sort(key=lambda item: item['score'], reverse=True)
+
+
+    # normalize scores, if results lists is non empty
+    if best_scores:
+        query_len_norm_fact = normalization_factor_by_query_len(keywords)
+
+        _get_score = lambda item: item['score']
+        #min_score = _get_score(min(best_scores, key=_get_score))
+        max_score = _get_score(max(best_scores, key=_get_score))
+
+        #normalize = lambda item: (float(item['score']) - min_score) / \
+        #                         (max_score - min_score)
+
+
+        # for displaying the score bar, we want to obtain scores <= 1.0
+        visual_norm_fact = query_len_norm_fact
+        max_score_normalized = max_score / query_len_norm_fact
+        if max_score_normalized > 1.0:
+            visual_norm_fact = max_score_normalized * query_len_norm_fact
+
+
+        for idx, r in enumerate(best_scores):
+
+            # SCORE normalized by query length.
+            # close to 1 is good, as all keywords are mapped,
+            # negative or close to 0 is bad as either no keywords were mapped,
+            # or possibly false query interpretation received many penalties
+
+            best_scores[idx]['len_normalized_score'] = _get_score(r) / query_len_norm_fact
+            best_scores[idx]['scorebar_normalized_score'] = _get_score(r) / visual_norm_fact
+
+
 
     print '\n'.join(
         ['%.2f: %s' % (r['score'], r['result']) for r in best_scores])

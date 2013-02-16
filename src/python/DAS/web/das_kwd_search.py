@@ -3,7 +3,8 @@ __author__ = 'vidma'
 import cherrypy
 import urllib
 import cgi
-from itertools import *
+import math
+#from itertools import *
 
 from DAS.keywordsearch.search import search as keyword_search, init as init_kws
 
@@ -41,9 +42,6 @@ class KeywordSearchHandler:
     def handle_search(webm, query, inst,  initial_exc_message = '', dbsmngr=None):
         # TODO: DBS instance
         proposed_queries = keyword_search(query, inst, dbsmngr= dbsmngr)
-        html = '<b>DAS is unable  to unambigously interpret your query.'\
-              ' Is any of the queries below what you meant?</b><br>\n'
-
 
         # get the top 5 entities
         entity_scores = {}
@@ -58,9 +56,7 @@ class KeywordSearchHandler:
         hi_score_result_types.append('see all')
 
 
-        html += '''
-
-        '''
+        html = ''
 
         if len(hi_score_result_types) > 1:
             html += """<div class="select-result-type">Are you searching for:
@@ -80,13 +76,33 @@ class KeywordSearchHandler:
             print q['link']
             q['trace'] = list(q['trace'])
             q['trace'].sort()
-            q['trace'] = cgi.escape('<ul style="width: 500px;background-color: #fff;"><li>' +'</li><li>'.join([str(item) for item in q['trace']]) + '</li></ul>', quote=True)
+            q['trace'] = cgi.escape('<ul style="width: 500px;background-color: #fff;"><li>' +
+                                        '</li><li>'.join([str(item) for item in q['trace']]) +
+                                    '</li></ul>' +
+                                    'score: %.2f; query len norm score (-inf; ~1.0): %.2f' % (
+                                        q['score'], q['len_normalized_score']),
+                                    quote=True)
+            #
+            max_w = 50
+            min_w = 3
+            score = max(min(q['len_normalized_score'], 1.0), 0.0)
+            w = math.floor((max_w - min_w) * q['scorebar_normalized_score']) + min_w
+            color_class = (q['len_normalized_score'] < 0.35) and 'low' or \
+                    (q['len_normalized_score'] < 0.60) and 'avg' or 'high'
+
+            q['bar'] = ('<div class="score-bar" style="width: %(max_w)dpx;">' + \
+                       '  <div class="score-bar-inner score-bar-inner-%(style)s" style="width: %(w)dpx;"></div>'
+                       '  <span class="score-num">%(score).2f</span> ' +\
+                       '</div>') % {'max_w': max_w,
+                                   'w': w,
+                                   'style': color_class,
+                                   'score': q['len_normalized_score']}
 
 
         # Equivalent DAS query:
         html += '\n'.join(["""
             <div class="kws-result result-with-entity-%(entity)s">
-                %(score).2f: <a class="kws-link" href="%(link)s" target="_blank"
+                %(bar)s <a class="kws-link" href="%(link)s" target="_blank"
                                     title="Explanation: &lt;br/&gt; %(nl_query_escaped)s">%(query_escaped)s</a>
                 <a class="debug" title="%(trace)s">debug</a>
             </div>
