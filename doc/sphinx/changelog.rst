@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - Add JS function to handle Event (hide DAS keys window) via ESC
   - Resolve double counting issue, ticket #3965
   - Add Show DAS keys description to web UI
   - Wrap combined_site4dataset API call into try/except block and show
