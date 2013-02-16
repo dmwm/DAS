@@ -224,7 +224,8 @@ def adjust_values(func, gen, links, pkey):
         tdict = {}
         for key, val in to_show:
             tdict[key] = val
-        if  set(tdict.keys()) == set(['function', 'result', 'key']):
+        result_keys = ['function', 'result', 'key']
+        if  set(tdict.keys()) & set(result_keys) == set(result_keys):
             page += '%s(%s)=%s' \
                 % (tdict['function'], tdict['key'], tdict['result'])
         else:
@@ -541,7 +542,7 @@ class CMSRepresentation(DASRepresentation):
             page += '</div>'
             old = row
         main += fltpage
-        if  dup:
+        if  dup and not dasquery.aggregators:
             main += self.templatepage('das_duplicates', uinput=uinput,
                         instance=inst)
         main += page
