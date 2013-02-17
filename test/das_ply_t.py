@@ -197,6 +197,12 @@ class testDASPLY(unittest.TestCase):
                  'filters': {'grep': ['run.run_number>1', 'run.run_number<10']}}
         self.queries[query] = mongo
 
+        # query w/ filter which contains a filter conditions
+        query = 'run dataset=/a/b/c | grep run.a>0, run.b>=0, run.c<=0'
+        mongo = {'fields': ['run'], 'spec': {'dataset': '/a/b/c'}, 
+                 'filters': {'grep': ['run.a>0', 'run.b>=0', 'run.c<=0']}}
+        self.queries[query] = mongo
+
         # query with DASKEY, date=value
         query = 'dataset date=20110124'
         mongo = {'fields': ['dataset'], 'spec': {'date': 1295827200}}
