@@ -154,7 +154,9 @@ def gen_color(system):
     """
     Generate color for a system, use hash function for that
     """
-    if  system == 'dbs':
+    if  system == 'das':
+        bkg, col = '#DFDBC3', 'black' # rgb(223, 219, 195), see das.css
+    elif system == 'dbs':
         bkg, col = '#008B8B', 'white'
     elif system == 'dbs3':
         bkg, col = '#006400', 'white'
