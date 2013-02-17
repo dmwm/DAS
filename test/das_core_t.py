@@ -39,6 +39,8 @@ class testDASCore(unittest.TestCase):
         result = self.das.call(dquery)
         result = self.das.get_from_cache(dquery)
         result = [r for r in result][0]
+        if  result.has_key('das'):
+            del result['das'] # strip off DAS info
         expect = {"function": "count", "result": {"value": 1}, 
                   "key": "zip.Placemark.address", "_id":0}
         self.assertEqual(expect, result)
