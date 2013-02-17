@@ -168,9 +168,12 @@ class testCMSFakeDataServices(unittest.TestCase):
         dquery = DASQuery(query, mongoparser=self.mongoparser)
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         result = [r for r in result]
+        result = result[0] # take first result
+        if  result.has_key('das'):
+            del result['das'] # strip off DAS info
         expect = {"function": "count", "result": {"value": 2}, 
                   "key": "zip.place.city", "_id":0}
-        self.assertEqual(expect, result[0])
+        self.assertEqual(expect, result)
 
     def testIPService(self):
         """test DASCore with IP service"""
