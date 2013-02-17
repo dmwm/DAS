@@ -435,21 +435,31 @@ class DASCore(object):
             expire = 300 # min expire
             for func, key in dasquery.aggregators:
                 afunc = getattr(das_aggregator, 'das_%s' % func)
+                found = False
                 for srv, apis, in sinfo.items():
                     for api in apis:
-                        rows = self.rawcache.get_from_cache(\
+                        rows  = self.rawcache.get_from_cache(\
                                 dasquery, collection=collection)
-                        gen  = api_rows(rows, api)
-                        data = afunc(key, gen)
+                        gen   = api_rows(rows, api)
+                        data  = afunc(key, gen)
+                        ctime = time.time() - time0
+                        das   = dasheader(srv, dasquery, expire, api=api,
+                                ctime=ctime)
                         if  isinstance(data, dict) and data['value'] != 'N/A':
-                            ctime = time.time()-time0
-                            das   = dasheader(srv, dasquery, expire, api=api,
-                                    ctime=ctime)
-                            aggr  = {'_id':_id, 'function': func,
-                                     'key': key, 'result': data}
+                            aggr = {'_id':_id, 'function': func,
+                                    'key': key, 'result': data}
                             aggr.update(das)
                             res.append(aggr)
                             _id += 1
+                            found = True
+                if  not found: # when we got nothing add empty result record
+                    empty = {'value':'N/A'}
+                    ctime = time.time() - time0
+                    das = dasheader('das', dasquery, expire, api='das_core',
+                            ctime=ctime)
+                    rec = {'_id':0, 'function':func, 'key':key, 'result':empty}
+                    rec.update(das)
+                    res.append(rec)
         elif isinstance(fields, list) and 'queries' in fields:
             res = itertools.islice(self.get_queries(dasquery), idx, idx+limit)
         else:
