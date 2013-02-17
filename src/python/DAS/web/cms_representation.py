@@ -250,7 +250,7 @@ class CMSRepresentation(DASRepresentation):
             self.dbs_global = self.dasmapping.dbs_global_instance()
         else:
             self.dbs_global = None
-        self.colors = {}
+        self.colors = {'das':gen_color('das')}
         for system in self.dasmgr.systems:
             self.colors[system] = gen_color(system)
 
