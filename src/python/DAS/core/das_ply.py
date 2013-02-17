@@ -390,7 +390,7 @@ class DASPLY(object):
                   | DASKEY_ATTR FILTER_OPERATOR NUMBER"""
         val = ''
         for idx in xrange(0, len(p)):
-            if  p[idx]:
+            if  p[idx] or p[idx] == 0:
                 val += str(p[idx])
         p[0] = [val]
 
