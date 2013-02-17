@@ -196,7 +196,7 @@ class DASWebService(DASWebManager):
             self.dbs_global = self.dasmapping.dbs_global_instance()
             self.dbs_instances = self.dasmapping.dbs_instances()
             self.dasmapping.init_presentationcache()
-            self.colors = {}
+            self.colors = {'das':gen_color('das')}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
             self.sitedbmgr = SERVICES.get('sitedb2', None) # SiteDB from global scope
