@@ -95,6 +95,7 @@ def add_filter_values(row, filters):
             if  flt.find('<') == -1 and flt.find('>') == -1:
                 val = repr_values(row, flt)
                 page += "<br />Filter <em>%s:</em> %s" % (flt, val)
+    page += '<br/>'
     return page
 
 def tooltip_helper(title):
@@ -428,26 +429,27 @@ class CMSRepresentation(DASRepresentation):
                     if  pkey == 'run.run_number' or pkey == 'lumi.number':
                         if  isinstance(pval, basestring):
                             pval = int(pval)
-                    if  pval:
-                        page += '%s: ' % lkey.capitalize()
-                        if  lkey == 'parent' or lkey == 'child':
-                            if  str(pval).find('.root') != -1:
-                                lkey = 'file'
+                    if  not filters:
+                        if  pval:
+                            page += '%s: ' % lkey.capitalize()
+                            if  lkey == 'parent' or lkey == 'child':
+                                if  str(pval).find('.root') != -1:
+                                    lkey = 'file'
+                                else:
+                                    lkey = 'dataset'
+                            if  lkey in not_to_link():
+                                page += '%s' % pval
+                            elif  isinstance(pval, list):
+                                page += ', '.join(['<span class="highlight>"'+\
+                                    '<a href="/das/request?%s">%s</a></span>'\
+                                    % (make_args(lkey, i, inst), i) for i in pval])
                             else:
-                                lkey = 'dataset'
-                        if  lkey in not_to_link():
-                            page += '%s' % pval
-                        elif  isinstance(pval, list):
-                            page += ', '.join(['<span class="highlight>"'+\
-                                '<a href="/das/request?%s">%s</a></span>'\
-                                % (make_args(lkey, i, inst), i) for i in pval])
+                                args  = make_args(lkey, pval, inst)
+                                page += '<span class="highlight">'+\
+                                    '<a href="/das/request?%s">%s</a></span>'\
+                                    % (args, pval)
                         else:
-                            args  = make_args(lkey, pval, inst)
-                            page += '<span class="highlight">'+\
-                                '<a href="/das/request?%s">%s</a></span>'\
-                                % (args, pval)
-                    else:
-                        page += '%s: N/A' % lkey.capitalize()
+                            page += '%s: N/A' % lkey.capitalize()
                     plist = self.dasmgr.mapping.presentation(lkey)
                     linkrec = None
                     for item in plist:
@@ -503,8 +505,10 @@ class CMSRepresentation(DASRepresentation):
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
-                page += add_filter_values(row, filters)
-                page += adjust_values(func, gen, links, pkey)
+                if  filters:
+                    page += add_filter_values(row, filters)
+                else:
+                    page += adjust_values(func, gen, links, pkey)
             pad   = ""
             try:
                 if  row.has_key('das'):
