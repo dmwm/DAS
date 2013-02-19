@@ -21,7 +21,7 @@ from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import print_exc, getarg, size_format, access
-from DAS.utils.utils import identical_data_records, dastimestamp
+from DAS.utils.utils import identical_data_records, dastimestamp, sort_rows
 from DAS.web.utils import das_json, quote, gen_color, not_to_link
 from DAS.web.tools import exposetext
 from DAS.web.das_representation import DASRepresentation
@@ -681,5 +681,8 @@ class CMSRepresentation(DASRepresentation):
                                 '\n'.join([i.get(att, '') for i in val]) + '\n'
                     except:
                         pass
-        results = '\n'.join(set([r for r in results.split('\n') if r]))
+        # use DAS sort_rows function instead of python set, since we need to
+        # preserve the order of records in final output
+        rows = [r for r in results.split('\n') if r]
+        results = '\n'.join([r for r in sort_rows(rows)])
         return results
