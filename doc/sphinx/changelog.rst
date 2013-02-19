@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.9.X
 
+  - Fix ticket #3967 (preserve DAS records order while removing duplicates)
   - Fix ticket #3966 (strip-off zero in das filters)
   - Add JS function to handle Event (hide DAS keys window) via ESC
   - Resolve double counting issue, ticket #3965
