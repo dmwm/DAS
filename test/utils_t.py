@@ -28,7 +28,7 @@ from DAS.utils.utils import genkey, next_day, prev_day, convert2date
 from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 from DAS.utils.utils import delete_keys, parse_filter_string
 from DAS.utils.utils import fix_times, das_dateformat, http_timestamp
-from DAS.utils.utils import api_rows, regen, das_sinfo
+from DAS.utils.utils import api_rows, regen, das_sinfo, sort_rows
 from DAS.utils.regex import das_time_pattern
 from DAS.core.das_query import DASQuery
 
@@ -36,6 +36,13 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_sort_rows(self):
+        "Test sort_rows function"
+        rows   = [5, 1, 1, 1, 2, 2, 3, 3, 3, 4]
+        expect = [5, 1, 2, 3, 4]
+        result = [r for r in sort_rows(rows)]
+        self.assertEqual(result, expect)
+
     def test_regen(self):
         "Test regen function"
         rows   = (i for i in range(5))

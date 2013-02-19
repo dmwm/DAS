@@ -1590,3 +1590,17 @@ def das_sinfo(row):
     for api, srv in zip(apis, srvs):
         sinfo.setdefault(srv, set()).add(api)
     return sinfo
+
+def sort_rows(rows):
+    """
+    Sort rows, use this function when we can't use set, e.g.
+    when DAS returns sorted list and set will change its original order
+    """
+    old = ''
+    for row in rows:
+        if  not old:
+            old = row
+        if  old != row:
+            yield old
+            old = row
+    yield old
