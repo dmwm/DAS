@@ -11,7 +11,6 @@ __author__ = "Valentin Kuznetsov"
 import os
 import re
 import time
-import thread
 import cherrypy
 import threading
 
@@ -19,7 +18,7 @@ from datetime import date
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
-from pymongo.errors import AutoReconnect
+from pymongo.errors import AutoReconnect, ConnectionFailure
 
 # DAS modules
 import DAS
@@ -48,15 +47,9 @@ from DAS.web.help_cards import help_cards
 from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
-from DAS.services.sitedb2.sitedb2_service import SiteDBService
 from DAS.utils.global_scope import SERVICES
+from DAS.core.das_exceptions import WildcardMultipleMatchesException
 import DAS.utils.jsonwrapper as json
-
-from DAS.core.das_query import WildcardMultipleMatchesException
-import urllib
-
-# TODO: move this to an appropriate place
-from DAS.web.utils import HtmlString
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
@@ -199,7 +192,8 @@ class DASWebService(DASWebManager):
             self.colors = {'das':gen_color('das')}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
-            self.sitedbmgr = SERVICES.get('sitedb2', None) # SiteDB from global scope
+            # get SiteDB from global scope
+            self.sitedbmgr = SERVICES.get('sitedb2', None)
             # Start DBS daemon
             if  self.dataset_daemon:
                 self.dbs_daemon(self.dasconfig['web_server'])
@@ -207,11 +201,11 @@ class DASWebService(DASWebManager):
                 keylist = [r for r in self.dasmapping.das_presentation_map()]
                 keylist.sort(key=lambda r: r['das'])
                 self.daskeyslist = keylist
-        except Exception as ConnectionFailure:
+        except ConnectionFailure as _err:
             tstamp = dastimestamp('')
-            thread = threading.current_thread()
+            mythr  = threading.current_thread()
             print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
-                    % (thread.name, thread.ident, tstamp)
+                    % (mythr.name, mythr.ident, tstamp)
         except Exception as exc:
             print_exc(exc)
             self.dasmgr  = None
@@ -401,16 +395,16 @@ class DASWebService(DASWebManager):
 
 
 
-    def _get_dbsmgr_for_db_instance(self, str_dbsinst):
+    def _get_dbsmgr_for_db_instance(self, inst):
         """
         Given a string representation of DBS instance, returns DBSManager
         instance which "knows" how to look up datasets
         (further for performance reasons of searching by wildcard and substring,
         we may want to store then even outside MongoDB).
         """
-        # TODO: instance selection shall be more clean
+        # instance selection shall be more clean
         if  self.dataset_daemon:
-            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(str_dbsinst) != -1]
+            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(inst) != -1]
             if  len(dbs_urls) == 1:
                 return self.dbsmgr[dbs_urls[0]]
         return None
@@ -438,28 +432,18 @@ class DASWebService(DASWebManager):
             dasquery = DASQuery(uinput, instance=inst,
                     active_dbsmgr = self._get_dbsmgr_for_db_instance(inst))
         except Exception as err:
-            # allow html in the exception message
-            exc_message = str(err)
-            if  isinstance(err.message, HtmlString):
-                exc_message = err.message
-
-            # Wildcard exception has to be processed here,
-            # because only this class knows about Web UI!
+            # process Wildcard exception separately
             if  isinstance(err, WildcardMultipleMatchesException):
-                options = []
-                for dpat, query in err.options.items():
-                    # TODO: get view and limit
-                    params = cherrypy.request.params.copy()
-                    params['input'] = query
-                    das_url = '/das/request?' + urllib.urlencode(params)
-                    make_link_to_query = \
-                        lambda q: "<a href='%s'>%s</a>"\
-                           % (das_url,  q.replace(dpat, '<b>%s</b>' % dpat))
-                    options.append(make_link_to_query(query))
-
-                exc_message = HtmlString(err.message + '<br>\n'.join(options))
-            das_parser_error(uinput, 'WildcardMultipleMatchedException')
-            return 1, helper(exc_message, html_error)
+                das_parser_error(uinput, 'WildcardMultipleMatchedException')
+                suggest = err.options.values
+                guide = self.templatepage('dbsql_vs_dasql',
+                            operators=', '.join(das_operators()))
+                page = self.templatepage('das_wildcard_err', error=str(err),
+                        base=self.base, guide=guide, suggest=suggest)
+            else:
+                das_parser_error(uinput, str(type(err)))
+                page = helper(str(err), html_error)
+            return 1, page
 
         fields = dasquery.mongo_query.get('fields', [])
         if  not fields:
