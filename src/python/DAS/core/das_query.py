@@ -14,39 +14,12 @@ from   bson.objectid import ObjectId
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from   DAS.utils.regex import RE_3SLAHES
-from   DAS.utils.utils import genkey, deepcopy, print_exc
+from   DAS.utils.utils import genkey, deepcopy, print_exc, dastimestamp
 from   DAS.utils.query_utils import compare_specs
 from   DAS.core.das_parser import ql_manager
-
-from  DAS.core.das_process_dataset_wildcards import process_dataset_wildcards
-
-
-class WildcardMatchingException(Exception):
-    """
-    a base exception class for cases when wildcard matching
-     needs further user's intervention
-    """
-    def __init__(self, *args, **kwargs):
-        super(WildcardMatchingException, self).__init__(*args, **kwargs)
-
-class WildcardMultipleMatchesException (WildcardMatchingException):
-    """
-    When a windcard query may have multiple interpretations, we use this
-     to communicate these interpretations to the user.
-    """
-    def __init__(self, message, options = None):
-        super(WildcardMultipleMatchesException, self).__init__(message)
-        self.message =  message
-
-        if options is None:
-            options = {}
-        self.options = options
-
-    def __unicode__(self):
-        return self.message + '\n'.join(self.options)
-    __str__ = __unicode__
-
-
+from   DAS.core.das_process_dataset_wildcards import process_dataset_wildcards
+from   DAS.core.das_exceptions import WildcardMultipleMatchesException
+from   DAS.core.das_exceptions import WildcardMatchingException
 
 class DASQuery(object):
     """
@@ -73,23 +46,28 @@ class DASQuery(object):
         print "Matching wildcard query=%s into dataset patterns=%s" % (
             val, dataset_matches)
         if not len(dataset_matches):
-            # TODO: fuzzy matching to propose fixes? This also could be done for any dataset...
+            # TODO: fuzzy matching to propose fixes?
+            # This also could be done for any dataset...
             raise WildcardMatchingException(
-                    'The pattern you specified did not match any datasets in DAS cache.\n'
-                    'Check for misspellings or if you know it exists, provide it '
-                    'with three slashes: \n /primary_dataset/processed_daset/data_tier')
+                    'The pattern you specified did not match ' +
+                    'any datasets in DAS cache.\n' +
+                    'Check for misspellings or if you know ' +
+                    'it exists, provide it ' +
+                    'with three slashes: \n ' +
+                    '/primary_dataset/processed_daset/data_tier')
         if len(dataset_matches) > 1:
             options = {}
             for match in dataset_matches:
-                # TODO: a nice way to modify a query is needed
                 options[match] = self.query.replace(val, match)
-            raise WildcardMultipleMatchesException(msg +\
-                    ' The query is matching more than one such dataset pattern.\n' +
-                    'Please choose one from these:\n',
-                options)
+            raise WildcardMultipleMatchesException(msg + ' ' +
+                    'The query is matching more than one ' +
+                    'such dataset pattern.\n' +
+                    'Please choose one from these:\n', options)
 
         # If there's only one match, continue with query execution
-        # TODO: we may still wish to display a message to the user
+        msg = 'Input query=%s has unique match "%s", proceed' \
+                % (self.query, dataset_matches[0])
+        print dastimestamp('DAS WARNING ') + ' ' + msg
         self._mongo_query['spec'][key] = dataset_matches[0]
 
     def __init__(self, query, **flags):
@@ -162,15 +140,17 @@ class DASQuery(object):
 
         # check dataset wild-cards
         for key, val in self._mongo_query['spec'].items():
-            if  key == 'dataset.name': # only match dataset.name but do not primary_dataset.name
+            if  key == 'dataset.name':
+                # only match dataset.name but do not primary_dataset.name
                 if  not RE_3SLAHES.match(val):
 
-                    # TODO: we currently do not support wildcard matching from command line interface
+                    # TODO: we currently do not support wildcard matching
+                    #       from command line interface
                     if not self._active_dbsmgr:
                         continue
 
-                    # apply 3 slash pattern look-up, continuing only if one interpretation existings
-                    # here, ticket #3071
+                    # apply 3 slash pattern look-up, continuing only if one
+                    # interpretation existings here, ticket #3071
                     self._handle_dataset_slashes(key, val)
 
 
