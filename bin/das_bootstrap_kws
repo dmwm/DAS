@@ -28,6 +28,8 @@ while read query; do
 
 done < $QUERIES_FILE
 
+# TODO: remove result_field_index
+rm -Rf $DAS_KWS_IR_INDEX/*
 # reload the fields index
 python -u  $DAS_ROOT/analytics/standalone_task.py -c update_result_field_index
 

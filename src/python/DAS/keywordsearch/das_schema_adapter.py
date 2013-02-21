@@ -20,13 +20,6 @@ import DAS.web.dbs_daemon
 DEBUG = False
 
 
-# TODO: if field has fairly static values, then given value is not in there, is shall be penalized
-static_field_values = {
-    'site': [],
-    'tier': [],
-    'status': [],
-    'datatype': []
-}
 
 entity_wordnet_synsets = {
     'site': wordnet.synset('site.n.01'),
@@ -84,6 +77,15 @@ def discover_apis_and_fields(dascore):
         print 'Sys:', system
         print ''
         apis = mappings.list_apis(system)
+
+        # apis cover only DAS keys that are result_types
+
+        for das_key in dascore.das_keys(): # the short daskeys
+            long_daskeys = dascore.mapping.mapkeys(das_key)
+
+            for entity_long in long_daskeys:
+                entity_names[entity_long]  = das_key
+
 
         for api in apis:
             entity_long = mappings.primary_mapkey(system, api)
@@ -195,6 +197,8 @@ def entities_for_input_params(params):
 
 
 
+
+
 def validate_input_params(params, entity=None, final_step=False):
     """
     input parameters mapping (from keywords to input parameters) is that there must exist an API
@@ -298,11 +302,16 @@ def init_result_fields_list(dascore, same_entitty_prunning=False, _DEBUG=False):
         print 'keylearning collection:', dascore.keylearning.col
         print 'result attributes (all):'
 
+
+
+
+
     fields_by_entity = {}
     for r  in dascore.keylearning.list_members():
         #pprint(r)
         result_type = dascore.mapping.primary_key(r['system'], r['urn'])
         (entity_long, out, in_required, api_) = input_output_params_by_api[tuple((r['system'], r['urn']))]
+
 
         #print (entity_long, out, in_required, api_), '-->', result_type, ':', ', '.join([m for m in r.get('members', [])])
 
@@ -381,6 +390,66 @@ def init_result_fields_list(dascore, same_entitty_prunning=False, _DEBUG=False):
 
 
 
+def get_result_field_list_by_entity(dascore, entity, input_params, _DEBUG=False):
+    '''
+    return list of fields available in entity, if inputs_params are available
+    '''
+
+    # TODO: take some titles from DAS integration schema if defined, e.g.
+    # site.replica_fraction -->  File-replica presence
+
+    input_param_set = set(input_params)
+
+    if _DEBUG:
+        print 'keylearning collection:', dascore.keylearning.col
+        print 'result attributes (all):'
+
+    result_fields = set()
+
+
+    for r  in dascore.keylearning.list_members():
+        #pprint(r)
+        result_type = dascore.mapping.primary_key(r['system'], r['urn'])
+        print "result_type %s, need entity: %s" % (result_type, entity)
+
+        if result_type != entity:
+            continue
+
+        entity_long, out, in_required, api_ = input_output_params_by_api[tuple((r['system'], r['urn']))]
+
+
+        #print in_required, input_param_set
+        if not set(in_required).issubset(input_param_set):
+            continue
+
+        #print (entity_long, out, in_required, api_), '-->', result_type, ':', ', '.join([m for m in r.get('members', [])])
+
+        result_members = r.get('members', [])
+        fields = [m for m in result_members
+                  if m not in das_specific_fields
+            and m.replace(result_type, '*') not in das_specific_fields
+        ]
+
+        contain_errors = [m for m in result_members
+                          if m.endswith('.error')]
+
+        if contain_errors:
+            print 'WARNING: contain errors: ', result_type, '(' +  ', '.join(r.get('keys', [])) + ')', ':', \
+                ', '.join(fields)
+            if EXCLUDE_RECORDS_WITH_ERRORS:
+                continue
+
+
+        result_fields |= set(fields)
+
+        # now some of the fields are not refering to the same entity, e.g.
+        #  u'release': set([u'dataset.name', u'release.name']),
+        # which is actually coming from APIs that return the parameters..
+
+    return list(result_fields)
+
+
+
 def init(dascore):
     print 'DAS CORE IS'
     pprint.pprint(dascore)
@@ -451,6 +520,14 @@ def get_result_field_title(result_entity, field, technical=False, html=True):
     return title
 
 
+def get_field_list_for_entity_by_pk(result_entity, pk):
+    # TODO: make sure all the fields exists on record returned by PK !!!
+    # TODO: specify a certain PK
+
+    if _result_fields_by_entity:
+        return _result_fields_by_entity[result_entity]
+
+
 def list_result_fields(same_entitty_prunning=False, _DEBUG=False):
     #global _result_fields_by_entity
     if _result_fields_by_entity:
@@ -462,20 +539,13 @@ def list_result_fields(same_entitty_prunning=False, _DEBUG=False):
 
 
 if __name__ == '__main__':
-    pprint.pprint(_result_fields_by_entity)
+    from DAS.core.das_core import DASCore
+    dascore = DASCore()
+    init(dascore)
+    pprint.pprint(list_result_fields())
 
 
-"""
-operators
-
-sort
-avg
-count
-max
-min
-median
-sum
-"""
+# TODO: this is not yet used...
 operators = {
     # TODO: is this needed explicitly?
     #'grep': [

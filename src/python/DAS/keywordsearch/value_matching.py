@@ -40,9 +40,11 @@ def keyword_value_weights(keyword, api_results_allowed=False):
             # to minimize false positives, we exclude the fields from regexp matching
             # for which we have a list of possible values (the quite static ones)
 
-            if entity_matched not in input_values_tracker.get_fields_tracked() and \
+            if entity_matched not in input_values_tracker.get_fields_tracked(only_stable=True) and \
                             score > scores_by_entity.get(entity_matched, 0):
                 scores_by_entity[entity_matched] = (score, entity_matched)
+
+            # TODO: shall we add with very low score even other matches?
 
 
     # check for matching of existing datasets
@@ -85,6 +87,12 @@ def keyword_regexp_weights(keyword):
         if not '^' in constraint and not '$' in constraint and apis[0]['key'] \
             in ['dataset', 'file', 'reco_status', 'run']:
             constraint = '^' + constraint + '$'
+
+        # do not alow # in dataset TODO: shall be moved to API mappings
+        if apis[0]['key'] == 'dataset' and '#' in keyword:
+            continue
+
+
         score = 0
 
 

@@ -12,6 +12,8 @@ from whoosh.fields import *
 from whoosh.query import *
 from whoosh.analysis import *
 
+import whoosh.scoring
+
 from DAS.keywordsearch.das_schema_adapter import *
 
 import os
@@ -19,7 +21,7 @@ import os
 
 INDEX_DIR = os.environ['DAS_KWS_IR_INDEX']
 
-_DEBUG= True
+_DEBUG= False
 
 def build_index(fields_by_entity, remove_old = False):
     '''
@@ -49,7 +51,7 @@ def build_index(fields_by_entity, remove_old = False):
     # replica_fraction -> replica fraction
     # TODO: store entity as we are filtering by it?
     schema = Schema(fieldname=TEXT(stored=True, field_boost=3),
-                    fieldname_current=TEXT(stored=True, field_boost=2.0),
+                    fieldname_current=TEXT(stored=True, field_boost=1),
 
                     fieldname_processed_parents=TEXT(stored=True,
                                                      field_boost=0.2,
@@ -60,13 +62,13 @@ def build_index(fields_by_entity, remove_old = False):
                                                      analyzer=analysis.KeywordAnalyzer(
                                                          lowercase=True), ),
                     # TODO: to keep stopwords somewhere?
-                    title=TEXT(stored=True, ),
+                    title=TEXT(stored=True, field_boost=0.7),
                     title_stemmed=TEXT(analyzer=analysis.StemmingAnalyzer(),
-                                       field_boost=0.5),
+                                       field_boost=1.5),
                     # KeywordAnalyzer leaves text as it was in the beginning
                     title_exact=TEXT(
                         analyzer=analysis.KeywordAnalyzer(lowercase=True),
-                        field_boost=0.5),
+                        field_boost=1),
 
                     entity_and_fn=ID,
                     result_type=KEYWORD(stored=True))
@@ -114,12 +116,19 @@ def load_index():
     return _ix
 
 
-def search_index(keywords, result_type=False, full_matches_only=False, limit=10):
+def search_index(keywords, result_type=False, full_matches_only=False, limit=10,
+                 use_bm25f=False):
     global _ix
 
     if _DEBUG:
         print 'Evaluating query: ', keywords
-    with _ix.searcher() as s:
+
+    weighting=whoosh.scoring.TF_IDF()
+    #weighting=whoosh.scoring.PL2()
+
+    if use_bm25f:
+        weighting = whoosh.scoring.BM25F()
+    with _ix.searcher(weighting=weighting) as s:
 
         # Title do not contain stop words, so use a filter
         _text = lambda l: [t.text for t in l]
@@ -138,7 +147,8 @@ def search_index(keywords, result_type=False, full_matches_only=False, limit=10)
         # build the terms to search
         fields_to_search = ['fieldname', 'fieldname_processed_parents',
                             'fieldname_processed_current', 'fieldname_current',
-                            'title', ]
+                            'title',
+                            ]
         all_fields_and_terms = [Term(f, kw) for kw in
                                 keyword_list_no_stopw
                                 for f in fields_to_search
@@ -146,11 +156,11 @@ def search_index(keywords, result_type=False, full_matches_only=False, limit=10)
         all_fields_and_terms.extend([Term('title_stemmed', kw)
                                      for kw in keyword_list_stemmed])
 
-        # TODO: Is Stemmer needed here manually ?
 
-        if keyword_list_no_stopw:
+
+        if keyword_list_no_stopw and len(keyword_list_no_stopw) > 1:
             all_fields_and_terms.append(
-                Phrase('title', keyword_list_no_stopw, boost=3,
+                Phrase('title', keyword_list_no_stopw, boost=2,
                        slop=1))
 
             # TODO: the problem is that exact matching has to match the whole phrase, overwise there's not so much of use

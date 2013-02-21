@@ -21,7 +21,7 @@ from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
 from pymongo.errors import AutoReconnect
 import urllib
-
+import copy
 
 # DAS modules
 import DAS
@@ -365,6 +365,57 @@ class DASWebService(DASWebManager):
         page = self.templatepage('das_services', dasdict=dasdict, 
                         daskeys=daskeys, mapreduce=mapreduce)
         return self.page(page, response_div=False)
+
+    @expose
+    @checkargs(DAS_WEB_INPUTS)
+    def autocomplete_test(self):
+        """
+        represent DAS services
+        """
+        dasdict = {}
+        daskeys = []
+        for system, keys in self.dasmgr.mapping.daskeys().iteritems():
+            if  system not in self.dasmgr.systems:
+                continue
+            tmpdict = {}
+            for key in keys:
+                tmpdict[key] = self.dasmgr.mapping.lookup_keys(system, key)
+                if  key not in daskeys:
+                    daskeys.append(key)
+            dasdict[system] = dict(keys=dict(tmpdict),
+                                   apis=self.dasmgr.mapping.list_apis(system))
+        mapreduce = [r for r in self.dasmgr.rawcache.get_map_reduce()]
+
+
+        sdaskeys = json.dumps(daskeys)
+        from DAS.keywordsearch import das_schema_adapter
+        das_schema_adapter.init(self.dasmgr)
+        # das_schema_adapter.list_result_fields()
+        from DAS.keywordsearch.input_values_tracker import *
+        ent_values = {}
+
+
+        for field in get_fields_tracked():
+
+            values = get_tracker(field).find('*', limit=-1)
+            values = json.dumps([v for v in values])
+            ent_values[field.replace('.name', '')] = values
+        tmpl = '''
+            case '%(selkey)s':
+                callback(%(values)s);
+                break;
+            '''
+        selkeys_values = '\n'.join([tmpl % {'selkey': key, 'values': values}
+                                    for key, values in ent_values.items()])
+        selkeys_values = '''switch (facet) { %s \n}''' % selkeys_values
+
+
+        page = self.templatepage('das_kws_autocomplete', dasdict=dasdict,
+                                 daskeys=daskeys, sdaskeys=sdaskeys,
+                                 selkeys_values=selkeys_values,
+                                 mapreduce=mapreduce)
+        return self.page(page, response_div=False)
+
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -884,10 +935,15 @@ class DASWebService(DASWebManager):
             else:
                 return content
         dasquery = content # returned content is valid DAS query
+
+        initial_das_query = DASQuery(copy.deepcopy(dasquery.mongo_query))
+
         # update filters of DASQuery to include spec fields, this is useful
         # for end-users since DAS web UI always shows primary key
         # Please note, this is not done for CLI requests, where users
         # are more explicit with their intention
+
+
         dasquery.update_filters()
 
         status, _qhash = self.dasmgr.get_status(dasquery)
@@ -896,6 +952,18 @@ class DASWebService(DASWebManager):
             page = self.get_page_content(kwargs, complete_msg=False)
             ctime = (time.time()-time0)
             if  view == 'list' or view == 'table':
+                # TODO: it seems it is here that results are being rendered of a completed query
+                print 'list|table status=ok'
+                # If some of given filters do not exist in the results, check if this could be easily resolved by querying entity by its PK
+                # TODO: initial query is not necessarily what we want, especially if we have wildcards...
+                generated_query_msg = self.repmgr.check_filter_existence(initial_das_query)
+                if generated_query_msg:
+                    #print_exc(exc)
+                    #msg  = gen_error_msg()
+                    content =  self.templatepage('das_error', msg=generated_query_msg)
+                    return self.page(form + content, ctime=time.time()-time0)
+                    #return self.error(generated_query, wrap=False)
+
                 return self.page(form + page, ctime=ctime)
             return page
         else:

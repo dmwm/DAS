@@ -15,3 +15,4 @@ run between [160915,160917]
 summary dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO  run=150619
 user user=vidmasze@cern.ch
 run dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO
+file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80

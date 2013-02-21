@@ -137,16 +137,22 @@ DEBUG = False
 en_stopwords = stopwords.words('english')
 processed_stopwords = ['where', 'when', 'who']
 
+from nltk import stem
+stemmer = stem.PorterStemmer()
 
 def filter_stopwords(kwd_list):
     return filter(lambda k: k not in en_stopwords or k in processed_stopwords, kwd_list)
 
-def _get_reserved_terms():
+def _get_reserved_terms(stem=False):
     """
     terms that shall be down-ranked
     """
-    entities = ['dataset', 'run', 'block', 'file', 'site', 'config', 'time']
+    entities = ['dataset', 'run', 'block', 'file', 'site', 'config', 'time', 'lumi']
     operators = integration_schema.get_operator_synonyms()
+
+    if stem:
+        return map(lambda w: stemmer.stem(w), entities)
+
     return set(entities) | set(operators)
 
 # TODO: this has to be implemented in a better way
@@ -163,6 +169,12 @@ def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
     if keyword in _get_reserved_terms(): #['dataset', 'run', 'block', 'file', 'site']:
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
         return -5.0
+
+    print '_get_reserved_terms(stem=True):', _get_reserved_terms(stem=True)
+
+    if not ' ' in keyword and stemmer.stem(keyword) in _get_reserved_terms(stem=True): #['dataset', 'run', 'block', 'file', 'site']:
+        # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
+        return -2.0
 
     _DEBUG = 0
     if schema_ws:
@@ -240,8 +252,11 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
                 delta_score += penalize_highly_possible_schema_terms_as_values(
                     kwds[0], None)
             else:
-                # TODO?
-                pass
+
+                penalties = map(lambda kwd: penalize_highly_possible_schema_terms_as_values(kwd, None),
+                                kwds)
+                # for now, use average
+                delta_score += len(penalties) and sum(penalties)/len(penalties) or 0.0
 
 
 
@@ -630,11 +645,13 @@ def generate_chunks_no_ent_filter(keywords):
     if not mod_enabled('SERVICE_RESULT_FIELDS'):
         return {}
 
+    _DEBUG = False
+
     W_PHRASE = 1.5
 
     # TODO: These could be increased for short queries or lowered for long ones
-    RESULT_LIMIT_PHRASES = 5
-    RESULT_LIMIT_TOKEN_COMBINATION = 5
+    RESULT_LIMIT_PHRASES = 20
+    RESULT_LIMIT_TOKEN_COMBINATION = 10
     # max len of tokens to consider as a sequence
     # (e.g. number of events --> "number of events")
     MAX_TOKEN_COMBINATION_LEN =  4
@@ -765,9 +782,9 @@ def generate_chunks_no_ent_filter(keywords):
             matches[key] = filter(lambda m: m['score'] > cutoff, matches[key])
 
 
-
-    print 'chunks generated:'
-    pprint.pprint(matches)
+    if _DEBUG:
+        print 'chunks generated:'
+        pprint.pprint(matches)
     return matches
 
 
@@ -833,10 +850,11 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     if not isinstance(query, unicode) and isinstance(query, str):
         query = unicode(query)
 
-    # query = cleanup_query(query)
     if DEBUG: print 'Query:', query
-    query = cleanup_query(query)
-    if DEBUG: print 'CLEAN Query:', query
+
+    clean_query = cleanup_query(query)
+    if DEBUG: print 'CLEAN Query:', clean_query
+
     tokens = tokenize(query)
     if DEBUG: print 'TOKENS:', tokens
 

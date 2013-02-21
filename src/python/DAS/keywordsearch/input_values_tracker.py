@@ -62,7 +62,9 @@ service_input_value_providers = [
      'jsonpath': "$[0]['dataset_access_type'][*]",
      'test':'valid'}, # TODO: is it case sensitive?!
     {'field': 'release.name',
-     'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/releaseversions',
+
+    # https://cmsweb.cern.ch/dbs/prod/global/DBSReader/releaseversions
+     'url': 'https://cmsweb-testbed.cern.ch/dbs/dev/global/DBSReader/releaseversions',
      'jsonpath': "$[0]['release_version'][*]",
      'test':'CMSSW_4_*'},
 
@@ -75,7 +77,7 @@ service_input_value_providers = [
      'test':'analysis'},
 ]
 
-stable_fields = ['site', 'tier', 'datatype', 'status', 'group']
+stable_fields = ['site.name', 'tier.name', 'datatype.name', 'status.name', 'group.name']
 # release?
 
 class InputValuesTracker(object):
@@ -229,7 +231,10 @@ def init_trackers():
 # TODO: thread-unsafe!!!
 init_trackers()
 
-def get_fields_tracked():
+def get_fields_tracked(only_stable=False):
+    if only_stable:
+        return stable_fields
+
     return trackers.keys()
 
 def get_tracker(field):

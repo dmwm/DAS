@@ -104,6 +104,7 @@ class DASQuery(object):
         self._service_apis_map = {}
         self._str           = ''
         self._query         = ''
+        self._query_full    = ''
         self._storage_query = {}
         self._mongo_query   = {}
         self._qhash         = None
@@ -257,6 +258,29 @@ class DASQuery(object):
                         in self.mongo_query.get('spec', {}).iteritems()])
             self._query = query.strip()
         return self._query
+
+    @property
+    def query_in_das_ql(self):
+        "query property of the DAS query (human readble form)"
+        if  not self._query_full:
+            fields = self.mongo_query.get('fields', [])
+            if  not fields:
+                fields = [] # will use empty list for conversion
+            query  = ' '.join(fields)
+            query += ' ' # space between fields and spec values
+            query += ' '.join(['%s=%s' % (k, v) for k, v \
+                               in self.mongo_query.get('spec', {}).iteritems()])
+
+            # add post_filters
+            if self.filters:
+                query += ' | grep ' +', '.join(self.filters)
+
+            # TODO: add aggregators (including unique)
+
+            self._query_full = query.strip()
+        return self._query_full
+
+
 
     @property
     def storage_query(self):

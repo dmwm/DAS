@@ -48,8 +48,14 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
 
 
+    def result_is_correct(self, result, expected_results):
+        if isinstance(expected_results, str) or isinstance(expected_results, unicode):
+            return result == expected_results
 
-    def assertQueryResult(self, query, expected_result, query_complexity = 'general'):
+        return result in expected_results
+
+
+    def assertQueryResult(self, query, expected_results = None, exclude_for_all_results=None,  query_complexity = 'general'):
         '''
         run a test query, and gather statistics
         '''
@@ -58,15 +64,17 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
         results = search(query, dbsmngr=self.global_dbs_inst)
         first_result = results[0]['result']
+        results_str_list = map(lambda item: item['result'], results)
 
 
-        if first_result == expected_result:
+        if self.result_is_correct(first_result, expected_results):
             n_queries_passed_at_1 += 1
 
         # count queries that contained expected answer not lower than at i-th position
         passed_at_i = False
         for i in xrange(0, 10):
-            if i < len(results) and results[i]['result'] == expected_result:
+            if i < len(results) and self.result_is_correct(results[i]['result'], expected_results):
+                # TODO: recall (how many of the correct ones have been seen)
                 passed_at_i = True
 
             if passed_at_i:
@@ -75,11 +83,27 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
         # TODO: print distribution
 
-        print 'Test: ', query, '. Result: ', first_result == expected_result
+        print 'Test: ', query, '. Result: ', self.result_is_correct(first_result, expected_results)
         print 'Queries so far:', n_queries, 'Passed at #1: ', n_queries_passed_at_1, 'Passed at i-th:', pformat(n_queries_passed_at)
 
 
-        self.assertEquals(first_result, expected_result)
+        # TODO: exclusion
+
+
+        msg = '''
+        Query: %s
+        Got: %s
+        Expected: %s
+        ''' % (query, first_result, str(expected_results))
+
+        if isinstance(expected_results, list):
+            self.assertIn(first_result, expected_results, msg=msg)
+        else:
+            self.assertEquals(first_result, expected_results,  msg=msg)
+
+        if exclude_for_all_results:
+            for bad in exclude_for_all_results:
+                self.assertNotIn(bad, results)
 
 
     def test_doctests(self):
@@ -140,10 +164,11 @@ class TestDASDatasetWildcards(unittest.TestCase):
             'lumi  run=176304 lumi=80'
 
 
-    def test_numeric_params(self):
+    def test_numeric_params_1(self):
         # values closer to the field name shall be preferred
         self.assertQueryResult('lumis in run 176304', 'lumi run=176304')
 
+    def test_numeric_params_2(self):
         # TODO: field 'is' value --> a good pattern?
         self.assertQueryResult('files in /HT/Run2011B-v1/RAW where run is 176304 lumi is 80',
                 'file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80')
@@ -173,11 +198,12 @@ class TestDASDatasetWildcards(unittest.TestCase):
                                'site dataset=*Run2012*PromptReco*/AOD')
 
 
-    def test_dataset_wildcards(self):
+    def test_dataset_wildcards_1(self):
         # make sure 'dataset' is matched into entity but not its value (dataset=*dataset*)
         self.assertQueryResult('location of dataset *Run2012*PromptReco*/AOD',
             'site dataset=*Run2012*PromptReco*/AOD')
 
+    def test_dataset_wildcards_2(self):
         # automatically adding wildcards
         self.assertQueryResult('location of Zmm',
         'site dataset=*Zmm*')
@@ -187,6 +213,8 @@ class TestDASDatasetWildcards(unittest.TestCase):
     def test_value_based(self):
         self.assertQueryResult(u'datasets at T1_CH_CERN',
             'dataset site=T1_CH_CERN')
+
+    def test_value_based_1(self):
         self.assertQueryResult(u'datasets at T1_CH_*',
             'dataset site=T1_CH_*')
 
@@ -224,11 +252,13 @@ class TestDASDatasetWildcards(unittest.TestCase):
         self.assertQueryResult('files of /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO  located at site T1_*',
                                'file dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO site=T1_*')
 
+    def test_inputs_vs_postfilters_1(self):
 
         # currently #4
         self.assertQueryResult('files of /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO  at site T1_*',
                                'file dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO site=T1_*')
 
+    def test_inputs_vs_postfilters_2(self):
 
         # the query is quite ambigous...
         self.assertQueryResult('lumis in run 176304',  'lumi run=176304')
@@ -247,15 +277,32 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
         self.assertQueryResult('Zmmg magnetic field',
                                'run dataset=*Zmmg* | grep run.bfield, run.run_number')
+    def test_result_field_selections_2(self):
 
         self.assertQueryResult('Zmmg custodial file replicas',
                                'file dataset=*Zmmg* | grep file.replica.custodial, file.name')
+    def test_result_field_selections_3(self):
 
         self.assertQueryResult('Zmmg custodial block replicas',
                                'block dataset=*Zmmg* | grep block.replica.custodial, block.name')
 
+    def test_result_field_selections_4(self):
+
         self.assertQueryResult('number of lumis in run 176304',
                                'summary run=176304 | grep summary.nlumis')
+
+    def test_result_field_selections_stem(self):
+        self.assertQueryResult('Zmmg event number',
+                               ['file dataset=*Zmmg* | grep lumi.number, file.name',
+                                'dataset dataset=*Zmmg* | grep dataset.nevents, dataset.name',
+                                'block dataset=*Zmmg* | grep block.nevents, block.name'])
+
+    def test_result_field_selections_stem_phrase(self):
+        self.assertQueryResult('Zmmg "event number"',
+                               ['file dataset=*Zmmg* | grep lumi.number, file.name',
+                                'dataset dataset=*Zmmg* | grep dataset.nevents, dataset.name',
+                                'block dataset=*Zmmg* | grep block.nevents, block.name'])
+
 
     def test_result_field_selections_harder(self):
         #2nd
@@ -276,6 +323,7 @@ class TestDASDatasetWildcards(unittest.TestCase):
                'site dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO'
         )
 
+    def test_wh_words_2(self):
         self.assertQueryResult(
             'where are Zmmg',
             'site dataset=*Zmmg*'
@@ -284,20 +332,64 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
 
 
+
     def test_basic_queries(self):
         self.assertQueryResult(
             'configuration /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO',
             'config dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO')
-
+    def test_basic_queries_2(self):
         self.assertQueryResult('configuration of /*Zmm*/*/*',
                      'config dataset=/*Zmm*/*/*')
+
+    def test_basic_queries_3(self):
 
 
         self.assertQueryResult('/*Zmm*/*/*', 'dataset dataset=/*Zmm*/*/*')
 
-        self.assertQueryResult('name of vidmasze@cern.ch', '')
+    def test_basic_queries_1(self):
+        # it is actually fine, because name is very common term, so we don't want (and we dont get a filter)
+        self.assertQueryResult('name of vidmasze@cern.ch', 'user user=vidmasze@cern.ch')
 
-        self.assertQueryResult('last name of vidmasze@cern.ch', '')
+    def test_basic_queries_2(self):
+        self.assertQueryResult('last name of vidmasze@cern.ch', 'user user=vidmasze@cern.ch | grep user.surname')
+
+
+    def test_complex_no_impossible_results(self):
+        self.assertQueryResult(
+            'file block=/MinimumBias/Run2011A-ValSkim-08Nov2011-v1/RAW-RECO#f424e3d4-0f05-11e1-a8b1-00221959e72f run=175648  site=T1_US_FNAL_MSS &&',
+            'file block=/MinimumBias/Run2011A-ValSkim-08Nov2011-v1/RAW-RECO#f424e3d4-0f05-11e1-a8b1-00221959e72f run=175648 | grep file.replica.site=T1_US_FNAL_MSS',
+            exclude_for_all_results = [
+                # these are completetly non-valid
+                'file run=175648 | grep file.replica.site=T1_US_FNAL_MSS, file.block_name=/MinimumBias/Run2011A-ValSkim-08Nov2011-v1/RAW-RECO#f424e3d4-0f05-11e1-a8b1-00221959e72f',
+                'file run=175648'
+            ]
+        )
+
+
+    def test_schema_terms_vs_field_names_1(self):
+        # fairly easy (token)
+        self.assertQueryResult(
+            '"number of files" dataset=*DoubleMuParked25ns*',
+            ['dataset dataset=*DoubleMuParked25ns* | grep dataset.nfiles, dataset.name',
+             'block dataset=*DoubleMuParked25ns* | grep block.nfiles, block.name'])
+    def test_schema_terms_vs_field_names_2(self):
+        # more ambiguous
+        self.assertQueryResult(
+            'number of files dataset=*DoubleMuParked25ns*',
+            ['dataset dataset=*DoubleMuParked25ns* | grep dataset.nfiles, dataset.name',
+             'block dataset=*DoubleMuParked25ns* | grep block.nfiles, block.name'])
+
+    def test_schema_terms_vs_field_names_3(self):
+        # here entity shall be preferred
+        self.assertQueryResult(
+            'files in dataset=*DoubleMuParked25ns*',
+            'file dataset=*DoubleMuParked25ns*')
+
+
+    def test_schema_terms_vs_field_names_4(self):
+        # here entity shall be preferred
+        self.assertQueryResult('files in DoubleMuParked25ns',
+            'file dataset=*DoubleMuParked25ns*')
 
 
 if __name__ == '__main__':

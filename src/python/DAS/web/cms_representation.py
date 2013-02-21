@@ -265,6 +265,195 @@ class CMSRepresentation(DASRepresentation):
             tdict[uikey] = mapkey
         return tdict
 
+
+
+    def get_fields_in_query_result(self, dasquery):
+        '''
+        returns a list of available fields in the results of dasquery (must be in cache)
+        '''
+
+        # if we have filter/aggregator get one row from the given query
+        if  dasquery.mongo_query:
+            row = self.get_one_row(dasquery)
+
+            rowkeys = []
+            page = ''
+            if  row and row.has_key('das') and row['das'].has_key('primary_key'):
+                pkey = row['das']['primary_key']
+                if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
+                    try:
+                        mkey = pkey.split('.')[0]
+                        if  isinstance(row[mkey], list):
+                            # take first five or less entries from the list to cover
+                            # possible aggregated records and extract row keys
+                            lmax    = len(row[mkey]) if len(row[mkey]) < 5 else 5
+                            sublist = [row[mkey][i] for i in xrange(0, lmax)]
+                            ndict   = DotDict({mkey:sublist})
+                            rowkeys = [k for k in ndict.get_keys(mkey)]
+                        else:
+                            rowkeys = [k for k in DotDict(row).get_keys(mkey)]
+                        rowkeys.sort()
+                        rowkeys += ['das.conflict']
+                        #dflt = das_filters() + das_aggregators()
+                        #dflt.remove('unique')
+                        return rowkeys
+                    except Exception as exc:
+                        msg = "Fail to pkey.split('.') for pkey=%s" % pkey
+                        print msg
+                        print_exc(exc)
+                        pass
+        return []
+
+
+
+    def check_filter_existence(self, dasquery):
+        '''
+        tests:
+
+        check_filter_existence( \
+            'file block=/MinimumBias/Run2011A-ValSkim-08Nov2011-v1/RAW-RECO#f424e3d4-0f05-11e1-a8b1-00221959e72f | grep file.replica.site=T1_US_FNAL_MSS, run.run_number=175648')
+
+            TODO: we could consider getting the same requested entity but not
+            necessarily through a PK.
+        >>> False
+
+
+        '''
+        if  dasquery.filters:
+
+            fields_available_in_1st = set(self.get_fields_in_query_result(dasquery))
+
+
+            from pprint import pprint
+            from DAS.keywordsearch.das_schema_adapter import get_field_list_for_entity_by_pk, get_result_field_list_by_entity
+            from copy import deepcopy
+            from DAS.keywordsearch.tokenizer import get_keyword_without_operator
+
+            r_entity = dasquery.mongo_query['fields'][0]
+            filters_required = dasquery.filters
+            req_field_set = set([get_keyword_without_operator(field)
+                                 for field in filters_required])
+            projected_fields_available_in_1st = req_field_set & fields_available_in_1st
+            projected_fields_missing_in_1st = req_field_set - fields_available_in_1st
+
+
+
+            pprint(['DASQUERY:', dasquery.mongo_query])
+            # TODO: what if it doesn't have it?
+
+            pprint(['RESULT ENTITY:', r_entity])
+            pprint(['TODO: FILTERS FOR DAS QUERY:', dasquery.filters])
+            pprint(['TODO: PARAMS FOR DAS QUERY:', dasquery.params()])
+            pprint(['Feilds available in Current Query:', fields_available_in_1st])
+
+
+
+            # TODO: here I may need to privide a particular PK
+            pks_of_req_entity = list(set(self.dasmapping.mapkeys(r_entity)) \
+                                      &  set(fields_available_in_1st))
+
+
+            #fields_in_nested_by_pk = get_field_list_for_entity_by_pk(r_entity)
+
+            # try any of PKs available
+            for pk in pks_of_req_entity:
+                # list of fields for given entity retrieved by PK
+                fields_in_nested_by_pk = \
+                    get_result_field_list_by_entity(self.dasmgr, r_entity, [pk,])
+
+                pprint(['PK FIELDS:', fields_in_nested_by_pk])
+
+
+
+                pprint(locals())
+
+                query_rewritable = projected_fields_missing_in_1st.issubset(set(fields_in_nested_by_pk))
+
+                if projected_fields_missing_in_1st and not query_rewritable:
+                    # TODO: print notification
+                    pass
+
+                # if all fields that are still missing, are available in query='entity PK=pk'
+                if query_rewritable and projected_fields_missing_in_1st:
+                    # find all lookup (primary keys) for given das entity
+                    print 'Rewrite OK'
+
+                    #pk_ = list(set(fields_in_nested_by_pk) & )
+                    #pprint(['possible pks to use', pk_])
+
+                    #print 'pk_ = list(set(pk_fields) & set(fields_available_in_1st) & set(pks_of_requested_entity))'
+                    #pprint([set(fields_in_nested_by_pk), set(fields_available_in_1st), set(pks_of_req_entity)])
+
+                    #pprint(locals())
+
+                    #if not pk_:
+                    #    return False
+
+                    #pk = pk_[0]
+
+
+
+                    # It is safe to combine the queries
+                    get_pk_list_mongo_q = deepcopy(dasquery.mongo_query)
+                    # TODO: add actual PK
+
+                    filters_first = filter(lambda f: get_keyword_without_operator(f) in projected_fields_available_in_1st, filters_required)
+                    filters_nested = filter(lambda f: get_keyword_without_operator(f) in projected_fields_missing_in_1st, filters_required)
+
+
+                    get_pk_list_mongo_q['filters'] = {'grep': list(set(filters_first) | set([pk, ])),
+
+                                                     }
+                    # add unique
+
+                    first_query = DASQuery(get_pk_list_mongo_q)
+                    # TODO: we should actually leave any filters which are still available!!!
+
+                    print 'first query', first_query.query_in_das_ql, first_query.mongo_query
+
+                    nested_query = deepcopy(dasquery.mongo_query)
+                    # das_conditions: pk returned by first query
+                    nested_query['spec'] = {pk: '<PK>'}
+                    # TODO: add other operands, not only grep, min, max, unique... (actually these would have to be post-processed again....)
+
+                    nested_query['filters'] = {u'grep': list(filters_nested) }
+                    nested_query = DASQuery(nested_query)
+
+                    first_query_str = first_query.query_in_das_ql
+                    nested_query_str = nested_query.query_in_das_ql
+
+                    print 'Nested query:', nested_query.query_in_das_ql, nested_query.mongo_query
+
+                    # TODO: second query
+
+                    # TODO: use warning instead!
+
+                    #first_result = self.get_one_row(dasquery)
+                    #pprint(first_result)
+
+
+                    msg = '''
+                    DAS (and it's underlying services) do not support this query directly yet,
+                     however, you could use the instructions bellow to fetch the results automatically.
+
+                    you need to:
+
+                        execute this query: %(first_query_str)s
+                        for each result:
+                            execute this query: %(nested_query_str)s   (replacing <PK> with value of %(pk)s returned)
+
+                        (the combination (join) of results from the two queries will give you the results expected,
+                         except the aggregations which you will have to combine yourself).
+                    ''' % locals()
+                    print msg
+                    return msg
+
+
+
+        return False
+
+
+
     def get_one_row(self, dasquery):
         """
         Invoke DAS workflow and get one row from the cache.
