@@ -5,6 +5,11 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.10.X
+
+  - Imrove web UI links with box_attention for submitting DAS tickets, ticket
+    #3969
+
 - 1.9.X
 
   - Fix ticket #3967 (preserve DAS records order while removing duplicates)
