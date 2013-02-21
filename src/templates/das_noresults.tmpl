@@ -4,13 +4,12 @@
 <!-- das_noresults.tmpl -->
 <div>
 DAS unable to find any results for this query.
-#if not $incache
-<br />
-None of the participated data-providers match their APIs with
-given query. If you believe that this query should be answered
-by DAS feel free to submit a new
-<a href="https://github.com/dmwm/DAS/issues/new">ticket</a>.
-#end if
+<br/>
+<br/>
+If you believe that this query should provide adequate answer
+feel free to submit a new DAS
+<a class="box_attention"
+   href="https://github.com/dmwm/DAS/issues/new?title=no+results+$query">ticket</a>.
 </div>
 <hr class="line" />
 <!-- end of das_noresults.tmpl -->

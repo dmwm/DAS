@@ -366,7 +366,6 @@ class CMSRepresentation(DASRepresentation):
         kwargs   = head.get('args')
         uinput   = kwargs.get('input', '')
         total    = head.get('nresults', 0)
-        incache  = head.get('incache')
         apilist  = head.get('apilist')
         dasquery = head.get('dasquery', None)
         if  not dasquery:
@@ -374,7 +373,7 @@ class CMSRepresentation(DASRepresentation):
             dasquery = DASQuery(uinput, instance=inst)
         inst     = dasquery.instance
         filters  = dasquery.filters
-        main     = self.pagination(total, incache, apilist, kwargs)
+        main     = self.pagination(total, apilist, kwargs)
         style    = 'white'
         rowkeys  = []
         fltpage  = self.filter_bar(dasquery)
@@ -567,13 +566,12 @@ class CMSRepresentation(DASRepresentation):
         """
         kwargs   = head.get('args')
         total    = head.get('nresults', 0)
-        incache  = head.get('incache')
         apilist  = head.get('apilist')
         dasquery = head.get('dasquery')
         filters  = dasquery.filters
         sdir     = getarg(kwargs, 'dir', '')
         titles   = []
-        page     = self.pagination(total, incache, apilist, kwargs)
+        page     = self.pagination(total, apilist, kwargs)
         fltbar   = self.filter_bar(dasquery)
         if  filters:
             for flt in filters:
