@@ -657,6 +657,13 @@ class DASWebService(DASWebManager):
             nres = self.dasmgr.nresults(dasquery, coll)
             data = \
                 self.dasmgr.get_from_cache(dasquery, idx, limit)
+            if  dasquery.aggregators:
+                # aggregators split DAS record into sub-system and then
+                # apply aggregator functions, therefore we need to correctly
+                # account for nresults. Resolve generator into list and take
+                # its length as nresults value.
+                data = [r for r in data]
+                nres = len(data)
             head.update({'status':'ok', 'nresults':nres,
                          'ctime': time.time()-time0, 'dasquery': dasquery})
         except Exception as exc:
