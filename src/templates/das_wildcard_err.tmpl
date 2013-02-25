@@ -1,0 +1,31 @@
+#from DAS.web.utils import quote
+#set base = $quote($base)
+#set error = $quote($error)
+#assert isinstance($base, str)
+#assert (isinstance($error, str) or isinstance($error, unicode))
+<!-- das_wildcard_err.tmpl -->
+<div> <!-- main div -->
+Input query contains a wild-card statement which is ambiguous:
+<pre>
+$error
+</pre>
+#if $suggest
+Suggested queries:
+<ul>
+#for query in $suggest
+#set query=$quote($query)
+<li><a href="$base/request?input=$query">$query</a></li>
+#end for
+</ul>
+#end if
+For more information please use <a href="$base/faq">FAQ</a> page; review
+<b>DAS query guide:</b>
+<a href="javascript:ToggleTag('dbsql_vs_dasql', 'link_dbsql_vs_dasql')" id="link_dbsql_vs_dasql">show</a>
+or submit a bug report
+<a href="https://github.com/dmwm/DAS/issues/new">here</a>.
+<div id="dbsql_vs_dasql" name="dbsql_vs_dasql" class="hide">
+$guide
+</div>
+</div> <!-- end of main div -->
+<!-- end of das_wildcard_err.tmpl -->
+
