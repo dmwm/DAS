@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Upgrade to Prototype.js 1.7
   - Remove lumi API from CondDB mapping; add lumi API to RunRegistry mapping;
     clean-up RunRegistry code and remove v2 APIs, the v3 is default now
   - Re-factor Vidmantas code: move wild-card errors into separate template;
