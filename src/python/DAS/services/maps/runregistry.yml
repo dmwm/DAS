@@ -13,6 +13,16 @@ das_map : [
     {"das_key":"date","rec_key":"date"},
 ]
 ---
+urn : rr_xmlrpc_lumis
+url : "http://localhost:8081/runregistry"
+expire : 900
+params : {"run": "required"}
+lookup : lumi
+das_map : [
+    {"das_key":"run","rec_key":"run.run_number","api_arg":"run"},
+    {"das_key":"lumi","rec_key":"lumi.number","api_arg":""},
+]
+---
 notations : [
     {"api_output":"bField", "rec_key":"bfield", "api":""},
     {"api_output":"hltKey", "rec_key":"hlt", "api":""},

@@ -12,17 +12,6 @@ das_map : [
     {"das_key":"date","rec_key":"date","api_arg":"date"},
 ]
 ---
-urn: "get_lumi_info"
-url : "http://cms-conddb.cern.ch/getLumi/"
-expire : 3600
-params : {"Runs":"","date": "optional"}
-lookup : lumi
-das_map : [
-    {"das_key":"lumi","rec_key":"lumi.number"},
-    {"das_key":"run","rec_key":"run.run_number","api_arg":"Runs"},
-    {"das_key":"date","rec_key":"date","api_arg":"date"},
-]
----
 notations : [
     {"api_output":"Run-Info", "rec_key":"run_info", "api":""},
     {"api_output":"Run", "rec_key":"run_number", "api":"get_run_info"},
