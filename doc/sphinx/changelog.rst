@@ -7,6 +7,11 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Remove lumi API from CondDB mapping; add lumi API to RunRegistry mapping;
+    clean-up RunRegistry code and remove v2 APIs, the v3 is default now
+  - Re-factor Vidmantas code: move wild-card errors into separate template;
+    sanitize template parameters; clean-up code
+  - Add das_exceptions module, move all Wild-card excepion into this module
   - Imrove web UI links with box_attention for submitting DAS tickets, ticket
     #3969
 
