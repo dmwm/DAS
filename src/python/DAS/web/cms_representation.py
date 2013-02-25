@@ -409,7 +409,7 @@ class CMSRepresentation(DASRepresentation):
                     first_query = DASQuery(get_pk_list_mongo_q)
                     # TODO: we should actually leave any filters which are still available!!!
 
-                    print 'first query', first_query.query_in_das_ql, first_query.mongo_query
+                    print 'first query', first_query.convert_query_to_das_ql(self.dasmgr), first_query.mongo_query
 
                     nested_query = deepcopy(dasquery.mongo_query)
                     # das_conditions: pk returned by first query
@@ -419,10 +419,10 @@ class CMSRepresentation(DASRepresentation):
                     nested_query['filters'] = {u'grep': list(filters_nested) }
                     nested_query = DASQuery(nested_query)
 
-                    first_query_str = first_query.query_in_das_ql
-                    nested_query_str = nested_query.query_in_das_ql
+                    first_query_str = first_query.convert_query_to_das_ql(self.dasmgr)
+                    nested_query_str = nested_query.convert_query_to_das_ql(self.dasmgr)
 
-                    print 'Nested query:', nested_query.query_in_das_ql, nested_query.mongo_query
+                    print 'Nested query:', nested_query.convert_query_to_das_ql(self.dasmgr), nested_query.mongo_query
 
                     # TODO: second query
 

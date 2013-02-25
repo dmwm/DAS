@@ -201,9 +201,22 @@ def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
 
 
 def store_result(score, r_type, values_dict, r_filters, trace = set()):
-    result =   (score, r_type, values_dict.items(), tuple(r_filters), tuple(trace))
-    thread_data.results.append(result)
+    store_result_dict(score, r_type, values_dict, r_filters, trace)
 
+    #result =   (score, r_type, values_dict.items(), tuple(r_filters), tuple(trace))
+    #thread_data.results.append(result)
+
+
+def store_result_dict(score, r_type, values_dict, r_filters, trace = set(), missing_inputs=None):
+
+    result =   {'score':score,
+                'result_type': r_type,
+                'input_values': values_dict.items(),
+                'result_filters': tuple(r_filters),
+                'trace': tuple(trace),
+                'status': missing_inputs and 'missing_inputs' or 'OK',
+                'missing_inputs': missing_inputs}
+    thread_data.results_dict.append(result)
 
 
 
@@ -342,6 +355,87 @@ def penalize_non_mapped_keywords(keywords_used, keywords_list, score):
     return score
 
 
+def get_missing_required_inputs():
+    '''
+    APIs have their input constraints, and in some cases
+    only specific combinations of intpus are accepted, for example:
+
+    file run=148126 [requires dataset or block]
+
+    more complex cases:
+    file dataset=/Zmm/*/* site=T1_CH_CERN [requires exact dataset name!]
+    '''
+    pass
+
+def store_result_and_check_projections(
+        SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT, UGLY_DEBUG, chunks,
+        fields_covered_by_values_set, fields_included, keywords_list,
+        keywords_used, old_score, result_projection_forbidden, result_type,
+        trace, values_mapping):
+    '''
+    this is run after  mapping keywords into values is done.
+    it either stores the specific configuration as a result, or continues with
+    generating with mapping the projections/api result post_filters
+    '''
+
+    #print keyword_index, 'final'
+    # DAS requires at least one filtering attribute
+    if fields_covered_by_values_set and fields_covered_by_values_set.issuperset(
+            fields_included) and \
+            validate_input_params(fields_included, final_step=True,
+                                  entity=result_type):
+        #if UGLY_DEBUG: print 'VALUES MATCH:', (
+        #    result_type, fields_included, values_mapping ),\
+        #validate_input_params(fields_included, final_step=True,
+        #    entity=result_type)
+
+        # Adjust the final score to favour mappings that cover most keywords
+        # TODO: this could be probably better done by introducing P(Unknown)
+
+
+        if not result_type:
+            # if not entity was guessed, infer it from service parameters
+            entities = entities_for_input_params(fields_included)
+            if UGLY_DEBUG: print 'Result entities matching:', entities
+
+            for result_type in entities.keys():
+                adjusted_score = old_score
+
+                if result_type in values_mapping.keys():
+                    adjusted_score += SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
+
+                # TODO: how to handle non mapped items: probablity, divide, minus??
+                # TODO: shall we use probability-like scoring?
+                adjusted_score = penalize_non_mapped_keywords(keywords_used,
+                                                              keywords_list,
+                                                              adjusted_score)
+
+                # TODO: are we validating the result 100%?
+                store_result(adjusted_score, result_type, values_mapping,
+                    [], trace)
+
+                generate_result_filters(keywords_list, chunks,
+                                        keywords_used | result_projection_forbidden,
+                                        old_score, result_type,
+                                        values_mapping, traceability=trace,
+                )
+
+
+        else:
+            adjusted_score = penalize_non_mapped_keywords(keywords_used,
+                                                          keywords_list,
+                                                          old_score)
+
+            store_result(adjusted_score, result_type, values_mapping,
+                [], trace)
+
+            generate_result_filters(keywords_list, chunks,
+                                    keywords_used | result_projection_forbidden,
+                                    old_score, result_type,
+                                    values_mapping, traceability=trace,
+                                    result_fields_included=result_projection_forbidden)
+
+
 def generate_value_mappings(result_type, fields_included, schema_ws,
                             values_ws,
                             old_score, values_mapping={}, # TODO
@@ -370,61 +464,11 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
             values_mapping, keywords_used, keywords_list, keyword_index, ')'
 
     if keyword_index == len(keywords_list):
-        #print keyword_index, 'final'
-        # DAS requires at least one filtering attribute
-        if fields_covered_by_values_set and fields_covered_by_values_set.issuperset(
-            fields_included) and\
-           validate_input_params(fields_included, final_step=True,
-               entity=result_type):
-            if UGLY_DEBUG: print 'VALUES MATCH:', (
-                result_type, fields_included, values_mapping ),\
-            validate_input_params(fields_included, final_step=True,
-                entity=result_type)
-
-            # Adjust the final score to favour mappings that cover most keywords
-            # TODO: this could be probably better done by introducing P(Unknown)
-
-
-            if not result_type:
-                # if not entity was guessed, infer it from service parameters
-                entities = entities_for_input_params(fields_included)
-                if UGLY_DEBUG: print 'Result entities matching:', entities
-
-                for result_type in entities.keys():
-                    adjusted_score = old_score
-
-                    if result_type in values_mapping.keys():
-                        adjusted_score += SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
-
-                    # TODO: how to handle non mapped items: probablity, divide, minus??
-                    # TODO: shall we use probability-like scoring?
-                    adjusted_score = penalize_non_mapped_keywords(keywords_used,
-                                                                  keywords_list,
-                                                                  adjusted_score)
-
-                    store_result(adjusted_score, result_type, values_mapping,
-                                [], trace)
-
-
-                    generate_result_filters(keywords_list, chunks,
-                        keywords_used | result_projection_forbidden,
-                        old_score, result_type,
-                        values_mapping, traceability = trace,
-                        )
-
-
-            else:
-                adjusted_score = penalize_non_mapped_keywords(keywords_used,
-                                    keywords_list, old_score)
-
-                store_result(adjusted_score, result_type, values_mapping,
-                    [], trace)
-
-                generate_result_filters(keywords_list, chunks,
-                    keywords_used | result_projection_forbidden,
-                    old_score, result_type,
-                    values_mapping, traceability=trace,
-                    result_fields_included = result_projection_forbidden)
+        store_result_and_check_projections(
+            SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT, UGLY_DEBUG,
+            chunks, fields_covered_by_values_set, fields_included,
+            keywords_list, keywords_used, old_score,
+            result_projection_forbidden, result_type, trace, values_mapping)
 
         return
 
@@ -885,9 +929,20 @@ def result_to_DASQL(result, format='text'):
             return  pattern % _params
         return pattern
 
+    missing_inputs = []
 
+    if isinstance(result, dict):
+        score = result['score']
+        result_type = result['result_type']
+        input_params = result['input_values']
+        projections_filters = result['result_filters']
+        trace = result['trace']
+        missing_inputs = result['missing_inputs']
+        #store_result_dict()
 
-    (score, result_type, input_params, projections_filters, trace) = result
+        # TODO: missing fields
+    else:
+        (score, result_type, input_params, projections_filters, trace) = result
 
     # short entity names
     s_result_type = entity_names[result_type]
@@ -1025,6 +1080,7 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
 
 
     thread_data.results = []
+    thread_data.results_dict = []
     #chunks = generate_chunks(keywords)
     chunks = generate_chunks_no_ent_filter(keywords)
 
@@ -1036,6 +1092,9 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     if DEBUG: print "============= Results for: %s ===" % query
     results =  thread_data.results[:]  # list(set(thread_data.final_mappings))
     results.sort(key=lambda item: item[0], reverse=True)
+
+    results =  thread_data.results_dict[:]  # list(set(thread_data.final_mappings))
+    results.sort(key=lambda item: item['score'], reverse=True)
 
     best_scores = {}
 

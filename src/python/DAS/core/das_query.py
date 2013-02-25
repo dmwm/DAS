@@ -259,16 +259,30 @@ class DASQuery(object):
             self._query = query.strip()
         return self._query
 
-    @property
-    def query_in_das_ql(self):
+
+    def convert_query_to_das_ql(self, dascore):
         "query property of the DAS query (human readble form)"
         if  not self._query_full:
             fields = self.mongo_query.get('fields', [])
             if  not fields:
                 fields = [] # will use empty list for conversion
+
+            # we need to convert into short das keys
+            #  (e.g. run.run_number->run)
+
+            # init field mappings
+            entity_names = {}
+            for das_key in dascore.das_keys(): # the short daskeys
+                long_daskeys = dascore.mapping.mapkeys(das_key)
+
+                for entity_long in long_daskeys:
+                    entity_names[entity_long]  = das_key
+            get_short_daskey = lambda ldaskey: entity_names.get(ldaskey, ldaskey)
+
+
             query  = ' '.join(fields)
             query += ' ' # space between fields and spec values
-            query += ' '.join(['%s=%s' % (k, v) for k, v \
+            query += ' '.join(['%s=%s' % (get_short_daskey(k), v) for k, v \
                                in self.mongo_query.get('spec', {}).iteritems()])
 
             # add post_filters
