@@ -366,6 +366,46 @@ class DASWebService(DASWebManager):
                         daskeys=daskeys, mapreduce=mapreduce)
         return self.page(page, response_div=False)
 
+
+
+
+    @expose
+    @checkargs(DAS_WEB_INPUTS)
+    def kws_async(self, **kwargs):
+        """
+        Request data from DAS cache.
+        """
+        print 'kws async'
+        # do not allow caching
+        set_no_cache_flags()
+
+        uinput  = kwargs.get('input', '').strip()
+        print 'kws async', uinput
+
+        if  not uinput:
+            kwargs['reason'] = 'No input found'
+            return self.redirect(**kwargs)
+
+        time0   = time.time()
+        self.adjust_input(kwargs)
+        view    = kwargs.get('view', 'list')
+        inst    = kwargs.get('instance', self.dbs_global)
+        uinput  = kwargs.get('input', '')
+
+        if  self.busy():
+            return self.busy_page(uinput)
+
+        self.logdb(uinput)
+        print 'kws async', uinput
+        status, body =  KeywordSearchHandler.handle_search(self,
+                                                  query=uinput, inst=inst,
+                                                  initial_exc_message = '',
+                                                  dbsmngr = self._get_dbsmgr_for_db_instance(inst),
+                                                  is_ajax=True)
+        return body
+
+
+
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def autocomplete_test(self):
@@ -386,8 +426,9 @@ class DASWebService(DASWebManager):
                                    apis=self.dasmgr.mapping.list_apis(system))
         mapreduce = [r for r in self.dasmgr.rawcache.get_map_reduce()]
 
+        # daskeys could be inputs or outputs
+        daskeys_json = json.dumps(daskeys)
 
-        sdaskeys = json.dumps(daskeys)
         from DAS.keywordsearch import das_schema_adapter
         das_schema_adapter.init(self.dasmgr)
         # das_schema_adapter.list_result_fields()
@@ -395,6 +436,11 @@ class DASWebService(DASWebManager):
         ent_values = {}
 
 
+        inp_daskeys, out_daskeys = das_schema_adapter.get_io_daskeys()
+        inp_daskeys_json = json.dumps(inp_daskeys)
+        out_daskeys_json = json.dumps(out_daskeys)
+
+        # fields in service results
         for field in get_fields_tracked():
 
             values = get_tracker(field).find('*', limit=-1)
@@ -402,17 +448,53 @@ class DASWebService(DASWebManager):
             ent_values[field.replace('.name', '')] = values
         tmpl = '''
             case '%(selkey)s':
-                callback(%(values)s);
+                callback(%(values)s, { allowInfix: true });
                 break;
             '''
         selkeys_values = '\n'.join([tmpl % {'selkey': key, 'values': values}
                                     for key, values in ent_values.items()])
         selkeys_values = '''switch (facet) { %s \n}''' % selkeys_values
 
+        entity_groupings = {
+            'dataset info': [
+                "block", "dataset", "file", "tier",
+                "primary_dataset",
+                "status", "config", "datatype",
+                "release",
+                "site",
+                "summary",
+                ],
+            'run info':
+                ["lumi", "run",],
+            'users and groups':
+                ["group", "user", "role",],
+            'dataset parentage':
+                ["parent", "child", "relationship"],
+            'misc':
+                ["date", "jobsummary",
+                 "run_status", "reco_status",
+                 "stream",  "monitor", "ip",]
+        }
+        daskeys_grouped = []
+        for cat, entities in entity_groupings.items():
+            for ent in sorted(entities):
+                entity = {
+                    'label': ent,
+                    'category': cat,
+                }
+                daskeys_grouped.append(entity)
+        # TODO: put not yet mapped keys into misc
+
+        daskeys_grouped_json = json.dumps(daskeys_grouped)
+
+
 
         page = self.templatepage('das_kws_autocomplete', dasdict=dasdict,
-                                 daskeys=daskeys, sdaskeys=sdaskeys,
+                                 daskeys=daskeys, daskeys_json=daskeys_json,
+                                 daskeys_grouped_json=daskeys_grouped_json,
                                  selkeys_values=selkeys_values,
+                                 inp_daskeys_json=inp_daskeys_json,
+                                 out_daskeys_json=out_daskeys_json,
                                  mapreduce=mapreduce)
         return self.page(page, response_div=False)
 

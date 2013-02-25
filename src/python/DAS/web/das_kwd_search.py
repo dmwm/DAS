@@ -27,19 +27,9 @@ class KeywordSearchHandler:
 
 
 
-    @staticmethod
-    def render(webm, msg, html_error=None, tmpl='das_kwdsearch_res'):
-        """Helper function which provide error template"""
-        if  not html_error:
-            return msg
-        guide = '' #webm.templatepage('dbsql_vs_dasql', operators=', '.join(das_operators()))
-
-        page = webm.templatepage(tmpl or 'das_ambiguous_html', msg=msg,
-                                 base=webm.base, guide=guide)
-        return page
 
     @staticmethod
-    def handle_search(webm, query, inst,  initial_exc_message = '', dbsmngr=None):
+    def handle_search(webm, query, inst,  initial_exc_message = '', dbsmngr=None, is_ajax=False):
         # TODO: DBS instance
         proposed_queries = keyword_search(query, inst, dbsmngr= dbsmngr)
 
@@ -59,8 +49,10 @@ class KeywordSearchHandler:
         html = ''
 
         if len(hi_score_result_types) > 1:
-            html += """<div class="select-result-type">Are you searching for:
-                        <span class="rt-filters">%(rt-filters)s</span>
+            html += """
+            <div class="select-result-type">
+                <span class="tooltip">Are searching for:<span class="classic">You may filter suggestions by the entity they return</span></span>
+                        &nbsp;<span class="rt-filters">%(rt-filters)s</span>
                         </div>
                     """ % {
                         'rt-filters': ",&nbsp;".join([
@@ -103,17 +95,17 @@ class KeywordSearchHandler:
         html += '\n'.join(["""
             <div class="kws-result result-with-entity-%(entity)s">
                 %(bar)s <a class="kws-link" href="%(link)s" target="_blank"
-                                    title="Explanation: &lt;br/&gt; %(nl_query_escaped)s">%(query_escaped)s</a>
+                                    title="Explanation: &lt;br/&gt; %(nl_query_escaped)s">%(query_html)s</a>
                 <a class="debug" title="%(trace)s">debug</a>
             </div>
             """ % r for r in proposed_queries ])
         # TODO: add user info to logs if available (e.g. certificate auth, to filter out queries submitted by developers)
 
-        html += '<br>\n<br>\nError message: ' + initial_exc_message
+        initial_err_message ='Initial error message: ' + initial_exc_message
         #msg = '<br>\n'.join(proposed_queries)
         html = HtmlString(html)
 
-        return 1, KeywordSearchHandler.render(webm, html, True, tmpl='das_kwdsearch_res')
+        return 1, webm.templatepage('das_kwdsearch_res', msg=html, is_ajax=is_ajax, initial_err_message=initial_err_message)
         # TODO: html links
         #return html
 

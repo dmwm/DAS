@@ -1,0 +1,96 @@
+ul.tagit {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+#filters {
+    margin-right: 120px;
+}
+
+/* query styles */
+.q-res-type, .q-projection {
+    /* result type (entity) */
+    color: #111160;
+}
+.q-field-name {
+    /* green as cheap */
+    color: #383;
+}
+.q-post-filter-field-name {
+    /* red as expensive to filter */
+    color: #933;
+}
+.q-op {
+    color: #f33;
+}
+
+.q-res-type {
+    font-weight: bold;
+}
+
+.q-op {
+    font-weight: bold;
+}
+.q-post-filter-field-name, .q-op, .q-field-name, .q-res-type, .q-projection {
+    /* font-weight: bold; */
+}
+
+.select-result-type { margin: 20px 0; font-weight: normal; }
+.rtype-selected {
+    font-weight: bold;
+    color: #000;
+}
+
+.kws-result a { line-height: 2em; color: #666; }
+.kws-result a, .kws-result a:visited, .kws-result a:active {  text-decoration: none; }
+.kws-result a:hover {  text-decoration: underline; }
+div.score-bar {
+    border:  1px solid #aaaaaa;
+    height: 10px;
+    display: inline-block;
+    position: relative;
+    /* float: left; */
+    background-color: #dddddd;
+    margin-right: 10px;
+}
+
+/* this is the colorful bar */
+div.score-bar-inner {
+    height: 10px;
+    display: block;
+    position: relative;
+    z-index: 0;
+    background-color: #88ff88;
+}
+/* text (score) inside the bar */
+div.score-bar-inner-avg {
+    background-color: #FFFF66;
+}
+div.score-bar-inner-low {
+    background-color: #ff6666;
+}
+
+div.score-bar span {
+    position: absolute;
+    font-size: 10px;
+    z-index: 1;
+    margin-left: 5px;
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    width: 50px;
+}
+.ui-tooltip {
+    max-width: 700px;
+    font-size: 8pt;
+}
+.nl-result-field {
+    color: #999;
+}
+
+
+.kws-result .debug {
+    color: #FF9999;
+    font-size: 10px;
+    margin-left: 20px;
+}

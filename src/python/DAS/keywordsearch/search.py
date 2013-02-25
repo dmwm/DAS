@@ -170,7 +170,7 @@ def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
         return -5.0
 
-    print '_get_reserved_terms(stem=True):', _get_reserved_terms(stem=True)
+    if DEBUG: print '_get_reserved_terms(stem=True):', _get_reserved_terms(stem=True)
 
     if not ' ' in keyword and stemmer.stem(keyword) in _get_reserved_terms(stem=True): #['dataset', 'run', 'block', 'file', 'site']:
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
@@ -211,6 +211,10 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
                             old_score, result_type, values_mapping,
                             result_filters=[], field_idx_start=0,
                             traceability=set(), result_fields_included = set()):
+    # prune out branches with very low scores (that is due to sence-less assignments)
+    if (mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled('PRUNE_NEGATIVE_SCORES')):
+        return
+
     # try assigning result values for particular entity
     # TODO: we use greedy strategy trying to assign largest keyword sequence (field chunks are sorted)
     requested_entity_short = result_type.split('.')[0]
@@ -227,7 +231,7 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
         # if all required keywords are still available
         if set(match['keywords_required']).isdisjoint(keywords_used) and \
                 (target_fieldname not in result_fields_included):
-            print 'required fields available for:', match
+            if DEBUG: print 'required fields available for:', match
             keywords_used_ = keywords_used | set(match['keywords_required'])
 
             #weight = match['field']['importance'] and 0.2 or 0.1
@@ -356,6 +360,9 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
     # (as a final condition) now every field in fields_included that were guessed in earlier step, has to be covered by values
     # newones could still be added
 
+    # prune out branches with very low scores (that is due to sence-less assignments)
+    if (mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled('PRUNE_NEGATIVE_SCORES')):
+        return
 
     if UGLY_DEBUG:
         print 'generate_value_mappings(', \
@@ -713,7 +720,7 @@ def generate_chunks_no_ent_filter(keywords):
                 continue
 
 
-            print 'len=', l, '; start=', start, 'chunk:', chunk
+            if DEBUG: print 'len=', l, '; start=', start, 'chunk:', chunk
 
             chunk_kwds = map(get_keyword_without_operator, chunk)
 
@@ -763,7 +770,7 @@ def generate_chunks_no_ent_filter(keywords):
     scores = map(_get_max_score, matches.values())
     max_score = reduce(max, scores, 0)
 
-    print 'max_score', max_score
+    if DEBUG: print 'max_score', max_score
     if max_score:
         for ent_matches in matches.values():
             for m in ent_matches:
@@ -828,6 +835,118 @@ def DASQL_2_NL(dasql_tuple, html=True):
 
 
 
+def result_to_DASQL(result, format='text'):
+    _patterns = {
+        'text': {
+            'RESULT_TYPE': '%s',
+            'INPUT_FIELD_AND_VALUE': '%s=%s',
+            'RESULT_FILTER_OP_VALUE': '%s%s%s',
+            'PROJECTION': '%s',
+            'GREP': ' | grep ',
+
+        },
+        'html': {
+            'RESULT_TYPE': '<span class="q-res-type">%s</span>',
+            'INPUT_FIELD_AND_VALUE':
+                '<span class="q-field-name">%s</span><span class="op" style="color: #f66;">=</span>%s',
+            'RESULT_FILTER_OP_VALUE':
+                '<span class="q-post-filter-field-name">%s<span class="q-op">%s</span></span>%s',
+            'GREP': ' | <b>grep</b> ',
+            'PROJECTION': '<span class="q-projection">%s</span>',
+            },
+
+    }
+    patterns = _patterns[format]
+
+    _v = lambda v: v
+    if format =='html':
+        import cgi
+        _v = lambda v: v and cgi.escape(v, quote=True) or ''
+
+
+    import collections
+
+    def tmpl(name, params = None):
+        '''
+        gets a pattern, formats it with params if any,
+        and apply an escape function if needed
+        '''
+
+        if isinstance(params, tuple) or isinstance(params, list):
+            _params = tuple(map(lambda v: _v(v), params))
+        else:
+            _params =_v(params)
+
+        pattern = patterns[name]
+
+        print pattern, params, _params
+
+        if params is not None:
+            return  pattern % _params
+        return pattern
+
+
+
+    (score, result_type, input_params, projections_filters, trace) = result
+
+    # short entity names
+    s_result_type = entity_names[result_type]
+    s_input_params = [(entity_names.get(field, field), value) for
+                      (field, value) in input_params]
+    s_input_params.sort(key=lambda item: item[0])
+
+    s_query =tmpl('RESULT_TYPE', s_result_type) + ' ' + \
+              ' '.join(
+                        [tmpl('INPUT_FIELD_AND_VALUE', (field, value))
+                            for (field, value) in s_input_params])
+
+    result_projections = [p for p in projections_filters
+                          if not isinstance(p, tuple)]
+
+    result_filters = [p for p in projections_filters
+                      if isinstance(p, tuple)]
+
+
+    if result_projections or result_filters:
+
+        if DEBUG: print 'selections before:', result_projections
+        result_projections = list(result_projections)
+
+        # automatically add wildcard fields to selections (if any), so they would be displayed in the results
+        if [1 for (field, value) in input_params if '*' in value]:
+            result_projections.append(
+                result_type) # result type of primary key of requested entity
+            # TODO: check if other wildcard fields are also there
+
+        # add formated projects
+        result_grep = map(lambda prj: tmpl('PROJECTION', prj),result_projections[:])
+        # add filters to grep
+        s_result_filters = [tmpl('RESULT_FILTER_OP_VALUE', f)
+                            for f in result_filters]
+        result_grep.extend(s_result_filters)
+        # TODO: NL description
+
+        s_query += tmpl('GREP') + ', '.join(result_grep)
+
+        if DEBUG:
+            print 'sprojections after:', result_projections
+            print 'filters after:', result_filters
+
+
+    das_ql_tuple = (s_result_type, s_input_params, result_projections, result_filters, [])
+    result = {
+        'result': s_query,
+        'query': s_query,
+        'trace': trace,
+        'score': score,
+        'entity': s_result_type,
+        'das_ql_tuple': das_ql_tuple
+    }
+    return result
+
+
+
+
 def init(dascore):
     from DAS.keywordsearch import das_schema_adapter
     das_schema_adapter.init(dascore)
@@ -865,7 +984,7 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     # TODO: shall not be part of this function call
 
     if True:
-        print 'DBS inst parameter:', inst
+        if DEBUG: print 'DBS inst parameter:', inst
         if not dbsmngr:
             if isinstance(inst, str):
                 inst = get_global_dbs_mngr(inst=inst)
@@ -897,7 +1016,7 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
         if not is_stopword and kw_value:
             values_ws[keyword] = keyword_value_weights(kw_value)
 
-    print '============= Q: %s ==========' % query
+    if DEBUG: print '============= Q: %s ==========' % query
     if DEBUG:
         print '============= Schema mappings (TODO) =========='
         pprint.pprint(schema_ws)
@@ -914,7 +1033,7 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
         kw_list=keywords, kw_index=0, old_score=0, chunks=chunks)
 
 
-    print "============= Results for: %s ===" % query
+    if DEBUG: print "============= Results for: %s ===" % query
     results =  thread_data.results[:]  # list(set(thread_data.final_mappings))
     results.sort(key=lambda item: item[0], reverse=True)
 
@@ -922,55 +1041,18 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
 
     first = 1
 
-    for (score, result_type, input_params, projections_filters, trace) in results:
-        # short entity names
-        s_result_type = entity_names[result_type]
-        s_input_params = [(entity_names.get(field, field), value) for
-                          (field, value) in input_params]
-        s_input_params.sort(key=lambda item: item[0])
 
-        s_query = s_result_type + ' ' + ' '.join(
-            ['%s=%s' % (field, value) for (field, value) in s_input_params])
+    get_best_score = lambda q: \
+        best_scores.get(q, {'score': -float("inf")})['score']
 
-        result_projections = [p for p in projections_filters
-                             if not isinstance(p, tuple)]
-        result_filters = [p for p in projections_filters
-                             if isinstance(p, tuple)]
+    for r in results:
+        result = result_to_DASQL(r)
+        result['query_in_words'] = DASQL_2_NL(result['das_ql_tuple'])
+        result['query_html'] = result_to_DASQL(r, format='html')['query']
+        query = result['query']
 
-
-        if result_projections or result_filters:
-
-            print 'selections before:', result_projections
-            result_projections = list(result_projections)
-
-            # automatically add wildcard fields to selections (if any), so they would be displayed in the results
-            if [1 for (field, value) in input_params if '*' in value]:
-                result_projections.append(
-                            result_type) # result type of primary key of requested entity
-            # TODO: check if other wildcard fields are also there
-
-            result_grep = result_projections[:]
-            # add filters to grep
-            s_result_filters = ['%s%s%s' % f for f in result_filters]
-            result_grep.extend(s_result_filters)
-            # TODO: NL description
-
-            s_query += ' | grep ' + ', '.join(result_grep)
-            print 'sprojections after:', result_projections
-            print 'filters after:', result_filters
-
-
-        das_ql_tuple = (s_result_type, s_input_params, result_projections, result_filters, [])
-
-        result = {
-            'result': s_query,
-            'trace': trace,
-            'score': score,
-            'query_in_words': DASQL_2_NL(das_ql_tuple),
-            'entity': s_result_type,
-        }
-        if best_scores.get(s_query, {'score': -float("inf")})['score'] < score:
-            best_scores[s_query] = result
+        if get_best_score(query) < result['score']:
+            best_scores[query] = result
 
 
     best_scores = best_scores.values()
@@ -1008,8 +1090,9 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
 
 
 
-    print '\n'.join(
-        ['%.2f: %s' % (r['score'], r['result']) for r in best_scores])
+    if DEBUG:
+        print '\n'.join(
+            ['%.2f: %s' % (r['score'], r['result']) for r in best_scores])
 
     return best_scores
 

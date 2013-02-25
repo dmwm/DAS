@@ -39,22 +39,14 @@ entity_wordnet_synsets = {
     #["since blocks are often defined as a single sector, the terms `block' and `sector' are sometimes used interchangeably"]),
 }
 
-
-#print mappings.find_system(system)
-
-# api: listFileProcQuality api2daskey: [u'file', u'dataset', u'file_quality'] apitag: None
-#primary_key file
-#primary_mapkey file.name
-# api returns entities: [{u'map': u'file.name', u'key': u'file', u'pattern': u''}, {u'map': u'dataset.name', u'key': u'dataset', u'pattern': u''}, {u'map': u'file_quality', u'key': u'file_quality', u'pattern': u''}]
-
 apis_by_their_input_contraints = {}
-
-# TODO: Other possibility is just look up DB:
-# find .match(value)
-# but mongodb is slow and I'd prefer not to relay on it
 
 
 entity_names = {} #  dataset.name -> values, user, user.email, user.name
+
+# entities = {'input': [{user.email->user, ..}], 'output': [short_key], }
+daskeys_io = {'input':{}, 'output':{}}
+
 search_field_names = [] # i.e. das key
 
 api_input_params = []
@@ -66,6 +58,10 @@ input_output_params_by_api = {}
 _result_fields_by_entity = {}
 
 
+def get_io_daskeys():
+    ''' return which daskeys are available for input and which for output '''
+    unique = lambda l: list(set(l))
+    return unique(daskeys_io['input'].values()), unique(daskeys_io['output'].values())
 
 # Discover APIs
 def discover_apis_and_fields(dascore):
@@ -78,7 +74,7 @@ def discover_apis_and_fields(dascore):
         print ''
         apis = mappings.list_apis(system)
 
-        # apis cover only DAS keys that are result_types
+        # apis cover only those DAS keys that are result_types
 
         for das_key in dascore.das_keys(): # the short daskeys
             long_daskeys = dascore.mapping.mapkeys(das_key)
@@ -94,6 +90,8 @@ def discover_apis_and_fields(dascore):
 
 
             entity_names[entity_long or entity_short] = entity_short
+
+            daskeys_io['output'][entity_long] = entity_short
 
             #print 'primary_key', mappings.primary_key(system, api)
             #print 'primary_mapkey', mappings.primary_mapkey(system, api)
@@ -152,6 +150,8 @@ def discover_apis_and_fields(dascore):
 
                 apis_by_their_input_contraints[param_constraint].append(
                     {'api': api, 'system': system, 'key': param['das_key'], 'entity_long': param['rec_key'] , 'constr': param_constraint})
+
+                daskeys_io['input'][param['rec_key']] = param['das_key']
 
 
             # response entity, fields (entity.attr), required_params

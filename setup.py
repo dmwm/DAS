@@ -220,6 +220,7 @@ data_files   = [
                 ('DAS/web/js', datafiles('src/js')),
                 ('DAS/web/css', datafiles('src/css')),
                 ('DAS/web/images', datafiles('src/images')),
+                ('DAS/web/images', datafiles('src/jquery-ui-images')),                
                 ('DAS/web/templates', datafiles('src/templates')),
                ]
 license      = "CMS experiment software"

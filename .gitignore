@@ -31,3 +31,10 @@ MANIFEST
 *.spl
 *.fdb_latexmk
 *.blg
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+*.orig
+*.patch
+

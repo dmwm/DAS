@@ -9,8 +9,8 @@
             font-size: 0.8em!important;
         }
     </style>
-    <link rel="stylesheet" href="/das/css/?f=jquery-ui.css" />
-    <script type="text/javascript" src="/das/js/?f=visualsearch-dependencies.min.js"></script>
+    <link rel="stylesheet" href="/das/css/?f=jquery-ui.css&f=jquery.tagit.css&f=kwsearch.css" />
+    <script type="text/javascript" src="/das/js/?f=visualsearch-dependencies.min.js&f=tag-it.js&f=jquery.ui.tooltip.js"></script>
     <!--
     <script src="http://documentcloud.github.com/visualsearch/build-min/dependencies.js"
             type="text/javascript"></script> -->
@@ -18,10 +18,11 @@
     <script type="text/javascript">
         jQuery.noConflict();
     </script>
+
     <!--
-    <script src="http://documentcloud.github.com/visualsearch/build-min/visualsearch.js"
-            type="text/javascript"></script>-->
     <script type="text/javascript" src="/das/js/?f=visualsearch.min.js&f=autocomplete_kws.js"></script>
+    -->
+    <script type="text/javascript" src="/das/js/?f=visualsearch.js&f=autocomplete_kws.js"></script>
 
     <!--[if lte IE 7]><!-->
     <link href="/das/css/?f=visualsearch.css"
@@ -34,43 +35,79 @@
     <!--<![endif]-->
 
 
-    <div id="autocomplete-container" style="position:absolute; width: 500px;"></div>
-    <b>Describe what you are searching for</b>
-    <div id="result_entities" class="visual_search_result"></div>
 
-    <b>Describe what do you know about the data (i.e. how to filter it out)</b>
+    <b style="color: #666">Describe what do you know about the data (i.e. how to filter it out)</b><br />
+
+    <input type="submit" value="Search" id="submit"  style="float:right; font-weight: bold;" class="ui-button"/>
     <div id="filters" class="visual_search_filters"></div>
 
-    <div id="#filters_summary"></div>
+    <br />
+
+    <label for="result_entities"> Optionally select or describe what you are searching for</label>
+    <input id="result_entities" type="text" class="visual_search_result_type" title="e.g. dataset; magnetic field" /><br />
+
+
+    <div id="search_query"></div>
+
+    <div id="results-async"></div>
 
 
     <script type="text/javascript" charset="utf-8">
         var _DEBUG = true;
-        jQuery(document).ready(function () {
-            var visualSearch = VS.init({
+
+
+
+
+        jQuery(document).ready(function (query) {
+            var visualSearch;
+
+            var do_search_async = function() {
+
+                var query = visualSearch.searchBox.value();
+
+                if (_DEBUG) console.log(query);
+
+
+                // TODO: add delay, so executed at most ones in 5 seconds
+                // TODO: shall we also delay it so it would not be executed if still being edited?
+                var conditions = query.replace(':', '=');
+                // encode entity list
+                var entities_with_quotes = _.map(jQuery('#result_entities').val().split(','), function(v){
+                    return '"'+v+'"'
+                });
+                var entities = entities_with_quotes.join(' ');
+
+                jQuery('#results-async').prepend('<b>Refreshing results...</b>').load('/das/kws_async', {
+                    // TODO: = vs :
+                    // TODO: KWS could be smarted to distinguish that this is result type
+
+
+                    'input': conditions + ' '+ entities
+                    // TODO: other parameters
+                });
+
+
+
+            };
+
+
+
+
+            visualSearch = VS.init({
                 container: jQuery('.visual_search_filters'),
                 query: '',
                 showFacets : true,
+                remainder   : 'keywords',
                 unquotable : [
                 ],
                 callbacks  : {
                     search : function(query, searchCollection) {
-                        var query = jQuery('#search_query');
-                        query.stop().animate({opacity : 1}, {duration: 300, queue: false});
-                        query.html('<span class="raquo">&raquo;</span> You searched for: <b>' + searchCollection.serialize() + '</b>');
-                        clearTimeout(window.queryHideDelay);
-                        window.queryHideDelay = setTimeout(function() {
-                            query.animate({
-                                opacity : 0
-                            }, {
-                                duration: 1000,
-                                queue: false
-                            });
-                        }, 2000);
+                        if (_DEBUG) console.log('search callback', query, searchCollection);
+                        do_search_async();
                     },
                     // These are the facets that will be autocompleted in an empty input.
                     facetMatches: function (callback) {
-                        callback($sdaskeys,
+                        callback($daskeys_grouped_json,
                                 // preserves order of terms/facets
                                 // (so far this exclude free keywords)
                                 { preserveOrder: true,
@@ -93,7 +130,7 @@
                                         { query:  searchTerm },
                                         function(data){
                                             if (_DEBUG) console.log(data);
-                                            matches = jQuery.map(data, function(item, i){
+                                            var matches = jQuery.map(data, function(item, i){
                                                 if (item.info == 'dataset'){
                                                     return item.value.replace('dataset=', '')
                                                 }
@@ -102,9 +139,10 @@
 
                                             //jQuery.each(data.items, function(i,item){
                                             //}
+                                            if (_DEBUG)
+                                                console.log(callback);
                                             callback(matches, {
-                                                allowInfix: true,
-                                                doNotFilter: true // to allow wildcard!
+                                                preserveMatches: true // to allow wildcard!
                                             });
                                         })
                                         .error(function(){
@@ -121,6 +159,23 @@
                     }
                 }
             });
+
+
+
+            jQuery('#submit').click(function(evt){
+                evt.preventDefault();
+                var query = visualSearch.searchBox.value();
+
+                do_search_async();
+            });
+
+            jQuery("#result_entities").tagit({
+                showAutocompleteOnFocus: true,
+                allowSpaces: true,
+                autocomplete: {source: $out_daskeys_json}
+            });
+            //.focus(function() { jQuery(this).autocomplete("search", ""); });;
+
         });
     </script>
 
@@ -128,7 +183,6 @@
 
 
 
-    <b>Kws tests</b><br/>
 
 
 </div> <!-- end of main div -->
