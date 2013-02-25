@@ -35,6 +35,12 @@ ul.tagit {
     /* font-weight: bold; */
 }
 
+.results-only-top-k {
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
 .select-result-type { margin: 20px 0; font-weight: normal; }
 .rtype-selected {
     font-weight: bold;
