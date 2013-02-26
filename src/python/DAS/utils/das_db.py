@@ -117,6 +117,8 @@ def parse2gridfs(gfs, prim_key, genrows, logger=None):
     Yield docs from provided generator with size < 4MB or store them into
     GridFS.
     """
+    if  not prim_key:
+        return
     key = prim_key.split('.')[0]
     for row in genrows:
         if  not row:
