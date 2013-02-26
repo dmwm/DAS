@@ -133,7 +133,7 @@ def worker_helper(url, query, table='runsummary'):
                         range(rec.pop('sectionFrom'), rec.pop('sectionTo')+1)]
             yield dict(lumi=rec)
 
-def worker(url, query, table='runsummary'):
+def rr_worker(url, query, table='runsummary'):
     "Call RunRegistry APIs"
     for key, val in query.items():
         if  key == 'runNumber' and table == 'runsummary':
@@ -224,7 +224,7 @@ class RunRegistryService(DASAbstractService):
         msg = "DASAbstractService:RunRegistry, query=%s" % _query
         self.logger.info(msg)
         time0   = time.time()
-        rawrows = worker(url, _query, _table)
+        rawrows = rr_worker(url, _query, _table)
         genrows = self.translator(api, rawrows)
         if  _table == 'runsummary':
             dasrows = self.set_misses(dasquery, api, run_duration(genrows))
@@ -252,7 +252,7 @@ def test():
     query = {'number': '>= 165103 and <= 165110'}
     url = 'http://localhost:8081/runregistry/'
     ver = 3
-    for row in worker(url, query, ver):
+    for row in rr_worker(url, query, ver):
         print row, type(row)
 
 if __name__ == '__main__':
