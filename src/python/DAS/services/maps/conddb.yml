@@ -3,7 +3,7 @@ system : conddb
 format : JSON
 ---
 urn: "get_run_info"
-url : "http://cms-conddb.cern.ch/getLumi/"
+url : "https://cms-conddb-prod.cern.ch/getLumi"
 expire : 3600
 params : {"Runs":"", "date": "optional","lumiType":"delivered"}
 lookup : run
