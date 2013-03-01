@@ -175,7 +175,7 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('block')
-        if  api == 'fakeRun4Run':#runregistry don't support 'in'
+        if  api == 'fakeRun4Run':
             val = kwds['run']
             if  val != 'required':
                 if  isinstance(val, dict):
@@ -188,8 +188,7 @@ class DBSService(DASAbstractService):
                     if  min_run and max_run:
                         val = "run >=%s and run <= %s" % (min_run, max_run)
                     elif val.has_key('$in'):
-                        arr = [r for r in val['$in']]
-                        val = "run >=%s and run <= %s" % (arr[0], arr[-1])
+                        val = ' or '.join(['run=%s' % r for r in val['$in']])
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 kwds['query'] = "find run where %s" % val
@@ -274,7 +273,7 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
             kwds.pop('dataset')
-        if  api == 'fakeDataset4Run':#runregistry don't support 'in'
+        if  api == 'fakeDataset4Run':
             val = kwds['run']
             qlist = []
             if  val != 'required':
@@ -288,8 +287,7 @@ class DBSService(DASAbstractService):
                     if  min_run and max_run:
                         val = "run >=%s and run <= %s" % (min_run, max_run)
                     elif val.has_key('$in'):
-                        arr = [r for r in val['$in']]
-                        val = "run >=%s and run <= %s" % (arr[0], arr[-1])
+                        val = ' or '.join(['run=%s' % r for r in val['$in']])
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 if  kwds.has_key('dataset') and kwds['dataset']:
@@ -454,8 +452,7 @@ class DBSService(DASAbstractService):
                     if  min_run and max_run:
                         val = "run >=%s and run <= %s" % (min_run, max_run)
                     elif val.has_key('$in'):
-                        arr = [r for r in val['$in']]
-                        val = "run >=%s and run <= %s" % (arr[0], arr[-1])
+                        val = ' or '.join(['run=%s' % r for r in val['$in']])
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 cond += " and %s" % val
