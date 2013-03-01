@@ -74,17 +74,13 @@ class CondDBService(DASAbstractService):
             maxrun = 0
             for kkk, vvv in kwds['Runs'].iteritems():
                 if  kkk == '$in':
-                    if len(vvv) == 2:
-                        minrun, maxrun = vvv
-                    else: # in[1, 2, 3]
-                        msg = "conddb can not deal with 'in'"
-                        self.logger.info(msg)
-                        continue
+                    kwds['Runs'] = ','.join([str(r) for r in vvv])
                 elif kkk == '$lte':
                     maxrun = vvv
                 elif kkk == '$gte':
                     minrun = vvv
-            kwds['Runs'] = '%s-%s' % (minrun, maxrun)
+            if  minrun and maxrun:
+                kwds['Runs'] = '%s-%s' % (minrun, maxrun)
 
     def parser(self, query, dformat, source, api):
         """
