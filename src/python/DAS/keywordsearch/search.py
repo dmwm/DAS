@@ -140,6 +140,20 @@ processed_stopwords = ['where', 'when', 'who']
 from nltk import stem
 stemmer = stem.PorterStemmer()
 
+from math import log
+_USE_PROBABILITIES = True
+
+_sc = lambda score: score
+
+# TODO: probablity of not taking a keyword shall depend on: stopword? known schema entity?
+# TODO: another issue! complex queries that system can not solve...!
+_P_NOT_TAKEN = 0.6
+
+if _USE_PROBABILITIES:
+    # logarithm of zero or negative shall be very large
+    _sc = lambda score: score > 0 and log(score) or score == 0 and -10 or score
+
+
 def filter_stopwords(kwd_list):
     return filter(lambda k: k not in en_stopwords or k in processed_stopwords, kwd_list)
 
