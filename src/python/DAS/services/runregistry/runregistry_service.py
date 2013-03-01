@@ -173,17 +173,14 @@ class RunRegistryService(DASAbstractService):
                     maxrun = 0
                     for kkk, vvv in val.iteritems():
                         if  kkk == '$in':
-                            if len(vvv) == 2:
-                                minrun, maxrun = vvv
-                            else: # in[1, 2, 3]
-                                msg = "runregistry can not deal with 'in'"
-                                self.logger.info(msg)
-                                continue
+                            runs = ' or '.join([str(r) for r in vvv])
+                            _query = {'runNumber': runs}
                         elif kkk == '$lte':
                             maxrun = vvv
                         elif kkk == '$gte':
                             minrun = vvv
-                    _query = {'runNumber': '>= %s and < %s' % (minrun, maxrun)}
+                    if  minrun and maxrun:
+                        _query = {'runNumber': '>= %s and < %s' % (minrun, maxrun)}
             elif key == 'date':
                 if  isinstance(val, dict):
                     if  val.has_key('$in'):
