@@ -15,6 +15,11 @@ NOTE: DBS3 APIs provide flat namespace JSON records. It means
       nested dicts and therefore it is better to re-map DBS3 data-records
       directly in a code.
 """
+
+# TODO: I need to implement support for IN operator, see DBS3 tickets:
+#       https://svnweb.cern.ch/trac/CMSDMWM/ticket/4136
+#       https://svnweb.cern.ch/trac/CMSDMWM/ticket/4157
+
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -113,6 +118,8 @@ class DBS3Service(DASAbstractService):
             val = kwds['minrun']
             if  isinstance(val, dict): # we got a run range
                 if  val.has_key('$in'):
+                    # TODO: this should be corrected when DBS will support
+                    # run-ranges
                     kwds['minrun'] = val['$in'][0]
                     kwds['maxrun'] = val['$in'][-1]
                 if  val.has_key('$lte'):
@@ -123,6 +130,8 @@ class DBS3Service(DASAbstractService):
             if  val:
                 if  isinstance(val, dict): # we got a run range
                     if  val.has_key('$in'):
+                        # TODO: this should be corrected when DBS will support
+                        # run-ranges
                         kwds['minrun'] = val['$in'][0]
                         kwds['maxrun'] = val['$in'][-1]
                     if  val.has_key('$lte'):
