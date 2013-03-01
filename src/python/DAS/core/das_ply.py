@@ -164,12 +164,6 @@ class DASPLY(object):
             msg = 'Not a valid DAS query, DBS-QL keyword: %s' % t.value
             raise Exception(msg)
 
-        # test if VALUE is in
-        if  t.value == 'in':
-            msg  = 'Operator "in" is not supported, '
-            msg += 'please use operator "between" instead'
-            raise Exception(msg)
-
         if  t.value == 'and' or t.value == 'or':
             msg = 'DAS-QL does not support AND|OR'
             raise Exception(msg)
