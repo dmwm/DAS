@@ -24,12 +24,21 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
+import urllib
+from   types import GeneratorType
 
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, json_parser
 from DAS.utils.utils import expire_timestamp, convert2ranges
 from DAS.utils.url_utils import getdata
+import DAS.utils.jsonwrapper as json
+
+def get_api(url):
+    "Extract from DBS3 URL the api name"
+    if  url[-1] == '/':
+        url = url[:-1]
+    return url.split('/')[-1]
 
 def get_modification_time(record):
     "Get modification timestamp from DBS data-record"
@@ -64,19 +73,59 @@ class DBS3Service(DASAbstractService):
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
-    def getdata(self, url, params, expire, headers=None, post=None):
-        """URL call wrapper"""
-        headers =  {'Accept': 'application/json' } # DBS3 always needs that
+    def getdata_helper(self, url, params, expire, headers=None):
+        "URL call wrapper"
+        post = None
+        if  not headers:
+            headers =  {'Accept': 'application/json' } # DBS3 always needs that
         return getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert,
                 doseq=False, system=self.name)
+
+    def getdata(self, url, params, expire, headers):
+        """URL call wrapper"""
+        if  isinstance(url, list):
+            # multi-stage workflows
+            if  [get_api(u) for u in url] == ['blocks', 'filelumis']:
+                edict = {'expire':expire}
+                dataset = params.get('dataset')
+                res = self.file_lumi_helper(url, dataset, edict)
+                return res, edict.get('expire')
+        return self.getdata_helper(url, params, expire, headers)
+
+    def file_lumi_helper(self, url, dataset, edict):
+        "Specialized DBS3 helper to get file, lumi pairs for a given dataset"
+        params  = {'dataset': dataset}
+        expire  = edict.get('expire')
+        data, _ = self.getdata_helper(url[0], params, expire)
+        blocks  = json.load(data)
+        for row in blocks:
+            params = {'block_name': row['block_name']}
+            val, expire = self.getdata_helper(url[1], params, expire)
+            filelumis = json.load(val)
+            edict.update({'expire': expire})
+            if  isinstance(filelumis, list):
+                for row in filelumis:
+                    lumi = row.get('lumi_section_num', None)
+                    lfn  = row.get('logical_file_name', None)
+                    rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
+                    yield rec
+            else:
+                lumi = row.get('lumi_section_num', None)
+                lfn  = row.get('logical_file_name', None)
+                rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
+                yield rec
 
     def url_instance(self, url, instance):
         """
         Adjust URL for a given instance
         """
         if  instance in self.instances:
-            return url.replace(self.prim_instance, instance)
+            if  isinstance(url, basestring):
+                return url.replace(self.prim_instance, instance)
+            elif isinstance(url, list):
+                urls = [u.replace(self.prim_instance, instance) for u in url]
+                return urls
         return url
 
     def adjust_params(self, api, kwds, inst=None):
@@ -155,6 +204,10 @@ class DBS3Service(DASAbstractService):
         """
         DBS3 data-service parser.
         """
+        if  isinstance(source, GeneratorType):
+            for row in source:
+                yield row
+            return
         for row in self.parser_helper(query, dformat, source, api):
             mod_time = get_modification_time(row)
             if  self.extended_expire:
