@@ -224,6 +224,15 @@ class DASPLY(object):
             if  not tok:
                 break
 
+    def err_msg(self, err):
+        pos  = self.lexer.lexpos-1
+        pad  = ' '*pos
+        msg  = "DASPLY lexer error, position=%s:\n" % pos
+        msg += self.lexer.lexdata + '\n'
+        msg += pad + '^\n'
+        msg += err + '\n'
+        return msg
+
     def t_error(self, t):
         """Error handling rule"""
         raise Exception("Illegal character '%s'" % t)
@@ -254,14 +263,15 @@ class DASPLY(object):
                  | SPECIALKEY EQUAL VALUE"""
         p[0] = ('keyop', p[1], p[2], p[3])
 
-    def p_err_opvalue(self, p):
-        """keyop : DASKEY EQUAL VALUE VALUE"""
-        p.error = "empty space between values: '%s' '%s'" % (p[3], p[4])
-        raise Exception(p.error)
-
     def p_opkey(self, p):
         """keyop : DASKEY EQUAL DASKEY"""
         p[0] = ('keyop', p[1], p[2], p[3])
+
+    def p_key_comma_key(self, p):
+        """keyop : DASKEY COMMA DASKEY
+                 | DASKEY COMMA DASKEY COMMA DASKEY"""
+        olist = [i for i in p if i and i != ',']
+        p[0] = ('keyop', tuple(olist), None, None)
 
     def p_opnumber(self, p):
         """keyop : DASKEY EQUAL NUMBER
@@ -278,11 +288,12 @@ class DASPLY(object):
         elif p[2] == 'last' and p[1] == 'date':
             p[0] = ('keyop', p[1], p[2], p[3])
         else:
-            p.error = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+            err = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
             if p[2] == 'last':
-                p.error += "'last' is only valid with key 'date'"
+                err += "'last' is only valid with key 'date'"
             else:
-                p.error += "'%s' is expecting an array with '[]'" % p[2]
+                err += "'%s' is expecting an array with '[]'" % p[2]
+            p.error = self.err_msg(err)
             raise Exception(p.error)
 
     # 'date in array' is not valid,
@@ -293,14 +304,15 @@ class DASPLY(object):
             if p[2] == 'between':
                 p[0] = ('keyop', p[1], p[2], p[3])
             else :
-                p.error = "'%s %s %s' is not valid, " % \
-                    (p[1], p[2], p[3])
-                p.error += "'in' is not supported by 'date'"
+                err  = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+                err += "'in' is not supported by 'date'"
+                p.error = self.err_msg(err)
                 raise Exception(p.error)
         elif p[2] != 'last':
             p[0] = ('keyop', p[1], p[2], p[3])
         else:
-            p.error = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+            err = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+            p.error = self.err_msg(err)
             raise Exception(p.error)
 
     def p_opip(self, p):
@@ -340,7 +352,8 @@ class DASPLY(object):
                  | SPECIALKEY OPERATOR NUMBER
                  | DASKEY OPERATOR DATE
                  | SPECIALKEY OPERATOR DATE"""
-        p.error = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+        err = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+        p.error = self.err_msg(err)
         raise Exception(p.error)
 
     def p_err2_op(self, p):
@@ -351,15 +364,22 @@ class DASPLY(object):
                  | VALUE OPERATOR NUMBER
                  | VALUE EQUAL DATE
                  | VALUE OPERATOR DATE"""
-        p.error = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
-        p.error += "'%s' is not a daskey" % p[1]
+        err  = "'%s %s %s' is not valid, " % (p[1], p[2], p[3])
+        err += "'%s' is not a daskey" % p[1]
+        p.error = self.err_msg(err)
         raise Exception(p.error)
 
     def p_err3_op(self, p):
         """keyop : SPECIALKEY"""
-        p.error = "'%s' is not support without values " % p[1]
-        if p[1] == 'date':
-            p.error += "please explore date info via attribute in filter"
+        err = "'%s' is not support without values " % p[1]
+        if  p[1] == 'date':
+            err += "please explore date info via attribute in filter"
+        p.error = self.err_msg(err)
+        raise Exception(p.error)
+
+    def p_err4_op(self, p):
+        """keyop : VALUE"""
+        p.error = self.err_msg("'%s' value is misplaced" % p[1])
         raise Exception(p.error)
 
     def p_date_for_filter(self, p):
@@ -504,12 +524,20 @@ def ply2mongo(query):
                 vlist.sort()
                 value = {'$gte' : vlist[0], '$lte': vlist[-1]}
         else: # selection field
-            if fields.count(name) == 0:
-                fields.append(name)
+            if  isinstance(name, list) or isinstance(name, tuple):
+                for item in name:
+                    if  item not in fields:
+                        fields.append(item)
+            elif isinstance(name, basestring):
+                if  name not in fields:
+                    fields.append(name)
+            else:
+                msg = 'Unsupported data type, %s, type=%s' % (name, type(name))
+                raise Exception(msg)
             value = '*'
         if  spec.has_key(dasname):
             exist_value = spec[dasname]
-            if  isinstance(exist_value, list):
+            if  isinstance(exist_value, list) or isinstance(exist_value, tuple):
                 array = [r for r in exist_value] + [value]
             elif exist_value == '*' and value != '*':
                 array = value
@@ -521,7 +549,11 @@ def ply2mongo(query):
                 array = [exist_value, value]
             spec[dasname] = array
         else:
-            spec[dasname] = value
+            if  isinstance(dasname, list) or isinstance(dasname, tuple):
+                for item in dasname:
+                    spec[item] = value
+            else:
+                spec[dasname] = value
     if  fields:
         mongodict['fields'] = fields
         for key in fields:
