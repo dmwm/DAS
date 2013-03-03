@@ -373,6 +373,7 @@ class CMSRepresentation(DASRepresentation):
             dasquery = DASQuery(uinput, instance=inst)
         inst     = dasquery.instance
         filters  = dasquery.filters
+        aggrtrs  = dasquery.aggregators
         main     = self.pagination(total, apilist, kwargs)
         style    = 'white'
         rowkeys  = []
@@ -504,7 +505,7 @@ class CMSRepresentation(DASRepresentation):
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
-                if  filters:
+                if  filters and not aggrtrs:
                     page += add_filter_values(row, filters)
                 else:
                     page += adjust_values(func, gen, links, pkey)
