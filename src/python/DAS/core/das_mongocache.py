@@ -12,8 +12,6 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.86 2010/05/03 19:14:06 valya Exp $"
-__version__ = "$Revision: 1.86 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
