@@ -575,10 +575,11 @@ class DASAbstractService(object):
                         val   = val.replace('*', wild)
                     args[key] = val
 
-            prim_key = self.dasmapping.primary_key(self.name, api)
-            if  prim_key not in skeys:
-                msg = "--- rejects API %s, primary_key %s is not selected"\
-                        % (api, prim_key)
+            # compare query selection keys with API look-up keys
+            api_lkeys = self.dasmapping.api_lkeys(self.name, api)
+            if  api_lkeys != skeys:
+                msg = "--- rejects API %s, api_lkeys(%s)!=skeys(%s)"\
+                        % (api, api_lkeys, skeys)
                 self.logger.info(msg)
                 continue
 
