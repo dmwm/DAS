@@ -6,8 +6,6 @@
 DAS Query Language parser based on PLY.
 """
 
-__revision__ = "$Id: $"
-__version__ = "$Revision: $"
 __author__ = "Gordon Ball and Valentin Kuznetsov"
 
 import os
