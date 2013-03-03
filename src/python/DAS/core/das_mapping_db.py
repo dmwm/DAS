@@ -300,7 +300,10 @@ class DASMapping(object):
         """
         cond = {'system':das_system, 'urn':urn}
         record = self.col.find_one(cond)
-        return record['lookup']
+        pkey = record['lookup']
+        if  pkey.find(',') != -1:
+            pkey = pkey.split(',')
+        return pkey
         
     def primary_mapkey(self, das_system, urn):
         """
@@ -308,9 +311,18 @@ class DASMapping(object):
         """
         cond = {'system':das_system, 'urn':urn}
         record = self.col.find_one(cond)
+        mapkey = []
         for row in record['das_map']:
-            if  row['das_key'] == record['lookup']:
-                return row['rec_key']
+            lkey = record['lookup']
+            if  lkey.find(',') != -1:
+                lkey = lkey.split(',')
+            if  isinstance(lkey, list):
+                if  row['das_key'] in lkey:
+                    mapkey.append(row['rec_key'])
+            else:
+                if  row['das_key'] == lkey:
+                    return row['rec_key']
+        return mapkey
         
     def find_daskey(self, das_system, map_key, value=None):
         """
