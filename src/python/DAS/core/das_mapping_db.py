@@ -3,7 +3,23 @@
 #pylint: disable-msg=W0703,R0902,R0904,R0914
 
 """
-DAS mapping DB module
+DAS mapping DB module. It provides access to DAS API maps. Every map consists
+of the following structure:
+
+.. doctest::
+
+    urn: myApi
+    url: http://a.b.com
+    params: {'file':'required'}
+    lookup: file
+    das_map: [{'das_key':'file, 'rec_key':'file.name', 'api_arg':'file'}]
+
+Here *urn* denotes data-service API, *url, params* are URL and input arguments
+publically available data-service API. The *lookup* attribute represents the
+fields which are accessible to look-up in DAS queries (it can be a list of
+fields) and *das_map* provides actual mapping from DAS key to record key and
+associated api argument. Please note that the first record in *das_map*
+represents DAS primary key.
 """
 
 __author__ = "Valentin Kuznetsov"
@@ -46,6 +62,7 @@ class DASMapping(object):
         thname = 'mappingdb_monitor'
         start_new_thread(thname, db_monitor, (self.dburi, self.init))
 
+        self.apilkeys = {}             # to be filled at run time
         self.keymap = {}               # to be filled at run time
         self.presentationcache = {}    # to be filled at run time
         self.reverse_presentation = {} # to be filled at run time
@@ -57,10 +74,22 @@ class DASMapping(object):
         self.dbs_inst_names = None     # to be determined at run time
         self.init_notationcache()
         self.init_presentationcache()
+        self.init_apilkeys_cache()
 
     # ===============
     # Management APIs
     # ===============
+    def init_apilkeys_cache(self):
+        "Read DAS maps and initialize apilkeys"
+        for row in self.col.find({}):
+            if  row.has_key('urn'):
+                api = row['urn']
+                system = row['system']
+                lookup = row['lookup']
+                key    = (system, api)
+                for lkey in lookup.split(','):
+                    self.apilkeys.setdefault(key, []).append(lkey)
+
     def init_notationcache(self):
         """
         Initialize notation cache by reading notations.
@@ -298,6 +327,8 @@ class DASMapping(object):
         """
         Return DAS lookup keys for given das system and api
         """
+        if  self.apilkeys.has_key((das_system, api)):
+            return self.apilkeys[(das_system, api)]
         cond = {'system':das_system, 'urn':api}
         record = self.col.find_one(cond)
         skeys = record['lookup']
@@ -305,11 +336,13 @@ class DASMapping(object):
             skeys = skeys.split(',')
         if  isinstance(skeys, basestring):
             skeys = [skeys]
+        self.apilkeys[(das_system, api)] = skeys
         return skeys
 
     def primary_key(self, das_system, urn):
         """
-        Return DAS primary key for provided system and urn
+        Return DAS primary key for provided system and urn. The DAS primary key
+        is a first entry in *lookup* attribute of DAS API record.
         """
         cond = {'system':das_system, 'urn':urn}
         record = self.col.find_one(cond)
@@ -320,7 +353,9 @@ class DASMapping(object):
         
     def primary_mapkey(self, das_system, urn):
         """
-        Return DAS primary map key for provided system and urn
+        Return DAS primary map key for provided system and urn. For example,
+        the file DAS key is mapped to file.name, so this API will return
+        file.name
         """
         cond = {'system':das_system, 'urn':urn}
         record = self.col.find_one(cond)
