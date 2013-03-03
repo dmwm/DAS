@@ -294,6 +294,19 @@ class DASMapping(object):
     # ============
     # Look-up APIs
     # ============
+    def api_lkeys(self, das_system, api):
+        """
+        Return DAS lookup keys for given das system and api
+        """
+        cond = {'system':das_system, 'urn':api}
+        record = self.col.find_one(cond)
+        skeys = record['lookup']
+        if  skeys.find(',') != -1:
+            skeys = skeys.split(',')
+        if  isinstance(skeys, basestring):
+            skeys = [skeys]
+        return skeys
+
     def primary_key(self, das_system, urn):
         """
         Return DAS primary key for provided system and urn
@@ -302,7 +315,7 @@ class DASMapping(object):
         record = self.col.find_one(cond)
         pkey = record['lookup']
         if  pkey.find(',') != -1:
-            pkey = pkey.split(',')
+            pkey = pkey.split(',')[0]
         return pkey
         
     def primary_mapkey(self, das_system, urn):
@@ -315,13 +328,9 @@ class DASMapping(object):
         for row in record['das_map']:
             lkey = record['lookup']
             if  lkey.find(',') != -1:
-                lkey = lkey.split(',')
-            if  isinstance(lkey, list):
-                if  row['das_key'] in lkey:
-                    mapkey.append(row['rec_key'])
-            else:
-                if  row['das_key'] == lkey:
-                    return row['rec_key']
+                lkey = lkey.split(',')[0]
+            if  row['das_key'] == lkey:
+                return row['rec_key']
         return mapkey
         
     def find_daskey(self, das_system, map_key, value=None):
