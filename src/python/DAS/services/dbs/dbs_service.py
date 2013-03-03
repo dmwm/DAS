@@ -209,6 +209,14 @@ class DBSService(DASAbstractService):
                 kwds.pop('block')
             else:
                 kwds['query'] = 'required'
+        if  api == 'fakeFileLumis4dataset':
+            dataset = kwds.get('dataset', 'required')
+            if  dataset != 'required':
+                kwds['query'] = \
+                'find file.name, lumi.number where dataset=%s' % dataset
+                kwds.pop('dataset')
+            else:
+                kwds['query'] = 'required'
         if  api == 'fakeLumis4FileRun':
             query = kwds.get('query', 'required')
             lfn = kwds.get('lfn', 'required')
@@ -518,6 +526,8 @@ class DBSService(DASAbstractService):
             prim_key = 'run'
         elif api == 'fakeLumis4block':
             prim_key = 'lumi'
+        elif api == 'fakeFileLumis4dataset':
+            prim_key = 'file'
         elif api == 'fakeLumis4FileRun':
             prim_key = 'lumi'
         elif  api == 'fakeRelease4File':
@@ -679,5 +689,14 @@ class DBSService(DASAbstractService):
                         file_status = row['file']['status']
                         if  file_status == 'VALID':
                             row = None
+            if  api == 'fakeFileLumis4dataset':
+                row = row['file']
+                if  row.has_key('name'):
+                    row['file'] = {'name': row['name']}
+                    del row['name']
+                if  row.has_key('lumi.number'):
+                    row['lumi'] = {'number': row['lumi.number']}
+                    del row['lumi.number']
+
             if  row:
                 yield row
