@@ -518,19 +518,6 @@ das_map : [
      "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
-urn : listLFNs
-url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
-params : {
-     "api":"listLFNs", "apiversion": "DBS_2_0_9", 
-     "path":"", "api_arg_meta_data":"",
-}
-lookup : file
-das_map : [
-    {"das_key":"file", "rec_key":"file.name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path"},
-]
----
 urn : listFileProcQuality
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600

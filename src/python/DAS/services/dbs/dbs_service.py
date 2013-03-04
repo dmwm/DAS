@@ -504,8 +504,6 @@ class DBSService(DASAbstractService):
             prim_key = 'file'
         elif api == 'fakeFiles4DatasetRun':
             prim_key = 'file'
-        elif api == 'listLFNs':
-            prim_key = 'file_lfn'
         elif api == 'listFileLumis':
             prim_key = 'file_lumi_section'
         elif api == 'listFileProcQuality':
