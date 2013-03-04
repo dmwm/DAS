@@ -441,6 +441,8 @@ class DBSService(DASAbstractService):
                 # listFiles does not support run range, see
                 # fakeFiles4DatasetRun API
                 kwds.pop('run')
+            if  not kwds['path'] and not kwds['block_name']:
+                kwds['path'] = 'required'
             del kwds['status']
         if  api == 'fakeFiles4DatasetRun':
             cond = ""
