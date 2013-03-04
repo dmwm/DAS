@@ -18,7 +18,8 @@ params : {
 lookup: status
 das_map: [
     {"das_key":"status", "rec_key":"status.name", "api_arg":"status"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeRelease4File
@@ -44,7 +45,8 @@ params : {
 lookup: release
 das_map: [
     {"das_key":"release", "rec_key":"release.name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeConfig
@@ -57,7 +59,8 @@ params : {
 lookup: config
 das_map: [
     {"das_key":"config", "rec_key":"config.name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeListDataset4Block
@@ -70,7 +73,8 @@ params : {
 lookup: dataset
 das_map: [
     {"das_key":"dataset", "rec_key":"dataset.name"},
-    {"das_key":"block", "rec_key":"block.name", "api_arg":"block"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
 urn : fakeListDataset4File
@@ -128,7 +132,8 @@ params : {
 lookup: group
 das_map: [
     {"das_key":"group", "rec_key":"group.name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : listPrimaryDatasets
@@ -143,6 +148,7 @@ das_map : [
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"pattern"},
 ]
 ---
+# please note this API can accept dataset patterns
 urn : fakeDatasetSummary
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
@@ -249,7 +255,8 @@ lookup: block
 das_map : [
     {"das_key":"block", "rec_key":"block.name"},
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeRun4File
@@ -274,7 +281,8 @@ params : {
 lookup: tier
 das_map : [
     {"das_key":"tier", "rec_key":"tier.name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : listDatasetParents
@@ -314,7 +322,8 @@ params : {
 lookup: block
 das_map : [
     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : listBlocks4path
@@ -327,7 +336,8 @@ params : {
 lookup: block
 das_map : [
     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeBlock4file
@@ -388,7 +398,8 @@ das_map : [
         {"das_key": "file", "rec_key": "file.name", "api_arg": "pattern_lfn"},
         {"das_key": "run", "rec_key": "run.run_number", "api_arg": "run_number",
          "pattern": "^[0-9]{3,10}"},
-        {"das_key": "dataset", "rec_key": "dataset.name", "api_arg": "path"},
+        {"das_key": "dataset", "rec_key": "dataset.name", "api_arg": "path",
+         "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
         {"das_key": "block", "rec_key": "block.name", "api_arg": "block_name"},
         {"das_key": "status", "rec_key": "status.name", "api_arg": "status"},
 ]
@@ -528,7 +539,8 @@ params : {
 lookup: file
 das_map : [
     {"das_key":"file", "rec_key":"file.name", "api_arg":"lfn"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"path",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn : fakeFiles4DatasetRunLumis
@@ -542,7 +554,8 @@ lookup: file
 das_map : [
     {"das_key":"file", "rec_key":"file.name", "api_arg":"file"},
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
-    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
 ]
 ---
