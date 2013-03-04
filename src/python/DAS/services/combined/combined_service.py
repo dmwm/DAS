@@ -92,7 +92,7 @@ def dbs_dataset4site_release(dbs_url, release):
             for row in rec:
                 yield row['dataset']
 
-def dataset_summary(dbs_url, dataset, status='VALID'):
+def dataset_summary(dbs_url, dataset):
     """
     Invoke DBS2/DBS3 call to get information about total
     number of filesi/blocks in a given dataset.
@@ -100,10 +100,8 @@ def dataset_summary(dbs_url, dataset, status='VALID'):
     expire = 600 # set some expire since we're not going to use it
     if  which_dbs(dbs_url) == 'dbs':
         # DBS2 call
-        query = 'find dataset.name, count(file.name), count(block.name) where dataset=%s'\
-                 % dataset
-        if  status:
-            query += ' and dataset.status=%s' % status
+        query  = 'find count(file.name), count(block.name)'
+        query += ' where dataset=%s and dataset.status=*' % dataset
         dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
                     'query':query}
         headers = {'Accept': 'text/xml'}
@@ -136,13 +134,12 @@ def combined_site4dataset(dbs_url, phedex_api, args, expire):
     "Yield site information about given dataset"
     # DBS part
     dataset = args['dataset']
-    status  = args.get('status', 'VALID').upper()
     try:
-        totblocks, totfiles = dataset_summary(dbs_url, dataset, status)
+        totblocks, totfiles = dataset_summary(dbs_url, dataset)
     except Exception as err:
-        reason = str(err)
-        error  = 'Fail to lookup in DBS dataset=%s with status=%s' \
-                % (dataset, status)
+        error  = str(err)
+        reason = "Can't find #block, #files info in DBS for dataset=%s" \
+                % dataset
         yield {'site': {'error': error, 'reason': reason}}
         return
     # Phedex part
