@@ -92,7 +92,7 @@ def dbs_dataset4site_release(dbs_url, release):
             for row in rec:
                 yield row['dataset']
 
-def dataset_summary(dbs_url, dataset):
+def dataset_summary(dbs_url, dataset, status='VALID'):
     """
     Invoke DBS2/DBS3 call to get information about total
     number of filesi/blocks in a given dataset.
@@ -100,8 +100,10 @@ def dataset_summary(dbs_url, dataset):
     expire = 600 # set some expire since we're not going to use it
     if  which_dbs(dbs_url) == 'dbs':
         # DBS2 call
-        query = 'find count(file.name), count(block.name) where dataset=%s'\
+        query = 'find dataset.name, count(file.name), count(block.name) where dataset=%s'\
                  % dataset
+        if  status:
+            query += ' and dataset.status=%s' % status
         dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
                     'query':query}
         headers = {'Accept': 'text/xml'}
@@ -114,7 +116,10 @@ def dataset_summary(dbs_url, dataset):
                 totblocks = row['dataset']['count_block.name']
                 return totblocks, totfiles
             elif row.has_key('error'):
-                return 0, 0
+                raise Exception(row.get('reason', row['error']))
+        # if we're here we didn't find a dataset, throw the error
+        msg = 'empty set'
+        raise Exception(msg)
     else:
         # we call filesummaries?dataset=dataset to get number of files/blks
         dbs_url += dbs_url + '/filesummaries'
@@ -131,7 +136,15 @@ def combined_site4dataset(dbs_url, phedex_api, args, expire):
     "Yield site information about given dataset"
     # DBS part
     dataset = args['dataset']
-    totblocks, totfiles = dataset_summary(dbs_url, dataset)
+    status  = args.get('status', 'VALID').upper()
+    try:
+        totblocks, totfiles = dataset_summary(dbs_url, dataset, status)
+    except Exception as err:
+        reason = str(err)
+        error  = 'Fail to lookup in DBS dataset=%s with status=%s' \
+                % (dataset, status)
+        yield {'site': {'error': error, 'reason': reason}}
+        return
     # Phedex part
     phedex_args = {'dataset':args['dataset']}
     headers = {'Accept': 'text/xml'}
