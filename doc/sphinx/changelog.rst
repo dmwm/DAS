@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Fix file block=/a/b/c#123 query (DBS should contribute to it)
+  - Add dataset pattern constratins for all DBS/DBS3 queries
+  - Remove listLFNs since listFiles cover the use case to look-up file for a given dataset
+  - Add filelumis4dataset API to support file,lumi dataset=/a/b/c queries
   - Add support for run IN [1,2,3] queries, this will be allowed in DBS/DBS3,
     CondDB, RunRegistry data-services
   - Upgrade to Prototype.js 1.7
