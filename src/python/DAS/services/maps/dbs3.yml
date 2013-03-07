@@ -299,7 +299,8 @@ params : {"block_name":"required", "run_num":"optional"}
 lookup : lumi
 das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number"},
-    {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name"},
+    {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
 ]
 ---
