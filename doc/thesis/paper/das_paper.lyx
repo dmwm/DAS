@@ -4239,9 +4239,8 @@ Data-Source qualities, Infrastructure
 
 \begin_layout Itemize
 
-\series bold
 \color red
-amount of data; description of services; constraints;
+amount of data; description of services; constraints
 \end_layout
 
 \begin_layout Subsubsection*
@@ -4250,10 +4249,26 @@ Issues
 
 \begin_layout Itemize
 
-\series bold
 \color red
-consider relationships between services explicit (PK dataset.name); implicit
- - even more ambiguity and complexity
+performance
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+the fields that are contained in the results of retrieving some entity depend
+ on the filtering conditions (sometimes it contains all the fields, sometimes
+ only the 
+\begin_inset Quotes eld
+\end_inset
+
+primary key
+\begin_inset Quotes erd
+\end_inset
+
+ allowing to identify the entity).
+ This is creating additional confusion for the users, as it is not easy
+ to figure out where and how to find what the user is searching for.
 \end_layout
 
 \begin_layout Standard
@@ -4498,7 +4513,7 @@ not yet implemented
 \begin_layout Standard
 Tracking of the execution time of each data-service, 
 \color red
-have been implemented
+was proposed to be implemented
 \color inherit
 , that allows a) informing user of long lasting queries, and running them
  only with his confirmation b) pre-running the speedy queries even before
@@ -4597,7 +4612,7 @@ name "chap:Evaluation"
 \end_layout
 
 \begin_layout Section
-Accuracy (and types of queries supported)
+Accuracy
 \end_layout
 
 \begin_layout Standard
@@ -4667,7 +4682,7 @@ result attribute filter
 aggregator / sorting??
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsection*
 String matching
 \end_layout
 
@@ -4675,12 +4690,12 @@ String matching
 Users feedback
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Standard
 Usability
 \end_layout
 
-\begin_layout Subsection
-Usefulness of KWS / NL / DAS QL
+\begin_layout Standard
+Usefulness of KWS vs structured query language
 \end_layout
 
 \begin_layout Chapter
