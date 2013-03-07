@@ -255,3 +255,25 @@ def close(stream):
     "Close given stream"
     if  isinstance(stream, InstanceType) or isinstance(stream, file):
         stream.close()
+
+def proxy_get_data(urls):
+    """
+    Get data for given set of URLs using urlfetch proxy. This method works
+    for GET HTTP requests and all URLs will be passed as is to the urlfetcher
+    proxy. Client should take care of proper encoding.
+    """
+    try:
+        from pyurlfetch.urlfetch import DownloadError, URLFetchClient
+        client  = URLFetchClient()
+        urls    = (u.encode('ascii', 'ignore') for u in urls)
+        fetches = (client.start_fetch(u) for u in urls)
+        for fid in fetches:
+            try:
+                code, response, _headers = client.get_result(fid)
+                if  code == 200:
+                    yield response
+            except DownloadError as err:
+                raise Exception('urlfetch download error=%s' % str(err))
+        client.close()
+    except Exception as exp:
+        raise Exception('Unable to use data proxy, reason=%s' % str(exp))
