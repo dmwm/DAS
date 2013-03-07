@@ -1,0 +1,21 @@
+At the start of this project, an enterprise information integration system based on simple structured queries was already in place (described below), which suffered from a number of performance and usability problems. %
+The author of this work evaluated possible approaches to these problems: improvements to system's usability through redesigning the user interface and allowing less restricted keyword search, analysis of performance bottlenecks {\color{red}and the possibility of supporting more complex queries}.\marginpar{{\color{red}only to some extent - secondary goal. we are bound by performance issues first}}
+
+% {\color{red}A remarkable opportunity we have is possibility to test ideas on a sample of ~3000 people working at CMS.}
+
+
+%Following a similar approach a 
+\subsubsection*{The EII system used at CMS, CERN}
+
+The \textit{CMS Data Aggregation System (DAS)}\cite{Kuznetsov2010, Kuznetsov2011} allows integrated access to a number of proprietary data-sources by processing users' queries on demand - it determines which  data-sources are able to answer\footnote{This is done by a mapping between flat mediated schema entities ('DAS keys') into web-service methods and their arguments. Then system queries all services that could provide a result of expected type with given parameters}, queries them, merges the results and caches them for subsequent use. DAS uses the \textit{Boolean retrieval model} as users are often interested in retrieving ALL the items matching their query.
+
+Currently the queries are formed by specifying what entity the user is interested in (dataset, file, etc) and providing selection criteria (e.g. attribute=value, name BETWEEN [v1, v2]). The combined query results could be later 'piped' for further filtering, sorting or aggregation (min, max, avg, sum, count, median), e.g.:
+
+{\small 
+\begin{Verbatim}[commandchars=\\\{\}]
+\footnotesize# find average and median dataset sizes of \textit{RelVal} datasets with more than 1000 events
+dataset=*RelVal* | grep dataset.nevents >1000 | avg(dataset.size), median(dataset.size)
+\end{Verbatim}
+}
+
+Queries are executed either from web browser or through a command line interface where the results could be fed into another application (e.g. programs doing physics analysis or automatic software release validation).

@@ -1,0 +1,47 @@
+{\color{red}
+At large scientific collaborations like the CMS Experiment at CERN's Large Hadron Collider, joining together more than 3000 collaborators, data usually resides on a fair number of autonomous and heterogeneous proprietary systems each serving it's own purpose
+\footnote{For instance, at CERN,  due to many reasons (e.g. research-orientedness and need of freedom, politics of institutes involved) software projects usually evolve in independent fashion resulting in fair number of proprietary systems\cite{Koch00CERN}. Further high turnover makes it harder to extend these systems}. As data stored on one system may be related to data residing on others%
+	\footnote{For example, datasets containing physics events are registered at DBS, while the physical location of files is tracked by Phedex which also takes care of their transfers within the grid storage worldwide}%
+, users are in need of a centralized and easy-to-use solution for locating and combining data from all these multiple services.
+
+Using a highly structured language like SQL is problematic because users need to know not only the language but also where to find the information and also lots of technical details like schema. %
+}
+
+
+
+
+\subsection{Composing multiple data sources efficiently: Query translation using Logical Views\label{IM_query_translation}}
+The \textit{Information Manifold}\cite{Levy96} is virtual integration (EII) system that represents  both it's \textit{queries} and \textit{source descriptions} through a dialect of \textit{description logics} (could be thought as \textit{datalog}).  It describes each source as a \textit{logical view} over the global (mediated) schema, augmented with source capabilities (e.g. what are possible and the required input parameters for the source to return results\footnote{this makes these logical views quite similar to source APIs used by DAS, with difference that DAS currently only describes the parameters APIs and only partially the results}).
+%
+This allows designing algorithms that could efficiently answer complex queries that require composing multiple the data sources that is done by finding maximally contained rewriting of the (conjunctive) input query in terms of logical views representing the sources (that is, finding an optimal way to compose the sources).
+
+For example, consider such sources expressed as views (on the left) in terms of global predicates of the mediated schema (on the right) in datalog notation (based on \cite{integr_views2000}):
+%
+{\small
+\begin{verbatim}
+v1(E, P, M) :- emp(E) & phone(E, P) & mgr(E, M). # employees, their phones and managers
+v2(E, O, D) :- emp(E) & office(E, O) & dept(E, D). # offices and departments of employees
+v3(E, P) :- emp(E) & phone(E, P) & dept(E, toy_dept). # phones of employees only in Toys dept.
+\end{verbatim}
+}
+%
+Suppose we wanted to know Sally's phone and office. We express this again in datalog over global predicates:
+{\small\begin{verbatim}
+q1(P,O) :- phone(sally,P) & office(sally,O).
+\end{verbatim}}
+There are two minimal solutions (as sources could be incomplete, the full solution is union of the two):
+{\small
+\begin{verbatim}
+answer1(P,O) :- v1(sally,P,M) & v2(sally,O,D).
+answer2(P,O) :- v3(sally,P) & v2(sally,O,D).
+\end{verbatim}}
+Notice that the expansions of these solutions (e.g. answer1\_exp) are not equivalent to $q_1$, but only the conjunctive queries that are closest and still contained in $q_1$ (as they are the only usable views provided by the sources):
+{\footnotesize\begin{Verbatim}[commandchars=\\\{\}]
+answer1_exp(P,O) :- emp(sally) & \textbf{\underline{phone}(sally,P)} & mgr(sally,M) & emp(sally) & \textbf{\underline{office}(sally,O)} & dept(sally,D).
+\end{Verbatim}
+}
+After this the \textit{Information Manifold} would find an executable order that adheres the capabilities of the sources, by iteratively considering any sources whose input parameters are satisfied. 
+% \subsection{Keyword search: integration on demand}
+% {\color{red}TODO?: \cite[ch.16]{principles_data_integration}}
+
+
