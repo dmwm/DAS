@@ -512,7 +512,8 @@ params : {
 lookup: lumi
 das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number"},
-    {"das_key":"block", "rec_key":"block.name", "api_arg":"block"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
 urn : fakeFileLumis4dataset
