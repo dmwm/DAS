@@ -296,6 +296,25 @@ phd.
 
 \begin_layout Abstract
 
+\lang english
+TO BE UPDATED
+\end_layout
+
+\begin_layout Publishers
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Abstract
+
 \color red
 Data integration provides a centralized solution for locating and combining
  data from multiple sources.
@@ -337,10 +356,6 @@ TODO: abstract shall be shorter? 50-100 words; rewrite it!
 
 
 \end_layout
-
-\begin_layout Standard
-\begin_inset CommandInset toc
-LatexCommand tableofcontents
 
 \end_inset
 
@@ -529,15 +544,15 @@ description "Enterprise Information Integration\\\\"
 
 \end_inset
 
-) is beneficial when other 
-\color red
+) is beneficial when the other 
+\color blue
 information integration
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
-\color red
+\color blue
 a better term?
 \end_layout
 
@@ -563,9 +578,9 @@ for instance, publish-subscribe approach is not applicable in the presence
 \emph on
 SQL
 \emph default
-, which present a number of user interfacing issues
-\series bold
-.
+, which present a 
+\color blue
+number of user interface issues.
 \end_layout
 
 \begin_layout Standard
@@ -587,8 +602,7 @@ key "what_are_we_searching_2012"
 
 \end_inset
 
-, in fact, received very little attention in the field of data service integrati
-on
+, in fact, received little attention in the field of data service integration
 \begin_inset CommandInset citation
 LatexCommand citep
 key "nl_to_dataservices_guerrisi2012natural"
@@ -597,17 +611,7 @@ key "nl_to_dataservices_guerrisi2012natural"
 
 .
  Virtual integration presents an additional challenge - only limited access
- to the data instances is available
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-, so metadata has to be used instead
-\end_layout
-
-\end_inset
-
-.
+ to the data instances is available.
  
 \end_layout
 
@@ -637,20 +641,12 @@ Motivation
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\color red
-isn't this better for use-case, and here more general?
-\end_layout
-
-\end_inset
-
-At scientific collaborations such as the CMS Experiment at CERN, where this
- work has been conducted, data often resides on a fair number of autonomous
- systems each serving it’s own purpose
+At scientific collaborations such as the 
+\emph on
+CMS Experiment at CERN
+\emph default
+, where this work has been conducted, data often resides on a fair number
+ of autonomous systems each serving its own purpose
 \series bold
 \color red
 
@@ -684,8 +680,8 @@ key "Koch00CERN"
 \end_layout
 
 \begin_layout Standard
-The virtual data integration (EII), solves the data integration problem
- even then data is volatile and systems are
+The EII, solves the data integration problem even when data is volatile
+ and systems are
 \series bold
  
 \series default
@@ -705,29 +701,9 @@ schema
 \end_layout
 
 \begin_layout Standard
-
-\color red
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-sources: YQL..
-\end_layout
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-search engines heading towards natural language
-\end_layout
-
-\end_inset
-
-
-\color inherit
 As an another example, the web search engines, which are becoming close
  to generic question-answering 
-\color red
+\color blue
 engines
 \color inherit
 
@@ -769,7 +745,7 @@ Structure of the work and our contributions
 \end_layout
 
 \begin_layout Standard
-First, we present an overview of the state-of-the-art in the related fields
+First, we present an overview of the state-of-the-art in the field
 \begin_inset Note Note
 status collapsed
 
@@ -787,7 +763,41 @@ reference "sec:State-of-the"
 \end_inset
 
 ).
- Then, in chapter 
+ 
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\color red
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\series bold
+\color magenta
+innovation???
+\end_layout
+
+\begin_layout Plain Layout
+
+\color magenta
+relaxed assumptions? (To check)
+\end_layout
+
+\begin_layout Plain Layout
+
+\color magenta
+autocompletion?
+\end_layout
+
+\end_inset
+
+
+\series default
+\color inherit
+Then, in chapter 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "chap:Keyword-Search-over-DataServices"
@@ -798,63 +808,41 @@ reference "chap:Keyword-Search-over-DataServices"
  that given a keyword query, proposes top-k most probable structured queries
  which can later be answered over data service integration at the CMS Experiment
 , CERN.
+ We propose a combined string similarity metric, discuss the presentation
+ of results, and propose combining keyword search with auto-completion
+\series bold
+\color red
  
+\series default
+in a unique way.
 \end_layout
 
 \begin_layout Standard
-We touch a couple of practical issues such as selection of good string similarit
-y metrics, user interface
-\series bold
- 
-\color red
-issues (presentation of results, 
-\series default
-\color inherit
-gathering feedback
-\series bold
-\color red
-).
- 
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-OUR INAVATIVENESS!!!
-\end_layout
-
-\begin_layout Plain Layout
-relaxed assumptions?
-\end_layout
+Next, in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Incorporating-User-Feedback"
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-Next, we discuss approaches allowing to incorporate
+, we discuss approaches allowing to incorporate
 \series bold
 \color red
- users feedback into keyword search over EII.
- We 
+ 
 \series default
-propose to combine advanced auto-completion with keyword search when possible,
- as that allows getting feedback of higher quality without overloading the
- users and discussing user feedback
+\color inherit
+users feedback into keyword search over EII.
+ The earlier mentioned auto-completion would allows getting feedback of
+ higher quality without overloading the users, that could be used for improving
+ various parts of the system
 \series bold
  
 \series default
-(this is for future work, but the current implementation is designed in
- such a way to gather the required data and facilitate the transition).
+(for future work).
  
 \end_layout
 
 \begin_layout Standard
-
-\color red
 In chapter 
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -866,30 +854,28 @@ reference "chap:Case-study:CMS"
 \series bold
  
 \series default
-cover some issues an EII may face, such as data-service not readiness for
- information retrieval, 
+covers some real-world issues an EII system may face, such as data-service
+ performance,
+\color red
+ [users confusion - intricacy of a query language where the fields in the
+ results for same entity differs depending on the query] 
+\color inherit
+and discusses ways for solving these.
+
 \series bold
-etc.
  
 \end_layout
 
 \begin_layout Standard
-
-\color red
-The implementation was evaluated quantitatively using test queries and qualitati
-vely through user feedback.
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\color red
-Evaluation on fake data is not so good.
-\end_layout
+Finally, in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Evaluation"
 
 \end_inset
 
-
+, the developed system is evaluated quantitatively using test queries and
+ qualitatively through user feedback.
 \end_layout
 
 \begin_layout Standard
@@ -897,20 +883,13 @@ Evaluation on fake data is not so good.
 \emph on
 Note:
 \emph default
- The project included number of 
-\series bold
-unexpected
-\series default
- time-demanding tasks: 1) choosing a precise the topic to focus on
-\color red
- - because the area is not so actively researched and there is no concise
- terminology
+ The project included these time-demanding tasks: 1) choosing a precise
+ topic to focus on - because the area is not so actively researched and
+ there is no concise terminology
 \begin_inset Foot
 status collapsed
 
 \begin_layout Plain Layout
-
-\color red
 e.g.
  virtual data integration, enterprise information integration, data virtualizati
 on are used as synonyms throughout different time periods; works on keyword
@@ -920,10 +899,9 @@ on are used as synonyms throughout different time periods; works on keyword
 
 \end_inset
 
-, this has took a considerable amount of time, and
-\color inherit
- 2) case analysis at the CMS Experiment: analysis of query logs and benchmarking
- performance bottlenecks; user's survey, tutorials and presentations.
+, this has took a considerable amount of time, and 2) case analysis at the
+ CMS Experiment included analysing query logs, benchmarking the performance
+ bottlenecks; a users survey, tutorials and presentations.
 \end_layout
 
 \begin_layout Section
@@ -931,25 +909,6 @@ State of the Art in the field
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:State-of-the"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\lang english
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\color cyan
-\lang english
-Shall this be shorter?
-\end_layout
 
 \end_inset
 
@@ -1034,7 +993,9 @@ key "keymantic_kws_metadata_bergamaschi2011,bergamaschi2011hidden,nl_to_dataserv
 status open
 
 \begin_layout Plain Layout
-Query Forms approach that propose SQL templates
+
+\color yellow
+TODO: Query Forms approach that propose SQL templates
 \end_layout
 
 \end_inset
@@ -1137,7 +1098,7 @@ key "characterization_search_behaviour_kumar2009,Kws_metadata_2011"
 \end_inset
 
 .
- Based on this, idea, most of the existing approaches employ the dependencies
+ Based on this, most of the existing approaches employ the dependencies
  of nearby keywords for ranking the candidate answers: 
 \emph on
 Keymantic
@@ -1636,12 +1597,8 @@ Entity
 \begin_inset space ~
 \end_inset
 
-Matching 
-\color cyan
-provides the possible interpretations of individual keywords, as entry points
- for further processing
-\color inherit
-.
+Matching provides the possible interpretations of individual keywords, as
+ entry points for further processing.
  From the fields of information retrieval, entity and string matching, vast
  amounts of works exist, including various methods for calculating string,
  word and phrase similarities: string-edit distances, learned string distances
@@ -1688,12 +1645,9 @@ description "Natural Language Processing"
 
 
 \lang british
- including: focus extraction 
-\color cyan
-telling what was requested
-\color inherit
-, parsing into predicate argument structure providing more generic representatio
-n of a sentence (e.g.
+ including: question focus extraction identifying the requested entit(-ies),
+ parsing into predicate argument structure providing more generic representation
+ of a sentence (e.g.
  removing differences between passive and active voices) simplifies further
  analysis, the relation extraction allows grasping more exact relationships
  between constituents of a clause
@@ -1715,16 +1669,13 @@ key "watson_2012relation"
 
 \end_inset
 
-, 
-\color cyan
-word sense disambiguation and other semantic techniques allow choosing more
- semantically correct interpretations.
-\color inherit
-
+, word sense disambiguation and other semantic techniques allow choosing
+ more semantically correct interpretations.
 \begin_inset Newline newline
 \end_inset
 
-It is worth mentioning, that current state-of-the art methods such as the
+It is worth mentioning, that the current state-of-the art methods such as
+ the
 \emph on
  IBM Watson
 \emph default
@@ -1931,7 +1882,7 @@ lines 0
 placement o
 overhang 0col%
 width "50col%"
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset ERT
@@ -1983,13 +1934,134 @@ a data-service (simplified)
 
 \end_inset
 
- Given an enterprise information integration system, capable of answering
- structured queries, we are interested in translating user's query into
- the corresponding structured query.
+ Given an EII system, capable of answering structured queries, we are interested
+ in translating the keyword query into the corresponding structured query.
+ A keyword query, KWQ
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "KWQ"
+description "keyword query\\\\"
+
+\end_inset
+
+ is an ordered tuple of 
+\begin_inset Formula $n$
+\end_inset
+
+ keywords 
+\begin_inset Formula $\left(kw_{1},kw_{2},..,kw_{n}\right)$
+\end_inset
+
+.
+ Answering a keyword query is 
+\emph on
+interpreting
+\emph default
+ it in terms of its semantics over the 
+\emph on
+\color magenta
+integration schema.
+ 
+\emph default
+\color inherit
+We are given the following 
+\color magenta
+metadata
+\emph on
+ 
+\emph default
+(
+\emph on
+virtual integration schema
+\emph default
+)
+\color inherit
+: 
 \end_layout
 
+\begin_layout Itemize
+
+\emph on
+schema
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "schema"
+description "by schema we refer to the integration schema (virtual schema based of entities exposed by the services)"
+
+\end_inset
+
+ terms
+\emph default
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "schema terms"
+description "names of entities in integration schema and their attributes (names of either inputs to the services or their output fields)"
+
+\end_inset
+
+: names of entities in 
+\emph on
+integration schema
+\emph default
+ and their attributes (names of either 
+\emph on
+inputs
+\emph default
+ to the services or their 
+\emph on
+output
+\emph default
+ fields)
+\end_layout
+
+\begin_layout Itemize
+information about possible 
+\emph on
+value terms
+\emph default
+
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+(domain vocabulary)
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "value terms"
+description "values of entity attributes (that could be input parameters of data services, or be contained in their results)"
+
+\end_inset
+
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+for some fields, we have a list of possible values
+\end_layout
+
+\begin_layout Itemize
+the
+\emph on
+ service mappings
+\emph default
+ define the
+\emph on
+ constraints
+\emph default
+ on values allowed as data-service inputs (required fields, regular expressions
+ defining the values accepted)
+\end_layout
+
+\end_deeper
 \begin_layout Standard
-For instance, the query 
+Consider these two queries: 
 \begin_inset Quotes eld
 \end_inset
 
@@ -2005,7 +2077,7 @@ size of Zmmg datasets where number of events is more than 1000
 \begin_inset Quotes erd
 \end_inset
 
- and the keyword query 
+ and 
 \begin_inset Quotes eld
 \end_inset
 
@@ -2017,7 +2089,8 @@ avg dataset size Zmmg number of events>1000
 \begin_inset Quotes erd
 \end_inset
 
- shall be converted into this structured query (in YQL
+.
+ For both, the expected structured query is: (in YQL
 \begin_inset Foot
 status collapsed
 
@@ -2148,150 +2221,20 @@ DASQL -its semantics actually represent the physical operations with services
 \end_layout
 
 \begin_layout Standard
-We are given the 
-\color magenta
-metadata
-\emph on
- 
-\emph default
-(
-\emph on
-virtual integration schema
-\emph default
-)
-\emph on
- 
-\emph default
-\color inherit
-that consists of: 
-\end_layout
-
-\begin_layout Itemize
-schema
-\begin_inset CommandInset nomenclature
-LatexCommand nomenclature
-symbol "schema"
-description "by schema we refer to the integration schema (virtual schema based of entities exposed by the services)"
-
-\end_inset
-
- terms
-\begin_inset CommandInset nomenclature
-LatexCommand nomenclature
-symbol "schema terms"
-description "names of entities in integration schema and their attributes (names of either inputs to the services or their output fields)"
-
-\end_inset
-
-: names of entities in 
-\emph on
-integration schema
-\emph default
- and their attributes (names of either 
-\emph on
-inputs
-\emph default
- to the services or their 
-\emph on
-output
-\emph default
- fields)
-\end_layout
-
-\begin_layout Itemize
-value terms
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-(domain vocabulary)
-\end_layout
-
-\end_inset
-
-
-\begin_inset CommandInset nomenclature
-LatexCommand nomenclature
-symbol "value terms"
-description "values of entity attributes (that could be input parameters of data services, or be contained in their results)"
-
-\end_inset
-
-: values of entity attributes (that could be 
-\emph on
-input
-\emph default
- parameters of data services, or be contained in their results)
-\end_layout
-
-\begin_layout Itemize
-mappings between the service inputs (and some outputs) and the schema terms
-\end_layout
-
-\begin_layout Itemize
-constraints on data-service inputs (required fields, regular expressions
- defining the types of values accepted)
-\end_layout
-
-\begin_layout Itemize
-for some fields, a list of possible values 
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-The integration schema is referring to data service interfaces (accepted
- inputs and outputs provided)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-A keyword query, KWQ
-\begin_inset CommandInset nomenclature
-LatexCommand nomenclature
-symbol "KWQ"
-description "keyword query\\\\"
-
-\end_inset
-
- is an ordered tuple of 
-\begin_inset Formula $n$
-\end_inset
-
- keywords 
-\begin_inset Formula $\left(kw_{1},kw_{2},..,kw_{n}\right)$
-\end_inset
-
-.
- Answering a keyword query is 
-\emph on
-interpreting
-\emph default
- the keyword query in terms of its semantics over the 
-\emph on
-\color magenta
-integration schema.
- 
-\end_layout
-
-\begin_layout Standard
 In this work, we consider only 
 \emph on
 conjunctive queries
 \emph default
  
-\color red
+\color blue
 augmented with simple aggregation functions without grouping
 \begin_inset Marginal
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
-\color red
-aggregations not so important (find better examples above?)
+\color blue
+aggregations not so important; not yet fully implemented
 \end_layout
 
 \end_inset
@@ -2302,13 +2245,17 @@ aggregations not so important (find better examples above?)
 \color magenta
 -join
 \color inherit
- in SQL, where selections can be composed only of conjunctions).
- In particular case of DASQL (our current implementation), we want to map
- a keyword query into:
+ in SQL, where selections can be composed only of conjunctions) as potential
+ results.
+ In the particular case of DASQL used at the 
+\emph on
+CMS Experiment
+\emph default
+, we want to map a keyword query into:
 \end_layout
 
 \begin_layout Itemize
-result entity type (e.g.
+type of result entity (e.g.
  datasets) and projections of fields in the service outputs
 \end_layout
 
@@ -2323,9 +2270,9 @@ post-filters on service outputs: e.g.
 \end_layout
 
 \begin_layout Itemize
-
-\color magenta
 basic aggregation functions: e.g.
+
+\color blue
  
 \color inherit
 avg(out_size)
@@ -2337,7 +2284,23 @@ Available solutions
 
 \begin_layout Standard
 In the following section, we present a fairly simple heuristics-based implementa
-tion, which 
+tion, where we focused on the quality of results and on not enforcing any
+ assumptions on the input queries (it could be full-sentence or keyword
+ queries; still if some patterns hold, we are able improve the results
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color cyan
+?? unlike Keymantic which had assumptions!?
+\end_layout
+
+\end_inset
+
+).
+ The heuristics-based approach 
 \series bold
 \color red
 is designed
@@ -2345,32 +2308,74 @@ is designed
 \color inherit
  with the goal to be replaced by user feedback-lead machine learning approach
  once sufficient amount of historical query data and user's feedback is
- available for the training
-\lang english
+ available for the training.
+\end_layout
 
+\begin_layout Standard
+
+\color blue
+Knowing the constraints on the project duration, we did excluded this from
+ implementation: Question Answering approaches with deep language processing;
+ complex service orchestration (feeding of outputs into inputs of other
+ services), which is not directly supported by the EII system and the service
+ performance is not adequate for this 
 \begin_inset Foot
 status collapsed
 
 \begin_layout Plain Layout
 
-\lang english
-The full sentence Question Answering (QA) approach is also possible, however
- the keyword-based methods (possibly with ideas from QA) shall work better
- knowing the constraints on the short project duration, and the fact that
- we do not take any assumptions about the keyword queries (i.e.
- they are allowed not to follow the syntactic rules).
+\color blue
+this due to issues with data service performance and unavailability of basic
+ capabilities such as pagination or sorting of their results; we do not
+ control the data services, so a number of suggestions for the providers
+ have been proposed (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:cms-Performance-Issues"
+
+\end_inset
+
+); second, these improvements would take a considerable effort to be implemented
+, pushing this far beyond the scope of this project
 \end_layout
 
 \end_inset
 
-
-\lang british
+; also we did not focus on the performance (which is OK without optimizations,
+ and was already covered by the earlier works)
+\color inherit
 .
 \end_layout
 
 \begin_layout Standard
 
+\color magenta
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\color magenta
+The approaches below are useful then there is no possibility to index the
+ data terms, e.g.
+ then a DB is behind a wrapper (e.g.
+ accessible only through a 
+\emph on
+Web form
+\emph default
+ in “Hidden Web” or a 
+\emph on
+web-service
+\emph default
+) then crawling is generally not possible.
+\end_layout
+
+\end_inset
+
+
+\color inherit
 \lang english
+
 \begin_inset Note Note
 status collapsed
 
@@ -2396,15 +2401,18 @@ exhaustively evaluating the possible alternatives
 \end_inset
 
 
-\end_layout
+\begin_inset Newpage clearpage
+\end_inset
 
-\begin_layout Standard
+
+\lang british
+
 \begin_inset Wrap figure
 lines 0
 placement r
 overhang 1cm
 width "40col%"
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset ERT
@@ -2484,34 +2492,6 @@ name "fig:Keymantic-query-translation"
 
 \end_layout
 
-\begin_layout Standard
-
-\color magenta
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-
-\color magenta
-The approaches below are useful then there is no possibility to index the
- data terms, e.g.
- then a DB is behind a wrapper (e.g.
- accessible only through a 
-\emph on
-Web form
-\emph default
- in “Hidden Web” or a 
-\emph on
-web-service
-\emph default
-) then crawling is generally not possible.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
 Heuristics-based approach
 \end_layout
@@ -2554,8 +2534,8 @@ reference "sub:Tokenizer"
 
 \begin_layout Standard
 Secondly, employing a number of string matching techniques based on metadata
-\begin_inset Foot
-status collapsed
+\begin_inset Note Note
+status open
 
 \begin_layout Plain Layout
 including: a custom string similarity function, regular expressions constraining
@@ -2582,8 +2562,6 @@ entry points
 status collapsed
 
 \begin_layout Plain Layout
-
-\series bold
 schema term is the name of an entity or it's attribute in the integration
  schema (e.g.
  the 
@@ -2761,10 +2739,15 @@ reference "sub:cms-Performance-Issues"
 \begin_layout Standard
 
 \series bold
-\color red
-For example, consider this input query: 
-\family typewriter
+\color blue
+Example.
+
 \series default
+ Consider this query:
+\color red
+ 
+\family typewriter
+\size footnotesize
 \color inherit
 avg dataset sizes Zmmg 
 \begin_inset Quotes eld
@@ -2902,6 +2885,10 @@ key "ethz2012"
 TODO: finish the example; mention it actually requires combining two services
 \end_layout
 
+\begin_layout Standard
+Below each the processing steps is described in more details.
+\end_layout
+
 \begin_layout Subsection
 Tokenizer
 \begin_inset CommandInset label
@@ -2924,9 +2911,9 @@ With the goal to simplify subsequent processing, first the keyword query
  removing extra spaces, normalizing date formats from YYYY-MM-DD into YYYYMMDD
  accepted by EII system, 
 \color red
-also recognizing some expressions in NL
+also recognizing some expressions in 
 \color inherit
-, such as simple operators [X equals Y, X more than Y, etc]).
+natural language, such as simple operators [X equals Y, X more than Y, etc]).
  This is accomplished using a number of regular expression replacement patterns.
  
 \end_layout
@@ -2993,6 +2980,8 @@ name "sub:Matching-keywords"
 \begin_layout Standard
 The second step of query processing is identifying the starting points through
  applying the techniques below.
+ To lower false positives, only the matches that score above some predefined
+ cut-off threshold are included.
 \end_layout
 
 \begin_layout Paragraph*
@@ -3184,11 +3173,11 @@ Regular expressions
 \end_layout
 
 \begin_layout Standard
-A regular expression match do not guarantee a correct keyword interpretation,
- these as scored lower than other matching methods.
- Still, some regular expressions are more restrictive and informative (e.g.
- email) than others, we take that into account by scoring the more restrictive
- matches higher.
+As a regular expression (regexp) match do not guarantee a correct keyword
+ interpretation (a regular expression could be too loose), so in general
+ case, regexp matches are scored lower than in other matching methods.
+ Still, some regular expressions are sufficiently restrictive (e.g.
+ email), which we score higher.
 \end_layout
 
 \begin_layout Subparagraph*
@@ -3204,17 +3193,11 @@ status open
 \begin_layout Plain Layout
 
 \color red
-no fuzzy matching except stemming is currently used for matching fields
- in results
+no fuzzy matching except stemming is currently used
 \end_layout
 
 \end_inset
 
-
-\color inherit
- 
-\color blue
-(these are currently only in service outputs).
 
 \color inherit
  For simplicity, this is currently implemented using an IR library
@@ -3237,23 +3220,30 @@ whoosh,
 
 \end_inset
 
-, where a 
+, where we store 
 \begin_inset Quotes eld
 \end_inset
 
-document
+documents
 \begin_inset Quotes erd
 \end_inset
 
- consists of (physical field name, field title if any, and stemmed and tokenized
- versions of these, with different importance weights).
- Then we query the IR library, both for phrase and partial matches of the
- k-nearby keywords (we use maximum of 4), and filter out the worst results
- (phrase matches are assigned larger weight).
- These will be the entry points for mapping keywords into the fields of
- data service outputs, currently we use the score returned by IR engine
+ consists of multiple fields [physical term name, term title if any, and
+ stemmed and tokenized versions of these] with different importance weights.
+ 
+\end_layout
+
+\begin_layout Standard
+To find the matches, we query the IR library, for both 
+\series bold
+phrase and single term matches of up to the k-nearby keywords
+\series default
+ (we use maximum of 4), where phrase matches are assigned larger weight.
+ After filtering out the worst results these will become the entry points
+ for mapping keywords into the fields of data service outputs, currently
+ we directly use the score returned by IR engine
 \begin_inset Foot
-status open
+status collapsed
 
 \begin_layout Plain Layout
 
@@ -3281,16 +3271,17 @@ machine readable
 
 \end_inset
 
-, just normalized between [0..1].
- The scoring could be improved, but in the case of CMS it works already
- good.
+ manually normalized between [0..1].
+ 
+\color blue
+The scoring could be improved, but in our case it works already good.
 \end_layout
 
 \begin_layout Standard
-The same could be also achieved by retrieving a list of matching fields
+The same could be also achieved through retrieving a list of matching fields
  for each keyword separately and then combining them through the scoring
- function, however the first approach allows pruning out the worst scoring
- token pairs and supporting the phrase search very easily.
+ function, however the earlier approach allows pruning out the worst scoring
+ token pairs and supporting the phrase search more easily.
 \begin_inset Note Note
 status collapsed
 
@@ -3311,19 +3302,6 @@ Known values
 \end_layout
 
 \begin_layout Standard
-For some input parameters we have a list of possible values accepted by
- the services, that we obtained bootstrapping them through respective data
- service interfaces (these values could also be tracked live as the queries
- comes, but that do not provide full coverage).
- For matching we have a number of cases, with decreasing score: full match,
- partial match, and matches with wildcards.
- If keyword's value matches a regular expression, but is not contained on
- the know values list for the same field, if we consider the known values
- to be static (not changing often), we exclude this possibly false match\SpecialChar \@.
-
-\end_layout
-
-\begin_layout Standard
 
 \series bold
 \color red
@@ -3340,6 +3318,20 @@ there are some specific cases with wildcard matches
 \end_inset
 
 
+\series default
+\color inherit
+ For some schema terms, we have a list of possible values, that we obtained
+ bootstrapping them through respective data service interfaces.
+ 
+\color blue
+For matching we have a number of cases, with decreasing score
+\color inherit
+: full match, partial match, and matches of keywords with wildcards.
+ If keyword's value matches a regular expression, but is not contained in
+ the know values list and the accepted values of the given field are considered
+ to be static (not changing often), we exclude this possibly false match
+ allowing to reduce the false positives\SpecialChar \@.
+
 \end_layout
 
 \begin_layout Subparagraph*
@@ -3347,43 +3339,23 @@ Semantic similarity (not used)
 \end_layout
 
 \begin_layout Standard
-A semantic matching based on freely available general domain ontology such
+A semantic matching based on freely available open-domain ontology such
  as the 
 \emph on
 WordNet
 \emph default
-, cannot work well for a closed-domain vocabulary out-of-the box.
+, cannot work well in a very specific domain, out-of-the box.
  As the EII system at CMS currently has no linguistic ontology, we do not
- include semantic similarity, as it just seem to worsen the results.
+ use the semantic similarity - if enabled, it just worsens the results by
+ introducing false positives.
  
 \color red
-For open-domain querying large semantic knowledge bases such as 
+While for open-domain, large semantic knowledge bases such as 
 \emph on
 YAGO2
 \emph default
- are better choices.
+ are quite good choices.
  
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-
-\color red
-Latent semantic index do not fit: a) IR engine do not support this b) our
- 
-\begin_inset Quotes eld
-\end_inset
-
-documents
-\begin_inset Quotes erd
-\end_inset
-
- contain single concept -- useless
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsection
@@ -3400,7 +3372,7 @@ name "sub:Ranking-function"
 \begin_layout Standard
 
 \lang english
-In addition to combining 
+In addition to combining the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -3450,9 +3422,8 @@ promoting such combinations where nearby keywords refer to related schema
 \end_layout
 
 \begin_layout Itemize
-promoting such combinations that match most of the keywords (we have to
- balance between taking a keyword and leaving out the ones that we are unsure
- about) ; 
+we have to balance between taking most of the keyword and leaving out the
+ ones that we are unsure about 
 \begin_inset Marginal
 status open
 
@@ -3460,7 +3431,7 @@ status open
 
 \series bold
 \color magenta
-what?
+not in set H; Keymantic didn't do this?
 \end_layout
 
 \end_inset
@@ -3470,11 +3441,10 @@ what?
 
 \begin_layout Itemize
 
-\series bold
 \color blue
 boost important keywords (different parts of speech are of different importance,
  e.g.
- stopwords are less useful than nouns, see Keyword Extraction, in Sec.
+ stop-words are less useful than nouns, see Keyword Extraction, in Sec.
  
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -3483,6 +3453,19 @@ reference "sub:Keyword-extraction"
 \end_inset
 
 )!
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\color blue
+only stop-words are distinguished now; '(tell|show|display|find) me?' filtered
+ out by tokenizer
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_deeper
@@ -3512,19 +3495,22 @@ primary key
 \end_layout
 
 \begin_layout Itemize
+for being able to execute the query, the service constraints must be satisfied;
+ still it could useful to the interpretations that achieve high rank, even
+ if they do not satisfy some constraint (e.g.
+ a mandatory filter is missing) informing the user
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
 
 \color blue
-data service constraints must be satisfied
-\color inherit
-: we could also include identifying interpretations that achieve high rank
- even if they do not satisfy some constraint (e.g.
- a mandatory filter is missing), and informing the user; 
-\series bold
-\color magenta
-\lang english
-alternative: identifying interpretations of high rank, that do not satisfy
- some constraint (a mandatory filter condition is missing), and informing
- user
+not yet implemented
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_deeper
@@ -3533,7 +3519,7 @@ alternative: identifying interpretations of high rank, that do not satisfy
 \color blue
 \lang english
 \begin_inset Note Note
-status open
+status collapsed
 
 \begin_layout Plain Layout
 
@@ -3591,7 +3577,7 @@ Averaging:
 \lang english
 \begin_inset Formula 
 \begin{equation}
-score\_avg(tags|KWQ)=\frac{{\displaystyle \sum_{i=0}^{|KWQ|}{\displaystyle \left(score(tag_{i}|kw_{i})+{\displaystyle \sum_{h_{j}\in H}h_{j}(tag_{i,i-1,..,0}|kw_{i})}\right)}}}{N\_non\_stopword}
+score\_avg(tags|KWQ)=\frac{{\displaystyle \sum_{i=1}^{|KWQ|}{\displaystyle \left(score(tag_{i}|kw_{i})+{\displaystyle \sum_{h_{j}\in H}h_{j}(tag_{i}|kw_{i};tag_{i-1,..,1})}\right)}}}{N\_non\_stopword}
 \end{equation}
 
 \end_inset
@@ -3633,7 +3619,7 @@ Probabilistic:
 \lang english
 \begin_inset Formula 
 \begin{equation}
-score\_prob(tags|KWQ)=\sum_{i=0}^{|KWQ|}\left({\displaystyle {\displaystyle \ln}\left(score(tag_{i}|kw_{i})\right)}+\sum_{h_{j}\in H}h_{j}(tag_{i,i-1,..,0}|kw_{i})\right)
+score\_prob(tags|KWQ)=\sum_{i=1}^{|KWQ|}\left({\displaystyle {\displaystyle \ln}\left(score(tag_{i}|kw_{i})\right)}+\sum_{h_{j}\in H}h_{j}(tag_{i}|kw_{i};tag_{i-1,..,1})\right)
 \end{equation}
 
 \end_inset
@@ -3664,12 +3650,12 @@ do we need better test data?
 
 \series default
 \color inherit
-, with the probabilistic approach to be more vulnerable to variations in
- scoring of the entry points (the scores are just estimates of our confidence,
- not real probabilities; the results improved with improvements to accuracy
- of string matching functions, see the following section), however it seems
- the second approach is more exact in ranking the results when the entry
- point scores are quite exact.
+, with the probabilistic approach to be more sensitive to variations in
+ scoring quality of the entry points (the scores are just estimates of our
+ confidence, not real probabilities; the results improved with improvements
+ to accuracy of string matching functions), however it seems the second
+ approach is more exact in ranking the results when the entry point scores
+ are quite exact.
  The final scores of the probabilistic approach are also more complex to
  interpret the result (if we have low score for an interpretation of a keyword
  it doesn't necessarily mean it is not a good match).
@@ -3686,105 +3672,6 @@ Tuning the scoring parameters
 TODO
 \end_layout
 
-\begin_layout Subsection
-User interface: advanced auto-completion (prototype)
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-here or separate chapter?
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-While structured queries are hard to compose, keyword and natural language
- queries are complex for a machine to interpret because of their ambiguity
- or inherent complexity.
- Form-based interfaces has been around since many years, however with many
- structural items being candidates for the input, they are not very practical,
- while static predefined forms are limiting the user's expressiveness even
- more.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-For instance, at CERN, the DAS system has seen many different interfaces
- to date, but none of them git well established/naturalized.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-We are interested if a simple user-interface
-\color red
- 
-\color inherit
-could combine the advantages of both: properly-implemented variation of
- forms 
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-which for example could be implemented as a one input-field widget accepting
- multiple tokens and providing suggestions and disambiguations in real time
- while the user is typing a query
-\end_layout
-
-\end_inset
-
-, being a structured input, could reduce the ambiguity of the queries to
- a minimum extent; this, combined with keyword queries would leave freedom
- for expressiveness.
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-\color red
-The keyword search [is augmented] with an interactive user interface that
- allows getting a) immediate user's feedback resulting in better defined
- input to the system, that in turn results in more exact query suggestions.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-
-\series bold
-We believe that in many cases supporting a combination of these approaches
- is a good compromise: 
-\series default
-the input (or subset of it) that is not conforming to the rules of given
- structured language, could be processed as natural language if it conforms
- to its grammar or as a keyword query otherwise.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-
-\color magenta
-Technical details
-\end_layout
-
 \begin_layout Standard
 \begin_inset Note Note
 status open
@@ -3796,113 +3683,6 @@ packages, tool-kits: uncertainties, nltk, wordnet,mongodb
 \end_inset
 
 
-\end_layout
-
-\begin_layout Paragraph*
-Implementation focus
-\end_layout
-
-\begin_layout Standard
-At the CMS Experiment, we did not consider implementing more complex service
- orchestration, which is not directly supported by EII system and its query
- language, mainly  because of performance considerations
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-this due to issues with data service performance and unavailability of basic
- capabilities such as pagination or sorting of their results; we do not
- control the data services, so a number of suggestions for the providers
- have been proposed (see section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sub:cms-Performance-Issues"
-
-\end_inset
-
-); second, these improvements would take a considerable effort to be implemented
-, pushing this far beyond the scope of this project
-\end_layout
-
-\end_inset
-
-.
- 
-\color cyan
-Still, to make the life easier for the users of the system we have slightly
- extended the query language (so that it would be possible to access attributes
- of a certain entity even if it's not returned by the services; this sometimes
- requires feeding results of one service into the other).
- 
-\end_layout
-
-\begin_layout Standard
-We focused on the other hand more practical issues (e.g.
- selection of good similarity metrics), and less researched topics (e.g.
- user feedback and machine learning).
-\end_layout
-
-\begin_layout Paragraph
-Performance
-\end_layout
-
-\begin_layout Standard
-Performance could be optimized through a number of methods presented in
- the literature (e.g.
- Munkres bipartite matching algorithm, or dynamic programming with assumption
- of maximum length of dependences) 
-\color red
-[most probably]
-\color inherit
- in exchange to the quality of the results.
- however, at the CMS collaboration, this is not even needed: queries with
- the length of up to 
-\series bold
-n=8
-\series default
- keywords runs faster than in a second, while EII system requires tens of
- seconds or even minutes for retrieving the actual query results from the
- data services 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-(This could be further optimized if part of the input is structured)
-\end_layout
-
-\end_inset
-
-.
- Importantly, compared to other better performing alternatives, the
-\series bold
- heuristics-based-exhaustive-search
-\series default
- method allows more flexibility in specifying the ranking (cost) function,
- and the quality of results is quite important in the beginning of the project,
- 
-\series bold
-when new users are either tempted to like something from the beginning or
- to dislike it, and not willing to try it again later.
- 
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-Finally, we didn't want to waste to much time on implementing something
- that has been already solved many times and which will probably have to
- be replaced in future anyway, we hope some machine-learning based approach
- could outperform the current ranking if given enough of training data,
- which could be gathered while this implementation is in production.
-\end_layout
-
-\begin_layout Standard
-
-\color red
-also limitations of the services and EII system allows pruning-out lots
- of meaningless 
-\size footnotesize
-querie
 \end_layout
 
 \begin_layout Standard
@@ -3966,51 +3746,1014 @@ Head-driven phrase structure grammar
  without any additional training, giving much better results than the standard
  packages available in 
 \color red
-nltk
+NLTK.
+ As the 
 \color inherit
- (which seemed useful only for very generic domains)
-\color red
-.
- Still the problem is two-fold: dependence on additional third-party code,
- and complex integration
+project scope was
+\color cyan
+ limited, we didn't want additional dependences on third-party code, and
+ natural language is still complex to interpret well
 \color inherit
-, and limit of time, and 
-\series bold
-natural language is anyway complex to parse well
-\series default
-).
-\end_layout
+, this was excluded.
 
-\begin_layout Standard
+\color red
+ 
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
 
 \color red
 Word-Sense-Disambiguation could be still potentially useful, however as
  it we focused on closed domain, and do not directly interpret full-sentence
- queries, it was left out for future.
+ queries, this is secondary importance.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
-
-\color red
-Future work
+Performance
 \end_layout
 
 \begin_layout Standard
-Client-side implementation of keyword search - large parts of keyword search
- could be moved to client-side, saving the server resources.
+A number of methods are available for improving the performance (e.g.
+ Munkres/Hungarian bipartite matching algorithm, or dynamic programming
+ with assumption of maximum length of dependences) 
+\color red
+[most probably]
+\color inherit
+ in exchange for additional assumptions.
+ 
+\end_layout
+
+\begin_layout Standard
+Actually, at the CMS collaboration, implementing additional optimizations
+ is not of highest priority: queries with the length of up to 
+\series bold
+n=8
+\series default
+ keywords runs faster than in a second, while for most of the queries the
+ EII system requires tens of seconds to minutes to retrieve the actual query
+ results from the data services 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+(This could be further optimized if part of the input is structured)
+\end_layout
+
+\end_inset
+
+.
+ 
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+, and the quality of results is important in the beginning of the project
+ (the new users are tempted to like or to dislike something from the beginning
+ it, without willing to try it again later).
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage clearpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+User interface
+\end_layout
+
+\begin_layout Subsection
+Presenting the results
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+[PUT IMAGE]
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+keyword search results
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Advanced auto-completion (prototype)
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color red
+here or separate chapter?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+While structured queries are hard to compose, keyword and natural language
+ queries are complex for a machine to interpret because of their ambiguity
+ or inherent complexity.
+ Form-based interfaces has been around since many years, however with many
+ structural items being candidates for the input, they are not very practical,
+ while static predefined forms are limiting the user's expressiveness even
+ more.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+For instance, at CERN, the DAS system has seen many different interfaces
+ to date, but none of them git well established/naturalized.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+We are argue that a simple user-interface
+\series default
+\color red
+ 
+\color inherit
+could combine the advantages of both: properly-implemented variation of
+ forms (which for instance could be implemented as an input widget accepting
+ multiple tokens and providing suggestions and disambiguations in real time,
+ see fig.
  
 \series bold
-A couple of issues exist: making sure that the load is not to high and synchroni
-zing the logs.
+XYZ
+\series default
+), being a structured input, could reduce the ambiguity of the queries to
+ a minimum extent; while the availability of keyword search leaves freedom
+ for expressiveness.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/ui.png
+	width 60text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+prototype of auto-completion based interface
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\color red
+Further, such user interface would allow getting immediate user's feedback
+ resulting in: a) well-defined input to the system, that in turn results
+ in more exact query suggestions, b) could potentially used for evaluating
+ and improving the quality of entity matching and keyword search.
+ We will elaborate on this is the chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Incorporating-User-Feedback"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\series bold
+We believe that in many cases supporting a combination of these approaches
+ is a good compromise: 
+\series default
+the input (or subset of it) that is not conforming to the rules of given
+ structured language, could be processed as natural language if it conforms
+ to its grammar or as a keyword query otherwise.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Chapter
+
+\color red
+Incorporating User Feedback
+\color inherit
+: Sketch
+\begin_inset CommandInset label
+LatexCommand label
+name "chap:Incorporating-User-Feedback"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+influence keyword to schema term matching
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+similarity metrics and their weights
+\end_layout
+
+\begin_layout Itemize
+allow users to add new: [this is the explicit feedback, that is more valuable
+ than implicit]
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+values for schema entities
+\end_layout
+
+\begin_layout Itemize
+synonyms for schema terms
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+weights on particular entities or notes in schema graph: SODA 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "soda_feedback"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+promote/demote query suggestions - machine learning
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Section
+Personalizing the results
+\end_layout
+
+\begin_layout Plain Layout
+First the most common queries may be promoted in the results, maximizing
+ the probability of getting results right.
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+shall we distinguish links generated by DAS, e.g.
+ for dataset: config, files, etc?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+Information need among different user roles (department, function) differs
+ a lot.
+ At least at the CMS Experiment, CERN, users are often interested only in
+ a few types of queries or entities that they are interacting with the most.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+Prioritization may promote queries related to what the user (or his group?)
+ has previously used.
+\end_layout
+
+\begin_layout Section
+Machine Learning approaches
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Wrap figure
+lines 0
+placement r
+overhang 1cm
+width "40col%"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{-60pt}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename 1000px-HMMsequence.svg.png
+	lyxscale 30
+	width 40text%
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{-10pt}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+HMM consituents
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Plain Layout
+Bergamaschi et al.
+ approached the earlier problem through Hidden Markov Model (HMM
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "HMM"
+description "Hidden Markov Model"
+
+\end_inset
+
+) that allow taking into account the query logs.
+ Keywords that are near to each other are expected to represent interrelated
+ concepts, which motivates the application of an HMM as it can efficiently
+ model such kind of interdependences
+\begin_inset CommandInset citation
+LatexCommand citep
+key "semantics_without_access"
+
+\end_inset
+
+.
+ Their approach was initially designed for Relational Databases (then access
+ to the instance is limited), but it could be also adapted for data integration
+ over data services.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Chapter
+Case study: Data Integration at the CMS Experiment, CERN
+\begin_inset CommandInset label
+LatexCommand label
+name "chap:Case-study:CMS"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+to put this before or after KWS in detais? a problem description in details
+ could be good
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "sub_chapters/cms_case.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Data-Source qualities, Infrastructure
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+\color red
+amount of data; description of services; constraints;
+\end_layout
+
+\begin_layout Subsubsection*
+Issues
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+\color red
+consider relationships between services explicit (PK dataset.name); implicit
+ - even more ambiguity and complexity
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Subsection
+Alternative architectures
+\end_layout
+
+\begin_layout Plain Layout
+Publish/subscribe
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Discussion of Performance Issues
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:cms-Performance-Issues"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+After analysis of query logs and benchmarking the most popular queries,
+ it was found out that most performance issues were due to large data amounts
+ the data providers are processing, and some of the unnecessarily work being
+ repeated or requested without need.
+\end_layout
+
+\begin_layout Standard
+The most of data-sources at CMS were initially created focusing on data
+ taking (for recording the measurements from the CMS particle detector),
+ without thinking much about information retrieval.
+ As a result, the services are not optimized for querying the fairly large
+ data volumes stored: data is stored in fully-relational fashion where querying
+ requires complex joins; the APIs of most services do not allow limiting
+ the number of results to be returned, nor sorting.
+ 
+\end_layout
+
+\begin_layout Subsection*
+Incremental view maintenance
+\end_layout
+
+\begin_layout Standard
+In the cases when new records are coming but the existing ones are not changing
+ much
+\series bold
+, 
+\series default
+the incremental view maintenance that computes only differences from earlier
+ results could be a fairly easy solution for improving the performance of
+ (popular) queries containing heavy joins and/or aggregations.
+ 
+\end_layout
+
+\begin_layout Standard
+This is exactly the case for the most popular expensive query
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+see query #7 in DAS Query log analysis
+\series bold
+
+\begin_inset CommandInset ref
+LatexCommand vpageref
+reference "appendix_das_cli_logs"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\end_inset
+
+ over the DBS system (80GB of data + 280GB of indexes): 
+\emph on
+’find files where run in [r1, r2, r3] and dataset=X’
+\emph default
+ that requires joining all the biggest tables in that database.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+small
+\backslash
+verb|Dataset (164K rows) -> Block (2M) -> Files (31M) -> FileRunLumi (902M)
+ <- Runs (65K)|}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\color red
+diagram instead?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Having a materialized view with all these tables joined together would allow
+ answering such queries much quicker.
+ Given low change rates (in comparison to data already present), maintaining
+ the view should be also comparatively cheap with the only expense of just
+ couple of times of storage space (storage is bound by the size of the largest
+ table anyway).
+ 
+\end_layout
+
+\begin_layout Standard
+In Oracle, the 
+\emph on
+materialized refresh fast views with query rewriting
+\emph default
+ would be completely transparent and would not need any changes to proprietary
+ systems, but it has a couple of limitations on the queries
+\begin_inset CommandInset citation
+LatexCommand citep
+key "Oracle11"
+
+\end_inset
+
+.
+ Alternatively, some other continuous view maintenance tool (e.g.
+ DBToaster
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+http://www.dbtoaster.org that is being developed at EPFL 
+\end_layout
+
+\end_inset
+
+) could be used, however this would not be as transparent as the earlier
+ solution.
+ 
+\end_layout
+
+\begin_layout Subsection*
+Pagination and Sorting of results
+\end_layout
+
+\begin_layout Standard
+As many of the queries on the web interface are exploratory and request
+ only the first page of results, supporting pagination is one of the major
+ factors towards performance improvements (and perception of performance
+ by the users).
+ As the DAS system is combining records from multiple systems, pagination
+ also requires some ordering that is common among the services (in most
+ cases that could be the 
+\begin_inset Quotes eld
+\end_inset
+
+Primary key
+\begin_inset Quotes erd
+\end_inset
+
+ of the entity that is being queried).
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\series bold
+Integrating distributed information efficiently
+\end_layout
+
+\begin_layout Plain Layout
+Bloom-join (which could be quite transparent and implemented even on DB
+ side (efficient pure SQL is doable for MySQL, and probably for Oracle too)
+ quite transparently (a helper function could take the initial query and
+ bloom-filter’s bit-vector as parameters).
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+Estimating query running time
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Estimating-query-running"
+
+\end_inset
+
+
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+not yet implemented
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Tracking of the execution time of each data-service, 
+\color red
+have been implemented
+\color inherit
+, that allows a) informing user of long lasting queries, and running them
+ only with his confirmation b) pre-running the speedy queries even before
+ user has explicitly selected them (e.g.
+ the top few queries proposed).
+\end_layout
+
+\begin_layout Standard
+It has been chosen to track the mean of execution time, and its standard
+ deviation.
+ Knuth has shown that the standard deviation can be efficiently computed
+ in an online fashion without need to store each individual value, nor recomputi
+ng everything from scratch 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "p. 232"
+key "knuth1998stdev"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Because input parameters passed to the service may heavily impact the service
+ performance, we differentiate between these parameter types: 1) some specific
+ value, 2) a value with wild-card (presumably returning more results than
+ specific value as it may match multiple values), 3) not provided (matches
+ all values).
+ So we store only four values per data-service input parameter's combination.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\color magenta
+Prioritizing the queries
+\end_layout
+
+\begin_layout Subsection
+Improving the Search Interface and Relaxation of the Query Language
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+shall we put the solutions here or somewhere lower in the paper after describing
+ Keyword Search?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\color red
+implementation of simple compound queries so that an entity could always
+ return same list of fields, easy to implement and very useful for users
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+makes the system much more clear
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+that even makes keyword searching easier to implement, as we could assume
+ that all the fields are almost 
+\begin_inset Quotes eld
+\end_inset
+
+stable
+\begin_inset Quotes erd
+\end_inset
+
+ for each entity being returned (except a couple of exceptional cases, which
+ could be check afterwards)
+\end_layout
+
+\begin_layout Chapter
+Evaluation
+\begin_inset CommandInset label
+LatexCommand label
+name "chap:Evaluation"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Accuracy (and types of queries supported)
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+success @ K-th result
+\end_layout
+
+\begin_layout Standard
+1
+\end_layout
+
+\begin_layout Standard
+3
+\end_layout
+
+\begin_layout Standard
+5
+\end_layout
+
+\begin_layout Standard
+10
+\end_layout
+
+\begin_layout Standard
+20
+\end_layout
+
+\begin_layout Standard
+-
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+query types:
+\end_layout
+
+\begin_layout Standard
+value: known, regexp
+\end_layout
+
+\begin_layout Standard
+entity + known val
+\end_layout
+
+\begin_layout Standard
+entity + unknown value
+\end_layout
+
+\begin_layout Standard
+multiple entities values
+\end_layout
+
+\begin_layout Standard
+result attribute filter
+\end_layout
+
+\begin_layout Standard
+(meaningless -- false match)
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\color red
+aggregator / sorting??
+\end_layout
+
+\begin_layout Subsection
+String matching
+\end_layout
+
+\begin_layout Section
+Users feedback
+\end_layout
+
+\begin_layout Subsection
+Usability
+\end_layout
+
+\begin_layout Subsection
+Usefulness of KWS / NL / DAS QL
+\end_layout
+
+\begin_layout Chapter
+Conclusions and Future work
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Section
+Other applications?
+\end_layout
+
+\begin_layout Section
+Conclusion
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\color magenta
+Keyword search over data services is still lacking attention from research
+ community.
+\end_layout
+
+\begin_layout Standard
+
+\color magenta
+In addition to structured query languages, this could help in learning and
+ getting results more quickly.
+\end_layout
+
+\begin_layout Standard
+We presented ...
+\end_layout
+
+\begin_layout Standard
+Future work...
+\end_layout
+
+\begin_layout Standard
+
+\color cyan
+----
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\color cyan
+Future work (technical notes):
+\end_layout
+
+\begin_layout Itemize
+
+\color cyan
+Client-side implementation of keyword search - large parts of keyword search
+ could be moved to client-side, saving the server resources.
+ A couple of issues exist: making sure that the load is not to high and
+ synchronizing the logs.
  The first one could be solved by using so called worker threads.
- http://www.w3.org/TR/workers/
+ http://www.w3.org/TR/workers/ http://www.sitepoint.com/javascript-execution-browser
+-limits/
 \end_layout
 
 \begin_layout Standard
-http://www.sitepoint.com/javascript-execution-browser-limits/
-\end_layout
 
-\begin_layout Standard
+\color cyan
 \begin_inset Note Note
 status collapsed
 
@@ -4243,725 +4986,19 @@ Predicate Argument Structure + Relation Extraction Rules(proLog) -- however
 
 \end_layout
 
-\begin_layout Chapter
+\begin_layout Itemize
+
+\color cyan
+web sockets for auto-completion
+\end_layout
+
+\begin_layout Standard
 
 \color red
-Incorporating User Feedback
-\color inherit
-: Sketch
-\begin_inset CommandInset label
-LatexCommand label
-name "chap:Incorporating-User-Feedback"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Incorporating User Feedback
-\end_layout
-
-\begin_layout Itemize
-influence keyword to schema term matching
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-similarity metrics and their weights
-\end_layout
-
-\begin_layout Itemize
-allow users to add new: [this is the explicit feedback, that is more valuable
- than implicit]
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-values for schema entities
-\end_layout
-
-\begin_layout Itemize
-synonyms for schema terms
-\end_layout
-
-\end_deeper
-\end_deeper
-\begin_layout Itemize
-SODA 
-\begin_inset CommandInset citation
-LatexCommand citep
-key "soda_feedback"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-promote/demote query suggestions
-\end_layout
-
-\begin_layout Section
-Personalizing to Users' Needs
-\end_layout
-
-\begin_layout Standard
-First the most common queries may be promoted in the results, maximizing
- the probability of getting results right.
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\color red
-shall we distinguish links generated by DAS, e.g.
- for dataset: config, files, etc?
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Information need among different user roles (department, function) differs
- a lot.
- At least at the CMS Experiment, CERN, users are often interested only in
- a few types of queries or entities that they are interacting with the most.
- 
-\end_layout
-
-\begin_layout Standard
-Prioritization may promote queries related to what the user (or his group?)
- has previously used.
-\end_layout
-
-\begin_layout Section
-Machine Learning approaches
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement r
-overhang 1cm
-width "40col%"
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-vspace{-60pt}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename 1000px-HMMsequence.svg.png
-	lyxscale 30
-	width 40text%
-
-\end_inset
-
-
-\begin_inset ERT
-status collapsed
-
-\begin_layout Plain Layout
-
-
-\backslash
-vspace{-10pt}
-\end_layout
-
-\end_inset
-
-
-\begin_inset Caption
-
-\begin_layout Plain Layout
-HMM consituents
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
-Bergamaschi et al.
- approached the earlier problem through Hidden Markov Model (HMM
-\begin_inset CommandInset nomenclature
-LatexCommand nomenclature
-symbol "HMM"
-description "Hidden Markov Model"
-
-\end_inset
-
-) that allow taking into account the query logs.
- Keywords that are near to each other are expected to represent interrelated
- concepts, which motivates the application of an HMM as it can efficiently
- model such kind of interdependences
-\begin_inset CommandInset citation
-LatexCommand citep
-key "semantics_without_access"
-
-\end_inset
-
-.
- Their approach was initially designed for Relational Databases (then access
- to the instance is limited), but it could be also adapted for data integration
- over data services.
-\end_layout
-
-\begin_layout Chapter
-Case study: Data Integration at the CMS Experiment, CERN
-\begin_inset CommandInset label
-LatexCommand label
-name "chap:Case-study:CMS"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Introduction
-\end_layout
-
-\begin_layout Standard
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\color red
-to put this before or after KWS in detais? a problem description in details
- could be good
-\end_layout
-
-\end_inset
-
-
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "sub_chapters/cms_case.tex"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection*
-Data-Source qualities, Infrastructure
-\end_layout
-
-\begin_layout Itemize
-
-\series bold
-\color red
-amount of data; description of services; contstraints;
-\end_layout
-
-\begin_layout Subsubsection*
-User requirements
-\end_layout
-
-\begin_layout Itemize
-
-\series bold
-\color red
-powerful users vs simple users why IR is not applicable here.
- number and it’s meaning?
-\end_layout
-
-\begin_layout Subsubsection*
-Issues
-\end_layout
-
-\begin_layout Itemize
-
-\series bold
-\color red
-consider relationships between services explicit (PK dataset.name); implicit
- - even more ambiguity and complexity
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Note
 status collapsed
 
-\begin_layout Subsection
-Alternative architectures
-\end_layout
-
 \begin_layout Plain Layout
-Publish/subscribe
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Discussion of Performance Issues
-\begin_inset CommandInset label
-LatexCommand label
-name "sub:cms-Performance-Issues"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-After analysis of query logs and benchmarking the most popular queries,
- it was found out that most performance issues were due to large data amounts
- the data providers are processing, and some of the unnecessarily work being
- repeated or requested without need.
-\end_layout
-
-\begin_layout Standard
-The most of data-sources at CMS were initially created focusing on data
- taking (for recording the measurements from the CMS particle detector),
- without thinking much about information retrieval.
- As a result, the services are not optimized for querying the fairly large
- data volumes stored: data is stored in fully-relational fashion where querying
- requires complex joins; the APIs of most services do not allow limiting
- the number of results to be returned, nor sorting.
- 
-\end_layout
-
-\begin_layout Subsubsection*
-Incremental view maintenance
-\end_layout
-
-\begin_layout Standard
-In the cases when new records are coming but the existing ones are not changing
- much
-\series bold
-, 
-\series default
-the incremental view maintenance that computes only differences from earlier
- results could be a fairly easy solution for improving the performance of
- (popular) queries containing heavy joins and/or aggregations.
- 
-\end_layout
-
-\begin_layout Standard
-This is exactly the case for the most popular expensive query
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-see query #7 in DAS Query log analysis
-\series bold
-
-\begin_inset CommandInset ref
-LatexCommand vpageref
-reference "appendix_das_cli_logs"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
- over the DBS system (80GB of data + 280GB of indexes): 
-\emph on
-’find files where run in [r1, r2, r3] and dataset=X’
-\emph default
- that requires joining all the biggest tables in that database.
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-{
-\backslash
-small
-\backslash
-verb|Dataset (164K rows) -> Block (2M) -> Files (31M) -> FileRunLumi (902M)
- <- Runs (65K)|}
-\end_layout
-
-\end_inset
-
- 
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\color red
-diagram instead?
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Having a materialized view with all these tables joined together would allow
- answering such queries much quicker.
- Given low change rates (in comparison to data already present), maintaining
- the view should be also comparatively cheap with the only expense of just
- couple of times of storage space (storage is bound by the size of the largest
- table anyway).
- 
-\end_layout
-
-\begin_layout Standard
-In Oracle, the 
-\emph on
-materialized refresh fast views with query rewriting
-\emph default
- would be completely transparent and would not need any changes to proprietary
- systems, but it has a couple of limitations on the queries
-\begin_inset CommandInset citation
-LatexCommand citep
-key "Oracle11"
-
-\end_inset
-
-.
- Alternatively, some other continuous view maintenance tool (e.g.
- DBToaster
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-http://www.dbtoaster.org that is being developed at EPFL 
-\end_layout
-
-\end_inset
-
-) could be used, however this would not be as transparent as the earlier
- solution.
- 
-\end_layout
-
-\begin_layout Subsubsection*
-Pagination and Sorting of results
-\end_layout
-
-\begin_layout Standard
-As many of the queries on the web interface are exploratory and request
- only the first page of results, supporting pagination is one of the major
- factors towards performance improvements (and perception of performance
- by the users).
- As the DAS system is combining records from multiple systems, pagination
- also requires some ordering that is common among the services (in most
- cases that could be the 
-\begin_inset Quotes eld
-\end_inset
-
-Primary key
-\begin_inset Quotes erd
-\end_inset
-
- of the entity that is being queried).
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-Integrating distributed information efficiently
-\end_layout
-
-\begin_layout Plain Layout
-Bloom-join (which could be quite transparent and implemented even on DB
- side (efficient pure SQL is doable for MySQL, and probably for Oracle too)
- quite transparently (a helper function could take the initial query and
- bloom-filter’s bit-vector as parameters).
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection*
-Estimating query running time
-\begin_inset CommandInset label
-LatexCommand label
-name "sub:Estimating-query-running"
-
-\end_inset
-
-
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\color red
-not yet implemented
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Tracking of the execution time of each data-service, 
-\color red
-have been implemented
-\color inherit
-, that allows a) informing user of long lasting queries, and running them
- only with his confirmation b) pre-running the speedy queries even before
- user has explicitly selected them (e.g.
- the top few queries proposed).
-\end_layout
-
-\begin_layout Standard
-It has been chosen to track the mean of execution time, and its standard
- deviation.
- Knuth has shown that the standard deviation can be efficiently computed
- in an online fashion without need to store each individual value, nor recomputi
-ng everything from scratch 
-\begin_inset CommandInset citation
-LatexCommand citep
-after "p. 232"
-key "knuth1998stdev"
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-Because input parameters passed to the service may heavily impact the service
- performance, we differentiate between these parameter types: 1) some specific
- value, 2) a value with wild-card (presumably returning more results than
- specific value as it may match multiple values), 3) not provided (matches
- all values).
- So we store only four values per data-service input parameter's combination.
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-\color magenta
-Prioritizing the queries
-\end_layout
-
-\begin_layout Subsection
-Improving the Search Interface
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\color red
-shall we put the solutions here or somewhere lower in the paper after describing
- Keyword Search?
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-....
-\end_layout
-
-\begin_layout Standard
-
-\color red
-support for simple compound queries - easy to implement and very useful
- for users
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-makes the system much more clear
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-that even makes keyword searching easier to implement, as we could assume
- that all the fields are almost 
-\begin_inset Quotes eld
-\end_inset
-
-stable
-\begin_inset Quotes erd
-\end_inset
-
- for each entity being returned (except a couple of exceptional cases, which
- could be check afterwards)
-\end_layout
-
-\begin_layout Standard
-
-\color red
-\lang english
-Another thing which could useful for the users at CMS Experiment, CERN,
- is search system that allows a) combing keyword-based and structured search
- (even in the same query), and that b) do not require the queries to be
- in a format that depends on physical service implementation (inputs vs
- outputs), while the current 
-\emph on
-DAS Query Language
-\emph default
- does.
-\end_layout
-
-\begin_layout Chapter
-Evaluation
-\begin_inset CommandInset label
-LatexCommand label
-name "chap:Evaluation"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The evaluation was performed at the CMS Experiment described earlier.
- 
-\end_layout
-
-\begin_layout Standard
-......
-\end_layout
-
-\begin_layout Section
-Accuracy
-\end_layout
-
-\begin_layout Standard
-success @ K
-\end_layout
-
-\begin_layout Standard
-1
-\end_layout
-
-\begin_layout Standard
-3
-\end_layout
-
-\begin_layout Standard
-5
-\end_layout
-
-\begin_layout Standard
-10
-\end_layout
-
-\begin_layout Standard
-20
-\end_layout
-
-\begin_layout Standard
-query types:
-\end_layout
-
-\begin_layout Standard
-value: known, regexp
-\end_layout
-
-\begin_layout Standard
-entity + known val
-\end_layout
-
-\begin_layout Standard
-entity + unknown value
-\end_layout
-
-\begin_layout Standard
-multiple entities values
-\end_layout
-
-\begin_layout Standard
-result attribute filter
-\end_layout
-
-\begin_layout Standard
-(meaningless -- false match)
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-\color red
-aggregator / sorting??
-\end_layout
-
-\begin_layout Subsection
-String matching
-\end_layout
-
-\begin_layout Subsection
-Query benchmarks (and types of queries supported)
-\end_layout
-
-\begin_layout Subsection
-User's evaluation
-\end_layout
-
-\begin_layout Section
-Usability
-\end_layout
-
-\begin_layout Section
-Usefulness of KWS / NL / DAS QL
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-KWS vs NL vs Structured language
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-TODO: evaluation strategy
-\end_layout
-
-\begin_layout Chapter
-Conclusions and Future work
-\end_layout
-
-\begin_layout Standard
 Because of the project was fairly short and the author had to follow some
  of priorities of the CMS Experiment, some parts of the research work had
  to be excluded, including: 
@@ -4972,27 +5009,9 @@ TODO
 .
 \end_layout
 
-\begin_layout Section
-Other applications?
-\end_layout
+\end_inset
 
-\begin_layout Section
-Conclusion
-\end_layout
 
-\begin_layout Standard
-
-\color magenta
-NL and KW Search over Web Services is still lacking attention from research
- community.
-\end_layout
-
-\begin_layout Standard
-
-\color magenta
-In addition to QL this could help in learning and get results more quickly
- (immediately) proprietary systems with … rules of changing them; would
- ease adoption of Struct L and fit naturally with existing contrains.
 \end_layout
 
 \begin_layout Standard
@@ -5011,18 +5030,15 @@ options "bibtotoc,alpha"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Newpage clearpage
-\end_inset
-
-
-\end_layout
+\begin_inset Note Note
+status collapsed
 
 \begin_layout Chapter*
 \start_of_appendix
 Appendices
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand input
 preview true
@@ -5033,13 +5049,13 @@ filename "sub_chapters/das_logs.tex"
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \series bold
 Appendix: Kinds of Queries at CMS
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Note Note
 status collapsed
 
@@ -5052,7 +5068,7 @@ Appendix: Proposed solutions for CMS?
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Note Note
 status collapsed
 
@@ -5244,6 +5260,11 @@ Another thing which could useful for the users at CMS Experiment, CERN,
 DAS Query Language
 \emph default
  does.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
