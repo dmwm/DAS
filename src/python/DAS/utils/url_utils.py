@@ -265,7 +265,6 @@ def proxy_get_data(urls):
     try:
         from pyurlfetch.urlfetch import DownloadError, URLFetchClient
         client  = URLFetchClient()
-        urls    = (u.encode('ascii', 'ignore') for u in urls)
         fetches = (client.start_fetch(u) for u in urls)
         for fid in fetches:
             try:
