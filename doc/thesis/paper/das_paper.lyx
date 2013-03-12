@@ -428,6 +428,32 @@ ness
 -
 \change_unchanged
 completion and ideas for further work on incorporating users feedback
+\change_inserted -438528902 1363114333
+
+\end_layout
+
+\begin_layout Abstract
+
+\change_inserted -438528902 1363114361
+* detailed description; 
+\end_layout
+
+\begin_layout Abstract
+
+\change_inserted -438528902 1363114414
+* reference implementation -- no open-source exists to our knowledge; still
+ large portions of code needs to be rewritten (as it was initially developed
+ as 
+\begin_inset Quotes eld
+\end_inset
+
+research prototypes
+\begin_inset Quotes erd
+\end_inset
+
+, and lack of time didn't allow redesigning)
+\change_unchanged
+
 \end_layout
 
 \begin_layout Publishers
@@ -776,8 +802,13 @@ This work was financially supported by the Computing group of the Compact
  Muon Solenoid Experiment at the European Organization for Nuclear Research
  (CERN).
  The author of this report is thankful to Robert Gwadera and prof.
- Karl Aberer who supervised this Master Thesis project.
-\change_inserted -438528902 1362928981
+ Karl Aberer who supervised this Master Thesis project
+\change_inserted -438528902 1363080878
+, as well as, to the responsible people at the company, Peter Kreuzer and
+ Valentin Kuznetsov, for their support and helpful comments
+\change_unchanged
+.
+\change_inserted -438528902 1363080826
 
 \end_layout
 
@@ -2553,12 +2584,27 @@ the
 \end_layout
 
 \begin_layout Subsubsection*
+
+\change_inserted -438528902 1363033196
+\begin_inset Newpage clearpage
+\end_inset
+
+
+\change_unchanged
 DAS Query language (DASQL) and the Execution Flow
 \end_layout
 
 \begin_layout Standard
-Currently the queries are formed by specifying what entity the user is intereste
-d in (dataset, file, etc) and providing selection criteria (e.g.
+Currently the queries are formed by specifying 
+\change_inserted -438528902 1363024953
+the type of
+\change_unchanged
+ entity the user is interested in (
+\change_inserted -438528902 1363024968
+e.g.
+ 
+\change_unchanged
+dataset, file, etc) and providing selection criteria (e.g.
  attribute=value, name BETWEEN [v1, v2]).
  The combined query results could be later 'piped' for further filtering,
  sorting or aggregation (min, max, avg, sum, count, median), e.g.: 
@@ -3554,7 +3600,11 @@ The solution
 
 \begin_layout Standard
 In the following section, we present a fairly simple heuristics-based implementa
-tion, where we focused on the quality of results
+tion,
+\change_inserted -438528902 1363108552
+ that returns ranked list of best matching queries
+\change_unchanged
+, where we focused on the quality of results
 \change_deleted -438528902 1362845676
  and 
 \change_inserted -438528902 1362845679
@@ -3562,16 +3612,33 @@ tion, where we focused on the quality of results
 \change_deleted -438528902 1362845680
 on
 \change_unchanged
- not enforcing any assumptions on the input queries (it could be full-sentence
- or 
+ not enforcing any assumptions on the input queries (
+\change_deleted -438528902 1363108593
+it could be
+\change_inserted -438528902 1363108593
+a
+\change_unchanged
+ full-sentence or 
 \change_inserted -438528902 1362845716
 just 
 \change_unchanged
-keyword queries; 
-\change_inserted -438528902 1362845739
-it may contain some structured patterns that could be used to
+keyword
+\change_deleted -438528902 1363108599
+ queries
+\change_inserted -438528902 1363108599
+s
 \change_unchanged
- improve the results
+; 
+\change_inserted -438528902 1363108615
+while existence of predefined structural patterns could be used to
+\change_unchanged
+ improve the result
+\change_deleted -438528902 1363108623
+s
+\change_inserted -438528902 1363108625
+ quality
+\change_unchanged
+
 \begin_inset Marginal
 status open
 
@@ -3593,7 +3660,13 @@ Keymantic
 \end_inset
 
 ).
- The heuristics-based approach is designed with the goal to
+ The 
+\change_deleted -438528902 1363108652
+heuristics-based approach
+\change_inserted -438528902 1363108654
+implementation
+\change_unchanged
+ is designed with the goal to
 \change_inserted -438528902 1362845807
  be able to employ the
 \change_unchanged
@@ -3611,11 +3684,47 @@ Keymantic
 \begin_layout Standard
 
 \color blue
-Knowing the constraints on the project duration, we did exclude this from
- implementation: Question Answering approaches with deep language processing;
- complex service orchestration (feeding of outputs into inputs of other
- services), which is not directly supported by the EII system and the service
- performance is not adequate for this 
+Knowing the constraints on the project duration, we 
+\change_deleted -438528902 1363108674
+did
+\change_inserted -438528902 1363108675
+had to
+\change_unchanged
+ exclude 
+\change_deleted -438528902 1363108962
+this
+\change_inserted -438528902 1363108964
+a number of items
+\change_unchanged
+ from 
+\change_inserted -438528902 1363108687
+the 
+\change_unchanged
+implementation: 
+\change_inserted -438528902 1363108978
+q
+\change_unchanged
+uestion 
+\change_inserted -438528902 1363108981
+a
+\change_deleted -438528902 1363108981
+A
+\change_unchanged
+nswering approaches with deep language processing; complex service orchestration
+ (feeding of outputs into inputs of other services
+\change_deleted -438528902 1363108709
+)
+\change_unchanged
+, which is 
+\change_inserted -438528902 1363108717
+anyway 
+\change_unchanged
+not directly supported by the EII system and the service performance is
+ not adequate for this
+\change_deleted -438528902 1363109269
+ 
+\change_unchanged
+
 \begin_inset Foot
 status collapsed
 
@@ -3638,26 +3747,38 @@ reference "sub:cms-Performance-Issues"
 
 \end_inset
 
-; also we did not focus on the performance (
-\change_inserted -438528902 1362845966
-performance
+
+\change_inserted -438528902 1363108725
+)
 \change_unchanged
- is OK 
-\change_inserted -438528902 1362845970
-even 
+; 
+\change_deleted -438528902 1363108741
+also we did not focus on
+\change_inserted -438528902 1363108744
+and lastly
 \change_unchanged
-without optimizations, and 
-\change_inserted -438528902 1362845954
-this 
+ the performance 
+\change_inserted -438528902 1363108799
+is of lowest priority
+\change_deleted -438528902 1363109208
+( is OK without optimizations, and 
+\change_inserted -438528902 1363109214
+as
+\change_deleted -438528902 1363109208
+was already covered by the earlier works
+\change_inserted -438528902 1363109160
+ the performance perceived by end user is still dominated by services taking
+ minutes to respond
+\change_deleted -438528902 1363109229
+)
+\change_inserted -438528902 1363109256
+, and the performance was already covered by the earlier works
 \change_unchanged
-was already covered by the earlier works)
+
 \color inherit
 .
-\end_layout
-
-\begin_layout Standard
-
 \color magenta
+
 \begin_inset Note Note
 status collapsed
 
@@ -3687,7 +3808,7 @@ web-service
 lines 0
 placement r
 overhang 1cm
-width "45col%"
+width "45text%"
 status collapsed
 
 \begin_layout Plain Layout
@@ -3760,6 +3881,19 @@ name "fig:query-translation-steps"
 \end_inset
 
 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{-40pt}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -3792,7 +3926,7 @@ reference "fig:query-translation-steps"
 \end_layout
 
 \begin_layout Standard
-Firstly, the keyword query is pre-processed by the 
+Firstly, the query is pre-processed by the 
 \emph on
 tokenizer
 \emph default
@@ -3808,8 +3942,13 @@ reference "sub:Tokenizer"
 \end_layout
 
 \begin_layout Standard
-Secondly, employing a number of string matching techniques based on metadata,
- the 
+Secondly, employing a number of 
+\change_deleted -438528902 1363109307
+string
+\change_inserted -438528902 1363109333
+metadata-based entity
+\change_unchanged
+ matching techniques, the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -3856,8 +3995,19 @@ value term - is the name of schema term which could gain value of given
 
  
 \series default
-terms it may correspond to, along with its score giving a rough estimate
- of our confidence (see Section 
+terms it may correspond to
+\change_deleted -438528902 1363109510
+,
+\change_unchanged
+ along with 
+\change_deleted -438528902 1363109620
+ score giving 
+\change_unchanged
+a rough estimate of our confidence
+\change_inserted -438528902 1363080061
+ 
+\change_unchanged
+(see Section 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sub:Matching-keywords"
@@ -3866,15 +4016,39 @@ reference "sub:Matching-keywords"
 
 ).
 
-\change_inserted -438528902 1362922541
- This also includes identifying chunks of keywords likely corresponding
- to multi-word schema terms (curently present only as names result field).
+\change_inserted -438528902 1363082153
+ This includes identifying keyword chunks corresponding to multi-word terms
+ (currently, only fields in service results); many of them are unclean,
+ machine-readable field-names, with irrelevant and frequent terms, motivating
+ the use of IDF-based
+\change_unchanged
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "IDF"
+description "Inverse Document Frequency, used to downrank frequent and therefore likely irrelevant terms"
+
+\end_inset
+
+
+\change_inserted -438528902 1363082147
+ 
+\color magenta
+information retrieval techniques
+\color inherit
+.
 \change_unchanged
 
 \end_layout
 
 \begin_layout Standard
-Thirdly, the 
+
+\change_deleted -438528902 1363109449
+Thirdly
+\change_inserted -438528902 1363109450
+Lastly
+\change_unchanged
+, the 
 \emph on
 entry points
 \emph default
@@ -4225,7 +4399,11 @@ ssion matching pattern which match the three cases above (n proper order),
 \end_layout
 
 \begin_layout Subsection
-Step 2: Identifying entry points: Entity matching
+Step 2: Identifying entry points
+\change_deleted -438528902 1363109698
+: Entity matching
+\change_unchanged
+
 \begin_inset CommandInset label
 LatexCommand label
 name "sub:Matching-keywords"
@@ -4242,14 +4420,23 @@ The second step of query processing is identifying the starting points through
  cut-off threshold are included.
 \end_layout
 
+\begin_layout Subsubsection
+
+\change_inserted -438528902 1363113289
+Matching the schema terms
+\end_layout
+
 \begin_layout Paragraph*
 Custom string similarity function
 \end_layout
 
 \begin_layout Standard
-Our experience is that basic string-edit distance metrics such as the standard
- Levenshtein edit-distance (where inserts, edits, and mutations are equal)
- or 
+Our experience is that basic string-edit distance metrics
+\change_inserted -438528902 1363112745
+,
+\change_unchanged
+ such as the standard Levenshtein edit-distance (where inserts, edits, and
+ mutations are equal) or 
 \emph on
 Jaro-Winker's
 \begin_inset Marginal
@@ -4257,6 +4444,7 @@ status open
 
 \begin_layout Plain Layout
 
+\series bold
 \emph on
 \color red
 there was a paper on this
@@ -4266,12 +4454,33 @@ there was a paper on this
 
 
 \emph default
- which are initially designed for general matching tasks (e.g.
- matching people names, correcting typing errors, etc), do not perform very
+ 
+\change_deleted -438528902 1363112796
+which
+\change_inserted -438528902 1363112796
+being
+\change_deleted -438528902 1363112799
+ are initially
+\change_unchanged
+ designed for general matching tasks (e.g.
+ matching people names, correcting typing errors, etc
+\change_inserted -438528902 1363112811
+.
+\change_unchanged
+), do not perform 
+\change_deleted -438528902 1363112816
+very
+\change_unchanged
  well in the task of matching keywords into specific entity names, either
  introducing too many false-positives (e.g.
- 'file' as 'site'), or not recognizing lexically farther word combinations
- that still make sense, such as 
+ 'file' 
+\change_deleted -438528902 1363112831
+as
+\change_inserted -438528902 1363112831
+for
+\change_unchanged
+ 'site'), or not recognizing lexically farther word combinations that still
+ make sense, such as 
 \emph on
 config
 \emph default
@@ -4285,26 +4494,113 @@ configuration
 
 \begin_layout Standard
 Therefore, to minimize the false positives (which have direct effect on
- ranking), we propose to use a combination of more trustful metrics in this
- order: full match, lemma match (e.g.
- only the word number differs), stem-match, stem match within a very small
- edit distance, see eq.
+ ranking), we propose 
+\change_deleted -438528902 1363112883
+to use 
+\change_unchanged
+a 
+\change_inserted -438528902 1363112886
+simple 
+\change_unchanged
+combination of more trustful metrics in 
+\change_deleted -438528902 1363112905
+this 
+\change_inserted -438528902 1363112905
+the 
+\change_unchanged
+order
+\change_inserted -438528902 1363112910
+ of decreasing score
+\change_unchanged
+: full match, lemma match 
+\change_inserted -438528902 1363112511
+(indicating also the meaning match
+\change_unchanged
+), stem-match
+\change_inserted -438528902 1363112526
+ (meaning is further)
+\change_unchanged
+, 
+\change_inserted -438528902 1363112927
+and finally a 
+\change_unchanged
+stem match within a very small edit distance
+\change_inserted -438528902 1363112944
+ (
+\change_deleted -438528902 1363112943
+, 
+\change_unchanged
+see eq.
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "eq:string_dist"
 
 \end_inset
 
-, where 
+
+\change_inserted -438528902 1363112940
+)
+\change_deleted -438528902 1363112939
+,
+\change_inserted -438528902 1363112952
+.
+
+\change_unchanged
+ 
+\change_deleted -438528902 1363112954
+where
+\change_inserted -438528902 1363112954
+Below
+\change_unchanged
+ 
 \begin_inset Formula $dist$
 \end_inset
 
- is some string distance metric with limitations 
-\color magenta
-(e.g.
- max 1-3 characters differing, max 1 mutation, beginning or end preferred,
- otherwise zero).
+ is some string distance metric with
+\change_inserted -438528902 1363112977
+ tight
+\change_unchanged
+ limitations
+\change_inserted -438528902 1363113087
+ with score 
+\begin_inset Formula $\in[0,1]$
+\end_inset
+
+
+\change_unchanged
+ (e.g.
+ max 1-3 characters differing
+\change_inserted -438528902 1363113189
+ with beginning or end preferred
+\change_unchanged
+, max 1 mutation
+\change_inserted -438528902 1363113189
+/transposion
+\change_unchanged
+).
+
+\change_deleted -438528902 1363113224
  
+\change_inserted -438528902 1363113189
+
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363113254
+
+\color magenta
+TODO: lematization depend on POS tags (saw[v]->see, [n]->saw)
+\change_unchanged
+
+\end_layout
+
+\end_inset
+
+
+\change_unchanged
+
 \end_layout
 
 \begin_layout Standard
@@ -4325,7 +4621,19 @@ similarity(A,B)=\begin{cases}
 
 \begin_layout Standard
 This improves the matching by incorporating basic linguistic knowledge,
- and do not require any domain-specific lexical resources
+ and
+\change_deleted -438528902 1363112542
+ do not
+\change_inserted -438528902 1363112544
+ without
+\change_unchanged
+ requir
+\change_deleted -438528902 1363112546
+e
+\change_inserted -438528902 1363112547
+ing
+\change_unchanged
+ any domain-specific lexical resources
 \begin_inset Foot
 status collapsed
 
@@ -4345,9 +4653,66 @@ key "string_edit_crf_mccallum2012conditional"
 
 \end_inset
 
- .
- Further, it is easy to implement as libraries exist for stemming, lemmatization
- (such as PorterStemmer and WordNetLemmatizer in the nltk).
+
+\change_deleted -438528902 1363112562
+ 
+\change_unchanged
+.
+ Further, 
+\change_deleted -438528902 1363112568
+it
+\change_inserted -438528902 1363112569
+this
+\change_unchanged
+ is easy to implement 
+\change_deleted -438528902 1363112593
+as
+\change_inserted -438528902 1363112595
+using existing
+\change_unchanged
+ libraries 
+\change_deleted -438528902 1363112605
+exist for stemming, lemmatization
+\change_unchanged
+ (such as 
+\emph on
+PorterStemmer
+\emph default
+ and 
+\emph on
+WordNetLemmatizer
+\emph default
+ in the 
+\emph on
+nltk
+\change_inserted -438528902 1363112631
+
+\emph default
+
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363112711
+an open-source natural language processing toolkit for Python 
+\begin_inset CommandInset href
+LatexCommand href
+name "http://nltk.org/"
+target "http://nltk.org/"
+
+\end_inset
+
+
+\change_unchanged
+
+\end_layout
+
+\end_inset
+
+
+\change_unchanged
+).
 \end_layout
 
 \begin_layout Standard
@@ -4427,18 +4792,6 @@ could also match the possible values
 \end_layout
 
 \begin_layout Paragraph*
-Regular expressions
-\end_layout
-
-\begin_layout Standard
-As a regular expression (regexp) match do not guarantee a correct keyword
- interpretation (a regular expression could be too loose), so in general
- case, regexp matches are scored lower than in other matching methods.
- Still, some regular expressions are sufficiently restrictive (e.g.
- email), which we score higher.
-\end_layout
-
-\begin_layout Paragraph*
 Matching multi-word schema terms
 \end_layout
 
@@ -4463,7 +4816,83 @@ no fuzzy matching except stemming is currently used
 
 
 \color inherit
- For simplicity, this is currently implemented using an IR library
+ 
+\change_inserted -438528902 1363117862
+This component identifies keyword chunks corresponding to 
+\emph on
+multi-word
+\emph default
+ 
+\emph on
+schema-terms
+\emph default
+ representing field-names or titles of service results fields.
+ The fields in service results are quite specific: some may have only the
+ machine-readable field-names and no human readable description, and may
+ contain some frequent and not so informative terms.
+ All this motivates the use of IDF-based
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "IDF"
+description "Inverse Document Frequency, used to downrank frequent and therefore likely irrelevant terms"
+
+\end_inset
+
+ 
+\color magenta
+information retrieval techniques
+\color inherit
+.
+ In addition, the field names in service outputs (which are processed artefacts
+ of JSON or XML responses) have some parent-child structure which may provide
+ useful contextual information (e.g.
+ block.replica.creation_time vs block.creation_time).
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363117851
+any cases when this is misleading? - context itself is NOT sufficient to
+ identify a field.
+\change_unchanged
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\change_inserted -438528902 1363118551
+
+\series bold
+\color magenta
+TODO: mention paper from XML retrieval
+\end_layout
+
+\begin_layout Standard
+For simplicity, 
+\change_deleted -438528902 1363117889
+this is 
+\change_inserted -438528902 1363117889
+we 
+\change_deleted -438528902 1363117897
+currently implemented using
+\change_inserted -438528902 1363117902
+ used
+\change_unchanged
+ an
+\change_inserted -438528902 1363117904
+ existing
+\change_unchanged
+ IR library
+\change_inserted -438528902 1363118753
+, Whoosh
+\change_unchanged
+
 \begin_inset Foot
 status collapsed
 
@@ -4491,17 +4920,161 @@ documents
 \begin_inset Quotes erd
 \end_inset
 
- consists of multiple fields [physical term name, term title if any, and
- stemmed and tokenized versions of these] with different importance weights.
+
+\change_inserted -438528902 1363118055
+ each representing 
+\begin_inset Quotes eld
+\end_inset
+
+a field in 
+\series bold
+service outputs
+\begin_inset Quotes erd
+\end_inset
+
+
+\series default
+ 
+\series bold
+[that is a field of an entity in integration schema]
+\series default
+.
+ Each such document
+\change_deleted -438528902 1363118051
+ 
+\change_inserted -438528902 1363118046
+ 
+\change_unchanged
+consists of 
+\series bold
+multiple fields
+\change_inserted -438528902 1363118067
+:
+\end_layout
+
+\begin_layout Itemize
+
+\change_inserted -438528902 1363118397
+fully-qualified machine readable field-name (e.g.
+ block.replica.creation_time)
+\change_unchanged
+
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\change_inserted -438528902 1363118400
+a field containing a tokenized+stemmed version of machine readable field-name
+ (e.g.
+ creation_time)
+\change_unchanged
+
+\end_layout
+
+\begin_layout Itemize
+
+\change_inserted -438528902 1363118411
+context - a field containing a tokenized+stemmed version of machine readable
+ field-name's parent (block.replica)
+\change_unchanged
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\change_inserted -438528902 1363118501
+human readable field title, if any (e.g.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Creation time of block's replica
+\begin_inset Quotes erd
+\end_inset
+
+, but often this do not include the context: 
+\begin_inset Quotes eld
+\end_inset
+
+Creation time
+\begin_inset Quotes erd
+\end_inset
+
+, or it does not exist)
+\series bold
+ 
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363119231
+only tokenized+stemmed version --- it seems creating multiple versions of
+ same fields decrease performance with default params; therefore I even
+ got rid of copies including the stop-words
+\change_unchanged
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\change_deleted -438528902 1363118526
+
+\series bold
+ [physical term name, term title if any, and stemmed and tokenized versions
+ of these]
+\change_inserted -438528902 1363118534
+
+\series default
+These fields are assigned
+\series bold
+ 
+\change_deleted -438528902 1363118535
+
+\series default
+ with 
+\change_unchanged
+different importance weights.
  
 \end_layout
 
 \begin_layout Standard
-To find the matches, we query the IR library, for both 
-\series bold
-phrase and single term matches of up to the k-nearby keywords
-\series default
- (we use maximum of 4), where phrase matches are assigned larger weight.
+To find the matches, we query the IR library, 
+\change_deleted -438528902 1363118795
+for 
+\change_unchanged
+both 
+\change_inserted -438528902 1363118799
+for 
+\change_unchanged
+phrase and single term matches of up to the k-nearby keywords (we use maximum
+ of 4
+\change_inserted -438528902 1363119420
+, which both provides sufficient context, and is short enough to be computationa
+lly inexpensive
+\change_unchanged
+), 
+\change_deleted -438528902 1363118819
+where
+\change_unchanged
+ phrase matches 
+\change_deleted -438528902 1363118822
+are
+\change_inserted -438528902 1363118822
+given
+\change_unchanged
+ 
+\change_deleted -438528902 1363118824
+assigned
+\change_unchanged
+ larger weight.
  After filtering out the worst results these will become the entry points
  for mapping keywords into the fields of data service outputs, currently
  we directly use the score returned by IR engine
@@ -4537,14 +5110,140 @@ machine readable
  manually normalized between [0..1].
  
 \color magenta
-The scoring could be improved, but in our case it works already good.
+The scoring could be improved, but in our case it works already 
+\change_deleted -438528902 1363118845
+good
+\change_inserted -438528902 1363118847
+not so bad
+\change_unchanged
+.
+\change_inserted -438528902 1363118581
+
 \end_layout
 
 \begin_layout Standard
-The same could be also achieved through retrieving a list of matching fields
+
+\change_inserted -438528902 1363119247
+Finally, 
+\change_deleted -438528902 1363119247
+T
+\change_inserted -438528902 1363119248
+t
+\change_unchanged
+he same could be also achieved through retrieving a list of matching fields
  for each keyword separately and then combining them through the scoring
  function, however the earlier approach allows pruning out the worst scoring
  token pairs and supporting the phrase search more easily.
+
+\change_inserted -438528902 1363119532
+ In either case, the problem of how to incorporate the IDFs and context
+ information remains.
+\end_layout
+
+\begin_layout Standard
+
+\change_inserted -438528902 1363119533
+
+\color magenta
+CAVEATS AND TODOs TO CONSIDER:
+\end_layout
+
+\begin_layout Itemize
+
+\change_inserted -438528902 1363119533
+
+\color magenta
+full field match [all tokens] is much better (how about modified document
+ length in BM25F?) even than phrase match: 
+\begin_inset Quotes eld
+\end_inset
+
+number of events
+\begin_inset Quotes erd
+\end_inset
+
+ vs 
+\begin_inset Quotes eld
+\end_inset
+
+events; number; block
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\change_inserted -438528902 1363119533
+
+\color cyan
+using context information without enforsing that to belong only to that
+ field (we already use result type = result entity type)
+\end_layout
+
+\begin_layout Itemize
+
+\change_inserted -438528902 1363119533
+
+\color magenta
+multiple matches of same term result in unfair scores
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\change_inserted -438528902 1363119533
+
+\color magenta
+e.g.
+ number -> run 
+\series bold
+number, 
+\series default
+where
+\series bold
+ 
+\series default
+number
+\series bold
+ 
+\series default
+is repeated run.run_number, tokenized: 'run; number', title: 'run number'
+\end_layout
+
+\begin_layout Itemize
+
+\change_inserted -438528902 1363119533
+
+\color magenta
+idf shall be stronger than physical term count
+\end_layout
+
+\begin_layout Itemize
+
+\change_inserted -438528902 1363119533
+
+\color magenta
+as mentioned in a paper on 
+\begin_inset Quotes eld
+\end_inset
+
+Semantic Search with BM25F
+\begin_inset Quotes erd
+\end_inset
+
+ which criticized Lucene ranking, naive inclusion of multiple fields could
+ lead to false high-matches.
+ 
+\emph on
+~approx:~Matching terms on different fields would be scored higher than
+ matches of the same keywords in the same field, which is semantically better
+ defined~~.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
 \begin_inset Note Note
 status collapsed
 
@@ -4558,6 +5257,177 @@ Matching keyword into an sample of values (guessing which is the best attribute
 \end_inset
 
 
+\change_inserted -438528902 1363119530
+
+\end_layout
+
+\begin_layout Paragraph*
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\series bold
+\color red
+separate not used section?
+\end_layout
+
+\end_inset
+
+Semantic similarity (not used)
+\end_layout
+
+\begin_layout Standard
+
+\change_deleted -438528902 1363114852
+A
+\change_inserted -438528902 1363114854
+While
+\change_unchanged
+ semantic matching based on freely available open-domain ontolog
+\change_inserted -438528902 1363114867
+ies
+\change_deleted -438528902 1363114866
+y
+\change_inserted -438528902 1363114877
+,
+\change_unchanged
+ such as the 
+\emph on
+WordNet
+\emph default
+, 
+\change_inserted -438528902 1363114886
+could work well for open-domain, it 
+\change_deleted -438528902 1363114891
+cannot work
+\change_inserted -438528902 1363114893
+do not work
+\change_unchanged
+ well in a very specific domain, out-of-the box.
+ As the EII system at CMS currently has no 
+\change_inserted -438528902 1363114906
+specific 
+\change_unchanged
+linguistic ontology, 
+\change_deleted -438528902 1363114925
+we do not use the
+\change_inserted -438528902 1363114925
+no
+\change_unchanged
+ semantic similarity
+\change_inserted -438528902 1363114932
+ is used
+\change_unchanged
+ - if enabled, it just worsens the results by introducing false positives.
+ 
+\change_deleted -438528902 1363114937
+
+\color red
+While for open-domain, large semantic knowledge bases such as 
+\emph on
+YAGO2
+\emph default
+ are quite good choices.
+ 
+\change_unchanged
+
+\end_layout
+
+\begin_layout Subsubsection
+
+\change_inserted -438528902 1363113330
+Matching the value terms
+\end_layout
+
+\begin_layout Paragraph*
+Regular expressions
+\end_layout
+
+\begin_layout Standard
+
+\change_inserted -438528902 1363114282
+For the most of service interfaces there exist regular expressions that
+ constraint the 
+\emph on
+input
+\emph default
+ 
+\emph on
+values
+\emph default
+ accepted by services.
+ A 
+\change_unchanged
+regular expression (regexp) match do not guarantee 
+\change_inserted -438528902 1363114051
+that a certain value exists, but 
+\change_unchanged
+a
+\change_inserted -438528902 1363114025
+lso
+\change_unchanged
+ 
+\change_deleted -438528902 1363114070
+correct
+\change_inserted -438528902 1363114162
+it could result in incorrect
+\change_unchanged
+ keyword interpretation
+\change_inserted -438528902 1363114094
+s, as
+\change_unchanged
+ 
+\change_deleted -438528902 1363113753
+(a regular expression
+\change_inserted -438528902 1363114102
+as a regexp
+\change_unchanged
+ could be 
+\change_deleted -438528902 1363114110
+too 
+\change_unchanged
+loose
+\change_inserted -438528902 1363114116
+ly defined
+\change_deleted -438528902 1363114120
+)
+\change_inserted -438528902 1363114120
+.
+\change_deleted -438528902 1363114120
+,
+\change_unchanged
+ 
+\change_deleted -438528902 1363113795
+so
+\change_inserted -438528902 1363114124
+Thus,
+\change_unchanged
+ in 
+\change_inserted -438528902 1363113800
+the 
+\change_unchanged
+general case, 
+\change_inserted -438528902 1363113806
+the 
+\change_unchanged
+regexp matches are scored lower than 
+\change_deleted -438528902 1363113838
+in
+\change_inserted -438528902 1363113843
+matches of
+\change_unchanged
+ other matching methods.
+ Still, some 
+\change_inserted -438528902 1363113870
+of the 
+\change_unchanged
+regular expressions are sufficiently restrictive (e.g.
+ email), which we 
+\change_inserted -438528902 1363114223
+selectively 
+\change_unchanged
+score higher.
 \end_layout
 
 \begin_layout Paragraph*
@@ -4587,50 +5457,43 @@ there are some specific cases with wildcard matches
  bootstrapping them through respective data service interfaces.
  
 \color magenta
-For matching we have a number of cases, with decreasing score: 
+For matching we have a number of cases, with 
+\change_inserted -438528902 1363114533
+the 
+\change_unchanged
+decreasing score: 
 \color inherit
-full match, partial match, and matches of keywords with wildcards.
+full match, partial match, and matches of keywords 
+\change_deleted -438528902 1363114542
+with
+\change_inserted -438528902 1363114544
+containing
+\change_unchanged
+ wildcards.
  If keyword's value matches a regular expression, but is not contained in
- the know values list and the accepted values of the given field are considered
- to be static (not changing often), we exclude this possibly false match
- allowing to reduce the false positives\SpecialChar \@.
-
-\end_layout
-
-\begin_layout Subparagraph*
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-separate not used section?
-\end_layout
-
-\end_inset
-
-Semantic similarity (not used)
-\end_layout
-
-\begin_layout Standard
-A semantic matching based on freely available open-domain ontology such
- as the 
-\emph on
-WordNet
-\emph default
-, cannot work well in a very specific domain, out-of-the box.
- As the EII system at CMS currently has no linguistic ontology, we do not
- use the semantic similarity - if enabled, it just worsens the results by
- introducing false positives.
+ the known values list and the accepted values of the given field are considered
+ to be static (not changing often), we exclude this 
+\change_deleted -438528902 1363114566
+possibly
+\change_inserted -438528902 1363114625
+ very likely
+\change_unchanged
+ false match 
+\change_deleted -438528902 1363114575
+allowing
+\change_unchanged
  
-\color red
-While for open-domain, large semantic knowledge bases such as 
-\emph on
-YAGO2
-\emph default
- are quite good choices.
- 
+\change_deleted -438528902 1363114588
+to 
+\change_inserted -438528902 1363114590
+ that 
+\change_unchanged
+reduce
+\change_inserted -438528902 1363114592
+s
+\change_unchanged
+ the false positives\SpecialChar \@.
+
 \end_layout
 
 \begin_layout Subsection
@@ -5008,10 +5871,6 @@ packages, tool-kits: uncertainties, nltk, wordnet,mongodb
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 
 \end_layout
 
@@ -5560,8 +6419,6 @@ name "fig:prototype-of-auto-completion-kws"
 
 \begin_layout Standard
 Further, such user interface 
-\change_deleted -438528902 1363018306
-would
 \change_inserted -438528902 1363018376
 can be closely integrated with keyword search - some of the suggestions
  would include multiple interpretations of the last term being typed,
@@ -5576,17 +6433,11 @@ to get
 \change_inserted -438528902 1363018491
  and 
 \change_unchanged
-resulting in
-\change_deleted -438528902 1363018504
-: a)
-\change_unchanged
- 
+resulting in 
 \change_inserted -438528902 1363013834
 better
 \change_unchanged
 -defined input to the system,
-\change_deleted -438528902 1363018512
- that
 \change_inserted -438528902 1363018515
 .
  This,
@@ -5595,16 +6446,10 @@ better
 \change_inserted -438528902 1363013851
 , would
 \change_unchanged
- result
-\change_deleted -438528902 1363018410
-s
-\change_unchanged
- in more exact query suggestions,
+ result in more exact query suggestions.
+ 
 \change_inserted -438528902 1363018526
-.
- Second, 
-\change_deleted -438528902 1363018527
- b)
+Second,
 \change_unchanged
  
 \change_inserted -438528902 1363013860
@@ -5615,8 +6460,6 @@ could
 be 
 \change_unchanged
 potentially 
-\change_deleted -438528902 1363018421
-used
 \change_inserted -438528902 1363018422
 useful
 \change_unchanged
@@ -5628,45 +6471,52 @@ entity matching and keyword search.
  
 \color red
 We will elaborate on this is the 
-\change_deleted -438528902 1363018539
-chapter
-\change_inserted -438528902 1363018562
+\change_inserted -438528902 1363035796
 subsequent sections.
- 
-\change_deleted -438528902 1363018552
- 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "chap:Incorporating-User-Feedback"
+\end_layout
 
-\end_inset
+\begin_layout Subsection
 
-.
-\change_inserted -438528902 1363018552
+\change_inserted -438528902 1363081046
+Customization and user-preferences
+\end_layout
 
-\begin_inset Note Note
-status open
+\begin_layout Standard
 
-\begin_layout Plain Layout
+\change_inserted -438528902 1363081076
+shall be per user or per user-group! SODA didn't use any clustering?
+\end_layout
 
-\change_inserted -438528902 1363018552
+\begin_layout Subsection
 
-\color red
- 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "chap:Incorporating-User-Feedback"
+\change_inserted -438528902 1363081044
+Using the feedback for self-improvement
+\end_layout
 
-\end_inset
+\begin_layout Standard
 
-.
+\change_inserted -438528902 1363036278
+First, the implicit feedback from auto-completion could be useful for evaluating
+ and improving the quality of the entity matching (learned edit-distance
+ metrics, updating the weights of different matching metrics).
+\end_layout
+
+\begin_layout Standard
+
+\change_inserted -438528902 1363036335
+
+\series bold
+Second, this could serve as training data for machine learning-based algorithms,
+ however 
 \change_unchanged
 
 \end_layout
 
-\end_inset
+\begin_layout Standard
 
-
+\change_inserted -438528902 1363035883
+There are many ways to employ the users feedback, from .
+ 
 \end_layout
 
 \begin_layout Standard
@@ -5687,7 +6537,7 @@ the input (or subset of it) that is not conforming to the rules of given
 \end_inset
 
 
-\change_inserted -438528902 1363018617
+\change_inserted -438528902 1363028251
 
 \end_layout
 
