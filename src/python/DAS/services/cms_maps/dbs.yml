@@ -377,7 +377,7 @@ urn : listFiles
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params: {
-    "api" : "listFiles", "apiversion" : "DBS_2_0_9", "path" : "required",
+    "api" : "listFiles", "apiversion" : "DBS_2_0_9", "path" : "",
     "primary_dataset": "", "processed_dataset" : "", "data_tier_list" : "",
     "analysis_dataset_name" : "", "block_name" : "", "other_details" : False,
     "run_number" : "", "pattern_lfn": "", "detail" : False,
