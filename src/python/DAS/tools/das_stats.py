@@ -46,7 +46,7 @@ class LogdbManager(object):
         
     def dates(self):
         "Return registered dates from logdb"
-        spec = {'type':'cache'}
+        spec = {'type':{'$in': ['cache', 'web']}}
         min_date = 10**9
         max_date = 0
         dates = set()
