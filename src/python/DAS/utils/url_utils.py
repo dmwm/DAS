@@ -256,7 +256,7 @@ def close(stream):
     if  isinstance(stream, InstanceType) or isinstance(stream, file):
         stream.close()
 
-def proxy_get_data(urls):
+def proxy_getdata(urls):
     """
     Get data for given set of URLs using urlfetch proxy. This method works
     for GET HTTP requests and all URLs will be passed as is to the urlfetcher
