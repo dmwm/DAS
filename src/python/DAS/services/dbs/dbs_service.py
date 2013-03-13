@@ -189,6 +189,7 @@ class DBSService(DASAbstractService):
                         val = "run >=%s and run <= %s" % (min_run, max_run)
                     elif val.has_key('$in'):
                         val = ' or '.join(['run=%s' % r for r in val['$in']])
+                        val = '(%s)' % val
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 kwds['query'] = "find run where %s" % val
@@ -296,6 +297,7 @@ class DBSService(DASAbstractService):
                         val = "run >=%s and run <= %s" % (min_run, max_run)
                     elif val.has_key('$in'):
                         val = ' or '.join(['run=%s' % r for r in val['$in']])
+                        val = '(%s)' % val
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 if  kwds.has_key('dataset') and kwds['dataset']:
@@ -463,6 +465,7 @@ class DBSService(DASAbstractService):
                         val = "run >=%s and run <= %s" % (min_run, max_run)
                     elif val.has_key('$in'):
                         val = ' or '.join(['run=%s' % r for r in val['$in']])
+                        val = '(%s)' % val
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 cond += " and %s" % val
