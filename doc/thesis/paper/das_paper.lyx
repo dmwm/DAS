@@ -4043,8 +4043,6 @@ information retrieval techniques
 
 \begin_layout Standard
 
-\change_deleted -438528902 1363109449
-Thirdly
 \change_inserted -438528902 1363109450
 Lastly
 \change_unchanged
@@ -4052,22 +4050,35 @@ Lastly
 \emph on
 entry points
 \emph default
- are combined, evaluating different combinations of them (each such permutation
- of keyword 
-\begin_inset Quotes eld
-\end_inset
-
-meanings
-\begin_inset Quotes erd
-\end_inset
-
- is called a 
+ are combined, evaluating 
+\change_inserted -438528902 1363170592
+the 
+\change_unchanged
+different 
+\change_inserted -438528902 1363170597
+permutations
+\change_unchanged
+ of them
+\change_inserted -438528902 1363171115
+ (called 
 \emph on
 configuration
 \emph default
-, defining a tagging of input keywords in terms of schema terms or values)
- and ranked combining the scores of individual keywords based on a number
- of heuristics that boost the scores of 
+s) by means of
+\change_unchanged
+ combining the scores of individual keywords
+\change_inserted -438528902 1363170991
+ and using
+\change_unchanged
+ heuristic
+\change_inserted -438528902 1363170733
+ rules
+\change_unchanged
+ 
+\change_inserted -438528902 1363171129
+to 
+\change_unchanged
+boost the scores of 
 \emph on
 configurations
 \emph default
@@ -4099,6 +4110,42 @@ key "keymantic_kws_metadata_bergamaschi2011"
 \end_inset
 
 .
+
+\change_deleted -438528902 1363170843
+ 
+\change_unchanged
+ During the same step, the configurations that are compatible with our data
+ integration system are
+\change_inserted -438528902 1363171174
+ identified and
+\change_unchanged
+ interpreted as structured queries, where we disambiguate 
+\change_inserted -438528902 1363170162
+the keyword matchings
+\change_unchanged
+ 
+\change_inserted -438528902 1363170115
+between
+\change_unchanged
+ 
+\change_inserted -438528902 1363171185
+the result types, the 
+\change_unchanged
+projections
+\change_deleted -438528902 1363170131
+,
+\change_unchanged
+ 
+\change_inserted -438528902 1363171429
+the selections (filters on service inputs or outputs)
+\change_unchanged
+, 
+\color red
+or simple operators
+\color inherit
+.
+
+\change_inserted -438528902 1363170864
  The ranking is presented in the section 
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -4107,35 +4154,30 @@ reference "sub:Ranking-function"
 \end_inset
 
 .
- During the same step, the configurations that are compatible with our data
- integration system (currently not all 
-\begin_inset Quotes eld
-\end_inset
+\change_unchanged
 
-possible
-\begin_inset Quotes erd
-\end_inset
-
- queries could be answered) are interpreted as structured queries, where
- we disambiguate schema terms as projections, filters, 
-\color red
-or simple operators [min, avg, unique etc]
-\color inherit
- (this is also part of ranking).
 \begin_inset Marginal
-status open
+status collapsed
 
 \begin_layout Plain Layout
 
-\series bold
+\change_inserted -438528902 1363171460
+
 \color red
-operators not implemented yet, lower priority; 
+[min, avg, unique etc]
+\change_unchanged
+
+\series bold
+ not 
+\change_inserted -438528902 1363171657
+fully 
+\change_unchanged
+implemented, lower priority 
 \end_layout
 
 \end_inset
 
-.
- 
+
 \begin_inset Note Note
 status collapsed
 
@@ -4148,7 +4190,7 @@ status collapsed
 
 \end_inset
 
-.
+
 \begin_inset Note Note
 status collapsed
 
@@ -4341,11 +4383,33 @@ The tokenizer do not try to parse the natural language, however attempts
 With the goal to simplify subsequent processing, first the keyword query
  is cleaned-up, standardizing its notation (e.g.
  removing extra spaces, normalizing date formats from YYYY-MM-DD into YYYYMMDD
- accepted by EII system, 
+ accepted by EII system, also recognizing some expressions in
 \color red
-also recognizing some expressions in 
+ 
 \color inherit
-natural language, such as simple operators [X equals Y, X more than Y, etc]).
+natural language, such as simple operators [X equals Y, X more than Y, etc])
+\change_inserted -438528902 1363171729
+
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363171837
+
+\color cyan
+but NL support is limited, as there are many ambiguous ways of expressing
+ the same: e.g.
+ more than 123 events
+\change_unchanged
+
+\end_layout
+
+\end_inset
+
+
+\change_unchanged
+.
  This is accomplished using a number of regular expression replacement patterns.
  
 \end_layout
@@ -4400,10 +4464,6 @@ ssion matching pattern which match the three cases above (n proper order),
 
 \begin_layout Subsection
 Step 2: Identifying entry points
-\change_deleted -438528902 1363109698
-: Entity matching
-\change_unchanged
-
 \begin_inset CommandInset label
 LatexCommand label
 name "sub:Matching-keywords"
@@ -4455,27 +4515,21 @@ there was a paper on this
 
 \emph default
  
-\change_deleted -438528902 1363112796
-which
 \change_inserted -438528902 1363112796
 being
-\change_deleted -438528902 1363112799
- are initially
 \change_unchanged
  designed for general matching tasks (e.g.
  matching people names, correcting typing errors, etc
 \change_inserted -438528902 1363112811
 .
 \change_unchanged
-), do not perform 
-\change_deleted -438528902 1363112816
-very
+), do not perform
+\change_deleted -438528902 1363171863
+ 
 \change_unchanged
  well in the task of matching keywords into specific entity names, either
  introducing too many false-positives (e.g.
  'file' 
-\change_deleted -438528902 1363112831
-as
 \change_inserted -438528902 1363112831
 for
 \change_unchanged
@@ -4503,8 +4557,6 @@ a
 simple 
 \change_unchanged
 combination of more trustful metrics in 
-\change_deleted -438528902 1363112905
-this 
 \change_inserted -438528902 1363112905
 the 
 \change_unchanged
@@ -4527,8 +4579,6 @@ and finally a
 stem match within a very small edit distance
 \change_inserted -438528902 1363112944
  (
-\change_deleted -438528902 1363112943
-, 
 \change_unchanged
 see eq.
 \begin_inset CommandInset ref
@@ -4538,17 +4588,11 @@ reference "eq:string_dist"
 \end_inset
 
 
-\change_inserted -438528902 1363112940
-)
-\change_deleted -438528902 1363112939
-,
 \change_inserted -438528902 1363112952
-.
-
+)
 \change_unchanged
+.
  
-\change_deleted -438528902 1363112954
-where
 \change_inserted -438528902 1363112954
 Below
 \change_unchanged
@@ -4622,14 +4666,10 @@ similarity(A,B)=\begin{cases}
 \begin_layout Standard
 This improves the matching by incorporating basic linguistic knowledge,
  and
-\change_deleted -438528902 1363112542
- do not
 \change_inserted -438528902 1363112544
  without
 \change_unchanged
  requir
-\change_deleted -438528902 1363112546
-e
 \change_inserted -438528902 1363112547
 ing
 \change_unchanged
@@ -4665,14 +4705,12 @@ it
 this
 \change_unchanged
  is easy to implement 
-\change_deleted -438528902 1363112593
-as
 \change_inserted -438528902 1363112595
 using existing
 \change_unchanged
- libraries 
-\change_deleted -438528902 1363112605
-exist for stemming, lemmatization
+ libraries
+\change_deleted -438528902 1363171899
+ 
 \change_unchanged
  (such as 
 \emph on
@@ -4875,14 +4913,8 @@ TODO: mention paper from XML retrieval
 
 \begin_layout Standard
 For simplicity, 
-\change_deleted -438528902 1363117889
-this is 
-\change_inserted -438528902 1363117889
-we 
-\change_deleted -438528902 1363117897
-currently implemented using
 \change_inserted -438528902 1363117902
- used
+we used
 \change_unchanged
  an
 \change_inserted -438528902 1363117904
@@ -4921,35 +4953,41 @@ documents
 \end_inset
 
 
-\change_inserted -438528902 1363118055
+\change_inserted -438528902 1363172068
  each representing 
 \begin_inset Quotes eld
 \end_inset
 
-a field in 
+a field in service outputs
 \series bold
-service outputs
+
 \begin_inset Quotes erd
 \end_inset
 
 
-\series default
+\color cyan
  
-\series bold
-[that is a field of an entity in integration schema]
 \series default
-.
- Each such document
+(that is a field of an entity in integration schema
+\color inherit
+).
+ Each such 
+\emph on
+document
 \change_deleted -438528902 1363118051
+
+\emph default
  
 \change_inserted -438528902 1363118046
  
 \change_unchanged
-consists of 
-\series bold
-multiple fields
-\change_inserted -438528902 1363118067
-:
+consists of multiple 
+\emph on
+fields
+\change_inserted -438528902 1363171998
+
+\emph default
+, with different weights of importance assigned to each:
 \end_layout
 
 \begin_layout Itemize
@@ -5024,28 +5062,6 @@ only tokenized+stemmed version --- it seems creating multiple versions of
 \end_layout
 
 \begin_layout Standard
-
-\change_deleted -438528902 1363118526
-
-\series bold
- [physical term name, term title if any, and stemmed and tokenized versions
- of these]
-\change_inserted -438528902 1363118534
-
-\series default
-These fields are assigned
-\series bold
- 
-\change_deleted -438528902 1363118535
-
-\series default
- with 
-\change_unchanged
-different importance weights.
- 
-\end_layout
-
-\begin_layout Standard
 To find the matches, we query the IR library, 
 \change_deleted -438528902 1363118795
 for 
@@ -5060,31 +5076,58 @@ phrase and single term matches of up to the k-nearby keywords (we use maximum
 , which both provides sufficient context, and is short enough to be computationa
 lly inexpensive
 \change_unchanged
-), 
-\change_deleted -438528902 1363118819
-where
+),
+\change_deleted -438528902 1363172168
+ 
 \change_unchanged
  phrase matches 
-\change_deleted -438528902 1363118822
-are
 \change_inserted -438528902 1363118822
 given
-\change_unchanged
+\change_deleted -438528902 1363172174
  
-\change_deleted -438528902 1363118824
-assigned
 \change_unchanged
  larger weight.
- After filtering out the worst results these will become the entry points
- for mapping keywords into the fields of data service outputs, currently
- we directly use the score returned by IR engine
-\begin_inset Foot
+ 
+\change_inserted -438528902 1363172107
+
+\end_layout
+
+\begin_layout Standard
+
+\change_inserted -438528902 1363172193
+The ranking is done using 
+\series bold
+\color cyan
+BM25F
+\series default
+\color inherit
+ scoring function.
+ 
+\change_unchanged
+After filtering out the worst results these will become the entry points
+ for mapping keywords into the fields of data service outputs.
+
+\change_inserted -438528902 1363172224
+ 
+\change_unchanged
+Currently we directly use the score returned by 
+\change_inserted -438528902 1363169621
+the 
+\change_unchanged
+IR 
+\change_inserted -438528902 1363169679
+library
+\color red
+
+\begin_inset Note Note
 status collapsed
 
 \begin_layout Plain Layout
 
+\change_inserted -438528902 1363169657
+
 \color red
-TF_IDF scoring is currently used.
+[TF_IDF scoring is currently used.
  BM25F also available, however with default parameters it performed worse
  with unclean documents: multiple copies of same words in 
 \begin_inset Quotes eld
@@ -5102,38 +5145,63 @@ machine readable
 \begin_inset Quotes erd
 \end_inset
 
- field names
+ field names]
+\change_unchanged
+
 \end_layout
 
 \end_inset
 
- manually normalized between [0..1].
+
+\change_unchanged
+
+\color inherit
+manually normalized between [0..1]
+\change_inserted -438528902 1363169712
+
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363169833
+normalization: threshold based on weights signifying a good score + (maybe
+ smoothing function)
+\change_unchanged
+
+\end_layout
+
+\end_inset
+
+
+\change_unchanged
+.
  
 \color magenta
 The scoring could be improved, but in our case it works already 
 \change_deleted -438528902 1363118845
 good
-\change_inserted -438528902 1363118847
+\change_inserted -438528902 1363169623
 not so bad
 \change_unchanged
 .
-\change_inserted -438528902 1363118581
+\change_inserted -438528902 1363169623
 
 \end_layout
 
 \begin_layout Standard
 
-\change_inserted -438528902 1363119247
-Finally, 
-\change_deleted -438528902 1363119247
-T
 \change_inserted -438528902 1363119248
-t
+Finally, 
 \change_unchanged
-he same could be also achieved through retrieving a list of matching fields
- for each keyword separately and then combining them through the scoring
- function, however the earlier approach allows pruning out the worst scoring
- token pairs and supporting the phrase search more easily.
+the same 
+\change_inserted -438528902 1363172262
+functionality 
+\change_unchanged
+could be also achieved through retrieving a list of matching fields for
+ each keyword separately and then combining them through the scoring function,
+ however the earlier approach allows pruning out the worst scoring token
+ pairs and supporting the phrase search more easily.
 
 \change_inserted -438528902 1363119532
  In either case, the problem of how to incorporate the IDFs and context
@@ -5142,19 +5210,18 @@ he same could be also achieved through retrieving a list of matching fields
 
 \begin_layout Standard
 
-\change_inserted -438528902 1363119533
+\change_inserted -438528902 1363169517
 
 \color magenta
-CAVEATS AND TODOs TO CONSIDER:
+TECHNICAL NOTES FOR MYSELF: CAVEATS AND TODOs TO CONSIDER:
 \end_layout
 
 \begin_layout Itemize
 
-\change_inserted -438528902 1363119533
+\change_inserted -438528902 1363169413
 
 \color magenta
-full field match [all tokens] is much better (how about modified document
- length in BM25F?) even than phrase match: 
+full field match [all tokens] is much better even than phrase match: 
 \begin_inset Quotes eld
 \end_inset
 
@@ -5170,18 +5237,21 @@ events; number; block
 \begin_inset Quotes erd
 \end_inset
 
-
+ [idf shall penalize this, but this seems not enough] - (how about modified
+ document length in BM25F?)
 \end_layout
 
+\begin_deeper
 \begin_layout Itemize
 
-\change_inserted -438528902 1363119533
+\change_inserted -438528902 1363169492
 
 \color cyan
-using context information without enforsing that to belong only to that
- field (we already use result type = result entity type)
+how about to force BM25F to count only distinct tokens once? e.g.
+ tf(d, t)c = max(w_c), regardless of field c
 \end_layout
 
+\end_deeper
 \begin_layout Itemize
 
 \change_inserted -438528902 1363119533
@@ -5222,7 +5292,7 @@ idf shall be stronger than physical term count
 
 \begin_layout Itemize
 
-\change_inserted -438528902 1363119533
+\change_inserted -438528902 1363169877
 
 \color magenta
 as mentioned in a paper on 
@@ -5243,6 +5313,15 @@ Semantic Search with BM25F
 \end_layout
 
 \end_deeper
+\begin_layout Itemize
+
+\change_inserted -438528902 1363169885
+
+\color cyan
+Far future: using context information without enforcing that to belong only
+ to that field (we already use result type = result entity type)
+\end_layout
+
 \begin_layout Standard
 \begin_inset Note Note
 status collapsed
@@ -5513,42 +5592,377 @@ name "sub:Ranking-function"
 
 \begin_layout Standard
 
-\lang english
-In addition to combining the 
+\change_inserted -438528902 1363173085
+As the last step, different combinations of the entry points (where each
+ permutation of keyword 
 \begin_inset Quotes eld
 \end_inset
 
-likelihood
+meanings
 \begin_inset Quotes erd
 \end_inset
 
- scores of entry points (described in section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sub:Scoring-functions-used"
+ is called a 
+\emph on
+configuration
+\emph default
+, defining a tagging of input keywords as schema or value terms) and ranked
+ combining the scores of individual keywords in some way (e.g.
+ summing of log likelihoods, averaging, described below) with addition of
+ a couple of heuristics that boost the scores of 
+\emph on
+configurations
+\emph default
+ that 
+\begin_inset Quotes eld
+\end_inset
+
+respect
+\begin_inset Quotes erd
+\end_inset
+
+ the likely dependencies between the nearby keywords
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363170225
+the nearby keywords are expected to be related
+\begin_inset CommandInset citation
+LatexCommand citep
+key "keymantic_kws_metadata_bergamaschi2011"
 
 \end_inset
 
-), a set of heuristics, 
-\begin_inset Formula $H$
+, e.g.
+ a configuration is promoted if the tags of nearby keywords refer to the
+ same entity
+\end_layout
+
 \end_inset
 
- is applied to boost the final scores:
+.
 \end_layout
 
 \begin_layout Standard
-\begin_inset ERT
+
+\color blue
+\lang english
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\color blue
+\lang english
+entity near wildcard may mean what is being requested: what is the average
+ size of 
+\series bold
+Zmm datesets
+\series default
+ where number of events is more than 1000
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+
+\lang english
+Scoring functions used
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Scoring-functions-used"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+We experimented with two scoring functions, the first one basically averaging
+ the scores (as it was used by Keymantic
+\begin_inset CommandInset citation
+LatexCommand citep
+key "keymantic10"
+
+\end_inset
+
+), and the other of 
+\change_inserted -438528902 1363173286
+more 
+\change_unchanged
+probabilistic nature - summing the log likelihoods.
+ 
+\change_inserted -438528902 1363173695
+There, the 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $score(tag_{i}|kw_{i})$
+\end_inset
+
+ signifies the score assigned for scoring an individual keyword 
+\begin_inset Formula $kw_{i}$
+\end_inset
+
+ as 
+\begin_inset Formula $tag_{i}$
+\end_inset
+
+ (an entry point); 
+\begin_inset Formula $h_{j}(tag_{i}|kw_{i};tag_{i-1,..,1})$
+\end_inset
+
+ denotes the score boost returned by heuristic 
+\begin_inset Formula $h_{j}$
+\end_inset
+
+ given a concrete tagging so far (in most cases all tags are not needed).
+ 
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\lang english
+Averaging:
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset Formula 
+\begin{equation}
+score\_avg(tags|KWQ)=\frac{{\displaystyle \sum_{i=1}^{|KWQ|}{\displaystyle \left(score(tag_{i}|kw_{i})+{\displaystyle \sum_{h_{j}\in H}h_{j}(tag_{i}|kw_{i};tag_{i-1,..,1})}\right)}}}{N\_non\_stopword}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
-
-\backslash
-FloatBarrier
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang english
+resultype, etc?
 \end_layout
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\lang english
+Probabilistic:
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset Formula 
+\begin{equation}
+score\_prob(tags|KWQ)=\sum_{i=1}^{|KWQ|}\left({\displaystyle {\displaystyle \ln}\left(score(tag_{i}|kw_{i})\right)}+\sum_{h_{j}\in H}h_{j}(tag_{i}|kw_{i};tag_{i-1,..,1})\right)
+\end{equation}
+
+\end_inset
+
+
+\change_inserted -438528902 1363173709
+
+\end_layout
+
+\begin_layout Standard
+
+\change_inserted -438528902 1363174014
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang english
+Note that in 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+the
+\series bold
+\emph on
+ probabilistic 
+\series default
+\emph default
+approach we introduce a set of 
+\begin_inset Quotes eld
+\end_inset
+
+fake
+\begin_inset Quotes erd
+\end_inset
+
+ tags where keywords are not mapped to any known entity or operator (e.g.
+ a keyword is unrecognized, or it is a stop word) and we assign some predefined
+ score to it depending on it's category (e.g.
+ no score for stopword
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363173870
+
+\color cyan
+sort of useful stopwords: where, who, when?
+\change_unchanged
+
+\end_layout
+
+\end_inset
+
+).
+\change_unchanged
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+The two methods 
+\series bold
+\color red
+seemed to perform 
+\change_inserted -438528902 1363174079
+almost 
+\change_unchanged
+equally well
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color red
+\lang english
+do we need better test data?
+\end_layout
+
+\end_inset
+
+
+\series default
+\color inherit
+, with the probabilistic approach 
+\change_inserted -438528902 1363174093
+being
+\change_unchanged
+ more sensitive to variations in scoring quality of the entry points (the
+ scores are just estimates of our confidence, not real probabilities; the
+ results improved with improvements to accuracy of string matching functions),
+ however
+\series bold
+ 
+\color cyan
+it seems
+\series default
+\color inherit
+ the 
+\change_inserted -438528902 1363174137
+probabilistic
+\change_unchanged
+ approach is more exact in ranking the results when the entry point scores
+ are quite exact.
+ 
+\change_inserted -438528902 1363174309
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+The final scores of the probabilistic approach are also more complex to
+ interpret
+\change_deleted -438528902 1363174171
+ 
+\change_unchanged
+ (
+\change_inserted -438528902 1363174419
+we would like to present the user with color coding which identifies the
+ our confidence, and the scores if exponented vary much more than in averaging
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363174358
+
+\lang english
+, still one could estimate the high and low thresholds based on initial
+ scores
+\change_unchanged
+
+\end_layout
+
+\end_inset
+
+).
+
+\change_unchanged
+ 
+\change_inserted -438528902 1363173117
+
+\end_layout
+
+\begin_layout Subsubsection*
+
+\change_inserted -438528902 1363173120
+
+\color cyan
+\lang english
+The heuristics
+\change_unchanged
 
 \end_layout
 
@@ -5564,49 +5978,19 @@ promoting such combinations where nearby keywords refer to related schema
 \end_layout
 
 \begin_layout Itemize
-balance between taking 
-\change_deleted -438528902 1363018875
-most of
-\change_unchanged
- the keyword 
-\change_deleted -438528902 1363018882
-and
-\change_inserted -438528902 1363018882
-or
-\change_unchanged
- leaving 
-\change_inserted -438528902 1363018884
-it 
-\change_unchanged
-out 
-\change_inserted -438528902 1363018911
-(
-\change_unchanged
-the one
-\change_deleted -438528902 1363018915
-s
-\change_unchanged
- that we are unsure about
-\change_inserted -438528902 1363018922
-)
-\change_unchanged
+balance between taking
+\change_deleted -438528902 1363173135
  
+\change_unchanged
+ the keyword or leaving it out (the one that we are unsure about) 
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
-\change_deleted -438528902 1363018982
-
 \series bold
 \color magenta
- 
-\change_unchanged
-Keymantic 
-\change_inserted -438528902 1363018968
-assumed all keyword have interpretation!
-\change_unchanged
-
+Keymantic assumed all keyword have interpretation!
 \end_layout
 
 \end_inset
@@ -5680,154 +6064,36 @@ not yet implemented
 \end_inset
 
 
+\change_inserted -438528902 1363173236
+
 \end_layout
 
 \end_deeper
-\begin_layout Standard
-
-\color blue
-\lang english
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-
-\color blue
-\lang english
-entity near wildcard may mean what is being requested: what is the average
- size of 
-\series bold
-Zmm datesets
-\series default
- where number of events is more than 1000
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsubsection*
 
-\lang english
-Scoring functions used
-\begin_inset CommandInset label
-LatexCommand label
-name "sub:Scoring-functions-used"
+\change_inserted -438528902 1363173255
 
-\end_inset
-
-
+\color cyan
+Prunning the candidates
 \end_layout
 
 \begin_layout Standard
 
-\lang english
-We experimented with two scoring functions, the first one basically averaging
- the scores (as it was used by Keymantic
-\begin_inset CommandInset citation
-LatexCommand citep
-key "keymantic10"
+\change_inserted -438528902 1363173255
 
+\color cyan
+During the same step, the configurations that are compatible with our data
+ integration system (currently not all 
+\begin_inset Quotes eld
 \end_inset
 
-), and the other of probabilistic nature - summing the log likelihoods.
- 
-\end_layout
-
-\begin_layout Standard
-
-\lang english
-Averaging:
-\end_layout
-
-\begin_layout Standard
-
-\lang english
-\begin_inset Formula 
-\begin{equation}
-score\_avg(tags|KWQ)=\frac{{\displaystyle \sum_{i=1}^{|KWQ|}{\displaystyle \left(score(tag_{i}|kw_{i})+{\displaystyle \sum_{h_{j}\in H}h_{j}(tag_{i}|kw_{i};tag_{i-1,..,1})}\right)}}}{N\_non\_stopword}
-\end{equation}
-
+possible
+\begin_inset Quotes erd
 \end_inset
 
-
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\uuline off
-\uwave off
-\noun off
-\color none
-\lang english
-resultype, etc?
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\lang english
-Probabilistic:
-\end_layout
-
-\begin_layout Standard
-
-\lang english
-\begin_inset Formula 
-\begin{equation}
-score\_prob(tags|KWQ)=\sum_{i=1}^{|KWQ|}\left({\displaystyle {\displaystyle \ln}\left(score(tag_{i}|kw_{i})\right)}+\sum_{h_{j}\in H}h_{j}(tag_{i}|kw_{i};tag_{i-1,..,1})\right)
-\end{equation}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\lang english
-The two methods 
-\series bold
-\color red
-seemed to perform equally well
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-\lang english
-do we need better test data?
-\end_layout
-
-\end_inset
-
-
-\series default
-\color inherit
-, with the probabilistic approach to be more sensitive to variations in
- scoring quality of the entry points (the scores are just estimates of our
- confidence, not real probabilities; the results improved with improvements
- to accuracy of string matching functions), however it seems the second
- approach is more exact in ranking the results when the entry point scores
- are quite exact.
- The final scores of the probabilistic approach are also more complex to
- interpret the result (if we have low score for an interpretation of a keyword
- it doesn't necessarily mean it is not a good match).
+ queries could be answered) are interpreted as structured queries, where
+ we disambiguate the keyword matchings between the result type, the projections
+ or filters, or simple operators [min, avg, unique etc] .
 \end_layout
 
 \begin_layout Subsubsection
