@@ -31,7 +31,7 @@ from   types import GeneratorType
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, json_parser
 from DAS.utils.utils import expire_timestamp, convert2ranges
-from DAS.utils.url_utils import getdata
+from DAS.utils.url_utils import getdata, proxy_getdata
 import DAS.utils.jsonwrapper as json
 
 def get_api(url):
@@ -99,6 +99,26 @@ class DBS3Service(DASAbstractService):
         expire  = edict.get('expire')
         data, _ = self.getdata_helper(url[0], params, expire)
         blocks  = json.load(data)
+
+        # TEST data_proxy, please note that urls must be strings
+        # and not unicode (therefore we use encode function for conversion)
+#        blocks = (r['block_name'] for r in blocks)
+#        urls = ('%s?block_name=%s' % (url[1], urllib.quote(b)) \
+#                for b in blocks)
+#        gen = proxy_getdata(urls)
+#        for filelumis in gen:
+#            if  isinstance(filelumis, list):
+#                for row in filelumis:
+#                    lumi = row.get('lumi_section_num', None)
+#                    lfn  = row.get('logical_file_name', None)
+#                    rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
+#                    yield rec
+#            else:
+#                lumi = row.get('lumi_section_num', None)
+#                lfn  = row.get('logical_file_name', None)
+#                rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
+#                yield rec
+
         for row in blocks:
             params = {'block_name': row['block_name']}
             val, expire = self.getdata_helper(url[1], params, expire)
