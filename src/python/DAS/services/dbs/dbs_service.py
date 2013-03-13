@@ -446,12 +446,15 @@ class DBSService(DASAbstractService):
             if  not kwds['path'] and not kwds['block_name']:
                 kwds['path'] = 'required'
             del kwds['status']
-        if  api == 'fakeFiles4DatasetRun':
+        if  api == 'fakeFiles4DatasetRun' or api == 'fakeFiles4BlockRun':
             cond = ""
-            val = kwds['dataset']
+            entity = 'dataset'
+            if  api == 'fakeFiles4BlockRun':
+                entity = 'block'
+            val = kwds[entity]
             if  val and val != 'required':
-                cond = " and dataset=%s" % val
-                kwds.pop('dataset')
+                cond = " and %s=%s" % (entity, val)
+                kwds.pop(entity)
             val = kwds['run']
             if  val and val != 'required':
                 if  isinstance(val, dict):
@@ -507,7 +510,7 @@ class DBSService(DASAbstractService):
             prim_key = 'block'
         elif api == 'listFiles':
             prim_key = 'file'
-        elif api == 'fakeFiles4DatasetRun':
+        elif api == 'fakeFiles4DatasetRun' or api == 'fakeFiles4BlockRun':
             prim_key = 'file'
         elif api == 'listFileLumis':
             prim_key = 'file_lumi_section'
