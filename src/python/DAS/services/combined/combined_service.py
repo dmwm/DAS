@@ -30,6 +30,7 @@ from DAS.utils.ddict import DotDict
 from DAS.utils.utils import expire_timestamp, print_exc
 from DAS.utils.global_scope import SERVICES
 from DAS.utils.url_utils import getdata
+from DAS.utils.regex import site_pattern, se_pattern
 
 #
 # NOTE:
@@ -59,6 +60,66 @@ def which_dbs(dbs_url):
     if  dbs_url.find('servlet') != -1:
         return 'dbs'
     return 'dbs3'
+
+def phedex_files(phedex_url, kwds):
+    "Get file information from Phedex"
+    params = dict(kwds) # parameters to be send to Phedex
+    site = kwds.get('site', None)
+    if  site and site_pattern.match(site):
+        params.update({'node': site})
+        params.pop('site')
+    elif site and se_pattern.match(site):
+        params.update({'se': site})
+        params.pop('site')
+    else:
+        return
+    expire = 600 # set some expire since we're not going to use it
+    headers = {'Accept': 'text/xml'}
+    source, expire = \
+        getdata(phedex_url, params, headers, expire, ckey=CKEY, cert=CERT)
+    tags = 'block.file.name'
+    prim_key = 'block'
+    for rec in xml_parser(source, prim_key, tags):
+        ddict = DotDict(rec)
+        files = ddict.get('block.file')
+        if  not isinstance(files, list):
+            files = [files]
+        for row in files:
+            yield row['name']
+
+def dbs_files4runs(dbs_url, files, runs):
+    """
+    DBS filter accepts list of runs and files and yield the matches.
+    TODO: need to run it via proxy_getdata for concurrent access to DBS.
+    """
+    expire = 600 # set some expire since we're not going to use it
+    if  which_dbs(dbs_url) == 'dbs':
+        # in DBS3 I'll use datasets API and pass release over there
+        for fname in files:
+            query = 'find run where file=%s' % fname
+            dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
+                        'query':query}
+            headers = {'Accept': 'text/xml'}
+            source, expire = \
+                getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
+            prim_key = 'run'
+            for row in qlxml_parser(source, prim_key):
+                run = row['run']['run']
+                if  run in runs:
+                    yield (run, fname)
+    else:
+        # we call runs?lfn=lfn to get list of runs from DBS
+        dbs_url += '/runs'
+        headers = {'Accept': 'application/json;text/json'}
+        for fname in files:
+            dbs_args = {'logical_file_name':fname}
+            source, expire = \
+                getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
+            for rec in json_parser(source, None):
+                for row in rec:
+                    runlist = row['run_num']
+                    if  set(runlist) & set(runs):
+                        yield (runlist, fname)
 
 def dbs_dataset4site_release(dbs_url, release):
     "Get dataset for given site and release"
@@ -306,3 +367,27 @@ class CombinedService(DASAbstractService):
                     args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)
+
+def test_phedex_files():
+    "Test phedex_files"
+    url = 'https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas'
+    site = 'T2_IN_TIFR'
+    dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
+    block = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
+    kwds = {'block':block, 'site':site}
+    kwds = {'dataset':dataset, 'site':site}
+    gen = phedex_files(url, kwds)
+    for row in gen:
+        yield row
+
+def test_dbs_files4runs():
+    url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+    url = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+    files = test_phedex_files()
+    runs = [177718, 177053]
+    for row in dbs_files4runs(url, files, runs):
+        print row
+
+if __name__ == '__main__':
+#    test_phedex_files()
+    test_dbs_files4runs()
