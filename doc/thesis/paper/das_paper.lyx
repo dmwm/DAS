@@ -3605,12 +3605,8 @@ tion,
  that returns ranked list of best matching queries
 \change_unchanged
 , where we focused on the quality of results
-\change_deleted -438528902 1362845676
- and 
 \change_inserted -438528902 1362845679
- with the goal of 
-\change_deleted -438528902 1362845680
-on
+ with the goal of
 \change_unchanged
  not enforcing any assumptions on the input queries (
 \change_deleted -438528902 1363108593
@@ -3623,8 +3619,6 @@ a
 just 
 \change_unchanged
 keyword
-\change_deleted -438528902 1363108599
- queries
 \change_inserted -438528902 1363108599
 s
 \change_unchanged
@@ -3661,8 +3655,6 @@ Keymantic
 
 ).
  The 
-\change_deleted -438528902 1363108652
-heuristics-based approach
 \change_inserted -438528902 1363108654
 implementation
 \change_unchanged
@@ -3674,27 +3666,14 @@ implementation
 \change_inserted -438528902 1362845914
  for future improvements to various components of the system, such as initial
  entry points, or ranking of the results
-\change_deleted -438528902 1362846150
- machine learning approach once sufficient amount of historical query data
- and user's feedback is available for the training
 \change_unchanged
 .
 \end_layout
 
 \begin_layout Standard
-
-\color blue
-Knowing the constraints on the project duration, we 
-\change_deleted -438528902 1363108674
-did
-\change_inserted -438528902 1363108675
-had to
-\change_unchanged
- exclude 
-\change_deleted -438528902 1363108962
-this
-\change_inserted -438528902 1363108964
-a number of items
+Knowing the constraints on the project duration, 
+\change_inserted -438528902 1363175081
+a number of items had to be excluded
 \change_unchanged
  from 
 \change_inserted -438528902 1363108687
@@ -3729,8 +3708,6 @@ not directly supported by the EII system and the service performance is
 status collapsed
 
 \begin_layout Plain Layout
-
-\color blue
 this due to issues with data service performance and unavailability of basic
  capabilities such as pagination or sorting of their results; we do not
  control the data services, so a number of suggestions for the providers
@@ -3752,30 +3729,18 @@ reference "sub:cms-Performance-Issues"
 )
 \change_unchanged
 ; 
-\change_deleted -438528902 1363108741
-also we did not focus on
 \change_inserted -438528902 1363108744
 and lastly
 \change_unchanged
  the performance 
-\change_inserted -438528902 1363108799
-is of lowest priority
-\change_deleted -438528902 1363109208
-( is OK without optimizations, and 
-\change_inserted -438528902 1363109214
-as
-\change_deleted -438528902 1363109208
-was already covered by the earlier works
-\change_inserted -438528902 1363109160
- the performance perceived by end user is still dominated by services taking
- minutes to respond
+\change_inserted -438528902 1363175239
+is of lower priority, as the end user's perceived performance is still dominated
+ by services taking minutes to respond
 \change_deleted -438528902 1363109229
 )
 \change_inserted -438528902 1363109256
 , and the performance was already covered by the earlier works
 \change_unchanged
-
-\color inherit
 .
 \color magenta
 
@@ -4090,30 +4055,7 @@ respect
 \begin_inset Quotes erd
 \end_inset
 
- the likely dependencies between the nearby keywords
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-the nearby keywords are expected to be related
-\begin_inset CommandInset citation
-LatexCommand citep
-key "keymantic_kws_metadata_bergamaschi2011"
-
-\end_inset
-
-, e.g.
- a configuration is promoted if the tags of nearby keywords refer to the
- same entity
-\end_layout
-
-\end_inset
-
-.
-
-\change_deleted -438528902 1363170843
- 
-\change_unchanged
+ the likely dependencies between the nearby keywords.
  During the same step, the configurations that are compatible with our data
  integration system are
 \change_inserted -438528902 1363171174
@@ -5573,6 +5515,14 @@ s
 \change_unchanged
  the false positives\SpecialChar \@.
 
+\change_inserted -438528902 1363175778
+
+\begin_inset Newpage clearpage
+\end_inset
+
+
+\change_unchanged
+
 \end_layout
 
 \begin_layout Subsection
@@ -5592,7 +5542,7 @@ name "sub:Ranking-function"
 
 \begin_layout Standard
 
-\change_inserted -438528902 1363173085
+\change_inserted -438528902 1363175801
 As the last step, different combinations of the entry points (where each
  permutation of keyword 
 \begin_inset Quotes eld
@@ -5642,13 +5592,30 @@ key "keymantic_kws_metadata_bergamaschi2011"
 
 \end_inset
 
-.
+ 
+\color cyan
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363175801
+
+\color cyan
+(the heuristics are presented after the scoring functions)
+\change_unchanged
+
 \end_layout
 
-\begin_layout Standard
+\end_inset
+
+.
+\change_unchanged
 
 \color blue
 \lang english
+
 \begin_inset Note Note
 status collapsed
 
@@ -5672,7 +5639,7 @@ Zmm datesets
 \begin_layout Subsubsection*
 
 \lang english
-Scoring functions used
+The scoring functions 
 \begin_inset CommandInset label
 LatexCommand label
 name "sub:Scoring-functions-used"
@@ -5738,9 +5705,13 @@ There, the
 
 \begin_layout Standard
 
+\change_deleted -438528902 1363175858
+
 \series bold
 \lang english
 Averaging:
+\change_unchanged
+
 \end_layout
 
 \begin_layout Standard
@@ -5754,36 +5725,17 @@ score\_avg(tags|KWQ)=\frac{{\displaystyle \sum_{i=1}^{|KWQ|}{\displaystyle \left
 \end_inset
 
 
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\uuline off
-\uwave off
-\noun off
-\color none
-\lang english
-resultype, etc?
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
 
+\change_deleted -438528902 1363175861
+
 \series bold
 \lang english
 Probabilistic:
+\change_unchanged
+
 \end_layout
 
 \begin_layout Standard
@@ -5957,11 +5909,11 @@ status open
 
 \begin_layout Subsubsection*
 
-\change_inserted -438528902 1363173120
+\change_inserted -438528902 1363175381
 
 \color cyan
 \lang english
-The heuristics
+The heuristics and pruning out the unacceptable candidates
 \change_unchanged
 
 \end_layout
@@ -6035,6 +5987,29 @@ promote data service inputs over filters on their results: 1) it is more
 \end_layout
 
 \begin_layout Itemize
+
+\change_inserted -438528902 1363175536
+if some keyword can be matched as the requested entity, and mapping of other
+ keywords fits the service constraints
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363175554
+
+\color cyan
+shall we allow both as filter name and result type? no?
+\change_unchanged
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
 if requested entity and a filter condition is the same (a small increase,
  a common use-case is retrieving an entity given it's 
 \begin_inset Quotes eld
@@ -6069,33 +6044,6 @@ not yet implemented
 \end_layout
 
 \end_deeper
-\begin_layout Subsubsection*
-
-\change_inserted -438528902 1363173255
-
-\color cyan
-Prunning the candidates
-\end_layout
-
-\begin_layout Standard
-
-\change_inserted -438528902 1363173255
-
-\color cyan
-During the same step, the configurations that are compatible with our data
- integration system (currently not all 
-\begin_inset Quotes eld
-\end_inset
-
-possible
-\begin_inset Quotes erd
-\end_inset
-
- queries could be answered) are interpreted as structured queries, where
- we disambiguate the keyword matchings between the result type, the projections
- or filters, or simple operators [min, avg, unique etc] .
-\end_layout
-
 \begin_layout Subsubsection
 Tuning the scoring parameters
 \end_layout
@@ -6142,7 +6090,13 @@ packages, tool-kits: uncertainties, nltk, wordnet,mongodb
 
 \begin_layout Subsection
 
-\change_inserted -438528902 1362828942
+\change_inserted -438528902 1363175925
+Miscellanea
+\end_layout
+
+\begin_layout Subsubsection*
+
+\change_inserted -438528902 1363175922
 Automatically identifying the 
 \color red
 qualities
@@ -6211,7 +6165,7 @@ In future we may also the data types (string, integer) as hints for scoring
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection*
 Natural Language Processing and full-sentence search
 \end_layout
 
@@ -6316,7 +6270,7 @@ Word-Sense-Disambiguation could be still potentially useful, however as
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection*
 Performance
 \end_layout
 
