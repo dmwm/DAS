@@ -255,7 +255,8 @@ params : {
 lookup : file
 das_map : [
     {"das_key": "file", "rec_key":"file.name"},
-    {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name"},
+    {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"minrun"},
     {"das_key": "release", "rec_key":"release.name", "api_arg":"release_version"},
     {"das_key": "status", "rec_key":"status.name", "api_arg":"status"},
