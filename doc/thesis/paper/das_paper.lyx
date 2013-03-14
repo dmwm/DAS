@@ -843,8 +843,8 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-The virtual integration of data-services (also referred to as Enterprise
- Information Integration, EII
+The virtual integration of data-services, also referred to as Enterprise
+ Information Integration (EII
 \begin_inset CommandInset nomenclature
 LatexCommand nomenclature
 symbol "EII"
@@ -852,8 +852,8 @@ description "Enterprise Information Integration\\\\"
 
 \end_inset
 
-) allows querying the sources in a coherent way (eliminating the inconsistencies
- in data formats such as JSON vs XML, provides naming conventions, combines
+), allows querying the sources in a coherent way (eliminating the inconsistencie
+s in data formats such as JSON vs XML, provides naming conventions, combines
  the results, etc.) and is the most beneficial when the other 
 \color blue
 data 
@@ -928,6 +928,9 @@ the mechanisms for user feedback
 status open
 
 \begin_layout Plain Layout
+
+\series bold
+\color red
 focus: user interface instead?
 \end_layout
 
@@ -1237,21 +1240,7 @@ name "sec:State-of-the"
 \begin_layout Standard
 
 \lang english
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-\lang english
-Shorten this down, and move to related work; call it: Background? 
-\end_layout
-
-\end_inset
-
-During the last 15 years, significant experience has been accumulated in
- the field of 
+Significant experience has been accumulated in the field of 
 \shape italic
 Enterprise Information Integration
 \shape default
@@ -1280,20 +1269,15 @@ key "eii_2005"
 
 \end_inset
 
- (EII) including: data integration formalisms, ways of describing heterogeneous
- data sources and their abilities (e.g.
- database vs web form), query optimization (combining sources efficiently,
- source overlap, data quality, etc) 
+ (EII) including: data integration formalisms, query optimization 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "eii_2005"
 
 \end_inset
 
-.
- Recent research in Enterprise Information Integration mostly focused on
- approaches minimizing human efforts on source integration, e.g.
- on probabilistic self-improving EII systems 
+, with the recent research focusing on the approaches minimizing human efforts
+ in source integration 
 \begin_inset CommandInset citation
 LatexCommand citep
 after "ch.19"
@@ -1316,43 +1300,6 @@ key "keymantic_kws_metadata_bergamaschi2011,bergamaschi2011hidden,nl_to_dataserv
 \end_inset
 
  to address the problem.
-\end_layout
-
-\begin_layout Standard
-
-\lang english
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\color yellow
-TODO: Query Forms approach that propose SQL templates
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "sub_chapters/literature_overview_short.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Section*
@@ -1989,21 +1936,6 @@ also mention: NL querying over services
 
 \end_layout
 
-\begin_layout Section*
-
-\color red
-Discussion
-\end_layout
-
-\begin_layout Standard
-
-\color red
-Valentin: You need to finish section of Related Work with 
-\series bold
-some conclusion about what you considered be valuable for CMS use case and
- what were not.
-\end_layout
-
 \begin_layout Standard
 \begin_inset Newpage clearpage
 \end_inset
@@ -2012,7 +1944,7 @@ some conclusion about what you considered be valuable for CMS use case and
 \end_layout
 
 \begin_layout Chapter
-Background: EII at CMS, CERN
+Thesis context: EII at CMS, CERN
 \begin_inset CommandInset label
 LatexCommand label
 name "chap:Case-study:CMS"
@@ -2640,9 +2572,7 @@ avg(dataset.size)
 \end_layout
 
 \begin_layout Section
-Overview of the 
-\color magenta
-solution
+Overview of our approach
 \end_layout
 
 \begin_layout Standard
@@ -3205,7 +3135,7 @@ web-service
 \end_layout
 
 \begin_layout Section
-Implementation Details
+Details of the keyword search system
 \end_layout
 
 \begin_layout Standard
@@ -5353,6 +5283,106 @@ works on user feedback?
 
 \end_layout
 
+\begin_layout Standard
+In addition to the few most closely related works namely Keymantic
+\begin_inset CommandInset citation
+LatexCommand citep
+key "keymantic_kws_metadata_bergamaschi2011,keymantic10"
+
+\end_inset
+
+ and KEYRY 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "bergamaschi2011hidden"
+
+\end_inset
+
+ presented earlier
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+where?!
+\end_layout
+
+\end_inset
+
+, significant amounts of research exists in more distant fields presented
+ below.
+\end_layout
+
+\begin_layout Description
+Enterprise
+\begin_inset space ~
+\end_inset
+
+Information
+\begin_inset space ~
+\end_inset
+
+Integration
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+During the last 15 years, significant experience has been accumulated in
+ the field of 
+\shape italic
+Enterprise Information Integration
+\shape default
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+
+\lang english
+Enterprise Information Integration (EII) is about 'integrating data from
+ multiple sources 
+\shape italic
+without
+\shape default
+ having to to first load data into a central warehouse'
+\begin_inset CommandInset citation
+LatexCommand citep
+after "p.1"
+key "eii_2005"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ (EII) including: data integration formalisms, ways of describing heterogeneous
+ data sources and their abilities (e.g.
+ database vs web form), query optimization (combining sources efficiently,
+ source overlap, data quality, etc) 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "eii_2005"
+
+\end_inset
+
+.
+ Recent research in Enterprise Information Integration mostly focused on
+ approaches minimizing human efforts on source integration, e.g.
+ on probabilistic self-improving EII systems 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "ch.19"
+key "principles_data_integration"
+
+\end_inset
+
+.
+\end_layout
+
 \begin_layout Description
 String
 \begin_inset space ~
@@ -6074,8 +6104,8 @@ name "sub:cms-Performance-Issues"
 \end_layout
 
 \begin_layout Standard
-Analysis of query logs and benchmarking the most popular queries, it was
- found out that most of the performance issues were due to large data amounts
+Analysing query logs and benchmarking the most popular queries, it was found
+ out that most of the performance issues were due to large data amounts
  of data the providers are processing, including some unnecessarily work
  being repeated or requested without need (due to current limitations of
  services, which are not under our direct control).
