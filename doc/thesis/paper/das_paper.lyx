@@ -1730,6 +1730,10 @@ Structure of the work and our contributions
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset Marginal
 status open
 
@@ -1761,6 +1765,11 @@ reference "sec:State-of-the"
 ).
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 The chapter 
 \begin_inset CommandInset ref
@@ -1769,16 +1778,23 @@ reference "chap:Case-study:CMS"
 
 \end_inset
 
-, presents the EII system used within this work, 
+, presents the context in which this thesis was conducted - the EII system
+ and introduces
 \series bold
-introducing 
+ 
 \series default
-some real-world issues with EII, such as data-service performance,
+some real-world issues, such as data-service performance
 \color red
- [users confusion - intricacy of a query language where the fields in the
- results for same entity differs depending on the query] 
+ and system's usability 
 \color inherit
-and discusses ways for solving these.
+(the solutions are presented in appendix 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:CMS-war-stories"
+
+\end_inset
+
+).
 \end_layout
 
 \begin_layout Standard
@@ -1819,9 +1835,9 @@ reference "chap:Keyword-Search-over-DataServices"
 
 \end_inset
 
-, after formally defining the problem of keyword search over EII, a keyword
+, the problem of keyword search over EII is formally defined, and a keyword
  search engine is presented, that given a keyword query, proposes most probable
- structured queries .
+ structured queries.
  We propose a custom string similarity metric, discuss the presentation
  of results to the end users, and propose 
 \color red
@@ -1829,7 +1845,10 @@ combining keyword search with auto-completion
 \series bold
  
 \series default
-in a unique way.
+\color magenta
+in a unique way
+\color red
+.
 \end_layout
 
 \begin_layout Standard
@@ -1840,13 +1859,13 @@ reference "chap:Incorporating-User-Feedback"
 
 \end_inset
 
-, we discuss approaches allowing to incorporate
+, we discuss approaches towards incorporating
 \series bold
 \color red
  
 \series default
 \color inherit
-users feedback into keyword search over EII.
+users feedback into the keyword search over EII.
  The earlier mentioned auto-completion would allow getting the feedback
  of higher quality without overloading the users, that could be used for
  improving various parts of the system
