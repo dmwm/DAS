@@ -1367,42 +1367,11 @@ other terminology?
 \end_inset
 
 , the standard approach is to produce a ranked list of most-likely structured
- queries
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-
-\lang english
-e.g.
-
-\shape italic
- 
-\emph on
-the
-\emph default
- SODA
-\shape default
-
+ queries 
 \begin_inset CommandInset citation
 LatexCommand citep
-key "ethz2012"
-
-\end_inset
-
- system proposes SQL over a large data-warehouse, or 
-\emph on
-Keymantic
-\emph default
-
-\begin_inset CommandInset citation
-LatexCommand citep
-key "keymantic10"
-
-\end_inset
-
- attempting the same without accessing the data
-\end_layout
+before "e.g."
+key "ethz2012,keymantic10,bergamaschi2011hidden"
 
 \end_inset
 
@@ -1494,17 +1463,21 @@ Keyword querying over EII
 \begin_layout Standard
 
 \lang english
-Two works were identified to be the most closely related to our problem:
- heuristics-based keyword search (
-\emph on
-Keymantic
-\emph default
-), and the machine learning approach (
-\emph on
-KEYRY
-\emph default
-).
- 
+Two approaches that are presented below were identified as the closest to
+ our problem.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\lang english
+There was also an attempt towards answering open-domain natural language
+ queries over data-services, however this is further from out topic .
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1903,25 +1876,14 @@ key "keymantic_list_viterbi_training_rota2011"
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Standard
-According to 
+ According to 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "bergamaschi2011hidden"
 
 \end_inset
 
- the accuracy of 
-\emph on
-Keymantic
-\emph default
- and 
-\emph on
-KEYRY
-\emph default
- systems didn't differ much
+ the accuracy of the two systems didn't differ much
 \begin_inset Marginal
 status open
 
