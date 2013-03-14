@@ -1015,11 +1015,15 @@ tes; 2) the keyword search based on metadata returning query results directly,
 
 \begin_layout Standard
 The objective of this work is to research 
-\change_inserted -438528902 1363295165
-the latter variation of
+\change_inserted -438528902 1363296463
+the third option,
 \change_unchanged
- the keyword search as a more intuitive alternative, which, in fact, received
- little attention in the field of data service integration
+ the keyword search
+\change_inserted -438528902 1363296494
+ proposing the ranked list of queries,
+\change_unchanged
+ as a more intuitive alternative, which, in fact, received little attention
+ in the field of data service integration
 \begin_inset CommandInset citation
 LatexCommand citep
 key "nl_to_dataservices_guerrisi2012natural"
