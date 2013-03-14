@@ -2012,7 +2012,7 @@ some conclusion about what you considered be valuable for CMS use case and
 \end_layout
 
 \begin_layout Chapter
-Project Background: Data Integration at CMS, CERN
+Background: EII at CMS, CERN
 \begin_inset CommandInset label
 LatexCommand label
 name "chap:Case-study:CMS"
@@ -2064,9 +2064,9 @@ key "Kuznetsov2010,Kuznetsov2011"
 
  
 \emph default
-is in use at CMS, CERN, allowing integrated access to a number of proprietary
- data-sources through simple structured queries (eliminating the inconsistencies
- in entity naming, data formats, combining the results,
+allows integrated access to a number of proprietary data-sources through
+ simple structured queries (eliminating the inconsistencies in entity naming,
+ data formats, combining the results,
 \series bold
 \color cyan
  
@@ -2107,15 +2107,15 @@ The queries are executed either from web browser or through a command line
 \end_layout
 
 \begin_layout Paragraph*
-DAS Query language
+Query language and execution
 \end_layout
 
 \begin_layout Standard
 The queries are formed specifying the entity the user is interested in (e.g.
  dataset, file, etc) and providing selection criteria (e.g.
  attribute=value, attribute BETWEEN [v1, v2]).
- The combined query results could be later 'piped' for further filtering,
- sorting or aggregation (min, max, avg, sum, count, median), e.g.: 
+ The results could be later 'piped' for further filtering, sorting or aggregatio
+n (min, max, avg, sum, count, median), e.g.: 
 \end_layout
 
 \begin_layout Standard
@@ -2183,34 +2183,29 @@ This close correspondence between the query language and the physical execution
 \end_layout
 
 \begin_layout Paragraph*
-Data-Source qualities, Infrastructure
+The Data-Sources
 \end_layout
 
 \begin_layout Standard
+The system integrates around 15 data providers
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
-
-\series bold
-\color red
-service constraints?!
+ (~100 interfaces in JSON, XML, or structured queries)
 \end_layout
 
 \end_inset
 
-Currently the system integrates around 15 data providers, or around 100
- data service interfaces (APIs).
- The most of data-sources at CMS were initially created focusing on data
- taking (for recording the measurements from the CMS particle detector),
- without much attention to the information retrieval.
+.
+ The most of data-sources were created initially focusing on data storage
+ without much attention to its retrieval.
  The services are not optimized for querying the fairly large data volumes
- stored: data is stored in fully-relational fashion, resulting in complex
- joins over large tables; even worse, the interfaces of the services do
- not allow limiting the number of results to be returned, nor sorting.
-\end_layout
+ stored
+\begin_inset Foot
+status collapsed
 
-\begin_layout Standard
+\begin_layout Plain Layout
 The total sizes of 
 \begin_inset Quotes eld
 \end_inset
@@ -2224,6 +2219,13 @@ metadata
  For instance, the DBS, one of the biggest services, is partitioned among
  ~10 instances, with the biggest containing 80GB of data + 280GB of indexes
  in Oracle.
+\end_layout
+
+\end_inset
+
+: the data is kept in fully-relational fashion, thus queries often require
+ complex joins over large tables; even worse, the interfaces of the services
+ do not allow limiting the number of results to be returned, nor sorting.
 \end_layout
 
 \begin_layout Paragraph*
