@@ -1042,8 +1042,7 @@ key "Koch00CERN"
 \series default
 \color inherit
 .
- As data stored on one system may be related to data residing on the others,
- users are in need of a centralized and easy-to-use solution for locating
+ Often users are in need of a centralized and easy-to-use solution for locating
  and combining data from all these multiple sources.
  
 \end_layout
@@ -1065,8 +1064,8 @@ schema
 \end_inset
 
  and the query language.
- However, even the tech-savvy users may have only a vague idea of where
- exactly to find what they need.
+ Still, even the tech-savvy users may have only a vague idea of where exactly
+ to find what they need.
 \end_layout
 
 \begin_layout Standard
