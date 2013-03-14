@@ -118,7 +118,7 @@ figs-within-sections
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
-\tracking_changes true
+\tracking_changes false
 \output_changes false
 \html_math_output 0
 \html_css_as_file 0
@@ -243,15 +243,21 @@ Master Thesis
 \end_layout
 
 \begin_layout Title
-Keyword Search 
-\change_inserted -438528902 1362778296
-over
-\change_unchanged
- Data Service Integration
-\change_inserted -438528902 1362778341
- for Precise Results
-\change_unchanged
+\begin_inset Marginal
+status open
 
+\begin_layout Plain Layout
+
+\series bold
+\color red
+make better & more CS precise title
+\end_layout
+
+\end_inset
+
+Keyword Search over Data Service Integration 
+\color red
+for Precise Results
 \end_layout
 
 \begin_layout Author
@@ -277,12 +283,12 @@ Supervised by:
 
 
 \series bold
-phd.
+Dr.
  Robert Gwadera (LSIR, EPFL)
 \begin_inset Newline newline
 \end_inset
 
-prof.
+Prof.
  Karl Aberer (LSIR, EPFL)
 \series default
 \lang english
@@ -290,7 +296,7 @@ prof.
 \begin_inset Newline newline
 \end_inset
 
-phd.
+Dr.
  Valentin 
 \lang british
 Kuznetsov
@@ -303,7 +309,7 @@ Cornell Univ., USA
 \begin_inset Newline newline
 \end_inset
 
-phd.
+Dr.
  Peter Kreuzer (CERN)
 \begin_inset Newline newline
 \end_inset
@@ -327,38 +333,26 @@ alike
  
 \series bold
 traditional methods
-\change_inserted -438528902 1363015198
-
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363015292
-
 \series bold
 \color cyan
 trad of kws @ relational databases (SPARK); also IR, SPARK don't fit as
  queries as answers needed
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
 
-\change_unchanged
-
 \series default
  are not applicable, as only a limited access to the data instances is available
  in this case.
-\change_inserted -438528902 1362777938
-
 \end_layout
 
 \begin_layout Abstract
-
-\change_inserted -438528902 1363015344
 
 \color red
 In this work we present a keyword search system that approaches this problem
@@ -373,8 +367,6 @@ In this work we present a keyword search system that approaches this problem
 
 \begin_layout Abstract
 
-\change_inserted -438528902 1363015350
-
 \series bold
 \color red
 Unlike the earlier works, 
@@ -388,8 +380,6 @@ it makes no assumptions on the input query (still being able to leverage
 
 \begin_layout Abstract
 
-\change_inserted -438528902 1362777939
-
 \color red
 The system is discussed within context of CMS data discovery service where
  simplicity and capabilities of the search interface places a crucial role
@@ -401,11 +391,7 @@ The system is discussed within context of CMS data discovery service where
 \begin_layout Abstract
 
 \color red
-Our innovations/distinctive
-\change_inserted -438528902 1363015408
-ness
-\change_unchanged
- from earlier works:
+Our innovations/distinctiveness from earlier works:
 \end_layout
 
 \begin_layout Abstract
@@ -423,24 +409,14 @@ ness
 \begin_layout Abstract
 
 \color red
-* auto
-\change_inserted -438528902 1362824985
--
-\change_unchanged
-completion and ideas for further work on incorporating users feedback
-\change_inserted -438528902 1363114333
-
+* auto-completion and ideas for further work on incorporating users feedback
 \end_layout
 
 \begin_layout Abstract
-
-\change_inserted -438528902 1363114361
 * detailed description; 
 \end_layout
 
 \begin_layout Abstract
-
-\change_inserted -438528902 1363114414
 * reference implementation -- no open-source exists to our knowledge; still
  large portions of code needs to be rewritten (as it was initially developed
  as 
@@ -452,8 +428,6 @@ research prototypes
 \end_inset
 
 , and lack of time didn't allow redesigning)
-\change_unchanged
-
 \end_layout
 
 \begin_layout Publishers
@@ -801,38 +775,24 @@ Acknowledgements
 This work was financially supported by the Computing group of the Compact
  Muon Solenoid Experiment at the European Organization for Nuclear Research
  (CERN).
- The author of this report is thankful to Robert Gwadera and prof.
- Karl Aberer who supervised this Master Thesis project
-\change_inserted -438528902 1363080878
-, as well as, to the responsible people at the company, Peter Kreuzer and
- Valentin Kuznetsov, for their support and helpful comments
-\change_unchanged
-.
-\change_inserted -438528902 1363080826
-
-\end_layout
-
-\begin_layout Standard
-
-\change_inserted -438528902 1363002768
+ The author of this report is thankful to Dr.
+ Robert Gwadera and prof.
+ Karl Aberer who supervised this Master Thesis project, as well as, to the
+ responsible people at the company, Dr.
+ Peter Kreuzer and Dr.
+ Valentin Kuznetsov, for their support and valuable comments.
 \begin_inset Note Note
-status open
+status collapsed
 
 \begin_layout Section
-
-\change_inserted -438528902 1363002768
 Comments
 \end_layout
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363002768
 Valentin:
 \end_layout
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363002768
 2.
  You need to finish section of Related Work with 
 \series bold
@@ -841,8 +801,6 @@ some conclusion about what you considered be valuable for CMS use case and
 \end_layout
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363002768
 3.
  I think it would be useful if you 
 \series bold
@@ -855,16 +813,12 @@ expand Problem statement
 \end_layout
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363002768
 5.
  2.3.6 Performance section should show actual benchmark numbers for some query
  patterns
 \end_layout
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363002768
 
 \series bold
 7.
@@ -877,23 +831,10 @@ expand Problem statement
  This can also explain why CMS services where not designed originally as
  information retrieval system and rather being architectured around production
  use cases of CMS/LHC.
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\change_unchanged
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Newpage clearpage
-\end_inset
-
-
-\change_deleted -438528902 1362777639
 
 \end_layout
 
@@ -911,25 +852,11 @@ description "Enterprise Information Integration\\\\"
 
 \end_inset
 
-)
-\change_inserted -438528902 1362836452
- allows querying the sources in a coherent way (eliminating the inconsistencies
+) allows querying the sources in a coherent way (eliminating the inconsistencies
  in data formats such as JSON vs XML, provides naming conventions, combines
- the results, etc.) and
-\change_unchanged
- is 
-\change_inserted -438528902 1362835891
-the most 
-\change_unchanged
-beneficial when the other 
-\change_deleted -438528902 1362836127
-
+ the results, etc.) and is the most beneficial when the other 
 \color blue
-information
-\change_inserted -438528902 1362836127
-data
-\change_unchanged
- 
+data 
 \color inherit
 integration approaches are not applicable
 \begin_inset Foot
@@ -938,11 +865,8 @@ status collapsed
 \begin_layout Plain Layout
 for instance, publish-subscribe approach is not applicable in the presence
  of proprietary (and reluctant to change) systems, data-warehousing is too
- heavy and complex then large portions of data is volatile
-\change_inserted -438528902 1362836044
- or when only limited interfaces are provided by proprietary services.
-\change_unchanged
-
+ heavy and complex then large portions of data is volatile or when only
+ limited interfaces are provided by proprietary services.
 \end_layout
 
 \end_inset
@@ -982,8 +906,6 @@ Building on the experience gained while working on an EII system
 at the 
 \emph on
 CMS Experiment
-\change_inserted -438528902 1362843902
-
 \emph default
 
 \begin_inset CommandInset nomenclature
@@ -993,8 +915,6 @@ description "The Compact Moun Selenoid Experiment at the European Organization f
 
 \end_inset
 
-
-\change_unchanged
  at 
 \emph on
 CERN
@@ -1002,25 +922,17 @@ CERN
 , we will focus on the implementation of keyword search and 
 \color red
 the mechanisms for user feedback
-\change_inserted -438528902 1362836264
-
 \color inherit
 
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1362836276
 focus: user interface instead?
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\change_unchanged
 , also touching some
 \series bold
  
@@ -1131,6 +1043,17 @@ Structure of the work and our contributions
 \end_layout
 
 \begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+make this part of intro??
+\end_layout
+
+\end_inset
+
 First, we present an overview of the state-of-the-art in the field
 \begin_inset Note Note
 status collapsed
@@ -1141,13 +1064,7 @@ status collapsed
 
 \end_inset
 
- (
-\change_deleted -438528902 1362928937
-section
-\change_inserted -438528902 1362928938
-chapter
-\change_unchanged
- 
+ (chapter 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sec:State-of-the"
@@ -1155,14 +1072,9 @@ reference "sec:State-of-the"
 \end_inset
 
 ).
- 
-\change_inserted -438528902 1362908132
-
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1362908600
 The chapter 
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -1180,8 +1092,6 @@ some real-world issues with EII, such as data-service performance,
  results for same entity differs depending on the query] 
 \color inherit
 and discusses ways for solving these.
-\change_unchanged
-
 \end_layout
 
 \begin_layout Standard
@@ -1222,34 +1132,11 @@ reference "chap:Keyword-Search-over-DataServices"
 
 \end_inset
 
-, 
-\change_inserted -438528902 1362908277
-after formally defining the problem of keyword search over EII, 
-\change_deleted -438528902 1362908293
-the design and implementation of
-\change_unchanged
- a keyword search engine is presented, that given a keyword query, proposes
- 
-\change_deleted -438528902 1362908656
-top-k 
-\change_unchanged
-most probable structured queries 
-\change_deleted -438528902 1362908664
-which can later be answered over data service integration at the CMS Experiment,
- CERN
-\change_unchanged
-.
- We propose a 
-\change_deleted -438528902 1362908681
-combined
-\change_inserted -438528902 1362908682
-custom
-\change_unchanged
- string similarity metric, discuss the presentation of results
-\change_inserted -438528902 1362908690
- to the end users
-\change_unchanged
-, and propose 
+, after formally defining the problem of keyword search over EII, a keyword
+ search engine is presented, that given a keyword query, proposes most probable
+ structured queries .
+ We propose a custom string similarity metric, discuss the presentation
+ of results to the end users, and propose 
 \color red
 combining keyword search with auto-completion
 \series bold
@@ -1273,24 +1160,13 @@ reference "chap:Incorporating-User-Feedback"
 \series default
 \color inherit
 users feedback into keyword search over EII.
- The earlier mentioned auto-completion would allow
-\change_deleted -438528902 1362908737
-s
-\change_unchanged
- getting 
-\change_inserted -438528902 1362908742
-the 
-\change_unchanged
-feedback of higher quality without overloading the users, that could be
- used for improving various parts of the system
+ The earlier mentioned auto-completion would allow getting the feedback
+ of higher quality without overloading the users, that could be used for
+ improving various parts of the system
 \series bold
  
 \series default
-(
-\change_deleted -438528902 1362908757
-for 
-\change_unchanged
-future work).
+(future work).
  
 \end_layout
 
@@ -1307,17 +1183,28 @@ reference "chap:Evaluation"
 \end_layout
 
 \begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+add: Related work; conclusions; cms solutions moved to appendix;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 
 \emph on
 Note:
 \emph default
- The project 
-\change_inserted -438528902 1362908774
-also 
-\change_unchanged
-included these time-demanding tasks: 1) choosing a precise topic to focus
- on - because the area is not so actively researched and there is no concise
- terminology
+ The project also included these time-demanding tasks: 1) choosing a precise
+ topic to focus on - because the area is not so actively researched and
+ there is no concise terminology
 \begin_inset Foot
 status collapsed
 
@@ -1350,6 +1237,19 @@ name "sec:State-of-the"
 \begin_layout Standard
 
 \lang english
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color red
+\lang english
+Shorten this down, and move to related work; call it: Background? 
+\end_layout
+
+\end_inset
+
 During the last 15 years, significant experience has been accumulated in
  the field of 
 \shape italic
@@ -1383,7 +1283,7 @@ key "eii_2005"
  (EII) including: data integration formalisms, ways of describing heterogeneous
  data sources and their abilities (e.g.
  database vs web form), query optimization (combining sources efficiently,
- source overlap, data quality, etc)
+ source overlap, data quality, etc) 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "eii_2005"
@@ -1393,7 +1293,7 @@ key "eii_2005"
 .
  Recent research in Enterprise Information Integration mostly focused on
  approaches minimizing human efforts on source integration, e.g.
- on probabilistic self-improving EII systems
+ on probabilistic self-improving EII systems 
 \begin_inset CommandInset citation
 LatexCommand citep
 after "ch.19"
@@ -1407,7 +1307,7 @@ key "principles_data_integration"
 Boolean Keyword-based search over data services
 \shape default
 , which is our main focus, received little attention from the research community
-, with only few attempts 
+, with only a few attempts 
 \begin_inset CommandInset citation
 LatexCommand citep
 before "e.g."
@@ -1461,7 +1361,7 @@ Nature of keyword queries
 
 \begin_layout Standard
 Keyword queries are often underspecified, therefore every possible interpretatio
-n shall be included in the results
+n shall be included in the results 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "Kws_metadata_2011"
@@ -1473,8 +1373,20 @@ key "Kws_metadata_2011"
 \lang english
 But for a given keyword query, some interpretations are more likely than
  the others, therefore, when the users are interested in complete answer
- sets, the standard approach is to produce a ranked list of most-likely
- structured queries
+ sets
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\lang english
+other terminology?
+\end_layout
+
+\end_inset
+
+, the standard approach is to produce a ranked list of most-likely structured
+ queries
 \begin_inset Foot
 status collapsed
 
@@ -1520,9 +1432,9 @@ key "keymantic10"
 \end_layout
 
 \begin_layout Standard
-It has been noticed that even if keyword queries do not have any clear syntactic
- structure, keywords referring to related concepts usually come close to
- each other in the query
+Further, it has been noticed that even if keyword queries do not have any
+ clear syntactic structure, keywords referring to related concepts usually
+ come close to each other in the query 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "characterization_search_behaviour_kumar2009,Kws_metadata_2011"
@@ -1530,12 +1442,27 @@ key "characterization_search_behaviour_kumar2009,Kws_metadata_2011"
 \end_inset
 
 .
- Based on this, most of the existing approaches employ the dependencies
- of nearby keywords for ranking the candidate answers: 
+
+\color cyan
+ 
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\series bold
+\color cyan
+TODO: move next to each approach separately
+\end_layout
+
+\end_inset
+
+Based on this, most of the existing approaches employ the dependencies of
+ nearby keywords for ranking the candidate answers: 
 \emph on
 Keymantic
 \emph default
-
+ 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "keymantic10"
@@ -1548,6 +1475,8 @@ key "keymantic10"
 status collapsed
 
 \begin_layout Plain Layout
+
+\color cyan
 e.g.
  schema term's name followed by its value, for instance in query 
 \begin_inset Quotes eld
@@ -1567,7 +1496,7 @@ restaurant Italia
 \emph on
 KEYRY
 \emph default
-
+ 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "bergamaschi2011hidden"
@@ -1608,21 +1537,14 @@ http://searchuserinterfaces.com/book/sui_ch12_emerging.html
 \end_layout
 
 \begin_layout Section*
-Related work
-\change_inserted -438528902 1363015497
-s
-\change_unchanged
-
+Keyword querying over EII
 \end_layout
 
 \begin_layout Standard
 
 \lang english
-Two works were identified to be
-\change_inserted -438528902 1363016193
- the most
-\change_unchanged
- closely related to our problem: heuristics-based keyword search (
+Two works were identified to be the most closely related to our problem:
+ heuristics-based keyword search (
 \emph on
 Keymantic
 \emph default
@@ -1631,9 +1553,10 @@ Keymantic
 KEYRY
 \emph default
 ).
+ 
 \end_layout
 
-\begin_layout Description
+\begin_layout Standard
 Keymantic
 \begin_inset CommandInset citation
 LatexCommand citep
@@ -1642,7 +1565,7 @@ key "keymantic_kws_metadata_bergamaschi2011,keymantic10"
 \end_inset
 
  answers keyword queries over relational databases with limited access to
- the database instance, which is also the case of data integration
+ the database instance, which is also the case of data integration 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "keymantic10"
@@ -1975,8 +1898,8 @@ every keyword plays some role in the query, i.e., there are no unjustiﬁed
 
 \end_layout
 
-\begin_layout Description
-KEYRY
+\begin_layout Standard
+KEYRY 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "bergamaschi2011hidden"
@@ -1985,7 +1908,7 @@ key "bergamaschi2011hidden"
 
  attempts to incorporate users feedback through learning an HMM tagger that
  is given the keywords as its input.
- It uses the List-Viterbi
+ It uses the List-Viterbi 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "list_viterbi_1994"
@@ -2018,7 +1941,7 @@ supervised
 \series default
 \color inherit
  training, while even the keyword queries itself, can serve for unsupervised
- learning
+ learning 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "keymantic_list_viterbi_training_rota2011"
@@ -2051,287 +1974,28 @@ but they mentioned a better evaluation may be needed...
 .
 \end_layout
 
-\begin_layout Description
-String
-\begin_inset space ~
-\end_inset
-
-and
-\begin_inset space ~
-\end_inset
-
-Entity
-\begin_inset space ~
-\end_inset
-
-Matching provides the possible interpretations of individual keywords, as
- entry points for further processing.
- From the fields of information retrieval, entity and string matching, vast
- amounts of works exist, including various methods for calculating string,
- word and phrase similarities: string-edit distances, learned string distances
- 
-\begin_inset CommandInset citation
-LatexCommand citep
-key "string_edit_crf_mccallum2012conditional"
-
-\end_inset
-
-, and frameworks for semantic similarity.
-\end_layout
-
-\begin_layout Description
-
-\series bold
-Natural
-\begin_inset space ~
-\end_inset
-
-Language
-\begin_inset space ~
-\end_inset
-
-Processing
-\begin_inset space ~
-\end_inset
-
-(NLP)
-\series default
-\lang english
- could be useful
-\lang british
- in gaining the better understanding of the meaning of a question or a query.
- 
-\lang english
-Large amount of works exist on Question Answering and NLP
-\begin_inset CommandInset nomenclature
-LatexCommand nomenclature
-symbol "NLP"
-description "Natural Language Processing"
-
-\end_inset
-
-
-\lang british
- including: question focus extraction identifying the requested entit(-ies),
- parsing into predicate argument structure providing more generic representation
- of a sentence (e.g.
- removing differences between passive and active voices) simplifies further
- analysis, the relation extraction allows grasping more exact relationships
- between constituents of a clause
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-especially good for a small predefined set of important relations, but requires
- lots of manual work; less common relations can be covered through machine-learn
-ing based relation extraction, but that requires large corpus
-\begin_inset CommandInset citation
-LatexCommand citep
-key "watson_2012relation"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-, word sense disambiguation and other semantic techniques allow choosing
- more semantically correct interpretations.
-\begin_inset Newline newline
-\end_inset
-
-It is worth mentioning, that the current state-of-the art methods such as
- the
-\emph on
- IBM Watson
-\emph default
-
-\begin_inset CommandInset citation
-LatexCommand citep
-key "watson_introduction_ferrucci2012"
-
-\end_inset
-
-, a complex open-domain question answering system, do not even try gaining
- the complete understanding of the question (which is still a very challenging
- task), but focuses instead on scoring and analysing the alternative interpretat
-ions of questions and result candidates.
-\end_layout
-
-\begin_layout Description
-
-\color magenta
-NL
-\begin_inset space ~
-\end_inset
-
-interfaces
-\begin_inset space ~
-\end_inset
-
-to
-\begin_inset space ~
-\end_inset
-
-Data
-\begin_inset space ~
-\end_inset
-
-Services:
-\color inherit
- 
-\begin_inset CommandInset citation
-LatexCommand citep
-key "nl_to_dataservices_guerrisi2012natural"
-
-\end_inset
-
-
-\series bold
-\lang english
- 
-\series default
-attempts to process multi-domain
-\series bold
- 
-\series default
-full-sentence natural language queries over web-services.
- It uses focus extraction to find the focus entity, splits the query into
- constituents (sub-questions), classifies the domain of each constituent,
- and then tries to combine and resolve these constituents over the data
- service interfaces (tries recognizing the intent modifiers [e.g.
- adjectives] as parameters to services).
- 
-\color magenta
-( too ambitious/not-mature; open domain, real natural language questions
- - a bit farther from our focus, our domain is very specific.).
-
-\color inherit
- 
-\begin_inset Note Note
+\begin_layout Standard
+\begin_inset Marginal
 status open
 
-\begin_layout Description
-as part of 
-\begin_inset Quotes eld
-\end_inset
-
-Search
-\begin_inset space ~
-\end_inset
-
-Computing
-\begin_inset Quotes erd
-\end_inset
-
- project....
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Description
-
-\lang english
-Searching
-\begin_inset space ~
-\end_inset
-
-structured
-\begin_inset space ~
-\end_inset
-
-DBs The problem of keyword search over relational and other structured databases
- received a significant attention within the last decade.
- It was explored from a number of perspectives: returning top-k ranked data-tupl
-es
-\shape italic
-
-\begin_inset CommandInset citation
-LatexCommand citep
-key "spark2_luo2011"
-
-\end_inset
-
-
-\shape default
- vs suggesting structured queries as SQL
-\begin_inset CommandInset citation
-LatexCommand citep
-key "ethz2012"
-
-\end_inset
-
-, performance optimization, 
-\color red
-user feedback mechanisms
-\begin_inset Marginal
-status collapsed
-
 \begin_layout Plain Layout
 
-\color red
-\lang english
-what in addition to schema mappings for item-based ranking?
+\series bold
+also mention: NL querying over services
 \end_layout
 
 \end_inset
 
-,
-\color inherit
- keyword searching over distributed sources, up to lightweight exploratory
-\begin_inset Foot
-status collapsed
 
-\begin_layout Plain Layout
-
-\lang english
-because of probabilistic nature of schema mappings, it do not provide 100%
- result exactness
-\end_layout
-
-\end_inset
-
- probabilistic data integration based on users-feedback that minimize the
- upfront human effort required
-\begin_inset CommandInset citation
-LatexCommand citep
-after "ch.16"
-key "principles_data_integration"
-
-\end_inset
-
-.
- On the other extreme, the 
-\shape italic
-SODA
-\begin_inset CommandInset citation
-LatexCommand citep
-key "ethz2012"
-
-\end_inset
-
-
-\shape default
- system has proved that if enough meta-data is in place, even quite complex
- queries given in business terms could be answered over a large and complex
- warehouse.
 \end_layout
 
 \begin_layout Section*
-
-\change_inserted -438528902 1363015563
 
 \color red
 Discussion
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363015568
 
 \color red
 Valentin: You need to finish section of Related Work with 
@@ -2348,11 +2012,7 @@ some conclusion about what you considered be valuable for CMS use case and
 \end_layout
 
 \begin_layout Chapter
-
-\change_inserted -438528902 1362928835
-Data Integration
-\change_unchanged
- at CMS, CERN
+Project Background: Data Integration at CMS, CERN
 \begin_inset CommandInset label
 LatexCommand label
 name "chap:Case-study:CMS"
@@ -2363,69 +2023,31 @@ name "chap:Case-study:CMS"
 \end_layout
 
 \begin_layout Standard
-At the start of this project, an enterprise information integration system
- based on simple structured queries was 
-\change_deleted -438528902 1362928692
-already
-\change_unchanged
- in place (described below), which suffered from a number of performance
- and usability problems.
+In this chapter, the context is presented, in which the thesis project was
+ conducted.
  
-\change_deleted -438528902 1362928372
-The author of this work evaluated possible approaches to these problems:
- improvements to s
-\change_inserted -438528902 1362928372
-S
-\change_unchanged
-ystem's usability 
-\change_deleted -438528902 1362928387
-through
-\change_inserted -438528902 1362928397
- was improved by
-\change_unchanged
- redesigning the user interface and allowing less restricted keyword search
-\change_inserted -438528902 1362928403
-;
-\change_deleted -438528902 1362928403
-,
-\change_unchanged
- analysis of
-\change_inserted -438528902 1362928486
- the
-\change_unchanged
- performance bottlenecks
-\change_inserted -438528902 1362928741
- indicated that data providers were not ready for data retrieval - appropriate
- measures were proposed, and are discussed
-\series bold
- 
-\series default
-below
-\series bold
-.
-
-\change_unchanged
-
-\series default
- 
-\change_deleted -438528902 1362928455
-and the possibility of supporting more complex queries
-\change_unchanged
-.
-\change_deleted -438528902 1362851431
-
 \end_layout
 
-\begin_layout Section
-EII system used at CMS
+\begin_layout Paragraph
+The EII system to be extended
 \end_layout
 
 \begin_layout Standard
-The 
+An 
 \emph on
-CMS Data Aggregation System (DAS
-\change_inserted -438528902 1362848852
+EII 
+\emph default
+system called
+\emph on
+ 
+\begin_inset Quotes eld
+\end_inset
 
+CMS Data Aggregation System
+\begin_inset Quotes erd
+\end_inset
+
+ (DAS
 \begin_inset CommandInset nomenclature
 LatexCommand nomenclature
 symbol "DAS"
@@ -2433,71 +2055,167 @@ description "CMS Data Aggregation System - The EII system used at CMS"
 
 \end_inset
 
-
-\change_unchanged
-)
+) 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "Kuznetsov2010,Kuznetsov2011"
 
 \end_inset
 
-
+ 
 \emph default
- allows integrated access to a number of proprietary data-sources by processing
- users' queries on demand - it determines which data-sources are able to
- answer, queries them, merges the results and caches them for subsequent
- use.
+is in use at CMS, CERN, allowing integrated access to a number of proprietary
+ data-sources through simple structured queries (eliminating the inconsistencies
+ in entity naming, data formats, combining the results,
+\series bold
+\color cyan
+ 
+\series default
+\color inherit
+etc).
  DAS uses the 
 \emph on
 Boolean retrieval model
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\series bold
+\emph on
+augmented with aggregation functions...
+\end_layout
+
+\end_inset
+
+
 \emph default
  as users are often interested in retrieving ALL the items matching their
  query.
-\change_inserted -438528902 1362850988
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+The queries are executed either from web browser or through a command line
+ interface (feeding the results into users' applications).
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+DAS Query language
+\end_layout
+
+\begin_layout Standard
+The queries are formed specifying the entity the user is interested in (e.g.
+ dataset, file, etc) and providing selection criteria (e.g.
+ attribute=value, attribute BETWEEN [v1, v2]).
+ The combined query results could be later 'piped' for further filtering,
+ sorting or aggregation (min, max, avg, sum, count, median), e.g.: 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename figures/DASQL_structure.pdf
+	width 100text%
+
+\end_inset
+
 
 \end_layout
 
 \begin_layout Standard
+As seen in the figure above, DAS query language closely corresponds to the
+ physical execution flow over the EII: based on the requested entity and
+ the conditions on service inputs, DAS decides the set of the services to
+ be queried
+\begin_inset Foot
+status collapsed
 
-\change_inserted -438528902 1362851371
-The queries are executed either from web browser or through a command line
- interface where the results could be fed into another application (e.g.
- programs doing physics analysis or automatic software release validation).
+\begin_layout Plain Layout
+including pre-defined 
+\begin_inset Quotes eld
+\end_inset
+
+virtual services
+\begin_inset Quotes erd
+\end_inset
+
+, which feed results from one service into inputs of the others
 \end_layout
 
-\begin_layout Subsection*
+\end_inset
 
-\change_inserted -438528902 1362851372
+.
+ Then, after retrieving, processing and merging of the results from services,
+ the filters and projections are applied, which are followed by aggregators.
+\color magenta
+
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\color magenta
+In between there could be additional operations, such as 
+\emph on
+unique
+\emph default
+ for selecting only unique records, or custom map-reduce processing steps.
+ 
+\end_layout
+
+\end_inset
+
+
+\color inherit
+ The results are cached for subsequent uses.
+ 
+\series bold
+\color red
+This close correspondence between the query language and the physical execution
+ has both advantages (users are aware of service constraints) and disadvantages
+ (users have to know exactly how the data structured).
+\end_layout
+
+\begin_layout Paragraph*
 Data-Source qualities, Infrastructure
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363002406
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363002407
-
 \series bold
 \color red
 service constraints?!
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-Currently the system integrated around 15 data providers, or around 100
+Currently the system integrates around 15 data providers, or around 100
  data service interfaces (APIs).
- The total sizes of 
+ The most of data-sources at CMS were initially created focusing on data
+ taking (for recording the measurements from the CMS particle detector),
+ without much attention to the information retrieval.
+ The services are not optimized for querying the fairly large data volumes
+ stored: data is stored in fully-relational fashion, resulting in complex
+ joins over large tables; even worse, the interfaces of the services do
+ not allow limiting the number of results to be returned, nor sorting.
+\end_layout
+
+\begin_layout Standard
+The total sizes of 
 \begin_inset Quotes eld
 \end_inset
 
-metada
+metadata
 \begin_inset Quotes erd
 \end_inset
 
@@ -2506,209 +2224,31 @@ metada
  For instance, the DBS, one of the biggest services, is partitioned among
  ~10 instances, with the biggest containing 80GB of data + 280GB of indexes
  in Oracle.
-\change_unchanged
-
 \end_layout
 
-\begin_layout Standard
-The most of data-sources at CMS were initially created focusing on data
- taking (for recording the measurements from the CMS particle detector),
- without 
-\change_deleted -438528902 1362926734
-thinking 
-\change_unchanged
-much
-\change_inserted -438528902 1363001780
- attention
-\change_unchanged
- 
-\change_deleted -438528902 1362926738
-about
-\change_inserted -438528902 1363001780
- to
-\change_unchanged
- 
-\change_inserted -438528902 1363001780
-the 
-\change_unchanged
-information retrieval.
- 
-\change_deleted -438528902 1362926774
-As a result, t
-\change_inserted -438528902 1363001780
-T
-\change_unchanged
-he services are not optimized for querying the fairly large data volumes
- stored: data is stored in fully-relational fashion 
-\change_deleted -438528902 1362926821
-where
-\change_inserted -438528902 1363001780
-, resulting in
-\change_unchanged
- 
-\change_deleted -438528902 1362926843
-querying
-\change_unchanged
- 
-\change_deleted -438528902 1362926847
-requires
-\change_unchanged
- complex joins
-\change_inserted -438528902 1363001780
- over large tables
-\change_unchanged
-; 
-\change_inserted -438528902 1363001780
-even worse, 
-\change_unchanged
-the 
-\change_deleted -438528902 1362926880
-APIs
-\change_inserted -438528902 1363001780
-interfaces
-\change_unchanged
- of 
-\change_deleted -438528902 1362926877
-most
-\change_inserted -438528902 1363001780
-the
-\change_unchanged
- services do not allow limiting the number of results to be returned, nor
- sorting
-\change_inserted -438528902 1363001780
-.
-\change_deleted -438528902 1362926924
-.
-\change_unchanged
+\begin_layout Paragraph*
 
-\end_layout
-
-\begin_layout Subsubsection*
-
-\change_inserted -438528902 1363033196
-\begin_inset Newpage clearpage
-\end_inset
-
-
-\change_unchanged
-DAS Query language (DASQL) and the Execution Flow
-\end_layout
-
-\begin_layout Standard
-Currently the queries are formed by specifying 
-\change_inserted -438528902 1363024953
-the type of
-\change_unchanged
- entity the user is interested in (
-\change_inserted -438528902 1363024968
-e.g.
- 
-\change_unchanged
-dataset, file, etc) and providing selection criteria (e.g.
- attribute=value, name BETWEEN [v1, v2]).
- The combined query results could be later 'piped' for further filtering,
- sorting or aggregation (min, max, avg, sum, count, median), e.g.: 
-\change_inserted -438528902 1362848293
-
+\color red
+Issues and User Feedback
 \end_layout
 
 \begin_layout Standard
 
-\change_inserted -438528902 1362848426
-\begin_inset Float figure
-placement H
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-
-\change_inserted -438528902 1362848447
-\begin_inset Graphics
-	filename figures/DASQL_structure.pdf
-	width 100text%
-
-\end_inset
-
-
-\change_unchanged
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\change_inserted -438528902 1362848426
-\begin_inset Caption
-
-\begin_layout Plain Layout
-
-\change_inserted -438528902 1362848673
-Structure of DAS Query Language (example)
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:Structure-of-DASQL"
-
-\end_inset
-
-
-\change_unchanged
-
-\end_layout
-
-\end_inset
-
-
-\change_unchanged
-
-\end_layout
-
-\end_inset
-
-
-\change_unchanged
-
-\end_layout
-
-\begin_layout Standard
-
-\change_inserted -438528902 1363002453
-As it can be seen in fig.
- 
+\color red
+The EII system suffered from a number of performance and usability problems.
+ System's usability was improved by redesigning the user interface and allowing
+ less restricted keyword search; analysis of the performance bottlenecks
+ indicated that data providers were not ready for data retrieval - appropriate
+ measures were proposed (see appendix 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "fig:Structure-of-DASQL"
+reference "chap:CMS-war-stories"
 
 \end_inset
 
-, the DAS query language corresponds to the physical execution flow over
- the EII: the requested entity along with the conditions on service inputs
- decides the set of the services to be queried (this also includes the pre-defin
-ed 
-\begin_inset Quotes eld
-\end_inset
-
-virtual services
-\begin_inset Quotes erd
-\end_inset
-
-, which feed the results from one service into inputs of the others).
- Then after retrieving the results from services, the filters and projections
- are applied, which is followed by aggregators.
- In between there could be additional operations, such as 
-\emph on
-unique
-\emph default
- for selecting only unique records, or custom map-reduce processing steps.
- This has both advantages (users are aware of service constraints) and disadvant
-ages (for complex queries, users have to know how the data structured).
-\end_layout
-
-\begin_layout Subsection*
-Issues
-\change_inserted -438528902 1362856263
- and User Feedback
-\change_unchanged
-
+)
+\series bold
+.
 \end_layout
 
 \begin_layout Itemize
@@ -2730,29 +2270,21 @@ primary key
 \begin_inset Quotes erd
 \end_inset
 
- allowing to identify the entity
-\change_inserted -438528902 1362926507
- 
+ allowing to identify the entity 
 \begin_inset Foot
 status collapsed
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1362926507
 
 \color red
 e.g.
  'dataset dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM' contains
  all the possible fields, while 'dataset dataset=/zmm/*/*' only the dataset.name
  and couple of others
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\change_unchanged
 ).
  This is creating additional confusion for the users, as it is not easy
  to figure out where and how to find what the user is searching for.
@@ -2773,503 +2305,18 @@ Publish/subscribe
 \end_inset
 
 
-\change_inserted -438528902 1362856198
-
-\end_layout
-
-\begin_layout Section
-
-\change_inserted -438528902 1362856198
-Relaxation of the Query Language
 \begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\change_inserted -438528902 1362856198
-
-\color red
-shall we put the solutions here or somewhere lower in the paper after describing
- Keyword Search?
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\change_inserted -438528902 1362856243
-
-\color red
-Initially the queries had to operate exactly on the fields returned by data
- services...
-\end_layout
-
-\begin_layout Standard
-
-\change_inserted -438528902 1362856198
-
-\color red
-implementation of simple compound queries so that an entity could always
- return same list of fields, easy to implement and very useful for users
-\end_layout
-
-\begin_layout Itemize
-
-\change_inserted -438528902 1362856198
-
-\color red
-makes the system much more clear
-\end_layout
-
-\begin_layout Itemize
-
-\change_inserted -438528902 1362856198
-
-\color red
-that even makes keyword searching easier to implement, as we could assume
- that all the fields are almost 
-\begin_inset Quotes eld
-\end_inset
-
-stable
-\begin_inset Quotes erd
-\end_inset
-
- for each entity being returned (except a couple of exceptional cases, which
- could be check afterwards)
-\change_unchanged
-
-\end_layout
-
-\begin_layout Section
-Solutions
-\change_inserted -438528902 1362931314
- 
-\change_unchanged
-to the Performance Issues
-\begin_inset CommandInset label
-LatexCommand label
-name "sub:cms-Performance-Issues"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\change_deleted -438528902 1362926558
-After a
-\change_inserted -438528902 1362926558
-A
-\change_unchanged
-nalysis of query logs and benchmarking the most popular queries, it was
- found out that most 
-\change_inserted -438528902 1362926588
-of the 
-\change_unchanged
-performance issues were due to large data amounts
-\change_inserted -438528902 1362926598
- of
-\change_unchanged
- 
-\change_deleted -438528902 1362926600
-the
-\change_unchanged
- data 
-\change_inserted -438528902 1362926603
-the 
-\change_unchanged
-providers are processing, 
-\change_deleted -438528902 1362926609
-and
-\change_inserted -438528902 1362926610
-including
-\change_unchanged
- some 
-\change_deleted -438528902 1362926616
-of the
-\change_unchanged
- unnecessarily work being repeated or requested without need
-\change_inserted -438528902 1362926689
- (due to current limitations of services, which are not under our direct
- control)
-\change_unchanged
-.
-\end_layout
-
-\begin_layout Subsection*
-Incremental view maintenance
-\end_layout
-
-\begin_layout Standard
-In the cases when new records are coming
-\change_inserted -438528902 1362926950
-,
-\change_unchanged
- but the existing ones are not changing much
-\series bold
-, 
-\series default
-the incremental view maintenance that computes only differences from earlier
- results could be a fairly easy solution for 
-\change_inserted -438528902 1362927037
-greatly 
-\change_unchanged
-improving the performance of 
-\change_deleted -438528902 1362927050
-(popular) 
-\change_unchanged
-queries containing heavy joins and/or aggregations.
- 
-\end_layout
-
-\begin_layout Standard
-This is exactly the case 
-\change_deleted -438528902 1362927069
-for
-\change_inserted -438528902 1362927069
-with
-\change_unchanged
- the most popular expensive query
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-see query #7 in DAS Query log analysis
-\series bold
-
-\begin_inset CommandInset ref
-LatexCommand vpageref
-reference "appendix_das_cli_logs"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
- 
-\end_layout
-
-\end_inset
-
- over the DBS system (80GB of data + 280GB of indexes): 
-\emph on
-’find files where run in [r1, r2, r3] and dataset=X’
-\emph default
- that requires joining 
-\change_deleted -438528902 1362927116
-all
-\change_inserted -438528902 1362927118
-most of
-\change_unchanged
- the biggest tables in 
-\change_deleted -438528902 1362927178
-that
-\change_inserted -438528902 1362927178
-the
-\change_unchanged
- database
-\change_inserted -438528902 1362927573
- (number of tuples in parentesis, arrow indicate join direction):
-\change_deleted -438528902 1362927150
-.
-\change_unchanged
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-{
-\backslash
-small
-\backslash
-verb|Dataset (164K rows) -> Block (2M) -> Files (31M) -> FileRunLumi (902M)
- <- Runs (65K)|}
-\end_layout
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
-Having a materialized view with all these tables joined together would allow
- answering such queries much quicker.
- Given low change rates (in comparison to data already present), maintaining
- the view
-\change_inserted -438528902 1362927260
- incrementally
-\change_unchanged
- should be 
-\change_deleted -438528902 1362927263
-also 
-\change_unchanged
-comparatively cheap with the only expense of just couple of times of storage
- space (storage is bound by the size of the largest table anyway).
- 
-\end_layout
-
-\begin_layout Standard
-In Oracle,
-\change_inserted -438528902 1362927354
- which is the standard back-end,
-\change_unchanged
- the 
-\emph on
-materialized refresh fast views with query rewriting
-\emph default
- 
-\change_deleted -438528902 1362927363
-would be
-\change_inserted -438528902 1362927365
-provide a
-\change_unchanged
- completely transparent
-\change_inserted -438528902 1362927378
- operation
-\change_deleted -438528902 1362927383
- and would not need 
-\change_inserted -438528902 1362927387
- not requiring 
-\change_unchanged
-any changes to 
-\change_inserted -438528902 1362927390
-the 
-\change_unchanged
-proprietary system
-\change_deleted -438528902 1362927398
-s,
-\change_inserted -438528902 1362927398
-.
-
-\change_unchanged
- 
-\change_deleted -438528902 1362927401
-but
-\change_inserted -438528902 1362927402
-Still,
-\change_unchanged
- it has a couple of limitations on the queries
-\change_inserted -438528902 1362927456
- and the ways of refreshing the view
-\change_unchanged
-
-\begin_inset CommandInset citation
-LatexCommand citep
-key "Oracle11"
-
-\end_inset
-
-.
- Alternatively, some 
-\change_inserted -438528902 1362927472
-an
-\change_unchanged
-other continuous view maintenance tool (e.g.
- DBToaster
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-http://www.dbtoaster.org that is being developed at EPFL 
-\end_layout
-
-\end_inset
-
-) could be used, however this 
-\change_deleted -438528902 1362927486
-would
-\change_inserted -438528902 1362927486
-is
-\change_unchanged
- not be as transparent as the earlier solution.
- 
-\end_layout
-
-\begin_layout Subsection*
-Pagination and Sorting of results
-\end_layout
-
-\begin_layout Standard
-As many of the queries on the web interface are exploratory and request
- only the first page of results, supporting pagination is one of the major
- factors towards performance improvements 
-\change_deleted -438528902 1362927614
-(and perception of performance by the users)
-\change_unchanged
-.
- As the DAS system is combining records from multiple systems, pagination
- also requires 
-\change_deleted -438528902 1362927638
-some
-\change_unchanged
- 
-\change_deleted -438528902 1362927921
-ordering
-\change_unchanged
- 
-\change_inserted -438528902 1362927930
-retrieving results from the data providers in an ordering 
-\change_unchanged
-that is common among the services (in 
-\change_deleted -438528902 1362927884
-most
-\change_inserted -438528902 1362927929
-many
-\change_unchanged
- cases that 
-\change_deleted -438528902 1362927940
-could
-\change_inserted -438528902 1362927941
-can
-\change_unchanged
- be the 
-\begin_inset Quotes eld
-\end_inset
-
-Primary key
-\begin_inset Quotes erd
-\end_inset
-
- of the entity that is being 
-\change_deleted -438528902 1362927955
-queried
-\change_inserted -438528902 1362927971
-requested; however, some cases are more complex from the side of data provider:
- an ordering not supported by database indexes could induce full table scan!
-\change_unchanged
-).
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-\begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
 
 \series bold
-Integrating distributed information efficiently
-\end_layout
-
-\begin_layout Plain Layout
-Bloom-join (which could be quite transparent and implemented even on DB
- side (efficient pure SQL is doable for MySQL, and probably for Oracle too)
- quite transparently (a helper function could take the initial query and
- bloom-filter’s bit-vector as parameters).
- 
+Point to appendix: solutions at CMS
 \end_layout
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsection*
-Estimating query running time
-\begin_inset CommandInset label
-LatexCommand label
-name "sub:Estimating-query-running"
-
-\end_inset
-
-
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\color red
-not yet implemented
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Tracking of the execution time of each data-service, 
-\color red
-was proposed to be implemented
-\color inherit
-, that 
-\change_inserted -438528902 1362930022
-would
-\change_unchanged
- 
-\change_deleted -438528902 1362930077
-a)
-\change_unchanged
- inform
-\change_deleted -438528902 1362930029
-ing
-\change_unchanged
- user of long lasting queries, 
-\change_deleted -438528902 1362930039
-and 
-\change_inserted -438528902 1362930046
-starting 
-\change_deleted -438528902 1362930047
-running
-\change_unchanged
- them only with his confirmation 
-\change_deleted -438528902 1362930081
-
-\color red
-b) pre-running the speedy queries even before user has explicitly selected
- them (e.g.
- the top few queries proposed).
-\change_unchanged
-
-\end_layout
-
-\begin_layout Standard
-It has been chosen to track the mean of execution time, and its standard
- deviation.
- Knuth has shown that the standard deviation can be efficiently computed
- in an online fashion without need to store each individual value, nor recomputi
-ng everything from scratch 
-\begin_inset CommandInset citation
-LatexCommand citep
-after "p. 232"
-key "knuth1998stdev"
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-Because 
-\change_inserted -438528902 1362930290
-the 
-\change_unchanged
-input parameters passed to the service may heavily impact the service performanc
-e, we differentiate between these parameter types: 1) some specific value,
- 2) a value with wild-card (presumably returning more results than specific
- value as it may match multiple values), 3) not provided (matches all values).
- So we store only four values per 
-\change_inserted -438528902 1362930350
-each different combination of 
-\change_unchanged
-data-service input parameter's .
 \end_layout
 
 \begin_layout Chapter
@@ -3542,11 +2589,7 @@ avg(dataset size) Zmmg 'number of events'>1000
 \end_inset
 
 .
- For all, the expected 
-\change_inserted -438528902 1362932925
-result
-\change_unchanged
- is:
+ For all, the expected result is:
 \end_layout
 
 \begin_layout Standard
@@ -3595,196 +2638,73 @@ avg(dataset.size)
 \end_layout
 
 \begin_layout Section
-The solution
+Overview of the 
+\color magenta
+solution
 \end_layout
 
 \begin_layout Standard
-In the following section, we present a fairly simple heuristics-based implementa
-tion,
-\change_inserted -438528902 1363108552
- that returns ranked list of best matching queries
-\change_unchanged
-, where we focused on the quality of results
-\change_inserted -438528902 1362845679
- with the goal of
-\change_unchanged
- not enforcing any assumptions on the input queries (
-\change_deleted -438528902 1363108593
-it could be
-\change_inserted -438528902 1363108593
-a
-\change_unchanged
- full-sentence or 
-\change_inserted -438528902 1362845716
-just 
-\change_unchanged
-keyword
-\change_inserted -438528902 1363108599
-s
-\change_unchanged
-; 
-\change_inserted -438528902 1363108615
-while existence of predefined structural patterns could be used to
-\change_unchanged
- improve the result
-\change_deleted -438528902 1363108623
-s
-\change_inserted -438528902 1363108625
- quality
-\change_unchanged
 
+\color cyan
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
-\change_deleted -438528902 1362846091
+\color red
+solution, 
+\series bold
+approach, implementation
+\end_layout
+
+\end_inset
+
+In the following section, 
+\color inherit
+we present a fairly simple heuristics-based implementation, that returns
+ ranked list of best matching queries, where we focused on the quality of
+ results with the goal of not enforcing any assumptions on the input queries
+ (a full-sentence or just keywords; while existence of predefined structural
+ patterns could be used to improve the result quality
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
 
 \series bold
 \color cyan
- 
-\change_unchanged
-Keymantic
-\change_deleted -438528902 1362846094
- 
-\change_unchanged
- had assumptions!
+Keymantic had assumptions!
 \end_layout
 
 \end_inset
 
 ).
- The 
-\change_inserted -438528902 1363108654
-implementation
-\change_unchanged
- is designed with the goal to
-\change_inserted -438528902 1362845807
- be able to employ the
-\change_unchanged
- user feedback
-\change_inserted -438528902 1362845914
- for future improvements to various components of the system, such as initial
- entry points, or ranking of the results
-\change_unchanged
-.
+ The implementation is designed with the goal to be able to employ the user
+ feedback for future improvements to various components of the system, such
+ as initial entry points, or ranking of the results.
+\end_layout
+
+\begin_layout Subsection*
+The algorithm
 \end_layout
 
 \begin_layout Standard
-Knowing the constraints on the project duration, 
-\change_inserted -438528902 1363175081
-a number of items had to be excluded
-\change_unchanged
- from 
-\change_inserted -438528902 1363108687
-the 
-\change_unchanged
-implementation: 
-\change_inserted -438528902 1363108978
-q
-\change_unchanged
-uestion 
-\change_inserted -438528902 1363108981
-a
-\change_deleted -438528902 1363108981
-A
-\change_unchanged
-nswering approaches with deep language processing; complex service orchestration
- (feeding of outputs into inputs of other services
-\change_deleted -438528902 1363108709
-)
-\change_unchanged
-, which is 
-\change_inserted -438528902 1363108717
-anyway 
-\change_unchanged
-not directly supported by the EII system and the service performance is
- not adequate for this
-\change_deleted -438528902 1363109269
- 
-\change_unchanged
-
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-this due to issues with data service performance and unavailability of basic
- capabilities such as pagination or sorting of their results; we do not
- control the data services, so a number of suggestions for the providers
- have been proposed (see section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sub:cms-Performance-Issues"
-
-\end_inset
-
-); second, these improvements would take a considerable effort to be implemented
-, pushing this far beyond the scope of this project
-\end_layout
-
-\end_inset
-
-
-\change_inserted -438528902 1363108725
-)
-\change_unchanged
-; 
-\change_inserted -438528902 1363108744
-and lastly
-\change_unchanged
- the performance 
-\change_inserted -438528902 1363175239
-is of lower priority, as the end user's perceived performance is still dominated
- by services taking minutes to respond
-\change_deleted -438528902 1363109229
-)
-\change_inserted -438528902 1363109256
-, and the performance was already covered by the earlier works
-\change_unchanged
-.
-\color magenta
-
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-
-\color magenta
-The approaches below are useful then there is no possibility to index the
- data terms, e.g.
- then a DB is behind a wrapper (e.g.
- accessible only through a 
-\emph on
-Web form
-\emph default
- in “Hidden Web” or a 
-\emph on
-web-service
-\emph default
-) then crawling is generally not possible.
-\end_layout
-
-\end_inset
-
-
-\color inherit
-
 \begin_inset Wrap figure
 lines 0
 placement r
 overhang 1cm
 width "45text%"
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset ERT
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
 
 \backslash
-vspace{-10pt}
+vspace{-40pt}
 \end_layout
 
 \end_inset
@@ -3793,8 +2713,6 @@ vspace{-10pt}
 \end_layout
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1362994316
 
 \series bold
 \begin_inset Graphics
@@ -3804,8 +2722,6 @@ vspace{-10pt}
 
 \end_inset
 
-
-\change_unchanged
 
 \end_layout
 
@@ -3853,7 +2769,7 @@ status open
 
 
 \backslash
-vspace{-40pt}
+vspace{-10pt}
 \end_layout
 
 \end_inset
@@ -3863,15 +2779,7 @@ vspace{-40pt}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Subsection
-Overview
-\end_layout
-
-\begin_layout Standard
-Taking inspiration from Keymantic 
+ Taking inspiration from Keymantic 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "keymantic10"
@@ -3907,13 +2815,8 @@ reference "sub:Tokenizer"
 \end_layout
 
 \begin_layout Standard
-Secondly, employing a number of 
-\change_deleted -438528902 1363109307
-string
-\change_inserted -438528902 1363109333
-metadata-based entity
-\change_unchanged
- matching techniques, the 
+Secondly, employing a number of metadata-based entity matching techniques,
+ the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -3960,19 +2863,8 @@ value term - is the name of schema term which could gain value of given
 
  
 \series default
-terms it may correspond to
-\change_deleted -438528902 1363109510
-,
-\change_unchanged
- along with 
-\change_deleted -438528902 1363109620
- score giving 
-\change_unchanged
-a rough estimate of our confidence
-\change_inserted -438528902 1363080061
- 
-\change_unchanged
-(see Section 
+terms it may correspond to along with a rough estimate of our confidence
+ (see Section 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sub:Matching-keywords"
@@ -3980,14 +2872,10 @@ reference "sub:Matching-keywords"
 \end_inset
 
 ).
-
-\change_inserted -438528902 1363082153
  This includes identifying keyword chunks corresponding to multi-word terms
  (currently, only fields in service results); many of them are unclean,
  machine-readable field-names, with irrelevant and frequent terms, motivating
  the use of IDF-based
-\change_unchanged
-
 \begin_inset CommandInset nomenclature
 LatexCommand nomenclature
 symbol "IDF"
@@ -3995,55 +2883,24 @@ description "Inverse Document Frequency, used to downrank frequent and therefore
 
 \end_inset
 
-
-\change_inserted -438528902 1363082147
  
 \color magenta
 information retrieval techniques
 \color inherit
 .
-\change_unchanged
-
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363109450
-Lastly
-\change_unchanged
-, the 
+Lastly, the 
 \emph on
 entry points
 \emph default
- are combined, evaluating 
-\change_inserted -438528902 1363170592
-the 
-\change_unchanged
-different 
-\change_inserted -438528902 1363170597
-permutations
-\change_unchanged
- of them
-\change_inserted -438528902 1363171115
- (called 
+ are combined, evaluating the different permutations of them (called 
 \emph on
 configuration
 \emph default
-s) by means of
-\change_unchanged
- combining the scores of individual keywords
-\change_inserted -438528902 1363170991
- and using
-\change_unchanged
- heuristic
-\change_inserted -438528902 1363170733
- rules
-\change_unchanged
- 
-\change_inserted -438528902 1363171129
-to 
-\change_unchanged
-boost the scores of 
+s) by means of combining the scores of individual keywords and using heuristic
+ rules to boost the scores of 
 \emph on
 configurations
 \emph default
@@ -4057,37 +2914,13 @@ respect
 
  the likely dependencies between the nearby keywords.
  During the same step, the configurations that are compatible with our data
- integration system are
-\change_inserted -438528902 1363171174
- identified and
-\change_unchanged
- interpreted as structured queries, where we disambiguate 
-\change_inserted -438528902 1363170162
-the keyword matchings
-\change_unchanged
- 
-\change_inserted -438528902 1363170115
-between
-\change_unchanged
- 
-\change_inserted -438528902 1363171185
-the result types, the 
-\change_unchanged
-projections
-\change_deleted -438528902 1363170131
-,
-\change_unchanged
- 
-\change_inserted -438528902 1363171429
-the selections (filters on service inputs or outputs)
-\change_unchanged
-, 
+ integration system are identified and interpreted as structured queries,
+ where we disambiguate the keyword matchings between the result types, the
+ projections the selections (filters on service inputs or outputs), 
 \color red
 or simple operators
 \color inherit
 .
-
-\change_inserted -438528902 1363170864
  The ranking is presented in the section 
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -4096,25 +2929,15 @@ reference "sub:Ranking-function"
 \end_inset
 
 .
-\change_unchanged
-
 \begin_inset Marginal
 status collapsed
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363171460
-
 \color red
 [min, avg, unique etc]
-\change_unchanged
-
 \series bold
- not 
-\change_inserted -438528902 1363171657
-fully 
-\change_unchanged
-implemented, lower priority 
+ not fully implemented, lower priority 
 \end_layout
 
 \end_inset
@@ -4305,6 +3128,99 @@ end{verbatim}
 Below each the processing steps is described in more details.
 \end_layout
 
+\begin_layout Subsection*
+Project constraints and priorities
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color magenta
+subsection: constraints, limitations, considerations?
+\end_layout
+
+\end_inset
+
+
+\color cyan
+Knowing the constraints on the project duration, a number of items had to
+ be excluded from the implementation: question answering approaches with
+ deep language processing; complex service orchestration (feeding of outputs
+ into inputs of other services, which is anyway not directly supported by
+ the EII system and the service performance is not adequate for this
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+
+\color cyan
+this due to issues with data service performance and unavailability of basic
+ capabilities such as pagination or sorting of their results; we do not
+ control the data services, so a number of suggestions for the providers
+ have been proposed (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:cms-Performance-Issues"
+
+\end_inset
+
+); second, these improvements would take a considerable effort to be implemented
+, pushing this far beyond the scope of this project
+\end_layout
+
+\end_inset
+
+); and lastly the performance is of lower priority, as the end user's perceived
+ performance is still dominated by services taking minutes to respond, and
+ the performance was already covered by the earlier works.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\color magenta
+The approaches below are useful then there is no possibility to index the
+ data terms, e.g.
+ then a DB is behind a wrapper (e.g.
+ accessible only through a 
+\emph on
+Web form
+\emph default
+ in “Hidden Web” or a 
+\emph on
+web-service
+\emph default
+) then crawling is generally not possible.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Implementation Details
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+detailed algorithm?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Step 1: Tokenizer
 \begin_inset CommandInset label
@@ -4330,27 +3246,19 @@ With the goal to simplify subsequent processing, first the keyword query
  
 \color inherit
 natural language, such as simple operators [X equals Y, X more than Y, etc])
-\change_inserted -438528902 1363171729
-
 \begin_inset Marginal
 status collapsed
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363171837
-
 \color cyan
 but NL support is limited, as there are many ambiguous ways of expressing
  the same: e.g.
  more than 123 events
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\change_unchanged
 .
  This is accomplished using a number of regular expression replacement patterns.
  
@@ -4423,8 +3331,6 @@ The second step of query processing is identifying the starting points through
 \end_layout
 
 \begin_layout Subsubsection
-
-\change_inserted -438528902 1363113289
 Matching the schema terms
 \end_layout
 
@@ -4433,12 +3339,9 @@ Custom string similarity function
 \end_layout
 
 \begin_layout Standard
-Our experience is that basic string-edit distance metrics
-\change_inserted -438528902 1363112745
-,
-\change_unchanged
- such as the standard Levenshtein edit-distance (where inserts, edits, and
- mutations are equal) or 
+Our experience is that basic string-edit distance metrics, such as the standard
+ Levenshtein edit-distance (where inserts, edits, and mutations are equal)
+ or 
 \emph on
 Jaro-Winker's
 \begin_inset Marginal
@@ -4456,27 +3359,12 @@ there was a paper on this
 
 
 \emph default
- 
-\change_inserted -438528902 1363112796
-being
-\change_unchanged
- designed for general matching tasks (e.g.
- matching people names, correcting typing errors, etc
-\change_inserted -438528902 1363112811
-.
-\change_unchanged
-), do not perform
-\change_deleted -438528902 1363171863
- 
-\change_unchanged
- well in the task of matching keywords into specific entity names, either
- introducing too many false-positives (e.g.
- 'file' 
-\change_inserted -438528902 1363112831
-for
-\change_unchanged
- 'site'), or not recognizing lexically farther word combinations that still
- make sense, such as 
+ being designed for general matching tasks (e.g.
+ matching people names, correcting typing errors, etc.), do not perform well
+ in the task of matching keywords into specific entity names, either introducing
+ too many false-positives (e.g.
+ 'file' for 'site'), or not recognizing lexically farther word combinations
+ that still make sense, such as 
 \emph on
 config
 \emph default
@@ -4490,102 +3378,39 @@ configuration
 
 \begin_layout Standard
 Therefore, to minimize the false positives (which have direct effect on
- ranking), we propose 
-\change_deleted -438528902 1363112883
-to use 
-\change_unchanged
-a 
-\change_inserted -438528902 1363112886
-simple 
-\change_unchanged
-combination of more trustful metrics in 
-\change_inserted -438528902 1363112905
-the 
-\change_unchanged
-order
-\change_inserted -438528902 1363112910
- of decreasing score
-\change_unchanged
-: full match, lemma match 
-\change_inserted -438528902 1363112511
-(indicating also the meaning match
-\change_unchanged
-), stem-match
-\change_inserted -438528902 1363112526
- (meaning is further)
-\change_unchanged
-, 
-\change_inserted -438528902 1363112927
-and finally a 
-\change_unchanged
-stem match within a very small edit distance
-\change_inserted -438528902 1363112944
- (
-\change_unchanged
-see eq.
+ ranking), we propose a simple combination of more trustful metrics in the
+ order of decreasing score: full match, lemma match (indicating also the
+ meaning match), stem-match (meaning is further), and finally a stem match
+ within a very small edit distance (see eq.
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "eq:string_dist"
 
 \end_inset
 
-
-\change_inserted -438528902 1363112952
-)
-\change_unchanged
-.
- 
-\change_inserted -438528902 1363112954
-Below
-\change_unchanged
- 
+).
+ Below 
 \begin_inset Formula $dist$
 \end_inset
 
- is some string distance metric with
-\change_inserted -438528902 1363112977
- tight
-\change_unchanged
- limitations
-\change_inserted -438528902 1363113087
- with score 
+ is some string distance metric with tight limitations with score 
 \begin_inset Formula $\in[0,1]$
 \end_inset
 
-
-\change_unchanged
  (e.g.
- max 1-3 characters differing
-\change_inserted -438528902 1363113189
- with beginning or end preferred
-\change_unchanged
-, max 1 mutation
-\change_inserted -438528902 1363113189
-/transposion
-\change_unchanged
-).
-
-\change_deleted -438528902 1363113224
- 
-\change_inserted -438528902 1363113189
-
+ max 1-3 characters differing with beginning or end preferred, max 1 mutation/tr
+ansposion).
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363113254
-
 \color magenta
 TODO: lematization depend on POS tags (saw[v]->see, [n]->saw)
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\change_unchanged
 
 \end_layout
 
@@ -4607,15 +3432,7 @@ similarity(A,B)=\begin{cases}
 
 \begin_layout Standard
 This improves the matching by incorporating basic linguistic knowledge,
- and
-\change_inserted -438528902 1363112544
- without
-\change_unchanged
- requir
-\change_inserted -438528902 1363112547
-ing
-\change_unchanged
- any domain-specific lexical resources
+ and without requiring any domain-specific lexical resources
 \begin_inset Foot
 status collapsed
 
@@ -4635,26 +3452,8 @@ key "string_edit_crf_mccallum2012conditional"
 
 \end_inset
 
-
-\change_deleted -438528902 1363112562
- 
-\change_unchanged
 .
- Further, 
-\change_deleted -438528902 1363112568
-it
-\change_inserted -438528902 1363112569
-this
-\change_unchanged
- is easy to implement 
-\change_inserted -438528902 1363112595
-using existing
-\change_unchanged
- libraries
-\change_deleted -438528902 1363171899
- 
-\change_unchanged
- (such as 
+ Further, this is easy to implement using existing libraries (such as 
 \emph on
 PorterStemmer
 \emph default
@@ -4665,16 +3464,12 @@ WordNetLemmatizer
  in the 
 \emph on
 nltk
-\change_inserted -438528902 1363112631
-
 \emph default
 
 \begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363112711
 an open-source natural language processing toolkit for Python 
 \begin_inset CommandInset href
 LatexCommand href
@@ -4684,14 +3479,10 @@ target "http://nltk.org/"
 \end_inset
 
 
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\change_unchanged
 ).
 \end_layout
 
@@ -4784,21 +3575,16 @@ status collapsed
 \begin_layout Plain Layout
 
 \color red
-no fuzzy matching except stemming is currently used
-\change_inserted -438528902 1362922740
-; one more heuristic - if terms on the ends are not used by search engine,
- they are useless -- eliminate such results
-\change_unchanged
-
+no fuzzy matching except stemming is currently used; one more heuristic
+ - if terms on the ends are not used by search engine, they are useless
+ -- eliminate such results
 \end_layout
 
 \end_inset
 
 
 \color inherit
- 
-\change_inserted -438528902 1363117862
-This component identifies keyword chunks corresponding to 
+ This component identifies keyword chunks corresponding to 
 \emph on
 multi-word
 \emph default
@@ -4831,12 +3617,8 @@ information retrieval techniques
 status open
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363117851
 any cases when this is misleading? - context itself is NOT sufficient to
  identify a field.
-\change_unchanged
-
 \end_layout
 
 \end_inset
@@ -4846,27 +3628,13 @@ any cases when this is misleading? - context itself is NOT sufficient to
 
 \begin_layout Standard
 
-\change_inserted -438528902 1363118551
-
 \series bold
 \color magenta
 TODO: mention paper from XML retrieval
 \end_layout
 
 \begin_layout Standard
-For simplicity, 
-\change_inserted -438528902 1363117902
-we used
-\change_unchanged
- an
-\change_inserted -438528902 1363117904
- existing
-\change_unchanged
- IR library
-\change_inserted -438528902 1363118753
-, Whoosh
-\change_unchanged
-
+For simplicity, we used an existing IR library, Whoosh
 \begin_inset Foot
 status collapsed
 
@@ -4894,8 +3662,6 @@ documents
 \begin_inset Quotes erd
 \end_inset
 
-
-\change_inserted -438528902 1363172068
  each representing 
 \begin_inset Quotes eld
 \end_inset
@@ -4916,55 +3682,33 @@ a field in service outputs
  Each such 
 \emph on
 document
-\change_deleted -438528902 1363118051
-
 \emph default
- 
-\change_inserted -438528902 1363118046
- 
-\change_unchanged
-consists of multiple 
+ consists of multiple 
 \emph on
 fields
-\change_inserted -438528902 1363171998
-
 \emph default
 , with different weights of importance assigned to each:
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1363118397
 fully-qualified machine readable field-name (e.g.
  block.replica.creation_time)
-\change_unchanged
-
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-
-\change_inserted -438528902 1363118400
 a field containing a tokenized+stemmed version of machine readable field-name
  (e.g.
  creation_time)
-\change_unchanged
-
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1363118411
 context - a field containing a tokenized+stemmed version of machine readable
  field-name's parent (block.replica)
-\change_unchanged
-
 \end_layout
 
 \end_deeper
 \begin_layout Itemize
-
-\change_inserted -438528902 1363118501
 human readable field title, if any (e.g.
  
 \begin_inset Quotes eld
@@ -4989,13 +3733,9 @@ Creation time
 status collapsed
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363119231
 only tokenized+stemmed version --- it seems creating multiple versions of
  same fields decrease performance with default params; therefore I even
  got rid of copies including the stop-words
-\change_unchanged
-
 \end_layout
 
 \end_inset
@@ -5004,39 +3744,14 @@ only tokenized+stemmed version --- it seems creating multiple versions of
 \end_layout
 
 \begin_layout Standard
-To find the matches, we query the IR library, 
-\change_deleted -438528902 1363118795
-for 
-\change_unchanged
-both 
-\change_inserted -438528902 1363118799
-for 
-\change_unchanged
-phrase and single term matches of up to the k-nearby keywords (we use maximum
- of 4
-\change_inserted -438528902 1363119420
-, which both provides sufficient context, and is short enough to be computationa
-lly inexpensive
-\change_unchanged
-),
-\change_deleted -438528902 1363172168
+To find the matches, we query the IR library, both for phrase and single
+ term matches of up to the k-nearby keywords (we use maximum of 4, which
+ both provides sufficient context, and is short enough to be computationally
+ inexpensive), phrase matches given larger weight.
  
-\change_unchanged
- phrase matches 
-\change_inserted -438528902 1363118822
-given
-\change_deleted -438528902 1363172174
- 
-\change_unchanged
- larger weight.
- 
-\change_inserted -438528902 1363172107
-
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363172193
 The ranking is done using 
 \series bold
 \color cyan
@@ -5044,29 +3759,15 @@ BM25F
 \series default
 \color inherit
  scoring function.
- 
-\change_unchanged
-After filtering out the worst results these will become the entry points
+ After filtering out the worst results these will become the entry points
  for mapping keywords into the fields of data service outputs.
-
-\change_inserted -438528902 1363172224
- 
-\change_unchanged
-Currently we directly use the score returned by 
-\change_inserted -438528902 1363169621
-the 
-\change_unchanged
-IR 
-\change_inserted -438528902 1363169679
-library
+ Currently we directly use the score returned by the IR library
 \color red
 
 \begin_inset Note Note
 status collapsed
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363169657
 
 \color red
 [TF_IDF scoring is currently used.
@@ -5088,79 +3789,46 @@ machine readable
 \end_inset
 
  field names]
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
 
-\change_unchanged
-
 \color inherit
 manually normalized between [0..1]
-\change_inserted -438528902 1363169712
-
 \begin_inset Marginal
 status collapsed
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363169833
 normalization: threshold based on weights signifying a good score + (maybe
  smoothing function)
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\change_unchanged
 .
  
 \color magenta
-The scoring could be improved, but in our case it works already 
-\change_deleted -438528902 1363118845
-good
-\change_inserted -438528902 1363169623
-not so bad
-\change_unchanged
-.
-\change_inserted -438528902 1363169623
-
+The scoring could be improved, but in our case it works already not so bad.
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363119248
-Finally, 
-\change_unchanged
-the same 
-\change_inserted -438528902 1363172262
-functionality 
-\change_unchanged
-could be also achieved through retrieving a list of matching fields for
- each keyword separately and then combining them through the scoring function,
- however the earlier approach allows pruning out the worst scoring token
- pairs and supporting the phrase search more easily.
-
-\change_inserted -438528902 1363119532
+Finally, the same functionality could be also achieved through retrieving
+ a list of matching fields for each keyword separately and then combining
+ them through the scoring function, however the earlier approach allows
+ pruning out the worst scoring token pairs and supporting the phrase search
+ more easily.
  In either case, the problem of how to incorporate the IDFs and context
  information remains.
 \end_layout
 
 \begin_layout Standard
 
-\change_inserted -438528902 1363169517
-
 \color magenta
 TECHNICAL NOTES FOR MYSELF: CAVEATS AND TODOs TO CONSIDER:
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1363169413
 
 \color magenta
 full field match [all tokens] is much better even than phrase match: 
@@ -5186,8 +3854,6 @@ events; number; block
 \begin_deeper
 \begin_layout Itemize
 
-\change_inserted -438528902 1363169492
-
 \color cyan
 how about to force BM25F to count only distinct tokens once? e.g.
  tf(d, t)c = max(w_c), regardless of field c
@@ -5196,16 +3862,12 @@ how about to force BM25F to count only distinct tokens once? e.g.
 \end_deeper
 \begin_layout Itemize
 
-\change_inserted -438528902 1363119533
-
 \color magenta
 multiple matches of same term result in unfair scores
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-
-\change_inserted -438528902 1363119533
 
 \color magenta
 e.g.
@@ -5226,15 +3888,11 @@ is repeated run.run_number, tokenized: 'run; number', title: 'run number'
 
 \begin_layout Itemize
 
-\change_inserted -438528902 1363119533
-
 \color magenta
 idf shall be stronger than physical term count
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1363169877
 
 \color magenta
 as mentioned in a paper on 
@@ -5257,8 +3915,6 @@ Semantic Search with BM25F
 \end_deeper
 \begin_layout Itemize
 
-\change_inserted -438528902 1363169885
-
 \color cyan
 Far future: using context information without enforcing that to belong only
  to that field (we already use result type = result entity type)
@@ -5277,8 +3933,6 @@ Matching keyword into an sample of values (guessing which is the best attribute
 
 \end_inset
 
-
-\change_inserted -438528902 1363119530
 
 \end_layout
 
@@ -5299,65 +3953,20 @@ Semantic similarity (not used)
 \end_layout
 
 \begin_layout Standard
-
-\change_deleted -438528902 1363114852
-A
-\change_inserted -438528902 1363114854
-While
-\change_unchanged
- semantic matching based on freely available open-domain ontolog
-\change_inserted -438528902 1363114867
-ies
-\change_deleted -438528902 1363114866
-y
-\change_inserted -438528902 1363114877
-,
-\change_unchanged
+While semantic matching based on freely available open-domain ontologies,
  such as the 
 \emph on
 WordNet
 \emph default
-, 
-\change_inserted -438528902 1363114886
-could work well for open-domain, it 
-\change_deleted -438528902 1363114891
-cannot work
-\change_inserted -438528902 1363114893
-do not work
-\change_unchanged
- well in a very specific domain, out-of-the box.
- As the EII system at CMS currently has no 
-\change_inserted -438528902 1363114906
-specific 
-\change_unchanged
-linguistic ontology, 
-\change_deleted -438528902 1363114925
-we do not use the
-\change_inserted -438528902 1363114925
-no
-\change_unchanged
- semantic similarity
-\change_inserted -438528902 1363114932
- is used
-\change_unchanged
- - if enabled, it just worsens the results by introducing false positives.
+, could work well for open-domain, it do not work well in a very specific
+ domain, out-of-the box.
+ As the EII system at CMS currently has no specific linguistic ontology,
+ no semantic similarity is used - if enabled, it just worsens the results
+ by introducing false positives.
  
-\change_deleted -438528902 1363114937
-
-\color red
-While for open-domain, large semantic knowledge bases such as 
-\emph on
-YAGO2
-\emph default
- are quite good choices.
- 
-\change_unchanged
-
 \end_layout
 
 \begin_layout Subsubsection
-
-\change_inserted -438528902 1363113330
 Matching the value terms
 \end_layout
 
@@ -5366,8 +3975,6 @@ Regular expressions
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363114282
 For the most of service interfaces there exist regular expressions that
  constraint the 
 \emph on
@@ -5378,77 +3985,13 @@ input
 values
 \emph default
  accepted by services.
- A 
-\change_unchanged
-regular expression (regexp) match do not guarantee 
-\change_inserted -438528902 1363114051
-that a certain value exists, but 
-\change_unchanged
-a
-\change_inserted -438528902 1363114025
-lso
-\change_unchanged
- 
-\change_deleted -438528902 1363114070
-correct
-\change_inserted -438528902 1363114162
-it could result in incorrect
-\change_unchanged
- keyword interpretation
-\change_inserted -438528902 1363114094
-s, as
-\change_unchanged
- 
-\change_deleted -438528902 1363113753
-(a regular expression
-\change_inserted -438528902 1363114102
-as a regexp
-\change_unchanged
- could be 
-\change_deleted -438528902 1363114110
-too 
-\change_unchanged
-loose
-\change_inserted -438528902 1363114116
-ly defined
-\change_deleted -438528902 1363114120
-)
-\change_inserted -438528902 1363114120
-.
-\change_deleted -438528902 1363114120
-,
-\change_unchanged
- 
-\change_deleted -438528902 1363113795
-so
-\change_inserted -438528902 1363114124
-Thus,
-\change_unchanged
- in 
-\change_inserted -438528902 1363113800
-the 
-\change_unchanged
-general case, 
-\change_inserted -438528902 1363113806
-the 
-\change_unchanged
-regexp matches are scored lower than 
-\change_deleted -438528902 1363113838
-in
-\change_inserted -438528902 1363113843
-matches of
-\change_unchanged
- other matching methods.
- Still, some 
-\change_inserted -438528902 1363113870
-of the 
-\change_unchanged
-regular expressions are sufficiently restrictive (e.g.
- email), which we 
-\change_inserted -438528902 1363114223
-selectively 
-\change_unchanged
-score higher.
+ A regular expression (regexp) match do not guarantee that a certain value
+ exists, but also it could result in incorrect keyword interpretations,
+ as as a regexp could be loosely defined.
+ Thus, in the general case, the regexp matches are scored lower than matches
+ of other matching methods.
+ Still, some of the regular expressions are sufficiently restrictive (e.g.
+ email), which we selectively score higher.
 \end_layout
 
 \begin_layout Paragraph*
@@ -5478,59 +4021,25 @@ there are some specific cases with wildcard matches
  bootstrapping them through respective data service interfaces.
  
 \color magenta
-For matching we have a number of cases, with 
-\change_inserted -438528902 1363114533
-the 
-\change_unchanged
-decreasing score: 
+For matching we have a number of cases, with the decreasing score: 
 \color inherit
-full match, partial match, and matches of keywords 
-\change_deleted -438528902 1363114542
-with
-\change_inserted -438528902 1363114544
-containing
-\change_unchanged
- wildcards.
+full match, partial match, and matches of keywords containing wildcards.
  If keyword's value matches a regular expression, but is not contained in
  the known values list and the accepted values of the given field are considered
- to be static (not changing often), we exclude this 
-\change_deleted -438528902 1363114566
-possibly
-\change_inserted -438528902 1363114625
- very likely
-\change_unchanged
- false match 
-\change_deleted -438528902 1363114575
-allowing
-\change_unchanged
+ to be static (not changing often), we exclude this very likely false match
+\change_deleted -438528902 1363201314
  
-\change_deleted -438528902 1363114588
-to 
-\change_inserted -438528902 1363114590
- that 
 \change_unchanged
-reduce
-\change_inserted -438528902 1363114592
-s
-\change_unchanged
- the false positives\SpecialChar \@.
-
-\change_inserted -438528902 1363175778
+ that reduces the false positives\SpecialChar \@.
 
 \begin_inset Newpage clearpage
 \end_inset
 
 
-\change_unchanged
-
 \end_layout
 
 \begin_layout Subsection
-Step 3: 
-\change_inserted -438528902 1363001577
-Candidate-answer generation and ranking
-\change_unchanged
-
+Step 3: Candidate-answer generation and ranking
 \begin_inset CommandInset label
 LatexCommand label
 name "sub:Ranking-function"
@@ -5541,8 +4050,6 @@ name "sub:Ranking-function"
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363175801
 As the last step, different combinations of the entry points (where each
  permutation of keyword 
 \begin_inset Quotes eld
@@ -5576,8 +4083,6 @@ respect
 status collapsed
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363170225
 the nearby keywords are expected to be related
 \begin_inset CommandInset citation
 LatexCommand citep
@@ -5600,19 +4105,13 @@ status open
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363175801
-
 \color cyan
 (the heuristics are presented after the scoring functions)
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
 .
-\change_unchanged
-
 \color blue
 \lang english
 
@@ -5660,14 +4159,8 @@ key "keymantic10"
 
 \end_inset
 
-), and the other of 
-\change_inserted -438528902 1363173286
-more 
-\change_unchanged
-probabilistic nature - summing the log likelihoods.
- 
-\change_inserted -438528902 1363173695
-There, the 
+), and the other of more probabilistic nature - summing the log likelihoods.
+ There, the 
 \family roman
 \series medium
 \shape up
@@ -5705,17 +4198,6 @@ There, the
 
 \begin_layout Standard
 
-\change_deleted -438528902 1363175858
-
-\series bold
-\lang english
-Averaging:
-\change_unchanged
-
-\end_layout
-
-\begin_layout Standard
-
 \lang english
 \begin_inset Formula 
 \begin{equation}
@@ -5724,17 +4206,6 @@ score\_avg(tags|KWQ)=\frac{{\displaystyle \sum_{i=1}^{|KWQ|}{\displaystyle \left
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-
-\change_deleted -438528902 1363175861
-
-\series bold
-\lang english
-Probabilistic:
-\change_unchanged
 
 \end_layout
 
@@ -5749,13 +4220,9 @@ score\_prob(tags|KWQ)=\sum_{i=1}^{|KWQ|}\left({\displaystyle {\displaystyle \ln}
 \end_inset
 
 
-\change_inserted -438528902 1363173709
-
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363174014
 
 \family roman
 \series medium
@@ -5804,19 +4271,13 @@ status collapsed
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363173870
-
 \color cyan
 sort of useful stopwords: where, who, when?
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
 ).
-\change_unchanged
-
 \end_layout
 
 \begin_layout Standard
@@ -5825,11 +4286,7 @@ sort of useful stopwords: where, who, when?
 The two methods 
 \series bold
 \color red
-seemed to perform 
-\change_inserted -438528902 1363174079
-almost 
-\change_unchanged
-equally well
+seemed to perform almost equally well
 \begin_inset Marginal
 status open
 
@@ -5846,76 +4303,49 @@ do we need better test data?
 
 \series default
 \color inherit
-, with the probabilistic approach 
-\change_inserted -438528902 1363174093
-being
-\change_unchanged
- more sensitive to variations in scoring quality of the entry points (the
- scores are just estimates of our confidence, not real probabilities; the
- results improved with improvements to accuracy of string matching functions),
- however
+, with the probabilistic approach being more sensitive to variations in
+ scoring quality of the entry points (the scores are just estimates of our
+ confidence, not real probabilities; the results improved with improvements
+ to accuracy of string matching functions), however
 \series bold
  
 \color cyan
 it seems
 \series default
 \color inherit
- the 
-\change_inserted -438528902 1363174137
-probabilistic
-\change_unchanged
- approach is more exact in ranking the results when the entry point scores
- are quite exact.
+ the probabilistic approach is more exact in ranking the results when the
+ entry point scores are quite exact.
  
-\change_inserted -438528902 1363174309
-
 \end_layout
 
 \begin_layout Standard
 
 \lang english
 The final scores of the probabilistic approach are also more complex to
- interpret
-\change_deleted -438528902 1363174171
- 
-\change_unchanged
- (
-\change_inserted -438528902 1363174419
-we would like to present the user with color coding which identifies the
- our confidence, and the scores if exponented vary much more than in averaging
+ interpret (we would like to present the user with color coding which identifies
+ the our confidence, and the scores if exponented vary much more than in
+ averaging
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363174358
-
 \lang english
 , still one could estimate the high and low thresholds based on initial
  scores
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
 ).
-
-\change_unchanged
  
-\change_inserted -438528902 1363173117
-
 \end_layout
 
 \begin_layout Subsubsection*
 
-\change_inserted -438528902 1363175381
-
 \color cyan
 \lang english
 The heuristics and pruning out the unacceptable candidates
-\change_unchanged
-
 \end_layout
 
 \begin_layout Itemize
@@ -5930,11 +4360,8 @@ promoting such combinations where nearby keywords refer to related schema
 \end_layout
 
 \begin_layout Itemize
-balance between taking
-\change_deleted -438528902 1363173135
- 
-\change_unchanged
- the keyword or leaving it out (the one that we are unsure about) 
+balance between taking the keyword or leaving it out (the one that we are
+ unsure about) 
 \begin_inset Marginal
 status open
 
@@ -5987,8 +4414,6 @@ promote data service inputs over filters on their results: 1) it is more
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1363175536
 if some keyword can be matched as the requested entity, and mapping of other
  keywords fits the service constraints
 \begin_inset Marginal
@@ -5996,12 +4421,8 @@ status collapsed
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363175554
-
 \color cyan
 shall we allow both as filter name and result type? no?
-\change_unchanged
-
 \end_layout
 
 \end_inset
@@ -6039,8 +4460,6 @@ not yet implemented
 \end_inset
 
 
-\change_inserted -438528902 1363173236
-
 \end_layout
 
 \end_deeper
@@ -6053,25 +4472,17 @@ Tuning the scoring parameters
 \series bold
 \color blue
 TODO
-\change_inserted -438528902 1362923273
-
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1362924378
 weights for regexps, etc
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1362924373
 not taking a keyword
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1362924363
 multi-word matching
 \end_layout
 
@@ -6089,14 +4500,10 @@ packages, tool-kits: uncertainties, nltk, wordnet,mongodb
 \end_layout
 
 \begin_layout Subsection
-
-\change_inserted -438528902 1363175925
 Miscellanea
 \end_layout
 
 \begin_layout Subsubsection*
-
-\change_inserted -438528902 1363175922
 Automatically identifying the 
 \color red
 qualities
@@ -6105,8 +4512,6 @@ qualities
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1362846340
 The integration schema mappings that are used in the EII system are minimal
  - they only describe services, their input parameters, and mappings between
  inconsistently named output fields.
@@ -6128,8 +4533,6 @@ primary key
 
 \begin_layout Standard
 
-\change_inserted -438528902 1363019448
-
 \emph on
 Note:
 \emph default
@@ -6142,22 +4545,16 @@ Note:
 
 \begin_layout Standard
 
-\change_inserted -438528902 1363019401
-
 \color red
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363019406
-
 \color red
 In future we may also the data types (string, integer) as hints for scoring
  ambiguous predicate predicate tokens (e.g.
  event number>10).
-\change_unchanged
-
 \end_layout
 
 \end_inset
@@ -6170,26 +4567,18 @@ Natural Language Processing and full-sentence search
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1362922850
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363019218
-
 \color cyan
 describes what was NOT used.
  future work?
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\change_unchanged
 We first looked into parsing as this is a prerequisite for most other natural
  language processing methods such as Keyword extraction or Relation Extraction.
  However it didn't look worth the investment given our time constrains and
@@ -6275,14 +4664,10 @@ Performance
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1362922870
 \begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363019220
 
 \color cyan
 describes what was NOT used.
@@ -6291,8 +4676,6 @@ describes what was NOT used.
 
 \end_inset
 
-
-\change_unchanged
 A number of methods are available for improving the performance (e.g.
  Munkres/Hungarian bipartite matching algorithm, or dynamic programming
  with assumption of maximum length of dependences) 
@@ -6345,14 +4728,10 @@ status collapsed
 \end_layout
 
 \begin_layout Section
-
-\change_inserted -438528902 1363014272
 Presenting the results to the user
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363014095
 The results presented to the user for the query 
 \emph on
 Zmmg event number > 10
@@ -6379,13 +4758,9 @@ nevents
 ).
  However, if user knows the entity he is searching for, he may immediately
  filter only these results.
-\change_unchanged
-
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363014200
 Hovering on the structured query, user sees it's explanation (an interactive
  way to learn the semantics of the query language).
  Different elements of the query are presented visually in different colors
@@ -6414,8 +4789,6 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1362854858
 \begin_inset Graphics
 	filename /home/vidma/DAS_paper/figures/ui_query_results.png
 	width 90text%
@@ -6423,21 +4796,13 @@ status open
 \end_inset
 
 
-\change_unchanged
-
 \end_layout
 
 \begin_layout Plain Layout
 \begin_inset Caption
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1362855362
-Presentation of 
-\change_unchanged
-keyword search results
-\change_inserted -438528902 1362854928
-
+Presentation of keyword search results
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:ui-keyword-search-results"
@@ -6445,8 +4810,6 @@ name "fig:ui-keyword-search-results"
 \end_inset
 
 
-\change_unchanged
-
 \end_layout
 
 \end_inset
@@ -6456,20 +4819,14 @@ name "fig:ui-keyword-search-results"
 
 \end_inset
 
-
-\change_inserted -438528902 1362854933
 
 \end_layout
 
 \begin_layout Subsection
-
-\change_inserted -438528902 1362855334
 Entry points
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363018737
 
 \series bold
 \begin_inset Note Greyedout
@@ -6477,13 +4834,9 @@ status open
 
 \begin_layout Plain Layout
 
-\change_inserted -438528902 1363018765
-
 \series bold
 TODO: showing entry points to the user, so used would understand why he
  sees results like; and could give live-feedback?
-\change_unchanged
-
 \end_layout
 
 \end_inset
@@ -6492,8 +4845,6 @@ TODO: showing entry points to the user, so used would understand why he
 \end_layout
 
 \begin_layout Section
-
-\change_inserted -438528902 1363014504
 
 \color red
 Incorporating User Feedback
@@ -6509,11 +4860,7 @@ name "chap:Incorporating-User-Feedback"
 \end_layout
 
 \begin_layout Subsection
-
-\change_inserted -438528902 1363014526
-Live feedback through 
-\change_unchanged
-auto-completion (prototype)
+Live feedback through auto-completion (prototype)
 \begin_inset Marginal
 status open
 
@@ -6566,26 +4913,15 @@ could combine the advantages of both: properly-implemented variation of
  multiple tokens and providing suggestions and disambiguations in real time,
  see fig.
  
-\change_inserted -438528902 1363013739
-
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:prototype-of-auto-completion-kws"
 
 \end_inset
 
-
-\change_unchanged
-)
-\change_inserted -438528902 1363013771
-.
- This
-\change_unchanged
-, being a structured input, could reduce the ambiguity of the queries 
-\change_deleted -438528902 1363013788
-to a minimum extent
-\change_unchanged
-; while the availability of keyword search leaves freedom for expressiveness.
+).
+ This, being a structured input, could reduce the ambiguity of the queries
+ ; while the availability of keyword search leaves freedom for expressiveness.
 \end_layout
 
 \begin_layout Standard
@@ -6610,8 +4946,6 @@ status open
 
 \begin_layout Plain Layout
 prototype of auto-completion based interface
-\change_inserted -438528902 1363013720
-
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:prototype-of-auto-completion-kws"
@@ -6619,16 +4953,10 @@ name "fig:prototype-of-auto-completion-kws"
 \end_inset
 
 
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
 
 \end_layout
 
@@ -6638,84 +4966,31 @@ name "fig:prototype-of-auto-completion-kws"
 \end_layout
 
 \begin_layout Standard
-Further, such user interface 
-\change_inserted -438528902 1363018376
-can be closely integrated with keyword search - some of the suggestions
- would include multiple interpretations of the last term being typed,
-\change_unchanged
- allow 
-\change_inserted -438528902 1363018463
-to get
-\change_unchanged
- immediate user's feedback
-\change_deleted -438528902 1363018482
- 
-\change_inserted -438528902 1363018491
- and 
-\change_unchanged
-resulting in 
-\change_inserted -438528902 1363013834
-better
-\change_unchanged
--defined input to the system,
-\change_inserted -438528902 1363018515
-.
- This,
-\change_unchanged
- in turn
-\change_inserted -438528902 1363013851
-, would
-\change_unchanged
- result in more exact query suggestions.
- 
-\change_inserted -438528902 1363018526
-Second,
-\change_unchanged
- 
-\change_inserted -438528902 1363013860
-this 
-\change_unchanged
-could 
-\change_inserted -438528902 1363013869
-be 
-\change_unchanged
-potentially 
-\change_inserted -438528902 1363018422
-useful
-\change_unchanged
- for evaluating and improving the quality of 
-\change_inserted -438528902 1363013887
-the 
-\change_unchanged
-entity matching and keyword search.
+Further, such user interface can be closely integrated with keyword search
+ - some of the suggestions would include multiple interpretations of the
+ last term being typed, allow to get immediate user's feedback and resulting
+ in better-defined input to the system,.
+ This, in turn, would result in more exact query suggestions.
+ Second, this could be potentially useful for evaluating and improving the
+ quality of the entity matching and keyword search.
  
 \color red
-We will elaborate on this is the 
-\change_inserted -438528902 1363035796
-subsequent sections.
+We will elaborate on this is the subsequent sections.
 \end_layout
 
 \begin_layout Subsection
-
-\change_inserted -438528902 1363081046
 Customization and user-preferences
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363081076
 shall be per user or per user-group! SODA didn't use any clustering?
 \end_layout
 
 \begin_layout Subsection
-
-\change_inserted -438528902 1363081044
 Using the feedback for self-improvement
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363036278
 First, the implicit feedback from auto-completion could be useful for evaluating
  and improving the quality of the entity matching (learned edit-distance
  metrics, updating the weights of different matching metrics).
@@ -6723,18 +4998,12 @@ First, the implicit feedback from auto-completion could be useful for evaluating
 
 \begin_layout Standard
 
-\change_inserted -438528902 1363036335
-
 \series bold
 Second, this could serve as training data for machine learning-based algorithms,
  however 
-\change_unchanged
-
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363035883
 There are many ways to employ the users feedback, from .
  
 \end_layout
@@ -6757,26 +5026,18 @@ the input (or subset of it) that is not conforming to the rules of given
 \end_inset
 
 
-\change_inserted -438528902 1363028251
-
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363018626
 \begin_inset Note Greyedout
 status open
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1363018626
 live feedback
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-
-\change_inserted -438528902 1363018675
 more: if unsure, ask user to specify the interpretation of his query (like
  SODA but with options) or even while waiting for results -- calculating
  entry points is cheap.
@@ -6786,43 +5047,31 @@ more: if unsure, ask user to specify the interpretation of his query (like
 
 \end_deeper
 \begin_layout Itemize
-
-\change_inserted -438528902 1363018626
 influence keyword to schema term matching
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-
-\change_inserted -438528902 1363018626
 similarity metrics and their weights
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1363018626
 allow users to add new: [this is the explicit feedback, that is more valuable
  than implicit]
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-
-\change_inserted -438528902 1363018626
 values for schema entities
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1363018626
 synonyms for schema terms
 \end_layout
 
 \end_deeper
 \end_deeper
 \begin_layout Itemize
-
-\change_inserted -438528902 1363018626
 weights on particular entities or notes in schema graph: SODA 
 \begin_inset CommandInset citation
 LatexCommand citep
@@ -6834,17 +5083,11 @@ key "soda_feedback"
 \end_layout
 
 \begin_layout Itemize
-
-\change_inserted -438528902 1363018626
 promote/demote query suggestions - machine learning
-\change_unchanged
-
 \end_layout
 
 \end_inset
 
-
-\change_unchanged
 
 \end_layout
 
@@ -6997,8 +5240,6 @@ name "chap:Evaluation"
 
 \begin_layout Section
 Accuracy
-\change_inserted -438528902 1363017577
-
 \end_layout
 
 \begin_layout Standard
@@ -7082,6 +5323,302 @@ Usability
 
 \begin_layout Standard
 Usefulness of KWS vs structured query language
+\end_layout
+
+\begin_layout Chapter
+Related Work
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+TODO: introduce; mention the closest ones: Keymantic/KEYRY; compare with
+ our work (?);
+\end_layout
+
+\begin_layout Plain Layout
+
+\series bold
+works on user feedback?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+String
+\begin_inset space ~
+\end_inset
+
+and
+\begin_inset space ~
+\end_inset
+
+Entity
+\begin_inset space ~
+\end_inset
+
+Matching provides the possible interpretations of individual keywords, as
+ entry points for further processing.
+ From the fields of information retrieval, entity and string matching, vast
+ amounts of works exist, including various methods for calculating string,
+ word and phrase similarities: string-edit distances, learned string distances
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "string_edit_crf_mccallum2012conditional"
+
+\end_inset
+
+, and frameworks for semantic similarity.
+\end_layout
+
+\begin_layout Description
+
+\series bold
+Natural
+\begin_inset space ~
+\end_inset
+
+Language
+\begin_inset space ~
+\end_inset
+
+Processing
+\begin_inset space ~
+\end_inset
+
+(NLP)
+\series default
+\lang english
+ could be useful
+\lang british
+ in gaining the better understanding of the meaning of a question or a query.
+ 
+\lang english
+Large amount of works exist on Question Answering and NLP
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "NLP"
+description "Natural Language Processing"
+
+\end_inset
+
+
+\lang british
+ including: question focus extraction identifying the requested entit(-ies),
+ parsing into predicate argument structure providing more generic representation
+ of a sentence (e.g.
+ removing differences between passive and active voices) simplifies further
+ analysis, the relation extraction allows grasping more exact relationships
+ between constituents of a clause
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+especially good for a small predefined set of important relations, but requires
+ lots of manual work; less common relations can be covered through machine-learn
+ing based relation extraction, but that requires large corpus
+\begin_inset CommandInset citation
+LatexCommand citep
+key "watson_2012relation"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+, word sense disambiguation and other semantic techniques allow choosing
+ more semantically correct interpretations.
+\begin_inset Newline newline
+\end_inset
+
+It is worth mentioning, that the current state-of-the art methods such as
+ the
+\emph on
+ IBM Watson
+\emph default
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "watson_introduction_ferrucci2012"
+
+\end_inset
+
+, a complex open-domain question answering system, do not even try gaining
+ the complete understanding of the question (which is still a very challenging
+ task), but focuses instead on scoring and analysing the alternative interpretat
+ions of questions and result candidates.
+\end_layout
+
+\begin_layout Description
+
+\color magenta
+NL
+\begin_inset space ~
+\end_inset
+
+interfaces
+\begin_inset space ~
+\end_inset
+
+to
+\begin_inset space ~
+\end_inset
+
+Data
+\begin_inset space ~
+\end_inset
+
+Services:
+\color inherit
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "nl_to_dataservices_guerrisi2012natural"
+
+\end_inset
+
+
+\series bold
+\lang english
+ 
+\series default
+attempts to process multi-domain
+\series bold
+ 
+\series default
+full-sentence natural language queries over web-services.
+ It uses focus extraction to find the focus entity, splits the query into
+ constituents (sub-questions), classifies the domain of each constituent,
+ and then tries to combine and resolve these constituents over the data
+ service interfaces (tries recognizing the intent modifiers [e.g.
+ adjectives] as parameters to services).
+ 
+\color magenta
+( too ambitious/not-mature; open domain, real natural language questions
+ - a bit farther from our focus, our domain is very specific.).
+
+\color inherit
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Description
+as part of 
+\begin_inset Quotes eld
+\end_inset
+
+Search
+\begin_inset space ~
+\end_inset
+
+Computing
+\begin_inset Quotes erd
+\end_inset
+
+ project....
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Description
+
+\lang english
+Searching
+\begin_inset space ~
+\end_inset
+
+structured
+\begin_inset space ~
+\end_inset
+
+DBs The problem of keyword search over relational and other structured databases
+ received a significant attention within the last decade.
+ It was explored from a number of perspectives: returning top-k ranked data-tupl
+es
+\shape italic
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "spark2_luo2011"
+
+\end_inset
+
+
+\shape default
+ vs suggesting structured queries as SQL 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "ethz2012"
+
+\end_inset
+
+, performance optimization, 
+\color red
+user feedback mechanisms
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+\lang english
+what in addition to schema mappings for item-based ranking?
+\end_layout
+
+\end_inset
+
+,
+\color inherit
+ keyword searching over distributed sources, up to lightweight exploratory
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+
+\lang english
+because of probabilistic nature of schema mappings, it do not provide 100%
+ result exactness
+\end_layout
+
+\end_inset
+
+ probabilistic data integration based on users-feedback that minimize the
+ upfront human effort required 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "ch.16"
+key "principles_data_integration"
+
+\end_inset
+
+.
+ On the other extreme, the 
+\shape italic
+SODA 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "ethz2012"
+
+\end_inset
+
+
+\shape default
+ system has proved that if enough meta-data is in place, even quite complex
+ queries given in business terms could be answered over a large and complex
+ warehouse.
 \end_layout
 
 \begin_layout Chapter
@@ -7393,6 +5930,20 @@ Predicate Argument Structure + Relation Extraction Rules(proLog) -- however
 web sockets for auto-completion
 \end_layout
 
+\begin_layout Itemize
+better interpretation of patterns in keyword queries
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+NL - focus
+\end_layout
+
+\begin_layout Itemize
+semi-structured? - (weak|shallow|permissive) parsing of DAS QL
+\end_layout
+
+\end_deeper
 \begin_layout Standard
 
 \color red
@@ -7416,10 +5967,6 @@ TODO
 \end_layout
 
 \begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset CommandInset bibtex
 LatexCommand bibtex
 bibfiles "refs"
@@ -7430,237 +5977,262 @@ options "bibtotoc,alpha"
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Chapter*
+\begin_layout Chapter
 \start_of_appendix
-Appendices
-\end_layout
+Data Integration 
+\begin_inset Quotes eld
+\end_inset
+
+War stories
+\begin_inset Quotes erd
+\end_inset
+
+ at the CMS Experiment, CERN
+\begin_inset CommandInset label
+LatexCommand label
+name "chap:CMS-war-stories"
+
+\end_inset
+
+
+\begin_inset Marginal
+status collapsed
 
 \begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "sub_chapters/das_logs.tex"
+or just: Problem solutions
+\end_layout
 
 \end_inset
 
 
 \end_layout
 
+\begin_layout Section
+Relaxation of the Query Language
+\begin_inset Marginal
+status collapsed
+
 \begin_layout Plain Layout
 
+\color red
+shall we put the solutions here or somewhere lower in the paper after describing
+ Keyword Search?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\color red
+Initially the queries had to operate exactly on the fields returned by data
+ services...
+\end_layout
+
+\begin_layout Standard
+
+\color red
+implementation of simple compound queries so that an entity could always
+ return same list of fields, easy to implement and very useful for users
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+makes the system much more clear
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+that even makes keyword searching easier to implement, as we could assume
+ that all the fields are almost 
+\begin_inset Quotes eld
+\end_inset
+
+stable
+\begin_inset Quotes erd
+\end_inset
+
+ for each entity being returned (except a couple of exceptional cases, which
+ could be check afterwards)
+\end_layout
+
+\begin_layout Section
+Solutions to the Performance Issues
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:cms-Performance-Issues"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Analysis of query logs and benchmarking the most popular queries, it was
+ found out that most of the performance issues were due to large data amounts
+ of data the providers are processing, including some unnecessarily work
+ being repeated or requested without need (due to current limitations of
+ services, which are not under our direct control).
+\end_layout
+
+\begin_layout Subsection*
+Incremental view maintenance
+\end_layout
+
+\begin_layout Standard
+In the cases when new records are coming, but the existing ones are not
+ changing much
 \series bold
-Appendix: Kinds of Queries at CMS
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-Appendix: Proposed solutions for CMS?
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Itemize
-Showing results in natural language too!!!
-\end_layout
-
-\begin_layout Itemize
-Faceted navigation and/or Refinement of User's Intent?!
-\end_layout
-
-\begin_layout Itemize
-Real-time suggestions
-\end_layout
-
-\begin_layout Itemize
-also Keyword Search combining services? 
-\end_layout
-
-\begin_layout Itemize
-try loading the results online (but they count be different)
-\end_layout
-
-\begin_layout Itemize
-understanding relationships between services (e.g.
- through existing queries?) 
-\end_layout
-
-\begin_layout Itemize
-evaluation of degradation of ranking quality with expansion of search space
- (operators: aggression, min, max, post-filtering through result fields)
-\end_layout
-
-\begin_layout Itemize
-Limitations of the approach: control statements? controlled statements:
- top 10, rank by, aggregate by etc
-\end_layout
-
-\begin_layout Itemize
-Examples in our domain? in different domain? Evaluation/usability study
- by end-users
-\end_layout
-
-\begin_layout Itemize
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Itemize
-interaction with the user e.g.
- creation time/ modification time dataset taken on 1/Jan/2013 dataset -
- F size, type, I n_events decrease false positives via machine learning?
+, 
+\series default
+the incremental view maintenance that computes only differences from earlier
+ results could be a fairly easy solution for greatly improving the performance
+ of queries containing heavy joins and/or aggregations.
  
 \end_layout
 
-\begin_layout Itemize
-e.g., dateset with more than 100 event avg, sum 
+\begin_layout Standard
+This is exactly the case with the most popular expensive query
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+see query #7 in DAS Query log analysis
+\series bold
+
+\begin_inset CommandInset ref
+LatexCommand vpageref
+reference "appendix_das_cli_logs"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
 
- CRF implementations that can output n-best results
+ 
 \end_layout
 
-\begin_deeper
-\begin_layout Itemize
-http://crfpp.googlecode.com/svn/trunk/doc/index.html
+\end_inset
+
+ over the DBS system (80GB of data + 280GB of indexes): 
+\emph on
+’find files where run in [r1, r2, r3] and dataset=X’
+\emph default
+ that requires joining most of the biggest tables in the database (number
+ of tuples in parentesis, arrow indicate join direction):
 \end_layout
 
-\begin_layout Itemize
-http://wapiti.limsi.fr/ 
-\end_layout
+\begin_layout Standard
+\begin_inset ERT
+status open
 
-\begin_layout Itemize
-mallet is Java library (not prefferd because of Java)
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\series bold
-\color red
-\lang english
-TO Check: Natural Language Querying over Databases Using Cascaded CRFs
-\end_layout
-
-\begin_layout Itemize
-
-\lang english
-Training Conditional Random Fields using Virtual Evidence Boosting 
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\lang english
-http://www.ijcai.org/Past%20Proceedings/IJCAI-2007/PDF/IJCAI07-407.pdf
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\series bold
-About converting HMM into CRF:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-http://www.cs.ucf.edu/~gitars/cap6938/vail07conditional.pdf
-\end_layout
-
-\begin_layout Itemize
-
-\series bold
-http://knight.cis.temple.edu/~yates/cis8538/sp11/slides/conditional-random-fields.pp
-t
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-http://knight.cis.temple.edu/~yates/cis8538/sp11/
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-CRF survey:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-http://blog.echen.me/2012/01/03/introduction-to-conditional-random-fields/
-\end_layout
-
-\begin_layout Itemize
-http://onionesquereality.wordpress.com/2011/08/20/conditional-random-fields-a-begi
-nners-survey/
-\end_layout
-
-\begin_layout Itemize
-http://stackoverflow.com/questions/80089/anyone-recommend-a-good-tutorial-on-cond
-itional-random-fields
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-in python:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-http://github.com/shuyo/iir/blob/master/sequence/crf.py
-\end_layout
-
-\begin_layout Itemize
-http://blog.echen.me/2012/01/03/introduction-to-conditional-random-fields/
-\end_layout
-
-\end_deeper
-\end_deeper
-\begin_layout Itemize
-lingPIpe?
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-also supports CRF: http://alias-i.com/lingpipe/demos/tutorial/crf/read-me.html
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Problems with complex queries:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-give me sizes for RAW, RECO, AOD for /SingleMu/Run2012B-PromptReco-v1/RECO
- dataset and run 195529
-\end_layout
-
-\end_deeper
 \begin_layout Plain Layout
 
-\lang english
-Another thing which could useful for the users at CMS Experiment, CERN,
- is search system that allows a) combing keyword-based and structured search
- (even in the same query), and that b) do not require the queries to be
- in a format that depends on physical service implementation (inputs vs
- outputs), while the current 
+{
+\backslash
+small
+\backslash
+verb|Dataset (164K rows) -> Block (2M) -> Files (31M) -> FileRunLumi (902M)
+ <- Runs (65K)|}
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+Having a materialized view with all these tables joined together would allow
+ answering such queries much quicker.
+ Given low change rates (in comparison to data already present), maintaining
+ the view incrementally should be comparatively cheap with the only expense
+ of just couple of times of storage space (storage is bound by the size
+ of the largest table anyway).
+ 
+\end_layout
+
+\begin_layout Standard
+In Oracle, which is the standard back-end, the 
 \emph on
-DAS Query Language
+materialized refresh fast views with query rewriting
 \emph default
- does.
+ provide a completely transparent operation not requiring any changes to
+ the proprietary system.
+ Still, it has a couple of limitations on the queries and the ways of refreshing
+ the view
+\begin_inset CommandInset citation
+LatexCommand citep
+key "Oracle11"
+
+\end_inset
+
+.
+ Alternatively, some another continuous view maintenance tool (e.g.
+ DBToaster
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+http://www.dbtoaster.org that is being developed at EPFL 
+\end_layout
+
+\end_inset
+
+) could be used, however this is not be as transparent as the earlier solution.
+ 
+\end_layout
+
+\begin_layout Subsection*
+Pagination and Sorting of results
+\end_layout
+
+\begin_layout Standard
+As many of the queries on the web interface are exploratory and request
+ only the first page of results, supporting pagination is one of the major
+ factors towards performance improvements .
+ As the DAS system is combining records from multiple systems, pagination
+ also requires retrieving results from the data providers in an ordering
+ that is common among the services (in many cases that can be the 
+\begin_inset Quotes eld
+\end_inset
+
+Primary key
+\begin_inset Quotes erd
+\end_inset
+
+ of the entity that is being requested; however, some cases are more complex
+ from the side of data provider: an ordering not supported by database indexes
+ could induce full table scan!).
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+Integrating distributed information efficiently
+\end_layout
+
+\begin_layout Plain Layout
+Bloom-join (which could be quite transparent and implemented even on DB
+ side (efficient pure SQL is doable for MySQL, and probably for Oracle too)
+ quite transparently (a helper function could take the initial query and
+ bloom-filter’s bit-vector as parameters).
+ 
 \end_layout
 
 \end_inset
@@ -7668,9 +6240,63 @@ DAS Query Language
 
 \end_layout
 
+\begin_layout Subsection*
+Estimating query running time
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Estimating-query-running"
+
 \end_inset
 
 
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+not yet implemented
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Tracking of the execution time of each data-service, 
+\color red
+was proposed to be implemented
+\color inherit
+, that would inform user of long lasting queries, starting them only with
+ his confirmation 
+\end_layout
+
+\begin_layout Standard
+It has been chosen to track the mean of execution time, and its standard
+ deviation.
+ Knuth has shown that the standard deviation can be efficiently computed
+ in an online fashion without need to store each individual value, nor recomputi
+ng everything from scratch 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "p. 232"
+key "knuth1998stdev"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Because the input parameters passed to the service may heavily impact the
+ service performance, we differentiate between these parameter types: 1)
+ some specific value, 2) a value with wild-card (presumably returning more
+ results than specific value as it may match multiple values), 3) not provided
+ (matches all values).
+ So we store only four values per each different combination of data-service
+ input parameter's .
 \end_layout
 
 \end_body
