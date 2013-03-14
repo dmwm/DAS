@@ -118,8 +118,8 @@ figs-within-sections
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
-\tracking_changes false
-\output_changes false
+\tracking_changes true
+\output_changes true
 \html_math_output 0
 \html_css_as_file 0
 \html_be_strict false
@@ -951,12 +951,55 @@ SQL
 \emph default
 .
  However, the latter present a number of user interface issues.
+\change_inserted -438528902 1363295135
+
 \end_layout
 
 \begin_layout Standard
-The objective of this work is to research the keyword search as a more intuitive
- alternative, which, in fact, received little attention in the field of
- data service integration
+
+\change_inserted -438528902 1363295137
+Virtual integration presents an additional challenge, since only limited
+ access to the data instances is available, rendering the traditional methods
+ that return data-tuples
+\series bold
+ 
+\series default
+inapplicable (e.g.
+ Information Retrieval or Keyword search over relational databases).
+\end_layout
+
+\begin_layout Standard
+
+\change_inserted -438528902 1363295137
+The alternatives to structured queries include: 1) interfaces based on regular
+ forms
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\change_inserted -438528902 1363295137
+?
+\end_layout
+
+\end_inset
+
+, that are impractical for complex queries over large number of entities/attribu
+tes; 2) the keyword search based on metadata returning query results directly,
+ risking that the query interpretation chosen is not the correct one, as
+ the keyword queries are ambiguous; or 3) the keyword search based on metadata
+ and proposing a list of structured queries for user to choose from.
+\change_unchanged
+
+\end_layout
+
+\begin_layout Standard
+The objective of this work is to research 
+\change_inserted -438528902 1363295165
+the latter variation of
+\change_unchanged
+ the keyword search as a more intuitive alternative, which, in fact, received
+ little attention in the field of data service integration
 \begin_inset CommandInset citation
 LatexCommand citep
 key "nl_to_dataservices_guerrisi2012natural"
@@ -964,8 +1007,6 @@ key "nl_to_dataservices_guerrisi2012natural"
 \end_inset
 
 .
- Virtual integration presents an additional challenge since only limited
- access to the data instances is available.
  
 \end_layout
 
