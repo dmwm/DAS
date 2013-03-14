@@ -995,7 +995,7 @@ CMS Experiment at CERN
 \color red
 
 \begin_inset Foot
-status open
+status collapsed
 
 \begin_layout Plain Layout
 due to the complexity of combining the contributions by a large number institute
@@ -1722,6 +1722,13 @@ also mention: NL querying over services
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Newpage clearpage
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Structure of the work and our contributions
 \end_layout
@@ -1768,14 +1775,14 @@ reference "sec:State-of-the"
 \end_layout
 
 \begin_layout Standard
-The chapter 
+Chapter 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "chap:Case-study:CMS"
 
 \end_inset
 
-, presents the context in which this thesis was conducted - the EII system
+ presents the context in which this thesis was conducted - the EII system
  and introduces
 \series bold
  
@@ -1825,14 +1832,14 @@ autocompletion?
 
 \series default
 \color inherit
-Then, in chapter 
+In chapter 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "chap:Keyword-Search-over-DataServices"
 
 \end_inset
 
-, the problem of keyword search over EII is formally defined, and a keyword
+ the problem of keyword search over EII is formally defined, and a keyword
  search engine is presented, that given a keyword query, proposes most probable
  structured queries.
  We propose a custom string similarity metric, discuss the presentation
@@ -1856,7 +1863,7 @@ reference "chap:Incorporating-User-Feedback"
 
 \end_inset
 
-, we discuss approaches towards incorporating
+ we discuss approaches towards incorporating
 \series bold
 \color red
  
@@ -1874,14 +1881,14 @@ users feedback into the keyword search over EII.
 \end_layout
 
 \begin_layout Standard
-Finally, in chapter 
+In chapter 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "chap:Evaluation"
 
 \end_inset
 
-, the developed system is evaluated quantitatively using test queries and
+ the developed system is evaluated quantitatively using test queries and
  qualitatively through user feedback.
 \end_layout
 
@@ -1901,11 +1908,7 @@ add: Related work; conclusions; cms solutions moved to appendix;
 \end_layout
 
 \begin_layout Standard
-
-\emph on
-Note:
-\emph default
- The project also included these time-demanding tasks: 1) choosing a precise
+The project also included these time-demanding tasks: 1) choosing a precise
  topic to focus on - because the area is not so actively researched and
  there is no concise terminology
 \begin_inset Foot
@@ -1921,8 +1924,8 @@ on are used as synonyms throughout different time periods; works on keyword
 
 \end_inset
 
-, this has took a considerable amount of time, and 2) case analysis at the
- CMS Experiment included analysing query logs, benchmarking the performance
+, this took a considerable amount of time, and 2) case analysis at the CMS
+ Experiment included analysing query logs, benchmarking the performance
  bottlenecks; a users survey, tutorials and presentations.
 \end_layout
 
