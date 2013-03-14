@@ -851,9 +851,9 @@ description "Enterprise Information Integration\\\\"
 
 \end_inset
 
-), 
+)
 \lang english
-which is about 
+ is about 
 \begin_inset Quotes eld
 \end_inset
 
@@ -873,14 +873,14 @@ key "eii_2005"
 
 \end_inset
 
-,
+.
+ It
 \lang british
  allows querying the sources in a coherent way (eliminating the inconsistencies
- in data formats, providing naming conventions and combining the results,
- etc.).
- It is the most beneficial when the other 
+ in data formats, naming; combines the results, etc.) and is the most beneficial
+ when the other data
 \color blue
-data 
+ 
 \color inherit
 integration approaches are not applicable
 \begin_inset Foot
@@ -905,16 +905,6 @@ SQL
 \color blue
 number of user interface issues.
  
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -983,6 +973,18 @@ Motivation
 \end_layout
 
 \begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color green
+too much blah blah
+\end_layout
+
+\end_inset
+
 At scientific collaborations such as the 
 \emph on
 CMS Experiment at CERN
@@ -2031,12 +2033,14 @@ The queries are executed either from web browser or through a command line
 
 \end_layout
 
-\begin_layout Paragraph*
-Query language and query execution
-\end_layout
-
 \begin_layout Standard
-The queries are formed specifying the entity the user is interested in (e.g.
+
+\series bold
+DAS Query language (DASQL) and query execution.
+
+\series default
+ The queries are formed specifying the entity the user is interested in
+ (e.g.
  dataset, file, etc) and providing selection criteria (e.g.
  attribute=value, attribute BETWEEN [v1, v2]).
  The results could be later 'piped' for further filtering, sorting or aggregatio
@@ -2054,10 +2058,9 @@ n (min, max, avg, sum, count, median), e.g.:
 \end_layout
 
 \begin_layout Standard
-As seen in the figure above, DAS query language closely corresponds to the
- physical execution flow over the EII: based on the requested entity and
- the conditions on service inputs, DAS decides the set of the services to
- be queried
+As seen in the figure above, DASQL closely corresponds to the physical execution
+ flow over the EII: based on the requested entity and the conditions on
+ service inputs, DAS decides the set of the services to be queried
 \begin_inset Foot
 status collapsed
 
@@ -2135,47 +2138,79 @@ The system integrates approx.
 10 data providers
 \series default
 \color inherit
- (~100 interfaces returning JSON, XML, or other formats), most of them using
+ (~100 interfaces returning JSON, XML, or other formats), most of them uses
  Oracle as back-end.
- Most of the providers were created initially focusing on data storage without
- much attention to its retrieval.
- The services are not optimized for querying the fairly large data volumes
- stored
+ Because most of the providers were created initially focusing on data storage
+ without much attention to its retrieval, services are not optimized for
+ querying the fairly large data volumes they store
 \begin_inset Foot
-status collapsed
+status open
 
 \begin_layout Plain Layout
-the total size of data that the services refer to is growing in order of
- 1TB/year.
+the total size of data growing at rate of 1TB/year.
  E.g.
- one of the biggest providers, DBS, is partitioned among ~10 instances,
- with the biggest containing 80GB of data + 280GB of indexes in Oracle
+ one of the biggest providers, DBS, is partitioned among ~10 instances in
+ Oracle, with the biggest of 80GB data + 280GB indexes
 \end_layout
 
 \end_inset
 
-: the data is kept in fully-relational fashion, thus queries often require
- complex joins over large tables; even worse, the interfaces of the services
- do not allow limiting the number of results to be returned, nor sorting.
+: the data is kept in fully-relational fashion, often requiring complex
+ joins over large tables; the services do not allow result pagination, nor
+ sorting.
 \end_layout
 
 \begin_layout Paragraph*
 
 \color red
-Issues and User Feedback
+User Feedback, Issues, Solutions
 \end_layout
 
 \begin_layout Standard
+DAS 
+\series bold
+experienced
+\series default
+ a number of performance and usability issues (two types of feedback: users
+ totally happy with DASQL, or totally lost).
+ In addition to keyword search, a slight extension to the query language
+ was proposed.
+ A confusing element of DAS was that the fields returned for certain entity
+ were depending on the 
+\series bold
+selection conditions
+\begin_inset Note Note
+status open
 
+\begin_layout Plain Layout
+ (as directly returned by the services)
+\end_layout
+
+\end_inset
+
+
+\series default
 \color red
-The EII system suffered from a number of performance and usability problems.
- System's usability was improved by redesigning the user interface and allowing
- less restricted keyword search; analysis of the performance bottlenecks
- indicated that data providers were not ready for data retrieval - appropriate
- measures were proposed (see appendix 
+, it was proposed to automatically resolve the additional service 
+\series bold
+orchestration
+\series default
+ for returning the requested fields
+\color inherit
+ (see appendix 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "chap:CMS-war-stories"
+reference "sec:Relaxation-DASQL"
+
+\end_inset
+
+).
+ Second, analysis of performance bottlenecks indicated that data providers
+ were not ready for data retrieval - appropriate measures were proposed
+ (see appendix 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:cms-Performance-Issues"
 
 \end_inset
 
@@ -2184,58 +2219,18 @@ reference "chap:CMS-war-stories"
 .
 
 \series default
- The fields that are contained in the results of retrieving some entity
- depend on the filtering conditions (sometimes it contains all the fields,
- sometimes only the 
-\begin_inset Quotes eld
-\end_inset
-
-primary key
-\begin_inset Quotes erd
-\end_inset
-
- allowing to identify the entity 
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-
 \color red
-e.g.
- 'dataset dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM' contains
- all the possible fields, while 'dataset dataset=/zmm/*/*' only the dataset.name
- and couple of others
-\end_layout
+ 
+\series bold
+\color inherit
 
-\end_inset
-
-).
- This is creating additional confusion for the users, as it is not easy
- to figure out where and how to find what the user is searching for.
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Note
-status collapsed
-
-\begin_layout Subsection
-Alternative architectures
-\end_layout
-
-\begin_layout Plain Layout
-Publish/subscribe
-\end_layout
-
-\end_inset
-
-
-\begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
 
 \series bold
-Point to appendix: solutions at CMS
+[without directly specifying how to rerieve it]
 \end_layout
 
 \end_inset
@@ -4394,15 +4389,31 @@ not yet implemented
 \end_layout
 
 \end_deeper
-\begin_layout Subsubsection
+\begin_layout Subsection
 Tuning the scoring parameters
 \end_layout
 
 \begin_layout Standard
+First the individual system components has been tuned to a 
+\begin_inset Quotes eld
+\end_inset
 
+sufficient
+\begin_inset Quotes erd
+\end_inset
+
+ level using a number of unit tests, and manual testing.
+ In some cases it required assigning arbitrary estimates likelihood/confidence.
+\end_layout
+
+\begin_layout Standard
+Then using a number of keyword queries either written by the end users of
+ the system, or the developer to address 
 \series bold
-\color blue
-TODO
+marginal/specific
+\series default
+ use cases, a number of global system parameters had been fine-tuned by
+ hand:
 \end_layout
 
 \begin_layout Itemize
@@ -5323,12 +5334,8 @@ Information
 \end_inset
 
 Integration
-\end_layout
-
-\begin_layout Standard
-
 \lang english
-During the last 15 years, significant experience has been accumulated in
+ During the last 15 years, significant experience has been accumulated in
  the field of 
 \shape italic
 Enterprise Information Integration
@@ -6040,6 +6047,13 @@ or just: Problem solutions
 
 \begin_layout Section
 Relaxation of the Query Language
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Relaxation-DASQL"
+
+\end_inset
+
+
 \begin_inset Marginal
 status collapsed
 
@@ -6060,6 +6074,48 @@ shall we put the solutions here or somewhere lower in the paper after describing
 \color red
 Initially the queries had to operate exactly on the fields returned by data
  services...
+ 
+\end_layout
+
+\begin_layout Standard
+----
+\end_layout
+
+\begin_layout Standard
+
+\color red
+The fields that are contained in the results of retrieving some entity depend
+ on the filtering conditions (sometimes it contains all the fields, sometimes
+ only the 
+\begin_inset Quotes eld
+\end_inset
+
+primary key
+\begin_inset Quotes erd
+\end_inset
+
+ allowing to identify the entity 
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+e.g.
+ 'dataset dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM' contains
+ all the possible fields, while 'dataset dataset=/zmm/*/*' only the dataset.name
+ and couple of others
+\end_layout
+
+\end_inset
+
+).
+ This is creating additional confusion for the users, as it is not easy
+ to figure out where and how to find what the user is searching for.
+\end_layout
+
+\begin_layout Standard
+----
 \end_layout
 
 \begin_layout Standard
