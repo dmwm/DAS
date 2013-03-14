@@ -861,14 +861,14 @@ integrating data from multiple sources
 \shape italic
 without
 \shape default
- having to to first load data into a central warehouse
+ having to first load data into a central warehouse
 \begin_inset Quotes erd
 \end_inset
 
  
 \begin_inset CommandInset citation
 LatexCommand citep
-after "p.1"
+after "page 1"
 key "eii_2005"
 
 \end_inset
@@ -877,8 +877,8 @@ key "eii_2005"
  It
 \lang british
  allows querying the sources in a coherent way (eliminating the inconsistencies
- in data formats, naming; combines the results, etc.) and is the most beneficial
- when the other data
+ in data formats, naming; combining the results, etc.) and is the most beneficial
+ when other data
 \color blue
  
 \color inherit
@@ -901,10 +901,10 @@ for instance, publish-subscribe approach is not applicable in the presence
 \emph on
 SQL
 \emph default
-, which present a 
+.
+ However, the latter present a 
 \color blue
 number of user interface issues.
- 
 \end_layout
 
 \begin_layout Standard
@@ -918,8 +918,8 @@ key "nl_to_dataservices_guerrisi2012natural"
 \end_inset
 
 .
- Virtual integration presents an additional challenge - only limited access
- to the data instances is available.
+ Virtual integration presents an additional challenge since only limited
+ access to the data instances is available.
  
 \end_layout
 
@@ -995,20 +995,19 @@ CMS Experiment at CERN
 \color red
 
 \begin_inset Foot
-status collapsed
+status open
 
 \begin_layout Plain Layout
-At CERN, due to many reasons (e.g.
- research-orientedness and need of freedom, politics of institutes involved)
- software projects usually evolve in independent fashion, resulting in fair
- number of proprietary systems
+due to the complexity of combining the contributions by a large number institute
+s in a single project, they usually evolve in independent fashion, resulting
+ in fair number of proprietary systems
 \begin_inset CommandInset citation
 LatexCommand citep
 key "Koch00CERN"
 
 \end_inset
 
-, whereas high turnover makes it harder to extend these systems 
+
 \end_layout
 
 \end_inset
@@ -1092,12 +1091,8 @@ name "sec:State-of-the"
 \begin_layout Standard
 
 \lang english
-In the field of 
-\shape italic
-Enterprise Information Integration
-\shape default
- (EII), significant experience has been accumulated on its formalisms, source
- descriptions, query optimization 
+In the field of EII, significant experience has been accumulated on its
+ formalisms, source descriptions, query optimization 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "eii_2005"
@@ -5337,7 +5332,7 @@ Enterprise Information Integration
 \shape default
 
 \begin_inset Foot
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
@@ -5350,7 +5345,7 @@ without
  having to to first load data into a central warehouse'
 \begin_inset CommandInset citation
 LatexCommand citep
-after "p.1"
+after "page 1"
 key "eii_2005"
 
 \end_inset
