@@ -2165,12 +2165,8 @@ User Feedback, Issues, Solutions
 \end_layout
 
 \begin_layout Standard
-DAS 
-\series bold
-experienced
-\series default
- a number of performance and usability issues (two types of feedback: users
- totally happy with DASQL, or totally lost).
+DAS experienced a number of performance and usability issues (users reported
+ either being totally happy with DASQL, either being totally lost).
  In addition to keyword search, a slight extension to the query language
  was proposed.
  A confusing element of DAS was that the fields returned for certain entity
