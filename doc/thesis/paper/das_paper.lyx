@@ -318,18 +318,42 @@ Dr.
 \end_layout
 
 \begin_layout Abstract
-In the cases when there is no direct access to the data, but only certain
- interfaces are available (e.g.
- web services, web forms, proprietary systems, etc), the virtual data integratio
-n provides a way to query the sources in a coherent way.
- Querying is usually done through structured query languages such as the
- SQL and 
-\color red
-alike
-\color inherit
-, allowing to obtain the precise results, but implying that the user must
- learn the query language and has to know how the data is structured.
- The keyword search is a popular way for finding information, however the
+We consider the case then there is no direct access to the data and only
+ interfaces of limited capabilities are available (e.g.
+ web services, web forms, proprietary systems), while users are in need
+ of a way to query these sources for accurate results (boolean retrieval
+ augmented with additional operators).
+ This, renders the traditional methods that return data-tuples
+\series bold
+ 
+\series default
+inapplicable (e.g.
+ Information Retrieval or Keyword search over relational databases).
+\end_layout
+
+\begin_layout Abstract
+In that instance, the Enterprise Information Integration (EII), provides
+ the means to query the sources in a coherent way.
+ The querying is usually done through structured query languages such as
+ the SQL, implying that the user must learn the query language and has to
+ know how the data is structured.
+ 
+\end_layout
+
+\begin_layout Abstract
+The alternatives to structured queries include: 1) interfaces based on regular
+ forms, that are impractical for complex queries over large number of entities/a
+ttributes; 2) the keyword search based on metadata returning query results
+ directly, risking that the query interpretation chosen is not the correct
+ one as keyword queries are ambiguous; or 3) the keyword search based on
+ metadata and proposing a list of structured queries for user to choose
+ from.
+ 
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+The keyword search is a popular way for finding information, however the
  
 \series bold
 traditional methods
@@ -352,74 +376,73 @@ trad of kws @ relational databases (SPARK); also IR, SPARK don't fit as
  in this case.
 \end_layout
 
-\begin_layout Abstract
+\end_inset
 
-\color red
-In this work we present a keyword search system that approaches this problem
- operating on the available: the metadata such as the constraints on allowed
- values,
+
+\end_layout
+
+\begin_layout Abstract
+In this work we explore the latter, and present a keyword search system
+ that approaches this problem operating on the available: the metadata such
+ as the constraints on allowed values, and some portions of the data.
+ It proposes a ranked list of structured queries along with explanations
+ of their meaning.
+ Unlike the earlier works,
 \series bold
- analysis of user queries
-\series default
-, and some portions of the data.
  
-\end_layout
+\series default
+it is freely available, makes no assumptions on the input query (still being
+ able to leverage the structural patterns in the query, if present).
+ 
+\begin_inset Note Note
+status open
 
-\begin_layout Abstract
+\begin_layout Plain Layout
 
 \series bold
 \color red
-Unlike the earlier works, 
+analysis of user queries
+\end_layout
+
+\end_inset
+
+
+\series bold
+ 
+\end_layout
+
+\begin_layout Abstract
+The system is discussed within context of an EII service at the Compact
+ Muon Solenoid Experiment, at CERN, where the simplicity and capabilities
+ of the search interface places a crucial role for adoption among the end
+ users and their ability to cover their information needs.
+\end_layout
+
+\begin_layout Abstract
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+Note that
 \series default
-it makes no assumptions on the input query (still being able to leverage
- the structural patterns in the query, if present) and proposes a ranked
- list of structured queries along with explanations of their meaning to
- the end user.
- 
+ keyword search returning data-tuples either based on Information Retrieval
+ or designed for Relational Databases is not applicable, because users are
+ in need of accurate results, and there is no easy way index sources.
 \end_layout
 
-\begin_layout Abstract
+\begin_layout Plain Layout
 
+\series bold
 \color red
-The system is discussed within context of CMS data discovery service where
- simplicity and capabilities of the search interface places a crucial role
- for adoption among the end users and their ability to cover their information
- needs.
- 
+* TODO: add auto-completion and ideas for further work on incorporating
+ users feedback
 \end_layout
 
-\begin_layout Abstract
-
-\color red
-Our innovations/distinctiveness from earlier works:
-\end_layout
-
-\begin_layout Abstract
-
-\color red
-* no assumptions on input
-\end_layout
-
-\begin_layout Abstract
-
-\color red
-* real-world implementation + war stories
-\end_layout
-
-\begin_layout Abstract
-
-\color red
-* auto-completion and ideas for further work on incorporating users feedback
-\end_layout
-
-\begin_layout Abstract
-* detailed description; 
-\end_layout
-
-\begin_layout Abstract
-* reference implementation -- no open-source exists to our knowledge; still
- large portions of code needs to be rewritten (as it was initially developed
- as 
+\begin_layout Plain Layout
+* still large portions of code needs to be rewritten (as it was initially
+ developed as 
 \begin_inset Quotes eld
 \end_inset
 
@@ -428,6 +451,11 @@ research prototypes
 \end_inset
 
 , and lack of time didn't allow redesigning)
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Publishers
