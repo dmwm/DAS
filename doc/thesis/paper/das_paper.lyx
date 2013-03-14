@@ -1074,7 +1074,20 @@ tnt 123456789
 \end_inset
 
  can be interpreted as requesting the tracking information for a given TNT
- shipment tracking code.
+ shipment
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color red
+avoid company names?
+\end_layout
+
+\end_inset
+
+ tracking code.
 \end_layout
 
 \begin_layout Section
@@ -1165,7 +1178,7 @@ key "Kws_metadata_2011"
 
 \lang english
 .
- Although, some interpretations are more likely than the others, therefore,
+ Still, some interpretations are more likely than the others, therefore,
  when the users are interested in complete answer sets
 \begin_inset Marginal
 status open
@@ -1182,7 +1195,6 @@ other terminology?
  queries 
 \begin_inset CommandInset citation
 LatexCommand citep
-before "e.g."
 key "ethz2012,keymantic10,bergamaschi2011hidden"
 
 \end_inset
@@ -1208,7 +1220,7 @@ key "characterization_search_behaviour_kumar2009,Kws_metadata_2011"
 \color cyan
  
 \color inherit
-Most of the existing approaches attempts to profit from these dependencies
+Most of the existing approaches attempt to profit from these dependencies
  to ameliorate their candidate answers ranking.
 
 \color cyan
@@ -1339,7 +1351,7 @@ value
 \series bold
 , 
 \series default
-and refined by heuristics that increasing the scores of query interpretations
+and refined by heuristics that increase the scores of query interpretations
  with the nearby keywords having related labels assigned.
  Finally, these labels are interpreted as SQL queries.
 \begin_inset Note Note
@@ -1649,8 +1661,16 @@ key "bergamaschi2011hidden"
 
 \end_inset
 
- attempts to incorporate users feedback through training an HMM tagger taking
- keywords as its input.
+ attempts to incorporate users feedback through training an Hidden Markov
+ Model's (HMM)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "HMM"
+description "HIdden Markov Model"
+
+\end_inset
+
+ tagger taking keywords as its input.
  It uses the List-Viterbi 
 \begin_inset CommandInset citation
 LatexCommand citep
@@ -1856,7 +1876,7 @@ in a unique way
 \end_layout
 
 \begin_layout Standard
-Next, in chapter 
+Next, in section 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "chap:Incorporating-User-Feedback"
@@ -2001,19 +2021,6 @@ etc).
  DAS uses the 
 \emph on
 Boolean retrieval model
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\series bold
-\emph on
-augmented with aggregation functions...
-\end_layout
-
-\end_inset
-
-
 \emph default
  as users are often interested in retrieving ALL the items matching their
  query.
@@ -2040,7 +2047,11 @@ Query language (DASQL) and its execution
 \begin_layout Standard
 The queries are formed specifying the entity the user is interested in (e.g.
  dataset, file, etc) and providing selection criteria (e.g.
- attribute=value, attribute BETWEEN [v1, v2]).
+ attribute=value, attribute 
+\emph on
+between
+\emph default
+ [v1, v2]).
  The results could be later 'piped' for further filtering, sorting or aggregatio
 n (min, max, avg, sum, count, median), e.g.: 
 \end_layout
@@ -2056,9 +2067,9 @@ n (min, max, avg, sum, count, median), e.g.:
 \end_layout
 
 \begin_layout Standard
-As seen in the figure above, DASQL closely corresponds to the physical execution
- flow over the EII: based on the requested entity and the conditions on
- service inputs, DAS decides the set of the services to be queried
+As seen in the figure above, the DASQL closely corresponds to the physical
+ execution flow over the EII: based on the requested entity and the conditions
+ on service inputs, DAS decides the set of the services to be queried
 \begin_inset Foot
 status collapsed
 
@@ -2128,17 +2139,14 @@ The Data-Sources
 \begin_layout Standard
 The system integrates approx.
 \series bold
-\color magenta
 
 \begin_inset space ~
 \end_inset
 
 
 \series default
-10 data providers
-\color inherit
- (~100 interfaces returning JSON, XML, or other formats), most of them uses
- Oracle as back-end.
+10 data providers (~100 interfaces returning JSON, XML, or other formats),
+ most of them uses Oracle as back-end.
  Because most of the providers were created initially focusing on data storage
  without much attention to its retrieval, services are not optimized for
  querying the fairly large data volumes they store
