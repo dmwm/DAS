@@ -1077,191 +1077,6 @@ tnt 123456789
 \end_layout
 
 \begin_layout Section
-Structure of the work and our contributions
-\end_layout
-
-\begin_layout Standard
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-make this part of intro??
-\end_layout
-
-\end_inset
-
-First, we present an overview of the state-of-the-art in the field
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
- various approaches to the problem and the related works
-\end_layout
-
-\end_inset
-
- (chapter 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sec:State-of-the"
-
-\end_inset
-
-).
-\end_layout
-
-\begin_layout Standard
-The chapter 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "chap:Case-study:CMS"
-
-\end_inset
-
-, presents the EII system used within this work, 
-\series bold
-introducing 
-\series default
-some real-world issues with EII, such as data-service performance,
-\color red
- [users confusion - intricacy of a query language where the fields in the
- results for same entity differs depending on the query] 
-\color inherit
-and discusses ways for solving these.
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-\color red
-\begin_inset Marginal
-status collapsed
-
-\begin_layout Plain Layout
-
-\series bold
-\color magenta
-innovation???
-\end_layout
-
-\begin_layout Plain Layout
-
-\color magenta
-relaxed assumptions? (To check)
-\end_layout
-
-\begin_layout Plain Layout
-
-\color magenta
-autocompletion?
-\end_layout
-
-\end_inset
-
-
-\series default
-\color inherit
-Then, in chapter 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "chap:Keyword-Search-over-DataServices"
-
-\end_inset
-
-, after formally defining the problem of keyword search over EII, a keyword
- search engine is presented, that given a keyword query, proposes most probable
- structured queries .
- We propose a custom string similarity metric, discuss the presentation
- of results to the end users, and propose 
-\color red
-combining keyword search with auto-completion
-\series bold
- 
-\series default
-in a unique way.
-\end_layout
-
-\begin_layout Standard
-Next, in chapter 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "chap:Incorporating-User-Feedback"
-
-\end_inset
-
-, we discuss approaches allowing to incorporate
-\series bold
-\color red
- 
-\series default
-\color inherit
-users feedback into keyword search over EII.
- The earlier mentioned auto-completion would allow getting the feedback
- of higher quality without overloading the users, that could be used for
- improving various parts of the system
-\series bold
- 
-\series default
-(future work).
- 
-\end_layout
-
-\begin_layout Standard
-Finally, in chapter 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "chap:Evaluation"
-
-\end_inset
-
-, the developed system is evaluated quantitatively using test queries and
- qualitatively through user feedback.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-add: Related work; conclusions; cms solutions moved to appendix;
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\emph on
-Note:
-\emph default
- The project also included these time-demanding tasks: 1) choosing a precise
- topic to focus on - because the area is not so actively researched and
- there is no concise terminology
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-e.g.
- virtual data integration, enterprise information integration, data virtualizati
-on are used as synonyms throughout different time periods; works on keyword
- search over EII mostly focused on relational databases (with limited access
- to data instances)
-\end_layout
-
-\end_inset
-
-, this has took a considerable amount of time, and 2) case analysis at the
- CMS Experiment included analysing query logs, benchmarking the performance
- bottlenecks; a users survey, tutorials and presentations.
-\end_layout
-
-\begin_layout Chapter
 State of the Art in the field
 \begin_inset CommandInset label
 LatexCommand label
@@ -1337,7 +1152,7 @@ key "eii_2005"
 
 \end_layout
 
-\begin_layout Subsubsection*
+\begin_layout Paragraph*
 Nature of keyword queries
 \end_layout
 
@@ -1456,7 +1271,7 @@ http://searchuserinterfaces.com/book/sui_ch12_emerging.html
 
 \end_layout
 
-\begin_layout Subsubsection*
+\begin_layout Paragraph*
 Keyword querying over EII
 \end_layout
 
@@ -1910,6 +1725,191 @@ also mention: NL querying over services
 
 \end_layout
 
+\begin_layout Section
+Structure of the work and our contributions
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+make this part of intro??
+\end_layout
+
+\end_inset
+
+First, we present an overview of the state-of-the-art in the field
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+ various approaches to the problem and the related works
+\end_layout
+
+\end_inset
+
+ (chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:State-of-the"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+The chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Case-study:CMS"
+
+\end_inset
+
+, presents the EII system used within this work, 
+\series bold
+introducing 
+\series default
+some real-world issues with EII, such as data-service performance,
+\color red
+ [users confusion - intricacy of a query language where the fields in the
+ results for same entity differs depending on the query] 
+\color inherit
+and discusses ways for solving these.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\color red
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\series bold
+\color magenta
+innovation???
+\end_layout
+
+\begin_layout Plain Layout
+
+\color magenta
+relaxed assumptions? (To check)
+\end_layout
+
+\begin_layout Plain Layout
+
+\color magenta
+autocompletion?
+\end_layout
+
+\end_inset
+
+
+\series default
+\color inherit
+Then, in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Keyword-Search-over-DataServices"
+
+\end_inset
+
+, after formally defining the problem of keyword search over EII, a keyword
+ search engine is presented, that given a keyword query, proposes most probable
+ structured queries .
+ We propose a custom string similarity metric, discuss the presentation
+ of results to the end users, and propose 
+\color red
+combining keyword search with auto-completion
+\series bold
+ 
+\series default
+in a unique way.
+\end_layout
+
+\begin_layout Standard
+Next, in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Incorporating-User-Feedback"
+
+\end_inset
+
+, we discuss approaches allowing to incorporate
+\series bold
+\color red
+ 
+\series default
+\color inherit
+users feedback into keyword search over EII.
+ The earlier mentioned auto-completion would allow getting the feedback
+ of higher quality without overloading the users, that could be used for
+ improving various parts of the system
+\series bold
+ 
+\series default
+(future work).
+ 
+\end_layout
+
+\begin_layout Standard
+Finally, in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Evaluation"
+
+\end_inset
+
+, the developed system is evaluated quantitatively using test queries and
+ qualitatively through user feedback.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+add: Related work; conclusions; cms solutions moved to appendix;
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+Note:
+\emph default
+ The project also included these time-demanding tasks: 1) choosing a precise
+ topic to focus on - because the area is not so actively researched and
+ there is no concise terminology
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+e.g.
+ virtual data integration, enterprise information integration, data virtualizati
+on are used as synonyms throughout different time periods; works on keyword
+ search over EII mostly focused on relational databases (with limited access
+ to data instances)
+\end_layout
+
+\end_inset
+
+, this has took a considerable amount of time, and 2) case analysis at the
+ CMS Experiment included analysing query logs, benchmarking the performance
+ bottlenecks; a users survey, tutorials and presentations.
+\end_layout
+
 \begin_layout Standard
 \begin_inset Newpage clearpage
 \end_inset
@@ -1918,7 +1918,7 @@ also mention: NL querying over services
 \end_layout
 
 \begin_layout Chapter
-Thesis context: EII at CMS, CERN
+Project context: EII at CMS, CERN
 \begin_inset CommandInset label
 LatexCommand label
 name "chap:Case-study:CMS"
@@ -2013,7 +2013,7 @@ The queries are executed either from web browser or through a command line
 \end_layout
 
 \begin_layout Paragraph*
-Query language and execution
+Query language and query execution
 \end_layout
 
 \begin_layout Standard
@@ -2083,9 +2083,22 @@ unique
  
 \series bold
 \color red
+
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color red
 This close correspondence between the query language and the physical execution
  has both advantages (users are aware of service constraints) and disadvantages
  (users have to know exactly how the data structured).
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph*
@@ -2093,38 +2106,31 @@ The Data-Sources
 \end_layout
 
 \begin_layout Standard
-The system integrates around 15 data providers
-\begin_inset Marginal
-status open
+The system integrates approx.
+\series bold
+\color magenta
 
-\begin_layout Plain Layout
- (~100 interfaces in JSON, XML, or structured queries)
-\end_layout
-
+\begin_inset space ~
 \end_inset
 
-.
- The most of data-sources were created initially focusing on data storage
- without much attention to its retrieval.
+10 data providers
+\series default
+\color inherit
+ (~100 interfaces returning JSON, XML, or other formats), most of them using
+ Oracle as back-end.
+ Most of the providers were created initially focusing on data storage without
+ much attention to its retrieval.
  The services are not optimized for querying the fairly large data volumes
  stored
 \begin_inset Foot
 status collapsed
 
 \begin_layout Plain Layout
-The total sizes of 
-\begin_inset Quotes eld
-\end_inset
-
-metadata
-\begin_inset Quotes erd
-\end_inset
-
- that the services refer is growing in order of 1TB/year.
- Most of this data is stored in relational databases, in Oracle.
- For instance, the DBS, one of the biggest services, is partitioned among
- ~10 instances, with the biggest containing 80GB of data + 280GB of indexes
- in Oracle.
+the total size of data that the services refer to is growing in order of
+ 1TB/year.
+ E.g.
+ one of the biggest providers, DBS, is partitioned among ~10 instances,
+ with the biggest containing 80GB of data + 280GB of indexes in Oracle
 \end_layout
 
 \end_inset
@@ -2157,20 +2163,11 @@ reference "chap:CMS-war-stories"
 )
 \series bold
 .
-\end_layout
 
-\begin_layout Itemize
-
-\color red
-performance
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-the fields that are contained in the results of retrieving some entity depend
- on the filtering conditions (sometimes it contains all the fields, sometimes
- only the 
+\series default
+ The fields that are contained in the results of retrieving some entity
+ depend on the filtering conditions (sometimes it contains all the fields,
+ sometimes only the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -2567,11 +2564,12 @@ approach, implementation
 
 In the following section, 
 \color inherit
-we present a fairly simple heuristics-based implementation, that returns
- ranked list of best matching queries, where we focused on the quality of
- results with the goal of not enforcing any assumptions on the input queries
- (a full-sentence or just keywords; while existence of predefined structural
- patterns could be used to improve the result quality
+we present a fairly simple heuristics-based implementation, that produces
+ a ranked list of best matching structured queries, where we focused on
+ the quality of results with the goal of not enforcing any assumptions on
+ the input queries (it could just plain keywords, a full-sentence, while
+ existence of predefined structural patterns could be used to improve the
+ result quality
 \begin_inset Marginal
 status open
 
@@ -2592,6 +2590,19 @@ Keymantic had assumptions!
 
 \begin_layout Subsection*
 The algorithm
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color red
+better term?
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -2789,11 +2800,7 @@ description "Inverse Document Frequency, used to downrank frequent and therefore
 
 \end_inset
 
- 
-\color magenta
-information retrieval techniques
-\color inherit
-.
+ information retrieval techniques.
 \end_layout
 
 \begin_layout Standard
@@ -3035,7 +3042,7 @@ Below each the processing steps is described in more details.
 \end_layout
 
 \begin_layout Subsection*
-Project constraints and priorities
+Project priorities and constraints
 \end_layout
 
 \begin_layout Standard
@@ -3053,7 +3060,7 @@ subsection: constraints, limitations, considerations?
 
 
 \color cyan
-Knowing the constraints on the project duration, a number of items had to
+Due to the constraints on the project duration, a number of items had to
  be excluded from the implementation: question answering approaches with
  deep language processing; complex service orchestration (feeding of outputs
  into inputs of other services, which is anyway not directly supported by
@@ -3067,7 +3074,7 @@ status collapsed
 this due to issues with data service performance and unavailability of basic
  capabilities such as pagination or sorting of their results; we do not
  control the data services, so a number of suggestions for the providers
- have been proposed (see section 
+ have been proposed (see appendix 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sub:cms-Performance-Issues"
@@ -3280,6 +3287,22 @@ configuration
 \emph default
 .
  
+\series bold
+
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color red
+TODO: small edit distance; a paper has proposed: dynamic thresholds for
+ Levenstein distance
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3393,31 +3416,6 @@ target "http://nltk.org/"
 \end_layout
 
 \begin_layout Standard
-
-\series bold
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-TODO: values within small edit distance
-\end_layout
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-a paper has proposed: dynamic thresholds for Levenstein distance
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Note
 status collapsed
 
@@ -3510,33 +3508,30 @@ description "Inverse Document Frequency, used to downrank frequent and therefore
 
 \end_inset
 
- 
-\color magenta
-information retrieval techniques
-\color inherit
-.
+ information retrieval techniques.
  In addition, the field names in service outputs (which are processed artefacts
  of JSON or XML responses) have some parent-child structure which may provide
  useful contextual information (e.g.
  block.replica.creation_time vs block.creation_time).
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-any cases when this is misleading? - context itself is NOT sufficient to
- identify a field.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
 
 \series bold
 \color magenta
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\color magenta
 TODO: mention paper from XML retrieval
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3731,6 +3726,12 @@ Finally, the same functionality could be also achieved through retrieving
 \begin_layout Standard
 
 \color magenta
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\color magenta
 TECHNICAL NOTES FOR MYSELF: CAVEATS AND TODOs TO CONSIDER:
 \end_layout
 
@@ -3824,6 +3825,11 @@ Semantic Search with BM25F
 \color cyan
 Far future: using context information without enforcing that to belong only
  to that field (we already use result type = result entity type)
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
