@@ -2033,14 +2033,14 @@ The queries are executed either from web browser or through a command line
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Paragraph
 
 \series bold
-DAS Query language (DASQL) and query execution.
+Query language (DASQL) and its execution
+\end_layout
 
-\series default
- The queries are formed specifying the entity the user is interested in
- (e.g.
+\begin_layout Standard
+The queries are formed specifying the entity the user is interested in (e.g.
  dataset, file, etc) and providing selection criteria (e.g.
  attribute=value, attribute BETWEEN [v1, v2]).
  The results could be later 'piped' for further filtering, sorting or aggregatio
@@ -2135,8 +2135,9 @@ The system integrates approx.
 \begin_inset space ~
 \end_inset
 
-10 data providers
+
 \series default
+10 data providers
 \color inherit
  (~100 interfaces returning JSON, XML, or other formats), most of them uses
  Oracle as back-end.
