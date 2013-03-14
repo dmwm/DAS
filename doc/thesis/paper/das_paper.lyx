@@ -843,8 +843,7 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-The virtual integration of data-services, also referred to as Enterprise
- Information Integration (EII
+Enterprise Information Integration (EII
 \begin_inset CommandInset nomenclature
 LatexCommand nomenclature
 symbol "EII"
@@ -852,9 +851,34 @@ description "Enterprise Information Integration\\\\"
 
 \end_inset
 
-), allows querying the sources in a coherent way (eliminating the inconsistencie
-s in data formats such as JSON vs XML, provides naming conventions, combines
- the results, etc.) and is the most beneficial when the other 
+), 
+\lang english
+which is about 
+\begin_inset Quotes eld
+\end_inset
+
+integrating data from multiple sources 
+\shape italic
+without
+\shape default
+ having to to first load data into a central warehouse
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "p.1"
+key "eii_2005"
+
+\end_inset
+
+,
+\lang british
+ allows querying the sources in a coherent way (eliminating the inconsistencies
+ in data formats, providing naming conventions and combining the results,
+ etc.).
+ It is the most beneficial when the other 
 \color blue
 data 
 \color inherit
@@ -880,6 +904,17 @@ SQL
 , which present a 
 \color blue
 number of user interface issues.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1240,44 +1275,20 @@ name "sec:State-of-the"
 \begin_layout Standard
 
 \lang english
-Significant experience has been accumulated in the field of 
+In the field of 
 \shape italic
 Enterprise Information Integration
 \shape default
-
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-
-\lang english
-Enterprise Information Integration (EII) is about 'integrating data from
- multiple sources 
-\shape italic
-without
-\shape default
- having to to first load data into a central warehouse'
-\begin_inset CommandInset citation
-LatexCommand citep
-after "p.1"
-key "eii_2005"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
- (EII) including: data integration formalisms, query optimization 
+ (EII), significant experience has been accumulated on its formalisms, source
+ descriptions, query optimization 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "eii_2005"
 
 \end_inset
 
-, with the recent research focusing on the approaches minimizing human efforts
- in source integration 
+, with the recent research focusing on minimizing human efforts on source
+ integration 
 \begin_inset CommandInset citation
 LatexCommand citep
 after "ch.19"
@@ -1288,10 +1299,10 @@ key "principles_data_integration"
 .
  Meanwhile, to the best of our knowledge, the 
 \shape italic
-Boolean Keyword-based search over data services
+Boolean Keyword-based search over data service integration
 \shape default
-, which is our main focus, received little attention from the research community
-, with only a few attempts 
+, which is our main focus, received little attention, with only a few attempts
+ 
 \begin_inset CommandInset citation
 LatexCommand citep
 before "e.g."
@@ -1300,9 +1311,33 @@ key "keymantic_kws_metadata_bergamaschi2011,bergamaschi2011hidden,nl_to_dataserv
 \end_inset
 
  to address the problem.
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\lang english
+which is about 'integrating data from multiple sources 
+\shape italic
+without
+\shape default
+ having to to first load data into a central warehouse' 
+\begin_inset CommandInset citation
+LatexCommand citep
+after "p.1"
+key "eii_2005"
+
+\end_inset
+
+,
 \end_layout
 
-\begin_layout Section*
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
 Nature of keyword queries
 \end_layout
 
@@ -1315,12 +1350,11 @@ key "Kws_metadata_2011"
 
 \end_inset
 
-.
- 
+
 \lang english
-But for a given keyword query, some interpretations are more likely than
- the others, therefore, when the users are interested in complete answer
- sets
+.
+ Although, some interpretations are more likely than the others, therefore,
+ when the users are interested in complete answer sets
 \begin_inset Marginal
 status open
 
@@ -1392,53 +1426,19 @@ key "characterization_search_behaviour_kumar2009,Kws_metadata_2011"
 
 \color cyan
  
+\color inherit
+Most of the existing approaches attempts to profit from these dependencies
+ to ameliorate their candidate answers ranking.
+
+\color cyan
+ 
 \begin_inset Marginal
 status collapsed
 
 \begin_layout Plain Layout
 
-\series bold
 \color cyan
-TODO: move next to each approach separately
-\end_layout
-
-\end_inset
-
-Based on this, most of the existing approaches employ the dependencies of
- nearby keywords for ranking the candidate answers: 
-\emph on
-Keymantic
-\emph default
- 
-\begin_inset CommandInset citation
-LatexCommand citep
-key "keymantic10"
-
-\end_inset
-
- includes heuristic rules that score higher whose query interpretations
- where the nearby keywords have related labels assigned
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-
-\color cyan
-e.g.
- schema term's name followed by its value, for instance in query 
-\begin_inset Quotes eld
-\end_inset
-
-restaurant Italia
-\begin_inset Quotes erd
-\end_inset
-
-, the second term would probably mean name of restaurant
-\end_layout
-
-\end_inset
-
-, or in machine learning approaches this justifies usage of sequential models
+this also justifies the applicability of sequential machine learning models
  such as the Hidden Markov Model in 
 \emph on
 KEYRY
@@ -1453,7 +1453,11 @@ key "bergamaschi2011hidden"
 .
 \end_layout
 
-\begin_layout Standard
+\end_inset
+
+
+\color inherit
+
 \begin_inset Note Note
 status collapsed
 
@@ -1483,7 +1487,7 @@ http://searchuserinterfaces.com/book/sui_ch12_emerging.html
 
 \end_layout
 
-\begin_layout Section*
+\begin_layout Subsubsection*
 Keyword querying over EII
 \end_layout
 
@@ -1504,7 +1508,11 @@ KEYRY
 \end_layout
 
 \begin_layout Standard
+
+\emph on
 Keymantic
+\emph default
+ 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "keymantic_kws_metadata_bergamaschi2011,keymantic10"
@@ -1512,7 +1520,7 @@ key "keymantic_kws_metadata_bergamaschi2011,keymantic10"
 \end_inset
 
  answers keyword queries over relational databases with limited access to
- the database instance, which is also the case of data integration 
+ the data instances or over data integration 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "keymantic10"
@@ -1520,16 +1528,7 @@ key "keymantic10"
 \end_inset
 
 .
- 
-\begin_inset Newline newline
-\end_inset
-
-First, based on meta-data,individual keywords are scored as potential matches
- to 
-\emph on
-schema terms
-\emph default
- 
+ First, based on meta-data
 \begin_inset Foot
 status collapsed
 
@@ -1540,15 +1539,24 @@ in EII, only limited access to data instances is available, therefore instead
 
 \end_inset
 
- (to names of entities and their attributes using some entity matching technique
-s) or as potential 
+ , individual keywords are scored as potential matches to 
+\emph on
+schema terms
+\emph default
+ (entity names and their attributes, using some entity matching techniques)
+ or as potential 
 \emph on
 value
 \emph default
- matches (by checking if the keyword matches any available constraints,
- such as the regular expressions imposed by the database or data-services).
- Then, based on a number of heuristics the scores are combined, exploiting
- the earlier mentioned dependencies between the nearby keywords.
+ matches (by checking any available constraints, such as the regular expressions
+ imposed by the database or data-services).
+ Then, these scores are combined
+\series bold
+, 
+\series default
+and refined by heuristics that increasing the scores of query interpretations
+ with the nearby keywords having related labels assigned.
+ Finally, these labels are interpreted as SQL queries.
 \begin_inset Note Note
 status collapsed
 
@@ -1800,24 +1808,14 @@ http://www.jbiomedsem.com/content/pdf/2041-1480-2-8.pdf
 
 \end_inset
 
+ 
+\series bold
+\color cyan
 
 \begin_inset Marginal
 status collapsed
 
 \begin_layout Plain Layout
-
-\series bold
-\color red
-it seems it was summing the scores (no log()!) Weighted-bipartite matching
- as optimization; still exponencial because of first step?
-\end_layout
-
-\end_inset
-
- 
-\begin_inset Newline newline
-\end_inset
-
 
 \series bold
 \color cyan
@@ -1842,19 +1840,32 @@ every keyword plays some role in the query, i.e., there are no unjustiﬁed
 \begin_inset Quotes erd
 \end_inset
 
+ 
+\series bold
+\color red
+it seems it was summing the scores (no log()!) Weighted-bipartite matching
+ as optimization; still exponencial because of first step?
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
 \begin_layout Standard
-KEYRY 
+
+\emph on
+KEYRY
+\emph default
+ 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "bergamaschi2011hidden"
 
 \end_inset
 
- attempts to incorporate users feedback through learning an HMM tagger that
- is given the keywords as its input.
+ attempts to incorporate users feedback through training an HMM tagger taking
+ keywords as its input.
  It uses the List-Viterbi 
 \begin_inset CommandInset citation
 LatexCommand citep
@@ -1872,13 +1883,9 @@ meaning
 \end_inset
 
  of each keyword).
- This is converted into a list of SQL queries and presented to the users.
- 
-\begin_inset Newline newline
-\end_inset
-
-The HMM is first initialized through the supervised training, but even if
- no training data is available, the initial HMM probability distributions
+ This is interpreted as SQL queries and presented to the users.
+ The HMM is first initialized through the supervised training, but even
+ if no training data is available, the initial HMM probability distributions
  can be estimated through a number of heuristic rules (e.g.
  promoting related tags).
  Later, user's feedback can be used for further 
@@ -1896,9 +1903,9 @@ key "keymantic_list_viterbi_training_rota2011"
 \end_inset
 
 .
-\begin_inset Newline newline
-\end_inset
+\end_layout
 
+\begin_layout Standard
 According to 
 \begin_inset CommandInset citation
 LatexCommand citep
@@ -1906,7 +1913,15 @@ key "bergamaschi2011hidden"
 
 \end_inset
 
- the accuracy of Keymantic and KEYRY systems didn't differ much
+ the accuracy of 
+\emph on
+Keymantic
+\emph default
+ and 
+\emph on
+KEYRY
+\emph default
+ systems didn't differ much
 \begin_inset Marginal
 status open
 
@@ -1919,9 +1934,6 @@ but they mentioned a better evaluation may be needed...
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Standard
 \begin_inset Marginal
 status open
 
