@@ -1957,7 +1957,7 @@ on are used as synonyms throughout different time periods; works on keyword
 \end_layout
 
 \begin_layout Chapter
-Project context: EII at CMS, CERN
+Project context: EII at CMS
 \begin_inset CommandInset label
 LatexCommand label
 name "chap:Case-study:CMS"
@@ -6026,7 +6026,7 @@ War stories
 \begin_inset Quotes erd
 \end_inset
 
- at the CMS Experiment, CERN
+ at the CMS Experiment
 \begin_inset CommandInset label
 LatexCommand label
 name "chap:CMS-war-stories"
