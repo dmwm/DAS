@@ -318,34 +318,47 @@ Dr.
 \end_layout
 
 \begin_layout Abstract
-We consider the case where there is no direct access to the data and only
- interfaces of limited capabilities are available (e.g.
+We consider the case 
+\change_inserted -438528902 1363296284
+where
+\change_unchanged
+ there is no direct access to the data and only interfaces of limited capabiliti
+es are available (e.g.
  web services, web forms, proprietary systems), while users are in need
  of a way to query these sources for accurate results (boolean retrieval
  augmented with additional operators).
- This, renders the traditional methods that return data-tuples
+ This
+\change_deleted -438528902 1363295312
+,
+\change_unchanged
+ renders the traditional methods that return data-tuples
 \series bold
  
 \series default
 inapplicable (e.g.
- Information Retrieval or Keyword search over relational databases).
+ information retrieval or the keyword search over relational databases).
 \end_layout
 
 \begin_layout Abstract
 In that instance, the Enterprise Information Integration (EII), provides
  the means to query the sources in a coherent way.
  The querying is usually done through structured query languages such as
- the SQL, implying that the user must learn the query language and has to
- know how the data is structured.
+ SQL, implying that the user must learn the query language and has to know
+ how the data is structured.
  
 \end_layout
 
 \begin_layout Abstract
-The alternatives to structured queries include: 1) forms, that are impractical
- for complex queries, 2) the keyword search returning query results directly,
- risking that the interpretation chosen is not the correct one; or 3) the
- keyword search based on metadata and proposing a list of structured queries
- for user to choose from.
+The alternatives to structured queries include: 1) 
+\change_inserted -438528902 1363296208
+forms, that are impractical for complex queries
+\change_unchanged
+, 2) the keyword search returning query results directly, risking 
+\change_inserted -438528902 1363296247
+of choosing the wrong interpretation
+\change_unchanged
+; or 3) the keyword search based on metadata and proposing a list of structured
+ queries for user to choose from.
  
 \begin_inset Note Note
 status collapsed
@@ -380,10 +393,13 @@ trad of kws @ relational databases (SPARK); also IR, SPARK don't fit as
 \end_layout
 
 \begin_layout Abstract
-In this work we explore the latter, and present a keyword search system
- that approaches this problem operating on the available information: the
- metadata such as the constraints on allowed values, and some portions of
- the data.
+In this work we explore 
+\change_inserted -438528902 1363296186
+the third
+\change_unchanged
+ option and present a keyword search system that approaches this problem
+ operating on the available information: the metadata such as the constraints
+ on allowed values, and some portions of the data.
  It proposes a ranked list of structured queries along with explanations
  of their meaning.
  Unlike the earlier works,
@@ -413,8 +429,12 @@ The system is discussed within context of an EII service at the Compact
  Muon Solenoid Experiment (CMS), at CERN, where the simplicity and capabilities
  of the search interface places a crucial role for adoption among the end
  users and their ability to cover their information needs.
- It has been integrated with the CMS production Data Management system and
+ 
+\change_inserted -438528902 1363296331
+It has been integrated with the CMS production Data Management system and
  exposed to the CMS Collaboration.
+\change_unchanged
+
 \end_layout
 
 \begin_layout Abstract
@@ -945,7 +965,7 @@ for instance, publish-subscribe approach is not applicable in the presence
 
 .
  In EII, data physically stays at its origin, and is requested only on demand,
- usually, through structured query languages such as the 
+ usually, through structured query languages such as 
 \emph on
 SQL
 \emph default
@@ -1081,14 +1101,27 @@ key "Koch00CERN"
 \end_layout
 
 \begin_layout Standard
-The EII, solves the data integration problem even when data is volatile
- and systems are
+The EII
+\change_deleted -438528902 1363295514
+,
+\change_unchanged
+ solves the data integration problem even when data is volatile and systems
+ are
 \series bold
  
 \series default
-heterogeneous and reluctant to change, however the complexity of writing
- such queries first impacts the simple users, forcing them to learn the
+heterogeneous and reluctant to change
+\change_inserted -438528902 1363295531
+.
+\change_deleted -438528902 1363295531
+,
+\change_unchanged
  
+\change_inserted -438528902 1363295535
+H
+\change_unchanged
+owever the complexity of writing such queries first impacts the simple users,
+ forcing them to learn the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1120,8 +1153,12 @@ need to discuss alternatives?
 
 \end_inset
 
-As an another example, the web search engines, which are becoming close
- to generic question-answering 
+As
+\change_deleted -438528902 1363295568
+ an
+\change_unchanged
+ another example, the web search engines, which are becoming close to generic
+ question-answering 
 \color blue
 engines
 \color inherit
@@ -1245,7 +1282,11 @@ Nature of keyword queries
 
 \begin_layout Standard
 Keyword queries are often underspecified, therefore every possible interpretatio
-n shall be included in the results 
+n 
+\change_inserted -438528902 1363295587
+has to be
+\change_unchanged
+ included in the results 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "Kws_metadata_2011"
@@ -1776,8 +1817,11 @@ meaning
 supervised
 \series default
 \color inherit
- training, while even the keyword queries itself, can serve for unsupervised
- learning 
+ training, while even the keyword queries itself
+\change_deleted -438528902 1363295652
+,
+\change_unchanged
+ can serve for unsupervised learning 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "keymantic_list_viterbi_training_rota2011"
@@ -2023,7 +2067,11 @@ on are used as synonyms throughout different time periods; works on keyword
 
 , this took a considerable amount of time, and 2) case analysis at the CMS
  Experiment included analysing query logs, benchmarking the performance
- bottlenecks; a users survey, tutorials and presentations.
+ bottlenecks; a users
+\change_inserted -438528902 1363295784
+'
+\change_unchanged
+ survey, tutorials and presentations.
 \end_layout
 
 \begin_layout Standard
@@ -2250,7 +2298,11 @@ User Feedback, Issues, Solutions
 
 \begin_layout Standard
 DAS experienced a number of performance and usability issues (users reported
- either being totally happy with DASQL, either being totally lost).
+ either being totally happy with DASQL, 
+\change_inserted -438528902 1363295817
+or
+\change_unchanged
+ being totally lost).
  In addition to keyword search, a slight extension to the query language
  was proposed.
  A confusing element of DAS was that the fields returned for certain entity
@@ -2659,9 +2711,16 @@ In the following section,
 we present a fairly simple heuristics-based implementation, that produces
  a ranked list of best matching structured queries, where we focused on
  the quality of results with the goal of not enforcing any assumptions on
- the input queries (it could just plain keywords, a full-sentence, while
- existence of predefined structural patterns could be used to improve the
- result quality
+ the input queries (it could 
+\change_inserted -438528902 1363295915
+be
+\change_unchanged
+ plain keywords
+\change_inserted -438528902 1363295948
+ or 
+\change_unchanged
+a full-sentence, while existence of predefined structural patterns could
+ be used to improve the result quality
 \begin_inset Marginal
 status open
 
@@ -2812,8 +2871,12 @@ Firstly, the query is pre-processed by the
 \emph on
 tokenizer
 \emph default
-: it is cleans up the query, identifies any explicit phrase tokens, or basic
- operators (see section 
+: it 
+\change_deleted -438528902 1363295990
+is 
+\change_unchanged
+cleans up the query, identifies any explicit phrase tokens, or basic operators
+ (see section 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sub:Tokenizer"
