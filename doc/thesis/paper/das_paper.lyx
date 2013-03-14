@@ -318,7 +318,7 @@ Dr.
 \end_layout
 
 \begin_layout Abstract
-We consider the case then there is no direct access to the data and only
+We consider the case where there is no direct access to the data and only
  interfaces of limited capabilities are available (e.g.
  web services, web forms, proprietary systems), while users are in need
  of a way to query these sources for accurate results (boolean retrieval
@@ -341,13 +341,11 @@ In that instance, the Enterprise Information Integration (EII), provides
 \end_layout
 
 \begin_layout Abstract
-The alternatives to structured queries include: 1) interfaces based on regular
- forms, that are impractical for complex queries over large number of entities/a
-ttributes; 2) the keyword search based on metadata returning query results
- directly, risking that the query interpretation chosen is not the correct
- one as keyword queries are ambiguous; or 3) the keyword search based on
- metadata and proposing a list of structured queries for user to choose
- from.
+The alternatives to structured queries include: 1) forms, that are impractical
+ for complex queries, 2) the keyword search returning query results directly,
+ risking that the interpretation chosen is not the correct one; or 3) the
+ keyword search based on metadata and proposing a list of structured queries
+ for user to choose from.
  
 \begin_inset Note Note
 status collapsed
@@ -383,8 +381,9 @@ trad of kws @ relational databases (SPARK); also IR, SPARK don't fit as
 
 \begin_layout Abstract
 In this work we explore the latter, and present a keyword search system
- that approaches this problem operating on the available: the metadata such
- as the constraints on allowed values, and some portions of the data.
+ that approaches this problem operating on the available information: the
+ metadata such as the constraints on allowed values, and some portions of
+ the data.
  It proposes a ranked list of structured queries along with explanations
  of their meaning.
  Unlike the earlier works,
@@ -411,9 +410,11 @@ analysis of user queries
 
 \begin_layout Abstract
 The system is discussed within context of an EII service at the Compact
- Muon Solenoid Experiment, at CERN, where the simplicity and capabilities
+ Muon Solenoid Experiment (CMS), at CERN, where the simplicity and capabilities
  of the search interface places a crucial role for adoption among the end
  users and their ability to cover their information needs.
+ It has been integrated with the CMS production Data Management system and
+ exposed to the CMS Collaboration.
 \end_layout
 
 \begin_layout Abstract
@@ -449,6 +450,16 @@ research prototypes
 \end_inset
 
 , and lack of time didn't allow redesigning)
+\end_layout
+
+\begin_layout Plain Layout
+The alternatives to structured queries include: 1) interfaces based on regular
+ forms, that are impractical for complex queries over large number of entities/a
+ttributes; 2) the keyword search based on metadata returning query results
+ directly, risking that the query interpretation chosen is not the correct
+ one as keyword queries are ambiguous; or 3) the keyword search based on
+ metadata and proposing a list of structured queries for user to choose
+ from.
 \end_layout
 
 \end_inset
@@ -979,24 +990,8 @@ description "The Compact Moun Selenoid Experiment at the European Organization f
 \emph on
 CERN
 \emph default
-, we will focus on the implementation of keyword search and 
-\color red
-the mechanisms for user feedback
-\color inherit
-
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-focus: user interface instead?
-\end_layout
-
-\end_inset
-
-, also touching some
+, we will focus on the implementation of keyword search, also touching and
+ the mechanisms for user feedback and some
 \series bold
  
 \series default
@@ -1008,18 +1003,6 @@ Motivation
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\color green
-too much blah blah
-\end_layout
-
-\end_inset
-
 At scientific collaborations such as the 
 \emph on
 CMS Experiment at CERN
@@ -1078,6 +1061,24 @@ schema
 \end_layout
 
 \begin_layout Standard
+\begin_inset Marginal
+status collapsed
+
+\begin_layout Plain Layout
+
+\series bold
+\color green
+too much blah blah;
+\end_layout
+
+\begin_layout Plain Layout
+
+\series bold
+need to discuss alternatives?
+\end_layout
+
+\end_inset
+
 As an another example, the web search engines, which are becoming close
  to generic question-answering 
 \color blue
@@ -1088,8 +1089,9 @@ engines
 status collapsed
 
 \begin_layout Plain Layout
-for instance, on the Google search engine, information on weather, currency
- rates, time at given location, etc.
+e.g.
+ on the popular search engines, information on currency rates, weather and
+ time at given location, etc.
  is already available through recognition of certain patterns in web queries
 \end_layout
 
@@ -5287,7 +5289,16 @@ aggregator / sorting??
 \end_layout
 
 \begin_layout Subsection*
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 String matching
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -5300,6 +5311,16 @@ Usability
 
 \begin_layout Standard
 Usefulness of KWS vs structured query language
+\end_layout
+
+\begin_layout Standard
+liked the idea of autocompletion;
+\end_layout
+
+\begin_layout Standard
+Because the users (and their meetings) were extremely busy during the last
+ month, only preliminary feedback available to date.
+ More feedback is expected within a month.
 \end_layout
 
 \begin_layout Chapter
