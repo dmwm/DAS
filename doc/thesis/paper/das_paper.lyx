@@ -869,7 +869,11 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-Enterprise Information Integration (EII
+
+\emph on
+Enterprise Information Integration
+\emph default
+ (EII
 \begin_inset CommandInset nomenclature
 LatexCommand nomenclature
 symbol "EII"
@@ -877,7 +881,14 @@ description "Enterprise Information Integration\\\\"
 
 \end_inset
 
-)
+), which is 
+\lang english
+also called 
+\emph on
+Virtual Data Integration
+\emph default
+\lang british
+,
 \lang english
  is about 
 \begin_inset Quotes eld
@@ -928,9 +939,7 @@ for instance, publish-subscribe approach is not applicable in the presence
 SQL
 \emph default
 .
- However, the latter present a 
-\color blue
-number of user interface issues.
+ However, the latter present a number of user interface issues.
 \end_layout
 
 \begin_layout Standard
