@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Add fakeFiles4BlockRun API to cover file block=/a/b/c#123 run in [1,2,3]
+    queries required by CMSSW Integration Builds (IB).
   - Fix file block=/a/b/c#123 query (DBS should contribute to it)
   - Add dataset pattern constratins for all DBS/DBS3 queries
   - Remove listLFNs since listFiles cover the use case to look-up file for a given dataset
