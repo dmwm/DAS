@@ -118,8 +118,8 @@ figs-within-sections
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
-\tracking_changes true
-\output_changes true
+\tracking_changes false
+\output_changes false
 \html_math_output 0
 \html_css_as_file 0
 \html_be_strict false
@@ -1815,17 +1815,12 @@ meaning
  if no training data is available, the initial HMM probability distributions
  can be estimated through a number of heuristic rules (e.g.
  promoting related tags).
- Later, user's feedback can be used for further 
-\series bold
-\color red
-supervised
-\series default
-\color inherit
- training, while even the keyword queries itself
+ Later, user's feedback can be used for supervised training, while even
+ the keyword queries itself
 \change_deleted -438528902 1363295652
 ,
 \change_unchanged
- can serve for unsupervised learning 
+ can serve for unsupervised training 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "keymantic_list_viterbi_training_rota2011"
@@ -1862,13 +1857,6 @@ status open
 also mention: NL querying over services
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Newpage clearpage
 \end_inset
 
 
@@ -1928,7 +1916,7 @@ reference "chap:Case-study:CMS"
 \end_inset
 
  presents the context in which this thesis was conducted - the EII system
- and introduces
+ - and introduces
 \series bold
  
 \series default
@@ -2035,6 +2023,21 @@ reference "chap:Evaluation"
 
  the developed system is evaluated quantitatively using test queries and
  qualitatively through user feedback.
+ Chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Related-Work"
+
+\end_inset
+
+ presents the more distant related works, while, in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Conclusions-and-Future"
+
+\end_inset
+
+ the future work is discussed.
 \end_layout
 
 \begin_layout Standard
@@ -2050,6 +2053,10 @@ add: Related work; conclusions; cms solutions moved to appendix;
 \end_inset
 
 
+\end_layout
+
+\begin_layout Paragraph
+Deliverables and related tasks
 \end_layout
 
 \begin_layout Standard
@@ -2076,6 +2083,18 @@ on are used as synonyms throughout different time periods; works on keyword
 '
 \change_unchanged
  survey, tutorials and presentations.
+ 
+\end_layout
+
+\begin_layout Standard
+For the complete list of project deliverables/artefacts see appendix 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:project-deliverables"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -2635,7 +2654,7 @@ avg dataset size Zmmg number of events>1000
 
 
 \emph on
-avg(dataset size) Zmmg 'number of events'>1000
+avg(dataset size) Zmmg `number of events'>1000
 \emph default
 
 \begin_inset Quotes erd
@@ -2656,14 +2675,8 @@ avg(dataset size) Zmmg 'number of events'>1000
 \end_layout
 
 \begin_layout Standard
-
-\series bold
-\color red
-In the particular case of DASQL used at the 
-\emph on
-CMS Experiment
-\emph default
-, we want to map a keyword query into:
+In the particular case of DASQL, used at CMS, the input has to be mapped
+ into:
 \end_layout
 
 \begin_layout Itemize
@@ -2688,6 +2701,10 @@ basic aggregation functions, applied on service results: e.g.
  
 \color inherit
 avg(dataset.size)
+\begin_inset Newpage clearpage
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -2695,22 +2712,9 @@ Overview of our approach
 \end_layout
 
 \begin_layout Standard
-
+In the following sections,
 \color cyan
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\color red
-solution, 
-\series bold
-approach, implementation
-\end_layout
-
-\end_inset
-
-In the following section, 
+ 
 \color inherit
 we present a fairly simple heuristics-based implementation, that produces
  a ranked list of best matching structured queries, where we focused on
@@ -2724,20 +2728,7 @@ be
  or 
 \change_unchanged
 a full-sentence, while existence of predefined structural patterns could
- be used to improve the result quality
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\color cyan
-Keymantic had assumptions!
-\end_layout
-
-\end_inset
-
-).
+ be used to improve the result quality).
  The implementation is designed with the goal to be able to employ the user
  feedback for future improvements to various components of the system, such
  as initial entry points, or ranking of the results.
@@ -2745,19 +2736,6 @@ Keymantic had assumptions!
 
 \begin_layout Subsection*
 The algorithm
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\color red
-better term?
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -3062,7 +3040,7 @@ reference "sub:cms-Performance-Issues"
 \begin_layout Standard
 
 \series bold
-Example.
+Motivating Example.
 
 \series default
  Consider this query
@@ -3196,10 +3174,6 @@ end{verbatim}
 
 \end_layout
 
-\begin_layout Standard
-Below each the processing steps is described in more details.
-\end_layout
-
 \begin_layout Subsection*
 Project priorities and constraints
 \end_layout
@@ -3279,18 +3253,7 @@ Details of the keyword search system
 \end_layout
 
 \begin_layout Standard
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-detailed algorithm?
-\end_layout
-
-\end_inset
-
-
+Below each the processing steps is described in more details.
 \end_layout
 
 \begin_layout Subsection
@@ -3727,18 +3690,16 @@ documents
 \end_inset
 
 a field in service outputs
-\series bold
-
 \begin_inset Quotes erd
 \end_inset
 
 
+\series bold
 \color cyan
  
 \series default
-(that is a field of an entity in integration schema
 \color inherit
-).
+(that is a field of an entity in integration schema).
  Each such 
 \emph on
 document
@@ -3812,13 +3773,7 @@ To find the matches, we query the IR library, both for phrase and single
 \end_layout
 
 \begin_layout Standard
-The ranking is done using 
-\series bold
-\color cyan
-BM25F
-\series default
-\color inherit
- scoring function.
+The ranking is done using BM25F scoring function.
  After filtering out the worst results these will become the entry points
  for mapping keywords into the fields of data service outputs.
  Currently we directly use the score returned by the IR library
@@ -3867,9 +3822,8 @@ normalization: threshold based on weights signifying a good score + (maybe
 \end_inset
 
 .
- 
-\color magenta
-The scoring could be improved, but in our case it works already not so bad.
+ The scoring could be improved tuning the scoring function, but in our case
+ it works already not so bad.
 \end_layout
 
 \begin_layout Standard
@@ -3880,13 +3834,10 @@ Finally, the same functionality could be also achieved through retrieving
  more easily.
  In either case, the problem of how to incorporate the IDFs and context
  information remains.
-\end_layout
-
-\begin_layout Standard
-
 \color magenta
+
 \begin_inset Note Note
-status open
+status collapsed
 
 \begin_layout Plain Layout
 
@@ -3989,9 +3940,8 @@ Far future: using context information without enforcing that to belong only
 \end_inset
 
 
-\end_layout
+\color inherit
 
-\begin_layout Standard
 \begin_inset Note Note
 status collapsed
 
@@ -4616,25 +4566,10 @@ primary key
 \end_inset
 
 ).
-\end_layout
-
-\begin_layout Standard
-
-\emph on
-Note:
-\emph default
- it was a sub-task of this project to make this work based on existing broken
- prototype.
-
 \color red
- 
-\end_layout
 
-\begin_layout Standard
-
-\color red
 \begin_inset Note Note
-status open
+status collapsed
 
 \begin_layout Plain Layout
 
@@ -4916,27 +4851,13 @@ Entry points
 \begin_layout Standard
 
 \series bold
-\begin_inset Note Greyedout
-status open
-
-\begin_layout Plain Layout
-
-\series bold
+\color magenta
 TODO: showing entry points to the user, so used would understand why he
  sees results like; and could give live-feedback?
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
-
-\color red
 Incorporating User Feedback
-\color inherit
-
 \begin_inset CommandInset label
 LatexCommand label
 name "chap:Incorporating-User-Feedback"
@@ -4948,6 +4869,13 @@ name "chap:Incorporating-User-Feedback"
 
 \begin_layout Subsection
 Live feedback through auto-completion (prototype)
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Live-feedback-through-autocompletion"
+
+\end_inset
+
+
 \begin_inset Marginal
 status open
 
@@ -5070,7 +4998,20 @@ Customization and user-preferences
 \end_layout
 
 \begin_layout Standard
+
+\color magenta
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\color magenta
 shall be per user or per user-group! SODA didn't use any clustering?
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -5330,78 +5271,188 @@ Accuracy
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename figures/accuracy.png
+	lyxscale 30
+	width 45text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Accuracy comparison of the two scoring methods at kth result
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Accuracy-comparison-avg-prob"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+At the moment we used 34 test queries written by the end users (around half),
+ or by the developer (to address some specific cases, such as preference
+ of service inputs over filters on their outputs).
+ We use the measure of accuracy at k-th result (i.e.
+ is there expected result among the k top results) for the evaluation.
+\end_layout
+
+\begin_layout Standard
+As seen in figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Accuracy-comparison-avg-prob"
+
+\end_inset
+
+, with current test data, the difference between 
+\begin_inset Quotes eld
+\end_inset
+
+averaging
+\begin_inset Quotes erd
+\end_inset
+
+ and the 
+\begin_inset Quotes eld
+\end_inset
+
+probabilistic
+\begin_inset Quotes erd
+\end_inset
+
+ scoring functions (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Ranking-function"
+
+\end_inset
+
+ for details) is not large.
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset Quotes eld
+\end_inset
+
+averaging method
+\begin_inset Quotes erd
+\end_inset
+
+ performing slightly better on the first result 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+, but if we consider more than the first result, the 
+\begin_inset Quotes eld
+\end_inset
+
+probabilistic
+\begin_inset Quotes erd
+\end_inset
+
+ log-likelihood based function performs better, at the fourth result reaching
+ the maximum accuracy of 0.853
+\series bold
+.
+ 
+\series default
+From this, it seems that the latter method perform better (as one could
+ have expected), but it requires better score estimates.
+ For instance, currently the multi-term scores that are based almost directly
+ on the BM25F function (i.e.
+ 
+\begin_inset Formula $score/max(goodscore,maxscore)$
+\end_inset
+
+ ) seem to be not exact enough, nor the IR ranking (which could require
+ adjusting the field weights, the BM25F parameters or slightly modifying
+ it, to account for not clean field titles, repeated irrelevant term, or
+ the fact that same terms could appear in the field-name and it's title).
+ 
+\end_layout
+
+\begin_layout Standard
+It is expected to gather more real-world query examples from the users during
+ the upcoming presentations to the CMS Collaboration (they were not possible
+ earlier due to busy schedules at CMS).
+\end_layout
+
+\begin_layout Standard
 
 \series bold
-success @ K-th result
-\end_layout
+\begin_inset Note Note
+status collapsed
 
-\begin_layout Standard
-1
-\end_layout
-
-\begin_layout Standard
-3
-\end_layout
-
-\begin_layout Standard
-5
-\end_layout
-
-\begin_layout Standard
-10
-\end_layout
-
-\begin_layout Standard
-20
-\end_layout
-
-\begin_layout Standard
--
-\end_layout
-
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \series bold
 query types:
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 value: known, regexp
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 entity + known val
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 entity + unknown value
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 multiple entities values
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 result attribute filter
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 (meaningless -- false match)
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \series bold
 \color red
 aggregator / sorting??
-\end_layout
-
-\begin_layout Subsection*
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-String matching
 \end_layout
 
 \end_inset
@@ -5414,25 +5465,31 @@ Users feedback
 \end_layout
 
 \begin_layout Standard
-Usability
+Users liked the idea of auto-completion, both because it could autocomplete
+ the schema terms, and some of the value terms.
+ Regarding the keyword search, there there two groups of users: 1) the advanced
+ users who are used to query languages and how the organization of the data,
+ who did not express big interest in keyword search, and others, 2) others
+ that liked it.
+ Still, both groups liked the fact that sometimes they could find what they
+ didn't known how to query for it, or even didn't know it may exist.
 \end_layout
 
 \begin_layout Standard
-Usefulness of KWS vs structured query language
-\end_layout
-
-\begin_layout Standard
-liked the idea of autocompletion;
-\end_layout
-
-\begin_layout Standard
-Because the users (and their meetings) were extremely busy during the last
- month, only preliminary feedback available to date.
- More feedback is expected within a month.
+Because the end users were extremely busy during the last month, only preliminar
+y feedback is available to date.
+ More feedback is expected in close future.
 \end_layout
 
 \begin_layout Chapter
 Related Work
+\begin_inset CommandInset label
+LatexCommand label
+name "chap:Related-Work"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -5824,7 +5881,14 @@ key "ethz2012"
 \end_layout
 
 \begin_layout Chapter
-Conclusions and Future work
+Future work and Conclusions
+\begin_inset CommandInset label
+LatexCommand label
+name "chap:Conclusions-and-Future"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -6181,6 +6245,124 @@ options "bibtotoc,alpha"
 
 \begin_layout Chapter
 \start_of_appendix
+Complete list of Project Deliverables/Artefacts
+\begin_inset CommandInset label
+LatexCommand label
+name "chap:project-deliverables"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Keyword search engine and related components (as described in chapter 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "chap:Keyword-Search-over-DataServices"
+
+\end_inset
+
+)
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+design, implementation, user interface, and tuning of its parameters; including
+ implementation of various entity matching techniques & heuristics
+\end_layout
+
+\begin_layout Enumerate
+prototype of advanced auto-completion input widget (as described in section
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Live-feedback-through-autocompletion"
+
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Enumerate
+slight relaxation of DASQL (as described in appendix
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Relaxation-DASQL"
+
+\end_inset
+
+)
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+prototype implementation of 
+\begin_inset Quotes eld
+\end_inset
+
+simple service orchestration
+\begin_inset Quotes erd
+\end_inset
+
+ even then the existing fields are not known in advance
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+bootstrapping of: 1) allowed values, 2) fields in service results
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+log analysis and data service performance benchmarking at CMS
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+development of tools for log analysis and data service performance benchmarking
+ (per query types)
+\end_layout
+
+\begin_layout Enumerate
+presented solutions for data service providers (see appendix 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:cms-Performance-Issues"
+
+\end_inset
+
+)
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+user surveys, presentations and tutorials at the CMS Collaboration
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+interim report to developers
+\end_layout
+
+\begin_layout Enumerate
+cooperation with a selected group of ~5+ users on constant feedback on the
+ system developed
+\end_layout
+
+\begin_layout Enumerate
+tutorial for Computing Operators group on EII at CERN (DAS query language,
+ the constraints, and introduction to keyword search)
+\end_layout
+
+\begin_layout Enumerate
+Future: at least two more presentations/tutorials to come in the week of
+ 18th of March (CMS Computing & Offline Week for meetings) to get further
+ exposure and feedback from the CMS Collaboration
+\end_layout
+
+\end_deeper
+\begin_layout Chapter
 Data Integration 
 \begin_inset Quotes eld
 \end_inset
