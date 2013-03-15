@@ -123,7 +123,6 @@ figs-within-sections
 \html_math_output 0
 \html_css_as_file 0
 \html_be_strict false
-\author -438528902 "vidma,,," 
 \end_header
 
 \begin_body
@@ -255,9 +254,7 @@ make better & more CS precise title
 
 \end_inset
 
-Keyword Search over Data Service Integration 
-\color red
-for Accurate Results
+Keyword Search over Data Service Integration for Accurate Results
 \end_layout
 
 \begin_layout Author
@@ -318,20 +315,12 @@ Dr.
 \end_layout
 
 \begin_layout Abstract
-We consider the case 
-\change_inserted -438528902 1363296284
-where
-\change_unchanged
- there is no direct access to the data and only interfaces of limited capabiliti
-es are available (e.g.
+We consider the case where there is no direct access to the data and only
+ interfaces of limited capabilities are available (e.g.
  web services, web forms, proprietary systems), while users are in need
  of a way to query these sources for accurate results (boolean retrieval
  augmented with additional operators).
- This
-\change_deleted -438528902 1363295312
-,
-\change_unchanged
- renders the traditional methods that return data-tuples
+ This renders the traditional methods that return data-tuples
 \series bold
  
 \series default
@@ -349,16 +338,11 @@ In that instance, the Enterprise Information Integration (EII), provides
 \end_layout
 
 \begin_layout Abstract
-The alternatives to structured queries include: 1) 
-\change_inserted -438528902 1363296208
-forms, that are impractical for complex queries
-\change_unchanged
-, 2) the keyword search returning query results directly, risking 
-\change_inserted -438528902 1363296247
-of choosing the wrong interpretation
-\change_unchanged
-; or 3) the keyword search based on metadata and proposing a list of structured
- queries for user to choose from.
+The alternatives to structured queries include: i) forms, that are impractical
+ for complex queries, ii) the keyword search returning query results directly,
+ risking of choosing the wrong interpretation; or iii) the keyword search
+ based on metadata and proposing a list of structured queries for user to
+ choose from.
  
 \begin_inset Note Note
 status collapsed
@@ -393,13 +377,10 @@ trad of kws @ relational databases (SPARK); also IR, SPARK don't fit as
 \end_layout
 
 \begin_layout Abstract
-In this work we explore 
-\change_inserted -438528902 1363296186
-the third
-\change_unchanged
- option and present a keyword search system that approaches this problem
- operating on the available information: the metadata such as the constraints
- on allowed values, and some portions of the data.
+In this work we explore the third option and present a keyword search system
+ that approaches this problem operating on the available information: the
+ metadata such as the constraints on allowed values, and some portions of
+ the data.
  It proposes a ranked list of structured queries along with explanations
  of their meaning.
  Unlike the earlier works,
@@ -429,17 +410,13 @@ The system is discussed within context of an EII service at the Compact
  Muon Solenoid Experiment (CMS), at CERN, where the simplicity and capabilities
  of the search interface places a crucial role for adoption among the end
  users and their ability to cover their information needs.
- 
-\change_inserted -438528902 1363296331
-It has been integrated with the CMS production Data Management system and
+ It has been integrated with the CMS production Data Management system and
  exposed to the CMS Collaboration.
-\change_unchanged
-
 \end_layout
 
 \begin_layout Abstract
 \begin_inset Note Note
-status open
+status collapsed
 
 \begin_layout Plain Layout
 
@@ -971,13 +948,9 @@ SQL
 \emph default
 .
  However, the latter present a number of user interface issues.
-\change_inserted -438528902 1363295135
-
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363295137
 Virtual integration presents an additional challenge, since only limited
  access to the data instances is available, rendering the traditional methods
  that return data-tuples
@@ -989,16 +962,12 @@ inapplicable (e.g.
 \end_layout
 
 \begin_layout Standard
-
-\change_inserted -438528902 1363295137
 The alternatives to structured queries include: 1) interfaces based on regular
  forms
 \begin_inset Marginal
 status collapsed
 
 \begin_layout Plain Layout
-
-\change_inserted -438528902 1363295137
 ?
 \end_layout
 
@@ -1009,21 +978,13 @@ tes; 2) the keyword search based on metadata returning query results directly,
  risking that the query interpretation chosen is not the correct one, as
  the keyword queries are ambiguous; or 3) the keyword search based on metadata
  and proposing a list of structured queries for user to choose from.
-\change_unchanged
-
 \end_layout
 
 \begin_layout Standard
-The objective of this work is to research 
-\change_inserted -438528902 1363296463
-the third option,
-\change_unchanged
- the keyword search
-\change_inserted -438528902 1363296494
- proposing the ranked list of queries,
-\change_unchanged
- as a more intuitive alternative, which, in fact, received little attention
- in the field of data service integration
+The objective of this work is to research the third option, the keyword
+ search proposing the ranked list of queries, as a more intuitive alternative,
+ which, in fact, received little attention in the field of data service
+ integration
 \begin_inset CommandInset citation
 LatexCommand citep
 key "nl_to_dataservices_guerrisi2012natural"
@@ -1105,27 +1066,14 @@ key "Koch00CERN"
 \end_layout
 
 \begin_layout Standard
-The EII
-\change_deleted -438528902 1363295514
-,
-\change_unchanged
- solves the data integration problem even when data is volatile and systems
- are
+The EII solves the data integration problem even when data is volatile and
+ systems are
 \series bold
  
 \series default
-heterogeneous and reluctant to change
-\change_inserted -438528902 1363295531
-.
-\change_deleted -438528902 1363295531
-,
-\change_unchanged
- 
-\change_inserted -438528902 1363295535
-H
-\change_unchanged
-owever the complexity of writing such queries first impacts the simple users,
- forcing them to learn the 
+heterogeneous and reluctant to change.
+ However the complexity of writing such queries first impacts the simple
+ users, forcing them to learn the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1157,16 +1105,8 @@ need to discuss alternatives?
 
 \end_inset
 
-As
-\change_deleted -438528902 1363295568
- an
-\change_unchanged
- another example, the web search engines, which are becoming close to generic
- question-answering 
-\color blue
-engines
-\color inherit
-
+As another example, the web search engines, which are becoming close to
+ generic question-answering engines
 \begin_inset Foot
 status collapsed
 
@@ -1286,11 +1226,7 @@ Nature of keyword queries
 
 \begin_layout Standard
 Keyword queries are often underspecified, therefore every possible interpretatio
-n 
-\change_inserted -438528902 1363295587
-has to be
-\change_unchanged
- included in the results 
+n has to be included in the results 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "Kws_metadata_2011"
@@ -1816,11 +1752,7 @@ meaning
  can be estimated through a number of heuristic rules (e.g.
  promoting related tags).
  Later, user's feedback can be used for supervised training, while even
- the keyword queries itself
-\change_deleted -438528902 1363295652
-,
-\change_unchanged
- can serve for unsupervised training 
+ the keyword queries itself can serve for unsupervised training 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "keymantic_list_viterbi_training_rota2011"
@@ -1922,7 +1854,11 @@ reference "chap:Case-study:CMS"
 \series default
 some real-world issues, such as data-service performance
 \color red
- and system's usability 
+ 
+\color inherit
+and system's usability
+\color red
+ 
 \color inherit
 (the solutions are presented in appendix 
 \begin_inset CommandInset ref
@@ -1976,16 +1912,24 @@ reference "chap:Keyword-Search-over-DataServices"
  search engine is presented, that given a keyword query, proposes most probable
  structured queries.
  We propose a custom string similarity metric, discuss the presentation
- of results to the end users, and propose 
-\color red
-combining keyword search with auto-completion
+ of results to the end users, and propose combining keyword search with
+ auto-completion
 \series bold
  
 \series default
-\color magenta
-in a unique way
-\color red
-.
+in a novel way.
+\begin_inset Marginal
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+need less strong for novel?
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -2040,21 +1984,6 @@ reference "chap:Conclusions-and-Future"
  the future work is discussed.
 \end_layout
 
-\begin_layout Standard
-\begin_inset Marginal
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-add: Related work; conclusions; cms solutions moved to appendix;
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Paragraph
 Deliverables and related tasks
 \end_layout
@@ -2078,11 +2007,7 @@ on are used as synonyms throughout different time periods; works on keyword
 
 , this took a considerable amount of time, and 2) case analysis at the CMS
  Experiment included analysing query logs, benchmarking the performance
- bottlenecks; a users
-\change_inserted -438528902 1363295784
-'
-\change_unchanged
- survey, tutorials and presentations.
+ bottlenecks; a users' survey, tutorials and presentations.
  
 \end_layout
 
@@ -2321,35 +2246,24 @@ User Feedback, Issues, Solutions
 
 \begin_layout Standard
 DAS experienced a number of performance and usability issues (users reported
- either being totally happy with DASQL, 
-\change_inserted -438528902 1363295817
-or
-\change_unchanged
- being totally lost).
+ either being totally happy with DASQL, or being totally lost).
  In addition to keyword search, a slight extension to the query language
  was proposed.
  A confusing element of DAS was that the fields returned for certain entity
- were depending on the 
-\series bold
-selection conditions
-\begin_inset Note Note
+ were depending on the selection conditions, it was proposed to automatically
+ resolve the additional service orchestration for returning the requested
+ fields
+\begin_inset Marginal
 status open
 
 \begin_layout Plain Layout
- (as directly returned by the services)
+
+\series bold
+improve wording?
 \end_layout
 
 \end_inset
 
-
-\series default
-\color red
-, it was proposed to automatically resolve the additional service 
-\series bold
-orchestration
-\series default
- for returning the requested fields
-\color inherit
  (see appendix 
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -2489,14 +2403,10 @@ interpreting
 \emph default
  it in terms of its semantics over the 
 \emph on
-\color magenta
 integration schema.
  
 \emph default
-\color inherit
-We are given the following 
-\color magenta
-metadata
+We are given the following metadata
 \emph on
  
 \emph default
@@ -2504,9 +2414,7 @@ metadata
 \emph on
 virtual integration schema
 \emph default
-)
-\color inherit
-: 
+): 
 \end_layout
 
 \begin_layout Itemize
@@ -2596,26 +2504,34 @@ In this work, we consider as potential results only the
 conjunctive queries
 \emph default
  augmented with simple aggregation functions without grouping
-\color blue
-
 \begin_inset Marginal
 status collapsed
 
 \begin_layout Plain Layout
-
-\color blue
 aggregations not so important; not yet fully implemented
 \end_layout
 
 \end_inset
 
+ (that correspond to select-project[-join
+\begin_inset Foot
+status collapsed
 
-\color inherit
- (that correspond to select-project
-\color magenta
--join
-\color inherit
- in SQL, with selections composed only of conjunctions) as potential results.
+\begin_layout Plain Layout
+the 
+\begin_inset Quotes eld
+\end_inset
+
+joins
+\begin_inset Quotes erd
+\end_inset
+
+ are currently limited, and can not be explicitly specified by the user
+\end_layout
+
+\end_inset
+
+] in SQL, with selections composed only of conjunctions) as potential results.
  
 \end_layout
 
@@ -2626,9 +2542,9 @@ Consider these queries:
 
 
 \emph on
-what is the 
+what is the average
 \color red
-average 
+ 
 \color inherit
 size of RelVal datasets where number of events is more than 1000
 \emph default
@@ -2719,16 +2635,9 @@ In the following sections,
 we present a fairly simple heuristics-based implementation, that produces
  a ranked list of best matching structured queries, where we focused on
  the quality of results with the goal of not enforcing any assumptions on
- the input queries (it could 
-\change_inserted -438528902 1363295915
-be
-\change_unchanged
- plain keywords
-\change_inserted -438528902 1363295948
- or 
-\change_unchanged
-a full-sentence, while existence of predefined structural patterns could
- be used to improve the result quality).
+ the input queries (it could be plain keywords or a full-sentence, while
+ existence of predefined structural patterns could be used to improve the
+ result quality).
  The implementation is designed with the goal to be able to employ the user
  feedback for future improvements to various components of the system, such
  as initial entry points, or ranking of the results.
@@ -2853,12 +2762,8 @@ Firstly, the query is pre-processed by the
 \emph on
 tokenizer
 \emph default
-: it 
-\change_deleted -438528902 1363295990
-is 
-\change_unchanged
-cleans up the query, identifies any explicit phrase tokens, or basic operators
- (see section 
+: it cleans up the query, identifies any explicit phrase tokens, or basic
+ operators (see section 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sub:Tokenizer"
@@ -2966,11 +2871,8 @@ respect
  During the same step, the configurations that are compatible with our data
  integration system are identified and interpreted as structured queries,
  where we disambiguate the keyword matchings between the result types, the
- projections the selections (filters on service inputs or outputs), 
-\color red
-or simple operators
-\color inherit
-.
+ projections the selections (filters on service inputs or outputs), or simple
+ operators.
  The ranking is presented in the section 
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -3040,7 +2942,10 @@ reference "sub:cms-Performance-Issues"
 \begin_layout Standard
 
 \series bold
-Motivating Example.
+\begin_inset Newpage clearpage
+\end_inset
+
+Example.
 
 \series default
  Consider this query
@@ -3051,38 +2956,19 @@ Motivating Example.
 \family typewriter
 \size footnotesize
 \color inherit
-avg dataset sizes RelVal 
-\begin_inset Quotes eld
-\end_inset
-
-number of events > 1000
-\begin_inset Quotes erd
-\end_inset
-
-
+dataset sizes RelVal `number of events > 1000'
 \end_layout
 
 \begin_layout Standard
 Tokenizer would return these tokens: 
 \family typewriter
-avg; datasets; sizes; RelVal; 
-\begin_inset Quotes eld
-\end_inset
-
-number of events>1000
-\begin_inset Quotes erd
-\end_inset
-
-
+dataset; sizes; RelVal; `number of events>1000'
 \end_layout
 
 \begin_layout Standard
-Each tokens result in some entry points:
-\end_layout
-
-\begin_layout Standard
-
+Second, Each token result in some entry points:
 \color magenta
+ 
 \begin_inset Marginal
 status open
 
@@ -3095,27 +2981,28 @@ make a nice table!
 \end_inset
 
 
-\begin_inset Note Greyedout
-status open
+\color inherit
 
-\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
 \begin_layout Plain Layout
 
-
+{
+\backslash
+small
 \backslash
 begin{verbatim}
 \end_layout
 
 \begin_layout Plain Layout
 
-Zmmg -> 0.7, value: dataset.name=*RelVal* 
+RelVal -> 1.0, value: group=RelVal
 \end_layout
 
 \begin_layout Plain Layout
 
+RelVal -> 0.7, value: dataset=*RelVal* 
 \end_layout
 
 \begin_layout Plain Layout
@@ -3134,27 +3021,37 @@ Chunks:
 
 \begin_layout Plain Layout
 
-number of events>1000 -> 
+  'number of events>1000' -> 
 \end_layout
 
 \begin_layout Plain Layout
 
-    1.0, filter: dataset.nevents>1000
+    0.93, filter: dataset.nevents>1000
 \end_layout
 
 \begin_layout Plain Layout
 
-    0.8, filter: file.nevents>1000
+    0.93, filter: file.nevents>1000
 \end_layout
 
 \begin_layout Plain Layout
 
-"datasets; sizes" -> projection: dataset.size 
+  'datasets; sizes' -> 0.99, projection: dataset.size
 \end_layout
 
 \begin_layout Plain Layout
 
-"avg; datasets; sizes" -> aggregation:avg(dataset.size)
+  'sizes'           -> 0.41, projection: dataset.size
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+...
+ and some more with lower scores...
 \end_layout
 
 \begin_layout Plain Layout
@@ -3164,9 +3061,64 @@ number of events>1000 ->
 end{verbatim}
 \end_layout
 
+\begin_layout Plain Layout
+
+}
+\end_layout
+
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+As one can see from the entry points, the `RelVal' keyword is ambiguous,
+ there is a `RelVal' group, and also `RelVal' could be part of dataset name.
+ While, `number of events' could be attribute of dataset, file or block.
+ Also well there is some ambiguity in chunking, 'dataset sizes' may map
+ to 
+\emph on
+dataset.size
+\emph default
+ attribute, while dataset is also the entity type
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+ (in this case it doesn't a big difference as the earlier is part of the
+ same entity, however entities may have )
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+After combining the entry point scores, some of the top-four results are:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename figures/example_results.png
+	lyxscale 30
+	width 80text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The first result we see because the score of group=RelVal is higher than
+ the other option for the same keyword.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+The second results is however mapping dataset as requested entity, and sizes
+ to dataset.size
 \end_layout
 
 \end_inset
@@ -3243,6 +3195,10 @@ web-service
 ) then crawling is generally not possible.
 \end_layout
 
+\end_inset
+
+
+\begin_inset Newpage clearpage
 \end_inset
 
 
@@ -4048,9 +4004,6 @@ full match, partial match, and matches of keywords containing wildcards.
  If keyword's value matches a regular expression, but is not contained in
  the known values list and the accepted values of the given field are considered
  to be static (not changing often), we exclude this very likely false match
-\change_deleted -438528902 1363201314
- 
-\change_unchanged
  that reduces the false positives\SpecialChar \@.
 
 \begin_inset Newpage clearpage
@@ -5307,10 +5260,6 @@ name "fig:Accuracy-comparison-avg-prob"
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
@@ -6498,10 +6447,6 @@ Simple service orchestration
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
 
 \end_layout
 
