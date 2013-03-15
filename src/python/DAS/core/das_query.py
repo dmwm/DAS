@@ -43,8 +43,8 @@ class DASQuery(object):
         """
         msg  = 'Dataset value requires 3 slashes.'
         dataset_matches = process_dataset_wildcards(val, self._active_dbsmgr)
-        print "Matching wildcard query=%s into dataset patterns=%s" % (
-            val, dataset_matches)
+#        print "Matching wildcard query=%s into dataset patterns=%s" % (
+#            val, dataset_matches)
         if not len(dataset_matches):
             # TODO: fuzzy matching to propose fixes?
             # This also could be done for any dataset...
