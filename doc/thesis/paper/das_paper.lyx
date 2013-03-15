@@ -981,7 +981,7 @@ tes; 2) the keyword search based on metadata returning query results directly,
 \end_layout
 
 \begin_layout Standard
-The objective of this work is to research the third option, the keyword
+The objective of this work is to investigate the third option, the keyword
  search proposing the ranked list of queries, as a more intuitive alternative,
  which, in fact, received little attention in the field of data service
  integration
@@ -1039,12 +1039,12 @@ CMS Experiment at CERN
 \color red
 
 \begin_inset Foot
-status collapsed
+status open
 
 \begin_layout Plain Layout
 due to the complexity of combining the contributions by a large number institute
-s in a single project, they usually evolve in independent fashion, resulting
- in fair number of proprietary systems
+s in a single project, the software projects result in fair number of proprietar
+y systems
 \begin_inset CommandInset citation
 LatexCommand citep
 key "Koch00CERN"
@@ -1188,7 +1188,6 @@ Boolean Keyword-based search over data service integration
  
 \begin_inset CommandInset citation
 LatexCommand citep
-before "e.g."
 key "keymantic_kws_metadata_bergamaschi2011,bergamaschi2011hidden,nl_to_dataservices_guerrisi2012natural"
 
 \end_inset
@@ -1946,7 +1945,7 @@ reference "chap:Incorporating-User-Feedback"
  
 \series default
 \color inherit
-users feedback into the keyword search over EII.
+user feedback into the keyword search over EII.
  The earlier mentioned auto-completion would allow getting the feedback
  of higher quality without overloading the users, that could be used for
  improving various parts of the system
@@ -1989,9 +1988,9 @@ Deliverables and related tasks
 \end_layout
 
 \begin_layout Standard
-The project also included these time-demanding tasks: 1) choosing a precise
- topic to focus on - because the area is not so actively researched and
- there is no concise terminology
+The project also included the following tasks: 1) choosing a precise topic
+ to focus on - because the area is not so actively researched and there
+ is no concise terminology
 \begin_inset Foot
 status collapsed
 
@@ -4731,12 +4730,12 @@ nevents
 \end_inset
 
 ).
- However, if user knows the entity he is searching for, he may immediately
+ However, if the user knows the entity he is searching for, he may immediately
  filter only these results.
 \end_layout
 
 \begin_layout Standard
-Hovering on the structured query, user sees it's explanation (an interactive
+Hovering on the structured query, the user see its explanation (an interactive
  way to learn the semantics of the query language).
  Different elements of the query are presented visually in different colors
 \series bold
@@ -5857,39 +5856,70 @@ Conclusion
 
 \end_layout
 
-\begin_layout Standard
-
-\color magenta
-Keyword search over data services is still lacking attention from research
- community.
+\begin_layout Section
+Conclusions
 \end_layout
 
 \begin_layout Standard
-
-\color magenta
-In addition to structured query languages, this could help in learning and
- getting results more quickly.
-\end_layout
-
-\begin_layout Standard
-We presented ...
-\end_layout
-
-\begin_layout Standard
-Future work...
-\end_layout
-
-\begin_layout Standard
-
-\color cyan
-----
-\end_layout
-
-\begin_layout Standard
-
+In comparison to the other fields such as searching the relational databases,
+ the keyword search over data service integration is still lacking attention
+ from research community.
+ With the increasing availability of public, corporate and governmental
+ services, as well as the growing popularity of data service repositories
+ and tools for combining data in them, such as the 
+\emph on
+YQL
+\emph default
+ or the
+\emph on
+ Google Fusion Tables
 \series bold
-\color cyan
-Future work (technical notes):
+\emph default
+, 
+\series default
+the lack of user friendly interfaces to do so, is becoming increasingly
+ larger issue, not only within the corporate environments.
+ 
+\end_layout
+
+\begin_layout Standard
+A implementation of keyword search over Enterprise Information Integration
+ has been presented, discussing the implementation in details, some real-world
+ issues and ways to solving them.
+ The implemented system do not impose any constraints on the input query
+ (unlike some of the earlier works
+\begin_inset CommandInset citation
+LatexCommand citep
+key "keymantic10"
+
+\end_inset
+
+), and it is able to profit from the structure available in the query (phrases,
+ selections through auto-completion).
+ 
+\end_layout
+
+\begin_layout Standard
+Even if because of short project duration, a number of further improvements
+ may be needed to various system components to boost the accuracy of current
+ implementation (within top 5 results we get accuracy of over 80%), the
+ keyword search could be successfully employed as a method for learning
+ the structured query language and figuring out how the data is structured
+ through a interactive way, allowing the end users to satisfy their information
+ needs more quickly.
+ 
+\end_layout
+
+\begin_layout Standard
+The concept and a working (prototype) implementation was exposed to the
+ large CMS physics community, with the aim to have it in production soon.
+ The system implemented is going to be further supported and advanced, and
+ this will contribute to improve the overall efficiency of the physics analysis
+ program by the CMS Collaboration.
+\end_layout
+
+\begin_layout Section
+Future work
 \end_layout
 
 \begin_layout Itemize
@@ -5904,9 +5934,52 @@ Client-side implementation of keyword search - large parts of keyword search
 -limits/
 \end_layout
 
-\begin_layout Standard
+\begin_layout Itemize
 
 \color cyan
+web sockets for auto-completion
+\end_layout
+
+\begin_layout Itemize
+better interpretation of patterns in keyword queries
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+NL - focus
+\end_layout
+
+\begin_layout Itemize
+semi-structured? - (weak|shallow|permissive) parsing of DAS QL
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Explore the machine learning approaches deeper
+\end_layout
+
+\begin_layout Standard
+
+\color red
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Because of the project was fairly short and the author had to follow some
+ of priorities of the CMS Experiment, some parts of the research work had
+ to be excluded, including: 
+\series bold
+\color red
+TODO
+\series default
+.
+\end_layout
+
+\end_inset
+
+
+\color cyan
+
 \begin_inset Note Note
 status collapsed
 
@@ -6132,48 +6205,6 @@ Templates / Regexps
 \begin_layout Plain Layout
 Predicate Argument Structure + Relation Extraction Rules(proLog) -- however
  too expensive given time constraints...
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-
-\color cyan
-web sockets for auto-completion
-\end_layout
-
-\begin_layout Itemize
-better interpretation of patterns in keyword queries
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-NL - focus
-\end_layout
-
-\begin_layout Itemize
-semi-structured? - (weak|shallow|permissive) parsing of DAS QL
-\end_layout
-
-\end_deeper
-\begin_layout Standard
-
-\color red
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-Because of the project was fairly short and the author had to follow some
- of priorities of the CMS Experiment, some parts of the research work had
- to be excluded, including: 
-\series bold
-\color red
-TODO
-\series default
-.
 \end_layout
 
 \end_inset
