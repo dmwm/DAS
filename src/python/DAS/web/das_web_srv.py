@@ -434,7 +434,9 @@ class DASWebService(DASWebManager):
         except Exception as err:
             # process Wildcard exception separately
             if  isinstance(err, WildcardMultipleMatchesException):
-                das_parser_error(uinput, 'WildcardMultipleMatchesException')
+                emsg  = 'WildcardMultipleMatchesException, uinput=%s. ' % uinput
+                emsg += str(err).replace('\n', '')
+                das_parser_error(uinput, emsg)
                 suggest = err.options.values
                 guide = self.templatepage('dbsql_vs_dasql',
                             operators=', '.join(das_operators()))
