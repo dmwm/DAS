@@ -111,6 +111,14 @@ def logdb_record(coll, doc):
     rec.update(doc)
     return rec
 
+def etstamp(delta=20):
+    """
+    Return expire timestamp which can be used for empty records
+    It should be short enough to allow quick expire of the records.
+    The delta input parameter can be used to control thta.
+    """
+    return time.time() + delta
+
 class DASLogdb(object):
     """DASLogdb"""
     def __init__(self, config):
@@ -668,6 +676,7 @@ class DASMongocache(object):
             self.logger.info(msg)
 
         # if no raw records were yield we look-up possible error records
+        # and reset timestamp for record with system:['das']
         if  not counter:
             nrec = self.col.find({'qhash':dasquery.qhash}).count()
             if  nrec:
@@ -675,6 +684,7 @@ class DASMongocache(object):
                         % (dasquery, nrec)
                 prf = 'DAS WARNING, monogocache:get_from_cache '
                 print dastimestamp(prf), msg
+            self.update_das_expire(dasquery, etstamp())
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
         """
@@ -811,7 +821,7 @@ class DASMongocache(object):
         elif  not lookup_keys: # we get query w/o fields
             pass
         else: # we didn't merge anything, it is DB look-up failure
-            empty_expire = time.time() + 20 # secs, short enough to expire
+            empty_expire = etstamp()
             empty_record = {'das':{'expire':empty_expire,
                                    'primary_key':list(lookup_keys),
                                    'empty_record': 1},
