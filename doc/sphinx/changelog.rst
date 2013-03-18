@@ -7,6 +7,11 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Separte insertion of query and data records
+  - Remove analytics calls from abstract service, current analytics
+    implementation require full re-design, it does not make any good so far
+  - Add distinguishing message in ticket issue title for no apis/no results
+    errors
   - Add fakeFiles4BlockRun API to cover file block=/a/b/c#123 run in [1,2,3]
     queries required by CMSSW Integration Builds (IB).
   - Fix file block=/a/b/c#123 query (DBS should contribute to it)
