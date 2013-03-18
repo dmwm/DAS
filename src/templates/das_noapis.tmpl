@@ -1,12 +1,14 @@
 #from DAS.web.utils import quote
-#set query=$quote($query)
-
+#import time
 <!-- das_noapis.tmpl -->
 <div>
 None of the registered data-provider's APIs in DAS match this query.
 If you believe that this query should be answered
 by DAS feel free to submit a new
-<a class="box_attention" href="https://github.com/dmwm/DAS/issues/new">ticket</a>.
+#set msg="No APIs, %s (%s)" % ($query, $tstamp)
+#set msg=$quote(msg)
+<a class="box_attention"
+   href="https://github.com/dmwm/DAS/issues/new?title=$msg">ticket</a>
 </div>
 <hr class="line" />
 <!-- end of das_noapis.tmpl -->
