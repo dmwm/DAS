@@ -5,7 +5,7 @@ format : JSON
 urn: "get_run_info"
 url : "https://cms-conddb-prod.cern.ch/getLumi"
 expire : 3600
-params : {"Runs":"", "date": "optional","lumiType":"delivered"}
+params : {"Runs":"", "date": "optional"}
 lookup : run
 das_map : [
     {"das_key":"run","rec_key":"run.run_number","api_arg":"Runs"},
