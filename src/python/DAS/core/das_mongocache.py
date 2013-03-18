@@ -402,46 +402,30 @@ class DASMongocache(object):
 
     def update_query_record(self, dasquery, status, header=None):
         "Update DAS record for provided query"
+        ctime = time.time()
+        das_spec = {'qhash': dasquery.qhash, 'das.system':'das'}
         if  header:
             system = header['das']['system']
-            api    = header['das']['api']
-            spec1  = {'qhash': dasquery.qhash, 'das.system': 'das'}
-            dasrecord = self.col.find_one(spec1)
-            spec2  = {'qhash': dasquery.qhash, 'das.system': system,
-                      'das.api': api, 'query': {'$exists':True}}
-            sysrecord = self.col.find_one(spec2)
-            hexpire = header['das']['expire']
-            dexpire = hexpire
-            if  dasrecord and dasrecord.has_key('das'):
-                dexpire = dasrecord['das'].get('expire', None)
-            if  dexpire and hexpire > dexpire:
-                expire = dexpire
-            else:
-                expire = hexpire
-            if  sysrecord:
-                api  = header['das']['api']
-                url  = header['das']['url']
-                sapi = sysrecord['das'].get('api', [])
-                surl = sysrecord['das'].get('url', [])
-                if  set(api) & set(sapi) == set(api) and \
-                    set(url) & set(surl) == set(url):
-                    self.col.update({'_id':ObjectId(sysrecord['_id'])},
-                        {'$set': {'das.expire':expire, 'das.status':status}})
-                else:
-                    self.col.update({'_id':ObjectId(sysrecord['_id'])},
-                        {'$pushAll':{'das.api':header['das']['api'],
-                                     'das.urn':header['das']['api'],
-                                     'das.url':header['das']['url'],
-                                     'das.ctime':header['das']['ctime'],
-                                    },
-                         '$set': {'das.expire':expire, 'das.status':status}})
-            if  dasrecord:
-                self.col.update({'_id':ObjectId(dasrecord['_id'])},
-                     {'$set': {'das.expire':expire}})
+            sts    = header['das']['status']
+            expire = header['das']['expire']
+            spec   = {'qhash': dasquery.qhash, 'das.system': system}
+            new_expire = None
+            for rec in self.col.find(spec):
+                if  rec.has_key('das') and rec['das'].has_key('expire'):
+                    if  rec['das']['expire'] > expire:
+                        new_expire = expire
+                        ndict = {'das.expire':expire, 'das.status':status}
+                        cdict = {'das.ctime':ctime}
+                        udict = {'$set':ndict, '$push':cdict}
+                        oid   = ObjectId(rec['_id'])
+                        self.col.update({'_id':oid}, udict)
+            if  new_expire:
+                udict = {'$set': {'das.expire': new_expire},
+                         '$push': {'das.ctime':ctime}}
+                self.col.update(das_spec, udict)
         else:
-            self.col.update({'qhash': dasquery.qhash,
-                             'das.system':'das'},
-                            {'$set': {'das.status': status}})
+            udict = {'$set': {'das.status':status}, '$push': {'das.ctime':ctime}}
+            self.col.update(das_spec, udict)
 
     def apilist(self, dasquery):
         "Return list of apis for given dasquery"
@@ -878,6 +862,7 @@ class DASMongocache(object):
             q_record['das']['empty_record'] = 0
             q_record['das']['status'] = "requested"
             q_record['qhash'] = dasquery.qhash
+            q_record['das']['ctime'] = [time.time()]
             self.col.insert(q_record)
 
     def generate_records(self, dasquery, results, header):
@@ -912,6 +897,7 @@ class DASMongocache(object):
                     counter += 1
                     if  item.has_key('das'):
                         expire = item.get('das').get('expire', expire)
+                        dasheader['expire'] = expire
                     item['das'] = dict(expire=expire, primary_key=prim_key,
                                        condition_keys=cond_keys,
                                        instance=dasquery.instance,
