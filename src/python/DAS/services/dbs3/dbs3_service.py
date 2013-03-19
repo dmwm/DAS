@@ -29,10 +29,12 @@ from   types import GeneratorType
 
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, json_parser
+from DAS.utils.utils import map_validator, json_parser, print_exc
 from DAS.utils.utils import expire_timestamp, convert2ranges
-from DAS.utils.url_utils import getdata, proxy_getdata
+from DAS.utils.url_utils import getdata, get_proxy
 import DAS.utils.jsonwrapper as json
+
+print "\n### DBS3 module, proxy", get_proxy()
 
 def get_api(url):
     "Extract from DBS3 URL the api name"
@@ -100,41 +102,51 @@ class DBS3Service(DASAbstractService):
         data, _ = self.getdata_helper(url[0], params, expire)
         blocks  = json.load(data)
 
-        # TEST data_proxy, please note that urls must be strings
-        # and not unicode (therefore we use encode function for conversion)
-#        blocks = (r['block_name'] for r in blocks)
-#        urls = ('%s?block_name=%s' % (url[1], urllib.quote(b)) \
-#                for b in blocks)
-#        gen = proxy_getdata(urls)
-#        for filelumis in gen:
-#            if  isinstance(filelumis, list):
-#                for row in filelumis:
-#                    lumi = row.get('lumi_section_num', None)
-#                    lfn  = row.get('logical_file_name', None)
-#                    rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
-#                    yield rec
-#            else:
-#                lumi = row.get('lumi_section_num', None)
-#                lfn  = row.get('logical_file_name', None)
-#                rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
-#                yield rec
+        proxy_getdata = get_proxy()
+        proxy_error = False
+        if  proxy_getdata:
+            try:
+                # fetch data concurrently via proxy
+                blk_list = (r['block_name'] for r in blocks)
+                urls = ('%s?block_name=%s' % (url[1], urllib.quote(b)) \
+                        for b in blk_list)
+                gen = proxy_getdata(urls)
+                for item in gen:
+                    filelumis = json.loads(item)
+                    if  isinstance(filelumis, list):
+                        for row in filelumis:
+                            lumi = row.get('lumi_section_num', None)
+                            lfn  = row.get('logical_file_name', None)
+                            rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
+                            yield rec
+                    else:
+                        print "\n### filelumis", filelumis
+                        lumi = filelumis.get('lumi_section_num', None)
+                        lfn  = filelumis.get('logical_file_name', None)
+                        rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
+                        yield rec
+            except Exception as exc:
+                print_exc(exc)
+                proxy_error = True
 
-        for row in blocks:
-            params = {'block_name': row['block_name']}
-            val, expire = self.getdata_helper(url[1], params, expire)
-            filelumis = json.load(val)
-            edict.update({'expire': expire})
-            if  isinstance(filelumis, list):
-                for row in filelumis:
+        # plan B, get data sequentially
+        if  proxy_error or not proxy_getdata:
+            for row in blocks:
+                params = {'block_name': row['block_name']}
+                val, expire = self.getdata_helper(url[1], params, expire)
+                filelumis = json.load(val)
+                edict.update({'expire': expire})
+                if  isinstance(filelumis, list):
+                    for row in filelumis:
+                        lumi = row.get('lumi_section_num', None)
+                        lfn  = row.get('logical_file_name', None)
+                        rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
+                        yield rec
+                else:
                     lumi = row.get('lumi_section_num', None)
                     lfn  = row.get('logical_file_name', None)
                     rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
                     yield rec
-            else:
-                lumi = row.get('lumi_section_num', None)
-                lfn  = row.get('logical_file_name', None)
-                rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
-                yield rec
 
     def url_instance(self, url, instance):
         """
