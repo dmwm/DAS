@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Add get_proxy, proxy_getdata and implementation (still experimental) of
+    proxy usage within DBS3 module
   - Re-wrote update_query_record API; update ctime for query records
   - Separte insertion of query and data records
   - Remove analytics calls from abstract service, current analytics
