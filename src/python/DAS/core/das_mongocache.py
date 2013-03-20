@@ -573,9 +573,11 @@ class DASMongocache(object):
             err = "Key %s not found" % fltr
             raise Exception(err)
 
-    def get_records(self, col, spec, fields, skeys, idx, limit, unique=False):
+    def get_records(self, collection, spec, fields, skeys, idx, limit,
+            unique=False):
         "Generator to get records from MongoDB. It correctly applies"
         try:
+            col = self.mdb[collection]
             res = col.find(spec=spec, fields=fields)
             if  skeys:
                 res = res.sort(skeys)
@@ -608,7 +610,6 @@ class DASMongocache(object):
                 yield row
         else: # pure MongoDB query
             das_fields = ['das_id', 'cache_id', 'das', 'qhash']
-            coll    = self.mdb[collection]
             fields  = dasquery.mongo_query.get('fields', [])
             spec    = dasquery.mongo_query.get('spec', {})
             if  dasquery.filters:
@@ -618,7 +619,7 @@ class DASMongocache(object):
                 pkeys   = [k.split('.')[0] for k in fields]
                 fields += das_fields
             skeys   = self.mongo_sort_keys(collection, dasquery)
-            result  = self.get_records(coll, spec, fields, skeys, \
+            result  = self.get_records(collection, spec, fields, skeys, \
                             idx, limit, dasquery.unique_filter)
             for row in result:
                 if  dasquery.filters:
@@ -629,7 +630,6 @@ class DASMongocache(object):
 
     def get_das_records(self, dasquery, idx=0, limit=0, collection='merge'):
         "Generator which retrieves DAS records from the cache"
-        col = self.mdb[collection]
         msg = "(%s, %s, %s, coll=%s)" % (dasquery, idx, limit, collection)
         self.logger.info(msg)
 
@@ -648,7 +648,7 @@ class DASMongocache(object):
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
         skeys   = self.mongo_sort_keys(collection, dasquery)
-        res     = self.get_records(col, spec, fields, skeys, \
+        res     = self.get_records(collection, spec, fields, skeys, \
                         idx, limit, dasquery.unique_filter)
         counter = 0
         for row in res:
