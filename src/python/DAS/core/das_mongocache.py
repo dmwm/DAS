@@ -332,16 +332,17 @@ class DASMongocache(object):
         Remove expired records from DAS cache.
         """
         timestamp = int(time.time())
-        col  = self.mdb[collection]
-        spec = {'das.expire' : {'$lt' : timestamp}}
-        if  self.verbose:
-            nrec = col.find(spec).count()
-            msg  = "will remove %s records" % nrec
-            msg += ", localtime=%s" % timestamp
-            self.logger.debug(msg)
-        if  self.logging:
-            self.logdb.insert(collection, {'delete': col.find(spec).count()})
-        col.remove(spec)
+        with self.conn.start_request():
+            col  = self.mdb[collection]
+            spec = {'das.expire' : {'$lt' : timestamp}}
+            if  self.verbose:
+                nrec = col.find(spec).count()
+                msg  = "will remove %s records" % nrec
+                msg += ", localtime=%s" % timestamp
+                self.logger.debug(msg)
+            if  self.logging:
+                self.logdb.insert(collection, {'delete': col.find(spec).count()})
+            col.remove(spec)
 
     def find(self, dasquery):
         """
@@ -445,13 +446,14 @@ class DASMongocache(object):
         http://api.mongodb.org/python/
         """
         self.remove_expired(collection)
-        col  = self.mdb[collection]
         spec = {'qhash':dasquery.qhash}
         if  system:
             spec.update({'das.system': system})
         if  api:
             spec.update({'das.api': api})
-        res  = col.find(spec=spec).count()
+        with self.conn.start_request():
+            col  = self.mdb[collection]
+            res  = col.find(spec=spec).count()
         msg  = "(%s, coll=%s) found %s results" % (dasquery, collection, res)
         self.logger.info(msg)
         if  res:
@@ -467,7 +469,6 @@ class DASMongocache(object):
         # we can rely on DB count() method. Pleas keep in mind that
         # usage of fields in find doesn't account for counting, since it
         # is a view over records found with spec, so we don't need to use it.
-        col  = self.mdb[collection]
         fields, filter_cond = self.get_fields(dasquery)
         if  not fields:
             spec = dasquery.mongo_query.get('spec', {})
@@ -477,16 +478,18 @@ class DASMongocache(object):
             spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
         if  filter_cond:
             spec.update(filter_cond)
-        self.check_filters(col, spec, fields)
-        if  dasquery.unique_filter:
-            skeys = self.mongo_sort_keys(collection, dasquery)
-            if  skeys:
-                gen = col.find(spec=spec).sort(skeys)
+        self.check_filters(collection, spec, fields)
+        with self.conn.start_request():
+            col  = self.mdb[collection]
+            if  dasquery.unique_filter:
+                skeys = self.mongo_sort_keys(collection, dasquery)
+                if  skeys:
+                    gen = col.find(spec=spec).sort(skeys)
+                else:
+                    gen = col.find(spec=spec)
+                res = len([r for r in unique_filter(gen)])
             else:
-                gen = col.find(spec=spec)
-            res = len([r for r in unique_filter(gen)])
-        else:
-            res = col.find(spec=spec).count()
+                res = col.find(spec=spec).count()
         msg = "%s" % res
         self.logger.info(msg)
         return res
@@ -537,16 +540,19 @@ class DASMongocache(object):
              ...
              u'tier.name_-1': {u'key': [(u'tier.name', -1)], u'v': 0}}
         """
-        col = self.mdb[collection]
-        for val in col.index_information().values():
-            for idx in val['key']:
-                yield idx[0] # index name
+        with self.conn.start_request():
+            col = self.mdb[collection]
+            for val in col.index_information().values():
+                for idx in val['key']:
+                    yield idx[0] # index name
 
-    def check_filters(self, col, spec, fields):
+    def check_filters(self, collection, spec, fields):
         "Check that given filters can be applied to records found with spec"
         if  not fields:
             return
-        data = col.find_one(spec)
+        with self.conn.start_request():
+            col  = self.mdb[collection]
+            data = col.find_one(spec)
         if  not data:
             return
         found = False
@@ -577,15 +583,16 @@ class DASMongocache(object):
             unique=False):
         "Generator to get records from MongoDB. It correctly applies"
         try:
-            col = self.mdb[collection]
-            res = col.find(spec=spec, fields=fields)
-            if  skeys:
-                res = res.sort(skeys)
-            if  not unique:
-                if  idx:
-                    res = res.skip(idx)
-                if  limit:
-                    res = res.limit(limit)
+            with self.conn.start_request():
+                col = self.mdb[collection]
+                res = col.find(spec=spec, fields=fields)
+                if  skeys:
+                    res = res.sort(skeys)
+                if  not unique:
+                    if  idx:
+                        res = res.skip(idx)
+                    if  limit:
+                        res = res.limit(limit)
         except Exception as exp:
             print_exc(exp)
             row = {'exception': str(exp)}
