@@ -359,6 +359,10 @@ class CMSRepresentation(DASRepresentation):
             fltpage = ''
         return fltpage
 
+    def processing_time(self, dasquery):
+        "Return processing time of DAS query"
+        return self.dasmgr.processing_time(dasquery)
+
     def listview(self, head, data):
         """
         Represent data in list view.
@@ -381,7 +385,6 @@ class CMSRepresentation(DASRepresentation):
         page     = ''
         old      = None
         dup      = False
-        tstamp   = None
         status   = head.get('status', None)
         if  status == 'fail':
             reason = head.get('reason', '')
@@ -399,12 +402,6 @@ class CMSRepresentation(DASRepresentation):
                 msg  = 'Exception: %s\n' % str(exc)
                 msg += 'Fail to process row\n%s' % str(row)
                 raise Exception(msg)
-            if  not tstamp:
-                try:
-                    oid = ObjectId(mongo_id)
-                    tstamp = time.mktime(oid.generation_time.timetuple())
-                except:
-                    pass
             page += '<div class="%s"><hr class="line" />' % style
             links = []
             pkey  = None
@@ -550,13 +547,11 @@ class CMSRepresentation(DASRepresentation):
             main += self.templatepage('das_duplicates', uinput=uinput,
                         instance=inst)
         main += page
-        msg   = ''
-        if  tstamp:
-            try:
-                msg += 'request time: %s sec, ' \
-                        % (time.mktime(time.gmtime())-tstamp)
-            except:
-                pass
+        proc_time = self.processing_time(dasquery)
+        if  proc_time:
+            msg = 'processing time: %5.3f sec, ' % proc_time
+        else:
+            msg   = ''
         msg  += 'cache server time: %5.3f sec' % head['ctime']
         main += '<div align="right">%s</div>' % msg
         return main
