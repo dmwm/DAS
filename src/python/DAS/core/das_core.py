@@ -378,6 +378,16 @@ class DASCore(object):
         das_timer('DASCore::call', self.verbose)
         return 'ok'
 
+    def processing_time(self, dasquery):
+        "Look-up and return DAS query processing time"
+        query_record = self.rawcache.find(dasquery)
+        das = query_record.get('das', None)
+        if  isinstance(das, dict):
+            ctime = das.get('ctime', [])
+            if  ctime:
+                return ctime[-1]-ctime[0]
+        return None
+
     def nresults(self, dasquery, coll='merge'):
         """
         Return total number of results (count) for provided query
