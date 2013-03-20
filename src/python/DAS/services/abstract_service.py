@@ -532,7 +532,7 @@ class DASAbstractService(object):
 
             # compare query selection keys with API look-up keys
             api_lkeys = self.dasmapping.api_lkeys(self.name, api)
-            if  api_lkeys != skeys:
+            if  set(api_lkeys) != set(skeys):
                 msg = "--- rejects API %s, api_lkeys(%s)!=skeys(%s)"\
                         % (api, api_lkeys, skeys)
                 self.logger.info(msg)
