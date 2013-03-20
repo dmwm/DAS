@@ -310,10 +310,10 @@ url : ["https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blocks",
        "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"]
 expire : 900
 params : {"dataset":"required"}
-lookup : file,lumi
+lookup : lumi,file
 das_map : [
-    {"das_key":"file", "rec_key":"file.name"},
     {"das_key":"lumi", "rec_key":"lumi.number"},
+    {"das_key":"file", "rec_key":"file.name"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
