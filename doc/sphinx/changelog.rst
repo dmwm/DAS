@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Add draft code to accommodate file dataset=/a/b/c run in [1,2,3] site=X
+    query (still under development)
+  - Add url_proxy module which can work with pyurlfecth or Go proxy server
   - Add get_proxy, proxy_getdata and implementation (still experimental) of
     proxy usage within DBS3 module
   - Re-wrote update_query_record API; update ctime for query records
