@@ -21,7 +21,14 @@ We use the following definitions for dataset presence:
 """
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import time
+try:
+    import cStringIO as StringIO
+except:
+    import StringIO
+
+# DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
@@ -29,7 +36,7 @@ from DAS.utils.utils import json_parser, get_key_cert, dastimestamp
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import expire_timestamp, print_exc
 from DAS.utils.global_scope import SERVICES
-from DAS.utils.url_utils import getdata
+from DAS.utils.url_utils import getdata, get_proxy
 from DAS.utils.regex import site_pattern, se_pattern
 
 #
@@ -181,7 +188,7 @@ def dataset_summary(dbs_url, dataset):
         raise Exception(msg)
     else:
         # we call filesummaries?dataset=dataset to get number of files/blks
-        dbs_url += dbs_url + '/filesummaries'
+        dbs_url += '/filesummaries'
         dbs_args = {'dataset': dataset}
         headers = {'Accept': 'application/json;text/json'}
         source, expire = \
@@ -368,6 +375,93 @@ class CombinedService(DASAbstractService):
         except Exception as exc:
             print_exc(exc)
 
+def dbs2_files(url, kwds):
+    "Find files for given set of parameters"
+    expire = 600
+    dataset = kwds.get('dataset', None)
+    block = kwds.get('block', None)
+    runs = kwds.get('runs', None)
+    if  not dataset and not block:
+        return
+    if  dataset:
+        query = 'find file where dataset=%s' % dataset
+    elif block:
+        query = 'find file where block=%s' % block
+    rcond   = ' or '.join(['run=%s' % r for r in runs])
+    query  += ' and (%s)' % rcond
+    params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
+    headers = {'Accept': 'text/xml'}
+    source, expire = \
+        getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
+    prim_key = 'file'
+    for row in qlxml_parser(source, prim_key):
+        lfn = row['file']['file']
+        yield lfn
+
+def dbs3_files(url, kwds):
+    "Find files for given set of parameters"
+    expire = 600
+    dataset = kwds.get('dataset', None)
+    block = kwds.get('block', None)
+    runs = kwds.get('runs', None)
+    if  not dataset and not block:
+        return
+    url += '/files'
+    # TODO: replace minrun/maxrun with new run range parameter once DBS3 will be ready
+    if  dataset:
+        params = {'dataset':dataset, 'minrun':runs[0], 'maxrun':runs[0]}
+    elif block:
+        params = {'block_name': block, 'minrun': runs[0], 'maxrun':runs[0]}
+    headers = {'Accept': 'application/json;text/json'}
+    source, expire = \
+        getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
+    for row in json_parser(source, None):
+        for rec in row:
+            yield rec['logical_file_name']
+
+def dbs_files(url, kwds):
+    "Find files for given set of parameters"
+    if  which_dbs(url) == 'dbs':
+        gen = dbs2_files(url, kwds)
+    else:
+        gen = dbs3_files(url, kwds)
+    for row in gen:
+        yield row
+
+def files4site(phedex_url, files, site):
+    "Find site for given files"
+    proxy_getdata = get_proxy()
+    proxy_error = False
+    print "\n### proxy_getdata", proxy_getdata
+    if  not proxy_getdata:
+        return # plan B
+    params = {}
+    if  site and site_pattern.match(site):
+        params.update({'node': site})
+    elif site and se_pattern.match(site):
+        params.update({'se': site})
+    else:
+        return
+    urls = []
+    for fname in files:
+        url = '%s?lfn=%s' % (phedex_url, fname)
+        urls.append(url)
+    tags = 'block.replica.node'
+    prim_key = 'block'
+    gen = proxy_getdata(urls)
+    for rec in gen:
+        # convert record string into StringIO for xml_parser
+        source = StringIO.StringIO(rec)
+        for row in xml_parser(source, prim_key, tags):
+            fobj = row['block']['file']
+            fname = fobj['name']
+            replica = fobj['replica']
+            for item in replica:
+                if  params.has_key('node') and item['node'] == site:
+                    yield fname
+                elif params.has_key('se') and item['se'] == site:
+                    yield fname
+
 def test_phedex_files():
     "Test phedex_files"
     url = 'https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas'
@@ -388,6 +482,24 @@ def test_dbs_files4runs():
     for row in dbs_files4runs(url, files, runs):
         print row
 
+def test_dbs_files():
+    phedex_url = 'https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas'
+    url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+    dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
+    block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
+    runs    = [177718, 177053]
+    kwds    = {'block':block, 'runs':runs}
+    kwds    = {'dataset':dataset, 'runs':runs}
+    site    = 'T2_IN_TIFR'
+    files   = dbs_files(url, kwds)
+    count   = 0
+    for fname in files4site(phedex_url, files, site):
+        count += 1
+        print fname
+    print "Site=%s: nfiles=%s" % (site, count)
+
 if __name__ == '__main__':
 #    test_phedex_files()
-    test_dbs_files4runs()
+#    test_dbs_files4runs()
+    test_dbs_files()
