@@ -23,7 +23,7 @@ def go_proxy(urls):
     "Proxy client for Go proxy server"
     params = {'urls': '\n'.join(urls)}
     encoded_data = urllib.urlencode(params)
-    go_server = "http://localhost:8000/getdata"
+    go_server = "http://localhost:8000/fetch"
     req = urllib2.Request(go_server)
     data = urllib2.urlopen(req, encoded_data)
     code = data.getcode()
