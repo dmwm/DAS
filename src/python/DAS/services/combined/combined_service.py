@@ -42,8 +42,7 @@ from DAS.utils.regex import site_pattern, se_pattern
 #
 # NOTE:
 # DBS3 will provide datasets API, once this API will support POST request
-# and multiple datasets, I need to epxlore revert logic for
-# combined_dataset4site
+# and multiple datasets, I need to epxlore revert logic for dataset4site
 # API. First find all blocks at given site, then strip off dataset info
 # and ask DBS to provide dataset info for found dataset.
 #
@@ -198,7 +197,7 @@ def dataset_summary(dbs_url, dataset):
             totblocks = row[0]['num_block']
             return totblocks, totfiles
 
-def combined_site4dataset(dbs_url, phedex_api, args, expire):
+def site4dataset(dbs_url, phedex_api, args, expire):
     "Yield site information about given dataset"
     # DBS part
     dataset = args['dataset']
@@ -282,7 +281,7 @@ class CombinedService(DASAbstractService):
         phedex_url = self.map[api]['services']['phedex']
         # make phedex_api from url, but use xml version for processing
         phedex_api = phedex_url.replace('/json/', '/xml/') + '/blockReplicas'
-        if  api == 'combined_dataset4site_release':
+        if  api == 'dataset4site_release':
             # DBS part
             datasets = set()
             for row in dbs_dataset4site_release(dbs_url, args['release']):
@@ -318,9 +317,9 @@ class CombinedService(DASAbstractService):
                 yield {'dataset':record}
             del datasets
             del found
-        if  api == 'combined_site4dataset':
+        if  api == 'site4dataset':
             try:
-                gen = combined_site4dataset(dbs_url, phedex_api, args, expire)
+                gen = site4dataset(dbs_url, phedex_api, args, expire)
                 for row in gen:
                     yield row
             except Exception as err:
@@ -332,6 +331,18 @@ class CombinedService(DASAbstractService):
                     'error':msg, 'dataset_fraction': 'N/A',
                     'block_fraction':'N/A', 'block_completion':'N/A'}, 'error': msg}
                 yield row
+        if  api == 'files4dataset_runs_site':
+            run_value = args.get('run')
+            if  isinstance(run_value, dict) and run_value.has_key('$in'):
+                runs = run_value['$in']
+            else:
+                runs = run_value
+            args.update({'runs': runs})
+            files = [f for f in dbs_files(dbs_url, args)]
+            site  = args.get('site')
+            phedex_api = phedex_url.replace('/json/', '/xml/') + '/fileReplicas'
+            for fname in files4site(phedex_api, files, site):
+                yield {'file':{'name':fname}}
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
         """
@@ -342,13 +353,13 @@ class CombinedService(DASAbstractService):
         # therefore the expire time stamp will not be changed, since
         # helper function will yield results
         time0 = time.time()
-        if  api == 'combined_dataset4site_release' or \
-            api == 'combined_site4dataset':
+        if  api == 'dataset4site_release' or \
+            api == 'site4dataset' or 'files4dataset_runs_site':
             genrows = self.helper(api, args, expire)
         # here I use directly the call to the service which returns
         # proper expire timestamp. Moreover I use HTTP header to look
         # at expires and adjust my expire parameter accordingly
-        if  api == 'combined_dataset4site':
+        if  api == 'dataset4site':
             headers = {'Accept': 'application/json;text/json'}
             datastream, expire = getdata(url, args, headers, expire)
             try: # get HTTP header and look for Expires
@@ -359,7 +370,7 @@ class CombinedService(DASAbstractService):
             except:
                 pass
             genrows = parse_data(datastream)
-        if  api == 'combined_lumi4dataset':
+        if  api == 'lumi4dataset':
             headers = {'Accept': 'application/json;text/json'}
             data, expire = getdata(url, args, headers, expire)
             genrows = json_parser(data, None)
@@ -432,7 +443,7 @@ def files4site(phedex_url, files, site):
     "Find site for given files"
     proxy_getdata = get_proxy()
     proxy_error = False
-    print "\n### proxy_getdata", proxy_getdata
+#    print "\n### proxy_getdata", proxy_getdata
     if  not proxy_getdata:
         return # plan B
     params = {}
