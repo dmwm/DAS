@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Add proxy_getdata to request data from external urlproxy server, ticket
+    3986; should be used to fetch data concurrently
+  - Add support for file dataset=/a/b/c run in [1,2,3] site=T2_CH_CERN, ticket
+    3982 (requires external urlproxy server, see 3986)
   - Split fakeDatasetSummary into fakeDatasetPattern and fakeDatasetSummary to
     support look-up of valid datasets for given pattern and any dataset info
     for givan dataset path; ticket 3990
