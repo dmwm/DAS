@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Add pyurlfetch client
   - Add proxy_getdata to request data from external urlproxy server, ticket
     3986; should be used to fetch data concurrently
   - Add support for file dataset=/a/b/c run in [1,2,3] site=T2_CH_CERN, ticket
