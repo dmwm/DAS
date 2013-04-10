@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Split fakeDatasetSummary into fakeDatasetPattern and fakeDatasetSummary to
+    support look-up of valid datasets for given pattern and any dataset info
+    for givan dataset path; ticket 3990
   - Add draft code to accommodate file dataset=/a/b/c run in [1,2,3] site=X
     query (still under development)
   - Add url_proxy module which can work with pyurlfecth or Go proxy server
