@@ -350,7 +350,7 @@ class DBSService(DASAbstractService):
                 kwds['query'] = "find file.name where %s" % cond[4:]
             else:
                 kwds['query'] = 'required'
-        if  api == 'fakeDatasetSummary':
+        if  api == 'fakeDatasetSummary' or api == 'fakeDatasetPattern':
             value = ""
             path = False
             for key, val in kwds.iteritems():
@@ -369,11 +369,12 @@ class DBSService(DASAbstractService):
                     value += ' and phygrp=%s' % val
                 if  key == 'datatype' and val:
                     value += ' and datatype=%s' % val
-                if  key == 'status':
-                    if  val:
-                        value += ' and dataset.status=%s' % val.upper()
-                    else:
-                        value += ' and dataset.status like VALID*'
+                if  api == 'fakeDatasetPattern':
+                    if  key == 'status':
+                        if  val:
+                            value += ' and dataset.status=%s' % val.upper()
+                        else:
+                            value += ' and dataset.status like VALID*'
             keys = ['dataset', 'release', 'primary_dataset', 'tier', \
                 'phygrp', 'datatype', 'status']
             for key in keys:
@@ -549,6 +550,8 @@ class DBSService(DASAbstractService):
         elif  api == 'fakeListDataset4File':
             prim_key = 'dataset'
         elif  api == 'fakeListDatasetbyDate':
+            prim_key = 'dataset'
+        elif  api == 'fakeDatasetPattern':
             prim_key = 'dataset'
         elif  api == 'fakeDatasetSummary':
             prim_key = 'dataset'

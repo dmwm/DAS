@@ -149,17 +149,37 @@ das_map : [
 ]
 ---
 # please note this API can accept dataset patterns
-urn : fakeDatasetSummary
+urn : fakeDatasetPattern
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
      "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"required",
-     "dataset":"", "primary_dataset":"", "release":"", "tier":"", 
+     "dataset":"", "primary_dataset":"", "release":"", "tier":"",
      "phygrp":"", "datatype":"", "status":""
 }
 lookup: dataset
 das_map: [
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key":"primary_dataset", "rec_key":"primary_dataset.name", "api_arg":"primary_dataset"},
+    {"das_key":"release", "rec_key":"release.name", "api_arg": "release", "pattern":"CMSSW_.*"},
+    {"das_key":"tier", "rec_key":"tier.name", "api_arg": "tier", "pattern":".*[A-Z].*"},
+    {"das_key":"group", "rec_key":"group.name", "api_arg": "phygrp"},
+    {"das_key":"datatype", "rec_key":"datatype.name", "api_arg":"datatype"},
+    {"das_key":"status", "rec_key":"status.name", "api_arg":"status"},
+]
+---
+urn : fakeDatasetSummary
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+expire : 3600
+params : {
+     "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"required",
+     "dataset":"", "primary_dataset":"", "release":"", "tier":"",
+     "phygrp":"", "datatype":"", "status":""
+}
+lookup: dataset
+das_map: [
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
     {"das_key":"primary_dataset", "rec_key":"primary_dataset.name", "api_arg":"primary_dataset"},
     {"das_key":"release", "rec_key":"release.name", "api_arg": "release", "pattern":"CMSSW_.*"},
     {"das_key":"tier", "rec_key":"tier.name", "api_arg": "tier", "pattern":".*[A-Z].*"},
