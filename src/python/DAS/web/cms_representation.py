@@ -165,7 +165,11 @@ def adjust_values(func, gen, links, pkey):
                         % (link, quote(val), quote(val))
             if  isinstance(val, list):
                 value = ', '.join([str(v) for v in val])
-                if  len(set(val)) > 1 and \
+                try:
+                    length = len(set(val))
+                except TypeError: # happens when val list contains a dict
+                    length = len(val)
+                if  length > 1 and \
                     (key.lower().find('number') != -1 or \
                         key.lower().find('size') != -1):
                     if  pkey != 'lumi.number':
