@@ -357,7 +357,7 @@ user    : [
         {"das":"user.phone2", "ui":"Alternative Phone"},
         ],
 status: [
-        {"das":"status", "ui":"Status", "link":[],
+        {"das":"status.name", "ui":"Status", "link":[],
          "description":"is a special DAS key to specify dataset status information",
          "examples":[
          "dataset status=valid",
