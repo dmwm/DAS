@@ -7,6 +7,12 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Add support for block dataset run in/between [1,2] query, ticket 3974
+  - Apply file.name index to allow MongoDB to sort the files, ticket 3988
+    this is required in rare case when number of files is very large and
+    MongoDB give up on sorting without the index. I may apply similar index on
+    block as well since their number in dataset can be large as well.
+  - Add constrain on block name for lumi block=/a/b/c#123 queries, ticket 3977
   - Add pyurlfetch client
   - Add proxy_getdata to request data from external urlproxy server, ticket
     3986; should be used to fetch data concurrently
