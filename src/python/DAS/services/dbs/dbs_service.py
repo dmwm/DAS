@@ -232,10 +232,28 @@ class DBSService(DASAbstractService):
             kwds['query'] = query
         if  api == 'fakeBlock4DatasetRun':
             dataset = kwds.get('dataset', 'required')
-            run = kwds.get('run', 'required')
-            if  dataset != 'required' and run != 'required':
-                kwds['query'] = 'find block.name where dataset=%s and run=%s'\
-                        % (dataset, run)
+            if  dataset != 'required':
+                kwds['query'] = 'find block.name where dataset=%s'\
+                        % dataset
+            else:
+                kwds['query'] = 'required'
+            val = kwds.get('run', 'required')
+            if  val != 'required':
+                if  isinstance(val, dict):
+                    min_run = 0
+                    max_run = 0
+                    if  val.has_key('$lte'):
+                        max_run = val['$lte']
+                    if  val.has_key('$gte'):
+                        min_run = val['$gte']
+                    if  min_run and max_run:
+                        val = "run >=%s and run <= %s" % (min_run, max_run)
+                    elif val.has_key('$in'):
+                        val = ' or '.join(['run=%s' % r for r in val['$in']])
+                        val = '(%s)' % val
+                elif isinstance(val, int):
+                    val = "run = %d" % val
+                kwds['query'] += ' and ' + val
             else:
                 kwds['query'] = 'required'
         if  api == 'summary4run':
