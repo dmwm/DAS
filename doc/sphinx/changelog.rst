@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Allow user to get DBS file into regardless of its status, ticket 3992
   - Add indexes for file.name,dataset.name.block.name and run.run_number in DAS
     cache collection to prevent error on sorting entities
   - Add support for block dataset run in/between [1,2] query, ticket 3974
