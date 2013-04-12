@@ -204,7 +204,11 @@ class DASMongocache(object):
             # ensure that we have the following indexes
             index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
                           ('das.system', ASCENDING),
-                          ('qhash', DESCENDING), ('file.name', DESCENDING),
+                          ('qhash', DESCENDING),
+                          ('file.name', DESCENDING),
+                          ('dataset.name', DESCENDING),
+                          ('block.name', DESCENDING),
+                          ('run.run_number', DESCENDING),
                           ('das.empty_record', ASCENDING)]
             create_indexes(self.col, index_list)
             index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
