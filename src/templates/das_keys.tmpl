@@ -26,7 +26,7 @@ $name via query: $query.replace("%s", $val)
 </ul>
 #end if
 
-#set examples=$row["examples"]
+#set examples=$row.get("examples", [])
 #if $examples
 <br/>
 Examples:
