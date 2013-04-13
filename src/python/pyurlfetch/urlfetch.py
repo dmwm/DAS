@@ -187,24 +187,28 @@ class URLFetchClient(object):
         else:
             self._socket.send(command("GET_RESULT", fid))
 
-        while True:
-            data = self._socket.recv(MAX_CHUNK_SIZE)
+        try:
+            while True:
+                data = self._socket.recv(MAX_CHUNK_SIZE)
 
-            if not body and data:
-                status_code = read_int4(data[:4])
-                data = data[4:]
+                if not body and data:
+                    status_code = read_int4(data[:4])
+                    data = data[4:]
 
-            if not data or data in (NOT_FOUND,):
-                raise DownloadError
-            elif data.endswith(TERMINATOR):
-                body += data[:-len(TERMINATOR)]
-                break
+                if not data or data in (NOT_FOUND,):
+                    raise DownloadError("Fail to get data")
+                elif data.endswith(TERMINATOR):
+                    body += data[:-len(TERMINATOR)]
+                    break
 
-            body += data
+                body += data
+        except Exception as err:
+            msg = "Fail to receive data from server, error=%s" % str(err)
+            raise Exception(msg)
 
         try:
             headers, body = body.split('\n\n', 1)
         except ValueError:      # pragma: no cover
-            raise DownloadError
+            raise DownloadError("Fail to parse headers")
 
         return (status_code, body, decode_headers(headers))
