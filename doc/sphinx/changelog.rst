@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Add preliminary support for file block=/a/b/c#123 runs site
+    query (must have urlfetch proxy)
   - Allow user to get DBS file into regardless of its status, ticket 3992
   - Add indexes for file.name,dataset.name.block.name and run.run_number in DAS
     cache collection to prevent error on sorting entities
