@@ -331,7 +331,8 @@ class CombinedService(DASAbstractService):
                     'error':msg, 'dataset_fraction': 'N/A',
                     'block_fraction':'N/A', 'block_completion':'N/A'}, 'error': msg}
                 yield row
-        if  api == 'files4dataset_runs_site':
+        if  api == 'files4dataset_runs_site' or \
+            api == 'files4block_runs_site':
             run_value = args.get('run')
             if  isinstance(run_value, dict) and run_value.has_key('$in'):
                 runs = run_value['$in']

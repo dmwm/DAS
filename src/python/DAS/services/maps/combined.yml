@@ -67,3 +67,18 @@ das_map : [
     {"das_key":"site", "rec_key":"site.name", "api_arg":"site", "pattern":"^T[0-3]_"},
     {"das_key":"site", "rec_key":"site.se", "api_arg":"site", "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
 ]
+---
+urn : files4block_runs_site
+url : "http://localhost:8212/dbs_phedex"
+format : JSON
+expire : 3600
+params : {"block":"required", "run": "required", "site": "required"}
+lookup : file
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"site", "rec_key":"site.name", "api_arg":"site", "pattern":"^T[0-3]_"},
+    {"das_key":"site", "rec_key":"site.se", "api_arg":"site", "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
+]
