@@ -2026,6 +2026,7 @@ decreasing score: full match, partial match, and matches of keywords containing
 
 \begin_layout Itemize
 
+\color red
 \lang british
 If keyword's value matches a regular expression, but is not contained in
  the known values list and the accepted values of the given field are considered
@@ -2125,6 +2126,7 @@ Relationships between keywords:
 \begin_deeper
 \begin_layout Itemize
 
+\color red
 \lang british
 promoting such combinations where nearby keywords refer to related schema
  terms (e.g.
@@ -2133,6 +2135,7 @@ promoting such combinations where nearby keywords refer to related schema
 
 \begin_layout Itemize
 
+\color red
 \lang british
 balance between taking the keyword or leaving it out (the one that we are
  unsure about) 
@@ -2140,13 +2143,11 @@ balance between taking the keyword or leaving it out (the one that we are
 
 \begin_layout Itemize
 
-\color black
+\color red
 \lang british
 boost important keywords (different parts of speech are of different importance,
  e.g.
- stop-words are less useful than nouns
-\color blue
-)
+ stop-words are less useful than nouns)
 \end_layout
 
 \end_deeper
@@ -2159,6 +2160,7 @@ Qualities of Data Integration System:
 \begin_deeper
 \begin_layout Itemize
 
+\color red
 \lang british
 promote data service inputs over filters on their results: 1) it is more
  efficient, especially when this is possible; 2) there are much more of
@@ -2168,6 +2170,7 @@ promote data service inputs over filters on their results: 1) it is more
 
 \begin_layout Itemize
 
+\color red
 \lang british
 if some keyword can be matched as the requested entity, and mapping of other
  keywords fits the service constraints
@@ -2175,6 +2178,7 @@ if some keyword can be matched as the requested entity, and mapping of other
 
 \begin_layout Itemize
 
+\color red
 \lang british
 if requested entity and a filter condition is the same (a small increase,
  a common use-case is retrieving an entity given it's 
@@ -2190,6 +2194,7 @@ primary key
 
 \begin_layout Itemize
 
+\color red
 \lang british
 for being able to execute the query, the service constraints must be satisfied;
  still it could useful to the interpretations that achieve high rank, even
@@ -2509,17 +2514,12 @@ name "fig:prototype-of-auto-completion-kws"
 
 \end_layout
 
-\begin_layout Standard
-an interesting feature of this is, it could seamlessly provide feedback
- for:
+\begin_layout Itemize
+autocompletion can be combined with keyword-search to obtain improved results
 \end_layout
 
 \begin_layout Itemize
-entity matching techniques
-\end_layout
-
-\begin_layout Itemize
-(or even keyword search itself)
+it could seamlessly provide feedback for improving system components
 \end_layout
 
 \begin_layout BeginFrame
@@ -2528,6 +2528,7 @@ Using the feedback for self-improvement
 
 \begin_layout Standard
 
+\color red
 \lang british
 First, the implicit feedback from auto-completion could be useful for evaluating
  and improving the quality of the entity matching (learned edit-distance
@@ -2542,6 +2543,7 @@ First, the implicit feedback from auto-completion could be useful for evaluating
 
 \begin_layout Standard
 
+\color red
 \lang british
 Also users implicit feedback (clicking on the link), could be useful, however
  it is of limited quality (the user may click on it just for figuring out
@@ -2555,6 +2557,7 @@ Also users implicit feedback (clicking on the link), could be useful, however
 
 \begin_layout Standard
 
+\color red
 \lang british
 Additional problem is that what was so far modelled by the sequential machine
  learning algorithms, such as HMM, was not directly the structured query,
@@ -2565,6 +2568,7 @@ query configurations.
 
 \begin_layout Standard
 
+\color red
 \lang british
 This may make the semi-explicit user feedback of lower quality, and we propose
  that this may need additional investigation:
@@ -2572,6 +2576,7 @@ This may make the semi-explicit user feedback of lower quality, and we propose
 
 \begin_layout Itemize
 
+\color red
 \lang british
 that is the correspondences between the keywords and their 
 \begin_inset Quotes eld
@@ -2587,6 +2592,7 @@ meanings
 
 \begin_layout Itemize
 
+\color red
 \lang british
 the quality of the feedback could also depend on the false positives of
  the earlier mappings (while working on the system, we have seen that it
