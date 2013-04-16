@@ -944,7 +944,23 @@ also generates SQL suggestions
 
 \begin_deeper
 \begin_layout Itemize
-uses Hidden Markov Model (HMM) as first step
+uses 
+\emph on
+Hidden Markov Model
+\emph default
+ (HMM) with 
+\emph on
+List Viterbi
+\emph default
+ as first step
+\end_layout
+
+\begin_layout Itemize
+HMM can be estimated from heuristics
+\end_layout
+
+\begin_layout Itemize
+later supervised and unsupervised learning can be used
 \end_layout
 
 \end_deeper
