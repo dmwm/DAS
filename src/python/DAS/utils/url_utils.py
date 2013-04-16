@@ -259,28 +259,29 @@ def close(stream):
 def get_proxy():
     "Test if proxy_getdata is loadable and return proxy function or False"
     try:
-        from pyurlfetch.urlfetch import DownloadError, URLFetchClient
-        func = proxy_getdata
-        return func
-    except ImportError:
-        return False
+        result = [r for r in urlfetch_proxy([])]
+    except Exception as _exc:
+        result = []
+    if  len(result) == 1 and result[0] == {'ping':'pong'}:
+        return urlfetch_proxy
+    print "\n### No UrlFecth Proxy Server"
+    return False
 
-def proxy_getdata(urls):
-    """
-    Get data for given set of URLs using urlfetch proxy. This method works
-    for GET HTTP requests and all URLs will be passed as is to the urlfetcher
-    proxy. Client should take care of proper encoding.
-    """
-    if  not urls:
-        return
-    from pyurlfetch.urlfetch import DownloadError, URLFetchClient
-    client  = URLFetchClient()
-    fetches = (client.start_fetch(u) for u in urls)
-    for fid in fetches:
-        try:
-            code, response, _headers = client.get_result(fid)
-            if  code == 200:
-                yield response
-        except DownloadError as err:
-            raise Exception('urlfetch download error=%s' % str(err))
-    client.close()
+def urlfetch_proxy(urls):
+    "Proxy client for Go proxy server"
+    params = {'urls': '\n'.join(urls)}
+    encoded_data = urllib.urlencode(params)
+    server = "http://localhost:8215/fetch"
+    req = urllib2.Request(server)
+    data = urllib2.urlopen(req, encoded_data)
+    code = data.getcode()
+    if  code == 200:
+        if  not urls: # ping request
+            yield {'ping':'pong'}
+        else:
+            for row in data.readlines():
+                rec = json.loads(row)
+                for line in rec['data'].split('\n'):
+                    yield line
+    else:
+        yield {'error':'Fail to contact UrlFetch proxy server', 'code':code}
