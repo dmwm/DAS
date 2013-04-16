@@ -2569,18 +2569,20 @@ most of performance problems may be deep in underlying services...
 
 \begin_layout Itemize
 
-\lang british
-the system is going to be further supported
-\end_layout
-
-\begin_layout Itemize
-
 \color red
 \lang british
 this will contribute to improve the overall efficiency of the physics analysis
  program by the CMS Collaboration
 \end_layout
 
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+the system is going to be further supported
+\end_layout
+
+\end_deeper
 \end_deeper
 \begin_layout BeginFrame
 Future work
