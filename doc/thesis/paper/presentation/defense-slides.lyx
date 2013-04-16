@@ -833,7 +833,11 @@ Task:
 \begin_inset Formula $kw_{i}\in KWQ$
 \end_inset
 
- as: 
+ as 
+\emph on
+part of structured query
+\emph default
+: 
 \end_layout
 
 \begin_layout Itemize
@@ -892,7 +896,7 @@ Nature of Keyword queries:
 \begin_layout Itemize
 ambiguous: 
 \emph on
-structured queries
+propose structured queries
 \emph default
  
 \emph on
@@ -917,9 +921,7 @@ Keyword Search over EII
 
 \begin_deeper
 \begin_layout Enumerate
-KEYMANTIC - 
-\color red
-generates SQL suggestions from keyword query
+KEYMANTIC - generates SQL suggestions
 \end_layout
 
 \begin_deeper
@@ -937,22 +939,28 @@ cover
 
 \end_deeper
 \begin_layout Enumerate
-KEYRY - 
-\color red
-also generates SQL suggestions
+KEYRY - same but uses 
+\emph on
+Hidden Markov Model
+\emph default
+ (HMM)
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-uses 
-\emph on
-Hidden Markov Model
-\emph default
- (HMM) with 
+
 \emph on
 List Viterbi
 \emph default
- as first step
+ gives 
+\begin_inset Quotes eld
+\end_inset
+
+tagging
+\begin_inset Quotes erd
+\end_inset
+
+ of keywords, which is interpreted into SQL
 \end_layout
 
 \begin_layout Itemize
@@ -978,7 +986,7 @@ status open
 
 {
 \backslash
-color{darkgrey}SeCo - Natural Language to compose services}
+color{darkgrey}SeCo - Natural Language open-domain queries to compose services}
 \end_layout
 
 \end_inset
@@ -986,10 +994,27 @@ color{darkgrey}SeCo - Natural Language to compose services}
 
 \end_layout
 
-\begin_layout Enumerate
+\begin_deeper
+\begin_layout Itemize
+we focus on closed-domain; both plain keywords and sentences shall work
+\end_layout
 
+\end_deeper
+\begin_layout Enumerate
+lots of works on: 
+\emph on
+Question Answering
+\emph default
+ (e.g.
+ IBM Watson) and 
+\emph on
+Natural Language Processing, Entity Matching, Keyword Search in Structured
+ Databases
+\emph default
 \color red
-SODA - SQL suggestions over large data-warehouse; rely on metadata ontology
+ (e.g.
+ SODA@ETHZ - SQL suggestions over large data-warehouse; rely on large metadata
+ ontology)
 \end_layout
 
 \end_deeper
@@ -1043,7 +1068,7 @@ no direct access to the data:
 
 \begin_deeper
 \begin_layout Itemize
-need bootstrapping values lists (available only for some fields)
+need bootstrapping values listings (available only for some fields)
 \end_layout
 
 \begin_layout Itemize
@@ -1063,6 +1088,32 @@ bootstrap list of fields through queries and maintain it...
 \begin_layout Itemize
 some field names are unclean (coming directly from XML, JSON responses)
  
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\color magenta
+unexpected challenges/issues with project realization:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+lack of concise terminology in the field
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+the area is not so actively researched
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+thus significant effort was needed to choose a 
+\emph on
+precise topic to focus on
 \end_layout
 
 \end_deeper
@@ -1337,7 +1388,7 @@ Query processing
 \end_layout
 
 \begin_layout BeginFrame
-Example query processing
+Example of query processing
 \end_layout
 
 \begin_layout Standard
@@ -2017,9 +2068,8 @@ Relationships between keywords:
 \begin_deeper
 \begin_layout Itemize
 
-\color red
 \lang british
-promote if nearby keywords refer to related schema terms (e.g.
+nearby keywords refer to related terms (e.g.
  entity name and it's value)
 \begin_inset Note Note
 status open
@@ -2052,15 +2102,6 @@ balance between taking the keyword or leaving it out (the one that we are
 
 \begin_layout Itemize
 
-\color red
-\lang british
-boost important keywords
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\color red
 \lang british
 parts of speech of different importances, e.g.
  stop-words vs.
@@ -2071,21 +2112,20 @@ parts of speech of different importances, e.g.
 
 \lang british
 keyword's position (e.g.
- expect result type in beginning [focus extraction]) 
+ result type in beginning [focus extraction]) 
 \end_layout
 
-\end_deeper
 \end_deeper
 \begin_layout Itemize
 
 \lang british
-Qualities of Data Integration System:
+Qualities of EII system:
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
 
-\color red
+\color blue
 \lang british
 promote 
 \emph on
@@ -2099,30 +2139,15 @@ filters on their results
 \begin_deeper
 \begin_layout Itemize
 
-\color red
+\color blue
 \lang british
-it is more efficient, if possible
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-\lang british
-more choices, so more false matches
+it is more efficient, if possible; less false matches
 \end_layout
 
 \end_deeper
 \begin_layout Itemize
 
-\color red
-\lang british
-if some keyword can be matched as the requested entity, and mapping of other
- keywords fits the service constraints
-\end_layout
-
-\begin_layout Itemize
-
-\color red
+\color blue
 \lang british
 common use-case: retrieve an entity given it's 
 \begin_inset Quotes eld
@@ -2132,24 +2157,38 @@ primary key
 \begin_inset Quotes erd
 \end_inset
 
- or wildcard on it
+ (or wildcard)
 \end_layout
 
 \begin_layout Itemize
 
-\color red
+\color blue
 \lang british
-to execute the query, service constraints must be satisfied
+service constraints must be satisfied
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
 
-\color red
+\lang british
+assumption: services directly cover most of requests
+\end_layout
+
+\begin_layout Itemize
+
+\color blue
 \lang british
 could useful to show the interpretations that achieve high rank, even if
  they do not satisfy some constraints (e.g.
  a mandatory filter is missing)
+\end_layout
+
+\begin_layout Itemize
+
+\color blue
+\lang british
+if some keyword can be matched as the requested entity, and mapping of other
+ keywords fits the service constraints
 \end_layout
 
 \end_deeper
@@ -2379,91 +2418,87 @@ Using the feedback for self-improvement
 
 \begin_layout Standard
 
-\color red
+\series bold
 \lang british
-First, the implicit feedback from auto-completion could be useful for evaluating
- and improving the quality of the entity matching (learned edit-distance
- metrics, updating the weights of different matching metrics).
- Second, the user's selections in auto-completion fields could serve as
- training data for machine learning-based algorithms (and it is of better
- quality because user is selecting autocompleted values for separate terms),
- however it is important to gather sufficiently large sets of high quality
- feedback, to avoid over-fitting the machine learning models.
- 
+Implicit feedback from auto-completion
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+improving entity matching (e.g.
+ learned edit-distance)
 \end_layout
 
 \begin_layout Standard
 
-\color red
+\series bold
 \lang british
-Also users implicit feedback (clicking on the link), could be useful, however
- it is of limited quality (the user may click on it just for figuring out
- what the query returns even if it was not directly related with his information
- needs expressed as the the input keywords).
- An alternative to this could be asking users if the result was what they
- were asking for, when they see the results of actual structure query (this
- could be a little bit overwhelming, but looks quite optimal).
- 
+Users implicit feedback (clicking on the link)
 \end_layout
 
-\begin_layout Standard
+\begin_layout Itemize
+
+\lang british
+limited feedback quality - user may click on non-related query
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+ask user to confirm if the final result was the intended one
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
 
 \color red
 \lang british
-Additional problem is that what was so far modelled by the sequential machine
- learning algorithms, such as HMM, was not directly the structured query,
- however the 
+sequential ML algorithms, such as HMM, so far modelled not directly the
+ structured query, but 
 \emph on
-query configurations.
+labelling of keywords in query
+\emph default
+.
+ we propose to investigate if these could degrade the semi-explicit feedback:
 \end_layout
 
-\begin_layout Standard
+\begin_deeper
+\begin_layout Enumerate
 
 \color red
 \lang british
-This may make the semi-explicit user feedback of lower quality, and we propose
- that this may need additional investigation:
+multiple ways to be convert the labelling into structured query: better
+ implicit feedback from autocompletion: we get direct feedback - selections
+ are for separate terms, not for the query as whole, which is not being
+ modelled
 \end_layout
 
-\begin_layout Itemize
+\begin_layout Enumerate
 
 \color red
 \lang british
-that is the correspondences between the keywords and their 
-\begin_inset Quotes eld
-\end_inset
-
-meanings
-\begin_inset Quotes erd
-\end_inset
-
- as schema or value terms, which still has multiple ways to be converted
- into structured query.
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-\lang british
-the quality of the feedback could also depend on the false positives of
- the earlier mappings (while working on the system, we have seen that it
- is possible for a false matching from a keyword to an entity to result
- in a correct result!), and that may potentially impact the machine learning.
- 
-\begin_inset Note Note
-status open
+feedback could depend on the false positives of the earlier mappings
+\begin_inset Foot
+status collapsed
 
 \begin_layout Plain Layout
 
+\color red
 \lang british
-Some methods to go around this could include 
+we seen that it is possible for a false matching to result in a correct
+ result! this was more prevalent on ambiguous matching methods, e.g.
+ regexps
 \end_layout
 
 \end_inset
 
-
+, and that may potentially impact the machine learning.
+ 
 \end_layout
 
+\end_deeper
 \begin_layout Section
 Conclusions & Future work
 \end_layout
@@ -2700,7 +2735,8 @@ Data integration war-stories
 \end_inset
 
 
-\end_layout
+\begin_inset Note Note
+status collapsed
 
 \begin_layout BeginFrame
 Closely related works
@@ -2853,7 +2889,7 @@ key "bergamaschi2011hidden"
 
 \end_deeper
 \end_deeper
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \lang british
 \begin_inset Note Note
@@ -2879,6 +2915,11 @@ status open
 
 \backslash
 BackupSlide
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -3042,6 +3083,287 @@ value{finalframe}}
 \end_layout
 
 \begin_layout BeginFrame
+Project deliverables
+\end_layout
+
+\begin_layout Enumerate
+
+\lang british
+keyword search engine and related components 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+color{darkgrey}
+\end_layout
+
+\end_inset
+
+implementation of entity matching techniques & heuristics
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+code for bootstrapping of: 1) allowed values, 2) fields in service results
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+tuning the system's parameters
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+prototype of advanced auto-completion input widget
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+slight relaxation of DASQL: prototype of 
+\begin_inset Quotes eld
+\end_inset
+
+simple service orchestration
+\begin_inset Quotes erd
+\end_inset
+
+ even then the existing fields are not known in advance - gives more power
+ and simplifies the keyword search
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+
+\lang british
+log analysis and data service performance benchmarking at CMS
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+proposed solutions for data service providers
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+
+\lang british
+user surveys, presentations and tutorials at the CMS Collaboration
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+constant cooperation with a selected group of ~5+ users for feedback
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+
+\lang british
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\lang british
+\begin_inset CommandInset href
+LatexCommand href
+name "https://github.com/vidma/DAS"
+target "https://github.com/vidma/DAS"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+BackupSlide
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+
+\series bold
+\lang british
+Project priorities and constraints
+\end_layout
+
+\begin_layout Standard
+
+\color red
+\lang british
+Due to the constraints on the project duration, a number of items had to
+ be excluded from the implementation: 
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+\lang british
+question answering approaches with deep language processing
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+\lang british
+complex service orchestration (feeding of outputs into inputs of other services)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\color red
+\lang british
+not directly supported by the EII system
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+\lang british
+the service performance is not adequate for this
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+\lang british
+this due to issues with data service performance and unavailability of basic
+ capabilities such as pagination or sorting of their results; we do not
+ control the data services, so a number of suggestions for the providers
+ have been proposed (see appendix 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:cms-Performance-Issues"
+
+\end_inset
+
+); second, these improvements would take a considerable effort to be implemented
+, pushing this far beyond the scope of this project
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\color red
+\lang british
+the performance is of lower priority
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\color red
+\lang british
+end user's perceived performance is still dominated by services taking minutes
+ to respond
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+\lang british
+performance was already covered by the earlier works.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\color magenta
+\lang british
+The approaches below are useful then there is no possibility to index the
+ data terms, e.g.
+ then a DB is behind a wrapper (e.g.
+ accessible only through a 
+\emph on
+Web form
+\emph default
+ in “Hidden Web” or a 
+\emph on
+web-service
+\emph default
+) then crawling is generally not possible.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+
+\lang british
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\lang british
+TODO: BACKUP!?
+\end_layout
+
+\end_inset
+
+
+\lang english
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+BackupSlide
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
 Tuning the scoring parameters
 \end_layout
 
@@ -3171,238 +3493,6 @@ BackupSlide
 
 \begin_layout BeginFrame
 Data integration war-stories: Dataservice Performance
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-BackupSlide
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout BeginFrame
-
-\series bold
-\lang british
-Project priorities and constraints
-\end_layout
-
-\begin_layout Standard
-
-\color red
-\lang british
-Due to the constraints on the project duration, a number of items had to
- be excluded from the implementation: question answering approaches with
- deep language processing; complex service orchestration (feeding of outputs
- into inputs of other services, which is anyway not directly supported by
- the EII system and the service performance is not adequate for this
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-
-\color red
-\lang british
-this due to issues with data service performance and unavailability of basic
- capabilities such as pagination or sorting of their results; we do not
- control the data services, so a number of suggestions for the providers
- have been proposed (see appendix 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sub:cms-Performance-Issues"
-
-\end_inset
-
-); second, these improvements would take a considerable effort to be implemented
-, pushing this far beyond the scope of this project
-\end_layout
-
-\end_inset
-
-); and lastly the performance is of lower priority, as the end user's perceived
- performance is still dominated by services taking minutes to respond, and
- the performance was already covered by the earlier works.
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-
-\color magenta
-\lang british
-The approaches below are useful then there is no possibility to index the
- data terms, e.g.
- then a DB is behind a wrapper (e.g.
- accessible only through a 
-\emph on
-Web form
-\emph default
- in “Hidden Web” or a 
-\emph on
-web-service
-\emph default
-) then crawling is generally not possible.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\lang british
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\series bold
-\lang british
-TODO: BACKUP!?
-\end_layout
-
-\end_inset
-
-
-\lang english
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-BackupSlide
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout BeginFrame
-List of project deliverables
-\end_layout
-
-\begin_layout Enumerate
-
-\lang british
-keyword search engine and related components 
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\lang british
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-color{darkgrey}
-\end_layout
-
-\end_inset
-
-implementation of entity matching techniques & heuristics
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-code for bootstrapping of: 1) allowed values, 2) fields in service results
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-tuning the system's parameters
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-prototype of advanced auto-completion input widget
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-slight relaxation of DASQL: prototype of 
-\begin_inset Quotes eld
-\end_inset
-
-simple service orchestration
-\begin_inset Quotes erd
-\end_inset
-
- even then the existing fields are not known in advance - gives more power
- and simplifies the keyword search
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-
-\lang british
-log analysis and data service performance benchmarking at CMS
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\lang british
-proposed solutions for data service providers
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-
-\lang british
-user surveys, presentations and tutorials at the CMS Collaboration
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\lang british
-constant cooperation with a selected group of ~5+ users for feedback
-\end_layout
-
-\end_deeper
-\begin_layout Standard
-
-\lang british
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\lang british
-\begin_inset CommandInset href
-LatexCommand href
-name "https://github.com/vidma/DAS"
-target "https://github.com/vidma/DAS"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
