@@ -974,6 +974,18 @@ later supervised and unsupervised learning can be used
 \end_deeper
 \end_deeper
 \begin_layout Itemize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+color{darkgrey}
+\end_layout
+
+\end_inset
+
 Farther works:
 \end_layout
 
@@ -996,25 +1008,57 @@ color{darkgrey}SeCo - Natural Language open-domain queries to compose services}
 
 \begin_deeper
 \begin_layout Itemize
-we focus on closed-domain; both plain keywords and sentences shall work
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+color{darkgrey}
+\end_layout
+
+\end_inset
+
+focus on closed-domain; both plain keywords and sentences shall work
 \end_layout
 
 \end_deeper
 \begin_layout Enumerate
-lots of works on: 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+color{darkgrey}
+\end_layout
+
+\end_inset
+
+
 \emph on
 Question Answering
 \emph default
- (e.g.
- IBM Watson) and 
+, 
 \emph on
 Natural Language Processing, Entity Matching, Keyword Search in Structured
  Databases
-\emph default
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
 \color red
  (e.g.
  SODA@ETHZ - SQL suggestions over large data-warehouse; rely on large metadata
  ontology)
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_deeper
