@@ -225,7 +225,7 @@ Supervised by:
 \end_inset
 
  dr.
- V.Kuztesov (Cornell), dr.
+ V.Kuznetsov (Cornell), dr.
  P.Kreuzer (CERN)
 \end_layout
 
@@ -465,15 +465,47 @@ lightweight
 \series bold
 virtual
 \series default
- integration (vs.
- data-warehousing
-\emph default
-, publish-subscribe)
+ integration 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\emph on
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+color{darkgrey}(vs.data-warehousing,publish-subscribe)}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+minimal requirements on services
 \end_layout
 
 \begin_layout Itemize
-usually queried with structured languages, e.g.
- SQL, YQL, etc
+vs.
+ more demanding data-warehousing, publish-subscribe
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+queried with structured languages, e.g.
+ SQL, YQL
 \emph on
 
 \begin_inset Note Note
@@ -503,7 +535,7 @@ operates on: services with inputs & outputs
 \end_layout
 
 \begin_layout Itemize
-growing # of sources and applications: corporate, governmental, mashups...
+growing # of datasources and applications:
 \end_layout
 
 \begin_deeper
@@ -511,7 +543,13 @@ growing # of sources and applications: corporate, governmental, mashups...
 
 \emph on
 e.g.
- Yahoo's YQL, Google Fusion Tables, ...
+ 
+\emph default
+corporate, governmental
+\emph on
+, Yahoo's YQL, 
+\emph default
+mashups, ...
 \end_layout
 
 \end_deeper
@@ -574,7 +612,7 @@ status open
 
 \begin_layout Plain Layout
 
-{Example query (in DASQL used at CMS, CERN)}
+{Example query (in DASQL)}
 \end_layout
 
 \end_inset
@@ -648,7 +686,7 @@ status open
 
 {
 \backslash
-textbf{The problem:} for users it is overwhelming to:}
+textbf{The problem:} it is overwhelming to:}
 \end_layout
 
 \end_inset
@@ -686,7 +724,7 @@ status open
 
 {
 \backslash
-textbf{Intuition:} Could 
+textbf{Intuition:} could 
 \backslash
 textit{Keyword Queries} solve it?}
 \end_layout
@@ -1138,7 +1176,7 @@ some field names are unclean (coming directly from XML, JSON responses)
 \begin_layout Itemize
 
 \color magenta
-unexpected challenges/issues with project realization:
+unexpected challenges during project realization:
 \end_layout
 
 \begin_deeper
@@ -1496,6 +1534,14 @@ Schema terms:
 \begin_inset Newline newline
 \end_inset
 
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
 datasets -> 0.9, schema: dataset
 \begin_inset Newline newline
 \end_inset
@@ -1515,8 +1561,24 @@ Schema terms (multi-word):
 \begin_inset Newline newline
 \end_inset
 
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
 'number of events>1000' ->
 \begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
 \end_inset
 
 
@@ -1555,8 +1617,24 @@ Schema terms (multi-word):
 \begin_inset space ~
 \end_inset
 
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
  0.93, pred: file.nevents>1000
 \begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
 \end_inset
 
 'dataset
@@ -1573,6 +1651,14 @@ project:
 
 dataset.size
 \begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
 \end_inset
 
 sizes -> 0.41, project:
@@ -1597,8 +1683,23 @@ Value terms:
 \family typewriter
 \size scriptsize
 \lang british
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
 RelVal -> 1.0, value: group=RelVal
 \begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
 \end_inset
 
 RelVal -> 0.7, value: dataset=*RelVal* 
@@ -1836,6 +1937,19 @@ d(w_{1},w_{2})=\begin{cases}
 \end_layout
 
 \begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+color{darkgrey}
+\end_layout
+
+\end_inset
+
+
 \begin_inset Formula $sdist(w_{1},w_{2})>0$
 \end_inset
 
@@ -1849,6 +1963,17 @@ d(w_{1},w_{2})=\begin{cases}
 
  are within very small string-edit distance (penalize transpositions, and
  changes in middle)
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1861,15 +1986,25 @@ Matching multi-word unclean schema terms
 \begin_layout Itemize
 
 \lang british
-some terms are non-informative --> 
+some terms are repeated -->
 \series bold
+ 
+\series default
 IDF needed
 \end_layout
 
 \begin_layout Itemize
 
 \lang british
-use Information Retrieval library (Whoosh) with BM25F scoring
+use IR library (
+\emph on
+whoosh
+\emph default
+) with 
+\emph on
+BM25F
+\emph default
+ scoring
 \end_layout
 
 \begin_layout Itemize
@@ -1894,7 +2029,14 @@ a field of an entity
 \begin_layout Itemize
 
 \lang british
-fully-qualified machine readable (e.g.
+\begin_inset Quotes eld
+\end_inset
+
+technical
+\begin_inset Quotes erd
+\end_inset
+
+ field name (e.g.
  block.replica.creation_time)
 \end_layout
 
@@ -1902,18 +2044,14 @@ fully-qualified machine readable (e.g.
 \begin_layout Itemize
 
 \lang british
-tokenized+stemmed (e.g.
- creation
-\color red
-_
-\color inherit
-time)
+child: stemmed (e.g.
+ creation time)
 \end_layout
 
 \begin_layout Itemize
 
 \lang british
-context - tokenized+stemmed parent (e.g.
+parents: stemmed (e.g.
  block; replica)
 \end_layout
 
@@ -1921,7 +2059,7 @@ context - tokenized+stemmed parent (e.g.
 \begin_layout Itemize
 
 \lang british
-human readable title, if any (e.g.
+title, if any: stemmed+stopword (e.g.
  
 \begin_inset Quotes eld
 \end_inset
@@ -1955,13 +2093,7 @@ Regular expression (regexp) can result in false positives:
 \begin_layout Itemize
 
 \lang british
-it do not guarantee that actual match exists as regexp can be loose
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-thus, regexp matches are scored lower than other methods
+regexp can be too loose
 \end_layout
 
 \begin_deeper
@@ -1973,6 +2105,12 @@ to reduce false positives: exclude regexp match if not in known values,
 \end_layout
 
 \end_deeper
+\begin_layout Itemize
+
+\lang british
+thus, regexp matches are scored lower than other methods
+\end_layout
+
 \end_deeper
 \begin_layout Itemize
 
@@ -1992,6 +2130,18 @@ these automatically bootstrapped
 \lang british
 assign decreasing score for: full match, partial match, and keywords with
  wildcards
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\lang british
+how are these diffrent from partial match? startswith?
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_deeper
@@ -2060,12 +2210,42 @@ score\_prob=\sum_{i=1}^{|KWQ|}\left({\displaystyle {\displaystyle \ln}\left(scor
 \begin_inset Formula $score(tag_{i}|kw_{i})$
 \end_inset
 
- ~ likelihood of 
+ - likelihood of 
 \begin_inset Formula $kw_{i}$
 \end_inset
 
  to be 
 \begin_inset Formula $tag_{i}$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+in score_prob 
+\begin_inset Formula $score(tag_{i}=unknown|kw_{i})$
+\end_inset
+
+ uses predefined 
+\begin_inset Formula $P(unknown)$
+\end_inset
+
+.
+\end_layout
+
 \end_inset
 
 
@@ -2103,13 +2283,12 @@ score\_prob=\sum_{i=1}^{|KWQ|}\left({\displaystyle {\displaystyle \ln}\left(scor
 Step 3: Answer candidate scoring: heuristics
 \end_layout
 
-\begin_layout Itemize
+\begin_layout Standard
 
 \lang british
-Relationships between keywords:
+Keywords:
 \end_layout
 
-\begin_deeper
 \begin_layout Itemize
 
 \lang british
@@ -2159,17 +2338,14 @@ keyword's position (e.g.
  result type in beginning [focus extraction]) 
 \end_layout
 
-\end_deeper
-\begin_layout Itemize
+\begin_layout Standard
 
 \lang british
 Qualities of EII system:
 \end_layout
 
-\begin_deeper
 \begin_layout Itemize
 
-\color blue
 \lang british
 promote 
 \emph on
@@ -2178,20 +2354,25 @@ dataservice inputs
  over 
 \emph on
 filters on their results
-\end_layout
+\emph default
+ 
+\begin_inset Note Note
+status open
 
-\begin_deeper
-\begin_layout Itemize
+\begin_layout Plain Layout
 
 \color blue
 \lang british
 it is more efficient, if possible; less false matches
 \end_layout
 
-\end_deeper
+\end_inset
+
+
+\end_layout
+
 \begin_layout Itemize
 
-\color blue
 \lang british
 common use-case: retrieve an entity given it's 
 \begin_inset Quotes eld
@@ -2201,23 +2382,28 @@ primary key
 \begin_inset Quotes erd
 \end_inset
 
- (or wildcard)
+
 \end_layout
 
 \begin_layout Itemize
 
-\color blue
 \lang british
-service constraints must be satisfied
-\end_layout
+service constraints have to be satisfied 
+\begin_inset Note Note
+status open
 
-\begin_deeper
-\begin_layout Itemize
+\begin_layout Plain Layout
 
 \lang british
 assumption: services directly cover most of requests
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
 \begin_layout Itemize
 
 \color blue
@@ -2235,7 +2421,6 @@ if some keyword can be matched as the requested entity, and mapping of other
  keywords fits the service constraints
 \end_layout
 
-\end_deeper
 \end_deeper
 \begin_layout BeginFrame
 Evaluation: Accuracy
@@ -2447,102 +2632,26 @@ name "fig:prototype-of-auto-completion-kws"
 \end_layout
 
 \begin_layout Itemize
-autocompletion can be combined with keyword-search to obtain improved results
+can be combined with keyword-search
 \end_layout
 
 \begin_layout Itemize
-it could seamlessly provide feedback for improving system components
-\end_layout
-
-\begin_layout BeginFrame
-Using the feedback for self-improvement 
-\color red
-(As Backup ???)
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-\lang british
-Implicit feedback from auto-completion
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-improving entity matching (e.g.
- learned edit-distance)
-\end_layout
-
-\begin_layout Standard
-
-\series bold
-\lang british
-Users implicit feedback (clicking on the link)
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-limited feedback quality - user may click on non-related query
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\lang british
-ask user to confirm if the final result was the intended one
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\color red
-\lang british
-sequential ML algorithms, such as HMM, so far modelled not directly the
- structured query, but 
-\emph on
-labelling of keywords in query
-\emph default
-.
- we propose to investigate if these could degrade the semi-explicit feedback:
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-
-\color red
-\lang british
-multiple ways to be convert the labelling into structured query: better
- implicit feedback from autocompletion: we get direct feedback - selections
- are for separate terms, not for the query as whole, which is not being
- modelled
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-feedback could depend on the false positives of the earlier mappings
-\begin_inset Foot
-status collapsed
+seamless feedback for improving system components 
+\begin_inset ERT
+status open
 
 \begin_layout Plain Layout
 
-\color red
-\lang british
-we seen that it is possible for a false matching to result in a correct
- result! this was more prevalent on ambiguous matching methods, e.g.
- regexps
+{
+\backslash
+color{darkgrey}(backup slides)}
 \end_layout
 
 \end_inset
 
-, and that may potentially impact the machine learning.
- 
+
 \end_layout
 
-\end_deeper
 \begin_layout Section
 Conclusions & Future work
 \end_layout
@@ -2622,7 +2731,7 @@ pause
 \begin_layout Itemize
 discussed a real-world case and 
 \color red
-first open-source
+an open-source
 \color inherit
  implementation
 \end_layout
@@ -2635,27 +2744,12 @@ no assumptions on input but able to use patterns
 \begin_layout Itemize
 
 \color red
-users quite like the idea and the 
-\begin_inset Quotes eld
-\end_inset
-
-working prototypes
-\begin_inset Quotes erd
-\end_inset
-
-...
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-main performance issues may be deep in underlying services which were never
- properly optimized...
+proposed solutions on data-service optimizations (backup slides)
 \end_layout
 
 \end_deeper
 \begin_layout Itemize
-keyword search proposing structured queries can be quite successful 
+keyword search proposing ranked queries can be successful 
 \begin_inset Note Note
 status open
 
@@ -2687,6 +2781,10 @@ related SODA project showed for complex schema's, ontology is helpful
 
 \end_layout
 
+\begin_layout Itemize
+users liked the idea and prototypes...
+\end_layout
+
 \end_deeper
 \begin_layout Itemize
 
@@ -2708,21 +2806,25 @@ Future work
 \end_layout
 
 \begin_layout Itemize
-tuning the accuracy based on users' feedback
+tuning the accuracy
 \end_layout
 
 \begin_layout Itemize
-explore the auto-completion further
-\end_layout
-
-\begin_layout Itemize
-explore the Machine Learning approaches once more data is gathered?
+explore auto-completion further
 \end_layout
 
 \begin_layout Itemize
 
 \lang british
-support additional query patterns
+additional query patterns
+\end_layout
+
+\begin_layout Itemize
+explore 
+\emph on
+machine learning
+\emph default
+ approaches once more logs gathered?
 \end_layout
 
 \begin_layout Itemize
@@ -2735,9 +2837,7 @@ large parts of keyword search can be moved to client-side
 \end_layout
 
 \begin_layout Itemize
-
-\color red
-performance improvements to the data providers, and keyword search
+performance improvements (data providers, keyword search)
 \end_layout
 
 \end_deeper
@@ -2983,161 +3083,6 @@ status open
 
 \backslash
 BackupSlide
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout BeginFrame
-
-\lang british
-Uniqueness of this implementation
-\end_layout
-
-\begin_layout Enumerate
-
-\lang british
-no assumptions on input query
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-plain keywords vs.
- full-sentence 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-(that may contain even some unrecognized terms)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-still can use patterns if present (phrases, predicates/conditions
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\lang british
- , TODO: aggregators
-\end_layout
-
-\end_inset
-
-)
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-
-\lang british
-implements a specific real-world use-case
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-
-\color red
-\lang british
-different selection of entry points / scoring heuristics and entity matching
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-scoring
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\lang british
-and heuristics
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-specific query language
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-
-\lang british
-first open-source implementation
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\lang british
-the code will be further maintained
-\end_layout
-
-\end_deeper
-\begin_layout Standard
-
-\lang british
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-BackupSlide
-\end_layout
-
-\end_inset
-
-
-\lang english
-
-\begin_inset Note Note
-status collapsed
-
-\begin_layout BeginFrame
-Data-services at CMS
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-% Backup frames
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-setcounter{framenumber}{
-\backslash
-value{finalframe}}
 \end_layout
 
 \end_inset
@@ -3585,6 +3530,93 @@ BackupSlide
 \end_layout
 
 \begin_layout BeginFrame
+Using the feedback for self-improvement 
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\lang british
+Implicit feedback from auto-completion
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+improving entity matching (e.g.
+ learned edit-distance)
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\lang british
+Users implicit feedback (clicking on the link)
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+limited feedback quality - user may click on non-related query
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+ask user to confirm if the final result was the intended one
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\color red
+\lang british
+sequential ML algorithms, such as HMM, so far modelled not directly the
+ structured query, but 
+\emph on
+labelling of keywords in query
+\emph default
+.
+ we propose to investigate if these could degrade the semi-explicit feedback:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+
+\color red
+\lang british
+multiple ways to be convert the labelling into structured query: better
+ implicit feedback from autocompletion: we get direct feedback - selections
+ are for separate terms, not for the query as whole, which is not being
+ modelled
+\end_layout
+
+\begin_layout Enumerate
+
+\color red
+\lang british
+feedback could depend on the false positives of the earlier mappings
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+\lang british
+we seen that it is possible for a false matching to result in a correct
+ result! this was more prevalent on ambiguous matching methods, e.g.
+ regexps
+\end_layout
+
+\end_inset
+
+, and that may potentially impact the machine learning.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout BeginFrame
 Data integration war-stories: Dataservice Performance
 \end_layout
 
@@ -3597,6 +3629,138 @@ status open
 
 \backslash
 BackupSlide
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+
+\lang british
+Uniqueness of this implementation
+\end_layout
+
+\begin_layout Enumerate
+
+\lang british
+no assumptions on input query
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+plain keywords vs.
+ full-sentence 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+(that may contain even some unrecognized terms)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+still can use patterns if present (phrases, predicates/conditions
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\lang british
+ , TODO: aggregators
+\end_layout
+
+\end_inset
+
+)
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+
+\lang british
+implements a specific real-world use-case
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+
+\lang british
+different selection of entry points (entity matching)
+\end_layout
+
+\begin_layout Enumerate
+
+\lang british
+custom scoring
+\end_layout
+
+\begin_layout Enumerate
+
+\lang british
+specific query language
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+
+\lang british
+(first) open-source implementation
+\end_layout
+
+\begin_layout Standard
+
+\lang british
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+BackupSlide
+\end_layout
+
+\end_inset
+
+
+\lang english
+
+\begin_inset Note Note
+status collapsed
+
+\begin_layout BeginFrame
+Data-services at CMS
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+% Backup frames
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+setcounter{framenumber}{
+\backslash
+value{finalframe}}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
