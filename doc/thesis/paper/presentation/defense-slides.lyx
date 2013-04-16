@@ -3260,58 +3260,43 @@ Project priorities and constraints
 
 \begin_layout Standard
 
-\color red
 \lang british
-Due to the constraints on the project duration, a number of items had to
- be excluded from the implementation: 
+excluded, due to project constraints: 
 \end_layout
 
 \begin_layout Itemize
 
-\color red
 \lang british
-question answering approaches with deep language processing
+question answering & deep language processing
 \end_layout
 
 \begin_layout Itemize
 
-\color red
 \lang british
-complex service orchestration (feeding of outputs into inputs of other services)
+complex service orchestration
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
 
-\color red
 \lang british
 not directly supported by the EII system
 \end_layout
 
 \begin_layout Itemize
 
-\color red
 \lang british
 the service performance is not adequate for this
 \begin_inset Foot
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
-\color red
 \lang british
-this due to issues with data service performance and unavailability of basic
- capabilities such as pagination or sorting of their results; we do not
- control the data services, so a number of suggestions for the providers
- have been proposed (see appendix 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sub:cms-Performance-Issues"
-
-\end_inset
-
-); second, these improvements would take a considerable effort to be implemented
-, pushing this far beyond the scope of this project
+unavailability of basic capabilities such as pagination or sorting of their
+ results;  a number of suggestions for the providers have been proposed,
+ but these improvements would take a considerable effort to be implemented,
+ pushing this far beyond the scope of this project
 \end_layout
 
 \end_inset
@@ -3322,25 +3307,21 @@ reference "sub:cms-Performance-Issues"
 \end_deeper
 \begin_layout Itemize
 
-\color red
 \lang british
-the performance is of lower priority
+performance was of lower priority
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
 
-\color red
 \lang british
-end user's perceived performance is still dominated by services taking minutes
- to respond
+performance dominated by data-services - proposed solutions
 \end_layout
 
 \begin_layout Itemize
 
-\color red
 \lang british
-performance was already covered by the earlier works.
+already covered by the earlier works.
 \begin_inset Note Note
 status collapsed
 
@@ -3430,7 +3411,7 @@ unit tests and manual testing
 \begin_layout Enumerate
 
 \lang british
-fine-tune the whole system (by hand)
+fine-tuned the whole system (by hand)
 \end_layout
 
 \begin_deeper
@@ -3440,6 +3421,7 @@ fine-tune the whole system (by hand)
 use keyword queries by written users or developer for evaluation
 \end_layout
 
+\end_deeper
 \begin_layout Itemize
 
 \lang british
@@ -3450,15 +3432,14 @@ important variables to be tuned:
 \begin_layout Itemize
 
 \lang british
-weights for regexps, 
-\color red
-etc
+scoring in matching techniques
 \end_layout
 
+\begin_deeper
 \begin_layout Itemize
 
 \lang british
-likelihood of not taking a keyword
+string similarity, regexps, etc
 \end_layout
 
 \begin_layout Itemize
@@ -3480,10 +3461,30 @@ query
 \begin_inset Quotes erd
 \end_inset
 
- weights (for IR matching multi-word terms)
+ weights
 \end_layout
 
 \end_deeper
+\begin_layout Itemize
+
+\lang british
+likelihood of not taking a keyword
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+depending on part-of-speech
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\lang british
+influence of other heuristics
+\end_layout
+
 \end_deeper
 \begin_layout Standard
 
