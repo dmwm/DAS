@@ -2508,8 +2508,12 @@ Conclusions
 \end_layout
 
 \begin_layout Itemize
-growing popularity of data-service integration systems, increase need accessing
- data easily 
+popularity of data-service integration grows
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+need accessing data easily 
 \begin_inset Note Note
 status collapsed
 
@@ -2570,6 +2574,7 @@ pause
 
 \end_layout
 
+\end_deeper
 \begin_layout Itemize
 discussed a real-world case and 
 \color red
