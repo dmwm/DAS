@@ -2570,10 +2570,43 @@ pause
 
 \end_layout
 
+\begin_layout Itemize
+discussed a real-world case and 
+\color red
+first open-source
+\color inherit
+ implementation
+\end_layout
+
 \begin_deeper
 \begin_layout Itemize
-one successful approach can be keyword search proposing structured queries
- 
+no assumptions on input but able to use patterns
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+users quite like the idea and the 
+\begin_inset Quotes eld
+\end_inset
+
+working prototypes
+\begin_inset Quotes erd
+\end_inset
+
+...
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+main performance issues may be deep in underlying services which were never
+ properly optimized...
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+keyword search proposing structured queries can be quite successful 
 \begin_inset Note Note
 status open
 
@@ -2586,63 +2619,43 @@ status open
 
 \end_layout
 
+\begin_deeper
 \begin_layout Itemize
-keyword search in EII (i.e.
- then no complete access is available) received fairly little attention..\SpecialChar \@.
+for simple schema, no expensive schema ontology needed
+\color red
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\color red
+related SODA project showed for complex schema's, ontology is helpful
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
 \end_deeper
 \begin_layout Itemize
-discussed a real-world case and 
-\color red
-first open-source
-\color inherit
- implementation
-\end_layout
 
-\begin_deeper
-\begin_layout Itemize
-able to use patterns
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-users quite like the idea..
-\end_layout
-
-\begin_layout Itemize
-
-\color red
-most of performance problems may be deep in underlying services...
-\end_layout
-
-\begin_layout Itemize
-
-\color red
 \lang british
-this will contribute to improve the overall efficiency of the physics analysis
- program by the CMS Collaboration
+the system will be further supported
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
 
+\color red
 \lang british
-the system is going to be further supported
+it will improve efficiency of the physics analysis program by the CMS
 \end_layout
 
-\end_deeper
 \end_deeper
 \begin_layout BeginFrame
 Future work
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-better interpretation of patterns in queries
 \end_layout
 
 \begin_layout Itemize
@@ -2650,15 +2663,21 @@ tuning the accuracy based on users' feedback
 \end_layout
 
 \begin_layout Itemize
-exploring the auto-completion further
+explore the auto-completion further
 \end_layout
 
 \begin_layout Itemize
-exploring the Machine Learning approaches once more data is gathered?
+explore the Machine Learning approaches once more data is gathered?
 \end_layout
 
 \begin_layout Itemize
-technical
+
+\lang british
+support additional query patterns
+\end_layout
+
+\begin_layout Itemize
+non-functional
 \end_layout
 
 \begin_deeper
@@ -2669,7 +2688,7 @@ large parts of keyword search can be moved to client-side
 \begin_layout Itemize
 
 \color red
-performance improvements
+performance improvements to the data providers, and keyword search
 \end_layout
 
 \end_deeper
@@ -3132,7 +3151,26 @@ prototype of advanced auto-completion input widget
 \begin_layout Itemize
 
 \lang british
-slight relaxation of DASQL: prototype of 
+slight relaxation of DASQL
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+color{darkgrey}
+\end_layout
+
+\end_inset
+
+prototype of 
 \begin_inset Quotes eld
 \end_inset
 
@@ -3140,10 +3178,16 @@ simple service orchestration
 \begin_inset Quotes erd
 \end_inset
 
- even then the existing fields are not known in advance - gives more power
- and simplifies the keyword search
+ even then the existing fields are not known in advance
 \end_layout
 
+\begin_layout Itemize
+
+\lang british
+gives more power and simplifies the keyword search
+\end_layout
+
+\end_deeper
 \end_deeper
 \begin_layout Enumerate
 
