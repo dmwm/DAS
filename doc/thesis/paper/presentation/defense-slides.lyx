@@ -52,8 +52,8 @@
 {
   \leavevmode%
   \hbox{%
-  \begin{beamercolorbox}[wd=.4\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
-    \usebeamerfont{author in head/foot}\insertshortauthor
+  \begin{beamercolorbox}[wd=.4\paperwidth,ht=2.25ex,dp=1ex,left]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\hspace*{1ex}\insertshortauthor
   \end{beamercolorbox}%
   \begin{beamercolorbox}[wd=.6\paperwidth,ht=2.25ex,dp=1ex,right]{title in head/foot}%
     \usebeamerfont{title in head/foot}\hfill
@@ -64,6 +64,9 @@
 
 %\insertshorttitle
 % \hspace*{0.5ex}
+
+% command to keep frame number...
+\newcommand{\BackupSlide}{\setcounter{framenumber}{\value{finalframe}}}
 \end_preamble
 \options outer sep=0pt,inner sep=0pt
 \use_default_options true
@@ -643,9 +646,9 @@ status open
 
 \begin_layout Plain Layout
 
-{The problem: it is {
+{
 \backslash
-color{red}tiring/overwhelming} to:}
+textbf{The problem:} for users it is overwhelming to:}
 \end_layout
 
 \end_inset
@@ -681,7 +684,11 @@ status open
 
 \begin_layout Plain Layout
 
-{Could this be extended by Keyword Queries? e.g.}
+{
+\backslash
+textbf{Intuition:} Could 
+\backslash
+textit{Keyword Queries} solve it?}
 \end_layout
 
 \end_inset
@@ -840,15 +847,14 @@ schema term (result type; projections; or field name in a predicate)
 \lang british
 values term 
 \color red
-(a value in a predicate) [pred := field_name op.
- value]
+(a value condition in a predicate)
 \end_layout
 
 \begin_layout Itemize
 
 \color red
 \lang british
-(aggregation) operator
+operator
 \color inherit
 , or 
 \emph on
@@ -870,38 +876,6 @@ unknown
 
 \end_layout
 
-\begin_layout BeginFrame
-Challenges
-\end_layout
-
-\begin_layout Itemize
-no direct access to the data, use:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-bootstrapping values lists (available only for some fields)
-\end_layout
-
-\begin_layout Itemize
-rely on regexps otherwise
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-no fully predefined schema
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-some field names are unclean (directly from XML, JSON responses)
-\end_layout
-
-\begin_layout Itemize
-bootstrap list of fields through queries and maintain it...
-\end_layout
-
-\end_deeper
 \begin_layout Subsection
 State-of-the-Art
 \end_layout
@@ -926,7 +900,7 @@ as results
 \end_layout
 
 \begin_layout Itemize
-nearby keywords are related
+nearby keywords are often related
 \end_layout
 
 \end_deeper
@@ -945,13 +919,41 @@ Keyword Search over EII
 \begin_layout Enumerate
 KEYMANTIC - 
 \color red
-rule-based + heuristics
+generates SQL suggestions from keyword query
 \end_layout
 
+\begin_deeper
+\begin_layout Itemize
+uses heuristics to 
+\begin_inset Quotes eld
+\end_inset
+
+cover
+\begin_inset Quotes erd
+\end_inset
+
+ keyword interdependencies
+\end_layout
+
+\end_deeper
 \begin_layout Enumerate
-KEYRY - HMM-based
+KEYRY - 
+\color red
+also generates SQL suggestions
 \end_layout
 
+\begin_deeper
+\begin_layout Itemize
+uses Hidden Markov Model (HMM) as first step
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+Farther works:
+\end_layout
+
+\begin_deeper
 \begin_layout Enumerate
 \begin_inset ERT
 status open
@@ -960,7 +962,7 @@ status open
 
 {
 \backslash
-color{darkgrey}Natural Language to compose services (farther...)}
+color{darkgrey}SeCo - Natural Language to compose services}
 \end_layout
 
 \end_inset
@@ -968,14 +970,28 @@ color{darkgrey}Natural Language to compose services (farther...)}
 
 \end_layout
 
+\begin_layout Enumerate
+
+\color red
+SODA - SQL suggestions over large data-warehouse; rely on metadata ontology
+\end_layout
+
 \end_deeper
 \begin_layout Standard
 \begin_inset Note Note
-status open
+status collapsed
+
+\begin_layout Enumerate
+
+\color red
+methods below 
+\series bold
+generate SQL suggestions from keyword query
+\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Note Greyedout
-status open
+status collapsed
 
 \begin_layout Plain Layout
 EII is well researched: formalisms, query optimization, minimize human effort...
@@ -992,255 +1008,45 @@ EII is well researched: formalisms, query optimization, minimize human effort...
 \end_layout
 
 \begin_layout BeginFrame
-Closely related works
+Challenges
 \end_layout
 
-\begin_layout Enumerate
-
-\series bold
-\color red
-(I do not need that much detail:)
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-KEYMA
-\lang british
-NTIC
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-
-\color red
-\lang british
-based on metadata, keywords are scored as potential matches to 
-\emph on
-schema terms
-\emph default
- (entity names and their attributes, using some entity matching techniques)
- or as potential 
-\emph on
-value
-\emph default
- matches (by checking any available constraints, such as the regular expressions
- imposed by the database or data-services).
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-Then, these scores are combined
-\series bold
-, 
-\series default
-and refined by heuristics that increase the scores of query interpretations
- with the nearby keywords having related labels assigned.
- 
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-Finally, these labels are interpreted as SQL queries.
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-
-\color red
-KEYRY 
-\lang british
-incorporate users feedback through training an Hidden Markov Model's (HMM)
-\begin_inset CommandInset nomenclature
-LatexCommand nomenclature
-symbol "HMM"
-description "HIdden Markov Model"
-
-\end_inset
-
- tagger taking keywords as its input.
- 
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-
-\color red
-\lang british
-It uses the List-Viterbi 
-\begin_inset CommandInset citation
-LatexCommand citep
-key "list_viterbi_1994"
-
-\end_inset
-
- algorithm to produce the top-k most probable tagging sequences (where tags
- represent the 
-\begin_inset Quotes eld
-\end_inset
-
-meaning
-\begin_inset Quotes erd
-\end_inset
-
- of each keyword).
- 
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-This is interpreted as SQL queries and presented to the users.
- 
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-The HMM
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-
-\color red
-\lang british
-is first initialized through the supervised training, but even if no training
- data is available, the initial HMM probability distributions can be estimated
- through a number of heuristic rules (e.g.
- promoting related tags).
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-Later, user's feedback can be used for supervised training, while even the
- keyword queries itself can serve for unsupervised training 
-\begin_inset CommandInset citation
-LatexCommand citep
-key "keymantic_list_viterbi_training_rota2011"
-
-\end_inset
-
-.
- According to 
-\begin_inset CommandInset citation
-LatexCommand citep
-key "bergamaschi2011hidden"
-
-\end_inset
-
- the accuracy of the two systems didn't differ much.
-\end_layout
-
-\end_deeper
-\end_deeper
-\begin_layout BeginFrame
-
-\lang british
-Uniqueness of this implementation
-\end_layout
-
-\begin_layout Enumerate
-
-\lang british
-no assumptions on input query
+\begin_layout Itemize
+keyword queries are ambiguous
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-plain keywords vs.
- full-sentence 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-(that may contain even some unrecognized terms)
+solution: ranked list of query suggestions
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
+\end_deeper
 \begin_layout Itemize
-
-\lang british
-still can use patterns if present (phrases, predicates/conditions
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\lang british
- , TODO: aggregators
-\end_layout
-
-\end_inset
-
-)
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-
-\lang british
-implements a specific real-world use-case
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-
-\color red
-\lang british
-different selection of entry points / scoring heuristics and entity matching
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-scoring
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\lang british
-and heuristics
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Enumerate
-
-\color red
-\lang british
-specific query language
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-
-\lang british
-first open-source implementation
+no direct access to the data:
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
+need bootstrapping values lists (available only for some fields)
+\end_layout
 
-\lang british
-the code will be further maintained
+\begin_layout Itemize
+rely on regexps otherwise --> false positives
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+no fully predefined schema
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+bootstrap list of fields through queries and maintain it...
+\end_layout
+
+\begin_layout Itemize
+some field names are unclean (coming directly from XML, JSON responses)
+ 
 \end_layout
 
 \end_deeper
@@ -1291,7 +1097,7 @@ entry points
 \begin_inset Quotes erd
 \end_inset
 
-
+ with
 \end_layout
 
 \begin_deeper
@@ -1334,7 +1140,7 @@ status open
 \begin_layout Enumerate
 
 \lang british
-known values
+list of known values
 \end_layout
 
 \begin_layout Enumerate
@@ -1370,7 +1176,7 @@ combine
 \lang british
 consider various 
 \emph on
-entry points
+entry point
 \emph default
  permutations 
 \begin_inset Note Greyedout
@@ -1379,11 +1185,7 @@ status open
 \begin_layout Plain Layout
 
 \lang british
- (called 
-\emph on
-configuration
-\emph default
-s)
+ (keyword labelings)
 \end_layout
 
 \end_inset
@@ -1401,7 +1203,6 @@ or other heuristics
 
 \begin_layout Enumerate
 
-\color red
 \lang british
 interpret as structured queries 
 \begin_inset Note Note
@@ -1443,7 +1244,7 @@ status open
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 
@@ -1478,6 +1279,24 @@ vspace{-20pt}
 \end_layout
 
 \begin_layout Plain Layout
+
+\lang british
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{-10pt}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption
 
 \begin_layout Plain Layout
@@ -1502,74 +1321,6 @@ Query processing
 \end_layout
 
 \begin_layout BeginFrame
-
-\series bold
-\lang british
-Project priorities and constraints
-\end_layout
-
-\begin_layout Standard
-
-\color red
-\lang british
-Due to the constraints on the project duration, a number of items had to
- be excluded from the implementation: question answering approaches with
- deep language processing; complex service orchestration (feeding of outputs
- into inputs of other services, which is anyway not directly supported by
- the EII system and the service performance is not adequate for this
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-
-\color red
-\lang british
-this due to issues with data service performance and unavailability of basic
- capabilities such as pagination or sorting of their results; we do not
- control the data services, so a number of suggestions for the providers
- have been proposed (see appendix 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sub:cms-Performance-Issues"
-
-\end_inset
-
-); second, these improvements would take a considerable effort to be implemented
-, pushing this far beyond the scope of this project
-\end_layout
-
-\end_inset
-
-); and lastly the performance is of lower priority, as the end user's perceived
- performance is still dominated by services taking minutes to respond, and
- the performance was already covered by the earlier works.
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-
-\color magenta
-\lang british
-The approaches below are useful then there is no possibility to index the
- data terms, e.g.
- then a DB is behind a wrapper (e.g.
- accessible only through a 
-\emph on
-Web form
-\emph default
- in “Hidden Web” or a 
-\emph on
-web-service
-\emph default
-) then crawling is generally not possible.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout BeginFrame
 Example query processing
 \end_layout
 
@@ -1582,7 +1333,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "55col%"
+width "57col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -1614,11 +1365,123 @@ status open
 
 {
 \backslash
-footnotesize dataset sizes RelVal `number of events > 1000'}
+footnotesize{Q:datasets sizes RelVal `number of events > 1000'}}
 \end_layout
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout ExampleBlock
+
+\family typewriter
+\size scriptsize
+\emph on
+\lang british
+Schema terms:
+\emph default
+
+\begin_inset Newline newline
+\end_inset
+
+datasets -> 0.9, schema: dataset
+\begin_inset Newline newline
+\end_inset
+
+
+\end_layout
+
+\begin_layout ExampleBlock
+
+\family typewriter
+\size scriptsize
+\emph on
+\lang british
+Schema terms (multi-word):
+\emph default
+
+\begin_inset Newline newline
+\end_inset
+
+'number of events>1000' ->
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+ 0.93, pred: dataset.nevents>1000
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+ 0.93, pred: file.nevents>1000
+\begin_inset Newline newline
+\end_inset
+
+'dataset
+\begin_inset space ~
+\end_inset
+
+sizes'->0.99,
+\begin_inset space ~
+\end_inset
+
+project:
+\begin_inset space ~
+\end_inset
+
+dataset.size
+\begin_inset Newline newline
+\end_inset
+
+sizes -> 0.41, project:
+\begin_inset space ~
+\end_inset
+
+dataset.size
+\begin_inset Newline newline
+\end_inset
+
+
+\emph on
+
+\begin_inset Newline newline
+\end_inset
+
+Value terms:
+\end_layout
+
+\begin_layout ExampleBlock
 
 \family typewriter
 \size scriptsize
@@ -1638,57 +1501,23 @@ RelVal -> 0.7, value: dataset=*RelVal*
 
 \family typewriter
 \size scriptsize
+\emph on
 \lang british
-datasets -> 0.9, schema: dataset
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-Chunks:
-\begin_inset Newline newline
-\end_inset
-
-'number of events>1000' 
-\begin_inset Newline newline
-\end_inset
-
---> 0.93, filter: dataset.nevents>1000
-\begin_inset Newline newline
-\end_inset
-
---> 0.93, filter: file.nevents>1000
-\begin_inset Newline newline
-\end_inset
-
-'datasets; sizes' 
-\begin_inset Newline newline
-\end_inset
-
---> 0.99, projection: dataset.size
-\begin_inset Newline newline
-\end_inset
-
-'sizes'
-\end_layout
-
-\begin_layout ExampleBlock
-
-\family typewriter
-\size scriptsize
-\lang british
---> 0.41, projection: dataset.size
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
 ...
  and some more with lower scores...
+\end_layout
+
+\begin_layout Plain Layout
+
+\lang british
+\begin_inset Graphics
+	filename ../figures/example_results.png
+	lyxscale 30
+	width 120text%
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -1827,11 +1656,17 @@ individual terms
 \begin_layout Standard
 
 \color red
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\color red
 Future - aggregates, e.g.
  avg(number of events) 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \color red
 -- more exact than ambiguous 
@@ -1845,10 +1680,15 @@ avg number events
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 
 \color red
 -- easier than currently strict syntax: | avg(dataset.nevents)
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout BeginFrame
@@ -1871,17 +1711,33 @@ did not work well: string edit-distance, semantic similarity
 \begin_layout Standard
 \begin_inset Formula 
 \[
-similarity(A,B)=\begin{cases}
-1, & if\, A=B\\
-0.9, & if\, lemma(A)=lemma(B)\\
-0.7, & if\, stem(A)=stem(B)\\
-0.6\cdot dist(stem(A),stem(B)), & otherwise
+d(w_{1},w_{2})=\begin{cases}
+1, & if\, w_{1}=w_{2}\\
+0.9, & if\, lemma(w_{1})=lemma(w_{2})\\
+0.7, & if\, stem(w_{1})=stem(w_{2})\\
+0.6\cdot sdist(stem(w_{1}),stem(w_{1})), & otherwise
 \end{cases}
 \]
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $sdist(w_{1},w_{2})>0$
+\end_inset
+
+, iff 
+\begin_inset Formula $w_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $w_{2}$
+\end_inset
+
+ are within very small string-edit distance (penalize transpositions, and
+ changes in middle)
 \end_layout
 
 \begin_layout Standard
@@ -1988,13 +1844,7 @@ Regular expression (regexp) can result in false positives:
 \begin_layout Itemize
 
 \lang british
-it do not guarantee that a certain value exists
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-regexp could be loosely defined
+it do not guarantee that actual match exists as regexp can be loose
 \end_layout
 
 \begin_layout Itemize
@@ -2003,28 +1853,45 @@ regexp could be loosely defined
 thus, regexp matches are scored lower than other methods
 \end_layout
 
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+to reduce false positives: exclude regexp match if not in known values,
+ and field's values do not change often
+\end_layout
+
+\end_deeper
 \end_deeper
 \begin_layout Itemize
 
 \lang british
-Known values
+Known values (strings)
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
 
 \lang british
-automatically bootstrapped
+these automatically bootstrapped
 \end_layout
 
 \begin_layout Itemize
 
 \lang british
-decreasing score: full match, partial match, and matches of keywords containing
+assign decreasing score for: full match, partial match, and keywords with
  wildcards
 \end_layout
 
-\begin_layout Itemize
+\end_deeper
+\begin_layout Standard
+
+\color red
+\lang british
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 
 \color red
 \lang british
@@ -2035,16 +1902,20 @@ If keyword's value matches a regular expression, but is not contained in
 
 \end_layout
 
-\end_deeper
+\end_inset
+
+
+\end_layout
+
 \begin_layout BeginFrame
 Step 3: Answer candidate scoring: formulas
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
-\begin{equation}
+\[
 score\_avg=\frac{{\displaystyle \sum_{i=1}^{|KWQ|}{\displaystyle \left(score(tag_{i}|kw_{i})+{\displaystyle \sum_{h_{j}\in H}h_{j}(tag_{i}|kw_{i};tag_{i-1,..,1})}\right)}}}{N\_non\_stopword}
-\end{equation}
+\]
 
 \end_inset
 
@@ -2053,9 +1924,9 @@ score\_avg=\frac{{\displaystyle \sum_{i=1}^{|KWQ|}{\displaystyle \left(score(tag
 
 \begin_layout Standard
 \begin_inset Formula 
-\begin{equation}
+\[
 score\_prob=\sum_{i=1}^{|KWQ|}\left({\displaystyle {\displaystyle \ln}\left(score(tag_{i}|kw_{i})\right)}+\sum_{h_{j}\in H}h_{j}(tag_{i}|kw_{i};tag_{i-1,..,1})\right)
-\end{equation}
+\]
 
 \end_inset
 
@@ -2109,7 +1980,11 @@ score\_prob=\sum_{i=1}^{|KWQ|}\left({\displaystyle {\displaystyle \ln}\left(scor
 \begin_inset Formula $h_{j}$
 \end_inset
 
- given a tagging so far (all tags are not needed).
+ given a tagging so far (often all 
+\begin_inset Formula $i-1$
+\end_inset
+
+ tags are not needed).
  
 \end_layout
 
@@ -2128,12 +2003,25 @@ Relationships between keywords:
 
 \color red
 \lang british
-promoting such combinations where nearby keywords refer to related schema
- terms (e.g.
+promote if nearby keywords refer to related schema terms (e.g.
  entity name and it's value)
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\color red
+\lang british
+used distance in Relationshional schema, here it DOESnt really apply
 \end_layout
 
-\begin_layout Itemize
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 
 \color red
 \lang british
@@ -2141,15 +2029,36 @@ balance between taking the keyword or leaving it out (the one that we are
  unsure about) 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Itemize
 
 \color red
 \lang british
-boost important keywords (different parts of speech are of different importance,
- e.g.
- stop-words are less useful than nouns)
+boost important keywords
 \end_layout
 
+\begin_deeper
+\begin_layout Itemize
+
+\color red
+\lang british
+parts of speech of different importances, e.g.
+ stop-words vs.
+ nouns
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+keyword's position (e.g.
+ expect result type in beginning [focus extraction]) 
+\end_layout
+
+\end_deeper
 \end_deeper
 \begin_layout Itemize
 
@@ -2162,12 +2071,31 @@ Qualities of Data Integration System:
 
 \color red
 \lang british
-promote data service inputs over filters on their results: 1) it is more
- efficient, especially when this is possible; 2) there are much more of
- possible entities to filter, so more false matches are expected there,
- while the service inputs shall cover large part of cases
+promote 
+\emph on
+dataservice inputs
+\emph default
+ over 
+\emph on
+filters on their results
 \end_layout
 
+\begin_deeper
+\begin_layout Itemize
+
+\color red
+\lang british
+it is more efficient, if possible
+\end_layout
+
+\begin_layout Itemize
+
+\color red
+\lang british
+more choices, so more false matches
+\end_layout
+
+\end_deeper
 \begin_layout Itemize
 
 \color red
@@ -2180,8 +2108,7 @@ if some keyword can be matched as the requested entity, and mapping of other
 
 \color red
 \lang british
-if requested entity and a filter condition is the same (a small increase,
- a common use-case is retrieving an entity given it's 
+common use-case: retrieve an entity given it's 
 \begin_inset Quotes eld
 \end_inset
 
@@ -2189,122 +2116,28 @@ primary key
 \begin_inset Quotes erd
 \end_inset
 
- identifier or a wild-card)
+ or wildcard on it
 \end_layout
 
 \begin_layout Itemize
 
 \color red
 \lang british
-for being able to execute the query, the service constraints must be satisfied;
- still it could useful to the interpretations that achieve high rank, even
- if they do not satisfy some constraint (e.g.
- a mandatory filter is missing) informing the user
-\end_layout
-
-\end_deeper
-\begin_layout BeginFrame
-Tuning the scoring parameters
-\end_layout
-
-\begin_layout Enumerate
-
-\lang british
-tuned individual components to 
-\begin_inset Quotes eld
-\end_inset
-
-sufficient
-\begin_inset Quotes erd
-\end_inset
-
- level
+to execute the query, service constraints must be satisfied
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
 
-\lang british
-unit tests and manual testing
-\end_layout
-
-\end_deeper
-\begin_layout Enumerate
-
-\lang british
-fine-tune the whole system (by hand)
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\lang british
-use keyword queries by written users or developer for evaluation
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-important variables to be tuned:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-
-\lang british
-weights for regexps, 
-\series bold
 \color red
-etc
-\end_layout
-
-\begin_layout Itemize
-
 \lang british
-likelihood of not taking a keyword
-\end_layout
-
-\begin_layout Itemize
-
-\lang british
-BM25F 
-\begin_inset Quotes eld
-\end_inset
-
-field
-\begin_inset Quotes erd
-\end_inset
-
- and 
-\begin_inset Quotes eld
-\end_inset
-
-query
-\begin_inset Quotes erd
-\end_inset
-
- weights (for IR matching multi-word terms)
+could useful to show the interpretations that achieve high rank, even if
+ they do not satisfy some constraints (e.g.
+ a mandatory filter is missing)
 \end_layout
 
 \end_deeper
 \end_deeper
-\begin_layout Standard
-
-\lang british
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\lang british
-MORE?
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout BeginFrame
 Evaluation: Accuracy
 \end_layout
@@ -2523,7 +2356,9 @@ it could seamlessly provide feedback for improving system components
 \end_layout
 
 \begin_layout BeginFrame
-Using the feedback for self-improvement
+Using the feedback for self-improvement 
+\color red
+(As Backup ???)
 \end_layout
 
 \begin_layout Standard
@@ -2786,7 +2621,7 @@ performance improvements
 
 \end_deeper
 \begin_layout Section
-Back-up/extra
+Backup slides
 \end_layout
 
 \begin_layout Standard
@@ -2842,6 +2677,594 @@ Data integration war-stories
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+Closely related works
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+\color red
+(I do not need that much detail:)
+\end_layout
+
+\begin_layout Enumerate
+
+\color red
+KEYMA
+\lang british
+NTIC
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+
+\color red
+\lang british
+based on metadata, keywords are scored as potential matches to 
+\emph on
+schema terms
+\emph default
+ (entity names and their attributes, using some entity matching techniques)
+ or as potential 
+\emph on
+value
+\emph default
+ matches (by checking any available constraints, such as the regular expressions
+ imposed by the database or data-services).
+\end_layout
+
+\begin_layout Enumerate
+
+\color red
+\lang british
+Then, these scores are combined
+\series bold
+, 
+\series default
+and refined by heuristics that increase the scores of query interpretations
+ with the nearby keywords having related labels assigned.
+ 
+\end_layout
+
+\begin_layout Enumerate
+
+\color red
+\lang british
+Finally, these labels are interpreted as SQL queries.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+
+\color red
+KEYRY 
+\lang british
+incorporate users feedback through training an Hidden Markov Model's (HMM)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "HMM"
+description "HIdden Markov Model"
+
+\end_inset
+
+ tagger taking keywords as its input.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+
+\color red
+\lang british
+It uses the List-Viterbi 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "list_viterbi_1994"
+
+\end_inset
+
+ algorithm to produce the top-k most probable tagging sequences (where tags
+ represent the 
+\begin_inset Quotes eld
+\end_inset
+
+meaning
+\begin_inset Quotes erd
+\end_inset
+
+ of each keyword).
+ 
+\end_layout
+
+\begin_layout Enumerate
+
+\color red
+\lang british
+This is interpreted as SQL queries and presented to the users.
+ 
+\end_layout
+
+\begin_layout Enumerate
+
+\color red
+\lang british
+The HMM
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+
+\color red
+\lang british
+is first initialized through the supervised training, but even if no training
+ data is available, the initial HMM probability distributions can be estimated
+ through a number of heuristic rules (e.g.
+ promoting related tags).
+\end_layout
+
+\begin_layout Enumerate
+
+\color red
+\lang british
+Later, user's feedback can be used for supervised training, while even the
+ keyword queries itself can serve for unsupervised training 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "keymantic_list_viterbi_training_rota2011"
+
+\end_inset
+
+.
+ According to 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "bergamaschi2011hidden"
+
+\end_inset
+
+ the accuracy of the two systems didn't differ much.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Standard
+
+\lang british
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\lang british
+TODO: BACKUP!?
+\end_layout
+
+\end_inset
+
+
+\lang english
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+BackupSlide
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+
+\lang british
+Uniqueness of this implementation
+\end_layout
+
+\begin_layout Enumerate
+
+\lang british
+no assumptions on input query
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+plain keywords vs.
+ full-sentence 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+(that may contain even some unrecognized terms)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+still can use patterns if present (phrases, predicates/conditions
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\lang british
+ , TODO: aggregators
+\end_layout
+
+\end_inset
+
+)
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+
+\lang british
+implements a specific real-world use-case
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+
+\color red
+\lang british
+different selection of entry points / scoring heuristics and entity matching
+\end_layout
+
+\begin_layout Enumerate
+
+\color red
+\lang british
+scoring
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\lang british
+and heuristics
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\color red
+\lang british
+specific query language
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+
+\lang british
+first open-source implementation
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+the code will be further maintained
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+
+\lang british
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+BackupSlide
+\end_layout
+
+\end_inset
+
+
+\lang english
+
+\begin_inset Note Note
+status collapsed
+
+\begin_layout BeginFrame
+Data-services at CMS
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+% Backup frames
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+setcounter{framenumber}{
+\backslash
+value{finalframe}}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+Tuning the scoring parameters
+\end_layout
+
+\begin_layout Enumerate
+
+\lang british
+tuned individual components to 
+\begin_inset Quotes eld
+\end_inset
+
+sufficient
+\begin_inset Quotes erd
+\end_inset
+
+ level
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+unit tests and manual testing
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+
+\lang british
+fine-tune the whole system (by hand)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+use keyword queries by written users or developer for evaluation
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+important variables to be tuned:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+weights for regexps, 
+\color red
+etc
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+likelihood of not taking a keyword
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+BM25F 
+\begin_inset Quotes eld
+\end_inset
+
+field
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+query
+\begin_inset Quotes erd
+\end_inset
+
+ weights (for IR matching multi-word terms)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Standard
+
+\lang british
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\lang british
+MORE?
+\end_layout
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\lang british
+TO BACKUP?
+\end_layout
+
+\end_inset
+
+
+\lang english
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+BackupSlide
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+Data integration war-stories: Dataservice Performance
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+BackupSlide
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout BeginFrame
+
+\series bold
+\lang british
+Project priorities and constraints
+\end_layout
+
+\begin_layout Standard
+
+\color red
+\lang british
+Due to the constraints on the project duration, a number of items had to
+ be excluded from the implementation: question answering approaches with
+ deep language processing; complex service orchestration (feeding of outputs
+ into inputs of other services, which is anyway not directly supported by
+ the EII system and the service performance is not adequate for this
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+
+\color red
+\lang british
+this due to issues with data service performance and unavailability of basic
+ capabilities such as pagination or sorting of their results; we do not
+ control the data services, so a number of suggestions for the providers
+ have been proposed (see appendix 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:cms-Performance-Issues"
+
+\end_inset
+
+); second, these improvements would take a considerable effort to be implemented
+, pushing this far beyond the scope of this project
+\end_layout
+
+\end_inset
+
+); and lastly the performance is of lower priority, as the end user's perceived
+ performance is still dominated by services taking minutes to respond, and
+ the performance was already covered by the earlier works.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+
+\color magenta
+\lang british
+The approaches below are useful then there is no possibility to index the
+ data terms, e.g.
+ then a DB is behind a wrapper (e.g.
+ accessible only through a 
+\emph on
+Web form
+\emph default
+ in “Hidden Web” or a 
+\emph on
+web-service
+\emph default
+) then crawling is generally not possible.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang british
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\series bold
+\lang british
+TODO: BACKUP!?
+\end_layout
+
+\end_inset
+
+
+\lang english
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+BackupSlide
 \end_layout
 
 \end_inset
@@ -2970,76 +3393,9 @@ status open
 
 \begin_layout Plain Layout
 
-% Backup frames
-\end_layout
-
-\begin_layout Plain Layout
-
 
 \backslash
-setcounter{framenumber}{
-\backslash
-value{finalframe}}
-\end_layout
-
-\end_inset
-
-
-\begin_inset Note Note
-status open
-
-\begin_layout BeginFrame
-Data-services at CMS
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-% Backup frames
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-setcounter{framenumber}{
-\backslash
-value{finalframe}}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout BeginFrame
-Data integration war-stories: Dataservice Performance
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-% Backup frames
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-setcounter{framenumber}{
-\backslash
-value{finalframe}}
+BackupSlide
 \end_layout
 
 \end_inset
@@ -3057,16 +3413,9 @@ status open
 
 \begin_layout Plain Layout
 
-% Backup frames
-\end_layout
-
-\begin_layout Plain Layout
-
 
 \backslash
-setcounter{framenumber}{
-\backslash
-value{finalframe}}
+BackupSlide
 \end_layout
 
 \end_inset
