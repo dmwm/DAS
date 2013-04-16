@@ -337,7 +337,7 @@ class CombinedService(DASAbstractService):
             if  isinstance(run_value, dict) and run_value.has_key('$in'):
                 runs = run_value['$in']
             else:
-                runs = run_value
+                runs = [run_value]
             args.update({'runs': runs})
             files = [f for f in dbs_files(dbs_url, args)]
             site  = args.get('site')
