@@ -280,8 +280,13 @@ def urlfetch_proxy(urls):
             yield {'ping':'pong'}
         else:
             for row in data.readlines():
-                rec = json.loads(row)
-                for line in rec['data'].split('\n'):
-                    yield line
+                if  row and row[0] == '{' and row.find('data'):
+                    # Erlang response
+                    rec = json.loads(row)
+                    for line in rec['data'].split('\n'):
+                        yield line
+                else:
+                    # Go response
+                    yield row
     else:
         yield {'error':'Fail to contact UrlFetch proxy server', 'code':code}
