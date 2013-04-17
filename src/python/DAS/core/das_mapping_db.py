@@ -25,6 +25,7 @@ represents DAS primary key.
 __author__ = "Valentin Kuznetsov"
 
 import re
+import time
 import threading
 
 # monogo db modules
@@ -34,9 +35,34 @@ from pymongo.errors import ConnectionFailure
 # DAS modules
 from DAS.utils.utils import dastimestamp, print_exc
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
-from DAS.utils.das_db import db_connection, create_indexes, db_monitor
+from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
+
+def db_monitor(uri, func, sleep=5, reload_time=86400):
+    """
+    Check status of MongoDB connection and reload DAS maps once in a while.
+    """
+    time0 = time.time()
+    conn = db_connection(uri)
+    while True:
+        if  not conn or not is_db_alive(uri):
+            try:
+                conn = db_connection(uri)
+                func()
+                if  conn:
+                    print "### db_monitor re-established connection %s" % conn
+                else:
+                    print "### db_monitor, lost connection"
+            except:
+                pass
+        if  conn:
+            if  time.time()-time0 > reload_time:
+                tstamp = time.strftime("%d %b %Y %H:%M:%S GMT", time.gmtime())
+                print "### %s reload DAS maps: %s" % (func, tstamp)
+                func()
+                time0 = time.time()
+        time.sleep(sleep)
 
 class DASMapping(object):
     """
