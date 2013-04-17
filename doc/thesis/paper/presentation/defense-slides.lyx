@@ -881,24 +881,45 @@ part of structured query
 \begin_layout Itemize
 
 \lang british
-schema term (result type; projections; or field name in a predicate)
+schema term 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+color{darkgrey}(result type; projections; or field name in a predicate)}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
 
 \lang british
 values term 
-\color red
-(a value condition in a predicate)
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+color{darkgrey}(a value condition in a predicate)}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
 
-\color red
 \lang british
-operator
-\color inherit
-, or 
+operator, or 
 \emph on
 unknown
 \series bold
@@ -1024,7 +1045,7 @@ color{darkgrey}
 
 \end_inset
 
-Farther works:
+Less related works:
 \end_layout
 
 \begin_deeper
@@ -1145,7 +1166,7 @@ solution: ranked list of query suggestions
 
 \end_deeper
 \begin_layout Itemize
-no direct access to the data:
+no direct access to the data
 \end_layout
 
 \begin_deeper
@@ -1174,8 +1195,6 @@ some field names are unclean (coming directly from XML, JSON responses)
 
 \end_deeper
 \begin_layout Itemize
-
-\color magenta
 unexpected challenges during project realization:
 \end_layout
 
@@ -1220,7 +1239,7 @@ width "57page%"
 special "none"
 height "1in"
 height_special "totalheight"
-status collapsed
+status open
 
 \begin_layout Enumerate
 
@@ -1345,9 +1364,7 @@ status open
 \begin_layout Enumerate
 
 \lang british
-promote ones respecting keyword dependencies 
-\color red
-or other heuristics
+promote ones respecting keyword dependencies or other heuristics
 \end_layout
 
 \begin_layout Enumerate
@@ -1387,7 +1404,7 @@ width "40col%"
 special "none"
 height "1in"
 height_special "totalheight"
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Float figure
@@ -2374,7 +2391,7 @@ it is more efficient, if possible; less false matches
 \begin_layout Itemize
 
 \lang british
-common use-case: retrieve an entity given it's 
+common use-case: retrieve an entity given its 
 \begin_inset Quotes eld
 \end_inset
 
@@ -2406,19 +2423,17 @@ assumption: services directly cover most of requests
 \begin_deeper
 \begin_layout Itemize
 
-\color blue
 \lang british
-could useful to show the interpretations that achieve high rank, even if
- they do not satisfy some constraints (e.g.
- a mandatory filter is missing)
+if some keyword can be matched as the requested entity, and mapping of other
+ keywords fits the service constraints
 \end_layout
 
 \begin_layout Itemize
 
-\color blue
 \lang british
-if some keyword can be matched as the requested entity, and mapping of other
- keywords fits the service constraints
+future work: could be useful to show the interpretations that achieve high
+ rank, even if they do not satisfy some constraints (e.g.
+ a mandatory filter is missing)
 \end_layout
 
 \end_deeper
@@ -2454,7 +2469,7 @@ vspace{-15pt}
 \begin_inset Graphics
 	filename ../figures/accuracy.png
 	lyxscale 30
-	width 70text%
+	width 60text%
 
 \end_inset
 
@@ -2506,6 +2521,27 @@ name "fig:Accuracy-comparison-avg-prob"
 accuracy of 85% @ 4th suggestion
 \end_layout
 
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+probabilistic
+\begin_inset Quotes erd
+\end_inset
+
+ is more accurate
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+but vulnerable to wrong scoring of entry points
+\end_layout
+
+\begin_layout Itemize
+these scores are just rough estimations
+\end_layout
+
+\end_deeper
 \begin_layout Itemize
 testing set is limited - need more live feedback
 \end_layout
@@ -2729,11 +2765,7 @@ pause
 
 \end_deeper
 \begin_layout Itemize
-discussed a real-world case and 
-\color red
-an open-source
-\color inherit
- implementation
+discussed a real-world case and implementation
 \end_layout
 
 \begin_deeper
@@ -2742,8 +2774,6 @@ no assumptions on input but able to use patterns
 \end_layout
 
 \begin_layout Itemize
-
-\color red
 proposed solutions on data-service optimizations (backup slides)
 \end_layout
 
@@ -2795,7 +2825,6 @@ the system will be further supported
 \begin_deeper
 \begin_layout Itemize
 
-\color red
 \lang british
 it will improve efficiency of the physics analysis program by the CMS
 \end_layout
@@ -3571,31 +3600,42 @@ ask user to confirm if the final result was the intended one
 \end_deeper
 \begin_layout Itemize
 
-\color red
 \lang british
-sequential ML algorithms, such as HMM, so far modelled not directly the
- structured query, but 
-\emph on
-labelling of keywords in query
-\emph default
-.
- we propose to investigate if these could degrade the semi-explicit feedback:
+investigate impacts to feedback quality:
 \end_layout
 
 \begin_deeper
 \begin_layout Enumerate
-
-\color red
+sequential ML (e.g.
+ HMM in 
 \lang british
-multiple ways to be convert the labelling into structured query: better
- implicit feedback from autocompletion: we get direct feedback - selections
- are for separate terms, not for the query as whole, which is not being
- modelled
+KEYRY
+\lang english
+) modeled 
+\emph on
+\lang british
+labelling of keywords 
+\emph default
+as schema terms, but not into the final result directly
 \end_layout
 
 \begin_layout Enumerate
 
-\color red
+\lang british
+multiple ways to convert the labelling into structured query
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+better implicit feedback from autocompletion: selections are for separate
+ terms, not for the query as whole (but we do not model it)
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+
 \lang british
 feedback could depend on the false positives of the earlier mappings
 \begin_inset Foot
@@ -3603,7 +3643,6 @@ status collapsed
 
 \begin_layout Plain Layout
 
-\color red
 \lang british
 we seen that it is possible for a false matching to result in a correct
  result! this was more prevalent on ambiguous matching methods, e.g.
@@ -3621,6 +3660,82 @@ we seen that it is possible for a false matching to result in a correct
 Data integration war-stories: Dataservice Performance
 \end_layout
 
+\begin_layout Itemize
+
+\lang british
+Incremental view maintenance
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+e.g.
+ DBS service (80GB data; 280GB indexes)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+existing records change rarely
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+joining may large tables (or aggregates)
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+\lang british
+solutions: materialized refresh fast views with query rewriting; 
+\emph default
+DBToaster
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\emph on
+\lang british
+e.g.
+ ’find files where run in [r1, r2, r3] and dataset=X’
+\emph default
+: 
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+
+\family typewriter
+\size scriptsize
+Dataset (164K) -> Block (2M) -> Files (31M) -> FileRunLumi (902M) <- Runs
+ (65K)
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+Estimating query run time
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\lang british
+calculate standard deviations online (4 vars)
+\end_layout
+
+\begin_layout Itemize
+
+\lang british
+per different parameter types
+\end_layout
+
+\end_deeper
 \begin_layout Standard
 \begin_inset ERT
 status open
@@ -3713,7 +3828,7 @@ specific query language
 \begin_layout Enumerate
 
 \lang british
-(first) open-source implementation
+open-source implementation
 \end_layout
 
 \begin_layout Standard
