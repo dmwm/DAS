@@ -39,13 +39,13 @@ from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
 
-def db_monitor(uri, func, sleep=5, reload_time=86400):
+def db_monitor(uri, func, sleep, reload_map, reload_time):
     """
     Check status of MongoDB connection and reload DAS maps once in a while.
     """
     time0 = time.time()
-    conn = db_connection(uri)
     while True:
+        conn = db_connection(uri)
         if  not conn or not is_db_alive(uri):
             try:
                 conn = db_connection(uri)
@@ -58,9 +58,12 @@ def db_monitor(uri, func, sleep=5, reload_time=86400):
                 pass
         if  conn:
             if  time.time()-time0 > reload_time:
-                tstamp = time.strftime("%d %b %Y %H:%M:%S GMT", time.gmtime())
-                print "### %s reload DAS maps: %s" % (func, tstamp)
-                func()
+                msg = "call %s" % reload_map
+                print dastimestamp(), msg
+                try:
+                    reload_map()
+                except Exception as err:
+                    print dastimestamp('DAS ERROR '), str(err)
                 time0 = time.time()
         time.sleep(sleep)
 
@@ -86,7 +89,10 @@ class DASMapping(object):
 
         # Monitoring thread which performs auto-reconnection to MongoDB
         thname = 'mappingdb_monitor'
-        start_new_thread(thname, db_monitor, (self.dburi, self.init))
+        sleep  = 5
+        reload_time = config['mappingdb'].get('reload_time', 86400)
+        start_new_thread(thname, db_monitor, (self.dburi, self.init, sleep,
+            self.load_maps, reload_time))
 
         self.apilkeys = {}             # to be filled at run time
         self.keymap = {}               # to be filled at run time
@@ -98,14 +104,18 @@ class DASMapping(object):
         self.apiinfocache = {}         # to be filled at run time
         self.dbs_global_url = None     # to be determined at run time
         self.dbs_inst_names = None     # to be determined at run time
-        self.init_notationcache()
-        self.init_presentationcache()
-        self.init_apilkeys_cache()
+        self.load_maps()
 
     # ===============
     # Management APIs
     # ===============
-    def init_apilkeys_cache(self):
+    def load_maps(self):
+        "Helper function to reload DAS maps"
+        self.init_apilkeyscache()
+        self.init_notationcache()
+        self.init_presentationcache()
+
+    def init_apilkeyscache(self):
         "Read DAS maps and initialize apilkeys"
         for row in self.col.find({}):
             if  row.has_key('urn'):
