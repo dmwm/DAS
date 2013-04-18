@@ -1,12 +1,16 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 
 """
-The pycurl multi-retrieval code has been taken and modified from
+File: url_utils.py
+Author: Valentin Kuznetsov <vkuznet@gmail.com>
+Description: pycurl module for processing multiple URLs.
+Credits: original idea has been taken and modified from
 https://github.com/Lispython/pycurl/blob/master/examples/retriever-multi.py
 """
 
 import os
+import re
 import pycurl
 
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see
@@ -23,6 +27,15 @@ try:
 except:
     import StringIO
 
+PAT = re.compile(\
+        "(https|http)://[-A-Za-z0-9_+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]")
+
+def validate_url(url):
+    "Validate URL"
+    if  PAT.match(url):
+        return True
+    return False
+
 def getdata(urls, ckey, cert, num_conn=10):
     """
     Get data for given list of urls, using provided number of connections
@@ -30,15 +43,9 @@ def getdata(urls, ckey, cert, num_conn=10):
     """
 
     # Make a queue with urls
-    queue = []
-    for url in urls:
-        url = url.strip()
-        if not url or url[0] == "#":
-            continue
-        queue.append(url)
+    queue = [u for u in urls if validate_url(u)]
 
     # Check args
-    assert queue, "no URLs given"
     num_urls = len(queue)
     num_conn = min(num_conn, num_urls)
 
