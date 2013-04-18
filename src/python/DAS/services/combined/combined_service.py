@@ -38,6 +38,7 @@ from DAS.utils.utils import expire_timestamp, print_exc
 from DAS.utils.global_scope import SERVICES
 from DAS.utils.url_utils import getdata, get_proxy
 from DAS.utils.regex import site_pattern, se_pattern
+from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
 
 #
 # NOTE:
@@ -442,11 +443,14 @@ def dbs_files(url, kwds):
 
 def files4site(phedex_url, files, site):
     "Find site for given files"
-    proxy_getdata = get_proxy()
-    proxy_error = False
-#    print "\n### proxy_getdata", proxy_getdata
-    if  not proxy_getdata:
-        return # plan B
+
+# NB this part was used for testing Erlang/Go urlfetch servers, I'll keep it
+#    around for a while
+
+#    proxy_getdata = get_proxy()
+#    proxy_error = False
+#    if  not proxy_getdata:
+#        return # plan B
     params = {}
     if  site and site_pattern.match(site):
         params.update({'node': site})
@@ -460,7 +464,12 @@ def files4site(phedex_url, files, site):
         urls.append(url)
     tags = 'block.replica.node'
     prim_key = 'block'
-    gen = proxy_getdata(urls)
+
+    # get data via proxy server
+#    gen = proxy_getdata(urls)
+    # get data via urlfetch_pycurl function
+    gen = urlfetch_getdata(urls, CKEY, CERT)
+
     for rec in gen:
         # convert record string into StringIO for xml_parser
         source = StringIO.StringIO(rec)
