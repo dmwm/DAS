@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.10.X
 
+  - Add urlfetch_pycurl module to fetch content from multiple urls
   - Use custom db_monitor which check MongoDB connection as well as periodically
     reload DAS maps
   - Add preliminary support for file block=/a/b/c#123 runs site
