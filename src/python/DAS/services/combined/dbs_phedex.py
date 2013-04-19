@@ -262,7 +262,7 @@ class DBSPhedexService(object):
         self.dasconfig  = das_readconfig()
         self.uri        = self.dasconfig['mongodb']['dburi']
         self.urls       = None # defined at run-time via self.init()
-        self.expire     = None # defined at run-time via self.init()
+        self.expire     = 60   # defined at run-time via self.init()
         self.coll       = None # defined at run-time via self.init()
         self.worker_thr = None # defined at run-time via self.init()
         self.init()
@@ -291,12 +291,10 @@ class DBSPhedexService(object):
                 # Worker thread which update dbs/phedex DB
                 self.worker_thr = start_new_thread('dbs_phedex_worker', worker, \
                 (self.urls, self.uri, self.dbname, self.collname, self.expire))
-#                self.worker_thr = thread.start_new_thread(worker, \
-#                (self.urls, self.uri, self.dbname, self.collname, self.expire))
-#                set_thread_name(self.worker_thr, 'dbs_phedex_worker')
         except Exception as exc:
+            print "Fail DBSPhedexService:init\n", str(exc)
             self.urls       = None
-            self.expire     = None
+            self.expire     = 60
             self.coll       = None
             self.worker_thr = None
 
