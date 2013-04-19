@@ -180,7 +180,7 @@ stream: [
         {"das":"run.start_time", "ui":"Start time"},
         ],
 lumi : [
-        {"das": "lumi.number", "ui": "Luminosiy number", "link":[],
+        {"das": "lumi.number", "ui": "Luminosity number", "link":[],
          "description":"is used to identify luminosity block during run data-taking, it is \
 provided by DBS/CondDB/LumiDB systems",
          "examples":[
@@ -357,7 +357,7 @@ user    : [
         {"das":"user.phone2", "ui":"Alternative Phone"},
         ],
 status: [
-        {"das":"status", "ui":"Status", "link":[],
+        {"das":"status.name", "ui":"Status", "link":[],
          "description":"is a special DAS key to specify dataset status information",
          "examples":[
          "dataset status=valid",
