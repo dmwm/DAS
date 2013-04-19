@@ -117,6 +117,10 @@ def getdata(urls, ckey, cert, num_conn=10):
                 mcurl.remove_handle(curl)
                 print "Failed: ", curl.url, errno, errmsg
                 freelist.append(curl)
+                cleanup(mcurl)
+                err_msg = "Failed to process '%s', code=%s, error=%s" \
+                        % (curl.url, errno, errmsg)
+                raise Exception(err_msg)
             num_processed = num_processed + len(ok_list) + len(err_list)
             if num_q == 0:
                 break
@@ -125,7 +129,10 @@ def getdata(urls, ckey, cert, num_conn=10):
         # We just call select() to sleep until some more data is available.
         mcurl.select(1.0)
 
-    # Cleanup
+    cleanup(mcurl)
+
+def cleanup(mcurl):
+    "Clean-up MultiCurl handles"
     for curl in mcurl.handles:
         if  curl.hbuf is not None:
             curl.hbuf.close()
