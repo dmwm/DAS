@@ -230,7 +230,7 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
     conn_interval = 3 # default connection failure sleep interval
     threshold = 60 # 1 minute is threashold to check connections
     time0 = time.time()
-    print "\n### Start dbs_phedex worker"
+    print "### Start dbs_phedex worker"
     while True:
         if  conn_interval > threshold:
             conn_interval = threshold
@@ -290,8 +290,9 @@ class DBSPhedexService(object):
                 # Worker thread which update dbs/phedex DB
                 self.worker_thr = start_new_thread('dbs_phedex_worker', worker, \
                 (self.urls, self.uri, self.dbname, self.collname, self.expire))
+            print "### DBSPhedexService:init started successfully"
         except Exception as exc:
-            print "\n### Fail DBSPhedexService:init\n", str(exc)
+            print "### Fail DBSPhedexService:init\n", str(exc)
             self.urls       = None
             self.expire     = 60
             self.coll       = None

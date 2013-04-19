@@ -216,6 +216,7 @@ class DASMongocache(object):
                           ('das.empty_record', ASCENDING),
                           ('das.ts', ASCENDING)]
             create_indexes(self.merge, index_list)
+            print "### DASMongocache:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()

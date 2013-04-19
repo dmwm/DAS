@@ -179,6 +179,7 @@ class DASMapping(object):
             if  self.conn:
                 self.dbc  = self.conn[self.dbname]
                 self.col  = self.dbc[self.colname]
+            print "### DASMapping:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
