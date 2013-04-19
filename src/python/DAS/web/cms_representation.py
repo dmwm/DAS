@@ -172,7 +172,7 @@ def adjust_values(func, gen, links, pkey):
                 if  length > 1 and \
                     (key.lower().find('number') != -1 or \
                         key.lower().find('size') != -1):
-                    if  pkey != 'lumi.number':
+                    if  key != 'Luminosity number':
                         value = '<span %s>%s</span>' % (red, value)
             elif  key.lower().find('size') != -1 and val:
                 value = size_format(val)
