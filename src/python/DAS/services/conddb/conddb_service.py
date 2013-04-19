@@ -35,25 +35,6 @@ class CondDBService(DASAbstractService):
         Adjust CondDB parameters for specific query requests
         """
         day = 24*60*60
-        if  api == 'get_lumi_info':
-            if  kwds.has_key('date') and kwds['date'] != 'optional':
-                value = kwds['date']
-                if  isinstance(value, str) or isinstance(value, unicode):
-                    value = convert2date(value)
-                elif isinstance(value, dict):
-                    value = [kwds['date']['$gte'], kwds['date']['$lte']]
-                elif isinstance(value, int):
-                    value = [value, value+day]
-                else:
-                    msg = 'Unsupported date format %s' % kwds['date']
-                    raise Exception(msg)
-                kwds['startTime'] = convert_datetime(value[0])
-                kwds['endTime'] = convert_datetime(value[1])
-                del kwds['date']
-            elif kwds.has_key('runList'):
-                val = kwds['runList']
-                if  isinstance(val, dict): # we got a run range
-                    kwds['runList'] = '%s-%s' % (val['$gte'], val['$lte'])
         if  api == 'get_run_info':
             if  kwds.has_key('date') and kwds['date'] != 'optional':
                 value = kwds['date']
@@ -81,6 +62,9 @@ class CondDBService(DASAbstractService):
                     minrun = vvv
             if  minrun and maxrun:
                 kwds['Runs'] = '%s-%s' % (minrun, maxrun)
+        if  kwds.has_key('Runs'):
+            if  not kwds['Runs']:
+                del kwds['Runs']
 
     def parser(self, query, dformat, source, api):
         """
@@ -88,9 +72,5 @@ class CondDBService(DASAbstractService):
         """
         gen = DASAbstractService.parser(self, query, dformat, source, api)
         for row in gen:
-            if  api == 'get_lumi_info':
-                for lumi in row['lumi']['Lumi']:
-                    yield lumi
-            else:
-                yield row
+            yield row
 
