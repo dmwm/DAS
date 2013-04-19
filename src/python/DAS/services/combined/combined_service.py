@@ -94,40 +94,6 @@ def phedex_files(phedex_url, kwds):
         for row in files:
             yield row['name']
 
-def dbs_files4runs(dbs_url, files, runs):
-    """
-    DBS filter accepts list of runs and files and yield the matches.
-    TODO: need to run it via proxy_getdata for concurrent access to DBS.
-    """
-    expire = 600 # set some expire since we're not going to use it
-    if  which_dbs(dbs_url) == 'dbs':
-        # in DBS3 I'll use datasets API and pass release over there
-        for fname in files:
-            query = 'find run where file=%s' % fname
-            dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
-                        'query':query}
-            headers = {'Accept': 'text/xml'}
-            source, expire = \
-                getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
-            prim_key = 'run'
-            for row in qlxml_parser(source, prim_key):
-                run = row['run']['run']
-                if  run in runs:
-                    yield (run, fname)
-    else:
-        # we call runs?lfn=lfn to get list of runs from DBS
-        dbs_url += '/runs'
-        headers = {'Accept': 'application/json;text/json'}
-        for fname in files:
-            dbs_args = {'logical_file_name':fname}
-            source, expire = \
-                getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
-            for rec in json_parser(source, None):
-                for row in rec:
-                    runlist = row['run_num']
-                    if  set(runlist) & set(runs):
-                        yield (runlist, fname)
-
 def dbs_dataset4site_release(dbs_url, release):
     "Get dataset for given site and release"
     expire = 600 # set some expire since we're not going to use it
@@ -444,13 +410,6 @@ def dbs_files(url, kwds):
 def files4site(phedex_url, files, site):
     "Find site for given files"
 
-# NB this part was used for testing Erlang/Go urlfetch servers, I'll keep it
-#    around for a while
-
-#    proxy_getdata = get_proxy()
-#    proxy_error = False
-#    if  not proxy_getdata:
-#        return # plan B
     params = {}
     if  site and site_pattern.match(site):
         params.update({'node': site})
@@ -464,12 +423,7 @@ def files4site(phedex_url, files, site):
         urls.append(url)
     tags = 'block.replica.node'
     prim_key = 'block'
-
-    # get data via proxy server
-#    gen = proxy_getdata(urls)
-    # get data via urlfetch_pycurl function
     gen = urlfetch_getdata(urls, CKEY, CERT)
-
     for rec in gen:
         # convert record string into StringIO for xml_parser
         source = StringIO.StringIO(rec)
@@ -482,26 +436,6 @@ def files4site(phedex_url, files, site):
                     yield fname
                 elif params.has_key('se') and item['se'] == site:
                     yield fname
-
-def test_phedex_files():
-    "Test phedex_files"
-    url = 'https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas'
-    site = 'T2_IN_TIFR'
-    dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
-    block = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
-    kwds = {'block':block, 'site':site}
-    kwds = {'dataset':dataset, 'site':site}
-    gen = phedex_files(url, kwds)
-    for row in gen:
-        yield row
-
-def test_dbs_files4runs():
-    url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
-    url = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
-    files = test_phedex_files()
-    runs = [177718, 177053]
-    for row in dbs_files4runs(url, files, runs):
-        print row
 
 def test_dbs_files():
     phedex_url = 'https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas'
@@ -521,6 +455,4 @@ def test_dbs_files():
     print "Site=%s: nfiles=%s" % (site, count)
 
 if __name__ == '__main__':
-#    test_phedex_files()
-#    test_dbs_files4runs()
     test_dbs_files()
