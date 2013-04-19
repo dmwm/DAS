@@ -282,8 +282,7 @@ class DBSPhedexService(object):
                 create_indexes(self.coll, [index])
             dasmapping   = DASMapping(self.dasconfig)
             service_name = self.config.get('name', 'combined')
-            service_api  = \
-                    self.config.get('api', 'combined_dataset4site_release')
+            service_api  = self.config.get('api', 'dataset4site_release')
             mapping      = dasmapping.servicemap(service_name)
             self.urls    = mapping[service_api]['services']
             self.expire  = mapping[service_api]['expire']
@@ -292,7 +291,7 @@ class DBSPhedexService(object):
                 self.worker_thr = start_new_thread('dbs_phedex_worker', worker, \
                 (self.urls, self.uri, self.dbname, self.collname, self.expire))
         except Exception as exc:
-            print "Fail DBSPhedexService:init\n", str(exc)
+            print "\n### Fail DBSPhedexService:init\n", str(exc)
             self.urls       = None
             self.expire     = 60
             self.coll       = None
