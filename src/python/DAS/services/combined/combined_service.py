@@ -397,7 +397,7 @@ def dbs3_find(entity, url, kwds):
     runs    = kwds.get('runs', None)
     if  not dataset and not block:
         return
-    url = '%s/%s' % (url, entity)
+    url = '%s/%ss' % (url, entity) # DBS3 APIs use plural entity value
     if  dataset:
         params = {'dataset':dataset}
     elif block:
@@ -405,8 +405,15 @@ def dbs3_find(entity, url, kwds):
     elif lfn:
         params = {'logical_file_name': lfn}
     # TODO: replace minrun/maxrun with new run range parameter once DBS3 will be ready
+    # PLEASE NOTE: different DBS3 APIs uses different convention for run parameter
+    # see https://svnweb.cern.ch/trac/CMSDMWM/ticket/4193
+    # so I need to use minrun/maxrun for files API, while run_num for
+    # datasets/blocks/etc. APIs
     if  runs:
-        params.update({'minrun': runs[0], 'maxrun': runs[0]})
+        if  entity == 'file':
+            params.update({'minrun': runs[0], 'maxrun': runs[0]})
+        else:
+            params.update({'run_num': runs[0]})
     headers = {'Accept': 'application/json;text/json'}
     source, expire = \
         getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
@@ -469,6 +476,8 @@ def lumi4files(entity, url, files, runs=[]):
 
     urls = []
     for fname in files:
+        if  not fname:
+            continue
         if  which_dbs(url) == 'dbs':
             query   = 'find %s,lumi where file=%s' % (entity, fname)
             params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
@@ -500,9 +509,7 @@ def lumi4files(entity, url, files, runs=[]):
                 lumi = row['row']['lumi']
                 odict.setdefault(key, []).append(lumi)
         else:
-            jsondict = json.loads(rec)
             for row in json.loads(rec):
-                run = row['run_num']
                 if  entity == 'run':
                     key = row['run_num']
                 elif entity == 'file':
@@ -517,6 +524,50 @@ def lumi4files(entity, url, files, runs=[]):
                     odict.setdefault(key, []).append(lumi)
     for key, lumis in odict.iteritems():
         yield key, lumis
+
+def lumi4blocks(url, blocks, runs=[]):
+    """
+    Find file, run, lumi tuple for given set of files and (optional) runs.
+    """
+    urls = []
+    for blk in blocks:
+        if  not blk:
+            continue
+        if  which_dbs(url) == 'dbs':
+            query   = 'find file,run,lumi where block=%s' % blk
+            params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
+            headers = {'Accept': 'text/xml'}
+            dbs_url = url + '?' + urllib.urlencode(params)
+        else:
+            dbs_url = url + '/filelumis'
+            dbs_url = '%s?block_name=%s' % (dbs_url, urllib.quote(blk))
+            headers = {'Accept': 'application/json;text/json'}
+        urls.append(dbs_url)
+    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
+    prim_key = 'row'
+    odict = {} # output dict
+    for rec in gen:
+        if  which_dbs(url) == 'dbs':
+            source   = StringIO.StringIO(rec)
+            old_run  = None
+            lumis    = []
+            for row in qlxml_parser(source, prim_key):
+                run = row['row']['run']
+                lfn  = row['row']['file']
+                lumi = row['row']['lumi']
+                key  = (lfn, run)
+                odict.setdefault(key, []).append(lumi)
+        else:
+            for row in json.loads(rec):
+                run = row['run_num']
+                lfn = row['logical_file_name']
+                lumilist = row['lumi_section_num']
+                key  = (lfn, run)
+                for lumi in lumilist:
+                    odict.setdefault(key, []).append(lumi)
+    for key, lumis in odict.iteritems():
+        lfn, run = key
+        yield lfn, run, lumis
 
 def test_dbs_files():
     """
@@ -547,8 +598,8 @@ def test_lumi4files():
     here run clause is optional
     """
     time0   = time.time()
-    url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
     url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+    url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
     dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
     block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
     runs    = [177718, 177053]
@@ -564,7 +615,29 @@ def test_lumi4files():
     print "# of %s,lumi pairs: %s, elapsed time: %s sec" \
             % (entity, count, time.time()-time0)
 
+def test_lumi4blocks():
+    """
+    Test the following DAS query:
+    block, run, lumi dataset=/a/b/c run in [1,2,3]
+    here run clause is optional
+    """
+    time0   = time.time()
+    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+    url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+    dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
+    block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
+#    runs    = [177718, 177053]
+#    kwds    = {'dataset':dataset, 'runs':runs}
+    kwds    = {'dataset':dataset}
+    blocks  = dbs_find('block', url, kwds)
+    count   = 0
+    for row in lumi4blocks(url, blocks):
+        count += 1
+        print row
+    print "# of lfn,run,lumi tuples: %s, elapsed time: %s sec" \
+            % (count, time.time()-time0)
+
 if __name__ == '__main__':
 #    test_dbs_files()
-#    test_run_lumi()
-    test_lumi4files()
+#    test_lumi4files()
+    test_lumi4blocks()
