@@ -38,7 +38,7 @@ def validate_url(url):
         return True
     return False
 
-def getdata(urls, ckey, cert, num_conn=10):
+def getdata(urls, ckey, cert, headers=None, num_conn=10):
     """
     Get data for given list of urls, using provided number of connections
     and user credentials
@@ -66,6 +66,9 @@ def getdata(urls, ckey, cert, num_conn=10):
         curl.setopt(pycurl.SSLCERT, cert)
         curl.setopt(pycurl.SSL_VERIFYPEER, False)
         mcurl.handles.append(curl)
+        if  headers:
+            curl.setopt(pycurl.HTTPHEADER, \
+                    ["%s: %s" % (k, v) for k, v in headers.iteritems()])
 
     # Main loop
     freelist = mcurl.handles[:]
