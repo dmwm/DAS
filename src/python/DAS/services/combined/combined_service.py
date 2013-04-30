@@ -307,7 +307,7 @@ class CombinedService(DASAbstractService):
             else:
                 runs = [run_value]
             args.update({'runs': runs})
-            files = [f for f in dbs_files(dbs_url, args)]
+            files = [f for f in dbs_find('file', dbs_url, args)]
             site  = args.get('site')
             phedex_api = phedex_url.replace('/json/', '/xml/') + '/fileReplicas'
             for fname in files4site(phedex_api, files, site):
@@ -355,56 +355,76 @@ class CombinedService(DASAbstractService):
         except Exception as exc:
             print_exc(exc)
 
-def dbs2_files(url, kwds):
+def dbs2_find(entity, url, kwds):
     "Find files for given set of parameters"
-    expire = 600
+    if  entity not in ['run', 'file', 'block']:
+        msg = 'Unsupported entity key=%s' % entity
+        raise Exception(msg)
+    expire  = 600
     dataset = kwds.get('dataset', None)
-    block = kwds.get('block', None)
-    runs = kwds.get('runs', None)
+    block   = kwds.get('block', None)
+    lfn     = kwds.get('lfn', None)
+    runs    = kwds.get('runs', None)
     if  not dataset and not block:
         return
+    query = 'find %s' % entity
     if  dataset:
-        query = 'find file where dataset=%s' % dataset
+        query += ' where dataset=%s' % dataset
     elif block:
-        query = 'find file where block=%s' % block
+        query += ' where block=%s' % block
+    elif lfn:
+        query += ' where file=%s' % lfn
     rcond   = ' or '.join(['run=%s' % r for r in runs])
     query  += ' and (%s)' % rcond
     params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
     headers = {'Accept': 'text/xml'}
     source, expire = \
         getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
-    prim_key = 'file'
-    for row in qlxml_parser(source, prim_key):
-        lfn = row['file']['file']
-        yield lfn
+    pkey    = entity
+    for row in qlxml_parser(source, pkey):
+        val = row[entity][entity]
+        yield val
 
-def dbs3_files(url, kwds):
-    "Find files for given set of parameters"
-    expire = 600
+def dbs3_find(entity, url, kwds):
+    "Find DBS3 entity for given set of parameters"
+    if  entity not in ['run', 'file', 'block']:
+        msg = 'Unsupported entity key=%s' % entity
+        raise Exception(msg)
+    expire  = 600
     dataset = kwds.get('dataset', None)
-    block = kwds.get('block', None)
-    runs = kwds.get('runs', None)
+    block   = kwds.get('block', None)
+    lfn     = kwds.get('file', None)
+    runs    = kwds.get('runs', None)
     if  not dataset and not block:
         return
-    url += '/files'
-    # TODO: replace minrun/maxrun with new run range parameter once DBS3 will be ready
+    url = '%s/%s' % (url, entity)
     if  dataset:
-        params = {'dataset':dataset, 'minrun':runs[0], 'maxrun':runs[0]}
+        params = {'dataset':dataset}
     elif block:
-        params = {'block_name': block, 'minrun': runs[0], 'maxrun':runs[0]}
+        params = {'block_name': block}
+    elif lfn:
+        params = {'logical_file_name': lfn}
+    # TODO: replace minrun/maxrun with new run range parameter once DBS3 will be ready
+    if  runs:
+        params.update({'minrun': runs[0], 'maxrun': runs[0]})
     headers = {'Accept': 'application/json;text/json'}
     source, expire = \
         getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
     for row in json_parser(source, None):
         for rec in row:
-            yield rec['logical_file_name']
+            if  entity == 'file':
+                yield rec['logical_file_name']
+            elif  entity == 'block':
+                yield rec['block_name']
+            elif  entity == 'file':
+                yield rec['dataset']
 
-def dbs_files(url, kwds):
-    "Find files for given set of parameters"
+def dbs_find(entity, url, kwds):
+    "Find given DBS entity for given set of parameters"
     if  which_dbs(url) == 'dbs':
-        gen = dbs2_files(url, kwds)
+        gen = dbs2_find(entity, url, kwds)
     else:
-        gen = dbs3_files(url, kwds)
+        gen = dbs3_find(entity, url, kwds)
     for row in gen:
         yield row
 
@@ -438,12 +458,19 @@ def files4site(phedex_url, files, site):
                 elif params.has_key('se') and item['se'] == site:
                     yield fname
 
-def run_lumi4files(url, files, runs=[]):
-    "Find run lumi pairs for given set of files and (optional) runs"
+def lumi4files(entity, url, files, runs=[]):
+    """
+    Find entity lumi pairs for given set of files and (optional) runs.
+    The given entity must be: run, file, block
+    """
+    if  entity not in ['run', 'file', 'block']:
+        msg = 'Unsupported entity key=%s' % entity
+        raise Exception(msg)
+
     urls = []
     for fname in files:
         if  which_dbs(url) == 'dbs':
-            query   = 'find run,lumi where file=%s' % fname
+            query   = 'find %s,lumi where file=%s' % (entity, fname)
             params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
             headers = {'Accept': 'text/xml'}
             dbs_url = url + '?' + urllib.urlencode(params)
@@ -461,54 +488,35 @@ def run_lumi4files(url, files, runs=[]):
             old_run  = None
             lumis    = []
             for row in qlxml_parser(source, prim_key):
-                run  = row['row']['run']
+                if  entity == 'run':
+                    key = row['row']['run']
+                elif entity == 'file':
+                    key = row['row']['file']
+                elif entity == 'block':
+                    key = row['row']['block']
+                else:
+                    msg = 'Unsupported entity key=%s' % entity
+                    raise Exception(msg)
                 lumi = row['row']['lumi']
-                odict.setdefault(run, []).append(lumi)
+                odict.setdefault(key, []).append(lumi)
         else:
             jsondict = json.loads(rec)
             for row in json.loads(rec):
                 run = row['run_num']
+                if  entity == 'run':
+                    key = row['run_num']
+                elif entity == 'file':
+                    key = row['logical_file_name']
+                elif entity == 'block':
+                    key = row['block_name']
+                else:
+                    msg = 'Unsupported entity key=%s' % entity
+                    raise Exception(msg)
                 lumilist = row['lumi_section_num']
                 for lumi in lumilist:
-                    odict.setdefault(run, []).append(lumi)
-    for run, lumis in odict.iteritems():
-        yield run, lumis
-
-def file_lumi4files(url, files, runs=[]):
-    "Find file lumi pairs for given set of files and (optional) runs"
-    urls = []
-    for fname in files:
-        if  which_dbs(url) == 'dbs':
-            query   = 'find file,lumi where file=%s' % fname
-            params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
-            headers = {'Accept': 'text/xml'}
-            dbs_url = url + '?' + urllib.urlencode(params)
-        else:
-            dbs_url = url + '/filelumis'
-            dbs_url = '%s?logical_file_name=%s' % (dbs_url, fname)
-            headers = {'Accept': 'application/json;text/json'}
-        urls.append(dbs_url)
-    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
-    prim_key = 'row'
-    odict = {} # output dict
-    for rec in gen:
-        if  which_dbs(url) == 'dbs':
-            source   = StringIO.StringIO(rec)
-            old_run  = None
-            lumis    = []
-            for row in qlxml_parser(source, prim_key):
-                lfn  = row['row']['file']
-                lumi = row['row']['lumi']
-                odict.setdefault(lfn, []).append(lumi)
-        else:
-            jsondict = json.loads(rec)
-            for row in json.loads(rec):
-                lfn = row['logical_file_name']
-                lumilist = row['lumi_section_num']
-                for lumi in lumilist:
-                    odict.setdefault(lfn, []).append(lumi)
-    for lfn, lumis in odict.iteritems():
-        yield lfn, lumis
+                    odict.setdefault(key, []).append(lumi)
+    for key, lumis in odict.iteritems():
+        yield key, lumis
 
 def test_dbs_files():
     """
@@ -525,35 +533,14 @@ def test_dbs_files():
     kwds    = {'block':block, 'runs':runs}
     kwds    = {'dataset':dataset, 'runs':runs}
     site    = 'T2_IN_TIFR'
-    files   = dbs_files(url, kwds)
+    files   = dbs_find('file', url, kwds)
     count   = 0
     for fname in files4site(phedex_url, files, site):
         count += 1
         print fname
     print "Site=%s: nfiles=%s" % (site, count)
 
-def test_run_lumi():
-    """
-    Test the following DAS query:
-    run, lumi dataset=/a/b/c run in [1,2,3]
-    here run clause is optional
-    """
-    time0   = time.time()
-    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
-    url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
-    dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
-    block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
-    runs    = [177718, 177053]
-    kwds    = {'block':block, 'runs':runs}
-    kwds    = {'dataset':dataset, 'runs':runs}
-    files   = dbs_files(url, kwds)
-    count   = 0
-    for row in run_lumi4files(url, files):
-        count += 1
-        print row
-    print "# of file,lumi pairs:", count, "elapsed time:", time.time()-time0
-
-def test_file_lumi():
+def test_lumi4files():
     """
     Test the following DAS query:
     file, lumi dataset=/a/b/c run in [1,2,3]
@@ -567,14 +554,17 @@ def test_file_lumi():
     runs    = [177718, 177053]
     kwds    = {'block':block, 'runs':runs}
     kwds    = {'dataset':dataset, 'runs':runs}
-    files   = dbs_files(url, kwds)
+    files   = dbs_find('file', url, kwds)
     count   = 0
-    for row in file_lumi4files(url, files):
+    entity  = 'run'
+    entity  = 'file'
+    for row in lumi4files(entity, url, files):
         count += 1
         print row
-    print "# of file,lumi pairs:", count, "elapsed time:", time.time()-time0
+    print "# of %s,lumi pairs: %s, elapsed time: %s sec" \
+            % (entity, count, time.time()-time0)
 
 if __name__ == '__main__':
 #    test_dbs_files()
 #    test_run_lumi()
-    test_file_lumi()
+    test_lumi4files()
