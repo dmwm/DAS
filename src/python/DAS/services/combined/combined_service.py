@@ -23,6 +23,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
+import urllib
 try:
     import cStringIO as StringIO
 except:
@@ -437,7 +438,84 @@ def files4site(phedex_url, files, site):
                 elif params.has_key('se') and item['se'] == site:
                     yield fname
 
+def run_lumi4files(url, files, runs=[]):
+    "Find run lumi pairs for given set of files and (optional) runs"
+    urls = []
+    for fname in files:
+        if  which_dbs(url) == 'dbs':
+            query   = 'find run,lumi where file=%s' % fname
+            params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
+            headers = {'Accept': 'text/xml'}
+            dbs_url = url + '?' + urllib.urlencode(params)
+        else:
+            dbs_url = url + '/filelumis'
+            dbs_url = '%s?logical_file_name=%s' % (dbs_url, fname)
+            headers = {'Accept': 'application/json;text/json'}
+        urls.append(dbs_url)
+    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
+    prim_key = 'row'
+    odict = {} # output dict
+    for rec in gen:
+        if  which_dbs(url) == 'dbs':
+            source   = StringIO.StringIO(rec)
+            old_run  = None
+            lumis    = []
+            for row in qlxml_parser(source, prim_key):
+                run  = row['row']['run']
+                lumi = row['row']['lumi']
+                odict.setdefault(run, []).append(lumi)
+        else:
+            jsondict = json.loads(rec)
+            for row in json.loads(rec):
+                run = row['run_num']
+                lumilist = row['lumi_section_num']
+                for lumi in lumilist:
+                    odict.setdefault(run, []).append(lumi)
+    for run, lumis in odict.iteritems():
+        yield run, lumis
+
+def file_lumi4files(url, files, runs=[]):
+    "Find file lumi pairs for given set of files and (optional) runs"
+    urls = []
+    for fname in files:
+        if  which_dbs(url) == 'dbs':
+            query   = 'find file,lumi where file=%s' % fname
+            params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
+            headers = {'Accept': 'text/xml'}
+            dbs_url = url + '?' + urllib.urlencode(params)
+        else:
+            dbs_url = url + '/filelumis'
+            dbs_url = '%s?logical_file_name=%s' % (dbs_url, fname)
+            headers = {'Accept': 'application/json;text/json'}
+        urls.append(dbs_url)
+    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
+    prim_key = 'row'
+    odict = {} # output dict
+    for rec in gen:
+        if  which_dbs(url) == 'dbs':
+            source   = StringIO.StringIO(rec)
+            old_run  = None
+            lumis    = []
+            for row in qlxml_parser(source, prim_key):
+                lfn  = row['row']['file']
+                lumi = row['row']['lumi']
+                odict.setdefault(lfn, []).append(lumi)
+        else:
+            jsondict = json.loads(rec)
+            for row in json.loads(rec):
+                lfn = row['logical_file_name']
+                lumilist = row['lumi_section_num']
+                for lumi in lumilist:
+                    odict.setdefault(lfn, []).append(lumi)
+    for lfn, lumis in odict.iteritems():
+        yield lfn, lumis
+
 def test_dbs_files():
+    """
+    Test the following DAS query:
+    file dataset=/a/b/c run in [1,2,3] site=X
+    file block=/a/b/c#123 run in [1,2,3] site=X
+    """
     phedex_url = 'https://cmsweb.cern.ch/phedex/datasvc/xml/prod/fileReplicas'
     url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
     url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
@@ -454,5 +532,49 @@ def test_dbs_files():
         print fname
     print "Site=%s: nfiles=%s" % (site, count)
 
+def test_run_lumi():
+    """
+    Test the following DAS query:
+    run, lumi dataset=/a/b/c run in [1,2,3]
+    here run clause is optional
+    """
+    time0   = time.time()
+    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+    url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+    dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
+    block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
+    runs    = [177718, 177053]
+    kwds    = {'block':block, 'runs':runs}
+    kwds    = {'dataset':dataset, 'runs':runs}
+    files   = dbs_files(url, kwds)
+    count   = 0
+    for row in run_lumi4files(url, files):
+        count += 1
+        print row
+    print "# of file,lumi pairs:", count, "elapsed time:", time.time()-time0
+
+def test_file_lumi():
+    """
+    Test the following DAS query:
+    file, lumi dataset=/a/b/c run in [1,2,3]
+    here run clause is optional
+    """
+    time0   = time.time()
+    url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+    dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
+    block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
+    runs    = [177718, 177053]
+    kwds    = {'block':block, 'runs':runs}
+    kwds    = {'dataset':dataset, 'runs':runs}
+    files   = dbs_files(url, kwds)
+    count   = 0
+    for row in file_lumi4files(url, files):
+        count += 1
+        print row
+    print "# of file,lumi pairs:", count, "elapsed time:", time.time()-time0
+
 if __name__ == '__main__':
-    test_dbs_files()
+#    test_dbs_files()
+#    test_run_lumi()
+    test_file_lumi()
