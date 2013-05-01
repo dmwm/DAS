@@ -38,7 +38,7 @@ def validate_url(url):
         return True
     return False
 
-def getdata(urls, ckey, cert, headers=None, num_conn=10):
+def getdata(urls, ckey, cert, headers=None, num_conn=100):
     """
     Get data for given list of urls, using provided number of connections
     and user credentials
