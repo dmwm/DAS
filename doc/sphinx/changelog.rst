@@ -8,9 +8,9 @@ This release series is targeted to DAS production stability and quality.
 - 1.11.X
 
   - Implement support for comp-ops queries, e.g.
-    find run, lumi for given dataset
-    find file, lumi for given dataset
-    find file, lumi, run for given dataset
+    find run, lumi for given dataset and optional run range
+    find file, lumi for given dataset and optional run range
+    find file, lumi, run for given dataset and optional run range
     this work is done via new urlfetch_getdata module
 
 - 1.10.X
