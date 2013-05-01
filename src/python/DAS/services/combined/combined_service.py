@@ -338,7 +338,7 @@ class CombinedService(DASAbstractService):
             for row in lumi4files(entity, dbs_url, files):
                 if  api.startswith('run'):
                     run, lumi = row
-                    yield {'run':{'number':run}, 'lumi':{'number':lumi}}
+                    yield {'run':{'run_number':run}, 'lumi':{'number':lumi}}
                 if  api.startswith('file'):
                     lfn, lumi = row
                     yield {'file':{'name':lfn}, 'lumi':{'number':lumi}}
@@ -352,7 +352,7 @@ class CombinedService(DASAbstractService):
             blocks  = dbs_find('block', dbs_url, args)
             for row in file_run_lumis(dbs_url, blocks):
                 lfn, run, lumi = row
-                yield {'run':{'number':run}, 'lumi':{'number':lumi},
+                yield {'run':{'run_number':run}, 'lumi':{'number':lumi},
                        'file':{'name': lfn}}
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
