@@ -645,20 +645,21 @@ def test_lumi4files():
     here run clause is optional
     """
     time0   = time.time()
-    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
     url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
     dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
     block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
-    runs    = [177718, 177053]
+    runs    = [177487, 177878]
     kwds    = {'block':block, 'runs':runs}
-    kwds    = {'dataset':dataset, 'runs':runs}
-    kwds    = {'dataset':dataset}
+#    runs    = [177718, 177053]
+#    kwds    = {'dataset':dataset, 'runs':runs}
+#    kwds    = {'dataset':dataset}
     files   = dbs_find('file', url, kwds)
     files   = [f for f in files]
     print "test_lumi4files", len(files), "files"
     count   = 0
-    entity  = 'run'
     entity  = 'file'
+    entity  = 'run'
     for row in lumi4files(entity, url, files):
         count += 1
         print row
