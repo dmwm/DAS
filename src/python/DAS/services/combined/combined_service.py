@@ -34,10 +34,10 @@ import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import json_parser, get_key_cert, dastimestamp
+from DAS.utils.utils import print_exc, convert2ranges
 from DAS.utils.ddict import DotDict
-from DAS.utils.utils import expire_timestamp, print_exc
 from DAS.utils.global_scope import SERVICES
-from DAS.utils.url_utils import getdata, get_proxy
+from DAS.utils.url_utils import getdata
 from DAS.utils.regex import site_pattern, se_pattern, int_number_pattern
 from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
 
@@ -114,7 +114,7 @@ def dbs_dataset4site_release(dbs_url, release):
             elif row.has_key('error'):
                 err = row.get('reason', None)
                 err = err if err else row['error']
-                yield 'DBS error: %' % err
+                yield 'DBS error: %s' % err
     else:
         # we call datasets?release=release to get list of datasets
         dbs_url += '/datasets'
@@ -184,7 +184,6 @@ def site4dataset(dbs_url, phedex_api, args, expire):
         getdata(phedex_api, phedex_args, headers, expire, post=True)
     prim_key = 'block'
     tags = 'block.replica.node'
-    found = {}
     site_info = {}
     for rec in xml_parser(source, prim_key, tags):
         ddict = DotDict(rec)
@@ -222,6 +221,27 @@ def site4dataset(dbs_url, phedex_api, args, expire):
         row = {'site':{'name':key, 'dataset_fraction': nfiles,
             'block_fraction': nblks, 'block_completion': b_completion}}
         yield row
+
+def process_lumis_with(ikey, gen):
+    "Helper function to process lumis with given key from provided generator"
+    odict = {}
+    for row in gen:
+        lfn, run, lumi = row
+        if  ikey == 'file':
+            key = lfn
+        if  ikey == 'run':
+            key = run
+        if  isinstance(lumi, list):
+            for ilumi in lumi:
+                odict.setdefault(key, []).append(ilumi)
+        else:
+            odict.setdefault(key, []).append(ilumi)
+    for key, lumi_list in odict.iteritems():
+        lumis = convert2ranges(lumi_list)
+        if  ikey == 'file':
+            yield {'file':{'name':key}, 'lumi':{'number':lumis}}
+        if  ikey == 'run':
+            yield {'run':{'run_number':key}, 'lumi':{'number':lumis}}
 
 class CombinedService(DASAbstractService):
     """
@@ -297,7 +317,8 @@ class CombinedService(DASAbstractService):
                 msg += str(err)
                 row = {'site':{'name':'Fail to look-up site info',
                     'error':msg, 'dataset_fraction': 'N/A',
-                    'block_fraction':'N/A', 'block_completion':'N/A'}, 'error': msg}
+                    'block_fraction':'N/A', 'block_completion':'N/A'},
+                    'error': msg}
                 yield row
         if  api == 'files4dataset_runs_site' or \
             api == 'files4block_runs_site':
@@ -318,7 +339,8 @@ class CombinedService(DASAbstractService):
             for fname in files4site(phedex_api, files, site):
                 yield {'file':{'name':fname}}
         if  api == 'run_lumi4dataset' or api == 'run_lumi4block' or \
-            api == 'file_lumi4dataset' or api == 'file_lumi4block':
+            api == 'file_lumi4dataset' or api == 'file_lumi4block' or \
+            api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block':
             run_value = args.get('run', [])
             if  isinstance(run_value, dict) and run_value.has_key('$in'):
                 runs = run_value['$in']
@@ -330,30 +352,19 @@ class CombinedService(DASAbstractService):
                 else:
                     runs = []
             args.update({'runs': runs})
-            files = dbs_find('file', dbs_url, args)
-            if  api.startswith('run'):
-                entity  = 'run'
-            if  api.startswith('file'):
-                entity  = 'file'
-            for row in lumi4files(entity, dbs_url, files):
-                if  api.startswith('run'):
-                    run, lumi = row
-                    yield {'run':{'run_number':run}, 'lumi':{'number':lumi}}
-                if  api.startswith('file'):
-                    lfn, lumi = row
-                    yield {'file':{'name':lfn}, 'lumi':{'number':lumi}}
-        if  api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block':
-            run_value = args.get('run')
-            if  isinstance(run_value, dict) and run_value.has_key('$in'):
-                runs = run_value['$in']
-            else:
-                runs = [run_value]
-            args.update({'runs': runs})
-            blocks  = dbs_find('block', dbs_url, args)
-            for row in file_run_lumis(dbs_url, blocks):
-                lfn, run, lumi = row
-                yield {'run':{'run_number':run}, 'lumi':{'number':lumi},
-                       'file':{'name': lfn}}
+            blocks = dbs_find('block', dbs_url, args)
+            gen = file_run_lumis(dbs_url, blocks, runs)
+            if  api.startswith('run_lumi'):
+                for row in process_lumis_with('run', gen):
+                    yield row
+            if  api.startswith('file_lumi'):
+                for row in process_lumis_with('file', gen):
+                    yield row
+            if  api.startswith('file_run_lumi'):
+                for row in file_run_lumis(dbs_url, blocks, runs):
+                    lfn, run, lumi = row
+                    yield {'run':{'run_number':run}, 'lumi':{'number':lumi},
+                           'file':{'name': lfn}}
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
         """
@@ -373,13 +384,6 @@ class CombinedService(DASAbstractService):
         if  api == 'dataset4site':
             headers = {'Accept': 'application/json;text/json'}
             datastream, expire = getdata(url, args, headers, expire)
-            try: # get HTTP header and look for Expires
-                e_time = expire_timestamp(\
-                    datastream.info().__dict__['dict']['expires'])
-                if  e_time > time.time():
-                    expire = e_time
-            except:
-                pass
             genrows = parse_data(datastream)
         if  api == 'lumi4dataset':
             headers = {'Accept': 'application/json;text/json'}
@@ -447,10 +451,10 @@ def dbs3_find(entity, url, kwds):
         params = {'block_name': block}
     elif lfn:
         params = {'logical_file_name': lfn}
-    # TODO: replace minrun/maxrun with new run range parameter once DBS3 will be ready
-    # PLEASE NOTE: different DBS3 APIs uses different convention for run parameter
-    # see https://svnweb.cern.ch/trac/CMSDMWM/ticket/4193
-    # so I need to use minrun/maxrun for files API, while run_num for
+    # TODO: replace minrun/maxrun with new run range parameter once DBS3 will
+    # be ready PLEASE NOTE: different DBS3 APIs uses different convention for
+    # run parameter see https://svnweb.cern.ch/trac/CMSDMWM/ticket/4193 so I
+    # need to use minrun/maxrun for files API, while run_num for
     # datasets/blocks/etc. APIs
     if  runs:
         if  entity == 'file':
@@ -508,69 +512,7 @@ def files4site(phedex_url, files, site):
                 elif params.has_key('se') and item['se'] == site:
                     yield fname
 
-def lumi4files(entity, url, files, runs=[]):
-    """
-    Find entity lumi pairs for given set of files and (optional) runs.
-    The given entity must be: run, file, block
-    """
-    if  entity not in ['run', 'file', 'block']:
-        msg = 'Unsupported entity key=%s' % entity
-        raise Exception(msg)
-
-    urls = []
-    for fname in files:
-        if  not fname:
-            continue
-        if  which_dbs(url) == 'dbs':
-            query   = 'find %s,lumi where file=%s' % (entity, fname)
-            params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
-            headers = {'Accept': 'text/xml'}
-            dbs_url = url + '?' + urllib.urlencode(params)
-        else:
-            dbs_url = url + '/filelumis'
-            dbs_url = '%s?logical_file_name=%s' % (dbs_url, fname)
-            headers = {'Accept': 'application/json;text/json'}
-        urls.append(dbs_url)
-    if  not urls:
-        return
-    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
-    prim_key = 'row'
-    odict = {} # output dict
-    for rec in gen:
-        if  which_dbs(url) == 'dbs':
-            source   = StringIO.StringIO(rec)
-            old_run  = None
-            lumis    = []
-            for row in qlxml_parser(source, prim_key):
-                if  entity == 'run':
-                    key = row['row']['run']
-                elif entity == 'file':
-                    key = row['row']['file']
-                elif entity == 'block':
-                    key = row['row']['block']
-                else:
-                    msg = 'Unsupported entity key=%s' % entity
-                    raise Exception(msg)
-                lumi = row['row']['lumi']
-                odict.setdefault(key, []).append(lumi)
-        else:
-            for row in json.loads(rec):
-                if  entity == 'run':
-                    key = row['run_num']
-                elif entity == 'file':
-                    key = row['logical_file_name']
-                elif entity == 'block':
-                    key = row['block_name']
-                else:
-                    msg = 'Unsupported entity key=%s' % entity
-                    raise Exception(msg)
-                lumilist = row['lumi_section_num']
-                for lumi in lumilist:
-                    odict.setdefault(key, []).append(lumi)
-    for key, lumis in odict.iteritems():
-        yield key, lumis
-
-def file_run_lumis(url, blocks, runs=[]):
+def file_run_lumis(url, blocks, runs=None):
     """
     Find file, run, lumi tuple for given set of files and (optional) runs.
     """
@@ -580,12 +522,19 @@ def file_run_lumis(url, blocks, runs=[]):
             continue
         if  which_dbs(url) == 'dbs':
             query   = 'find file,run,lumi where block=%s' % blk
-            params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
+            if  runs and isinstance(runs, list):
+                val = ' or '.join(['run=%s' % r for r in runs])
+                query += ' and (%s)' % val
+            params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9',
+                       'query':query}
             headers = {'Accept': 'text/xml'}
             dbs_url = url + '?' + urllib.urlencode(params)
         else:
             dbs_url = url + '/filelumis'
             dbs_url = '%s?block_name=%s' % (dbs_url, urllib.quote(blk))
+            if  runs and isinstance(runs, list):
+                # TODO: I need to add run-range condition once DBS3 ready
+                pass
             headers = {'Accept': 'application/json;text/json'}
         urls.append(dbs_url)
     if  not urls:
@@ -596,10 +545,9 @@ def file_run_lumis(url, blocks, runs=[]):
     for rec in gen:
         if  which_dbs(url) == 'dbs':
             source   = StringIO.StringIO(rec)
-            old_run  = None
             lumis    = []
             for row in qlxml_parser(source, prim_key):
-                run = row['row']['run']
+                run  = row['row']['run']
                 lfn  = row['row']['file']
                 lumi = row['row']['lumi']
                 key  = (lfn, run)
@@ -609,7 +557,7 @@ def file_run_lumis(url, blocks, runs=[]):
                 run = row['run_num']
                 lfn = row['logical_file_name']
                 lumilist = row['lumi_section_num']
-                key  = (lfn, run)
+                key = (lfn, run)
                 for lumi in lumilist:
                     odict.setdefault(key, []).append(lumi)
     for key, lumis in odict.iteritems():
@@ -638,34 +586,6 @@ def test_dbs_files():
         print fname
     print "Site=%s: nfiles=%s" % (site, count)
 
-def test_lumi4files():
-    """
-    Test the following DAS query:
-    file, lumi dataset=/a/b/c run in [1,2,3]
-    here run clause is optional
-    """
-    time0   = time.time()
-    url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
-    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
-    dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
-    block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
-    runs    = [177487, 177878]
-    kwds    = {'block':block, 'runs':runs}
-#    runs    = [177718, 177053]
-#    kwds    = {'dataset':dataset, 'runs':runs}
-#    kwds    = {'dataset':dataset}
-    files   = dbs_find('file', url, kwds)
-    files   = [f for f in files]
-    print "test_lumi4files", len(files), "files"
-    count   = 0
-    entity  = 'file'
-    entity  = 'run'
-    for row in lumi4files(entity, url, files):
-        count += 1
-        print row
-    print "# of %s,lumi pairs: %s, elapsed time: %s sec" \
-            % (entity, count, time.time()-time0)
-
 def test_file_run_lumis():
     """
     Test the following DAS query:
@@ -673,16 +593,17 @@ def test_file_run_lumis():
     here run clause is optional
     """
     time0   = time.time()
-    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
     url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
+    url     = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
     dataset = '/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO'
-    block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
-#    runs    = [177718, 177053]
-#    kwds    = {'dataset':dataset, 'runs':runs}
-    kwds    = {'dataset':dataset}
-    blocks  = dbs_find('block', url, kwds)
+#    block   = '%s#19110c74-1b66-11e1-a98b-003048f02c8a' % dataset
+    runs    = [177718, 177053]
+    kwds    = {'dataset':dataset, 'runs':runs}
+#    kwds    = {'dataset':dataset}
+    blocks  = [b for b in dbs_find('block', url, kwds)]
+    print "Found %s blocks" % len(blocks)
     count   = 0
-    for row in file_run_lumis(url, blocks):
+    for row in file_run_lumis(url, blocks, runs):
         count += 1
         print row
     print "# of lfn,run,lumi tuples: %s, elapsed time: %s sec" \
@@ -690,5 +611,4 @@ def test_file_run_lumis():
 
 if __name__ == '__main__':
 #    test_dbs_files()
-    test_lumi4files()
-#    test_file_run_lumis()
+    test_file_run_lumis()
