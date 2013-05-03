@@ -29,6 +29,7 @@ from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 from DAS.utils.utils import delete_keys, parse_filter_string
 from DAS.utils.utils import fix_times, das_dateformat, http_timestamp
 from DAS.utils.utils import api_rows, regen, das_sinfo, sort_rows
+from DAS.utils.utils import convert2ranges
 from DAS.utils.regex import das_time_pattern
 from DAS.core.das_query import DASQuery
 
@@ -36,6 +37,13 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_convert2ranges(self):
+        "Test sort_rows function"
+        rows   = [5, 1, 1, 1, 2, 2, 3, 3, 3, 4, 8, 9, 1]
+        expect = [[1,5], [8,9]]
+        result = [r for r in convert2ranges(rows)]
+        self.assertEqual(result, expect)
+
     def test_sort_rows(self):
         "Test sort_rows function"
         rows   = [5, 1, 1, 1, 2, 2, 3, 3, 3, 4]
