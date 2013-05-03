@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0702,R0913,R0912,R0915,R0904
+#pylint: disable-msg=W0702,R0913,R0912,R0915,R0904,R0914
 """
 DBS3 data-service plugin.
 NOTE: DBS3 APIs provide flat namespace JSON records. It means
@@ -25,16 +25,117 @@ __author__ = "Valentin Kuznetsov"
 # system modules
 import time
 import urllib
-from   types import GeneratorType
+from types import GeneratorType
 
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, json_parser, print_exc
-from DAS.utils.utils import expire_timestamp, convert2ranges
-from DAS.utils.url_utils import getdata, get_proxy
+from DAS.utils.utils import map_validator, json_parser
+from DAS.utils.utils import expire_timestamp, convert2ranges, get_key_cert
+from DAS.utils.url_utils import getdata
+from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
+from DAS.utils.regex import int_number_pattern
+
 import DAS.utils.jsonwrapper as json
 
-print "\n### DBS3 module, proxy", get_proxy()
+CKEY, CERT = get_key_cert()
+
+def process_lumis_with(ikey, gen):
+    "Helper function to process lumis with given key from provided generator"
+    odict = {}
+    for row in gen:
+        lfn, run, lumi = row
+        if  ikey == 'file':
+            key = lfn
+        if  ikey == 'run':
+            key = run
+        if  ikey == 'file_run':
+            key = (lfn, run)
+        if  isinstance(lumi, list):
+            for ilumi in lumi:
+                odict.setdefault(key, []).append(ilumi)
+        else:
+            odict.setdefault(key, []).append(ilumi)
+    for key, lumi_list in odict.iteritems():
+        lumis = convert2ranges(lumi_list)
+        if  ikey == 'file':
+            yield {'file':{'name':key}, 'lumi':{'number':lumis}}
+        if  ikey == 'run':
+            yield {'run':{'run_number':key}, 'lumi':{'number':lumis}}
+        if  ikey == 'file_run':
+            lfn, run = key
+            yield {'run':{'run_number':run}, 'lumi':{'number':lumi},
+                   'file':{'name': lfn}}
+
+def dbs_find(entity, url, kwds):
+    "Find DBS3 entity for given set of parameters"
+    if  entity not in ['run', 'file', 'block']:
+        msg = 'Unsupported entity key=%s' % entity
+        raise Exception(msg)
+    expire  = 600
+    dataset = kwds.get('dataset', None)
+    block   = kwds.get('block', None)
+    lfn     = kwds.get('file', None)
+    runs    = kwds.get('runs', [])
+    if  not (dataset or block or lfn):
+        return
+    url = '%s/%ss' % (url, entity) # DBS3 APIs use plural entity value
+    if  dataset:
+        params = {'dataset':dataset}
+    elif block:
+        params = {'block_name': block}
+    elif lfn:
+        params = {'logical_file_name': lfn}
+    # TODO: replace minrun/maxrun with new run range parameter once DBS3 will
+    # be ready PLEASE NOTE: different DBS3 APIs uses different convention for
+    # run parameter see https://svnweb.cern.ch/trac/CMSDMWM/ticket/4193 so I
+    # need to use minrun/maxrun for files API, while run_num for
+    # datasets/blocks/etc. APIs
+    if  runs:
+        if  entity == 'file':
+            params.update({'minrun': runs[0], 'maxrun': runs[0]})
+        else:
+            params.update({'run_num': runs[0]})
+    headers = {'Accept': 'application/json;text/json'}
+    source, expire = \
+        getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
+    for row in json_parser(source, None):
+        for rec in row:
+            if  entity == 'file':
+                yield rec['logical_file_name']
+            elif  entity == 'block':
+                yield rec['block_name']
+            elif  entity == 'file':
+                yield rec['dataset']
+
+def file_run_lumis(url, blocks, runs=None):
+    """
+    Find file, run, lumi tuple for given set of files and (optional) runs.
+    """
+    headers = {'Accept': 'application/json;text/json'}
+    urls = []
+    for blk in blocks:
+        if  not blk:
+            continue
+        dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
+        if  runs and isinstance(runs, list):
+            # TODO: I need to add run-range condition once DBS3 ready
+            pass
+        urls.append(dbs_url)
+    if  not urls:
+        return
+    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
+    odict = {} # output dict
+    for rec in gen:
+        for row in json.loads(rec):
+            run = row['run_num']
+            lfn = row['logical_file_name']
+            lumilist = row['lumi_section_num']
+            key = (lfn, run)
+            for lumi in lumilist:
+                odict.setdefault(key, []).append(lumi)
+    for key, lumis in odict.iteritems():
+        lfn, run = key
+        yield lfn, run, lumis
 
 def get_api(url):
     "Extract from DBS3 URL the api name"
@@ -61,6 +162,30 @@ def old_timestamp(tstamp, threshold=2592000):
         return True
     return False
 
+def get_file_run_lumis(url, api, args):
+    "Helper function to deal with file,run,lumi requests"
+    run_value = args.get('run', [])
+    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+        runs = run_value['$in']
+    elif isinstance(run_value, list):
+        runs = run_value
+    else:
+        if  int_number_pattern.match(run_value):
+            runs = [run_value]
+        else:
+            runs = []
+    args.update({'runs': runs})
+    blocks = dbs_find('block', url, args)
+    gen = file_run_lumis(url, blocks, runs)
+    if  api.startswith('run_lumi'):
+        key = 'run'
+    if  api.startswith('file_lumi'):
+        key = 'file'
+    if  api.startswith('file_run_lumi'):
+        key = 'file_run'
+    for row in process_lumis_with(key, gen):
+        yield row
+
 class DBS3Service(DASAbstractService):
     """
     Helper class to provide DBS service
@@ -75,78 +200,28 @@ class DBS3Service(DASAbstractService):
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
-    def getdata_helper(self, url, params, expire, headers=None):
-        "URL call wrapper"
-        post = None
+    def apicall(self, dasquery, url, api, args, dformat, expire):
+        "DBS3 implementation of AbstractService:apicall method"
+        if  api == 'run_lumi4dataset' or api == 'run_lumi4block' or \
+            api == 'file_lumi4dataset' or api == 'file_lumi4block' or \
+            api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block':
+            time0 = time.time()
+            dbs_url = '/'.join(url.split('/')[:-1])
+            dasrows = get_file_run_lumis(dbs_url, api, args)
+            ctime = time.time()-time0
+            self.write_to_cache(dasquery, expire, url, api, args,
+                    dasrows, ctime)
+        else:
+            super(DBS3Service, self).apicall(\
+                    dasquery, url, api, args, dformat, expire)
+
+    def getdata(self, url, params, expire, headers=None, post=None):
+        """URL call wrapper"""
         if  not headers:
             headers =  {'Accept': 'application/json' } # DBS3 always needs that
         return getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert,
                 doseq=False, system=self.name)
-
-    def getdata(self, url, params, expire, headers):
-        """URL call wrapper"""
-        if  isinstance(url, list):
-            # multi-stage workflows
-            if  [get_api(u) for u in url] == ['blocks', 'filelumis']:
-                edict = {'expire':expire}
-                dataset = params.get('dataset')
-                res = self.file_lumi_helper(url, dataset, edict)
-                return res, edict.get('expire')
-        return self.getdata_helper(url, params, expire, headers)
-
-    def file_lumi_helper(self, url, dataset, edict):
-        "Specialized DBS3 helper to get file, lumi pairs for a given dataset"
-        params  = {'dataset': dataset}
-        expire  = edict.get('expire')
-        data, _ = self.getdata_helper(url[0], params, expire)
-        blocks  = json.load(data)
-
-        proxy_getdata = get_proxy()
-        proxy_error = False
-        if  proxy_getdata:
-            try:
-                # fetch data concurrently via proxy
-                blk_list = (r['block_name'] for r in blocks)
-                urls = ('%s?block_name=%s' % (url[1], urllib.quote(b)) \
-                        for b in blk_list)
-                gen = proxy_getdata(urls)
-                for item in gen:
-                    filelumis = json.loads(item)
-                    if  isinstance(filelumis, list):
-                        for row in filelumis:
-                            lumi = row.get('lumi_section_num', None)
-                            lfn  = row.get('logical_file_name', None)
-                            rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
-                            yield rec
-                    else:
-                        print "\n### filelumis", filelumis
-                        lumi = filelumis.get('lumi_section_num', None)
-                        lfn  = filelumis.get('logical_file_name', None)
-                        rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
-                        yield rec
-            except Exception as exc:
-                print_exc(exc)
-                proxy_error = True
-
-        # plan B, get data sequentially
-        if  proxy_error or not proxy_getdata:
-            for row in blocks:
-                params = {'block_name': row['block_name']}
-                val, expire = self.getdata_helper(url[1], params, expire)
-                filelumis = json.load(val)
-                edict.update({'expire': expire})
-                if  isinstance(filelumis, list):
-                    for row in filelumis:
-                        lumi = row.get('lumi_section_num', None)
-                        lfn  = row.get('logical_file_name', None)
-                        rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
-                        yield rec
-                else:
-                    lumi = row.get('lumi_section_num', None)
-                    lfn  = row.get('logical_file_name', None)
-                    rec  = {'lumi':{'number':lumi}, 'file':{'name':lfn}}
-                    yield rec
 
     def url_instance(self, url, instance):
         """
@@ -246,7 +321,7 @@ class DBS3Service(DASAbstractService):
                 new_expire = expire_timestamp(self.extended_expire)
                 if  mod_time and \
                     old_timestamp(mod_time, self.extended_threshold):
-                    row.update({'das':{'expire': self.new_expire}})
+                    row.update({'das':{'expire': new_expire}})
                 # filesummaries is summary DBS API about dataset,
                 # it collects information about number of files/blocks/events
                 # for given dataset and therefore will be merged with datasets
@@ -334,7 +409,6 @@ class DBS3Service(DASAbstractService):
                     yield dict(name=val)
         elif api == 'files' or api == 'files_via_dataset' or \
             api == 'files_via_block':
-            mongo_query = query.mongo_query
             status = 'VALID'
             for row in gen:
                 if  query.mongo_query.has_key('spec'):

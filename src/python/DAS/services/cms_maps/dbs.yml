@@ -551,21 +551,6 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
-urn : fakeFileLumis4dataset
-url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
-expire : 3600
-params : {
-     "api":"executeQuery", "apiversion": "DBS_2_0_9", "dataset":"required",
-     "query":""
-}
-lookup : file,lumi
-das_map : [
-    {"das_key":"file", "rec_key":"file.name"},
-    {"das_key":"lumi", "rec_key":"lumi.number"},
-    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
-     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
-]
----
 urn : listFileProcQuality
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
@@ -594,6 +579,88 @@ das_map : [
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+]
+---
+urn : run_lumi4dataset
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run": "optional"}
+lookup : run,lumi
+das_map : [
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn : run_lumi4block
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+format : JSON
+expire : 3600
+params : {"block":"required", "run": "optional"}
+lookup : run,lumi
+das_map : [
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+]
+---
+urn : file_lumi4dataset
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run": "optional"}
+lookup : file,lumi
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn : file_lumi4block
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+format : JSON
+expire : 3600
+params : {"block":"required", "run": "optional"}
+lookup : file,lumi
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+]
+---
+urn : file_run_lumi4dataset
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run": "optional"}
+lookup : file,run,lumi
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn : file_run_lumi4block
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+format : JSON
+expire : 3600
+params : {"block":"required", "run": "optional"}
+lookup : file,run,lumi
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
 notations : [
