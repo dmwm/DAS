@@ -130,6 +130,7 @@ file : [
          ]
         },
         {"das":"file.size", "ui":"File size"},
+        {"das":"file.status", "ui":"Status"},
         {"das":"file.type", "ui":"File type"},
         {"das":"file.nevents", "ui":"Number of events"},
         {"das":"file.replica.site", "ui":"Site"},
