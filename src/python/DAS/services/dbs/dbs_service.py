@@ -586,11 +586,6 @@ class DBSService(DASAbstractService):
                 kwds['query'] = 'required'
             kwds.pop('date')
         if  api == 'listFiles':
-            status = kwds['status']
-            if  status and status.lower() == 'invalid':
-                rlist  = 'retrive_invalid_files,retrive_status'
-                rlist += 'retrive_date,retrive_person'
-                kwds['retrive_list'] = rlist
             val = kwds.get('run', None)
             if  isinstance(val, dict):
                 # listFiles does not support run range, see
@@ -599,7 +594,6 @@ class DBSService(DASAbstractService):
             if  not kwds['path'] and not kwds['block_name'] and \
                 not kwds['pattern_lfn']:
                 kwds['path'] = 'required'
-            del kwds['status']
         if  api == 'fakeFiles4DatasetRun' or api == 'fakeFiles4BlockRun':
             cond = ""
             entity = 'dataset'
@@ -843,10 +837,11 @@ class DBSService(DASAbstractService):
                 del row['dataset']['site']
             if  api == 'listFiles':
                 if  query.has_key('spec'):
-                    if  query['spec'].has_key('status.name') and \
-                        query['spec']['status.name'] == 'INVALID':
-                        file_status = row['file']['status']
-                        if  file_status == 'VALID':
-                            row = None
+                    if  query['spec'].has_key('status.name'):
+                        spec_status = query['spec']['status.name']
+                        if  row.has_key('file'):
+                            file_status = row['file'].get('status', '')
+                            if  file_status.lower() != spec_status.lower():
+                                row = None
             if  row:
                 yield row
