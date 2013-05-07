@@ -420,18 +420,28 @@ class CMSRepresentation(DASRepresentation):
                         pval = row[pkey]
                     else:
                         pval = [i for i in DotDict(row).get_values(pkey)]
-                    if  isinstance(pval, list):
-                        if  pval and not isinstance(pval[0], list):
+                        if  isinstance(pval, list):
+                            if  pval and not isinstance(pval[0], list):
+                                pval = list(set(pval))
+                        else:
                             pval = list(set(pval))
-                    else:
-                        pval = list(set(pval))
-                    if  len(pval) == 1:
-                        pval = pval[0]
-                    if  pkey == 'run.run_number' or pkey == 'lumi.number':
-                        if  isinstance(pval, basestring):
-                            pval = int(pval)
+                        if  len(pval) == 1:
+                            pval = pval[0]
+                        if  pkey == 'run.run_number' or pkey == 'lumi.number':
+                            if  isinstance(pval, basestring):
+                                pval = int(pval)
+                except Exception as exc:
+                    msg  = "Fail to extract pval for pkey='%s', lkey='%s'" \
+                            % (pkey, lkey)
+                    msg += "\npval='%s', type(pval)='%s'" % (pval, type(pval))
+                    print msg
+                    print_exc(exc)
+                    pval = 'N/A'
+                try:
                     if  not filters:
-                        if  pval:
+                        if  pkey == 'summary':
+                            page += 'Summary information:'
+                        elif  pval and pval != 'N/A':
                             page += '%s: ' % lkey.capitalize()
                             if  lkey == 'parent' or lkey == 'child':
                                 if  str(pval).find('.root') != -1:
