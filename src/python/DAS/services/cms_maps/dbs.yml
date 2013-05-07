@@ -409,7 +409,7 @@ expire : 3600
 params: {
     "api" : "listFiles", "apiversion" : "DBS_2_0_9", "path" : "",
     "primary_dataset": "", "processed_dataset" : "", "data_tier_list" : "",
-    "analysis_dataset_name" : "", "block_name" : "", "other_details" : False,
+    "analysis_dataset_name" : "", "block_name" : "", "other_details" : True,
     "run_number" : "", "pattern_lfn": "", "detail" : False,
     "retrive_list" : "retrive_invalid_files,retrive_status,retrive_date,retrive_person",
     "status":"optional"}
