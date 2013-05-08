@@ -7,13 +7,44 @@ Unit test for DAS aggregators
 
 import unittest
 from DAS.core.das_aggregators import das_func, das_sum, das_avg, das_min, das_max
-from DAS.core.das_aggregators import das_count, das_median
+from DAS.core.das_aggregators import das_count, das_median, expand_lumis
 from DAS.utils.ddict import DotDict
 
 class testDASAggregators(unittest.TestCase):
     """
     A test class for the DAS aggregators
     """
+    def test_expand_lumis(self):
+        "Test expand_lumis function"
+        rows   = [{'lumi':[{'number': [[1,2], [5,7]]}]}]
+        expect = [{'lumi':{'number': 1}},
+                  {'lumi':{'number': 2}},
+                  {'lumi':{'number': 5}},
+                  {'lumi':{'number': 6}},
+                  {'lumi':{'number': 7}}]
+        result = [r for r in expand_lumis(rows)]
+        self.assertEqual(expect, result)
+
+        rows   = [{'lumi':[{'number': [[1,2]]}]}]
+        expect = [{'lumi':{'number': 1}},
+                  {'lumi':{'number': 2}}]
+        result = [r for r in expand_lumis(rows)]
+        self.assertEqual(expect, result)
+
+        rows   = [{'lumi':[{'number': [[1,2]]}], 'run':{'run_number':1}},
+                  {'lumi':[{'number': [[5,7]]}], 'run':{'run_number':2}}]
+        expect = [{'lumi':{'number': 1}, 'run':{'run_number':1}},
+                  {'lumi':{'number': 2}, 'run':{'run_number':1}},
+                  {'lumi':{'number': 5}, 'run':{'run_number':2}},
+                  {'lumi':{'number': 6}, 'run':{'run_number':2}},
+                  {'lumi':{'number': 7}, 'run':{'run_number':2}}]
+        result = [r for r in expand_lumis(rows)]
+        self.assertEqual(expect, result)
+
+        expect = {'value': 5}
+        result = das_count('lumi.number', rows)
+        self.assertEqual(expect, result)
+
     def test_aggregators(self):
         """test aggregators dict records"""
         rows = []
