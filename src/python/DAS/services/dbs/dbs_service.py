@@ -393,8 +393,8 @@ class DBSService(DASAbstractService):
             query = "find dataset, file, run, file.size, \
   file.numevents, count(lumi) where "
             cond = ''
-            val = kwds.get('run', 'required')
-            if  val != 'required':
+            val = kwds.get('run', 'optional')
+            if  val != 'optional':
                 if  isinstance(val, dict):
                     min_run = 0
                     max_run = 0
