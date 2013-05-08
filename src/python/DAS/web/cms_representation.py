@@ -176,7 +176,7 @@ def adjust_values(func, gen, links, pkey):
                         value = '<span %s>%s</span>' % (red, value)
             elif  key.lower().find('size') != -1 and val:
                 value = size_format(val)
-            elif  key.find('Number of ') != -1 and val:
+            elif  key.find('Number of ') != -1 and val and int(val) != 0:
                 value = int(val)
             elif  key.find('Run number') != -1 and val:
                 value = int(val)
