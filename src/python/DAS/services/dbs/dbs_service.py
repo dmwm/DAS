@@ -390,8 +390,8 @@ class DBSService(DASAbstractService):
             else:
                 kwds['query'] = 'required'
         if  api == 'summary4run':
-            query = "find dataset, file, run, file.size, \
-  file.numevents, count(lumi) where "
+            query = "find dataset, count(file), count(run), sum(file.size), \
+  sum(file.numevents), count(lumi) where "
             cond = ''
             val = kwds.get('run', 'optional')
             if  val != 'optional':
@@ -759,9 +759,11 @@ class DBSService(DASAbstractService):
                 continue
             if  row.has_key('row') and api == 'summary4run':
                 row = row['row']
-                row['file_size'] = row.pop('file.size')
-                row['nevents'] = row.pop('file.numevents')
+                row['file_size'] = row.pop('sum_file.size')
+                row['nevents'] = row.pop('sum_file.numevents')
                 row['nlumis'] = row.pop('count_lumi')
+                row['nfiles'] = row.pop('count_file')
+                row['nruns'] = row.pop('count_run')
                 row = dict(summary=row)
             if  row.has_key('status') and \
                 row['status'].has_key('dataset.status'):
