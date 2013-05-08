@@ -393,9 +393,23 @@ class DBSService(DASAbstractService):
             query = "find dataset, file, run, file.size, \
   file.numevents, count(lumi) where "
             cond = ''
-            val = kwds['run']
-            if  val and val != 'required':
-                cond += 'run=%s' % val
+            val = kwds.get('run', 'required')
+            if  val != 'required':
+                if  isinstance(val, dict):
+                    min_run = 0
+                    max_run = 0
+                    if  val.has_key('$lte'):
+                        max_run = val['$lte']
+                    if  val.has_key('$gte'):
+                        min_run = val['$gte']
+                    if  min_run and max_run:
+                        val = "run >=%s and run <= %s" % (min_run, max_run)
+                    elif val.has_key('$in'):
+                        val = ' or '.join(['run=%s' % r for r in val['$in']])
+                        val = '(%s)' % val
+                elif isinstance(val, int):
+                    val = "run=%d" % val
+                cond += ' and %s' % val
             val = kwds['dataset']
             if  val and val != 'optional':
                 cond += ' and dataset=%s' % val
@@ -403,7 +417,7 @@ class DBSService(DASAbstractService):
             if  val and val != 'optional':
                 cond += ' and block=%s' % val
             if  cond:
-                kwds['query'] = query + cond
+                kwds['query'] = query + cond[4:]
             else:
                 kwds['query'] = 'required'
             kwds.pop('dataset')
