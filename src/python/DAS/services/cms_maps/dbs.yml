@@ -110,7 +110,7 @@ url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {
      "api":"executeQuery", "apiversion": "DBS_2_0_9", "query":"",
-     "dataset": "optional", "run":"required", "block":"optional",
+     "dataset": "optional", "run":"optional", "block":"optional",
 }
 lookup: summary
 das_map: [
