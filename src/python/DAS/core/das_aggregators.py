@@ -232,7 +232,7 @@ def das_sum(key, rows):
 
 def das_count(key, rows):
     """DAS count aggregator function"""
-    if  key == 'lumi.number':
+    if  key == 'lumi.number' or key == 'lumi':
         rows = expand_lumis(rows)
     robj = das_func('count', key, rows)
     if  not robj:
