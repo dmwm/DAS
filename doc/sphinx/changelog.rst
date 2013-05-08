@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.11.X
 
+  - Add expand_lumis helper function into das aggregators which flatten lumi
+    lists, e.g. [[1,3], [5,7]] into [1,2,3,5,6,7]. This allows correctly count
+    number of lumis in DAS records
   - Implement support for comp-ops queries, e.g.
     find run, lumi for given dataset and optional run range
     find file, lumi for given dataset and optional run range
