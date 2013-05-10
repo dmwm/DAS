@@ -105,7 +105,7 @@ das_map: [
     {"das_key":"status", "rec_key":"status.name", "api_arg":"status"},
 ]
 ---
-urn : summary4run
+urn : summary4dataset_run
 url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
 expire : 3600
 params : {

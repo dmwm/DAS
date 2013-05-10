@@ -389,9 +389,9 @@ class DBSService(DASAbstractService):
                 kwds['query'] += ' and ' + val
             else:
                 kwds['query'] = 'required'
-        if  api == 'summary4run':
-            query = "find dataset, count(file), count(run), sum(file.size), \
-  sum(file.numevents), count(lumi) where "
+        if  api == 'summary4dataset_run':
+            query = "find file, file.size, \
+                      file.numevents, count(lumi) where "
             cond = ''
             val = kwds.get('run', 'optional')
             if  val != 'optional':
@@ -718,7 +718,7 @@ class DBSService(DASAbstractService):
             prim_key = 'dataset'
         elif  api == 'fakeDataset4User':
             prim_key = 'dataset'
-        elif  api == 'summary4run':
+        elif  api == 'summary4dataset_run':
             prim_key = 'row'
         elif  api == 'fakeRun4File':
             prim_key = 'run'
@@ -754,17 +754,18 @@ class DBSService(DASAbstractService):
         config_attrs = ['config.name', 'config.content', 'config.version', \
                  'config.type', 'config.annotation', 'config.createdate', \
                  'config.createby', 'config.moddate', 'config.modby']
+        summary4dataset = {}
         for row in gen:
             if  not row:
                 continue
-            if  row.has_key('row') and api == 'summary4run':
+            if  row.has_key('row') and api == 'summary4dataset_run':
                 row = row['row']
-                row['file_size'] = row.pop('sum_file.size')
-                row['nevents'] = row.pop('sum_file.numevents')
-                row['nlumis'] = row.pop('count_lumi')
-                row['nfiles'] = row.pop('count_file')
-                row['nruns'] = row.pop('count_run')
-                row = dict(summary=row)
+                fname = row.pop('file')
+                fsize = row.pop('file.size')
+                nevents = row.pop('file.numevents')
+                nlumis = row.pop('count_lumi')
+                summary4dataset[fname] = {'size':fsize, 'nevents':nevents,
+                        'nlumis':nlumis}
             if  row.has_key('status') and \
                 row['status'].has_key('dataset.status'):
                 row['status']['name'] = row['status']['dataset.status']
@@ -861,3 +862,16 @@ class DBSService(DASAbstractService):
                                 row = None
             if  row:
                 yield row
+        if  api == 'summary4dataset_run':
+            nfiles = 0
+            tot_size  = 0
+            tot_lumis = 0
+            tot_evts  = 0
+            for fname, fval in summary4dataset.iteritems():
+                nfiles += 1
+                tot_size  += fval['size']
+                tot_lumis += fval['nlumis']
+                tot_evts  += fval['nevents']
+            sdict = {'nfiles':nfiles, 'nevents':tot_evts,
+                     'file_size':tot_size, 'nlumis':tot_lumis}
+            yield dict(summary=sdict)
