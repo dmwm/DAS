@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.11.X
 
+  - Add support for summary dataset=/a/b/c query without run conditions
   - Add support for run range in DBS2 summary dataset/run query
   - Add expand_lumis helper function into das aggregators which flatten lumi
     lists, e.g. [[1,3], [5,7]] into [1,2,3,5,6,7]. This allows correctly count
