@@ -7,6 +7,15 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.11.X
 
+  - Re-factor the code: add insert_query_records which scan input DAS query and
+    insert query records into DAS cache, then it yields list of acknowledged
+    data-services which used by call API for data retrieval
+  - Extend incache API to work with query or data records by providing
+    query_record flag with default value of False (check data records)
+  - Take care of potential failure of PLY parser. Use few trials on given input
+    and then give-up
+  - Fix bug in task manager when I mix-up return type of spawn function which
+    cause task fails under race conditions
   - Add support for summary dataset=/a/b/c query without run conditions
   - Add support for run range in DBS2 summary dataset/run query
   - Add expand_lumis helper function into das aggregators which flatten lumi
