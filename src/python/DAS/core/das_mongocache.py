@@ -443,7 +443,8 @@ class DASMongocache(object):
                 apis.append(api)
         return apis
 
-    def incache(self, dasquery, collection='merge', system=None, api=None):
+    def incache(self, dasquery, collection='merge', system=None, api=None,
+            query_record=False):
         """
         Check if we have query results in cache, otherwise return null.
         Please note, input parameter query means MongoDB query, please
@@ -451,7 +452,7 @@ class DASMongocache(object):
         http://api.mongodb.org/python/
         """
         self.remove_expired(collection)
-        spec = {'qhash':dasquery.qhash}
+        spec = {'qhash':dasquery.qhash, 'query':{'$exists':query_record}}
         if  system:
             spec.update({'das.system': system})
         if  api:
@@ -862,12 +863,13 @@ class DASMongocache(object):
         """
         Insert query record into DAS cache.
         """
-        dasheader  = header['das']
         # check presence of API record in a cache
-        system     = dasheader['system']
-        api        = dasheader['api']
-        collection = 'cache'
-        if  not self.incache(dasquery, collection, system, api):
+        dasheader   = header['das']
+        system      = dasheader['system']
+        api         = dasheader['api']
+        collection  = 'cache'
+        check_query = True
+        if  not self.incache(dasquery, collection, system, api, check_query):
             msg = "query=%s, header=%s" % (dasquery, header)
             self.logger.debug(msg)
             q_record = dict(das=dasheader, query=dasquery.storage_query)
