@@ -117,7 +117,7 @@ class DASQuery(object):
                     if  not self._mongo_query.has_key(key):
                         self._mongo_query[key] = val
             except Exception as exp:
-                msg = "Fail to parse DAS query='%s'" % query
+                msg = "Fail to parse DAS query='%s', %s" % (query, str(exp))
                 print_exc(msg, print_traceback=True)
                 raise exp
         elif isinstance(query, dict):
