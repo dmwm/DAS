@@ -12,7 +12,7 @@ from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_ql import das_special_keys, das_operators
 from DAS.core.das_ply import DASPLY, ply2mongo
-from DAS.utils.utils import print_exc, genkey
+from DAS.utils.utils import print_exc, genkey, dastimestamp
 from DAS.utils.regex import last_key_pattern
 from DAS.utils.logger import PrintManager
 from DAS.core.das_parsercache import DASParserDB
@@ -92,6 +92,20 @@ class QLManager(object):
         "Add DAS query to analytics DB"
         self.analytics.add_query(query, mongo_query)
 
+    def get_ply_query(self, query):
+        """
+        Get ply object for given query. Since we rely on PLY package and it may
+        fail under the load we use couple of trials.
+        """
+        for trial in xrange(1, 3):
+            try:
+                ply_query = self.dasply.parser.parse(query)
+            except Exception as exc:
+                msg = "Fail to parse query=%s, trial=%1" % (query, trial)
+                print dastimestamp('DAS WARNING ') + ' ' + msg
+            return ply_query
+        return None
+
     def mongo_query(self, query):
         """
         Return mongo query for provided input query
@@ -111,12 +125,14 @@ class QLManager(object):
             elif status == PARSERCACHE_INVALID:
                 raise Exception(value)
             else:
+                ply_query = self.get_ply_query(query)
+                if  not ply_query:
+                    msg = "Fail to parse query=%s" % query
+                    raise Exception(msg)
                 try:
-                    ply_query = self.dasply.parser.parse(query)
                     mongo_query = ply2mongo(ply_query)
                 except Exception as exc:
-#                    self.parserdb.insert_invalid_query(query, exp)
-                    print "Fail to parse query=%s" % query
+                    print "Fail in ply2mongo, ply_query=%s" % ply_query
                     raise exc
                 try:
                     self.parserdb.insert_valid_query(query, mongo_query)
