@@ -271,6 +271,40 @@ class DASCore(object):
         getattr(getattr(self, srv), 'call')(dasquery)
         das_timer(srv, self.verbose)
 
+    def insert_query_records(self, dasquery):
+        """
+        Insert DAS query records into DAS cache and return list of services
+        which will answer this query
+        """
+        services = []
+        if  dasquery.mongo_query.has_key('system'):
+            system = query['system']
+            if  isinstance(system, str) or isinstance(system, unicode):
+                services = [system]
+            elif isinstance(system, list):
+                services = system
+            else:
+                msg = 'Unsupported system=%s type=%s in DAS query' \
+                        % (system, type(system))
+                raise Exception(msg)
+        if  not services:
+            services = dasquery.params()['services']
+        self.logger.info('Potential services = %s' % services)
+        expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
+        header = dasheader("das", dasquery, expire, api='das_core')
+        header['lookup_keys'] = []
+        self.rawcache.insert_query_record(dasquery, header)
+        das_timer('das_record', self.verbose)
+        # get list of URI which can answer this query
+        ack_services = []
+        for srv in services:
+            gen = getattr(getattr(self, srv), 'apimap')(dasquery)
+            for url, api, args, iformat, expire in gen:
+                header = dasheader(srv, dasquery, expire, api, url, ctime=0)
+                self.rawcache.insert_query_record(dasquery, header)
+                ack_services.append(srv)
+        return ack_services
+
     def call(self, query, add_to_analytics=True, **kwds):
         """
         Top level DAS api which execute a given query using underlying
@@ -293,7 +327,6 @@ class DASCore(object):
             self.rawcache.remove_expired(col)
         self.logger.info('input query=%s' % query)
         das_timer('DASCore::call', self.verbose)
-        services = []
         if  isinstance(query, object) and hasattr(query, '__class__')\
             and query.__class__.__name__ == 'DASQuery':
             dasquery = query
@@ -301,17 +334,7 @@ class DASCore(object):
             dasquery = DASQuery(query, mongoparser=self.mongoparser)
         if  add_to_analytics:
             dasquery.add_to_analytics()
-        query = dasquery.mongo_query
-        if  dasquery.mongo_query.has_key('system'):
-            system = query['system']
-            if  isinstance(system, str) or isinstance(system, unicode):
-                services = [system]
-            elif isinstance(system, list):
-                services = system
-            else:
-                msg = 'Unsupported system=%s type=%s in DAS query' \
-                        % (system, type(system))
-                raise Exception(msg)
+        query  = dasquery.mongo_query
         spec   = query.get('spec')
         fields = query.get('fields')
         if  fields == ['records']:
@@ -327,34 +350,11 @@ class DASCore(object):
                         % (record['query'], status)
             self.logger.info(msg)
             return status
-        similar_result = self.rawcache.similar_queries(dasquery)
-        if  similar_result:
-            if  isinstance(similar_result, bool) and dasquery.hashes:
-                return similar_result, dasquery.hashes
-            for record in self.rawcache.find_specs(similar_result):
-                if  record:
-                    try:
-                        status = record['das']['status']
-                    except:
-                        status = 'N/A'
-                        msg = 'Fail to look-up das.status, record=%s' % record
-                        self.logger.info(msg)
-                msg  = 'found SIMILAR query in cache,'
-                msg += 'query=%s, status=%s\n' % (record['query'], status)
-                self.logger.info(msg)
-                return status
 
         self.logger.info(dasquery)
-        params = dasquery.params()
-        if  not services:
-            services = params['services']
-        self.logger.info('services = %s' % services)
         das_timer('das_record', self.verbose)
-        expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
-        header = dasheader("das", dasquery, expire, api='das_core')
-        header['lookup_keys'] = []
-        self.rawcache.insert_query_record(dasquery, header)
-        das_timer('das_record', self.verbose)
+        services = self.insert_query_records(dasquery)
+        self.logger.info('Acknowledged services = %s' % services)
         try:
             if  self.multitask:
                 jobs = []
