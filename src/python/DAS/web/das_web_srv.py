@@ -145,21 +145,21 @@ class DASWebService(DASWebManager):
         """Start DBS daemon if it is requested via DAS configuration"""
         try:
             main_dbs_url = self.dbs_url
-            self.dbs_urls = []
+            dbs_urls = []
             print "### DBS URL:", self.dbs_url
             print "### DBS instances:", self.dbs_instances
             if  not self.dbs_url or not self.dbs_instances:
                 return # just quit
             for inst in self.dbs_instances:
-                self.dbs_urls.append(\
-                        main_dbs_url.replace(self.dbs_global, inst))
+                dbs_urls.append(\
+                        (main_dbs_url.replace(self.dbs_global, inst), inst))
             interval  = config.get('dbs_daemon_interval', 3600)
             dbsexpire = config.get('dbs_daemon_expire', 3600)
             dbs_config  = {'expire': dbsexpire}
             if  self.dataset_daemon:
-                for dbs_url in self.dbs_urls:
+                for dbs_url, inst in dbs_urls:
                     dbsmgr = DBSDaemon(dbs_url, self.dburi, dbs_config)
-                    self.dbsmgr[dbs_url] = dbsmgr
+                    self.dbsmgr[(dbs_url, inst)] = dbsmgr
                     def dbs_updater(_dbsmgr, interval):
                         """DBS updater daemon"""
                         while True:
@@ -395,19 +395,19 @@ class DASWebService(DASWebManager):
 
 
 
-    def _get_dbsmgr_for_db_instance(self, inst):
+    def _get_dbsmgr(self, inst):
         """
         Given a string representation of DBS instance, returns DBSManager
         instance which "knows" how to look up datasets
-        (further for performance reasons of searching by wildcard and substring,
-        we may want to store then even outside MongoDB).
         """
+        mgr = None
         # instance selection shall be more clean
         if  self.dataset_daemon:
-            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(inst) != -1]
-            if  len(dbs_urls) == 1:
-                return self.dbsmgr[dbs_urls[0]]
-        return None
+            for dbs_url, dbs_inst in self.dbsmgr.keys():
+                if  dbs_inst == inst:
+                    mgr = self.dbsmgr[(dbs_url, dbs_inst)]
+                    return mgr
+        return mgr
 
 
     def generate_dasquery(self, uinput, inst, html_error=True):
@@ -430,7 +430,7 @@ class DASWebService(DASWebManager):
         # wrap it for upper layer (web interface)
         try:
             dasquery = DASQuery(uinput, instance=inst,
-                    active_dbsmgr = self._get_dbsmgr_for_db_instance(inst))
+                    active_dbsmgr = self._get_dbsmgr(inst))
         except Exception as err:
             # process Wildcard exception separately
             if  isinstance(err, WildcardMultipleMatchesException):
@@ -476,8 +476,8 @@ class DASWebService(DASWebManager):
                 print_exc(exc)
                 return 1, helper(msg, html_error)
             if  not service_map:
-                msg  = "None of the API's registered in DAS "
-                msg += "can resolve this query"
+                msg  = "Unable to resolve service_map for given DAS query %s" \
+                        % dasquery
                 return 1, helper(msg, html_error)
         return 0, dasquery
 
@@ -942,14 +942,12 @@ class DASWebService(DASWebManager):
         dataset = [r for r in result if r['value'].find('dataset=')!=-1]
         dbsinst = kwargs.get('dbs_instance', self.dbs_global)
         if  self.dataset_daemon and len(dataset):
-            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(dbsinst) != -1]
-            if  len(dbs_urls) == 1:
-                dbsmgr = self.dbsmgr[dbs_urls[0]]
-                if  query.find('dataset=') != -1:
-                    query = query.replace('dataset=', '')
-                for row in dbsmgr.find(query):
-                    result.append({'css': 'ac-info',
-                                   'value': 'dataset=%s' % row,
-                                   'info': 'dataset'})
+            dbsmgr = self._get_dbsmgr(dbsinst)
+            if  query.find('dataset=') != -1:
+                query = query.replace('dataset=', '')
+            for row in dbsmgr.find(query):
+                result.append({'css': 'ac-info',
+                               'value': 'dataset=%s' % row,
+                               'info': 'dataset'})
         return result
 
