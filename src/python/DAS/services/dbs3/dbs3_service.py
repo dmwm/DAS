@@ -366,7 +366,7 @@ class DBS3Service(DASAbstractService):
             for row in gen:
                 row['dataset']['name'] = name
                 yield row
-        elif api == 'summary4dataset_run':
+        elif api == 'summary4dataset_run' or api == 'summary4block_run':
             spec = query.mongo_query.get('spec', {})
             dataset = spec.get('dataset.name', '')
             block = spec.get('block.name', '')

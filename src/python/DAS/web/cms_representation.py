@@ -182,6 +182,11 @@ def adjust_values(func, gen, links, pkey):
                 value = int(val)
             elif  key.find('Lumi') != -1 and val:
                 value = int(val)
+            elif  key.find('Tag') != -1 and val:
+                if  isinstance(val, basestring) and val.lower() == 'unknown':
+                    value = '<span %s>%s</span>' % (red, val)
+                else:
+                    value = val
             elif  key.find('Creation time') != -1 and val:
                 try:
                     value = time.strftime('%d/%b/%Y %H:%M:%S GMT', \

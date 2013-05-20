@@ -345,6 +345,11 @@ config : [
         },
         {"das":"config.type", "ui":"Type"},
         {"das":"config.version", "ui":"Version"},
+        {"das":"config.release_version", "ui":"Release"},
+        {"das":"config.global_tag", "ui":"Global Tag"},
+        {"das":"config.pset_hash", "ui":"Pset hash"},
+        {"das":"config.create_by", "ui":"Created by"},
+        {"das":"config.creation_time", "ui":"Creation time"},
         ],
 user    : [
         {"das":"user.name", "ui":"User name", "link":[],
