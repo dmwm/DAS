@@ -571,8 +571,6 @@ class DASMongocache(object):
                         found = True
                     else:
                         found = False
-                        err = "Key %s not found" % fltr
-                        raise Exception(err)
                 elif isinstance(row, list):
                     for row in list(row):
                         if  row.has_key(key):
@@ -582,7 +580,8 @@ class DASMongocache(object):
                         else:
                             found = False
         if  not found:
-            err = "Key %s not found" % fltr
+            err  = "check_filters unable to find filter=%s" % fltr
+            err += "\nrecord=%s" % data
             raise Exception(err)
 
     def get_records(self, collection, spec, fields, skeys, idx, limit,
