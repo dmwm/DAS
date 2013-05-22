@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.11.X
 
+  - Add plistlib python module w/ None modifications to handle DAS XML output
+  - Add list of attributes for config output
+  - Add summary4block_run API
+  - Highlight unknown global tags in web UI
   - Re-factor the code: add insert_query_records which scan input DAS query and
     insert query records into DAS cache, then it yields list of acknowledged
     data-services which used by call API for data retrieval
