@@ -170,7 +170,7 @@ def get_file_run_lumis(url, api, args):
     elif isinstance(run_value, list):
         runs = run_value
     else:
-        if  int_number_pattern.match(run_value):
+        if  int_number_pattern.match(str(run_value)):
             runs = [run_value]
         else:
             runs = []
