@@ -79,6 +79,8 @@ class QLManager(object):
         if  self.enabledb:
             self.parserdb = DASParserDB(config)
 
+        self.dasply.build()
+
     def parse(self, query):
         """
         Parse input query and return query in MongoDB form.
@@ -110,37 +112,34 @@ class QLManager(object):
         """
         Return mongo query for provided input query
         """
-        # NOTE: somehow I need to keep build call just before using
-        # PLY parser, otherwise it fails to parse.
-        self.dasply.build()
         if  self.verbose:
             msg = "input query='%s'" % query
             self.logger.debug(msg)
             self.dasply.test_lexer(query)
+        parse_again = True
         if  self.enabledb:
             status, value = self.parserdb.lookup_query(query)
             if status == PARSERCACHE_VALID and \
                 len(last_key_pattern.findall(query)) == 0:
                 mongo_query = value
+                parse_again = False
             elif status == PARSERCACHE_INVALID:
-                raise Exception(value)
+                # we unable to find query in parserdb, so will parse again
+                parse_again = True
             else:
                 ply_query = self.get_ply_query(query)
-                if  not ply_query:
-                    msg = "Fail to parse query=%s" % query
-                    raise Exception(msg)
-                try:
-                    mongo_query = ply2mongo(ply_query)
-                except Exception as exc:
-                    print "Fail in ply2mongo, ply_query=%s" % ply_query
-                    raise exc
-                try:
-                    self.parserdb.insert_valid_query(query, mongo_query)
-                except Exception as exc:
-                    msg = "Fail to insert into parserdb"
-                    print_exc(msg, print_traceback=True)
-                    raise exc
-        else:
+                if  ply_query:
+                    try:
+                        mongo_query = ply2mongo(ply_query)
+                        parse_again = False
+                    except Exception as exc:
+                        print "Fail in ply2mongo, ply_query=%s" % ply_query
+                    try:
+                        self.parserdb.insert_valid_query(query, mongo_query)
+                    except Exception as exc:
+                        msg = "Fail to insert into parserdb"
+                        print_exc(msg, print_traceback=True)
+        if  parse_again:
             try:
                 ply_query   = self.dasply.parser.parse(query)
                 mongo_query = ply2mongo(ply_query)
