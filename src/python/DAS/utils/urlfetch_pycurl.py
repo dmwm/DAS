@@ -99,8 +99,9 @@ def getdata(urls, ckey, cert, headers=None, num_conn=100):
         while 1:
             num_q, ok_list, err_list = mcurl.info_read()
             for curl in ok_list:
-                _hdrs  = curl.hbuf.getvalue()
-                data   = curl.bbuf.getvalue()
+                hdrs  = curl.hbuf.getvalue()
+                data  = curl.bbuf.getvalue()
+                url   = curl.url
                 curl.bbuf.flush()
                 curl.bbuf.close()
                 curl.hbuf.close()
@@ -108,22 +109,21 @@ def getdata(urls, ckey, cert, headers=None, num_conn=100):
                 curl.bbuf = None
                 mcurl.remove_handle(curl)
                 freelist.append(curl)
-                yield data
+                yield {'url': url, 'data': data, 'headers': hdrs}
             for curl, errno, errmsg in err_list:
-                _hdrs = curl.hbuf.getvalue()
-                data = curl.bbuf.getvalue()
+                hdrs  = curl.hbuf.getvalue()
+                data  = curl.bbuf.getvalue()
+                url   = curl.url
                 curl.bbuf.flush()
                 curl.bbuf.close()
                 curl.hbuf.close()
                 curl.hbuf = None
                 curl.bbuf = None
                 mcurl.remove_handle(curl)
-                print "Failed: ", curl.url, errno, errmsg
                 freelist.append(curl)
                 cleanup(mcurl)
-                err_msg = "Failed to process '%s', code=%s, error=%s" \
-                        % (curl.url, errno, errmsg)
-                raise Exception(err_msg)
+                yield {'url': url, 'data': None, 'headers': hdrs,
+                        'error': errmsg, 'code': errno}
             num_processed = num_processed + len(ok_list) + len(err_list)
             if num_q == 0:
                 break
