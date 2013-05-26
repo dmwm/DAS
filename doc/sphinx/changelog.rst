@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.11.X
 
+  - Add support for block,run,lumi dataset=/a/b/c queries
   - Add plistlib python module w/ None modifications to handle DAS XML output
   - Add list of attributes for config output
   - Add summary4block_run API
