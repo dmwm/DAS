@@ -381,14 +381,18 @@ def files4site(phedex_url, files, site):
     prim_key = 'block'
     gen = urlfetch_getdata(urls, CKEY, CERT)
     for rec in gen:
-        # convert record string into StringIO for xml_parser
-        source = StringIO.StringIO(rec)
-        for row in xml_parser(source, prim_key, tags):
-            fobj = row['block']['file']
-            fname = fobj['name']
-            replica = fobj['replica']
-            for item in replica:
-                if  params.has_key('node') and item['node'] == site:
-                    yield fname
-                elif params.has_key('se') and item['se'] == site:
-                    yield fname
+        if  'error' in rec.keys():
+            # TODO: should handle the error
+            pass
+        else:
+            # convert record string into StringIO for xml_parser
+            source = StringIO.StringIO(rec['data'])
+            for row in xml_parser(source, prim_key, tags):
+                fobj = row['block']['file']
+                fname = fobj['name']
+                replica = fobj['replica']
+                for item in replica:
+                    if  params.has_key('node') and item['node'] == site:
+                        yield fname
+                    elif params.has_key('se') and item['se'] == site:
+                        yield fname
