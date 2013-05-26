@@ -20,6 +20,7 @@ from   DAS.utils.utils import expire_timestamp, extract_http_error
 from   DAS.utils.utils import http_timestamp
 from   DAS.utils.pycurl_manager import RequestHandler
 from   DAS.utils.pycurl_manager import REQUEST_HANDLER
+from   DAS.utils.regex import int_number_pattern
 import DAS.utils.jsonwrapper as json
 
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
@@ -290,3 +291,20 @@ def urlfetch_proxy(urls):
                     yield row
     else:
         yield {'error':'Fail to contact UrlFetch proxy server', 'code':code}
+
+def url_args(url, convert_types=False):
+    """
+    Extract args from given url, e.g. http://a.b.com/api?arg1=1&arg2=2
+    will yield {'arg1':1, 'arg2':2}
+    """
+    args = {}
+    for item in url.split("?")[-1].split('&'):
+        key, value = item.split('=')
+        if  convert_types:
+            if  int_number_pattern.match(value):
+                args[key] = int(value)
+            else:
+                args[key] = value
+        else:
+            args[key] = value
+    return args
