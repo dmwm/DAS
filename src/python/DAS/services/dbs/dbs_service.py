@@ -36,23 +36,28 @@ def process_lumis_with(ikey, gen):
             key = lfn
         if  ikey == 'run':
             key = run
-        if  ikey == 'file_run':
-            key = (lfn, run)
+        if  ikey == 'file_run' or 'block_run':
+            key = (lfn, run) # here lfn can refer to lfn or blk
         if  isinstance(lumi, list):
             for ilumi in lumi:
                 odict.setdefault(key, []).append(ilumi)
         else:
             odict.setdefault(key, []).append(ilumi)
     for key, lumi_list in odict.iteritems():
+        lumi_list.sort()
         lumis = convert2ranges(lumi_list)
         if  ikey == 'file':
             yield {'file':{'name':key}, 'lumi':{'number':lumis}}
-        if  ikey == 'run':
+        elif  ikey == 'run':
             yield {'run':{'run_number':key}, 'lumi':{'number':lumis}}
-        if  ikey == 'file_run':
+        elif  ikey == 'file_run':
             lfn, run = key
-            yield {'run':{'run_number':run}, 'lumi':{'number':lumi},
+            yield {'run':{'run_number':run}, 'lumi':{'number':lumis},
                    'file':{'name': lfn}}
+        elif  ikey == 'block_run':
+            blk, run = key
+            yield {'run':{'run_number':run}, 'lumi':{'number':lumis},
+                   'block':{'name': blk}}
 
 def dbs_find(entity, url, kwds):
     "Find files for given set of parameters"
@@ -84,6 +89,45 @@ def dbs_find(entity, url, kwds):
     for row in qlxml_parser(source, pkey):
         val = row[entity][entity]
         yield val
+
+def block_run_lumis(url, blocks, runs=None):
+    """
+    Find block, run, lumi tuple for given set of files and (optional) runs.
+    """
+    headers = {'Accept': 'text/xml'}
+    urls = []
+    for blk in blocks:
+        if  not blk:
+            continue
+        query   = 'find block,run,lumi where block=%s' % blk
+        if  runs and isinstance(runs, list):
+            val = ' or '.join(['run=%s' % r for r in runs])
+            query += ' and (%s)' % val
+        params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9',
+                   'query':query}
+        dbs_url = url + '?' + urllib.urlencode(params)
+        urls.append(dbs_url)
+    if  not urls:
+        return
+    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
+    prim_key = 'row'
+    odict = {} # output dict
+    for rec in gen:
+        if  'error' in rec.keys():
+            # TODO: should handle error somehow
+            pass
+        else:
+            source   = StringIO.StringIO(rec['data'])
+            lumis    = []
+            for row in qlxml_parser(source, prim_key):
+                run  = row['row']['run']
+                blk  = row['row']['block']
+                lumi = row['row']['lumi']
+                key  = (blk, run)
+                odict.setdefault(key, []).append(lumi)
+    for key, lumis in odict.iteritems():
+        blk, run = key
+        yield blk, run, lumis
 
 def file_run_lumis(url, blocks, runs=None):
     """
@@ -151,6 +195,25 @@ def convert_dot(row, key, attrs):
             row[key][name] = row[key][attr]
             del row[key][attr]
 
+def get_block_run_lumis(url, args):
+    "Helper function to deal with block,run,lumi requests"
+    run_value = args.get('run', [])
+    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+        runs = run_value['$in']
+    elif isinstance(run_value, list):
+        runs = run_value
+    else:
+        if  int_number_pattern.match(str(run_value)):
+            runs = [run_value]
+        else:
+            runs = []
+    args.update({'runs': runs})
+    blocks = dbs_find('block', url, args)
+    gen = block_run_lumis(url, blocks, runs)
+    key = 'block_run'
+    for row in process_lumis_with(key, gen):
+        yield row
+
 def get_file_run_lumis(url, api, args):
     "Helper function to deal with file,run,lumi requests"
     run_value = args.get('run', [])
@@ -193,9 +256,13 @@ class DBSService(DASAbstractService):
         "DBS2 implementation of AbstractService:apicall method"
         if  api == 'run_lumi4dataset' or api == 'run_lumi4block' or \
             api == 'file_lumi4dataset' or api == 'file_lumi4block' or \
-            api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block':
+            api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block' or \
+            api == 'block_run_lumi4dataset':
             time0 = time.time()
-            dasrows = get_file_run_lumis(url, api, args)
+            if  api == 'block_run_lumi4dataset':
+                dasrows = get_block_run_lumis(url, args)
+            else:
+                dasrows = get_file_run_lumis(url, api, args)
             ctime = time.time()-time0
             self.write_to_cache(dasquery, expire, url, api, args,
                     dasrows, ctime)

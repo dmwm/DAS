@@ -663,6 +663,20 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
+urn : block_run_lumi4dataset
+url : "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run": "optional"}
+lookup : block,run,lumi
+das_map : [
+    {"das_key":"block", "rec_key":"block.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
 notations : [
     {"api_output":"app_family_name", "rec_key":"name", "api":""},
     {"api_output":"app_executable_name", "rec_key":"executable", "api":""},
