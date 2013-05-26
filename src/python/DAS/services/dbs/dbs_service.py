@@ -152,14 +152,18 @@ def file_run_lumis(url, blocks, runs=None):
     prim_key = 'row'
     odict = {} # output dict
     for rec in gen:
-        source   = StringIO.StringIO(rec)
-        lumis    = []
-        for row in qlxml_parser(source, prim_key):
-            run  = row['row']['run']
-            lfn  = row['row']['file']
-            lumi = row['row']['lumi']
-            key  = (lfn, run)
-            odict.setdefault(key, []).append(lumi)
+        if  'error' in rec.keys():
+            # TODO: should handle error somehow
+            pass
+        else:
+            source   = StringIO.StringIO(rec['data'])
+            lumis    = []
+            for row in qlxml_parser(source, prim_key):
+                run  = row['row']['run']
+                lfn  = row['row']['file']
+                lumi = row['row']['lumi']
+                key  = (lfn, run)
+                odict.setdefault(key, []).append(lumi)
     for key, lumis in odict.iteritems():
         lfn, run = key
         yield lfn, run, lumis

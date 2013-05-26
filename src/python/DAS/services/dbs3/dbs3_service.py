@@ -165,13 +165,17 @@ def file_run_lumis(url, blocks, runs=None):
     gen = urlfetch_getdata(urls, CKEY, CERT, headers)
     odict = {} # output dict
     for rec in gen:
-        for row in json.loads(rec):
-            run = row['run_num']
-            lfn = row['logical_file_name']
-            lumilist = row['lumi_section_num']
-            key = (lfn, run)
-            for lumi in lumilist:
-                odict.setdefault(key, []).append(lumi)
+        if  'error' in rec.keys():
+            # TODO: should handle error somehow
+            pass
+        else:
+            for row in json.loads(rec['data']):
+                run = row['run_num']
+                lfn = row['logical_file_name']
+                lumilist = row['lumi_section_num']
+                key = (lfn, run)
+                for lumi in lumilist:
+                    odict.setdefault(key, []).append(lumi)
     for key, lumis in odict.iteritems():
         lfn, run = key
         yield lfn, run, lumis
