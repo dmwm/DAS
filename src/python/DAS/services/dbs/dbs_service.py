@@ -34,9 +34,9 @@ def process_lumis_with(ikey, gen):
         lfn, run, lumi = row
         if  ikey == 'file':
             key = lfn
-        if  ikey == 'run':
+        elif  ikey == 'run':
             key = run
-        if  ikey == 'file_run' or 'block_run':
+        elif  ikey == 'file_run' or 'block_run':
             key = (lfn, run) # here lfn can refer to lfn or blk
         if  isinstance(lumi, list):
             for ilumi in lumi:
