@@ -381,7 +381,7 @@ class DBSService(DASAbstractService):
         if  api == 'fakeListDataset4Block':
             val = kwds['block']
             if  val != 'required':
-                kwds['query'] = "find dataset, count(block), count(file.size), \
+                kwds['query'] = "find dataset, count(block), \
   sum(block.size), sum(block.numfiles), sum(block.numevents) \
   where block=%s" % val
             else:
