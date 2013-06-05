@@ -354,7 +354,8 @@ class DBS3Service(DASAbstractService):
                 del kwds['block_name']
             except KeyError:
                 pass
-        if  api == 'runs':
+        if  api == 'runs' or api == 'summary4dataset_run' or \
+            api == 'summary4block_run':
             val = kwds['run']
             if  isinstance(val, dict): # we got a run range
                 if  val.has_key('$in'):
@@ -445,6 +446,11 @@ class DBS3Service(DASAbstractService):
             dataset = spec.get('dataset.name', '')
             block = spec.get('block.name', '')
             run = spec.get('run.run_number', 0)
+            if  isinstance(run, dict): # we got a run range
+                if  run.has_key('$in'):
+                    run = run['$in']
+                elif run.has_key('$lte'):
+                    run = range(val['$gte'], val['$lte'])
             for row in gen:
                 if  run:
                     row.update({"run": run})
