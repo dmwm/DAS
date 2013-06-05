@@ -39,6 +39,31 @@ import DAS.utils.jsonwrapper as json
 
 CKEY, CERT = get_key_cert()
 
+def runrange(run1, run2, continuous=False):
+    "Construct DBS3 run range parameter"
+    run1 = int(run1)
+    run2 = int(run2)
+    if  run1 > run2:
+        rmin = run2
+        rmax = run1
+    elif run2 > run1:
+        rmin = run1
+        rmax = run2
+    else:
+        rmin = run1
+        rmax = run2
+    if  continuous:
+        if  rmin != rmax:
+            val = "['%s-%s']" % (rmin, rmax)
+        else:
+            val = "%s" % rmin
+    else:
+        if  rmin != rmax:
+            val = "[%s,%s]" % (rmin, rmax)
+        else:
+            val = "%s" % rmin
+    return val
+
 def process_lumis_with(ikey, gen):
     "Helper function to process lumis with given key from provided generator"
     odict = {}
@@ -90,16 +115,11 @@ def dbs_find(entity, url, kwds):
         params = {'block_name': block}
     elif lfn:
         params = {'logical_file_name': lfn}
-    # TODO: replace minrun/maxrun with new run range parameter once DBS3 will
-    # be ready PLEASE NOTE: different DBS3 APIs uses different convention for
-    # run parameter see https://svnweb.cern.ch/trac/CMSDMWM/ticket/4193 so I
-    # need to use minrun/maxrun for files API, while run_num for
-    # datasets/blocks/etc. APIs
     if  runs:
         if  entity == 'file':
-            params.update({'minrun': runs[0], 'maxrun': runs[0]})
+            params.update({'run': runrange(runs[0], runs[0], True)})
         else:
-            params.update({'run_num': runs[0]})
+            params.update({'run': runs[0]})
     headers = {'Accept': 'application/json;text/json'}
     source, expire = \
         getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
@@ -123,8 +143,7 @@ def block_run_lumis(url, blocks, runs=None):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            # TODO: I need to add run-range condition once DBS3 ready
-            pass
+            params.update({'run': runrange(runs[0], runs[0], True)})
         urls.append(dbs_url)
     if  not urls:
         return
@@ -157,8 +176,7 @@ def file_run_lumis(url, blocks, runs=None):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            # TODO: I need to add run-range condition once DBS3 ready
-            pass
+            dbs_url += "&run=%s" % runrange(runs[0], runs[-1], True)
         urls.append(dbs_url)
     if  not urls:
         return
@@ -337,32 +355,22 @@ class DBS3Service(DASAbstractService):
             except KeyError:
                 pass
         if  api == 'runs':
-            val = kwds['minrun']
+            val = kwds['run']
             if  isinstance(val, dict): # we got a run range
                 if  val.has_key('$in'):
-                    # TODO: this should be corrected when DBS will support
-                    # run-ranges
-                    kwds['minrun'] = val['$in'][0]
-                    kwds['maxrun'] = val['$in'][-1]
+                    kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
                 if  val.has_key('$lte'):
-                    kwds['minrun'] = val['$gte']
-                    kwds['maxrun'] = val['$lte']
+                    kwds['run'] = runrange(val['$gte'], val['$lte'], True)
         if  api == 'file4DatasetRunLumi':
             val = kwds.get('run', None)
             if  val:
                 if  isinstance(val, dict): # we got a run range
                     if  val.has_key('$in'):
-                        # TODO: this should be corrected when DBS will support
-                        # run-ranges
-                        kwds['minrun'] = val['$in'][0]
-                        kwds['maxrun'] = val['$in'][-1]
+                        kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
                     if  val.has_key('$lte'):
-                        kwds['minrun'] = val['$gte']
-                        kwds['maxrun'] = val['$lte']
+                        kwds['run'] = runrange(val['$gte'], val['$lte'], True)
                 else:
-                    kwds['minrun'] = val
-                    kwds['maxrun'] = val
-                del kwds['run']
+                    kwds['run'] = val
             val = kwds['lumi_list']
             if  val:
                 kwds['lumi_list'] = [val]
