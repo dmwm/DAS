@@ -232,7 +232,7 @@ das_map : [
     {"das_key": "status", "rec_key":"status.name", "api_arg":"status"},
 ]
 ---
-### NOTE: we don't use minrun parameter here since it is covered by
+### NOTE: we don't use run parameter here since it is covered by
 ### file4DatasetRunLumi API
 urn: files_via_dataset
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files/"
@@ -258,7 +258,7 @@ expire : 900
 params : {
         "block_name":"required",
         "detail":"True",
-        "minrun": "optional",
+        "run": "optional",
         "release_version": "optional",
         "status": "optional",
 }
@@ -267,7 +267,7 @@ das_map : [
     {"das_key": "file", "rec_key":"file.name"},
     {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"minrun"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run"},
     {"das_key": "release", "rec_key":"release.name", "api_arg":"release_version"},
     {"das_key": "status", "rec_key":"status.name", "api_arg":"status"},
 ]
@@ -319,10 +319,10 @@ das_map : [
 urn: runs
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/runs/"
 expire : 900
-params : {"minrun":"required","maxrun":"optional"}
+params : {"run":"required"}
 lookup : run
 das_map : [
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"minrun"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run"},
 ]
 ---
 urn: runs_via_dataset
