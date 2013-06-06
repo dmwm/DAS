@@ -102,10 +102,10 @@ class QLManager(object):
         for trial in xrange(1, 3):
             try:
                 ply_query = self.dasply.parser.parse(query)
+                return ply_query
             except Exception as exc:
                 msg = "Fail to parse query=%s, trial=%s" % (query, trial)
                 print dastimestamp('DAS WARNING ') + ' ' + msg
-            return ply_query
         return None
 
     def mongo_query(self, query):
