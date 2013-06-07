@@ -5,6 +5,18 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.12.X
+
+  - Get rid of empty_record,  query. Instead, introduce das.record with
+    different codes. Codes are defined in utils/utils.py record_codes function.
+    Add mongodb index on codes; modified queries to look-up das/data-records
+    using new das.record field
+  - Fix issue with ply_query parameter
+  - Add extra slash to avoid one round trip
+  - Work on support new run parameter w/ DBS3 APIs, now DAS is capable to use
+    run-range/run-list queries into DBS3
+  - Use json.dumps to printout JSON dict to stdout
+
 - 1.11.X
 
   - Add support for block,run,lumi dataset=/a/b/c queries
