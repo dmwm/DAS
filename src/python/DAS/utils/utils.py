@@ -36,6 +36,13 @@ from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
 
+def record_codes(rtype):
+    "Return das record code for given record type"
+    codes = {'query_record': 0,
+             'data_record': 1,
+             'empty_record': 2}
+    return codes[rtype]
+
 def get_dbs_instance(url):
     "Extract from DBS url its instance name"
     msg = 'Unsupported DBS url=%s' % url
@@ -1366,7 +1373,7 @@ def aggregator(dasquery, results, expire):
             else:
                 _ids = [_ids]
         rec['cache_id'] = list(set(_ids))
-        rec['das']['empty_record'] = 0
+        rec['das']['record'] = record_codes('data_record')
         rec['qhash'] = dasquery.qhash
         for key, val in rec.iteritems():
             if  key not in ['das_id', 'das', 'cache_id', '_id']:
