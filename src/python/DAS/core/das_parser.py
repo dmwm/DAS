@@ -7,6 +7,9 @@ DAS Query Language parser.
 
 __author__ = "Valentin Kuznetsov"
 
+# system modules
+import time
+
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
@@ -106,6 +109,7 @@ class QLManager(object):
             except Exception as exc:
                 msg = "Fail to parse query=%s, trial=%s" % (query, trial)
                 print dastimestamp('DAS WARNING ') + ' ' + msg
+            time.sleep(trial/10.)
         return None
 
     def mongo_query(self, query):
