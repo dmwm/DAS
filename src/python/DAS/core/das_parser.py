@@ -107,7 +107,8 @@ class QLManager(object):
                 ply_query = self.dasply.parser.parse(query)
                 return ply_query
             except Exception as exc:
-                msg = "Fail to parse query=%s, trial=%s" % (query, trial)
+                msg = "Fail to parse query=%s, trial=%s, exception=%s" \
+                        % (query, trial, str(exc))
                 print dastimestamp('DAS WARNING ') + ' ' + msg
             time.sleep(trial/10.)
         return None
