@@ -18,6 +18,9 @@ We use the following definitions for dataset presence:
 - replica_fraction (defined in services/phedex/phedex_service.py)
   is a total number of files at a site X
   divided by total number of in all block at this site
+
+See discussion on
+https://hypernews.cern.ch/HyperNews/CMS/get/comp-ops/1057/1/1/2/1/1.html
 """
 __author__ = "Valentin Kuznetsov"
 
