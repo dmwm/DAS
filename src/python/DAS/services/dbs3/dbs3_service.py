@@ -29,7 +29,8 @@ from types import GeneratorType
 
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, json_parser
+from DAS.utils.utils import map_validator, json_parser, print_exc
+from DAS.utils.utils import dastimestamp
 from DAS.utils.utils import expire_timestamp, convert2ranges, get_key_cert
 from DAS.utils.url_utils import getdata, url_args
 from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
@@ -117,7 +118,7 @@ def dbs_find(entity, url, kwds):
         params = {'logical_file_name': lfn}
     if  runs:
         if  entity == 'file':
-            params.update({'run': runrange(runs[0], runs[0], True)})
+            params.update({'run': runrange(runs[0], runs[-1], False)})
         else:
             params.update({'run': runs[0]})
     headers = {'Accept': 'application/json;text/json'}
@@ -125,12 +126,18 @@ def dbs_find(entity, url, kwds):
         getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
     for row in json_parser(source, None):
         for rec in row:
-            if  entity == 'file':
-                yield rec['logical_file_name']
-            elif  entity == 'block':
-                yield rec['block_name']
-            elif  entity == 'file':
-                yield rec['dataset']
+            try:
+                if  isinstance(rec, basestring):
+                    print dastimestamp('DBS3 ERROR:'), row
+                elif  entity == 'file':
+                    yield rec['logical_file_name']
+                elif  entity == 'block':
+                    yield rec['block_name']
+                elif  entity == 'file':
+                    yield rec['dataset']
+            except Exception as exp:
+                msg = 'Fail to parse "%s", exception="%s"' % (rec, exp)
+                print_exc(msg)
 
 def block_run_lumis(url, blocks, runs=None):
     """
