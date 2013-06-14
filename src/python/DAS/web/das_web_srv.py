@@ -367,48 +367,70 @@ class DASWebService(DASWebManager):
         return self.page(page, response_div=False)
 
 
-
+    def kws_async_init(self, kwargs):
+        # do not allow caching
+        set_no_cache_flags()
+        uinput = kwargs.get('input', '').strip()
+        print 'kws async', uinput
+        time0 = time.time()
+        self.adjust_input(kwargs)
+        view = kwargs.get('view', 'list')
+        inst = kwargs.get('instance', self.dbs_global)
+        uinput = kwargs.get('input', '')
+        self.logdb(uinput)
+        return inst, uinput
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def kws_async(self, **kwargs):
         """
-        Request data from DAS cache.
+        Returns KeywordSearch results for AJAX call (for now as html snippet)
         """
         print 'kws async'
-        # do not allow caching
-        set_no_cache_flags()
+        inst, uinput = self.kws_async_init(kwargs)
 
-        uinput  = kwargs.get('input', '').strip()
-        print 'kws async', uinput
+        if  self.busy():
+            return self.busy_page(uinput)
+
+
 
         if  not uinput:
             kwargs['reason'] = 'No input found'
             return self.redirect(**kwargs)
 
-        time0   = time.time()
-        self.adjust_input(kwargs)
-        view    = kwargs.get('view', 'list')
-        inst    = kwargs.get('instance', self.dbs_global)
-        uinput  = kwargs.get('input', '')
-
-        if  self.busy():
-            return self.busy_page(uinput)
-
-        self.logdb(uinput)
         print 'kws async', uinput
-        status, body =  KeywordSearchHandler.handle_search(self,
+        return KeywordSearchHandler.handle_search(self,
                                                   query=uinput, inst=inst,
                                                   initial_exc_message = '',
                                                   dbsmngr = self._get_dbsmgr_for_db_instance(inst),
                                                   is_ajax=True)
-        return body
+
+
+
+    @expose
+    @checkargs(DAS_WEB_INPUTS)
+    def kws_entry_points_ajax(self, **kwargs):
+        '''
+        returns entry points as html snippet (TODO: not finished)
+        '''
+        from DAS.keywordsearch import search as kws
+        inst, query = self.kws_async_init(**kwargs)
+
+        kws.init_dbs_mngr(dbsmngr=None, inst=inst)
+
+        query, tokens = kws.tokenize_query(query, DEBUG=True)
+        chunks, schema_ws, values_ws = kws.get_entry_points(tokens)
+
+        import pprint
+        pprint.pprint(chunks, schema_ws, values_ws)
+
 
 
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def autocomplete_test(self):
+
         """
         represent DAS services
         """
@@ -487,9 +509,7 @@ class DASWebService(DASWebManager):
 
         daskeys_grouped_json = json.dumps(daskeys_grouped)
 
-
-
-        page = self.templatepage('das_kws_autocomplete', dasdict=dasdict,
+        page = self.templatepage('kwdsearch_autocomplete', dasdict=dasdict,
                                  daskeys=daskeys, daskeys_json=daskeys_json,
                                  daskeys_grouped_json=daskeys_grouped_json,
                                  selkeys_values=selkeys_values,
@@ -523,7 +543,7 @@ class DASWebService(DASWebManager):
         Adjust user input wrt common DAS keyword patterns, e.g.
         Zee -> dataset=*Zee*, T1_US -> site=T1_US*. This method
         only works if self.adjust is set in configuration of DAS server.
-        This method can be customization for concrete DAS applications via
+        This method can be customized for concrete DAS applications via
         external free_text_parser function (part of DAS.web.utils module)
         """
         if  not self.adjust:
@@ -624,7 +644,7 @@ class DASWebService(DASWebManager):
 
             # Keyword Search
             if not isinstance(err, WildcardMatchingException):
-                return KeywordSearchHandler.handle_search(self,
+                return 1, KeywordSearchHandler.handle_search(self,
                     query=uinput, inst=inst, initial_exc_message = err.message,
                     dbsmngr = self._get_dbsmgr_for_db_instance(inst))
 

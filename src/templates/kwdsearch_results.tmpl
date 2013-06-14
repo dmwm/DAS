@@ -4,22 +4,75 @@
 #assert (isinstance($msg, str) or isinstance($msg, unicode))
 
 #if not $is_ajax
-<link rel="stylesheet" href="/das/css/?f=jquery-ui.css&f=kwsearch.css" />
-<script src="/das/js/?f=jquery.min.js" type="text/javascript"></script>
-<script type="text/javascript">
-    jQuery.noConflict();
-</script>
-<script src="/das/js/?f=jquery-ui.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="/das/css/?f=jquery-ui.css&f=kwsearch.css" />
+    <script src="/das/js/?f=jquery.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        jQuery.noConflict();
+    </script>
+    <script src="/das/js/?f=jquery-ui.js" type="text/javascript"></script>
 
-<b>DAS is unable  to unambigously interpret your query.
-    Is any of the queries below that you meant?</b><br />
+    <b>Your input  does not follow DAS query language.<br />
+       Consider these query propositions...</b><br />
 #end if
 
-<div id="kws-results-listing"> <!-- main div -->
+<div id="kws-results-container">
 
-    $msg
+    #if not $is_ajax
+    <div id="kws-entry-points">
+        <p>You wonder why do you get such propositions? Here is how we interpret your query...<br />
+            Specify below what exactly you meant, and improve the results...</p>
 
-</div> <!-- end of main div -->
+        [entry_points]
+
+    </div>
+    #end if
+
+
+    <div id="kws-results-listing"> <!-- main div -->
+
+        #if $hi_score_result_types
+
+            <div class="select-result-type">
+                    <span class="tooltip">Are you searching for:
+                        <span class="classic">You may filter suggestions by the entity they return</span></span>
+                            &nbsp;<span class="rt-filters">
+                                #for index, rt in enumerate($hi_score_result_types):
+#if index != 0 then ', &nbsp;' else '&nbsp;'
+<a href="javascript: filterByResultType('$rt', this)">$rt</a>#slurp
+                                #end for
+                            </span>
+                </div>
+
+        #end if
+
+
+        $msg
+
+        <!-- list proposed queries along with their scores -->
+        #for $item in $proposed_queries:
+            #set query_escaped = $quote($item.result)
+            #set nl_query_escaped = $quote($item.query_in_words)
+
+            <div class="kws-result result-with-entity-${item.entity}">
+
+               <div class="score-bar" style="width: ${item.bar.max_w}px;">
+                         <div class="score-bar-inner score-bar-inner-${item.bar.style}" style="width: ${item.bar.w}px;"></div>
+                         <span class="score-num">
+                                #echo "%.2f" % $item.bar.score
+                         </span>
+               </div>
+
+               <a class="kws-link" href="$item.link" target="_blank"
+                                    title="Explanation: &lt;br/&gt; $nl_query_escaped">$item.query_html</a>
+                <a class="debug" title="$item.trace">debug</a>
+            </div>
+
+        #end for
+
+    </div> <!-- end of main div -->
+
+</div>
+
 <div style="color: #666">
     $initial_err_message
 </div>
@@ -27,6 +80,10 @@
 
 
 <script type="text/javascript">
+
+    //
+    // result type selector
+    //
 
     function hide(selector){
         //jQuery(selector).hide().;
@@ -45,10 +102,14 @@
     function showAllRT(){
     }
 
+
+    // limit the number of results shown
+
     function showAllResults(){
         jQuery('.kws-result').show(300);
         jQuery('#results-only-top-k').html('');
     }
+
 
     function hideLowResults(){
         // hide all results lower than 10
@@ -91,5 +152,5 @@
 </script>
 
 
-<!-- end of das_ambiguous_html.tmpl -->
+<!-- end of kwdsearch_results.tmpl -->
 

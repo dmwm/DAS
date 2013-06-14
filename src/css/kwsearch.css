@@ -97,7 +97,11 @@ div.score-bar span {
 
 
 .kws-result .debug {
-    color: #FF9999;
+    color: #bbb;
     font-size: 10px;
     margin-left: 20px;
+}
+
+#kws-entry-points {
+    float: right;
 }
