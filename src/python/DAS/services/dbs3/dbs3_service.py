@@ -291,6 +291,89 @@ def get_file4dataset_run_lumi(url, api, args):
         if  lumi == ilumi:
             yield lfn
 
+### helper functions for get_blocks4tier_dates
+def process(gen):
+    "Process generator from getdata"
+    for row in gen:
+        if  row.has_key('error'):
+            raise Exception(row['error'])
+        if  row.has_key('data'):
+            yield json.loads(row['data'])
+
+def datasets(urls):
+    """Look-up datasets for given set of parameters"""
+    headers = {'Accept':'text/json;application/json'}
+    data    = urlfetch_getdata(urls, CKEY, CERT, headers)
+    for dlist in process(data):
+        for row in dlist:
+            yield row['dataset']
+
+def blocks(dbs, dlist, min_cdate, max_cdate):
+    "Get list of blocks for given dataset list"
+    headers = {'Accept':'text/json;application/json'}
+    url     = dbs + "/blocks"
+    params  = ({'dataset':d, 'min_cdate':min_cdate, 'max_cdate':max_cdate} \
+            for d in dlist)
+    urls    = ['%s?%s' % (url, urllib.urlencode(p)) for p in params]
+    res     = process(urlfetch_getdata(urls, CKEY, CERT, headers))
+    for blist in res:
+        for row in blist:
+            yield row['block_name']
+
+### TODO: this needs to be revisited with new DBS3 API blockSummaries
+### https://svnweb.cern.ch/trac/CMSDMWM/ticket/4148
+### currently the result of get_blocks4tier_dates is not precise since
+### blocks creation dates are not the same as dataset ones
+def get_blocks4tier_dates(dbs_url, api, args):
+    "Helper function to get blocks for given tier and date range"
+    fullday = 24*60*60
+    tier    = args.get('tier')
+    ddict   = args.get('date')
+    if  isinstance(ddict, dict):
+        if  ddict.has_key('$lte'):
+            date1 = ddict['$gte']
+            date2 = ddict['$lte'] + fullday
+        elif ddict.has_key('$in'):
+            date1 = ddict['$in'][0]
+            date2 = ddict['$in'][-1]
+        else:
+            msg = 'Unsupported date dict, "%s"' % ddict
+            raise Exception(msg)
+    else:
+        date1 = date
+        date1 = date + fullday
+    headers = {'Accept':'text/json;application/json'}
+    pat     = "/*/*/%s" % tier
+    url     = dbs_url + "/datasets"
+    params  = [{'dataset':pat, 'min_cdate':date1, 'max_cdate':date2}]
+    urls    = ['%s?%s' % (url, urllib.urlencode(p)) for p in params]
+    # get dataset list
+    dlist   = (r for r in datasets(urls))
+
+    # get block list
+    blist   = (r for r in blocks(dbs_url, dlist, date1, date2))
+
+    # get summaries
+    url     = dbs_url + "/filesummaries"
+    urls    = ['%s/?block_name=%s' % (url, urllib.quote(b)) for b in blist]
+    res     = urlfetch_getdata(urls, CKEY, CERT, headers)
+    for row in res:
+        if  row.has_key('error'):
+            raise Exception(row['error'])
+        url = row['url']
+        blk = urllib.unquote(url.split('=')[-1])
+        data = row['data']
+        try:
+            for rec in json.loads(data):
+                data = dict(name=blk, size=rec['file_size'],
+                        nfiles=rec['num_file'], nevents=rec['num_event'],
+                        nlumis=rec['num_lumi'])
+                yield dict(block=data)
+        except Exception as exc:
+            msg = 'Unable to parse block row, blk=%s, row=%s, exception=%s' \
+                    % (blk, row, exc)
+            print_exc(msg)
+
 class DBS3Service(DASAbstractService):
     """
     Helper class to provide DBS service
@@ -310,11 +393,14 @@ class DBS3Service(DASAbstractService):
         if  api == 'run_lumi4dataset' or api == 'run_lumi4block' or \
             api == 'file_lumi4dataset' or api == 'file_lumi4block' or \
             api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block' or \
-            api == 'block_run_lumi4dataset' or api == 'file4dataset_run_lumi':
+            api == 'block_run_lumi4dataset' or api == 'file4dataset_run_lumi' or\
+            api == 'blocks4tier_dates':
             time0 = time.time()
             dbs_url = '/'.join(url.split('/')[:-1])
             if  api == 'block_run_lumi4dataset':
                 dasrows = get_block_run_lumis(dbs_url, api, args)
+            elif api == 'blocks4tier_dates':
+                dasrows = get_blocks4tier_dates(dbs_url, api, args)
             elif api == 'file4dataset_run_lumi':
                 dasrows = get_file4dataset_run_lumi(dbs_url, api, args)
             else:

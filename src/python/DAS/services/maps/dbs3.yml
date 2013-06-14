@@ -475,6 +475,18 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
+urn : blocks4tier_dates
+url : "https://cmsweb-testbed.cern.ch/dbs/prod/global/DBSReader/blocks"
+format : JSON
+expire : 3600
+params : {"tier":"required", "date": "required"}
+lookup : block
+das_map : [
+    {"das_key": "block", "rec_key":"block.name"},
+    {"das_key": "tier", "rec_key":"tier.name", "api_arg":"tier"},
+    {"das_key": "date", "rec_key":"date", "api_arg":"date"},
+]
+---
 notations : [
     {"api_output": "creation_date", "rec_key":"creation_time", "api":""},
     {"api_output": "last_modification_date", "rec_key":"modification_time", "api":""},
