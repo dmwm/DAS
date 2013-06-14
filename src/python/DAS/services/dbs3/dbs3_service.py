@@ -273,6 +273,24 @@ def get_file_run_lumis(url, api, args):
     for row in process_lumis_with(key, gen):
         yield row
 
+def get_file4dataset_run_lumi(url, api, args):
+    "Helper function to deal with file dataset=/a/b/c run=123 lumi=1 requests"
+    run_value = args.get('run', [])
+    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+        runs = run_value['$in']
+    elif isinstance(run_value, list):
+        runs = run_value
+    else:
+        runs = [run_value]
+    ilumi = args.get('lumi')
+    args.update({'runs': runs})
+    blocks = dbs_find('block', url, args)
+    gen = file_run_lumis(url, blocks, runs)
+    key = 'file'
+    for lfn, _run, lumi in gen:
+        if  lumi == ilumi:
+            yield lfn
+
 class DBS3Service(DASAbstractService):
     """
     Helper class to provide DBS service
@@ -292,11 +310,13 @@ class DBS3Service(DASAbstractService):
         if  api == 'run_lumi4dataset' or api == 'run_lumi4block' or \
             api == 'file_lumi4dataset' or api == 'file_lumi4block' or \
             api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block' or \
-            api == 'block_run_lumi4dataset':
+            api == 'block_run_lumi4dataset' or api == 'file4dataset_run_lumi':
             time0 = time.time()
             dbs_url = '/'.join(url.split('/')[:-1])
             if  api == 'block_run_lumi4dataset':
                 dasrows = get_block_run_lumis(dbs_url, api, args)
+            elif api == 'file4dataset_run_lumi':
+                dasrows = get_file4dataset_run_lumi(dbs_url, api, args)
             else:
                 dasrows = get_file_run_lumis(dbs_url, api, args)
             ctime = time.time()-time0

@@ -461,6 +461,20 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
+urn : file4dataset_run_lumi
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run": "required", "lumi": "required"}
+lookup : file
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
 notations : [
     {"api_output": "creation_date", "rec_key":"creation_time", "api":""},
     {"api_output": "last_modification_date", "rec_key":"modification_time", "api":""},
