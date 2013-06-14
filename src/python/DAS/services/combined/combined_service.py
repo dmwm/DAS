@@ -26,6 +26,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
+import urllib
 try:
     import cStringIO as StringIO
 except:
@@ -40,7 +41,7 @@ from DAS.utils.utils import print_exc
 from DAS.utils.ddict import DotDict
 from DAS.utils.global_scope import SERVICES
 from DAS.utils.url_utils import getdata
-from DAS.utils.regex import site_pattern, se_pattern, int_number_pattern
+from DAS.utils.regex import phedex_node_pattern, se_pattern, int_number_pattern
 from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
 from DAS.services.dbs.dbs_service import dbs_find as dbs2_find
 from DAS.services.dbs3.dbs3_service import dbs_find as dbs3_find
@@ -77,7 +78,10 @@ def phedex_files(phedex_url, kwds):
     "Get file information from Phedex"
     params = dict(kwds) # parameters to be send to Phedex
     site = kwds.get('site', None)
-    if  site and site_pattern.match(site):
+    if  site and phedex_node_pattern.match(site):
+        if  not site.endswith('*'):
+            # this will account to look-up site names w/o _Buffer or _MSS
+            site += '*'
         params.update({'node': site})
         params.pop('site')
     elif site and se_pattern.match(site):
@@ -311,7 +315,7 @@ class CombinedService(DASAbstractService):
             elif isinstance(run_value, list):
                 runs = run_value
             else:
-                if  int_number_pattern.match(run_value):
+                if  int_number_pattern.match(str(run_value)):
                     runs = [run_value]
                 else:
                     runs = []
@@ -370,15 +374,19 @@ def files4site(phedex_url, files, site):
     "Find site for given files"
 
     params = {}
-    if  site and site_pattern.match(site):
+    if  site and phedex_node_pattern.match(site):
+        if  not site.endswith('*'):
+            # this will account to look-up site names w/o _Buffer or _MSS
+            site += '*'
         params.update({'node': site})
     elif site and se_pattern.match(site):
         params.update({'se': site})
     else:
         return
+    sname = urllib.urlencode(params)
     urls = []
     for fname in files:
-        url = '%s?lfn=%s' % (phedex_url, fname)
+        url = '%s?lfn=%s&%s' % (phedex_url, fname, sname)
         urls.append(url)
     tags = 'block.replica.node'
     prim_key = 'block'
@@ -395,7 +403,4 @@ def files4site(phedex_url, files, site):
                 fname = fobj['name']
                 replica = fobj['replica']
                 for item in replica:
-                    if  params.has_key('node') and item['node'] == site:
-                        yield fname
-                    elif params.has_key('se') and item['se'] == site:
-                        yield fname
+                    yield fname
