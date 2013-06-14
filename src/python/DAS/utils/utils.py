@@ -29,7 +29,7 @@ from   bson.objectid import ObjectId
 # DAS modules
 from   DAS.utils.ddict import DotDict, convert_dot_notation
 from   DAS.utils.regex import float_number_pattern, int_number_pattern
-from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
+from   DAS.utils.regex import phedex_node_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 from   DAS.utils.regex import rr_time_pattern, das_time_pattern
@@ -838,7 +838,7 @@ def sitename(site):
     CMS name or SAM name, etc.
     """
     patlist = [
-               ('phedex', phedex_tier_pattern),#T2_UK_NO
+               ('phedex', phedex_node_pattern),#T2_UK_NO
                ('cms', cms_tier_pattern), # T2_UK
                ('se',  se_pattern), # a.b.c
                ('site', site_pattern),
