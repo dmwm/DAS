@@ -129,7 +129,11 @@
                         return r && jQuery.inArray(item, matches) == -1 && r;
                     });
                     matches = jQuery.merge(matches, matches_anywhere);
-                    matches = jQuery.merge(matches, new Array({label: 'dataset=/Zmg69/*/*', type: 'value_match', 'facet': 'dataset', category: 'value matches'}));
+                    matches = jQuery.merge(matches, new Array(
+                        {label: 'dataset=/Zmm/*/*', type: 'value_match', 'facet': 'dataset', category: 'value matches'},
+                        {label: 'dataset=/*/Zmm/*', type: 'value_match', 'facet': 'dataset', category: 'value matches'},
+                        {label: 'primary_dataset=Zmm*', type: 'value_match', 'facet': 'dataset', category: 'value matches'}
+                    ));
                 }
 
                 if (_DEBUG) console.log('before end', matches);

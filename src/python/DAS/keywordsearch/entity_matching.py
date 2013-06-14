@@ -1,4 +1,4 @@
-__author__ = 'vidma'
+
 """
 This module generates candidates for matching keywords into entity names, attributes or values.
 It uses a number of similarity metrics and heuristics, along with exiting values.
@@ -16,58 +16,8 @@ from DAS.keywordsearch.das_schema_adapter import *
 
 from DAS.keywordsearch.config import mod_enabled
 
-from nltk import stem
-stemmer = stem.PorterStemmer()
 
-
-# TODO: use mapping to entity attributes even independent of the entity itself (idf-like inverted index)
-
-def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
-    # TODO: use some good string similarity metrics: string edit distance, jacard, levenshtein, hamming, etc
-    # TODO: use ontology
-
-    # if contains is good, insertions are worse
-    score = (jellyfish.jaro_winkler(keyword, match_to) +\
-             difflib.SequenceMatcher(a=keyword, b=match_to).ratio() ) / 2
-
-    # TODO: promote matching substrings
-
-    # TODO: similarity shall not be used at all if the words are not similar enough
-
-    if mod_enabled('STRING_DIST_ENABLE_NLTK_PORTER'):
-        if stemmer.stem(keyword) == stemmer.stem(match_to):
-            score = max(score, 0.7)
-        # TODO: shall we do string-distance on top of stemmer?
-
-
-
-    # TODO: we shall be able to handle attributes also
-    if mod_enabled('STRING_DIST_ENABLE_NLTK_SEMANTICS') and semantic and not '.' in match_to:
-        ks = wordnet.synsets(keyword)
-        # TODO: we shall can select the relevant synsets for our schema entities manually for improved results
-        if entity_wordnet_synsets.has_key(match_to):
-            ms = [entity_wordnet_synsets[match_to]]
-            #else:
-            #ms = wordnet.synsets(match_to)
-            if ms and ks:
-                avg = lambda l: sum(l)/len(l)
-
-                if DEBUG and keyword == 'location':
-                    print 'location similarities to ', match_to, ['%.2f' %  k.wup_similarity(m) for k in ks for m in ms if k.wup_similarity(m)]
-                similarities = [k.wup_similarity(m) for k in ks for m in ms if k.wup_similarity(m)]
-                semantic_score = similarities and max(similarities) or 0.0
-
-                if score < 0.7:
-                    score = semantic_score
-                else:
-                    score = max(semantic_score, (score + 2*semantic_score)/3)
-
-    if allow_low_scores:
-        return score if score > 0.1 else  0
-    else:
-        return score if score > 0.5 else  0
-
-
+from DAS.keywordsearch.nlp import string_distance
 
 def keyword_schema_weights(keyword,  use_fields=True, include_fields =False, \
                            include_operators=False,  keyword_index=-1, is_stopword = False):
@@ -105,30 +55,19 @@ def keyword_schema_weights(keyword,  use_fields=True, include_fields =False, \
     # TODO: operators
     # TODO: use IDF (some field subparts are very common, e.g. name)
 
-    result =  []
+    result =  [(string_distance(keyword, entity_short, semantic=True), entity_long)
+               for (entity_long, entity_short) in entity_names.items()]
 
-    if not is_stopword:
-        if include_fields:
-            result = [(string_distance(keyword, entity, semantic=True), entity_long)
-                       for (entity_long, entity) in entity_names.items()]
-        else:
-            if use_fields:
-                # for now a very dumb matching, to both entity.name and entity by string comparison
-                result = [(string_distance(keyword, entity_with_field, semantic=True), entity)
-                           for (entity_with_field, entity) in entity_names.items()]
-
-                result.extend([(string_distance(keyword, entity, semantic=True), entity)
-                               for (entity_with_field, entity) in entity_names.items()])
-            else:
-                result =  [(string_distance(keyword, entity, semantic=True), entity)
-                           for entity in search_field_names]
-
+    # check synonyms
+    for (entity_long, synonyms) in cms_synonyms['daskeys'].items():
+        for synonym in synonyms:
+            result.extend([ (string_distance(keyword, synonym, semantic=True), entity_long)   ])
 
     # apply some simple patterns
     if keyword_index == 0:
         # TODO: we actually know even more: this is the result type
         if keyword == 'where':
-            result.extend( [(0.6, 'site.name'), ])
+            result.extend( [(0.75, 'site.name'), ])
         if keyword == 'who':
             result.extend( [(0.5, 'user.name'),])
 

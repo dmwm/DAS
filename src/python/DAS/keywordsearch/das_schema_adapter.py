@@ -6,7 +6,7 @@ EXCLUDE_RECORDS_WITH_ERRORS = False
 
 import math
 import pprint
-import itertools
+
 
 from cherrypy import request
 
@@ -17,7 +17,7 @@ import DAS.web.dbs_daemon
 
 
 
-DEBUG = False
+DEBUG = True
 
 
 
@@ -533,8 +533,9 @@ def list_result_fields(same_entitty_prunning=False, _DEBUG=False):
     if _result_fields_by_entity:
         return _result_fields_by_entity
     else:
-        return {}
+        # return {}
         raise Exception('keyword search: das schema not loaded')
+
 
 
 
@@ -545,62 +546,12 @@ if __name__ == '__main__':
     pprint.pprint(list_result_fields())
 
 
-# TODO: this is not yet used...
-operators = {
-    # TODO: is this needed explicitly?
-    #'grep': [
-    #    {'type': 'filter',
-    #     'synonyms': ['filter', 'where']},
-    #],
-
-    'avg':
-        {'type': 'aggregator',
-         'synonyms': ['average', 'avg']},
-
-    # TODO:'number of' is ambiguos with 'number of events' in dataset etc
-    'count':
-        {'type': 'aggregator',
-         'synonyms': ['count', 'how many',  ]},
-    'min':
-        {'type': 'aggregator',
-         'synonyms': ['minimum', 'smallest', 'min']},
-    'max':
-        {'type': 'aggregator',
-         'synonyms': ['largest', 'max', 'maximum']},
-    'sum':
-        {'type': 'aggregator',
-         'synonyms': ['total', 'total sum']},
-
-    'median':
-        {'type': 'aggregator',
-         'synonyms': ['median']},
-
-    # TODO: problem: selecting between max and sort!
-    # TODO: e.g. largest dataset vs what is the largest size of dataset
-
-    # TODO: for size fields, smallest/largest
-    'sort %(field)s':
-        {'synonyms':
-            # TODO: entities that have size!! simpler approach just use expansion, e.g.
-            # largest *Zmm* dataset -> largest dataset Zmm
-            # TODO:  {'largest (dataset|file|block)': 'ENTITY.size'}
-            ['order by', 'sort by', 'sort', ]},
-    'sort -%field':
-        {'synonyms':
-             ['order by %(field)s descending', 'smallest [entity]']},
-
-}
-
-def flatten(listOfLists):
-    "Flatten one level of nesting"
-    return itertools.chain.from_iterable(listOfLists)
-
-def get_operator_synonyms():
-    return flatten([op.get('synonyms', []) for op in operators.values()])
-
 
 
 cms_synonyms = {
+    'daskeys': {
+        'site.name': ['location', ]
+    },
     'schema': {
         'site.se': ['storage element'],
         'run.bfield': ['magnetic field'],

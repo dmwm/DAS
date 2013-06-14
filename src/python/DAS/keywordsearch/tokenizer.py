@@ -14,10 +14,9 @@ import re
 from nltk.internals import  convert_regexp_to_nongrouping
 
 
+AGGREGATORS_ENABLED = False
 
-kws_operators = r'(>=|<=|<|>|=)'
-word = r'[a-zA-Z0-9_\-*/.@:#]+'
-
+from DAS.keywordsearch.das_ql import kws_operators, word, aggr_operators
 
 
 cleanup_subs = [
@@ -69,6 +68,9 @@ tokenizer_patterns = \
     ''' % locals()
 tokenizer_patterns = convert_regexp_to_nongrouping(tokenizer_patterns)
 tokenizer_patterns = re.compile(tokenizer_patterns, re.VERBOSE)
+
+
+
 
 
 
@@ -125,9 +127,32 @@ def get_keyword_without_operator(keyword):
 
     >>> get_keyword_without_operator('dataset=Zmm')
     'dataset'
+
+    # aggregators
+    >>> get_keyword_without_operator('average number of events')
+    'number of events'
+
+    >>> get_keyword_without_operator('avg dataset size')
+    'dataset size'
+
+    >>> get_keyword_without_operator('order by number of events')
+    'number of events'
     '''
     #global kws_operators
-    return re.split(kws_operators, keyword)[0].strip()
+    res = re.split(kws_operators, keyword)[0].strip()
+
+    # check for containment of aggregators
+    # TODO: this could yield multiple interpretations, so far we ignore that!!!
+
+    if AGGREGATORS_ENABLED:
+        for op in aggr_operators:
+            synonyms = op['synonyms_all']
+            for syn in synonyms:
+                if res.startswith(syn):
+                    return res.replace(syn, '').strip()
+
+
+    return res
 
 def test_operator_containment(keyword):
     '''
@@ -151,13 +176,24 @@ def get_operator_and_param(keyword):
     splits keyword on operator
 
     >>> get_operator_and_param('number of events >= 10')
-    {'param': '10', 'op': '>='}
+    {'type': 'filter', 'param': '10', 'op': '>='}
 
     >>> get_operator_and_param('dataset')
 
 
     >>> get_operator_and_param('dataset=Zmm')
-    {'param': 'Zmm', 'op': '='}
+    {'type': 'filter', 'param': 'Zmm', 'op': '='}
+
+
+    >>> get_operator_and_param('average file size')
+    {'type': 'aggregator', 'op_pattern': 'avg(%(field)s)', 'op': 'avg'}
+
+    >>> get_operator_and_param('avg file size')
+    {'type': 'aggregator', 'op_pattern': 'avg(%(field)s)', 'op': 'avg'}
+
+
+    >>> get_operator_and_param('min file size')
+    {'type': 'aggregator', 'op_pattern': 'min(%(field)s)', 'op': 'min'}
 
     '''
 
@@ -165,7 +201,21 @@ def get_operator_and_param(keyword):
     # e.g. parts = ['number of events ', '>=', ' 10']
     if len(parts) == 3:
         return {'op': parts[1].strip(),
-                'param': parts[2].strip()}
+                'param': parts[2].strip(),
+                'type': 'filter'}
+
+    # aggregator
+    if len(parts) ==1 and AGGREGATORS_ENABLED:
+        for op in aggr_operators:
+            synonyms = op['synonyms_all']
+            for syn in synonyms:
+                if keyword.startswith(syn):
+                    return {
+                        'op': op['name'],
+                        'op_pattern': op['op'],
+                        'type': op['type'],
+                    }
+                    # keyword.replace(syn, '').strip()
 
     #print parts
     return None

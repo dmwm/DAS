@@ -23,6 +23,9 @@ INDEX_DIR = os.environ['DAS_KWS_IR_INDEX']
 
 _DEBUG= False
 
+_USE_FAKE_FIELDS = False # this also impact IDFs!!!
+# if not, include only processed data!
+
 def build_index(fields_by_entity, remove_old = False):
     '''
     Schema:
@@ -50,28 +53,53 @@ def build_index(fields_by_entity, remove_old = False):
 
     # replica_fraction -> replica fraction
     # TODO: store entity as we are filtering by it?
-    schema = Schema(fieldname=TEXT(stored=True, field_boost=3),
-                    fieldname_current=TEXT(stored=True, field_boost=1),
+    if _USE_FAKE_FIELDS:
+        schema = Schema(fieldname=TEXT(stored=True, field_boost=3),
+                        fieldname_current=TEXT(stored=True, field_boost=1),
 
-                    fieldname_processed_parents=TEXT(stored=True,
-                                                     field_boost=0.2,
-                                                     analyzer=analysis.KeywordAnalyzer(
-                                                         lowercase=True), ),
-                    fieldname_processed_current=TEXT(stored=True,
-                                                     field_boost=1.0,
-                                                     analyzer=analysis.KeywordAnalyzer(
-                                                         lowercase=True), ),
-                    # TODO: to keep stopwords somewhere?
-                    title=TEXT(stored=True, field_boost=0.7),
-                    title_stemmed=TEXT(analyzer=analysis.StemmingAnalyzer(),
-                                       field_boost=1.5),
-                    # KeywordAnalyzer leaves text as it was in the beginning
-                    title_exact=TEXT(
-                        analyzer=analysis.KeywordAnalyzer(lowercase=True),
-                        field_boost=1),
+                        fieldname_processed_parents=TEXT(stored=True,
+                                                         field_boost=0.2,
+                                                         analyzer=analysis.KeywordAnalyzer(
+                                                             lowercase=True), ),
+                        fieldname_processed_current=TEXT(stored=True,
+                                                         field_boost=1.0,
+                                                         analyzer=analysis.KeywordAnalyzer(
+                                                             lowercase=True), ),
+                        # TODO: to keep stopwords somewhere?
+                        title=TEXT(stored=True, field_boost=0.7),
+                        title_stemmed=TEXT(analyzer=analysis.StemmingAnalyzer(),
+                                           field_boost=1.5),
+                        # KeywordAnalyzer leaves text as it was in the beginning
+                        title_exact=TEXT(
+                            analyzer=analysis.KeywordAnalyzer(lowercase=True),
+                            field_boost=1),
 
-                    entity_and_fn=ID,
-                    result_type=KEYWORD(stored=True))
+                        entity_and_fn=ID,
+                        result_type=KEYWORD(stored=True))
+    else:
+        schema = Schema(fieldname=TEXT(stored=True, field_boost=3),
+                        # fieldname_current=TEXT(stored=True, field_boost=1),
+
+                        fieldname_processed_parents=TEXT(stored=True,
+                                                         field_boost=0.2,
+                                                         analyzer=analysis.KeywordAnalyzer(
+                                                             lowercase=True), ),
+                        fieldname_processed_current=TEXT(stored=True,
+                                                         field_boost=1.0,
+                                                         analyzer=analysis.KeywordAnalyzer(
+                                                             lowercase=True), ),
+                        # TODO: to keep stopwords somewhere?
+                        #title=TEXT(stored=True, field_boost=0.7),
+                        title_stemmed=TEXT(analyzer=analysis.StemmingAnalyzer(),
+                                           field_boost=1.5),
+                        # KeywordAnalyzer leaves text as it was in the beginning
+                        #title_exact=TEXT(
+                        #    analyzer=analysis.KeywordAnalyzer(lowercase=True),
+                        #    field_boost=1),
+
+                        entity_and_fn=ID,
+                        result_type=KEYWORD(stored=True))
+
     idx = create_in(INDEX_DIR, schema, "idx_name")
 
     writer = idx.writer()
@@ -85,23 +113,42 @@ def build_index(fields_by_entity, remove_old = False):
             writer.delete_by_term('entity_and_fn',
                                   result_type + ':' + field_name)
 
-            writer.add_document(
-                fieldname=field_name,
-                fieldname_current=field_name.split('.')[-1],
-                # e.g. block.replica (for block.replica.custodial)
-                fieldname_processed_parents=' '.join(
-                    field_name.split('.')[:-1]).replace('_', ' ') or None,
+            if _USE_FAKE_FIELDS:
+                writer.add_document(
+                    fieldname=field_name,
+                    fieldname_current=field_name.split('.')[-1],
+                    # e.g. block.replica (for block.replica.custodial)
+                    fieldname_processed_parents=' '.join(
+                        field_name.split('.')[:-1]).replace('_', ' ') or None,
 
-                # e.g. .custodial (for block.replica.custodial)
-                fieldname_processed_current=field_name.split('.')[-1].replace(
-                    '_', ' '),
-                # title that is not always present...
-                title=field['title'] or None,
-                title_stemmed=field['title'] or None,
-                title_exact=field['title'] or None,
-                # TODO: porter stemmer, or other processing
-                entity_and_fn=result_type + ':' + field_name,
-                result_type=result_type)
+                    # e.g. .custodial (for block.replica.custodial)
+                    fieldname_processed_current=field_name.split('.')[-1].replace(
+                        '_', ' '),
+                    # title that is not always present...
+                    title=field['title'] or None,
+                    title_stemmed=field['title'] or None,
+                    title_exact=field['title'] or None,
+                    # TODO: porter stemmer, or other processing
+                    entity_and_fn=result_type + ':' + field_name,
+                    result_type=result_type)
+            else:
+                writer.add_document(
+                    fieldname=field_name,
+                    #fieldname_current=field_name.split('.')[-1],
+                    # e.g. block.replica (for block.replica.custodial)
+                    fieldname_processed_parents=' '.join(
+                        field_name.split('.')[:-1]).replace('_', ' ') or None,
+
+                    # e.g. .custodial (for block.replica.custodial)
+                    fieldname_processed_current=field_name.split('.')[-1].replace(
+                        '_', ' '),
+                    # title that is not always present...
+                    #title=field['title'] or None,
+                    title_stemmed=field['title'] or None,
+                    #title_exact=field['title'] or None,
+                    # TODO: porter stemmer, or other processing
+                    entity_and_fn=result_type + ':' + field_name,
+                    result_type=result_type)
 
     writer.commit()
     print 'index creation done.'
@@ -117,7 +164,7 @@ def load_index():
 
 
 def search_index(keywords, result_type=False, full_matches_only=False, limit=10,
-                 use_bm25f=False):
+                 use_bm25f=True,):
     global _ix
 
     if _DEBUG:
@@ -145,23 +192,44 @@ def search_index(keywords, result_type=False, full_matches_only=False, limit=10,
 
 
         # build the terms to search
-        fields_to_search = ['fieldname', 'fieldname_processed_parents',
-                            'fieldname_processed_current', 'fieldname_current',
-                            'title',
-                            ]
-        all_fields_and_terms = [Term(f, kw) for kw in
-                                keyword_list_no_stopw
-                                for f in fields_to_search
-        ]
-        all_fields_and_terms.extend([Term('title_stemmed', kw)
-                                     for kw in keyword_list_stemmed])
+        if _USE_FAKE_FIELDS:
+            fields_to_search = ['fieldname', 'fieldname_processed_parents',
+                                'fieldname_processed_current', 'fieldname_current',
+                                'title',
+                                ]
+
+            all_fields_and_terms = [Term(f, kw) for kw in
+                                    keyword_list_no_stopw
+                                    for f in fields_to_search
+            ]
+            all_fields_and_terms.extend([Term('title_stemmed', kw)
+                                         for kw in keyword_list_stemmed])
 
 
 
-        if keyword_list_no_stopw and len(keyword_list_no_stopw) > 1:
-            all_fields_and_terms.append(
-                Phrase('title', keyword_list_no_stopw, boost=2,
-                       slop=1))
+            if keyword_list_no_stopw and len(keyword_list_no_stopw) > 1:
+                all_fields_and_terms.append(
+                    Phrase('title', keyword_list_no_stopw, boost=2,
+                           slop=1))
+        else:
+            fields_to_search = ['fieldname', 'fieldname_processed_parents',
+                                'fieldname_processed_current',
+                                ]
+
+            all_fields_and_terms = [Term(f, kw) for kw in
+                                    keyword_list_stemmed
+                                    for f in fields_to_search
+            ]
+            all_fields_and_terms.extend([Term('title_stemmed', kw)
+                                         for kw in keyword_list_stemmed])
+
+            # WE no not search by stopwords anymore....
+            # here phrase also uses title_stemmed, it will match title stemmed, so score boost shouldn't be too high
+            if keyword_list_no_stopw and len(keyword_list_no_stopw) > 1:
+                all_fields_and_terms.append(
+                    Phrase('title_stemmed', keyword_list_stemmed, boost=1.5,
+                           slop=1))
+
 
             # TODO: the problem is that exact matching has to match the whole phrase, overwise there's not so much of use
             # e.g. 'number events' and 'number of' gets the same scores,

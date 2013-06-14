@@ -119,6 +119,8 @@ from DAS.keywordsearch.entity_matching import *
 
 import DAS.keywordsearch.das_schema_adapter as integration_schema
 
+from DAS.keywordsearch import das_ql
+
 from DAS.keywordsearch.tokenizer import tokenize, get_keyword_without_operator,\
     get_operator_and_param, cleanup_query, test_operator_containment
 
@@ -141,17 +143,27 @@ from nltk import stem
 stemmer = stem.PorterStemmer()
 
 from math import log
-_USE_PROBABILITIES = True
+_USE_LOG_PROBABILITIES = True
 
-_sc = lambda score: score
+_USE_IR_SCORE_SMOOTHING = False
+
+# just divide by the best score, may introduce some unnecessarily high scores...
+_USE_IR_SCORE_NORMALIZATION_LOCAL = False
+
+
+_logP = lambda score: score
 
 # TODO: probablity of not taking a keyword shall depend on: stopword? known schema entity?
 # TODO: another issue! complex queries that system can not solve...!
-_P_NOT_TAKEN = 0.6
+_P_NOT_TAKEN = 0.3
+_P_STOPWORD_NOT_TAKEN = 0.9
+_P_RES_TYPE_NOT_SPECIFIED = 0.5 # e.g. keyword with score 0.5 would take over...
 
-if _USE_PROBABILITIES:
+if _USE_LOG_PROBABILITIES:
     # logarithm of zero or negative shall be very large
-    _sc = lambda score: score > 0 and log(score) or score == 0 and -10 or score
+    _logP = lambda score: score > 0.0 and log(score) or \
+                          (score < 0) and score or 0.0
+                         # (score < -1) and -log(-score) or  0.0
 
 
 def filter_stopwords(kwd_list):
@@ -162,17 +174,18 @@ def _get_reserved_terms(stem=False):
     terms that shall be down-ranked
     """
     entities = ['dataset', 'run', 'block', 'file', 'site', 'config', 'time', 'lumi']
-    operators = integration_schema.get_operator_synonyms()
+    operators = das_ql.get_operator_synonyms()
+    r = set(entities) | set(operators)
 
     if stem:
-        return map(lambda w: stemmer.stem(w), entities)
+        r =  map(lambda w: stemmer.stem(w), r)
 
-    return set(entities) | set(operators)
+    return r
 
 # TODO: this has to be implemented in a better way
 def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
     """
-    it is important to avoid misclassifying dataset, run as values.
+    it is important to avoid missclassifying dataset, run as values.
     these shall be allowed only if explicitly requested.
     """
 
@@ -182,15 +195,16 @@ def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
     # TODO: this is just a quick workaround
     if keyword in _get_reserved_terms(): #['dataset', 'run', 'block', 'file', 'site']:
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
-        return -5.0
+        return _logP(-5.0)
 
     if DEBUG: print '_get_reserved_terms(stem=True):', _get_reserved_terms(stem=True)
 
     if not ' ' in keyword and stemmer.stem(keyword) in _get_reserved_terms(stem=True): #['dataset', 'run', 'block', 'file', 'site']:
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
-        return -2.0
+        return _logP(-3.0)
 
     _DEBUG = 0
+    # TODO: is stuff below useful at all?
     if schema_ws:
         # e.g. configuration of dataset Zmmg-13Jul2012-v1 site=T1_* location is at T1_*
         # 4.37: dataset dataset=*Zmmg-13Jul2012-v1* site=T1_*
@@ -214,20 +228,32 @@ def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
     return 0.0
 
 
-def store_result(score, r_type, values_dict, r_filters, trace = set()):
-    store_result_dict(score, r_type, values_dict, r_filters, trace)
+def store_result_(score, r_type, values_dict, r_filters, keywords_used, trace = set(), result_type_specified=True):
+    '''
+    result_type_specified - it is not always specified by the query,
+        e.g. 'Zmmg' gives no such information
+    '''
+    store_result_dict_(score, r_type, values_dict, r_filters, keywords_used,
+                       trace, result_type_specified=result_type_specified)
 
     #result =   (score, r_type, values_dict.items(), tuple(r_filters), tuple(trace))
     #thread_data.results.append(result)
 
 
-def store_result_dict(score, r_type, values_dict, r_filters, trace = set(), missing_inputs=None):
+def store_result_dict_(score, r_type, values_dict, r_filters, keywords_used, trace = set(), missing_inputs=None, result_type_specified=True):
 
-    result =   {'score':score,
+    # TODO: how to know that result_type is not mapped?
+    _score = penalize_non_mapped_keywords_(keywords_used, thread_data.keywords_list, score, result_type = result_type_specified)
+
+
+    _trace = tuple(trace | set([('adjusted_score', _score)]))
+
+
+    result =   {'score': _score,
                 'result_type': r_type,
                 'input_values': values_dict.items(),
                 'result_filters': tuple(r_filters),
-                'trace': tuple(trace),
+                'trace': _trace,
                 'status': missing_inputs and 'missing_inputs' or 'OK',
                 'missing_inputs': missing_inputs}
     thread_data.results_dict.append(result)
@@ -237,10 +263,16 @@ def store_result_dict(score, r_type, values_dict, r_filters, trace = set(), miss
 def generate_result_filters(keywords_list, chunks, keywords_used,
                             old_score, result_type, values_mapping,
                             result_filters=[], field_idx_start=0,
-                            traceability=set(), result_fields_included = set()):
-    # prune out branches with very low scores (that is due to sence-less assignments)
-    if (mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled('PRUNE_NEGATIVE_SCORES')):
-        return
+                            traceability=set(), result_fields_included = set(),
+                            result_type_specified=True):
+    if not _USE_LOG_PROBABILITIES:
+        # prune out branches with very low scores (that is due to sense-less assignments)
+        if (mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled('PRUNE_NEGATIVE_SCORES')):
+            return
+    else:
+        # low_score could be low_prob**n_kwds, e.g. 0.3**n_kwds, if we get it,
+        # it wont be improved as it will always decrease...
+        pass
 
     # try assigning result values for particular entity
     # TODO: we use greedy strategy trying to assign largest keyword sequence (field chunks are sorted)
@@ -249,17 +281,19 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
         if field_idx_start > field_idx:
             continue
 
-        target_fieldname = match['field']['field']
+        target_fieldname = match['field_name']
 
         # we are anyway including this into filter
         if target_fieldname == result_type:
             continue
 
+        if DEBUG: print 'target_fieldname:', target_fieldname
+
         # if all required keywords are still available
-        if set(match['keywords_required']).isdisjoint(keywords_used) and \
+        if set(match['tokens_required']).isdisjoint(keywords_used) and \
                 (target_fieldname not in result_fields_included):
             if DEBUG: print 'required fields available for:', match
-            keywords_used_ = keywords_used | set(match['keywords_required'])
+            keywords_used_ = keywords_used | set(match['tokens_required'])
 
             #weight = match['field']['importance'] and 0.2 or 0.1
 
@@ -274,18 +308,19 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
                 pred = match['predicate']
                 target = (target_fieldname, pred['op'], pred['param'])
 
-                # promote matches with operator
-                delta_score *= 2.0
+                if not _USE_LOG_PROBABILITIES:
+                    # promote matches with operator
+                    delta_score *= 2.0
 
 
-            kwds = filter_stopwords(match['keywords_required'])
-            if len(kwds) == 1:
+            tokens = filter_stopwords(match['tokens_required'])
+            if len(tokens) == 1:
                 delta_score += penalize_highly_possible_schema_terms_as_values(
-                    kwds[0], None)
+                    tokens[0], None)
             else:
 
                 penalties = map(lambda kwd: penalize_highly_possible_schema_terms_as_values(kwd, None),
-                                kwds)
+                                tokens)
                 # for now, use average
                 delta_score += len(penalties) and sum(penalties)/len(penalties) or 0.0
 
@@ -293,26 +328,31 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
 
             _r_filters.append(target)
 
-
-            new_score = old_score + delta_score
-            adjusted_score_ = penalize_non_mapped_keywords(
-                                keywords_used_, keywords_list, new_score)
+            # we count each token separately in scoring
+            new_score = old_score + len(tokens) * _logP(delta_score)
+            #adjusted_score_ = penalize_non_mapped_keywords(
+            #                    keywords_used_, keywords_list, new_score)
 
 
             # TODO: do we support set literal (set([]) == {}); requires: 2.7a3+
             # http://stackoverflow.com/questions/2243049/what-do-you-think-about-pythons-new-set-literal-2-7a3
 
             _trace = traceability | set([
-                                        (tuple(match['keywords_required']),
+                                        (tuple(match['tokens_required']),
                                         'result_projection',
                                         target,
                                          tuple({'delta_score': delta_score,
-                                          'field_score': match['score']}.items())), ])
+                                          'field_score': match['score'],
+                                          'old_score': old_score,
+                                           'new_score': new_score,
+                                          }.items())), ])
 
-            store_result(adjusted_score_, result_type,
+            store_result_(new_score, result_type,
                          values_mapping,
                          _r_filters,
-                         _trace)
+                         keywords_used_,
+                         _trace,
+                         result_type_specified=result_type_specified or 'projection')
 
 
             if len(keywords_used_) < len(set(keywords_list)):
@@ -344,6 +384,9 @@ def normalization_factor_by_query_len(keywords_list):
              for kw in kws_wo_stopwords]) + 0.3
 
 
+    if _USE_LOG_PROBABILITIES:
+        # TODO: we may be more kind, assuming 0.9 or so is very good
+        return 1.0
 
     if expected_optimal_score < 1.0:
         expected_optimal_score = 1.0
@@ -351,7 +394,8 @@ def normalization_factor_by_query_len(keywords_list):
     return expected_optimal_score
 
 
-def penalize_non_mapped_keywords(keywords_used, keywords_list, score):
+def penalize_non_mapped_keywords_(keywords_used, keywords_list, score,
+                                  result_type = False):
     '''
     penalizes keywords that have not been mapped.
     '''
@@ -360,8 +404,32 @@ def penalize_non_mapped_keywords(keywords_used, keywords_list, score):
     # e.g. TODO: where is smf, 'how big/large' is
 
 
+    # TODO: what if we use probabilistic approach
+
+
     N_total_kw = len(set(keywords_used))
     N_kw_without_stopw = len(filter_stopwords(set(keywords_list)))
+
+    N_kw_not_used = max(N_kw_without_stopw - len(keywords_used), 0)
+
+
+    if _USE_LOG_PROBABILITIES:
+        score += _logP(_P_NOT_TAKEN) * N_kw_not_used
+
+        # TODO: shall we map field>=value twice as in averaging approach? then not taking is penalized twice...
+        # we add the score twice anyways...!!!
+
+        N_not_mapped_all = max(N_total_kw - len(keywords_used) - N_kw_not_used, 0)
+        score += _logP(_P_STOPWORD_NOT_TAKEN) * N_not_mapped_all
+
+        if not result_type:
+            score += _logP(_P_RES_TYPE_NOT_SPECIFIED)
+        elif result_type == 'projection':
+            # this has already +/- accounted for result_type (probability was multiplied)
+            # we could add a high probability, so slightly favour explicit result types
+            score += _logP(0.8)
+
+        return score
 
     if N_kw_without_stopw:
         return score * min(len(keywords_used), N_total_kw) / N_kw_without_stopw
@@ -420,28 +488,30 @@ def store_result_and_check_projections(
 
                 # TODO: how to handle non mapped items: probablity, divide, minus??
                 # TODO: shall we use probability-like scoring?
-                adjusted_score = penalize_non_mapped_keywords(keywords_used,
-                                                              keywords_list,
-                                                              adjusted_score)
+                #adjusted_score = penalize_non_mapped_keywords(keywords_used,
+                #                                              keywords_list,
+                #                                              adjusted_score)
 
                 # TODO: are we validating the result 100%?
-                store_result(adjusted_score, result_type, values_mapping,
-                    [], trace)
+                store_result_(adjusted_score, result_type, values_mapping,
+                    [], keywords_used | result_projection_forbidden, trace,
+                              result_type_specified=False)
 
                 generate_result_filters(keywords_list, chunks,
                                         keywords_used | result_projection_forbidden,
                                         old_score, result_type,
                                         values_mapping, traceability=trace,
+                                        result_type_specified=False
                 )
 
 
         else:
-            adjusted_score = penalize_non_mapped_keywords(keywords_used,
-                                                          keywords_list,
-                                                          old_score)
+            #adjusted_score = penalize_non_mapped_keywords(keywords_used,
+            #                                              keywords_list,
+            #                                              old_score)
 
-            store_result(adjusted_score, result_type, values_mapping,
-                [], trace)
+            store_result_(old_score, result_type, values_mapping,
+                [],keywords_used | result_projection_forbidden, trace)
 
             generate_result_filters(keywords_list, chunks,
                                     keywords_used | result_projection_forbidden,
@@ -469,8 +539,12 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
     # newones could still be added
 
     # prune out branches with very low scores (that is due to sence-less assignments)
-    if (mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled('PRUNE_NEGATIVE_SCORES')):
-        return
+    if not _USE_LOG_PROBABILITIES:
+        if (mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled('PRUNE_NEGATIVE_SCORES')):
+            return
+    else:
+        # TODO: pruning is harder
+        pass
 
     if UGLY_DEBUG:
         print 'generate_value_mappings(', \
@@ -547,7 +621,7 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
                                 schema_ws)
 
 
-            new_score = delta_score +  old_score
+            new_score = _logP(delta_score) +  old_score
             new_fields = fields_included | set([possible_mapping])
 
             if validate_input_params(new_fields, final_step=False,
@@ -564,7 +638,11 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
                     trace= trace| set([(keyword,
                                       'value_for',
                                       possible_mapping,
-                                     delta_score)]),
+                                     (
+                                         ('delta_score', delta_score),
+                                         ('old_score', old_score),
+                                         ('new_score', new_score),
+                                     ))]),
                     result_projection_forbidden = result_projection_forbidden)
 
 
@@ -647,7 +725,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
                 values_ws,
                 kw_list=kw_list,
                 kw_index=kw_index + 1,
-                old_score=old_score + delta_score,
+                old_score=old_score + _logP(delta_score),
                 kw_used=kw_used | set([kwd]),
                 chunks=chunks,
                 trace=trace | set([(kwd,'schema', target_field, delta_score)]))
@@ -660,9 +738,12 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
             # TODO: use focus extraction instead!!!
             # if this is the first keyword mapped to schema (we expect entity name to come first)
             if not kw_used and (kw_index+1) * 1.9 < len(kw_list):
-                delta_score *= 0.5 * (
+                delta_score *= (
                     float(len(kw_list)) - kw_index) / len(
                     kw_list)
+
+                if not _USE_LOG_PROBABILITIES:
+                    delta_score *= 0.5
 
             if validate_input_params(fields_old, entity=target_field):
                 if UGLY_DEBUG:  print 'validated', (
@@ -673,7 +754,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
                     schema_ws, values_ws,
                     kw_list=kw_list,
                     kw_index=kw_index + 1,
-                    old_score=old_score + delta_score,\
+                    old_score=old_score + _logP(delta_score),\
                     kw_used=kw_used | set([kwd]),
                     chunks=chunks,
                     trace=trace | set([(kwd,'requested_entity',  target_field, delta_score)]))
@@ -688,7 +769,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
                     schema_ws, values_ws,
                     kw_list=kw_list,
                     kw_index=kw_index + 1,
-                    old_score=old_score + delta_score,\
+                    old_score=old_score + _logP(delta_score),\
                     kw_used=kw_used | set([kwd]),
                     chunks=chunks,
                     trace= trace | set([(kwd, 'requested_entity', target_field, delta_score)])
@@ -742,6 +823,8 @@ def generate_chunks_no_ent_filter(keywords):
         res = search_index(
             keywords=phrase,
             limit=RESULT_LIMIT_PHRASES)
+
+        max_score = res and res[0]['score']
         for r in res:
             #r['len'] =  1
             r['len'] = len(r['keywords_matched'])
@@ -749,13 +832,15 @@ def generate_chunks_no_ent_filter(keywords):
 
             entity = r['result_type']
             r['field'] = fields_by_entity[entity][r['field']]
-            r['keywords_required'] = [kwd]
+            r['tokens_required'] = [kwd]
             # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
             # therefore, if nothing is pointing to block.replica we shall not choose block.replica.site
             # TODO: shall we divide by variance or stddev?
 
             # penalize terms that have multiple matches
             r['score'] *= W_PHRASE
+            if _USE_IR_SCORE_NORMALIZATION_LOCAL:
+                r['score'] /= max_score
 
 
             if not matches.has_key(entity):
@@ -786,14 +871,17 @@ def generate_chunks_no_ent_filter(keywords):
             res = search_index(
                 keywords= s_chunk ,
                 limit=RESULT_LIMIT_TOKEN_COMBINATION)
-
+            max_score = res and res[0]['score']
             for r in res:
                 # TODO: use only matched keywords here
                 #r['len'] = len(filter_stopwords(chunk))
                 r['len'] = len(r['keywords_matched'])
                 entity = r['result_type']
                 r['field'] = fields_by_entity[entity][r['field']]
-                r['keywords_required'] = chunk
+                r['tokens_required'] = chunk
+
+                if _USE_IR_SCORE_NORMALIZATION_LOCAL:
+                    r['score'] /= max_score
 
 
                 # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
@@ -813,10 +901,8 @@ def generate_chunks_no_ent_filter(keywords):
         #print 'trying to sort:'
         #pprint.pprint(full_matches[entity])
         for m in matches[entity]:
-            pred = get_operator_and_param(m['keywords_required'][-1])
-            m['predicate'] = None
-            if pred:
-                m['predicate'] = pred
+            m['predicate'] = get_operator_and_param(m['tokens_required'][-1])
+
 
         matches[entity].sort(key=lambda f: f['score'], reverse=True)
 
@@ -829,14 +915,27 @@ def generate_chunks_no_ent_filter(keywords):
     max_score = reduce(max, scores, 0)
 
     if DEBUG: print 'max_score', max_score
+
+
+    fsmoothing = lambda x: (x / 20.0 < 1) and x / 20.0 or 1.0
+    fsmoothing = lambda x: (x / max(20.0, max_score))
+
+    if _USE_IR_SCORE_SMOOTHING:
+        fsmoothing = lambda x: math.sqrt(1.0+x) / math.sqrt(1.0+max_score)
+        fsmoothing = lambda x: math.log(1.0+x) / math.log(1.0+max(max_score, 20))
+
+
+
     if max_score:
         for ent_matches in matches.values():
             for m in ent_matches:
                 # print "m['score']", m['score'], 'mlen:', m['len']
                 # pprint.pprint(m)
-
-                # TODO: incorporate m['len'] somehow, maybe matched/m[len]
-                m['score'] = 1.0 * m['score'] * m['len'] / max_score
+                m['field_name'] = m['field']['field']
+                # TODO: actually this kind of normalization is not necessarily fair because
+                # some combinations could be scored very high, e.g. phrases...
+                # as a temporary "HACK" we use a smoothing function which would make these differences milder
+                m['score'] = fsmoothing(m['score'])
 
 
 
@@ -850,6 +949,11 @@ def generate_chunks_no_ent_filter(keywords):
     if _DEBUG:
         print 'chunks generated:'
         pprint.pprint(matches)
+    else:
+        for result_type, m in matches.items():
+            print 'result_type:', result_type
+            pprint.pprint(map(lambda item: '%.2f %s for: %s' \
+                                           % (item['score'], item['field_name'], ','.join(item['tokens_required'])), m))
     return matches
 
 
@@ -893,12 +997,20 @@ def DASQL_2_NL(dasql_tuple, html=True):
 
 
 
-def result_to_DASQL(result, format='text'):
+def result_to_DASQL(result, frmt='text', shorten_html = True, max_value_len=20):
+    """
+    returns proposed query as DASQL in there formats:
+    * text - standard DASQL
+    * html - colorified DASQL with long values shortened down (if shorten_html
+        is specified)
+    """
+    import cgi
+
     _patterns = {
         'text': {
             'RESULT_TYPE': '%s',
-            'INPUT_FIELD_AND_VALUE': '%s=%s',
-            'RESULT_FILTER_OP_VALUE': '%s%s%s',
+            'INPUT_FIELD_AND_VALUE': '%(field)s=%(value)s',
+            'RESULT_FILTER_OP_VALUE': '%(field)s%(op)s%(value)s',
             'PROJECTION': '%s',
             'GREP': ' | grep ',
 
@@ -906,20 +1018,15 @@ def result_to_DASQL(result, format='text'):
         'html': {
             'RESULT_TYPE': '<span class="q-res-type">%s</span>',
             'INPUT_FIELD_AND_VALUE':
-                '<span class="q-field-name">%s</span><span class="op" style="color: #f66;">=</span>%s',
+                '<span class="q-field-name">%(field)s</span><span class="op" style="color: #f66;">=</span>%(value)s',
             'RESULT_FILTER_OP_VALUE':
-                '<span class="q-post-filter-field-name">%s<span class="q-op">%s</span></span>%s',
+                '<span class="q-post-filter-field-name">%(field)s<span class="q-op">%(op)s</span></span>%(value)s',
             'GREP': ' | <b>grep</b> ',
             'PROJECTION': '<span class="q-projection">%s</span>',
             },
 
     }
-    patterns = _patterns[format]
-
-    _v = lambda v: v
-    if format =='html':
-        import cgi
-        _v = lambda v: v and cgi.escape(v, quote=True) or ''
+    patterns = _patterns[frmt]
 
 
     import collections
@@ -930,17 +1037,41 @@ def result_to_DASQL(result, format='text'):
         and apply an escape function if needed
         '''
 
-        if isinstance(params, tuple) or isinstance(params, list):
-            _params = tuple(map(lambda v: _v(v), params))
-        else:
-            _params =_v(params)
+        fescape = lambda v: v and cgi.escape(v, quote=True) or ''
+
+
+        if frmt == 'html':
+                    # shorten value if it's longer than
+                    if isinstance(params, dict) and params.has_key('value') and shorten_html:
+                        val = params['value']
+                        if len(val) > max_value_len:
+                            params['value'] = fescape(val[:max_value_len-2]) + \
+                                  '<span class="not-fitting-value" style="font-size: 0.8em">...</span>'
+                            params['field']=fescape(params['field'])
+                    else:
+                        # for html, make sure to escape the inputs
+
+                        if isinstance(params, tuple) or isinstance(params, list):
+                            params = tuple(map(fescape, params))
+                        elif isinstance(params, dict):
+                            # a helper function to map values of dict
+                            # TODO: in Py2.7: {k: f(v) for k, v in my_dictionary.items()}
+                            map_dict_values = lambda f, my_dict: dict(map(lambda (k,v): (k, f(v)), my_dict.iteritems()))
+
+                            params = map_dict_values(fescape, params)
+
+
+                        else:
+                            params = params and fescape(params)
 
         pattern = patterns[name]
 
-        print pattern, params, _params
+        #print pattern, params, _params
+
 
         if params is not None:
-            return  pattern % _params
+
+            return  pattern % params
         return pattern
 
     missing_inputs = []
@@ -966,7 +1097,7 @@ def result_to_DASQL(result, format='text'):
 
     s_query =tmpl('RESULT_TYPE', s_result_type) + ' ' + \
               ' '.join(
-                        [tmpl('INPUT_FIELD_AND_VALUE', (field, value))
+                        [tmpl('INPUT_FIELD_AND_VALUE', {'field': field, 'value': value})
                             for (field, value) in s_input_params])
 
     result_projections = [p for p in projections_filters
@@ -987,11 +1118,11 @@ def result_to_DASQL(result, format='text'):
                 result_type) # result type of primary key of requested entity
             # TODO: check if other wildcard fields are also there
 
-        # add formated projects
+        # add formated projections
         result_grep = map(lambda prj: tmpl('PROJECTION', prj),result_projections[:])
         # add filters to grep
-        s_result_filters = [tmpl('RESULT_FILTER_OP_VALUE', f)
-                            for f in result_filters]
+        s_result_filters = [tmpl('RESULT_FILTER_OP_VALUE', {'field': field, 'op': op, 'value': value})
+                            for (field, op, val) in result_filters]
         result_grep.extend(s_result_filters)
         # TODO: NL description
 
@@ -1020,56 +1151,18 @@ def init(dascore):
     from DAS.keywordsearch import das_schema_adapter
     das_schema_adapter.init(dascore)
 
-def search(query, inst=None, dbsmngr=None, _DEBUG=False):
-    """
-    unit tests
-    >>> search('vidmasze@cern.ch')
-    user user=vidmasze@cern.ch
-    """
 
-    # TODO: add DBS instance as parameter
-
-    DEBUG = True
-
-    schema_ws = {}
-    values_ws = {}
-
-
-    if not isinstance(query, unicode) and isinstance(query, str):
-        query = unicode(query)
-
-    if DEBUG: print 'Query:', query
-
-    clean_query = cleanup_query(query)
-    if DEBUG: print 'CLEAN Query:', clean_query
-
-    tokens = tokenize(query)
-    if DEBUG: print 'TOKENS:', tokens
-
-
-    if DEBUG: print 'Query after cleanup:', query
-
-    # retrieve DBS instance, and store it in request
-    # TODO: shall not be part of this function call
-
-    if True:
-        if DEBUG: print 'DBS inst parameter:', inst
-        if not dbsmngr:
-            if isinstance(inst, str):
-                inst = get_global_dbs_mngr(inst=inst)
-            else:
-                inst = get_global_dbs_mngr()
-
-    request.dbsmngr = dbsmngr
-
-
-    # TODO: some of EN 'stopwords' may be quite important e.g.  'at', 'between', 'where'
-    en_stopwords = stopwords.words('english')
+def get_entry_points(tokens, DEBUG=False):
+    # TODO: actually I shall never have empty tokens...?
     keywords = [kw.strip() for kw in tokens
                 if kw.strip()]
 
+    en_stopwords = stopwords.words('english')
+    schema_ws = {}
+    values_ws = {}
     for keyword_index, keyword in enumerate(keywords):
         # TODO: A=B, is a very good clue of what have to be mapped to what...
+
         kw_value = kw_schema = keyword
 
         if '=' in keyword:
@@ -1084,19 +1177,70 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
 
         if not is_stopword and kw_value:
             values_ws[keyword] = keyword_value_weights(kw_value)
-
-    if DEBUG: print '============= Q: %s ==========' % query
     if DEBUG:
         print '============= Schema mappings (TODO) =========='
         pprint.pprint(schema_ws)
         print '=============== Values mappings (TODO) ============'
         pprint.pprint(values_ws)
+    chunks = generate_chunks_no_ent_filter(keywords)
+    return chunks, schema_ws, values_ws
+
+
+def init_dbs_mngr(dbsmngr, inst, DEBUG = False):
+
+    # retrieve DBS instance, and store it in request
+    # TODO: shall not be part of this function call
+    if True:
+        if DEBUG: print 'DBS inst parameter:', inst
+        if not dbsmngr:
+            if isinstance(inst, str):
+                inst = get_global_dbs_mngr(inst=inst)
+            else:
+                inst = get_global_dbs_mngr()
+    request.dbsmngr = dbsmngr
+    return DEBUG
+
+
+def tokenize_query(query, DEBUG=False):
+    if not isinstance(query, unicode) and isinstance(query, str):
+        query = unicode(query)
+    if DEBUG: print 'Query:', query
+    clean_query = cleanup_query(query)
+    if DEBUG: print 'CLEAN Query:', clean_query
+    tokens = tokenize(query)
+    if DEBUG: print 'TOKENS:', tokens
+    if DEBUG: print 'Query after cleanup:', query
+    # TODO: some of EN 'stopwords' may be quite important e.g.  'at', 'between', 'where'
+    return query, tokens
+
+
+def search(query, inst=None, dbsmngr=None, _DEBUG=False):
+    """
+    unit tests
+    >>> search('vidmasze@cern.ch')
+    user user=vidmasze@cern.ch
+    """
+
+    # TODO: add DBS instance as parameter
+    DEBUG = True
+    init_dbs_mngr(dbsmngr, inst)
+
+    query, tokens = tokenize_query(query, DEBUG)
+
+    keywords = [kw.strip() for kw in tokens
+                if kw.strip()]
+
+    if DEBUG: print '============= Q: %s ==========' % query
+
+    chunks, schema_ws, values_ws = get_entry_points(keywords, DEBUG)
 
 
     thread_data.results = []
     thread_data.results_dict = []
-    #chunks = generate_chunks(keywords)
-    chunks = generate_chunks_no_ent_filter(keywords)
+
+    # static per request
+    thread_data.keywords_list = keywords
+    # TODO:  schema_ws, values_ws, is also static, see performance differences...
 
 
     generate_schema_mappings(None, [], schema_ws, values_ws,
@@ -1118,11 +1262,20 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     get_best_score = lambda q: \
         best_scores.get(q, {'score': -float("inf")})['score']
 
+
+    from math import exp
+
+
     for r in results:
         result = result_to_DASQL(r)
         result['query_in_words'] = DASQL_2_NL(result['das_ql_tuple'])
-        result['query_html'] = result_to_DASQL(r, format='html')['query']
+        result['query_html'] = result_to_DASQL(r, frmt='html')['query']
         query = result['query']
+
+        if _USE_LOG_PROBABILITIES:
+            print result['score'],'-->', exp(result['score']), query
+            result['score'] = exp(result['score'])
+
 
         if get_best_score(query) < result['score']:
             best_scores[query] = result
@@ -1130,7 +1283,6 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
 
     best_scores = best_scores.values()
     best_scores.sort(key=lambda item: item['score'], reverse=True)
-
 
     # normalize scores, if results lists is non empty
     if best_scores:
