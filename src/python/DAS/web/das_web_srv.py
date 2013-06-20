@@ -690,15 +690,14 @@ class DASWebService(DASWebManager):
         return self.page(form + page)
 
 
-    def _is_web_request(self, kwargs):
+    def _is_web_request(self, view):
         """
         returns whether the current view mode is not web
         """
 
         # first, check for explicit output type (view)
-        view = kwargs.get('view', 'list')
-        non_web_view = view in ['json', 'xml', 'plain']
-        if non_web_view:
+
+        if view in ['json', 'xml', 'plain']:
             return False
 
         # check accept header - e.g. das client only provides accept header
@@ -712,6 +711,7 @@ class DASWebService(DASWebManager):
             return  False
 
         return True
+
 
 
     @expose
@@ -737,29 +737,24 @@ class DASWebService(DASWebManager):
         pid    = kwargs.get('pid', '')
         inst   = kwargs.get('instance', self.dbs_global)
         uinput = kwargs.get('input', '')
+        view = kwargs.get('view', 'list')
+
         data   = []
 
         # textual views need text only error messages...
-
         check, content = self.generate_dasquery(uinput, inst,
-                              html_error= self._is_web_request(kwargs))
+                              html_error=self._is_web_request(view))
         if  check:
             head = dict(timestamp=time.time())
-
             head.update({'status': 'fail',
                          'reason': 'Can not interpret the query'+ \
                                    ' (while creating DASQuery)',
                          'ctime': 0})
-
-            # include the details of the error ...
-            # TODO: this shall be done in das_client instead, however until the
-            # users migrate, detailed msg is appended to 'reason' field
-
-            if  not self._is_web_request(kwargs):
+            if not self._is_web_request(view):
                 head['error_details'] = content
                 head['reason'] = head['reason'] + '\n\n' + content
-
             return self.datastream(dict(head=head, data=data))
+
         dasquery = content # returned content is valid DAS query
         status, _qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
@@ -821,8 +816,10 @@ class DASWebService(DASWebManager):
             else:
                 head, data = self.get_data(kwargs)
 
-                # TODO: a little security/stability issue here
-                # TODO: function defined by user is called without any checking
+                allowed_views = ['list', 'table', 'plain', 'xml', 'json']
+                if view not in allowed_views:
+                    raise
+
                 func = getattr(self, view + "view")
                 page = func(head, data)
         except HTTPError as _err:
