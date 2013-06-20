@@ -1,0 +1,17 @@
+## P.S. we need no quoting in text mode...
+
+#assert isinstance($base, str)
+#assert (isinstance($error, str) or isinstance($error, unicode))
+
+Input query contains a wild-card statement which is ambiguous:
+$error
+
+#if $suggest
+Suggested queries:
+
+#for query in $suggest
+    $query
+#end for
+#end if
+
+For easier query debuging, please use the DAS web interface first.

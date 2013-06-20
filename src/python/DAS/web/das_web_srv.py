@@ -438,10 +438,19 @@ class DASWebService(DASWebManager):
                 emsg += str(err).replace('\n', '')
                 das_parser_error(uinput, emsg)
                 suggest = err.options.values
-                guide = self.templatepage('dbsql_vs_dasql',
-                            operators=', '.join(das_operators()))
-                page = self.templatepage('das_wildcard_err', error=str(err),
-                        base=self.base, guide=guide, suggest=suggest)
+
+                if html_error:
+                    # standard html mode
+                    guide = self.templatepage('dbsql_vs_dasql',
+                                operators=', '.join(das_operators()))
+
+                    page = self.templatepage('das_wildcard_err', error=str(err),
+                            base=self.base, guide=guide, suggest=suggest)
+                else:
+                    # text mode
+                    page = self.templatepage('das_wildcard_err_txt',
+                                base=self.base, error=str(err), suggest=suggest)
+
             else:
                 das_parser_error(uinput, str(type(err)))
                 page = helper(str(err), html_error)
@@ -680,6 +689,31 @@ class DASWebService(DASWebManager):
         form = self.form(uinput)
         return self.page(form + page)
 
+
+    def _is_web_request(self, kwargs):
+        """
+        returns whether the current view mode is not web
+        """
+
+        # first, check for explicit output type (view)
+        view = kwargs.get('view', 'list')
+        non_web_view = view in ['json', 'xml', 'plain']
+        if non_web_view:
+            return False
+
+        # check accept header - e.g. das client only provides accept header
+        accepts = cherrypy.request.headers.elements('Accept')
+        non_html_accepts = ['application/json']
+        other_accepted = [a for a in accepts
+                          if a.value not in non_html_accepts]
+
+        # if only non html content types are accepted we are in non html mode
+        if not other_accepted and accepts:
+            return  False
+
+        return True
+
+
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def cache(self, **kwargs):
@@ -704,12 +738,27 @@ class DASWebService(DASWebManager):
         inst   = kwargs.get('instance', self.dbs_global)
         uinput = kwargs.get('input', '')
         data   = []
-        check, content = self.generate_dasquery(uinput, inst)
+
+        # textual views need text only error messages...
+
+        check, content = self.generate_dasquery(uinput, inst,
+                              html_error= self._is_web_request(kwargs))
         if  check:
             head = dict(timestamp=time.time())
+
             head.update({'status': 'fail',
-                         'reason': 'Fail to create DASQuery object',
+                         'reason': 'Can not interpret the query'+ \
+                                   ' (while creating DASQuery)',
                          'ctime': 0})
+
+            # include the details of the error ...
+            # TODO: this shall be done in das_client instead, however until the
+            # users migrate, detailed msg is appended to 'reason' field
+
+            if  not self._is_web_request(kwargs):
+                head['error_details'] = content
+                head['reason'] = head['reason'] + '\n\n' + content
+
             return self.datastream(dict(head=head, data=data))
         dasquery = content # returned content is valid DAS query
         status, _qhash = self.dasmgr.get_status(dasquery)
@@ -768,9 +817,12 @@ class DASWebService(DASWebManager):
                 if  kwargs.has_key('limit'):
                     del kwargs['limit']
             if  view in ['json', 'xml', 'plain'] and complete_msg:
-                page = 'Request comlpeted. Reload the page ...'
+                page = 'Request completed. Reload the page ...'
             else:
                 head, data = self.get_data(kwargs)
+
+                # TODO: a little security/stability issue here
+                # TODO: function defined by user is called without any checking
                 func = getattr(self, view + "view")
                 page = func(head, data)
         except HTTPError as _err:
