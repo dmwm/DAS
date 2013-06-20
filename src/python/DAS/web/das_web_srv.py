@@ -438,10 +438,19 @@ class DASWebService(DASWebManager):
                 emsg += str(err).replace('\n', '')
                 das_parser_error(uinput, emsg)
                 suggest = err.options.values
-                guide = self.templatepage('dbsql_vs_dasql',
-                            operators=', '.join(das_operators()))
-                page = self.templatepage('das_wildcard_err', error=str(err),
-                        base=self.base, guide=guide, suggest=suggest)
+
+                if html_error:
+                    # standard html mode
+                    guide = self.templatepage('dbsql_vs_dasql',
+                                operators=', '.join(das_operators()))
+
+                    page = self.templatepage('das_wildcard_err', error=str(err),
+                            base=self.base, guide=guide, suggest=suggest)
+                else:
+                    # text mode
+                    page = self.templatepage('das_wildcard_err_txt',
+                                base=self.base, error=str(err), suggest=suggest)
+
             else:
                 das_parser_error(uinput, str(type(err)))
                 page = helper(str(err), html_error)
@@ -680,6 +689,31 @@ class DASWebService(DASWebManager):
         form = self.form(uinput)
         return self.page(form + page)
 
+
+    def _is_web_request(self, view):
+        """
+        returns whether the current view mode is not web
+        """
+
+        # first, check for explicit output type (view)
+
+        if view in ['json', 'xml', 'plain']:
+            return False
+
+        # check accept header - e.g. das client only provides accept header
+        accepts = cherrypy.request.headers.elements('Accept')
+        non_html_accepts = ['application/json']
+        other_accepted = [a for a in accepts
+                          if a.value not in non_html_accepts]
+
+        # if only non html content types are accepted we are in non html mode
+        if not other_accepted and accepts:
+            return  False
+
+        return True
+
+
+
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def cache(self, **kwargs):
@@ -703,14 +737,24 @@ class DASWebService(DASWebManager):
         pid    = kwargs.get('pid', '')
         inst   = kwargs.get('instance', self.dbs_global)
         uinput = kwargs.get('input', '')
+        view = kwargs.get('view', 'list')
+
         data   = []
-        check, content = self.generate_dasquery(uinput, inst)
+
+        # textual views need text only error messages...
+        check, content = self.generate_dasquery(uinput, inst,
+                              html_error=self._is_web_request(view))
         if  check:
             head = dict(timestamp=time.time())
             head.update({'status': 'fail',
-                         'reason': 'Fail to create DASQuery object',
+                         'reason': 'Can not interpret the query'+ \
+                                   ' (while creating DASQuery)',
                          'ctime': 0})
+            if not self._is_web_request(view):
+                head['error_details'] = content
+                head['reason'] = head['reason'] + '\n\n' + content
             return self.datastream(dict(head=head, data=data))
+
         dasquery = content # returned content is valid DAS query
         status, _qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
@@ -768,9 +812,14 @@ class DASWebService(DASWebManager):
                 if  kwargs.has_key('limit'):
                     del kwargs['limit']
             if  view in ['json', 'xml', 'plain'] and complete_msg:
-                page = 'Request comlpeted. Reload the page ...'
+                page = 'Request completed. Reload the page ...'
             else:
                 head, data = self.get_data(kwargs)
+
+                allowed_views = ['list', 'table', 'plain', 'xml', 'json']
+                if view not in allowed_views:
+                    raise
+
                 func = getattr(self, view + "view")
                 page = func(head, data)
         except HTTPError as _err:
