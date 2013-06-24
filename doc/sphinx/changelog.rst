@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.12.X
 
+  - Fix wildcards to provide more informative messages in text mode
+  - Fix issues: 3997, 3975
+  - Replace phedex_tier_pattern with phedex_node_pattern
   - Get rid of empty_record,  query. Instead, introduce das.record with
     different codes. Codes are defined in utils/utils.py record_codes function.
     Add mongodb index on codes; modified queries to look-up das/data-records
