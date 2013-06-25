@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0702,R0913,R0912,R0915,R0904
+#pylint: disable-msg=W0702,R0913,R0912,R0915,R0904,R0914
 """
 DBS3 data-service plugin.
 NOTE: DBS3 APIs provide flat namespace JSON records. It means
@@ -15,16 +15,201 @@ NOTE: DBS3 APIs provide flat namespace JSON records. It means
       nested dicts and therefore it is better to re-map DBS3 data-records
       directly in a code.
 """
+
+# TODO: I need to implement support for IN operator, see DBS3 tickets:
+#       https://svnweb.cern.ch/trac/CMSDMWM/ticket/4136
+#       https://svnweb.cern.ch/trac/CMSDMWM/ticket/4157
+
 __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
+import urllib
+from types import GeneratorType
 
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator, json_parser
-from DAS.utils.utils import expire_timestamp, convert2ranges
-from DAS.utils.url_utils import getdata
+from DAS.utils.utils import map_validator, json_parser, print_exc
+from DAS.utils.utils import dastimestamp
+from DAS.utils.utils import expire_timestamp, convert2ranges, get_key_cert
+from DAS.utils.url_utils import getdata, url_args
+from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
+from DAS.utils.regex import int_number_pattern
+
+import DAS.utils.jsonwrapper as json
+
+CKEY, CERT = get_key_cert()
+
+def runrange(run1, run2, continuous=False):
+    "Construct DBS3 run range parameter"
+    run1 = int(run1)
+    run2 = int(run2)
+    if  run1 > run2:
+        rmin = run2
+        rmax = run1
+    elif run2 > run1:
+        rmin = run1
+        rmax = run2
+    else:
+        rmin = run1
+        rmax = run2
+    if  continuous:
+        if  rmin != rmax:
+            val = "['%s-%s']" % (rmin, rmax)
+        else:
+            val = "%s" % rmin
+    else:
+        if  rmin != rmax:
+            val = "[%s,%s]" % (rmin, rmax)
+        else:
+            val = "%s" % rmin
+    return val
+
+def process_lumis_with(ikey, gen):
+    "Helper function to process lumis with given key from provided generator"
+    odict = {}
+    for row in gen:
+        lfn, run, lumi = row
+        if  ikey == 'file':
+            key = lfn
+        elif  ikey == 'run':
+            key = run
+        elif  ikey == 'file_run' or 'block_run':
+            key = (lfn, run) # here lfn refers either to lfn or block
+        if  isinstance(lumi, list):
+            for ilumi in lumi:
+                odict.setdefault(key, []).append(ilumi)
+        else:
+            odict.setdefault(key, []).append(ilumi)
+    for key, lumi_list in odict.iteritems():
+        lumi_list.sort()
+        lumis = convert2ranges(lumi_list)
+        if  ikey == 'file':
+            yield {'file':{'name':key}, 'lumi':{'number':lumis}}
+        elif  ikey == 'run':
+            yield {'run':{'run_number':key}, 'lumi':{'number':lumis}}
+        elif  ikey == 'file_run':
+            lfn, run = key
+            yield {'run':{'run_number':run}, 'lumi':{'number':lumis},
+                   'file':{'name': lfn}}
+        elif  ikey == 'block_run':
+            blk, run = key
+            yield {'run':{'run_number':run}, 'lumi':{'number':lumis},
+                   'block':{'name': blk}}
+
+def dbs_find(entity, url, kwds):
+    "Find DBS3 entity for given set of parameters"
+    if  entity not in ['run', 'file', 'block']:
+        msg = 'Unsupported entity key=%s' % entity
+        raise Exception(msg)
+    expire  = 600
+    dataset = kwds.get('dataset', None)
+    block   = kwds.get('block', None)
+    lfn     = kwds.get('file', None)
+    runs    = kwds.get('runs', [])
+    if  not (dataset or block or lfn):
+        return
+    url = '%s/%ss' % (url, entity) # DBS3 APIs use plural entity value
+    if  dataset:
+        params = {'dataset':dataset}
+    elif block:
+        params = {'block_name': block}
+    elif lfn:
+        params = {'logical_file_name': lfn}
+    if  runs:
+        if  entity == 'file':
+            params.update({'run': runrange(runs[0], runs[-1], False)})
+        else:
+            params.update({'run': runs[0]})
+    headers = {'Accept': 'application/json;text/json'}
+    source, expire = \
+        getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
+    for row in json_parser(source, None):
+        for rec in row:
+            try:
+                if  isinstance(rec, basestring):
+                    print dastimestamp('DBS3 ERROR:'), row
+                elif  entity == 'file':
+                    yield rec['logical_file_name']
+                elif  entity == 'block':
+                    yield rec['block_name']
+                elif  entity == 'file':
+                    yield rec['dataset']
+            except Exception as exp:
+                msg = 'Fail to parse "%s", exception="%s"' % (rec, exp)
+                print_exc(msg)
+
+def block_run_lumis(url, blocks, runs=None):
+    """
+    Find block, run, lumi tuple for given set of files and (optional) runs.
+    """
+    headers = {'Accept': 'application/json;text/json'}
+    urls = []
+    for blk in blocks:
+        if  not blk:
+            continue
+        dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
+        if  runs and isinstance(runs, list):
+            params.update({'run': runrange(runs[0], runs[0], True)})
+        urls.append(dbs_url)
+    if  not urls:
+        return
+    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
+    odict = {} # output dict
+    for rec in gen:
+        blk = url_args(rec['url'])['block_name']
+        if  'error' in rec.keys():
+            # TODO: should handle error somehow
+            pass
+        else:
+            for row in json.loads(rec['data']):
+                run = row['run_num']
+                lumilist = row['lumi_section_num']
+                key = (blk, run)
+                for lumi in lumilist:
+                    odict.setdefault(key, []).append(lumi)
+    for key, lumis in odict.iteritems():
+        blk, run = key
+        yield blk, run, lumis
+
+def file_run_lumis(url, blocks, runs=None):
+    """
+    Find file, run, lumi tuple for given set of files and (optional) runs.
+    """
+    headers = {'Accept': 'application/json;text/json'}
+    urls = []
+    for blk in blocks:
+        if  not blk:
+            continue
+        dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
+        if  runs and isinstance(runs, list):
+            dbs_url += "&run=%s" % runrange(runs[0], runs[-1], True)
+        urls.append(dbs_url)
+    if  not urls:
+        return
+    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
+    odict = {} # output dict
+    for rec in gen:
+        if  'error' in rec.keys():
+            # TODO: should handle error somehow
+            pass
+        else:
+            for row in json.loads(rec['data']):
+                run = row['run_num']
+                lfn = row['logical_file_name']
+                lumilist = row['lumi_section_num']
+                key = (lfn, run)
+                for lumi in lumilist:
+                    odict.setdefault(key, []).append(lumi)
+    for key, lumis in odict.iteritems():
+        lfn, run = key
+        yield lfn, run, lumis
+
+def get_api(url):
+    "Extract from DBS3 URL the api name"
+    if  url[-1] == '/':
+        url = url[:-1]
+    return url.split('/')[-1]
 
 def get_modification_time(record):
     "Get modification timestamp from DBS data-record"
@@ -45,6 +230,150 @@ def old_timestamp(tstamp, threshold=2592000):
         return True
     return False
 
+def get_block_run_lumis(url, api, args):
+    "Helper function to deal with block,run,lumi requests"
+    run_value = args.get('run', [])
+    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+        runs = run_value['$in']
+    elif isinstance(run_value, list):
+        runs = run_value
+    else:
+        if  int_number_pattern.match(str(run_value)):
+            runs = [run_value]
+        else:
+            runs = []
+    args.update({'runs': runs})
+    blocks = dbs_find('block', url, args)
+    gen = block_run_lumis(url, blocks, runs)
+    key = 'block_run'
+    for row in process_lumis_with(key, gen):
+        yield row
+
+def get_file_run_lumis(url, api, args):
+    "Helper function to deal with file,run,lumi requests"
+    run_value = args.get('run', [])
+    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+        runs = run_value['$in']
+    elif isinstance(run_value, list):
+        runs = run_value
+    else:
+        if  int_number_pattern.match(str(run_value)):
+            runs = [run_value]
+        else:
+            runs = []
+    args.update({'runs': runs})
+    blocks = dbs_find('block', url, args)
+    gen = file_run_lumis(url, blocks, runs)
+    if  api.startswith('run_lumi'):
+        key = 'run'
+    if  api.startswith('file_lumi'):
+        key = 'file'
+    if  api.startswith('file_run_lumi'):
+        key = 'file_run'
+    for row in process_lumis_with(key, gen):
+        yield row
+
+def get_file4dataset_run_lumi(url, api, args):
+    "Helper function to deal with file dataset=/a/b/c run=123 lumi=1 requests"
+    run_value = args.get('run', [])
+    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+        runs = run_value['$in']
+    elif isinstance(run_value, list):
+        runs = run_value
+    else:
+        runs = [run_value]
+    ilumi = args.get('lumi')
+    args.update({'runs': runs})
+    blocks = dbs_find('block', url, args)
+    gen = file_run_lumis(url, blocks, runs)
+    key = 'file'
+    for lfn, _run, lumi in gen:
+        if  lumi == ilumi:
+            yield lfn
+
+### helper functions for get_blocks4tier_dates
+def process(gen):
+    "Process generator from getdata"
+    for row in gen:
+        if  row.has_key('error'):
+            raise Exception(row['error'])
+        if  row.has_key('data'):
+            yield json.loads(row['data'])
+
+def datasets(urls):
+    """Look-up datasets for given set of parameters"""
+    headers = {'Accept':'text/json;application/json'}
+    data    = urlfetch_getdata(urls, CKEY, CERT, headers)
+    for dlist in process(data):
+        for row in dlist:
+            yield row['dataset']
+
+def blocks(dbs, dlist, min_cdate, max_cdate):
+    "Get list of blocks for given dataset list"
+    headers = {'Accept':'text/json;application/json'}
+    url     = dbs + "/blocks"
+    params  = ({'dataset':d, 'min_cdate':min_cdate, 'max_cdate':max_cdate} \
+            for d in dlist)
+    urls    = ['%s?%s' % (url, urllib.urlencode(p)) for p in params]
+    res     = process(urlfetch_getdata(urls, CKEY, CERT, headers))
+    for blist in res:
+        for row in blist:
+            yield row['block_name']
+
+### TODO: this needs to be revisited with new DBS3 API blockSummaries
+### https://svnweb.cern.ch/trac/CMSDMWM/ticket/4148
+### currently the result of get_blocks4tier_dates is not precise since
+### blocks creation dates are not the same as dataset ones
+def get_blocks4tier_dates(dbs_url, api, args):
+    "Helper function to get blocks for given tier and date range"
+    fullday = 24*60*60
+    tier    = args.get('tier')
+    ddict   = args.get('date')
+    if  isinstance(ddict, dict):
+        if  ddict.has_key('$lte'):
+            date1 = ddict['$gte']
+            date2 = ddict['$lte'] + fullday
+        elif ddict.has_key('$in'):
+            date1 = ddict['$in'][0]
+            date2 = ddict['$in'][-1]
+        else:
+            msg = 'Unsupported date dict, "%s"' % ddict
+            raise Exception(msg)
+    else:
+        date1 = date
+        date1 = date + fullday
+    headers = {'Accept':'text/json;application/json'}
+    pat     = "/*/*/%s" % tier
+    url     = dbs_url + "/datasets"
+    params  = [{'dataset':pat, 'min_cdate':date1, 'max_cdate':date2}]
+    urls    = ['%s?%s' % (url, urllib.urlencode(p)) for p in params]
+    # get dataset list
+    dlist   = (r for r in datasets(urls))
+
+    # get block list
+    blist   = (r for r in blocks(dbs_url, dlist, date1, date2))
+
+    # get summaries
+    url     = dbs_url + "/filesummaries"
+    urls    = ['%s/?block_name=%s' % (url, urllib.quote(b)) for b in blist]
+    res     = urlfetch_getdata(urls, CKEY, CERT, headers)
+    for row in res:
+        if  row.has_key('error'):
+            raise Exception(row['error'])
+        url = row['url']
+        blk = urllib.unquote(url.split('=')[-1])
+        data = row['data']
+        try:
+            for rec in json.loads(data):
+                data = dict(name=blk, size=rec['file_size'],
+                        nfiles=rec['num_file'], nevents=rec['num_event'],
+                        nlumis=rec['num_lumi'])
+                yield dict(block=data)
+        except Exception as exc:
+            msg = 'Unable to parse block row, blk=%s, row=%s, exception=%s' \
+                    % (blk, row, exc)
+            print_exc(msg)
+
 class DBS3Service(DASAbstractService):
     """
     Helper class to provide DBS service
@@ -59,9 +388,34 @@ class DBS3Service(DASAbstractService):
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
+    def apicall(self, dasquery, url, api, args, dformat, expire):
+        "DBS3 implementation of AbstractService:apicall method"
+        if  api == 'run_lumi4dataset' or api == 'run_lumi4block' or \
+            api == 'file_lumi4dataset' or api == 'file_lumi4block' or \
+            api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block' or \
+            api == 'block_run_lumi4dataset' or api == 'file4dataset_run_lumi' or\
+            api == 'blocks4tier_dates':
+            time0 = time.time()
+            dbs_url = '/'.join(url.split('/')[:-1])
+            if  api == 'block_run_lumi4dataset':
+                dasrows = get_block_run_lumis(dbs_url, api, args)
+            elif api == 'blocks4tier_dates':
+                dasrows = get_blocks4tier_dates(dbs_url, api, args)
+            elif api == 'file4dataset_run_lumi':
+                dasrows = get_file4dataset_run_lumi(dbs_url, api, args)
+            else:
+                dasrows = get_file_run_lumis(dbs_url, api, args)
+            ctime = time.time()-time0
+            self.write_to_cache(dasquery, expire, url, api, args,
+                    dasrows, ctime)
+        else:
+            super(DBS3Service, self).apicall(\
+                    dasquery, url, api, args, dformat, expire)
+
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""
-        headers =  {'Accept': 'application/json' } # DBS3 always needs that
+        if  not headers:
+            headers =  {'Accept': 'application/json' } # DBS3 always needs that
         return getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert,
                 doseq=False, system=self.name)
@@ -71,7 +425,11 @@ class DBS3Service(DASAbstractService):
         Adjust URL for a given instance
         """
         if  instance in self.instances:
-            return url.replace(self.prim_instance, instance)
+            if  isinstance(url, basestring):
+                return url.replace(self.prim_instance, instance)
+            elif isinstance(url, list):
+                urls = [u.replace(self.prim_instance, instance) for u in url]
+                return urls
         return url
 
     def adjust_params(self, api, kwds, inst=None):
@@ -109,29 +467,24 @@ class DBS3Service(DASAbstractService):
                 del kwds['block_name']
             except KeyError:
                 pass
-        if  api == 'runs':
-            val = kwds['minrun']
+        if  api == 'runs' or api == 'summary4dataset_run' or \
+            api == 'summary4block_run':
+            val = kwds['run']
             if  isinstance(val, dict): # we got a run range
                 if  val.has_key('$in'):
-                    kwds['minrun'] = val['$in'][0]
-                    kwds['maxrun'] = val['$in'][-1]
+                    kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
                 if  val.has_key('$lte'):
-                    kwds['minrun'] = val['$gte']
-                    kwds['maxrun'] = val['$lte']
+                    kwds['run'] = runrange(val['$gte'], val['$lte'], True)
         if  api == 'file4DatasetRunLumi':
             val = kwds.get('run', None)
             if  val:
                 if  isinstance(val, dict): # we got a run range
                     if  val.has_key('$in'):
-                        kwds['minrun'] = val['$in'][0]
-                        kwds['maxrun'] = val['$in'][-1]
+                        kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
                     if  val.has_key('$lte'):
-                        kwds['minrun'] = val['$gte']
-                        kwds['maxrun'] = val['$lte']
+                        kwds['run'] = runrange(val['$gte'], val['$lte'], True)
                 else:
-                    kwds['minrun'] = val
-                    kwds['maxrun'] = val
-                del kwds['run']
+                    kwds['run'] = val
             val = kwds['lumi_list']
             if  val:
                 kwds['lumi_list'] = [val]
@@ -146,13 +499,17 @@ class DBS3Service(DASAbstractService):
         """
         DBS3 data-service parser.
         """
+        if  isinstance(source, GeneratorType):
+            for row in source:
+                yield row
+            return
         for row in self.parser_helper(query, dformat, source, api):
             mod_time = get_modification_time(row)
             if  self.extended_expire:
                 new_expire = expire_timestamp(self.extended_expire)
                 if  mod_time and \
                     old_timestamp(mod_time, self.extended_threshold):
-                    row.update({'das':{'expire': self.new_expire}})
+                    row.update({'das':{'expire': new_expire}})
                 # filesummaries is summary DBS API about dataset,
                 # it collects information about number of files/blocks/events
                 # for given dataset and therefore will be merged with datasets
@@ -197,11 +554,16 @@ class DBS3Service(DASAbstractService):
             for row in gen:
                 row['dataset']['name'] = name
                 yield row
-        elif api == 'summary4run':
+        elif api == 'summary4dataset_run' or api == 'summary4block_run':
             spec = query.mongo_query.get('spec', {})
             dataset = spec.get('dataset.name', '')
             block = spec.get('block.name', '')
             run = spec.get('run.run_number', 0)
+            if  isinstance(run, dict): # we got a run range
+                if  run.has_key('$in'):
+                    run = run['$in']
+                elif run.has_key('$lte'):
+                    run = range(val['$gte'], val['$lte'])
             for row in gen:
                 if  run:
                     row.update({"run": run})
@@ -240,7 +602,6 @@ class DBS3Service(DASAbstractService):
                     yield dict(name=val)
         elif api == 'files' or api == 'files_via_dataset' or \
             api == 'files_via_block':
-            mongo_query = query.mongo_query
             status = 'VALID'
             for row in gen:
                 if  query.mongo_query.has_key('spec'):

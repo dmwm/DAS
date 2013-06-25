@@ -410,6 +410,12 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
     -o-box-shadow: 10px 10px 20px #666666;
     box-shadow: 10px 10px 20px #666666;
 }
+.all-side-shadow {
+    -webkit-box-shadow: 2px 2px 10px 10px #666;
+    -moz-box-shadow: 2px 2px 10px 10px #666;
+    -o-box-shadow: 2px 2px 10px 10px #666;
+    box-shadow: 2px 2px 10px 10px #666;
+}
 .borders {
     -webkit-border-radius: 40px;
     -khtml-border-radius: 40px;
@@ -467,4 +473,22 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
     padding: 0.8em 1em;
     background: #FFFFAA;
     border: 1px solid #FFAD33;
+}
+.overlay {
+    position:absolute;
+    top:50px;
+    bottom:20px;
+    overflow:scroll;
+    left:15%;
+    right:15%;
+    height: auto;
+/*    background-color: rgb(223, 219, 195);*/
+    background-color: #CCD8CF;
+    color:#000;
+    padding:20px;
+    border:2px solid #ccc;
+    -moz-border-radius: 20px;
+    -webkit-border-radius:20px;
+    -khtml-border-radius:20px;
+    z-index:101;
 }

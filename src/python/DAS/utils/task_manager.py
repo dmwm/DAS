@@ -128,10 +128,10 @@ class TaskManager:
     def spawn(self, func, *args, **kwargs):
         """Spawn new process for given function"""
         pid = kwargs.get('pid', genkey(str(args) + str(kwargs)))
+        evt = Event()
         if  not pid in self._pids:
             self._pids.add(pid)
-            ready = Event()
-            task  = (ready, pid, func, args, kwargs)
+            task  = (evt, pid, func, args, kwargs)
             if  isinstance(self._tasks, PriorityQueue):
                 uid = kwargs.get('uid', None)
                 self._uids.add(uid)
@@ -139,9 +139,11 @@ class TaskManager:
                 self._tasks.put((priority, uid, task))
             else:
                 self._tasks.put(task)
-            return ready, pid
         else:
-            return 'in set', pid
+            # the event was not added to task list, invoke set()
+            # to pass it in wait() call, see joinall
+            evt.set()
+        return evt, pid
 
     def remove(self, pid):
         """Remove pid and associative process from the queue"""

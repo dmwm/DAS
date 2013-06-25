@@ -5,8 +5,107 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.12.X
+
+  - Fix wildcards to provide more informative messages in text mode
+  - Fix issues: 3997, 3975
+  - Replace phedex_tier_pattern with phedex_node_pattern
+  - Get rid of empty_record,  query. Instead, introduce das.record with
+    different codes. Codes are defined in utils/utils.py record_codes function.
+    Add mongodb index on codes; modified queries to look-up das/data-records
+    using new das.record field
+  - Fix issue with ply_query parameter
+  - Add extra slash to avoid one round trip
+  - Work on support new run parameter w/ DBS3 APIs, now DAS is capable to use
+    run-range/run-list queries into DBS3
+  - Use json.dumps to printout JSON dict to stdout
+
+- 1.11.X
+
+  - Add support for block,run,lumi dataset=/a/b/c queries
+  - Add plistlib python module w/ None modifications to handle DAS XML output
+  - Add list of attributes for config output
+  - Add summary4block_run API
+  - Highlight unknown global tags in web UI
+  - Re-factor the code: add insert_query_records which scan input DAS query and
+    insert query records into DAS cache, then it yields list of acknowledged
+    data-services which used by call API for data retrieval
+  - Extend incache API to work with query or data records by providing
+    query_record flag with default value of False (check data records)
+  - Take care of potential failure of PLY parser. Use few trials on given input
+    and then give-up
+  - Fix bug in task manager when I mix-up return type of spawn function which
+    cause task fails under race conditions
+  - Add support for summary dataset=/a/b/c query without run conditions
+  - Add support for run range in DBS2 summary dataset/run query
+  - Add expand_lumis helper function into das aggregators which flatten lumi
+    lists, e.g. [[1,3], [5,7]] into [1,2,3,5,6,7]. This allows correctly count
+    number of lumis in DAS records
+  - Implement support for comp-ops queries, e.g.
+    find run, lumi for given dataset and optional run range
+    find file, lumi for given dataset and optional run range
+    find file, lumi, run for given dataset and optional run range
+    this work is done via new urlfetch_getdata module
+
+- 1.10.X
+
+  - Add urlfetch_pycurl module to fetch content from multiple urls
+  - Use custom db_monitor which check MongoDB connection as well as periodically
+    reload DAS maps
+  - Add preliminary support for file block=/a/b/c#123 runs site
+    query (must have urlfetch proxy)
+  - Allow user to get DBS file into regardless of its status, ticket 3992
+  - Add indexes for file.name,dataset.name.block.name and run.run_number in DAS
+    cache collection to prevent error on sorting entities
+  - Add support for block dataset run in/between [1,2] query, ticket 3974
+  - Apply file.name index to allow MongoDB to sort the files, ticket 3988
+    this is required in rare case when number of files is very large and
+    MongoDB give up on sorting without the index. I may apply similar index on
+    block as well since their number in dataset can be large as well.
+  - Add constrain on block name for lumi block=/a/b/c#123 queries, ticket 3977
+  - Add pyurlfetch client
+  - Add proxy_getdata to request data from external urlproxy server, ticket
+    3986; should be used to fetch data concurrently
+  - Add support for file dataset=/a/b/c run in [1,2,3] site=T2_CH_CERN, ticket
+    3982 (requires external urlproxy server, see 3986)
+  - Split fakeDatasetSummary into fakeDatasetPattern and fakeDatasetSummary to
+    support look-up of valid datasets for given pattern and any dataset info
+    for givan dataset path; ticket 3990
+  - Add draft code to accommodate file dataset=/a/b/c run in [1,2,3] site=X
+    query (still under development)
+  - Add url_proxy module which can work with pyurlfecth or Go proxy server
+  - Add get_proxy, proxy_getdata and implementation (still experimental) of
+    proxy usage within DBS3 module
+  - Re-wrote update_query_record API; update ctime for query records
+  - Separte insertion of query and data records
+  - Remove analytics calls from abstract service, current analytics
+    implementation require full re-design, it does not make any good so far
+  - Add distinguishing message in ticket issue title for no apis/no results
+    errors
+  - Add fakeFiles4BlockRun API to cover file block=/a/b/c#123 run in [1,2,3]
+    queries required by CMSSW Integration Builds (IB).
+  - Fix file block=/a/b/c#123 query (DBS should contribute to it)
+  - Add dataset pattern constratins for all DBS/DBS3 queries
+  - Remove listLFNs since listFiles cover the use case to look-up file for a given dataset
+  - Add filelumis4dataset API to support file,lumi dataset=/a/b/c queries
+  - Add support for run IN [1,2,3] queries, this will be allowed in DBS/DBS3,
+    CondDB, RunRegistry data-services
+  - Upgrade to Prototype.js 1.7
+  - Remove lumi API from CondDB mapping; add lumi API to RunRegistry mapping;
+    clean-up RunRegistry code and remove v2 APIs, the v3 is default now
+  - Re-factor Vidmantas code: move wild-card errors into separate template;
+    sanitize template parameters; clean-up code
+  - Add das_exceptions module, move all Wild-card excepion into this module
+  - Imrove web UI links with box_attention for submitting DAS tickets, ticket
+    #3969
+
 - 1.9.X
 
+  - Fix ticket #3967 (preserve DAS records order while removing duplicates)
+  - Fix ticket #3966 (strip-off zero in das filters)
+  - Add JS function to handle Event (hide DAS keys window) via ESC
+  - Resolve double counting issue, ticket #3965
+  - Add Show DAS keys description to web UI
   - Wrap combined_site4dataset API call into try/except block and show
     exception on web UI. This will help to catch transient missing values from
     combined data-service for site dataset=/a/b/c queries.

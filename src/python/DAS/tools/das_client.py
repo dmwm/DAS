@@ -377,7 +377,7 @@ def main():
                     rows = [r for r in get_value(row, filters, base)]
                     print ' '.join(rows)
             else:
-                print jsondict
+                print(json.dumps(jsondict))
         elif aggregators:
             data = jsondict['data']
             if  unique:
@@ -416,7 +416,7 @@ def main():
     else:
         jsondict = get_data(\
                 host, query, idx, limit, debug, thr, ckey, cert, das_h)
-        print jsondict
+        print(json.dumps(jsondict))
 
 #
 # main

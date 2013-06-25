@@ -57,6 +57,8 @@ def yield_obj(rdict, ckey):
     Helper function for DotDict class. For a given dict and compound key,
     e.g. a.b.c, extract and yield next key and its object(s).
     """
+    if  not ckey:
+        return
     keys = ckey.split('.')
     key  = keys[0]
     if  len(keys) > 1:

@@ -20,6 +20,7 @@ from   DAS.utils.utils import expire_timestamp, extract_http_error
 from   DAS.utils.utils import http_timestamp
 from   DAS.utils.pycurl_manager import RequestHandler
 from   DAS.utils.pycurl_manager import REQUEST_HANDLER
+from   DAS.utils.regex import int_number_pattern
 import DAS.utils.jsonwrapper as json
 
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
@@ -255,3 +256,55 @@ def close(stream):
     "Close given stream"
     if  isinstance(stream, InstanceType) or isinstance(stream, file):
         stream.close()
+
+def get_proxy():
+    "Test if proxy_getdata is loadable and return proxy function or False"
+    try:
+        result = [r for r in urlfetch_proxy([])]
+    except Exception as _exc:
+        result = []
+    if  len(result) == 1 and result[0] == {'ping':'pong'}:
+        return urlfetch_proxy
+    print "\n### No UrlFecth Proxy Server"
+    return False
+
+def urlfetch_proxy(urls):
+    "Proxy client for Go proxy server"
+    params = {'urls': '\n'.join(urls)}
+    encoded_data = urllib.urlencode(params)
+    server = "http://localhost:8215/fetch"
+    req = urllib2.Request(server)
+    data = urllib2.urlopen(req, encoded_data)
+    code = data.getcode()
+    if  code == 200:
+        if  not urls: # ping request
+            yield {'ping':'pong'}
+        else:
+            for row in data.readlines():
+                if  row and row[0] == '{' and row.find('data'):
+                    # Erlang response
+                    rec = json.loads(row)
+                    for line in rec['data'].split('\n'):
+                        yield line
+                else:
+                    # Go response
+                    yield row
+    else:
+        yield {'error':'Fail to contact UrlFetch proxy server', 'code':code}
+
+def url_args(url, convert_types=False):
+    """
+    Extract args from given url, e.g. http://a.b.com/api?arg1=1&arg2=2
+    will yield {'arg1':1, 'arg2':2}
+    """
+    args = {}
+    for item in url.split("?")[-1].split('&'):
+        key, value = item.split('=')
+        if  convert_types:
+            if  int_number_pattern.match(value):
+                args[key] = int(value)
+            else:
+                args[key] = value
+        else:
+            args[key] = value
+    return args

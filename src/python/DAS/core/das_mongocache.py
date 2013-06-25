@@ -12,8 +12,6 @@ The DAS consists of several sub-systems:
     - DAS mapreduce collection
 """
 
-__revision__ = "$Id: das_mongocache.py,v 1.86 2010/05/03 19:14:06 valya Exp $"
-__version__ = "$Revision: 1.86 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -33,7 +31,7 @@ from DAS.utils.ddict import convert_dot_notation
 from DAS.utils.utils import aggregator, unique_filter
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.utils.utils import parse_filters, expire_timestamp
-from DAS.utils.utils import dastimestamp
+from DAS.utils.utils import dastimestamp, record_codes
 from DAS.utils.das_db import db_connection, db_monitor
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
@@ -112,6 +110,14 @@ def logdb_record(coll, doc):
     rec = {'type':coll, 'date':date, 'ts':timestamp}
     rec.update(doc)
     return rec
+
+def etstamp(delta=20):
+    """
+    Return expire timestamp which can be used for empty records
+    It should be short enough to allow quick expire of the records.
+    The delta input parameter can be used to control thta.
+    """
+    return time.time() + delta
 
 class DASLogdb(object):
     """DASLogdb"""
@@ -199,13 +205,18 @@ class DASMongocache(object):
             index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
                           ('das.system', ASCENDING),
                           ('qhash', DESCENDING),
-                          ('das.empty_record', ASCENDING)]
+                          ('file.name', DESCENDING),
+                          ('dataset.name', DESCENDING),
+                          ('block.name', DESCENDING),
+                          ('run.run_number', DESCENDING),
+                          ('das.record', ASCENDING)]
             create_indexes(self.col, index_list)
             index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
                           ('qhash', DESCENDING),
-                          ('das.empty_record', ASCENDING),
+                          ('das.record', ASCENDING),
                           ('das.ts', ASCENDING)]
             create_indexes(self.merge, index_list)
+            print "### DASMongocache:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
@@ -309,7 +320,7 @@ class DASMongocache(object):
             for dasfilter in filters:
                 if  dasfilter == 'unique':
                     continue
-                if  dasfilter not in fields and \
+                if  fields and dasfilter not in fields and \
                     dasfilter not in new_fields:
                     if  dasfilter.find('=') == -1 and dasfilter.find('<') == -1\
                     and dasfilter.find('>') == -1:
@@ -326,16 +337,17 @@ class DASMongocache(object):
         Remove expired records from DAS cache.
         """
         timestamp = int(time.time())
-        col  = self.mdb[collection]
-        spec = {'das.expire' : {'$lt' : timestamp}}
-        if  self.verbose:
-            nrec = col.find(spec).count()
-            msg  = "will remove %s records" % nrec
-            msg += ", localtime=%s" % timestamp
-            self.logger.debug(msg)
-        if  self.logging:
-            self.logdb.insert(collection, {'delete': col.find(spec).count()})
-        col.remove(spec)
+        with self.conn.start_request():
+            col  = self.mdb[collection]
+            spec = {'das.expire' : {'$lt' : timestamp}}
+            if  self.verbose:
+                nrec = col.find(spec).count()
+                msg  = "will remove %s records" % nrec
+                msg += ", localtime=%s" % timestamp
+                self.logger.debug(msg)
+            if  self.logging:
+                self.logdb.insert(collection, {'delete': col.find(spec).count()})
+            col.remove(spec)
 
     def find(self, dasquery):
         """
@@ -396,58 +408,45 @@ class DASMongocache(object):
 
     def update_query_record(self, dasquery, status, header=None):
         "Update DAS record for provided query"
+        ctime = time.time()
+        das_spec = {'qhash': dasquery.qhash, 'das.system':'das'}
         if  header:
             system = header['das']['system']
-            api    = header['das']['api']
-            spec1  = {'qhash': dasquery.qhash, 'das.system': 'das'}
-            dasrecord = self.col.find_one(spec1)
-            spec2  = {'qhash': dasquery.qhash, 'das.system': system,
-                      'das.api': api, 'query': {'$exists':True}}
-            sysrecord = self.col.find_one(spec2)
-            hexpire = header['das']['expire']
-            dexpire = hexpire
-            if  dasrecord and dasrecord.has_key('das'):
-                dexpire = dasrecord['das'].get('expire', None)
-            if  dexpire and hexpire > dexpire:
-                expire = dexpire
-            else:
-                expire = hexpire
-            if  sysrecord:
-                api  = header['das']['api']
-                url  = header['das']['url']
-                sapi = sysrecord['das'].get('api', [])
-                surl = sysrecord['das'].get('url', [])
-                if  set(api) & set(sapi) == set(api) and \
-                    set(url) & set(surl) == set(url):
-                    self.col.update({'_id':ObjectId(sysrecord['_id'])},
-                        {'$set': {'das.expire':expire, 'das.status':status}})
-                else:
-                    self.col.update({'_id':ObjectId(sysrecord['_id'])},
-                        {'$pushAll':{'das.api':header['das']['api'],
-                                     'das.urn':header['das']['api'],
-                                     'das.url':header['das']['url'],
-                                     'das.ctime':header['das']['ctime'],
-                                    },
-                         '$set': {'das.expire':expire, 'das.status':status}})
-            if  dasrecord:
-                self.col.update({'_id':ObjectId(dasrecord['_id'])},
-                     {'$set': {'das.expire':expire}})
+            sts    = header['das']['status']
+            expire = header['das']['expire']
+            spec   = {'qhash': dasquery.qhash, 'das.system': system}
+            new_expire = None
+            for rec in self.col.find(spec):
+                if  rec.has_key('das') and rec['das'].has_key('expire'):
+                    if  rec['das']['expire'] > expire:
+                        new_expire = expire
+                        ndict = {'das.expire':expire, 'das.status':status}
+                        cdict = {'das.ctime':ctime}
+                        udict = {'$set':ndict, '$push':cdict}
+                        oid   = ObjectId(rec['_id'])
+                        self.col.update({'_id':oid}, udict)
+            if  new_expire:
+                udict = {'$set': {'das.expire': new_expire},
+                         '$push': {'das.ctime':ctime}}
+                self.col.update(das_spec, udict)
         else:
-            self.col.update({'qhash': dasquery.qhash,
-                             'das.system':'das'},
-                            {'$set': {'das.status': status}})
+            udict = {'$set': {'das.status':status}, '$push': {'das.ctime':ctime}}
+            self.col.update(das_spec, udict)
 
     def apilist(self, dasquery):
         "Return list of apis for given dasquery"
-        spec = {'qhash':dasquery.qhash, 'query':{'$exists':True}}
+        spec = {'qhash':dasquery.qhash,
+                'das.record':record_codes('query_record')}
         apis = []
-        for row in self.col.find(spec):
-            das = row.get('das', {})
-            for api in das.get('api', []):
-                apis.append(api)
+        for row in self.col.find(spec, ['das.api']):
+            try:
+                apis += row['das']['api']
+            except Exception as _err:
+                pass
         return apis
 
-    def incache(self, dasquery, collection='merge', system=None, api=None):
+    def incache(self, dasquery, collection='merge', system=None, api=None,
+            query_record=False):
         """
         Check if we have query results in cache, otherwise return null.
         Please note, input parameter query means MongoDB query, please
@@ -455,13 +454,18 @@ class DASMongocache(object):
         http://api.mongodb.org/python/
         """
         self.remove_expired(collection)
-        col  = self.mdb[collection]
-        spec = {'qhash':dasquery.qhash}
+        if  query_record:
+            record = record_codes('query_record')
+        else:
+            record = record_codes('data_record')
+        spec = {'qhash':dasquery.qhash, 'das.record':record}
         if  system:
             spec.update({'das.system': system})
         if  api:
             spec.update({'das.api': api})
-        res  = col.find(spec=spec).count()
+        with self.conn.start_request():
+            col  = self.mdb[collection]
+            res  = col.find(spec=spec).count()
         msg  = "(%s, coll=%s) found %s results" % (dasquery, collection, res)
         self.logger.info(msg)
         if  res:
@@ -477,26 +481,29 @@ class DASMongocache(object):
         # we can rely on DB count() method. Pleas keep in mind that
         # usage of fields in find doesn't account for counting, since it
         # is a view over records found with spec, so we don't need to use it.
-        col  = self.mdb[collection]
         fields, filter_cond = self.get_fields(dasquery)
         if  not fields:
             spec = dasquery.mongo_query.get('spec', {})
         elif dasquery.hashes:
-            spec = {'qhash':{'$in':dasquery.hashes}, 'das.empty_record':0}
+            spec = {'qhash':{'$in':dasquery.hashes},
+                    'das.record': record_codes('data_record')}
         else:
-            spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
+            spec = {'qhash':dasquery.qhash,
+                    'das.record': record_codes('data_record')}
         if  filter_cond:
             spec.update(filter_cond)
-        self.check_filters(col, spec, fields)
-        if  dasquery.unique_filter:
-            skeys = self.mongo_sort_keys(collection, dasquery)
-            if  skeys:
-                gen = col.find(spec=spec).sort(skeys)
+        self.check_filters(collection, spec, fields)
+        with self.conn.start_request():
+            col  = self.mdb[collection]
+            if  dasquery.unique_filter:
+                skeys = self.mongo_sort_keys(collection, dasquery)
+                if  skeys:
+                    gen = col.find(spec=spec).sort(skeys)
+                else:
+                    gen = col.find(spec=spec)
+                res = len([r for r in unique_filter(gen)])
             else:
-                gen = col.find(spec=spec)
-            res = len([r for r in unique_filter(gen)])
-        else:
-            res = col.find(spec=spec).count()
+                res = col.find(spec=spec).count()
         msg = "%s" % res
         self.logger.info(msg)
         return res
@@ -547,16 +554,19 @@ class DASMongocache(object):
              ...
              u'tier.name_-1': {u'key': [(u'tier.name', -1)], u'v': 0}}
         """
-        col = self.mdb[collection]
-        for val in col.index_information().values():
-            for idx in val['key']:
-                yield idx[0] # index name
+        with self.conn.start_request():
+            col = self.mdb[collection]
+            for val in col.index_information().values():
+                for idx in val['key']:
+                    yield idx[0] # index name
 
-    def check_filters(self, col, spec, fields):
+    def check_filters(self, collection, spec, fields):
         "Check that given filters can be applied to records found with spec"
         if  not fields:
             return
-        data = col.find_one(spec)
+        with self.conn.start_request():
+            col  = self.mdb[collection]
+            data = col.find_one(spec)
         if  not data:
             return
         found = False
@@ -569,8 +579,6 @@ class DASMongocache(object):
                         found = True
                     else:
                         found = False
-                        err = "Key %s not found" % fltr
-                        raise Exception(err)
                 elif isinstance(row, list):
                     for row in list(row):
                         if  row.has_key(key):
@@ -580,20 +588,24 @@ class DASMongocache(object):
                         else:
                             found = False
         if  not found:
-            err = "Key %s not found" % fltr
+            err  = "check_filters unable to find filter=%s" % fltr
+            err += "\nrecord=%s" % data
             raise Exception(err)
 
-    def get_records(self, col, spec, fields, skeys, idx, limit, unique=False):
+    def get_records(self, collection, spec, fields, skeys, idx, limit,
+            unique=False):
         "Generator to get records from MongoDB. It correctly applies"
         try:
-            res = col.find(spec=spec, fields=fields)
-            if  skeys:
-                res = res.sort(skeys)
-            if  not unique:
-                if  idx:
-                    res = res.skip(idx)
-                if  limit:
-                    res = res.limit(limit)
+            with self.conn.start_request():
+                col = self.mdb[collection]
+                res = col.find(spec=spec, fields=fields)
+                if  skeys:
+                    res = res.sort(skeys)
+                if  not unique:
+                    if  idx:
+                        res = res.skip(idx)
+                    if  limit:
+                        res = res.limit(limit)
         except Exception as exp:
             print_exc(exp)
             row = {'exception': str(exp)}
@@ -614,24 +626,30 @@ class DASMongocache(object):
         "Generator which retrieves results from the cache"
         if  dasquery.service_apis_map(): # valid DAS query
             result = self.get_das_records(dasquery, idx, limit, collection)
+            for row in result:
+                yield row
         else: # pure MongoDB query
-            coll    = self.mdb[collection]
-            fields  = dasquery.mongo_query.get('fields', None)
+            das_fields = ['das_id', 'cache_id', 'das', 'qhash']
+            fields  = dasquery.mongo_query.get('fields', [])
             spec    = dasquery.mongo_query.get('spec', {})
             if  dasquery.filters:
-                if  fields == None:
-                    fields = dasquery.filters
-                else:
-                    fields += dasquery.filters
+                if  not fields:
+                    fields = []
+                fields += dasquery.filters
+                pkeys   = [k.split('.')[0] for k in fields]
+                fields += das_fields
             skeys   = self.mongo_sort_keys(collection, dasquery)
-            result  = self.get_records(coll, spec, fields, skeys, \
+            result  = self.get_records(collection, spec, fields, skeys, \
                             idx, limit, dasquery.unique_filter)
-        for row in result:
-            yield row
+            for row in result:
+                if  dasquery.filters:
+                    if  pkeys and set(pkeys) & set(row.keys()):
+                        yield row
+                else:
+                    yield row
 
     def get_das_records(self, dasquery, idx=0, limit=0, collection='merge'):
         "Generator which retrieves DAS records from the cache"
-        col = self.mdb[collection]
         msg = "(%s, %s, %s, coll=%s)" % (dasquery, idx, limit, collection)
         self.logger.info(msg)
 
@@ -640,9 +658,11 @@ class DASMongocache(object):
         if  not fields:
             spec = dasquery.mongo_query.get('spec', {})
         elif dasquery.hashes:
-            spec = {'qhash':{'$in':dasquery.hashes}, 'das.empty_record':0}
+            spec = {'qhash':{'$in':dasquery.hashes},
+                    'das.record': record_codes('data_record')}
         else:
-            spec = {'qhash':dasquery.qhash, 'das.empty_record':0}
+            spec = {'qhash':dasquery.qhash,
+                    'das.record': record_codes('data_record')}
         if  filter_cond:
             spec.update(filter_cond)
         if  fields: # be sure to extract das internal keys
@@ -650,7 +670,7 @@ class DASMongocache(object):
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
         skeys   = self.mongo_sort_keys(collection, dasquery)
-        res     = self.get_records(col, spec, fields, skeys, \
+        res     = self.get_records(collection, spec, fields, skeys, \
                         idx, limit, dasquery.unique_filter)
         counter = 0
         for row in res:
@@ -662,6 +682,7 @@ class DASMongocache(object):
             self.logger.info(msg)
 
         # if no raw records were yield we look-up possible error records
+        # and reset timestamp for record with system:['das']
         if  not counter:
             nrec = self.col.find({'qhash':dasquery.qhash}).count()
             if  nrec:
@@ -669,6 +690,7 @@ class DASMongocache(object):
                         % (dasquery, nrec)
                 prf = 'DAS WARNING, monogocache:get_from_cache '
                 print dastimestamp(prf), msg
+            self.update_das_expire(dasquery, etstamp())
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
         """
@@ -742,7 +764,8 @@ class DASMongocache(object):
         id_list = []
         expire  = 9999999999 # future
         # get all API records for given DAS query
-        spec    = {'qhash':dasquery.qhash, 'query':{'$exists':True}}
+        spec    = {'qhash':dasquery.qhash,
+                   'das.record':record_codes('query_record')}
         records = self.col.find(spec)
         for row in records:
             # find smallest expire timestamp to be used by aggregator
@@ -788,7 +811,8 @@ class DASMongocache(object):
                 records = self.col.find(spec).sort(skey)
                 gen = aggregator(dasquery, records, expire)
                 genrows = parse2gridfs(self.gfs, pkey, gen, self.logger)
-                das_dict = {'das':{'expire':expire, 'empty_record': 0,
+                das_dict = {'das':{'expire':expire,
+                        'das.record': record_codes('data_record'),
                         'primary_key':[k for k in lookup_keys],
                         'system': ['gridfs']}, 'qhash':dasquery.qhash,
                         'cache_id':[], 'das_id': id_list}
@@ -805,10 +829,10 @@ class DASMongocache(object):
         elif  not lookup_keys: # we get query w/o fields
             pass
         else: # we didn't merge anything, it is DB look-up failure
-            empty_expire = time.time() + 20 # secs, short enough to expire
+            empty_expire = etstamp()
             empty_record = {'das':{'expire':empty_expire,
                                    'primary_key':list(lookup_keys),
-                                   'empty_record': 1},
+                                   'record': record_codes('empty_record')},
                             'cache_id':[], 'das_id': id_list}
             for key, val in dasquery.mongo_query['spec'].iteritems():
                 if  key.find('.') == -1:
@@ -850,18 +874,20 @@ class DASMongocache(object):
         """
         Insert query record into DAS cache.
         """
-        dasheader  = header['das']
         # check presence of API record in a cache
-        system     = dasheader['system']
-        api        = dasheader['api']
-        collection = 'cache'
-        if  not self.incache(dasquery, collection, system, api):
+        dasheader   = header['das']
+        system      = dasheader['system']
+        api         = dasheader['api']
+        collection  = 'cache'
+        check_query = True
+        if  not self.incache(dasquery, collection, system, api, check_query):
             msg = "query=%s, header=%s" % (dasquery, header)
             self.logger.debug(msg)
             q_record = dict(das=dasheader, query=dasquery.storage_query)
-            q_record['das']['empty_record'] = 0
+            q_record['das']['record'] = record_codes('query_record')
             q_record['das']['status'] = "requested"
             q_record['qhash'] = dasquery.qhash
+            q_record['das']['ctime'] = [time.time()]
             self.col.insert(q_record)
 
     def generate_records(self, dasquery, results, header):
@@ -887,7 +913,7 @@ class DASMongocache(object):
         cond_keys  = dasquery.mongo_query['spec'].keys()
         # get API record id
         spec       = {'qhash':dasquery.qhash, 'das.system':system,
-                      'query':{'$exists':True}}
+                      'das.record': record_codes('query_record')}
         counter    = 0
         rids = [str(r['_id']) for r in self.col.find(spec, fields=['_id'])]
         if  rids:
@@ -896,10 +922,12 @@ class DASMongocache(object):
                     counter += 1
                     if  item.has_key('das'):
                         expire = item.get('das').get('expire', expire)
+                        dasheader['expire'] = expire
                     item['das'] = dict(expire=expire, primary_key=prim_key,
                                        condition_keys=cond_keys,
                                        instance=dasquery.instance,
-                                       system=system, empty_record=0,
+                                       system=system,
+                                       record=record_codes('data_record'),
                                        ts=time.time(), api=api)
                     item['das_id'] = rids
                     item['qhash'] = dasquery.qhash

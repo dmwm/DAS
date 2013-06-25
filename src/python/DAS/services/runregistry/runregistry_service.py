@@ -17,7 +17,7 @@ import urllib
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
-from   DAS.utils.utils import convert2date, print_exc
+from   DAS.utils.utils import convert2date, print_exc, convert2ranges
 
 def rr_date(timestamp):
     """
@@ -27,16 +27,13 @@ def rr_date(timestamp):
         return time.strftime("%Y-%m-%d", time.gmtime(timestamp))
     return timestamp
 
-def duration(ctime, etime, api_ver=2):
+def duration(ctime, etime):
     """
     Calculate run duration.
     """
     if  not ctime or not etime:
         return 'N/A'
-    if  api_ver == 2:
-        dformat = "%Y-%m-%dT%H:%M:%S" # 2010-10-09T17:39:51.0
-    else:
-        dformat = "%a %d-%m-%y %H:%M:%S" # Sun 15-05-11 17:25:00
+    dformat = "%a %d-%m-%y %H:%M:%S" # Sun 15-05-11 17:25:00
     csec = time.strptime(ctime.split('.')[0], dformat)
     esec = time.strptime(etime.split('.')[0], dformat)
     tot  = calendar.timegm(csec) - calendar.timegm(esec)
@@ -50,7 +47,26 @@ def convert_time(ctime):
     sec = time.strptime(ctime.split('.')[0], dformat)
     return long(calendar.timegm(sec))
 
-def run_duration(records, api_ver=2):
+def collect_lumis(records):
+    "Helper function to collect lumi records for same runs"
+    rec = {}
+    for row in records:
+        if  not rec:
+            rec.update(row)
+            continue
+        if  row['lumi']['run_number'] == rec['lumi']['run_number']:
+            lumis = rec['lumi']
+            lumis['number'] += row['lumi']['number']
+            rec['lumi'] = lumis
+        else:
+            rec['lumi']['number'] = convert2ranges(rec['lumi']['number'])
+            yield rec
+            rec = {}
+    if  rec:
+        rec['lumi']['number'] = convert2ranges(rec['lumi']['number'])
+        yield rec
+
+def run_duration(records):
     """
     Custom parser to produce run duration out of RR records and
     convert time stamps into DAS notations.
@@ -74,60 +90,21 @@ def run_duration(records, api_ver=2):
                 run['duration'] = None
         yield row
 
-def worker_v2(url, query):
-    """
-    Query RunRegistry service, see documentation at
-    https://twiki.cern.ch/twiki/bin/viewauth/CMS/DqmRrApi
-    url=http://pccmsdqm04.cern.ch/runregistry/xmlrpc
-    """
-    server    = xmlrpclib.ServerProxy(url)
-    namespace = 'GLOBAL'
-    if  isinstance(query, str) or isinstance(query, unicode):
-        try:
-            data = server.RunLumiSectionRangeTable.exportJson(namespace, query)
-        except Exception as _err:
-            data = "{}" # empty response
-        for row in json.loads(data):
-            yield row
-    elif isinstance(query, dict):
-        iformat  = 'tsv_runs' # other formats are xml_all, csv_runs
-        try:
-            data = server.RunDatasetTable.export(namespace, iformat, query)
-        except Exception as _err:
-            data = "" # empty response
-        titles = []
-        for line in data.split('\n'):
-            if  not line:
-                continue
-            if  not titles:
-                for title in line.split('\t')[:-1]:
-                    title = title.lower()
-                    if  title != 'run_number':
-                        title = title.replace('run_', '')
-                    titles.append(title)
-                continue
-            val = line.split('\t')[:-1]
-            if  len(val) != len(titles):
-                continue
-            record = {}
-            for idx in xrange(0, len(titles)):
-                key = titles[idx]
-                record[key] = adjust_value(val[idx])
-            yield dict(run=record)
-
-def worker_v3(url, query):
+def worker_helper(url, query, table='runsummary'):
     """
     Query RunRegistry service, see documentation at
     https://twiki.cern.ch/twiki/bin/viewauth/CMS/DqmRrApi
     url=http://runregistry.web.cern.ch/runregistry/
     """
     workspace = 'GLOBAL'
-    table = 'runsummary'
     template = 'json'
-    columns = ['number', 'startTime', 'stopTime', 'triggers',
-               'runClassName', 'runStopReason', 'bfield', 'gtKey',
-               'l1Menu', 'hltKeyDescription', 'lhcFill', 'lhcEnergy',
-               'runCreated', 'modified', 'lsCount', 'lsRanges']
+    if  table == 'runsummary':
+        columns = ['number', 'startTime', 'stopTime', 'triggers',
+                   'runClassName', 'runStopReason', 'bfield', 'gtKey',
+                   'l1Menu', 'hltKeyDescription', 'lhcFill', 'lhcEnergy',
+                   'runCreated', 'modified', 'lsCount', 'lsRanges']
+    elif table == 'runlumis':
+        columns = ['sectionFrom', 'sectionTo', 'runNumber']
     sdata = json.dumps({'filter':query})
     path = 'api/GLOBAL/%s/%s/%s/none/data' \
                 % (table, template, urllib.quote(','.join(columns)))
@@ -137,6 +114,7 @@ def worker_v3(url, query):
     result.close()
     notations = {'lsRanges':'lumi_section_ranges',
             'number':'run_number', 'runCreated':'create_time',
+            'runNumber': 'run_number',
             'stopTime': 'end_time', 'startTime': 'start_time',
             'lsCount': 'lumi_sections', 'runStopReason': 'stop_reason',
             'hltKeyDescription': 'hltkey', 'gtKey': 'gtkey',
@@ -147,26 +125,25 @@ def worker_v3(url, query):
             if  notations.has_key(key):
                 rec[notations[key]] = val
                 del rec[key]
-        yield dict(run=rec)
+        if  table == 'runsummary':
+            yield dict(run=rec)
+        elif table == 'runlumis':
+            if  rec.has_key('sectionTo') and rec.has_key('sectionFrom'):
+                rec['number'] = [i for i in \
+                        range(rec.pop('sectionFrom'), rec.pop('sectionTo')+1)]
+            yield dict(lumi=rec)
 
-def worker(url, query, api_ver):
+def rr_worker(url, query, table='runsummary'):
     "Call RunRegistry APIs"
-    if  api_ver == 2:
-        for row in worker_v2(url, query):
-            yield row
-    elif api_ver == 3:
-        for key, val in query.items():
-            if  key == 'runNumber':
-                query['number'] = val
-                del query['runNumber']
-            if  key == 'runStartTime':
-                query['startTime'] = val
-                del query['runStartTime']
-        for row in worker_v3(url, query):
-            yield row
-    else:
-        msg = 'Unsupported RunRegistry API, version=%s' % api_ver
-        raise Exception(msg)
+    for key, val in query.items():
+        if  key == 'runNumber' and table == 'runsummary':
+            query['number'] = val
+            del query['runNumber']
+        if  key == 'runStartTime':
+            query['startTime'] = val
+            del query['runStartTime']
+    for row in worker_helper(url, query, table):
+        yield row
 
 class RunRegistryService(DASAbstractService):
     """
@@ -183,7 +160,10 @@ class RunRegistryService(DASAbstractService):
         A service worker. It parses input query, invoke service API 
         and return results in a list with provided row.
         """
-        _query  = ""
+        _query  = ''
+        _table  = 'runsummary'
+        if  api == 'rr_xmlrpc_lumis':
+            _table = 'runlumis'
         for key, val in dasquery.mongo_query['spec'].iteritems():
             if  key == 'run.run_number':
                 if  isinstance(val, int):
@@ -193,17 +173,14 @@ class RunRegistryService(DASAbstractService):
                     maxrun = 0
                     for kkk, vvv in val.iteritems():
                         if  kkk == '$in':
-                            if len(vvv) == 2:
-                                minrun, maxrun = vvv
-                            else: # in[1, 2, 3]
-                                msg = "runregistry can not deal with 'in'"
-                                self.logger.info(msg)
-                                continue
+                            runs = ' or '.join([str(r) for r in vvv])
+                            _query = {'runNumber': runs}
                         elif kkk == '$lte':
                             maxrun = vvv
                         elif kkk == '$gte':
                             minrun = vvv
-                    _query = {'runNumber': '>= %s and < %s' % (minrun, maxrun)}
+                    if  minrun and maxrun:
+                        _query = {'runNumber': '>= %s and < %s' % (minrun, maxrun)}
             elif key == 'date':
                 if  isinstance(val, dict):
                     if  val.has_key('$in'):
@@ -244,10 +221,12 @@ class RunRegistryService(DASAbstractService):
         msg = "DASAbstractService:RunRegistry, query=%s" % _query
         self.logger.info(msg)
         time0   = time.time()
-        api_ver = 3 # API version for RunRegistry, v2 is xmlrpc, v3 is REST
-        rawrows = worker(url, _query, api_ver)
+        rawrows = rr_worker(url, _query, _table)
         genrows = self.translator(api, rawrows)
-        dasrows = self.set_misses(dasquery, api, run_duration(genrows, api_ver))
+        if  _table == 'runsummary':
+            dasrows = self.set_misses(dasquery, api, run_duration(genrows))
+        else:
+            dasrows = self.set_misses(dasquery, api, collect_lumis(genrows))
         ctime   = time.time() - time0
         try:
             self.write_to_cache(\
@@ -270,7 +249,7 @@ def test():
     query = {'number': '>= 165103 and <= 165110'}
     url = 'http://localhost:8081/runregistry/'
     ver = 3
-    for row in worker(url, query, ver):
+    for row in rr_worker(url, query, ver):
         print row, type(row)
 
 if __name__ == '__main__':

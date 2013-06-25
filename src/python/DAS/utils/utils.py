@@ -29,12 +29,19 @@ from   bson.objectid import ObjectId
 # DAS modules
 from   DAS.utils.ddict import DotDict, convert_dot_notation
 from   DAS.utils.regex import float_number_pattern, int_number_pattern
-from   DAS.utils.regex import phedex_tier_pattern, cms_tier_pattern
+from   DAS.utils.regex import phedex_node_pattern, cms_tier_pattern
 from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
+
+def record_codes(rtype):
+    "Return das record code for given record type"
+    codes = {'query_record': 0,
+             'data_record': 1,
+             'empty_record': 2}
+    return codes[rtype]
 
 def get_dbs_instance(url):
     "Extract from DBS url its instance name"
@@ -45,6 +52,8 @@ def get_dbs_instance(url):
         return url.split('/')[4]
     elif url.find('cmsdbsprod') != -1: # DBS2
         return url.split('/')[3]
+    elif url.find('localhost') != -1: # test instance
+        return None
     else:
         raise Exception(msg)
 
@@ -66,6 +75,7 @@ def convert2ranges(ilist):
     http://stackoverflow.com/questions/4628333/converting-a-list-of-integers-into-range-in-python
     """
     # right now just sort input list and return it
+    ilist = list(set(ilist))
     ilist.sort()
     res = [[t[0][1], t[-1][1]] for t in \
             (tuple(g[1]) for g in \
@@ -828,7 +838,7 @@ def sitename(site):
     CMS name or SAM name, etc.
     """
     patlist = [
-               ('phedex', phedex_tier_pattern),#T2_UK_NO
+               ('phedex', phedex_node_pattern),#T2_UK_NO
                ('cms', cms_tier_pattern), # T2_UK
                ('se',  se_pattern), # a.b.c
                ('site', site_pattern),
@@ -1363,7 +1373,7 @@ def aggregator(dasquery, results, expire):
             else:
                 _ids = [_ids]
         rec['cache_id'] = list(set(_ids))
-        rec['das']['empty_record'] = 0
+        rec['das']['record'] = record_codes('data_record')
         rec['qhash'] = dasquery.qhash
         for key, val in rec.iteritems():
             if  key not in ['das_id', 'das', 'cache_id', '_id']:
@@ -1551,3 +1561,54 @@ def filter_with_filters(rows, filters):
         flist = [(f, ddict.get(f)) for f in filters]
         for idx in flist:
             yield idx
+
+def api_rows(gen, api):
+    "Extract from given stream only rows which belong to given api"
+    das  = {}   # get from first row
+    pkey = None # get from das record
+    idx  = None # get from api list
+    for row in gen:
+        if  not das:
+            das  = row.get('das')
+            pkey = das['primary_key'].split('.')[0]
+            apis = das.get('api')
+            idx  = apis.index(api)
+        try:
+            data = row[pkey][idx] # get data item for given api index
+            nrow = dict(row)  # get copy of the row
+            nrow[pkey] = data # replace pkey value with data item
+            nrow['das']['system'] = [nrow['das']['system'][idx]]
+            nrow['das']['api'] = [nrow['das']['api'][idx]]
+            yield nrow
+        except:
+            pass
+
+def regen(first, gen):
+    "Yield given first row and generator back to workflow"
+    yield first
+    for row in gen:
+        yield row
+
+def das_sinfo(row):
+    "Extract DAS information from given row"
+    sinfo = {}
+    das   = row.get('das')
+    apis  = das.get('api')
+    srvs  = das.get('system')
+    for api, srv in zip(apis, srvs):
+        sinfo.setdefault(srv, set()).add(api)
+    return sinfo
+
+def sort_rows(rows):
+    """
+    Sort rows, use this function when we can't use set, e.g.
+    when DAS returns sorted list and set will change its original order
+    """
+    old = ''
+    for row in rows:
+        if  not old:
+            old = row
+        if  old != row:
+            yield old
+            old = row
+    yield old
