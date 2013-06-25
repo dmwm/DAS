@@ -325,7 +325,7 @@ class CMSRepresentation(DASRepresentation):
 
 
             from pprint import pprint
-            from DAS.keywordsearch.das_schema_adapter import get_field_list_for_entity_by_pk, get_result_field_list_by_entity
+            from DAS.keywordsearch.metadata.das_schema_adapter import get_field_list_for_entity_by_pk, get_result_field_list_by_entity
             from copy import deepcopy
             from DAS.keywordsearch.tokenizer import get_keyword_without_operator
 
@@ -434,13 +434,13 @@ class CMSRepresentation(DASRepresentation):
 
                     msg = '''
                     DAS (and it's underlying services) do not support this query directly yet,
-                     however, you could use the instructions bellow to fetch the results automatically.
+                     however, you could use the instructions bellow to fetch the results yourself.
 
                     you need to:
 
-                        execute this query: %(first_query_str)s
+                        query: %(first_query_str)s
                         for each result:
-                            execute this query: %(nested_query_str)s   (replacing <PK> with value of %(pk)s returned)
+                            query: %(nested_query_str)s   (replacing <PK> with value of %(pk)s returned)
 
                         (the combination (join) of results from the two queries will give you the results expected,
                          except the aggregations which you will have to combine yourself).

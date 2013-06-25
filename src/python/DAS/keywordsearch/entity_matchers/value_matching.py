@@ -1,23 +1,30 @@
+"""
+Value matching functions that evaluate if given input is similar to some of
+the value terms in the underlying data integration system.
+
+Also some CMS specific functions are used:
+- dataset name matching
+"""
 __author__ = 'vidma'
 
+import re
 
-import difflib
-import math, re
+
+from cherrypy import request
+
+from   DAS.utils.regex import RE_3SLAHES
+
 
 # for handling semantic and string similarities
-import jellyfish
-from nltk.corpus import wordnet
+from DAS.keywordsearch.metadata import input_values_tracker
+from DAS.keywordsearch.metadata.das_schema_adapter import *
 
-from DAS.keywordsearch import input_values_tracker
-from DAS.keywordsearch.das_schema_adapter import *
-
-from DAS.keywordsearch.config import mod_enabled
-
-#from nltk import stem
-#stemmer = stem.PorterStemmer()
+from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
 
 
-def keyword_value_weights(keyword, api_results_allowed=False):
+
+
+def keyword_value_weights(keyword):
     """
     for each attribute, calculates possibility that given keyword is a value of the attribute
     (we are mostly interested in API parameters, but TODO: this could be extended to API result fields also for post filtering)
@@ -123,5 +130,58 @@ def keyword_regexp_weights(keyword):
     scores.sort(key=lambda item: item[0], reverse=True)
     #print scores
     return scores
+
+
+
+
+# TODO: move this to value matching?
+def match_value_dataset(keyword):
+    if hasattr(request, 'dbsmngr'):
+        dbsmgr = request.dbsmngr
+    else:
+        dbsmgr = request.dbsmngr = get_global_dbs_mngr()
+
+    print 'DBS mngr:', dbsmgr
+
+    dataset_score = None
+    upd_kwd = keyword
+    # dbsmgr.find returns a generator, to check if it's non empty we have to access it's entities
+    # TODO: check for full and partial match
+    # e.g. /DoubleMu/Run2012A-Zmmg-13Jul2012-v1 --> /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/*
+    # DoubleMu -> *DoubleMu*
+    # TODO: a dataset pattern could be even *Zmm* -- we need minimum length here!!
+
+    if next(dbsmgr.find(pattern=keyword, limit=1), False):
+        print 'Dataset matched by keyword %s' % keyword
+        # TODO: if contains wildcards score shall be a bit lower
+        if '*' in keyword and not '/' in keyword:
+            dataset_score = 0.8
+        elif '*' in keyword and '/' in keyword:
+            dataset_score = 0.9
+        elif not '*' in keyword and not '/' in keyword:
+            if next(dbsmgr.find(pattern='*%s*' % keyword, limit=1), False):
+                dataset_score = 0.7
+                upd_kwd = '*%s*' % keyword
+        else:
+            dataset_score = 1.0
+
+    # TODO: shall we check for unique matches?
+
+    # it's better to add extra wildcard to make sure the query will work...
+    if not RE_3SLAHES.match(upd_kwd):
+        upd_kwd0 = upd_kwd
+
+        if  not upd_kwd.startswith('*') and not upd_kwd.startswith('/'):
+            upd_kwd =  '*' + upd_kwd
+
+        if not upd_kwd.endswith('*') and \
+            not (upd_kwd0.startswith('/') or upd_kwd0.startswith('*')):
+            upd_kwd =  upd_kwd + '*'
+
+
+    print 'dataset.name', dataset_score, upd_kwd
+
+
+    return 'dataset.name', dataset_score, upd_kwd
 
 

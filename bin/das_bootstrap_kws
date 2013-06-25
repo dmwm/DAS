@@ -34,7 +34,7 @@ rm -Rf $DAS_KWS_IR_INDEX/*
 python -u  $DAS_ROOT/analytics/standalone_task.py -c update_result_field_index
 
 # Bootstrap values (release, datatype, etc)
-python $DAS_ROOT/keywordsearch/input_values_tracker.py
+python $DAS_ROOT/keywordsearch/metadata/input_values_tracker.py
 
 # Bootstrap Dataset names (TODO: this should go automatically...)
 echo 'Bootstraping Dataset names'

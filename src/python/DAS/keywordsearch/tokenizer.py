@@ -1,22 +1,24 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-'''
+"""
 Module description:
  - first cleans up input keyword query (remove extra spaces, standardize notation)
  - then it tokenizes the query into:
     * individual query terms
     * compound query terms in brackets (e.g. "number of events")
     * strings of "terms operator value" (e.g. nevent > 1, "number of events"=100)
-'''
+"""
 
+AGGREGATORS_ENABLED = False
 
 import re
 from nltk.internals import  convert_regexp_to_nongrouping
 
+from DAS.keywordsearch.metadata import das_ql
 
-AGGREGATORS_ENABLED = False
-
-from DAS.keywordsearch.das_ql import kws_operators, word, aggr_operators
+kws_operators = das_ql.kws_operators
+aggr_operators = das_ql.aggr_operators
+word = das_ql.word
 
 
 cleanup_subs = [
@@ -66,6 +68,7 @@ tokenizer_patterns = \
     %(word)s | # word
     \S+" # any other non-whitespace sequence
     ''' % locals()
+
 tokenizer_patterns = convert_regexp_to_nongrouping(tokenizer_patterns)
 tokenizer_patterns = re.compile(tokenizer_patterns, re.VERBOSE)
 
@@ -116,7 +119,7 @@ def cleanup_query(query):
 
 
 def get_keyword_without_operator(keyword):
-    '''
+    """
     splits keyword on operator
 
     >>> get_keyword_without_operator('number of events >= 10')
@@ -128,16 +131,16 @@ def get_keyword_without_operator(keyword):
     >>> get_keyword_without_operator('dataset=Zmm')
     'dataset'
 
-    # aggregators
-    >>> get_keyword_without_operator('average number of events')
+    # TODO: aggregators
+    #TODO: >>> get_keyword_without_operator('average number of events')
     'number of events'
 
-    >>> get_keyword_without_operator('avg dataset size')
+    # TODO: >>> get_keyword_without_operator('avg dataset size')
     'dataset size'
 
-    >>> get_keyword_without_operator('order by number of events')
+    # TODO: >>> get_keyword_without_operator('order by number of events')
     'number of events'
-    '''
+    """
     #global kws_operators
     res = re.split(kws_operators, keyword)[0].strip()
 
@@ -155,7 +158,7 @@ def get_keyword_without_operator(keyword):
     return res
 
 def test_operator_containment(keyword):
-    '''
+    """
     returns whether a keyword token contains an operator
     (this is useful then processing a list of tokens,
     as only the last token may have an operator)
@@ -166,13 +169,13 @@ def test_operator_containment(keyword):
     >>> test_operator_containment('number')
     False
 
-    '''
+    """
     return bool(re.findall(kws_operators, keyword))
 
 
 
 def get_operator_and_param(keyword):
-    '''
+    """
     splits keyword on operator
 
     >>> get_operator_and_param('number of events >= 10')
@@ -185,17 +188,17 @@ def get_operator_and_param(keyword):
     {'type': 'filter', 'param': 'Zmm', 'op': '='}
 
 
-    >>> get_operator_and_param('average file size')
+    # TODO: >>> get_operator_and_param('average file size')
     {'type': 'aggregator', 'op_pattern': 'avg(%(field)s)', 'op': 'avg'}
 
-    >>> get_operator_and_param('avg file size')
+    # TODO: >>> get_operator_and_param('avg file size')
     {'type': 'aggregator', 'op_pattern': 'avg(%(field)s)', 'op': 'avg'}
 
 
-    >>> get_operator_and_param('min file size')
+    # TODO: >>> get_operator_and_param('min file size')
     {'type': 'aggregator', 'op_pattern': 'min(%(field)s)', 'op': 'min'}
 
-    '''
+    """
 
     parts = re.split(kws_operators, keyword)
     # e.g. parts = ['number of events ', '>=', ' 10']
@@ -246,16 +249,18 @@ def tokenize(query):
 
     >>> tokenize('user=vidmasze@cern.ch')
     ['user=vidmasze@cern.ch']
+
+    # TODO: this is not currently implemented in DASQL: >>> tokenize('field="long value"')
+    ['field=long value']
     """
     #TODO: if needed we may add support for parentesis e.g. sum(number of events)
 
     #global kws_operators
-    operators = kws_operators
+    #operators = kws_operators
 
     query = cleanup_query(query)
     # first remove extra spaces
     #operators = r'[=><]{1,2}'
-
 
     # TODO: remove brackets?
 

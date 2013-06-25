@@ -3,20 +3,15 @@
 __author__ = 'vidma'
 
 import pprint
+import os
 
 from whoosh import analysis
 from whoosh.index import create_in
 from whoosh.index import open_dir
-
 from whoosh.fields import *
 from whoosh.query import *
 from whoosh.analysis import *
-
 import whoosh.scoring
-
-from DAS.keywordsearch.das_schema_adapter import *
-
-import os
 
 
 INDEX_DIR = os.environ['DAS_KWS_IR_INDEX']
@@ -27,7 +22,7 @@ _USE_FAKE_FIELDS = False # this also impact IDFs!!!
 # if not, include only processed data!
 
 def build_index(fields_by_entity, remove_old = False):
-    '''
+    """
     Schema:
 
     entity_results:
@@ -39,7 +34,7 @@ def build_index(fields_by_entity, remove_old = False):
         entity
 
         [optionally it could be dependent on specific api?]
-    '''
+    """
 
     # _result_fields_by_entity[result_entity].get(field, {'title': ''})['title']
 
@@ -208,6 +203,7 @@ def search_index(keywords, result_type=False, full_matches_only=False, limit=10,
 
 
             if keyword_list_no_stopw and len(keyword_list_no_stopw) > 1:
+                # noinspection PyTypeChecker
                 all_fields_and_terms.append(
                     Phrase('title', keyword_list_no_stopw, boost=2,
                            slop=1))
@@ -226,6 +222,7 @@ def search_index(keywords, result_type=False, full_matches_only=False, limit=10,
             # WE no not search by stopwords anymore....
             # here phrase also uses title_stemmed, it will match title stemmed, so score boost shouldn't be too high
             if keyword_list_no_stopw and len(keyword_list_no_stopw) > 1:
+                # noinspection PyTypeChecker
                 all_fields_and_terms.append(
                     Phrase('title_stemmed', keyword_list_stemmed, boost=1.5,
                            slop=1))
@@ -327,12 +324,15 @@ def search_index(keywords, result_type=False, full_matches_only=False, limit=10,
 
 
 
-#build_index()
-if __name__ == '__main__':
-    build_index()
-    load_index()
+def not_used_manual_tests():
+    from DAS.keywordsearch.metadata import das_schema_adapter
+    from DAS.core.das_core import DASCore
 
-    # TODO: Phrase search
+    dascore = DASCore()
+    das_schema_adapter.init(dascore)
+    fields_by_entity = das_schema_adapter.list_result_fields()
+    build_index(fields_by_entity)
+    load_index()
 
     if False:
         search_index(
@@ -392,4 +392,6 @@ if __name__ == '__main__':
         search_index(keywords=u'file in', result_type='file', limit=4))
 
 
-    #  lumi flag in run 176304
+
+if __name__ == '__main__':
+    not_used_manual_tests()

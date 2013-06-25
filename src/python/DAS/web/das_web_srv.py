@@ -4,6 +4,7 @@
 """
 DAS web interface, based on WMCore/WebTools
 """
+from DAS.keywordsearch.metadata import das_schema_adapter
 
 __author__ = "Valentin Kuznetsov"
 
@@ -451,10 +452,9 @@ class DASWebService(DASWebManager):
         # daskeys could be inputs or outputs
         daskeys_json = json.dumps(daskeys)
 
-        from DAS.keywordsearch import das_schema_adapter
         das_schema_adapter.init(self.dasmgr)
         # das_schema_adapter.list_result_fields()
-        from DAS.keywordsearch.input_values_tracker import *
+        from DAS.keywordsearch.metadata.input_values_tracker import *
         ent_values = {}
 
 

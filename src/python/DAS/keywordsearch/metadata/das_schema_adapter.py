@@ -1,23 +1,21 @@
+"""
+Some functions to access DAS schema:
+- list of services & their params (inputs, outputs)
+- list of entities and their fields
+
+Note/TODO: quite unclean code
+"""
 __author__ = 'vidma'
 
 
 
-EXCLUDE_RECORDS_WITH_ERRORS = False
-
-import math
 import pprint
-
-
-from cherrypy import request
-
 from nltk.corpus import wordnet
 
-from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
-import DAS.web.dbs_daemon
+from DAS.keywordsearch.config import EXCLUDE_RECORDS_WITH_ERRORS, DEBUG
 
 
-
-DEBUG = True
+#DEBUG = True
 
 
 
@@ -59,12 +57,17 @@ _result_fields_by_entity = {}
 
 
 def get_io_daskeys():
-    ''' return which daskeys are available for input and which for output '''
+    """ return which daskeys are available for input and which for output """
     unique = lambda l: list(set(l))
     return unique(daskeys_io['input'].values()), unique(daskeys_io['output'].values())
 
 # Discover APIs
 def discover_apis_and_fields(dascore):
+    """
+    builds list of apis and input/output fields that are defined in service maps
+    """
+    # TODO: rewrite this freshly
+
     mappings = dascore.mapping
     UGLY_DEBUG = False
 
@@ -223,77 +226,19 @@ def validate_input_params(params, entity=None, final_step=False):
 
     return False
 
-# TODO: move this to value matching?
-def match_value_dataset(keyword):
-    DAS.web.dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART = 1
-    #DAS.web.dbs_daemon.SKIP_UPDATES = 1
-
-
-    if hasattr(request, 'dbsmngr'):
-        dbsmgr = request.dbsmngr
-    else:
-        dbsmgr = request.dbsmngr = get_global_dbs_mngr()
-
-    print 'DBS mngr:', dbsmgr
-
-    dataset_score = None
-    adj_keyword = keyword
-    # dbsmgr.find returns a generator, to check if it's non empty we have to access it's entities
-    # TODO: check for full and partial match
-    # e.g. /DoubleMu/Run2012A-Zmmg-13Jul2012-v1 --> /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/*
-    # DoubleMu -> *DoubleMu*
-    # TODO: a dataset pattern could be even *Zmm* -- we need minimum length here!!
-
-    if next(dbsmgr.find(pattern=keyword, limit=1), False):
-        print 'Dataset matched by keyword %s' % keyword
-        # TODO: if contains wildcards score shall be a bit lower
-        if '*' in keyword and not '/' in keyword:
-            dataset_score = 0.8
-        elif '*' in keyword and '/' in keyword:
-            dataset_score = 0.9
-        elif not '*' in keyword and not '/' in keyword:
-            if next(dbsmgr.find(pattern='*%s*' % keyword, limit=1), False):
-                dataset_score = 0.7
-                adj_keyword = '*%s*' % keyword
-        else:
-            dataset_score = 1.0
-
-    # TODO: shall we check for unique matches?
-
-    print 'dataset.name', dataset_score, adj_keyword
-
-    return 'dataset.name', dataset_score, adj_keyword
 
 
 
 
-    # bootstrap queries:
-    # sudo python setup.py install && python -u  src/python/DAS/analytics/standalone_task.py -c key_learning
-    # sudo python setup.py install && python -u  src/python/DAS/keywordsearch/das_schema_adapter.py
-
-
-"""
-entity.field -- samples
-
-some interesting mappings:
-dataset.datatype --> datatype
-"""
 
 # TODO: DAS Specific fields in results of every entity that signify error, etc
 # TODO: DAS conflict could be useful
 das_specific_fields = ['*.error', '*.reason',  'qhash']
-# 'das.conflict',
-
-# TODO:
-"""
-file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80
-returns only file.name
-while file dataset=/HT/Run2011B-v1/RAW --> heaps of other stuff
-"""
+# TODO: shall this be excluded as well or not? 'das.conflict',
 
 # TODO: what is the problem with WARNING KeyLearning:process_query_record got inconsistent system/urn/das_id length
 
-def init_result_fields_list(dascore, same_entitty_prunning=False, _DEBUG=False):
+def init_result_fields_list(dascore, _DEBUG=False):
 
     # TODO: take some titles from DAS integration schema if defined, e.g.
     # site.replica_fraction -->  File-replica presence
@@ -310,10 +255,11 @@ def init_result_fields_list(dascore, same_entitty_prunning=False, _DEBUG=False):
     for r  in dascore.keylearning.list_members():
         #pprint(r)
         result_type = dascore.mapping.primary_key(r['system'], r['urn'])
-        (entity_long, out, in_required, api_) = input_output_params_by_api[tuple((r['system'], r['urn']))]
 
-
-        #print (entity_long, out, in_required, api_), '-->', result_type, ':', ', '.join([m for m in r.get('members', [])])
+        #(entity_long, out, in_required, api_) =
+        #       input_output_params_by_api[tuple((r['system'], r['urn']))]
+        #print (entity_long, out, in_required, api_), '-->',
+        #        result_type, ':', ', '.join([m for m in r.get('members', [])])
 
         result_members = r.get('members', [])
         fields = [m for m in result_members
@@ -391,12 +337,14 @@ def init_result_fields_list(dascore, same_entitty_prunning=False, _DEBUG=False):
 
 
 def get_result_field_list_by_entity(dascore, entity, input_params, _DEBUG=False):
-    '''
+    """
     return list of fields available in entity, if inputs_params are available
-    '''
+    """
 
     # TODO: take some titles from DAS integration schema if defined, e.g.
     # site.replica_fraction -->  File-replica presence
+    print 'get_result_field_list_by_entity:input_output_params_by_api:'
+    pprint.pprint(input_output_params_by_api)
 
     input_param_set = set(input_params)
 
@@ -462,35 +410,6 @@ def init(dascore):
                      for (entity, params, required, api_name) in api_input_params
                      if not required])
 
-
-    if False:
-        # TODO: this is not used (?)
-        # TODO 2: we could actually use a standard IR search engine for idf
-        # inverted term frequency in the schema, to lower the importance of
-        # very common term (e.g. name (dataset.name, file.name)
-        idf = {
-        }
-
-        for entity_long in entity_names.keys():
-            # TODO: stemming?
-            # term = entity_long # dataset.name
-            if '.' in entity_long:
-                term = entity_long.split('.')[1]
-                idf[term] = idf.get(entity_long, 0) + 1
-
-        for term in search_field_names:
-            # TODO: stemming?
-            idf[term] = idf.get(entity_long, 0) + 1
-
-        N = len(idf)
-        for (term, frequency) in idf.items():
-            idf[term] = math.log(float(N) / frequency)
-
-        # TODO: normalize them
-        min_idf = min(idf.values())
-        for (term, idf_value) in idf.items():
-            idf[term] = idf_value / min_idf
-
     print 'entity_names'
     pprint.pprint(entity_names)
     print 'search_field_names'
@@ -528,12 +447,14 @@ def get_field_list_for_entity_by_pk(result_entity, pk):
         return _result_fields_by_entity[result_entity]
 
 
-def list_result_fields(same_entitty_prunning=False, _DEBUG=False):
-    #global _result_fields_by_entity
+def list_result_fields(_DEBUG=False):
+    """
+    lists the attributes contained in entity results (aggregated from services)
+    """
+
     if _result_fields_by_entity:
         return _result_fields_by_entity
     else:
-        # return {}
         raise Exception('keyword search: das schema not loaded')
 
 

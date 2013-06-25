@@ -37,6 +37,8 @@ sudo apt-get install voms-clients
 export DAS_ROOT=`python -c "import os, DAS; print os.path.dirname(DAS.__file__)"`
 export DAS_CONFIG=$DAS_ROOT/etc/das.cfg
 export YUI_ROOT=$DAS_ROOT/third-party/yui
+#and more in init_debian.sh  
+# DAS_KWS_IR_INDEX=
 das_server start
 
 # bootstrap the values and the structure of service output (fields)
@@ -45,4 +47,20 @@ $DAS_ROOT/bin/das_bootstrap_kws
 
 #finaly test:
 firefox http://localhost:8212/das/
+
+
+# keyword search
+# needed for servcice auth
+grid-proxy-init -independent
+# bootstrap list of fields available, and certain field values
+
+das_bootstrap_kws
+# TODO; /usr/local/lib/python2.7/dist-packages/DAS/keywordsearch/metadata/input_values_tracker.py
+# TODO: init nltk
+python -c "import nltk; nltk.download()"
+
+
+
+
+das_server start
 

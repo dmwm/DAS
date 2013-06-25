@@ -14,4 +14,5 @@ primary_dataset=/*Cosmics*/*/*
 run between [160915,160917]
 summary dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO  run=150619
 user user=vidmasze@cern.ch
+user user=zemleris
 run dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO

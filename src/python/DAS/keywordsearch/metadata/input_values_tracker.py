@@ -133,8 +133,8 @@ class InputValuesTracker(object):
             #print gen
             if  not self.col.count():
                 try: # perform bulk insert operation
-                   self.col.insert(\
-                        itertools.islice(values, self.cache_size))
+                   self.col.insert(
+                       itertools.islice(values, self.cache_size))
                     #   break
                 except InvalidOperation:
                     pass
@@ -242,24 +242,24 @@ def get_tracker(field):
 
 
 def check_for_unique_match(t, field, keyword):
-    '''
+    """
     returns a value if only one exists, othwerwise a boolean value
     whether the keyword is matched by multiple values in a given field
-    '''
+    """
     it = t.find(keyword, limit=2)
     match = next(it, False)
     if match:
         match2 = next(it, False)
         if match2:
             print 'non-unique match of %(keyword)s into %(match)s and %(match2)s' % locals()
-            return (True, None)
+            return True, None
         else:
             # there's no second item -- it's unique
             print 'unique match of %(keyword)s into %(match)s' % locals()
-            return (True, match)
+            return True, match
 
     else:
-        return (False, None) # no match at all
+        return False, None # no match at all
 
 
 
@@ -325,7 +325,7 @@ def input_value_matches(keyword):
 
 
 def test(service):
-    "Test function"
+    """Test function"""
     dburi = 'mongodb://localhost:8230'
 
     mgr = InputValuesTracker(service, dburi)

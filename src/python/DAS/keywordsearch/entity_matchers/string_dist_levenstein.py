@@ -4,9 +4,9 @@ __author__ = 'vidma'
 def levenshtein(s, t, subcost=3, maxcost=3, modification_middle_cost=2):
     m, n = len(s), len(t)
     d = [range(n+1)]
-    subs = [range(n+1)]
     d += [[i] for i in range(1,m+1)]
-    subs += [[0] for i in range(1,m+1)]
+    #subs = [range(n+1)]
+    #subs += [[0] for i in range(1,m+1)]
 
     for i in range(0,m):
         for j in range(0,n):
@@ -27,15 +27,13 @@ def levenshtein(s, t, subcost=3, maxcost=3, modification_middle_cost=2):
 
             opts = [
                 d[i][j+1] + mod_cost, # deletion
-                d[i+1][j] + mod_cost, # insertion
+                d[i+1][j] + mod_cost # insertion
             ]
-            #if maxsub < subs[i][j]:
 
             opts.append(d[i][j]+cost) #substitution or leave as is
 
-            d[i+1].append(
-                min(opts)
-            )
+            d[i+1].append(min(opts))
+
     return d[m][n]
 
 
@@ -52,7 +50,6 @@ def levenshtein_normalized(s, t, subcost=2, maxcost=3):
 
 
 if __name__=="__main__":
-    from sys import argv
     #print levenshtein(argv[1],argv[2])
 
     print levenshtein_normalized('dataset', 'dateset', subcost=2, maxcost=3)

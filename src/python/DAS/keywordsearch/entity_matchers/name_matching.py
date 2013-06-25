@@ -4,23 +4,12 @@ This module generates candidates for matching keywords into entity names, attrib
 It uses a number of similarity metrics and heuristics, along with exiting values.
 """
 
-import difflib
-import math, re
-
 # for handling semantic and string similarities
-import jellyfish
-from nltk.corpus import wordnet
 
-from DAS.keywordsearch import input_values_tracker
-from DAS.keywordsearch.das_schema_adapter import *
-
-from DAS.keywordsearch.config import mod_enabled
-
-
+from DAS.keywordsearch.metadata.das_schema_adapter import *
 from DAS.keywordsearch.nlp import string_distance
 
-def keyword_schema_weights(keyword,  use_fields=True, include_fields =False, \
-                           include_operators=False,  keyword_index=-1, is_stopword = False):
+def keyword_schema_weights(keyword, keyword_index=-1,):
     """
     for each schema term (entity, entity attribute) calculates keyword's semantic relatedness with it
 

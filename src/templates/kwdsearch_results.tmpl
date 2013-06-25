@@ -3,6 +3,27 @@
 #set msg = $quote($msg)
 #assert (isinstance($msg, str) or isinstance($msg, unicode))
 
+
+
+<div id="filter-by-entity">
+#if $hi_score_result_types
+
+    <div class="select-result-type">
+            <span class="tooltip">Filter by result:
+                <span class="classic">You may filter suggestions by the entity they return</span></span>
+                    &nbsp;<span class="rt-filters">
+                        #for index, rt in enumerate($hi_score_result_types):
+#if index != 0 then ', &nbsp;' else '&nbsp;'
+<a href="javascript: filterByResultType('$rt', this)">$rt</a>#slurp
+                        #end for
+                    </span>
+        </div>
+
+#end if
+
+</div>
+
+
 #if not $is_ajax
     <link rel="stylesheet" href="/das/css/?f=jquery-ui.css&f=kwsearch.css" />
     <script src="/das/js/?f=jquery.min.js" type="text/javascript"></script>
@@ -11,27 +32,35 @@
     </script>
     <script src="/das/js/?f=jquery-ui.js" type="text/javascript"></script>
 
+     <!--
     <b>Your input  does not follow DAS query language.<br />
-       Consider these query propositions...</b><br />
+       Consider these query propositions...</b><br /> -->
+
+
+    <b>Did you mean any of queries below...?</b><br />
+    <!-- (can't interpret your query)<br /> -->
 #end if
 
 <div id="kws-results-container">
 
+
     #if not $is_ajax
     <div id="kws-entry-points">
+
         <h4>Color-coding:</h4>
         blue -  entity to be retrieved<br />
         green - filter  (daskey, as input parameter)<br />
         red - expensive filter (daskey, must retrieve all and filter afterwards)
         <br />
 
+        <!--
         <h4>How your query was interpreted ...</h4>
         <p>You wonder why do you get such propositions? Here is how we interpret your query...<br />
             Specify below what exactly you meant, and improve the results...</p>
 
         [entry_points]
 
-
+        -->
 
     </div>
     #end if
@@ -39,20 +68,7 @@
 
     <div id="kws-results-listing"> <!-- main div -->
 
-        #if $hi_score_result_types
 
-            <div class="select-result-type">
-                    <span class="tooltip">Are you searching for:
-                        <span class="classic">You may filter suggestions by the entity they return</span></span>
-                            &nbsp;<span class="rt-filters">
-                                #for index, rt in enumerate($hi_score_result_types):
-#if index != 0 then ', &nbsp;' else '&nbsp;'
-<a href="javascript: filterByResultType('$rt', this)">$rt</a>#slurp
-                                #end for
-                            </span>
-                </div>
-
-        #end if
 
 
         $msg

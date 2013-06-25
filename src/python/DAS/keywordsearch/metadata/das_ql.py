@@ -1,3 +1,10 @@
+"""
+defines DASQL and keyword search features, e.g. what shall be considered as:
+* word
+* simple operators
+* aggregation operators (not implemented)
+
+"""
 __author__ = 'vidma'
 
 import itertools
@@ -77,7 +84,7 @@ for op in aggr_operators:
 
 
 def flatten(listOfLists):
-    'Flatten one level of nesting'
+    """Flatten one level of nesting"""
 
     return itertools.chain.from_iterable(listOfLists)
 

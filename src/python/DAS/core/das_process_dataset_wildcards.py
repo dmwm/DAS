@@ -52,15 +52,17 @@ def substitute_multiple(target, replacements, to_replace ='*',):
 
 
 
-def get_global_dbs_mngr(update_required=False):
+def get_global_dbs_mngr(update_required=False, inst='cms_dbs_prod_global'):
     """
     Gets a new instance of DBSDaemon for global DBS for testing purposes.
 
     """
+    #DAS.web.dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART = 1
+    #DAS.web.dbs_daemon.SKIP_UPDATES = 1
 
     dburi = 'localhost:8230'
     main_dbs_url = \
-            'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
+            'http://cmsdbsprod.cern.ch/%(inst)s/servlet/DBSServlet' % locals()
     # TODO: update if only needed; access dasconfig
     # main_dbs_url = self.dasconfig['dbs']['dbs_global_url']
 
