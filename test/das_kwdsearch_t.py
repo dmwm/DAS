@@ -282,7 +282,8 @@ class TestDASKeywordSearch(unittest.TestCase):
                                'run run=20853 | grep run.bfield' )
 
         self.assertQueryResult('when  was run=20853 taken?',
-                               'run=20853 | grep run.start_time, run.end_time')
+                               ['run=20853 | grep run.start_time',
+                                'run=20853 | grep run.creation_time'])
 
         self.assertQueryResult('administrator email of all T1 sites',
                                'site site=*T1* | grep site.admin.email, site.name',
@@ -346,7 +347,8 @@ class TestDASKeywordSearch(unittest.TestCase):
                                query_type='projection')
 
     def test_result_field_selections_4(self):
-
+        # TODO: this is example of field that is named like an aggregator
+        # number of smf... sum, count()...
         self.assertQueryResult('number of lumis in run 176304',
                                'summary run=176304 | grep summary.nlumis',
                                query_type='projection')
@@ -420,9 +422,9 @@ class TestDASKeywordSearch(unittest.TestCase):
     def test_basic_queries_1(self):
         # it is actually fine, because name is very common term, so we don't want (and we dont get a filter)
         self.assertQueryResult('name of vidmasze@cern.ch',
-                               ['user user=vidmasze@cern.ch | grep user.forename',
-                                'user user=vidmasze@cern.ch | grep user.surname'],
-                               query_type='projection_ambiguous')
+                            ['user user=vidmasze@cern.ch | grep user.name',
+                             'user user=vidmasze@cern.ch | grep user.surname'],
+                            query_type='projection_ambiguous')
 
     def test_basic_queries_2(self):
         self.assertQueryResult('last name of vidmasze@cern.ch', 'user user=vidmasze@cern.ch | grep user.surname',

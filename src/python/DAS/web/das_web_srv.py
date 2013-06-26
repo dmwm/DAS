@@ -12,7 +12,6 @@ __author__ = "Valentin Kuznetsov"
 import os
 import re
 import time
-import thread
 import cherrypy
 import threading
 
@@ -20,7 +19,7 @@ from datetime import date
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
-from pymongo.errors import AutoReconnect
+from pymongo.errors import AutoReconnect, ConnectionFailure
 import urllib
 import copy
 
@@ -51,11 +50,10 @@ from DAS.web.help_cards import help_cards
 from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
-from DAS.services.sitedb2.sitedb2_service import SiteDBService
 from DAS.utils.global_scope import SERVICES
+from DAS.core.das_exceptions import WildcardMultipleMatchesException
 import DAS.utils.jsonwrapper as json
 
-from DAS.core.das_query import WildcardMultipleMatchesException
 from DAS.core.das_query import WildcardMatchingException
 import urllib
 
@@ -142,6 +140,7 @@ class DASWebService(DASWebManager):
         self.dbs_global  = None # defined at run-time via self.init()
         self.dataset_daemon = config.get('dbs_daemon', False)
         self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
+        self.daskeyslist = [] # list of DAS keys
         self.init()
 
         # Monitoring thread which performs auto-reconnection
@@ -162,21 +161,21 @@ class DASWebService(DASWebManager):
         """Start DBS daemon if it is requested via DAS configuration"""
         try:
             main_dbs_url = self.dbs_url
-            self.dbs_urls = []
-            print "\n### DBS URL:", self.dbs_url
+            dbs_urls = []
+            print "### DBS URL:", self.dbs_url
             print "### DBS instances:", self.dbs_instances
             if  not self.dbs_url or not self.dbs_instances:
                 return # just quit
             for inst in self.dbs_instances:
-                self.dbs_urls.append(\
-                        main_dbs_url.replace(self.dbs_global, inst))
+                dbs_urls.append(\
+                        (main_dbs_url.replace(self.dbs_global, inst), inst))
             interval  = config.get('dbs_daemon_interval', 3600)
             dbsexpire = config.get('dbs_daemon_expire', 3600)
             dbs_config  = {'expire': dbsexpire}
             if  self.dataset_daemon:
-                for dbs_url in self.dbs_urls:
+                for dbs_url, inst in dbs_urls:
                     dbsmgr = DBSDaemon(dbs_url, self.dburi, dbs_config)
-                    self.dbsmgr[dbs_url] = dbsmgr
+                    self.dbsmgr[(dbs_url, inst)] = dbsmgr
                     def dbs_updater(_dbsmgr, interval):
                         """DBS updater daemon"""
                         while True:
@@ -206,18 +205,23 @@ class DASWebService(DASWebManager):
             self.dbs_global = self.dasmapping.dbs_global_instance()
             self.dbs_instances = self.dasmapping.dbs_instances()
             self.dasmapping.init_presentationcache()
-            self.colors = {}
+            self.colors = {'das':gen_color('das')}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
-            self.sitedbmgr = SERVICES.get('sitedb2', None) # SiteDB from global scope
+            # get SiteDB from global scope
+            self.sitedbmgr = SERVICES.get('sitedb2', None)
             # Start DBS daemon
             if  self.dataset_daemon:
                 self.dbs_daemon(self.dasconfig['web_server'])
-        except Exception as ConnectionFailure:
+            if  not self.daskeyslist:
+                keylist = [r for r in self.dasmapping.das_presentation_map()]
+                keylist.sort(key=lambda r: r['das'])
+                self.daskeyslist = keylist
+        except ConnectionFailure as _err:
             tstamp = dastimestamp('')
-            thread = threading.current_thread()
+            mythr  = threading.current_thread()
             print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
-                    % (thread.name, thread.ident, tstamp)
+                    % (mythr.name, mythr.ident, tstamp)
         except Exception as exc:
             print_exc(exc)
             self.dasmgr  = None
@@ -302,7 +306,8 @@ class DASWebService(DASWebManager):
         highlight = kwargs.get('highlight', None)
         guide = self.templatepage('dbsql_vs_dasql', 
                     operators=', '.join(das_operators()))
-        page = self.templatepage('das_faq', guide=guide,
+        daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
+        page = self.templatepage('das_faq', guide=guide, daskeys=daskeys,
                 section=section, highlight=highlight,
                 operators=', '.join(das_operators()), 
                 aggregators=', '.join(das_aggregators()))
@@ -579,22 +584,23 @@ class DASWebService(DASWebManager):
                 return self.dbsmgr[dbs_urls[0]]
         return None
 
+        kwargs['input'] = new_input
 
 
 
-    def _get_dbsmgr_for_db_instance(self, str_dbsinst):
+    def _get_dbsmgr(self, inst):
         """
         Given a string representation of DBS instance, returns DBSManager
         instance which "knows" how to look up datasets
-        (further for performance reasons of searching by wildcard and substring,
-        we may want to store then even outside MongoDB).
         """
-        # TODO: instance selection shall be more clean
+        mgr = None
+        # instance selection shall be more clean
         if  self.dataset_daemon:
-            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(str_dbsinst) != -1]
-            if  len(dbs_urls) == 1:
-                return self.dbsmgr[dbs_urls[0]]
-        return None
+            for dbs_url, dbs_inst in self.dbsmgr.keys():
+                if  dbs_inst == inst:
+                    mgr = self.dbsmgr[(dbs_url, dbs_inst)]
+                    return mgr
+        return mgr
 
 
     def generate_dasquery(self, uinput, inst, html_error=True):
@@ -617,39 +623,41 @@ class DASWebService(DASWebManager):
         # wrap it for upper layer (web interface)
         try:
             dasquery = DASQuery(uinput, instance=inst,
-                    active_dbsmgr = self._get_dbsmgr_for_db_instance(inst))
+                    active_dbsmgr = self._get_dbsmgr(inst))
         except Exception as err:
-            # allow html in the exception message
-            exc_message = str(err)
-            if  isinstance(err.message, HtmlString):
-                exc_message = err.message
-
-            # Wildcard exception has to be processed here,
-            # because only this class knows about Web UI!
+            # process Wildcard exception separately
             if  isinstance(err, WildcardMultipleMatchesException):
-                options = []
-                for dpat, query in err.options.items():
-                    # TODO: get view and limit
-                    params = cherrypy.request.params.copy()
-                    params['input'] = query
-                    das_url = '/das/request?' + urllib.urlencode(params)
-                    make_link_to_query = \
-                        lambda q: "<a href='%s'>%s</a>"\
-                           % (das_url,  q.replace(dpat, '<b>%s</b>' % dpat))
-                    options.append(make_link_to_query(query))
+                emsg  = 'WildcardMultipleMatchesException, uinput=%s. ' % uinput
+                emsg += str(err).replace('\n', '')
+                das_parser_error(uinput, emsg)
+                suggest = err.options.values
 
-                exc_message = HtmlString(err.message + '<br>\n'.join(options))
-            #das_parser_error(uinput, 'WildcardMultipleMatchedException')
-            #return 1, helper(exc_message, html_error)
+                if html_error:
+                    # standard html mode
+                    guide = self.templatepage('dbsql_vs_dasql',
+                                operators=', '.join(das_operators()))
+
+                    page = self.templatepage('das_wildcard_err', error=str(err),
+                            base=self.base, guide=guide, suggest=suggest)
+                else:
+                    # text mode
+                    page = self.templatepage('das_wildcard_err_txt',
+                                base=self.base, error=str(err), suggest=suggest)
+
 
             # Keyword Search
             if not isinstance(err, WildcardMatchingException):
                 return 1, KeywordSearchHandler.handle_search(self,
                     query=uinput, inst=inst, initial_exc_message = err.message,
-                    dbsmngr = self._get_dbsmgr_for_db_instance(inst))
+                    dbsmngr = self._get_dbsmgr(inst))
 
-            return 1, helper(das_parser_error(uinput, exc_message), html_error)
+            #return 1, helper(das_parser_error(uinput, exc_message), html_error)
 
+
+            else:
+                das_parser_error(uinput, str(type(err)))
+                page = helper(str(err), html_error)
+            return 1, page
 
         fields = dasquery.mongo_query.get('fields', [])
         if  not fields:
@@ -680,8 +688,8 @@ class DASWebService(DASWebManager):
                 print_exc(exc)
                 return 1, helper(msg, html_error)
             if  not service_map:
-                msg  = "None of the API's registered in DAS "
-                msg += "can resolve this query"
+                msg  = "Unable to resolve service_map for given DAS query %s" \
+                        % dasquery
                 return 1, helper(msg, html_error)
         return 0, dasquery
 
@@ -706,8 +714,9 @@ class DASWebService(DASWebManager):
             instance = self.dbs_global
         cards = self.templatepage('das_cards', base=self.base, show=cards, \
                 width=900, height=220, cards=help_cards(self.base))
+        daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
         page  = self.templatepage('das_searchform', input=uinput, \
-                init_dbses=list(self.dbs_instances), \
+                init_dbses=list(self.dbs_instances), daskeys=daskeys, \
                 base=self.base, instance=instance, view=view, cards=cards)
         return page
 
@@ -846,6 +855,13 @@ class DASWebService(DASWebManager):
             nres = self.dasmgr.nresults(dasquery, coll)
             data = \
                 self.dasmgr.get_from_cache(dasquery, idx, limit)
+            if  dasquery.aggregators:
+                # aggregators split DAS record into sub-system and then
+                # apply aggregator functions, therefore we need to correctly
+                # account for nresults. Resolve generator into list and take
+                # its length as nresults value.
+                data = [r for r in data]
+                nres = len(data)
             head.update({'status':'ok', 'nresults':nres,
                          'ctime': time.time()-time0, 'dasquery': dasquery})
         except Exception as exc:
@@ -876,6 +892,31 @@ class DASWebService(DASWebManager):
         form = self.form(uinput)
         return self.page(form + page)
 
+
+    def _is_web_request(self, view):
+        """
+        returns whether the current view mode is not web
+        """
+
+        # first, check for explicit output type (view)
+
+        if view in ['json', 'xml', 'plain']:
+            return False
+
+        # check accept header - e.g. das client only provides accept header
+        accepts = cherrypy.request.headers.elements('Accept')
+        non_html_accepts = ['application/json']
+        other_accepted = [a for a in accepts
+                          if a.value not in non_html_accepts]
+
+        # if only non html content types are accepted we are in non html mode
+        if not other_accepted and accepts:
+            return  False
+
+        return True
+
+
+
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def cache(self, **kwargs):
@@ -899,14 +940,24 @@ class DASWebService(DASWebManager):
         pid    = kwargs.get('pid', '')
         inst   = kwargs.get('instance', self.dbs_global)
         uinput = kwargs.get('input', '')
+        view = kwargs.get('view', 'list')
+
         data   = []
-        check, content = self.generate_dasquery(uinput, inst)
+
+        # textual views need text only error messages...
+        check, content = self.generate_dasquery(uinput, inst,
+                              html_error=self._is_web_request(view))
         if  check:
             head = dict(timestamp=time.time())
             head.update({'status': 'fail',
-                         'reason': 'Fail to create DASQuery object',
+                         'reason': 'Can not interpret the query'+ \
+                                   ' (while creating DASQuery)',
                          'ctime': 0})
+            if not self._is_web_request(view):
+                head['error_details'] = content
+                head['reason'] = head['reason'] + '\n\n' + content
             return self.datastream(dict(head=head, data=data))
+
         dasquery = content # returned content is valid DAS query
         status, _qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
@@ -964,9 +1015,14 @@ class DASWebService(DASWebManager):
                 if  kwargs.has_key('limit'):
                     del kwargs['limit']
             if  view in ['json', 'xml', 'plain'] and complete_msg:
-                page = 'Request comlpeted. Reload the page ...'
+                page = 'Request completed. Reload the page ...'
             else:
                 head, data = self.get_data(kwargs)
+
+                allowed_views = ['list', 'table', 'plain', 'xml', 'json']
+                if view not in allowed_views:
+                    raise
+
                 func = getattr(self, view + "view")
                 page = func(head, data)
         except HTTPError as _err:
@@ -1040,13 +1096,7 @@ class DASWebService(DASWebManager):
 
         initial_das_query = DASQuery(copy.deepcopy(dasquery.mongo_query))
 
-        # update filters of DASQuery to include spec fields, this is useful
-        # for end-users since DAS web UI always shows primary key
-        # Please note, this is not done for CLI requests, where users
-        # are more explicit with their intention
 
-
-        dasquery.update_filters()
 
         status, _qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
@@ -1161,14 +1211,12 @@ class DASWebService(DASWebManager):
         dataset = [r for r in result if r['value'].find('dataset=')!=-1]
         dbsinst = kwargs.get('dbs_instance', self.dbs_global)
         if  self.dataset_daemon and len(dataset):
-            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(dbsinst) != -1]
-            if  len(dbs_urls) == 1:
-                dbsmgr = self.dbsmgr[dbs_urls[0]]
-                if  query.find('dataset=') != -1:
-                    query = query.replace('dataset=', '')
-                for row in dbsmgr.find(query):
-                    result.append({'css': 'ac-info',
-                                   'value': 'dataset=%s' % row,
-                                   'info': 'dataset'})
+            dbsmgr = self._get_dbsmgr(dbsinst)
+            if  query.find('dataset=') != -1:
+                query = query.replace('dataset=', '')
+            for row in dbsmgr.find(query):
+                result.append({'css': 'ac-info',
+                               'value': 'dataset=%s' % row,
+                               'info': 'dataset'})
         return result
 

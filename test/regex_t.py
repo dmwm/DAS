@@ -8,9 +8,11 @@ Unit test for DAS core module
 import unittest
 from DAS.utils.regex import ip_address_pattern, last_time_pattern, \
 date_yyyymmdd_pattern, key_attrib_pattern, cms_tier_pattern, \
-float_number_pattern, int_number_pattern, phedex_tier_pattern, \
+float_number_pattern, int_number_pattern, \
 se_pattern, site_pattern, web_arg_pattern, number_pattern,\
 last_key_pattern, unix_time_pattern
+
+from DAS.utils.regex_daskeys import  phedex_tier_pattern
 
 class testDASCore(unittest.TestCase):
     """

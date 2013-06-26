@@ -41,7 +41,6 @@ class DASAbstractService(object):
             title             = 'DASAbstactService_%s' % self.name
             self.logger       = PrintManager(title, self.verbose)
             self.dasmapping   = config['dasmapping']
-            self.analytics    = config['dasanalytics']
             self.write2cache  = config.get('write_cache', True)
             self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
@@ -173,24 +172,16 @@ class DASAbstractService(object):
 
     def write_to_cache(self, dasquery, expire, url, api, args, result, ctime):
         """
-        Write provided result set into DAS cache. Update analytics
-        db appropriately.
+        Write provided result set into DAS cache.
         """
         if  not self.write2cache:
             return
-        self.analytics.add_api(self.name, dasquery.mongo_query, api, args)
-        msg  = 'added to Analytics DB'
-        msg += ' query=%s, api=%s, args=%s' % (dasquery, api, args)
-        self.logger.debug(msg)
-        header  = dasheader(self.name, dasquery, expire, api, url, ctime)
-        header['lookup_keys'] = self.lookup_keys(api)
-        header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
-
-        # check that apicall record is present in analytics DB
-        self.analytics.insert_apicall(self.name, dasquery.mongo_query,
-                                      url, api, args, expire)
 
         # update the cache
+        header  = dasheader(self.name, dasquery, expire, api, url)
+        header['lookup_keys'] = self.lookup_keys(api)
+        header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
+        header['ctime'] = ctime
         self.localcache.update_cache(dasquery, result, header)
 
         msg  = 'cache has been updated,\n'
@@ -205,40 +196,6 @@ class DASAbstractService(object):
         to pass to listPrimaryDatasets as primary_dataset pattern.
         """
         pass
-
-    def pass_apicall(self, dasquery, url, api, api_params):
-        """
-        Filter provided apicall wrt existing apicall records in Analytics DB.
-        """
-        self.analytics.remove_expired()
-        msg  = 'API=%s, args=%s' % (api, api_params)
-        for row in self.analytics.list_apicalls(url=url, api=api):
-            input_query = {'spec':api_params}
-            exist_query = {'spec':row['apicall']['api_params']}
-            if  compare_specs(input_query, exist_query):
-                msg += '\nwill re-use existing api call with args=%s, query=%s'\
-                % (row['apicall']['api_params'], exist_query)
-                self.logger.info(msg)
-                try:
-                    # update DAS cache with empty result set
-                    args = self.inspect_params(api, api_params)
-                    cond   = {'das.qhash': row['apicall']['qhash']}
-                    record = self.localcache.col.find_one(cond)
-                    if  record and record.has_key('das') and \
-                        record['das'].has_key('expire'):
-                        expire = record['das']['expire']
-                        self.write_to_cache(\
-                                dasquery, expire, url, api, args, [], 0)
-                except Exception as exc:
-                    print_exc(exc)
-                    msg  = 'failed api %s\n' % api
-                    msg += 'input query %s\n' % input_query
-                    msg += 'existing query %s\n' % exist_query
-                    msg += 'Unable to look-up existing query and extract '
-                    msg += 'expire timestamp'
-                    raise Exception(msg)
-                return False
-        return True
 
     def lookup_keys(self, api):
         """
@@ -266,14 +223,12 @@ class DASAbstractService(object):
                         maxval = int(val[-1])
                         args[key] = range(minval, maxval)
                     elif oper == '$lt':
-#                        maxval = int(val) - 1
                         maxval = int(val)
                         args[key] = maxval
                     elif oper == '$lte':
                         maxval = int(val)
                         args[key] = maxval
                     elif oper == '$gt':
-#                        minval = int(val) + 1
                         minval = int(val)
                         args[key] = minval
                     elif oper == '$gte':
@@ -323,8 +278,6 @@ class DASAbstractService(object):
                         if  key != 'results':
                             das_dict[key] = val
                     row = row['results']
-                    self.analytics.update_apicall(\
-                        dasquery.mongo_query, das_dict)
                 if  isinstance(row, list):
                     for item in row:
                         if  item.has_key(prim_key):
@@ -460,6 +413,10 @@ class DASAbstractService(object):
             return
         jobs = []
         for url, api, args, dformat, expire in genrows:
+            # insert DAS query record for given API
+            header = dasheader(self.name, dasquery, expire, api, url)
+            self.localcache.insert_query_record(dasquery, header)
+            # fetch DAS data records
             if  self.multitask:
                 jobs.append(self.taskmgr.spawn(self.apicall, \
                             dasquery, url, api, args, dformat, expire))
@@ -483,8 +440,6 @@ class DASAbstractService(object):
         try:
             args    = self.inspect_params(api, args)
             time0   = time.time()
-            self.analytics.insert_apicall(self.name, dasquery.mongo_query, url,
-                                          api, args, expire)
             headers = make_headers(dformat)
             datastream, expire = self.getdata(url, args, expire, headers)
             self.logger.info("%s expire %s" % (api, expire))
@@ -575,10 +530,11 @@ class DASAbstractService(object):
                         val   = val.replace('*', wild)
                     args[key] = val
 
-            prim_key = self.dasmapping.primary_key(self.name, api)
-            if  prim_key not in skeys:
-                msg = "--- rejects API %s, primary_key %s is not selected"\
-                        % (api, prim_key)
+            # compare query selection keys with API look-up keys
+            api_lkeys = self.dasmapping.api_lkeys(self.name, api)
+            if  set(api_lkeys) != set(skeys):
+                msg = "--- rejects API %s, api_lkeys(%s)!=skeys(%s)"\
+                        % (api, api_lkeys, skeys)
                 self.logger.info(msg)
                 continue
 

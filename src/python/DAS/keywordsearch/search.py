@@ -71,6 +71,7 @@ def tokenize_query(query, DEBUG=False):
     return query, tokens
 
 
+
 def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     """
     Performs keyword search
@@ -85,7 +86,8 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     keywords = [kw.strip() for kw in tokens
                 if kw.strip()]
 
-    if DEBUG: print '============= Q: %s, tokens: %s ' % (query, str(tokens))
+    if MINIMAL_DEBUG:
+        print '============= Q: %s, tokens: %s ' % (query, str(tokens))
 
     chunks, schema_ws, values_ws = get_entry_points(keywords, DEBUG)
 

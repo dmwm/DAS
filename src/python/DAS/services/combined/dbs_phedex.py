@@ -230,7 +230,7 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
     conn_interval = 3 # default connection failure sleep interval
     threshold = 60 # 1 minute is threashold to check connections
     time0 = time.time()
-    print "\n### Start dbs_phedex worker"
+    print "### Start dbs_phedex worker"
     while True:
         if  conn_interval > threshold:
             conn_interval = threshold
@@ -262,7 +262,7 @@ class DBSPhedexService(object):
         self.dasconfig  = das_readconfig()
         self.uri        = self.dasconfig['mongodb']['dburi']
         self.urls       = None # defined at run-time via self.init()
-        self.expire     = None # defined at run-time via self.init()
+        self.expire     = 60   # defined at run-time via self.init()
         self.coll       = None # defined at run-time via self.init()
         self.worker_thr = None # defined at run-time via self.init()
         self.init()
@@ -282,8 +282,7 @@ class DBSPhedexService(object):
                 create_indexes(self.coll, [index])
             dasmapping   = DASMapping(self.dasconfig)
             service_name = self.config.get('name', 'combined')
-            service_api  = \
-                    self.config.get('api', 'combined_dataset4site_release')
+            service_api  = self.config.get('api', 'dataset4site_release')
             mapping      = dasmapping.servicemap(service_name)
             self.urls    = mapping[service_api]['services']
             self.expire  = mapping[service_api]['expire']
@@ -291,12 +290,11 @@ class DBSPhedexService(object):
                 # Worker thread which update dbs/phedex DB
                 self.worker_thr = start_new_thread('dbs_phedex_worker', worker, \
                 (self.urls, self.uri, self.dbname, self.collname, self.expire))
-#                self.worker_thr = thread.start_new_thread(worker, \
-#                (self.urls, self.uri, self.dbname, self.collname, self.expire))
-#                set_thread_name(self.worker_thr, 'dbs_phedex_worker')
+            print "### DBSPhedexService:init started successfully"
         except Exception as exc:
+            print "### Fail DBSPhedexService:init\n", str(exc)
             self.urls       = None
-            self.expire     = None
+            self.expire     = 60
             self.coll       = None
             self.worker_thr = None
 

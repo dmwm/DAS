@@ -18,29 +18,43 @@ We use the following definitions for dataset presence:
 - replica_fraction (defined in services/phedex/phedex_service.py)
   is a total number of files at a site X
   divided by total number of in all block at this site
+
+See discussion on
+https://hypernews.cern.ch/HyperNews/CMS/get/comp-ops/1057/1/1/2/1/1.html
 """
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import time
+import urllib
+try:
+    import cStringIO as StringIO
+except:
+    import StringIO
+
+# DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
-from DAS.utils.utils import json_parser, get_key_cert, dastimestamp
+from DAS.utils.utils import json_parser, dastimestamp, get_key_cert
+from DAS.utils.utils import print_exc
 from DAS.utils.ddict import DotDict
-from DAS.utils.utils import expire_timestamp, print_exc
 from DAS.utils.global_scope import SERVICES
 from DAS.utils.url_utils import getdata
+from DAS.utils.regex import phedex_node_pattern, se_pattern, int_number_pattern
+from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
+from DAS.services.dbs.dbs_service import dbs_find as dbs2_find
+from DAS.services.dbs3.dbs3_service import dbs_find as dbs3_find
+
+CKEY, CERT = get_key_cert()
 
 #
 # NOTE:
 # DBS3 will provide datasets API, once this API will support POST request
-# and multiple datasets, I need to epxlore revert logic for
-# combined_dataset4site
+# and multiple datasets, I need to epxlore revert logic for dataset4site
 # API. First find all blocks at given site, then strip off dataset info
 # and ask DBS to provide dataset info for found dataset.
 #
-
-CKEY, CERT = get_key_cert()
 
 def parse_data(data):
     """
@@ -59,6 +73,35 @@ def which_dbs(dbs_url):
     if  dbs_url.find('servlet') != -1:
         return 'dbs'
     return 'dbs3'
+
+def phedex_files(phedex_url, kwds):
+    "Get file information from Phedex"
+    params = dict(kwds) # parameters to be send to Phedex
+    site = kwds.get('site', None)
+    if  site and phedex_node_pattern.match(site):
+        if  not site.endswith('*'):
+            # this will account to look-up site names w/o _Buffer or _MSS
+            site += '*'
+        params.update({'node': site})
+        params.pop('site')
+    elif site and se_pattern.match(site):
+        params.update({'se': site})
+        params.pop('site')
+    else:
+        return
+    expire = 600 # set some expire since we're not going to use it
+    headers = {'Accept': 'text/xml'}
+    source, expire = \
+        getdata(phedex_url, params, headers, expire, ckey=CKEY, cert=CERT)
+    tags = 'block.file.name'
+    prim_key = 'block'
+    for rec in xml_parser(source, prim_key, tags):
+        ddict = DotDict(rec)
+        files = ddict.get('block.file')
+        if  not isinstance(files, list):
+            files = [files]
+        for row in files:
+            yield row['name']
 
 def dbs_dataset4site_release(dbs_url, release):
     "Get dataset for given site and release"
@@ -79,7 +122,7 @@ def dbs_dataset4site_release(dbs_url, release):
             elif row.has_key('error'):
                 err = row.get('reason', None)
                 err = err if err else row['error']
-                yield 'DBS error: %' % err
+                yield 'DBS error: %s' % err
     else:
         # we call datasets?release=release to get list of datasets
         dbs_url += '/datasets'
@@ -100,8 +143,8 @@ def dataset_summary(dbs_url, dataset):
     expire = 600 # set some expire since we're not going to use it
     if  which_dbs(dbs_url) == 'dbs':
         # DBS2 call
-        query = 'find count(file.name), count(block.name) where dataset=%s'\
-                 % dataset
+        query  = 'find count(file.name), count(block.name)'
+        query += ' where dataset=%s and dataset.status=*' % dataset
         dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
                     'query':query}
         headers = {'Accept': 'text/xml'}
@@ -114,10 +157,13 @@ def dataset_summary(dbs_url, dataset):
                 totblocks = row['dataset']['count_block.name']
                 return totblocks, totfiles
             elif row.has_key('error'):
-                return 0, 0
+                raise Exception(row.get('reason', row['error']))
+        # if we're here we didn't find a dataset, throw the error
+        msg = 'empty set'
+        raise Exception(msg)
     else:
         # we call filesummaries?dataset=dataset to get number of files/blks
-        dbs_url += dbs_url + '/filesummaries'
+        dbs_url += '/filesummaries'
         dbs_args = {'dataset': dataset}
         headers = {'Accept': 'application/json;text/json'}
         source, expire = \
@@ -127,11 +173,18 @@ def dataset_summary(dbs_url, dataset):
             totblocks = row[0]['num_block']
             return totblocks, totfiles
 
-def combined_site4dataset(dbs_url, phedex_api, args, expire):
+def site4dataset(dbs_url, phedex_api, args, expire):
     "Yield site information about given dataset"
     # DBS part
     dataset = args['dataset']
-    totblocks, totfiles = dataset_summary(dbs_url, dataset)
+    try:
+        totblocks, totfiles = dataset_summary(dbs_url, dataset)
+    except Exception as err:
+        error  = str(err)
+        reason = "Can't find #block, #files info in DBS for dataset=%s" \
+                % dataset
+        yield {'site': {'error': error, 'reason': reason}}
+        return
     # Phedex part
     phedex_args = {'dataset':args['dataset']}
     headers = {'Accept': 'text/xml'}
@@ -139,7 +192,6 @@ def combined_site4dataset(dbs_url, phedex_api, args, expire):
         getdata(phedex_api, phedex_args, headers, expire, post=True)
     prim_key = 'block'
     tags = 'block.replica.node'
-    found = {}
     site_info = {}
     for rec in xml_parser(source, prim_key, tags):
         ddict = DotDict(rec)
@@ -204,7 +256,7 @@ class CombinedService(DASAbstractService):
         phedex_url = self.map[api]['services']['phedex']
         # make phedex_api from url, but use xml version for processing
         phedex_api = phedex_url.replace('/json/', '/xml/') + '/blockReplicas'
-        if  api == 'combined_dataset4site_release':
+        if  api == 'dataset4site_release':
             # DBS part
             datasets = set()
             for row in dbs_dataset4site_release(dbs_url, args['release']):
@@ -240,9 +292,9 @@ class CombinedService(DASAbstractService):
                 yield {'dataset':record}
             del datasets
             del found
-        if  api == 'combined_site4dataset':
+        if  api == 'site4dataset':
             try:
-                gen = combined_site4dataset(dbs_url, phedex_api, args, expire)
+                gen = site4dataset(dbs_url, phedex_api, args, expire)
                 for row in gen:
                     yield row
             except Exception as err:
@@ -252,8 +304,27 @@ class CombinedService(DASAbstractService):
                 msg += str(err)
                 row = {'site':{'name':'Fail to look-up site info',
                     'error':msg, 'dataset_fraction': 'N/A',
-                    'block_fraction':'N/A', 'block_completion':'N/A'}, 'error': msg}
+                    'block_fraction':'N/A', 'block_completion':'N/A'},
+                    'error': msg}
                 yield row
+        if  api == 'files4dataset_runs_site' or \
+            api == 'files4block_runs_site':
+            run_value = args.get('run', [])
+            if  isinstance(run_value, dict) and run_value.has_key('$in'):
+                runs = run_value['$in']
+            elif isinstance(run_value, list):
+                runs = run_value
+            else:
+                if  int_number_pattern.match(str(run_value)):
+                    runs = [run_value]
+                else:
+                    runs = []
+            args.update({'runs': runs})
+            files = dbs_find('file', dbs_url, args)
+            site  = args.get('site')
+            phedex_api = phedex_url.replace('/json/', '/xml/') + '/fileReplicas'
+            for fname in files4site(phedex_api, files, site):
+                yield {'file':{'name':fname}}
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
         """
@@ -264,24 +335,17 @@ class CombinedService(DASAbstractService):
         # therefore the expire time stamp will not be changed, since
         # helper function will yield results
         time0 = time.time()
-        if  api == 'combined_dataset4site_release' or \
-            api == 'combined_site4dataset':
+        if  api == 'dataset4site_release' or \
+            api == 'site4dataset' or 'files4dataset_runs_site':
             genrows = self.helper(api, args, expire)
         # here I use directly the call to the service which returns
         # proper expire timestamp. Moreover I use HTTP header to look
         # at expires and adjust my expire parameter accordingly
-        if  api == 'combined_dataset4site':
+        if  api == 'dataset4site':
             headers = {'Accept': 'application/json;text/json'}
             datastream, expire = getdata(url, args, headers, expire)
-            try: # get HTTP header and look for Expires
-                e_time = expire_timestamp(\
-                    datastream.info().__dict__['dict']['expires'])
-                if  e_time > time.time():
-                    expire = e_time
-            except:
-                pass
             genrows = parse_data(datastream)
-        if  api == 'combined_lumi4dataset':
+        if  api == 'lumi4dataset':
             headers = {'Accept': 'application/json;text/json'}
             data, expire = getdata(url, args, headers, expire)
             genrows = json_parser(data, None)
@@ -296,3 +360,47 @@ class CombinedService(DASAbstractService):
                     args, dasrows, ctime)
         except Exception as exc:
             print_exc(exc)
+
+def dbs_find(entity, url, kwds):
+    "Find given DBS entity for given set of parameters"
+    if  which_dbs(url) == 'dbs':
+        gen = dbs2_find(entity, url, kwds)
+    else:
+        gen = dbs3_find(entity, url, kwds)
+    for row in gen:
+        yield row
+
+def files4site(phedex_url, files, site):
+    "Find site for given files"
+
+    params = {}
+    if  site and phedex_node_pattern.match(site):
+        if  not site.endswith('*'):
+            # this will account to look-up site names w/o _Buffer or _MSS
+            site += '*'
+        params.update({'node': site})
+    elif site and se_pattern.match(site):
+        params.update({'se': site})
+    else:
+        return
+    sname = urllib.urlencode(params)
+    urls = []
+    for fname in files:
+        url = '%s?lfn=%s&%s' % (phedex_url, fname, sname)
+        urls.append(url)
+    tags = 'block.replica.node'
+    prim_key = 'block'
+    gen = urlfetch_getdata(urls, CKEY, CERT)
+    for rec in gen:
+        if  'error' in rec.keys():
+            # TODO: should handle the error
+            pass
+        else:
+            # convert record string into StringIO for xml_parser
+            source = StringIO.StringIO(rec['data'])
+            for row in xml_parser(source, prim_key, tags):
+                fobj = row['block']['file']
+                fname = fobj['name']
+                replica = fobj['replica']
+                for item in replica:
+                    yield fname

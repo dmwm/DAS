@@ -15,7 +15,7 @@ import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, print_exc, expire_timestamp
 from   DAS.utils.url_utils import getdata
-from   DAS.utils.regex import se_pattern, phedex_tier_pattern
+from   DAS.utils.regex import se_pattern, phedex_node_pattern
 
 def rowdict(columns, row):
     """Convert given row list into dict with column keys"""
@@ -106,7 +106,7 @@ class SiteDBService(DASAbstractService):
                 for rec in row['resources']:
                     if  rec['fqdn'] == site:
                         return row
-            if  phedex_tier_pattern.match(site) and row['name'] == site:
+            if  phedex_node_pattern.match(site) and row['name'] == site:
                 return row
 
     def api_data(self, api):

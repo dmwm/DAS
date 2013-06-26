@@ -3,12 +3,29 @@
 #pylint: disable-msg=W0703,R0902,R0904,R0914
 
 """
-DAS mapping DB module
+DAS mapping DB module. It provides access to DAS API maps. Every map consists
+of the following structure:
+
+.. doctest::
+
+    urn: myApi
+    url: http://a.b.com
+    params: {'file':'required'}
+    lookup: file
+    das_map: [{'das_key':'file, 'rec_key':'file.name', 'api_arg':'file'}]
+
+Here *urn* denotes data-service API, *url, params* are URL and input arguments
+publically available data-service API. The *lookup* attribute represents the
+fields which are accessible to look-up in DAS queries (it can be a list of
+fields) and *das_map* provides actual mapping from DAS key to record key and
+associated api argument. Please note that the first record in *das_map*
+represents DAS primary key.
 """
 
 __author__ = "Valentin Kuznetsov"
 
 import re
+import time
 import threading
 
 # monogo db modules
@@ -18,9 +35,37 @@ from pymongo.errors import ConnectionFailure
 # DAS modules
 from DAS.utils.utils import dastimestamp, print_exc
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
-from DAS.utils.das_db import db_connection, create_indexes, db_monitor
+from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
+
+def db_monitor(uri, func, sleep, reload_map, reload_time):
+    """
+    Check status of MongoDB connection and reload DAS maps once in a while.
+    """
+    time0 = time.time()
+    while True:
+        conn = db_connection(uri)
+        if  not conn or not is_db_alive(uri):
+            try:
+                conn = db_connection(uri)
+                func()
+                if  conn:
+                    print "### db_monitor re-established connection %s" % conn
+                else:
+                    print "### db_monitor, lost connection"
+            except:
+                pass
+        if  conn:
+            if  time.time()-time0 > reload_time:
+                msg = "call %s" % reload_map
+                print dastimestamp(), msg
+                try:
+                    reload_map()
+                except Exception as err:
+                    print dastimestamp('DAS ERROR '), str(err)
+                time0 = time.time()
+        time.sleep(sleep)
 
 class DASMapping(object):
     """
@@ -44,8 +89,12 @@ class DASMapping(object):
 
         # Monitoring thread which performs auto-reconnection to MongoDB
         thname = 'mappingdb_monitor'
-        start_new_thread(thname, db_monitor, (self.dburi, self.init))
+        sleep  = 5
+        reload_time = config['mappingdb'].get('reload_time', 86400)
+        start_new_thread(thname, db_monitor, (self.dburi, self.init, sleep,
+            self.load_maps, reload_time))
 
+        self.apilkeys = {}             # to be filled at run time
         self.keymap = {}               # to be filled at run time
         self.presentationcache = {}    # to be filled at run time
         self.reverse_presentation = {} # to be filled at run time
@@ -55,12 +104,28 @@ class DASMapping(object):
         self.apiinfocache = {}         # to be filled at run time
         self.dbs_global_url = None     # to be determined at run time
         self.dbs_inst_names = None     # to be determined at run time
-        self.init_notationcache()
-        self.init_presentationcache()
+        self.load_maps()
 
     # ===============
     # Management APIs
     # ===============
+    def load_maps(self):
+        "Helper function to reload DAS maps"
+        self.init_apilkeyscache()
+        self.init_notationcache()
+        self.init_presentationcache()
+
+    def init_apilkeyscache(self):
+        "Read DAS maps and initialize apilkeys"
+        for row in self.col.find({}):
+            if  row.has_key('urn'):
+                api = row['urn']
+                system = row['system']
+                lookup = row['lookup']
+                key    = (system, api)
+                for lkey in lookup.split(','):
+                    self.apilkeys.setdefault(key, []).append(lkey)
+
     def init_notationcache(self):
         """
         Initialize notation cache by reading notations.
@@ -95,6 +160,16 @@ class DASMapping(object):
                         self.reverse_presentation[row['ui']] = \
                                 {daskey : {'mapkey': row['das'], 'link': link}}
 
+    def das_presentation_map(self):
+        "Read DAS presentation map"
+        query = {'presentation':{'$ne':None}}
+        data  = self.col.find_one(query)
+        if  data:
+            for daskey, uilist in data.get('presentation', {}).iteritems():
+                for row in uilist:
+                    if  row.has_key('link'):
+                        yield row
+
     def init(self):
         """
         Establish connection to MongoDB back-end and create DB.
@@ -104,6 +179,7 @@ class DASMapping(object):
             if  self.conn:
                 self.dbc  = self.conn[self.dbname]
                 self.col  = self.dbc[self.colname]
+            print "### DASMapping:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
@@ -284,23 +360,50 @@ class DASMapping(object):
     # ============
     # Look-up APIs
     # ============
+    def api_lkeys(self, das_system, api):
+        """
+        Return DAS lookup keys for given das system and api
+        """
+        if  self.apilkeys.has_key((das_system, api)):
+            return self.apilkeys[(das_system, api)]
+        cond = {'system':das_system, 'urn':api}
+        record = self.col.find_one(cond)
+        skeys = record['lookup']
+        if  skeys.find(',') != -1:
+            skeys = skeys.split(',')
+        if  isinstance(skeys, basestring):
+            skeys = [skeys]
+        self.apilkeys[(das_system, api)] = skeys
+        return skeys
+
     def primary_key(self, das_system, urn):
         """
-        Return DAS primary key for provided system and urn
+        Return DAS primary key for provided system and urn. The DAS primary key
+        is a first entry in *lookup* attribute of DAS API record.
         """
         cond = {'system':das_system, 'urn':urn}
         record = self.col.find_one(cond)
-        return record['lookup']
+        pkey = record['lookup']
+        if  pkey.find(',') != -1:
+            pkey = pkey.split(',')[0]
+        return pkey
         
     def primary_mapkey(self, das_system, urn):
         """
-        Return DAS primary map key for provided system and urn
+        Return DAS primary map key for provided system and urn. For example,
+        the file DAS key is mapped to file.name, so this API will return
+        file.name
         """
         cond = {'system':das_system, 'urn':urn}
         record = self.col.find_one(cond)
+        mapkey = []
         for row in record['das_map']:
-            if  row['das_key'] == record['lookup']:
+            lkey = record['lookup']
+            if  lkey.find(',') != -1:
+                lkey = lkey.split(',')[0]
+            if  row['das_key'] == lkey:
                 return row['rec_key']
+        return mapkey
         
     def find_daskey(self, das_system, map_key, value=None):
         """

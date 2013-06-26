@@ -21,7 +21,7 @@ from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import print_exc, getarg, size_format, access
-from DAS.utils.utils import identical_data_records
+from DAS.utils.utils import identical_data_records, dastimestamp, sort_rows
 from DAS.web.utils import das_json, quote, gen_color, not_to_link
 from DAS.web.tools import exposetext
 from DAS.web.das_representation import DASRepresentation
@@ -95,6 +95,7 @@ def add_filter_values(row, filters):
             if  flt.find('<') == -1 and flt.find('>') == -1:
                 val = repr_values(row, flt)
                 page += "<br />Filter <em>%s:</em> %s" % (flt, val)
+    page += '<br/>'
     return page
 
 def tooltip_helper(title):
@@ -164,19 +165,28 @@ def adjust_values(func, gen, links, pkey):
                         % (link, quote(val), quote(val))
             if  isinstance(val, list):
                 value = ', '.join([str(v) for v in val])
-                if  len(set(val)) > 1 and \
+                try:
+                    length = len(set(val))
+                except TypeError: # happens when val list contains a dict
+                    length = len(val)
+                if  length > 1 and \
                     (key.lower().find('number') != -1 or \
                         key.lower().find('size') != -1):
-                    if  pkey != 'lumi.number':
+                    if  key not in ['Luminosity number', 'Run number']:
                         value = '<span %s>%s</span>' % (red, value)
             elif  key.lower().find('size') != -1 and val:
                 value = size_format(val)
-            elif  key.find('Number of ') != -1 and val:
+            elif  key.find('Number of ') != -1 and val and int(val) != 0:
                 value = int(val)
             elif  key.find('Run number') != -1 and val:
                 value = int(val)
             elif  key.find('Lumi') != -1 and val:
                 value = int(val)
+            elif  key.find('Tag') != -1 and val:
+                if  isinstance(val, basestring) and val.lower() == 'unknown':
+                    value = '<span %s>%s</span>' % (red, val)
+                else:
+                    value = val
             elif  key.find('Creation time') != -1 and val:
                 try:
                     value = time.strftime('%d/%b/%Y %H:%M:%S GMT', \
@@ -224,7 +234,8 @@ def adjust_values(func, gen, links, pkey):
         tdict = {}
         for key, val in to_show:
             tdict[key] = val
-        if  set(tdict.keys()) == set(['function', 'result', 'key']):
+        result_keys = ['function', 'result', 'key']
+        if  set(tdict.keys()) & set(result_keys) == set(result_keys):
             page += '%s(%s)=%s' \
                 % (tdict['function'], tdict['key'], tdict['result'])
         else:
@@ -249,7 +260,7 @@ class CMSRepresentation(DASRepresentation):
             self.dbs_global = self.dasmapping.dbs_global_instance()
         else:
             self.dbs_global = None
-        self.colors = {}
+        self.colors = {'das':gen_color('das')}
         for system in self.dasmgr.systems:
             self.colors[system] = gen_color(system)
 
@@ -473,6 +484,8 @@ class CMSRepresentation(DASRepresentation):
             if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
                 try:
                     mkey = pkey.split('.')[0]
+                    if  not row.has_key(mkey):
+                        return page
                     if  isinstance(row[mkey], list):
                         # take first five or less entries from the list to cover
                         # possible aggregated records and extract row keys
@@ -544,6 +557,10 @@ class CMSRepresentation(DASRepresentation):
             fltpage = ''
         return fltpage
 
+    def processing_time(self, dasquery):
+        "Return processing time of DAS query"
+        return self.dasmgr.processing_time(dasquery)
+
     def listview(self, head, data):
         """
         Represent data in list view.
@@ -551,7 +568,6 @@ class CMSRepresentation(DASRepresentation):
         kwargs   = head.get('args')
         uinput   = kwargs.get('input', '')
         total    = head.get('nresults', 0)
-        incache  = head.get('incache')
         apilist  = head.get('apilist')
         dasquery = head.get('dasquery', None)
         if  not dasquery:
@@ -559,14 +575,14 @@ class CMSRepresentation(DASRepresentation):
             dasquery = DASQuery(uinput, instance=inst)
         inst     = dasquery.instance
         filters  = dasquery.filters
-        main     = self.pagination(total, incache, apilist, kwargs)
+        aggrtrs  = dasquery.aggregators
+        main     = self.pagination(total, apilist, kwargs)
         style    = 'white'
         rowkeys  = []
         fltpage  = self.filter_bar(dasquery)
         page     = ''
         old      = None
         dup      = False
-        tstamp   = None
         status   = head.get('status', None)
         if  status == 'fail':
             reason = head.get('reason', '')
@@ -584,12 +600,6 @@ class CMSRepresentation(DASRepresentation):
                 msg  = 'Exception: %s\n' % str(exc)
                 msg += 'Fail to process row\n%s' % str(row)
                 raise Exception(msg)
-            if  not tstamp:
-                try:
-                    oid = ObjectId(mongo_id)
-                    tstamp = time.mktime(oid.generation_time.timetuple())
-                except:
-                    pass
             page += '<div class="%s"><hr class="line" />' % style
             links = []
             pkey  = None
@@ -604,36 +614,47 @@ class CMSRepresentation(DASRepresentation):
                         pval = row[pkey]
                     else:
                         pval = [i for i in DotDict(row).get_values(pkey)]
-                    if  isinstance(pval, list):
-                        if  pval and not isinstance(pval[0], list):
-                            pval = list(set(pval))
-                    else:
-                        pval = list(set(pval))
-                    if  len(pval) == 1:
-                        pval = pval[0]
-                    if  pkey == 'run.run_number' or pkey == 'lumi.number':
-                        if  isinstance(pval, basestring):
-                            pval = int(pval)
-                    if  pval:
-                        page += '%s: ' % lkey.capitalize()
-                        if  lkey == 'parent' or lkey == 'child':
-                            if  str(pval).find('.root') != -1:
-                                lkey = 'file'
-                            else:
-                                lkey = 'dataset'
-                        if  lkey in not_to_link():
-                            page += '%s' % pval
-                        elif  isinstance(pval, list):
-                            page += ', '.join(['<span class="highlight>"'+\
-                                '<a href="/das/request?%s">%s</a></span>'\
-                                % (make_args(lkey, i, inst), i) for i in pval])
+                        if  isinstance(pval, list):
+                            if  pval and not isinstance(pval[0], list):
+                                pval = list(set(pval))
                         else:
-                            args  = make_args(lkey, pval, inst)
-                            page += '<span class="highlight">'+\
-                                '<a href="/das/request?%s">%s</a></span>'\
-                                % (args, pval)
-                    else:
-                        page += '%s: N/A' % lkey.capitalize()
+                            pval = list(set(pval))
+                        if  len(pval) == 1:
+                            pval = pval[0]
+                        if  pkey == 'run.run_number' or pkey == 'lumi.number':
+                            if  isinstance(pval, basestring):
+                                pval = int(pval)
+                except Exception as exc:
+                    msg  = "Fail to extract pval for pkey='%s', lkey='%s'" \
+                            % (pkey, lkey)
+                    msg += "\npval='%s', type(pval)='%s'" % (pval, type(pval))
+                    print msg
+                    print_exc(exc)
+                    pval = 'N/A'
+                try:
+                    if  not filters:
+                        if  pkey == 'summary':
+                            page += 'Summary information:'
+                        elif  pval and pval != 'N/A':
+                            page += '%s: ' % lkey.capitalize()
+                            if  lkey == 'parent' or lkey == 'child':
+                                if  str(pval).find('.root') != -1:
+                                    lkey = 'file'
+                                else:
+                                    lkey = 'dataset'
+                            if  lkey in not_to_link():
+                                page += '%s' % pval
+                            elif  isinstance(pval, list):
+                                page += ', '.join(['<span class="highlight>"'+\
+                                    '<a href="/das/request?%s">%s</a></span>'\
+                                    % (make_args(lkey, i, inst), i) for i in pval])
+                            else:
+                                args  = make_args(lkey, pval, inst)
+                                page += '<span class="highlight">'+\
+                                    '<a href="/das/request?%s">%s</a></span>'\
+                                    % (args, pval)
+                        else:
+                            page += '%s: N/A' % lkey.capitalize()
                     plist = self.dasmgr.mapping.presentation(lkey)
                     linkrec = None
                     for item in plist:
@@ -689,19 +710,26 @@ class CMSRepresentation(DASRepresentation):
             gen   = self.convert2ui(row, pkey)
             if  self.dasmgr:
                 func  = self.dasmgr.mapping.daskey_from_presentation
-                page += add_filter_values(row, filters)
-                page += adjust_values(func, gen, links, pkey)
+                if  filters and not aggrtrs:
+                    page += add_filter_values(row, filters)
+                else:
+                    page += adjust_values(func, gen, links, pkey)
             pad   = ""
             try:
-                systems = self.systems(row['das']['system'])
-                if  row['das']['system'] == ['combined'] or \
-                    row['das']['system'] == [u'combined']:
-                    if  lkey:
-                        rowsystems = DotDict(row).get('%s.combined' % lkey) 
-                        try:
-                            systems = self.systems(rowsystems)
-                        except TypeError as _err:
-                            systems = self.systems(['combined'])
+                if  row.has_key('das'):
+                    systems = self.systems(row['das']['system'])
+                    if  row['das']['system'] == ['combined'] or \
+                        row['das']['system'] == [u'combined']:
+                        if  lkey:
+                            rowsystems = DotDict(row).get('%s.combined' % lkey)
+                            try:
+                                systems = self.systems(rowsystems)
+                            except TypeError as _err:
+                                systems = self.systems(['combined'])
+                else:
+                    systems = "" # no das record
+                    print dastimestamp('DAS ERROR '), \
+                            'record withou DAS key', row
             except KeyError as exc:
                 print_exc(exc)
                 systems = "" # we don't store systems for aggregated records
@@ -723,17 +751,15 @@ class CMSRepresentation(DASRepresentation):
             page += '</div>'
             old = row
         main += fltpage
-        if  dup:
+        if  dup and not dasquery.aggregators:
             main += self.templatepage('das_duplicates', uinput=uinput,
                         instance=inst)
         main += page
-        msg   = ''
-        if  tstamp:
-            try:
-                msg += 'request time: %s sec, ' \
-                        % (time.mktime(time.gmtime())-tstamp)
-            except:
-                pass
+        proc_time = self.processing_time(dasquery)
+        if  proc_time:
+            msg = 'processing time: %5.3f sec, ' % proc_time
+        else:
+            msg   = ''
         msg  += 'cache server time: %5.3f sec' % head['ctime']
         main += '<div align="right">%s</div>' % msg
         return main
@@ -744,13 +770,12 @@ class CMSRepresentation(DASRepresentation):
         """
         kwargs   = head.get('args')
         total    = head.get('nresults', 0)
-        incache  = head.get('incache')
         apilist  = head.get('apilist')
         dasquery = head.get('dasquery')
         filters  = dasquery.filters
         sdir     = getarg(kwargs, 'dir', '')
         titles   = []
-        page     = self.pagination(total, incache, apilist, kwargs)
+        page     = self.pagination(total, apilist, kwargs)
         fltbar   = self.filter_bar(dasquery)
         if  filters:
             for flt in filters:
@@ -862,5 +887,8 @@ class CMSRepresentation(DASRepresentation):
                                 '\n'.join([i.get(att, '') for i in val]) + '\n'
                     except:
                         pass
-        results = '\n'.join(set([r for r in results.split('\n') if r]))
+        # use DAS sort_rows function instead of python set, since we need to
+        # preserve the order of records in final output
+        rows = [r for r in results.split('\n') if r]
+        results = '\n'.join([r for r in sort_rows(rows)])
         return results

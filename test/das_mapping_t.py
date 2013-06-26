@@ -50,7 +50,7 @@ class testDASMapping(unittest.TestCase):
     def test_api(self):
         """test methods for api table"""
         self.mgr.delete_db()
-        self.mgr.create_db()
+        self.mgr.init()
 
         apiversion = 'DBS_2_0_8'
         url     = 'http://a.com'
@@ -148,7 +148,7 @@ class testDASMapping(unittest.TestCase):
 
     def test_presentation(self):
         """test presentation method"""
-        self.mgr.create_db()
+        self.mgr.init()
         self.coll.insert(self.pmap)
         expect = self.pmap['presentation']['block']
         result = self.mgr.presentation('block')
@@ -156,7 +156,7 @@ class testDASMapping(unittest.TestCase):
 
     def test_notations(self):
         """test notations method"""
-        self.mgr.create_db()
+        self.mgr.init()
         system = "test"
         rec = {'notations': [
         {"api_output": "site.resource_element.cms_name", "rec_key": "site.name", "api": ""},

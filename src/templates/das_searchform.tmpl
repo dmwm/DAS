@@ -68,6 +68,9 @@ autocompletion
 <input type="text" name="input" id="input" style="width:100%;" />
 <div id="ac_container"></div>
 </div>
+<span>
+<a href="javascript:FlipTag('das_keys_desc');"><b>Show DAS keys description</b></a>
+</span>
 </form>
 <div class="right">
 <img src="$base/images/mongodb_logo.png" alt="Powered by MongoDB" width="5%" />
@@ -158,6 +161,26 @@ ac_init();
 
 ### Please note the cards are sanitized in das_cards template
 $cards
+<div class="hide" id="das_keys_desc">
+<div class="overlay all-side-shadow">
+<div align="right"><a href="javascript:HideTag('das_keys_desc')"><b>Hide</b></a></div>
+<h3>DAS keys description</h3>
+The following is a list of DAS keys which can be used to form your DAS query
+$daskeys
+</div>
+</div>
+
+<script type="text/javascript">
+function HideDasKeys(e) {
+    var element = Event.element(e);
+    if (e.keyCode == Event.KEY_ESC) {
+        HideTag('das_keys_desc');
+    }
+}
+document.observe('keydown', HideDasKeys);
+// It should observe given tag (code below), but somehow does not
+//\$('das_keys_desc').observe('keydown', HideDasKeys);
+</script>
 
 <div id="response" name="response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
 

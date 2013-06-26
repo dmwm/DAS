@@ -34,13 +34,15 @@ class testDASCore(unittest.TestCase):
     def testAggregators(self):
         """test DASCore aggregators via zip service"""
         # test DAS workflow
-        query  = "zip=14850 | grep zip.Placemark.address | count(zip.Placemark.address)"
+        query  = "zip=14850 | grep zip.code | count(zip.code)"
         dquery = DASQuery(query)
         result = self.das.call(dquery)
         result = self.das.get_from_cache(dquery)
         result = [r for r in result][0]
+        if  result.has_key('das'):
+            del result['das'] # strip off DAS info
         expect = {"function": "count", "result": {"value": 1}, 
-                  "key": "zip.Placemark.address", "_id":0}
+                  "key": "zip.code", "_id":0}
         self.assertEqual(expect, result)
 
     def testIPService(self):

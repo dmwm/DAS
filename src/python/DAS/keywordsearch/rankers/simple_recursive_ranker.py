@@ -53,6 +53,7 @@ def _get_reserved_terms(stem=False):
     """
     terms that shall be down-ranked if contained in values or in grep-field names
     """
+    # TODO: list of entities shall be taken from das_schema_adapter
     entities = ['dataset', 'run', 'block', 'file', 'site', 'config', 'time', 'lumi']
     operators = das_ql.get_operator_synonyms()
     r = set(entities) | set(operators)

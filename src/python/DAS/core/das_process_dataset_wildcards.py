@@ -173,8 +173,8 @@ def process_dataset_wildcards(pattern, dbs_mngr):
 
     Tests:
 
-    >>> process_dataset_wildcards('*Zmm*special*RECO*', dbsmgr)
-    [u'/RelValZmm/*special*/*RECO']
+    >>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbsmgr)
+    [u'/RelValZmm*/CMSSW*/*RECO']
 
     >>> process_dataset_wildcards('*Zmm*', dbsmgr)
     ['/*/*Zmm*/*', '/*Zmm*/*/*']

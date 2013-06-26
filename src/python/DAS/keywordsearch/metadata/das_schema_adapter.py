@@ -245,6 +245,8 @@ def init_result_fields_list(dascore, _DEBUG=False):
 
     if _DEBUG:
         print 'keylearning collection:', dascore.keylearning.col
+        print 'keylearning members:'
+        pprint.pprint([item for item in dascore.keylearning.list_members()])
         print 'result attributes (all):'
 
 
@@ -292,10 +294,11 @@ def init_result_fields_list(dascore, _DEBUG=False):
 
 
 
-    # assign the titles
+    # assign the titles from presentation cache
     titles_by_field = {}
 
     if _DEBUG:
+        print 'presentation cache:'
         pprint.pprint(dascore.mapping.presentationcache)
     for entries_by_entity in dascore.mapping.presentationcache.itervalues():
         for dic in entries_by_entity:
@@ -455,7 +458,7 @@ def list_result_fields(_DEBUG=False):
     if _result_fields_by_entity:
         return _result_fields_by_entity
     else:
-        raise Exception('keyword search: das schema not loaded')
+        raise Exception('keyword search: das schema or field list not loaded')
 
 
 

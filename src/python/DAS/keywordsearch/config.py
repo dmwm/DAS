@@ -3,6 +3,9 @@ __author__ = 'vidma'
 
 
 DEBUG = False
+# important debug, generating minimal output
+MINIMAL_DEBUG = 1
+
 
 
 processed_stopwords = ['where', 'when', 'who']

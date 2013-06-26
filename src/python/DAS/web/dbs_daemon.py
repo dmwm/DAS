@@ -89,13 +89,17 @@ class DBSDaemon(object):
 
     def update(self):
         """
-        Update DBS collection with a fresh copy of datasets
+        Update DBS collection with a fresh copy of datasets. Upon first insert
+        of datasets we add dataset:__POPULATED__ record to be used as a flag
+        that cache was populated in this cache.
         """
         if SKIP_UPDATES:
             return None
 
         if  self.col:
             time0 = time.time()
+            udict = {'$set':{'ts':time0}}
+            cdict = {'dataset':'__POPULATED__'}
             gen = self.datasets()
             if  not self.col.count():
                 try: # perform bulk insert operation
@@ -103,14 +107,22 @@ class DBSDaemon(object):
                         if  not self.col.insert(\
                                 itertools.islice(gen, self.cache_size)):
                             break
-                except InvalidOperation:
+                except InvalidOperation as err:
+                    # please note we need to inspect error message to
+                    # distinguish InvalidOperation from generate exhastion
+                    if  str(err) == 'cannot do an empty bulk insert':
+                        self.col.insert(cdict)
+                    pass
+                except Exception as err:
                     pass
             else: # we already have records, update their ts
                 for row in gen:
                     spec = dict(dataset=row['dataset'])
-                    self.col.update(spec, {'$set':{'ts':time0}}, upsert=True)
+                    self.col.update(spec, udict, upsert=True)
             # remove records with old ts
             self.col.remove({'ts':{'$lt':time0-self.expire}})
+            if  self.col.find_one(cdict):
+                self.col.update(cdict, udict)
             print "%s DBSDaemon updated %s collection in %s sec, nrec=%s" \
             % (dastimestamp(), self.dbcoll, time.time()-time0, self.col.count())
 

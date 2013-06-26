@@ -8,8 +8,6 @@ das_func sink, which by itself hold ResultObject as a result
 holder.
 """
 
-__revision__ = "$Id: das_aggregators.py,v 1.3 2010/03/05 18:08:23 valya Exp $"
-__version__ = "$Revision: 1.3 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.utils.utils import dict_type
@@ -167,6 +165,8 @@ def cochain(ckey, data_name, sink_name):
 def das_func(func, ckey, genrows):
     """DAS aggregator function"""
     robj = ResultObject()
+    # keep sink and row variables visible in namespace since cochain will
+    # compile them into object code
     sink = das_action(robj, func) # coroutine sink
     for row in genrows:
         code = cochain(ckey, 'row', 'sink')
@@ -232,8 +232,30 @@ def das_sum(key, rows):
 
 def das_count(key, rows):
     """DAS count aggregator function"""
+    if  key == 'lumi.number' or key == 'lumi':
+        rows = expand_lumis(rows)
     robj = das_func('count', key, rows)
     if  not robj:
         return {'value': 'N/A'}
     return {'value': robj.result}
 
+def expand_lumis(rows):
+    "Expand lumis in given set of rows"
+    for row in rows:
+        lumi_val = row['lumi']
+        if  isinstance(lumi_val, list):
+            for item in lumi_val:
+                lumi = item['number']
+                if  isinstance(lumi, list):
+                    for lumis in lumi:
+                        lrange = [l for l in xrange(lumis[0], lumis[-1]+1)]
+                        for slumi in lrange:
+                            rec = dict(row)
+                            rec['lumi'] = {'number': slumi}
+                            yield rec
+                else:
+                    rec = dict(row)
+                    rec['lumi'] = item
+                    yield rec
+        else:
+            yield row

@@ -57,7 +57,7 @@ float_number_pattern = \
     re.compile(r'(^[-]?\d+\.\d*$|^\d*\.{1,1}\d+$)')
 int_number_pattern = \
     re.compile(r'(^[0-9-]$|^[0-9-][0-9]*$)')
-phedex_tier_pattern = \
+phedex_node_pattern = \
     re.compile(r'^T[0-9]_[A-Z]+(_)[A-Z]+') # T2_UK_NO
 se_pattern = \
     re.compile(r'[a-z]+(\.)[a-z]+(\.)') # a.b.c

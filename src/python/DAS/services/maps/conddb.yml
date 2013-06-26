@@ -3,22 +3,11 @@ system : conddb
 format : JSON
 ---
 urn: "get_run_info"
-url : "http://cms-conddb.cern.ch/getLumi/"
+url : "https://cms-conddb.cern.ch/getLumi/"
 expire : 3600
-params : {"Runs":"", "date": "optional","lumiType":"delivered"}
+params : {"Runs":"", "date": "optional"}
 lookup : run
 das_map : [
-    {"das_key":"run","rec_key":"run.run_number","api_arg":"Runs"},
-    {"das_key":"date","rec_key":"date","api_arg":"date"},
-]
----
-urn: "get_lumi_info"
-url : "http://cms-conddb.cern.ch/getLumi/"
-expire : 3600
-params : {"Runs":"","date": "optional"}
-lookup : lumi
-das_map : [
-    {"das_key":"lumi","rec_key":"lumi.number"},
     {"das_key":"run","rec_key":"run.run_number","api_arg":"Runs"},
     {"das_key":"date","rec_key":"date","api_arg":"date"},
 ]

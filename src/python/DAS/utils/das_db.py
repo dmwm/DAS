@@ -57,7 +57,7 @@ class _DBConnectionSingleton(object):
         key = genkey(str(uri))
         if  not self.conndict.has_key(key):
             try:
-                dbinst = MongoClient(host=uri)
+                dbinst = MongoClient(host=uri, max_pool_size=100)
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
@@ -117,6 +117,8 @@ def parse2gridfs(gfs, prim_key, genrows, logger=None):
     Yield docs from provided generator with size < 4MB or store them into
     GridFS.
     """
+    if  not prim_key:
+        return
     key = prim_key.split('.')[0]
     for row in genrows:
         if  not row:

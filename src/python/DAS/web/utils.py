@@ -24,25 +24,12 @@ from   bson.objectid import ObjectId
 import DAS.utils.jsonwrapper as json
 from   DAS.utils.utils import print_exc, presentation_datetime
 from   DAS.utils.regex import number_pattern, web_arg_pattern, http_pattern
-from   DAS.utils.das_db import db_connection, is_db_alive
+from   DAS.utils.das_db import db_connection
 from   DAS.web.das_codes import web_code
-from   DAS.utils.das_config import das_readconfig
 
 # regex patterns used in free_text_parser
 from DAS.utils.regex import PAT_BLOCK, PAT_RUN, PAT_FILE, PAT_RELEASE
 from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
-
-class HtmlString(object):
-    """
-    a class which embeds a string to be displayed in html mode (quote() will not modify it).
-    Precaution: all escaping has to be done before hand.
-    """
-    def __init__(self, str):
-        self.str = str
-    def __unicode__(self):
-        return self.str
-    __str__ = __unicode__
-
 
 class HtmlString(object):
     """
@@ -166,7 +153,9 @@ def gen_color(system):
     """
     Generate color for a system, use hash function for that
     """
-    if  system == 'dbs':
+    if  system == 'das':
+        bkg, col = '#DFDBC3', 'black' # rgb(223, 219, 195), see das.css
+    elif system == 'dbs':
         bkg, col = '#008B8B', 'white'
     elif system == 'dbs3':
         bkg, col = '#006400', 'white'
@@ -253,8 +242,6 @@ def quote(data):
         res = data
     elif  isinstance(data, ObjectId):
         res = str(data)
-    elif isinstance(data, HtmlString):
-        res = unicode(data)
     else:
         try:
             if  data:
