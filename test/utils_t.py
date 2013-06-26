@@ -390,7 +390,7 @@ class testUtils(unittest.TestCase):
         # 1 row in results
         dasquery = DASQuery(dict(fields=None, spec={'dataset':'/a/b/c'}))
         qhash = dasquery.qhash
-        das  = {'expire': 10, 'primary_key':'vk', 'empty_record': 0,
+        das  = {'expire': 10, 'primary_key':'vk', 'record': 1,
                 'api':'api', 'system':['foo'],
                 'condition_keys':['run'], 'instance':None}
         row  = {'run':10, 'das':das, '_id':1, 'das_id':1}
@@ -415,7 +415,7 @@ class testUtils(unittest.TestCase):
         self.assertEqual(result, expect)
 
         # 2 rows with common value for common key
-        das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0,
+        das  = {'expire': 10, 'primary_key':'run.a', 'record': 1,
                 'api': ['api'], 'system':['foo'],
                 'condition_keys':['run'], 'instance':None}
         rows = []
@@ -435,7 +435,7 @@ class testUtils(unittest.TestCase):
         """Test aggregator function"""
         dasquery = DASQuery(dict(fields=None, spec={'dataset':'/a/b/c'}))
         qhash = dasquery.qhash
-        das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0,
+        das  = {'expire': 10, 'primary_key':'run.a', 'record': 1,
                 'api':['api'], 'system':['foo'],
                 'condition_keys':['run'], 'instance':None}
         rows = []
