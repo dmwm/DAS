@@ -5,6 +5,11 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 1.13.X
+
+  - Add lumi4block_run and dataset4block DBS3 APIs
+  - fix run input parameter for all DBS3 APIs
+
 - 1.12.X
 
   - Fix wildcards to provide more informative messages in text mode
