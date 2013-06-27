@@ -356,6 +356,11 @@ def get_blocks4tier_dates(dbs_url, api, args):
     for row in block_summary(dbs_url, blist):
         yield row
 
+def get_dataset4block(args):
+    "Get dataset name for given block"
+    block = args.get('block')
+    yield {'dataset':{'name':block.split('#')[0]}}
+
 class DBS3Service(DASAbstractService):
     """
     Helper class to provide DBS service
@@ -377,7 +382,7 @@ class DBS3Service(DASAbstractService):
             api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block' or \
             api == 'block_run_lumi4dataset' or \
             api == 'file4dataset_run_lumi' or \
-            api == 'blocks4tier_dates':
+            api == 'blocks4tier_dates' or api == 'dataset4block':
             time0 = time.time()
             dbs_url = '/'.join(url.split('/')[:-1])
             if  api == 'block_run_lumi4dataset':
@@ -386,6 +391,8 @@ class DBS3Service(DASAbstractService):
                 dasrows = get_blocks4tier_dates(dbs_url, api, args)
             elif api == 'file4dataset_run_lumi':
                 dasrows = get_file4dataset_run_lumi(dbs_url, api, args)
+            elif api == 'dataset4block':
+                dasrows = get_dataset4block(args)
             else:
                 dasrows = get_file_run_lumis(dbs_url, api, args)
             ctime = time.time()-time0

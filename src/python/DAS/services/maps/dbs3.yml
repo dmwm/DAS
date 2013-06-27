@@ -47,6 +47,17 @@ das_map : [
     {"das_key": "primary_dataset", "rec_key":"primary_dataset.name", "api_arg":"primary_ds_name"},
 ]
 ---
+urn: dataset4block
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
+expire : 86400
+params : {"block":"required"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key": "block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+]
+---
 urn: datasets
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
 expire : 900
@@ -55,7 +66,6 @@ params : {
         "primary_ds_name":"optional",
         "detail":"True",
         "dataset_access_type": "VALID",
-        "block_name":"optional",
         "data_tier_name":"optional",
         "release_version": "optional",
         "run": "optional",
