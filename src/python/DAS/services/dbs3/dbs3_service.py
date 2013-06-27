@@ -261,6 +261,7 @@ def get_file_run_lumis(url, api, args):
     args.update({'runs': runs})
     blocks = dbs_find('block', url, args)
     gen = file_run_lumis(url, blocks, runs)
+    key = 'file_run'
     if  api.startswith('run_lumi'):
         key = 'run'
     if  api.startswith('file_lumi'):
@@ -286,6 +287,11 @@ def get_file4dataset_run_lumi(url, api, args):
     for lfn, _run, lumi in gen:
         if  lumi == ilumi:
             yield lfn
+
+def get_lumis4block_run(url, api, args):
+    "Get lumi numbers for given block/run parameters"
+    for row in get_file_run_lumis(url, api, args):
+        yield dict(lumi=row['lumi'])
 
 ### helper functions for get_blocks4tier_dates
 def process(gen):
@@ -382,7 +388,8 @@ class DBS3Service(DASAbstractService):
             api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block' or \
             api == 'block_run_lumi4dataset' or \
             api == 'file4dataset_run_lumi' or \
-            api == 'blocks4tier_dates' or api == 'dataset4block':
+            api == 'blocks4tier_dates' or api == 'dataset4block' or \
+            api == 'lumi4block_run':
             time0 = time.time()
             dbs_url = '/'.join(url.split('/')[:-1])
             if  api == 'block_run_lumi4dataset':
@@ -391,6 +398,8 @@ class DBS3Service(DASAbstractService):
                 dasrows = get_blocks4tier_dates(dbs_url, api, args)
             elif api == 'file4dataset_run_lumi':
                 dasrows = get_file4dataset_run_lumi(dbs_url, api, args)
+            elif api == 'lumi4block_run':
+                dasrows = get_lumis4block_run(dbs_url, api, args)
             elif api == 'dataset4block':
                 dasrows = get_dataset4block(args)
             else:
@@ -426,6 +435,16 @@ class DBS3Service(DASAbstractService):
         """
         Adjust DBS2 parameters for specific query requests
         """
+        # adjust run parameter if it is present in kwds
+        val = kwds.get('run', None)
+        if  val:
+            if  isinstance(val, dict): # we got a run range
+                if  val.has_key('$in'):
+                    kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
+                if  val.has_key('$lte'):
+                    kwds['run'] = runrange(val['$gte'], val['$lte'], True)
+            else:
+                kwds['run'] = val
         if  api == 'site4dataset':
             # skip API call if inst is global one (data provided by phedex)
             if  inst == self.prim_instance:
@@ -457,24 +476,7 @@ class DBS3Service(DASAbstractService):
                 del kwds['block_name']
             except KeyError:
                 pass
-        if  api == 'runs' or api == 'summary4dataset_run' or \
-            api == 'summary4block_run':
-            val = kwds['run']
-            if  isinstance(val, dict): # we got a run range
-                if  val.has_key('$in'):
-                    kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
-                if  val.has_key('$lte'):
-                    kwds['run'] = runrange(val['$gte'], val['$lte'], True)
         if  api == 'file4DatasetRunLumi':
-            val = kwds.get('run', None)
-            if  val:
-                if  isinstance(val, dict): # we got a run range
-                    if  val.has_key('$in'):
-                        kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
-                    if  val.has_key('$lte'):
-                        kwds['run'] = runrange(val['$gte'], val['$lte'], True)
-                else:
-                    kwds['run'] = val
             val = kwds['lumi_list']
             if  val:
                 kwds['lumi_list'] = [val]
