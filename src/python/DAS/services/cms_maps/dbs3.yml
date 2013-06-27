@@ -47,6 +47,17 @@ das_map : [
     {"das_key": "primary_dataset", "rec_key":"primary_dataset.name", "api_arg":"primary_ds_name"},
 ]
 ---
+urn: dataset4block
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
+expire : 86400
+params : {"block":"required"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key": "block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+]
+---
 urn: datasets
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
 expire : 900
@@ -55,7 +66,6 @@ params : {
         "primary_ds_name":"optional",
         "detail":"True",
         "dataset_access_type": "VALID",
-        "block_name":"optional",
         "data_tier_name":"optional",
         "release_version": "optional",
         "run": "optional",
@@ -459,6 +469,45 @@ das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn : lumi4block_run
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"block":"required", "run": "optional"}
+lookup : lumi
+das_map : [
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+]
+---
+urn : file4dataset_run_lumi
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run": "required", "lumi": "required"}
+lookup : file
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn : blocks4tier_dates
+url : "https://cmsweb-testbed.cern.ch/dbs/prod/global/DBSReader/blocks"
+format : JSON
+expire : 3600
+params : {"tier":"required", "date": "required"}
+lookup : block
+das_map : [
+    {"das_key": "block", "rec_key":"block.name"},
+    {"das_key": "tier", "rec_key":"tier.name", "api_arg":"tier"},
+    {"das_key": "date", "rec_key":"date", "api_arg":"date"},
 ]
 ---
 notations : [
