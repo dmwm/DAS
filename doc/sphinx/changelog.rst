@@ -9,6 +9,7 @@ This release series is targeted to DAS production stability and quality.
 
   - Add lumi4block_run and dataset4block DBS3 APIs
   - fix run input parameter for all DBS3 APIs
+  - Add runsummaries API
 
 - 1.12.X
 
