@@ -28,7 +28,8 @@ from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 
 
-from jsonpath import jsonpath
+from jsonpath_rw import jsonpath, parse
+
 
 
 
@@ -212,9 +213,11 @@ class InputValuesTracker(object):
 
         if service['jsonpath']:
             response = json.load(stream)
-            results = jsonpath(response, service['jsonpath'])
+            jsonpath_expr = parse(service['jsonpath'])
+            #results = jsonpath(response, jsonpath_expr)
+            results = jsonpath_expr.find(response)
             stream.close()
-            return [{'value': v} for v in results]
+            return [{'value': v.value} for v in results]
             #return results
 
         return []
