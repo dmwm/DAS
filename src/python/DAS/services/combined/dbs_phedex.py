@@ -238,6 +238,7 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
             update_db(urls, uri, db_name, coll_name)
             print "%s update dbs_phedex DB %s sec" \
                 % (dastimestamp(), time.time()-time0)
+            time0 = time.time()
             time.sleep(interval)
         except AutoReconnect as _err:
             time.sleep(conn_interval) # handles broken connection
