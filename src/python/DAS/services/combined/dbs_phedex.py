@@ -18,6 +18,7 @@ from   bson.code import Code
 # DAS modules
 from   DAS.utils.das_db import db_connection, create_indexes, db_monitor
 from   DAS.utils.url_utils import getdata
+from   DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
 from   DAS.web.tools import exposejson
 from   DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from   DAS.utils.utils import get_key_cert
@@ -28,7 +29,7 @@ import DAS.utils.jsonwrapper as json
 
 PAT = re.compile("^T[0-3]_")
 CKEY, CERT = get_key_cert()
-        
+
 def datasets(urls, verbose=0):
     """
     Retrieve list of datasets from DBS and compare each of them
@@ -48,26 +49,54 @@ def datasets_dbs3(urls, verbose=0):
     """DBS3 implementation of datasets function"""
     headers = {'Accept':'application/json;text/json'}
     records = []
-    url     = urls.get('dbs')
+    url     = urls.get('dbs3') + '/datasets'
     params  = {'detail':'True', 'dataset_access_type':'VALID'}
+# use this params set for testing
+#    params  = {'detail':'True', 'dataset_access_type':'VALID',
+#    "dataset":"/ElectronHad/Run2011A-05Aug2011-v1/AOD"}
     data, _ = getdata(url, params, headers, post=False, verbose=verbose,
                 ckey=CKEY, cert=CERT, doseq=False)
     records = json.load(data)
     data.close()
-    data = {}
-    size = 10 # size for POST request to Phedex
+    dbsdata = {}
     for row in records:
-        if  not data.has_key(row['dataset']):
-            data[row['dataset']] = \
+        if  not dbsdata.has_key(row['dataset']):
+            dbsdata[row['dataset']] = \
                 dict(era=row['acquisition_era_name'],
                         tier=row['data_tier_name'], status='VALID')
-        if  len(data.keys()) > size:
-            for rec in dataset_info(urls, data):
-                yield rec
-            data = {}
-    if  data:
-        for rec in dataset_info(urls, data):
-            yield rec
+    # create list of URLs for urlfetch
+    url  = urls.get('phedex') + '/blockReplicas'
+    urls = ('%s?dataset=%s' % (url, d) for d in dbsdata.keys())
+    headers  = {'Accept':'application/json;text/json'}
+    gen  = urlfetch_getdata(urls, CKEY, CERT, headers)
+    for ddict in gen:
+        jsondict = json.loads(ddict['data'])
+        rec = {}
+        for blk in jsondict['phedex']['block']:
+            name = blk['name'].split('#')[0]
+            if  not rec.has_key('nfiles'):
+                nfiles = blk['files']
+                size = blk['bytes']
+            else:
+                nfiles = rec['nfiles'] + blk['files']
+                size = rec['size'] + blk['bytes']
+            rec.update({'nfiles':nfiles, 'size':size})
+            for rep in blk['replica']:
+                if  not rec.has_key('site'):
+                    rec = dict(name=name, nfiles=nfiles, size=size,
+                                site=[rep['node']], se=[rep['se']],
+                                custodial=[rep['custodial']])
+                    rec.update(dbsdata[name])
+                else:
+                    sites = rec['site']
+                    ses = rec['se']
+                    custodial = rec['custodial']
+                    if  rep['node'] not in sites:
+                        sites.append(rep['node'])
+                        ses.append(rep['se'])
+                        custodial.append(rep['custodial'])
+                    rec.update({'site':sites, 'se':ses, 'custodial':custodial})
+        yield rec
 
 def datasets_dbs2(urls, verbose=0):
     """DBS2 implementation of datasets function"""
@@ -118,10 +147,10 @@ def dataset_info(urls, datasetdict, verbose=0):
     for row in jsondict['phedex']['block']:
         name = row['name'].split('#')[0]
         for rep in row['replica']:
-            rec = dict(name=name, 
+            rec = dict(name=name,
                         nfiles=row['files'],
                         size=row['bytes'],
-                        site=rep['node'], 
+                        site=rep['node'],
                         se=rep['se'],
                         custodial=rep['custodial'])
             rec.update(datasetdict[name])
@@ -162,7 +191,7 @@ def find_dataset(coll, site, operation="mapreduce"):
     else:
         for row in find_dataset_mp(coll, site):
             yield row
-        
+
 def find_dataset_group(coll, site):
     """
     Find dataset info in MongoDB using group operation.
@@ -200,7 +229,7 @@ def find_dataset_mp(coll, site):
             custodial:this.custodial, name:this.name});
         }""")
     redfunc = Code("""function(key, values) {
-        var result = {count:0, name:"", size:0, nfiles:0, 
+        var result = {count:0, name:"", size:0, nfiles:0,
             site:"",se:"",era:"",tier:"",custodial:""};
         values.forEach(function(value) {
             result.name = value.name;
@@ -277,7 +306,7 @@ class DBSPhedexService(object):
         try:
             conn = db_connection(self.uri)
             self.coll = conn[self.dbname][self.collname]
-            indexes = [('name', DESCENDING), ('site', DESCENDING), 
+            indexes = [('name', DESCENDING), ('site', DESCENDING),
                        ('ts', DESCENDING)]
             for index in indexes:
                 create_indexes(self.coll, [index])
@@ -339,10 +368,21 @@ class DBSPhedexService(object):
             expires = self.expire
         cherrypy.lib.caching.expires(secs=expires, force = True)
         return records
-        
+
 def test():
     """Test main function"""
     cherrypy.quickstart(DBSPhedexService({}), '/')
 
+def test2():
+    urls = {
+        "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
+        "dbs3": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
+        "phedex": "https://cmsweb.cern.ch/phedex/datasvc/json/prod",
+        "conddb": "https://cms-conddb.cern.ch",
+    }
+    for row in datasets_dbs3(urls):
+        print "\n### row", row
+
 if __name__ == '__main__':
-    test()
+#    test()
+    test2()
