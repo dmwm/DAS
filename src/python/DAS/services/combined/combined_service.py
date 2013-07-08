@@ -60,13 +60,19 @@ def parse_data(data):
     """
     Helper to parse input data
     """
-
-    for item in json.load(data):
-        if  isinstance(item, list):
-            for row in item:
-                yield row
-        else:
-            yield item
+    if  isinstance(data, basestring):
+        data = StringIO.StringIO(data)
+    try:
+        jsondata = json.load(data)
+    except Exception as exc:
+        jsondata = []
+        msg = 'Unable to apply json.load to "%s"' % data
+        print msg
+    if  isinstance(jsondata, dict):
+        yield jsondata
+    elif isinstance(jsondata, list):
+        for row in jsondata:
+            yield row
 
 def which_dbs(dbs_url):
     """Determine DBS version based on given DBS url"""
