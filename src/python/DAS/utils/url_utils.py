@@ -72,8 +72,9 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
                     error_expire, verbose, ckey, cert, doseq)
     except urllib2.HTTPError as httperror:
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
-                    % (url, params, headers)
-        data = {'error': 'Unable to contact %s' % contact, 'reason': msg}
+                    % (url, json.dumps(params), json.dumps(headers))
+        data = {'error': 'Unable to contact %s' % contact,
+                'reason': msg, 'ts':time.time()}
         try:
             err  = '%s %s' % (contact, extract_http_error(httperror.read()))
             data.update({'error':err})
@@ -86,9 +87,10 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
         expire = expire_timestamp(error_expire)
     except Exception as exp:
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
-                    % (url, params, headers)
+                    % (url, json.dumps(params), json.dumps(headers))
         print msg + '\n' + str(exp)
-        data = {'error': 'Unable to contact %s' % contact, 'reason': msg}
+        data = {'error': 'Unable to contact %s' % contact,
+                'reason': msg, 'ts':time.time()}
         data = json.dumps(data)
         expire = expire_timestamp(error_expire)
     das_timer(timer_key, verbose)
