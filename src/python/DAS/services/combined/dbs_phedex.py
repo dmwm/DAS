@@ -30,15 +30,15 @@ import DAS.utils.jsonwrapper as json
 PAT = re.compile("^T[0-3]_")
 CKEY, CERT = get_key_cert()
 
-def datasets(urls, verbose=0):
+def datasets(urls, which_dbs, verbose=0):
     """
     Retrieve list of datasets from DBS and compare each of them
     wrt list in MongoDB.
     """
     url     = urls.get('dbs')
-    if  url.find('servlet') != -1: # DBS2 url
+    if  which_dbs == 'dbs': # DBS2 url
         gen = datasets_dbs2(urls, verbose)
-    elif url.find('cmsweb') != -1 and url.find('DBSReader') != -1:
+    elif which_dbs == 'dbs3':
         gen = datasets_dbs3(urls, verbose)
     else:
         raise Exception('Unsupport DBS URL, url=%s' % url)
@@ -53,6 +53,7 @@ def datasets_dbs3(urls, verbose=0):
     params  = {'detail':'True', 'dataset_access_type':'VALID'}
 # use this params set for testing
 #    params  = {'detail':'True', 'dataset_access_type':'VALID',
+#    "dataset":"/ElectronHad/*/*"}
 #    "dataset":"/ElectronHad/Run2011A-05Aug2011-v1/AOD"}
     data, _ = getdata(url, params, headers, post=False, verbose=verbose,
                 ckey=CKEY, cert=CERT, doseq=False)
@@ -70,7 +71,10 @@ def datasets_dbs3(urls, verbose=0):
     headers  = {'Accept':'application/json;text/json'}
     gen  = urlfetch_getdata(urls, CKEY, CERT, headers)
     for ddict in gen:
-        jsondict = json.loads(ddict['data'])
+        try:
+            jsondict = json.loads(ddict['data'])
+        except Exception as _exc:
+            continue
         rec = {}
         for blk in jsondict['phedex']['block']:
             name = blk['name'].split('#')[0]
@@ -96,7 +100,18 @@ def datasets_dbs3(urls, verbose=0):
                         ses.append(rep['se'])
                         custodial.append(rep['custodial'])
                     rec.update({'site':sites, 'se':ses, 'custodial':custodial})
-        yield rec
+        if  rec:
+            # unwrap the site/se/custodial lists and yield records w/ their
+            # individual values
+            for idx in range(0, len(rec['site'])):
+                sename = rec['se'][idx]
+                site = rec['site'][idx]
+                custodial = rec['custodial'][idx]
+                newrec = dict(rec)
+                newrec['se'] = sename
+                newrec['site'] = site
+                newrec['custodial'] = custodial
+                yield newrec
 
 def datasets_dbs2(urls, verbose=0):
     """DBS2 implementation of datasets function"""
@@ -165,7 +180,7 @@ def collection(uri):
     coll = conn['db']['datasets']
     return coll
 
-def update_db(urls, uri, db_name, coll_name):
+def update_db(urls, which_dbs, uri, db_name, coll_name):
     """
     Update DB info with dataset info.
     """
@@ -173,9 +188,10 @@ def update_db(urls, uri, db_name, coll_name):
     conn = db_connection(uri)
     if  conn:
         coll = conn[db_name][coll_name]
-        for dataset in datasets(urls):
+        for row in datasets(urls, which_dbs):
+            dataset = dict(row)
             dataset.update({'ts':tst})
-            spec = dict(name=dataset['name'])
+            spec = dict(name=dataset['name'], site=dataset['site'])
             coll.update(spec, dataset, upsert=True)
         coll.remove({'ts': {'$lt': tst}})
     else:
@@ -213,7 +229,9 @@ def find_dataset_group(coll, site):
         key = 'site'
     else:
         key = 'se'
-    spec = {key:site}
+    pat = re.compile('%s.*' % site.replace('*', ''))
+#    spec = {key:site}
+    spec = {key:pat}
     key  = {'name':True}
     for row in coll.group(key, spec, initial, redfunc, finalize):
         yield row
@@ -247,12 +265,14 @@ def find_dataset_mp(coll, site):
         key = 'site'
     else:
         key = 'se'
-    spec = {key:site}
+    pat = re.compile('%s.*' % site.replace('*', ''))
+#    spec = {key:site}
+    spec = {key:pat}
     result = coll.map_reduce(mapfunc, redfunc, "results", query=spec)
     for row in result.find():
         yield row['value']
 
-def worker(urls, uri, db_name, coll_name, interval=3600):
+def worker(urls, which_dbs, uri, db_name, coll_name, interval=3600):
     """
     Daemon which updates DBS/Phedex DB
     """
@@ -264,7 +284,7 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
         if  conn_interval > threshold:
             conn_interval = threshold
         try:
-            update_db(urls, uri, db_name, coll_name)
+            update_db(urls, which_dbs, uri, db_name, coll_name)
             print "%s update dbs_phedex DB %s sec" \
                 % (dastimestamp(), time.time()-time0)
             time0 = time.time()
@@ -316,11 +336,16 @@ class DBSPhedexService(object):
             mapping      = dasmapping.servicemap(service_name)
             self.urls    = mapping[service_api]['services']
             self.expire  = mapping[service_api]['expire']
+            services     = self.dasconfig['services']
+            which_dbs    = [d for d in services if d.find('dbs') != -1][0]
             if  not self.worker_thr:
                 # Worker thread which update dbs/phedex DB
                 self.worker_thr = start_new_thread('dbs_phedex_worker', worker, \
-                (self.urls, self.uri, self.dbname, self.collname, self.expire))
-            print "### DBSPhedexService:init started successfully"
+                (self.urls, which_dbs,
+                    self.uri, self.dbname, self.collname, self.expire))
+            msg = "### DBSPhedexService:init started with %s service" \
+                    % which_dbs
+            print msg
         except Exception as exc:
             print "### Fail DBSPhedexService:init\n", str(exc)
             self.urls       = None
