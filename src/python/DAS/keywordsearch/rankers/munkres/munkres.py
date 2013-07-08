@@ -333,8 +333,8 @@ class Munkres:
 
         Please use the module function ``make_cost_matrix()``.
         """
-        import munkres
-        return munkres.make_cost_matrix(profit_matrix, inversion_function)
+
+        return make_cost_matrix(profit_matrix, inversion_function)
 
     make_cost_matrix = staticmethod(make_cost_matrix)
 
@@ -482,7 +482,6 @@ class Munkres:
         For each row of the matrix, find the smallest element and
         subtract it from every element in its row. Go to Step 2.
         """
-        C = self.C
         n = self.n
         for i in range(n):
             minval = min(self.C[i])
@@ -779,13 +778,13 @@ def print_matrix(matrix, msg=None):
             width = max(width, int(math.log10(val)) + 1)
 
     # Make the format string
-    format = '%%%dd' % width
+    format_ = '%%%dd' % width
 
     # Print the matrix
     for row in matrix:
         sep = '['
         for val in row:
-            sys.stdout.write(sep + format % val)
+            sys.stdout.write(sep + format_ % val)
             sep = ', '
         sys.stdout.write(']\n')
 
