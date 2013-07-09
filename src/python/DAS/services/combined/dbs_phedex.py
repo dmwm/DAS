@@ -56,7 +56,7 @@ def datasets_dbs3(urls, verbose=0):
 #    "dataset":"/ElectronHad/*/*"}
 #    "dataset":"/ElectronHad/Run2011A-05Aug2011-v1/AOD"}
     data, _ = getdata(url, params, headers, post=False, verbose=verbose,
-                ckey=CKEY, cert=CERT, doseq=False)
+                ckey=CKEY, cert=CERT, doseq=False, system='dbs3')
     records = json.load(data)
     data.close()
     dbsdata = {}
@@ -122,7 +122,7 @@ def datasets_dbs2(urls, verbose=0):
         'find dataset,dataset.tier,dataset.era where dataset.status like VALID*'
     params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
     stream, _ = getdata(url, params, headers, post=False, \
-            ckey=CKEY, cert=CERT, verbose=verbose)
+            ckey=CKEY, cert=CERT, verbose=verbose, system='dbs')
     records = [r for r in qlxml_parser(stream, 'dataset')]
     stream.close()
     data = {}
@@ -153,7 +153,7 @@ def dataset_info(urls, datasetdict, verbose=0):
     params   = {'dataset': [d for d in datasetdict.keys()]}
     headers  = {'Accept':'application/json;text/json'}
     data, _  = getdata(url, params, headers, post=True, \
-            ckey=CKEY, cert=CERT, verbose=verbose)
+            ckey=CKEY, cert=CERT, verbose=verbose, system='dbs_phedex')
     if  isinstance(data, basestring): # no response
         dastimestamp('DBS_PHEDEX ERROR: %s' % data)
         return
