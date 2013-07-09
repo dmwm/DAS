@@ -78,7 +78,7 @@ def phedex_info(urls, dbsdata):
             continue
         rec = {}
         for blk in jsondict['phedex']['block']:
-            name = blk['name'].split('#')[0]
+            dataset = blk['name'].split('#')[0]
             if  not rec.has_key('nfiles'):
                 nfiles = blk['files']
                 size = blk['bytes']
@@ -88,10 +88,10 @@ def phedex_info(urls, dbsdata):
             rec.update({'nfiles':nfiles, 'size':size})
             for rep in blk['replica']:
                 if  not rec.has_key('site'):
-                    rec = dict(name=name, nfiles=nfiles, size=size,
+                    rec = dict(dataset=dataset, nfiles=nfiles, size=size,
                                 site=[rep['node']], se=[rep['se']],
                                 custodial=[rep['custodial']])
-                    rec.update(dbsdata[name])
+                    rec.update(dbsdata[dataset])
                 else:
                     sites = rec['site']
                     ses = rec['se']
@@ -154,15 +154,15 @@ def dataset_info(urls, datasetdict, verbose=0):
     jsondict = json.load(data)
     data.close()
     for row in jsondict['phedex']['block']:
-        name = row['name'].split('#')[0]
+        dataset = row['name'].split('#')[0]
         for rep in row['replica']:
-            rec = dict(name=name,
+            rec = dict(dataset=dataset,
                         nfiles=row['files'],
                         size=row['bytes'],
                         site=rep['node'],
                         se=rep['se'],
                         custodial=rep['custodial'])
-            rec.update(datasetdict[name])
+            rec.update(datasetdict[dataset])
             yield rec
     data.close()
 
@@ -185,7 +185,7 @@ def update_db(urls, which_dbs, uri, db_name, coll_name):
         for row in datasets(urls, which_dbs):
             dataset = dict(row)
             dataset.update({'ts':tst})
-            spec = dict(name=dataset['name'], site=dataset['site'])
+            spec = dict(dataset=dataset['dataset'], site=dataset['site'])
             coll.update(spec, dataset, upsert=True)
         coll.remove({'ts': {'$lt': tst}})
     else:
@@ -210,6 +210,7 @@ def find_dataset_group(coll, site):
     initial = {'count':0, 'nfiles':0, 'size':0}
     redfunc = Code("""function(doc, out) {
         out.size += parseFloat(doc.size);
+        out.dataset = doc.dataset;
         out.site = doc.site;
         out.se = doc.se;
         out.era = doc.era;
@@ -218,7 +219,9 @@ def find_dataset_group(coll, site):
         out.nfiles += parseInt(doc.nfiles);
         out.count += 1;}""")
     finalize = Code("""function(out) {
-        out.nfiles = parseInt(out.nfiles); }""")
+        out.nfiles = parseInt(out.nfiles);
+        out.size = parseFloat(out.size);
+        }""")
     if  PAT.match(site):
         key = 'site'
     else:
@@ -226,7 +229,7 @@ def find_dataset_group(coll, site):
     pat = re.compile('%s.*' % site.replace('*', ''))
 #    spec = {key:site}
     spec = {key:pat}
-    key  = {'name':True}
+    key  = {'dataset':True}
     for row in coll.group(key, spec, initial, redfunc, finalize):
         yield row
 
@@ -236,15 +239,15 @@ def find_dataset_mp(coll, site):
     """
     # implementation via group function
     mapfunc = Code("""function() {
-        emit(this.name, {count:1, size:this.size, nfiles:this.nfiles,
+        emit(this.dataset, {count:1, size:this.size, nfiles:this.nfiles,
             site:this.site, se:this.se, era:this.era, tier:this.tier,
-            custodial:this.custodial, name:this.name});
+            custodial:this.custodial, dataset:this.dataset});
         }""")
     redfunc = Code("""function(key, values) {
-        var result = {count:0, name:"", size:0, nfiles:0,
+        var result = {count:0, dataset:"", size:0, nfiles:0,
             site:"",se:"",era:"",tier:"",custodial:""};
         values.forEach(function(value) {
-            result.name = value.name;
+            result.dataset = value.dataset;
             result.count += parseInt(value.count);
             result.size += parseFloat(value.size);
             result.nfiles += parseInt(value.nfiles);
@@ -356,32 +359,34 @@ class DBSPhedexService(object):
             return False
         return True
 
-    def find_dataset(self, site, operation):
+    def find(self, site, operation, rkey='summary'):
         """Find dataset info for a given site"""
-        reason = 'waiting for DBS3/Phedex info'
+        reason = 'waiting for DBS/Phedex info'
         if  PAT.match(site):
             key = 'name'
         else:
             key = 'se'
-        rec = dict(dataset={'name':'N/A', 'reason':reason}, site={key:site})
+        rec = {rkey:{'name':'N/A', 'reason':reason}, site:{key:site}}
         if  self.isexpired():
             yield rec
         else:
             if  self.coll:
                 for item in find_dataset(self.coll, site, operation):
-                    yield {'dataset':item}
+                    yield {rkey:item}
             else:
                 reason = 'lost connection to internal DB'
-                rec.update({'dataset':{'name':'N/A', 'reason':reason}})
+                rec.update({rkey:{'name':'N/A', 'reason':reason}})
                 yield rec
 
     @exposejson
-    def dataset(self, site, operation="mapreduce"):
+    def dataset_site(self, site, operation="mapreduce"):
         """
         Service exposed method to get dataset/site info
         """
-        records = [r for r in self.find_dataset(site, operation)]
-        if  len(records) == 1 and records[0]['dataset'].has_key('reason'):
+        operation = 'group'
+        rkey = 'summary' # record key
+        records = [r for r in self.find(site, operation, rkey)]
+        if  len(records) == 1 and records[0][rkey].has_key('reason'):
             expires = 60 # in seconds
         else:
             expires = self.expire
