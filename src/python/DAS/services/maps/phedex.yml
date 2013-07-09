@@ -28,7 +28,7 @@ das_map : [
 urn : dataset4site_group
 url : "https://cmsweb.cern.ch/phedex/datasvc/xml/prod/blockreplicas"
 expire : 3600
-params : {"node":"required", "dataset":"optional", "group":"optional"}
+params : {"node":"required", "dataset":"optional", "group":"required"}
 lookup: dataset
 das_map : [
         {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset"},

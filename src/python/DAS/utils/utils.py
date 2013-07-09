@@ -1360,6 +1360,7 @@ def aggregator(dasquery, results, expire):
     """
     High-level API, DAS aggregator function.
     """
+    old_rec = None
     for rec in aggregator_helper(results, expire):
         das_id = rec.pop('das_id')
         if  isinstance(das_id, list):
@@ -1379,7 +1380,10 @@ def aggregator(dasquery, results, expire):
             if  key not in ['das_id', 'das', 'cache_id', '_id']:
                 if  isinstance(val, dict):
                     rec[key] = [val]
-        yield rec
+        # check for duplicate records
+        if  rec != old_rec:
+            yield rec
+        old_rec = rec
 
 def aggregator_helper(results, expire):
     """
