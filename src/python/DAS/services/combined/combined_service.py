@@ -98,7 +98,8 @@ def phedex_files(phedex_url, kwds):
     expire = 600 # set some expire since we're not going to use it
     headers = {'Accept': 'text/xml'}
     source, expire = \
-        getdata(phedex_url, params, headers, expire, ckey=CKEY, cert=CERT)
+        getdata(phedex_url, params, headers, expire, ckey=CKEY, cert=CERT,
+                system='combined')
     tags = 'block.file.name'
     prim_key = 'block'
     for rec in xml_parser(source, prim_key, tags):
@@ -119,7 +120,8 @@ def dbs_dataset4site_release(dbs_url, release):
                     'query':query}
         headers = {'Accept': 'text/xml'}
         source, expire = \
-            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
+            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
+                    system='combined')
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
             if  row.has_key('dataset'):
@@ -136,7 +138,8 @@ def dbs_dataset4site_release(dbs_url, release):
         {'release_version': release, 'dataset_access_type':'VALID'}
         headers = {'Accept': 'application/json;text/json'}
         source, expire = \
-            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
+            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
+                    system='combined')
         for rec in json_parser(source, None):
             for row in rec:
                 yield row['dataset']
@@ -155,7 +158,8 @@ def dataset_summary(dbs_url, dataset):
                     'query':query}
         headers = {'Accept': 'text/xml'}
         source, expire = \
-            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
+            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
+                    system='combined')
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
             if  row.has_key('dataset'):
@@ -173,7 +177,8 @@ def dataset_summary(dbs_url, dataset):
         dbs_args = {'dataset': dataset}
         headers = {'Accept': 'application/json;text/json'}
         source, expire = \
-            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT)
+            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
+                    system='combined')
         for row in json_parser(source, None):
             totfiles  = row[0]['num_file']
             totblocks = row[0]['num_block']
@@ -195,7 +200,8 @@ def site4dataset(dbs_url, phedex_api, args, expire):
     phedex_args = {'dataset':args['dataset']}
     headers = {'Accept': 'text/xml'}
     source, expire = \
-        getdata(phedex_api, phedex_args, headers, expire, post=True)
+        getdata(phedex_api, phedex_args, headers, expire, post=True,
+                system='combined')
     prim_key = 'block'
     tags = 'block.replica.node'
     site_info = {}
@@ -276,7 +282,8 @@ class CombinedService(DASAbstractService):
                                 'node': '%s*' % args['site']}
             headers = {'Accept': 'text/xml'}
             source, expire = \
-                getdata(phedex_api, phedex_args, headers, expire, post=True)
+                getdata(phedex_api, phedex_args, headers, expire, post=True,
+                        system='combined')
             prim_key = 'block'
             tags = 'block.replica.node'
             found = {}
@@ -349,11 +356,13 @@ class CombinedService(DASAbstractService):
         # at expires and adjust my expire parameter accordingly
         if  api == 'dataset4site':
             headers = {'Accept': 'application/json;text/json'}
-            datastream, expire = getdata(url, args, headers, expire)
+            datastream, expire = getdata(url, args, headers, expire,
+                                            system='combined')
             genrows = parse_data(datastream)
         if  api == 'lumi4dataset':
             headers = {'Accept': 'application/json;text/json'}
-            data, expire = getdata(url, args, headers, expire)
+            data, expire = getdata(url, args, headers, expire,
+                                            system='combined')
             genrows = json_parser(data, None)
 
         # proceed with standard workflow
