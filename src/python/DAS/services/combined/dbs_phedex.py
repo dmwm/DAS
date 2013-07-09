@@ -51,10 +51,6 @@ def datasets_dbs3(urls, verbose=0):
     records = []
     url     = urls.get('dbs3') + '/datasets'
     params  = {'detail':'True', 'dataset_access_type':'VALID'}
-# use this params set for testing
-#    params  = {'detail':'True', 'dataset_access_type':'VALID',
-#    "dataset":"/ElectronHad/*/*"}
-#    "dataset":"/ElectronHad/Run2011A-05Aug2011-v1/AOD"}
     data, _ = getdata(url, params, headers, post=False, verbose=verbose,
                 ckey=CKEY, cert=CERT, doseq=False, system='dbs3')
     records = json.load(data)
@@ -65,6 +61,11 @@ def datasets_dbs3(urls, verbose=0):
             dbsdata[row['dataset']] = \
                 dict(era=row['acquisition_era_name'],
                         tier=row['data_tier_name'], status='VALID')
+    for row in phedex_info(urls, dbsdata):
+        yield row
+
+def phedex_info(urls, dbsdata):
+    "Get phedex info for given set of dbs data"
     # create list of URLs for urlfetch
     url  = urls.get('phedex') + '/blockReplicas'
     urls = ('%s?dataset=%s' % (url, d) for d in dbsdata.keys())
@@ -125,22 +126,15 @@ def datasets_dbs2(urls, verbose=0):
             ckey=CKEY, cert=CERT, verbose=verbose, system='dbs')
     records = [r for r in qlxml_parser(stream, 'dataset')]
     stream.close()
-    data = {}
-    size = 10 # size for POST request to Phedex
+    dbsdata = {}
     for row in records:
         dataset = row['dataset']
-        if  not data.has_key(dataset['dataset']):
-            data[dataset['dataset']] = \
+        if  not dbsdata.has_key(dataset['dataset']):
+            dbsdata[dataset['dataset']] = \
                 dict(era=dataset['dataset.era'],
                         tier=dataset['dataset.tier'], status='VALID')
-        if  len(data.keys()) > size:
-            for rec in dataset_info(urls, data):
-                yield rec
-            data = {}
-    if  data:
-        for rec in dataset_info(urls, data):
-            yield rec
-    del records
+    for row in phedex_info(urls, dbsdata):
+        yield row
 
 def dataset_info(urls, datasetdict, verbose=0):
     """
@@ -398,16 +392,20 @@ def test():
     """Test main function"""
     cherrypy.quickstart(DBSPhedexService({}), '/')
 
-def test2():
+def test_dbs(which_dbs):
     urls = {
         "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
         "dbs3": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
         "phedex": "https://cmsweb.cern.ch/phedex/datasvc/json/prod",
         "conddb": "https://cms-conddb.cern.ch",
     }
-    for row in datasets_dbs3(urls):
+    if  which_dbs == 'dbs':
+        gen = datasets_dbs2(urls)
+    else:
+        gen = datasets_dbs3(urls)
+    for row in gen:
         print "\n### row", row
 
 if __name__ == '__main__':
 #    test()
-    test2()
+    test_dbs('dbs')
