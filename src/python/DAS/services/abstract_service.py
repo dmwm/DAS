@@ -30,7 +30,7 @@ from DAS.utils.logger import PrintManager
 
 class DASAbstractService(object):
     """
-    Abstract class describing DAS service. It initialized with a name who
+    Abstract class describing DAS service. It initialized with a name which
     is used to identify service parameters from DAS configuration file.
     Those parameters are keys, verbosity level, URL of the data-service.
     """
@@ -93,6 +93,15 @@ class DASAbstractService(object):
         else:
             msg = 'Undefined rawcache, please check your configuration'
             raise Exception(msg)
+
+    def systems(self):
+        """
+        Return list of sub-subsystems used to retrieve data records. It is used
+        in dasheader call to setup das.system field. This method can be
+        overwritten in sub-classes, otherwise it returns list with service name
+        entry.
+        """
+        return [self.name]
 
     def version(self):
         """Return data-services version, should be implemented in sub-classes"""
@@ -178,7 +187,7 @@ class DASAbstractService(object):
             return
 
         # update the cache
-        header  = dasheader(self.name, dasquery, expire, api, url)
+        header  = dasheader(self.systems(), dasquery, expire, api, url)
         header['lookup_keys'] = self.lookup_keys(api)
         header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
         header['ctime'] = ctime
