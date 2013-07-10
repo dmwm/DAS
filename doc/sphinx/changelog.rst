@@ -7,6 +7,11 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Support block tier=GEN-SIM date between [20120223, 20120224] query via
+    blocksummaries DBS3 API
+  - Switch from block_names to block_name as input parameter for blocksummaries
+    DBS3 API; handle correctly incorrect values for dates in DBS3
+    blocksummaries API
   - Fix issues 4014, 4013, 4009
   - Add lumi4block_run and dataset4block DBS3 APIs
   - fix run input parameter for all DBS3 APIs
