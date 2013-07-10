@@ -319,7 +319,7 @@ def block_summary(dbs, blocks):
     "Get block summary information for given set of blocks"
     headers = {'Accept':'text/json;application/json'}
     url     = dbs + "/blocksummaries"
-    urls    = ['%s/?block_names=%s' % (url, urllib.quote(b)) for b in blocks]
+    urls    = ['%s/?block_name=%s' % (url, urllib.quote(b)) for b in blocks]
     res     = urlfetch_getdata(urls, CKEY, CERT, headers)
     for row in res:
         if  row.has_key('error'):
