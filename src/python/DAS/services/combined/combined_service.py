@@ -99,7 +99,7 @@ def phedex_files(phedex_url, kwds):
     headers = {'Accept': 'text/xml'}
     source, expire = \
         getdata(phedex_url, params, headers, expire, ckey=CKEY, cert=CERT,
-                system='combined')
+                system='phedex')
     tags = 'block.file.name'
     prim_key = 'block'
     for rec in xml_parser(source, prim_key, tags):
@@ -121,7 +121,7 @@ def dbs_dataset4site_release(dbs_url, release):
         headers = {'Accept': 'text/xml'}
         source, expire = \
             getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
-                    system='combined')
+                    system='dbs')
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
             if  row.has_key('dataset'):
@@ -139,7 +139,7 @@ def dbs_dataset4site_release(dbs_url, release):
         headers = {'Accept': 'application/json;text/json'}
         source, expire = \
             getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
-                    system='combined')
+                    system='dbs3')
         for rec in json_parser(source, None):
             for row in rec:
                 yield row['dataset']
@@ -159,7 +159,7 @@ def dataset_summary(dbs_url, dataset):
         headers = {'Accept': 'text/xml'}
         source, expire = \
             getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
-                    system='combined')
+                    system='dbs')
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
             if  row.has_key('dataset'):
@@ -178,7 +178,7 @@ def dataset_summary(dbs_url, dataset):
         headers = {'Accept': 'application/json;text/json'}
         source, expire = \
             getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
-                    system='combined')
+                    system='dbs3')
         for row in json_parser(source, None):
             totfiles  = row[0]['num_file']
             totblocks = row[0]['num_block']
@@ -201,7 +201,7 @@ def site4dataset(dbs_url, phedex_api, args, expire):
     headers = {'Accept': 'text/xml'}
     source, expire = \
         getdata(phedex_api, phedex_args, headers, expire, post=True,
-                system='combined')
+                system='phedex')
     prim_key = 'block'
     tags = 'block.replica.node'
     site_info = {}
@@ -250,6 +250,17 @@ class CombinedService(DASAbstractService):
         DASAbstractService.__init__(self, 'combined', config)
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
+        if  SERVICES.has_key('dbs'):
+            dbs = 'dbs'
+        elif SERVICES.has_key('dbs3'):
+            dbs = 'dbs3'
+        else:
+            raise Exception('Unsupport DBS system')
+        self.dbs = dbs
+
+    def systems(self):
+        "Return list of data-services used by this class"
+        return [self.dbs, 'phedex']
 
     def helper(self, api, args, expire):
         """
@@ -258,13 +269,7 @@ class CombinedService(DASAbstractService):
         must contain combined attribute corresponding to systems
         used to produce record content.
         """
-        if  SERVICES.has_key('dbs'):
-            dbs = 'dbs'
-        elif SERVICES.has_key('dbs3'):
-            dbs = 'dbs3'
-        else:
-            raise Exception('Unsupport DBS system')
-        dbs_url = self.map[api]['services'][dbs]
+        dbs_url = self.map[api]['services'][self.dbs]
         phedex_url = self.map[api]['services']['phedex']
         # make phedex_api from url, but use xml version for processing
         phedex_api = phedex_url.replace('/json/', '/xml/') + '/blockReplicas'
@@ -283,7 +288,7 @@ class CombinedService(DASAbstractService):
             headers = {'Accept': 'text/xml'}
             source, expire = \
                 getdata(phedex_api, phedex_args, headers, expire, post=True,
-                        system='combined')
+                        system='phedex')
             prim_key = 'block'
             tags = 'block.replica.node'
             found = {}
@@ -300,8 +305,7 @@ class CombinedService(DASAbstractService):
                 else:
                     found[found_dataset] = {'bytes': bbytes, 'files': files}
             for name, val in found.iteritems():
-                record = dict(name=name, size=val['bytes'], files=val['files'],
-                                combined=[which_dbs(dbs_url), 'phedex'])
+                record = dict(name=name, size=val['bytes'], files=val['files'])
                 yield {'dataset':record}
             del datasets
             del found
@@ -356,13 +360,13 @@ class CombinedService(DASAbstractService):
         # at expires and adjust my expire parameter accordingly
         if  api == 'dataset4site':
             headers = {'Accept': 'application/json;text/json'}
-            datastream, expire = getdata(url, args, headers, expire,
-                                            system='combined')
+            datastream, expire = \
+                    getdata(url, args, headers, expire, system='combined')
             genrows = parse_data(datastream)
         if  api == 'lumi4dataset':
             headers = {'Accept': 'application/json;text/json'}
-            data, expire = getdata(url, args, headers, expire,
-                                            system='combined')
+            data, expire = \
+                    getdata(url, args, headers, expire, system='combined')
             genrows = json_parser(data, None)
 
         # proceed with standard workflow
@@ -419,3 +423,4 @@ def files4site(phedex_url, files, site):
                 replica = fobj['replica']
                 for item in replica:
                     yield fname
+                    break # only need to yield once since its replica
