@@ -311,7 +311,13 @@ def blocks4tier_date(dbs, tier, min_cdate, max_cdate):
                'max_cdate':max_cdate}
     urls    = ['%s?%s' % (url, urllib.urlencode(params))]
     res     = process(urlfetch_getdata(urls, CKEY, CERT, headers))
+    err     = 'Unable to get blocks for tier=%s, mindate=%s, maxdate=%s' \
+                % (tier, min_cdate, max_cdate)
     for blist in res:
+        if  isinstance(blist, dict):
+            if  not blist.has_key('block_name'):
+                msg = err + ', reason=%s' % json.dumps(blist)
+                raise Exception(msg)
         for row in blist:
             yield row['block_name']
 
@@ -355,12 +361,18 @@ def get_blocks4tier_dates(dbs_url, api, args):
         date1 = ddict
         date1 = ddict + fullday
 
-    # get block list
-    blist   = (r for r in blocks4tier_date(dbs_url, tier, date1, date2))
+    try:
+        # get block list
+        blist   = (r for r in blocks4tier_date(dbs_url, tier, date1, date2))
 
-    # get summaries
-    for row in block_summary(dbs_url, blist):
-        yield row
+        # get summaries
+        for row in block_summary(dbs_url, blist):
+            yield row
+    except Exception as exc:
+        data = {'error': 'get_blocks4tier_dates API error',
+                'reason': str(exc),
+                'ts': time.time()}
+        yield dict(block=data)
 
 def get_dataset4block(args):
     "Get dataset name for given block"
