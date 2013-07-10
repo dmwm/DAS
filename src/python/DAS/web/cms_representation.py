@@ -529,14 +529,6 @@ class CMSRepresentation(DASRepresentation):
             try:
                 if  row.has_key('das'):
                     systems = self.systems(row['das']['system'])
-                    if  row['das']['system'] == ['combined'] or \
-                        row['das']['system'] == [u'combined']:
-                        if  lkey:
-                            rowsystems = DotDict(row).get('%s.combined' % lkey)
-                            try:
-                                systems = self.systems(rowsystems)
-                            except TypeError as _err:
-                                systems = self.systems(['combined'])
                 else:
                     systems = "" # no das record
                     print dastimestamp('DAS ERROR '), \
