@@ -591,7 +591,7 @@ class DBS3Service(DASAbstractService):
                 parent = row['parent']
                 for val in parent['parent_logical_file_name']:
                     yield dict(name=val)
-        elif api == 'runs_via_dataset':
+        elif api == 'runs_via_dataset' or api == 'runs':
             for row in gen:
                 values = row['run']['run_num']
                 if  isinstance(values, list):
