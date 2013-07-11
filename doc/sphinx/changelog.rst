@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Apply common set of indexes for both cache/merge collection to properly
+    get/merge records
+  - Allow runs DBS3 API to yield individual records
   - Support block tier=GEN-SIM date between [20120223, 20120224] query via
     blocksummaries DBS3 API
   - Switch from block_names to block_name as input parameter for blocksummaries
