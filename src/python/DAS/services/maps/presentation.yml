@@ -156,7 +156,6 @@ run : [
          "diff":["run.nevents"],
          "link":[
                 {"name":"Datasets", "query": "dataset run=%s"},
-                {"name":"Lumis", "query": "lumi run=%s"},
                 ],
         "description":"is run number (usually six digits) used by DBS/RunRegistry/CondDB/Tier-0 systems",
          "examples":[
@@ -199,9 +198,10 @@ lumi : [
          "description":"is used to identify luminosity block during run data-taking, it is \
 provided by DBS/CondDB/LumiDB systems",
          "examples":[
-         "lumi run=160915",
          "lumi file=/lfn.root",
+         "lumi file=/lfn.root run=160915",
          "lumi block=/a/b/c#123",
+         "lumi block=/a/b/c#123 | count(lumi)",
          ]
         },
         {"das": "lumi.delivered", "ui": "Delivered luminosiy"},
