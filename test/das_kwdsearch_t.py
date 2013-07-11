@@ -137,9 +137,6 @@ class TestDASKeywordSearch(unittest.TestCase):
         
         
 
-
-
-
         msg = '''
         Query: %s
         Got First: %s
@@ -150,7 +147,8 @@ class TestDASKeywordSearch(unittest.TestCase):
         if not test_passed  and  \
                 not (DO_NOT_FAIL_ON_NON_IMPLEMENTED and non_implemented):
             if isinstance(expected_results, list):
-                self.assertIn(first_result, expected_results, msg=msg)
+                # TODO: in py2.7 will be able to use assertIn
+                self.assertTrue(first_result in expected_results, msg=msg)
             else:
                 self.assertEquals(first_result, expected_results,  msg=msg)
 
@@ -158,7 +156,7 @@ class TestDASKeywordSearch(unittest.TestCase):
         # TODO: exclusion ( is that needed?)
         if exclude_for_all_results:
             for bad in exclude_for_all_results:
-                self.assertNotIn(bad, results)
+                self.assertTrue(bad not in results)
 
 
     def test_doctests(self):
@@ -429,6 +427,25 @@ class TestDASKeywordSearch(unittest.TestCase):
     def test_basic_queries_2(self):
         self.assertQueryResult('last name of vidmasze@cern.ch', 'user user=vidmasze@cern.ch | grep user.surname',
                                query_type='projection')
+
+
+    def test_from_free_text_parser(self):
+        pairs = [("Zee CMSSW_4_*", "dataset dataset=*Zee* release=CMSSW_4_*"),
+                 ("Zee mc", "dataset dataset=*Zee* datatype=mc"),
+                 # TODO: ("160915 CMSSW_4_*", "run run=160915 release=CMSSW_4_*"),
+                 ("/store/mc/Summer11/ZMM/GEN-SIM/DESIGN42_V11_428_SLHC1-v1/0003/AAF5DDA5-0733-E111-A8D4-0002C90A3426.root",
+                    "file file=/store/mc/Summer11/ZMM/GEN-SIM/DESIGN42_V11_428_SLHC1-v1/0003/AAF5DDA5-0733-E111-A8D4-0002C90A3426.root"),
+                 # TODO: could add unique prefix CMSSW_4_1* automatically...
+                 ("4_1 Zee", "dataset dataset=*Zee* release=*4_1*"),
+                 ("MC CMSSW_4_* /Zee",
+                    "dataset dataset=/Zee datatype=mc release=CMSSW_4_*"),
+                 # TODO: no wildcards allowed in tier so far.. is that needed?
+                 #("gen-sim-reco", "tier tier=*gen-sim-reco*"),
+                 #("SIM-DIGI", "tier tier=*SIM-DIGI*")
+                 ]
+
+        for kwq, result in pairs:
+            self.assertQueryResult(kwq, result)
 
 
     def test_complex_no_impossible_results(self):
