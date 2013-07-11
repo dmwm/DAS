@@ -1,15 +1,10 @@
 #!/bin/sh
 
-# To run this:
-# bash $DAS_ROOT/keywordsearch/bootstrap.sh
+DAS_PYTHONPATH=`python -c "import os, DAS; print os.path.dirname(DAS.__file__)"`
 
+QUERIES_FILE="$DAS_PYTHONPATH/services/bootstrap_queries/cms_bootstrap_queries_1r.txt"
 
-# QUERIES_FILE="./bootstrap_queries.txt"
-# QUERIES_FILE="/home/vidma/Desktop/DAS/DAS_code/DAS/src/python/DAS/keywordsearch/bootstrap_queries_1r.txt"
-QUERIES_FILE="$DAS_ROOT/services/bootstrap_queries/cms_bootstrap_queries_1r.txt"
-
-# mv src/python/DAS/keywordsearch/bootstrap_queries_1r.txt etc/
-#
+# TODO: mv src/python/DAS/keywordsearch/bootstrap_queries_1r.txt etc/
 
 
 # Clean up:
@@ -24,18 +19,18 @@ while read query; do
     das_cli --no-output -q "$query"
 
     # while the results are still in raw cache, update the registry about service result structure
-    python -u  $DAS_ROOT/analytics/standalone_task.py -c key_learning
+    python -u  $DAS_PYTHONPATH/analytics/standalone_task.py -c key_learning
 
 done < $QUERIES_FILE
 
 # TODO: remove result_field_index
 rm -Rf $DAS_KWS_IR_INDEX/*
 # reload the fields index
-python -u  $DAS_ROOT/analytics/standalone_task.py -c update_result_field_index
+python -u  $DAS_PYTHONPATH/analytics/standalone_task.py -c update_result_field_index
 
 # Bootstrap values (release, datatype, etc)
-python $DAS_ROOT/keywordsearch/metadata/input_values_tracker.py
+python $DAS_PYTHONPATH/keywordsearch/metadata/input_values_tracker.py
 
 # Bootstrap Dataset names (TODO: this should go automatically...)
 echo 'Bootstraping Dataset names'
-python $DAS_ROOT/web/dbs_daemon.py
+python $DAS_PYTHONPATH/web/dbs_daemon.py
