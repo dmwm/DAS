@@ -202,20 +202,22 @@ class DASMongocache(object):
             self.add_manipulator()
 
             # ensure that we have the following indexes
-            index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                          ('das.system', ASCENDING),
-                          ('qhash', DESCENDING),
+            common_idx = [
                           ('file.name', DESCENDING),
                           ('dataset.name', DESCENDING),
                           ('block.name', DESCENDING),
                           ('run.run_number', DESCENDING),
+                          ]
+            index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
+                          ('das.system', ASCENDING),
+                          ('qhash', DESCENDING),
                           ('das.record', ASCENDING)]
-            create_indexes(self.col, index_list)
+            create_indexes(self.col, index_list + common_idx)
             index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
                           ('qhash', DESCENDING),
                           ('das.record', ASCENDING),
                           ('das.ts', ASCENDING)]
-            create_indexes(self.merge, index_list)
+            create_indexes(self.merge, index_list + common_idx)
 #            print "### DASMongocache:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
