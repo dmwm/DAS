@@ -10,41 +10,23 @@ this currently  is a fairly nasty implementation of recursion-based
 
 __author__ = 'vidma'
 
-
-
 import heapq
 
 from heapq import heappush, heappushpop, heappop
-#heapq.cmp_lt = cmp_gt
-
-
-def heappushmaxqueue(heap, item):
-    """Fast version of a heappush followed by a heappop."""
-    if heap and heapq.cmp_lt(heap[0], item):
-        item, heap[0] = heap[0], item
-        heapq._siftup(heap, 0)
-    return item
-
-
 
 from cherrypy import thread_data
 
-
-
 from DAS.keywordsearch.metadata.das_schema_adapter import validate_input_params, \
     entities_for_input_params
-
 
 from DAS.keywordsearch.config import *
 
 from DAS.keywordsearch.nlp import filter_stopwords
 
-
-from DAS.keywordsearch.tokenizer import  get_keyword_without_operator, \
-     test_operator_containment
+from DAS.keywordsearch.tokenizer import get_keyword_without_operator, \
+    test_operator_containment
 
 from DAS.keywordsearch.metadata import das_ql
-
 
 from DAS.keywordsearch.config import K_RESULTS_TO_STORE
 
@@ -54,14 +36,16 @@ def _get_reserved_terms(stem=False):
     terms that shall be down-ranked if contained in values or in grep-field names
     """
     # TODO: list of entities shall be taken from das_schema_adapter
-    entities = ['dataset', 'run', 'block', 'file', 'site', 'config', 'time', 'lumi']
+    entities = ['dataset', 'run', 'block', 'file', 'site', 'config', 'time',
+                'lumi']
     operators = das_ql.get_operator_synonyms()
     r = set(entities) | set(operators)
 
     if stem:
-        r =  map(lambda w: stemmer.stem(w), r)
+        r = map(lambda w: stemmer.stem(w), r)
 
     return r
+
 
 def normalization_factor_by_query_len(keywords_list):
     """
@@ -76,13 +60,13 @@ def normalization_factor_by_query_len(keywords_list):
 
     kws_wo_stopwords = filter_stopwords(set(keywords_list))
 
-    _get_phrase_len = lambda kw: len(filter_stopwords(set(get_keyword_without_operator(kw).split(' '))))
+    _get_phrase_len = lambda kw: len(
+        filter_stopwords(set(get_keyword_without_operator(kw).split(' '))))
 
     expected_optimal_score = \
-        sum([test_operator_containment(kw) and 2.0 *_get_phrase_len(kw) \
-                or 1.0 * _get_phrase_len(kw)
-             for kw in kws_wo_stopwords]) + 0.3
-
+        sum(2.0 * _get_phrase_len(kw)  if test_operator_containment(kw)
+            else 1.0 * _get_phrase_len(kw)
+            for kw in kws_wo_stopwords) + 0.3
 
     if USE_LOG_PROBABILITIES:
         # TODO: we may be more kind, assuming 0.9 or so is very good
@@ -95,7 +79,7 @@ def normalization_factor_by_query_len(keywords_list):
 
 
 def penalize_non_mapped_keywords_(keywords_used, keywords_list, score,
-                                  result_type = False):
+                                  result_type=False):
     """
     penalizes keywords that have not been mapped.
     """
@@ -112,14 +96,14 @@ def penalize_non_mapped_keywords_(keywords_used, keywords_list, score,
 
     N_kw_not_used = max(N_kw_without_stopw - len(keywords_used), 0)
 
-
     if USE_LOG_PROBABILITIES:
         score += logP(P_NOT_TAKEN) * N_kw_not_used
 
         # TODO: shall we map field>=value twice as in averaging approach? then not taking is penalized twice...
         # we add the score twice anyways...!!!
 
-        N_not_mapped_all = max(N_total_kw - len(keywords_used) - N_kw_not_used, 0)
+        N_not_mapped_all = max(N_total_kw - len(keywords_used) - N_kw_not_used,
+                               0)
         score += logP(P_NOT_TAKEN_STOPWORD) * N_not_mapped_all
 
         if not result_type:
@@ -152,9 +136,11 @@ def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
         return logP(-5.0)
 
-    if DEBUG: print '_get_reserved_terms(stem=True):', _get_reserved_terms(stem=True)
+    if DEBUG: print '_get_reserved_terms(stem=True):', _get_reserved_terms(
+        stem=True)
 
-    if not ' ' in keyword and stemmer.stem(keyword) in _get_reserved_terms(stem=True): #['dataset', 'run', 'block', 'file', 'site']:
+    if not ' ' in keyword and stemmer.stem(keyword) in _get_reserved_terms(
+            stem=True): #['dataset', 'run', 'block', 'file', 'site']:
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
         return logP(-3.0)
 
@@ -178,12 +164,13 @@ def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
             print "avg schema score for '%s' is %.2f; avg schema = %.2f " % (
                 keyword, keyword_schema_score, avg_score)
         if avg_score < keyword_schema_score:
-            return 3*min(-0.5, -(keyword_schema_score- avg_score))
+            return 3 * min(-0.5, -(keyword_schema_score - avg_score))
 
     return 0.0
 
 
-def store_result_(score, r_type, values_dict, r_filters, keywords_used, trace = set(), result_type_specified=True):
+def store_result_(score, r_type, values_dict, r_filters, keywords_used,
+                  trace=set(), result_type_specified=True):
     """
     result_type_specified - it is not always specified by the query,
         e.g. 'Zmmg' gives no such information
@@ -195,28 +182,39 @@ def store_result_(score, r_type, values_dict, r_filters, keywords_used, trace = 
     #thread_data.results.append(result)
 
 
-
-
-
-def store_result_dict_(score, r_type, values_dict, r_filters, keywords_used, trace = set(), missing_inputs=None, result_type_specified=True):
-
+def store_result_dict_(score, r_type, values_dict, r_filters, keywords_used,
+                       trace=set(), missing_inputs=None,
+                       result_type_specified=True):
     # TODO: how to know that result_type is not mapped?
-    _score = penalize_non_mapped_keywords_(keywords_used, thread_data.keywords_list, score, result_type = result_type_specified)
-
+    _score = penalize_non_mapped_keywords_(keywords_used,
+                                           thread_data.keywords_list, score,
+                                           result_type=result_type_specified)
 
     _trace = tuple(trace | set([('adjusted_score', _score)]))
 
+    result = {'score': _score,
+              'result_type': r_type,
+              'input_values': values_dict.items(),
+              'result_filters': tuple(r_filters),
+              'trace': _trace,
+              'status': missing_inputs and 'missing_inputs' or 'OK',
+              'missing_inputs': missing_inputs}
 
-    result =   {'score': _score,
-                'result_type': r_type,
-                'input_values': values_dict.items(),
-                'result_filters': tuple(r_filters),
-                'trace': _trace,
-                'status': missing_inputs and 'missing_inputs' or 'OK',
-                'missing_inputs': missing_inputs}
+
+    class ScoreDescOrder(object):
+            def __init__(self, num=0):
+                self.num = num
+
+            # inverse the order
+            def __lt__(self, other):
+                return self.num < other.num
+
+            def __repr__(self):
+                return self.num
 
 
-    heap_tuple = (score, result)
+
+    heap_tuple = (ScoreDescOrder(score), result)
 
     if DEBUG:
         print 'adding a result:'
@@ -232,7 +230,7 @@ def store_result_dict_(score, r_type, values_dict, r_filters, keywords_used, tra
         # TODO: storing in the other way round may further improve the performance...
         if len(thread_data.results_dict) > K_RESULTS_TO_STORE:
             # this adds the item, and removes the smallest
-            heappush(thread_data.results_dict, heap_tuple)
+            heappushpop(thread_data.results_dict, heap_tuple)
 
             # TODO: check if this work as expected
             #smalest_popped = heappop(thread_data.results_dict)
@@ -244,21 +242,21 @@ def store_result_dict_(score, r_type, values_dict, r_filters, keywords_used, tra
             heappush(thread_data.results_dict, heap_tuple)
 
 
-    #thread_data.results_dict.append(result)
-
+            #thread_data.results_dict.append(result)
 
 
 def generate_result_filters(keywords_list, chunks, keywords_used,
                             old_score, result_type, values_mapping,
                             result_filters=None, field_idx_start=0,
-                            traceability=set(), result_fields_included = set(),
+                            traceability=set(), result_fields_included=set(),
                             result_type_specified=True):
     if result_filters is None:
         result_filters = []
 
     if not USE_LOG_PROBABILITIES:
         # prune out branches with very low scores (that is due to sense-less assignments)
-        if mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled('PRUNE_NEGATIVE_SCORES'):
+        if mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled(
+                'PRUNE_NEGATIVE_SCORES'):
             return
     else:
         # low_score could be low_prob**n_kwds, e.g. 0.3**n_kwds, if we get it,
@@ -292,7 +290,6 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
             _r_filters = result_filters[:]
             target = target_fieldname
 
-
             delta_score = match['score']
 
             if match['predicate']:
@@ -303,19 +300,19 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
                     # promote matches with operator
                     delta_score *= 2.0
 
-
             tokens = filter_stopwords(match['tokens_required'])
             if len(tokens) == 1:
                 delta_score += penalize_highly_possible_schema_terms_as_values(
                     tokens[0], None)
             else:
 
-                penalties = map(lambda kwd: penalize_highly_possible_schema_terms_as_values(kwd, None),
-                                tokens)
+                penalties = map(
+                    lambda kwd: penalize_highly_possible_schema_terms_as_values(
+                        kwd, None),
+                    tokens)
                 # for now, use average
-                delta_score += len(penalties) and sum(penalties)/len(penalties) or 0.0
-
-
+                delta_score += len(penalties) and sum(penalties) / len(
+                    penalties) or 0.0
 
             _r_filters.append(target)
 
@@ -329,36 +326,30 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
             # http://stackoverflow.com/questions/2243049/what-do-you-think-about-pythons-new-set-literal-2-7a3
 
             _trace = traceability | set([
-                                        (tuple(match['tokens_required']),
-                                        'result_projection',
-                                        target,
-                                         tuple({'delta_score': delta_score,
-                                          'field_score': match['score'],
-                                          'old_score': old_score,
-                                           'new_score': new_score,
-                                          }.items())), ])
+                (tuple(match['tokens_required']),
+                 'result_projection',
+                 target,
+                 tuple({'delta_score': delta_score,
+                        'field_score': match['score'],
+                        'old_score': old_score,
+                        'new_score': new_score,
+                 }.items())), ])
 
             store_result_(new_score, result_type,
-                         values_mapping,
-                         _r_filters,
-                         keywords_used_,
-                         _trace,
-                         result_type_specified=result_type_specified or 'projection')
-
+                          values_mapping,
+                          _r_filters,
+                          keywords_used_,
+                          _trace,
+                          result_type_specified=result_type_specified or 'projection')
 
             if len(keywords_used_) < len(set(keywords_list)):
                 generate_result_filters(keywords_list, chunks, keywords_used_,
-                    new_score, result_type, values_mapping,
-                    result_filters =_r_filters, field_idx_start=field_idx + 1,
-                    traceability=_trace,
-                    result_fields_included = result_fields_included | set([target_fieldname ]))
-
-
-
-
-
-
-
+                                        new_score, result_type, values_mapping,
+                                        result_filters=_r_filters,
+                                        field_idx_start=field_idx + 1,
+                                        traceability=_trace,
+                                        result_fields_included=result_fields_included | set(
+                                            [target_fieldname]))
 
 
 def store_result_and_check_projections(
@@ -423,7 +414,7 @@ def store_result_and_check_projections(
             #                                              old_score)
 
             store_result_(old_score, result_type, values_mapping,
-                [],keywords_used | result_projection_forbidden, trace)
+                [], keywords_used | result_projection_forbidden, trace)
 
             generate_result_filters(keywords_list, chunks,
                                     keywords_used | result_projection_forbidden,
@@ -436,8 +427,8 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
                             values_ws,
                             old_score, values_mapping=None, # TODO
                             keywords_used=set(),
-                            keywords_list= (), keyword_index=0, chunks=(),
-                            trace= set(),
+                            keywords_list=(), keyword_index=0, chunks=(),
+                            trace=set(),
                             result_projection_forbidden=set()):
     UGLY_DEBUG = False
     if values_mapping is None:
@@ -456,7 +447,8 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
 
     # prune out branches with very low scores (that is due to sence-less assignments)
     if not USE_LOG_PROBABILITIES:
-        if mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled('PRUNE_NEGATIVE_SCORES'):
+        if mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled(
+                'PRUNE_NEGATIVE_SCORES'):
             return
     else:
         # TODO: pruning is harder
@@ -464,7 +456,7 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
 
     if UGLY_DEBUG:
         print 'generate_value_mappings(', \
-            result_type, fields_included, schema_ws, values_ws, old_score,\
+            result_type, fields_included, schema_ws, values_ws, old_score, \
             values_mapping, keywords_used, keywords_list, keyword_index, ')'
 
     if keyword_index == len(keywords_list):
@@ -484,10 +476,11 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
 
     # case 1) we do not take keyword[i]:
     generate_value_mappings(result_type, fields_included, schema_ws,
-        values_ws, old_score, values_mapping,
-        keywords_used, keywords_list, keyword_index=keyword_index + 1,
-        chunks=chunks, trace=trace,
-        result_projection_forbidden=result_projection_forbidden)
+                            values_ws, old_score, values_mapping,
+                            keywords_used, keywords_list,
+                            keyword_index=keyword_index + 1,
+                            chunks=chunks, trace=trace,
+                            result_projection_forbidden=result_projection_forbidden)
 
     # case 2) we do take keyword[i]:
     if keyword not in keywords_used:
@@ -521,57 +514,62 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
 
                 # we favour mappings which respect X=Y conditions in the keywords
                 if '=' in keyword:
-                    smapping = [(field_score, smapping) for (field_score, smapping) in
+                    smapping = [(field_score, smapping) for
+                                (field_score, smapping) in
                                 schema_ws[keyword]
                                 if smapping == possible_mapping]
                     if smapping:
                         # increase by the score of mapping into schema (to only favour likely schema mappings)
                         delta_score += smapping[0][
-                                     0] + SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
+                                           0] + SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT
 
 
 
             # TODO: penalize keywords that are mapping well to the schema entities
             if True and not '=' in keyword:
-                delta_score += penalize_highly_possible_schema_terms_as_values(keyword,
-                                schema_ws)
+                delta_score += penalize_highly_possible_schema_terms_as_values(
+                    keyword,
+                    schema_ws)
 
-
-            new_score = logP(delta_score) +  old_score
+            new_score = logP(delta_score) + old_score
             new_fields = fields_included | set([possible_mapping])
 
             if validate_input_params(new_fields, final_step=False,
-                entity=result_type):
+                                     entity=result_type):
                 generate_value_mappings(result_type,
-                    fields_included=new_fields,
-                    values_mapping=vm_new,
-                    old_score=new_score,
-                    keywords_used=keywords_used | set([keyword]),
-                    schema_ws=schema_ws, values_ws=values_ws,
-                    keyword_index=keyword_index + 1,
-                    keywords_list=keywords_list,
-                    chunks=chunks,
-                    trace= trace| set([(keyword,
-                                      'value_for',
-                                      possible_mapping,
-                                     (
-                                         ('delta_score', delta_score),
-                                         ('old_score', old_score),
-                                         ('new_score', new_score),
-                                     ))]),
-                    result_projection_forbidden = result_projection_forbidden)
+                                        fields_included=new_fields,
+                                        values_mapping=vm_new,
+                                        old_score=new_score,
+                                        keywords_used=keywords_used | set(
+                                            [keyword]),
+                                        schema_ws=schema_ws,
+                                        values_ws=values_ws,
+                                        keyword_index=keyword_index + 1,
+                                        keywords_list=keywords_list,
+                                        chunks=chunks,
+                                        trace=trace | set([(keyword,
+                                                            'value_for',
+                                                            possible_mapping,
+                                                            (
+                                                                ('delta_score',
+                                                                 delta_score),
+                                                                ('old_score',
+                                                                 old_score),
+                                                                ('new_score',
+                                                                 new_score),
+                                                            ))]),
+                                        result_projection_forbidden=result_projection_forbidden)
 
 
                 # (as a final condition) now every field in fields_included that were guessed in earlier step, has to be covered by values
                 # newones could still be added
 
 
-
 def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
                              old_score, kw_list=(), kw_index=0,
                              kw_used=set(),
                              chunks=(),
-                             trace= set()):
+                             trace=set()):
     # TODO: the recursion is dumb, we could at least use some pruning
     # TODO: keyword order is important
     UGLY_DEBUG = False
@@ -584,23 +582,24 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
     if kw_index == len(kw_list):
         # TODO: check if required fields are functioning properly !!!
         if validate_input_params(fields_old, final_step=True,
-            entity=result_type):
+                                 entity=result_type):
             if UGLY_DEBUG: print 'SCHEMA MATCH:', (
                 result_type, fields_old), validate_input_params(
                 fields_old, final_step=True, entity=result_type)
 
 
         # if we used a compound keyword A=B for schema, its still available for values
-        keywords_used_wo_operators = set(filter(lambda k: not '=' in k, kw_used))
+        keywords_used_wo_operators = set(
+            filter(lambda k: not '=' in k, kw_used))
         result_projection_forbidden = set(filter(lambda k: '=' in k, kw_used))
 
         # try to map values based on this
         generate_value_mappings(result_type, fields_old, schema_ws,
-            values_ws, old_score,
-            keywords_used=keywords_used_wo_operators, keywords_list=kw_list,
-            chunks=chunks,  trace=trace,
-            result_projection_forbidden = result_projection_forbidden)
-
+                                values_ws, old_score,
+                                keywords_used=keywords_used_wo_operators,
+                                keywords_list=kw_list,
+                                chunks=chunks, trace=trace,
+                                result_projection_forbidden=result_projection_forbidden)
 
         if UGLY_DEBUG: print (
             result_type, fields_old, schema_ws, values_ws)
@@ -620,9 +619,9 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
 
     # opt 1) do not take keyword[i]
     generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
-        kw_list=kw_list, kw_index=kw_index + 1,
-        old_score=old_score,
-        kw_used=kw_used, chunks=chunks, trace=trace)
+                             kw_list=kw_list, kw_index=kw_index + 1,
+                             old_score=old_score,
+                             kw_used=kw_used, chunks=chunks, trace=trace)
 
     # opt 2) take it:
     for schema_score, target_field in schema_w:
@@ -639,13 +638,15 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
 
             delta_score = schema_score
             generate_schema_mappings(result_type, fields_new, schema_ws,
-                values_ws,
-                kw_list=kw_list,
-                kw_index=kw_index + 1,
-                old_score=old_score + logP(delta_score),
-                kw_used=kw_used | set([kwd]),
-                chunks=chunks,
-                trace=trace | set([(kwd,'schema', target_field, delta_score)]))
+                                     values_ws,
+                                     kw_list=kw_list,
+                                     kw_index=kw_index + 1,
+                                     old_score=old_score + logP(delta_score),
+                                     kw_used=kw_used | set([kwd]),
+                                     chunks=chunks,
+                                     trace=trace | set([(kwd, 'schema',
+                                                         target_field,
+                                                         delta_score)]))
 
 
         # opt 2.b) take as requested entity (result type)
@@ -654,9 +655,9 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
 
             # TODO: use focus extraction instead!!!
             # if this is the first keyword mapped to schema (we expect entity name to come first)
-            if not kw_used and (kw_index+1) * 1.9 < len(kw_list):
+            if not kw_used and (kw_index + 1) * 1.9 < len(kw_list):
                 delta_score *= (
-                    float(len(kw_list)) - kw_index) / len(
+                                   float(len(kw_list)) - kw_index) / len(
                     kw_list)
 
                 if not USE_LOG_PROBABILITIES:
@@ -668,28 +669,38 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
 
                 # TODO: currently the score is anyway being increased if a value is being mapped...
                 generate_schema_mappings(target_field, fields_old,
-                    schema_ws, values_ws,
-                    kw_list=kw_list,
-                    kw_index=kw_index + 1,
-                    old_score=old_score + logP(delta_score),
-                    kw_used=kw_used | set([kwd]),
-                    chunks=chunks,
-                    trace=trace | set([(kwd,'requested_entity',  target_field, delta_score)]))
+                                         schema_ws, values_ws,
+                                         kw_list=kw_list,
+                                         kw_index=kw_index + 1,
+                                         old_score=old_score + logP(
+                                             delta_score),
+                                         kw_used=kw_used | set([kwd]),
+                                         chunks=chunks,
+                                         trace=trace | set([(kwd,
+                                                             'requested_entity',
+                                                             target_field,
+                                                             delta_score)]))
 
             # opt 2.c) take both as requested entity (result type) and  input param entity
             if validate_input_params(fields_new,
-                entity=target_field):
+                                     entity=target_field):
 
-                if UGLY_DEBUG: print 'valid',(target_field, fields_new)
+                if UGLY_DEBUG: print 'valid', (target_field, fields_new)
 
                 generate_schema_mappings(target_field, fields_new,
-                    schema_ws, values_ws,
-                    kw_list=kw_list,
-                    kw_index=kw_index + 1,
-                    old_score=old_score + logP(delta_score),
-                    kw_used=kw_used | set([kwd]),
-                    chunks=chunks,
-                    trace= trace | set([(kwd, 'requested_entity', target_field, delta_score)])
-                           | set([(kwd, 'schema', target_field, delta_score)])
+                                         schema_ws, values_ws,
+                                         kw_list=kw_list,
+                                         kw_index=kw_index + 1,
+                                         old_score=old_score + logP(
+                                             delta_score),
+                                         kw_used=kw_used | set([kwd]),
+                                         chunks=chunks,
+                                         trace=trace | set([(kwd,
+                                                             'requested_entity',
+                                                             target_field,
+                                                             delta_score)])
+                                               | set([(kwd, 'schema',
+                                                       target_field,
+                                                       delta_score)])
                 )
 

@@ -4,12 +4,9 @@
 main module for Keyword Search
 """
 
-
-#import cherrypy
 from cherrypy import thread_data, request
 
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
-
 
 from DAS.keywordsearch.tokenizer import tokenize, cleanup_query
 from DAS.keywordsearch.presentation.result_presentation import *
@@ -72,7 +69,7 @@ def tokenize_query(query, DEBUG=False):
 
 
 
-def search(query, inst=None, dbsmngr=None, _DEBUG=False):
+def search(query, inst=None, dbsmngr=None):
     """
     Performs keyword search
     """
@@ -121,8 +118,8 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
 
     best_scores = {}
 
-    get_best_score = lambda q: \
-        best_scores.get(q, {'score': -float("inf")})['score']
+    get_best_score = lambda scores, q: \
+        scores.get(q, {'score': -float("inf")})['score']
 
 
     from math import exp
@@ -140,7 +137,7 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
             result['score'] = exp(result['score'])
 
 
-        if get_best_score(query) < result['score']:
+        if get_best_score(best_scores, query) < result['score']:
             best_scores[query] = result
 
 
@@ -180,7 +177,7 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
 
     if DEBUG:
         print '\n'.join(
-            ['%.2f: %s' % (r['score'], r['result']) for r in best_scores])
+                    '%.2f: %s' % (r['score'], r['result']) for r in best_scores)
 
     return best_scores
 
@@ -189,56 +186,23 @@ def search(query, inst=None, dbsmngr=None, _DEBUG=False):
     # TODO: feature, the part of string that matches, e.g. dataset=*valid* vs status=valid !
 
 def crap():
-    if False:
-        print search('datasets at T1_CH_CERN')
-        print search('datasets at T1_CH_*')
-
-        print search(
-            '/SingleElectron/Run2011A-WElectron-PromptSkim-v6/RAW-RECO status')
-
-        print search(
-            'is /SingleElectron/Run2011A-WElectron-PromptSkim-v6/RAW-RECO valid')
-
-        print search('location of *Run2012*PromptReco*/AOD')
-
-        print search(
-            'where is /SingleElectron/Run2011A-WElectron-PromptSkim-v6/RAW-RECO')
-
-        print search('where is Zmm')
-
-        print search(
-            '/SingleElectron/Run2011A-WElectron-PromptSkim-v6/RAW-RECO status')
-
     print search('number of events in dataset *Run2012*PromptReco*/AOD')
-
-
     # site
     print search('custodial of dataset *Run2012*PromptReco*/AOD')
-
     print search(
         'how many events there are in lumi section 198952 of *Run2012*PromptReco*/AOD'.replace(
             'how many', 'number of'))
     print search(
         'number of events there are in lumi section 198952 of *Run2012*PromptReco*/AOD')
-
     print search('global tag *Run2012*PromptReco*/AOD')
-
-    print search('dataset = dataset  global tag')
-
+    print search('dataset = Zmm  global tag')
     print search(
         'dataset=/GlobalSep07-A/Online-CMSSW_1_6_0_DAQ3/*  run = 20853 number of events')
-
     print search(
         'dataset run=148126 & site=T1_US_FNAL')
-
     print search('Zmm "number of events">10')
-
     print search('Zmm nevents>10')
-
     print search('Zmm block.nevents>10')
-
-
-    #print greedy_chunker([], '*Run2012*PromptReco*/AOD number of events')
 
     # TODO: complex
     #print search('what is the custodial site of *Run2012*PromptReco*/AOD')

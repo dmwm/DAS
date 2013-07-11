@@ -9,7 +9,7 @@ Some info on Munkres Assignment: http://csclab.murraystate.edu/bob.pilgrim/445/m
 import sys
 
 # from munkres import Munkres, print_matrix
-
+import pprint
 from DAS.keywordsearch.rankers.munkres.munkres import Munkres
 
 from itertools import imap
@@ -18,31 +18,18 @@ INCL_INDEX = 0
 EXCL_INDEX = 1
 COST_INDEX = 2
 
+
+
 UGLY_DEBUG = False
-
-
-def parse_str_matrix(mstr):
-    return [
-            [float(cell.strip())
-             for cell in l.split('\t')
-             if cell.strip()  ]
-             for l in mstr.split('\n')
-             if l.strip()
-    ]
-
-
-matrix55_0 = parse_str_matrix(
-    '''0.376573	0.012995	0.596978	0.609910	0.553592
-    0.850493	0.621621	0.301854	0.502297	0.762826
-    0.895802	0.871357	0.874034	0.505582	0.892734
-    0.312408	0.597709	0.201495	0.866165	0.643917
-    0.316172	0.243507	0.952605	0.262790	0.787490''')
+DEBUG=False
 
 
 class MunkresRanked:
     """
     This computes a Ranked List of K-best solutions for the Assignment Problem
     """
+    #maxnum = 10000.0
+
 
     def getf(self):
         maxfunc = min
@@ -54,21 +41,25 @@ class MunkresRanked:
 
         return maxfunc
 
-    def __init__(self, matrix, maximize=False):
+    def __init__(self, matrix, maximize=False, maxnum=1000.0):
+        #TODO: at the moment maximization works only if maxnum is much smaller than maxint
+
         self._matrix = self.cost_matrix = matrix
         self._maximize = maximize
+        self.maxnum = maxnum #sys.maxint
+
 
 
         self.m = Munkres()
         self._partial_solutions = []
 
 
-        self.maxfunc = min
+        self.minfunc = min
 
         # initially Munkres is intended to minimize the total cost
         # if instead we want to maximize the scores, invert them
         if self._maximize:
-            self.maxfunc = max
+            self.minfunc = max
             self.cost_matrix = self.get_matrix_for_maximization(matrix)
 
     @staticmethod
@@ -87,7 +78,7 @@ class MunkresRanked:
         for row in matrix:
             cost_row = []
             for col in row:
-                cost_row += [sys.maxint - col]
+                cost_row += [self.maxnum - col]
             cost_matrix += [cost_row]
 
         return cost_matrix
@@ -158,7 +149,8 @@ class MunkresRanked:
         if UGLY_DEBUG:
             for row, col in incl:
                 print 'tranform_node, incl cell:', (row, col), 'cost:', \
-                    self.cost_matrix[row][col]
+                    self.cost_matrix[row][col], \
+                    ' matrix:', self._matrix[row][col]
 
         # new_cost = old_cost + self.cost_matrix[row][col] for cell in new_incl
         new_cost = sum(self._matrix[row][col]
@@ -191,7 +183,14 @@ class MunkresRanked:
                '\n} '
 
 
-    def k_best_solutions(self, k=10, DEBUG=False):
+    def _debug_partial_solutions(self, txt):
+        if UGLY_DEBUG:
+            print 'partial solutions '+ txt
+            print [str(self.print_node(s['node']))+':'+ str(s['cost'])
+                   for s in self._partial_solutions
+                   if not s.get('disabled')]
+
+    def k_best_solutions(self, k=10):
         """
         compute the K-best solutions
         """
@@ -201,6 +200,7 @@ class MunkresRanked:
         self._partial_solutions.append(min_cost_sol)
 
         if DEBUG: MunkresRanked.print_solution(self._matrix, min_cost_sol['cells'])
+
         yield min_cost_sol
 
         # define partial nodes
@@ -237,12 +237,9 @@ class MunkresRanked:
             # TODO: actually this we should know before-hand... as all nodes are supposed to be non-empty
             new_solutions = filter(None, new_solutions)
 
-            if UGLY_DEBUG:
-                print 'partial solutions before'
-                print [self.print_node(s['node'])
-                       for s in self._partial_solutions
-                       if not s.get('disabled')]
+            self._debug_partial_solutions('before')
 
+            # TODO: for some reason we are getting duplicates, but if this filtering is active all works fine!
             if True:
                 # check for duplicates... TODO: shall this arrise?
                 for sol in new_solutions:
@@ -252,29 +249,24 @@ class MunkresRanked:
             else:
                 self._partial_solutions.extend(new_solutions)
 
-            if UGLY_DEBUG:
-                print 'partial solutions in-between'
-                print '\n'.join([str(self.print_node(s['node']))+':'+ str(s['cost'])
-                       for s in self._partial_solutions
-                       if not s.get('disabled')])
+            self._debug_partial_solutions('in between')
 
 
-            # TODO: choose the best one, and add it's sub-nodes to node list
+            # find the best solution, and add it's sub-nodes to node list
 
             if DEBUG: print 'NEW SOLUTIONS:', new_solutions
-
 
 
             # TODO: disabled could be more performant...
             not_used_sols = (s for s in self._partial_solutions
                              if not s.get('disabled', False))
             try:
-                min_cost_sol = self.maxfunc(not_used_sols,
+                min_cost_sol = self.minfunc(not_used_sols,
                                             key=lambda sol: sol['cost'])
             except ValueError, e:
                 # expect: ValueError: min() arg is an empty sequence
 
-                print 'Finished', e
+                if UGLY_DEBUG: print 'Finished', e
                 break
 
             if DEBUG: print 'Found one more min-cost solution:', min_cost_sol
@@ -284,12 +276,7 @@ class MunkresRanked:
             # remove the current min-cost from partial solutions
             min_cost_sol['disabled'] = True
 
-            if UGLY_DEBUG:
-                print 'partial solutions after removing current best:'
-                print '\n'.join([self.print_node(s['node'])
-                       for s in self._partial_solutions
-                       if not s.get('disabled')])
-
+            self._debug_partial_solutions('after')
 
             # partition the M_d (currently best solution) by adding new node elements to it based on
 
@@ -314,14 +301,16 @@ def permute(a, results):
 
 
 def exhaustive_search(matrix, k=10, maximize= False):
+    '''
+    runs exhaustive search to rank the assignments
+    '''
 
     permutations = []
     permute(range(len(matrix)), permutations) # [0, 1, 2] for a 3x3 matrix
 
-    print permutations
+    #print permutations
 
     import heapq
-    from heapq import heappushpop, heappush
     def cmp_gt(x, y):
     # Use __lt__ if available; otherwise, try __le__.
     # In Py3.x, only __lt__ will be called.
@@ -331,39 +320,49 @@ def exhaustive_search(matrix, k=10, maximize= False):
         heapq.cmp_lt = cmp_gt
 
     results = []
+
+
+    # TODO: heap query do not work in ascending order... is it implemented in C?
+
     # TODO: get proper permutations. itertools?
-    for i, rows in enumerate(permutations):
-        for cols in permutations:
-            cells = zip(rows, cols)
+    n = len(matrix)
+    for i, cols in enumerate(permutations):
+            cells = zip(range(n), cols)
+
             cost = sum(matrix[row][col]
-                         for row, col in cells)
-            r = (cost, tuple(set(cells)))
+                       for row, col in cells)
 
-            # TODO: this method results in duplicates...
-            if len(results) >= k*100:
-                heappushpop(results, r)
+            r = (cost, set(cells))
+
+            if False and k and len(results) >= k:
+                heapq.heappushpop(results, r)
             else:
-                heappush(results, r)
+                heapq.heappush(results, r)
 
-
-    results = tuple(set(results))
-    print sorted(results, reverse=maximize, key=lambda item: item[0])
     return results
 
 
+
+    #test_munkres()
 
 
 
 
 
 if __name__ == '__main__':
-    def test_munkres():
-        matrix = matrix55_0
-        m = Munkres()
-        print matrix
-        print('Best solution:')
-        MunkresRanked.print_solution(matrix, m.compute(matrix))
 
+
+
+
+
+    #test_ranked_assignment_float(maximize=False)
+
+    #test_ranked_assignment_float(maximize=True)
+
+
+
+    def test_munkres():
+        pass
 
         '''
         vidma@vidma-laptop:/storage/DAS/DAS_code/DAS/munkres/java-k-best-1.00/src$ java com.google.code.javakbest.Test
@@ -377,48 +376,3 @@ if __name__ == '__main__':
         (0, 3)	(1, 2)	(2, 4)	(3, 0)	(4, 1)
         Solution 4 (2.421300962484084):
         (0, 2)	(1, 4)	(2, 3)	(3, 0)	(4, 1)	'''
-
-
-    def test_ranked_assignment_float():
-        matrix = matrix55_0
-
-        mr = MunkresRanked(matrix, maximize=False)
-
-        print 'trying k-best'
-        sols = []
-        for sol in mr.k_best_solutions(k=30):
-            print 'sol detailed:', sol
-            cells = set(sol['cells']) | sol['node'][INCL_INDEX]
-            #print 'cells:', cells
-            cost = mr.get_total_cost(cells)
-            mr.print_solution(mr._matrix, cells)
-            sols.append(cost)
-
-
-        # TODO: we now get repetitions...!
-
-    def test():
-        matrix = [[5, 9, 1],
-                  [10, 3, 2],
-                  [8, 7, 4]]
-
-        mr = MunkresRanked(matrix, maximize=False)
-
-        results = set()
-        for sol in mr.k_best_solutions(k=300):
-            print 'sol detailed:', sol
-            cells = set(sol['cells']) | sol['node'][INCL_INDEX]
-            cost = mr.get_total_cost(sol['cells'])
-            r = set([(cost, tuple(cells))])
-            results |= r
-            #print 'cells:', cells
-            mr.print_solution(mr._matrix, cells)
-
-        #print results == set(exh_res)
-
-
-    #test_munkres()
-
-    test()
-    test_ranked_assignment_float()
-

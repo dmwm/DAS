@@ -450,7 +450,7 @@ def get_field_list_for_entity_by_pk(result_entity, pk):
         return _result_fields_by_entity[result_entity]
 
 
-def list_result_fields(_DEBUG=False):
+def list_result_fields():
     """
     lists the attributes contained in entity results (aggregated from services)
     """

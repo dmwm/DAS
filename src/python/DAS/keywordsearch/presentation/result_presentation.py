@@ -1,7 +1,7 @@
 __author__ = 'vidma'
 
 
-from DAS.keywordsearch.config  import DEBUG
+from DAS.keywordsearch.config  import DEBUG, UI_MAX_DISPLAYED_VALUE_LEN
 import DAS.keywordsearch.metadata.das_schema_adapter as integration_schema
 from DAS.keywordsearch.metadata.das_schema_adapter import entity_names
 
@@ -47,7 +47,8 @@ def DASQL_2_NL(dasql_tuple, html=True):
 
 
 
-def result_to_DASQL(result, frmt='text', shorten_html = True, max_value_len=20):
+def result_to_DASQL(result, frmt='text', shorten_html = True,
+                    max_value_len=UI_MAX_DISPLAYED_VALUE_LEN):
     """
     returns proposed query as DASQL in there formats:
     * text - standard DASQL
@@ -86,16 +87,27 @@ def result_to_DASQL(result, frmt='text', shorten_html = True, max_value_len=20):
         """
 
         fescape = lambda v: v and cgi.escape(v, quote=True) or ''
+        def shorten_value(val):
+
+            #return fescape(val[:max_value_len-2]) + \
+            #                      '<span class="not-fitting-value" style="font-size: 0.8em">...</span>'
+
+            middle = (max_value_len-2)/2
+            return fescape(val[:middle]) + \
+                     '<span class="not-fitting-value"' + \
+                     ' style="font-size: 0.8em">...</span>' + \
+                     fescape(val[-middle:])
+
 
 
         if frmt == 'html':
+
                     # shorten value if it's longer than
                     if isinstance(params, dict) and params.has_key('value') and shorten_html:
                         val = params['value']
                         if len(val) > max_value_len:
-                            params['value'] = fescape(val[:max_value_len-2]) + \
-                                  '<span class="not-fitting-value" style="font-size: 0.8em">...</span>'
-                            params['field']=fescape(params['field'])
+                            params['value'] = shorten_value(val)
+                            params['field'] = fescape(params['field'])
                     else:
                         # for html, make sure to escape the inputs
 
@@ -145,8 +157,9 @@ def result_to_DASQL(result, frmt='text', shorten_html = True, max_value_len=20):
 
     s_query =tmpl('RESULT_TYPE', s_result_type) + ' ' + \
               ' '.join(
-                        [tmpl('INPUT_FIELD_AND_VALUE', {'field': field, 'value': value})
-                            for (field, value) in s_input_params])
+                        tmpl('INPUT_FIELD_AND_VALUE',
+                             {'field': field, 'value': value})
+                        for (field, value) in s_input_params)
 
     result_projections = [p for p in projections_filters
                           if not isinstance(p, tuple)]

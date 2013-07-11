@@ -26,6 +26,8 @@ USE_IR_SCORE_NORMALIZATION_LOCAL = False
 K_RESULTS_TO_STORE = 20
 #K_RESULTS_TO_STORE = 0
 
+# max length of a value to be displayed without shortening it down in web UI
+UI_MAX_DISPLAYED_VALUE_LEN = 26
 
 logP = lambda score: score
 

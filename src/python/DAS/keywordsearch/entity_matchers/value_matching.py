@@ -176,7 +176,7 @@ def match_value_dataset(keyword):
 
         if not upd_kwd.endswith('*') and \
             not (upd_kwd0.startswith('/') or upd_kwd0.startswith('*')):
-            upd_kwd =  upd_kwd + '*'
+            upd_kwd += '*'
 
 
     print 'dataset.name', dataset_score, upd_kwd

@@ -28,7 +28,7 @@ from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 
 
-from jsonpath_rw import jsonpath, parse
+from jsonpath_rw import parse
 
 
 
@@ -116,7 +116,7 @@ class InputValuesTracker(object):
 
             if not KEEP_EXISTING_RECORDS_ON_RESTART:
                 self.col.remove()
-        except Exception as _exp:
+        except Exception as _exc:
             self.col = None
         if  not is_db_alive(self.dburi):
             self.col = None
