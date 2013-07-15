@@ -1,13 +1,18 @@
 #!/bin/sh
 
 DAS_PYTHONPATH=`python -c "import os, DAS; print os.path.dirname(DAS.__file__)"`
-
 QUERIES_FILE="$DAS_PYTHONPATH/services/bootstrap_queries/cms_bootstrap_queries_1r.txt"
 
-# TODO: mv src/python/DAS/keywordsearch/bootstrap_queries_1r.txt etc/
-
+# make sure mongodb is alive (otherwhile das_cli wont start...)
+echo "Waiting for DB"
+python $DAS_PYTHONPATH/tools/das_waitfordb.py
+if [ $? -ne 0 ]; then
+    echo "DB is down. Can not continue"
+    exit 1
+fi
 
 # Clean up:
+# TODO: we whall not wipe everything out from keylearning !?
 mongo --port 8230 keylearning --eval "db.db.remove(); db.db.find();"
 mongo --port 8230 das --eval "db.cache.remove(); db.merge.remove();"
 
