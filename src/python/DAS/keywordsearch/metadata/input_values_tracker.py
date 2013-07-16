@@ -2,9 +2,8 @@
 #-*- coding: ISO-8859-1 -*-
 #pylint: disable-msg=R0913,W0703,W0702
 """
-File: dbs_daemon.py
-Author: Valentin Kuznetsov <vkuznet@gmail.com>
-Description: DBS daemon, which update DAS cache with DBS datasets
+Description: maintains a list of the allowed input values for certain DAS keys
+by querying certain web-services.
 """
 
 # system modules
@@ -45,6 +44,7 @@ def fieldname(field):
     return field.replace('.', '_')
 
 # TODO: are wildcards always allowed?
+# TODO: multiple DBS instances?!
 service_input_value_providers = [
     {'field': 'site.name',
      'url': 'https://cmsweb.cern.ch/sitedb/data/prod/site-names',
@@ -63,15 +63,18 @@ service_input_value_providers = [
      'jsonpath': "$[0]['dataset_access_type'][*]",
      'test':'valid'}, # TODO: is it case sensitive?!
     {'field': 'release.name',
-
-    # https://cmsweb.cern.ch/dbs/prod/global/DBSReader/releaseversions
-     'url': 'https://cmsweb-testbed.cern.ch/dbs/dev/global/DBSReader/releaseversions',
+    # DEV URL was:
+    # https://cmsweb-testbed.cern.ch/dbs/dev/global/DBSReader/releaseversions
+     'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/releaseversions',
      'jsonpath': "$[0]['release_version'][*]",
      'test':'CMSSW_4_*'},
 
-    # TODO: this also have potentially useful primary_ds_type': 'mc' and creation date
-    # TODO: better to store in MongoDB?
-    #'primary_dataset': {'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/primarydatasets',                            'jsonpath': '$..primary_ds_name' },
+    # TODO: potentially useful primary_ds_type': 'mc' and creation date
+    {'field': 'primary_dataset.name',
+      'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/primarydatasets',
+      'jsonpath': '$..primary_ds_name',
+      'test': 'RelVal160pre4Z-TT'},
+
     {'field': 'group.name',
      'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/physicsgroups',
      'jsonpath': '$..physics_group_name',
@@ -205,20 +208,15 @@ class InputValuesTracker(object):
 
 
         stream = urllib2.urlopen(req)
-        #stream = urllib2.urlopen(url)
-
-        # parse the response, TODO: JSON only so far...
 
         # TODO:  sitedb2 is already tracked...
 
         if service['jsonpath']:
             response = json.load(stream)
             jsonpath_expr = parse(service['jsonpath'])
-            #results = jsonpath(response, jsonpath_expr)
             results = jsonpath_expr.find(response)
             stream.close()
-            return [{'value': v.value} for v in results]
-            #return results
+            return ({'value': v.value} for v in results)
 
         return []
 
@@ -231,7 +229,7 @@ def init_trackers():
     for s in service_input_value_providers:
         trackers[s['field']] = InputValuesTracker(s, dburi)
 
-# TODO: thread-unsafe!!!
+# TODO: thread-unsafe and connection is shared among threads!?
 init_trackers()
 
 def get_fields_tracked(only_stable=False):
@@ -246,7 +244,7 @@ def get_tracker(field):
 
 def check_for_unique_match(t, field, keyword):
     """
-    returns a value if only one exists, othwerwise a boolean value
+    returns a value if only one exists, otherwise a boolean value
     whether the keyword is matched by multiple values in a given field
     """
     it = t.find(keyword, limit=2)

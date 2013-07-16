@@ -89,8 +89,7 @@ def search(query, inst=None, dbsmngr=None):
     chunks, schema_ws, values_ws = get_entry_points(keywords, DEBUG)
 
 
-    #thread_data.results = []
-    thread_data.results_dict = []
+    thread_data.results = []
 
     # static per request
     thread_data.keywords_list = keywords
@@ -100,13 +99,11 @@ def search(query, inst=None, dbsmngr=None):
     generate_schema_mappings(None, [], schema_ws, values_ws,
         kw_list=keywords, kw_index=0, old_score=0, chunks=chunks)
 
+    results =  thread_data.results[:]
 
-    if DEBUG: print "============= Results for: %s ===" % query
+    if DEBUG or True:
+        print "============= Results for: %s ===" % query
 
-    results =  thread_data.results_dict[:]
-    if DEBUG:
-        print "RESULTSSSSSSSSSSSSSS"
-        print results
 
     # did we store all results?
     if K_RESULTS_TO_STORE:
@@ -116,6 +113,8 @@ def search(query, inst=None, dbsmngr=None):
 
     results.sort(key=lambda item: item['score'], reverse=True)
 
+    #print 'len(results)', len(results)
+    #print '------'
     best_scores = {}
 
     get_best_score = lambda scores, q: \
@@ -149,11 +148,7 @@ def search(query, inst=None, dbsmngr=None):
         query_len_norm_fact = normalization_factor_by_query_len(keywords)
 
         _get_score = lambda item: item['score']
-        #min_score = _get_score(min(best_scores, key=_get_score))
         max_score = _get_score(max(best_scores, key=_get_score))
-
-        #normalize = lambda item: (float(item['score']) - min_score) / \
-        #                         (max_score - min_score)
 
 
         # for displaying the score bar, we want to obtain scores <= 1.0
@@ -162,16 +157,14 @@ def search(query, inst=None, dbsmngr=None):
         if max_score_normalized > 1.0:
             visual_norm_fact = max_score_normalized * query_len_norm_fact
 
+        # SCORE is normalized by query length.
+        # close to 1 is good, as all keywords are mapped,
+        # negative or close to 0 is bad as either no keywords were mapped,
+        # or possibly false query interpretation received many penalties
 
-        for idx, r in enumerate(best_scores):
-
-            # SCORE normalized by query length.
-            # close to 1 is good, as all keywords are mapped,
-            # negative or close to 0 is bad as either no keywords were mapped,
-            # or possibly false query interpretation received many penalties
-
-            best_scores[idx]['len_normalized_score'] = _get_score(r) / query_len_norm_fact
-            best_scores[idx]['scorebar_normalized_score'] = _get_score(r) / visual_norm_fact
+        for r in best_scores:
+            r['len_normalized_score'] = _get_score(r) / query_len_norm_fact
+            r['scorebar_normalized_score'] = _get_score(r) / visual_norm_fact
 
 
 
@@ -181,9 +174,6 @@ def search(query, inst=None, dbsmngr=None):
 
     return best_scores
 
-
-
-    # TODO: feature, the part of string that matches, e.g. dataset=*valid* vs status=valid !
 
 def crap():
     print search('number of events in dataset *Run2012*PromptReco*/AOD')

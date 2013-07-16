@@ -2,15 +2,37 @@
 #pylint: disable-msg=C0301,C0103
 
 """
-Unit test for DotDict module
+Unit test for Ranked Munkres Assignment module
 """
 
-import os
-import sys
 import unittest
-from DAS.utils.ddict import DotDict
 
-class Test_DotDict(unittest.TestCase):
+from DAS.keywordsearch.rankers.munkres.munkres_ranked_list import MunkresRanked, \
+    exhaustive_search
+
+def parse_str_matrix(mstr):
+    return [
+            [float(cell.strip())
+             for cell in l.split('\t')
+             if cell.strip()  ]
+             for l in mstr.split('\n')
+             if l.strip()
+    ]
+
+
+matrix55_0 = parse_str_matrix(
+    '''0.376573	0.012995	0.596978	0.609910	0.553592
+    0.850493	0.621621	0.301854	0.502297	0.762826
+    0.895802	0.871357	0.874034	0.505582	0.892734
+    0.312408	0.597709	0.201495	0.866165	0.643917
+    0.316172	0.243507	0.952605	0.262790	0.787490''')
+
+matrix_33 = [[5, 9, 1],
+            [10, 3, 2],
+            [8, 7, 4]]
+
+
+class Test_Munkres_Ranked(unittest.TestCase):
     """
     A test class for the DotDict module
     """
@@ -18,161 +40,52 @@ class Test_DotDict(unittest.TestCase):
         """
         set up DAS core module
         """
-        self.rec1 = {'a':{'b':1, 'c':[1,2]}}
-        self.rec2 = {'a':[{'b':1, 'c':[1,2]}, {'b':10, 'c':[10,20]}]}
+        pass
 
-    def test_get_keys(self):
-        """test get_keys method"""
-        rec = DotDict(self.rec1)
-        expect = ['a', 'a.b', 'a.c']
-        expect.sort()
-        result = rec.get_keys()
-        result.sort()
-        self.assertEqual(expect, result)
+    def _test_result_equality(self, matrix, maximize, K=50):
 
-        rec = DotDict(self.rec2)
-        result = rec.get_keys()
-        result.sort()
-        self.assertEqual(expect, result)
 
-        doc = {"site": [{"mapping": { "pfn": [
-                    {
-                     "protocol": "direct",
-                     "result": "/store/$1",
-                     "path": "/+hadoop/cms/store/(.*)"
-                    },
-                    {
-                     "protocol": "direct",
-                     "result": "/store/$1",
-                     "path": "/+hadoop/cms/store/(.*)"
-                    }]
-                }}]
-        }
-        result = DotDict(doc).get_keys()
-        result.sort()
-        expect = ['site',
-                  'site.mapping',
-                  'site.mapping.pfn',
-                  'site.mapping.pfn.path',
-                  'site.mapping.pfn.protocol',
-                  'site.mapping.pfn.result']
-        self.assertEqual(expect, result)
+        mr = MunkresRanked(matrix, maximize=maximize)
 
-    def test_get(self):
-        """test get method"""
-        rec = DotDict(self.rec1)
-        expect = [1,2]
-        result = rec.get('a.c')
-        self.assertEqual(expect, result)
-        self.assertEqual(expect, rec['a.c'])
+        sols = []
+        for sol in mr.k_best_solutions(k=K):
+            #print 'sol detailed:', sol
+            cells = sol['all_cells']
+            #print 'cells:', cells
+            cost = mr.get_total_cost(cells)
+            #mr.print_solution(mr._matrix, cells)
+            r = (cost, cells)
+            sols.append(r)
 
-    def test_get_values(self):
-        """test get_values method"""
-        rec = DotDict(self.rec2)
-        expect = [1, 2, 10, 20]
-        result = [o for o in rec.get_values('a.c')]
-        self.assertEqual(expect, result)
+        expected = exhaustive_search(matrix, k=None, maximize=maximize)
 
-    def test_set(self):
-        """test set method"""
-        rec = DotDict(self.rec1)
-        rec['a.d'] = 111
-        self.assertEqual(rec['a.d'], 111)
-        self.assertRaises(Exception, rec.set, ('a.c.d', 1))
+        keyfunc = lambda it: (it[0], str(it[1]))
+        expected = sorted(expected, reverse=maximize, key=keyfunc)[:K]
+        sols = sorted(sols, reverse=maximize, key=keyfunc)
+        #print sols
 
-        rec = DotDict(self.rec2)
-        rec['a.b'] = 111
-        self.assertEqual(rec['a.b'], 111)
+        f_round = lambda (cost, cells): ('%.6f' % cost, cells)
 
-    def test_delete(self):
-        """test delete method"""
-        rec = DotDict(self.rec1)
-        rec.delete('a.c')
-        expect = {'a':{'b':1}}
-        self.assertEqual(expect, rec)
+        sols = map(f_round, sols)
+        expected = map(f_round, expected)
 
-    def test_DotDict(self):
-        """Test DotDict class"""
-        res = {u'zip' : {u'code':u'14850'}}
-        mdict = DotDict(res)
-        mdict['zip.code'] = 14850
-        expect = {u'zip' : {u'code':14850}}
-        self.assertEqual(expect, mdict)
+        self.assertEqual(expected, sols)
 
-        res = {'a':{'b':{'c':10}, 'd':10}}
-        mdict = DotDict(res)
-        mdict['x.y.z'] = 10
-        expect = {'a':{'b':{'c':10}, 'd':10}, 'x':{'y':{'z':10}}}
-        self.assertEqual(expect, mdict)
+    def test_ranked_assignment_float(self):
+        self._test_result_equality(matrix = matrix55_0, maximize=False)
 
-        mdict['a.b.k.m'] = 10
-        expect = {'a':{'b':{'c':10, 'k':{'m':10}}, 'd':10}, 'x':{'y':{'z':10}}}
-        self.assertEqual(expect, mdict)
-        expect = 10
-        result = mdict.get('a.b.k.m')
-        self.assertEqual(expect, result)
+    def test_ranked_assignment_int(self):
+        self._test_result_equality(matrix = matrix_33, maximize=False)
 
-        res = {'a':{'b':{'c':10}, 'd':[{'x':1}, {'x':2}]}}
-        mdict = DotDict(res)
-        expect = 1
-        result = mdict.get('a.d.x')
-        self.assertEqual(expect, result)
-        expect = None
-        result = mdict.get('a.M.Z')
-        self.assertEqual(expect, result)
+    def test_ranked_assignment_float_desc(self):
+        self._test_result_equality(matrix = matrix55_0, maximize=True)
 
-        res = {'a': {'b': {'c':1, 'd':2}}}
-        mdict = DotDict(res)
-        expect = {'a': {'b': {'c':1}}}
-        mdict.delete('a.b.d')
-        self.assertEqual(expect, mdict)
+    def test_ranked_assignment_int_desc(self):
+        self._test_result_equality(matrix = matrix_33, maximize=True)
 
-    def test_DotDict_list(self):
-        """Test DotDict class"""
-        res = {'a':[{'b':1, 'c':1}, {'c':1}]}
-        mdict = DotDict(res)
-        expect = 1
-        result = mdict.get('a.b')
-        self.assertEqual(expect, result)
 
-        res = {'a':[{'c':1}, {'b':1, 'c':1}]}
-        mdict = DotDict(res)
-        expect = 1
-        result = mdict.get('a.b')
-        self.assertEqual(expect, result)
 
-    def test_DotDict_values(self):
-        """Test DotDict get_values method"""
-        res = {'a':[{'b':1, 'c':1}, {'c':2}]}
-        mdict = DotDict(res)
-        expect = [1]
-        result = [r for r in mdict.get_values('a.b')]
-        self.assertEqual(expect, result)
-        
-        expect = [1,2]
-        result = [r for r in mdict.get_values('a.c')]
-        self.assertEqual(expect, result)
-        
-        res = {'a':[{'b': [{'c':2}, {'c':3}]}, {'b': [{'c':4}, {'c':5}]}]}
-        mdict = DotDict(res)
-        expect = [2,3,4,5]
-        result = [r for r in mdict.get_values('a.b.c')]
-        self.assertEqual(expect, result)
-        
-    def test_DotDict_keys(self):
-        """Test DotDict get_keys method"""
-        res = {'a':[{'b':1, 'c':1}, {'c':2}]}
-        mdict = DotDict(res)
-        expect = ['a.b', 'a.c']
-        result = [r for r in mdict.get_keys('a')]
-        self.assertEqual(set(expect), set(result))
 
-        res = {'a':[{'b': [{'c':2}, {'c':{'d':1}}]},
-                    {'b': [{'c':4}, {'c':5}]}]}
-        mdict = DotDict(res)
-        expect = ['a.b', 'a.b.c', 'a.b.c.d']
-        result = [r for r in mdict.get_keys('a')]
-        self.assertEqual(set(expect), set(result))
 #
 # main
 #

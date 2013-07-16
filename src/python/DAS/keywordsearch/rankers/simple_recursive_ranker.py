@@ -12,7 +12,7 @@ __author__ = 'vidma'
 
 import heapq
 
-from heapq import heappush, heappushpop, heappop
+from heapq import heappush, heappushpop
 
 from cherrypy import thread_data
 
@@ -182,6 +182,8 @@ def store_result_(score, r_type, values_dict, r_filters, keywords_used,
     #thread_data.results.append(result)
 
 
+
+
 def store_result_dict_(score, r_type, values_dict, r_filters, keywords_used,
                        trace=set(), missing_inputs=None,
                        result_type_specified=True):
@@ -214,35 +216,68 @@ def store_result_dict_(score, r_type, values_dict, r_filters, keywords_used,
 
 
 
-    heap_tuple = (ScoreDescOrder(score), result)
+    #heap_tuple = (ScoreDescOrder(score), result)
+    heap_tuple = (_score, result)
 
     if DEBUG:
         print 'adding a result:'
         print heap_tuple
 
-    #thread_data.results_dict.append(result)
 
 
     # store only K-best results (if needed)
     if not K_RESULTS_TO_STORE:
-        thread_data.results_dict.append(result)
+        thread_data.results.append(result)
     else:
         # TODO: storing in the other way round may further improve the performance...
-        if len(thread_data.results_dict) > K_RESULTS_TO_STORE:
+        if len(thread_data.results) > K_RESULTS_TO_STORE:
             # this adds the item, and removes the smallest
-            heappushpop(thread_data.results_dict, heap_tuple)
+            popped_out = heappushpop(thread_data.results, heap_tuple)
 
             # TODO: check if this work as expected
-            #smalest_popped = heappop(thread_data.results_dict)
-            #if DEBUG: print 'smalest_ thrown away result:', smalest_popped
+            print 'smalest thrown away result:', popped_out[0], 'len=', len(thread_data.results)
 
-
-            #heappushpop(thread_data.results_dict, heap_tuple)
         else:
-            heappush(thread_data.results_dict, heap_tuple)
+            heappush(thread_data.results, heap_tuple)
 
 
-            #thread_data.results_dict.append(result)
+def check_for_pruning(score):
+
+    if False:
+        # todo: this could be valid only at the higher stages...
+        if not USE_LOG_PROBABILITIES:
+            # prune out branches with very low scores
+            #  (that is mostly due to sense-less assignments)
+
+            if mod_enabled('PRUNE_NEGATIVE_SCORES') and \
+               score < mod_enabled('PRUNE_NEGATIVE_SCORES'):
+                return True
+
+    if USE_LOG_PROBABILITIES:
+        # low_score could be low_prob**n_kwds, e.g. 0.3**n_kwds, if we get it,
+        # it wont be improved as it will always decrease...
+        pass
+
+
+
+    if False and USE_LOG_PROBABILITIES:
+        # TODO: this can not work, because the score is finally
+        # being adjusted by number of keywords matched
+        # in penalize_non_mapped_keywords_()
+        # -- but that would just decrease the score...
+
+        # prune_scores_lower_than_worst
+        heap_full = len(thread_data.results) > K_RESULTS_TO_STORE
+        if mod_enabled('PRUNE_SCORES_LESS_THAN_WORST') and heap_full:
+            # TODO: this is valid  only if we use heap
+            worst_score = thread_data.results[0][0]
+            threshold = mod_enabled('PRUNE_SCORES_LESS_THAN_WORST')
+
+            if score < worst_score + threshold:
+                return True
+
+    return False
+
 
 
 def generate_result_filters(keywords_list, chunks, keywords_used,
@@ -250,18 +285,12 @@ def generate_result_filters(keywords_list, chunks, keywords_used,
                             result_filters=None, field_idx_start=0,
                             traceability=set(), result_fields_included=set(),
                             result_type_specified=True):
+    if check_for_pruning(old_score):
+            return
+
+
     if result_filters is None:
         result_filters = []
-
-    if not USE_LOG_PROBABILITIES:
-        # prune out branches with very low scores (that is due to sense-less assignments)
-        if mod_enabled('PRUNE_NEGATIVE_SCORES') and old_score < mod_enabled(
-                'PRUNE_NEGATIVE_SCORES'):
-            return
-    else:
-        # low_score could be low_prob**n_kwds, e.g. 0.3**n_kwds, if we get it,
-        # it wont be improved as it will always decrease...
-        pass
 
     # try assigning result values for particular entity
     # TODO: we use greedy strategy trying to assign largest keyword sequence (field chunks are sorted)
@@ -431,6 +460,10 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
                             trace=set(),
                             result_projection_forbidden=set()):
     UGLY_DEBUG = False
+
+    if check_for_pruning(old_score):
+            return
+
     if values_mapping is None:
         values_mapping = {}
 
@@ -573,6 +606,9 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
     # TODO: the recursion is dumb, we could at least use some pruning
     # TODO: keyword order is important
     UGLY_DEBUG = False
+
+    if check_for_pruning(old_score):
+        return
 
     # generate_values_mappings()
     # TODO: shall we modify the value and schema mappings weights according to previous mappings HERE or only when doing VALUE matching?

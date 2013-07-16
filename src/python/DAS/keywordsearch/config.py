@@ -23,8 +23,7 @@ USE_IR_SCORE_SMOOTHING = False
 USE_IR_SCORE_NORMALIZATION_LOCAL = False
 
 # find only K-best results for input query (K=0 for unlimited)
-K_RESULTS_TO_STORE = 20
-#K_RESULTS_TO_STORE = 0
+K_RESULTS_TO_STORE = 100
 
 # max length of a value to be displayed without shortening it down in web UI
 UI_MAX_DISPLAYED_VALUE_LEN = 26
@@ -66,6 +65,14 @@ ENABLED_MODULES = {
 
     # threshold or false
     'PRUNE_NEGATIVE_SCORES': -0.5,
+
+    # threshold or false
+    # this would prune out all the results earlier (based on partial matching)
+    #  even if later some heuristic may increase the score
+    # results would be not 100% best, but shall be returned faster...
+    'PRUNE_SCORES_LESS_THAN_WORST': -0.3,
+
+
 }
 
 

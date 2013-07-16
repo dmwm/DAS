@@ -9,20 +9,10 @@ __author__ = 'vidma'
 
 import re
 
-
-from cherrypy import request
-
-from   DAS.utils.regex import RE_3SLAHES
-
-
 # for handling semantic and string similarities
 from DAS.keywordsearch.metadata import input_values_tracker
 from DAS.keywordsearch.metadata.das_schema_adapter import *
-
-from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
-
-
-
+from DAS.keywordsearch.entity_matchers.value_matching_dataset import match_value_dataset
 
 def keyword_value_weights(keyword):
     """
@@ -87,7 +77,7 @@ def keyword_regexp_weights(keyword):
     # TODO: define that is more restrictive regexp
 
     for (constraint, apis) in apis_by_their_input_contraints.items():
-    #print (constraint, apis)
+        #print (constraint, apis)
 
 
         # TODO: I've hacked file/dataset regexps to be more restrictive as these are well defined
@@ -103,10 +93,6 @@ def keyword_regexp_weights(keyword):
         score = 0
 
 
-        #if apis[0]['key'] in ['reco_status']:
-        #    print 'reco_status (any)'
-        #    pprint.pprint((constraint, apis))
-
 
         # We shall prefer non empty constraints
         # We may also have different weights for different types of regexps
@@ -119,9 +105,6 @@ def keyword_regexp_weights(keyword):
                 score = 0.6
             elif constraint != '':
                 score = 0.5
-                #if apis[0]['key'] in ['reco_status']:
-                #    print 'reco_status 0.5'
-                #    pprint.pprint((constraint, apis))
 
             score = (score, apis)
 
@@ -130,58 +113,3 @@ def keyword_regexp_weights(keyword):
     scores.sort(key=lambda item: item[0], reverse=True)
     #print scores
     return scores
-
-
-
-
-# TODO: move this to value matching?
-def match_value_dataset(keyword):
-    if hasattr(request, 'dbsmngr'):
-        dbsmgr = request.dbsmngr
-    else:
-        dbsmgr = request.dbsmngr = get_global_dbs_mngr()
-
-    print 'DBS mngr:', dbsmgr
-
-    dataset_score = None
-    upd_kwd = keyword
-    # dbsmgr.find returns a generator, to check if it's non empty we have to access it's entities
-    # TODO: check for full and partial match
-    # e.g. /DoubleMu/Run2012A-Zmmg-13Jul2012-v1 --> /DoubleMu/Run2012A-Zmmg-13Jul2012-v1/*
-    # DoubleMu -> *DoubleMu*
-    # TODO: a dataset pattern could be even *Zmm* -- we need minimum length here!!
-
-    if next(dbsmgr.find(pattern=keyword, limit=1), False):
-        print 'Dataset matched by keyword %s' % keyword
-        # TODO: if contains wildcards score shall be a bit lower
-        if '*' in keyword and not '/' in keyword:
-            dataset_score = 0.8
-        elif '*' in keyword and '/' in keyword:
-            dataset_score = 0.9
-        elif not '*' in keyword and not '/' in keyword:
-            if next(dbsmgr.find(pattern='*%s*' % keyword, limit=1), False):
-                dataset_score = 0.7
-                upd_kwd = '*%s*' % keyword
-        else:
-            dataset_score = 1.0
-
-    # TODO: shall we check for unique matches?
-
-    # it's better to add extra wildcard to make sure the query will work...
-    if not RE_3SLAHES.match(upd_kwd):
-        upd_kwd0 = upd_kwd
-
-        if  not upd_kwd.startswith('*') and not upd_kwd.startswith('/'):
-            upd_kwd =  '*' + upd_kwd
-
-        if not upd_kwd.endswith('*') and \
-            not (upd_kwd0.startswith('/') or upd_kwd0.startswith('*')):
-            upd_kwd += '*'
-
-
-    print 'dataset.name', dataset_score, upd_kwd
-
-
-    return 'dataset.name', dataset_score, upd_kwd
-
-

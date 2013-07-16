@@ -1,3 +1,149 @@
+
+
+
+sudo yum install git.x86_64
+
+
+VER=1303b
+
+mkdir -p /tmp/foo
+cd /tmp/foo
+DEPLOYMENT="git://github.com/dmwm/deployment.git"
+DEPLOYMENT="git://github.com/vidma/deployment.git"
+# TODO: 
+(git clone $DEPLOYMENT cfg && cd cfg && git reset --hard HG$VER )
+sudo -l 
+cfg/Deploy -t dummy -s post $PWD system/devvm
+# OPTIONAL: review what happened: less /tmp/foo/.deploy/*
+rm -fr /tmp/foo
+
+#logout or even reboot
+
+
+
+cd /data
+# should print out large number local _foo groups now
+id 
+
+
+DEPLOYMENT="git://github.com/vidma/deployment.git"
+VER=1303b
+(git clone $DEPLOYMENT cfg && cd /data/cfg && git reset --hard HG$VER )
+(cd /data/cfg && git checkout  origin/master ./das/manage && git checkout  origin/master ./admin/InstallDev)
+
+sudo -l
+
+# get auth proxy. TODO: is this needed at all?
+
+mkdir -p $PWD/1207a/auth/proxy
+$PWD/cfg/admin/ProxySeed -t dev -d $PWD/1207a/auth/proxy
+
+
+#install
+
+# TODO: how to use my repo??
+A=/data/cfg/admin REPO="-r comp=comp.pre.zemleris"
+
+# add -a $PWD/auth for passwords
+# TODO: not yet installed: phedex dbs
+$A/InstallDev -R cmsweb@$VER -s image -v hg$VER  $REPO -p "admin das@1.11.9-hg1309-rc2 mongodb"
+# cmsweb
+$A/InstallDev -R cmsweb@$VER -s image -v hg$VER  $REPO -p "frontend overview"
+
+
+# TODO: this shall be moved to the spec file and cleanup
+sudo vim current/sw.pre.zemleris/slc5_amd64_gcc461/external/py2-nltk/2.0.4/etc/profile.d/init.sh
+export NLTK_DATA="${PY2_NLTK_ROOT}/build/zemleris/w/slc5_amd64_gcc461/external/rpm/4.8.0-comp/share/nltk_data"
+
+sudo vim current/sw.pre.zemleris/slc5_amd64_gcc461/external/py2-nltk/2.0.4/etc/profile.d/init.csh
+setenv NLTK_DATA "${PY2_NLTK_ROOT}/build/zemleris/w/slc5_amd64_gcc461/external/rpm/4.8.0-comp/share/nltk_data"
+
+
+
+# patch installDev to include bootstrap. TODO: temporary
+#cp ~/InstallDev $A/
+
+# bootstrap DAS
+# TODO: may need to start everything except DAS
+$A/InstallDev -s start
+$A/InstallDev -s stop:das
+$A/InstallDev -s bootstrap:das
+
+# start services
+$A/InstallDev -s start
+
+
+
+
+bash
+# TODO: make sure /data was created by set up script
+cd /data
+sudo -l
+id
+A=/data/cfg/admin REPO="-r comp=comp.pre.zemleris"
+
+# test
+$A/InstallDev -s status
+firefox http://127.0.0.1:8212/das/
+firefox http://localhost:8213/analytics/
+
+# TO ENABLE ACESS FROM OUTSIDE:
+# sudo system-config-securitylevel-tui
+# customize: add 8212:tcp 
+
+
+
+# run TESTS
+
+cd ~/manage_tests /data/current/config/das/
+export DAS_ROOT_MOD=`python -c "import os, DAS; print os.path.dirname(DAS.__file__)"`
+sudo -H -u _das bashs -lc '/data/current/config/das/manage_tests test_kws '\''I did read documentation'\'''
+
+
+
+
+
+
+
+
+
+
+
+---- NOT USED BELOW ----
+cd /data
+sudo -l
+id
+# add another target test?
+export DAS_KWS_IR_INDEX=/data/state/das/das_kws_index/
+# init the current installation
+. /data/current/config/admin/init.sh
+. /data/current/apps/das/etc/profile.d/init.sh
+#. /data/current/apps/mongo/etc/profile.d/init.sh
+export DAS_ROOT_MOD=`python -c "import os, DAS; print os.path.dirname(DAS.__file__)"`
+echo $DAS_ROOT_MOD
+export  DAS_CONFIG=/data/current/config/das/das_cms.py
+python $DAS_ROOT/test/das_kwdsearch_t.py
+
+
+
+
+# patch
+#/data/hgHG1303b/sw.pre.zemleris/slc5_amd64_gcc461/cms/das/1.11.9-hg1309-rc1/lib/python2.6/site-packages/DAS/keywordsearch/metadata/
+#/data/hgHG1303b/sw.pre.zemleris/slc5_amd64_gcc461/cms/das/1.11.9-hg1309-rc1/lib/python2.6/site-packages/DAS/analytics/
+#dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+
+
+EmptyIndexError: Index 'idx_name' does not exist in FileStorage('/data/state/das/das_kws_index')
+
+echo $DAS_KWS_IR_INDEX
+
+
+
+
+
+----
+
+
 # Based on: [1] https://cms-http-group.web.cern.ch/cms-http-group/tutorials/environ/vm-setup.html
 # first get a SLC5 x64. See [1]
 

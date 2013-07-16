@@ -43,7 +43,7 @@ ul.tagit {
 }
 
 .select-result-type { margin: 20px 0; font-weight: normal; }
-.rtype-selected {
+.rt-filters a.rtype-selected {
     font-weight: bold;
     color: #000;
 }

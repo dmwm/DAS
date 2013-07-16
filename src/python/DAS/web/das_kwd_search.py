@@ -93,16 +93,19 @@ class KeywordSearchHandler:
         '''
         performs the search, and renders the search results
         '''
-        # TODO: DBS instance
         proposed_queries = keyword_search(query, inst, dbsmngr= dbsmngr)
+
+        # no need for result type filter if # of results is low
 
         # get top 5 entity types
         hi_score_result_types = KeywordSearchHandler._get_top_entities(
-            proposed_queries)
+                                                        proposed_queries) \
+                                if len(proposed_queries) > 6 else False
 
         # process the results
         for q in proposed_queries:
-            q['link'] = KeywordSearchHandler._get_link_to_query(q['result'], kw_query=query)
+            q['link'] = KeywordSearchHandler._get_link_to_query(q['result'],
+                                                                kw_query=query)
             q['trace'] = KeywordSearchHandler._prepare_trace(q)
             q['bar'] = KeywordSearchHandler._prepare_score_bar(q)
 
@@ -111,6 +114,9 @@ class KeywordSearchHandler:
 
         initial_err_message ='Initial error message: ' + initial_exc_message
         #html = HtmlString(html)
+
+
+
 
         return webm.templatepage('kwdsearch_results',
                                     msg='',

@@ -607,6 +607,9 @@ class DASWebService(DASWebManager):
         """
         Check provided input as valid DAS input query.
         Returns status and content (either error message or valid DASQuery)
+        :param uinput: user's input
+        :param inst: DBS instance
+        :param html_error: whether errors shall be output in html
         """
         def helper(msg, html_error=None):
             """Helper function which provide error template"""
@@ -647,12 +650,18 @@ class DASWebService(DASWebManager):
 
             # Keyword Search
             if not isinstance(err, WildcardMatchingException):
-                return 1, KeywordSearchHandler.handle_search(self,
-                    query=uinput, inst=inst, initial_exc_message = err.message,
-                    dbsmngr = self._get_dbsmgr(inst))
+                try:
+                    kws_res = KeywordSearchHandler.handle_search(self,
+                        query=uinput, inst=inst, initial_exc_message = err.message,
+                        dbsmngr = self._get_dbsmgr(inst))
+                    return 1, kws_res
+                except Exception, e:
+                    print e
+                    return 1, helper(err.message +
+                                     '\nCan not perform keyword search at this '
+                                     'moment: some data is missing', html_error)
 
-            #return 1, helper(das_parser_error(uinput, exc_message), html_error)
-
+                #return 1, helper(das_parser_error(uinput, exc_message), html_error)
 
             else:
                 das_parser_error(uinput, str(type(err)))

@@ -9,12 +9,12 @@
 #if $hi_score_result_types
 
     <div class="select-result-type">
-            <span class="tooltip">Show only ones returning:
+            <span class="tooltip">Filter by query result:
                 <span class="classic">You may filter suggestions by the entity they return</span></span>
                     &nbsp;<span class="rt-filters">
                         #for index, rt in enumerate($hi_score_result_types):
 #if index != 0 then ', &nbsp;' else '&nbsp;'
-<a href="javascript: filterByResultType('$rt', this)">$rt</a>#slurp
+<a onclick="filterByResultType('$rt', this)" href="#">$rt</a>#slurp
                         #end for
                     </span>
         </div>
@@ -37,7 +37,7 @@
        Consider these query propositions...</b><br /> -->
 
 
-    <b>Did you mean any of queries below...?</b><br />
+    <b>Did you mean any of the queries below?</b><br />
     <!-- (can't interpret your query)<br /> -->
 #end if
 
@@ -48,9 +48,9 @@
     <div id="kws-entry-points">
 
         <h4>Color-coding:</h4>
-        blue -  entity to be retrieved<br />
-        green - filter  (daskey, as input parameter)<br />
-        red - expensive filter (daskey, must retrieve all and filter afterwards)
+        <span class="q-res-type">blue -  entity to be retrieved</span> <br />
+        <span class="q-field-name">green - filter  (daskey, as input parameter)</span> <br />
+        <span class="q-post-filter-field-name">red - expensive filter (daskey, must retrieve all and filter afterwards)</span>
         <br />
 
         <!--
@@ -77,6 +77,7 @@
         #for $item in $proposed_queries:
             #set query_escaped = $quote($item.result)
             #set nl_query_escaped = $quote($item.query_in_words)
+
 
             <div class="kws-result result-with-entity-${item.entity}">
 
@@ -122,6 +123,7 @@
         }
 
         jQuery('.rt-filters a').removeClass('rtype-selected');
+        console.log(target, jQuery(target));
         jQuery(target).addClass('rtype-selected')
     }
     function showAllRT(){
@@ -139,6 +141,8 @@
     function hideLowResults(){
         // hide all results lower than 10
         var limit = 10;
+        var nimportant = 4;
+
         count = jQuery('.kws-result').length;
 
         if (count > limit) {
@@ -150,6 +154,10 @@
 
             jQuery('div#kws-results-listing').append(cont);
         }
+
+        //if (count > nimportant) {
+        //    jQuery('.kws-result:gt('+ (nimportant-1) +')').css('opacity', 0.7);
+        //}
     }
 
 
