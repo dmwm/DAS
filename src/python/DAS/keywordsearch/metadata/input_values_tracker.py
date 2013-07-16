@@ -241,6 +241,12 @@ def get_fields_tracked(only_stable=False):
 def get_tracker(field):
     return trackers[field]
 
+def need_value_bootstrap():
+    """
+    bootstrap is needed if some of fields were not loaded...
+    """
+    return any(map(lambda x: not next(x.find('*'), False), trackers.values()))
+
 
 def check_for_unique_match(t, field, keyword):
     """
@@ -266,7 +272,6 @@ def check_for_unique_match(t, field, keyword):
 
 def input_value_matches(keyword):
     # TODO: support wildcards for site
-    # TODO: store everything at mongoDB
     scores_by_entity = {}
 
     for field in get_fields_tracked():

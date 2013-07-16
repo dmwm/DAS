@@ -1,11 +1,27 @@
-from DAS.core.das_core import DASCore
-from DAS.core.das_mapping_db import DASMapping
+import contextlib
+import sys
+import cStringIO
 
-__author__ = 'vidma'
+
+
+@contextlib.contextmanager
+def nostdout():
+    save_stdout = sys.stdout
+    sys.stdout = cStringIO.StringIO()
+    yield
+    sys.stdout = save_stdout
+
 
 import sys, time
-from DAS.utils.das_config import das_readconfig
-from DAS.utils.das_db import db_connection, is_db_alive
+
+# silence the DAS messages
+with nostdout():
+    from DAS.utils.das_config import das_readconfig
+    from DAS.utils.das_db import db_connection, is_db_alive
+    from DAS.core.das_core import DASCore
+    from DAS.core.das_mapping_db import DASMapping
+
+
 
 
 def check_mappings_readiness():
@@ -31,7 +47,7 @@ def on_db_available():
     if check_mappings_readiness():
         print('Mappings seem to be fine...\n'
               'just in case, wait 10s until the mappings are fully loaded...')
-        time.sleep(10)
+        #time.sleep(10)
         sys.exit(0)
 
 def db_monitor(uri, func, sleep=5, max_retries=None):
@@ -61,18 +77,48 @@ def db_monitor(uri, func, sleep=5, max_retries=None):
         time.sleep(sleep)
 
 
-def waitfordb(max_time):
+def waitfordb(max_time, callback=on_db_available):
     """
     waits until DB is ready as well as until DAS mappings are created/updated.
     """
     config = das_readconfig()
     dburi = config['mongodb']['dburi']
     sleep_time=5
-    db_monitor(dburi, on_db_available,
+    db_monitor(dburi, callback,
                sleep=sleep_time, max_retries=max_time // sleep_time)
 
     print 'DB is not available and the timeout has passed'
     sys.exit(-1)
+
+
+
+def is_bootstrap_needed():
+    with nostdout():
+
+        from DAS.keywordsearch.metadata.input_values_tracker \
+            import need_value_bootstrap
+        from DAS.keywordsearch.metadata import das_schema_adapter
+        from DAS.keywordsearch.whoosh import ir_entity_attributes
+
+        def need_res_fields_bootsrap():
+            dascore = DASCore()
+            das_schema_adapter.init(dascore)
+
+            try:
+                das_schema_adapter.list_result_fields()
+
+                ir_entity_attributes.load_index()
+            except Exception, e:
+                print e
+                return True
+            return  False
+
+        needed = (need_value_bootstrap() or need_res_fields_bootsrap())
+        return 1 if needed else 0
+
+
+
+
 
 def test():
     # remove mappings
@@ -84,4 +130,6 @@ def test():
 
 
 if __name__ == '__main__':
+    is_bootstrap_needed()
     waitfordb(60)
+

@@ -1,4 +1,17 @@
-#!/bin/sh
+#!/bin/bash
+
+# check number of input arguments
+usage="Usage: `basename $0` [--only-if-needed]"
+helpmsg="  This script bootstraps external data needed for keyword search"
+E_BADARGS=65
+if [ $# -eq 1 ]; then
+    if  [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+        echo $usage
+        echo $helpmsg
+        exit
+    fi
+fi
+
 
 DAS_PYTHONPATH=`python -c "import os, DAS; print os.path.dirname(DAS.__file__)"`
 QUERIES_FILE="$DAS_PYTHONPATH/services/bootstrap_queries/cms_bootstrap_queries_1r.txt"
@@ -7,9 +20,26 @@ QUERIES_FILE="$DAS_PYTHONPATH/services/bootstrap_queries/cms_bootstrap_queries_1
 echo "Waiting for DB"
 python $DAS_PYTHONPATH/tools/das_waitfordb.py
 if [ $? -ne 0 ]; then
-    echo "DB is down. Can not continue"
+    echo "DB is down for too long. Can not continue"
     exit 1
 fi
+
+
+if [ $# -eq 1 ]; then
+   if  [ "$1" == "--only-if-needed" ]; then
+        echo "Checking if bootstrap is mandatory"
+        BOOTSTR_NEEDED=`python -c "from DAS.tools.das_waitfordb import is_bootstrap_needed; print (is_bootstrap_needed())"`
+        if [ "$BOOTSTR_NEEDED" -ne "1" ]; then
+            echo 'Bootstrap is not mandatory. exiting...'
+            exit
+
+        else
+            sleep 10
+        fi
+
+    fi
+fi
+
 
 # Clean up:
 # TODO: we whall not wipe everything out from keylearning !?
