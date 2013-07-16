@@ -28,14 +28,11 @@ while read query; do
 
 done < $QUERIES_FILE
 
-# TODO: remove result_field_index
+# remove result_field_index
 rm -Rf $DAS_KWS_IR_INDEX/*
+
 # reload the fields index
 python -u  $DAS_PYTHONPATH/analytics/standalone_task.py -c update_result_field_index
 
 # Bootstrap values (release, datatype, etc)
 python $DAS_PYTHONPATH/keywordsearch/metadata/input_values_tracker.py
-
-# Bootstrap Dataset names (TODO: this should go automatically...)
-echo 'Bootstraping Dataset names'
-python $DAS_PYTHONPATH/web/dbs_daemon.py
