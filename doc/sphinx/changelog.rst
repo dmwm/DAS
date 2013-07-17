@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Fix issue4016: add aux-record called arecord; arecord contains count of
+    corresponding map record, map record type and a system. Adjust DASMapping
+    check_maps method to perform full check of DAS maps by comparing count
+    field from aux-record with actual number of maps in DAS mapping DB
   - Apply common set of indexes for both cache/merge collection to properly
     get/merge records
   - Allow runs DBS3 API to yield individual records
