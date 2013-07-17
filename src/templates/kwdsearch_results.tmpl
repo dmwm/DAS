@@ -14,7 +14,7 @@
                     &nbsp;<span class="rt-filters">
                         #for index, rt in enumerate($hi_score_result_types):
 #if index != 0 then ', &nbsp;' else '&nbsp;'
-<a onclick="filterByResultType('$rt', this)" href="#">$rt</a>#slurp
+<a onclick="filterByResultType('$rt', this)" href="#" class="rt-$rt">$rt</a>#slurp
                         #end for
                     </span>
         </div>
@@ -111,11 +111,13 @@
     // result type selector
     //
 
+    var RTYPE_ANY = "any";
+
     function hide(selector){
         //jQuery(selector).hide().;
     }
     function filterByResultType(rt, target){
-        if (rt == 'see all') {
+        if (rt == RTYPE_ANY) {
             jQuery('.kws-result').show(300);
         } else {
             jQuery('.kws-result').hide();
@@ -123,9 +125,13 @@
         }
 
         jQuery('.rt-filters a').removeClass('rtype-selected');
-        console.log(target, jQuery(target));
+        //console.log(target, jQuery(target));
         jQuery(target).addClass('rtype-selected')
     }
+
+    // by default select the "any"
+    jQuery('.rt-'+RTYPE_ANY).addClass('rtype-selected');
+
     function showAllRT(){
     }
 

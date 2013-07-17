@@ -13,9 +13,9 @@ from DAS.keywordsearch.search import search as keyword_search, init as init_kws
 
 avg = lambda l: len(l) and float(sum(l))/len(l)
 
-import dbs_daemon
-dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART =1
-dbs_daemon.SKIP_UPDATES =1
+#import dbs_daemon
+#dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART =1
+#dbs_daemon.SKIP_UPDATES =1
 
 
 
@@ -85,7 +85,7 @@ class KeywordSearchHandler:
         entity_scores.sort(key=lambda item: item[1], reverse=True)
         #print entity_scores
         hi_score_result_types = [e[0] for e in entity_scores[:top_k]]
-        hi_score_result_types.append('see all')
+        hi_score_result_types.append('any')
         return hi_score_result_types
 
     @staticmethod

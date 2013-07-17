@@ -68,7 +68,7 @@ def tokenize_query(query, DEBUG=False):
     return query, tokens
 
 
-
+@profile
 def search(query, inst=None, dbsmngr=None):
     """
     Performs keyword search

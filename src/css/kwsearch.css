@@ -47,6 +47,9 @@ ul.tagit {
     font-weight: bold;
     color: #000;
 }
+.rt-filters a {  text-decoration: none; }
+.rt-filters a:hover { text-decoration: underline; }
+
 
 .kws-result a { line-height: 2em; color: #666; }
 .kws-result a, .kws-result a:visited, .kws-result a:active {  text-decoration: none; }

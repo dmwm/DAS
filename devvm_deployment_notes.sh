@@ -4,6 +4,7 @@
 sudo yum install git.x86_64
 
 
+
 VER=1303b
 
 mkdir -p /tmp/foo
@@ -20,6 +21,15 @@ rm -fr /tmp/foo
 #logout or even reboot
 
 
+# clean up the previous installation, if any
+cd /data
+$PWD/cfg/admin/InstallDev -s stop
+crontab -r
+killall python
+sudo rm -fr [^aceu]* .??* current enabled
+
+
+
 
 cd /data
 # should print out large number local _foo groups now
@@ -28,35 +38,28 @@ id
 
 DEPLOYMENT="git://github.com/vidma/deployment.git"
 VER=1303b
+rm -Rf cfg
 (git clone $DEPLOYMENT cfg && cd /data/cfg && git reset --hard HG$VER )
-(cd /data/cfg && git checkout  origin/master ./das/manage && git checkout  origin/master ./admin/InstallDev)
+(cd /data/cfg && git checkout  origin/master ./das/manage )
+#git checkout  origin/master ./admin/InstallDev
 
 sudo -l
 
-# get auth proxy. TODO: is this needed at all?
-
-mkdir -p $PWD/1207a/auth/proxy
-$PWD/cfg/admin/ProxySeed -t dev -d $PWD/1207a/auth/proxy
-
-
 #install
 
-# TODO: how to use my repo??
-A=/data/cfg/admin REPO="-r comp=comp.pre.zemleris"
+A=/data/cfg/admin REPO="-r comp=comp.pre.zemleris" VER=1303b
 
 # add -a $PWD/auth for passwords
 # TODO: not yet installed: phedex dbs
-$A/InstallDev -R cmsweb@$VER -s image -v hg$VER  $REPO -p "admin das@1.11.9-hg1309-rc2 mongodb"
-# cmsweb
-$A/InstallDev -R cmsweb@$VER -s image -v hg$VER  $REPO -p "frontend overview"
-
+$A/InstallDev -R cmsweb@HG$VER -s image -v hg$VER  $REPO -p "admin das@1.11.9-hg1309-rc3 mongodb frontend overview"
+$A/InstallDev -R cmsweb@HG$VER -s image -v hg$VER  $REPO -p "t0datasvc t0mon reqmon"
 
 # TODO: this shall be moved to the spec file and cleanup
 sudo vim current/sw.pre.zemleris/slc5_amd64_gcc461/external/py2-nltk/2.0.4/etc/profile.d/init.sh
-export NLTK_DATA="${PY2_NLTK_ROOT}/build/zemleris/w/slc5_amd64_gcc461/external/rpm/4.8.0-comp/share/nltk_data"
+export NLTK_DATA="${PY2_NLTK_ROOT}/nltk_data"
 
 sudo vim current/sw.pre.zemleris/slc5_amd64_gcc461/external/py2-nltk/2.0.4/etc/profile.d/init.csh
-setenv NLTK_DATA "${PY2_NLTK_ROOT}/build/zemleris/w/slc5_amd64_gcc461/external/rpm/4.8.0-comp/share/nltk_data"
+setenv NLTK_DATA "${PY2_NLTK_ROOT}/nltk_data"
 
 
 
@@ -73,10 +76,9 @@ $A/InstallDev -s bootstrap:das
 $A/InstallDev -s start
 
 
-
+touch /data/state/frontend/etc/voms-gridmap.txt
 
 bash
-# TODO: make sure /data was created by set up script
 cd /data
 sudo -l
 id
@@ -90,6 +92,8 @@ firefox http://localhost:8213/analytics/
 # TO ENABLE ACESS FROM OUTSIDE:
 # sudo system-config-securitylevel-tui
 # customize: add 8212:tcp 
+
+
 
 
 
@@ -123,6 +127,11 @@ export DAS_ROOT_MOD=`python -c "import os, DAS; print os.path.dirname(DAS.__file
 echo $DAS_ROOT_MOD
 export  DAS_CONFIG=/data/current/config/das/das_cms.py
 python $DAS_ROOT/test/das_kwdsearch_t.py
+
+
+# get auth proxy
+mkdir -p $PWD/1207a/auth/proxy
+$PWD/cfg/admin/ProxySeed -t dev -d $PWD/1207a/auth/proxy
 
 
 
@@ -171,7 +180,6 @@ id
 git clone git://github.com/dmwm/deployment.git cfg
 
 # get auth proxy
-
 mkdir -p $PWD/1207a/auth/proxy
 $PWD/cfg/admin/ProxySeed -t dev -d $PWD/1207a/auth/proxy
 
