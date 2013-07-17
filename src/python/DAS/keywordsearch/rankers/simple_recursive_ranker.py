@@ -19,16 +19,16 @@ from cherrypy import thread_data
 from DAS.keywordsearch.metadata.das_schema_adapter import validate_input_params, \
     entities_for_input_params
 
+
 from DAS.keywordsearch.config import *
 
-from DAS.keywordsearch.nlp import filter_stopwords
+from DAS.keywordsearch.nlp import filter_stopwords, stemmer
 
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator, \
     test_operator_containment
 
 from DAS.keywordsearch.metadata import das_ql
 
-from DAS.keywordsearch.config import K_RESULTS_TO_STORE
 
 
 def _get_reserved_terms(stem=False):

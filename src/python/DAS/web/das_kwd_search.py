@@ -4,7 +4,6 @@ import cherrypy
 import urllib
 import cgi
 import math
-#from itertools import *
 
 from DAS.keywordsearch.search import search as keyword_search, init as init_kws
 
@@ -36,7 +35,8 @@ class KeywordSearchHandler:
 
     @staticmethod
     def init(dascore):
-        init_kws(dascore)
+        if dascore:
+            init_kws(dascore)
 
 
     @staticmethod

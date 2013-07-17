@@ -6,7 +6,7 @@ import pprint
 
 from nltk.corpus import stopwords
 
-from DAS.keywordsearch.entity_matchers.result_fields_by_chunks import *
+import DAS.keywordsearch.entity_matchers.result_fields_by_chunks
 from DAS.keywordsearch.entity_matchers.name_matching import keyword_schema_weights
 from DAS.keywordsearch.entity_matchers.value_matching import keyword_value_weights
 
@@ -43,6 +43,6 @@ def get_entry_points(tokens, DEBUG=False):
         pprint.pprint(schema_ws)
         print '=============== Values mappings (TODO) ============'
         pprint.pprint(values_ws)
-    chunks = generate_chunks_no_ent_filter(keywords)
+    chunks = DAS.keywordsearch.entity_matchers.result_fields_by_chunks.generate_chunks_no_ent_filter(keywords)
     return chunks, schema_ws, values_ws
 

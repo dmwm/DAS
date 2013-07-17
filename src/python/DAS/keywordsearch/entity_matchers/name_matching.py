@@ -6,7 +6,7 @@ It uses a number of similarity metrics and heuristics, along with exiting values
 
 # for handling semantic and string similarities
 
-from DAS.keywordsearch.metadata.das_schema_adapter import *
+from DAS.keywordsearch.metadata.das_schema_adapter import cms_synonyms, entity_names
 from DAS.keywordsearch.nlp import string_distance
 
 def keyword_schema_weights(keyword, keyword_index=-1,):

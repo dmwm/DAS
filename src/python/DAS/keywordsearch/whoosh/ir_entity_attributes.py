@@ -8,9 +8,9 @@ import os
 from whoosh import analysis
 from whoosh.index import create_in
 from whoosh.index import open_dir
-from whoosh.fields import *
-from whoosh.query import *
-from whoosh.analysis import *
+from whoosh.fields import TEXT, ID, KEYWORD, Schema
+from whoosh.query import Term, Phrase, Or, And, FuzzyTerm
+from whoosh.analysis import SpaceSeparatedTokenizer, StopFilter, LowercaseFilter, StemFilter
 import whoosh.scoring
 
 

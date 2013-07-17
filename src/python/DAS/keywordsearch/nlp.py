@@ -18,7 +18,7 @@ en_stopwords = stopwords.words('english')
 # for handling semantic and string similarities
 from nltk.corpus import wordnet
 
-from DAS.keywordsearch.metadata.das_schema_adapter import *
+from DAS.keywordsearch.metadata.das_schema_adapter import entity_wordnet_synsets
 
 from DAS.keywordsearch.config import mod_enabled
 

@@ -8,9 +8,10 @@ from cherrypy import thread_data, request
 
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
 
+from DAS.keywordsearch.config import *
 from DAS.keywordsearch.tokenizer import tokenize, cleanup_query
-from DAS.keywordsearch.presentation.result_presentation import *
-from DAS.keywordsearch.rankers.simple_recursive_ranker import *
+import DAS.keywordsearch.presentation.result_presentation
+from DAS.keywordsearch.rankers.simple_recursive_ranker import generate_schema_mappings, normalization_factor_by_query_len
 from DAS.keywordsearch.entry_points import get_entry_points
 from DAS.keywordsearch.metadata import das_schema_adapter
 
@@ -68,7 +69,7 @@ def tokenize_query(query, DEBUG=False):
     return query, tokens
 
 
-@profile
+#@profile
 def search(query, inst=None, dbsmngr=None):
     """
     Performs keyword search
@@ -78,7 +79,7 @@ def search(query, inst=None, dbsmngr=None):
     #DEBUG = False
     init_dbs_mngr(dbsmngr, inst)
 
-    query, tokens = tokenize_query(query, DEBUG)
+    query, tokens = tokenize_query(query, DAS.keywordsearch.presentation.result_presentation.DEBUG)
 
     keywords = [kw.strip() for kw in tokens
                 if kw.strip()]
@@ -86,7 +87,7 @@ def search(query, inst=None, dbsmngr=None):
     if MINIMAL_DEBUG:
         print '============= Q: %s, tokens: %s ' % (query, str(tokens))
 
-    chunks, schema_ws, values_ws = get_entry_points(keywords, DEBUG)
+    chunks, schema_ws, values_ws = get_entry_points(keywords, DAS.keywordsearch.presentation.result_presentation.DEBUG)
 
 
     thread_data.results = []
@@ -101,7 +102,7 @@ def search(query, inst=None, dbsmngr=None):
 
     results =  thread_data.results[:]
 
-    if DEBUG or True:
+    if DAS.keywordsearch.presentation.result_presentation.DEBUG or True:
         print "============= Results for: %s ===" % query
 
 
@@ -125,13 +126,13 @@ def search(query, inst=None, dbsmngr=None):
 
 
     for r in results:
-        result = result_to_DASQL(r)
-        result['query_in_words'] = DASQL_2_NL(result['das_ql_tuple'])
-        result['query_html'] = result_to_DASQL(r, frmt='html')['query']
+        result = DAS.keywordsearch.presentation.result_presentation.result_to_DASQL(r)
+        result['query_in_words'] = DAS.keywordsearch.presentation.result_presentation.DASQL_2_NL(result['das_ql_tuple'])
+        result['query_html'] = DAS.keywordsearch.presentation.result_presentation.result_to_DASQL(r, frmt='html')['query']
         query = result['query']
 
         if USE_LOG_PROBABILITIES:
-            if DEBUG:
+            if DAS.keywordsearch.presentation.result_presentation.DEBUG:
                 print result['score'],'-->', exp(result['score']), query
             result['score'] = exp(result['score'])
 
@@ -168,7 +169,7 @@ def search(query, inst=None, dbsmngr=None):
 
 
 
-    if DEBUG:
+    if DAS.keywordsearch.presentation.result_presentation.DEBUG:
         print '\n'.join(
                     '%.2f: %s' % (r['score'], r['result']) for r in best_scores)
 

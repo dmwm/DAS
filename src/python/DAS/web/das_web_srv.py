@@ -459,7 +459,7 @@ class DASWebService(DASWebManager):
 
         das_schema_adapter.init(self.dasmgr)
         # das_schema_adapter.list_result_fields()
-        from DAS.keywordsearch.metadata.input_values_tracker import *
+        from DAS.keywordsearch.metadata.input_values_tracker import get_fields_tracked, get_tracker
         ent_values = {}
 
 
