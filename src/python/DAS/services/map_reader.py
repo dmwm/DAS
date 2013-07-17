@@ -27,6 +27,7 @@ def read_service_map(filename, field="uri"):
     """
     Read service map file and construct DAS record for MappingDB.
     """
+    tstamp = time.time()
     record = {}
     system = ''
     url    = ''
@@ -60,7 +61,7 @@ def read_service_map(filename, field="uri"):
                                 urn=urn, params=params,
                                 format=frmt, wild_card=wild, lookup=lookup,
                                 services=services,
-                                created=time.time())
+                                ts=tstamp)
                 if  instances:
                     record.update({'instances':instances})
                 if  metric.has_key('das_map'):
@@ -74,16 +75,16 @@ def read_service_map(filename, field="uri"):
             if  field == 'notations' and metric.has_key('notations'):
                 notations = metric['notations']
                 record = dict(notations=notations,
-                                system=system, created=time.time())
+                                system=system, ts=tstamp)
                 if  validator(record):
                     yield record
             if  field == 'presentation' and metric.has_key('presentation'):
                 record = dict(presentation=metric['presentation'],
-                                created=time.time())
+                                ts=tstamp)
                 if  validator(record):
                     yield record
         if  field == 'notations' and not notations and system: # no notations
-            record = dict(notations=[], system=system, created=time.time())
+            record = dict(notations=[], system=system, ts=tstamp)
             if  validator(record):
                 yield record
 
@@ -92,12 +93,12 @@ def validator(record):
     DAS map validator
     """
     if  record.has_key('notations'):
-        must_have_keys = ['system', 'notations', 'created']
+        must_have_keys = ['system', 'notations', 'ts']
     elif record.has_key('presentation'):
-        must_have_keys = ['presentation', 'created']
+        must_have_keys = ['presentation', 'ts']
     else:
         must_have_keys = ['system', 'format', 'urn', 'url', 'expire',
-                            'params', 'das_map', 'created']
+                            'params', 'das_map', 'ts']
     if  set(record.keys()) & set(must_have_keys) != set(must_have_keys):
         return False
     return True

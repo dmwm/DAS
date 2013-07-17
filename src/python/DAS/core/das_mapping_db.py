@@ -27,6 +27,7 @@ __author__ = "Valentin Kuznetsov"
 import re
 import time
 import threading
+from collections import defaultdict
 
 # monogo db modules
 from pymongo import DESCENDING
@@ -207,9 +208,43 @@ class DASMapping(object):
 
     def check_maps(self):
         """
-        Check if there are records in Mapping DB
+        Check Mapping DB and return true/false based on its content
         """
-        return self.col.count()
+        udict = defaultdict(int)
+        ndict = defaultdict(int)
+        pdict = defaultdict(int)
+        adict = {}
+        for row in self.col.find():
+            if  row.has_key('urn'):
+                udict[row['system']] += 1
+            elif row.has_key('notations'):
+                ndict[row['system']] += 1
+            elif row.has_key('presentation'):
+                pdict['presentation'] += 1
+            elif row.has_key('arecord'):
+                arec = row['arecord']
+                system = arec['system']
+                rec = {arec['type']:arec['count']}
+                if  adict.has_key(system):
+                    adict[system].update(rec)
+                else:
+                    adict[system] = rec
+
+        # retrieve uri/notation/presentation maps
+        status_umap = status_nmap = status_pmap = False
+        ulist = []
+        nlist = []
+        for system in adict.keys():
+            if  adict[system].has_key('uri'):
+                ulist.append(adict[system]['uri'] == udict[system])
+                nlist.append(adict[system]['notations'] == ndict[system])
+        status_umap = sum(ulist) == len(ulist)
+        status_nmap = sum(nlist) == len(nlist)
+        status_pmap = adict['presentation']['presentation'] == 1
+        # multiply statuses as a result of this map check
+        print "### DAS map status, umap=%s, nmap=%s, pmap=%s" \
+                % (status_umap, status_nmap, status_pmap)
+        return status_umap*status_nmap*status_pmap
 
     def remove(self, spec):
         """
@@ -258,6 +293,8 @@ class DASMapping(object):
                      ('notations.api_output', DESCENDING)]
         elif record.has_key('presentation'):
             index = []
+        elif record.has_key('arecord'):
+            pass
         else:
             msg = 'Invalid record %s' % record
             raise Exception(msg)
