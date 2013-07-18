@@ -36,11 +36,19 @@ from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
 
+def md5hash(rec):
+    "Return md5 hash of given query"
+    if  isinstance(rec, dict) or isinstance(rec, list):
+        rec = json.JSONEncoder(sort_keys=True).encode(rec)
+    keyhash = hashlib.md5()
+    keyhash.update(rec)
+    return keyhash.hexdigest()
+
 def add_hash(record):
     "Add hash into given record"
     if  not isinstance(record, dict):
         raise NotImplementedError
-    md5 = genkey(record)
+    md5 = md5hash(record)
     record.update({'hash':md5})
 
 def record_codes(rtype):
@@ -616,9 +624,7 @@ def genkey(query):
         from DAS.extensions.das_hash import _das_hash
         return _das_hash(query)
     except:
-        keyhash = hashlib.md5()
-        keyhash.update(query)
-        return keyhash.hexdigest()
+        return md5hash(query)
 
 def gen2list(results):
     """
