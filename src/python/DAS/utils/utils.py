@@ -36,6 +36,13 @@ from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
 
+def add_hash(record):
+    "Add hash into given record"
+    if  not isinstance(record, dict):
+        raise NotImplementedError
+    md5 = genkey(record)
+    record.update({'hash':md5})
+
 def record_codes(rtype):
     "Return das record code for given record type"
     codes = {'query_record': 0,
