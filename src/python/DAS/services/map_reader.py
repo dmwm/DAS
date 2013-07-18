@@ -23,6 +23,9 @@ __author__ = "Valentin Kuznetsov"
 import yaml
 import time
 
+# DAS modules
+from DAS.utils.utils import add_hash
+
 def read_service_map(filename, field="uri"):
     """
     Read service map file and construct DAS record for MappingDB.
@@ -92,13 +95,14 @@ def validator(record):
     """
     DAS map validator
     """
+    add_hash(record)
     if  record.has_key('notations'):
-        must_have_keys = ['system', 'notations', 'ts']
+        must_have_keys = ['system', 'notations', 'ts', 'hash']
     elif record.has_key('presentation'):
-        must_have_keys = ['presentation', 'ts']
+        must_have_keys = ['presentation', 'ts', 'hash']
     else:
         must_have_keys = ['system', 'format', 'urn', 'url', 'expire',
-                            'params', 'das_map', 'ts']
+                            'params', 'das_map', 'ts', 'hash']
     if  set(record.keys()) & set(must_have_keys) != set(must_have_keys):
         return False
     return True
