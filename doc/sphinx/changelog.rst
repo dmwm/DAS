@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Fix issue4017: add hash to all DAS map records; add verification of hash
+    into DASMapping check_maps method
   - Fix issue4016: add aux-record called arecord; arecord contains count of
     corresponding map record, map record type and a system. Adjust DASMapping
     check_maps method to perform full check of DAS maps by comparing count
