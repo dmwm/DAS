@@ -48,15 +48,15 @@ def fieldname(field):
 service_input_value_providers = [
     {'field': 'site.name',
      'url': 'https://cmsweb.cern.ch/sitedb/data/prod/site-names',
-     'jsonpath': "$.result[*]..[2]",
+     'jsonpath': "$.result[*][2]",
      'test': 'T1*'},
     {'field': 'tier.name',
      'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datatiers',
-     'jsonpath': '$..data_tier_name',
+     'jsonpath': '$[*].data_tier_name',
      'test': '*RECO*' },
     {'field': 'datatype.name',
      'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datatypes',
-     'jsonpath': '$..data_type',
+     'jsonpath': '$[*].data_type',
      'test': 'mc'},
     {'field': 'status.name',
      'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasetaccesstypes',
@@ -72,12 +72,12 @@ service_input_value_providers = [
     # TODO: potentially useful primary_ds_type': 'mc' and creation date
     {'field': 'primary_dataset.name',
       'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/primarydatasets',
-      'jsonpath': '$..primary_ds_name',
+      'jsonpath': '$[*].primary_ds_name',
       'test': 'RelVal160pre4Z-TT'},
 
     {'field': 'group.name',
      'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/physicsgroups',
-     'jsonpath': '$..physics_group_name',
+     'jsonpath': '$[*].physics_group_name',
      'test':'analysis'},
 ]
 
@@ -216,6 +216,7 @@ class InputValuesTracker(object):
             jsonpath_expr = parse(service['jsonpath'])
             results = jsonpath_expr.find(response)
             stream.close()
+
             return ({'value': v.value} for v in results)
 
         return []
@@ -349,5 +350,4 @@ def test_all():
 
 
 if __name__ == '__main__':
-    #test(service_input_value_providers[0])
     test_all()
