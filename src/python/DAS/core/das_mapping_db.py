@@ -34,11 +34,23 @@ from pymongo import DESCENDING
 from pymongo.errors import ConnectionFailure
 
 # DAS modules
-from DAS.utils.utils import dastimestamp, print_exc
+from DAS.utils.utils import dastimestamp, print_exc, genkey
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
+import DAS.utils.jsonwrapper as json
+
+def check_map_record(rec):
+    "Check hash of given map record"
+    # remove _id MongoDB Object
+    if  rec.has_key('_id'):
+        del rec['_id']
+    if  rec.has_key('hash'):
+        md5 = rec.pop('hash')
+        if  genkey(rec) != md5:
+            err = 'Invalid hash for %s' % json.dumps(rec)
+            raise Exception(err)
 
 def db_monitor(uri, func, sleep, reload_map, reload_time):
     """
@@ -215,6 +227,7 @@ class DASMapping(object):
         pdict = defaultdict(int)
         adict = {}
         for row in self.col.find():
+            check_map_record(row)
             if  row.has_key('urn'):
                 udict[row['system']] += 1
             elif row.has_key('notations'):
