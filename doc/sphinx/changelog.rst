@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Round timestamp for map records as well as for dasheader due to
+    inconsistent behavior of json parsers, see note in jsonwrapper module
   - Fix issue4017: add hash to all DAS map records; add verification of hash
     into DASMapping check_maps method
   - Fix issue4016: add aux-record called arecord; arecord contains count of
