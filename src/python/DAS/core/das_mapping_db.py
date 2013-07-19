@@ -257,9 +257,10 @@ class DASMapping(object):
         status_umap = sum(ulist) == len(ulist)
         status_nmap = sum(nlist) == len(nlist)
         status_pmap = adict['presentation']['presentation'] == 1
+        if  self.verbose:
+            print "### DAS map status, umap=%s, nmap=%s, pmap=%s" \
+                    % (status_umap, status_nmap, status_pmap)
         # multiply statuses as a result of this map check
-        print "### DAS map status, umap=%s, nmap=%s, pmap=%s" \
-                % (status_umap, status_nmap, status_pmap)
         return status_umap*status_nmap*status_pmap
 
     def remove(self, spec):
