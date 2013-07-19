@@ -44,14 +44,17 @@ def dasheader(system, dasquery, expire, api=None, url=None, ctime=None):
     Return DAS header (dict) wrt DAS specifications, see
     https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
     """
+    # tstamp must be integer in order for json encoder/decoder to
+    # work properly, see utils/jsonwrapper/__init__.py
+    tstamp = round(time.time())
     if  isinstance(system, basestring):
         system = [system]
     if  not api:
-        dasdict = dict(system=system, ts=time.time(),
+        dasdict = dict(system=system, ts=tstamp,
                     expire=expire_timestamp(expire),
                     status="requested")
     else:
-        dasdict = dict(system=system, ts=time.time(),
+        dasdict = dict(system=system, ts=tstamp,
                     url=[url], ctime=[ctime],
                     expire=expire_timestamp(expire), urn=[api],
                     api=[api], status="requested")

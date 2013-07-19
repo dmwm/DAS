@@ -30,7 +30,9 @@ def read_service_map(filename, field="uri"):
     """
     Read service map file and construct DAS record for MappingDB.
     """
-    tstamp = time.time()
+    # tstamp must be integer in order for json encoder/decoder to
+    # work properly, see utils/jsonwrapper/__init__.py
+    tstamp = round(time.time())
     record = {}
     system = ''
     url    = ''
