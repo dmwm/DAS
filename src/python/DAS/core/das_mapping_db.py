@@ -34,7 +34,7 @@ from pymongo import DESCENDING
 from pymongo.errors import ConnectionFailure
 
 # DAS modules
-from DAS.utils.utils import dastimestamp, print_exc, genkey
+from DAS.utils.utils import dastimestamp, print_exc, md5hash
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.logger import PrintManager
@@ -48,8 +48,11 @@ def check_map_record(rec):
         del rec['_id']
     if  rec.has_key('hash'):
         md5 = rec.pop('hash')
-        if  genkey(rec) != md5:
-            err = 'Invalid hash for %s' % json.dumps(rec)
+        rec_md5 = md5hash(rec)
+        if  rec_md5 != md5:
+            err  = 'Invalid hash record:\n%s\n' % json.dumps(rec)
+            err += '\nrecord hash  : %s' % md5
+            err += '\nobtained hash: %s\n' % md5hash(rec)
             raise Exception(err)
 
 def db_monitor(uri, func, sleep, reload_map, reload_time):
