@@ -36,6 +36,11 @@ from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
 
+def upper_lower(ilist):
+    "Return list of lower and upper words from given list"
+    ilist = [i.lower() for i in ilist] + [i.upper() for i in ilist]
+    return list(set(ilist))
+
 def md5hash(rec):
     "Return md5 hash of given query"
     if  isinstance(rec, dict) or isinstance(rec, list):
