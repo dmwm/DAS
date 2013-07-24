@@ -24,6 +24,9 @@ from distutils.errors import DistutilsPlatformError, DistutilsExecError
 from distutils.core import Extension
 from distutils.command.install import INSTALL_SCHEMES
 
+import fnmatch
+
+
 sys.path.append(os.path.join(os.getcwd(), 'src/python'))
 from DAS import version as das_version
 
@@ -183,7 +186,7 @@ def find_packages(relativedir):
         packages.append(package)
     return packages
 
-def datafiles(dir):
+def datafiles(dir, pattern=None):
     """Return list of data files in provided relative dir"""
     files = []
     for dirname, dirnames, filenames in os.walk(dir):
@@ -191,6 +194,9 @@ def datafiles(dir):
             files.append(os.path.join(dirname, subdirname))
         for filename in filenames:
             if  filename[-1] == '~':
+                continue
+            # match file name pattern (e.g. *.css) if one given
+            if pattern and not fnmatch.fnmatch(filename, pattern):
                 continue
             files.append(os.path.join(dirname, filename))
     return files
@@ -217,8 +223,20 @@ data_files   = [
                 ('DAS/services/cms_maps', datafiles('src/python/DAS/services/cms_maps')),
                 ('DAS/services/bootstrap_queries', 
                                  datafiles('src/python/DAS/services/bootstrap_queries')),
+
                 ('DAS/web/js', datafiles('src/js')),
                 ('DAS/web/css', datafiles('src/css')),
+
+                # autocompletion
+                ('DAS/web/css', datafiles('src/cm-autocomplete', '*.css')),
+                ('DAS/web/js', datafiles('src/cm-autocomplete', '*.js')),
+
+                ('DAS/web/css', datafiles('src/cm-xquery-hint', '*.css')),
+                ('DAS/web/js', datafiles('src/cm-xquery-hint', '*.js')),
+
+
+
+
                 ('DAS/web/images', datafiles('src/images')),
                 ('DAS/web/images', datafiles('src/jquery-ui-images')),                
                 ('DAS/web/templates', datafiles('src/templates')),

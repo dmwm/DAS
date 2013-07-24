@@ -514,7 +514,7 @@ class DASWebService(DASWebManager):
 
         daskeys_grouped_json = json.dumps(daskeys_grouped)
 
-        page = self.templatepage('kwdsearch_autocomplete', dasdict=dasdict,
+        page = self.templatepage('kwdsearch_autocomplete_cm', dasdict=dasdict,
                                  daskeys=daskeys, daskeys_json=daskeys_json,
                                  daskeys_grouped_json=daskeys_grouped_json,
                                  selkeys_values=selkeys_values,
