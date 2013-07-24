@@ -131,5 +131,5 @@ def test():
 
 if __name__ == '__main__':
     is_bootstrap_needed()
-    waitfordb(60)
+    waitfordb(120)
 

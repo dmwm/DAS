@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # check number of input arguments
 usage="Usage: `basename $0` [--only-if-needed]"

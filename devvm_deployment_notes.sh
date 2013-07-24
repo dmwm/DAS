@@ -47,36 +47,33 @@ sudo -l
 
 #install
 
+
 A=/data/cfg/admin REPO="-r comp=comp.pre.zemleris" VER=1303b
 
-# add -a $PWD/auth for passwords
+# get auth proxy
+mkdir -p $PWD/HG$VER/auth/proxy
+$PWD/cfg/admin/ProxySeed -t dev -d $PWD/HG$VER/auth/proxy
+
 # TODO: not yet installed: phedex dbs
-$A/InstallDev -R cmsweb@HG$VER -s image -v hg$VER  $REPO -p "admin das@1.11.9-hg1309-rc3 mongodb frontend overview"
-$A/InstallDev -R cmsweb@HG$VER -s image -v hg$VER  $REPO -p "t0datasvc t0mon reqmon"
-
-# TODO: this shall be moved to the spec file and cleanup
-sudo vim current/sw.pre.zemleris/slc5_amd64_gcc461/external/py2-nltk/2.0.4/etc/profile.d/init.sh
-export NLTK_DATA="${PY2_NLTK_ROOT}/nltk_data"
-
-sudo vim current/sw.pre.zemleris/slc5_amd64_gcc461/external/py2-nltk/2.0.4/etc/profile.d/init.csh
-setenv NLTK_DATA "${PY2_NLTK_ROOT}/nltk_data"
-
-
-
-# patch installDev to include bootstrap. TODO: temporary
-#cp ~/InstallDev $A/
-
-# bootstrap DAS
-# TODO: may need to start everything except DAS
-$A/InstallDev -s start
-$A/InstallDev -s stop:das
-$A/InstallDev -s bootstrap:das
-
-# start services
-$A/InstallDev -s start
-
+$A/InstallDev -R cmsweb@HG$VER -s image -v hg$VER  $REPO -p "admin das@1.11.9-hg1309-rc4 mongodb frontend overview t0datasvc t0mon reqmon"
 
 touch /data/state/frontend/etc/voms-gridmap.txt
+# bootstrap & start DAS
+$A/InstallDev -s start
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 bash
 cd /data

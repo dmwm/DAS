@@ -66,7 +66,7 @@ class KeywordSearchHandler:
         t.sort()
         thtml = \
             '<ul style="width: 500px;background-color: #fff;"><li>' + \
-            '</li><li>'.join([str(item) for item in t]) + \
+            '</li><li>'.join(str(item) for item in t) + \
             '</li></ul>' + \
             'score: %.2f; query len norm score (-inf; ~1.0): %.2f' % (
                 q['score'], q['len_normalized_score'])
