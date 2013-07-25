@@ -190,6 +190,7 @@ def update_db(urls, which_dbs, uri, db_name, coll_name):
         coll.remove({'ts': {'$lt': tst}})
     else:
         raise ConnectionFailure('could not establish connection')
+    print "%s update dbs_phedex DB %s sec" % (dastimestamp(), time.time()-tst)
 
 def find_dataset(coll, site, operation="mapreduce"):
     """
@@ -275,16 +276,12 @@ def worker(urls, which_dbs, uri, db_name, coll_name, interval=3600):
     """
     conn_interval = 3 # default connection failure sleep interval
     threshold = 60 # 1 minute is threashold to check connections
-    time0 = time.time()
     print "### Start dbs_phedex worker"
     while True:
         if  conn_interval > threshold:
             conn_interval = threshold
         try:
             update_db(urls, which_dbs, uri, db_name, coll_name)
-            print "%s update dbs_phedex DB %s sec" \
-                % (dastimestamp(), time.time()-time0)
-            time0 = time.time()
             time.sleep(interval)
         except AutoReconnect as _err:
             time.sleep(conn_interval) # handles broken connection
@@ -323,7 +320,7 @@ class DBSPhedexService(object):
         try:
             conn = db_connection(self.uri)
             self.coll = conn[self.dbname][self.collname]
-            indexes = [('name', DESCENDING), ('site', DESCENDING),
+            indexes = [('dataset', DESCENDING), ('site', DESCENDING),
                        ('ts', DESCENDING)]
             for index in indexes:
                 create_indexes(self.coll, [index])
