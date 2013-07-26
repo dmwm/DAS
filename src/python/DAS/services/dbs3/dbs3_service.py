@@ -100,7 +100,7 @@ def dbs_find(entity, url, kwds):
         raise Exception(msg)
     expire  = 600
     dataset = kwds.get('dataset', None)
-    block   = kwds.get('block', None)
+    block   = kwds.get('block_name', None)
     lfn     = kwds.get('file', None)
     runs    = kwds.get('runs', [])
     if  not (dataset or block or lfn):
@@ -114,9 +114,9 @@ def dbs_find(entity, url, kwds):
         params = {'logical_file_name': lfn}
     if  runs:
         if  entity == 'file':
-            params.update({'run': runrange(runs[0], runs[-1], False)})
+            params.update({'run_num': runrange(runs[0], runs[-1], False)})
         else:
-            params.update({'run': runs[0]})
+            params.update({'run_num': runs[0]})
     headers = {'Accept': 'application/json;text/json'}
     source, expire = \
         getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
@@ -147,7 +147,7 @@ def block_run_lumis(url, blocks, runs=None):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            params.update({'run': runrange(runs[0], runs[0], True)})
+            params.update({'run_num': runrange(runs[0], runs[0], True)})
         urls.append(dbs_url)
     if  not urls:
         return
@@ -180,7 +180,7 @@ def file_run_lumis(url, blocks, runs=None):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            dbs_url += "&run=%s" % runrange(runs[0], runs[-1], True)
+            dbs_url += "&run_num=%s" % runrange(runs[0], runs[-1], True)
         urls.append(dbs_url)
     if  not urls:
         return
@@ -229,7 +229,7 @@ def old_timestamp(tstamp, threshold=2592000):
 
 def get_block_run_lumis(url, api, args):
     "Helper function to deal with block,run,lumi requests"
-    run_value = args.get('run', [])
+    run_value = args.get('run_num', [])
     if  isinstance(run_value, dict) and run_value.has_key('$in'):
         runs = run_value['$in']
     elif isinstance(run_value, list):
@@ -248,7 +248,7 @@ def get_block_run_lumis(url, api, args):
 
 def get_file_run_lumis(url, api, args):
     "Helper function to deal with file,run,lumi requests"
-    run_value = args.get('run', [])
+    run_value = args.get('run_num', [])
     if  isinstance(run_value, dict) and run_value.has_key('$in'):
         runs = run_value['$in']
     elif isinstance(run_value, list):
@@ -273,7 +273,7 @@ def get_file_run_lumis(url, api, args):
 
 def get_file4dataset_run_lumi(url, api, args):
     "Helper function to deal with file dataset=/a/b/c run=123 lumi=1 requests"
-    run_value = args.get('run', [])
+    run_value = args.get('run_num', [])
     if  isinstance(run_value, dict) and run_value.has_key('$in'):
         runs = run_value['$in']
     elif isinstance(run_value, list):
@@ -376,7 +376,7 @@ def get_blocks4tier_dates(dbs_url, api, args):
 
 def get_dataset4block(args):
     "Get dataset name for given block"
-    block = args.get('block')
+    block = args.get('block_name')
     yield {'dataset':{'name':block.split('#')[0]}}
 
 class DBS3Service(DASAbstractService):
@@ -448,15 +448,15 @@ class DBS3Service(DASAbstractService):
         Adjust DBS2 parameters for specific query requests
         """
         # adjust run parameter if it is present in kwds
-        val = kwds.get('run', None)
+        val = kwds.get('run_num', None)
         if  val:
             if  isinstance(val, dict): # we got a run range
                 if  val.has_key('$in'):
-                    kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
+                    kwds['run_num'] = runrange(val['$in'][0], val['$in'][-1])
                 if  val.has_key('$lte'):
-                    kwds['run'] = runrange(val['$gte'], val['$lte'], True)
+                    kwds['run_num'] = runrange(val['$gte'], val['$lte'], True)
             else:
-                kwds['run'] = val
+                kwds['run_num'] = val
         if  api == 'site4dataset':
             # skip API call if inst is global one (data provided by phedex)
             if  inst == self.prim_instance:

@@ -48,13 +48,14 @@ das_map : [
 ]
 ---
 urn: dataset4block
-url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
+# url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
+url : "local_api"
 expire : 86400
-params : {"block":"required"}
+params : {"block_name":"required"}
 lookup : dataset
 das_map : [
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
-    {"das_key": "block", "rec_key":"block.name", "api_arg":"block",
+    {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
@@ -207,6 +208,30 @@ das_map : [
     {"das_key": "site", "rec_key":"site.se", "api_arg":"original_site_name",
      "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
 ]
+# NOTE: blocksummaries is a subset of filesummaries output, so we really don't
+# need this API
+# ---
+# urn: blocksummaries4dataset
+# url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blocksummaries/"
+# expire : 900
+# params : {"dataset":"required"}
+# lookup : summary
+# das_map : [
+#     {"das_key": "summary", "rec_key": "summary"},
+#     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+#      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+# ]
+# ---
+# urn: blocksummaries4block
+# url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blocksummaries/"
+# expire : 900
+# params : {"block_name":"required"}
+# lookup : summary
+# das_map : [
+#     {"das_key": "summary", "rec_key": "summary"},
+#     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
+#      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+# ]
 ---
 urn: blockparents
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blockparents/"
@@ -400,16 +425,18 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
+# FIXME: this is aggregated API and I should pass block_name since this is what
+# filelumis API expect
 urn : run_lumi4block
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
 expire : 3600
-params : {"block":"required", "run_num": "optional"}
+params : {"block_name":"required", "run_num": "optional"}
 lookup : run,lumi
 das_map : [
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
-    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
@@ -431,13 +458,13 @@ urn : file_lumi4block
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
 expire : 3600
-params : {"block":"required", "run_num": "optional"}
+params : {"block_name":"required", "run_num": "optional"}
 lookup : file,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
-    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
@@ -459,13 +486,13 @@ urn : file_run_lumi4block
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
 expire : 3600
-params : {"block":"required", "run_num": "optional"}
+params : {"block_name":"required", "run_num": "optional"}
 lookup : file,run,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
-    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
@@ -487,12 +514,12 @@ urn : lumi4block_run
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
 expire : 3600
-params : {"block":"required", "run_num": "optional"}
+params : {"block_name":"required", "run_num": "optional"}
 lookup : lumi
 das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
-    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
