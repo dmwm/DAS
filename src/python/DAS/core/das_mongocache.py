@@ -217,7 +217,21 @@ class DASMongocache(object):
                           ('qhash', DESCENDING),
                           ('das.record', ASCENDING),
                           ('das.ts', ASCENDING)]
-            create_indexes(self.merge, index_list + common_idx)
+            create_indexes(self.merge, index_list)
+            # NOTE: I found that creating index in merge collection leads to
+            # MongoDB error when records contains multiple arrays on indexed
+            # keys. For example, when we query file,run,lumi both file and run
+            # are arrays in MongoDB. In this case the final sort in MongoDB
+            # bark with the following message:
+            # cannot sort with keys that are parallel arrays
+            # it looks like that there is no fix for that yet
+            # see
+            # http://stackoverflow.com/questions/6516725/how-do-i-index-two-arrays-in-mongodb
+            # therefore I temporary disabled create_indexes call on merge
+            # collection which was used to have index to ease final sort,
+            # especially in a case when a lot of records correspond to inital
+            # query, e.g. file records.
+#            create_indexes(self.merge, index_list + common_idx)
 #            print "### DASMongocache:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
