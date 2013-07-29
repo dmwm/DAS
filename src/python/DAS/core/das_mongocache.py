@@ -231,7 +231,11 @@ class DASMongocache(object):
             # collection which was used to have index to ease final sort,
             # especially in a case when a lot of records correspond to inital
             # query, e.g. file records.
-#            create_indexes(self.merge, index_list + common_idx)
+            # On another hand, the most common use case where sort fails is
+            # getting file records, and I can add one compound key to ease sort
+            # but I can't add another compound key on array field, e.g. run
+            common_idx = [[('qhash',DESCENDING), ('file.name', DESCENDING)]]
+            create_indexes(self.merge, index_list + common_idx)
 #            print "### DASMongocache:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
