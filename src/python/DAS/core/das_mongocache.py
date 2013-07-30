@@ -426,7 +426,7 @@ class DASMongocache(object):
             self.col.update({'query': dasquery.storage_query},
                             {'$set': info}, upsert=True)
 
-    def update_query_record(self, dasquery, status, header=None):
+    def update_query_record(self, dasquery, status, header=None, reason=None):
         "Update DAS record for provided query"
         ctime = time.time()
         das_spec = {'qhash': dasquery.qhash, 'das.system':'das'}
@@ -451,6 +451,9 @@ class DASMongocache(object):
                 self.col.update(das_spec, udict)
         else:
             udict = {'$set': {'das.status':status}, '$push': {'das.ctime':ctime}}
+            self.col.update(das_spec, udict)
+        if  reason:
+            udict = {'$set': {'das.reason':reason}}
             self.col.update(das_spec, udict)
 
     def apilist(self, dasquery):
