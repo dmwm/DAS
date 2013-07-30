@@ -31,7 +31,7 @@ from DAS.utils.query_utils import compare_specs, decode_mongo_query
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
 from DAS.utils.utils import expire_timestamp, print_exc, fix_times
-from DAS.utils.utils import api_rows, das_sinfo, regen
+from DAS.utils.utils import api_rows, das_sinfo, regen, dastimestamp
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.das_timer import das_timer, get_das_timer
 from DAS.utils.global_scope import SERVICES
@@ -39,7 +39,8 @@ from DAS.utils.global_scope import SERVICES
 # DAS imports
 import DAS.core.das_aggregators as das_aggregator
 
-def dasheader(system, dasquery, expire, api=None, url=None, ctime=None):
+def dasheader(system, dasquery, expire, api=None, url=None, ctime=None,
+        services=[]):
     """
     Return DAS header (dict) wrt DAS specifications, see
     https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
@@ -58,6 +59,8 @@ def dasheader(system, dasquery, expire, api=None, url=None, ctime=None):
                     url=[url], ctime=[ctime],
                     expire=expire_timestamp(expire), urn=[api],
                     api=[api], status="requested")
+    if  system == ['das']:
+        dasdict.update({"services": services})
     return dict(das=dasdict)
 
 class DASCore(object):
@@ -242,32 +245,23 @@ class DASCore(object):
         Look-up status of provided query in a cache.
         Return status of the query request and its hash.
         """
+        status = None
+        reason = None
         for col in ['merge', 'cache']:
             self.rawcache.remove_expired(col)
         if  dasquery and dasquery.mongo_query.has_key('fields'):
             fields = dasquery.mongo_query['fields']
             if  fields and isinstance(fields, list) and 'queries' in fields:
-                return 'ok', dasquery.qhash
-        status = 0
+                return 'ok', reason
         record = self.rawcache.find(dasquery)
         try:
             if  record and record.has_key('das') and \
                 record['das'].has_key('status'):
                 status = record['das']['status']
-                return status, record['qhash']
+                return status, record['das'].get('reason', reason)
         except:
             pass
-
-        similar_result = self.rawcache.similar_queries(dasquery)
-        if  similar_result:
-            if  isinstance(similar_result, bool) and dasquery.hashes:
-                return 'ok', dasquery.hashes
-            record = self.rawcache.find(similar_result)
-            if  record and record.has_key('das') and \
-                record['das'].has_key('status'):
-                similar_query_status = record['das']['status']
-                return similar_query_status, record['qhash']
-        return status, 0
+        return status, reason
 
     def worker(self, srv, dasquery):
         """Main worker function which calls data-srv call function"""
@@ -296,19 +290,25 @@ class DASCore(object):
             services = dasquery.params()['services']
         self.logger.info('Potential services = %s' % services)
         expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
-        header = dasheader("das", dasquery, expire, api='das_core')
+        header = dasheader("das", dasquery, expire, api='das_core',
+                services=services)
         header['lookup_keys'] = []
         self.rawcache.insert_query_record(dasquery, header)
         das_timer('das_record', self.verbose)
         # get list of URI which can answer this query
-        ack_services = []
-        for srv in services:
-            gen = getattr(getattr(self, srv), 'apimap')(dasquery)
-            for url, api, args, iformat, expire in gen:
-                header = dasheader(srv, dasquery, expire, api, url, ctime=0)
-                self.rawcache.insert_query_record(dasquery, header)
-                ack_services.append(srv)
-        return ack_services
+        if  services:
+            ack_services = []
+            for srv in services:
+                gen = getattr(getattr(self, srv), 'apimap')(dasquery)
+                for url, api, args, iformat, expire in gen:
+                    header = dasheader(srv, dasquery, expire, api, url, ctime=0)
+                    self.rawcache.insert_query_record(dasquery, header)
+                    ack_services.append(srv)
+        if  services and not ack_services:
+            srv_status = False
+        else:
+            srv_status = set(services) & set(ack_services) == set(ack_services)
+        return ack_services, srv_status
 
     def call(self, query, add_to_analytics=True, **kwds):
         """
@@ -358,7 +358,17 @@ class DASCore(object):
 
         self.logger.info(dasquery)
         das_timer('das_record', self.verbose)
-        services = self.insert_query_records(dasquery)
+        services, srv_status = self.insert_query_records(dasquery)
+        if  not srv_status:
+            if  services:
+                msg = 'fail to acknowledge services %s' % services
+            else:
+                msg = 'unable to locate any data-service'
+            print dastimestamp('DAS ERROR '), dasquery, msg
+            self.rawcache.update_query_record(dasquery, 'fail', reason=msg)
+            self.rawcache.add_to_record(\
+                    dasquery, {'das.timer': get_das_timer()}, system='das')
+            return 'fail'
         self.logger.info('Acknowledged services = %s' % services)
         try:
             if  self.multitask:
