@@ -154,7 +154,7 @@ def block_run_lumis(url, blocks, runs=None):
     gen = urlfetch_getdata(urls, CKEY, CERT, headers)
     odict = {} # output dict
     for rec in gen:
-        blk = url_args(rec['url'])['block_name']
+        blk = urllib.unquote(url_args(rec['url'])['block_name'])
         if  'error' in rec.keys():
             err = 'N/A: %s' % rec
             yield blk, err, err
