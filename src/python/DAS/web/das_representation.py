@@ -37,7 +37,7 @@ class DASRepresentation(DASWebManager):
         kwargs  = head.get('args')
         total   = head.get('nresults', 0)
         apilist = head.get('apilist')
-        main    = self.pagination(total, apilist, kwargs)
+        main    = self.pagination(head)
         style   = 'white'
         page    = ''
         pad     = ''
@@ -98,7 +98,7 @@ class DASRepresentation(DASWebManager):
         filters  = dasquery.filters
         titles   = []
         apilist  = head.get('apilist')
-        page     = self.pagination(total, apilist, kwargs)
+        page     = self.pagination(head)
         if  filters:
             for flt in filters:
                 if  flt.find('=') != -1 or flt.find('>') != -1 or \
@@ -150,13 +150,18 @@ class DASRepresentation(DASWebManager):
                 % head['ctime']
         return page
 
-    def pagination(self, total, apilist, kwds):
+    def pagination(self, head):
         """
         Construct pagination part of the page. It accepts total as a
         total number of result as well as dict of kwargs which
         contains idx/limit/query/input parameters, as well as other
         parameters used in URL by end-user.
         """
+        kwds    = head.get('args')
+        total   = head.get('nresults')
+        apilist = head.get('apilist')
+        status  = head.get('status', None)
+        reason  = head.get('reason', None)
         kwargs  = deepcopy(kwds)
         if  kwargs.has_key('dasquery'):
             del kwargs['dasquery'] # we don't need it
@@ -175,10 +180,15 @@ class DASRepresentation(DASWebManager):
                 nrows=total, idx=idx, limit=limit, url=url)
         else:
             # distinguish the case when no results vs no API calls
-            if  apilist == ['das_core']: # only DAS core call
-                page = self.templatepage('das_noapis', query=uinput)
-            else:
+            if  status == 'ok':
                 page = self.templatepage('das_noresults', query=uinput)
+            elif status == 'fail':
+                page = 'DAS fails to get results for your query'
+                if  reason:
+                    page += ', %s' % str(reason)
+                page += 'Please try again later.'
+            else:
+                page = self.templatepage('das_noapis', query=uinput)
         return page
 
     @exposetext
