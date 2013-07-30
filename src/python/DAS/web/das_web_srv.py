@@ -649,6 +649,7 @@ class DASWebService(DASWebManager):
                 return head, data
             dasquery = content # returned content is valid DAS query
         try:
+            status, reason = self.dasmgr.get_status(dasquery)
             nres = self.dasmgr.nresults(dasquery, coll)
             data = \
                 self.dasmgr.get_from_cache(dasquery, idx, limit)
@@ -659,15 +660,18 @@ class DASWebService(DASWebManager):
                 # its length as nresults value.
                 data = [r for r in data]
                 nres = len(data)
-            head.update({'status':'ok', 'nresults':nres,
+            head.update({'status':status, 'nresults':nres,
                          'ctime': time.time()-time0, 'dasquery': dasquery})
+            if  reason:
+                head.update({'reason': reason})
         except Exception as exc:
             print_exc(exc)
             head.update({'status': 'fail', 'reason': str(exc),
                          'ctime': time.time()-time0, 'dasquery': dasquery})
             data = []
         head.update({'incache':self.dasmgr.incache(dasquery, coll='cache'),
-                     'apilist':self.dasmgr.apilist(dasquery)})
+                     'apilist':self.dasmgr.apilist(dasquery),
+                     'status':status, 'reason':reason})
         return head, data
 
     def busy(self):
@@ -756,7 +760,7 @@ class DASWebService(DASWebManager):
             return self.datastream(dict(head=head, data=data))
 
         dasquery = content # returned content is valid DAS query
-        status, _qhash = self.dasmgr.get_status(dasquery)
+        status, _reason = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
             kwargs['dasquery'] = dasquery
             self.reqmgr.remove(dasquery.qhash)
@@ -890,15 +894,8 @@ class DASWebService(DASWebManager):
             else:
                 return content
         dasquery = content # returned content is valid DAS query
-        status, _qhash = self.dasmgr.get_status(dasquery)
-        if  status == 'ok':
-            kwargs['dasquery'] = dasquery
-            page = self.get_page_content(kwargs, complete_msg=False)
-            ctime = (time.time()-time0)
-            if  view == 'list' or view == 'table':
-                return self.page(form + page, ctime=ctime)
-            return page
-        else:
+        status, _reason = self.dasmgr.get_status(dasquery)
+        if  status == None:
             kwargs['dasquery'] = dasquery.storage_query
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery,
@@ -911,6 +908,13 @@ class DASWebService(DASWebManager):
             else:
                 page = self.get_page_content(kwargs)
                 self.reqmgr.remove(pid)
+        else:
+            kwargs['dasquery'] = dasquery
+            page = self.get_page_content(kwargs, complete_msg=False)
+            ctime = (time.time()-time0)
+            if  view == 'list' or view == 'table':
+                return self.page(form + page, ctime=ctime)
+            return page
         ctime = (time.time()-time0)
         return self.page(form + page, ctime=ctime)
 
