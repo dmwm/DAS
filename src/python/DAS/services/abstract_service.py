@@ -486,6 +486,7 @@ class DASAbstractService(object):
         Analyze input query and yield url, api, args, format, expire
         for further processing.
         """
+        srv   = self.name # get local copy to avoid threading issues
         cond  = getarg(dasquery.mongo_query, 'spec', {})
         instance = dasquery.mongo_query.get('instance', self.dbs_global)
         skeys = getarg(dasquery.mongo_query, 'fields', [])
@@ -504,11 +505,11 @@ class DASAbstractService(object):
                 if  key in das_special_keys():
                     found += 1
                 # check if keys from conditions are accepted by API.
-                if  self.dasmapping.check_dasmap(self.name, api, key, val):
+                if  self.dasmapping.check_dasmap(srv, api, key, val):
                     # need to convert key (which is daskeys.map) into
                     # input api parameter
                     for apiparam in \
-                        self.dasmapping.das2api(self.name, key, val, api):
+                        self.dasmapping.das2api(srv, key, val, api):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
                             found += 1
@@ -540,21 +541,21 @@ class DASAbstractService(object):
                     args[key] = val
 
             # compare query selection keys with API look-up keys
-            api_lkeys = self.dasmapping.api_lkeys(self.name, api)
+            api_lkeys = self.dasmapping.api_lkeys(srv, api)
             if  set(api_lkeys) != set(skeys):
                 msg = "--- rejects API %s, api_lkeys(%s)!=skeys(%s)"\
                         % (api, api_lkeys, skeys)
                 self.logger.info(msg)
                 continue
 
-            msg = '+++ %s passes API %s' % (self.name, api)
+            msg = '+++ %s passes API %s' % (srv, api)
             self.logger.info(msg)
             msg = 'args=%s' % args
             self.logger.debug(msg)
 
             msg  = "yield "
             msg += "system ***%s***, url=%s, api=%s, args=%s, format=%s, " \
-                % (self.name, url, api, args, iformat)
+                % (srv, url, api, args, iformat)
             msg += "expire=%s, wild_card=%s" \
                 % (expire, wild)
             self.logger.debug(msg)
