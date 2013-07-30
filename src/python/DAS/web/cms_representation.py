@@ -387,7 +387,7 @@ class CMSRepresentation(DASRepresentation):
         inst     = dasquery.instance
         filters  = dasquery.filters
         aggrtrs  = dasquery.aggregators
-        main     = self.pagination(total, apilist, kwargs)
+        main     = self.pagination(head)
         style    = 'white'
         rowkeys  = []
         fltpage  = self.filter_bar(dasquery)
@@ -578,7 +578,7 @@ class CMSRepresentation(DASRepresentation):
         filters  = dasquery.filters
         sdir     = getarg(kwargs, 'dir', '')
         titles   = []
-        page     = self.pagination(total, apilist, kwargs)
+        page     = self.pagination(head)
         fltbar   = self.filter_bar(dasquery)
         if  filters:
             for flt in filters:
