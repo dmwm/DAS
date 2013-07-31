@@ -8,8 +8,8 @@ by DAS feel free to submit a new
 #set tstamp=time.strftime("%d %b %Y %H:%M:%S GMT", time.gmtime())
 #set msg="No APIs, %s (%s)" % ($query, $tstamp)
 #set msg=$quote(msg)
-#set status=$quote(status)
-#set reason=$quote(reason)
+#set status=$quote($status)
+#set reason=$quote($reason)
 <a class="box_attention"
    href="https://github.com/dmwm/DAS/issues/new?title=$msg">ticket</a>
 <pre>
