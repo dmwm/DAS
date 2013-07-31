@@ -187,8 +187,14 @@ class DASRepresentation(DASWebManager):
                 if  reason:
                     page += ', %s' % str(reason)
                 page += 'Please try again later.'
+            elif status == 'busy':
+                page = 'DAS server server is busy processing other request'
+                page += 'Please try again later.'
             else:
-                page = self.templatepage('das_noapis', query=uinput)
+                if  not reason:
+                    reason = ''
+                page = self.templatepage('das_noapis', query=uinput,
+                        status=status, reason=reason)
         return page
 
     @exposetext
