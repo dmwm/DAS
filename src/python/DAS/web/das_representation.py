@@ -193,6 +193,8 @@ class DASRepresentation(DASWebManager):
             else:
                 if  not reason:
                     reason = ''
+                if  not status:
+                    status = 'Not available'
                 page = self.templatepage('das_noapis', query=uinput,
                         status=status, reason=reason)
         return page
