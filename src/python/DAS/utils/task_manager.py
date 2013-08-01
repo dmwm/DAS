@@ -114,6 +114,13 @@ class TaskManager:
         self._workers = [Worker(name, self._tasks, self._pids, self._uids) \
                         for _ in xrange(0, nworkers)]
 
+    def status(self):
+        "Return status of task manager queue"
+        info = {'qsize':self._tasks.qsize(), 'full':self._tasks.full(),
+                'unfinished':self._tasks.unfinished_tasks,
+                'nworkers':len(self._workers)}
+        return {self.name:info}
+
     def nworkers(self):
         """Return number of workers associated with this manager"""
         return len(self._workers)
