@@ -308,6 +308,8 @@ class DASCore(object):
             srv_status = False
         else:
             srv_status = set(services) & set(ack_services) == set(ack_services)
+        if  dasquery.query.find('records ') != -1:
+            srv_status = True # skip DAS queries w/ records request
         return ack_services, srv_status
 
     def call(self, query, add_to_analytics=True, **kwds):
@@ -363,7 +365,7 @@ class DASCore(object):
             if  services:
                 msg = 'fail to acknowledge services %s' % services
             else:
-                msg = 'unable to locate any data-service'
+                msg = 'unable to locate data-services to fulfill this request'
             print dastimestamp('DAS ERROR '), dasquery, msg
             self.rawcache.update_query_record(dasquery, 'fail', reason=msg)
             self.rawcache.add_to_record(\
