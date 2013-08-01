@@ -216,9 +216,6 @@ def quote(data):
     """
     Sanitize the data using cgi.escape.
     """
-
-
-
     if  isinstance(data, int) or isinstance(data, float):
         res = data
     elif  isinstance(data, dict):
