@@ -672,7 +672,17 @@ class DASWebService(DASWebManager):
         head.update({'incache':self.dasmgr.incache(dasquery, coll='cache'),
                      'apilist':self.dasmgr.apilist(dasquery),
                      'status':status, 'reason':reason})
+        if  status != 'ok':
+            head.update(self.status())
         return head, data
+
+    def status(self):
+        "Return status of DAS server"
+        info = {'nrequests': self.reqmgr.size(),
+                'nworkers': self.taskmgr.nworkers(),
+                'dascore': self.dasmgr.taskmgr.status(),
+                'dasweb': self.reqmgr.status()}
+        return dict(das_server=info)
 
     def busy(self):
         """
