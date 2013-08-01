@@ -123,3 +123,9 @@ class RequestManager(object):
         """Return size of the request cache"""
         self.clean()
         return self.col.count()
+
+    def status(self):
+        "Return status of RequestManager"
+        requests = [json.loads(i['kwds'])['input'] for i in self.items()]
+        info = {'nrequest': self.size(), 'requests': requests}
+        return {'reqmgr': info}
