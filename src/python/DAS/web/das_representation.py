@@ -9,6 +9,7 @@ Description: Abstract interface to represent DAS records
 
 # system modules
 import urllib
+import pprint
 
 # mongodb modules
 from bson.objectid import ObjectId
@@ -160,8 +161,6 @@ class DASRepresentation(DASWebManager):
         kwds    = head.get('args')
         total   = head.get('nresults')
         apilist = head.get('apilist')
-        status  = head.get('status', None)
-        reason  = head.get('reason', None)
         kwargs  = deepcopy(kwds)
         if  kwargs.has_key('dasquery'):
             del kwargs['dasquery'] # we don't need it
@@ -180,23 +179,12 @@ class DASRepresentation(DASWebManager):
                 nrows=total, idx=idx, limit=limit, url=url)
         else:
             # distinguish the case when no results vs no API calls
-            if  status == 'ok':
-                page = self.templatepage('das_noresults', query=uinput)
-            elif status == 'fail':
-                page = 'DAS fails to get results for your query'
-                if  reason:
-                    page += ', %s' % str(reason)
-                page += 'Please try again later.'
-            elif status == 'busy':
-                page = 'DAS server server is busy processing other request'
-                page += 'Please try again later.'
-            else:
-                if  not reason:
-                    reason = ''
-                if  not status:
-                    status = 'Not available'
-                page = self.templatepage('das_noapis', query=uinput,
-                        status=status, reason=reason)
+            info = head.get('das_server', None)
+            info = pprint.pformat(info) if info else None
+            page = self.templatepage('das_noresults', query=uinput,
+                    status=head.get('status', None),
+                    reason=head.get('reason', None),
+                    info=info, apilist=head.get('apilist', None))
         return page
 
     @exposetext
