@@ -94,6 +94,7 @@ class DASMapping(object):
         self.dburi    = config['mongodb']['dburi']
         self.dbname   = config['mappingdb']['dbname']
         self.colname  = config['mappingdb']['collname']
+        self.map_test = config.get('map_test', True)
 
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
@@ -225,6 +226,8 @@ class DASMapping(object):
         """
         Check Mapping DB and return true/false based on its content
         """
+        if  not self.map_test:
+            return True # do not test DAS maps, useful for unit tests
         udict = defaultdict(int)
         ndict = defaultdict(int)
         pdict = defaultdict(int)
