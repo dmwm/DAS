@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Remove timestamp attribute from passed dict to md5hash function, it is
+    required due to dynamic nature of timestamp which leads to modification of
+    the hash of the record
+  - Add new stress tool, see bin/das_stress_tool
   - Round timestamp for map records as well as for dasheader due to
     inconsistent behavior of json parsers, see note in jsonwrapper module
   - Fix issue4017: add hash to all DAS map records; add verification of hash
