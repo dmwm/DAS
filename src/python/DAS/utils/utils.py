@@ -43,8 +43,15 @@ def upper_lower(ilist):
 
 def md5hash(rec):
     "Return md5 hash of given query"
-    if  isinstance(rec, dict) or isinstance(rec, list):
-        rec = json.JSONEncoder(sort_keys=True).encode(rec)
+    if  not isinstance(rec, dict):
+        raise NotImplementedError
+    # discard timestamp fields from hash calculations since they're dynamic
+    record = dict(rec)
+    if  'ts' in record:
+        del record['ts']
+    if  'timestamp' in record:
+        del record['timestamp']
+    rec = json.JSONEncoder(sort_keys=True).encode(record)
     keyhash = hashlib.md5()
     keyhash.update(rec)
     return keyhash.hexdigest()
