@@ -211,11 +211,11 @@ def get_api(url):
 def get_modification_time(record):
     "Get modification timestamp from DBS data-record"
     for key in ['dataset', 'block', 'file']:
-        if  record.has_key(key):
+        if  key in record:
             obj = record[key]
-            if  isinstance(obj, dict) and obj.has_key('last_modification_date'):
+            if  isinstance(obj, dict) and 'last_modification_date' in obj:
                 return record[key]['last_modification_date']
-    if  isinstance(record, dict) and record.has_key('last_modification_date'):
+    if  isinstance(record, dict) and 'last_modification_date' in record:
         return record['last_modification_date']
     return None
 
@@ -230,7 +230,7 @@ def old_timestamp(tstamp, threshold=2592000):
 def get_block_run_lumis(url, api, args):
     "Helper function to deal with block,run,lumi requests"
     run_value = args.get('run_num', [])
-    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+    if  isinstance(run_value, dict) and '$in' in run_value:
         runs = run_value['$in']
     elif isinstance(run_value, list):
         runs = run_value
@@ -249,7 +249,7 @@ def get_block_run_lumis(url, api, args):
 def get_file_run_lumis(url, api, args):
     "Helper function to deal with file,run,lumi requests"
     run_value = args.get('run_num', [])
-    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+    if  isinstance(run_value, dict) and '$in' in run_value:
         runs = run_value['$in']
     elif isinstance(run_value, list):
         runs = run_value
@@ -274,7 +274,7 @@ def get_file_run_lumis(url, api, args):
 def get_file4dataset_run_lumi(url, api, args):
     "Helper function to deal with file dataset=/a/b/c run=123 lumi=1 requests"
     run_value = args.get('run_num', [])
-    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+    if  isinstance(run_value, dict) and '$in' in run_value:
         runs = run_value['$in']
     elif isinstance(run_value, list):
         runs = run_value
@@ -297,9 +297,9 @@ def get_lumis4block_run(url, api, args):
 def process(gen):
     "Process generator from getdata"
     for row in gen:
-        if  row.has_key('error'):
+        if  'error' in row:
             raise Exception(row['error'])
-        if  row.has_key('data'):
+        if  'data' in row:
             yield json.loads(row['data'])
 
 def blocks4tier_date(dbs, tier, min_cdate, max_cdate):
@@ -315,7 +315,7 @@ def blocks4tier_date(dbs, tier, min_cdate, max_cdate):
                 % (tier, min_cdate, max_cdate)
     for blist in res:
         if  isinstance(blist, dict):
-            if  not blist.has_key('block_name'):
+            if  'block_name' not in blist:
                 msg = err + ', reason=%s' % json.dumps(blist)
                 raise Exception(msg)
         for row in blist:
@@ -328,7 +328,7 @@ def block_summary(dbs, blocks):
     urls    = ['%s/?block_name=%s' % (url, urllib.quote(b)) for b in blocks]
     res     = urlfetch_getdata(urls, CKEY, CERT, headers)
     for row in res:
-        if  row.has_key('error'):
+        if  'error' in row:
             raise Exception(row['error'])
         url = row['url']
         blk = urllib.unquote(url.split('=')[-1])
@@ -348,10 +348,10 @@ def get_blocks4tier_dates(dbs_url, api, args):
     tier    = args.get('tier')
     ddict   = args.get('date')
     if  isinstance(ddict, dict):
-        if  ddict.has_key('$lte'):
+        if  '$lte' in ddict:
             date1 = ddict['$gte']
             date2 = ddict['$lte'] + fullday
-        elif ddict.has_key('$in'):
+        elif '$in' in ddict:
             date1 = ddict['$in'][0]
             date2 = ddict['$in'][-1]
         else:
@@ -451,9 +451,9 @@ class DBS3Service(DASAbstractService):
         val = kwds.get('run_num', None)
         if  val:
             if  isinstance(val, dict): # we got a run range
-                if  val.has_key('$in'):
+                if  '$in' in val:
                     kwds['run_num'] = runrange(val['$in'][0], val['$in'][-1])
-                if  val.has_key('$lte'):
+                if  '$lte' in val:
                     kwds['run_num'] = runrange(val['$gte'], val['$lte'], True)
             else:
                 kwds['run_num'] = val
@@ -564,9 +564,9 @@ class DBS3Service(DASAbstractService):
             block = spec.get('block.name', '')
             run = spec.get('run.run_number', 0)
             if  isinstance(run, dict): # we got a run range
-                if  run.has_key('$in'):
+                if  '$in' in run:
                     run = run['$in']
-                elif run.has_key('$lte'):
+                elif '$lte' in run:
                     run = range(run['$gte'], run['$lte'])
             for row in gen:
                 if  run:
@@ -608,8 +608,8 @@ class DBS3Service(DASAbstractService):
             api == 'files_via_block':
             status = 'VALID'
             for row in gen:
-                if  query.mongo_query.has_key('spec'):
-                    if  query.mongo_query['spec'].has_key('status.name'):
+                if  'spec' in query.mongo_query:
+                    if  'status.name' in query.mongo_query['spec']:
                         status = query.mongo_query['spec']['status.name']
                 file_status = row['file']['is_file_valid']
                 if  status == 'INVALID': # filter out valid files
@@ -622,8 +622,8 @@ class DBS3Service(DASAbstractService):
                     yield row
         elif api == 'filelumis' or api == 'filelumis4block':
             for row in gen:
-                if  row.has_key('lumi'):
-                    if  row['lumi'].has_key('lumi_section_num'):
+                if  'lumi' in row:
+                    if  'lumi_section_num' in row['lumi']:
                         val = row['lumi']['lumi_section_num']
                         row['lumi']['lumi_section_num'] = convert2ranges(val)
                     yield row
