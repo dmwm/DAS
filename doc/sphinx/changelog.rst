@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Add code to support PREP2 data-service, user can look-up prep info by
+    using the following query: summary prep=<PREP-ID>
   - Remove timestamp attribute from passed dict to md5hash function, it is
     required due to dynamic nature of timestamp which leads to modification of
     the hash of the record

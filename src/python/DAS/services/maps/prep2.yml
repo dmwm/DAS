@@ -14,4 +14,7 @@ das_map : [
 ---
 notations : [
     {"api_output":"results", "rec_key":"summary", "api":"mcm"},
+    {"api_output":"total_events", "rec_key":"nevents", "api":"mcm"},
+    {"api_output":"cmssw_release", "rec_key":"release", "api":"mcm"},
+    {"api_output":"reqmgr_name", "rec_key":"reqmgr", "api":"mcm"},
 ]

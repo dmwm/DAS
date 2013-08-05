@@ -165,6 +165,8 @@ def gen_color(system):
         bkg, col = '#AFEEEE', 'black'
     elif system == 'monitor':
         bkg, col = '#FF4500', 'black'
+    elif system == 'prep2':
+        bkg, col = '#CCFF66', 'black'
     else:
         keyhash = hashlib.md5()
         keyhash.update(system)
