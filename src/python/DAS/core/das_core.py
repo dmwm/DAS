@@ -249,14 +249,13 @@ class DASCore(object):
         reason = None
         for col in ['merge', 'cache']:
             self.rawcache.remove_expired(col)
-        if  dasquery and dasquery.mongo_query.has_key('fields'):
+        if  dasquery and 'fields' in dasquery.mongo_query:
             fields = dasquery.mongo_query['fields']
             if  fields and isinstance(fields, list) and 'queries' in fields:
                 return 'ok', reason
         record = self.rawcache.find(dasquery)
         try:
-            if  record and record.has_key('das') and \
-                record['das'].has_key('status'):
+            if  record and 'das' in record and 'status' in record['das']:
                 status = record['das']['status']
                 return status, record['das'].get('reason', reason)
         except:
@@ -276,7 +275,7 @@ class DASCore(object):
         which will answer this query
         """
         services = []
-        if  dasquery.mongo_query.has_key('system'):
+        if  'system' in dasquery.mongo_query:
             system = query['system']
             if  isinstance(system, str) or isinstance(system, unicode):
                 services = [system]

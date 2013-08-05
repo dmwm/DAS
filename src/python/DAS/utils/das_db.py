@@ -55,7 +55,7 @@ class _DBConnectionSingleton(object):
     def connection(self, uri):
         """Return MongoDB connection"""
         key = genkey(str(uri))
-        if  not self.conndict.has_key(key):
+        if  key not in self.conndict:
             try:
                 dbinst = MongoClient(host=uri, max_pool_size=100)
                 gfs    = dbinst.gridfs
@@ -81,7 +81,7 @@ class _DBConnectionSingleton(object):
             else:
                 return False
         except:
-            if  self.conndict.has_key(key):
+            if  key in self.conndict:
                 del self.conndict[key]
             return False
         return True

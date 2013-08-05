@@ -91,7 +91,7 @@ class RunSummaryService(DASAbstractService):
                         raise Exception(msg)
                 args['RUN_BEGIN'] = minrun
                 args['RUN_END']   = maxrun
-            elif key == 'date' and value.has_key('$in') and \
+            elif key == 'date' and '$in' in value and \
                 len(value['$in']) == 2:
                 date1, date2 = value['$in']
                 args['TIME_BEGIN'] = convert_datetime(date1)

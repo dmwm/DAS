@@ -41,7 +41,7 @@ def set_cache_flags():
     "Set cherrypy flags to prevent caching"
     headers = cherrypy.response.headers
     for key in ['Cache-Control', 'Pragma']:
-        if  headers.has_key(key):
+        if  key in headers:
             del headers[key]
 
 def threshold(sitedbmgr, thr, config):
@@ -297,7 +297,7 @@ def checkargs(supported):
             if  checkarg(kwds, 'query') and not len(kwds['query']):
                 code  = web_code('Invalid query')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
-            if  kwds.has_key('input'):
+            if  'input' in kwds:
                 if  not (isinstance(kwds['input'], str) or \
                     isinstance(kwds['input'], unicode)):
                     code  = web_code('Invalid input')

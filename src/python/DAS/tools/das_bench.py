@@ -196,7 +196,7 @@ def avg_std(input_file):
                         % (input_file, line)
                 traceback.print_exc()
                 continue
-            if  data.has_key('ctime'):
+            if  'ctime' in data:
                 res    = float(data['ctime'])
                 sum   += res
                 count += 1

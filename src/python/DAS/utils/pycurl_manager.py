@@ -122,7 +122,7 @@ class RequestHandler(object):
             cache = self.pcache
         else:
             cache = self.gcache
-        if  cache.has_key(thread):
+        if  thread in cache:
             curl  = cache.get(thread)
         else:
             curl  = pycurl.Curl()

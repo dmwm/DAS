@@ -43,7 +43,7 @@ def mongo_operator(das_operator):
     """
     Convert DAS operator into MongoDB equivalent
     """
-    if  MONGO_MAP.has_key(das_operator):
+    if  das_operator in MONGO_MAP:
         return MONGO_MAP[das_operator]
     return None
 

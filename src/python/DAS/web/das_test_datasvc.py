@@ -117,9 +117,9 @@ class DASTestDataService(DASWebManager):
         Test SiteDB data-service
         """
         try:
-            if  kwargs.has_key('name'):
+            if  'name' in kwargs:
                 site = kwargs.get('name')
-            elif kwargs.has_key('site'):
+            elif 'site' in kwargs:
                 site = kwargs.get('site')
             else:
                 code = web_code('Unsupported key')

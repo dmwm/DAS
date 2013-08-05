@@ -59,7 +59,7 @@ class DashboardService(DASAbstractService):
                             row[name] = k.text
                         if  params:
                             for key, val in params.iteritems():
-                                if  not row.has_key(key):
+                                if  key not in row:
                                     row[key] = val
                         rowkey = self.map[api]['keys'][0]
                         yield {rowkey : row}
@@ -98,9 +98,9 @@ class DashboardService(DASAbstractService):
                         count += 1
             else: # we got some operator, e.g. key :{'$in' : [1,2,3]}
                 if  key == 'date' or key == 'jobsummary':
-                    if  value.has_key('$in'):
+                    if  '$in' in value:
                         vallist = value['$in']
-                    elif value.has_key('$lte') and value.has_key('$gte'):
+                    elif '$lte' in value and '$gte' in value:
                         vallist = (value['$gte'], value['$lte'])
                     else:
                         raise Exception(err)

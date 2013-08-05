@@ -78,11 +78,11 @@ class Maintainer(object):
     def check_records(self):
         "Check and return list of DAS records which require update"
         for row in self.conn['das']['merge'].find():
-            if  not row.has_key('qhash'):
+            if  'qhash' not in row:
                 continue
             spec = {'qhash': row['qhash'], 'das.system':'das'}
             for rec in self.conn['das']['cache'].find(spec):
-                if  rec.has_key('query'):
+                if  'query' in rec:
                     expire = rec['das']['expire']
                     if  expire < time.time() or \
                         abs(expire-time.time()) < self.sleep:
@@ -102,7 +102,7 @@ class Maintainer(object):
         while True:
             jobs = []
             for query, expire in self.check_records():
-                if  not onhold.has_key(query):
+                if  query not in onhold:
                     onhold[query] = expire
             for query, expire in onhold.items():
                 if  expire < time.time():

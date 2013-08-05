@@ -115,7 +115,7 @@ class JSONEncoder(object):
     """
     def __init__(self, **kwargs):
         self.encoder = json.JSONEncoder(**kwargs)
-        if  kwargs and kwargs.has_key('sort_keys'):
+        if  kwargs and 'sort_keys' in kwargs:
             self.module = 'default'
         else:
             self.module = MODULE

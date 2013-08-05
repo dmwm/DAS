@@ -181,7 +181,7 @@ def get_value(data, filters, base=10):
         row = dict(data)
         values = set()
         for key in ftr.split('.'):
-            if  isinstance(row, dict) and row.has_key(key):
+            if  isinstance(row, dict) and key in row:
                 if  key == 'creation_time':
                     row = convert_time(row[key])
                 elif  key == 'size':
@@ -190,7 +190,7 @@ def get_value(data, filters, base=10):
                     row = row[key]
             if  isinstance(row, list):
                 for item in row:
-                    if  isinstance(item, dict) and item.has_key(key):
+                    if  isinstance(item, dict) and key in item:
                         if  key == 'creation_time':
                             row = convert_time(item[key])
                         elif  key == 'size':
@@ -291,14 +291,14 @@ def prim_value(row):
     key, att = prim_key.split('.')
     if  isinstance(row[key], list):
         for item in row[key]:
-            if  item.has_key(att):
+            if  att in item:
                 return item[att]
     else:
         return row[key][att]
 
 def print_summary(rec):
     "Print summary record information on stdout"
-    if  not rec.has_key('summary'):
+    if  not 'summary' in rec:
         msg = 'Summary information is not found in record:\n', rec
         raise Exception(msg)
     for row in rec['summary']:
@@ -328,7 +328,7 @@ def main():
         sys.exit(EX_USAGE)
     if  opts.format == 'plain':
         jsondict = get_data(host, query, idx, limit, debug, thr, ckey, cert)
-        if  not jsondict.has_key('status'):
+        if  'status' not in jsondict:
             print 'DAS record without status field:\n%s' % jsondict
             sys.exit(EX_PROTOCOL)
         if  jsondict['status'] != 'ok':
