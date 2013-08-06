@@ -87,6 +87,11 @@ dataset : [
          "dataset=/ZMM*/*/*",
          ]
         },
+        {"das":"dataset.PrepID", "ui":"McM info",
+         "link":[{"name":"McM", "query":"mcm prepid=%s"}],
+         "description": "PrepID info provided by McM data-service",
+         "examples":["mcm prepid=HIG-Summer12-01312"]
+        },
         {"das":"dataset.nfiles", "ui":"Number of files"},
         {"das":"dataset.nblocks", "ui":"Number of blocks"},
         {"das":"dataset.nevents", "ui":"Number of events"}, 
@@ -378,6 +383,12 @@ user    : [
         {"das":"user.email", "ui":"Email"},
         {"das":"user.phone1", "ui":"Phone"},
         {"das":"user.phone2", "ui":"Alternative Phone"},
+        ],
+mcm   : [
+        {"das":"mcm.release", "ui":"CMSSW release"},
+        {"das":"mcm.notes", "ui":"Physics channel"},
+        {"das":"mcm.pwg", "ui":"Physics group"},
+        {"das":"mcm.nevents", "ui":"Number of events"},
         ],
 status: [
         {"das":"status.name", "ui":"Status", "link":[],
