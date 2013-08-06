@@ -132,7 +132,8 @@ def adjust_values(func, gen, links, pkey):
     das_mapping_db:daskey_from_presentation
     """
     rdict = {}
-    for uikey, value in [k for k, _g in groupby(gen)]:
+    uidict = {}
+    for uikey, value, uilink, uidesc, uiexamples in [k for k, _g in groupby(gen)]:
         val = quote(value)
         if  rdict.has_key(uikey):
             existing_val = rdict[uikey]
@@ -142,11 +143,25 @@ def adjust_values(func, gen, links, pkey):
                 rdict[uikey] = existing_val + [val]
         else:
             rdict[uikey] = val
+        uidict[uikey] = (uilink, uidesc, uiexamples)
     page = ""
     to_show = []
     green = 'style="color:green"'
     red = 'style="color:red"'
     for key, val in rdict.iteritems():
+        uilink, _uidesc, _uiexamples = uidict[key]
+        if  uilink and val:
+            if  not isinstance(val, list):
+                val = [val]
+            values = []
+            for elem in val:
+                for ilink in uilink:
+                    dasquery = ilink['query'] % elem
+                    val = '<a href="/das/request?input=%s">%s</a>' \
+                            % (dasquery, elem)
+                    values.append(val)
+            to_show.append((key, ', '.join(values)))
+            continue
         lookup = func(key)
         if  key.lower() == 'reason' or key.lower() == 'qhash':
             continue
@@ -329,14 +344,20 @@ class CMSRepresentation(DASRepresentation):
             for item in self.dasmapping.presentation(key):
                 try:
                     daskey = item['das']
+                    link = item.get('link', None)
+                    desc = item.get('description', None)
+                    exam = item.get('examples', None)
                     if  not2show and not2show == daskey:
                         continue
                     uikey  = item['ui']
                     for value in access(idict, daskey):
                         if  value:
-                            yield uikey, value
+                            yield uikey, value, link, desc, exam
                 except:
-                    yield key, idict[key]
+                    link = None
+                    desc = None
+                    exam = None
+                    yield key, idict[key], link, desc, exam
 
     def systems(self, slist):
         """Colorize provided sub-systems"""
@@ -611,7 +632,7 @@ class CMSRepresentation(DASRepresentation):
             else:
                 gen = self.convert2ui(row)
                 titles = []
-                for uikey, val in gen:
+                for uikey, val, _link, _desc, _examples in gen:
                     skip = 0
                     if  not filters:
                         if  uikey in titles:
