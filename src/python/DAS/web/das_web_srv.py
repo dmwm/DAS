@@ -29,6 +29,7 @@ from DAS.core.das_ply import das_parser_error
 from DAS.core.das_query import DASQuery
 from DAS.core.das_mongocache import DASLogdb
 from DAS.utils.utils import getarg
+from DAS.utils.url_utils import disable_urllib2Proxy
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import genkey, print_exc, dastimestamp
 from DAS.utils.thread import start_new_thread
@@ -54,6 +55,9 @@ import DAS.utils.jsonwrapper as json
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
 DAS_PIPECMDS = das_aggregators() + das_filters()
+
+# disable default urllib2 proxy
+disable_urllib2Proxy()
 
 def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
     "Worker daemon to process onhold requests"
