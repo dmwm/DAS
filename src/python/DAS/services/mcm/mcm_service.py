@@ -2,7 +2,7 @@
 #-*- coding: ISO-8859-1 -*-
 
 """
-PREP data-service plugin.
+MCM data-service plugin.
 """
 __author__ = "Valentin Kuznetsov"
 
@@ -12,12 +12,12 @@ from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator
 from   DAS.utils.url_utils import getdata
 
-class PREP2Service(DASAbstractService):
+class MCMService(DASAbstractService):
     """
-    Helper class to provide PREP data-service
+    Helper class to provide MCM data-service
     """
     def __init__(self, config):
-        DASAbstractService.__init__(self, 'prep2', config)
+        DASAbstractService.__init__(self, 'mcm', config)
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
 
@@ -25,7 +25,7 @@ class PREP2Service(DASAbstractService):
         """URL call wrapper"""
         if  not headers:
             headers =  {'Accept': 'application/json' } # DBS3 always needs that
-        # PREP uses rest API
+        # MCM uses rest API
         url = '%s/%s' % (url, params.get('prepid'))
         params = {}
         return getdata(url, params, headers, expire, post,
