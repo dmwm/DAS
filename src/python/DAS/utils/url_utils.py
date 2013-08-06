@@ -23,6 +23,15 @@ from   DAS.utils.pycurl_manager import REQUEST_HANDLER
 from   DAS.utils.regex import int_number_pattern
 import DAS.utils.jsonwrapper as json
 
+def disable_urllib2Proxy():
+    """
+    Setup once and forever urllib2 proxy, see
+    http://kember.net/articles/obscure-python-urllib2-proxy-gotcha
+    """
+    proxy_support = urllib2.ProxyHandler({})
+    opener = urllib2.build_opener(proxy_support)
+    urllib2.install_opener(opener)
+
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     """
     Simple HTTPS client authentication class based on provided 
