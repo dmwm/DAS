@@ -385,6 +385,11 @@ user    : [
         {"das":"user.phone2", "ui":"Alternative Phone"},
         ],
 mcm   : [
+        {"das":"mcm.prepid", "ui":"McM prepid",
+         "link":[{"name":"ReqMgr", "query":"dataset prepid=%s"}],
+         "description": "Most recent dataset for given prepid",
+         "examples":["dataset prepid=HIG-Summer12-01312"]
+        },
         {"das":"mcm.release", "ui":"CMSSW release"},
         {"das":"mcm.notes", "ui":"Physics channel"},
         {"das":"mcm.pwg", "ui":"Physics group"},
