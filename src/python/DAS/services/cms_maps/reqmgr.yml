@@ -23,6 +23,17 @@ das_map : [
 ]
 ---
 urn: datasetByPrepID
+url : "https://cmsweb.cern.ch/reqmgr/rest/outputDatasetsByPrepID"
+expire : 900
+params : {"prepid": "required"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "prepid", "rec_key":"prepid", "api_arg":"prepid"},
+]
+---
+urn: recentDatasetByPrepID
 url : "https://cmsweb.cern.ch/reqmgr/rest/mostRecentOutputDatasetsByPrepID"
 expire : 900
 params : {"prepid": "required"}
