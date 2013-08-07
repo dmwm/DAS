@@ -111,7 +111,7 @@ class DASMapping(object):
         start_new_thread(thname, db_monitor, (self.dburi, self.init, sleep,
             self.load_maps, reload_time))
 
-        self.apilkeys = {}             # to be filled at run time
+        self.dasmapscache = {}         # to be filled at run time
         self.keymap = {}               # to be filled at run time
         self.presentationcache = {}    # to be filled at run time
         self.reverse_presentation = {} # to be filled at run time
@@ -128,20 +128,21 @@ class DASMapping(object):
     # ===============
     def load_maps(self):
         "Helper function to reload DAS maps"
-        self.init_apilkeyscache()
+        self.init_dasmapscache()
         self.init_notationcache()
         self.init_presentationcache()
 
-    def init_apilkeyscache(self):
-        "Read DAS maps and initialize apilkeys"
+    def init_dasmapscache(self):
+        "Read DAS maps and initialize DAS API maps"
         for row in self.col.find({}):
             if  row.has_key('urn'):
-                api = row['urn']
-                system = row['system']
-                lookup = row['lookup']
-                key    = (system, api)
-                for lkey in lookup.split(','):
-                    self.apilkeys.setdefault(key, []).append(lkey)
+                for dmap in row['das_map']:
+                    for key, val in dmap.iteritems():
+                        if  key == 'pattern':
+                            pat = re.compile(val)
+                            dmap[key] = pat
+                key = (row['system'], row['urn'])
+                self.dasmapscache[key] = row
 
     def init_notationcache(self):
         """
@@ -421,16 +422,8 @@ class DASMapping(object):
         """
         Return DAS lookup keys for given das system and api
         """
-        if  self.apilkeys.has_key((das_system, api)):
-            return self.apilkeys[(das_system, api)]
-        cond = {'system':das_system, 'urn':api}
-        record = self.col.find_one(cond)
-        skeys = record['lookup']
-        if  skeys.find(',') != -1:
-            skeys = skeys.split(',')
-        if  isinstance(skeys, basestring):
-            skeys = [skeys]
-        self.apilkeys[(das_system, api)] = skeys
+        entry = self.dasmapscache[(das_system, api)]
+        skeys = entry['lookup'].split(',')
         return skeys
 
     def primary_key(self, das_system, urn):
@@ -626,34 +619,28 @@ class DASMapping(object):
                     raise err
         return names
 
-    def das2api(self, system, rec_key, value=None, api=None):
+    def das2api(self, system, api, rec_key, value=None):
         """
         Translates DAS record key into data-service API input parameter,
         e.g. run.number => run_number
         """
-        query = {'system':system}
-        if api: # only check this api
-            query['urn'] = api 
+        entry = self.dasmapscache.get((system, api), None)
         names = []
-        for adas in self.col.find(query, ['das_map']):
-            if  not adas.has_key('das_map'):
-                continue
-            if  not adas['das_map']:
-                names = [rec_key]
-            for row in adas['das_map']:
-                if  row.has_key('api_arg'):
-                    api_param = row['api_arg']
-                    pattern = row.get('pattern', '')
-                    if  row['rec_key'] != rec_key:
-                        continue
-                    if  value and pattern:
-                        pat = re.compile(pattern)
-                        if  pat.match(str(value)):
-                            if  api_param not in names:
-                                names.append(api_param)
-                    else:
+        if  not entry:
+            return [rec_key]
+        for row in entry.get('das_map', []):
+            if  'api_arg' in row:
+                api_param = row['api_arg']
+                pat = row.get('pattern', None)
+                if  row['rec_key'] != rec_key:
+                    continue
+                if  value and pat:
+                    if  pat.match(str(value)):
                         if  api_param not in names:
                             names.append(api_param)
+                else:
+                    if  api_param not in names:
+                        names.append(api_param)
         return names
 
     def notations(self, system=None):
