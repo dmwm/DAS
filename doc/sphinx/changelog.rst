@@ -7,13 +7,14 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Re-factor DASMapping code, see ticket 4021
   - Add support for mcm dataset=/a/b/c query; first it looks-up information
     from ReqMgr to get its info for given dataset, then it parse ReqMgr info
     and extracts PrepID and passes it to MCM data-service.
   - Add MCM links on dataset summary page when information
     is provided by reqmgr data-service (MC datasets)
-  - Add code to support MCM (PREP) data-service, user can look-up mcm info by
-    using the following query: mcm prepid=<PREP-ID>
+  - Add code to support MCM (PREP) data-service (issue 3449),
+    user can look-up mcm info by using the following query: mcm prepid=<PREP-ID>
   - Remove timestamp attribute from passed dict to md5hash function, it is
     required due to dynamic nature of timestamp which leads to modification of
     the hash of the record
