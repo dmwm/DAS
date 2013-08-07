@@ -79,7 +79,7 @@ class MCMService(DASAbstractService):
         if  not headers:
             headers =  {'Accept': 'application/json' } # DBS3 always needs that
         # MCM uses rest API
-        url = '%s/%s' % (url, params.get('prepid'))
+        url = '%s/%s' % (url, params.get('mcm'))
         params = {}
         return getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert,

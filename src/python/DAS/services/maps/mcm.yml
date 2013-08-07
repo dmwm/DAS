@@ -5,11 +5,10 @@ format : JSON
 urn : mcm_summary
 url : "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get"
 expire : 600
-params : {"prepid": "required"}
+params : {"mcm": "required"}
 lookup : mcm
 das_map : [
-    {"das_key": "mcm", "rec_key": "mcm.prepid"},
-    {"das_key":"prepid", "rec_key":"prepid", "api_arg":"prepid"},
+    {"das_key": "mcm", "rec_key": "mcm.prepid", "api_arg":"mcm"},
 ]
 ---
 urn : mcm4dataset
