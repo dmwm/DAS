@@ -509,7 +509,7 @@ class DASAbstractService(object):
                     # need to convert key (which is daskeys.map) into
                     # input api parameter
                     for apiparam in \
-                        self.dasmapping.das2api(srv, key, val, api):
+                        self.dasmapping.das2api(srv, api, key, val):
                         if  args.has_key(apiparam):
                             args[apiparam] = val
                             found += 1

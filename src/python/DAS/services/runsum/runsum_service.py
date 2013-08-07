@@ -69,7 +69,7 @@ class RunSummaryService(DASAbstractService):
                     args['TIME_BEGIN'] = convert_datetime(value[0])
                     args['TIME_END']   = convert_datetime(value[1])
                 else:
-                    for param in self.dasmapping.das2api(self.name, key):
+                    for param in self.dasmapping.das2api(self.name, api, key):
                         args[param] = value
             elif key == 'run.number' or key == 'run.run_number':
                 minrun = None
