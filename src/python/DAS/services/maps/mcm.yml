@@ -9,6 +9,7 @@ params : {"mcm": "required"}
 lookup : mcm
 das_map : [
     {"das_key": "mcm", "rec_key": "mcm.prepid", "api_arg":"mcm"},
+    {"das_key": "prepid", "rec_key": "mcm.prepid", "api_arg":"mcm"},
 ]
 ---
 urn : mcm4dataset
