@@ -22,9 +22,9 @@ DAS unable to process your request.
 #if $status != "ok"
 <pre>
 #if $reason
-DAS status: $status, reason=$reason
+DAS status: '$status', reason='$reason'
 #else
-DAS status: $status
+DAS status: '$status'
 #end if
 </pre>
 #if $info
