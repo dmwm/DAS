@@ -27,22 +27,21 @@ def mcm4dataset(url, reqmgr, dataset, expire):
     req_url = reqmgr.map['inputdataset']['url']
     params  = {'dataset':dataset}
     headers =  {'Accept': 'application/json' }
-    gen     = reqmgr.getdata(req_url, params, expire, headers)
+    data, expire = reqmgr.getdata(req_url, params, expire, headers)
     mcmurls = []
 
     # parse ReqMgr data, collect PrepID and construct McM URLs
-    for row in gen:
-        try:
-            rinfo = json.load(row)
-            for rec in rinfo:
-                key = 'WMCore.RequestManager.DataStructs.Request.Request'
-                prepid = rec[key].get('PrepID', None)
-                if  prepid:
-                    mcmurls.append('%s/%s' % (url, prepid))
-        except Exception as exp:
-            error = 'Fail to parse ReqMgr output'
-            reason = 'data=%s, json.load error=%s' % (row, str(exp))
-            yield {'mcm':{'error':error, 'reason':reason}}
+    try:
+        rinfo = json.load(data)
+        for rec in rinfo:
+            key = 'WMCore.RequestManager.DataStructs.Request.Request'
+            prepid = rec[key].get('PrepID', None)
+            if  prepid:
+                mcmurls.append('%s/%s' % (url, prepid))
+    except Exception as exp:
+        error = 'Fail to parse ReqMgr output'
+        reason = 'data=%s, json.load error=%s' % (row, str(exp))
+        yield {'mcm':{'error':error, 'reason':reason}}
 
     # contact McM data-service and get data for our list of McM URLs
     headers = {}
