@@ -42,7 +42,7 @@ class RequestManager(object):
     def get(self, pid):
         """Get params for a given pid"""
         doc = self.col.find_one(dict(_id=pid))
-        if  doc and isinstance(doc, dict):
+        if  doc:
             return json.loads(doc['kwds'])
         
     def add(self, pid, kwds):
@@ -72,27 +72,14 @@ class RequestManager(object):
     def remove(self, pid):
         """Remove given pid"""
         self.clean()
-        if  not self.has_pid(pid):
-            return
-        attempts = 0
-        while True:
-            try:
-                self.col.remove(dict(_id=pid))
-                break
-            except Exception as err:
-                print_exc(err)
-                time.sleep(0.01)
-            attempts += 1
-            if  attempts > 2:
-                msg = '%s unable to remove pid=%s' % (self.col, pid)
-                print dastimestamp('DAS ERROR '), msg
-                break
+        self.col.remove(dict(_id=pid))
         
     def items(self):
         """Return list of current requests"""
         self.clean()
         for row in self.col.find():
             row['_id'] = str(row['_id'])
+            row['kwds'] = json.loads(row['kwds'])
             yield row
 
     def add_onhold(self, pid, uinput, addr, future_tstamp):
