@@ -340,20 +340,36 @@ class DASWebService(DASWebManager):
         represent DAS services
         """
         dasdict = {}
-        daskeys = []
-        for system, keys in self.dasmgr.mapping.daskeys().iteritems():
-            if  system not in self.dasmgr.systems:
+        daskeys = set()
+        dasmapkeys = self.dasmgr.mapping.dasmapscache.keys()
+        dasmapkeys.sort()
+        for key in dasmapkeys:
+            srv, urn = key
+            if  srv not in self.dasmgr.systems:
                 continue
+            entry = self.dasmgr.mapping.dasmapscache[key]
             tmpdict = {}
-            for key in keys:
-                tmpdict[key] = self.dasmgr.mapping.lookup_keys(system, key) 
-                if  key not in daskeys:
-                    daskeys.append(key)
-            dasdict[system] = dict(keys=dict(tmpdict), 
-                apis=self.dasmgr.mapping.list_apis(system))
+            for item in entry['das_map']:
+                dkey = item['das_key']
+                rkey = item['rec_key']
+                daskeys.add(dkey)
+                vlist = tmpdict.get(dkey, []) + [rkey]
+                tmpdict[dkey] = list(set(vlist))
+            apis = []
+            if  srv in dasdict:
+                vdict = dasdict[srv]
+                okeys = vdict['keys']
+                apis  = vdict['apis'] + [urn]
+                for kkk, vvv in okeys.iteritems():
+                    vlist = tmpdict.get(kkk, []) + vvv
+                    tmpdict[kkk] = list(set(vlist))
+            else:
+                apis = [urn]
+            vdict = dict(keys=dict(tmpdict), apis=apis)
+            dasdict[srv] = vdict
         mapreduce = [r for r in self.dasmgr.rawcache.get_map_reduce()]
         page = self.templatepage('das_services', dasdict=dasdict, 
-                        daskeys=daskeys, mapreduce=mapreduce)
+                        daskeys=list(daskeys), mapreduce=mapreduce)
         return self.page(page, response_div=False)
 
     @expose
@@ -641,6 +657,8 @@ class DASWebService(DASWebManager):
         coll   = kwargs.get('collection', 'merge')
         dasquery = kwargs.get('dasquery', None)
         time0  = time.time()
+        status = None
+        reason = None
         if  dasquery:
             dasquery = DASQuery(dasquery, instance=inst)
         else:
@@ -653,7 +671,6 @@ class DASWebService(DASWebManager):
                 return head, data
             dasquery = content # returned content is valid DAS query
         try:
-            status, reason = self.dasmgr.get_status(dasquery)
             nres = self.dasmgr.nresults(dasquery, coll)
             data = \
                 self.dasmgr.get_from_cache(dasquery, idx, limit)
@@ -664,18 +681,20 @@ class DASWebService(DASWebManager):
                 # its length as nresults value.
                 data = [r for r in data]
                 nres = len(data)
+            status = 'ok'
             head.update({'status':status, 'nresults':nres,
                          'ctime': time.time()-time0, 'dasquery': dasquery})
-            if  reason:
-                head.update({'reason': reason})
         except Exception as exc:
+            status = 'fail'
+            reason = str(exc)
             print_exc(exc)
-            head.update({'status': 'fail', 'reason': str(exc),
+            head.update({'status': status,
                          'ctime': time.time()-time0, 'dasquery': dasquery})
             data = []
         head.update({'incache':self.dasmgr.incache(dasquery, coll='cache'),
-                     'apilist':self.dasmgr.apilist(dasquery),
-                     'status':status, 'reason':reason})
+                     'apilist':self.dasmgr.apilist(dasquery)})
+        if  reason:
+            head.update({'reason': reason})
         if  status != 'ok':
             head.update(self.status())
         return head, data
@@ -745,6 +764,17 @@ class DASWebService(DASWebManager):
         # do not allow caching
         set_no_cache_flags()
 
+        # if busy return right away
+        if  self.busy():
+            nrequests = self.reqmgr.size()
+            level   = nrequests - self.taskmgr.nworkers() - self.queue_limit
+            reason  = 'DAS server is busy'
+            reason += ', #requests=%s, #workers=%s, queue size=%s' \
+                % (self.reqmgr.size(), self.taskmgr.nworkds(), self.queue_limit)
+            head = dict(timestamp=time.time())
+            head.update({'status': 'busy', 'reason': reason, 'ctime':0})
+            return self.datastream(dict(head=head, data=data))
+
         uinput = kwargs.get('input', '').strip()
         if  not uinput:
             head = {'status': 'fail', 'reason': 'No input found',
@@ -755,8 +785,7 @@ class DASWebService(DASWebManager):
         pid    = kwargs.get('pid', '')
         inst   = kwargs.get('instance', self.dbs_global)
         uinput = kwargs.get('input', '')
-        view = kwargs.get('view', 'list')
-
+        view   = kwargs.get('view', 'list')
         data   = []
 
         # textual views need text only error messages...
@@ -775,30 +804,10 @@ class DASWebService(DASWebManager):
 
         dasquery = content # returned content is valid DAS query
         status, _reason = self.dasmgr.get_status(dasquery)
-        if  status == 'ok':
-            kwargs['dasquery'] = dasquery
-            self.reqmgr.remove(dasquery.qhash)
-            head, data = self.get_data(kwargs)
-            return self.datastream(dict(head=head, data=data))
-        kwargs['dasquery'] = dasquery.storage_query
-        if  not pid and self.busy():
-            head = dict(timestamp=time.time())
-            head.update({'status': 'busy', 'reason': 'DAS server is busy',
-                         'ctime': 0})
-            return self.datastream(dict(head=head, data=data))
-        if  pid:
-            if  not self.pid_pat.match(str(pid)) or len(str(pid)) != 32:
-                head = {'status': 'fail', 'reason': 'Invalid pid',
-                        'args': kwargs, 'ctime': 0, 'input': uinput}
-                data = []
-                return self.datastream(dict(head=head, data=data))
-            elif self.taskmgr.is_alive(pid):
-                return pid
-            else: # process is done, get data
-                self.reqmgr.remove(pid)
-                head, data = self.get_data(kwargs)
-                return self.datastream(dict(head=head, data=data))
-        else:
+        pid = dasquery.qhash
+        if  status == None: # submit new request
+            # TODO: this chunk of code should be replaced with decreasing
+            # priority level for this IP
             config = self.dasconfig.get('cacherequests', {})
             thr = threshold(self.sitedbmgr, self.hot_thr, config)
             nhits = self.get_nhits()
@@ -820,6 +829,23 @@ class DASWebService(DASWebManager):
             self.logdb(uinput) # put entry in log DB once we place a request
             self.reqmgr.add(pid, kwargs)
             return pid
+        if  status == 'ok':
+            kwargs['dasquery'] = dasquery
+            self.reqmgr.remove(dasquery.qhash)
+            head, data = self.get_data(kwargs)
+            return self.datastream(dict(head=head, data=data))
+        kwargs['dasquery'] = dasquery.storage_query
+        if  not self.pid_pat.match(str(pid)) or len(str(pid)) != 32:
+            head = {'status': 'fail', 'reason': 'Invalid pid',
+                    'args': kwargs, 'ctime': 0, 'input': uinput}
+            data = []
+            return self.datastream(dict(head=head, data=data))
+        elif self.taskmgr.is_alive(pid):
+            return pid
+        else: # process is done, get data
+            self.reqmgr.remove(pid)
+            head, data = self.get_data(kwargs)
+            return self.datastream(dict(head=head, data=data))
 
     def get_page_content(self, kwargs, complete_msg=True):
         """Retrieve page content for provided set of parameters"""
@@ -884,6 +910,10 @@ class DASWebService(DASWebManager):
         # do not allow caching
         set_no_cache_flags()
 
+        # if busy return right away
+        if  self.busy():
+            return self.busy_page(uinput)
+
         uinput  = kwargs.get('input', '').strip()
         if  not uinput:
             kwargs['reason'] = 'No input found'
@@ -894,9 +924,6 @@ class DASWebService(DASWebManager):
         view    = kwargs.get('view', 'list')
         inst    = kwargs.get('instance', self.dbs_global)
         uinput  = kwargs.get('input', '')
-
-        if  self.busy():
-            return self.busy_page(uinput)
 
         self.logdb(uinput)
 
@@ -909,26 +936,28 @@ class DASWebService(DASWebManager):
                 return content
         dasquery = content # returned content is valid DAS query
         status, _reason = self.dasmgr.get_status(dasquery)
-        if  status == None:
+        pid = dasquery.qhash
+        if  status == None: # process new request
             kwargs['dasquery'] = dasquery.storage_query
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery,
                     uid=addr, pid=dasquery.qhash)
             self.reqmgr.add(pid, kwargs)
-            if  self.taskmgr.is_alive(pid):
-                page = self.templatepage('das_check_pid', method='check_pid',
-                        uinput=uinput, view=view,
-                        base=self.base, pid=pid, interval=self.interval)
-            else:
-                page = self.get_page_content(kwargs)
-                self.reqmgr.remove(pid)
-        else:
+        elif status == 'ok' or status == 'fail':
+            self.reqmgr.remove(pid)
             kwargs['dasquery'] = dasquery
             page = self.get_page_content(kwargs, complete_msg=False)
             ctime = (time.time()-time0)
             if  view == 'list' or view == 'table':
                 return self.page(form + page, ctime=ctime)
             return page
+        if  self.taskmgr.is_alive(pid):
+            page = self.templatepage('das_check_pid', method='check_pid',
+                    uinput=uinput, view=view,
+                    base=self.base, pid=pid, interval=self.interval)
+        else:
+            self.reqmgr.remove(pid)
+            page = self.get_page_content(kwargs)
         ctime = (time.time()-time0)
         return self.page(form + page, ctime=ctime)
 
