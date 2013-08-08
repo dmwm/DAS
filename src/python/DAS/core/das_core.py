@@ -296,8 +296,8 @@ class DASCore(object):
         self.rawcache.insert_query_record(dasquery, header)
         das_timer('das_record', self.verbose)
         # get list of URI which can answer this query
+        ack_services = []
         if  services:
-            ack_services = []
             for srv in services:
                 gen = getattr(getattr(self, srv), 'apimap')(dasquery)
                 for url, api, args, iformat, expire in gen:
