@@ -696,10 +696,10 @@ class DASWebService(DASWebManager):
         if  reason:
             head.update({'reason': reason})
         if  status != 'ok':
-            head.update(self.status())
+            head.update(self.info())
         return head, data
 
-    def status(self):
+    def info(self):
         "Return status of DAS server"
         info = {'nrequests': self.reqmgr.size(),
                 'nworkers': self.taskmgr.nworkers(),
@@ -804,7 +804,8 @@ class DASWebService(DASWebManager):
 
         dasquery = content # returned content is valid DAS query
         status, _reason = self.dasmgr.get_status(dasquery)
-        pid = dasquery.qhash
+        if  not pid:
+            pid = dasquery.qhash
         if  status == None: # submit new request
             # TODO: this chunk of code should be replaced with decreasing
             # priority level for this IP
@@ -830,12 +831,13 @@ class DASWebService(DASWebManager):
             self.reqmgr.add(pid, kwargs)
             return pid
         if  status == 'ok':
+            self.reqmgr.remove(pid)
             kwargs['dasquery'] = dasquery
-            self.reqmgr.remove(dasquery.qhash)
             head, data = self.get_data(kwargs)
             return self.datastream(dict(head=head, data=data))
         kwargs['dasquery'] = dasquery.storage_query
         if  not self.pid_pat.match(str(pid)) or len(str(pid)) != 32:
+            self.reqmgr.remove(pid)
             head = {'status': 'fail', 'reason': 'Invalid pid',
                     'args': kwargs, 'ctime': 0, 'input': uinput}
             data = []
@@ -962,21 +964,10 @@ class DASWebService(DASWebManager):
         return self.page(form + page, ctime=ctime)
 
     @expose
-    def requests(self):
+    def status(self):
         """Return list of all current requests in DAS queue"""
-        page = ""
-        count = 0
-        for row in self.reqmgr.items():
-            tst = time.strftime("%Y%m%d %H:%M:%S GMT", time.gmtime(row['ts']))
-            page += '<li>%s placed at %s<br/>%s</li>' \
-                        % (row['_id'], tst, row['kwds'])
-            count += 1
-        if  page:
-            page = "<ul>%s</ul>" % page
-        else:
-            page = "The request queue is empty"
-        if  count:
-            page += '<div>Total: %s requests</div>' % count
+        requests = [r for r in self.reqmgr.items()]
+        page = self.templatepage('das_status', requests=requests)
         return self.page(page)
 
     @expose
