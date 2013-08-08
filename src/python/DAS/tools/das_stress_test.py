@@ -113,7 +113,7 @@ def run(host, query, idx, limit, debug, thr, ckey, cert):
     msg    = 'status: %s client: %s server: %s nresults: %s query: %s' \
             % (status, etime(time0), etime(tstm), nres, query)
     if  reason:
-        msg += 'reason: %s' % reason
+        msg += ' reason: %s' % reason
     print msg
 
 def main():
