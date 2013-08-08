@@ -210,11 +210,7 @@ class DASAbstractService(object):
         """
         Return look-up keys of data output for given data-service API.
         """
-        lkeys = []
-        for key in self.map[api]['keys']:
-            for lkey in self.dasmapping.lookup_keys(self.name, key, api=api):
-                if  lkey not in lkeys:
-                    lkeys.append(lkey)
+        lkeys = self.dasmapping.lookup_keys(self.name, api)
         return [{api:lkeys}]
 
     def inspect_params(self, api, args):
@@ -504,18 +500,13 @@ class DASAbstractService(object):
                 # check if key is a special one
                 if  key in das_special_keys():
                     found += 1
-                # check if keys from conditions are accepted by API.
-                if  self.dasmapping.check_dasmap(srv, api, key, val):
-                    # need to convert key (which is daskeys.map) into
-                    # input api parameter
-                    for apiparam in \
-                        self.dasmapping.das2api(srv, api, key, val):
-                        if  args.has_key(apiparam):
-                            args[apiparam] = val
-                            found += 1
-                else:
-                    found = 0
-                    break # condition key does not map into API params
+                # check if keys from conditions are accepted by API
+                # need to convert key (which is daskeys.map) into
+                # input api parameter
+                for apiparam in self.dasmapping.das2api(srv, api, key, val):
+                    if  args.has_key(apiparam):
+                        args[apiparam] = val
+                        found += 1
             self.adjust_params(api, args, instance)
             if  not found:
                 msg = "--- rejects API %s, parameters don't match" % api
