@@ -499,8 +499,8 @@ class CMSRepresentation(DASRepresentation):
                     if  pkey and pkey == 'file.name':
                         try:
                             lfn = DotDict(row).get('file.name')
-                            val = self.templatepage(\
-                                'filemover', lfn=lfn) if lfn else ''
+                            val = '<a href="/das/download?lfn=%s">Download</a>'\
+                                    % lfn if lfn else ''
                             if  val: links.append(val)
                         except:
                             pass
