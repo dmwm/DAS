@@ -72,6 +72,8 @@ class RequestManager(object):
     def remove(self, pid):
         """Remove given pid"""
         self.clean()
+        if  not self.has_pid(pid):
+            return
         attempts = 0
         while True:
             try:
