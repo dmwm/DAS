@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Extend download LFN link to download web page, issue 4022
   - Add Status link to DAS header and let users to see status of DAS queue
   - Re-factor DASMapping code, see ticket 4021
   - Add support for mcm dataset=/a/b/c query; first it looks-up information
