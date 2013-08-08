@@ -877,6 +877,12 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
+    def download(self, lfn):
+        "DAS download page for given LFN"
+        page = self.templatepage('filemover', lfn=lfn)
+        return self.page(page, response_div=False)
+
+    @expose
     def makepy(self, dataset, instance):
         """
         Request to create CMSSW py snippet for a given dataset
