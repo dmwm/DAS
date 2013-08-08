@@ -231,7 +231,8 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
         hdlr = HTTPSClientAuthHandler(ckey, cert, debug)
     else:
         hdlr = urllib2.HTTPHandler(debuglevel=debug)
-    opener = urllib2.build_opener(hdlr)
+    proxy_support = urllib2.ProxyHandler({})
+    opener = urllib2.build_opener(hdlr, proxy_support)
     fdesc = opener.open(req)
     data = fdesc.read()
     fdesc.close()
