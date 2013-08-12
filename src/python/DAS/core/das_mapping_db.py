@@ -74,7 +74,7 @@ def db_monitor(uri, func, sleep, reload_map, reload_time):
                 pass
         if  conn:
             if  time.time()-time0 > reload_time:
-                msg = "call %s" % reload_map
+                msg = "reload DAS maps %s" % reload_map
                 print dastimestamp(), msg
                 try:
                     reload_map()
