@@ -388,8 +388,8 @@ class DBS3Service(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.prim_instance = self.dasmapping.dbs_global_instance()
-        self.instances = self.dasmapping.dbs_instances()
+        self.prim_instance = self.dasmapping.dbs_global_instance(self.name)
+        self.instances = self.dasmapping.dbs_instances(self.name)
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
@@ -441,6 +441,11 @@ class DBS3Service(DASAbstractService):
             elif isinstance(url, list):
                 urls = [u.replace(self.prim_instance, instance) for u in url]
                 return urls
+        # TODO: hack to work ONLY with DBS2 global instance name
+        if  instance.find('cms_dbs_') != -1:
+            if  instance == 'cms_dbs_prod_global':
+                return url
+            return None # no other DBS2 instnaces is allowed
         return url
 
     def adjust_params(self, api, kwds, inst=None):
