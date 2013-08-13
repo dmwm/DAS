@@ -44,10 +44,7 @@ class DASAbstractService(object):
             self.write2cache  = config.get('write_cache', True)
             self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
-            if  config.has_key('dbs'):
-                self.dbs_global = self.dasmapping.dbs_global_instance()
-            else:
-                self.dbs_global = None
+            self.dbs_global   = None # to be configured at run time
             dburi             = config['mongodb']['dburi']
             engine            = config.get('engine', None)
             self.gfs          = db_gridfs(dburi)
@@ -493,6 +490,10 @@ class DASAbstractService(object):
             expire = value['expire']
             iformat = value['format']
             url    = self.adjust_url(value['url'], instance)
+            if  not url:
+                msg = '--- rejects API %s, no URL' % api
+                self.logger.info(msg)
+                continue
             args   = dict(value['params']) # make new copy, since we'll adjust
             wild   = value.get('wild_card', '*')
             found  = 0
