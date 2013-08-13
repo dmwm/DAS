@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Changes to allow DAS run with DBS2/DBS3 in a mix mode
   - Extend download LFN link to download web page, issue 4022
   - Add Status link to DAS header and let users to see status of DAS queue
   - Re-factor DASMapping code, see ticket 4021
