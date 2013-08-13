@@ -111,6 +111,7 @@ class DASMapping(object):
         start_new_thread(thname, db_monitor, (self.dburi, self.init, sleep,
             self.load_maps, reload_time))
 
+        self.systems = []              # to be filled at run time
         self.dasmapscache = {}         # to be filled at run time
         self.keymap = {}               # to be filled at run time
         self.presentationcache = {}    # to be filled at run time
@@ -131,6 +132,12 @@ class DASMapping(object):
         self.init_dasmapscache()
         self.init_notationcache()
         self.init_presentationcache()
+        self.systems = None        # re-initialize DAS system list
+        self.list_systems()
+        self.dbs_global_url = None # re-initialize DAS dbs global url
+        self.dbs_url()
+        self.dbs_inst_names = None # re-initialize DAS dbs instances
+        self.dbs_instances()
 
     def init_dasmapscache(self, records=[]):
         "Read DAS maps and initialize DAS API maps"
@@ -328,18 +335,22 @@ class DASMapping(object):
     # ==================
     # Informational APIs
     # ==================
-    def dbs_global_instance(self):
+    def dbs_global_instance(self, system='dbs'):
         "Retrive from mapping DB DBS url and extract DBS instance"
-        url = self.dbs_url()
+        url = self.dbs_url(system)
         return get_dbs_instance(url)
 
-    def dbs_url(self):
+    def dbs_url(self, system='dbs'):
         "Retrive from mapping DB DBS url"
-        if  self.dbs_global_url:
-            return self.dbs_global_url
+        systems = self.list_systems()
+        dbses   = set(['dbs', 'dbs3'])
+        if  dbses & set(systems) != dbses:
+            # use caching only when we operate with single DBS
+            if  self.dbs_global_url:
+                return self.dbs_global_url
         url = None
-        for srv in self.list_systems():
-            if  srv.find('dbs') != -1:
+        for srv in systems:
+            if  srv == system:
                 apis = self.list_apis(srv)
                 url  = self.api_info(apis[0])['url']
                 url  = parse_dbs_url(srv, url)
@@ -347,13 +358,17 @@ class DASMapping(object):
                 return url
         return url
 
-    def dbs_instances(self):
+    def dbs_instances(self, system='dbs'):
         "Retrive from mapping DB DBS instances"
-        if  self.dbs_inst_names:
-            return self.dbs_inst_names
+        systems = self.list_systems()
+        dbses   = set(['dbs', 'dbs3'])
+        if  dbses & set(systems) != dbses:
+            # use caching only when we operate with single DBS
+            if  self.dbs_inst_names:
+                return self.dbs_inst_names
         insts = []
-        for srv in self.list_systems():
-            if  srv.find('dbs') != -1:
+        for srv in systems:
+            if  srv == system:
                 apis  = self.list_apis(srv)
                 insts = self.api_info(apis[0])['instances']
                 self.dbs_inst_names = insts
@@ -364,9 +379,11 @@ class DASMapping(object):
         """
         List all DAS systems.
         """
-        cond = { 'system' : { '$ne' : None } }
-        gen  = (row['system'] for row in self.col.find(cond, ['system']))
-        return list( set(gen2list(gen)) & set(self.services) )
+        if  not self.systems:
+            cond = { 'system' : { '$ne' : None } }
+            gen  = (row['system'] for row in self.col.find(cond, ['system']))
+            self.systems = list( set(gen2list(gen)) & set(self.services) )
+        return self.systems
 
     def list_apis(self, system=None):
         """
