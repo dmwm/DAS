@@ -524,6 +524,8 @@ def das_json(record, pad='', full=False):
              'das_id':record.get('das_id', None),
              'cache_id': record.get('cache_id', None)}
     page += '<b>Hashes</b>: <pre>%s</pre>' % das_json_full(rhash)
+    rlink = '/das/records/%s?collection=merge&view=json' % record['_id']
+    page += '<br/>Download <a href="%s">raw record</a>' % rlink
     page += '</div>'
     return page
 
