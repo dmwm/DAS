@@ -1476,7 +1476,7 @@ def aggregator_helper(results, expire):
             ckeys  = list( set(ckeys+row_ckeys) )
             update = 0
             continue
-        if  val1 == val2:
+        if  val1 == val2 or (pkey == 'summary' and row_pkey == 'summary'):
             merge_dict(record, row)
             system += row_system
             api    += row_api
