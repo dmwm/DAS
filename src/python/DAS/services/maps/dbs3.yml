@@ -585,4 +585,5 @@ notations : [
     {"api_output": "physics_group_name", "rec_key": "name", "api": "physicsgroups"},
     {"api_output": "release_version", "rec_key": "name", "api": "releaseversions"},
     {"api_output": "app_name", "rec_key": "name", "api": "outputconfigs"},
+    {"api_output": "dataset_access_type", "rec_key": "status", "api": ""},
 ]
