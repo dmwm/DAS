@@ -506,10 +506,10 @@ def das_json(record, pad='', full=False):
     das_systems = das.get('system', [])
     apis = das.get('api', [])
     prim_key = das.get('primary_key', '').split('.')[0]
-    pval = record[prim_key]
     if  not das_systems or not prim_key or len(apis) != len(das_systems) or \
             len(pval) != len(das_systems):
         return das_json_full(record, pad)
+    pval = record[prim_key]
     for idx in range(0, len(das_systems)):
         srv   = das_systems[idx]
         api   = apis[idx]
