@@ -493,7 +493,41 @@ def json2html(idict, pad="", ref=None):
     sss += newline + pad + '}'
     return sss
 
-def das_json(record, pad=''):
+def das_json(record, pad='', full=False):
+    """
+    Wrap provided jsonhtml code snippet into div/pre blocks. Provided jsonhtml
+    snippet is sanitized by json2html function.
+    """
+    if  full:
+        return das_json_full(record, pad)
+    page  = '<div class="code">'
+    # get das.systems and primary key
+    das = record['das']
+    das_systems = das.get('system', [])
+    apis = das.get('api', [])
+    prim_key = das.get('primary_key', '').split('.')[0]
+    pval = record[prim_key]
+    if  not das_systems or not prim_key or len(apis) != len(das_systems) or \
+            len(pval) != len(das_systems):
+        return das_json_full(record, pad)
+    for idx in range(0, len(das_systems)):
+        srv   = das_systems[idx]
+        api   = apis[idx]
+        val   = das_json_full(pval[idx])
+        style = 'background-color:%s;color:%s;' % gen_color(srv)
+        page += '\n<b>CMS system:</b> '
+        page += '<span style="%s;padding:3px">%s</span> <b>DAS api:</b> %s' \
+                % (style, srv, api)
+        page += '\n<pre style="%s">%s</pre>' % (style, val)
+    page += '\n<b>DAS part:</b><pre>%s</pre>' % das_json_full(das)
+    rhash = {'qhash':record.get('qhash', None),
+             'das_id':record.get('das_id', None),
+             'cache_id': record.get('cache_id', None)}
+    page += '<b>Hashes</b>: <pre>%s</pre>' % das_json_full(rhash)
+    page += '</div>'
+    return page
+
+def das_json_full(record, pad=''):
     """
     Wrap provided jsonhtml code snippet into div/pre blocks. Provided jsonhtml
     snippet is sanitized by json2html function.
@@ -502,7 +536,6 @@ def das_json(record, pad=''):
     page += json2html(record, pad)
     page += "</pre></div>"
     return page
-
 def gen_error_msg(kwargs):
     """
     Generate standard error message.
