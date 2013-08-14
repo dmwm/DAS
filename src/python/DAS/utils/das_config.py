@@ -87,6 +87,9 @@ DASOption('dasdb', 'mergecollection', 'string', 'merge'),
 DASOption('dasdb', 'mrcollection', 'string', 'mapreduce'),
 # enable logging of DAS db operation, put insert/delete into logging db
 DASOption('dasdb', 'logging', 'bool', False),
+# DAS cache record TTL (time-to-live) parameter, i.e. how long to keep
+# records in DAS cache, default is 1 day.
+DASOption('dasdb', 'record_ttl', 'int', 24*60*60),
 
 #
 # DAS web server options
