@@ -248,7 +248,7 @@ class DASCore(object):
         status = None
         reason = None
         for col in ['merge', 'cache']:
-            self.rawcache.remove_expired(col)
+            self.rawcache.remove_expired(dasquery, col)
         if  dasquery and dasquery.mongo_query.has_key('fields'):
             fields = dasquery.mongo_query['fields']
             if  fields and isinstance(fields, list) and 'queries' in fields:
@@ -330,8 +330,6 @@ class DASCore(object):
         kwds is provided for compatibility with web layer, e.g. it
         may invoke this method with additional pid parameter.
         """
-        for col in ['merge', 'cache']:
-            self.rawcache.remove_expired(col)
         self.logger.info('input query=%s' % query)
         das_timer('DASCore::call', self.verbose)
         if  isinstance(query, object) and hasattr(query, '__class__')\
@@ -339,6 +337,8 @@ class DASCore(object):
             dasquery = query
         else:
             dasquery = DASQuery(query, mongoparser=self.mongoparser)
+        for col in ['merge', 'cache']:
+            self.rawcache.remove_expired(dasquery, col)
         if  add_to_analytics:
             dasquery.add_to_analytics()
         query  = dasquery.mongo_query

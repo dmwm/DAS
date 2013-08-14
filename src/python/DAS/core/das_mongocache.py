@@ -175,6 +175,7 @@ class DASMongocache(object):
         self.logger  = PrintManager('DASMongocache', self.verbose)
         self.mapping = config['dasmapping']
         self.logging = config['dasdb'].get('logging', False)
+        self.rec_ttl = config['dasdb'].get('record_ttl', 24*60*60)
 
         self.init()
         # Monitoring thread which performs auto-reconnection to MongoDB
@@ -352,14 +353,22 @@ class DASMongocache(object):
             return new_fields, cond
         return fields, cond
 
-    def remove_expired(self, collection):
+    def remove_expired(self, dasquery, collection):
         """
-        Remove expired records from DAS cache.
+        Remove expired records from DAS cache. We need to perform this
+        operation very carefullly since we don't use transation and on-going
+        commits can invoke this method (see das_core.py).  Therefore we use
+        MongoDB $or operator to wipe out queries which match DASQuery hash and
+        already expired or queries which lived in cache more then rec_ttl
+        config parameter. The later operation just prevent DAS cache from
+        growing.
         """
         timestamp = int(time.time())
         with self.conn.start_request():
-            col  = self.mdb[collection]
-            spec = {'das.expire' : {'$lt' : timestamp}}
+            col   = self.mdb[collection]
+            spec1 = {'qhash': dasquery.qhash, 'das.expire': {'$lt' : timestamp}}
+            spec2 = {'das.expire': {'$lt':timestamp-self.rec_ttl}}
+            spec  = {'$or':[spec1, spec2]}
             if  self.verbose:
                 nrec = col.find(spec).count()
                 msg  = "will remove %s records" % nrec
@@ -476,7 +485,6 @@ class DASMongocache(object):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        self.remove_expired(collection)
         if  query_record:
             record = record_codes('query_record')
         else:
