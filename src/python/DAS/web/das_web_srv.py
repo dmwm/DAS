@@ -594,6 +594,9 @@ class DASWebService(DASWebManager):
             idx      = getarg(kwargs, 'idx', 0)
             limit    = getarg(kwargs, 'limit', 10)
             coll     = kwargs.get('collection', 'merge')
+            view     = kwargs.get('view', '')
+            if  view == 'json':
+                res  = []
             inst     = kwargs.get('instance', self.dbs_global)
             form     = self.form(uinput="")
             check, content = self.generate_dasquery(query, inst)
@@ -605,7 +608,10 @@ class DASWebService(DASWebManager):
                 (dasquery, idx=idx, limit=limit, collection=coll)
             if  recordid: # we got id
                 for row in gen:
-                    res += das_json(row)
+                    if  view == 'json':
+                        res.append(row)
+                    else:
+                        res += das_json(row)
             else:
                 for row in gen:
                     rid  = row['_id']
@@ -624,6 +630,8 @@ class DASWebService(DASWebManager):
                 page += res
 
             ctime   = (time.time()-time0)
+            if  view == 'json':
+                return json.dumps(res)
             page = self.page(form + page, ctime=ctime)
             return page
         except Exception as exc:
