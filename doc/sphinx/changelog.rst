@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Re-evaluate lifetime of records in DAS cache: the clean-up should be done
+    either for qhash/das.expire pair (less then current tstamp) or for records
+    which live in cache long enough, via das.exire<tstamp-rec_ttl
+  - Introduce dasdb.record_ttl configuration parameter int das config
   - Fix issue4023
   - Changes to allow DAS run with DBS2/DBS3 in a mix mode
   - Extend download LFN link to download web page, issue 4022
