@@ -932,7 +932,8 @@ class DASMongocache(object):
 
         dasheader  = header['das']
         expire     = dasheader['expire']
-        system     = dasheader['system']
+        system     = dasheader['system'] # contributed CMS systems
+        services   = dasheader['services'] # DAS service name, e.g. combined
         api        = dasheader['api']
         prim_key   = header.get('prim_key', None)
         if  not prim_key:
@@ -957,7 +958,7 @@ class DASMongocache(object):
                     item['das'] = dict(expire=expire, primary_key=prim_key,
                                        condition_keys=cond_keys,
                                        instance=dasquery.instance,
-                                       system=system,
+                                       system=system, services=services,
                                        record=record_codes('data_record'),
                                        ts=time.time(), api=api)
                     item['das_id'] = rids
