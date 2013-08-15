@@ -497,6 +497,14 @@ class DASAbstractService(object):
             args   = dict(value['params']) # make new copy, since we'll adjust
             wild   = value.get('wild_card', '*')
             found  = 0
+            # check if input parameters are covered by API
+            if  not self.dasmapping.check_api_match(srv, api, cond):
+                msg = '--- rejects API %s, does not cover input condition keys' \
+                        % api
+                self.logger.info(msg)
+                continue
+            # once we now that API covers input set of parameters we check
+            # every input parameter for pattern matching
             for key, val in cond.iteritems():
                 # check if key is a special one
                 if  key in das_special_keys():
