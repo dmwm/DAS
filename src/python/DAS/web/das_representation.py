@@ -20,7 +20,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.utils import getarg, deepcopy
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.tools import exposedasjson, exposetext, exposedasplist
-from DAS.web.utils import quote, das_json
+from DAS.web.utils import quote, das_json_full
 
 class DASRepresentation(DASWebManager):
     """
@@ -68,7 +68,7 @@ class DASRepresentation(DASWebManager):
                 except:
                     pass
             page += '<div class="%s"><hr class="line" />' % style
-            jsonhtml = das_json(row, pad)
+            jsonhtml = das_json_full(row, pad)
             if  row.has_key('das') and row['das'].has_key('conflict'):
                 conflict = ', '.join(row['das']['conflict'])
             else:

@@ -560,7 +560,7 @@ class CMSRepresentation(DASRepresentation):
             except Exception as exc:
                 print_exc(exc)
                 systems = "" # we don't store systems for aggregated records
-            jsonhtml = das_json(row, pad)
+            jsonhtml = das_json(dasquery, row, pad)
             jsonhtml = jsonhtml.replace(\
                 'request?', 'request?instance=%s&' % inst)
             if  not links:

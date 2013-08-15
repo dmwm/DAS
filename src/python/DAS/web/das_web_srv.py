@@ -37,7 +37,7 @@ from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import free_text_parser, threshold
 from DAS.web.utils import set_no_cache_flags
-from DAS.web.utils import checkargs, das_json, gen_error_msg
+from DAS.web.utils import checkargs, das_json, das_json_full, gen_error_msg
 from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson
 from DAS.web.tools import jsonstreamer
@@ -380,7 +380,7 @@ class DASWebService(DASWebManager):
         """
         record = self.dasmgr.mapping.api_info(name)
         page   = "<b>DAS mapping record</b>"
-        page  += das_json(record)
+        page  += das_json_full(record)
         return self.page(page, response_div=False)
 
     @expose
@@ -611,7 +611,7 @@ class DASWebService(DASWebManager):
                     if  view == 'json':
                         res.append(row)
                     else:
-                        res += das_json(row)
+                        res += das_json(dasquery, row)
             else:
                 for row in gen:
                     rid  = row['_id']
