@@ -40,10 +40,17 @@ from DAS.utils.global_scope import SERVICES
 import DAS.core.das_aggregators as das_aggregator
 
 def dasheader(system, dasquery, expire, api=None, url=None, ctime=None,
-        services=[]):
+        services=None):
     """
-    Return DAS header (dict) wrt DAS specifications, see
-    https://twiki.cern.ch/twiki/bin/view/CMS/DMWMDataAggregationService#DAS_data_service_compliance
+    Return DAS header (dict) wrt DAS specifications:
+    - system represents DAS services, e.g. combined
+    - dasquery is DASQuery representation
+    - expire is expire timestamp of the record
+    - api is data-service API name
+    - url is data-service URL
+    - ctime is current timestamp
+    - services is a dict (or list of dicts) of CMS services contributed
+      to data record, e.g. combined service uses dbs and phedex
     """
     # tstamp must be integer in order for json encoder/decoder to
     # work properly, see utils/jsonwrapper/__init__.py
@@ -60,6 +67,8 @@ def dasheader(system, dasquery, expire, api=None, url=None, ctime=None,
                     expire=expire_timestamp(expire), urn=[api],
                     api=[api], status="requested")
     if  services:
+        if  isinstance(services, dict):
+            services = [services]
         dasdict.update({"services": services})
     return dict(das=dasdict)
 
@@ -297,7 +306,8 @@ class DASCore(object):
                 for url, api, args, iformat, expire in gen:
                     header = dasheader(srv, dasquery, expire, api, url, ctime=0)
                     self.rawcache.insert_query_record(dasquery, header)
-                    ack_services.append(srv)
+                    if  srv not in ack_services:
+                        ack_services.append(srv)
         if  services and not ack_services:
             srv_status = False
         else:
@@ -306,7 +316,7 @@ class DASCore(object):
             srv_status = True # skip DAS queries w/ records request
         expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
         header = dasheader("das", dasquery, expire, api='das_core',
-                services=ack_services)
+                services=dict(das=ack_services))
         header['lookup_keys'] = []
         self.rawcache.insert_query_record(dasquery, header)
         das_timer('das_record', self.verbose)
