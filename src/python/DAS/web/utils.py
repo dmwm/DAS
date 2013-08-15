@@ -536,7 +536,8 @@ def das_json(record, pad='', full=False):
         style = 'background-color:%s;color:%s;' % gen_color(srv)
         page += '\n<b>DAS service:</b> '
         page += '<span style="%s;padding:3px">%s</span> ' % (style, srv)
-        page += das_json_services(srv, das)
+        if  srv == 'combined':
+            page += das_json_services(srv, das)
         page += '<b>DAS api:</b> %s' % api
         page += '\n<pre style="%s">%s</pre>' % (style, val)
     page += '\n<b>DAS part:</b><pre>%s</pre>' % das_json_full(das)
