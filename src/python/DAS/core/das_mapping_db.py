@@ -620,6 +620,22 @@ class DASMapping(object):
                     raise err
         return names
 
+    def check_api_match(self, system, api, icond):
+        "Check if given API covers condition parameters"
+        entry = self.dasmapscache.get((system, api), None)
+        names = []
+        if  not entry:
+            return False
+        ikeys = [k.split('.')[0] for k in icond.keys()]
+        dkeys = []
+        for row in entry.get('das_map', []):
+            if  'api_arg' in row:
+                das_key = row['das_key']
+                dkeys.append(das_key)
+        if  set(ikeys) & set(dkeys) == set(ikeys):
+            return True
+        return False
+
     def das2api(self, system, api, rec_key, value=None):
         """
         Translates DAS record key into data-service API input parameter,
