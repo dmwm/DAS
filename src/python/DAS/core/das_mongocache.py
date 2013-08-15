@@ -932,8 +932,8 @@ class DASMongocache(object):
 
         dasheader  = header['das']
         expire     = dasheader['expire']
-        system     = dasheader['system'] # contributed CMS systems
-        services   = dasheader['services'] # DAS service name, e.g. combined
+        system     = dasheader['system'] # DAS service names, e.g. combined
+        services   = dasheader['services'] # CMS services used to get data
         api        = dasheader['api']
         prim_key   = header.get('prim_key', None)
         if  not prim_key:
