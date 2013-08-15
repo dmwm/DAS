@@ -358,16 +358,18 @@ class CombinedService(DASAbstractService):
         # here I use directly the call to the service which returns
         # proper expire timestamp. Moreover I use HTTP header to look
         # at expires and adjust my expire parameter accordingly
-        if  api == 'dataset4site':
-            headers = {'Accept': 'application/json;text/json'}
-            datastream, expire = \
-                    getdata(url, args, headers, expire, system='combined')
-            genrows = parse_data(datastream)
-        if  api == 'lumi4dataset':
-            headers = {'Accept': 'application/json;text/json'}
-            data, expire = \
-                    getdata(url, args, headers, expire, system='combined')
-            genrows = json_parser(data, None)
+# NOTE: disable dataset4site, lumi4site since they take too much load
+#       see combined.yml
+#        if  api == 'dataset4site':
+#            headers = {'Accept': 'application/json;text/json'}
+#            datastream, expire = \
+#                    getdata(url, args, headers, expire, system='combined')
+#            genrows = parse_data(datastream)
+#        if  api == 'lumi4dataset':
+#            headers = {'Accept': 'application/json;text/json'}
+#            data, expire = \
+#                    getdata(url, args, headers, expire, system='combined')
+#            genrows = json_parser(data, None)
 
         # proceed with standard workflow
         dasrows = self.set_misses(dasquery, api, genrows)
