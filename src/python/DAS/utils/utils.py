@@ -1415,16 +1415,18 @@ def aggregator_helper(results, expire):
     DAS aggregator helper which iterates over all records in results set and
     perform aggregation of records on the primary_key of the record.
     """
-    def helper(das_id, expire, pkey, system, api, ckeys, tstamp, inst):
+    def helper(das_id, expire, pkey, system, srvs, api, ckeys, tstamp, inst):
         "Construct a dict out of provided values"
         rdict = dict(expire=expire, primary_key=pkey, system=system,
+                services=srvs,
                 api=api, condition_keys=ckeys, ts=tstamp, instance=inst)
         return dict(das=rdict, das_id=das_id)
 
     record  = results.next()
     pkey    = record['das']['primary_key']
     ckeys   = record['das']['condition_keys']
-    system  = record['das']['system']
+    system  = record['das']['system'] # CMS systems, e.g. dbs, phedex
+    srvs    = record['das']['services'] # DAS services, e.g. combined
     api     = record['das']['api']
     das_id  = record['das_id']
     inst    = record['das'].get('instance', None)
@@ -1436,41 +1438,48 @@ def aggregator_helper(results, expire):
         row_pkey   = row['das']['primary_key']
         row_ckeys  = row['das']['condition_keys']
         row_system = row['das']['system']
+        row_srvs   = row['das']['services']
         row_api    = row['das']['api']
         row_das_id = row['das_id']
         row.pop('das')
         if  row_pkey != pkey:
-            args   = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            args   = (das_id, expire, pkey, system, srvs,
+                      api, ckeys, tstamp, inst)
             record.update(helper(*args))
             yield record
             pkey   = row_pkey
             record = row
             system = row_system
+            srvs   = row_srvs
             api    = row_api
             das_id = row_das_id
             ckeys  = list( set(ckeys+row_ckeys) )
             continue
         try:
-            val1 = dict_value(record, pkey)
+            val1   = dict_value(record, pkey)
         except:
-            args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            args   = (das_id, expire, pkey, system, srvs,
+                      api, ckeys, tstamp, inst)
             record.update(helper(*args))
             yield record
             record = dict(row)
             system = row_system
+            srvs   = row_srvs
             api    = row_api
             das_id = row_das_id
             ckeys  = list( set(ckeys+row_ckeys) )
             update = 0
             continue
         try:
-            val2 = dict_value(row, pkey)
+            val2   = dict_value(row, pkey)
         except:
-            args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            args   = (das_id, expire, pkey, system, srvs,
+                      api, ckeys, tstamp, inst)
             row.update(helper(*args))
             yield row
             record = dict(row)
             system = row_system
+            srvs   = row_srvs
             api    = row_api
             das_id = row_das_id
             ckeys  = list( set(ckeys+row_ckeys) )
@@ -1479,21 +1488,24 @@ def aggregator_helper(results, expire):
         if  val1 == val2 or (pkey == 'summary' and row_pkey == 'summary'):
             merge_dict(record, row)
             system += row_system
+            srvs   += row_srvs
             api    += row_api
             das_id += row_das_id
             ckeys   = list( set(ckeys+row_ckeys) )
             update  = 1
         else:
-            args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+            args   = (das_id, expire, pkey, system, srvs,
+                      api, ckeys, tstamp, inst)
             record.update(helper(*args))
             yield record
             record = dict(row)
             system = row_system
+            srvs   = row_srvs
             api    = row_api
             das_id = row_das_id
             ckeys  = list( set(ckeys+row_ckeys) )
             update = 0
-    args = (das_id, expire, pkey, system, api, ckeys, tstamp, inst)
+    args = (das_id, expire, pkey, system, srvs, api, ckeys, tstamp, inst)
     if  update: # check if we did update for last row
         record.update(helper(*args))
         yield record
