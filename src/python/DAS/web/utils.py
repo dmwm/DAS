@@ -511,14 +511,16 @@ def das_json_services(system, das):
             msg += ' '
     return msg
 
-def das_json(record, pad='', full=False):
+def das_json(dasquery, record, pad='', full=False):
     """
     Wrap provided jsonhtml code snippet into div/pre blocks. Provided jsonhtml
     snippet is sanitized by json2html function.
     """
     if  full:
         return das_json_full(record, pad)
-    page = '<div class="code">'
+    mquery  = dasquery.mongo_query
+    daskeys = ['das_id', 'cache_id', 'qhash', 'das' , '_id']
+    lkeys   = [l for l in mquery.get('fields', None) if l not in daskeys]
     # get das.systems and primary key
     das  = record['das']
     srvs = das.get('system', [])
@@ -529,25 +531,36 @@ def das_json(record, pad='', full=False):
     pval = record[prim_key]
     if  isinstance(pval, list) and len(pval) != len(srvs):
         return das_json_full(record, pad)
-    for idx in range(0, len(srvs)):
-        srv   = srvs[idx]
-        api   = apis[idx]
-        val   = das_json_full(pval[idx])
-        style = 'background-color:%s;color:%s;' % gen_color(srv)
-        page += '\n<b>DAS service:</b> '
-        page += '<span style="%s;padding:3px">%s</span> ' % (style, srv)
-        if  srv == 'combined':
-            page += das_json_services(srv, das)
-        page += '<b>DAS api:</b> %s' % api
-        page += '\n<pre style="%s">%s</pre>' % (style, val)
-    page += '\n<b>DAS part:</b><pre>%s</pre>' % das_json_full(das)
-    rhash = {'qhash':record.get('qhash', None),
-             'das_id':record.get('das_id', None),
-             'cache_id': record.get('cache_id', None)}
-    page += '<b>Hashes</b>: <pre>%s</pre>' % das_json_full(rhash)
-    rlink = '/das/records/%s?collection=merge&view=json' % record['_id']
-    page += '<br/>Download <a href="%s">raw record</a>' % rlink
-    page += '</div>'
+    try:
+        page = '<div class="code">'
+        for idx in range(0, len(srvs)):
+            srv   = srvs[idx]
+            api   = apis[idx]
+            if  lkeys:
+                rec = {prim_key: pval[idx]}
+                for lkey in [l for l in lkeys if l!=prim_key]:
+                    rec[lkey] = record[lkey][idx]
+                val = das_json_full(rec)
+            else:
+                val = das_json_full(pval[idx])
+            style = 'background-color:%s;color:%s;' % gen_color(srv)
+            page += '\n<b>DAS service:</b> '
+            page += '<span style="%s;padding:3px">%s</span> ' % (style, srv)
+            if  srv == 'combined':
+                page += das_json_services(srv, das)
+            page += '<b>DAS api:</b> %s' % api
+            page += '\n<pre style="%s">%s</pre>' % (style, val)
+        page += '\n<b>DAS part:</b><pre>%s</pre>' % das_json_full(das)
+        rhash = {'qhash':record.get('qhash', None),
+                 'das_id':record.get('das_id', None),
+                 'cache_id': record.get('cache_id', None)}
+        page += '<b>Hashes</b>: <pre>%s</pre>' % das_json_full(rhash)
+        rlink = '/das/records/%s?collection=merge&view=json' % record['_id']
+        page += '<br/>Download <a href="%s">raw record</a>' % rlink
+        page += '</div>'
+    except Exception as exc:
+        print_exc(exc)
+        return das_json_full(record, pad)
     return page
 
 def das_json_full(record, pad=''):
