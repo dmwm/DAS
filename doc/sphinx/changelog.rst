@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Turn off dbs_phedex, it producing too much load, instead use individual
+    services
   - Re-evaluate lifetime of records in DAS cache: the clean-up should be done
     either for qhash/das.expire pair (less then current tstamp) or for records
     which live in cache long enough, via das.exire<tstamp-rec_ttl
