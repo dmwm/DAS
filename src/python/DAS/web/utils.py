@@ -493,6 +493,24 @@ def json2html(idict, pad="", ref=None):
     sss += newline + pad + '}'
     return sss
 
+def das_json_services(system, das):
+    """
+    Helper function used in das_json which returns list of CMS services for
+    given DAS system and DAS dict
+    """
+    msg = ''
+    for row in das.get('services', []):
+        for srv, items in row.iteritems():
+            if  srv != system:
+                continue
+            msg = 'Sources:'
+            for cmssys in items:
+                style = 'background-color:%s;color:%s;' % gen_color(cmssys)
+                msg += '<span style="%s;padding:3px">%s</span>' \
+                        % (style, cmssys)
+            msg += ' '
+    return msg
+
 def das_json(record, pad='', full=False):
     """
     Wrap provided jsonhtml code snippet into div/pre blocks. Provided jsonhtml
@@ -503,7 +521,7 @@ def das_json(record, pad='', full=False):
     page = '<div class="code">'
     # get das.systems and primary key
     das  = record['das']
-    srvs = das.get('services', [])
+    srvs = das.get('system', [])
     apis = das.get('api', [])
     prim_key = das.get('primary_key', '').split('.')[0]
     if  not srvs or not prim_key or len(apis) != len(srvs):
@@ -511,14 +529,6 @@ def das_json(record, pad='', full=False):
     pval = record[prim_key]
     if  isinstance(pval, list) and len(pval) != len(srvs):
         return das_json_full(record, pad)
-    aux_msg = ''
-    if  'combined' in srvs:
-        aux_msg = 'Sources:'
-        for cmssys in das.get('system', []):
-            style = 'background-color:%s;color:%s;' % gen_color(cmssys)
-            aux_msg += '<span style="%s;padding:3px">%s</span>' \
-                    % (style, cmssys)
-        aux_msg += ' '
     for idx in range(0, len(srvs)):
         srv   = srvs[idx]
         api   = apis[idx]
@@ -526,7 +536,7 @@ def das_json(record, pad='', full=False):
         style = 'background-color:%s;color:%s;' % gen_color(srv)
         page += '\n<b>DAS service:</b> '
         page += '<span style="%s;padding:3px">%s</span> ' % (style, srv)
-        page += aux_msg
+        page += das_json_services(srv, das)
         page += '<b>DAS api:</b> %s' % api
         page += '\n<pre style="%s">%s</pre>' % (style, val)
     page += '\n<b>DAS part:</b><pre>%s</pre>' % das_json_full(das)
