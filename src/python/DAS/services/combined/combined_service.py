@@ -258,9 +258,9 @@ class CombinedService(DASAbstractService):
             raise Exception('Unsupport DBS system')
         self.dbs = dbs
 
-    def systems(self):
-        "Return list of data-services used by this class"
-        return [self.dbs, 'phedex']
+    def services(self):
+        "Return data-services used by this class"
+        return {self.name: [self.dbs, 'phedex']}
 
     def helper(self, api, args, expire):
         """
