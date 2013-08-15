@@ -184,7 +184,8 @@ class DASAbstractService(object):
             return
 
         # update the cache
-        header  = dasheader(self.systems(), dasquery, expire, api, url)
+        header = dasheader(self.systems(), dasquery, expire, api, url,
+                services=[self.name])
         header['lookup_keys'] = self.lookup_keys(api)
         header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
         header['ctime'] = ctime
