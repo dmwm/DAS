@@ -7,6 +7,9 @@ This release series is targeted to DAS production stability and quality.
 
 - 1.13.X
 
+  - Add services attribute to das part of data record, it shows which DAS
+    services were used, while system attribute used to show which CMS systems
+    were used to produce data record(s)
   - Turn off dbs_phedex, it producing too much load, instead use individual
     services
   - Re-evaluate lifetime of records in DAS cache: the clean-up should be done
