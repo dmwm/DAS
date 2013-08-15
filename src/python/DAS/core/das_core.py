@@ -59,7 +59,7 @@ def dasheader(system, dasquery, expire, api=None, url=None, ctime=None,
                     url=[url], ctime=[ctime],
                     expire=expire_timestamp(expire), urn=[api],
                     api=[api], status="requested")
-    if  system == ['das']:
+    if  services:
         dasdict.update({"services": services})
     return dict(das=dasdict)
 
@@ -289,12 +289,6 @@ class DASCore(object):
         if  not services:
             services = dasquery.params()['services']
         self.logger.info('Potential services = %s' % services)
-        expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
-        header = dasheader("das", dasquery, expire, api='das_core',
-                services=services)
-        header['lookup_keys'] = []
-        self.rawcache.insert_query_record(dasquery, header)
-        das_timer('das_record', self.verbose)
         # get list of URI which can answer this query
         ack_services = []
         if  services:
@@ -310,6 +304,12 @@ class DASCore(object):
             srv_status = set(services) & set(ack_services) == set(ack_services)
         if  dasquery.query.find('records ') != -1:
             srv_status = True # skip DAS queries w/ records request
+        expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
+        header = dasheader("das", dasquery, expire, api='das_core',
+                services=ack_services)
+        header['lookup_keys'] = []
+        self.rawcache.insert_query_record(dasquery, header)
+        das_timer('das_record', self.verbose)
         return ack_services, srv_status
 
     def call(self, query, add_to_analytics=True, **kwds):
