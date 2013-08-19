@@ -86,7 +86,7 @@ class DBSDaemon(object):
         that cache was populated in this cache.
         """
         if  self.col:
-            time0 = time.time()
+            time0 = round(time.time())
             udict = {'$set':{'ts':time0}}
             cdict = {'dataset':'__POPULATED__'}
             gen = self.datasets()
