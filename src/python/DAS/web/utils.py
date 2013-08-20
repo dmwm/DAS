@@ -520,7 +520,11 @@ def das_json(dasquery, record, pad='', full=False):
         return das_json_full(record, pad)
     mquery  = dasquery.mongo_query
     daskeys = ['das_id', 'cache_id', 'qhash', 'das' , '_id']
-    lkeys   = [l for l in mquery.get('fields', None) if l not in daskeys]
+    fields  = mquery.get('fields', None)
+    if  fields:
+        lkeys = [l for l in fields if l not in daskeys]
+    else:
+        lkeys = []
     # get das.systems and primary key
     das  = record['das']
     srvs = das.get('system', [])
@@ -538,7 +542,7 @@ def das_json(dasquery, record, pad='', full=False):
             api   = apis[idx]
             if  lkeys:
                 rec = {prim_key: pval[idx]}
-                for lkey in [l for l in lkeys if l!=prim_key]:
+                for lkey in [l for l in lkeys if l != prim_key]:
                     rec[lkey] = record[lkey][idx]
                 val = das_json_full(rec)
             else:
