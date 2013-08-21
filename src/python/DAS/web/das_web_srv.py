@@ -4,7 +4,7 @@
 """
 DAS web interface, based on WMCore/WebTools
 """
-from DAS.keywordsearch.metadata import das_schema_adapter
+#from DAS.keywordsearch.metadata import das_schema_adapter
 
 __author__ = "Valentin Kuznetsov"
 
@@ -234,7 +234,7 @@ class DASWebService(DASWebManager):
             return
 
         # initialize the Keyword Search
-        KeywordSearchHandler.init(self.dasmgr)
+        self.kws = KeywordSearchHandler(self.dasmgr)
 
         # Start Onhold_request daemon
         if  self.dasconfig['web_server'].get('onhold_daemon', False):
@@ -405,11 +405,11 @@ class DASWebService(DASWebManager):
             return self.redirect(**kwargs)
 
         print 'kws async', uinput
-        return KeywordSearchHandler.handle_search(self,
-                                                  query=uinput, inst=inst,
-                                                  initial_exc_message = '',
-                                                  dbsmngr = self._get_dbsmgr_for_db_instance(inst),
-                                                  is_ajax=True)
+        return self.kws.handle_search(self,
+                              query=uinput, inst=inst,
+                              initial_exc_message = '',
+                              dbsmngr = self._get_dbsmgr_for_db_instance(inst),
+                              is_ajax=True)
 
 
 
@@ -438,8 +438,9 @@ class DASWebService(DASWebManager):
     def autocomplete_test(self):
 
         """
-        represent DAS services
+        new autocompletion
         """
+        # get list of all daskeys. TODO: move to schema adapter or whatever?
         dasdict = {}
         daskeys = []
         for system, keys in self.dasmgr.mapping.daskeys().iteritems():
@@ -454,72 +455,35 @@ class DASWebService(DASWebManager):
                                    apis=self.dasmgr.mapping.list_apis(system))
         mapreduce = [r for r in self.dasmgr.rawcache.get_map_reduce()]
 
-        # daskeys could be inputs or outputs
+        # daskeys could be both inputs or outputs
         daskeys_json = json.dumps(daskeys)
 
-        das_schema_adapter.init(self.dasmgr)
-        # das_schema_adapter.list_result_fields()
+        #from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+        #getSchema(self.dasmgr)
+        #das_schema_adapter.init(self.dasmgr)
+
         from DAS.keywordsearch.metadata.input_values_tracker import get_fields_tracked, get_tracker
         ent_values = {}
 
 
-        inp_daskeys, out_daskeys = das_schema_adapter.get_io_daskeys()
-        inp_daskeys_json = json.dumps(inp_daskeys)
-        out_daskeys_json = json.dumps(out_daskeys)
+        #inp_daskeys, out_daskeys = getSchema().get_io_daskeys()
+        #inp_daskeys_json = json.dumps(inp_daskeys)
+        #out_daskeys_json = json.dumps(out_daskeys)
 
-        # fields in service results
+        # values for fields in service results
         for field in get_fields_tracked():
-
             values = get_tracker(field).find('*', limit=-1)
-            values = json.dumps([v for v in values])
-            ent_values[field.replace('.name', '')] = values
-        tmpl = '''
-            case '%(selkey)s':
-                callback(%(values)s, { allowInfix: true });
-                break;
-            '''
-        selkeys_values = '\n'.join([tmpl % {'selkey': key, 'values': values}
-                                    for key, values in ent_values.items()])
-        selkeys_values = '''switch (facet) { %s \n}''' % selkeys_values
-
-        entity_groupings = {
-            'dataset info': [
-                "block", "dataset", "file", "tier",
-                "primary_dataset",
-                "status", "config", "datatype",
-                "release",
-                "site",
-                "summary",
-                ],
-            'run info':
-                ["lumi", "run",],
-            'users and groups':
-                ["group", "user", "role",],
-            'dataset parentage':
-                ["parent", "child", "relationship"],
-            'misc':
-                ["date", "jobsummary",
-                 "run_status", "reco_status",
-                 "stream",  "monitor", "ip",]
-        }
-        daskeys_grouped = []
-        for cat, entities in entity_groupings.items():
-            for ent in sorted(entities):
-                entity = {
-                    'label': ent,
-                    'category': cat,
-                }
-                daskeys_grouped.append(entity)
-        # TODO: put not yet mapped keys into misc
-
-        daskeys_grouped_json = json.dumps(daskeys_grouped)
+            n = field.replace('.name', '')
+            ent_values[n] = [v for v in values]
+        known_values_json = json.dumps(ent_values)
 
         page = self.templatepage('kwdsearch_autocomplete_cm', dasdict=dasdict,
+                                 known_values=known_values_json,
                                  daskeys=daskeys, daskeys_json=daskeys_json,
-                                 daskeys_grouped_json=daskeys_grouped_json,
-                                 selkeys_values=selkeys_values,
-                                 inp_daskeys_json=inp_daskeys_json,
-                                 out_daskeys_json=out_daskeys_json,
+                                 #daskeys_grouped_json=daskeys_grouped_json,
+                                 #selkeys_values=selkeys_values,
+                                 #inp_daskeys_json=inp_daskeys_json,
+                                 #out_daskeys_json=out_daskeys_json,
                                  mapreduce=mapreduce)
         return self.page(page, response_div=False)
 
@@ -583,9 +547,6 @@ class DASWebService(DASWebManager):
             if  len(dbs_urls) == 1:
                 return self.dbsmgr[dbs_urls[0]]
         return None
-
-        kwargs['input'] = new_input
-
 
 
     def _get_dbsmgr(self, inst):
@@ -651,12 +612,15 @@ class DASWebService(DASWebManager):
             # Keyword Search
             if not isinstance(err, WildcardMatchingException):
                 try:
-                    kws_res = KeywordSearchHandler.handle_search(self,
+                    kws_res = self.kws.handle_search(self,
                         query=uinput, inst=inst, initial_exc_message = err.message,
                         dbsmngr = self._get_dbsmgr(inst))
                     return 1, kws_res
                 except Exception, e:
                     print e
+                    import traceback
+                    traceback.print_exc()
+
                     return 1, helper(err.message +
                                      '\nCan not perform keyword search at this '
                                      'moment: some data is missing', html_error)

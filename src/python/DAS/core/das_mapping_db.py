@@ -16,7 +16,7 @@ of the following structure:
 
 Here *urn* denotes data-service API, *url, params* are URL and input arguments
 publically available data-service API. The *lookup* attribute represents the
-fields which are accessible to look-up in DAS queries (it can be a list of
+entities which are accessible to look-up in DAS queries (it can be a list of
 fields) and *das_map* provides actual mapping from DAS key to record key and
 associated api argument. Please note that the first record in *das_map*
 represents DAS primary key.

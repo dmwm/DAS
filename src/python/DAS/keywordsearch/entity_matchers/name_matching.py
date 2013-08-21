@@ -6,10 +6,11 @@ It uses a number of similarity metrics and heuristics, along with exiting values
 
 # for handling semantic and string similarities
 
-from DAS.keywordsearch.metadata.das_schema_adapter import cms_synonyms, entity_names
+from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+    #cms_synonyms, entity_names
 from DAS.keywordsearch.nlp import string_distance
 
-def keyword_schema_weights(keyword, keyword_index=-1,):
+def keyword_schema_weights(keyword, keyword_index=-1):
     """
     for each schema term (entity, entity attribute) calculates keyword's semantic relatedness with it
 
@@ -45,10 +46,10 @@ def keyword_schema_weights(keyword, keyword_index=-1,):
     # TODO: use IDF (some field subparts are very common, e.g. name)
 
     result =  [(string_distance(keyword, entity_short, semantic=True), entity_long)
-               for (entity_long, entity_short) in entity_names.items()]
+               for (entity_long, entity_short) in getSchema().entity_names.items()]
 
     # check synonyms
-    for (entity_long, synonyms) in cms_synonyms['daskeys'].items():
+    for (entity_long, synonyms) in getSchema().cms_synonyms['daskeys'].items():
         for synonym in synonyms:
             result.extend([ (string_distance(keyword, synonym, semantic=True), entity_long)   ])
 

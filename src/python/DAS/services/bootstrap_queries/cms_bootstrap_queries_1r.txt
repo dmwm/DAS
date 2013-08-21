@@ -1,7 +1,8 @@
 run=20853
 run=193557
-dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO
-block=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO#a843ec69-8e53-4c6d-81f3-52aa883d4399
+dataset dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO
+block block=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO#a843ec69-8e53-4c6d-81f3-52aa883d4399
+block block=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO#99a4c51c-d351-11e1-bb62-00221959e69e
 file=/store/hidata/HIRun2010/HICorePhysics/RAW-RECO/v2/000/150/619/F4535E01-5CED-DF11-81E4-003048673F08.root
 site=T1_CH_CERN
 release=CMSSW_2_0_8

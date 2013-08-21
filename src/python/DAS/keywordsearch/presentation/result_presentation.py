@@ -2,10 +2,12 @@ __author__ = 'vidma'
 
 
 from DAS.keywordsearch.config  import DEBUG, UI_MAX_DISPLAYED_VALUE_LEN
-import DAS.keywordsearch.metadata.das_schema_adapter as integration_schema
-from DAS.keywordsearch.metadata.das_schema_adapter import entity_names
 
 
+#import DAS.keywordsearch.metadata.das_schema_adapter as integration_schema
+#from DAS.keywordsearch.metadata.das_schema_adapter import entity_names
+
+from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 
 
 def DASQL_2_NL(dasql_tuple, html=True):
@@ -27,7 +29,7 @@ def DASQL_2_NL(dasql_tuple, html=True):
     if result_filters:
         # TODO: add verbose name if any
         filters.extend(['%s %s %s' %
-                        (integration_schema.get_result_field_title(result_type, field, technical=True, html=True),
+                        (getSchema().get_result_field_title(result_type, field, technical=True, html=True),
                          op, val) for (field, op, val) in result_filters])
 
     filters = ' <b>AND</b> '.join(filters)
@@ -35,7 +37,7 @@ def DASQL_2_NL(dasql_tuple, html=True):
     if result_projections:
         # TODO: what if entity is different than result_type? We shall probably output that as well...
         result_projections = [
-            '%s' % integration_schema.get_result_field_title(result_type, field, technical=True, html=True)
+            '%s' % getSchema().get_result_field_title(result_type, field, technical=True, html=True)
             for field in result_projections
         ]
         result_projections = ', '.join(result_projections)
@@ -150,8 +152,8 @@ def result_to_DASQL(result, frmt='text', shorten_html = True,
         (score, result_type, input_params, projections_filters, trace) = result
 
     # short entity names
-    s_result_type = entity_names[result_type]
-    s_input_params = [(entity_names.get(field, field), value) for
+    s_result_type = getSchema().entity_names[result_type]
+    s_input_params = [(getSchema().entity_names.get(field, field), value) for
                       (field, value) in input_params]
     s_input_params.sort(key=lambda item: item[0])
 

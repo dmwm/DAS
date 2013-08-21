@@ -336,7 +336,10 @@ class CMSRepresentation(DASRepresentation):
 
 
             from pprint import pprint
-            from DAS.keywordsearch.metadata.das_schema_adapter import get_field_list_for_entity_by_pk, get_result_field_list_by_entity
+
+            from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+
+            #from DAS.keywordsearch.metadata.das_schema_adapter import get_field_list_for_entity_by_pk, get_result_field_list_by_entity
             from copy import deepcopy
             from DAS.keywordsearch.tokenizer import get_keyword_without_operator
 
@@ -370,7 +373,7 @@ class CMSRepresentation(DASRepresentation):
             for pk in pks_of_req_entity:
                 # list of fields for given entity retrieved by PK
                 fields_in_nested_by_pk = \
-                    get_result_field_list_by_entity(self.dasmgr, r_entity, [pk,])
+                    getSchema().get_result_field_list_by_entity(self.dasmgr, r_entity, [pk,])
 
                 pprint(['PK FIELDS:', fields_in_nested_by_pk])
 

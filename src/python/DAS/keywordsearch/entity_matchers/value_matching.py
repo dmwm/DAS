@@ -11,7 +11,10 @@ import re
 
 # for handling semantic and string similarities
 from DAS.keywordsearch.metadata import input_values_tracker
-from DAS.keywordsearch.metadata.das_schema_adapter import apis_by_their_input_contraints
+
+#from DAS.keywordsearch.metadata.das_schema_adapter import apis_by_their_input_contraints
+from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+
 from DAS.keywordsearch.entity_matchers.value_matching_dataset import match_value_dataset
 
 def keyword_value_weights(keyword):
@@ -76,7 +79,7 @@ def keyword_regexp_weights(keyword):
 
     # TODO: define that is more restrictive regexp
 
-    for (constraint, apis) in apis_by_their_input_contraints.items():
+    for (constraint, apis) in getSchema().apis_by_their_input_contraints.items():
         #print (constraint, apis)
 
 

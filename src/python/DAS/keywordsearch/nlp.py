@@ -18,7 +18,7 @@ en_stopwords = stopwords.words('english')
 # for handling semantic and string similarities
 from nltk.corpus import wordnet
 
-from DAS.keywordsearch.metadata.das_schema_adapter import entity_wordnet_synsets
+#from DAS.keywordsearch.metadata.das_schema_adapter import entity_wordnet_synsets
 
 from DAS.keywordsearch.config import mod_enabled
 
@@ -33,7 +33,7 @@ def filter_stopwords(kwd_list):
     return filter(lambda k: k not in en_stopwords or k in processed_stopwords, kwd_list)
 
 
-
+"""
 def semantic_dist(keyword, match_to, score):
     # TODO: redo this or throw away
     ks = wordnet.synsets(keyword)
@@ -58,6 +58,7 @@ def semantic_dist(keyword, match_to, score):
             else:
                 score = max(semantic_score, (score + 2 * semantic_score) / 3)
     return score
+"""
 
 
 def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
@@ -105,8 +106,8 @@ def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
 
 
     # TODO: we shall be able to handle attributes also
-    if mod_enabled('STRING_DIST_ENABLE_NLTK_SEMANTICS') and semantic and not '.' in match_to:
-        score = semantic_dist(keyword, match_to, score)
+    #if mod_enabled('STRING_DIST_ENABLE_NLTK_SEMANTICS') and semantic and not '.' in match_to:
+    #    score = semantic_dist(keyword, match_to, score)
 
     if allow_low_scores:
         return score if score > 0.1 else  0

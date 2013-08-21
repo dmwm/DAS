@@ -5,7 +5,8 @@ import urllib
 import cgi
 import math
 
-from DAS.keywordsearch.search import search as keyword_search, init as init_kws
+from DAS.keywordsearch.search import KeywordSearch
+    # import search as keyword_search, init as init_kws
 
 # from DAS.web.utils import HtmlString
 
@@ -33,10 +34,11 @@ class KeywordSearchHandler:
         return das_url
 
 
-    @staticmethod
-    def init(dascore):
-        if dascore:
-            init_kws(dascore)
+    def __init__(self, dascore):
+        if not dascore:
+            raise  Exception("dascore needed")
+        self.kws = KeywordSearch(dascore)
+
 
 
     @staticmethod
@@ -88,12 +90,11 @@ class KeywordSearchHandler:
         hi_score_result_types.append('any')
         return hi_score_result_types
 
-    @staticmethod
-    def handle_search(webm, query, inst,  initial_exc_message = '', dbsmngr=None, is_ajax=False):
+    def handle_search(self, webm, query, inst,  initial_exc_message = '', dbsmngr=None, is_ajax=False):
         '''
         performs the search, and renders the search results
         '''
-        proposed_queries = keyword_search(query, inst, dbsmngr= dbsmngr)
+        proposed_queries = self.kws.search(query, inst, dbsmngr= dbsmngr)
 
         # no need for result type filter if # of results is low
 

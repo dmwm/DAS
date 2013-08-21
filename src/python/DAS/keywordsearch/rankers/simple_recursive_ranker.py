@@ -16,8 +16,9 @@ from heapq import heappush, heappushpop
 
 from cherrypy import thread_data
 
-from DAS.keywordsearch.metadata.das_schema_adapter import validate_input_params, \
-    entities_for_input_params
+#from DAS.keywordsearch.metadata._das_schema_adapter import validate_input_params, \
+#    entities_for_input_params
+from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 
 
 from DAS.keywordsearch.config import *
@@ -396,7 +397,7 @@ def store_result_and_check_projections(
     # DAS requires at least one filtering attribute
     if fields_covered_by_values_set and fields_covered_by_values_set.issuperset(
             fields_included) and \
-            validate_input_params(fields_included, final_step=True,
+            getSchema().validate_input_params(fields_included, final_step=True,
                                   entity=result_type):
         #if UGLY_DEBUG: print 'VALUES MATCH:', (
         #    result_type, fields_included, values_mapping ),\
@@ -409,7 +410,7 @@ def store_result_and_check_projections(
 
         if not result_type:
             # if not entity was guessed, infer it from service parameters
-            entities = entities_for_input_params(fields_included)
+            entities = getSchema().entities_for_inputs(fields_included)
             if UGLY_DEBUG: print 'Result entities matching:', entities
 
             for result_type in entities.keys():
@@ -567,7 +568,7 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
             new_score = logP(delta_score) + old_score
             new_fields = fields_included | set([possible_mapping])
 
-            if validate_input_params(new_fields, final_step=False,
+            if getSchema().validate_input_params(new_fields, final_step=False,
                                      entity=result_type):
                 generate_value_mappings(result_type,
                                         fields_included=new_fields,
@@ -617,10 +618,10 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
 
     if kw_index == len(kw_list):
         # TODO: check if required fields are functioning properly !!!
-        if validate_input_params(fields_old, final_step=True,
+        if getSchema().validate_input_params(fields_old, final_step=True,
                                  entity=result_type):
             if UGLY_DEBUG: print 'SCHEMA MATCH:', (
-                result_type, fields_old), validate_input_params(
+                result_type, fields_old), getSchema().validate_input_params(
                 fields_old, final_step=True, entity=result_type)
 
 
@@ -669,7 +670,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
         #print 'validating', (f, requested_entity)
 
         # opt 2.a) take as api input param entity
-        if validate_input_params(fields_new, entity=result_type):
+        if getSchema().validate_input_params(fields_new, entity=result_type):
             if UGLY_DEBUG: print 'validated', (result_type, fields_new)
 
             delta_score = schema_score
@@ -699,7 +700,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
                 if not USE_LOG_PROBABILITIES:
                     delta_score *= 0.5
 
-            if validate_input_params(fields_old, entity=target_field):
+            if getSchema().validate_input_params(fields_old, entity=target_field):
                 if UGLY_DEBUG:  print 'validated', (
                     target_field, fields_old)
 
@@ -718,7 +719,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
                                                              delta_score)]))
 
             # opt 2.c) take both as requested entity (result type) and  input param entity
-            if validate_input_params(fields_new,
+            if getSchema().validate_input_params(fields_new,
                                      entity=target_field):
 
                 if UGLY_DEBUG: print 'valid', (target_field, fields_new)

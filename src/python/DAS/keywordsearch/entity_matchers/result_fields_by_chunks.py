@@ -4,12 +4,13 @@ import math
 import pprint
 
 from DAS.keywordsearch.config import *
-from DAS.keywordsearch.metadata.das_schema_adapter import list_result_fields
+#from DAS.keywordsearch.metadata.das_schema_adapter import list_result_fields
 from DAS.keywordsearch.config import mod_enabled
 from DAS.keywordsearch.whoosh.ir_entity_attributes import load_index, search_index
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator,\
     get_operator_and_param, test_operator_containment
 
+from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 
 
 def generate_chunks_no_ent_filter(keywords):
@@ -37,7 +38,7 @@ def generate_chunks_no_ent_filter(keywords):
     MAX_TOKEN_COMBINATION_LEN =  4
 
 
-    fields_by_entity = list_result_fields()
+    fields_by_entity = getSchema().list_result_fields()
 
 
     load_index()
