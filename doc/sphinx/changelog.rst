@@ -5,7 +5,7 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
-- 1.13.X
+- 2.0.X
 
   - Add services attribute to das part of data record, it shows which DAS
     services were used, while system attribute used to show which CMS systems
