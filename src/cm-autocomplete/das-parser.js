@@ -292,4 +292,4 @@ CodeMirror.defineMode('das', function (config) {
     };
 });
 
-CodeMirror.defineMIME('text/x-sh-das', 'das');
+CodeMirror.defineMIME('text/x-ql-das', 'das');

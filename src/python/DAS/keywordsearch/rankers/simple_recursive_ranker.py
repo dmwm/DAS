@@ -23,15 +23,19 @@ from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 
 from DAS.keywordsearch.config import *
 
-from DAS.keywordsearch.nlp import filter_stopwords, stemmer
+from DAS.keywordsearch.nlp import filter_stopwords, getstem
 
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator, \
     test_operator_containment
 
 from DAS.keywordsearch.metadata import das_ql
 
+from DAS.keywordsearch.utils import memo_1kwarg_static
+from functools import wraps
 
 
+
+@memo_1kwarg_static
 def _get_reserved_terms(stem=False):
     """
     terms that shall be down-ranked if contained in values or in grep-field names
@@ -43,8 +47,7 @@ def _get_reserved_terms(stem=False):
     r = set(entities) | set(operators)
 
     if stem:
-        r = map(lambda w: stemmer.stem(w), r)
-
+        r = map(lambda w: getstem(w), r)
     return r
 
 
@@ -140,7 +143,7 @@ def penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
     if DEBUG: print '_get_reserved_terms(stem=True):', _get_reserved_terms(
         stem=True)
 
-    if not ' ' in keyword and stemmer.stem(keyword) in _get_reserved_terms(
+    if not ' ' in keyword and getstem(keyword) in _get_reserved_terms(
             stem=True): #['dataset', 'run', 'block', 'file', 'site']:
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
         return logP(-3.0)
@@ -236,7 +239,7 @@ def store_result_dict_(score, r_type, values_dict, r_filters, keywords_used,
             popped_out = heappushpop(thread_data.results, heap_tuple)
 
             # TODO: check if this work as expected
-            print 'smalest thrown away result:', popped_out[0], 'len=', len(thread_data.results)
+            #print 'smalest thrown away result:', popped_out[0], 'len=', len(thread_data.results)
 
         else:
             heappush(thread_data.results, heap_tuple)

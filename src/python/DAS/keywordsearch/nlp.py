@@ -14,6 +14,9 @@ lmtzr = WordNetLemmatizer()
 from nltk.corpus import stopwords
 en_stopwords = stopwords.words('english')
 
+create_dict = lambda l: dict((v, v) for v in l)
+
+
 
 # for handling semantic and string similarities
 from nltk.corpus import wordnet
@@ -26,11 +29,26 @@ from DAS.keywordsearch.entity_matchers.string_dist_levenstein import levenshtein
 
 # TODO: use mapping to entity attributes even independent of the entity itself (idf-like inverted index)
 
+from DAS.keywordsearch.utils import memo
 
 
+lemmatize = memo(lmtzr.lemmatize)
+lemmatize.__doc__ = "cached version of lmtzr.lemmatize"
 
+getstem = memo(stemmer.stem)
+getstem.__doc__ = "cached version of PorterStemmer() stem"
+
+# TODO: make it load the lemmatization DB...
+lemmatize("dataset")
+
+# shall be slightly faster...
+en_stopwords_dict = create_dict(en_stopwords)
+processed_stopwords_dict = create_dict(processed_stopwords)
 def filter_stopwords(kwd_list):
-    return filter(lambda k: k not in en_stopwords or k in processed_stopwords, kwd_list)
+    return filter(lambda k: k not in en_stopwords_dict \
+                            or k in processed_stopwords_dict, kwd_list)
+
+
 
 
 """
@@ -61,6 +79,8 @@ def semantic_dist(keyword, match_to, score):
 """
 
 
+
+
 def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
     """
     Basic string-edit distance metrics do not perform well, it either introduces too many
@@ -84,16 +104,16 @@ def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
     # TODO: add specific terms: dataset
 
     # TODO: lemmatizer takes part of speech
-    lemma = lmtzr.lemmatize(keyword)
-    lemma2 = lmtzr.lemmatize(match_to)
+    lemma = lemmatize(keyword)
+    lemma2 = lemmatize(match_to)
     if lemma == lemma2:
         return 0.9
 
     # TODO: similarity shall not be used at all if the words are not similar enough
 
     if mod_enabled('STRING_DIST_ENABLE_NLTK_STEM'):
-        kwd_stem = stemmer.stem(keyword)
-        match_stem = stemmer.stem(match_to)
+        kwd_stem = getstem(keyword)
+        match_stem = getstem(match_to)
 
         if kwd_stem == match_stem:
             return 0.7

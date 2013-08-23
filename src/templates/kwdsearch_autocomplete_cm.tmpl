@@ -142,6 +142,13 @@ file,run,lumi dataset=/Zmm/*/* run in [1, 2, 3] | grep dataset.nevents>1, file.a
             return CodeMirror.Pass;
         }
 
+        function submitQuery(cm){
+            setTimeout(function () {
+                document.getElementById('das_search').submit();
+            }, 100);
+            //return CodeMirror.Pass;
+        }
+
         // TODO: integrate showContextInfo
         //CodeMirror.commands.autocomplete = function(cm) {
         //  CodeMirror.showHint(cm, CodeMirror.xqueryHint);
@@ -161,7 +168,8 @@ file,run,lumi dataset=/Zmm/*/* run in [1, 2, 3] | grep dataset.nevents>1, file.a
                 "Ctrl-Space": "autocomplete",
                 "Tab": "autocomplete",
                 "'.'": passAndHint,
-                "'='": passAndHint
+                "'='": passAndHint,
+                "Enter": submitQuery
             }
         });
     </script>
@@ -175,6 +183,8 @@ file,run,lumi dataset=/Zmm/*/* run in [1, 2, 3] | grep dataset.nevents>1, file.a
         CodeMirror.hint_values = ${known_values};
         CodeMirror.daskeys = ${daskeys_json};
         CodeMirror.hint_daskeys = ${daskeys_json};
+        CodeMirror.hint_fields = ${fields_by_entity_json};
+
 
 
 

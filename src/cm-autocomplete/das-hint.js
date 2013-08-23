@@ -1,3 +1,10 @@
+/*
+TODO:  ajax hints e.g. primary_dataset, dataset
+first provide the entity you are searching for (use-Tab)
+or attr=value pairs for filtering
+
+TODO: may value have a ","?
+ */
 (function () {
     Array.prototype.extend_array = function (array) {
         this.push.apply(this, array);
@@ -102,7 +109,10 @@
             // TODO: su[m] -> max
             if (CodeMirror.templatesHint) {
                 console.log('getCompletions:template');
-                CodeMirror.templatesHint.getCompletions(editor, found, s);
+                console.log(token);
+                 if (token.state && !token.state.value_for) {
+                    CodeMirror.templatesHint.getCompletions(editor, found, s);
+                 }
             }
 
             data = {list: found,
@@ -138,7 +148,7 @@
     /* TODO: hints sort of work, but we have to take care of more general case, when it's not known what the value is - a field, a value or whateva */
 
     var datasetFields = 'status creation_time modification_time tag nfiles nblocks size modified_by name datatype created_by nevents';
-    var dasEntities = 'status group monitor parent config lumi site dataset release role user file child tier run summary primary_dataset block jobsummary'; // TODO: and more...
+    //var dasEntities = 'status group monitor parent config lumi site dataset release role user file child tier run summary primary_dataset block jobsummary'; // TODO: and more...
     var fileFields = 'adler32 block_name checksum created_by creation_time file_trigger_tag file_trigger_tag.nevents file_trigger_tag.trigger_tag id last_modified_by md5 modification_time name nevents original_node queryable_meta_data replica replica.creation_time replica.custodial replica.group replica.node_id replica.se replica.site replica.subscribed size';
 
     CodeMirror.hint_fields = {
@@ -146,7 +156,7 @@
         file: 'adler32 block_name checksum created_by creation_time file_trigger_tag file_trigger_tag.nevents file_trigger_tag.trigger_tag id last_modified_by md5 modification_time name nevents original_node queryable_meta_data replica replica.creation_time replica.custodial replica.group replica.node_id replica.se replica.site replica.subscribed size'.split(' ')
     };
 
-    CodeMirror.hint_entities = 'dataset file site primary_dataset lumi'; // TODO: and more...
+    CodeMirror.hint_daskeys = CodeMirror.hint_daskeys || 'dataset file site primary_dataset lumi'.split(' ');
 
 
     // TODO: file entity may actually return replica as well!!!
@@ -164,7 +174,11 @@
         if (!(context && context.length > 0)) {
 
 
-            // TODO: values for high arity daskeys thru ajax
+            // TODO: values for high arity daskeys thru ajax, so far dataset
+            // TODO: dataset wildcard live??!!
+
+            // TODO: block also?
+
             if (token.state.value_for === "dataset") {
                 var req = new Ajax.Request('/das/autocomplete',
                     {
@@ -173,7 +187,7 @@
 
                         parameters: {
                             //dbs_instance: 'cms_dbs_prod_global',
-                            'query': token.string
+                            'query': token.string || '/*/*/*'
                         },
                         onSuccess: function (resp) {
                             console.log('ajax succ', resp);
@@ -199,8 +213,6 @@
                         }
                     });
                 return true;
-
-                //forEach("/Zmm/*/* /*/Zmm/*".split(" "), maybeAdd);
             }
 
         }
@@ -231,23 +243,42 @@
         }
 
         function maybeAdd(str) {
-            if (checkMatch(str) && !arrayContains(found, str))
+            var NO_DUPLICATE_CHECK = false;
+            var N = 500;
+
+            if (found.length == N) {
+                found.push('(showing only first 300 value matches...)');
+                return;
+            }
+            if (found.length > N)
+                return false;
+
+            if (checkMatch(str) &&
+                (NO_DUPLICATE_CHECK || !arrayContains(found, str)))
                 found.push(str);
         }
 
-        function maybeAddField(str) {
+        function maybeAddField(field_data) {
+            var field_name = field_data.name;
+            var field_title = field_data.title;
+            if (field_title)
+                field_title = '<b>'+field_title+'</b><br/>';
+
             var completion = {
-                "moduleFunction": str,
-                "text": "." + str,
-                "className": "CodeMirror-hint-function"
+                "moduleFunction": field_name,
+                "text": "." + field_name,
+                "className": "CodeMirror-hint-attribute"
             };
+
             completion.info = function (completion) {
-                return '<span class="note">Note: Have in mind, that ' +
+                return '' +
+                    field_title +
+                    '<span class="note">Note: Have in mind, that ' +
                     'availability of fields in the results may depend' +
                     ' on the variation of your keywords and therefore' +
                     ' can not be known in advance.';
             };
-            if (("." + str).indexOf(start) == 0 && !arrayContains(found, str)) found.push(completion);
+            if (("." + field_name).indexOf(start) == 0 && !arrayContains(found, field_name)) found.push(completion);
         }
 
 
@@ -265,6 +296,11 @@
 
             // TODO: it seems now I get: dataset.tag=dataset
             if (!obj.state.value_for) {
+                field_data = CodeMirror.hint_fields[context.string];
+                if (field_data !== undefined){
+                    forEach(field_data, maybeAddField);
+                }
+                /*
                 if (context.string == "dataset") {
                     forEach(datasetFields.split(" "), maybeAddField);
                 }
@@ -276,6 +312,7 @@
                     // forEach(coffeescriptKeywords.split(" "), maybeAdd);
                     // we could show the format for example...
                 }
+                */
             }
             else {
                 // complete the attribute values, that we don't have...
@@ -290,7 +327,7 @@
 
             if (!token.state.value_for) {
                 // das keys
-                forEach(dasEntities.split(" "), maybeAdd);
+                forEach(CodeMirror.hint_daskeys, maybeAdd);
                 forEach(keywords, maybeAdd);
 
             }

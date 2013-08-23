@@ -41,6 +41,10 @@ def match_value_dataset(keyword):
         else:
             dataset_score = 1.0
 
+        # prevent number-only-keywords to be matched into datasets with high score
+        if keyword.isnumeric():
+            dataset_score = dataset_score - 0.3
+
     # TODO: shall we check for unique matches?
 
     # it's better to add extra wildcard to make sure the query will work...

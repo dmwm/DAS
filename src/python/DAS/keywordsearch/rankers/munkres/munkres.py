@@ -387,10 +387,7 @@ class Munkres:
         """
         mark cells as excluded [the cell is disabled]
         """
-        #self.cell_excluded = self.__make_matrix(self.n, 0)
-
         for row, col in self.excluded_cells:
-            #self.cell_excluded[row][col] = 1
             self.C[row][col] = sys.maxint
 
 
@@ -461,6 +458,7 @@ class Munkres:
                 if self.marked[i][j] == 1:
                     results += [(i, j)]
 
+        # TODO: generally this shall not be needed...
         results = [ c for c in results
           if c not in self.excluded_cells]
 
@@ -513,10 +511,13 @@ class Munkres:
 
     def __step3(self):
         """
-        Cover each column containing a starred zero. If K columns are
+        Cover each column containing a starred zero.
+        If K= N - |included_cells| columns are
         covered, the starred zeros describe a complete set of unique
         assignments. In this case, Go to DONE, otherwise, Go to Step 4.
         """
+        # col covered = partial sol exist for that col (e.g. keyword)
+
         n = self.n
         count = 0
         for i in range(n):
@@ -528,7 +529,7 @@ class Munkres:
         if count >= n - len(self.included_cells):
             step = 7 # done
         else:
-            step = 4
+            step = 4 # continue
 
         return step
 
@@ -705,9 +706,8 @@ class Munkres:
             self.row_covered[i] = False
             self.col_covered[i] = False
 
-        # mark again the included rows
+        # mark again the force-included rows
         self.mark_included()
-        # TODO: will it work, as we'll have less cells now!!!
 
     def __erase_primes(self):
         """Erase all prime markings"""

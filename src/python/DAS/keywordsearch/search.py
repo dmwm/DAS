@@ -167,26 +167,3 @@ class KeywordSearch:
                                  chunks=chunks)
 
         return self.process_results(keywords, query)
-
-
-    """
-        print search('number of events in dataset *Run2012*PromptReco*/AOD')
-        # site
-        print search('custodial of dataset *Run2012*PromptReco*/AOD')
-        print search(
-            'how many events there are in lumi section 198952 of *Run2012*PromptReco*/AOD'.replace(
-                'how many', 'number of'))
-        print search(
-            'number of events there are in lumi section 198952 of *Run2012*PromptReco*/AOD')
-        print search('global tag *Run2012*PromptReco*/AOD')
-        print search('dataset = Zmm  global tag')
-        print search(
-            'dataset=/GlobalSep07-A/Online-CMSSW_1_6_0_DAQ3/*  run = 20853 number of events')
-        print search(
-            'dataset run=148126 & site=T1_US_FNAL')
-        print search('Zmm "number of events">10')
-        print search('Zmm nevents>10')
-        print search('Zmm block.nevents>10')
-    """
-    # TODO: complex
-    #print search('what is the custodial site of *Run2012*PromptReco*/AOD')

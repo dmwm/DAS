@@ -458,7 +458,6 @@ class DASWebService(DASWebManager):
         # daskeys could be both inputs or outputs
         daskeys_json = json.dumps(daskeys)
 
-        #from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
         #getSchema(self.dasmgr)
         #das_schema_adapter.init(self.dasmgr)
 
@@ -477,14 +476,40 @@ class DASWebService(DASWebManager):
             ent_values[n] = [v for v in values]
         known_values_json = json.dumps(ent_values)
 
-        page = self.templatepage('kwdsearch_autocomplete_cm', dasdict=dasdict,
+        # get all the fields available
+        from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+        from DAS.keywordsearch.metadata.schema_adapter2 import DasSchemaAdapter
+
+        #getSchema().
+        fields_by_ent = DasSchemaAdapter().list_result_fields()
+        #print "========================\n\nfields_by_ent\n\n"
+        #import pprint
+        #pprint.pprint(fields_by_ent)
+        from collections import defaultdict
+        fields_by_entity = defaultdict(list)
+
+
+
+        for ent in fields_by_ent.keys():
+            for field in fields_by_ent[ent].values():
+                fn = field['field']
+                if fn.startswith(ent+'.'):
+                    fn = fn.replace(ent+'.', '', 1)
+                descr = {'name': fn,
+                         'title': field['title'],
+                         # TODO: example usage!!!
+                         }
+                fields_by_entity[ent].append(descr)
+                # TODO: add description!!!
+        fields_by_entity_json = json.dumps(fields_by_entity)
+
+
+        page = self.templatepage('kwdsearch_autocomplete_cm',
+                                 dasdict=dasdict,
                                  known_values=known_values_json,
-                                 daskeys=daskeys, daskeys_json=daskeys_json,
-                                 #daskeys_grouped_json=daskeys_grouped_json,
-                                 #selkeys_values=selkeys_values,
-                                 #inp_daskeys_json=inp_daskeys_json,
-                                 #out_daskeys_json=out_daskeys_json,
-                                 mapreduce=mapreduce)
+                                 daskeys=daskeys,
+                                 daskeys_json=daskeys_json,
+                                 fields_by_entity_json=fields_by_entity_json)
         return self.page(page, response_div=False)
 
 
@@ -1078,7 +1103,7 @@ class DASWebService(DASWebManager):
             ctime = (time.time()-time0)
             if  view == 'list' or view == 'table':
                 # TODO: it seems it is here that results are being rendered of a completed query
-                print 'list|table status=ok'
+                print 'will check if query rewrite needed for nested queries'
                 # If some of given filters do not exist in the results, check if this could be easily resolved by querying entity by its PK
                 # TODO: initial query is not necessarily what we want, especially if we have wildcards...
                 generated_query_msg = self.repmgr.check_filter_existence(initial_das_query)

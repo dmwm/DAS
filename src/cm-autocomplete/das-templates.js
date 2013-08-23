@@ -16,21 +16,26 @@
 
         // aggregators
         {"name": "min", "description": "returns MIN value for the given field",
-            "template": " min(${field})"},
+            "template": " min(${field})",
+            "className": "CodeMirror-hint-function"},
 
         {"name": "max", "description": "returns MAX value for the given field",
-            "template": " max(${field})"},
+            "template": " max(${field})",
+        "className": "CodeMirror-hint-function"},
 
         {"name": "sum", "description": "return SUM of values for the given field",
-            "template": " sum(${field})"},
+            "template": " sum(${field})",
+        "className": "CodeMirror-hint-function"},
 
         {"name": "count", "description": "gives COUNT of *non null entries* for the given field",
-            "template": " count(${field})"},
+            "template": " count(${field})",
+        "className": "CodeMirror-hint-function"},
 
         // TODO: preconditions
         // e.g. TODO: here precondition would be no |, and no other operators
         {"name": "unique", "description": "select only UNIQUE records\n (must go after a pipe sign |) ",
-            "template": " unique"},
+            "template": " unique",
+        "className": "CodeMirror-hint-function"},
 
 
     ]};

@@ -1,18 +1,20 @@
 """
+Code based on Ranked-assignment paper (TODO: ref)
+Ranked List of K-best solutions for the Assignment Problem
+
+Modification to support contextualization partially based on KEYRY paper.
+
+
 Related implementations and documentation:
 https://code.google.com/p/java-k-best/
 
-Some info on Munkres Assignment: http://csclab.murraystate.edu/bob.pilgrim/445/munkres.html
+Some other info on Munkres Assignment:
+http://csclab.murraystate.edu/bob.pilgrim/445/munkres.html
 """
 
 
-import sys
-
-# from munkres import Munkres, print_matrix
-import pprint
 from DAS.keywordsearch.rankers.munkres.munkres import Munkres
 
-from itertools import imap
 
 INCL_INDEX = 0
 EXCL_INDEX = 1
@@ -32,9 +34,11 @@ class MunkresRanked:
 
 
     def getf(self):
-        maxfunc = min
-        # initially Munkres is intended to minimize the total cost
+        """
+        initially Munkres is intended to minimize the total cost
         # if instead we want to maximize the scores, invert them
+        """
+        maxfunc = min
         if self._maximize:
             maxfunc = max
         maxfunc = min
@@ -285,94 +289,10 @@ class MunkresRanked:
 
 
 
-def permute(a, results):
-    if len(a) == 1:
-        results.insert(len(results), a)
-
-    else:
-        for i in range(0, len(a)):
-            element = a[i]
-            a_copy = [a[j] for j in range(0, len(a)) if j != i]
-            subresults = []
-            permute(a_copy, subresults)
-            for subresult in subresults:
-                result = [element] + subresult
-                results.insert(len(results), result)
-
-
-def exhaustive_search(matrix, k=10, maximize= False):
-    '''
-    runs exhaustive search to rank the assignments
-    '''
-
-    permutations = []
-    permute(range(len(matrix)), permutations) # [0, 1, 2] for a 3x3 matrix
-
-    #print permutations
-
-    import heapq
-    def cmp_gt(x, y):
-    # Use __lt__ if available; otherwise, try __le__.
-    # In Py3.x, only __lt__ will be called.
-        return (x > y) if hasattr(x, '__gt__') else (not y >= x)
-
-    if not maximize:
-        heapq.cmp_lt = cmp_gt
-
-    results = []
-
-
-    # TODO: heap query do not work in ascending order... is it implemented in C?
-
-    # TODO: get proper permutations. itertools?
-    n = len(matrix)
-    for i, cols in enumerate(permutations):
-            cells = zip(range(n), cols)
-
-            cost = sum(matrix[row][col]
-                       for row, col in cells)
-
-            r = (cost, set(cells))
-
-            if False and k and len(results) >= k:
-                heapq.heappushpop(results, r)
-            else:
-                heapq.heappush(results, r)
-
-    return results
-
-
-
-    #test_munkres()
-
-
-
-
-
 if __name__ == '__main__':
+    import munkres_list_test
+    munkres_list_test.run_tests()
+    # TODO: inverted direction do not allways work? problem with maxint?
+    # well well, asssuming that values are between 0.0-1.0 we may easily overcome this...
 
 
-
-
-
-    #test_ranked_assignment_float(maximize=False)
-
-    #test_ranked_assignment_float(maximize=True)
-
-
-
-    def test_munkres():
-        pass
-
-        '''
-        vidma@vidma-laptop:/storage/DAS/DAS_code/DAS/munkres/java-k-best-1.00/src$ java com.google.code.javakbest.Test
-        Solution 0 (1.78051973502884):
-        (0, 1)	(1, 2)	(2, 3)	(3, 4)	(4, 0)
-        Solution 1 (1.916943031547661):
-        (0, 4)	(1, 2)	(2, 3)	(3, 0)	(4, 1)
-        Solution 2 (2.0714331273548563):
-        (0, 0)	(1, 2)	(2, 3)	(3, 4)	(4, 1)
-        Solution 3 (2.3604129886857486):
-        (0, 3)	(1, 2)	(2, 4)	(3, 0)	(4, 1)
-        Solution 4 (2.421300962484084):
-        (0, 2)	(1, 4)	(2, 3)	(3, 0)	(4, 1)	'''

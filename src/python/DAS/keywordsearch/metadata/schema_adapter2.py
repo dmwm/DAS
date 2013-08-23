@@ -1,7 +1,9 @@
 __author__ = 'vidma'
 
 import pprint
-from collections import namedtuple
+from collections import namedtuple, defaultdict
+from itertools import ifilter
+
 
 from DAS.core.das_core import DASCore
 
@@ -11,9 +13,12 @@ from DAS.keywordsearch.config import EXCLUDE_RECORDS_WITH_ERRORS, DEBUG
 # TODO: now multiple entities can be returned (compound lookups)
 
 
-ApiInputParamEntry = namedtuple('ApiInputParamsEntry',
-                ['api_entity', 'api_params_set', 'req_params', 'api', 'lookup'])
+ApiDef = namedtuple('ApiInputParamsEntry',
+                ['api_entity', 'api_params_set', 'req_params', 'api', 'lookup',
+                 'wildcard_params'])
 
+
+# TODO: is it fast to call constructor each time to get the instance?!!
 
 class DasSchemaAdapter(object):
     """
@@ -21,6 +26,7 @@ class DasSchemaAdapter(object):
     """
 
     __instance = None
+
     def __new__(cls, dascore=None):
         """
         this will allow accessing schema even without holding reference to it,
@@ -86,33 +92,94 @@ class DasSchemaAdapter(object):
 
     @property
     def apis_by_their_input_contraints(self):
-        global apis_by_their_input_contraints
-        return apis_by_their_input_contraints
-
+        #global apis_by_their_input_contraints
+        return self._apis_by_their_input_contraints
 
 
     # Discover APIs
+    def _get_api_definition(self, api, sys, mappings):
+        entity_long = mappings.primary_mapkey(sys, api)
+        entity_short = mappings.primary_key(sys, api)
+        api_info = mappings.api_info(api)
+        lookup_key = api_info['lookup']
+        if ',' in lookup_key:
+            print '--------'
+            print 'Sys:', sys, 'api:', api
+            print 'PK: ', entity_short, 'primary_mapkey=', entity_long
+            print 'lookup=', lookup_key
+
+            #entity_names[lookup_key] = lookup_key
+        #pprint.pprint(api_info)
+        #e.g. of api_info record
+        # Sys: dbs api: run_lumi4dataset
+        # primary_key = run ??? why?
+        # {u'_id': ObjectId('51e544e6579d717cc687c426'),
+        #  u'created': 1373979878.512316,
+        #  u'das_map': [{u'api_arg': u'run',
+        #                u'das_key': u'run',
+        #                u'rec_key': u'run.run_number'},
+        #               {u'api_arg': u'lumi',
+        #                u'das_key': u'lumi',
+        #                u'rec_key': u'lumi.number'},
+        #               {u'api_arg': u'dataset',
+        #                u'das_key': u'dataset',
+        #                u'pattern': u'/[\\w-]+/[\\w-]+/[A-Z-]+',
+        #                u'rec_key': u'dataset.name'}],
+        #  u'expire': 3600,
+        #  u'format': u'JSON',
+        #  u'instances': [u'prod', u'dev', u'int'],
+        #  u'lookup': u'run,lumi',
+        #  u'params': {u'dataset': u'required', u'run': u'optional'},
+        #  u'services': u'',
+        #  u'system': u'dbs3',
+        #  u'url': u'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis',
+        #  u'urn': u'run_lumi4dataset',
+        #  u'wild_card': u'*'}
+        # api_info['lookup'] = run,lumi
+        # could contain some low level params like API version, default values etc
+        api_params_lowlev = api_info.get('params', {})
+        das_map = api_info.get('das_map', [])
+        # inputs are those in das_map having api_arg defined
+        # other entries can be for instance PK, and are not passed as input
+        api_inputs = [p for p in das_map
+                      if p.get('api_arg', '')]
+        api_inputs_set = set(p['rec_key'] for p in api_inputs)
+        req_inputs_set = set(p['rec_key']
+                             for p in api_inputs
+                             if
+                             api_params_lowlev.get(p['api_arg'],
+                                                   '') == 'required')
+        api_def = ApiDef(entity_long, api_inputs_set,
+                         req_inputs_set, api, lookup_key, set())
+
+        params_list = []
+        for p in api_inputs:
+            param_constr = p.get('pattern', '')
+            param_def =  {
+                 'api': api,
+                 'system': sys,
+                 'key': p['das_key'],
+                 'entity_long': p['rec_key'],
+                 'constr': param_constr,
+                 'lookup': lookup_key}
+            params_list.append(param_def)
+
+        return api_def, params_list
+
     def discover_apis_and_fields(self, dascore):
         """
         builds list of apis and input/output fields that are defined in service maps
         """
         self.api_input_params = []
-
-        # TODO: rewrite this freshly
+        apis_by_their_input_contraints = defaultdict(list)
 
         mappings = dascore.mapping
 
-        global apis, api, entity_long, entity_short, parameters, api_info, api_params, param_constraint, apis_by_their_input_contraints
-
-
-        # retrieve list all daskeys
+        # retrieve list of all daskeys
         # P.S. apis cover only those DAS keys that are result_types
-
         for das_key in dascore.das_keys(): # the short daskeys
-            long_daskeys = dascore.mapping.mapkeys(das_key)
-
-        for entity_long in long_daskeys:
-            entity_names[entity_long] = das_key
+            for entity_long in mappings.mapkeys(das_key):
+                entity_names[entity_long] = das_key
 
 
         # list all system, api pairs
@@ -121,107 +188,28 @@ class DasSchemaAdapter(object):
 
 
         for sys, api in api_list:
-
             # TODO: primary_(map)key would return only first of lookup keys...
             entity_long = mappings.primary_mapkey(sys, api)
             entity_short = mappings.primary_key(sys, api)
-            parameters = mappings.api2daskey(system=sys, api=api)
-
             entity_names[entity_long or entity_short] = entity_short
-
             daskeys_io['output'][entity_long] = entity_short
 
+            api_def, params_def = self._get_api_definition(api, sys, mappings)
 
-            api_info = mappings.api_info(api)
-            lookup_key = api_info['lookup']
+            for p in params_def:
+                param_constr = p['constr']
+                apis_by_their_input_contraints[param_constr].append(p)
+                daskeys_io['input'][p['entity_long']] = p['key']
 
-
-            if ',' in lookup_key:
-                print '--------'
-                print 'Sys:', sys, 'api:', api
-                print 'PK: ', entity_short, 'primary_mapkey=', entity_long
-                print 'lookup=', lookup_key
-
-                #entity_names[lookup_key] = lookup_key
-
-
-            #pprint.pprint(api_info)
-            #e.g. of api_info record
-            # Sys: dbs api: run_lumi4dataset
-            # primary_key = run ??? why?
-            # {u'_id': ObjectId('51e544e6579d717cc687c426'),
-            #  u'created': 1373979878.512316,
-            #  u'das_map': [{u'api_arg': u'run',
-            #                u'das_key': u'run',
-            #                u'rec_key': u'run.run_number'},
-            #               {u'api_arg': u'lumi',
-            #                u'das_key': u'lumi',
-            #                u'rec_key': u'lumi.number'},
-            #               {u'api_arg': u'dataset',
-            #                u'das_key': u'dataset',
-            #                u'pattern': u'/[\\w-]+/[\\w-]+/[A-Z-]+',
-            #                u'rec_key': u'dataset.name'}],
-            #  u'expire': 3600,
-            #  u'format': u'JSON',
-            #  u'instances': [u'prod', u'dev', u'int'],
-            #  u'lookup': u'run,lumi',
-            #  u'params': {u'dataset': u'required', u'run': u'optional'},
-            #  u'services': u'',
-            #  u'system': u'dbs3',
-            #  u'url': u'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis',
-            #  u'urn': u'run_lumi4dataset',
-            #  u'wild_card': u'*'}
-
-            # api_info['lookup'] = run,lumi
-
-
-            # could contain some low level params like API version, default values etc
-            api_int_params_list = api_info.get('params', {})
-
-            # das map also contains the mapping of the result entity, so the list of params is intersection of the two
-            api_params = [p
-                          for p in api_info.get('das_map', [])
-                          if p.get('api_arg', p['das_key']) \
-                            in set(api_int_params_list.keys())]
-
-            # figure out what are the required params
-            required_api_inputs = set([p_name
-                                       for p_name, p_spec in
-                                       api_int_params_list.items()
-                                       if p_spec == 'required'])
-            required_daskeys = [p['rec_key']
-                                for p in api_params
-                                if p.has_key('api_arg') and p[
-                    'api_arg'] in required_api_inputs]
-            #print required_params
-
-
-            for p in api_params:
-                param_constraint = p.get('pattern', '')
-                apis_by_their_input_contraints[
-                    param_constraint] = apis_by_their_input_contraints.get(
-                    param_constraint,
-                    [])
-
-                apis_by_their_input_contraints[param_constraint].append(
-                    {'api': api,
-                     'system': sys,
-                     'key': p['das_key'],
-                     'entity_long': p['rec_key'],
-                     'constr': param_constraint,
-                     'lookup': lookup_key})
-
-                daskeys_io['input'][p['rec_key']] = p['das_key']
-
-
-            api_def = ApiInputParamEntry(entity_long, set(p['rec_key'] for p in api_params),
-                       set(required_daskeys), api, lookup_key)
+            # the same set of params could come from different systems,
+            # but currently we dont care about this
             if not api_def in self.api_input_params:
                 self.api_input_params.append(api_def)
-            input_output_params_by_api[tuple((sys, api))] = api_def
 
-            if DEBUG: print '\n'
+
         self.entity_names = entity_names
+        self._apis_by_their_input_contraints = apis_by_their_input_contraints
+
 
 
 
@@ -243,63 +231,45 @@ class DasSchemaAdapter(object):
             return self._result_fields_by_entity[result_entity]
 
 
-    def validate_input_params(self, params, entity=None, final_step=False):
+    def validate_input_params(self, params, entity=None, final_step=False,
+                              wildcards=None):
         """
         checks if DIS can answer query with given params.
         """
-        # TODO: need to distinguish between wildcards (?)
+        params = set(params)
 
+        # TODO: need to distinguish between wildcards (?)
         # given input parameters mapping (from keywords to input parameters)
         # there must exist an API, covering these input params
+        fitting_apis = (api for api in self.api_input_params
+                            if params.issubset(api.api_params_set) and \
+                            (entity is None or entity == api.api_entity))
 
-        if final_step:
-            # TODO: check that all required params are included
-            #print 'validate_input_params_mapping(final):',params, entity
-            # currently - a valid mapping shall contain attributes from some api and must satisfy it's minimum input requirements
-            # TODO: at the moment we do not allow additional selection
-            for (api_entity, api_params_set, req_params, api,
-                 lookup) in self.api_input_params:
-                #print set(params), api_params_set, ' api ent:', api_entity
-                if set(params).issubset(api_params_set) \
-                    and set(params).issuperset(req_params) \
-                    and (entity is None or entity == api_entity):
-                    # TODO: why am I returning a tuple here?
-                    return api_entity, api_params_set, req_params
-        else:
-            # requirement for any params mapping is that there must exist such a
-            for imp in self.api_input_params:
-                # (api_entity, api_params_set, api_required_params_set, api,
-                # lookup)
-                if set(params).issubset(imp.api_params_set) and (
-                        entity is None or entity == imp.api_entity):
-                    return True
+        covered_apis = (api for api in fitting_apis
+                            if params.issuperset(api.req_params))
 
-        return False
+        to_match = covered_apis if final_step else fitting_apis
+
+        return next(to_match, False)
 
     def entities_for_inputs(self, params):
         """
-        lists entities that could be retrieved with given parameter set
+        lists entities that could be retrieved with given input params
         """
 
-        entities = {}
-        for (api_entity, api_params_set, req_params, api,
-             lookup) in self.api_input_params:
-        #print set(params), api_params_set, ' api ent:', api_entity
-            if params.issubset(api_params_set) \
-                and params.issuperset(req_params):
-                # yield (api_entity, api_params_set, api_required_params_set)
-                #print 'ok', api_entity
-                if api_entity is None:
-                    print 'API RESULT TYPE IS NONE:', (
-                    api_entity, api_params_set, req_params)
-                    continue
-
-                entities[api_entity] = entities.get(api_entity, [])
-                entities.get(api_entity, []).append(
-                    (api_entity, api_params_set, req_params))
-                #print entities
-
+        entities = defaultdict(list)
+        # the api shall accept the params and to cover all of them
+        matching_apis = (api for api in self.api_input_params
+                         if params.issubset(api.api_params_set)
+                            and params.issuperset(api.req_params))
+        for api in matching_apis:
+            if api.api_entity is None:
+                print 'API RESULT TYPE IS NONE:', api
+                continue
+            entities[api.api_entity].append(
+                (api.api_entity, api.api_params_set, api.req_params))
         return entities
+
 
 
     def get_result_field_title(self, result_entity, field, technical=False,
@@ -339,14 +309,14 @@ class DasSchemaAdapter(object):
 
 
 # ---- TODO: For now, below is ugly -----
-apis_by_their_input_contraints = {}
+#apis_by_their_input_contraints = {}
 
 entity_names = {} #  dataset.name -> values, user, user.email, user.name
 # entities = {'input': [{user.email->user, ..}], 'output': [short_key], }
 daskeys_io = {'input': {}, 'output': {}}
 
 search_field_names = [] # i.e. das key
-input_output_params_by_api = {}
+#input_output_params_by_api = {}
 
 #TODO: entities of API results !!!
 
@@ -468,8 +438,7 @@ if __name__ == '__main__':
     # TODO: what if DB unavailable...?
     from DAS.core.das_core import DASCore
 
-    dascore = DASCore()
-    s = DasSchemaAdapter(dascore)
+    s = DasSchemaAdapter()
     pprint.pprint(s.list_result_fields())
 
     print 'validate input params():', s.validate_input_params(set(),
