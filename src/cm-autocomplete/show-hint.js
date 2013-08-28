@@ -1,6 +1,8 @@
 (function() {
   "use strict";
 
+
+
   CodeMirror.showHint = function(cm, getHints, options) {
     // We want a single cursor position.
     if (cm.somethingSelected()) return;
@@ -28,6 +30,8 @@
   }
 
   Completion.prototype = {
+    none_selected: -1,
+
     close: function() {
       if (!this.active()) return;
 
@@ -42,9 +46,11 @@
     },
 
     pick: function(data, i) {
-      var completion = data.list[i];
-      if (completion.hint) completion.hint(this.cm, data, completion);
-      else this.cm.replaceRange(getText(completion), data.from, data.to);
+      if (i != Completion.none_selected){
+          var completion = data.list[i];
+          if (completion.hint) completion.hint(this.cm, data, completion);
+          else this.cm.replaceRange(getText(completion), data.from, data.to);
+      }
       this.close();
     },
 
@@ -151,12 +157,14 @@
 
     var hints = this.hints = document.createElement("ul");
     hints.className = "CodeMirror-hints";
-    this.selectedHint = 0;
+
+    // hack not to have first entry selected
+    this.selectedHint = Completion.none_selected;
 
     var completions = data.list;
     for (var i = 0; i < completions.length; ++i) {
       var elt = hints.appendChild(document.createElement("li")), cur = completions[i];
-      var className = "CodeMirror-hint" + (i ? "" : " CodeMirror-hint-active");
+      var className = "CodeMirror-hint" + (i != this.selectedHint ? "" : " CodeMirror-hint-active");
       if (cur.className != null) className = cur.className + " " + className;
       elt.className = className;
       if (cur.render) cur.render(elt, data, cur);
@@ -199,7 +207,9 @@
       menuSize: function() { return widget.screenAmount(); },
       length: completions.length,
       close: function() { completion.close(); },
-      pick: function() { widget.pick(); }
+      pick: function() { widget.pick(); },
+      is_none_selected: function(){
+          return widget.selectedHint == Completion.none_selected}
     }));
 
     if (options.closeOnUnfocus !== false) {
@@ -255,17 +265,27 @@
     },
 
     changeActive: function(i) {
+      console.log('changeActive, i=', i);
+      if (isNaN(i)) i=0;
+
       i = Math.max(0, Math.min(i, this.data.list.length - 1));
       if (this.selectedHint == i) return;
       var node = this.hints.childNodes[this.selectedHint];
-      node.className = node.className.replace(" CodeMirror-hint-active", "");
+      // we now allow no selection...
+      if (node !== undefined){
+        node.className = node.className.replace(" CodeMirror-hint-active", "");
+      }
       node = this.hints.childNodes[this.selectedHint = i];
-      node.className += " CodeMirror-hint-active";
-      if (node.offsetTop < this.hints.scrollTop)
-        this.hints.scrollTop = node.offsetTop - 3;
-      else if (node.offsetTop + node.offsetHeight > this.hints.scrollTop + this.hints.clientHeight)
-        this.hints.scrollTop = node.offsetTop + node.offsetHeight - this.hints.clientHeight + 3;
-      CodeMirror.signal(this.data, "select", this.data.list[this.selectedHint], node);
+      if (node !== undefined){
+          node.className += " CodeMirror-hint-active";
+          if (node.offsetTop < this.hints.scrollTop)
+            this.hints.scrollTop = node.offsetTop - 3;
+          else if (node.offsetTop + node.offsetHeight > this.hints.scrollTop + this.hints.clientHeight)
+            this.hints.scrollTop = node.offsetTop + node.offsetHeight - this.hints.clientHeight + 3;
+          CodeMirror.signal(this.data, "select", this.data.list[this.selectedHint], node);
+      } else {
+          this.selectedHint = Completion.none_selected;
+      }
     },
 
     screenAmount: function() {

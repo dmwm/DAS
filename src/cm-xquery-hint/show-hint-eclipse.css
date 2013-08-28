@@ -4,17 +4,19 @@
   border : double rgb(212, 208, 200) 3px;
   max-height: 200px;
   max-width: 400px;
-  min-width: 400px;
+  min-width: 150px;
+  width: auto;
   overflow: auto;
   background: white;
-  font-family: Tahoma;
+  font-family: Tahoma, serif;
   font-size: 12px;
-  padding: 0px;
+  padding: 0;
 }
 
 .CodeMirror-hint {
   margin: 0px;
   padding: 0px;
+  /*padding-right: 5px;*/
   border: 0px solid transparent;
   list-style-type: none;
   cursor: pointer;

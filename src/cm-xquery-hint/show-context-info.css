@@ -33,3 +33,8 @@
   font-size: 12px;
   padding: 5px;
 }
+
+.CodeMirror-hints-contextInfo {
+  max-width: 200px;
+  min-width: 200px;
+}

@@ -283,7 +283,7 @@ class DASWebService(DASWebManager):
         """
         Define footer for all DAS web pages
         """
-        return self.templatepage('das_bottom', div=response_div,
+        return self.templatepage('das_bottom', div=response_div, base=self.base,
                 version=DAS.version)
 
     def page(self, content, ctime=None, response_div=True):
@@ -292,7 +292,7 @@ class DASWebService(DASWebManager):
         """
         page  = self.top()
         page += content
-        page += self.templatepage('das_bottom', ctime=ctime, 
+        page += self.templatepage('das_bottom', ctime=ctime,  base=self.base,
                                   version=DAS.version, div=response_div)
         return page
 
@@ -431,7 +431,55 @@ class DASWebService(DASWebManager):
         pprint.pprint(chunks, schema_ws, values_ws)
 
 
+    def _get_fields_by_entity(self):
+        # get all the fields available
+        from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+        from DAS.keywordsearch.metadata.schema_adapter2 import DasSchemaAdapter
+        #getSchema().
+        fields_by_ent = DasSchemaAdapter().list_result_fields()
+        from collections import defaultdict
 
+        fields_by_entity = defaultdict(list)
+        for ent in fields_by_ent.keys():
+            for field in fields_by_ent[ent].values():
+                fn = field['field'].replace(ent + '.', '', 1)
+                descr = {'name': fn,
+                         'title': field['title'],
+                         # TODO: example usage!!!
+                }
+                fields_by_entity[ent].append(descr)
+                # TODO: add description!!!
+        for ent in fields_by_entity.values():
+            ent.sort(key=lambda x: x['name'])
+        return fields_by_entity
+
+    def _get_known_values(self):
+        from DAS.keywordsearch.metadata.input_values_tracker import get_fields_tracked, get_tracker
+
+        ent_values = {}
+        # values for fields in service results
+        for field in get_fields_tracked():
+            values = get_tracker(field).find('*', limit=-1)
+            n = field.replace('.name', '')
+            ent_values[n] = [v for v in values]
+        return ent_values
+
+    def _get_daskeys_list(self):
+        # get list of all daskeys. TODO: move to schema adapter or whatever?
+        dasdict = {}
+        daskeys = []
+        for system, keys in self.dasmgr.mapping.daskeys().iteritems():
+            if system not in self.dasmgr.systems:
+                continue
+            tmpdict = {}
+            for key in keys:
+                tmpdict[key] = self.dasmgr.mapping.lookup_keys(system, key)
+                if key not in daskeys:
+                    daskeys.append(key)
+            dasdict[system] = dict(keys=dict(tmpdict),
+                                   apis=self.dasmgr.mapping.list_apis(system))
+
+        return daskeys
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -440,74 +488,14 @@ class DASWebService(DASWebManager):
         """
         new autocompletion
         """
-        # get list of all daskeys. TODO: move to schema adapter or whatever?
-        dasdict = {}
-        daskeys = []
-        for system, keys in self.dasmgr.mapping.daskeys().iteritems():
-            if  system not in self.dasmgr.systems:
-                continue
-            tmpdict = {}
-            for key in keys:
-                tmpdict[key] = self.dasmgr.mapping.lookup_keys(system, key)
-                if  key not in daskeys:
-                    daskeys.append(key)
-            dasdict[system] = dict(keys=dict(tmpdict),
-                                   apis=self.dasmgr.mapping.list_apis(system))
-        mapreduce = [r for r in self.dasmgr.rawcache.get_map_reduce()]
 
-        # daskeys could be both inputs or outputs
-        daskeys_json = json.dumps(daskeys)
-
-        #getSchema(self.dasmgr)
-        #das_schema_adapter.init(self.dasmgr)
-
-        from DAS.keywordsearch.metadata.input_values_tracker import get_fields_tracked, get_tracker
-        ent_values = {}
-
-
-        #inp_daskeys, out_daskeys = getSchema().get_io_daskeys()
-        #inp_daskeys_json = json.dumps(inp_daskeys)
-        #out_daskeys_json = json.dumps(out_daskeys)
-
-        # values for fields in service results
-        for field in get_fields_tracked():
-            values = get_tracker(field).find('*', limit=-1)
-            n = field.replace('.name', '')
-            ent_values[n] = [v for v in values]
-        known_values_json = json.dumps(ent_values)
-
-        # get all the fields available
-        from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
-        from DAS.keywordsearch.metadata.schema_adapter2 import DasSchemaAdapter
-
-        #getSchema().
-        fields_by_ent = DasSchemaAdapter().list_result_fields()
-        #print "========================\n\nfields_by_ent\n\n"
-        #import pprint
-        #pprint.pprint(fields_by_ent)
-        from collections import defaultdict
-        fields_by_entity = defaultdict(list)
-
-
-
-        for ent in fields_by_ent.keys():
-            for field in fields_by_ent[ent].values():
-                fn = field['field']
-                if fn.startswith(ent+'.'):
-                    fn = fn.replace(ent+'.', '', 1)
-                descr = {'name': fn,
-                         'title': field['title'],
-                         # TODO: example usage!!!
-                         }
-                fields_by_entity[ent].append(descr)
-                # TODO: add description!!!
-        fields_by_entity_json = json.dumps(fields_by_entity)
+        daskeys_json = json.dumps(self._get_daskeys_list()) # still daskeys could be both inputs or outputs
+        known_values_json = json.dumps(self._get_known_values())
+        fields_by_entity_json = json.dumps(self._get_fields_by_entity())
 
 
         page = self.templatepage('kwdsearch_autocomplete_cm',
-                                 dasdict=dasdict,
                                  known_values=known_values_json,
-                                 daskeys=daskeys,
                                  daskeys_json=daskeys_json,
                                  fields_by_entity_json=fields_by_entity_json)
         return self.page(page, response_div=False)
@@ -702,7 +690,36 @@ class DASWebService(DASWebManager):
         uinput = getarg(kwargs, 'input', '') 
         return self.page(self.form(uinput=uinput, cards=True))
 
+
     def form(self, uinput='', instance=None, view='list', cards=False):
+        """
+        provide input DAS search form
+        """
+        if  "'" in uinput: # e.g. file.creation_date>'20120101 12:01:01'
+            uinput = uinput.replace("'", '"')
+        if  not instance:
+            instance = self.dbs_global
+        cards = self.templatepage('das_cards', base=self.base, show=cards, \
+                width=900, height=220, cards=help_cards(self.base))
+        daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
+
+
+        # new autocompletion
+        daskeys_json = json.dumps(self._get_daskeys_list()) # still daskeys could be both inputs or outputs
+        known_values_json = json.dumps(self._get_known_values())
+        fields_by_entity_json = json.dumps(self._get_fields_by_entity())
+
+
+        page  = self.templatepage('das_searchform', input=uinput, \
+                init_dbses=list(self.dbs_instances), daskeys=daskeys, \
+                base=self.base, instance=instance, view=view, cards=cards,
+                known_values=known_values_json,
+                daskeys_json=daskeys_json,
+                fields_by_entity_json=fields_by_entity_json
+                )
+        return page
+
+    def _form(self, uinput='', instance=None, view='list', cards=False):
         """
         provide input DAS search form
         """

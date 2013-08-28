@@ -256,7 +256,8 @@ div#banner h3
 }
 .das_form {
         padding:1em;
-        border:1px solid #ccc;
+        border:1px solid #ddd;
+        border-radius: 4px;
         background:#f8f8f8;
 }
 .label {

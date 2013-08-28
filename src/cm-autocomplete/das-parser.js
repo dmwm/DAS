@@ -1,3 +1,5 @@
+var DEBUG = false;
+
 CodeMirror.defineMode('das', function (config) {
 
     CodeMirror.regexpOperator =  /[><=]/;
@@ -28,7 +30,7 @@ CodeMirror.defineMode('das', function (config) {
 
     // Keywords
     // if then do else elif while until for in esac fi fin fil done exit set unset export function
-    var das_keywords = 'last in between ';
+    var das_keywords = 'last in between date';
     var das_builin = 'grep unique sum count min max avg |';
     das_builin += das_builin.toUpperCase();
     das_keywords += das_keywords.toUpperCase();
@@ -72,7 +74,7 @@ CodeMirror.defineMode('das', function (config) {
         var cur = stream.current();
 
         //state.within_value_for_operator = true;
-        console.log('op:', cur, 'value_for:', state.value_for);
+        if (DEBUG) console.log('op:', cur, 'value_for:', state.value_for);
 
         // next is potentially a value
         state._eatAttr_next_step = 'value';
@@ -123,7 +125,7 @@ CodeMirror.defineMode('das', function (config) {
                 stream.eatWhile(CodeMirror.attributeRE);
                 var cur = stream.current();
                 state.attribute_name = cur;
-                console.log('attr:', cur, 'next:', stream.peek());
+                if (DEBUG) console.log('attr:', cur, 'next:', stream.peek());
 
                 // TODO: append if needed...
 
@@ -137,7 +139,7 @@ CodeMirror.defineMode('das', function (config) {
                 break;
 
             case 'op':
-                console.log('processing operator, token=', state, state.value_for);
+                if (DEBUG) console.log('processing operator, token=', state, state.value_for);
 
                 if (testOperator(stream)){
                     label =  tokenOperator(stream, state);
@@ -145,6 +147,8 @@ CodeMirror.defineMode('das', function (config) {
 
                     if (state.attribute_name) {
                         state.value_for = state.attribute_name;
+                        // mark daskey as used
+                        //state.daskeys_used.push(state.attribute_name);
                     }
 
                 } else {
@@ -153,7 +157,7 @@ CodeMirror.defineMode('das', function (config) {
                     scheduleCleanState(stream, state);
 
                 }
-                console.log('processing operator, token=', state, state.value_for);
+                if (DEBUG) console.log('processing operator, token=', state, state.value_for);
 
                 break;
 
@@ -234,7 +238,7 @@ CodeMirror.defineMode('das', function (config) {
 
         // do we have attribute that follows
         if (stream.match(CodeMirror.attributeRE_strict, false, true)) {
-            console.log('attr re strict passed');
+            if (DEBUG) console.log('attr re strict passed');
             stream.eatWhile(CodeMirror.wordRE);
             state._eatAttr_next_step = 'attr';
 
@@ -250,7 +254,7 @@ CodeMirror.defineMode('das', function (config) {
 
 
         if (testOperator(stream) && /\w/.test(cur)){
-            console.log('test op passed, cur: ', cur);
+            if (DEBUG) console.log('test op passed, cur: ', cur);
             state.value_for = cur;
             // tokenOperator(stream, state) will be called in next iteration
             state._eatAttr_next_step = 'op';
@@ -283,7 +287,7 @@ CodeMirror.defineMode('das', function (config) {
 
     return {
         startState: function () {
-            return {tokens: []};
+            return {tokens: [], daskeys_used: []};
         },
         token: function (stream, state) {
             if (stream.eatSpace()) return null;
