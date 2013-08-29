@@ -11,11 +11,9 @@ import re
 
 # for handling semantic and string similarities
 from DAS.keywordsearch.metadata import input_values_tracker
-
-#from DAS.keywordsearch.metadata.das_schema_adapter import apis_by_their_input_contraints
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
-
 from DAS.keywordsearch.entity_matchers.value_matching_dataset import match_value_dataset
+from DAS.utils import regex
 
 def keyword_value_weights(keyword):
     """
@@ -33,7 +31,7 @@ def keyword_value_weights(keyword):
     # even if combined queries were implemented/enabled, we still wish to match API parameters with higher priority
 
     scores_by_entity = {}
-    for (score, matches_for_api) in keyword_regexp_weights(keyword):
+    for score, matches_for_api in keyword_regexp_weights(keyword):
         for m in matches_for_api:
             entity_matched = m['entity_long']
 
@@ -110,8 +108,11 @@ def keyword_regexp_weights(keyword):
                 score = 0.5
 
             score = (score, apis)
-
             scores.append(score)
+
+    # append date match...
+    if regex.date_yyyymmdd_pattern.match(keyword):
+        scores.append((0.95, [{'entity_long': 'date'}]))
 
     scores.sort(key=lambda item: item[0], reverse=True)
     #print scores

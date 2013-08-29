@@ -396,12 +396,17 @@ def store_result_and_check_projections(
     generating with mapping the projections/api result post_filters
     """
 
+    wildcards = set(key for key, val in values_mapping.iteritems()
+                       if '*' in val)
+    if wildcards:
+        print wildcards
+
     #print keyword_index, 'final'
     # DAS requires at least one filtering attribute
     if fields_covered_by_values_set and fields_covered_by_values_set.issuperset(
             fields_included) and \
             getSchema().validate_input_params(fields_included, final_step=True,
-                                  entity=result_type):
+                                  entity=result_type, wildcards=wildcards):
         #if UGLY_DEBUG: print 'VALUES MATCH:', (
         #    result_type, fields_included, values_mapping ),\
         #validate_input_params(fields_included, final_step=True,
@@ -418,6 +423,11 @@ def store_result_and_check_projections(
 
             for result_type in entities.keys():
                 adjusted_score = old_score
+
+                # enforce wildcard check again, as without lookup(result_type) it was not checked
+                if not getSchema().validate_input_params(fields_included, final_step=True,
+                                  entity=result_type, wildcards=wildcards):
+                    continue
 
                 if result_type in values_mapping.keys():
                     adjusted_score += SCORE_INCREASE_FOR_SAME_ENTITY_IN_PARAM_AND_RESULT

@@ -143,14 +143,39 @@ class DasSchemaAdapter(object):
         # other entries can be for instance PK, and are not passed as input
         api_inputs = [p for p in das_map
                       if p.get('api_arg', '')]
+
+        api_inputs_wo_api_arg = [p for p in das_map[1:]
+                                 if not p.get('api_arg', '')]
+
+        #if 'date' in api_inputs_wo_api_arg:
+        # TODO: this seem to be correct, but still need to check if das_map[0] could also be param without api_arg
+        api_inputs.extend(api_inputs_wo_api_arg)
+
+        is_required = lambda p: \
+            'api_arg' in p and api_params_lowlev.get(p['api_arg'],'') == 'required'
+
         api_inputs_set = set(p['rec_key'] for p in api_inputs)
         req_inputs_set = set(p['rec_key']
                              for p in api_inputs
-                             if
-                             api_params_lowlev.get(p['api_arg'],
-                                                   '') == 'required')
+                             if is_required(p))
         api_def = ApiDef(entity_long, api_inputs_set,
                          req_inputs_set, api, lookup_key, set())
+
+
+
+        if True and api_inputs_wo_api_arg:
+            print 'Sys:', sys, 'api:', api
+            print 'lookup:', lookup_key
+            print 'entity_long:', entity_long
+            print 'req inputs:', req_inputs_set
+
+            print 'das_map w/o api_arg:', api_inputs_wo_api_arg
+
+            print 'other inputs:', api_inputs
+            print 'das map: ', das_map
+
+            print '-----------'
+
 
         params_list = []
         for p in api_inputs:
@@ -211,7 +236,18 @@ class DasSchemaAdapter(object):
         self._apis_by_their_input_contraints = apis_by_their_input_contraints
 
 
+    def check_result_field_match(self, fieldname):
+        """
+        checks for complete match to a result field
+        """
+        if not '.' in fieldname:
+            return None
 
+        entity, field = fieldname.split('.', 1) #i.e. maxsplit=1
+        fields = self._result_fields_by_entity.get(entity, {})
+        r = fields.get(fieldname)
+        if r:
+            return entity, r
 
 
     def list_result_fields(self, entity=None, inputs=None):
@@ -237,6 +273,17 @@ class DasSchemaAdapter(object):
         checks if DIS can answer query with given params.
         """
         params = set(params)
+        wildcards = wildcards or set([])
+
+        # check if wildcards are allowed. currently very simple rules
+        if final_step and wildcards and entity:
+            if entity == 'dataset.name' and wildcards == set(['dataset.name']):
+                # TODO: check presense of other params?!
+                pass
+            elif entity == 'file.name' and wildcards == set(['file.name']) and \
+                    ('dataset.name' in wildcards or 'block.name' in wildcards):
+                pass
+            else: return False
 
         # TODO: need to distinguish between wildcards (?)
         # given input parameters mapping (from keywords to input parameters)
@@ -296,6 +343,13 @@ class DasSchemaAdapter(object):
         return title
 
     def print_debug(self):
+        print "ALL APIS:"
+        #(entity, params, required, api_name, lookup)
+        print '\n'.join(["%s(%s) --> %s" % \
+                            (api.api, ','.join(api.api_params_set), api.api_entity)
+                         for api in self.api_input_params
+                         ])
+
         print "APIS without required params:"
         #(entity, params, required, api_name, lookup)
         print '\n'.join(["%s(%s) --> %s" % \
@@ -439,7 +493,7 @@ if __name__ == '__main__':
     from DAS.core.das_core import DASCore
 
     s = DasSchemaAdapter()
-    pprint.pprint(s.list_result_fields())
+    #pprint.pprint(s.list_result_fields())
 
     print 'validate input params():', s.validate_input_params(set(),
                                                               entity='dataset.name')
@@ -453,3 +507,13 @@ if __name__ == '__main__':
         set(['dataset.name', 'jobsummary.name']), entity='run.run_number',
         final_step=True)
 
+
+
+    print 'trying to validate Q jobsummary date=20120101: ',\
+        s.validate_input_params(set(['date']), entity='jobsummary', final_step=True,
+                              wildcards=None)
+
+
+    print 'trying to validate Q monitor date=20120101: ',\
+        s.validate_input_params(set(['date']), entity='monitor', final_step=True,
+                              wildcards=None)

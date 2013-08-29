@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 __author__ = 'vidma'
 
 import math
@@ -49,7 +51,7 @@ def generate_chunks_no_ent_filter(keywords):
 
     # we may also need to remove operators, e.g. "number of events">10, 'block.nevents>10'
 
-    matches = {}
+    matches = defaultdict(list)
 
     for kwd in phrase_kwds:
         phrase = get_keyword_without_operator(kwd)
@@ -76,9 +78,6 @@ def generate_chunks_no_ent_filter(keywords):
             if USE_IR_SCORE_NORMALIZATION_LOCAL:
                 r['score'] /= max_score
 
-
-            if not matches.has_key(entity):
-                matches[entity] = []
             matches[entity].append(r)
 
     # now process partial matches and their combinations
@@ -87,6 +86,23 @@ def generate_chunks_no_ent_filter(keywords):
     for l in xrange(1, max_len+1):
         for start in xrange(0, str_len-l+1):
             chunk = keywords[start:start+l]
+
+            # check for full name match to a attribute
+            if len(chunk) == 1 and '.' in chunk[0]:
+                match = getSchema().check_result_field_match(chunk[0])
+                if match:
+                    entity, field = match
+                    r = {'field': field}
+                    r['len'] = 1
+                    #r['field']
+                    r['tokens_required'] = chunk
+                    r['score'] = 20.0
+                    matches[entity].append(r)
+
+
+
+
+            print 'chunk:', chunk
 
             # exclude chunks with "a b c" (as these were processed earlier)
             if filter(lambda c:' ' in c, chunk):
@@ -122,8 +138,7 @@ def generate_chunks_no_ent_filter(keywords):
                 # therefore, if nothing is pointing to block.replica we shall not choose block.replica.site
                 # TODO: shall we divide by variance or stddev?
 
-                if not matches.has_key(entity):
-                    matches[entity] = []
+
                 matches[entity].append(r)
         # Use longest useful matching  as a heuristic to filter out crap, e.g.
     # file Zmm number of events > 10, shall match everything,

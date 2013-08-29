@@ -10,6 +10,7 @@ import DAS.keywordsearch.entity_matchers.result_fields_by_chunks
 from DAS.keywordsearch.entity_matchers.name_matching import keyword_schema_weights
 from DAS.keywordsearch.entity_matchers.value_matching import keyword_value_weights
 
+from DAS.keywordsearch.entity_matchers.result_fields_by_chunks import generate_chunks_no_ent_filter
 from DAS.keywordsearch.config import MINIMAL_DEBUG
 
 en_stopwords = stopwords.words('english')
@@ -43,6 +44,6 @@ def get_entry_points(tokens, DEBUG=False):
         pprint.pprint(schema_ws)
         print '=============== Values mappings (TODO) ============'
         pprint.pprint(values_ws)
-    chunks = DAS.keywordsearch.entity_matchers.result_fields_by_chunks.generate_chunks_no_ent_filter(keywords)
+    chunks = generate_chunks_no_ent_filter(keywords)
     return chunks, schema_ws, values_ws
 
