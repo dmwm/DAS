@@ -26,6 +26,8 @@ class DasSchemaAdapter(object):
     """
 
     __instance = None
+    _lookup_keys = set()
+
 
     def __new__(cls, dascore=None):
         """
@@ -49,9 +51,11 @@ class DasSchemaAdapter(object):
         print 'DasSchemaAdapter.init(); DAS CORE:'
         pprint.pprint(dascore)
 
-        self.discover_apis_and_fields(dascore)
 
-        self.lookup_keys = set(self.entity_names.values())
+        self.discover_apis_and_fields(dascore)
+        self._lookup_keys |= set(self.entity_names.values())
+        self._lookup_keys = list(self._lookup_keys)
+
 
         self.print_debug()
         self._result_fields_by_entity = init_result_fields_list(dascore)
@@ -76,6 +80,9 @@ class DasSchemaAdapter(object):
         }
     }
 
+    @property
+    def lookup_keys(self):
+        return self._lookup_keys
 
     @property
     def cms_synonyms(self):
@@ -108,34 +115,8 @@ class DasSchemaAdapter(object):
             print 'PK: ', entity_short, 'primary_mapkey=', entity_long
             print 'lookup=', lookup_key
 
-            #entity_names[lookup_key] = lookup_key
-        #pprint.pprint(api_info)
-        #e.g. of api_info record
-        # Sys: dbs api: run_lumi4dataset
-        # primary_key = run ??? why?
-        # {u'_id': ObjectId('51e544e6579d717cc687c426'),
-        #  u'created': 1373979878.512316,
-        #  u'das_map': [{u'api_arg': u'run',
-        #                u'das_key': u'run',
-        #                u'rec_key': u'run.run_number'},
-        #               {u'api_arg': u'lumi',
-        #                u'das_key': u'lumi',
-        #                u'rec_key': u'lumi.number'},
-        #               {u'api_arg': u'dataset',
-        #                u'das_key': u'dataset',
-        #                u'pattern': u'/[\\w-]+/[\\w-]+/[A-Z-]+',
-        #                u'rec_key': u'dataset.name'}],
-        #  u'expire': 3600,
-        #  u'format': u'JSON',
-        #  u'instances': [u'prod', u'dev', u'int'],
-        #  u'lookup': u'run,lumi',
-        #  u'params': {u'dataset': u'required', u'run': u'optional'},
-        #  u'services': u'',
-        #  u'system': u'dbs3',
-        #  u'url': u'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis',
-        #  u'urn': u'run_lumi4dataset',
-        #  u'wild_card': u'*'}
-        # api_info['lookup'] = run,lumi
+            self._lookup_keys |= set([lookup_key, ])
+
         # could contain some low level params like API version, default values etc
         api_params_lowlev = api_info.get('params', {})
         das_map = api_info.get('das_map', [])
@@ -190,6 +171,35 @@ class DasSchemaAdapter(object):
             params_list.append(param_def)
 
         return api_def, params_list
+
+        #entity_names[lookup_key] = lookup_key
+        #pprint.pprint(api_info)
+        #e.g. of api_info record
+        # Sys: dbs api: run_lumi4dataset
+        # primary_key = run ??? why?
+        # {u'_id': ObjectId('51e544e6579d717cc687c426'),
+        #  u'created': 1373979878.512316,
+        #  u'das_map': [{u'api_arg': u'run',
+        #                u'das_key': u'run',
+        #                u'rec_key': u'run.run_number'},
+        #               {u'api_arg': u'lumi',
+        #                u'das_key': u'lumi',
+        #                u'rec_key': u'lumi.number'},
+        #               {u'api_arg': u'dataset',
+        #                u'das_key': u'dataset',
+        #                u'pattern': u'/[\\w-]+/[\\w-]+/[A-Z-]+',
+        #                u'rec_key': u'dataset.name'}],
+        #  u'expire': 3600,
+        #  u'format': u'JSON',
+        #  u'instances': [u'prod', u'dev', u'int'],
+        #  u'lookup': u'run,lumi',
+        #  u'params': {u'dataset': u'required', u'run': u'optional'},
+        #  u'services': u'',
+        #  u'system': u'dbs3',
+        #  u'url': u'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis',
+        #  u'urn': u'run_lumi4dataset',
+        #  u'wild_card': u'*'}
+        # api_info['lookup'] = run,lumi
 
     def discover_apis_and_fields(self, dascore):
         """
@@ -267,6 +277,30 @@ class DasSchemaAdapter(object):
             return self._result_fields_by_entity[result_entity]
 
 
+    def areWildcardsAllowed(self, entity,  wildcards, params):
+        """
+        Whether wildcards are allowed for given inputs
+
+        currently only these simple rules allowed:
+        site=W*
+        dataset=W*
+        file file=W* dataset=FULL
+        file file=W* block=FULL
+        """
+        # TODO: shall we allow params not defined in the rules?
+        ok = True
+        if wildcards and entity:
+            if entity == 'dataset.name' and wildcards == set(['dataset.name']):
+                pass
+            elif entity == 'file.name' and wildcards == set(['file.name']) and \
+                    ('dataset.name' in params or 'block.name' in params):
+                pass
+            elif entity == 'site.name' and wildcards == set(['site.name']):
+                pass
+            else:
+                ok = False
+        return ok
+
     def validate_input_params(self, params, entity=None, final_step=False,
                               wildcards=None):
         """
@@ -275,17 +309,11 @@ class DasSchemaAdapter(object):
         params = set(params)
         wildcards = wildcards or set([])
 
-        # check if wildcards are allowed. currently very simple rules
-        if final_step and wildcards and entity:
-            if entity == 'dataset.name' and wildcards == set(['dataset.name']):
-                # TODO: check presense of other params?!
-                pass
-            elif entity == 'file.name' and wildcards == set(['file.name']) and \
-                    ('dataset.name' in wildcards or 'block.name' in wildcards):
-                pass
-            else: return False
+        # check if wildcards are allowed
+        if final_step and wildcards and \
+                not self.areWildcardsAllowed(entity, wildcards, params):
+            return False
 
-        # TODO: need to distinguish between wildcards (?)
         # given input parameters mapping (from keywords to input parameters)
         # there must exist an API, covering these input params
         fitting_apis = (api for api in self.api_input_params
@@ -359,7 +387,7 @@ class DasSchemaAdapter(object):
         print 'entity_names'
         pprint.pprint(self.entity_names)
         print 'search_field_names'
-        pprint.pprint(self.lookup_keys)
+        pprint.pprint(self._lookup_keys)
 
 
 # ---- TODO: For now, below is ugly -----
@@ -517,3 +545,5 @@ if __name__ == '__main__':
     print 'trying to validate Q monitor date=20120101: ',\
         s.validate_input_params(set(['date']), entity='monitor', final_step=True,
                               wildcards=None)
+
+    print 'lookup keys=', s.lookup_keys
