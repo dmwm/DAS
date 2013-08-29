@@ -12,7 +12,8 @@ CodeMirror.defineMode('das', function (config) {
 
     CodeMirror.attributeRE_strict = /^\w+\./;
 
-    CodeMirror.wordRE = /\w/;
+    // same as value but no . because currently this allow to distinguish attributes
+    CodeMirror.wordRE = /[a-zA-Z0-9_\-*/@:#]/; ///\w/;
     CodeMirror.attributeSeparRE = /\./;
 
 
@@ -166,6 +167,8 @@ CodeMirror.defineMode('das', function (config) {
                 stream.eat(' ');
                 //stream.eatWhile(/[^ "']/);
                 stream.eatWhile(CodeMirror.valueRE_1char);
+
+                console.log('eaten value=', stream.current());
 
                 label =  'string';
                 state._eatAttr_next_step = false;

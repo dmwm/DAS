@@ -481,6 +481,14 @@ class DASWebService(DASWebManager):
 
         return daskeys
 
+    def _list_lookup_keys(self):
+        from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+        return getSchema().lookup_keys
+
+
+        # append mutliple daskey lookup keys
+
+
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def autocomplete_test(self):
@@ -708,6 +716,7 @@ class DASWebService(DASWebManager):
         daskeys_json = json.dumps(self._get_daskeys_list()) # still daskeys could be both inputs or outputs
         known_values_json = json.dumps(self._get_known_values())
         fields_by_entity_json = json.dumps(self._get_fields_by_entity())
+        lookup_keys_json = json.dumps(self._list_lookup_keys())
 
 
         page  = self.templatepage('das_searchform', input=uinput, \
@@ -715,7 +724,8 @@ class DASWebService(DASWebManager):
                 base=self.base, instance=instance, view=view, cards=cards,
                 known_values=known_values_json,
                 daskeys_json=daskeys_json,
-                fields_by_entity_json=fields_by_entity_json
+                fields_by_entity_json=fields_by_entity_json,
+                lookup_keys_json=lookup_keys_json
                 )
         return page
 
