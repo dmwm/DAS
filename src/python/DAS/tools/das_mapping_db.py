@@ -4,10 +4,9 @@
 """
 DAS command line interface
 """
-__revision__ = "$Id: das_mapping_db.py,v 1.28 2010/04/14 20:39:13 valya Exp $"
-__version__ = "$Revision: 1.28 $"
 __author__ = "Valentin Kuznetsov"
 
+import os
 import sys
 from optparse import OptionParser
 from DAS.core.das_mapping_db import DASMapping
@@ -84,14 +83,23 @@ def main():
         sys.exit(0)
 
     if  opts.umap:
+        count = 0
+        system = ''
         for rec in read_service_map(opts.umap, field='uri'):
             if  opts.debug:
                 print rec
             spec = {'url':rec['url'], 'urn':rec['urn']}
+            system = rec['system']
             mgr.remove(spec) # remove previous record
             mgr.add(rec)
+            count += 1
+        if  system: # uri map must have sytsem
+            arecord = {'type':'uri', 'count':count, 'system': system}
+            mgr.add(dict(arecord=arecord))
 
     if  opts.nmap:
+        count = 0
+        system = ''
         for rec in read_service_map(opts.nmap, field='notations'):
             if  opts.debug:
                 print rec
@@ -99,14 +107,24 @@ def main():
             spec = {'notations':{'$exists':True}, 'system':system}
             mgr.remove(spec) # remove previous record
             mgr.add(rec)
+            count += 1
+        if  system: # notations map must have system
+            arecord = {'type':'notations', 'count':count, 'system': system}
+            mgr.add(dict(arecord=arecord))
 
     if  opts.pmap:
+        count = 0
+        system = 'presentation'
         for rec in read_service_map(opts.pmap, field='presentation'):
             if  opts.debug:
                 print rec
             spec = {'presentation':{'$exists':True}}
             mgr.remove(spec) # remove previous record
             mgr.add(rec)
+            count += 1
+        if  count == 1: # we should have one presentation map
+            arecord = {'type':'presentation', 'count':count, 'system': system}
+            mgr.add(dict(arecord=arecord))
 
     if  opts.clean:
         mgr.delete_db()

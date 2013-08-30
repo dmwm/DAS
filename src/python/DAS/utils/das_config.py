@@ -21,8 +21,8 @@ DASOption('mongodb', 'dburi', 'list', ['mongodb://localhost:27017']),
 DASOption('mongodb', 'dbname', 'string', 'das'),
 # default bulk size to be used by DAS during records insertion into MongoDB
 DASOption('mongodb', 'bulkupdate_size', 'int', 5000),
-# default lifetime of requests in MongoDB
-DASOption('mongodb', 'lifetime', 'int', 86400),
+# default lifetime of requests in MongoDB, default is 10min
+DASOption('mongodb', 'lifetime', 'int', 600),
 
 #
 # Mapping DB options
@@ -31,6 +31,8 @@ DASOption('mongodb', 'lifetime', 'int', 86400),
 DASOption('mappingdb', 'dbname', 'string', 'mapping'),
 # default collection name
 DASOption('mappingdb', 'collname', 'string', 'db'),
+# default reload_time for MappingDB maps monitor daemon, default is 1h
+DASOption('mappingdb', 'reload_time', 'int', 60*60),
 
 #
 # Keyleardnign DB options
@@ -85,6 +87,9 @@ DASOption('dasdb', 'mergecollection', 'string', 'merge'),
 DASOption('dasdb', 'mrcollection', 'string', 'mapreduce'),
 # enable logging of DAS db operation, put insert/delete into logging db
 DASOption('dasdb', 'logging', 'bool', False),
+# DAS cache record TTL (time-to-live) parameter, i.e. how long to keep
+# records in DAS cache, default is 1 day.
+DASOption('dasdb', 'record_ttl', 'int', 24*60*60),
 
 #
 # DAS web server options

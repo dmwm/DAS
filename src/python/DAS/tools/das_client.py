@@ -106,7 +106,7 @@ class DASOptionParser:
         msg = 'specify number of retries upon busy DAS server message'
         self.parser.add_option("--retry", action="store", type="string",
                                default=0, dest="retry", help=msg)
-        msg = 'drop DAS headers'
+        msg = 'show DAS headers in JSON format'
         self.parser.add_option("--das-headers", action="store_true",
                                default=False, dest="das_headers", help=msg)
         msg = 'specify power base for size_format, default is 10 (can be 2)'
@@ -231,7 +231,8 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
         hdlr = HTTPSClientAuthHandler(ckey, cert, debug)
     else:
         hdlr = urllib2.HTTPHandler(debuglevel=debug)
-    opener = urllib2.build_opener(hdlr)
+    proxy_support = urllib2.ProxyHandler({})
+    opener = urllib2.build_opener(hdlr, proxy_support)
     fdesc = opener.open(req)
     data = fdesc.read()
     fdesc.close()

@@ -175,6 +175,7 @@ class DASMongocache(object):
         self.logger  = PrintManager('DASMongocache', self.verbose)
         self.mapping = config['dasmapping']
         self.logging = config['dasdb'].get('logging', False)
+        self.rec_ttl = config['dasdb'].get('record_ttl', 24*60*60)
 
         self.init()
         # Monitoring thread which performs auto-reconnection to MongoDB
@@ -202,21 +203,41 @@ class DASMongocache(object):
             self.add_manipulator()
 
             # ensure that we have the following indexes
-            index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                          ('das.system', ASCENDING),
-                          ('qhash', DESCENDING),
+            common_idx = [
                           ('file.name', DESCENDING),
                           ('dataset.name', DESCENDING),
                           ('block.name', DESCENDING),
                           ('run.run_number', DESCENDING),
+                          ]
+            index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
+                          ('das.system', ASCENDING),
+                          ('qhash', DESCENDING),
                           ('das.record', ASCENDING)]
-            create_indexes(self.col, index_list)
+            create_indexes(self.col, index_list + common_idx)
             index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
                           ('qhash', DESCENDING),
                           ('das.record', ASCENDING),
                           ('das.ts', ASCENDING)]
             create_indexes(self.merge, index_list)
-            print "### DASMongocache:init started successfully"
+            # NOTE: I found that creating index in merge collection leads to
+            # MongoDB error when records contains multiple arrays on indexed
+            # keys. For example, when we query file,run,lumi both file and run
+            # are arrays in MongoDB. In this case the final sort in MongoDB
+            # bark with the following message:
+            # cannot sort with keys that are parallel arrays
+            # it looks like that there is no fix for that yet
+            # see
+            # http://stackoverflow.com/questions/6516725/how-do-i-index-two-arrays-in-mongodb
+            # therefore I temporary disabled create_indexes call on merge
+            # collection which was used to have index to ease final sort,
+            # especially in a case when a lot of records correspond to inital
+            # query, e.g. file records.
+            # On another hand, the most common use case where sort fails is
+            # getting file records, and I can add one compound key to ease sort
+            # but I can't add another compound key on array field, e.g. run
+            common_idx = [[('qhash',DESCENDING), ('file.name', DESCENDING)]]
+            create_indexes(self.merge, index_list + common_idx)
+#            print "### DASMongocache:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
@@ -332,14 +353,22 @@ class DASMongocache(object):
             return new_fields, cond
         return fields, cond
 
-    def remove_expired(self, collection):
+    def remove_expired(self, dasquery, collection):
         """
-        Remove expired records from DAS cache.
+        Remove expired records from DAS cache. We need to perform this
+        operation very carefullly since we don't use transation and on-going
+        commits can invoke this method (see das_core.py).  Therefore we use
+        MongoDB $or operator to wipe out queries which match DASQuery hash and
+        already expired or queries which lived in cache more then rec_ttl
+        config parameter. The later operation just prevent DAS cache from
+        growing.
         """
         timestamp = int(time.time())
         with self.conn.start_request():
-            col  = self.mdb[collection]
-            spec = {'das.expire' : {'$lt' : timestamp}}
+            col   = self.mdb[collection]
+            spec1 = {'qhash': dasquery.qhash, 'das.expire': {'$lt' : timestamp}}
+            spec2 = {'das.expire': {'$lt':timestamp-self.rec_ttl}}
+            spec  = {'$or':[spec1, spec2]}
             if  self.verbose:
                 nrec = col.find(spec).count()
                 msg  = "will remove %s records" % nrec
@@ -406,7 +435,7 @@ class DASMongocache(object):
             self.col.update({'query': dasquery.storage_query},
                             {'$set': info}, upsert=True)
 
-    def update_query_record(self, dasquery, status, header=None):
+    def update_query_record(self, dasquery, status, header=None, reason=None):
         "Update DAS record for provided query"
         ctime = time.time()
         das_spec = {'qhash': dasquery.qhash, 'das.system':'das'}
@@ -432,6 +461,9 @@ class DASMongocache(object):
         else:
             udict = {'$set': {'das.status':status}, '$push': {'das.ctime':ctime}}
             self.col.update(das_spec, udict)
+        if  reason:
+            udict = {'$set': {'das.reason':reason}}
+            self.col.update(das_spec, udict)
 
     def apilist(self, dasquery):
         "Return list of apis for given dasquery"
@@ -453,7 +485,6 @@ class DASMongocache(object):
         consult MongoDB API for more details,
         http://api.mongodb.org/python/
         """
-        self.remove_expired(collection)
         if  query_record:
             record = record_codes('query_record')
         else:
@@ -901,7 +932,8 @@ class DASMongocache(object):
 
         dasheader  = header['das']
         expire     = dasheader['expire']
-        system     = dasheader['system']
+        system     = dasheader['system'] # DAS service names, e.g. combined
+        services   = dasheader['services'] # CMS services used to get data
         api        = dasheader['api']
         prim_key   = header.get('prim_key', None)
         if  not prim_key:
@@ -926,7 +958,7 @@ class DASMongocache(object):
                     item['das'] = dict(expire=expire, primary_key=prim_key,
                                        condition_keys=cond_keys,
                                        instance=dasquery.instance,
-                                       system=system,
+                                       system=system, services=services,
                                        record=record_codes('data_record'),
                                        ts=time.time(), api=api)
                     item['das_id'] = rids

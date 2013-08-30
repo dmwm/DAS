@@ -238,6 +238,68 @@ def get_file_run_lumis(url, api, args):
     for row in process_lumis_with(key, gen):
         yield row
 
+def summary4dataset_run(url, kwds):
+    "Helper function to deal with summary dataset=/a/b/c requests"
+    urls = []
+    cond = ''
+    val = kwds.get('run', 'optional')
+    if  val != 'optional':
+        if  isinstance(val, dict):
+            min_run = 0
+            max_run = 0
+            if  val.has_key('$lte'):
+                max_run = val['$lte']
+            if  val.has_key('$gte'):
+                min_run = val['$gte']
+            if  min_run and max_run:
+                val = "run >=%s and run <= %s" % (min_run, max_run)
+            elif val.has_key('$in'):
+                val = ' or '.join(['run=%s' % r for r in val['$in']])
+                val = '(%s)' % val
+        elif isinstance(val, int):
+            val = "run=%d" % val
+        cond += ' and %s' % val
+    val = kwds.get('dataset', None)
+    if  val and val != 'optional':
+        cond += ' and dataset=%s' % val
+    val = kwds.get('block', None)
+    if  val and val != 'optional':
+        cond += ' and block=%s' % val
+    query = "find file, file.size, file.numevents where " + cond[4:]
+    params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
+    url1 = url + '?' + urllib.urlencode(params)
+    urls.append(url1)
+    query = "find run, count(lumi) where " + cond[4:]
+    params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
+    url2 = url + '?' + urllib.urlencode(params)
+    urls.append(url2)
+    headers = {'Accept': 'text/xml'}
+    gen = urlfetch_getdata(urls, CKEY, CERT, headers)
+    tot_size  = 0
+    tot_evts  = 0
+    tot_lumis = 0
+    tot_files = 0
+    for rec in gen:
+        url = rec['url']
+        data = rec['data']
+        stream = StringIO.StringIO(data)
+        if  url.find('file') != -1:
+            prim_key = 'file'
+        else:
+            prim_key = 'run'
+        for row in qlxml_parser(stream, prim_key):
+            if  prim_key == 'file':
+                fdata = row['file']
+                tot_size  += fdata['file.size']
+                tot_evts  += fdata['file.numevents']
+                tot_files += 1
+            else:
+                fdata = row['run']
+                tot_lumis += fdata['count_lumi']
+    srec = {'summary': {'file_size':tot_size, 'nevents':tot_evts,
+        'nlumis':tot_lumis, 'nfiles': tot_files}}
+    yield srec
+
 class DBSService(DASAbstractService):
     """
     Helper class to provide DBS service
@@ -247,8 +309,8 @@ class DBSService(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.prim_instance = self.dasmapping.dbs_global_instance()
-        self.instances = self.dasmapping.dbs_instances()
+        self.prim_instance = self.dasmapping.dbs_global_instance(self.name)
+        self.instances = self.dasmapping.dbs_instances(self.name)
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
@@ -257,10 +319,13 @@ class DBSService(DASAbstractService):
         if  api == 'run_lumi4dataset' or api == 'run_lumi4block' or \
             api == 'file_lumi4dataset' or api == 'file_lumi4block' or \
             api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block' or \
+            api == 'summary4dataset_run' or \
             api == 'block_run_lumi4dataset':
             time0 = time.time()
             if  api == 'block_run_lumi4dataset':
                 dasrows = get_block_run_lumis(url, args)
+            elif api == 'summary4dataset_run':
+                dasrows = summary4dataset_run(url, args)
             else:
                 dasrows = get_file_run_lumis(url, api, args)
             ctime = time.time()-time0
@@ -460,40 +525,6 @@ class DBSService(DASAbstractService):
                 kwds['query'] += ' and ' + val
             else:
                 kwds['query'] = 'required'
-        if  api == 'summary4dataset_run':
-            query = "find file, file.size, \
-                      file.numevents, count(lumi) where "
-            cond = ''
-            val = kwds.get('run', 'optional')
-            if  val != 'optional':
-                if  isinstance(val, dict):
-                    min_run = 0
-                    max_run = 0
-                    if  val.has_key('$lte'):
-                        max_run = val['$lte']
-                    if  val.has_key('$gte'):
-                        min_run = val['$gte']
-                    if  min_run and max_run:
-                        val = "run >=%s and run <= %s" % (min_run, max_run)
-                    elif val.has_key('$in'):
-                        val = ' or '.join(['run=%s' % r for r in val['$in']])
-                        val = '(%s)' % val
-                elif isinstance(val, int):
-                    val = "run=%d" % val
-                cond += ' and %s' % val
-            val = kwds['dataset']
-            if  val and val != 'optional':
-                cond += ' and dataset=%s' % val
-            val = kwds['block']
-            if  val and val != 'optional':
-                cond += ' and block=%s' % val
-            if  cond:
-                kwds['query'] = query + cond[4:]
-            else:
-                kwds['query'] = 'required'
-            kwds.pop('dataset')
-            kwds.pop('block')
-            kwds.pop('run')
         if  api == 'fakeGroup4Dataset':
             val = kwds['dataset']
             if  val != 'required':
@@ -789,8 +820,6 @@ class DBSService(DASAbstractService):
             prim_key = 'dataset'
         elif  api == 'fakeDataset4User':
             prim_key = 'dataset'
-        elif  api == 'summary4dataset_run':
-            prim_key = 'row'
         elif  api == 'fakeRun4File':
             prim_key = 'run'
         elif  api == 'fakeRun4Run':
@@ -825,18 +854,9 @@ class DBSService(DASAbstractService):
         config_attrs = ['config.name', 'config.content', 'config.version', \
                  'config.type', 'config.annotation', 'config.createdate', \
                  'config.createby', 'config.moddate', 'config.modby']
-        summary4dataset = {}
         for row in gen:
             if  not row:
                 continue
-            if  row.has_key('row') and api == 'summary4dataset_run':
-                row = row['row']
-                fname = row.pop('file')
-                fsize = row.pop('file.size')
-                nevents = row.pop('file.numevents')
-                nlumis = row.pop('count_lumi')
-                summary4dataset[fname] = {'size':fsize, 'nevents':nevents,
-                        'nlumis':nlumis}
             if  row.has_key('status') and \
                 row['status'].has_key('dataset.status'):
                 row['status']['name'] = row['status']['dataset.status']
@@ -933,16 +953,3 @@ class DBSService(DASAbstractService):
                                 row = None
             if  row:
                 yield row
-        if  api == 'summary4dataset_run':
-            nfiles = 0
-            tot_size  = 0
-            tot_lumis = 0
-            tot_evts  = 0
-            for fname, fval in summary4dataset.iteritems():
-                nfiles += 1
-                tot_size  += fval['size']
-                tot_lumis += fval['nlumis']
-                tot_evts  += fval['nevents']
-            sdict = {'nfiles':nfiles, 'nevents':tot_evts,
-                     'file_size':tot_size, 'nlumis':tot_lumis}
-            yield dict(summary=sdict)

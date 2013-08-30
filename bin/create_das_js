@@ -8,8 +8,8 @@ rm -f $map_file
 export PYTHONPATH=$PYTHONPATH:$PWD/src/python
 for amap in `ls $dir/*.yml`
 do
-    $cmd --uri-map=$amap >> $map_file
-    $cmd --notation-map=$amap >> $map_file
-    $cmd --presentation-map=$amap >> $map_file
+    $cmd --uri-map=$amap | grep -v "###" >> $map_file
+    $cmd --notation-map=$amap | grep -v "###" >> $map_file
+    $cmd --presentation-map=$amap | grep -v "###" >> $map_file
 done
 

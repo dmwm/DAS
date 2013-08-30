@@ -27,17 +27,33 @@ __author__ = "Valentin Kuznetsov"
 import re
 import time
 import threading
+from collections import defaultdict
 
 # monogo db modules
 from pymongo import DESCENDING
 from pymongo.errors import ConnectionFailure
 
 # DAS modules
-from DAS.utils.utils import dastimestamp, print_exc
+from DAS.utils.utils import dastimestamp, print_exc, md5hash
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
+import DAS.utils.jsonwrapper as json
+
+def check_map_record(rec):
+    "Check hash of given map record"
+    # remove _id MongoDB Object
+    if  rec.has_key('_id'):
+        del rec['_id']
+    if  rec.has_key('hash'):
+        md5 = rec.pop('hash')
+        rec_md5 = md5hash(rec)
+        if  rec_md5 != md5:
+            err  = 'Invalid hash record:\n%s\n' % json.dumps(rec)
+            err += '\nrecord hash  : %s' % md5
+            err += '\nobtained hash: %s\n' % md5hash(rec)
+            raise Exception(err)
 
 def db_monitor(uri, func, sleep, reload_map, reload_time):
     """
@@ -58,7 +74,7 @@ def db_monitor(uri, func, sleep, reload_map, reload_time):
                 pass
         if  conn:
             if  time.time()-time0 > reload_time:
-                msg = "call %s" % reload_map
+                msg = "reload DAS maps %s" % reload_map
                 print dastimestamp(), msg
                 try:
                     reload_map()
@@ -78,6 +94,7 @@ class DASMapping(object):
         self.dburi    = config['mongodb']['dburi']
         self.dbname   = config['mappingdb']['dbname']
         self.colname  = config['mappingdb']['collname']
+        self.map_test = config.get('map_test', True)
 
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
@@ -94,7 +111,8 @@ class DASMapping(object):
         start_new_thread(thname, db_monitor, (self.dburi, self.init, sleep,
             self.load_maps, reload_time))
 
-        self.apilkeys = {}             # to be filled at run time
+        self.systems = []              # to be filled at run time
+        self.dasmapscache = {}         # to be filled at run time
         self.keymap = {}               # to be filled at run time
         self.presentationcache = {}    # to be filled at run time
         self.reverse_presentation = {} # to be filled at run time
@@ -111,20 +129,29 @@ class DASMapping(object):
     # ===============
     def load_maps(self):
         "Helper function to reload DAS maps"
-        self.init_apilkeyscache()
+        self.init_dasmapscache()
         self.init_notationcache()
         self.init_presentationcache()
+        self.systems = None        # re-initialize DAS system list
+        self.list_systems()
+        self.dbs_global_url = None # re-initialize DAS dbs global url
+        self.dbs_url()
+        self.dbs_inst_names = None # re-initialize DAS dbs instances
+        self.dbs_instances()
 
-    def init_apilkeyscache(self):
-        "Read DAS maps and initialize apilkeys"
-        for row in self.col.find({}):
+    def init_dasmapscache(self, records=[]):
+        "Read DAS maps and initialize DAS API maps"
+        if  not records:
+            records = self.col.find()
+        for row in records:
             if  row.has_key('urn'):
-                api = row['urn']
-                system = row['system']
-                lookup = row['lookup']
-                key    = (system, api)
-                for lkey in lookup.split(','):
-                    self.apilkeys.setdefault(key, []).append(lkey)
+                for dmap in row['das_map']:
+                    for key, val in dmap.iteritems():
+                        if  key == 'pattern':
+                            pat = re.compile(val)
+                            dmap[key] = pat
+                key = (row['system'], row['urn'])
+                self.dasmapscache[key] = row
 
     def init_notationcache(self):
         """
@@ -179,7 +206,7 @@ class DASMapping(object):
             if  self.conn:
                 self.dbc  = self.conn[self.dbname]
                 self.col  = self.dbc[self.colname]
-            print "### DASMapping:init started successfully"
+#            print "### DASMapping:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
@@ -207,9 +234,47 @@ class DASMapping(object):
 
     def check_maps(self):
         """
-        Check if there are records in Mapping DB
+        Check Mapping DB and return true/false based on its content
         """
-        return self.col.count()
+        if  not self.map_test:
+            return True # do not test DAS maps, useful for unit tests
+        udict = defaultdict(int)
+        ndict = defaultdict(int)
+        pdict = defaultdict(int)
+        adict = {}
+        for row in self.col.find():
+            check_map_record(row)
+            if  row.has_key('urn'):
+                udict[row['system']] += 1
+            elif row.has_key('notations'):
+                ndict[row['system']] += 1
+            elif row.has_key('presentation'):
+                pdict['presentation'] += 1
+            elif row.has_key('arecord'):
+                arec = row['arecord']
+                system = arec['system']
+                rec = {arec['type']:arec['count']}
+                if  adict.has_key(system):
+                    adict[system].update(rec)
+                else:
+                    adict[system] = rec
+
+        # retrieve uri/notation/presentation maps
+        status_umap = status_nmap = status_pmap = False
+        ulist = []
+        nlist = []
+        for system in adict.keys():
+            if  adict[system].has_key('uri'):
+                ulist.append(adict[system]['uri'] == udict[system])
+                nlist.append(adict[system]['notations'] == ndict[system])
+        status_umap = sum(ulist) == len(ulist)
+        status_nmap = sum(nlist) == len(nlist)
+        status_pmap = adict['presentation']['presentation'] == 1
+        if  self.verbose:
+            print "### DAS map status, umap=%s, nmap=%s, pmap=%s" \
+                    % (status_umap, status_nmap, status_pmap)
+        # multiply statuses as a result of this map check
+        return status_umap*status_nmap*status_pmap
 
     def remove(self, spec):
         """
@@ -246,6 +311,7 @@ class DASMapping(object):
         msg = 'record=%s' % record
         self.logger.debug(msg)
         self.col.insert(record)
+        self.init_dasmapscache([record])
         index = None
         if  record.has_key('urn'):
             index = [('system', DESCENDING),
@@ -258,6 +324,8 @@ class DASMapping(object):
                      ('notations.api_output', DESCENDING)]
         elif record.has_key('presentation'):
             index = []
+        elif record.has_key('arecord'):
+            pass
         else:
             msg = 'Invalid record %s' % record
             raise Exception(msg)
@@ -267,18 +335,22 @@ class DASMapping(object):
     # ==================
     # Informational APIs
     # ==================
-    def dbs_global_instance(self):
+    def dbs_global_instance(self, system='dbs'):
         "Retrive from mapping DB DBS url and extract DBS instance"
-        url = self.dbs_url()
+        url = self.dbs_url(system)
         return get_dbs_instance(url)
 
-    def dbs_url(self):
+    def dbs_url(self, system='dbs'):
         "Retrive from mapping DB DBS url"
-        if  self.dbs_global_url:
-            return self.dbs_global_url
+        systems = self.list_systems()
+        dbses   = set(['dbs', 'dbs3'])
+        if  dbses & set(systems) != dbses:
+            # use caching only when we operate with single DBS
+            if  self.dbs_global_url:
+                return self.dbs_global_url
         url = None
-        for srv in self.list_systems():
-            if  srv.find('dbs') != -1:
+        for srv in systems:
+            if  srv == system:
                 apis = self.list_apis(srv)
                 url  = self.api_info(apis[0])['url']
                 url  = parse_dbs_url(srv, url)
@@ -286,13 +358,17 @@ class DASMapping(object):
                 return url
         return url
 
-    def dbs_instances(self):
+    def dbs_instances(self, system='dbs'):
         "Retrive from mapping DB DBS instances"
-        if  self.dbs_inst_names:
-            return self.dbs_inst_names
+        systems = self.list_systems()
+        dbses   = set(['dbs', 'dbs3'])
+        if  dbses & set(systems) != dbses:
+            # use caching only when we operate with single DBS
+            if  self.dbs_inst_names:
+                return self.dbs_inst_names
         insts = []
-        for srv in self.list_systems():
-            if  srv.find('dbs') != -1:
+        for srv in systems:
+            if  srv == system:
                 apis  = self.list_apis(srv)
                 insts = self.api_info(apis[0])['instances']
                 self.dbs_inst_names = insts
@@ -303,9 +379,11 @@ class DASMapping(object):
         """
         List all DAS systems.
         """
-        cond = { 'system' : { '$ne' : None } }
-        gen  = (row['system'] for row in self.col.find(cond, ['system']))
-        return list( set(gen2list(gen)) & set(self.services) )
+        if  not self.systems:
+            cond = { 'system' : { '$ne' : None } }
+            gen  = (row['system'] for row in self.col.find(cond, ['system']))
+            self.systems = list( set(gen2list(gen)) & set(self.services) )
+        return self.systems
 
     def list_apis(self, system=None):
         """
@@ -364,16 +442,8 @@ class DASMapping(object):
         """
         Return DAS lookup keys for given das system and api
         """
-        if  self.apilkeys.has_key((das_system, api)):
-            return self.apilkeys[(das_system, api)]
-        cond = {'system':das_system, 'urn':api}
-        record = self.col.find_one(cond)
-        skeys = record['lookup']
-        if  skeys.find(',') != -1:
-            skeys = skeys.split(',')
-        if  isinstance(skeys, basestring):
-            skeys = [skeys]
-        self.apilkeys[(das_system, api)] = skeys
+        entry = self.dasmapscache[(das_system, api)]
+        skeys = entry['lookup'].split(',')
         return skeys
 
     def primary_key(self, das_system, urn):
@@ -410,26 +480,29 @@ class DASMapping(object):
         Find das key for given system and map key.
         """
         msg   = 'system=%s\n' % das_system
-        cond  = { 'system' : das_system, 'das_map.rec_key': map_key }
         daskeys = []
-        for row in self.col.find(cond, ['das_map']):
-            if  row and row.has_key('das_map'):
-                for dkey in row['das_map']:
-                    if  dkey.has_key('das_key'):
-                        if  value:
-                            pval = dkey.get('pattern', '')
-                            if  pval:
-                                pat = re.compile(pval)
-                                if  pat.match(str(value)):
-                                    daskeys.append(dkey['das_key'])
-                                else:
-                                    msg += '-- reject key=%s, val=%s, pat=%s\n'\
-                                            % (map_key, value, pval)
-                                    self.logger.debug(msg)
-                            else:
-                                daskeys.append(dkey['das_key'])
+        for key, record in self.dasmapscache.iteritems():
+            srv, _urn = key
+            if  das_system != srv:
+                continue
+            for row in record['das_map']:
+                das_key = row['das_key']
+                rec_key = row['rec_key']
+                if  rec_key != map_key:
+                    continue
+                pat = row.get('pattern', None)
+                if  value:
+                    if  pat:
+                        if  pat.match(str(value)):
+                            daskeys.append(das_key)
                         else:
-                            daskeys.append(dkey['das_key'])
+                            msg += '-- reject key=%s, val=%s, pat=%s\n'\
+                                    % (map_key, value, pat.pattern)
+                            self.logger.debug(msg)
+                    else:
+                        daskeys.append(das_key)
+                else:
+                    daskeys.append(das_key)
         return daskeys
 
     def find_mapkey(self, das_system, das_key, value=None):
@@ -437,23 +510,28 @@ class DASMapping(object):
         Find map key for given system and das key.
         """
         msg   = 'system=%s\n' % das_system
-        cond  = { 'system' : das_system, 'das_map.das_key': das_key }
-        for row in self.col.find(cond, ['das_map', 'urn']):
-            if  row and row.has_key('das_map'):
-                for key in row['das_map']:
-                    if  key.has_key('rec_key') and key['das_key'] == das_key:
-                        if  value:
-                            pval = key.get('pattern', '')
-                            pat = re.compile(pval)
-                            if  pat.match(str(value)):
-                                return key['rec_key']
-                            else:
-                                msg += '-- reject key=%s, val=%s, pat=%s\n'\
-                                        % (das_key, value, key['pattern'])
-                                self.logger.debug(msg)
-                                continue
+        for key, record in self.dasmapscache.iteritems():
+            srv, _urn = key
+            if  das_system != srv:
+                continue
+            for row in record['das_map']:
+                if  row['das_key'] != das_key:
+                    continue
+                rec_key = row['rec_key']
+                pat = row.get('pattern', None)
+                if  value:
+                    if  pat:
+                        if  pat.match(str(value)):
+                            return rec_key
                         else:
-                            return key['rec_key']
+                            msg += '-- reject key=%s, val=%s, pat=%s\n'\
+                                    % (das_key, value, pat.pattern)
+                            self.logger.debug(msg)
+                            continue
+                    else:
+                        return rec_key
+                else:
+                    return rec_key
 
     def mapkeys(self, daskey):
         """
@@ -483,29 +561,6 @@ class DASMapping(object):
                 apilist.append(row['urn'])
         return apilist
 
-    def check_dasmap(self, system, urn, das_map, value=''):
-        """
-        Check if provided system/urn/das_map is a valid combination
-        in mapping db. If value for das_map key is provided we verify
-        it against pattern in DB.
-        """
-        if  not value:
-            cond   = {'system':system, 'das_map.rec_key':das_map, 'urn':urn}
-            return self.col.find(cond).count()
-        cond = { 'system' : system, 'das_map.rec_key' : das_map, 'urn': urn }
-        for row in self.col.find(cond, ['das_map']):
-            for item in row['das_map']:
-                if  not item:
-                    continue
-                if  item['rec_key'] == das_map:
-                    if  item.has_key('pattern'):
-                        pat = re.compile(item['pattern'])
-                        if  pat.match(str(value)):
-                            return True
-                    else:
-                        return True
-        return False
-
     def find_system(self, key):
         """
         Return system name for provided DAS key.
@@ -519,35 +574,31 @@ class DASMapping(object):
         systems.sort()
         return systems
 
-    def lookup_keys(self, system, daskey, api=None, value=None):
+    def lookup_keys(self, system, api, daskey=None, value=None):
         """
         Returns lookup keys for given system and provided
         selection DAS key, e.g. block => block.name
         """
-        query = {'system':system, 'das_map.das_key':daskey}
-        if  api:
-            query['urn'] = api
-        lookupkeys = []
-        for row in self.col.find(query):
-            for kdict in row['das_map']:
-                if  kdict['das_key'] == daskey: 
-                    lkey = kdict['rec_key']
+        entry = self.dasmapscache.get((system, api), None)
+        if  not entry:
+            return []
+        lkeys = entry.get('lookup', []).split(',')
+        rkeys = []
+        if  daskey in lkeys:
+            for dmap in entry['das_map']:
+                rec_key = dmap['rec_key']
+                if  daskey:
+                    if  dmap['das_key'] == daskey:
+                        pat = dmap.get('pattern', None)
+                        if  value:
+                            if  pat.match(str(value)):
+                                rkeys.append(rec_key)
+                        else:
+                            if  rec_key not in rkeys:
+                                rkeys.append(rec_key)
                 else:
-                    continue
-                if  value and kdict['pattern']:
-                    pat = re.compile(kdict['pattern'])
-                    if  pat.match(str(value)): 
-                        if  lkey not in lookupkeys:
-                            lookupkeys.append(lkey)
-                else:
-                    if  lkey not in lookupkeys:
-                        lookupkeys.append(lkey)
-        if  not lookupkeys:
-            msg = 'Unable to find look-up key for '
-            msg += 'system=%s, daskey=%s, api=%s, value=%s' \
-                % (system, daskey, api, value)
-            raise Exception(msg)
-        return lookupkeys
+                    rkeys.append(rec_key)
+        return rkeys
 
     def api2das(self, system, api_input_name):
         """
@@ -569,34 +620,44 @@ class DASMapping(object):
                     raise err
         return names
 
-    def das2api(self, system, rec_key, value=None, api=None):
+    def check_api_match(self, system, api, icond):
+        "Check if given API covers condition parameters"
+        entry = self.dasmapscache.get((system, api), None)
+        names = []
+        if  not entry:
+            return False
+        ikeys = [k.split('.')[0] for k in icond.keys()]
+        dkeys = []
+        for row in entry.get('das_map', []):
+            if  'api_arg' in row:
+                das_key = row['das_key']
+                dkeys.append(das_key)
+        if  set(ikeys) & set(dkeys) == set(ikeys):
+            return True
+        return False
+
+    def das2api(self, system, api, rec_key, value=None):
         """
         Translates DAS record key into data-service API input parameter,
         e.g. run.number => run_number
         """
-        query = {'system':system}
-        if api: # only check this api
-            query['urn'] = api 
+        entry = self.dasmapscache.get((system, api), None)
         names = []
-        for adas in self.col.find(query, ['das_map']):
-            if  not adas.has_key('das_map'):
-                continue
-            if  not adas['das_map']:
-                names = [rec_key]
-            for row in adas['das_map']:
-                if  row.has_key('api_arg'):
-                    api_param = row['api_arg']
-                    pattern = row.get('pattern', '')
-                    if  row['rec_key'] != rec_key:
-                        continue
-                    if  value and pattern:
-                        pat = re.compile(pattern)
-                        if  pat.match(str(value)):
-                            if  api_param not in names:
-                                names.append(api_param)
-                    else:
+        if  not entry:
+            return [rec_key]
+        for row in entry.get('das_map', []):
+            if  'api_arg' in row:
+                api_param = row['api_arg']
+                pat = row.get('pattern', None)
+                if  row['rec_key'] != rec_key:
+                    continue
+                if  value and pat:
+                    if  pat.match(str(value)):
                         if  api_param not in names:
                             names.append(api_param)
+                else:
+                    if  api_param not in names:
+                        names.append(api_param)
         return names
 
     def notations(self, system=None):

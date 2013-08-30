@@ -64,10 +64,6 @@ class testDASMapping(unittest.TestCase):
             'das_map' : [dict(das_key='run', rec_key='run.run_number', api_arg='path')],
         }
         self.mgr.add(rec)
-        res = self.mgr.check_dasmap('dbs', api, 'run.bfield')
-        self.assertEqual(False, res)
-        res = self.mgr.check_dasmap('dbs', api, 'run.run_number')
-        self.assertEqual(True, res)
         smap = {api: {'url':url, 'expire':expire, 'keys': ['run'],
                 'format': dformat, 'wild_card':'*', 'cert':None, 'ckey': None,
                 'services': '', 'lookup': 'run',
@@ -104,15 +100,15 @@ class testDASMapping(unittest.TestCase):
         res.sort()
         self.assertEqual(['listBlocks', 'listRuns'], res)
 
-        res = self.mgr.lookup_keys(system, daskey)
+        res = self.mgr.lookup_keys(system, api, daskey)
         self.assertEqual([rec_key], res)
 
         value = ''
-        res = self.mgr.das2api(system, rec_key, value)
+        res = self.mgr.das2api(system, api, rec_key, value)
         self.assertEqual([api_input], res)
 
         # adding another params which default is None
-        res = self.mgr.das2api(system, rec_key, value, api)
+        res = self.mgr.das2api(system, api, rec_key, value)
         self.assertEqual([api_input], res)
 
         res = self.mgr.api2das(system, api_input)

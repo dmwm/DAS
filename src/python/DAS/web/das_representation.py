@@ -9,6 +9,7 @@ Description: Abstract interface to represent DAS records
 
 # system modules
 import urllib
+import pprint
 
 # mongodb modules
 from bson.objectid import ObjectId
@@ -19,7 +20,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.utils import getarg, deepcopy
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.tools import exposedasjson, exposetext, exposedasplist
-from DAS.web.utils import quote, das_json
+from DAS.web.utils import quote, das_json_full
 
 class DASRepresentation(DASWebManager):
     """
@@ -37,7 +38,7 @@ class DASRepresentation(DASWebManager):
         kwargs  = head.get('args')
         total   = head.get('nresults', 0)
         apilist = head.get('apilist')
-        main    = self.pagination(total, apilist, kwargs)
+        main    = self.pagination(head)
         style   = 'white'
         page    = ''
         pad     = ''
@@ -67,7 +68,7 @@ class DASRepresentation(DASWebManager):
                 except:
                     pass
             page += '<div class="%s"><hr class="line" />' % style
-            jsonhtml = das_json(row, pad)
+            jsonhtml = das_json_full(row, pad)
             if  row.has_key('das') and row['das'].has_key('conflict'):
                 conflict = ', '.join(row['das']['conflict'])
             else:
@@ -98,7 +99,7 @@ class DASRepresentation(DASWebManager):
         filters  = dasquery.filters
         titles   = []
         apilist  = head.get('apilist')
-        page     = self.pagination(total, apilist, kwargs)
+        page     = self.pagination(head)
         if  filters:
             for flt in filters:
                 if  flt.find('=') != -1 or flt.find('>') != -1 or \
@@ -150,13 +151,16 @@ class DASRepresentation(DASWebManager):
                 % head['ctime']
         return page
 
-    def pagination(self, total, apilist, kwds):
+    def pagination(self, head):
         """
         Construct pagination part of the page. It accepts total as a
         total number of result as well as dict of kwargs which
         contains idx/limit/query/input parameters, as well as other
         parameters used in URL by end-user.
         """
+        kwds    = head.get('args')
+        total   = head.get('nresults')
+        apilist = head.get('apilist')
         kwargs  = deepcopy(kwds)
         if  kwargs.has_key('dasquery'):
             del kwargs['dasquery'] # we don't need it
@@ -175,10 +179,12 @@ class DASRepresentation(DASWebManager):
                 nrows=total, idx=idx, limit=limit, url=url)
         else:
             # distinguish the case when no results vs no API calls
-            if  apilist == ['das_core']: # only DAS core call
-                page = self.templatepage('das_noapis', query=uinput)
-            else:
-                page = self.templatepage('das_noresults', query=uinput)
+            info = head.get('das_server', None)
+            info = pprint.pformat(info) if info else None
+            page = self.templatepage('das_noresults', query=uinput,
+                    status=head.get('status', None),
+                    reason=head.get('reason', None),
+                    info=info, apilist=head.get('apilist', None))
         return page
 
     @exposetext

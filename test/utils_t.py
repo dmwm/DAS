@@ -29,7 +29,7 @@ from DAS.utils.utils import parse_filters, parse_filter, qlxml_parser
 from DAS.utils.utils import delete_keys, parse_filter_string
 from DAS.utils.utils import fix_times, das_dateformat, http_timestamp
 from DAS.utils.utils import api_rows, regen, das_sinfo, sort_rows
-from DAS.utils.utils import convert2ranges
+from DAS.utils.utils import convert2ranges, add_hash, upper_lower
 from DAS.utils.regex import das_time_pattern
 from DAS.core.das_query import DASQuery
 
@@ -37,8 +37,25 @@ class testUtils(unittest.TestCase):
     """
     A test class for the DAS utils module
     """
+    def test_upper_lower(self):
+        "Test upper_lower function"
+        ilist  = ['in', 'last', '=']
+        expect = ['in', 'last', '=', 'IN', 'LAST']
+        result = upper_lower(ilist)
+        expect.sort()
+        result.sort()
+        self.assertEqual(result, expect)
+
+    def test_add_hash(self):
+        "Test add_hash function"
+        rec    = {'foo':1}
+        add_hash(rec)
+        expect = ['foo', 'hash']
+        result = rec.keys()
+        self.assertEqual(result, expect)
+
     def test_convert2ranges(self):
-        "Test sort_rows function"
+        "Test convert2ranges function"
         rows   = [5, 1, 1, 1, 2, 2, 3, 3, 3, 4, 8, 9, 1]
         expect = [[1,5], [8,9]]
         result = [r for r in convert2ranges(rows)]
@@ -390,8 +407,8 @@ class testUtils(unittest.TestCase):
         # 1 row in results
         dasquery = DASQuery(dict(fields=None, spec={'dataset':'/a/b/c'}))
         qhash = dasquery.qhash
-        das  = {'expire': 10, 'primary_key':'vk', 'empty_record': 0,
-                'api':'api', 'system':['foo'],
+        das  = {'expire': 10, 'primary_key':'vk', 'record': 1,
+                'api':'api', 'system':['foo'], 'services':[],
                 'condition_keys':['run'], 'instance':None}
         row  = {'run':10, 'das':das, '_id':1, 'das_id':1}
         rows = (row for i in range(0,1))
@@ -415,8 +432,8 @@ class testUtils(unittest.TestCase):
         self.assertEqual(result, expect)
 
         # 2 rows with common value for common key
-        das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0,
-                'api': ['api'], 'system':['foo'],
+        das  = {'expire': 10, 'primary_key':'run.a', 'record': 1,
+                'api': ['api'], 'system':['foo'], 'services':[],
                 'condition_keys':['run'], 'instance':None}
         rows = []
         row  = {'run':{'a':1,'b':1}, 'das':das, '_id':1, 'das_id':[1]}
@@ -435,8 +452,8 @@ class testUtils(unittest.TestCase):
         """Test aggregator function"""
         dasquery = DASQuery(dict(fields=None, spec={'dataset':'/a/b/c'}))
         qhash = dasquery.qhash
-        das  = {'expire': 10, 'primary_key':'run.a', 'empty_record': 0,
-                'api':['api'], 'system':['foo'],
+        das  = {'expire': 10, 'primary_key':'run.a', 'record': 1,
+                'api':['api'], 'system':['foo'], 'services':[],
                 'condition_keys':['run'], 'instance':None}
         rows = []
         row  = {'run':{'a':1,'b':1}, 'das':das, '_id':1, 'das_id':[1]}
