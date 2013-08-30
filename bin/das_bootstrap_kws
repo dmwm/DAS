@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+DAS_PYTHONPATH=`python -c "import os, DAS; print os.path.dirname(DAS.__file__)"`
+QUERIES_FILE="$DAS_PYTHONPATH/services/bootstrap_queries/cms_bootstrap_queries_1r.txt"
+
+
 # check number of input arguments
 usage="Usage: `basename $0` [--only-if-needed]"
 helpmsg="  This script bootstraps external data needed for keyword search"
@@ -12,9 +16,6 @@ if [ $# -eq 1 ]; then
     fi
 fi
 
-
-DAS_PYTHONPATH=`python -c "import os, DAS; print os.path.dirname(DAS.__file__)"`
-QUERIES_FILE="$DAS_PYTHONPATH/services/bootstrap_queries/cms_bootstrap_queries_1r.txt"
 
 # make sure mongodb is alive (otherwhile das_cli wont start...)
 echo "Waiting for DB"

@@ -55,11 +55,11 @@ mkdir -p $PWD/HG$VER/auth/proxy
 $PWD/cfg/admin/ProxySeed -t dev -d $PWD/HG$VER/auth/proxy
 
 # TODO: not yet installed: phedex dbs
-$A/InstallDev -R cmsweb@HG$VER -s image -v hg$VER  $REPO -p "admin das@1.11.9-hg1309-rc4 mongodb frontend overview t0datasvc t0mon reqmon"
-
+$A/InstallDev -R cmsweb@HG$VER -s image -v hg$VER  $REPO -p "admin das@1.11.9-hg1309-rc5 mongodb frontend overview t0datasvc t0mon reqmon"
+$A/InstallDev -R cmsweb@HG$VER -s image -v hg$VER  $REPO -p "das@1.11.9-hg1309-rc5"
 touch /data/state/frontend/etc/voms-gridmap.txt
 # bootstrap & start DAS
-$A/InstallDev -s start
+$A/InstallDev -s start:das
 
 
 

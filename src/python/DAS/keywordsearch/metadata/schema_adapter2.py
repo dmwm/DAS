@@ -54,7 +54,6 @@ class DasSchemaAdapter(object):
 
         self.discover_apis_and_fields(dascore)
         self._lookup_keys |= set(self.entity_names.values())
-        self._lookup_keys = list(self._lookup_keys)
 
 
         self.print_debug()
@@ -82,7 +81,7 @@ class DasSchemaAdapter(object):
 
     @property
     def lookup_keys(self):
-        return self._lookup_keys
+        return list(self._lookup_keys)
 
     @property
     def cms_synonyms(self):
@@ -284,18 +283,24 @@ class DasSchemaAdapter(object):
         currently only these simple rules allowed:
         site=W*
         dataset=W*
+        dataset site=T1_CH_*
+        dataset site=T1_CH_* dataset=/BprimeBprimeToBZBZinc_M-375_7TeV-madgraph/Summer11-START311_V2-v3/GEN
         file file=W* dataset=FULL
         file file=W* block=FULL
         """
         # TODO: shall we allow params not defined in the rules?
         ok = True
         if wildcards and entity:
-            if entity == 'dataset.name' and wildcards == set(['dataset.name']):
+            if entity == 'dataset.name' and wildcards == set(['dataset.name',]):
                 pass
-            elif entity == 'file.name' and wildcards == set(['file.name']) and \
+            elif entity == 'file.name' and wildcards == set(['file.name',]) and \
                     ('dataset.name' in params or 'block.name' in params):
                 pass
-            elif entity == 'site.name' and wildcards == set(['site.name']):
+            elif entity == 'site.name' and wildcards == set(['site.name',]):
+                pass
+            elif entity == 'dataset.name' and wildcards == set(['site.name',]):
+                pass
+            elif entity == 'dataset.name' and wildcards == set(['dataset.name', 'site.name']):
                 pass
             else:
                 ok = False
