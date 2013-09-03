@@ -486,28 +486,6 @@ class DASWebService(DASWebManager):
         return getSchema().lookup_keys
 
 
-        # append mutliple daskey lookup keys
-
-
-    @expose
-    @checkargs(DAS_WEB_INPUTS)
-    def autocomplete_test(self):
-
-        """
-        new autocompletion
-        """
-
-        daskeys_json = json.dumps(self._get_daskeys_list()) # still daskeys could be both inputs or outputs
-        known_values_json = json.dumps(self._get_known_values())
-        fields_by_entity_json = json.dumps(self._get_fields_by_entity())
-
-
-        page = self.templatepage('kwdsearch_autocomplete_cm',
-                                 known_values=known_values_json,
-                                 daskeys_json=daskeys_json,
-                                 fields_by_entity_json=fields_by_entity_json)
-        return self.page(page, response_div=False)
-
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -718,6 +696,16 @@ class DASWebService(DASWebManager):
         fields_by_entity_json = json.dumps(self._get_fields_by_entity())
         lookup_keys_json = json.dumps(self._list_lookup_keys())
 
+        from collections import defaultdict
+        descriptions = defaultdict(str)
+
+        # DAS key descriptions
+        for item in self.daskeyslist:
+            daskey = item['das'].split('.')[0]
+            descr = self.templatepage('das_keys_desc_row', row=item)
+            descriptions[daskey] += descr
+
+
 
         page  = self.templatepage('das_searchform', input=uinput, \
                 init_dbses=list(self.dbs_instances), daskeys=daskeys, \
@@ -725,7 +713,8 @@ class DASWebService(DASWebManager):
                 known_values=known_values_json,
                 daskeys_json=daskeys_json,
                 fields_by_entity_json=fields_by_entity_json,
-                lookup_keys_json=lookup_keys_json
+                lookup_keys_json=lookup_keys_json,
+                daskeys_descr=json.dumps(descriptions),
                 )
         return page
 

@@ -164,6 +164,26 @@
                 });
         }
 
+        function addResult(str, results){
+            var type = "daskey";
+            if (str.indexOf('=') !== -1)
+                type = "suggestion";
+
+            var completion = {
+                "text": str,
+                "displayText": str,
+                "className": "CodeMirror-hint-"+type
+            };
+            var descr = CodeMirror.hint_daskey_descr[str];
+            if (descr){
+                completion.info = function(compl){
+                    return descr;
+                }
+            }
+            results.push(completion);
+        }
+
+
         function processHintResults(results, cur, token) {
             var s = getStartsWith(cur, token);
             //console.log('getStartsWith results:', s);
@@ -193,7 +213,6 @@
         function getAnyTokenMatchesAsync(token, cur, callback) {
             var token_value = token.string.toLowerCase();
 
-
             var req = new Ajax.Request('/das/autocomplete',
                 {
                     method: 'get',
@@ -219,10 +238,11 @@
                                 return false;
                             }
 
-                            if (checkMatch(str, token_value) &&
-                                (NO_DUPLICATE_CHECK || !arrayContains(results, str))) {
-                                results.push(str);
-                            }
+
+                            if (checkMatch(str, token_value)) {
+                            //    (NO_DUPLICATE_CHECK || !arrayContains(results, str))) {
+                                addResult(str, results);
+                           }
 
                         }
 
@@ -243,7 +263,7 @@
                                 var n = 0;
                                 forEach(vals, function (v) {
                                     if (checkMatch(v, token_value, true) && (n < 5)) {
-                                        results.push(daskey + "=" + v);
+                                        addResult(daskey + "=" + v, results);
                                         n++;
                                     }
                                 });
@@ -253,7 +273,7 @@
                             // dataset values
                             forEach(json, function (v) {
                                 if (v.value.indexOf("dataset=") == 0)
-                                    results.push(v.value);
+                                    addResult(v.value, results);
                             });
 
                             // this will need a callback
@@ -354,9 +374,21 @@
                     return false;
                 }
 
+                var completion = {
+                    "text": str,
+                    "displayText": str,
+                    "className": "CodeMirror-hint-daskey"
+                };
+                var descr = CodeMirror.hint_daskey_descr[str];
+                if (descr){
+                    completion.info = function(comp){
+                        return descr;
+                    }
+                }
+
                 if (checkMatch(str, token_value, infix) &&
                     (NO_DUPLICATE_CHECK || !arrayContains(found, str))) {
-                    found.push(str);
+                    found.push(completion);
                 }
 
             }
