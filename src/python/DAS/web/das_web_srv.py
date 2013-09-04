@@ -1108,29 +1108,26 @@ class DASWebService(DASWebManager):
                 return content
         dasquery = content # returned content is valid DAS query
 
-        initial_das_query = DASQuery(copy.deepcopy(dasquery.mongo_query))
-
-
 
         status, _qhash = self.dasmgr.get_status(dasquery)
         if  status == 'ok':
+            if  view == 'list' or view == 'table':
+                print 'will check if query rewrite needed for nested queries'
+                # If some of given filters do not exist in the results, check if this could be easily resolved by querying entity by its PK
+                # TODO: initial query is not necessarily what we want, especially if we have wildcards...
+                initial_das_query =  DASQuery(copy.deepcopy(dasquery.mongo_query))
+                #print 'rawcache record:', self.dasmgr.rawcache.find(initial_das_query)
+                generated_query_msg = self.repmgr.check_filter_existence(initial_das_query)
+                if generated_query_msg:
+                    content =  self.templatepage('das_error', msg=generated_query_msg)
+                    return self.page(form + content, ctime=time.time()-time0)
+
             kwargs['dasquery'] = dasquery
             page = self.get_page_content(kwargs, complete_msg=False)
             ctime = (time.time()-time0)
             if  view == 'list' or view == 'table':
-                # TODO: it seems it is here that results are being rendered of a completed query
-                print 'will check if query rewrite needed for nested queries'
-                # If some of given filters do not exist in the results, check if this could be easily resolved by querying entity by its PK
-                # TODO: initial query is not necessarily what we want, especially if we have wildcards...
-                generated_query_msg = self.repmgr.check_filter_existence(initial_das_query)
-                if generated_query_msg:
-                    #print_exc(exc)
-                    #msg  = gen_error_msg()
-                    content =  self.templatepage('das_error', msg=generated_query_msg)
-                    return self.page(form + content, ctime=time.time()-time0)
-                    #return self.error(generated_query, wrap=False)
+                    return self.page(form + page, ctime=ctime)
 
-                return self.page(form + page, ctime=ctime)
             return page
         else:
             kwargs['dasquery'] = dasquery.storage_query

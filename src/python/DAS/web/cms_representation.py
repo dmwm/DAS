@@ -277,42 +277,61 @@ class CMSRepresentation(DASRepresentation):
         return tdict
 
 
+    def _get_fieldlist_in_row(self, row):
+        print  '_get_fieldlist_in_row: row=', row
 
-    def get_fields_in_query_result(self, dasquery):
+        rowkeys = []
+        if  row and row.has_key('das') and row['das'].has_key('primary_key'):
+            pkey = row['das']['primary_key']
+            if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
+                try:
+                    mkey = pkey.split('.')[0]
+                    if  isinstance(row[mkey], list):
+                        # take first five or less entries from the list to cover
+                        # possible aggregated records and extract row keys
+                        # TODO: maybe more needed?
+                        lmax    = min(len(row[mkey]), 10)
+                        sublist = [row[mkey][i] for i in xrange(0, lmax)]
+                        ndict   = DotDict({mkey:sublist})
+                        rowkeys = [k for k in ndict.get_keys(mkey)]
+                    else:
+                        rowkeys = [k for k in DotDict(row).get_keys(mkey)]
+                    rowkeys.sort()
+                    rowkeys += ['das.conflict']
+                except Exception as exc:
+                    # TODO: pkey.split fail only if called on non-string
+                    msg = "Fail to pkey.split('.') for pkey=%s" % pkey
+                    print msg
+                    print_exc(exc)
+        print  '_get_fieldlist_in_row: result=', rowkeys
+        return rowkeys
+
+
+
+    def get_fields_in_query_result(self, dasquery, remove_grep=True):
         '''
         returns a list of available fields in the results of dasquery (must be in cache)
         '''
 
         # if we have filter/aggregator get one row from the given query
+
+        if True:
+            from copy import deepcopy
+            mongo_query = deepcopy(dasquery.mongo_query)
+            import pprint
+            pprint.pprint(mongo_query)
+            if 'filters' in mongo_query:
+                del mongo_query['filters']
+            dasquery = DASQuery(mongo_query)
+            pprint.pprint(dasquery.mongo_query)
+
+
+        # this requires qhash to be in cache
+        print  'get_fields_in_query_result. qhash=', dasquery.qhash
         if  dasquery.mongo_query:
             row = self.get_one_row(dasquery)
+            return self._get_fieldlist_in_row(row)
 
-            rowkeys = []
-            page = ''
-            if  row and row.has_key('das') and row['das'].has_key('primary_key'):
-                pkey = row['das']['primary_key']
-                if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
-                    try:
-                        mkey = pkey.split('.')[0]
-                        if  isinstance(row[mkey], list):
-                            # take first five or less entries from the list to cover
-                            # possible aggregated records and extract row keys
-                            lmax    = len(row[mkey]) if len(row[mkey]) < 5 else 5
-                            sublist = [row[mkey][i] for i in xrange(0, lmax)]
-                            ndict   = DotDict({mkey:sublist})
-                            rowkeys = [k for k in ndict.get_keys(mkey)]
-                        else:
-                            rowkeys = [k for k in DotDict(row).get_keys(mkey)]
-                        rowkeys.sort()
-                        rowkeys += ['das.conflict']
-                        #dflt = das_filters() + das_aggregators()
-                        #dflt.remove('unique')
-                        return rowkeys
-                    except Exception as exc:
-                        msg = "Fail to pkey.split('.') for pkey=%s" % pkey
-                        print msg
-                        print_exc(exc)
-                        pass
         return []
 
 
@@ -341,6 +360,7 @@ class CMSRepresentation(DASRepresentation):
 
             #from DAS.keywordsearch.metadata.das_schema_adapter import get_field_list_for_entity_by_pk, get_result_field_list_by_entity
             from copy import deepcopy
+
             from DAS.keywordsearch.tokenizer import get_keyword_without_operator
 
             r_entity = dasquery.mongo_query['fields'][0]
@@ -473,42 +493,23 @@ class CMSRepresentation(DASRepresentation):
         Invoke DAS workflow and get one row from the cache.
         """
         mongo_query = {'spec':{'qhash':dasquery.qhash}}
+        print 'get_one_row: mongo_query=', mongo_query
         data = [r for r in self.dasmgr.get_from_cache(\
                 DASQuery(mongo_query), idx=0, limit=1)]
+        print 'get_one_row: data=', data
         if  len(data):
             return data[0]
 
     def fltpage(self, row):
         """Prepare filter snippet for a given query"""
-        rowkeys = []
         page = ''
-        if  row and row.has_key('das') and row['das'].has_key('primary_key'):
-            pkey = row['das']['primary_key']
-            if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
-                try:
-                    mkey = pkey.split('.')[0]
-                    if  not row.has_key(mkey):
-                        return page
-                    if  isinstance(row[mkey], list):
-                        # take first five or less entries from the list to cover
-                        # possible aggregated records and extract row keys
-                        lmax    = len(row[mkey]) if len(row[mkey]) < 5 else 5
-                        sublist = [row[mkey][i] for i in xrange(0, lmax)]
-                        ndict   = DotDict({mkey:sublist})
-                        rowkeys = [k for k in ndict.get_keys(mkey)]
-                    else:
-                        rowkeys = [k for k in DotDict(row).get_keys(mkey)]
-                    rowkeys.sort()
-                    rowkeys += ['das.conflict']
-                    dflt = das_filters() + das_aggregators()
-                    dflt.remove('unique')
-                    page = self.templatepage('das_filters', \
-                            filters=dflt, das_keys=rowkeys)
-                except Exception as exc:
-                    msg = "Fail to pkey.split('.') for pkey=%s" % pkey
-                    print msg
-                    print_exc(exc)
-                    pass
+        fields = self._get_fieldlist_in_row(row)
+        if fields:
+            #fields += ['das.conflict']
+            dflt = das_filters() + das_aggregators()
+            dflt.remove('unique')
+            page = self.templatepage('das_filters',
+                                     filters=dflt, das_keys=fields)
         return page
 
     def convert2ui(self, idict, not2show=None):

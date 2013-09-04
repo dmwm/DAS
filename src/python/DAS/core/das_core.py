@@ -278,7 +278,7 @@ class DASCore(object):
         """
         services = []
         if  dasquery.mongo_query.has_key('system'):
-            system = query['system']
+            system = dasquery.mongo_query['system']
             if  isinstance(system, str) or isinstance(system, unicode):
                 services = [system]
             elif isinstance(system, list):
