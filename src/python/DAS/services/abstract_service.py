@@ -30,7 +30,7 @@ from DAS.utils.logger import PrintManager
 
 class DASAbstractService(object):
     """
-    Abstract class describing DAS service. It initialized with a name who
+    Abstract class describing DAS service. It initialized with a name which
     is used to identify service parameters from DAS configuration file.
     Those parameters are keys, verbosity level, URL of the data-service.
     """
@@ -44,10 +44,7 @@ class DASAbstractService(object):
             self.write2cache  = config.get('write_cache', True)
             self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
-            if  config.has_key('dbs'):
-                self.dbs_global = self.dasmapping.dbs_global_instance()
-            else:
-                self.dbs_global = None
+            self.dbs_global   = None # to be configured at run time
             dburi             = config['mongodb']['dburi']
             engine            = config.get('engine', None)
             self.gfs          = db_gridfs(dburi)
@@ -93,6 +90,15 @@ class DASAbstractService(object):
         else:
             msg = 'Undefined rawcache, please check your configuration'
             raise Exception(msg)
+
+    def services(self):
+        """
+        Return sub-subsystems used to retrieve data records. It is used
+        in dasheader call to setup das.services field. This method can be
+        overwritten in sub-classes, otherwise returns dict of service name
+        and CMS systems used to retrieve data records.
+        """
+        return {self.name:[self.name]}
 
     def version(self):
         """Return data-services version, should be implemented in sub-classes"""
@@ -162,7 +168,10 @@ class DASAbstractService(object):
         """
         self.logger.info(dasquery)
         # check the cache for records with given query/system
-        if  self.localcache.incache(dasquery, collection='cache', system=self.name):
+        res = self.localcache.incache(dasquery,
+                                      collection='cache',
+                                      system=self.name)
+        if  res:
             msg  = "found records in local cache"
             self.logger.info(msg)
             return
@@ -178,7 +187,8 @@ class DASAbstractService(object):
             return
 
         # update the cache
-        header  = dasheader(self.name, dasquery, expire, api, url)
+        header = dasheader(self.name, dasquery, expire, api, url,
+                services=self.services())
         header['lookup_keys'] = self.lookup_keys(api)
         header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
         header['ctime'] = ctime
@@ -201,11 +211,7 @@ class DASAbstractService(object):
         """
         Return look-up keys of data output for given data-service API.
         """
-        lkeys = []
-        for key in self.map[api]['keys']:
-            for lkey in self.dasmapping.lookup_keys(self.name, key, api=api):
-                if  lkey not in lkeys:
-                    lkeys.append(lkey)
+        lkeys = self.dasmapping.lookup_keys(self.name, api)
         return [{api:lkeys}]
 
     def inspect_params(self, api, args):
@@ -477,6 +483,7 @@ class DASAbstractService(object):
         Analyze input query and yield url, api, args, format, expire
         for further processing.
         """
+        srv   = self.name # get local copy to avoid threading issues
         cond  = getarg(dasquery.mongo_query, 'spec', {})
         instance = dasquery.mongo_query.get('instance', self.dbs_global)
         skeys = getarg(dasquery.mongo_query, 'fields', [])
@@ -487,25 +494,32 @@ class DASAbstractService(object):
             expire = value['expire']
             iformat = value['format']
             url    = self.adjust_url(value['url'], instance)
+            if  not url:
+                msg = '--- rejects API %s, no URL' % api
+                self.logger.info(msg)
+                continue
             args   = dict(value['params']) # make new copy, since we'll adjust
             wild   = value.get('wild_card', '*')
             found  = 0
+            # check if input parameters are covered by API
+            if  not self.dasmapping.check_api_match(srv, api, cond):
+                msg = '--- rejects API %s, does not cover input condition keys' \
+                        % api
+                self.logger.info(msg)
+                continue
+            # once we now that API covers input set of parameters we check
+            # every input parameter for pattern matching
             for key, val in cond.iteritems():
                 # check if key is a special one
                 if  key in das_special_keys():
                     found += 1
-                # check if keys from conditions are accepted by API.
-                if  self.dasmapping.check_dasmap(self.name, api, key, val):
-                    # need to convert key (which is daskeys.map) into
-                    # input api parameter
-                    for apiparam in \
-                        self.dasmapping.das2api(self.name, key, val, api):
-                        if  args.has_key(apiparam):
-                            args[apiparam] = val
-                            found += 1
-                else:
-                    found = 0
-                    break # condition key does not map into API params
+                # check if keys from conditions are accepted by API
+                # need to convert key (which is daskeys.map) into
+                # input api parameter
+                for apiparam in self.dasmapping.das2api(srv, api, key, val):
+                    if  args.has_key(apiparam):
+                        args[apiparam] = val
+                        found += 1
             self.adjust_params(api, args, instance)
             if  not found:
                 msg = "--- rejects API %s, parameters don't match" % api
@@ -531,21 +545,21 @@ class DASAbstractService(object):
                     args[key] = val
 
             # compare query selection keys with API look-up keys
-            api_lkeys = self.dasmapping.api_lkeys(self.name, api)
+            api_lkeys = self.dasmapping.api_lkeys(srv, api)
             if  set(api_lkeys) != set(skeys):
                 msg = "--- rejects API %s, api_lkeys(%s)!=skeys(%s)"\
                         % (api, api_lkeys, skeys)
                 self.logger.info(msg)
                 continue
 
-            msg = '+++ %s passes API %s' % (self.name, api)
+            msg = '+++ %s passes API %s' % (srv, api)
             self.logger.info(msg)
             msg = 'args=%s' % args
             self.logger.debug(msg)
 
             msg  = "yield "
             msg += "system ***%s***, url=%s, api=%s, args=%s, format=%s, " \
-                % (self.name, url, api, args, iformat)
+                % (srv, url, api, args, iformat)
             msg += "expire=%s, wild_card=%s" \
                 % (expire, wild)
             self.logger.debug(msg)

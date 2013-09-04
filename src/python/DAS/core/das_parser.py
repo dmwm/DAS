@@ -138,7 +138,9 @@ class QLManager(object):
                         mongo_query = ply2mongo(ply_query)
                         parse_again = False
                     except Exception as exc:
-                        print "Fail in ply2mongo, ply_query=%s" % ply_query
+                        msg = "Fail in ply2mongo, query=%s, ply_query=%s" \
+                                % (query, ply_query)
+                        print msg
                     try:
                         self.parserdb.insert_valid_query(query, mongo_query)
                     except Exception as exc:

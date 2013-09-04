@@ -121,7 +121,6 @@ def getdata(urls, ckey, cert, headers=None, num_conn=100):
                 curl.bbuf = None
                 mcurl.remove_handle(curl)
                 freelist.append(curl)
-                cleanup(mcurl)
                 yield {'url': url, 'data': None, 'headers': hdrs,
                         'error': errmsg, 'code': errno}
             num_processed = num_processed + len(ok_list) + len(err_list)

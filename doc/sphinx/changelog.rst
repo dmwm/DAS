@@ -5,6 +5,54 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 2.0.X
+
+  - Add services attribute to das part of data record, it shows which DAS
+    services were used, while system attribute used to show which CMS systems
+    were used to produce data record(s)
+  - Turn off dbs_phedex, it producing too much load, instead use individual
+    services
+  - Re-evaluate lifetime of records in DAS cache: the clean-up should be done
+    either for qhash/das.expire pair (less then current tstamp) or for records
+    which live in cache long enough, via das.exire<tstamp-rec_ttl
+  - Introduce dasdb.record_ttl configuration parameter int das config
+  - Fix issue4023
+  - Changes to allow DAS run with DBS2/DBS3 in a mix mode
+  - Extend download LFN link to download web page, issue 4022
+  - Add Status link to DAS header and let users to see status of DAS queue
+  - Re-factor DASMapping code, see ticket 4021
+  - Add support for mcm dataset=/a/b/c query; first it looks-up information
+    from ReqMgr to get its info for given dataset, then it parse ReqMgr info
+    and extracts PrepID and passes it to MCM data-service.
+  - Add MCM links on dataset summary page when information
+    is provided by reqmgr data-service (MC datasets)
+  - Add code to support MCM (PREP) data-service (issue 3449),
+    user can look-up mcm info by using the following query: mcm prepid=<PREP-ID>
+  - Remove timestamp attribute from passed dict to md5hash function, it is
+    required due to dynamic nature of timestamp which leads to modification of
+    the hash of the record
+  - Add new stress tool, see bin/das_stress_tool
+  - Round timestamp for map records as well as for dasheader due to
+    inconsistent behavior of json parsers, see note in jsonwrapper module
+  - Fix issue4017: add hash to all DAS map records; add verification of hash
+    into DASMapping check_maps method
+  - Fix issue4016: add aux-record called arecord; arecord contains count of
+    corresponding map record, map record type and a system. Adjust DASMapping
+    check_maps method to perform full check of DAS maps by comparing count
+    field from aux-record with actual number of maps in DAS mapping DB
+  - Apply common set of indexes for both cache/merge collection to properly
+    get/merge records
+  - Allow runs DBS3 API to yield individual records
+  - Support block tier=GEN-SIM date between [20120223, 20120224] query via
+    blocksummaries DBS3 API
+  - Switch from block_names to block_name as input parameter for blocksummaries
+    DBS3 API; handle correctly incorrect values for dates in DBS3
+    blocksummaries API
+  - Fix issues 4014, 4013, 4009
+  - Add lumi4block_run and dataset4block DBS3 APIs
+  - fix run input parameter for all DBS3 APIs
+  - Add runsummaries API
+
 - 1.12.X
 
   - Fix wildcards to provide more informative messages in text mode

@@ -132,7 +132,8 @@ def adjust_values(func, gen, links, pkey):
     das_mapping_db:daskey_from_presentation
     """
     rdict = {}
-    for uikey, value in [k for k, _g in groupby(gen)]:
+    uidict = {}
+    for uikey, value, uilink, uidesc, uiexamples in [k for k, _g in groupby(gen)]:
         val = quote(value)
         if  rdict.has_key(uikey):
             existing_val = rdict[uikey]
@@ -142,11 +143,25 @@ def adjust_values(func, gen, links, pkey):
                 rdict[uikey] = existing_val + [val]
         else:
             rdict[uikey] = val
+        uidict[uikey] = (uilink, uidesc, uiexamples)
     page = ""
     to_show = []
     green = 'style="color:green"'
     red = 'style="color:red"'
     for key, val in rdict.iteritems():
+        uilink, _uidesc, _uiexamples = uidict[key]
+        if  uilink and val:
+            if  not isinstance(val, list):
+                val = [val]
+            values = []
+            for elem in val:
+                for ilink in uilink:
+                    dasquery = ilink['query'] % elem
+                    val = '<a href="/das/request?input=%s">%s</a>' \
+                            % (dasquery, elem)
+                    values.append(val)
+            to_show.append((key, ', '.join(values)))
+            continue
         lookup = func(key)
         if  key.lower() == 'reason' or key.lower() == 'qhash':
             continue
@@ -314,22 +329,9 @@ class CMSRepresentation(DASRepresentation):
         '''
 
         # if we have filter/aggregator get one row from the given query
-
-        if True:
-            from copy import deepcopy
-            mongo_query = deepcopy(dasquery.mongo_query)
-            import pprint
-            pprint.pprint(mongo_query)
-            if 'filters' in mongo_query:
-                del mongo_query['filters']
-            dasquery = DASQuery(mongo_query)
-            pprint.pprint(dasquery.mongo_query)
-
-
         # this requires qhash to be in cache
-        print  'get_fields_in_query_result. qhash=', dasquery.qhash
         if  dasquery.mongo_query:
-            row = self.get_one_row(dasquery)
+            row = self._get_one_row_with_all_fields(dasquery)
             return self._get_fieldlist_in_row(row)
 
         return []
@@ -392,8 +394,9 @@ class CMSRepresentation(DASRepresentation):
             # try any of PKs available
             for pk in pks_of_req_entity:
                 # list of fields for given entity retrieved by PK
+
                 fields_in_nested_by_pk = \
-                    getSchema().get_result_field_list_by_entity(self.dasmgr, r_entity, [pk,])
+                    getSchema().get_field_list_for_entity_by_pk(r_entity, [pk,])
 
                 pprint(['PK FIELDS:', fields_in_nested_by_pk])
 
@@ -490,15 +493,41 @@ class CMSRepresentation(DASRepresentation):
 
     def get_one_row(self, dasquery):
         """
-        Invoke DAS workflow and get one row from the cache.
+        Invoke DAS workflow and get one rowID from the cache.
         """
+        # TODO: this returns ONLY rowID, is this intended use?
         mongo_query = {'spec':{'qhash':dasquery.qhash}}
-        print 'get_one_row: mongo_query=', mongo_query
         data = [r for r in self.dasmgr.get_from_cache(\
                 DASQuery(mongo_query), idx=0, limit=1)]
-        print 'get_one_row: data=', data
         if  len(data):
             return data[0]
+
+    def _get_one_row_with_all_fields(self, dasquery):
+        """
+        returns a query result ignoring the grep filter(s)
+        """
+        # TODO: cleanup
+        from copy import deepcopy
+        mongo_query = deepcopy(dasquery.mongo_query)
+        #import pprint
+        #print 'old Q:'
+        #pprint.pprint(mongo_query)
+        if 'filters' in mongo_query:
+            #del mongo_query['filters']
+            mongo_query['filters'] = {}
+        dasquery = DASQuery(mongo_query)
+        #print 'new Q:'
+        #pprint.pprint(dasquery.mongo_query)
+        #qstr = dasquery.convert_query_to_das_ql(self.dasmgr)
+        #dasquery = DASQuery(qstr)
+
+        data = [r for r in self.dasmgr.get_from_cache(\
+                        dasquery, idx=0, limit=1)]
+       # print 'get_one_row_all_fields: data=', data
+        if  len(data):
+            return data[0]
+
+
 
     def fltpage(self, row):
         """Prepare filter snippet for a given query"""
@@ -522,14 +551,20 @@ class CMSRepresentation(DASRepresentation):
             for item in self.dasmapping.presentation(key):
                 try:
                     daskey = item['das']
+                    link = item.get('link', None)
+                    desc = item.get('description', None)
+                    exam = item.get('examples', None)
                     if  not2show and not2show == daskey:
                         continue
                     uikey  = item['ui']
                     for value in access(idict, daskey):
                         if  value:
-                            yield uikey, value
+                            yield uikey, value, link, desc, exam
                 except:
-                    yield key, idict[key]
+                    link = None
+                    desc = None
+                    exam = None
+                    yield key, idict[key], link, desc, exam
 
     def systems(self, slist):
         """Colorize provided sub-systems"""
@@ -580,7 +615,7 @@ class CMSRepresentation(DASRepresentation):
         inst     = dasquery.instance
         filters  = dasquery.filters
         aggrtrs  = dasquery.aggregators
-        main     = self.pagination(total, apilist, kwargs)
+        main     = self.pagination(head)
         style    = 'white'
         rowkeys  = []
         fltpage  = self.filter_bar(dasquery)
@@ -671,8 +706,8 @@ class CMSRepresentation(DASRepresentation):
                     if  pkey and pkey == 'file.name':
                         try:
                             lfn = DotDict(row).get('file.name')
-                            val = self.templatepage(\
-                                'filemover', lfn=lfn) if lfn else ''
+                            val = '<a href="/das/download?lfn=%s">Download</a>'\
+                                    % lfn if lfn else ''
                             if  val: links.append(val)
                         except:
                             pass
@@ -722,14 +757,6 @@ class CMSRepresentation(DASRepresentation):
             try:
                 if  row.has_key('das'):
                     systems = self.systems(row['das']['system'])
-                    if  row['das']['system'] == ['combined'] or \
-                        row['das']['system'] == [u'combined']:
-                        if  lkey:
-                            rowsystems = DotDict(row).get('%s.combined' % lkey)
-                            try:
-                                systems = self.systems(rowsystems)
-                            except TypeError as _err:
-                                systems = self.systems(['combined'])
                 else:
                     systems = "" # no das record
                     print dastimestamp('DAS ERROR '), \
@@ -740,7 +767,7 @@ class CMSRepresentation(DASRepresentation):
             except Exception as exc:
                 print_exc(exc)
                 systems = "" # we don't store systems for aggregated records
-            jsonhtml = das_json(row, pad)
+            jsonhtml = das_json(dasquery, row, pad)
             jsonhtml = jsonhtml.replace(\
                 'request?', 'request?instance=%s&' % inst)
             if  not links:
@@ -779,7 +806,7 @@ class CMSRepresentation(DASRepresentation):
         filters  = dasquery.filters
         sdir     = getarg(kwargs, 'dir', '')
         titles   = []
-        page     = self.pagination(total, apilist, kwargs)
+        page     = self.pagination(head)
         fltbar   = self.filter_bar(dasquery)
         if  filters:
             for flt in filters:
@@ -812,7 +839,7 @@ class CMSRepresentation(DASRepresentation):
             else:
                 gen = self.convert2ui(row)
                 titles = []
-                for uikey, val in gen:
+                for uikey, val, _link, _desc, _examples in gen:
                     skip = 0
                     if  not filters:
                         if  uikey in titles:

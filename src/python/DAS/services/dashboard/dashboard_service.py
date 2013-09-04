@@ -93,7 +93,7 @@ class DashboardService(DASAbstractService):
                     args['date2'] = convert_datetime(value[1])
                     count += 1
                 else:
-                    for param in self.dasmapping.das2api(self.name, key):
+                    for param in self.dasmapping.das2api(self.name, api, key):
                         args[param] = value
                         count += 1
             else: # we got some operator, e.g. key :{'$in' : [1,2,3]}

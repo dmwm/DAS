@@ -177,6 +177,8 @@ def gen_color(system):
         bkg, col = '#AFEEEE', 'black'
     elif system == 'monitor':
         bkg, col = '#FF4500', 'black'
+    elif system == 'prep2':
+        bkg, col = '#CCFF66', 'black'
     else:
         keyhash = hashlib.md5()
         keyhash.update(system)
@@ -228,9 +230,6 @@ def quote(data):
     """
     Sanitize the data using cgi.escape.
     """
-
-
-
     if  isinstance(data, int) or isinstance(data, float):
         res = data
     elif  isinstance(data, dict):
@@ -506,7 +505,81 @@ def json2html(idict, pad="", ref=None):
     sss += newline + pad + '}'
     return sss
 
-def das_json(record, pad=''):
+def das_json_services(system, das):
+    """
+    Helper function used in das_json which returns list of CMS services for
+    given DAS system and DAS dict
+    """
+    msg = ''
+    for row in das.get('services', []):
+        for srv, items in row.iteritems():
+            if  srv != system:
+                continue
+            msg = 'Sources:'
+            for cmssys in items:
+                style = 'background-color:%s;color:%s;' % gen_color(cmssys)
+                msg += '<span style="%s;padding:3px">%s</span>' \
+                        % (style, cmssys)
+            msg += ' '
+    return msg
+
+def das_json(dasquery, record, pad='', full=False):
+    """
+    Wrap provided jsonhtml code snippet into div/pre blocks. Provided jsonhtml
+    snippet is sanitized by json2html function.
+    """
+    if  full:
+        return das_json_full(record, pad)
+    mquery  = dasquery.mongo_query
+    daskeys = ['das_id', 'cache_id', 'qhash', 'das' , '_id']
+    fields  = mquery.get('fields', None)
+    if  fields:
+        lkeys = [l for l in fields if l not in daskeys]
+    else:
+        lkeys = []
+    # get das.systems and primary key
+    das  = record['das']
+    srvs = das.get('system', [])
+    apis = das.get('api', [])
+    prim_key = das.get('primary_key', '').split('.')[0]
+    if  not srvs or not prim_key or len(apis) != len(srvs):
+        return das_json_full(record, pad)
+    pval = record[prim_key]
+    if  isinstance(pval, list) and len(pval) != len(srvs):
+        return das_json_full(record, pad)
+    try:
+        page = '<div class="code">'
+        for idx in range(0, len(srvs)):
+            srv   = srvs[idx]
+            api   = apis[idx]
+            if  lkeys:
+                rec = {prim_key: pval[idx]}
+                for lkey in [l for l in lkeys if l != prim_key]:
+                    rec[lkey] = record[lkey][idx]
+                val = das_json_full(rec)
+            else:
+                val = das_json_full(pval[idx])
+            style = 'background-color:%s;color:%s;' % gen_color(srv)
+            page += '\n<b>DAS service:</b> '
+            page += '<span style="%s;padding:3px">%s</span> ' % (style, srv)
+            if  srv == 'combined':
+                page += das_json_services(srv, das)
+            page += '<b>DAS api:</b> %s' % api
+            page += '\n<pre style="%s">%s</pre>' % (style, val)
+        page += '\n<b>DAS part:</b><pre>%s</pre>' % das_json_full(das)
+        rhash = {'qhash':record.get('qhash', None),
+                 'das_id':record.get('das_id', None),
+                 'cache_id': record.get('cache_id', None)}
+        page += '<b>Hashes</b>: <pre>%s</pre>' % das_json_full(rhash)
+        rlink = '/das/records/%s?collection=merge&view=json' % record['_id']
+        page += '<br/>Download <a href="%s">raw record</a>' % rlink
+        page += '</div>'
+    except Exception as exc:
+        print_exc(exc)
+        return das_json_full(record, pad)
+    return page
+
+def das_json_full(record, pad=''):
     """
     Wrap provided jsonhtml code snippet into div/pre blocks. Provided jsonhtml
     snippet is sanitized by json2html function.
@@ -515,7 +588,6 @@ def das_json(record, pad=''):
     page += json2html(record, pad)
     page += "</pre></div>"
     return page
-
 def gen_error_msg(kwargs):
     """
     Generate standard error message.

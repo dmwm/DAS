@@ -58,6 +58,10 @@ class testCMSFakeDataServices(unittest.TestCase):
         config['parserdb'] = {'collname': collname, 'dbname': 'parser', 
                                 'enable': True, 'sizecap': 10000}
         config['services'] = ['dbs', 'phedex', 'sitedb', 'google_maps', 'ip']
+        # Do not perform DAS map test, since we overwrite system and urls.
+        # This is done to use standard DAS maps, but use local URLs, which
+        # cause DAS hash map to be be wrong during a test
+        config['map_test'] = False
 
         # setup DAS mapper
         self.mgr = DASMapping(config)

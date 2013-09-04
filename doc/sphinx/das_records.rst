@@ -25,7 +25,9 @@ contains information about underlying API calls made to data-provider. For examp
              "url": ["http://a.v.com/api", "http://c.d.com/api"], 
              "timestamp": 1265404185.2611251, 
              "lookup_keys": ["block.name", "file.name", "block.name"], 
-             "system": ["phedex3", "dbs"], 
+             "system": ["combined"], 
+             "services": [{"combined":["dbs", "phedex"]}],
+             "record": 0,
              "api": ["blockReplicas", "listBlocks"], 
              "expire": 1265407785.2611251}
     }

@@ -269,8 +269,8 @@ class DasSchemaAdapter(object):
     # TODO: rename to ?? list_result_fields_for_pk
     # TODO: rename result_entity to looup?
     def get_field_list_for_entity_by_pk(self, result_entity, pk):
-        # TODO: make sure all the fields exists on record returned by given PK!!
-        # TODO: specify a certain PK
+        # TODO: make sure all the fields exists on record returned when querying by given PK!!
+        # e.g. user.email vs user.name!!!
 
         if self._result_fields_by_entity:
             return self._result_fields_by_entity[result_entity]

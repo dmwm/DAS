@@ -1,0 +1,31 @@
+# MCM API mapping to DAS
+system : mcm
+format : JSON
+---
+urn : mcm_summary
+url : "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get"
+expire : 600
+params : {"mcm": "required"}
+lookup : mcm
+das_map : [
+    {"das_key": "mcm", "rec_key": "mcm.prepid", "api_arg":"mcm"},
+    {"das_key": "prepid", "rec_key": "mcm.prepid", "api_arg":"mcm"},
+]
+---
+urn : mcm4dataset
+url : "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get"
+expire : 600
+params : {"dataset": "required"}
+lookup : mcm
+das_map : [
+    {"das_key": "mcm", "rec_key": "mcm.prepid"},
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+notations : [
+    {"api_output":"results", "rec_key":"mcm", "api":""},
+    {"api_output":"total_events", "rec_key":"nevents", "api":""},
+    {"api_output":"cmssw_release", "rec_key":"release", "api":""},
+    {"api_output":"reqmgr_name", "rec_key":"reqmgr", "api":""},
+]

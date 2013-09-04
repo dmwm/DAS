@@ -47,6 +47,14 @@ information about number of files/lumis/blocks/events and file size",
         {"das":"summary.file_size", "ui":"sum(file_size)"},
         {"das":"summary.run", "ui":"Run"},
         {"das":"summary.file", "ui":"File"},
+        {"das":"summary.dataset", "ui":"Dataset"},
+        {"das":"summary.era", "ui":"era"},
+        {"das":"summary.tier", "ui":"Data tier"},
+        {"das":"summary.custodial", "ui":"Custodial"},
+        {"das":"summary.size", "ui":"Size"},
+        {"das":"summary.release", "ui":"CMSSW release"},
+        {"das":"summary.notes", "ui":"Physics channel"},
+        {"das":"summary.pwg", "ui":"Physics group"},
         {"das":"nfiles", "ui":"Number of files"},
         {"das":"nlumis", "ui":"Number of lumis"},
         {"das":"nblocks", "ui":"Number of blocks"},
@@ -54,6 +62,11 @@ information about number of files/lumis/blocks/events and file size",
         {"das":"file_size", "ui":"sum(file_size)"},
         {"das":"run", "ui":"Run"},
         {"das":"file", "ui":"File"},
+        {"das":"dataset", "ui":"Dataset"},
+        {"das":"era", "ui":"era"},
+        {"das":"tier", "ui":"Data tier"},
+        {"das":"custodial", "ui":"Custodial"},
+        {"das":"size", "ui":"Size"},
         ],
 dataset : [
         {"das":"dataset.name", "ui":"Dataset",
@@ -73,6 +86,11 @@ dataset : [
          "examples":[
          "dataset=/ZMM*/*/*",
          ]
+        },
+        {"das":"dataset.PrepID", "ui":"McM info",
+         "link":[{"name":"McM", "query":"mcm prepid=%s"}],
+         "description": "PrepID info provided by McM data-service",
+         "examples":["mcm prepid=HIG-Summer12-01312"]
         },
         {"das":"dataset.nfiles", "ui":"Number of files"},
         {"das":"dataset.nblocks", "ui":"Number of blocks"},
@@ -146,7 +164,6 @@ run : [
          "diff":["run.nevents"],
          "link":[
                 {"name":"Datasets", "query": "dataset run=%s"},
-                {"name":"Lumis", "query": "lumi run=%s"},
                 ],
         "description":"is run number (usually six digits) used by DBS/RunRegistry/CondDB/Tier-0 systems",
          "examples":[
@@ -189,9 +206,10 @@ lumi : [
          "description":"is used to identify luminosity block during run data-taking, it is \
 provided by DBS/CondDB/LumiDB systems",
          "examples":[
-         "lumi run=160915",
          "lumi file=/lfn.root",
+         "lumi file=/lfn.root run=160915",
          "lumi block=/a/b/c#123",
+         "lumi block=/a/b/c#123 | count(lumi)",
          ]
         },
         {"das": "lumi.delivered", "ui": "Delivered luminosiy"},
@@ -253,6 +271,11 @@ site : [
         {"das":"site.replica_fraction", "ui":"File-replica presence"},
         {"das":"site.admin.email", "ui":"Admin Email(s)"},
         {"das":"site.info.usage", "ui":"Usage"},
+        {"das":"site.node.name", "ui":"Node name"},
+        {"das":"site.node.cust_node_files", "ui":"Custodial files"},
+        {"das":"site.node.cust_node_bytes", "ui":"Custodial size"},
+        {"das":"site.node.nocust_node_files", "ui":"Non-custodial files"},
+        {"das":"site.node.nocust_node_bytes", "ui":"Non-custtoial size"},
         {"das":"site.resources.fqdn", "ui":"CE/SE's"},
         {"das":"site.error", "ui":"Error"},
         {"das":"site.httperror", "ui":"HTTP error"},
@@ -365,6 +388,17 @@ user    : [
         {"das":"user.email", "ui":"Email"},
         {"das":"user.phone1", "ui":"Phone"},
         {"das":"user.phone2", "ui":"Alternative Phone"},
+        ],
+mcm   : [
+        {"das":"mcm.prepid", "ui":"McM prepid",
+         "link":[{"name":"ReqMgr", "query":"dataset prepid=%s"}],
+         "description": "Most recent dataset for given prepid",
+         "examples":["dataset prepid=HIG-Summer12-01312"]
+        },
+        {"das":"mcm.release", "ui":"CMSSW release"},
+        {"das":"mcm.notes", "ui":"Physics channel"},
+        {"das":"mcm.pwg", "ui":"Physics group"},
+        {"das":"mcm.nevents", "ui":"Number of events"},
         ],
 status: [
         {"das":"status.name", "ui":"Status", "link":[],

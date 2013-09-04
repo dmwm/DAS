@@ -97,7 +97,7 @@ class DBSDaemon(object):
             return None
 
         if  self.col:
-            time0 = time.time()
+            time0 = round(time.time())
             udict = {'$set':{'ts':time0}}
             cdict = {'dataset':'__POPULATED__'}
             gen = self.datasets()

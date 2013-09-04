@@ -6,8 +6,6 @@ DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.
 """
 
-__revision__ = "$Id: das_server.py,v 1.9 2010/04/07 18:21:35 valya Exp $"
-__version__ = "$Revision: 1.9 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -25,8 +23,6 @@ from cherrypy import config as cpconfig
 from DAS.utils.das_config import das_readconfig
 from DAS.web.das_web_srv import DASWebService
 from cherrypy.process.plugins import PIDFile
-from DAS.services.combined.dbs_phedex import DBSPhedexService
-from DAS.services.combined.lumi_service import LumiService
 
 class Root(object):
     """
@@ -113,16 +109,6 @@ class Root(object):
         config['engine'] = engine
         obj = DASWebService(self.config)
         tree.mount(obj, url_base) # mount web server
-
-        # Mount local services, e.g. dbs_phedex, dbs_lumi
-        for srv in self.config['web_server'].get('services', []):
-            print "### DAS web server mounted %s service" % srv
-            if  srv == 'dbs_phedex':
-                obj = DBSPhedexService()
-                tree.mount(obj, '/' + srv)
-            elif srv == 'dbs_lumi':
-                obj = LumiService()
-                tree.mount(obj, '/' + srv)
 
         print "### DAS web server, PID=%s" % self.pid
         print pformat(tree.apps)

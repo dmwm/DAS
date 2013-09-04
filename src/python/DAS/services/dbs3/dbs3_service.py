@@ -16,10 +16,6 @@ NOTE: DBS3 APIs provide flat namespace JSON records. It means
       directly in a code.
 """
 
-# TODO: I need to implement support for IN operator, see DBS3 tickets:
-#       https://svnweb.cern.ch/trac/CMSDMWM/ticket/4136
-#       https://svnweb.cern.ch/trac/CMSDMWM/ticket/4157
-
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -104,7 +100,7 @@ def dbs_find(entity, url, kwds):
         raise Exception(msg)
     expire  = 600
     dataset = kwds.get('dataset', None)
-    block   = kwds.get('block', None)
+    block   = kwds.get('block_name', None)
     lfn     = kwds.get('file', None)
     runs    = kwds.get('runs', [])
     if  not (dataset or block or lfn):
@@ -118,9 +114,9 @@ def dbs_find(entity, url, kwds):
         params = {'logical_file_name': lfn}
     if  runs:
         if  entity == 'file':
-            params.update({'run': runrange(runs[0], runs[-1], False)})
+            params.update({'run_num': runrange(runs[0], runs[-1], False)})
         else:
-            params.update({'run': runs[0]})
+            params.update({'run_num': runs[0]})
     headers = {'Accept': 'application/json;text/json'}
     source, expire = \
         getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
@@ -145,22 +141,23 @@ def block_run_lumis(url, blocks, runs=None):
     """
     headers = {'Accept': 'application/json;text/json'}
     urls = []
+    params = {}
     for blk in blocks:
         if  not blk:
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            params.update({'run': runrange(runs[0], runs[0], True)})
+            params.update({'run_num': runrange(runs[0], runs[0], True)})
         urls.append(dbs_url)
     if  not urls:
         return
     gen = urlfetch_getdata(urls, CKEY, CERT, headers)
     odict = {} # output dict
     for rec in gen:
-        blk = url_args(rec['url'])['block_name']
+        blk = urllib.unquote(url_args(rec['url'])['block_name'])
         if  'error' in rec.keys():
-            # TODO: should handle error somehow
-            pass
+            err = 'N/A: %s' % rec
+            yield blk, err, err
         else:
             for row in json.loads(rec['data']):
                 run = row['run_num']
@@ -183,7 +180,7 @@ def file_run_lumis(url, blocks, runs=None):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            dbs_url += "&run=%s" % runrange(runs[0], runs[-1], True)
+            dbs_url += "&run_num=%s" % runrange(runs[0], runs[-1], True)
         urls.append(dbs_url)
     if  not urls:
         return
@@ -191,8 +188,8 @@ def file_run_lumis(url, blocks, runs=None):
     odict = {} # output dict
     for rec in gen:
         if  'error' in rec.keys():
-            # TODO: should handle error somehow
-            pass
+            err = 'N/A: %s' % rec
+            yield err, err, err
         else:
             for row in json.loads(rec['data']):
                 run = row['run_num']
@@ -214,11 +211,11 @@ def get_api(url):
 def get_modification_time(record):
     "Get modification timestamp from DBS data-record"
     for key in ['dataset', 'block', 'file']:
-        if  record.has_key(key):
+        if  key in record:
             obj = record[key]
-            if  isinstance(obj, dict) and obj.has_key('last_modification_date'):
+            if  isinstance(obj, dict) and 'last_modification_date' in obj:
                 return record[key]['last_modification_date']
-    if  isinstance(record, dict) and record.has_key('last_modification_date'):
+    if  isinstance(record, dict) and 'last_modification_date' in record:
         return record['last_modification_date']
     return None
 
@@ -232,8 +229,8 @@ def old_timestamp(tstamp, threshold=2592000):
 
 def get_block_run_lumis(url, api, args):
     "Helper function to deal with block,run,lumi requests"
-    run_value = args.get('run', [])
-    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+    run_value = args.get('run_num', [])
+    if  isinstance(run_value, dict) and '$in' in run_value:
         runs = run_value['$in']
     elif isinstance(run_value, list):
         runs = run_value
@@ -251,8 +248,8 @@ def get_block_run_lumis(url, api, args):
 
 def get_file_run_lumis(url, api, args):
     "Helper function to deal with file,run,lumi requests"
-    run_value = args.get('run', [])
-    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+    run_value = args.get('run_num', [])
+    if  isinstance(run_value, dict) and '$in' in run_value:
         runs = run_value['$in']
     elif isinstance(run_value, list):
         runs = run_value
@@ -264,6 +261,7 @@ def get_file_run_lumis(url, api, args):
     args.update({'runs': runs})
     blocks = dbs_find('block', url, args)
     gen = file_run_lumis(url, blocks, runs)
+    key = 'file_run'
     if  api.startswith('run_lumi'):
         key = 'run'
     if  api.startswith('file_lumi'):
@@ -275,8 +273,8 @@ def get_file_run_lumis(url, api, args):
 
 def get_file4dataset_run_lumi(url, api, args):
     "Helper function to deal with file dataset=/a/b/c run=123 lumi=1 requests"
-    run_value = args.get('run', [])
-    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+    run_value = args.get('run_num', [])
+    if  isinstance(run_value, dict) and '$in' in run_value:
         runs = run_value['$in']
     elif isinstance(run_value, list):
         runs = run_value
@@ -286,41 +284,61 @@ def get_file4dataset_run_lumi(url, api, args):
     args.update({'runs': runs})
     blocks = dbs_find('block', url, args)
     gen = file_run_lumis(url, blocks, runs)
-    key = 'file'
     for lfn, _run, lumi in gen:
         if  lumi == ilumi:
             yield lfn
+
+def get_lumis4block_run(url, api, args):
+    "Get lumi numbers for given block/run parameters"
+    for row in get_file_run_lumis(url, api, args):
+        yield dict(lumi=row['lumi'])
 
 ### helper functions for get_blocks4tier_dates
 def process(gen):
     "Process generator from getdata"
     for row in gen:
-        if  row.has_key('error'):
+        if  'error' in row:
             raise Exception(row['error'])
-        if  row.has_key('data'):
+        if  'data' in row:
             yield json.loads(row['data'])
 
-def datasets(urls):
-    """Look-up datasets for given set of parameters"""
-    headers = {'Accept':'text/json;application/json'}
-    data    = urlfetch_getdata(urls, CKEY, CERT, headers)
-    for dlist in process(data):
-        for row in dlist:
-            yield row['dataset']
-
-def blocks(dbs, dlist, min_cdate, max_cdate):
-    "Get list of blocks for given dataset list"
+def blocks4tier_date(dbs, tier, min_cdate, max_cdate):
+    "Get list of blocks for given parameters"
     headers = {'Accept':'text/json;application/json'}
     url     = dbs + "/blocks"
-    params  = ({'dataset':d, 'min_cdate':min_cdate, 'max_cdate':max_cdate} \
-            for d in dlist)
-    urls    = ['%s?%s' % (url, urllib.urlencode(p)) for p in params]
+    params  = {'data_tier_name':tier,
+               'min_cdate':min_cdate,
+               'max_cdate':max_cdate}
+    urls    = ['%s?%s' % (url, urllib.urlencode(params))]
     res     = process(urlfetch_getdata(urls, CKEY, CERT, headers))
+    err     = 'Unable to get blocks for tier=%s, mindate=%s, maxdate=%s' \
+                % (tier, min_cdate, max_cdate)
     for blist in res:
+        if  isinstance(blist, dict):
+            if  'block_name' not in blist:
+                msg = err + ', reason=%s' % json.dumps(blist)
+                raise Exception(msg)
         for row in blist:
             yield row['block_name']
 
-### TODO: this needs to be revisited with new DBS3 API blockSummaries
+def block_summary(dbs, blocks):
+    "Get block summary information for given set of blocks"
+    headers = {'Accept':'text/json;application/json'}
+    url     = dbs + "/blocksummaries"
+    urls    = ['%s/?block_name=%s' % (url, urllib.quote(b)) for b in blocks]
+    res     = urlfetch_getdata(urls, CKEY, CERT, headers)
+    for row in res:
+        if  'error' in row:
+            raise Exception(row['error'])
+        url = row['url']
+        blk = urllib.unquote(url.split('=')[-1])
+        for rec in json.loads(row['data']):
+            data = {'name': blk, 'size': rec['file_size'],
+                    'nfiles': rec['num_file'],
+                    'nevents': rec['num_event']}
+            yield dict(block=data)
+
+### this needs to be revisited with new DBS3 API blockSummaries
 ### https://svnweb.cern.ch/trac/CMSDMWM/ticket/4148
 ### currently the result of get_blocks4tier_dates is not precise since
 ### blocks creation dates are not the same as dataset ones
@@ -330,49 +348,36 @@ def get_blocks4tier_dates(dbs_url, api, args):
     tier    = args.get('tier')
     ddict   = args.get('date')
     if  isinstance(ddict, dict):
-        if  ddict.has_key('$lte'):
+        if  '$lte' in ddict:
             date1 = ddict['$gte']
             date2 = ddict['$lte'] + fullday
-        elif ddict.has_key('$in'):
+        elif '$in' in ddict:
             date1 = ddict['$in'][0]
             date2 = ddict['$in'][-1]
         else:
-            msg = 'Unsupported date dict, "%s"' % ddict
+            msg = '%s, unsupported date dict, "%s"' % (api, ddict)
             raise Exception(msg)
     else:
-        date1 = date
-        date1 = date + fullday
-    headers = {'Accept':'text/json;application/json'}
-    pat     = "/*/*/%s" % tier
-    url     = dbs_url + "/datasets"
-    params  = [{'dataset':pat, 'min_cdate':date1, 'max_cdate':date2}]
-    urls    = ['%s?%s' % (url, urllib.urlencode(p)) for p in params]
-    # get dataset list
-    dlist   = (r for r in datasets(urls))
+        date1 = ddict
+        date1 = ddict + fullday
 
-    # get block list
-    blist   = (r for r in blocks(dbs_url, dlist, date1, date2))
+    try:
+        # get block list
+        blist   = (r for r in blocks4tier_date(dbs_url, tier, date1, date2))
 
-    # get summaries
-    url     = dbs_url + "/filesummaries"
-    urls    = ['%s/?block_name=%s' % (url, urllib.quote(b)) for b in blist]
-    res     = urlfetch_getdata(urls, CKEY, CERT, headers)
-    for row in res:
-        if  row.has_key('error'):
-            raise Exception(row['error'])
-        url = row['url']
-        blk = urllib.unquote(url.split('=')[-1])
-        data = row['data']
-        try:
-            for rec in json.loads(data):
-                data = dict(name=blk, size=rec['file_size'],
-                        nfiles=rec['num_file'], nevents=rec['num_event'],
-                        nlumis=rec['num_lumi'])
-                yield dict(block=data)
-        except Exception as exc:
-            msg = 'Unable to parse block row, blk=%s, row=%s, exception=%s' \
-                    % (blk, row, exc)
-            print_exc(msg)
+        # get summaries
+        for row in block_summary(dbs_url, blist):
+            yield row
+    except Exception as exc:
+        data = {'error': 'get_blocks4tier_dates API error',
+                'reason': str(exc),
+                'ts': time.time()}
+        yield dict(block=data)
+
+def get_dataset4block(args):
+    "Get dataset name for given block"
+    block = args.get('block_name')
+    yield {'dataset':{'name':block.split('#')[0]}}
 
 class DBS3Service(DASAbstractService):
     """
@@ -383,8 +388,8 @@ class DBS3Service(DASAbstractService):
         self.reserved = ['api', 'apiversion']
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        self.prim_instance = self.dasmapping.dbs_global_instance()
-        self.instances = self.dasmapping.dbs_instances()
+        self.prim_instance = self.dasmapping.dbs_global_instance(self.name)
+        self.instances = self.dasmapping.dbs_instances(self.name)
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
 
@@ -393,8 +398,10 @@ class DBS3Service(DASAbstractService):
         if  api == 'run_lumi4dataset' or api == 'run_lumi4block' or \
             api == 'file_lumi4dataset' or api == 'file_lumi4block' or \
             api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block' or \
-            api == 'block_run_lumi4dataset' or api == 'file4dataset_run_lumi' or\
-            api == 'blocks4tier_dates':
+            api == 'block_run_lumi4dataset' or \
+            api == 'file4dataset_run_lumi' or \
+            api == 'blocks4tier_dates' or api == 'dataset4block' or \
+            api == 'lumi4block_run':
             time0 = time.time()
             dbs_url = '/'.join(url.split('/')[:-1])
             if  api == 'block_run_lumi4dataset':
@@ -403,6 +410,10 @@ class DBS3Service(DASAbstractService):
                 dasrows = get_blocks4tier_dates(dbs_url, api, args)
             elif api == 'file4dataset_run_lumi':
                 dasrows = get_file4dataset_run_lumi(dbs_url, api, args)
+            elif api == 'lumi4block_run':
+                dasrows = get_lumis4block_run(dbs_url, api, args)
+            elif api == 'dataset4block':
+                dasrows = get_dataset4block(args)
             else:
                 dasrows = get_file_run_lumis(dbs_url, api, args)
             ctime = time.time()-time0
@@ -430,12 +441,27 @@ class DBS3Service(DASAbstractService):
             elif isinstance(url, list):
                 urls = [u.replace(self.prim_instance, instance) for u in url]
                 return urls
+        # TODO: hack to work ONLY with DBS2 global instance name
+        if  instance.find('cms_dbs_') != -1:
+            if  instance == 'cms_dbs_prod_global':
+                return url
+            return None # no other DBS2 instnaces is allowed
         return url
 
     def adjust_params(self, api, kwds, inst=None):
         """
         Adjust DBS2 parameters for specific query requests
         """
+        # adjust run parameter if it is present in kwds
+        val = kwds.get('run_num', None)
+        if  val:
+            if  isinstance(val, dict): # we got a run range
+                if  '$in' in val:
+                    kwds['run_num'] = runrange(val['$in'][0], val['$in'][-1])
+                if  '$lte' in val:
+                    kwds['run_num'] = runrange(val['$gte'], val['$lte'], True)
+            else:
+                kwds['run_num'] = val
         if  api == 'site4dataset':
             # skip API call if inst is global one (data provided by phedex)
             if  inst == self.prim_instance:
@@ -467,24 +493,7 @@ class DBS3Service(DASAbstractService):
                 del kwds['block_name']
             except KeyError:
                 pass
-        if  api == 'runs' or api == 'summary4dataset_run' or \
-            api == 'summary4block_run':
-            val = kwds['run']
-            if  isinstance(val, dict): # we got a run range
-                if  val.has_key('$in'):
-                    kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
-                if  val.has_key('$lte'):
-                    kwds['run'] = runrange(val['$gte'], val['$lte'], True)
         if  api == 'file4DatasetRunLumi':
-            val = kwds.get('run', None)
-            if  val:
-                if  isinstance(val, dict): # we got a run range
-                    if  val.has_key('$in'):
-                        kwds['run'] = runrange(val['$in'][0], val['$in'][-1])
-                    if  val.has_key('$lte'):
-                        kwds['run'] = runrange(val['$gte'], val['$lte'], True)
-                else:
-                    kwds['run'] = val
             val = kwds['lumi_list']
             if  val:
                 kwds['lumi_list'] = [val]
@@ -560,10 +569,10 @@ class DBS3Service(DASAbstractService):
             block = spec.get('block.name', '')
             run = spec.get('run.run_number', 0)
             if  isinstance(run, dict): # we got a run range
-                if  run.has_key('$in'):
+                if  '$in' in run:
                     run = run['$in']
-                elif run.has_key('$lte'):
-                    run = range(val['$gte'], val['$lte'])
+                elif '$lte' in run:
+                    run = range(run['$gte'], run['$lte'])
             for row in gen:
                 if  run:
                     row.update({"run": run})
@@ -587,7 +596,7 @@ class DBS3Service(DASAbstractService):
                 parent = row['parent']
                 for val in parent['parent_logical_file_name']:
                     yield dict(name=val)
-        elif api == 'runs_via_dataset':
+        elif api == 'runs_via_dataset' or api == 'runs':
             for row in gen:
                 values = row['run']['run_num']
                 if  isinstance(values, list):
@@ -604,8 +613,8 @@ class DBS3Service(DASAbstractService):
             api == 'files_via_block':
             status = 'VALID'
             for row in gen:
-                if  query.mongo_query.has_key('spec'):
-                    if  query.mongo_query['spec'].has_key('status.name'):
+                if  'spec' in query.mongo_query:
+                    if  'status.name' in query.mongo_query['spec']:
                         status = query.mongo_query['spec']['status.name']
                 file_status = row['file']['is_file_valid']
                 if  status == 'INVALID': # filter out valid files
@@ -618,8 +627,8 @@ class DBS3Service(DASAbstractService):
                     yield row
         elif api == 'filelumis' or api == 'filelumis4block':
             for row in gen:
-                if  row.has_key('lumi'):
-                    if  row['lumi'].has_key('lumi_section_num'):
+                if  'lumi' in row:
+                    if  'lumi_section_num' in row['lumi']:
                         val = row['lumi']['lumi_section_num']
                         row['lumi']['lumi_section_num'] = convert2ranges(val)
                     yield row

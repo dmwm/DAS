@@ -8,11 +8,9 @@ Unit test for DAS core module
 import unittest
 from DAS.utils.regex import ip_address_pattern, last_time_pattern, \
 date_yyyymmdd_pattern, key_attrib_pattern, cms_tier_pattern, \
-float_number_pattern, int_number_pattern, \
+float_number_pattern, int_number_pattern, phedex_node_pattern, \
 se_pattern, site_pattern, web_arg_pattern, number_pattern,\
 last_key_pattern, unix_time_pattern
-
-from DAS.utils.regex_daskeys import  phedex_tier_pattern
 
 class testDASCore(unittest.TestCase):
     """
@@ -96,9 +94,9 @@ class testDASCore(unittest.TestCase):
         arg = 'sdflkh'
         self.false(pat, arg)
 
-    def test_phedex_tier(self):
-        """test phedex_tier pattern"""
-        pat = phedex_tier_pattern
+    def test_phedex_node(self):
+        """test phedex_node pattern"""
+        pat = phedex_node_pattern
         arg = 'T1_CH_CERN'
         self.true(pat, arg)
         arg = 'T1'

@@ -27,27 +27,28 @@ class testDBS(unittest.TestCase):
             "wild_card": "*",
             "lookup": "site",
             "das_map": [{"rec_key": "site.name", "das_key": "site", "api_arg": "name"}],
-            "created": 123
+            "ts": 123
         }
         self.presentation = {"presentation": 
                 {"city": [{"ui": "City", "das": "city.name"}, 
                           {"ui": "Address", "das": "city.Placemark.address"}]},
-                "created":123}
+                "ts":123}
         self.notations = {"notations": 
                 [{"rec_key": "name", "api": "", "api_output": "cmsname"}, 
                  {"rec_key": "name", "api": "", "api_output": "cms_name"}], 
-                "system": "sitedb", "created": 123}
+                "system": "sitedb", "ts": 123}
 
     def testReader(self): 
         """test read_service_map function"""
         apimap  = dict(self.apimap)
-        del apimap['created']
+        del apimap['ts']
         fdescr  = tempfile.NamedTemporaryFile()
         mapfile = fdescr.name
         stream  = file(mapfile, 'w')
         yaml.dump(apimap, stream)
         result  = [r for r in read_service_map(mapfile)][0]
-        result.pop('created')
+        result.pop('ts')
+        result.pop('hash')
         self.assertEqual(apimap, result)
 
     def testValidator(self):
@@ -55,21 +56,21 @@ class testDBS(unittest.TestCase):
         record = dict(self.apimap)
         result = validator(record)
         self.assertEqual(True, result)
-        del record['created']
+        del record['ts']
         result = validator(record)
         self.assertEqual(False, result)
 
         record = dict(self.presentation)
         result = validator(record)
         self.assertEqual(True, result)
-        del record['created']
+        del record['ts']
         result = validator(record)
         self.assertEqual(False, result)
 
         record = dict(self.notations)
         result = validator(record)
         self.assertEqual(True, result)
-        del record['created']
+        del record['ts']
         result = validator(record)
         self.assertEqual(False, result)
 

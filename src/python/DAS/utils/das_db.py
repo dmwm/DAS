@@ -148,11 +148,17 @@ def create_indexes(coll, index_list):
                 index_exists = 1
         if  not index_exists:
             try:
-                coll.create_index([pair])
+                if  isinstance(pair, list):
+                    coll.create_index(pair)
+                else:
+                    coll.create_index([pair])
             except Exception as exp:
                 print_exc(exp)
         try:
-            coll.ensure_index([pair])
+            if  isinstance(pair, list):
+                coll.ensure_index(pair)
+            else:
+                coll.ensure_index([pair])
         except Exception as exp:
             print_exc(exp)
 
