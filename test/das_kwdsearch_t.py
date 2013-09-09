@@ -14,7 +14,9 @@ import doctest
 
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
 from DAS.keywordsearch import search as kwdsearch_module
-from DAS.keywordsearch.search import search, init as init_kws
+
+from DAS.keywordsearch.search import KeywordSearch
+    #search, init as init_kws
 #keyword_schema_weights, keyword_value_weights
 
 from DAS.core.das_core import DASCore
@@ -50,7 +52,7 @@ class Timer:
         self.end = time.clock()
         self.interval = self.end - self.start
 
-class TestDASKeywordSearch(unittest.TestCase):
+class KeywordSearchAbstractTester(unittest.TestCase):
     global_dbs_inst = False
 
     def setUp(self):
@@ -66,7 +68,7 @@ class TestDASKeywordSearch(unittest.TestCase):
             self.global_dbs_inst = get_global_dbs_mngr(update_required=False)
 
             self.dascore = DASCore()
-            init_kws(self.dascore)
+            self.kws = KeywordSearch(dascore=self.dascore)
 
 
 
@@ -90,7 +92,7 @@ class TestDASKeywordSearch(unittest.TestCase):
         n_queries += 1
 
         with Timer() as t:
-            results = search(query, dbsmngr=self.global_dbs_inst)
+            results = self.kws.search(query, dbsmngr=self.global_dbs_inst)
 
         times.append((t.interval, query))
 
@@ -158,6 +160,9 @@ class TestDASKeywordSearch(unittest.TestCase):
             for bad in exclude_for_all_results:
                 self.assertTrue(bad not in results)
 
+
+
+class TestDASKeywordSearch(KeywordSearchAbstractTester):
 
     def test_doctests(self):
         """
@@ -253,7 +258,7 @@ class TestDASKeywordSearch(unittest.TestCase):
 
     def test_das_key_synonyms(self):
         self.assertQueryResult('location of *Run2012*PromptReco*/AOD',
-                               'site dataset=*Run2012*PromptReco*/AOD',
+                               'site dataset=*Run2012*PromptReco*/AOD*',
                                query_type='nl',
                                non_implemented=SYNONYMS_NOT_IMPLEMENTED)
 
@@ -261,7 +266,7 @@ class TestDASKeywordSearch(unittest.TestCase):
     def test_dataset_wildcards_1(self):
         # make sure 'dataset' is matched into entity but not its value (dataset=*dataset*)
         self.assertQueryResult('location of dataset *Run2012*PromptReco*/AOD',
-            'site dataset=*Run2012*PromptReco*/AOD', query_type='nl_schema_term')
+            'site dataset=*Run2012*PromptReco*/AOD*', query_type='nl_schema_term')
 
     def test_dataset_wildcards_2_synonyms(self):
         # automatically adding wildcards and synonyms
@@ -349,7 +354,7 @@ class TestDASKeywordSearch(unittest.TestCase):
         # TODO: this is example of field that is named like an aggregator
         # number of smf... sum, count()...
         self.assertQueryResult('number of lumis in run 176304',
-                               'summary run=176304 | grep summary.nlumis',
+                               'run run=176304 | grep run.nlumis',
                                query_type='projection')
 
     def test_result_field_selections_stem(self):
@@ -439,7 +444,7 @@ class TestDASKeywordSearch(unittest.TestCase):
                  # TODO: could add unique prefix CMSSW_4_1* automatically...
                  ("4_1 Zee", "dataset dataset=*Zee* release=*4_1*"),
                  ("MC CMSSW_4_* /Zee",
-                    "dataset dataset=/Zee datatype=mc release=CMSSW_4_*"),
+                    "dataset dataset=/Zee* datatype=mc release=CMSSW_4_*"),
                  # TODO: no wildcards allowed in tier so far.. is that needed?
                  #("gen-sim-reco", "tier tier=*gen-sim-reco*"),
                  #("SIM-DIGI", "tier tier=*SIM-DIGI*")
@@ -487,4 +492,8 @@ class TestDASKeywordSearch(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    import cProfile
+    if True:
+        cProfile.run("unittest.main()", filename="das_kwdsearch_t.cprofile")
+    else:
+        unittest.main()
