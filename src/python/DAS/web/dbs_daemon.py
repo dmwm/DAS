@@ -120,6 +120,12 @@ class DBSDaemon(object):
                 for row in gen:
                     spec = dict(dataset=row['dataset'])
                     self.col.update(spec, udict, upsert=True)
+
+                # if no rows were returned, do not delete old cache
+                else:
+                    msg = 'Service %s returned no results' % self.dbs_url
+                    raise Exception(msg)
+
             # remove records with old ts
             self.col.remove({'ts':{'$lt':time0-self.expire}})
             if  self.col.find_one(cdict):
