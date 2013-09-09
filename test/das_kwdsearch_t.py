@@ -38,6 +38,7 @@ REQUIRE_TO_PASS_BEFORE_DEFAULT = 4
 DO_NOT_FAIL_ON_NON_IMPLEMENTED = True
 
 SYNONYMS_NOT_IMPLEMENTED = True
+PRINT_QUERY_RES_DICT = False
 
 from pprint import pformat
 
@@ -126,17 +127,16 @@ class KeywordSearchAbstractTester(unittest.TestCase):
                 queries_not_passed_at[i].append( {'query': query,  'res': expected_results})
 
 
-        # TODO: print distribution
+        if PRINT_QUERY_RES_DICT:
+            print 'Test: ', query, '. Result: ', self.result_is_correct(first_result, expected_results)
+            print 'Queries so far:', n_queries, 'Passed at #1: ', n_queries_passed_at_1, 'Passed at i-th:', pformat(n_queries_passed_at)
+            print 'Running times:', times
+            print 'Query statuses:', qstatus
 
-        print 'Test: ', query, '. Result: ', self.result_is_correct(first_result, expected_results)
-        print 'Queries so far:', n_queries, 'Passed at #1: ', n_queries_passed_at_1, 'Passed at i-th:', pformat(n_queries_passed_at)
-        print 'Running times:', times
-        print 'Query statuses:', qstatus
-        
-        print 'Queries passed up to i=4', pformat(queries_passed_at[:4])
-        
-        print 'Queries NOT passed up to i=4', pformat(queries_not_passed_at[:4])
-        
+            print 'Queries passed up to i=4', pformat(queries_passed_at[:4])
+
+            print 'Queries NOT passed up to i=4', pformat(queries_not_passed_at[:4])
+
         
 
         msg = '''
@@ -330,15 +330,22 @@ class TestDASKeywordSearch(KeywordSearchAbstractTester):
 
     def test_postfilters(self):
         # 1
-        self.assertQueryResult('Zmmg magnetic field>3.5',
-                               'run dataset=*Zmmg* | grep run.run_number, run.bfield>3.5',
+        self.assertQueryResult('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO magnetic field>3.5',
+                               'run dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO | grep run.bfield>3.5',
                                query_type='postfilter')
 
     def test_result_field_selections(self):
-
-        self.assertQueryResult('Zmmg magnetic field',
-                               'run dataset=*Zmmg* | grep run.bfield, run.run_number',
+        self.assertQueryResult('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO magnetic field',
+                               'run dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO | grep run.bfield',
                                query_type='projection')
+
+    def test_result_field_selections_pk(self):
+        if not DO_NOT_FAIL_ON_NON_IMPLEMENTED:
+            # TODO: shall PK grep filters be allowed
+            self.assertQueryResult('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO magnetic field and run number',
+                               'run dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO | grep run.bfield, run.run_number',
+                               query_type='projection')
+
     def test_result_field_selections_2(self):
 
         self.assertQueryResult('Zmmg custodial file replicas',
