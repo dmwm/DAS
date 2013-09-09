@@ -101,6 +101,7 @@ class DBSDaemon(object):
             udict = {'$set':{'ts':time0}}
             cdict = {'dataset':'__POPULATED__'}
             gen = self.datasets()
+            #TODO: make sure the generator is not empty (service or connection failure), as this may cause the dataset cache to be dumped out
             if  not self.col.count():
                 try: # perform bulk insert operation
                     while True:
