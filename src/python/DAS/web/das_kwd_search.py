@@ -65,7 +65,7 @@ class KeywordSearchHandler(object):
          (implementation doesn't matter much)
         '''
         t = list(q['trace'])
-        t.sort()
+        #t.sort()
         thtml = \
             '<ul style="width: 500px;background-color: #fff;"><li>' + \
             '</li><li>'.join(str(item) for item in t) + \

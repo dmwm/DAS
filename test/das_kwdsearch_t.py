@@ -13,7 +13,7 @@ import doctest
 # DAS modules
 
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
-from DAS.keywordsearch import search as kwdsearch_module
+#from DAS.keywordsearch import search as kwdsearch_module
 
 from DAS.keywordsearch.search import KeywordSearch
     #search, init as init_kws
@@ -39,6 +39,7 @@ DO_NOT_FAIL_ON_NON_IMPLEMENTED = True
 
 SYNONYMS_NOT_IMPLEMENTED = True
 PRINT_QUERY_RES_DICT = False
+PROFILING_ENABLED = False
 
 from pprint import pformat
 
@@ -53,24 +54,46 @@ class Timer:
         self.end = time.clock()
         self.interval = self.end - self.start
 
+
+class KwsTesterMetaClass(type):
+  def __init__(cls, name, bases, d):
+    type.__init__(cls, name, bases, d)
+
+    # set up only once
+    #if not cls.global_dbs_inst:
+    print 'setUp in metaclass: getting dbs manager to access current datasets ' \
+          '(and fetching them if needed)'
+    cls.global_dbs_inst = get_global_dbs_mngr(update_required=False)
+    cls.dascore = DASCore()
+    cls.kws = KeywordSearch(dascore=cls.dascore)
+    #cls.foo = 42
+
 class KeywordSearchAbstractTester(unittest.TestCase):
     global_dbs_inst = False
+
+    __metaclass__ = KwsTesterMetaClass
+
 
     def setUp(self):
         """
         sets up dbs manager instance
         """
-
-
         # set up only once
         if not self.global_dbs_inst:
-            print 'setUp: getting dbs manager to access current datasets ' \
-                  '(and fetching them if needed)'
-            self.global_dbs_inst = get_global_dbs_mngr(update_required=False)
+            if True:
+                print "setUp: quick"
+                cls = KeywordSearchAbstractTester
+                self.kws = cls.kws
+                self.dascore = cls.dascore
+                self.global_dbs_inst = cls.global_dbs_inst
+                print "setUp: done"
 
-            self.dascore = DASCore()
-            self.kws = KeywordSearch(dascore=self.dascore)
-
+            else:
+                print 'setUp: getting dbs manager to access current datasets ' \
+                      '(and fetching them if needed)'
+                self.global_dbs_inst = get_global_dbs_mngr(update_required=False)
+                self.dascore = DASCore()
+                self.kws = KeywordSearch(dascore=self.dascore)
 
 
 
@@ -164,47 +187,43 @@ class KeywordSearchAbstractTester(unittest.TestCase):
 
 class TestDASKeywordSearch(KeywordSearchAbstractTester):
 
-    def test_doctests(self):
-        """
-        runs doctests defined in DAS.core.das_process_dataset_wildcards
-        """
-        # pass dbs manager
+    #def test_doctests(self):
+    #    """
+    #    runs doctests defined in DAS.core.das_process_dataset_wildcards
+    #    """
+    #    # pass dbs manager
 
-        glob = kwdsearch_module.__dict__.copy()
-        glob['dbsmgr'] = self.global_dbs_inst
+    #    glob = kwdsearch_module.__dict__.copy()
+    #    glob['dbsmgr'] = self.global_dbs_inst
 
-        # run the tests
-        (n_failures, n_tests) = \
-            doctest.testmod(globs = glob, verbose=True, m=kwdsearch_module)
+    #    # run the tests
+    #    (n_failures, n_tests) = \
+    #        doctest.testmod(globs = glob, verbose=True, m=kwdsearch_module)
 
-        self.assertEquals(n_failures, 0)
-
-
-    def test_matching(self):
-        """
-        this was a manual test
-        if False:
-            # we can see difflib by itself is quite bad. we must penalize mutations, insertions, etc. containment is the best
-            print keyword_schema_weights('configuration') # shall be close to config
-            print '! time:'
-            print keyword_schema_weights('time')
-            print '! location:'
-            print keyword_schema_weights('location')
-            # e.g. 'location of /Smf/smf/smf (dataset)
-            print keyword_schema_weights('email')
-
-            # TODO: use either presentation map, or entity.attribute
-            print 'file name:', keyword_schema_weights('file name')
+    #    self.assertEquals(n_failures, 0)
 
 
-            #print search('vidmasze@cern.ch')
-            print 'expect email:', keyword_value_weights('vidmasze@cern.ch')
-            print 'expect dataset:', keyword_value_weights('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO')
-            print 'expect file:', keyword_value_weights('/store/backfill/1/T0TEST_532p1Run2012C_BUNNIES/DoubleMu/RAW-RECO/Zmmg-PromptSkim-v1/000/196/363/00000/DEBD64D4-A4C0-E111-A042-002618943826.root')
-        """
-        pass
+    """
+    this was a manual test
+    if False:
+        # we can see difflib by itself is quite bad. we must penalize mutations, insertions, etc. containment is the best
+        print keyword_schema_weights('configuration') # shall be close to config
+        print '! time:'
+        print keyword_schema_weights('time')
+        print '! location:'
+        print keyword_schema_weights('location')
+        # e.g. 'location of /Smf/smf/smf (dataset)
+        print keyword_schema_weights('email')
+
+        # TODO: use either presentation map, or entity.attribute
+        print 'file name:', keyword_schema_weights('file name')
 
 
+        #print search('vidmasze@cern.ch')
+        print 'expect email:', keyword_value_weights('vidmasze@cern.ch')
+        print 'expect dataset:', keyword_value_weights('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO')
+        print 'expect file:', keyword_value_weights('/store/backfill/1/T0TEST_532p1Run2012C_BUNNIES/DoubleMu/RAW-RECO/Zmmg-PromptSkim-v1/000/196/363/00000/DEBD64D4-A4C0-E111-A042-002618943826.root')
+    """
 
 
 
@@ -263,15 +282,14 @@ class TestDASKeywordSearch(KeywordSearchAbstractTester):
                                non_implemented=SYNONYMS_NOT_IMPLEMENTED)
 
 
-    def test_dataset_wildcards_1(self):
-        # make sure 'dataset' is matched into entity but not its value (dataset=*dataset*)
-        self.assertQueryResult('location of dataset *Run2012*PromptReco*/AOD',
-            'site dataset=*Run2012*PromptReco*/AOD*', query_type='nl_schema_term')
 
-    def test_dataset_wildcards_2_synonyms(self):
+    def test_dataset_synonyms(self):
         # automatically adding wildcards and synonyms
         self.assertQueryResult('location of Zmm',
-            'site dataset=*Zmm*', query_type='wildcard')
+            'site primary_dataset=ZMM', query_type='synonym')
+
+        self.assertQueryResult('where is /ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM',
+            'site dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM', query_type='synonym')
 
     def test_value_based(self):
         self.assertQueryResult(u'datasets at T1_CH_CERN',
@@ -348,13 +366,13 @@ class TestDASKeywordSearch(KeywordSearchAbstractTester):
 
     def test_result_field_selections_2(self):
 
-        self.assertQueryResult('Zmmg custodial file replicas',
-                               'file dataset=*Zmmg* | grep file.replica.custodial, file.name',
+        self.assertQueryResult('Zmmg complete file replicas',
+                               'file dataset=*Zmmg* | grep file.replica.complete, file.name',
                                query_type='projection')
     def test_result_field_selections_3(self):
 
-        self.assertQueryResult('Zmmg custodial block replicas',
-                               'block dataset=*Zmmg* | grep block.replica.custodial, block.name',
+        self.assertQueryResult('Zmmg complete block replicas',
+                               'block dataset=*Zmmg* | grep block.replica.complete, block.name',
                                query_type='projection')
 
     def test_result_field_selections_4(self):
@@ -403,8 +421,8 @@ class TestDASKeywordSearch(KeywordSearchAbstractTester):
 
     def test_wh_words_2(self):
         self.assertQueryResult(
-            'where are Zmmg',
-            'site dataset=*Zmmg*',
+            'where is Zmm',
+            'site primary_dataset=ZMM',
             query_type='nl_wh'
         )
 
@@ -500,7 +518,7 @@ class TestDASKeywordSearch(KeywordSearchAbstractTester):
 
 if __name__ == '__main__':
     import cProfile
-    if True:
+    if PROFILING_ENABLED:
         cProfile.run("unittest.main()", filename="das_kwdsearch_t.cprofile")
     else:
         unittest.main()

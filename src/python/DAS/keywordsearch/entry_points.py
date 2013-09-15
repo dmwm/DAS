@@ -39,11 +39,7 @@ def get_entry_points(tokens, DEBUG=False):
 
         if not is_stopword and kw_value:
             values_ws[keyword] = keyword_value_weights(kw_value)
-    if MINIMAL_DEBUG:
-        print '============= Schema mappings (TODO) =========='
-        pprint.pprint(schema_ws)
-        print '=============== Values mappings (TODO) ============'
-        pprint.pprint(values_ws)
+
     chunks = generate_chunks_no_ent_filter(keywords)
     return chunks, schema_ws, values_ws
 

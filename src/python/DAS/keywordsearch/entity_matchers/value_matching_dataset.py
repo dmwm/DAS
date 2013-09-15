@@ -11,7 +11,7 @@ from cherrypy import request
 
 from DAS.utils.regex import RE_3SLAHES
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
-
+from DAS.keywordsearch.config import DEBUG
 
 def match_value_dataset(keyword):
     if hasattr(request, 'dbsmngr'):
@@ -28,7 +28,7 @@ def match_value_dataset(keyword):
     # TODO: a dataset pattern could be even *Zm* -- we need minimum length!!
 
     if next(dbsmgr.find(pattern=keyword, limit=1), False):
-        print 'Dataset matched by keyword %s' % keyword
+        if DEBUG: print 'Dataset matched by keyword %s' % keyword
         # TODO: if contains wildcards score shall be a bit lower
         if '*' in keyword and not '/' in keyword:
             dataset_score = 0.8
@@ -43,7 +43,7 @@ def match_value_dataset(keyword):
 
         # prevent number-only-keywords to be matched into datasets with high score
         if keyword.isnumeric():
-            dataset_score = dataset_score - 0.3
+            dataset_score = dataset_score - 0.5
 
     # TODO: shall we check for unique matches?
 

@@ -48,27 +48,21 @@ class DasSchemaAdapter(object):
 
 
     def init(self, dascore=None):
-        print 'DasSchemaAdapter.init(); DAS CORE:'
-        pprint.pprint(dascore)
-
-
         self.discover_apis_and_fields(dascore)
         self._lookup_keys |= set(self.entity_names.values())
-
-
-        self.print_debug()
         self._result_fields_by_entity = init_result_fields_list(dascore)
 
+        if DEBUG: self.print_debug()
 
 
 
+    # TODO: this is not currently used
     _cms_synonyms = {
         'daskeys': {
             'site.name': ['location', ]
         },
         'schema': {
             'site.se': ['storage element'],
-            'run.bfield': ['magnetic field'],
             'run.delivered_lumi': ['delivered luminosity'],
         },
         'values': {
@@ -109,10 +103,11 @@ class DasSchemaAdapter(object):
         api_info = mappings.api_info(api)
         lookup_key = api_info['lookup']
         if ',' in lookup_key:
-            print '--------'
-            print 'Sys:', sys, 'api:', api
-            print 'PK: ', entity_short, 'primary_mapkey=', entity_long
-            print 'lookup=', lookup_key
+            if DEBUG:
+                print '--------'
+                print 'Sys:', sys, 'api:', api
+                print 'PK: ', entity_short, 'primary_mapkey=', entity_long
+                print 'lookup=', lookup_key
 
             self._lookup_keys |= set([lookup_key, ])
 
@@ -143,7 +138,7 @@ class DasSchemaAdapter(object):
 
 
 
-        if True and api_inputs_wo_api_arg:
+        if DEBUG and api_inputs_wo_api_arg:
             print 'Sys:', sys, 'api:', api
             print 'lookup:', lookup_key
             print 'entity_long:', entity_long
@@ -171,34 +166,6 @@ class DasSchemaAdapter(object):
 
         return api_def, params_list
 
-        #entity_names[lookup_key] = lookup_key
-        #pprint.pprint(api_info)
-        #e.g. of api_info record
-        # Sys: dbs api: run_lumi4dataset
-        # primary_key = run ??? why?
-        # {u'_id': ObjectId('51e544e6579d717cc687c426'),
-        #  u'created': 1373979878.512316,
-        #  u'das_map': [{u'api_arg': u'run',
-        #                u'das_key': u'run',
-        #                u'rec_key': u'run.run_number'},
-        #               {u'api_arg': u'lumi',
-        #                u'das_key': u'lumi',
-        #                u'rec_key': u'lumi.number'},
-        #               {u'api_arg': u'dataset',
-        #                u'das_key': u'dataset',
-        #                u'pattern': u'/[\\w-]+/[\\w-]+/[A-Z-]+',
-        #                u'rec_key': u'dataset.name'}],
-        #  u'expire': 3600,
-        #  u'format': u'JSON',
-        #  u'instances': [u'prod', u'dev', u'int'],
-        #  u'lookup': u'run,lumi',
-        #  u'params': {u'dataset': u'required', u'run': u'optional'},
-        #  u'services': u'',
-        #  u'system': u'dbs3',
-        #  u'url': u'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis',
-        #  u'urn': u'run_lumi4dataset',
-        #  u'wild_card': u'*'}
-        # api_info['lookup'] = run,lumi
 
     def discover_apis_and_fields(self, dascore):
         """
@@ -285,8 +252,14 @@ class DasSchemaAdapter(object):
         dataset=W*
         dataset site=T1_CH_*
         dataset site=T1_CH_* dataset=/BprimeBprimeToBZBZinc_M-375_7TeV-madgraph/Summer11-START311_V2-v3/GEN
+        file dataset=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO site=T1_*
+        file block=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO#b45f3476-cfb6-11e1-bb62-00221959e69e
         file file=W* dataset=FULL
         file file=W* block=FULL
+
+        # these are supported (probably) because of DAS-wrappers
+        file dataset=*DoubleMuParked25ns*
+        file dataset=*DoubleMuParked25ns* site=T2_RU_JINR
         """
         # TODO: shall we allow params not defined in the rules?
         ok = True
@@ -296,11 +269,22 @@ class DasSchemaAdapter(object):
             elif entity == 'file.name' and wildcards == set(['file.name',]) and \
                     ('dataset.name' in params or 'block.name' in params):
                 pass
+            elif entity == 'file.name' and wildcards == set(['site.name',]) and \
+                    ('dataset.name' in params or 'block.name' in params):
+                pass
             elif entity == 'site.name' and wildcards == set(['site.name',]):
                 pass
             elif entity == 'dataset.name' and wildcards == set(['site.name',]):
                 pass
             elif entity == 'dataset.name' and wildcards == set(['dataset.name', 'site.name']):
+                pass
+            # these are supported (probably) because of DAS-wrapper
+            elif entity == 'file.name' and (
+                    wildcards == set(['site.name', 'dataset.name']) or
+                    wildcards == set(['site.name', 'block.name']) or
+                    wildcards == set(['dataset.name']) or
+                    wildcards == set(['block.name'])
+                    ):
                 pass
             else:
                 ok = False
@@ -312,7 +296,7 @@ class DasSchemaAdapter(object):
         checks if DIS can answer query with given params.
         """
         params = set(params)
-        wildcards = wildcards or set([])
+        wildcards = wildcards or set()
 
         # check if wildcards are allowed
         if final_step and wildcards and \
@@ -324,6 +308,43 @@ class DasSchemaAdapter(object):
         fitting_apis = (api for api in self.api_input_params
                             if params.issubset(api.api_params_set) and \
                             (entity is None or entity == api.api_entity))
+
+        covered_apis = (api for api in fitting_apis
+                            if params.issuperset(api.req_params))
+
+        to_match = covered_apis if final_step else fitting_apis
+
+        return next(to_match, False)
+
+    def get_api_param_definitions(self):
+        return  [(api.api_params_set, api.req_params, api.lookup)
+                  for api in self.api_input_params]
+
+    def validate_input_params_lookupbased(self, params, entity=None,
+                                     final_step=False, wildcards=None):
+        """
+        checks if DIS can answer query with given params.
+        """
+        params = set(params)
+        wildcards = wildcards or set()
+
+        # could still be added later...
+        if final_step and not entity:
+            return False
+
+        # check if wildcards are allowed
+        # TODO: this is a quick to use lookup instead of PK
+        lookup = entity and entity.split('.')[0]
+        long_entity = lookup and lookup.split(',')[0] + '.name'
+        if final_step and wildcards and \
+                not self.areWildcardsAllowed(long_entity, wildcards, params):
+            return False
+
+        # given input parameters mapping (from keywords to input parameters)
+        # there must exist an API, covering these input params
+        fitting_apis = (api for api in self.api_input_params
+                            if params.issubset(api.api_params_set) and \
+                            (not lookup or lookup == api.lookup))
 
         covered_apis = (api for api in fitting_apis
                             if params.issuperset(api.req_params))
@@ -344,7 +365,7 @@ class DasSchemaAdapter(object):
                             and params.issuperset(api.req_params))
         for api in matching_apis:
             if api.api_entity is None:
-                print 'API RESULT TYPE IS NONE:', api
+                if DEBUG: print 'API RESULT TYPE IS NONE:', api
                 continue
             entities[api.api_entity].append(
                 (api.api_entity, api.api_params_set, api.req_params))
@@ -440,13 +461,7 @@ def init_result_fields_list(dascore, _DEBUG=False):
 
     fields_by_entity = {}
     for r in dascore.keylearning.list_members():
-        #pprint(r)
         result_type = dascore.mapping.primary_key(r['system'], r['urn'])
-
-        #(entity_long, out, in_required, api_) =
-        #       input_output_params_by_api[tuple((r['system'], r['urn']))]
-        #print (entity_long, out, in_required, api_), '-->',
-        #        result_type, ':', ', '.join([m for m in r.get('members', [])])
 
         result_members = r.get('members', [])
         fields = [m for m in result_members
@@ -458,7 +473,7 @@ def init_result_fields_list(dascore, _DEBUG=False):
                           if m.endswith('.error')]
 
         if contain_errors:
-            print 'WARNING: contain errors: ', result_type, '(' + ', '.join(
+            if _DEBUG: print 'WARNING: contain errors: ', result_type, '(' + ', '.join(
                 r.get('keys', [])) + ')', ':', \
                 ', '.join(fields)
             if EXCLUDE_RECORDS_WITH_ERRORS:
@@ -474,9 +489,9 @@ def init_result_fields_list(dascore, _DEBUG=False):
 
         fields_by_entity[result_type] |= set(fields)
 
-        # now some of the fields are not refering to the same entity, e.g.
-        #  u'release': set([u'dataset.name', u'release.name']),
-        # which is actually coming from APIs that return the parameters..
+    # TODO:currently some of the fields are not refering to the same entity, e.g.
+    #  u'release': set([u'dataset.name', u'release.name']),
+    # which is actually coming from APIs that return the parameters..
 
 
 

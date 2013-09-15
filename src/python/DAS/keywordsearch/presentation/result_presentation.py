@@ -144,15 +144,12 @@ def result_to_DASQL(result, frmt='text', shorten_html = True,
         input_params = result['input_values']
         projections_filters = result['result_filters']
         trace = result['trace']
-        missing_inputs = result['missing_inputs']
-
-
-        # TODO: missing fields
+        #missing_inputs = result['missing_inputs']
     else:
         (score, result_type, input_params, projections_filters, trace) = result
 
     # short entity names
-    s_result_type = getSchema().entity_names[result_type]
+    s_result_type = getSchema().entity_names.get(result_type, result_type)
     s_input_params = [(getSchema().entity_names.get(field, field), value) for
                       (field, value) in input_params]
     s_input_params.sort(key=lambda item: item[0])
@@ -176,10 +173,9 @@ def result_to_DASQL(result, frmt='text', shorten_html = True,
         result_projections = list(result_projections)
 
         # automatically add wildcard fields to selections (if any), so they would be displayed in the results
-        if [1 for (field, value) in input_params if '*' in value]:
-            result_projections.append(
-                result_type) # result type of primary key of requested entity
-            # TODO: check if other wildcard fields are also there
+        for field, value in input_params:
+            if '*' in value and not field in result_projections:
+                result_projections.append(field)
 
         # add formated projections
         result_grep = map(lambda prj: tmpl('PROJECTION', prj),result_projections[:])

@@ -4,6 +4,7 @@
 main module for Keyword Search
 """
 from math import exp
+import pprint
 
 from cherrypy import thread_data, request
 
@@ -16,7 +17,6 @@ from DAS.keywordsearch.presentation.result_presentation import result_to_DASQL, 
 
 #from DAS.keywordsearch.rankers.simple_recursive_ranker import generate_schema_mappings, normalization_factor_by_query_len
 
-import DAS.keywordsearch.rankers.simple_recursive_ranker
 
 
 from DAS.keywordsearch.entry_points import get_entry_points
@@ -46,7 +46,14 @@ class KeywordSearch:
     def __init__(self, dascore):
         #das_schema_adapter.init(dascore)
         self.schema = getSchema(dascore)
-        self.ranker = DAS.keywordsearch.rankers.simple_recursive_ranker
+
+        ranker = 'fast'
+        if ranker == 'fast':
+            from DAS.keywordsearch.rankers import fast_recursive_ranker
+            self.ranker = fast_recursive_ranker
+        else:
+            from DAS.keywordsearch.rankers import simple_recursive_ranker
+            self.ranker = simple_recursive_ranker
 
 
     def init_dbs_mngr(self, dbsmngr, inst, DEBUG=False):
@@ -79,7 +86,7 @@ class KeywordSearch:
     #@profile
     def process_results(self, keywords, query):
         results = thread_data.results[:]
-        if DEBUG or True:
+        if DEBUG:
             print "============= Results for: %s ===" % query
 
 
@@ -156,14 +163,21 @@ class KeywordSearch:
 
         chunks, schema_ws, values_ws = get_entry_points(keywords, DEBUG)
 
+        if MINIMAL_DEBUG:
+                print '============= Schema mappings (TODO) =========='
+                pprint.pprint(schema_ws)
+                print '=============== Values mappings (TODO) ============'
+                pprint.pprint(values_ws)
+
         thread_data.results = []
 
         # static per request
         thread_data.keywords_list = keywords
         # TODO:  schema_ws, values_ws, is also static, see performance differences...
 
-        self.ranker.generate_schema_mappings(None, [], schema_ws, values_ws,
-                                 kw_list=keywords, kw_index=0, old_score=0,
-                                 chunks=chunks)
+        #self.ranker.search_for_results(None, [], schema_ws, values_ws,
+        #                         kw_list=keywords, kw_index=0, old_score=0,
+        #                         chunks=chunks)
+        self.ranker.perform_search(schema_ws, values_ws, kw_list=keywords, chunks=chunks)
 
         return self.process_results(keywords, query)

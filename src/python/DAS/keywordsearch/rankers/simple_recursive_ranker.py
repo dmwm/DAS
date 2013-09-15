@@ -182,9 +182,6 @@ def store_result_(score, r_type, values_dict, r_filters, keywords_used,
     store_result_dict_(score, r_type, values_dict, r_filters, keywords_used,
                        trace, result_type_specified=result_type_specified)
 
-    #result =   (score, r_type, values_dict.items(), tuple(r_filters), tuple(trace))
-    #thread_data.results.append(result)
-
 
 
 
@@ -452,10 +449,6 @@ def store_result_and_check_projections(
 
 
         else:
-            #adjusted_score = penalize_non_mapped_keywords(keywords_used,
-            #                                              keywords_list,
-            #                                              old_score)
-
             store_result_(old_score, result_type, values_mapping,
                 [], keywords_used | result_projection_forbidden, trace)
 
@@ -612,7 +605,17 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
                 # newones could still be added
 
 
-def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
+def perform_search(schema_ws, values_ws, kw_list, chunks):
+    """
+    entry point for the ranker
+    """
+    search_for_results(None, [], schema_ws, values_ws,
+                             0, kw_list=kw_list, kw_index=0,
+                             chunks=chunks)
+
+
+
+def search_for_results(result_type, fields_old, schema_ws, values_ws,
                              old_score, kw_list=(), kw_index=0,
                              kw_used=set(),
                              chunks=(),
@@ -668,7 +671,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
     schema_w = schema_ws[kwd]
 
     # opt 1) do not take keyword[i]
-    generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
+    search_for_results(result_type, fields_old, schema_ws, values_ws,
                              kw_list=kw_list, kw_index=kw_index + 1,
                              old_score=old_score,
                              kw_used=kw_used, chunks=chunks, trace=trace)
@@ -687,7 +690,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
             if UGLY_DEBUG: print 'validated', (result_type, fields_new)
 
             delta_score = schema_score
-            generate_schema_mappings(result_type, fields_new, schema_ws,
+            search_for_results(result_type, fields_new, schema_ws,
                                      values_ws,
                                      kw_list=kw_list,
                                      kw_index=kw_index + 1,
@@ -718,7 +721,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
                     target_field, fields_old)
 
                 # TODO: currently the score is anyway being increased if a value is being mapped...
-                generate_schema_mappings(target_field, fields_old,
+                search_for_results(target_field, fields_old,
                                          schema_ws, values_ws,
                                          kw_list=kw_list,
                                          kw_index=kw_index + 1,
@@ -737,7 +740,7 @@ def generate_schema_mappings(result_type, fields_old, schema_ws, values_ws,
 
                 if UGLY_DEBUG: print 'valid', (target_field, fields_new)
 
-                generate_schema_mappings(target_field, fields_new,
+                search_for_results(target_field, fields_new,
                                          schema_ws, values_ws,
                                          kw_list=kw_list,
                                          kw_index=kw_index + 1,

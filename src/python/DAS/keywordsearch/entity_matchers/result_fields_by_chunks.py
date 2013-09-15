@@ -11,6 +11,7 @@ from DAS.keywordsearch.config import mod_enabled
 from DAS.keywordsearch.whoosh.ir_entity_attributes import load_index, search_index
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator,\
     get_operator_and_param, test_operator_containment
+from DAS.keywordsearch.nlp import filter_stopwords
 
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 
@@ -102,7 +103,7 @@ def generate_chunks_no_ent_filter(keywords):
 
 
 
-            print 'chunk:', chunk
+            if DEBUG: print 'chunk:', chunk
 
             # exclude chunks with "a b c" (as these were processed earlier)
             if filter(lambda c:' ' in c, chunk):
@@ -140,68 +141,68 @@ def generate_chunks_no_ent_filter(keywords):
 
 
                 matches[entity].append(r)
-        # Use longest useful matching  as a heuristic to filter out crap, e.g.
+    # Use longest useful matching  as a heuristic to filter out crap, e.g.
     # file Zmm number of events > 10, shall match everything,
 
+    _format_match_str = lambda item: '%.2f %s for: %s' \
+                                           % (item['score'], item['field_name'], ','.join(item['tokens_required']))
 
     # TODO: use SCORE!!!
     # return the matches in sorted order (per result type)
-    for entity in matches.keys():
+    for entity, m_list in matches.iteritems():
         #print 'trying to sort:'
         #pprint.pprint(full_matches[entity])
-        for m in matches[entity]:
+        for m in m_list:
             m['predicate'] = get_operator_and_param(m['tokens_required'][-1])
+            m['field_name'] = m['field']['field']
+            m['tokens_required_non_stopw'] = filter_stopwords(m['tokens_required'])
+            m['tokens_required_set'] = set(m['tokens_required'])
 
 
-        matches[entity].sort(key=lambda f: f['score'], reverse=True)
+        m_list.sort(key=lambda f: f['score'], reverse=True)
 
+        # because IR based matching is fairly dumb now, prune out the useless matches
+        purge = []
+        for m in m_list:
+            for m1 in m_list:
+                # TODO: check predicate?
+                if m1 != m and \
+                    m['field_name'] == m1['field_name'] and \
+                    m['tokens_required_set'].issubset(m1['tokens_required_set']) and \
+                    m['score']+0.01 >= m1['score']:
+                        purge.append(m1)
+                        #print 'will delete useless match:', _format_match_str(m1)
+
+        matches[entity] = filter(lambda m: not m in purge, m_list)
 
     # normalize the scores (if any)
-    # TODO: actually the IR score tell something.. if it's around ~10 it's a good match
-
+    # actually the IR score tell something.. if it's around ~10-20 it's a good match
     _get_max_score = lambda m_list: reduce(max, map(lambda m: m['score'], m_list), 0)
     scores = map(_get_max_score, matches.values())
     max_score = reduce(max, scores, 0)
 
     if DEBUG: print 'max_score', max_score
 
-
-    fsmoothing = lambda x: (x / 20.0 < 1) and x / 20.0 or 1.0
     fsmoothing = lambda x: (x / max(20.0, max_score))
 
     if USE_IR_SCORE_SMOOTHING:
-        fsmoothing = lambda x: math.sqrt(1.0+x) / math.sqrt(1.0+max_score)
         fsmoothing = lambda x: math.log(1.0+x) / math.log(1.0+max(max_score, 20))
 
-
-
     if max_score:
-        for ent_matches in matches.values():
+        for ent_matches in matches.itervalues():
             for m in ent_matches:
-                # print "m['score']", m['score'], 'mlen:', m['len']
-                # pprint.pprint(m)
-                m['field_name'] = m['field']['field']
-                # TODO: actually this kind of normalization is not necessarily fair because
-                # some combinations could be scored very high, e.g. phrases...
-                # as a temporary "HACK" we use a smoothing function which would make these differences milder
                 m['score'] = fsmoothing(m['score'])
-
-
 
     # if enabled, prune low scoring chunks
     if mod_enabled('RESULT_FIELD_CHUNKER_PRUNE_LOW_TERMS'):
         cutoff = mod_enabled('RESULT_FIELD_CHUNKER_PRUNE_LOW_TERMS')
-        for key in matches.keys():
+        for key in matches:
             matches[key] = filter(lambda m: m['score'] > cutoff, matches[key])
 
-
-    if _DEBUG:
-        print 'chunks generated:'
-        pprint.pprint(matches)
-    else:
+    if MINIMAL_DEBUG:
+        print "chunks"
         for result_type, m in matches.items():
             print 'result_type:', result_type
-            pprint.pprint(map(lambda item: '%.2f %s for: %s' \
-                                           % (item['score'], item['field_name'], ','.join(item['tokens_required'])), m))
+            pprint.pprint(map(_format_match_str, m))
     return matches
 

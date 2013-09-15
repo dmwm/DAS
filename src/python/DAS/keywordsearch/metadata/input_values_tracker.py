@@ -29,7 +29,7 @@ from DAS.utils.url_utils import HTTPSClientAuthHandler
 
 from jsonpath_rw import parse
 
-
+from DAS.keywordsearch.config import DEBUG
 
 
 # Shall we keep existing Datasets on server restart (very useful for debuging)
@@ -259,11 +259,11 @@ def check_for_unique_match(t, field, keyword):
     if match:
         match2 = next(it, False)
         if match2:
-            print 'non-unique match of %(keyword)s into %(match)s and %(match2)s' % locals()
+            if DEBUG: print 'non-unique match of %(keyword)s into %(match)s and %(match2)s' % locals()
             return True, None
         else:
             # there's no second item -- it's unique
-            print 'unique match of %(keyword)s into %(match)s' % locals()
+            if DEBUG: print 'unique match of %(keyword)s into %(match)s' % locals()
             return True, match
 
     else:
