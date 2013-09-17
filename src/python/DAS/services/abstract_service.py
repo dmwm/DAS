@@ -520,13 +520,20 @@ class DASAbstractService(object):
                     if  args.has_key(apiparam):
                         args[apiparam] = val
                         found += 1
-            self.adjust_params(api, args, instance)
+            if  len(cond.keys()) != found: # some keys may fail due to pattern
+                msg = "--- reject API %s, not all condition keys are covered" \
+                        % api
+                self.logger.info(msg)
+                msg = 'args=%s' % args
+                self.logger.debug(msg)
+                continue
             if  not found:
                 msg = "--- rejects API %s, parameters don't match" % api
                 self.logger.info(msg)
                 msg = 'args=%s' % args
                 self.logger.debug(msg)
                 continue
+            self.adjust_params(api, args, instance)
             # delete args keys whose value is optional
             delete_keys(args, 'optional')
             # check that there is no "required" parameter left in args,
