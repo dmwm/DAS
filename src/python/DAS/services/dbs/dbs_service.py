@@ -523,6 +523,8 @@ class DBSService(DASAbstractService):
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 kwds['query'] += ' and ' + val
+                kwds.pop('dataset')
+                kwds.pop('run')
             else:
                 kwds['query'] = 'required'
         if  api == 'fakeGroup4Dataset':
