@@ -105,7 +105,7 @@ class KeywordSearchHandler(object):
         '''
         performs the search, and renders the search results
         '''
-        proposed_queries = self.kws.search(query, inst, dbsmngr= dbsmngr)
+        err, proposed_queries = self.kws.search(query, inst, dbsmngr= dbsmngr)
 
         # no need for result type filter if # of results is low
 
@@ -129,5 +129,7 @@ class KeywordSearchHandler(object):
                                     is_ajax=is_ajax,
                                     initial_err_message =initial_err_message,
                                     proposed_queries = proposed_queries,
-                                    hi_score_result_types = hi_score_result_types)
+                                    hi_score_result_types = hi_score_result_types,
+                                    err=err
+        )
         #return html

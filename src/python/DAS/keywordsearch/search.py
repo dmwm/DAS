@@ -9,21 +9,13 @@ import pprint
 from cherrypy import thread_data, request
 
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
-
 from DAS.keywordsearch.config import *
 from DAS.keywordsearch.tokenizer import tokenize, cleanup_query
-
 from DAS.keywordsearch.presentation.result_presentation import result_to_DASQL, DASQL_2_NL
-
-#from DAS.keywordsearch.rankers.simple_recursive_ranker import generate_schema_mappings, normalization_factor_by_query_len
-
-
-
 from DAS.keywordsearch.entry_points import get_entry_points
-
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
-
 from DAS.keywordsearch.config import K_RESULTS_TO_STORE
+from DAS.keywordsearch.rankers.exceptions import TimeLimitExceeded
 
 
 class KeywordSearch:
@@ -149,6 +141,7 @@ class KeywordSearch:
     def search(self, query, inst=None, dbsmngr=None):
         """
         Performs the keyword search
+        returns: status, result_list
         """
         #DEBUG = False
         self.init_dbs_mngr(dbsmngr, inst)
@@ -175,9 +168,14 @@ class KeywordSearch:
         thread_data.keywords_list = keywords
         # TODO:  schema_ws, values_ws, is also static, see performance differences...
 
-        #self.ranker.search_for_results(None, [], schema_ws, values_ws,
-        #                         kw_list=keywords, kw_index=0, old_score=0,
-        #                         chunks=chunks)
-        self.ranker.perform_search(schema_ws, values_ws, kw_list=keywords, chunks=chunks)
+        err = None
+        try:
+            # TODO: add time limit into DAS settings
+            self.ranker.perform_search(schema_ws, values_ws, kw_list=keywords,
+                                       chunks=chunks, time_limit=5)
+        except TimeLimitExceeded as e:
+            print e
+            print 'time limit exceeded, still returning some results...'
+            err = TimeLimitExceeded
 
-        return self.process_results(keywords, query)
+        return err, self.process_results(keywords, query)

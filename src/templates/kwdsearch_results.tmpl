@@ -3,6 +3,12 @@
 #set msg = $quote($msg)
 #assert (isinstance($msg, str) or isinstance($msg, unicode))
 
+#if $err:
+        <div style="color: #fff; background-color: #992222; padding: 5px; margin-top: 20px">
+            Due to complexity of your query or high load on the server,
+            we are able to show only a subset of all suggestions (which
+            may be useless).</div>
+#end if
 
 
 <div id="filter-by-entity">

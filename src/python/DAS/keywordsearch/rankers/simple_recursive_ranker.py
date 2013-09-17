@@ -605,10 +605,11 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
                 # newones could still be added
 
 
-def perform_search(schema_ws, values_ws, kw_list, chunks):
+def perform_search(schema_ws, values_ws, kw_list, chunks, time_limit=None):
     """
     entry point for the ranker
     """
+    # TODO: time_limit is not handled. the ranker is to be thrown away anyway
     search_for_results(None, [], schema_ws, values_ws,
                              0, kw_list=kw_list, kw_index=0,
                              chunks=chunks)

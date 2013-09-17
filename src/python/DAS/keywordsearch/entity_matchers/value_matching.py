@@ -9,6 +9,8 @@ __author__ = 'vidma'
 
 import re
 
+from  collections import defaultdict
+
 # for handling semantic and string similarities
 from DAS.keywordsearch.metadata import input_values_tracker
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
@@ -27,79 +29,46 @@ def keyword_value_weights(keyword):
     - matching to regexps defining the values
     """
 
-    # TODO: we wish the generated query to match the APIs (so we promote such queries
-    # even if combined queries were implemented/enabled, we still wish to match API parameters with higher priority
+    # to minimize false positives, we exclude the fields from regexp matching
+    # for which we have a list of possible values (the quite static ones)
+    fields_tracked = input_values_tracker.get_fields_tracked(only_stable=True)
 
-    scores_by_entity = {}
-    for score, matches_for_api in keyword_regexp_weights(keyword):
-        for m in matches_for_api:
-            entity_matched = m['entity_long']
+    scores_dict = _select_best_scores(
+        (score, field) for score, field in keyword_regexp_weights(keyword)
+        if field not in fields_tracked)
 
-            # to minimize false positives, we exclude the fields from regexp matching
-            # for which we have a list of possible values (the quite static ones)
-
-            if entity_matched not in input_values_tracker.get_fields_tracked(only_stable=True) and \
-                            score > scores_by_entity.get(entity_matched, 0):
-                scores_by_entity[entity_matched] = (score, entity_matched)
-
-            # TODO: shall we add with very low score even other matches?
-
-
-    # check for matching of existing datasets
+    # check for matching of existing datasets, and override regexp based score
     # TODO: use instance from elsewhere (from web server if available)
-    # TODO: check issue with Malik's datasets
-
-    # TODO: we could actually get multiple interpretations (e.g. ambigous wildcard query)
-    map_to_field, dataset_score, adj_keyword = match_value_dataset(keyword)
+    field, dataset_score, adj_kwd = match_value_dataset(keyword)
     if dataset_score:
-        # TODO: shouldn't succesfull value lookup based score override the regexp based?
-        scores_by_entity[map_to_field] = (dataset_score,  {'map_to': 'dataset.name', 'adjusted_keyword': adj_keyword})
-
+        scores_dict[field] = (dataset_score,  {'map_to': 'dataset.name',
+                                          'adjusted_keyword': adj_kwd})
 
     # check for matching fields those values are fairly static (site, release, ...)
-    scores_by_entity.update(input_values_tracker.input_value_matches(keyword))
+    scores_dict.update(input_values_tracker.input_value_matches(keyword))
+
+    return sorted(scores_dict.itervalues(),
+                  key=lambda item: item[0], reverse=True)
 
 
-
-    #TODO: do we need partial matches?
-
-
-
-    # finally convert back to a sorted list (for backward compatibility)
-    scores = scores_by_entity.values()
-    scores.sort(key=lambda item: item[0], reverse=True)
-    return scores
-
-
+# TODO: precompile the regexps, this could be slight optimized!
 def keyword_regexp_weights(keyword):
-    # TODO: shall value match definitions of ALL APIs or some!? I'd say some is enough
-    scores = []
+    for constraint, apis in getSchema().apis_by_their_input_contraints.iteritems():
 
-    # TODO: define that is more restrictive regexp
-
-    for (constraint, apis) in getSchema().apis_by_their_input_contraints.items():
-        #print (constraint, apis)
-
-
-        # TODO: I've hacked file/dataset regexps to be more restrictive as these are well defined
-        if not '^' in constraint and not '$' in constraint and apis[0]['key'] \
-            in ['dataset', 'file', 'reco_status', 'run']:
+        # I've hacked file/dataset regexps to be more restrictive as these are well defined
+        if not '^' in constraint and not '$' in constraint and \
+                apis[0]['key'] in ['dataset', 'file', 'reco_status', 'run']:
             constraint = '^' + constraint + '$'
 
         # do not alow # in dataset TODO: shall be moved to API mappings
         if apis[0]['key'] == 'dataset' and '#' in keyword:
             continue
 
-
         score = 0
-
-
 
         # We shall prefer non empty constraints
         # We may also have different weights for different types of regexps
         if re.search(constraint, keyword):
-            #print apis
-
             if constraint.startswith('^') and  constraint.endswith('$'):
                 score = 0.7
             elif constraint.startswith('^') or  constraint.endswith('$'):
@@ -107,13 +76,24 @@ def keyword_regexp_weights(keyword):
             elif constraint != '':
                 score = 0.5
 
-            score = (score, apis)
-            scores.append(score)
+        if score:
+            for api in apis:
+                yield score, api['entity_long']
 
     # append date match...
     if regex.date_yyyymmdd_pattern.match(keyword):
-        scores.append((0.95, [{'entity_long': 'date'}]))
+        yield 0.95, 'date'
 
-    scores.sort(key=lambda item: item[0], reverse=True)
-    #print scores
+
+def  _select_best_scores(scores_iterator):
+    """
+    select only the best score, if multiple opts are available for the same item
+    """
+    scores = defaultdict(float)
+    for score, field in scores_iterator:
+        scores[field] = max(scores[field], score)
+
+    for field, score in scores.iteritems():
+        scores[field] = (score, field)
+
     return scores

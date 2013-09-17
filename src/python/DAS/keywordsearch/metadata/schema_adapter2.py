@@ -566,4 +566,19 @@ if __name__ == '__main__':
         s.validate_input_params(set(['date']), entity='monitor', final_step=True,
                               wildcards=None)
 
-    print 'lookup keys=', s.lookup_keys
+    #print 'lookup keys=', s.lookup_keys
+
+    print 'trying to validate Q: file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80 &&: ',\
+    s.validate_input_params(set(['dataset.name', 'run.run_number', 'lumi.number']),
+                            entity='file.name', final_step=False,
+                          wildcards=None)
+
+    print 'trying to validate Q: file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80 &&: ',\
+    s.validate_input_params(set(['dataset.name', 'run.run_number', 'lumi.number']),
+                            entity='file.name', final_step=True,
+                          wildcards=None)
+
+    from DAS.keywordsearch.rankers.fast_recursive_ranker import is_valid_result_py
+    print 'trying to validate Q (pyx): file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80 &&: ',\
+     is_valid_result_py(set(['dataset.name', 'run.run_number', 'lumi.number']),
+                            'file', final_step=True,  wildcards=None)

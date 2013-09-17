@@ -5,32 +5,21 @@
 # http://docs.cython.org/src/reference/compilation.html#compiler-directives
 
 
-
-from collections import defaultdict
-
 from libc.math cimport log, exp
 
 
-# TODO: <utility> is not found, for pair
-
-#from libcpp.map cimport map as cmap
-#from libcpp.list cimport list as clist
-#from libcpp.set cimport set as cset
-#from libcpp.pair cimport pair
-#from libcpp.string cimport string
-#from libcpp.vector cimport vector
-
+from collections import defaultdict
 
 from heapq import heappush, heappushpop
 from cherrypy import thread_data
+
 from DAS.keywordsearch.config import *
 from DAS.keywordsearch.metadata import das_ql
-from DAS.keywordsearch.nlp import getstem
-
+from DAS.keywordsearch.nlp import getstem, filter_stopwords
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator, \
     test_operator_containment
 
-
+from DAS.keywordsearch.rankers.exceptions import TimeLimitExceeded
 
 # Heuristics
 # /DoubleMu/Run2012A-Zmmg-13Jul2012-v1xx/RAW-RECO --> dataset
@@ -40,6 +29,11 @@ cdef double p_value_as_lookup = 0.80
 # TOOD: this is mainly for backward compatibility
 cdef double logP(double score):
    return log(score) if (score > 0.0) else score
+
+
+# TODO: disabling debug ("trace" variable) would further improve performance
+
+
 
 
 def cleanup_values_weights(values_ws):
@@ -68,17 +62,26 @@ cdef class QueryContext:
     cdef list kw_list
     cdef int N_kw
     cdef int N_kw_uniq_no_stopw
+    cdef clock_t time_limit
+    cdef bint time_limit_exceeded
     #cdef int N_kw_non_stopword
     # TODO: cdef list[bint] is_stopword
 
 
-    def __cinit__(self, schema_ws, values_ws, kw_list, chunks):
+    def __cinit__(self, schema_ws, values_ws, kw_list, chunks, time_limit):
         self.schema_ws = dict(schema_ws)
         self.values_ws = dict(values_ws)
         self.kw_list = kw_list
         self.N_kw = len(kw_list)
         self.N_kw_uniq_no_stopw = len(filter_stopwords(set(kw_list)))
         self.chunks = dict(chunks)
+
+        # calculate max cpu-time after which execution is not allowed
+        cdef clock_t start, end
+        start = clock()
+        end = start + CLOCKS_PER_SEC * time_limit
+        self.time_limit = end
+        self.time_limit_exceeded = False
 
 
 cdef class PartialSearchResult:
@@ -315,6 +318,11 @@ cdef bint validate_input_params_das_cpy(set params, str entity, bint final_step,
     return False
 
 
+def is_valid_result_py(params_set, result_type, final_step, wildcards):
+    # TODO: now PartialSearchResult could be a direct argument...
+    return validate_input_params_das_cpy(
+        params_set, result_type, final_step, wildcards)
+
 
 cdef inline bint is_valid_result(PartialSearchResult _r, bint final_step=False):
     # TODO: now PartialSearchResult could be a direct argument...
@@ -323,20 +331,26 @@ cdef inline bint is_valid_result(PartialSearchResult _r, bint final_step=False):
                                  final_step=final_step,
                                  wildcards=_r.wildcards_set)
 
-def perform_search(schema_ws, values_ws, kw_list, chunks):
+def perform_search(schema_ws, values_ws, kw_list, chunks, time_limit=3):
     values_ws = cleanup_values_weights(values_ws)
+
     cdef QueryContext c = QueryContext(schema_ws=schema_ws,
                                          values_ws=values_ws,
                                          kw_list=kw_list,
-                                         chunks=chunks)
+                                         chunks=chunks,
+                                         time_limit=time_limit)
 
     cdef PartialSearchResult r = PartialSearchResult(None)
     run_search(c, r, i=0)
+    if c.time_limit_exceeded:
+        raise TimeLimitExceeded()
 
 
-from DAS.keywordsearch.nlp import filter_stopwords
 
 cdef void seach_for_filters(QueryContext c, PartialSearchResult _r, int i):
+    if check_time_limit(c):
+        return
+
     requested_entity_short = _r.result_type.split('.')[0]
 
     cdef PartialSearchResult r = PartialSearchResult(_r)
@@ -397,6 +411,19 @@ cdef void seach_for_filters(QueryContext c, PartialSearchResult _r, int i):
 cdef list lookup_keys = schema.lookup_keys
 
 
+cdef inline bint check_time_limit(QueryContext c):
+    """
+    check time limit
+    """
+    # TODO: we may throw python exception here, but it may be slighly slower
+    if  clock() > c.time_limit:
+        # time limit exceeded
+        # TODO: would it help checking time bounds only each whatever # calls
+        c.time_limit_exceeded = True
+        return True
+    return False
+
+
 # TODO: one could do lazy log-score calculation
 # TODO: nicier exception handling
 cdef void run_search(QueryContext c, PartialSearchResult _r,
@@ -412,6 +439,10 @@ cdef void run_search(QueryContext c, PartialSearchResult _r,
 
     not supported yet: aggregation operators (min, max)
     """
+
+    if check_time_limit(c):
+        return
+
     #cdef char* lookup
     global lookup_keys
 
