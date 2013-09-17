@@ -145,7 +145,7 @@ def block_run_lumis(url, blocks, runs=None, verbose=0):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            params.update({'run_num': runrange(runs[0], runs[0], True)})
+            params.update({'run_num': runrange(runs[0], runs[-1], False)})
         urls.append(dbs_url)
     if  not urls:
         return
@@ -181,7 +181,7 @@ def file_run_lumis(url, blocks, runs=None, verbose=0):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            dbs_url += "&run_num=%s" % runrange(runs[0], runs[-1], True)
+            dbs_url += "&run_num=%s" % runrange(runs[0], runs[-1], False)
         urls.append(dbs_url)
     if  not urls:
         return
