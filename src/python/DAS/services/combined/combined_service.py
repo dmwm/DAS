@@ -250,10 +250,10 @@ class CombinedService(DASAbstractService):
         DASAbstractService.__init__(self, 'combined', config)
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        if  SERVICES.has_key('dbs'):
-            dbs = 'dbs'
-        elif SERVICES.has_key('dbs3'):
+        if SERVICES.has_key('dbs3'):
             dbs = 'dbs3'
+        elif  SERVICES.has_key('dbs'):
+            dbs = 'dbs'
         else:
             raise Exception('Unsupport DBS system')
         self.dbs = dbs
