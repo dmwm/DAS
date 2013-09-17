@@ -1,0 +1,122 @@
+<link rel="stylesheet" href="/das/css/?f=jquery-ui.css&f=kwsearch.css" />
+<script src="/das/js/?f=jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    jQuery.noConflict();
+</script>
+<script src="/das/js/?f=jquery-ui.js" type="text/javascript"></script>
+
+
+<div id="kws-suggestions">
+    loading query suggestions... please wait...
+</div>
+
+<script type="text/javascript">
+
+Ajax.Responders.register({
+  onCreate: function(response) {
+    response.transport.setRequestHeader = Prototype.emptyFunction;
+  }
+});
+/*
+Ajax.Responders.register({
+  onCreate: function(response) {
+    if (response.request.isSameOrigin())
+      return;
+    var t = response.transport;
+    t.setRequestHeader = t.setRequestHeader.wrap(function(original, k, v) {
+      if (/^(accept|accept-language|content-language)$/i.test(k))
+        return original(k, v);
+      if (/^content-type$/i.test(k) &&
+          /^(application\/x-www-form-urlencoded|multipart\/form-data|text\/plain)(;.+)?$/i.test(v))
+        return original(k, v);
+      return;
+    });
+  }
+});
+*/
+
+var KWS_HOST = "https://localhost";
+
+new Ajax.Request(KWS_HOST + "/das/kws_async", {
+    method: "get",
+    parameters: {
+        input: $uinput_json,
+        instance: $inst_json
+    },
+  onSuccess: function(transport) {
+    document.getElementById("kws-suggestions").innerHTML = transport.responseText;
+   //var json = resp.responseText.evalJSON(false);
+  },
+  onFailure: function(err) {
+    document.getElementById("kws-suggestions").innerHTML = "unable to load query suggestions at the moment..."
+
+  }
+
+});
+
+
+
+// keyword search stuff
+
+    //
+    // result type selector
+    //
+
+    var RTYPE_ANY = "any";
+
+    function hide(selector){
+        //jQuery(selector).hide().;
+    }
+    function filterByResultType(rt, target){
+        if (rt == RTYPE_ANY) {
+            jQuery('.kws-result').show(300);
+        } else {
+            jQuery('.kws-result').hide();
+            jQuery('.result-with-entity-'+rt).show(300);
+        }
+
+        jQuery('.rt-filters a').removeClass('rtype-selected');
+        //console.log(target, jQuery(target));
+        jQuery(target).addClass('rtype-selected')
+    }
+
+    // by default select the "any"
+    jQuery('.rt-'+RTYPE_ANY).addClass('rtype-selected');
+
+    function showAllRT(){
+    }
+
+
+    // limit the number of results shown
+
+    function showAllResults(){
+        jQuery('.kws-result').show(300);
+        jQuery('#results-only-top-k').html('');
+    }
+
+
+    function hideLowResults(){
+        // hide all results lower than 10
+        var limit = 10;
+        var nimportant = 4;
+
+        count = jQuery('.kws-result').length;
+
+        if (count > limit) {
+            jQuery('.kws-result:gt('+ (limit-1) +')').hide();
+            var cont = jQuery('<div id="results-only-top-k">Showing only top ' + limit + ' suggestions.&nbsp;</div>');
+            var showBtn = jQuery('<a href="javascript:;">see all</a>');
+            showBtn.click(showAllResults);
+            cont.append(showBtn);
+
+            jQuery('div#kws-results-listing').append(cont);
+        }
+
+        //if (count > nimportant) {
+        //    jQuery('.kws-result:gt('+ (nimportant-1) +')').css('opacity', 0.7);
+        //}
+    }
+
+
+
+</script>

@@ -396,7 +396,9 @@ class DASWebService(DASWebManager):
 
     def kws_async_init(self, kwargs):
         # do not allow caching
+        print 'a'
         set_no_cache_flags()
+        print 'b'
         uinput = kwargs.get('input', '').strip()
         print 'kws async', uinput
         time0 = time.time()
@@ -413,23 +415,30 @@ class DASWebService(DASWebManager):
         """
         Returns KeywordSearch results for AJAX call (for now as html snippet)
         """
-        print 'kws async'
         inst, uinput = self.kws_async_init(kwargs)
+        print 'kws async:', inst, uinput
 
-        if  self.busy():
+
+        if self.busy():
             return self.busy_page(uinput)
 
-
-
-        if  not uinput:
+        if not uinput:
             kwargs['reason'] = 'No input found'
             return self.redirect(**kwargs)
 
         print 'kws async', uinput
+
+        # TODO: set exact names of main das servers
+        cherrypy.response.headers['Access-Control-Allow-Origin'] = '*'
+        cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-JSON'
+        cherrypy.response.headers['Access-Control-Expose-Headers'] = 'X-JSON'
+
+
+
         return self.kws.handle_search(self,
                               query=uinput, inst=inst,
                               initial_exc_message = '',
-                              dbsmngr = self._get_dbsmgr_for_db_instance(inst),
+                              dbsmngr = self._get_dbsmgr(inst),
                               is_ajax=True)
 
 
@@ -592,15 +601,23 @@ class DASWebService(DASWebManager):
         :param inst: DBS instance
         :param html_error: whether errors shall be output in html
         """
-        def helper(msg, html_error=None):
+        def helper(msg, html_error=None, kws_enabled=False):
             """Helper function which provide error template"""
             if  not html_error:
                 return msg
             guide = self.templatepage('dbsql_vs_dasql', 
                         operators=', '.join(das_operators()))
+
+            # render keyword search loader
+            if kws_enabled:
+                kws = self.templatepage('kwdsearch_via_ajax',
+                                         uinput_json=json.dumps(uinput),
+                                         inst_json=json.dumps(inst))
+
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
-                        guide=guide)
+                        guide=guide, kws_enabled=kws_enabled, kws=kws)
             return page
+
         if  not uinput:
             return 1, helper('No input query')
         # Generate DASQuery object, if it fails we catch the exception and
@@ -630,26 +647,10 @@ class DASWebService(DASWebManager):
 
 
             # Keyword Search
-            if not isinstance(err, WildcardMatchingException):
-                try:
-                    kws_res = self.kws.handle_search(self,
-                        query=uinput, inst=inst, initial_exc_message = err.message,
-                        dbsmngr = self._get_dbsmgr(inst))
-                    return 1, kws_res
-                except Exception, e:
-                    print e
-                    import traceback
-                    traceback.print_exc()
+            kws_enabled = not isinstance(err, WildcardMatchingException)
 
-                    return 1, helper(err.message +
-                                     '\nCan not perform keyword search at this '
-                                     'moment: some data is missing', html_error)
-
-                #return 1, helper(das_parser_error(uinput, exc_message), html_error)
-
-            else:
-                das_parser_error(uinput, str(type(err)))
-                page = helper(str(err), html_error)
+            das_parser_error(uinput, str(type(err)))
+            page = helper(str(err), html_error, kws_enabled=kws_enabled)
             return 1, page
 
         fields = dasquery.mongo_query.get('fields', [])
