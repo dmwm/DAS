@@ -101,6 +101,9 @@ def dbs_find(entity, url, kwds, verbose=0):
     expire  = 600
     dataset = kwds.get('dataset', None)
     block   = kwds.get('block_name', None)
+    if  not block:
+        # TODO: this should go away when DBS will be retired (user in combined srv)
+        block = kwds.get('block', None)
     lfn     = kwds.get('file', None)
     runs    = kwds.get('runs', [])
     if  not (dataset or block or lfn):
