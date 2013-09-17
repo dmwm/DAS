@@ -704,11 +704,11 @@ class DBSService(DASAbstractService):
                 kwds['query'] = 'required'
             kwds.pop('date')
         if  api == 'listFiles':
-            val = kwds.get('run', None)
+            val = kwds.get('run_number', None)
             if  isinstance(val, dict):
                 # listFiles does not support run range, see
                 # fakeFiles4DatasetRun API
-                kwds.pop('run')
+                kwds['run_number'] = 'required'
             if  not kwds['path'] and not kwds['block_name'] and \
                 not kwds['pattern_lfn']:
                 kwds['path'] = 'required'
