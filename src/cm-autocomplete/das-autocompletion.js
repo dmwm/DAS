@@ -138,7 +138,7 @@ function CM_enableAutocompletion() {
     });
 
 
-    document.getElementById('ac_hint').innerHTML = "Start typing " +
-        "to activate autocompletion."
+    //document.getElementById('ac_hint').innerHTML = "Start typing " +
+    //    "to activate autocompletion."
 
 }
