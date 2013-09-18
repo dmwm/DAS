@@ -101,11 +101,13 @@ class KeywordSearchHandler(object):
         hi_score_result_types.append('any')
         return hi_score_result_types
 
-    def handle_search(self, webm, query, inst,  initial_exc_message = '', dbsmngr=None, is_ajax=False):
+    def handle_search(self, webm, query, inst,  initial_exc_message = '',
+                      dbsmngr=None, is_ajax=False, timeout=5):
         '''
         performs the search, and renders the search results
         '''
-        err, proposed_queries = self.kws.search(query, inst, dbsmngr= dbsmngr)
+        err, proposed_queries = self.kws.search(query, inst, dbsmngr= dbsmngr,
+                                                timeout=timeout)
 
         # no need for result type filter if # of results is low
 

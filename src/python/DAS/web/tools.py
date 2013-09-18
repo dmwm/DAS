@@ -219,3 +219,36 @@ def exposedasplist (func):
         return plist_str
     return wrapper
 
+
+def enable_cross_origin(func):
+    """
+    Enables Cross Origin Requests (from a predefined list of DAS origins)
+    to be run on each given back-end server (keyword search, autocompletion)
+    """
+
+    def enable_cross_orign_requests():
+        # TODO: check if the current server is back-end based?
+        # TODO: set exact names of main das server(s)
+        valid_origins = ['http://localhost:8212',
+                         'https://cmsweb.cern.ch',
+                         'https://das-kws-test.cern.ch']
+
+        # output the requests origin if it's allowed
+        origin = cherrypy.request.headers.get('Origin', '')
+        if origin in valid_origins:
+            cherrypy.response.headers['Access-Control-Allow-Origin'] = origin
+
+        cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-JSON'
+        cherrypy.response.headers['Access-Control-Expose-Headers'] = 'X-JSON'
+
+    def wrapper(self, *args, **kwds):
+        data = func(self, *args, **kwds)
+        enable_cross_orign_requests()
+        return data
+
+    return wrapper
+
+
+tojson = lambda var: json.dumps(var)
+tojson.__doc__ = "returns a json representation of a variable " \
+                 "that can be used safely in javascript"

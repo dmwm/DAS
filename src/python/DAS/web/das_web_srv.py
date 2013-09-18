@@ -15,11 +15,14 @@ import time
 import cherrypy
 import threading
 
+
 from datetime import date
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
 from pymongo.errors import AutoReconnect, ConnectionFailure
+from collections import defaultdict
+
 import urllib
 import copy
 
@@ -44,6 +47,8 @@ from DAS.web.utils import checkargs, das_json, das_json_full, gen_error_msg
 from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson
 from DAS.web.tools import jsonstreamer
+from DAS.web.tools import enable_cross_origin
+from DAS.web.tools import tojson
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 from DAS.web.autocomplete import autocomplete_helper
@@ -60,7 +65,8 @@ import urllib
 
 # keyword search
 from DAS.web.das_kwd_search import KeywordSearchHandler
-
+from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+from DAS.keywordsearch.metadata import input_values_tracker
 
 # TODO: move this to an appropriate place
 from DAS.web.utils import HtmlString
@@ -395,12 +401,10 @@ class DASWebService(DASWebManager):
 
 
     def kws_async_init(self, kwargs):
-        # do not allow caching
-        print 'a'
+        # TODO: decide if caching OK for KWS results?
         set_no_cache_flags()
-        print 'b'
+
         uinput = kwargs.get('input', '').strip()
-        print 'kws async', uinput
         time0 = time.time()
         self.adjust_input(kwargs)
         view = kwargs.get('view', 'list')
@@ -410,14 +414,13 @@ class DASWebService(DASWebManager):
         return inst, uinput
 
     @expose
+    @enable_cross_origin
     @checkargs(DAS_WEB_INPUTS)
     def kws_async(self, **kwargs):
         """
         Returns KeywordSearch results for AJAX call (for now as html snippet)
         """
         inst, uinput = self.kws_async_init(kwargs)
-        print 'kws async:', inst, uinput
-
 
         if self.busy():
             return self.busy_page(uinput)
@@ -426,48 +429,22 @@ class DASWebService(DASWebManager):
             kwargs['reason'] = 'No input found'
             return self.redirect(**kwargs)
 
-        print 'kws async', uinput
-
-        # TODO: set exact names of main das servers
-        cherrypy.response.headers['Access-Control-Allow-Origin'] = '*'
-        cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-JSON'
-        cherrypy.response.headers['Access-Control-Expose-Headers'] = 'X-JSON'
-
-
+        conf = self.dasconfig.get('keyword_search', {})
+        timeout = conf.get('timeout', 5)
 
         return self.kws.handle_search(self,
                               query=uinput, inst=inst,
                               initial_exc_message = '',
                               dbsmngr = self._get_dbsmgr(inst),
-                              is_ajax=True)
-
-
-
-    @expose
-    @checkargs(DAS_WEB_INPUTS)
-    def kws_entry_points_ajax(self, **kwargs):
-        '''
-        returns entry points as html snippet (TODO: not finished)
-        '''
-        from DAS.keywordsearch import search as kws
-        inst, query = self.kws_async_init(**kwargs)
-
-        kws.init_dbs_mngr(dbsmngr=None, inst=inst)
-
-        query, tokens = kws.tokenize_query(query, DEBUG=True)
-        chunks, schema_ws, values_ws = kws.get_entry_points(tokens)
-
-        import pprint
-        pprint.pprint(chunks, schema_ws, values_ws)
+                              is_ajax=True,
+                              timeout=timeout)
 
 
     def _get_fields_by_entity(self):
-        # get all the fields available
-        from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
-        from DAS.keywordsearch.metadata.schema_adapter2 import DasSchemaAdapter
-        #getSchema().
-        fields_by_ent = DasSchemaAdapter().list_result_fields()
-        from collections import defaultdict
+        """
+        gets list of all the fields available (static)
+        """
+        fields_by_ent = getSchema().list_result_fields()
 
         fields_by_entity = defaultdict(list)
         for ent in fields_by_ent.keys():
@@ -484,18 +461,19 @@ class DASWebService(DASWebManager):
         return fields_by_entity
 
     def _get_known_values(self):
-        from DAS.keywordsearch.metadata.input_values_tracker import get_fields_tracked, get_tracker
-
+        """
+        list of values for fields in service results (static)
+        """
         ent_values = {}
-        # values for fields in service results
-        for field in get_fields_tracked():
-            values = get_tracker(field).find('*', limit=-1)
+        for field in input_values_tracker.get_fields_tracked():
+            values = input_values_tracker.get_tracker(field).find('*', limit=-1)
             n = field.replace('.name', '')
             ent_values[n] = [v for v in values]
         return ent_values
 
     def _get_daskeys_list(self):
-        # get list of all daskeys. TODO: move to schema adapter or whatever?
+        # get list of all daskeys (static)
+        # TODO: move to some more generic place?
         dasdict = {}
         daskeys = []
         for system, keys in self.dasmgr.mapping.daskeys().iteritems():
@@ -512,7 +490,6 @@ class DASWebService(DASWebManager):
         return daskeys
 
     def _list_lookup_keys(self):
-        from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
         return getSchema().lookup_keys
 
 
@@ -560,24 +537,6 @@ class DASWebService(DASWebManager):
 
 
 
-
-
-
-    def _get_dbsmgr_for_db_instance(self, str_dbsinst):
-        """
-        Given a string representation of DBS instance, returns DBSManager
-        instance which "knows" how to look up datasets
-        (further for performance reasons of searching by wildcard and substring,
-        we may want to store then even outside MongoDB).
-        """
-        # TODO: instance selection shall be more clean
-        if  self.dataset_daemon:
-            dbs_urls = [d for d in self.dbsmgr.keys() if d.find(str_dbsinst) != -1]
-            if  len(dbs_urls) == 1:
-                return self.dbsmgr[dbs_urls[0]]
-        return None
-
-
     def _get_dbsmgr(self, inst):
         """
         Given a string representation of DBS instance, returns DBSManager
@@ -592,6 +551,14 @@ class DASWebService(DASWebManager):
                     return mgr
         return mgr
 
+
+    def _get_kws_host(self):
+        conf = self.dasconfig.get('load_balance', {})
+        return conf.get('kws_host', '')
+
+    def _get_autocompl_host(self):
+        conf = self.dasconfig.get('load_balance', {})
+        return conf.get('autocompletion_host', '')
 
     def generate_dasquery(self, uinput, inst, html_error=True):
         """
@@ -611,8 +578,9 @@ class DASWebService(DASWebManager):
             # render keyword search loader
             if kws_enabled:
                 kws = self.templatepage('kwdsearch_via_ajax',
-                                         uinput_json=json.dumps(uinput),
-                                         inst_json=json.dumps(inst))
+                                         uinput_json=tojson(uinput),
+                                         inst_json=tojson(inst),
+                                         kws_host=tojson(self._get_kws_host()))
 
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
                         guide=guide, kws_enabled=kws_enabled, kws=kws)
@@ -703,6 +671,8 @@ class DASWebService(DASWebManager):
         """
         provide input DAS search form
         """
+        # TODO: rename into search_form()? (template is also called like this
+
         if  "'" in uinput: # e.g. file.creation_date>'20120101 12:01:01'
             uinput = uinput.replace("'", '"')
         if  not instance:
@@ -711,14 +681,12 @@ class DASWebService(DASWebManager):
                 width=900, height=220, cards=help_cards(self.base))
         daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
 
-
         # new autocompletion
-        daskeys_json = json.dumps(self._get_daskeys_list()) # still daskeys could be both inputs or outputs
-        known_values_json = json.dumps(self._get_known_values())
-        fields_by_entity_json = json.dumps(self._get_fields_by_entity())
-        lookup_keys_json = json.dumps(self._list_lookup_keys())
+        daskeys_json = tojson(self._get_daskeys_list()) # still daskeys could be both inputs or outputs
+        known_values_json = tojson(self._get_known_values())
+        fields_by_entity_json = tojson(self._get_fields_by_entity())
+        lookup_keys_json = tojson(self._list_lookup_keys())
 
-        from collections import defaultdict
         descriptions = defaultdict(str)
 
         # DAS key descriptions
@@ -727,7 +695,7 @@ class DASWebService(DASWebManager):
             descr = self.templatepage('das_keys_desc_row', row=item)
             descriptions[daskey] += descr
 
-
+        autocompletion_host = self.dasconfig.get('autocompl')
 
         page  = self.templatepage('das_searchform', input=uinput, \
                 init_dbses=list(self.dbs_instances), daskeys=daskeys, \
@@ -736,24 +704,9 @@ class DASWebService(DASWebManager):
                 daskeys_json=daskeys_json,
                 fields_by_entity_json=fields_by_entity_json,
                 lookup_keys_json=lookup_keys_json,
-                daskeys_descr=json.dumps(descriptions),
+                daskeys_descr=tojson(descriptions),
+                autocompl_host=tojson(self._get_autocompl_host())
                 )
-        return page
-
-    def _form(self, uinput='', instance=None, view='list', cards=False):
-        """
-        provide input DAS search form
-        """
-        if  "'" in uinput: # e.g. file.creation_date>'20120101 12:01:01'
-            uinput = uinput.replace("'", '"')
-        if  not instance:
-            instance = self.dbs_global
-        cards = self.templatepage('das_cards', base=self.base, show=cards, \
-                width=900, height=220, cards=help_cards(self.base))
-        daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
-        page  = self.templatepage('das_searchform', input=uinput, \
-                init_dbses=list(self.dbs_instances), daskeys=daskeys, \
-                base=self.base, instance=instance, view=view, cards=cards)
         return page
 
     @expose
@@ -786,7 +739,7 @@ class DASWebService(DASWebManager):
             code = web_code('Exception')
             raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
-        return json.dumps(data)
+        return tojson(data)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -1261,6 +1214,7 @@ class DASWebService(DASWebManager):
         return self.repmgr.jsonview(head, data)
 
     @exposedasjson
+    @enable_cross_origin
     @checkargs(['query', 'dbs_instance'])
     def autocomplete(self, **kwargs):
         """

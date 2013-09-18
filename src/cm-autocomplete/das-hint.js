@@ -134,7 +134,8 @@
 
 
         function getDatasetsAsync(token, cur, callback) {
-            var req = new Ajax.Request('/das/autocomplete',
+            var host = CodeMirror.AUTOCOMPLETION_HOST;
+            var req = new Ajax.Request(host + '/das/autocomplete',
                 {
                     method: 'get',
                     requestHeaders: {Accept: 'application/json'},
@@ -212,8 +213,9 @@
 
         function getAnyTokenMatchesAsync(token, cur, callback) {
             var token_value = token.string.toLowerCase();
+            var host = CodeMirror.AUTOCOMPLETION_HOST;
 
-            var req = new Ajax.Request('/das/autocomplete',
+            var req = new Ajax.Request(host+'/das/autocomplete',
                 {
                     method: 'get',
                     requestHeaders: {Accept: 'application/json'},

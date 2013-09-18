@@ -138,10 +138,10 @@ class KeywordSearch:
                 '%.2f: %s' % (r['score'], r['result']) for r in best_scores)
         return best_scores
 
-    def search(self, query, inst=None, dbsmngr=None):
+    def search(self, query, inst=None, dbsmngr=None, timeout=5):
         """
         Performs the keyword search
-        returns: status, result_list
+        returns: (error or None, result_list)
         """
         #DEBUG = False
         self.init_dbs_mngr(dbsmngr, inst)
@@ -150,32 +150,29 @@ class KeywordSearch:
 
         keywords = [kw.strip() for kw in tokens
                     if kw.strip()]
+        chunks, schema_ws, values_ws = get_entry_points(keywords, DEBUG)
+
 
         if MINIMAL_DEBUG:
             print '============= Q: %s, tokens: %s ' % (query, str(tokens))
-
-        chunks, schema_ws, values_ws = get_entry_points(keywords, DEBUG)
-
-        if MINIMAL_DEBUG:
-                print '============= Schema mappings (TODO) =========='
-                pprint.pprint(schema_ws)
-                print '=============== Values mappings (TODO) ============'
-                pprint.pprint(values_ws)
+            print '============= Schema mappings (TODO) =========='
+            pprint.pprint(schema_ws)
+            print '=============== Values mappings (TODO) ============'
+            pprint.pprint(values_ws)
 
         thread_data.results = []
 
         # static per request
         thread_data.keywords_list = keywords
-        # TODO:  schema_ws, values_ws, is also static, see performance differences...
 
         err = None
         try:
             # TODO: add time limit into DAS settings
             self.ranker.perform_search(schema_ws, values_ws, kw_list=keywords,
-                                       chunks=chunks, time_limit=5)
+                                       chunks=chunks, time_limit=timeout)
         except TimeLimitExceeded as e:
             print e
             print 'time limit exceeded, still returning some results...'
-            err = TimeLimitExceeded
+            err = e
 
         return err, self.process_results(keywords, query)

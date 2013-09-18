@@ -7,23 +7,22 @@
 
 
 <div id="kws-suggestions">
-    loading query suggestions... please wait...
+    <br />
+    <b>Please wait... DAS will suggest some valid queries for you.</b>
+    <br /><br />
 </div>
 
 <script type="text/javascript">
 
 Ajax.Responders.register({
   onCreate: function(response) {
-    response.transport.setRequestHeader = Prototype.emptyFunction;
-  }
-});
-/*
-Ajax.Responders.register({
-  onCreate: function(response) {
-    if (response.request.isSameOrigin())
+    // TODO: isSameOrigin() seem to fail at least for localhost in Chrome
+    if (false && response.request.isSameOrigin())
       return;
+
     var t = response.transport;
     t.setRequestHeader = t.setRequestHeader.wrap(function(original, k, v) {
+
       if (/^(accept|accept-language|content-language)$/i.test(k))
         return original(k, v);
       if (/^content-type$/i.test(k) &&
@@ -33,8 +32,8 @@ Ajax.Responders.register({
     });
   }
 });
-*/
 
+// TODO: it must a setting
 var KWS_HOST = "https://localhost";
 
 new Ajax.Request(KWS_HOST + "/das/kws_async", {
@@ -49,7 +48,6 @@ new Ajax.Request(KWS_HOST + "/das/kws_async", {
   },
   onFailure: function(err) {
     document.getElementById("kws-suggestions").innerHTML = "unable to load query suggestions at the moment..."
-
   }
 
 });
@@ -58,64 +56,64 @@ new Ajax.Request(KWS_HOST + "/das/kws_async", {
 
 // keyword search stuff
 
-    //
-    // result type selector
-    //
+//
+// result type selector
+//
 
-    var RTYPE_ANY = "any";
+var RTYPE_ANY = "any";
 
-    function hide(selector){
-        //jQuery(selector).hide().;
-    }
-    function filterByResultType(rt, target){
-        if (rt == RTYPE_ANY) {
-            jQuery('.kws-result').show(300);
-        } else {
-            jQuery('.kws-result').hide();
-            jQuery('.result-with-entity-'+rt).show(300);
-        }
-
-        jQuery('.rt-filters a').removeClass('rtype-selected');
-        //console.log(target, jQuery(target));
-        jQuery(target).addClass('rtype-selected')
-    }
-
-    // by default select the "any"
-    jQuery('.rt-'+RTYPE_ANY).addClass('rtype-selected');
-
-    function showAllRT(){
-    }
-
-
-    // limit the number of results shown
-
-    function showAllResults(){
+function hide(selector){
+    //jQuery(selector).hide().;
+}
+function filterByResultType(rt, target){
+    if (rt == RTYPE_ANY) {
         jQuery('.kws-result').show(300);
-        jQuery('#results-only-top-k').html('');
+    } else {
+        jQuery('.kws-result').hide();
+        jQuery('.result-with-entity-'+rt).show(300);
     }
 
+    jQuery('.rt-filters a').removeClass('rtype-selected');
+    //console.log(target, jQuery(target));
+    jQuery(target).addClass('rtype-selected')
+}
 
-    function hideLowResults(){
-        // hide all results lower than 10
-        var limit = 10;
-        var nimportant = 4;
+// by default select the "any"
+jQuery('.rt-'+RTYPE_ANY).addClass('rtype-selected');
 
-        count = jQuery('.kws-result').length;
+function showAllRT(){
+}
 
-        if (count > limit) {
-            jQuery('.kws-result:gt('+ (limit-1) +')').hide();
-            var cont = jQuery('<div id="results-only-top-k">Showing only top ' + limit + ' suggestions.&nbsp;</div>');
-            var showBtn = jQuery('<a href="javascript:;">see all</a>');
-            showBtn.click(showAllResults);
-            cont.append(showBtn);
 
-            jQuery('div#kws-results-listing').append(cont);
-        }
+// limit the number of results shown
 
-        //if (count > nimportant) {
-        //    jQuery('.kws-result:gt('+ (nimportant-1) +')').css('opacity', 0.7);
-        //}
+function showAllResults(){
+    jQuery('.kws-result').show(300);
+    jQuery('#results-only-top-k').html('');
+}
+
+
+function hideLowResults(){
+    // hide all results lower than 10
+    var limit = 10;
+    var nimportant = 4;
+
+    count = jQuery('.kws-result').length;
+
+    if (count > limit) {
+        jQuery('.kws-result:gt('+ (limit-1) +')').hide();
+        var cont = jQuery('<div id="results-only-top-k">Showing only top ' + limit + ' suggestions.&nbsp;</div>');
+        var showBtn = jQuery('<a href="javascript:;">see all</a>');
+        showBtn.click(showAllResults);
+        cont.append(showBtn);
+
+        jQuery('div#kws-results-listing').append(cont);
     }
+
+    //if (count > nimportant) {
+    //    jQuery('.kws-result:gt('+ (nimportant-1) +')').css('opacity', 0.7);
+    //}
+}
 
 
 
