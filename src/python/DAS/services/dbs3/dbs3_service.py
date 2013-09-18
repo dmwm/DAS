@@ -518,6 +518,9 @@ class DBS3Service(DASAbstractService):
             # it does not accepted, instead it will be used for filtering
             # end-results
             del kwds['status']
+        if  api == 'filesummaries':
+            if  kwds['dataset'].find('*') != -1:
+                kwds['dataset'] = 'required'
 
     def parser(self, query, dformat, source, api):
         """

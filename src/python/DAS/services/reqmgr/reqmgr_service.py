@@ -23,7 +23,7 @@ class ReqMgrService(DASAbstractService):
         """
         Adjust parameters for specific query requests
         """
-        if  api == 'inputdataset':
+        if  api == 'inputdataset' or api == 'configIDs':
             if  kwds.get('dataset', 'required').find('*') != -1:
                 kwds['dataset'] = 'required' # we skip patterns
 
