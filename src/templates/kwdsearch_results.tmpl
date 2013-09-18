@@ -3,8 +3,10 @@
 #set msg = $quote($msg)
 #assert (isinstance($msg, str) or isinstance($msg, unicode))
 
+<b>Did you mean any of the queries below?</b><br />
+
 #if $err:
-        <div style="color: #fff; background-color: #992222; padding: 5px; margin-top: 20px">
+        <div class="kws-timeout">
             Due to complexity of your query or high load on the server,
             we are able to show only a subset of all suggestions (which
             may be useless).</div>
@@ -15,7 +17,7 @@
 #if $hi_score_result_types
 
     <div class="select-result-type">
-            <span class="tooltip">Filter by query result:
+            <span class="tooltip">Filter by entity:
                 <span class="classic">You may filter suggestions by the entity they return</span></span>
                     &nbsp;<span class="rt-filters">
                         #for index, rt in enumerate($hi_score_result_types):
@@ -45,14 +47,11 @@
     <!-- (can't interpret your query)<br /> -->
 #end if
 
-<b>Did you mean any of the queries below?</b><br />
 
 <div id="kws-results-container" style="margin-bottom: 50px">
 
 
-    #if not $is_ajax
 
-    #end if
 
     <div id="kws-entry-points">
 
@@ -107,36 +106,12 @@
 
 </div>
 
-<!-- not needed anymore
-<div style="color: #666">
-    $initial_err_message
-</div>
--->
 
-
+#if not $is_ajax
 <script type="text/javascript">
-
-    jQuery(function() {
-        // do not hide debug tooltip (TODO: it should be on click actually)
-        jQuery(".debug").each(function(){
-            jQuery(this).tooltip({
-                content: jQuery(this).attr('title'),
-                track: true,
-                //close: true,
-                hide: { effect: "fade", duration: 2000 }
-                //function( event, ui ) { jQuery(this).tooltip('open'); },
-            });
-        });
-        jQuery(".kws-link").each(function(){
-            jQuery(this).tooltip({
-                content: jQuery(this).attr('title')
-            });
-        });
-
-        hideLowResults();
-
-    });
+    jQuery(initialize_kws_results);
 </script>
+#end if
 
 
 <!-- end of kwdsearch_results.tmpl -->

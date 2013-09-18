@@ -495,3 +495,26 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
     -khtml-border-radius:20px;
     z-index:101;
 }
+
+/* When query is ambigous (keyword search will be shown) */
+.das-ambigous {
+  border: 1px solid #ddd; padding: 5px;  border-radius: 4px;
+  background-color: #fee;
+  margin: 20px 0;
+
+}
+.das-ambigous pre {
+    font-size: 10px;
+    width: auto;
+    display: inline-block;
+    margin:0; padding: 0;
+}
+.das-ambigous h4 {
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.kws-timeout {
+    color: #fff; background-color: #992222; padding: 5px; margin-top: 20px;
+}

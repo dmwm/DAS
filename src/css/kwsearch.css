@@ -42,7 +42,8 @@ ul.tagit {
     color: #666;
 }
 
-.select-result-type { margin: 20px 0; font-weight: normal; }
+.select-result-type { margin: 5px 0; font-weight: normal; }
+.select-result-type span.tooltip { border: none; font-weight: bold; color: #666; }
 .rt-filters a.rtype-selected {
     font-weight: bold;
     color: #000;
