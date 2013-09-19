@@ -224,9 +224,9 @@ class RunRegistryService(DASAbstractService):
         rawrows = rr_worker(url, _query, _table)
         genrows = self.translator(api, rawrows)
         if  _table == 'runsummary':
-            dasrows = self.set_misses(dasquery, api, run_duration(genrows))
+            dasrows = run_duration(genrows)
         else:
-            dasrows = self.set_misses(dasquery, api, collect_lumis(genrows))
+            dasrows = collect_lumis(genrows)
         ctime   = time.time() - time0
         try:
             self.write_to_cache(\
