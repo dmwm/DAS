@@ -516,6 +516,7 @@ def das_json(dasquery, record, pad='', full=False):
     Wrap provided jsonhtml code snippet into div/pre blocks. Provided jsonhtml
     snippet is sanitized by json2html function.
     """
+    error  = None
     if  full:
         return das_json_full(record, pad)
     mquery  = dasquery.mongo_query
@@ -527,6 +528,9 @@ def das_json(dasquery, record, pad='', full=False):
         lkeys = []
     # get das.systems and primary key
     das  = record['das']
+    if 'error' in record:
+        error  = {'error':record.get('error'),
+                  'reason': record.get('reason', '')}
     srvs = das.get('system', [])
     apis = das.get('api', [])
     prim_key = das.get('primary_key', '').split('.')[0]
@@ -543,7 +547,8 @@ def das_json(dasquery, record, pad='', full=False):
             if  lkeys:
                 rec = {prim_key: pval[idx]}
                 for lkey in [l for l in lkeys if l != prim_key]:
-                    rec[lkey] = record[lkey][idx]
+                    if  lkey != 'error' and lkey != 'reason':
+                        rec[lkey] = record[lkey][idx]
                 val = das_json_full(rec)
             else:
                 val = das_json_full(pval[idx])
@@ -555,6 +560,8 @@ def das_json(dasquery, record, pad='', full=False):
             page += '<b>DAS api:</b> %s' % api
             page += '\n<pre style="%s">%s</pre>' % (style, val)
         page += '\n<b>DAS part:</b><pre>%s</pre>' % das_json_full(das)
+        if  error:
+            page += '\n<b>Errors:</b><pre>%s</pre>' % das_json_full(error)
         rhash = {'qhash':record.get('qhash', None),
                  'das_id':record.get('das_id', None),
                  'cache_id': record.get('cache_id', None)}
