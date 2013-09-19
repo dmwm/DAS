@@ -65,6 +65,9 @@ def process_lumis_with(ikey, gen):
     "Helper function to process lumis with given key from provided generator"
     odict = {}
     for row in gen:
+        if  'error' in row:
+            yield row
+            continue
         lfn, run, lumi = row
         if  ikey == 'file':
             key = lfn
@@ -159,9 +162,10 @@ def block_run_lumis(url, blocks, runs=None, verbose=0):
     odict = {} # output dict
     for rec in gen:
         blk = urllib.unquote(url_args(rec['url'])['block_name'])
-        if  'error' in rec.keys():
-            err = 'N/A: %s' % rec
-            yield blk, err, err
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            yield {'error':error, 'reason':reason}
         else:
             for row in json.loads(rec['data']):
                 run = row['run_num']
@@ -194,9 +198,10 @@ def file_run_lumis(url, blocks, runs=None, verbose=0):
     gen = urlfetch_getdata(urls, CKEY, CERT, headers)
     odict = {} # output dict
     for rec in gen:
-        if  'error' in rec.keys():
-            err = 'N/A: %s' % rec
-            yield err, err, err
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            yield {'error':error, 'reason':reason}
         else:
             for row in json.loads(rec['data']):
                 run = row['run_num']
@@ -307,7 +312,11 @@ def process(gen):
     "Process generator from getdata"
     for row in gen:
         if  'error' in row:
-            raise Exception(row['error'])
+            error = row.get('error')
+            reason = row.get('reason', '')
+            print dastimestamp('DAS ERROR'), error, reason
+            yield row
+            continue
         if  'data' in row:
             yield json.loads(row['data'])
 
@@ -326,6 +335,9 @@ def blocks4tier_date(dbs, tier, min_cdate, max_cdate, verbose=0):
     err     = 'Unable to get blocks for tier=%s, mindate=%s, maxdate=%s' \
                 % (tier, min_cdate, max_cdate)
     for blist in res:
+        if 'error' in blist:
+            yield blist
+            continue
         if  isinstance(blist, dict):
             if  'block_name' not in blist:
                 msg = err + ', reason=%s' % json.dumps(blist)
@@ -341,7 +353,10 @@ def block_summary(dbs, blocks):
     res     = urlfetch_getdata(urls, CKEY, CERT, headers)
     for row in res:
         if  'error' in row:
-            raise Exception(row['error'])
+            error  = row.get('error')
+            reason = row.get('reason', '')
+            yield {'error':error, 'reason':reason}
+            continue
         url = row['url']
         blk = urllib.unquote(url.split('=')[-1])
         for rec in json.loads(row['data']):
