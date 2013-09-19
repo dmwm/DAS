@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.1.X
 
+  - Fixed #4032
   - Re-factor core/web code to propagate error record back to end-user and
     setup error status code in this case
   - Throw error records when urlfetch_getdata fails
