@@ -15,6 +15,7 @@ from DAS.core.das_aggregators import ResultObject
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
 
+DAS_RECORD_KEYS = ['das_id', 'cache_id', 'das', 'qhash', 'error', 'reason']
 DAS_FILTERS   = ['grep', 'unique', 'sort']
 DAS_OPERATORS = ['=', 'between', 'last', 'in']
 DAS_SPECIALS  = ['date', 'system', 'instance']
@@ -76,6 +77,12 @@ def das_db_keywords():
     Return list of DAS special keywords for retrieving information DAS DBs
     """
     return DAS_DB_KEYWORDS
+
+def das_record_keys():
+    """
+    Return list of DAS special keys used in DAS records
+    """
+    return DAS_RECORD_KEYS
 
 def das_aggregators():
     """
