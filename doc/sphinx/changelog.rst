@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.1.X
 
+  - Pass write_concern flag to MongoClient, by default it is off
   - Fixed #4032
   - Re-factor core/web code to propagate error record back to end-user and
     setup error status code in this case
