@@ -18,7 +18,7 @@ except:
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
-from DAS.utils.utils import dbsql_opt_map, convert_datetime
+from DAS.utils.utils import dbsql_opt_map, convert_datetime, dastimestamp
 from DAS.utils.utils import expire_timestamp, get_key_cert, convert2ranges
 from DAS.utils.global_scope import SERVICES
 from DAS.utils.url_utils import getdata
@@ -31,6 +31,9 @@ def process_lumis_with(ikey, gen):
     "Helper function to process lumis with given key from provided generator"
     odict = {}
     for row in gen:
+        if  'error' in row:
+            yield row
+            continue
         lfn, run, lumi = row
         if  ikey == 'file':
             key = lfn
@@ -113,9 +116,11 @@ def block_run_lumis(url, blocks, runs=None):
     prim_key = 'row'
     odict = {} # output dict
     for rec in gen:
-        if  'error' in rec.keys():
-            # TODO: should handle error somehow
-            pass
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            print dastimestamp('DAS ERROR'), error, reason
+            yield {'error': error, 'reason': reason}
         else:
             source   = StringIO.StringIO(rec['data'])
             lumis    = []
@@ -152,9 +157,11 @@ def file_run_lumis(url, blocks, runs=None):
     prim_key = 'row'
     odict = {} # output dict
     for rec in gen:
-        if  'error' in rec.keys():
-            # TODO: should handle error somehow
-            pass
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            print dastimestamp('DAS ERROR'), error, reason
+            yield {'error': error, 'reason': reason}
         else:
             source   = StringIO.StringIO(rec['data'])
             lumis    = []
@@ -280,6 +287,11 @@ def summary4dataset_run(url, kwds):
     tot_lumis = 0
     tot_files = 0
     for rec in gen:
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            srec = {'summary':'', 'error':error, 'reason':reason}
+            yield srec
         url = rec['url']
         data = rec['data']
         stream = StringIO.StringIO(data)
