@@ -5,6 +5,14 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 2.1.X
+
+  - Re-factor core/web code to propagate error record back to end-user and
+    setup error status code in this case
+  - Throw error records when urlfetch_getdata fails
+  - Move set_misses into write_to_cache
+  - Made adjustments to DBS3 data-service based on recent changes of DBS3 APIs
+
 - 2.0.X
 
   - Add services attribute to das part of data record, it shows which DAS
