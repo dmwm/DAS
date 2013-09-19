@@ -186,6 +186,10 @@ class DASAbstractService(object):
         if  not self.write2cache:
             return
 
+        # before going to cache we should check/set possible misses, e.g.
+        # primary key when error is thrown
+        result = self.set_misses(dasquery, api, result)
+
         # update the cache
         header = dasheader(self.name, dasquery, expire, api, url,
                 services=self.services())
@@ -451,7 +455,6 @@ class DASAbstractService(object):
             self.logger.info("%s expire %s" % (api, expire))
             rawrows = self.parser(dasquery, dformat, datastream, api)
             dasrows = self.translator(api, rawrows)
-            dasrows = self.set_misses(dasquery, api, dasrows)
             ctime   = time.time() - time0
             self.write_to_cache(dasquery, expire, url, api, args,
                     dasrows, ctime)
