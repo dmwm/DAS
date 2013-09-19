@@ -533,7 +533,7 @@ class DBS3Service(DASAbstractService):
             # it does not accepted, instead it will be used for filtering
             # end-results
             del kwds['status']
-        if  api == 'filesummaries':
+        if  api == 'filesummaries' or api == 'dataset_info':
             if  kwds['dataset'].find('*') != -1:
                 kwds['dataset'] = 'required'
 
@@ -586,7 +586,7 @@ class DBS3Service(DASAbstractService):
                         sites.add(orig_site)
             for site in sites:
                 yield {'site': {'name': site}}
-        elif api == 'datasets':
+        elif api == 'datasets' or api == 'dataset_info':
             for row in gen:
                 row['name'] = row['dataset']
                 del row['dataset']
