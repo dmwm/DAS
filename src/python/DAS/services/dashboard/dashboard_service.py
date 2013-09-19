@@ -125,8 +125,7 @@ class DashboardService(DASAbstractService):
         time0 = time.time()
         res, expire = self.getdata(url, args, expire, headers=self.headers)
         rawrows = self.parser(res, api, args)
-        genrows = self.translator(api, rawrows)
-        dasrows = self.set_misses(dasquery, api, genrows)
+        dasrows = self.translator(api, rawrows)
         ctime = time.time() - time0
         try:
             self.write_to_cache(\
