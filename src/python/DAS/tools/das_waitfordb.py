@@ -97,15 +97,14 @@ def is_bootstrap_needed():
 
         from DAS.keywordsearch.metadata.input_values_tracker \
             import need_value_bootstrap
-        from DAS.keywordsearch.metadata import das_schema_adapter
+        from DAS.keywordsearch.metadata import schema_adapter_factory
         from DAS.keywordsearch.whoosh import ir_entity_attributes
 
         def need_res_fields_bootsrap():
-            dascore = DASCore()
-            das_schema_adapter.init(dascore)
+            schema_adapter = schema_adapter_factory.getSchema()
 
             try:
-                das_schema_adapter.list_result_fields()
+                schema_adapter.list_result_fields()
 
                 ir_entity_attributes.load_index()
             except Exception, e:
