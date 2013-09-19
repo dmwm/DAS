@@ -57,7 +57,7 @@ class _DBConnectionSingleton(object):
         key = genkey(str(uri))
         if  not self.conndict.has_key(key):
             try:
-                dbinst = MongoClient(host=uri, max_pool_size=100)
+                dbinst = MongoClient(host=uri, max_pool_size=100, w=1)
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
