@@ -121,8 +121,7 @@ class MonitorService(DASAbstractService):
                     raise Exception(err)
             time0   = time.time()
             res, expire = self.getdata(url, args, expire)
-            genrows = self.parser(dasquery, dformat, res, args)
-            dasrows = self.set_misses(dasquery, api, genrows)
+            dasrows = self.parser(dasquery, dformat, res, args)
             ctime   = time.time() - time0
             self.write_to_cache(\
                 dasquery, expire, url, api, args, dasrows, ctime)
