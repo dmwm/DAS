@@ -255,22 +255,24 @@ class DASCore(object):
         Return status of the query request and its hash.
         """
         status = None
+        error  = None
         reason = None
         for col in ['merge', 'cache']:
             self.rawcache.remove_expired(dasquery, col)
         if  dasquery and dasquery.mongo_query.has_key('fields'):
             fields = dasquery.mongo_query['fields']
             if  fields and isinstance(fields, list) and 'queries' in fields:
-                return 'ok', reason
+                return 'ok', error, reason
         record = self.rawcache.find(dasquery)
+        error, reason = self.rawcache.is_error_in_records(dasquery)
         try:
             if  record and record.has_key('das') and \
                 record['das'].has_key('status'):
                 status = record['das']['status']
-                return status, record['das'].get('reason', reason)
+                return status, error, reason
         except:
             pass
-        return status, reason
+        return status, error, reason
 
     def worker(self, srv, dasquery):
         """Main worker function which calls data-srv call function"""
