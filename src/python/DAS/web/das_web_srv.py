@@ -663,10 +663,11 @@ class DASWebService(DASWebManager):
         idx    = getarg(kwargs, 'idx', 0)
         limit  = getarg(kwargs, 'limit', 0) # do not impose limit
         coll   = kwargs.get('collection', 'merge')
+        status = kwargs.get('status')
+        error  = kwargs.get('error')
+        reason = kwargs.get('reason')
         dasquery = kwargs.get('dasquery', None)
         time0  = time.time()
-        status = None
-        reason = None
         if  dasquery:
             dasquery = DASQuery(dasquery, instance=inst)
         else:
@@ -689,7 +690,8 @@ class DASWebService(DASWebManager):
                 # its length as nresults value.
                 data = [r for r in data]
                 nres = len(data)
-            status = 'ok'
+            if  error: # DAS record contains an error
+                status = 'error'
             head.update({'status':status, 'nresults':nres,
                          'ctime': time.time()-time0, 'dasquery': dasquery})
         except Exception as exc:
@@ -811,7 +813,8 @@ class DASWebService(DASWebManager):
             return self.datastream(dict(head=head, data=data))
 
         dasquery = content # returned content is valid DAS query
-        status, _reason = self.dasmgr.get_status(dasquery)
+        status, error, reason = self.dasmgr.get_status(dasquery)
+        kwargs.update({'status':status, 'error':error, 'reason':reason})
         if  not pid:
             pid = dasquery.qhash
         if  status == None: # submit new request
@@ -951,7 +954,8 @@ class DASWebService(DASWebManager):
             else:
                 return content
         dasquery = content # returned content is valid DAS query
-        status, _reason = self.dasmgr.get_status(dasquery)
+        status, error, reason = self.dasmgr.get_status(dasquery)
+        kwargs.update({'status':status, 'error':error, 'reason':reason})
         pid = dasquery.qhash
         if  status == None: # process new request
             kwargs['dasquery'] = dasquery.storage_query
