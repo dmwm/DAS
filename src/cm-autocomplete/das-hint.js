@@ -143,13 +143,15 @@
 
         function getDatasetValuesAsync(token, cur, callback) {
             var host = CodeMirror.AUTOCOMPLETION_HOST;
+            var inst = dbs_inst();
+
             var req = new Ajax.Request(host + '/das/autocomplete',
                 {
                     method: 'get',
                     requestHeaders: {Accept: 'application/json'},
 
                     parameters: {
-                        //dbs_instance: 'cms_dbs_prod_global',
+                        dbs_instance: inst,
                         'query': token.string || '/*/*/*'
                     },
                     onSuccess: function (resp) {
@@ -254,15 +256,15 @@
         function getAnyTokenMatchesAsync(token, cur, callback) {
             var token_value = token.string.toLowerCase();
             var host = CodeMirror.AUTOCOMPLETION_HOST;
+            var inst = dbs_inst();
 
             var req = new Ajax.Request(host + '/das/autocomplete',
                 {
                     method: 'get',
                     requestHeaders: {Accept: 'application/json'},
-
                     parameters: {
-                        //dbs_instance: 'cms_dbs_prod_global',
-                        'query': token.string || '/*/*/*'
+                        dbs_instance: inst,
+                        query: token.string || '/*/*/*'
                     },
                     onSuccess: function (resp) {
                         var json = resp.responseText.evalJSON(false);
@@ -416,7 +418,7 @@
                 // 1) fieldnames for given entity
                 if (!token.state.value_for) {
                     field_data = CodeMirror.hint_fields[context.string];
-                    if (field_data !== undefined) {
+                    if (typeof(field_data) !== 'undefined') {
                         forEachWithArg(field_data, maybeAddField, token_value);
                     }
 
