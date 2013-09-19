@@ -167,8 +167,7 @@ def adjust_values(func, gen, links, pkey):
             continue
         if  key.lower() == 'error':
             key = '<span %s>WARNING</span>' % red
-            if  val and isinstance(val, basestring):
-                val += '<br/>'
+            val = json.dumps(val) + '<br/>'
         if  lookup:
             if  key.find('Member') != -1 and val:
                 link = '/das/request?input=user%3D'
@@ -435,6 +434,7 @@ class CMSRepresentation(DASRepresentation):
             page += '<div class="%s"><hr class="line" />' % style
             links = []
             pkey  = None
+            pval  = None
             lkey  = None
             if  row.has_key('das') and row['das'].has_key('primary_key'):
                 pkey = row['das']['primary_key']
