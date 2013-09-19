@@ -372,13 +372,12 @@ class CombinedService(DASAbstractService):
 #            genrows = json_parser(data, None)
 
         # proceed with standard workflow
-        dasrows = self.set_misses(dasquery, api, genrows)
         ctime   = time.time() - time0
         try:
             if  isinstance(url, dict):
                 url = "combined: %s" % url.values()
             self.write_to_cache(dasquery, expire, url, api, \
-                    args, dasrows, ctime)
+                    args, genrows, ctime)
         except Exception as exc:
             print_exc(exc)
 
