@@ -576,6 +576,7 @@ class DASWebService(DASWebManager):
                         operators=', '.join(das_operators()))
 
             # render keyword search loader
+            kws = ''
             if kws_enabled:
                 kws = self.templatepage('kwdsearch_via_ajax',
                                          uinput_json=tojson(uinput),
