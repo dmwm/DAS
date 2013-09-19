@@ -227,6 +227,10 @@ data_files   = [
                 ('DAS/web/js', datafiles('src/js')),
                 ('DAS/web/css', datafiles('src/css')),
 
+                # hacky extension
+                ('DAS/keywordsearch/rankers', datafiles('src/python/DAS/keywordsearch/rankers/*.so')),
+
+
                 # autocompletion
                 ('DAS/web/css', datafiles('src/cm-autocomplete', '*.css')),
                 ('DAS/web/js', datafiles('src/cm-autocomplete', '*.js')),
@@ -264,6 +268,9 @@ def main():
     for scheme in INSTALL_SCHEMES.values():
         scheme['data'] = scheme['purelib']
 
+
+
+
     dist = setup(
         name                 = name,
         version              = version,
@@ -284,7 +291,14 @@ def main():
                                    sources=['src/python/DAS/extensions/dict_handler.c']),
                                Extension('DAS.extensions.das_hash',
                                    include_dirs=['extensions'],
-                                   sources=['src/python/DAS/extensions/das_hash.c'])],
+                                   sources=['src/python/DAS/extensions/das_hash.c']),
+
+                               # fast_recursive_ranker is based on cython, but
+                               # is distributed as .c source
+                               # .pyx->.c to be compiled separately
+                               #  so cython is not required for installation
+                               Extension('DAS.keywordsearch.rankers.fast_recursive_ranker',
+                                   sources=['src/python/DAS/keywordsearch/rankers/fast_recursive_ranker.c'])],
         classifiers          = classifiers,
         cmdclass             = {'build_ext': BuildExtCommand,
                                 'test': TestCommand,
