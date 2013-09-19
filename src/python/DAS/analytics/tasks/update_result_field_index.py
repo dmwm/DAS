@@ -27,11 +27,11 @@ class update_result_field_index(object):
 
         self.logger.info("updating keyword search index")
 
-        from DAS.keywordsearch.metadata import das_schema_adapter
+        from DAS.keywordsearch.metadata import schema_adapter_factory as s_fact
         from DAS.keywordsearch.whoosh.ir_entity_attributes import build_index
 
-        das_schema_adapter.init(self.das)
-        rfields = das_schema_adapter.list_result_fields()
+        schema_adapter = s_fact.getSchema(self.das)
+        rfields = schema_adapter.list_result_fields()
         build_index(rfields)
 
         return {}
