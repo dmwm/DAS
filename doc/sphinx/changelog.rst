@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.1.X
 
+  - Replaced all has_key dict calls with key in dict statement (work towards
+    python3 standard)
   - Add check_services call to DAS core to check status of services
   - Pass write_concern flag to MongoClient, by default it is off
   - Fixed #4032
