@@ -226,23 +226,7 @@ data_files   = [
 
                 ('DAS/web/js', datafiles('src/js')),
                 ('DAS/web/css', datafiles('src/css')),
-
-                # hacky extension
-                ('DAS/keywordsearch/rankers', datafiles('src/python/DAS/keywordsearch/rankers/*.so')),
-
-
-                # autocompletion
-                ('DAS/web/css', datafiles('src/cm-autocomplete', '*.css')),
-                ('DAS/web/js', datafiles('src/cm-autocomplete', '*.js')),
-
-                ('DAS/web/css', datafiles('src/cm-xquery-hint', '*.css')),
-                ('DAS/web/js', datafiles('src/cm-xquery-hint', '*.js')),
-
-
-
-
                 ('DAS/web/images', datafiles('src/images')),
-                ('DAS/web/images', datafiles('src/jquery-ui-images')),                
                 ('DAS/web/templates', datafiles('src/templates')),
                ]
 license      = "CMS experiment software"
