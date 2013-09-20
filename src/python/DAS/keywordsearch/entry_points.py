@@ -1,17 +1,8 @@
-
-
-__author__ = 'vidma'
-
-import pprint
-
 from nltk.corpus import stopwords
 
-import DAS.keywordsearch.entity_matchers.result_fields_by_chunks
 from DAS.keywordsearch.entity_matchers.name_matching import keyword_schema_weights
 from DAS.keywordsearch.entity_matchers.value_matching import keyword_value_weights
-
 from DAS.keywordsearch.entity_matchers.result_fields_by_chunks import generate_chunks_no_ent_filter
-from DAS.keywordsearch.config import MINIMAL_DEBUG
 
 en_stopwords = stopwords.words('english')
 

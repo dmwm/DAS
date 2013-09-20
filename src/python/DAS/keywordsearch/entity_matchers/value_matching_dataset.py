@@ -43,7 +43,7 @@ def match_value_dataset(keyword):
 
         # prevent number-only-keywords to be matched into datasets with high score
         if keyword.isnumeric():
-            dataset_score = dataset_score - 0.3
+            dataset_score -= 0.3
 
     # TODO: shall we check for unique matches?
 

@@ -670,32 +670,7 @@ def normalization_factor_by_query_len(keywords_list):
 
     + 0.3 extra for entity_type and other boost features
     """
-    return 1.0 # probabilistic ranking
-
-    kws_wo_stopwords = filter_stopwords(set(keywords_list))
-
-    _get_phrase_len = lambda kw: len(
-        filter_stopwords(set(get_keyword_without_operator(kw).split(' '))))
-
-    expected_optimal_score = \
-        sum(2.0 * _get_phrase_len(kw)  if test_operator_containment(kw)
-            else 1.0 * _get_phrase_len(kw)
-            for kw in kws_wo_stopwords) + 0.3
-
-    if expected_optimal_score < 1.0:
-        expected_optimal_score = 1.0
-
-    return expected_optimal_score
-
-
-
-
-
-
-
-
-
-
+    return 1.0 # probabilistic ranking only
 
 
 # TODO: this has to be implemented in a better way

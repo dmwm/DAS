@@ -203,21 +203,6 @@ def store_result_dict_(score, r_type, values_dict, r_filters, keywords_used,
               'status': missing_inputs and 'missing_inputs' or 'OK',
               'missing_inputs': missing_inputs}
 
-
-    class ScoreDescOrder(object):
-            def __init__(self, num=0):
-                self.num = num
-
-            # inverse the order
-            def __lt__(self, other):
-                return self.num < other.num
-
-            def __repr__(self):
-                return self.num
-
-
-
-    #heap_tuple = (ScoreDescOrder(score), result)
     heap_tuple = (_score, result)
 
     if DEBUG:

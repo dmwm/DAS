@@ -2,11 +2,8 @@ __author__ = 'vidma'
 
 import pprint
 from collections import namedtuple, defaultdict
-from itertools import ifilter
-
 
 from DAS.core.das_core import DASCore
-
 from DAS.keywordsearch.config import EXCLUDE_RECORDS_WITH_ERRORS, DEBUG
 
 
@@ -437,7 +434,7 @@ from itertools import chain
 
 
 def flatten(listOfLists):
-    "Flatten one level of nesting"
+    """Flatten one level of nesting"""
     return chain.from_iterable(listOfLists)
 
 

@@ -5,7 +5,7 @@ __author__ = 'vidma'
 from nltk import stem
 from nltk.stem.wordnet import WordNetLemmatizer
 
-from DAS.keywordsearch.config import  processed_stopwords, DEBUG
+from DAS.keywordsearch.config import  processed_stopwords
 
 stemmer = stem.PorterStemmer()
 lmtzr = WordNetLemmatizer()
@@ -16,21 +16,10 @@ en_stopwords = stopwords.words('english')
 
 create_dict = lambda l: dict((v, v) for v in l)
 
-
-
-# for handling semantic and string similarities
-from nltk.corpus import wordnet
-
-#from DAS.keywordsearch.metadata.das_schema_adapter import entity_wordnet_synsets
-
 from DAS.keywordsearch.config import mod_enabled
-
 from DAS.keywordsearch.entity_matchers.string_dist_levenstein import levenshtein_normalized
 
-# TODO: use mapping to entity attributes even independent of the entity itself (idf-like inverted index)
-
 from DAS.keywordsearch.utils import memo
-
 
 lemmatize = memo(lmtzr.lemmatize)
 lemmatize.__doc__ = "cached version of lmtzr.lemmatize"
@@ -38,7 +27,7 @@ lemmatize.__doc__ = "cached version of lmtzr.lemmatize"
 getstem = memo(stemmer.stem)
 getstem.__doc__ = "cached version of PorterStemmer() stem"
 
-# TODO: make it load the lemmatization DB...
+# load the lemmatization DB now
 lemmatize("dataset")
 
 # shall be slightly faster...
@@ -47,39 +36,6 @@ processed_stopwords_dict = create_dict(processed_stopwords)
 def filter_stopwords(kwd_list):
     return filter(lambda k: k not in en_stopwords_dict \
                             or k in processed_stopwords_dict, kwd_list)
-
-
-
-
-"""
-def semantic_dist(keyword, match_to, score):
-    # TODO: redo this or throw away
-    ks = wordnet.synsets(keyword)
-    # TODO: we shall can select the relevant synsets for our schema entities manually for improved results
-    if entity_wordnet_synsets.has_key(match_to):
-        ms = [entity_wordnet_synsets[match_to]]
-        #else:
-        #ms = wordnet.synsets(match_to)
-        if ms and ks:
-            avg = lambda l: sum(l) / len(l)
-
-            if DEBUG and keyword == 'location':
-                print 'location similarities to ', match_to, [
-                    '%.2f' % k.wup_similarity(m) for k in ks for m in ms if
-                    k.wup_similarity(m)]
-            similarities = [k.wup_similarity(m) for k in ks for m in ms if
-                            k.wup_similarity(m)]
-            semantic_score = similarities and max(similarities) or 0.0
-
-            if score < 0.7:
-                score = semantic_score
-            else:
-                score = max(semantic_score, (score + 2 * semantic_score) / 3)
-    return score
-"""
-
-
-
 
 def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
     """
@@ -95,13 +51,9 @@ def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
     * stem match only within a small edit distance (returning a low usable score)
         1-2 characters, maximum 1 mutation
     """
-    # TODO: use some good string similarity metrics: string edit distance, jacard, levenshtein, hamming, etc
-    # TODO: use ontology
 
     if keyword == match_to:
         return 1.0
-
-    # TODO: add specific terms: dataset
 
     # TODO: lemmatizer takes part of speech
     lemma = lemmatize(keyword)
@@ -124,18 +76,7 @@ def string_distance(keyword, match_to, semantic=False, allow_low_scores= False):
 
     score = 0.7 * levenshtein_normalized(kwd_stem, match_stem, subcost=2, maxcost=3)
 
-
-    # TODO: we shall be able to handle attributes also
-    #if mod_enabled('STRING_DIST_ENABLE_NLTK_SEMANTICS') and semantic and not '.' in match_to:
-    #    score = semantic_dist(keyword, match_to, score)
-
     if allow_low_scores:
-        return score if score > 0.1 else  0
+        return score if score > 0.1 else  0.0
     else:
-        return score if score > 0.35 else  0
-
-
-
-
-if __name__ == '__main__':
-    string_distance('confguration', 'config', semantic=True)
+        return score if score > 0.35 else  0.0

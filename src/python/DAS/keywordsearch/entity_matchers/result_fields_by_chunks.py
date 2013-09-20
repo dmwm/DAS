@@ -29,8 +29,6 @@ def generate_chunks_no_ent_filter(keywords):
     if not mod_enabled('SERVICE_RESULT_FIELDS'):
         return {}
 
-    _DEBUG = False
-
     W_PHRASE = 1.5
 
     # TODO: These could be increased for short queries or lowered for long ones
@@ -93,11 +91,11 @@ def generate_chunks_no_ent_filter(keywords):
                 match = getSchema().check_result_field_match(chunk[0])
                 if match:
                     entity, field = match
-                    r = {'field': field}
-                    r['len'] = 1
+                    r = {'field': field,
+                         'len': 1,
+                         'tokens_required': chunk,
+                         'score': 20.0}
                     #r['field']
-                    r['tokens_required'] = chunk
-                    r['score'] = 20.0
                     matches[entity].append(r)
 
 

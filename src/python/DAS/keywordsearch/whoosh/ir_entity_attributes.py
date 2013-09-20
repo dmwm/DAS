@@ -325,12 +325,10 @@ def search_index(keywords, result_type=False, full_matches_only=False, limit=10,
 
 
 def not_used_manual_tests():
-    from DAS.keywordsearch.metadata import das_schema_adapter
-    from DAS.core.das_core import DASCore
+    from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 
-    dascore = DASCore()
-    das_schema_adapter.init(dascore)
-    fields_by_entity = das_schema_adapter.list_result_fields()
+    schema_adapter = getSchema()
+    fields_by_entity = schema_adapter.list_result_fields()
     build_index(fields_by_entity)
     load_index()
 
