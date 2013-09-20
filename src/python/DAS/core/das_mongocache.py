@@ -375,6 +375,25 @@ class DASMongocache(object):
                 self.logdb.insert(collection, {'delete': col.find(spec).count()})
             col.remove(spec)
 
+    def check_services(self, dasquery):
+        """
+        Check if DAS cache contains DAS records with service response for
+        given query.
+        """
+        das_rec  = self.find(dasquery)
+        services = []
+        for srv in das_rec['das']['services']:
+            if  'das' in srv:
+                services = srv['das']
+                break
+        if  services:
+            cond = [{'das.system':r} for r in services]
+            spec = {'qhash': dasquery.qhash, '$or': cond}
+            nres = self.col.find(spec).count()
+            if  nres:
+                return True
+        return False
+
     def find(self, dasquery):
         """
         Find provided query in DAS cache.
