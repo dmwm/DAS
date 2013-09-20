@@ -65,7 +65,7 @@ def yield_obj(rdict, ckey):
         next_key = '.'.join(keys[1:])
     else:
         next_key = None
-    if  rdict.has_key(key):
+    if  key in rdict:
         obj = rdict[key]
         if  isinstance(obj, list) or isinstance(obj, GeneratorType):
             for item in obj:
@@ -120,7 +120,7 @@ class DotDict(dict):
         keys = ikey.split('.')
         for idx in xrange(0, len(keys)):
             key = keys[idx]
-            if  not obj.has_key(key):
+            if  key not in obj:
                 ckey = '.'.join(keys[idx:])
                 nkey, nval = convert_dot_notation(ckey, value)
                 if  isinstance(obj, DotDict):
@@ -140,7 +140,7 @@ class DotDict(dict):
                     for rec in obj:
                         attr = keys[-1]
                         if  isinstance(rec, dict) and \
-                            rec.has_key(attr): # last attr
+                            attr in rec: # last attr
                             rec[attr] = value
                     return
                 elif not isinstance(obj, dict):
@@ -153,7 +153,7 @@ class DotDict(dict):
 
     def _get_keys(self, ckey):
         """Helper generator which yields all keys for a starting ckey"""
-        if  self.has_key(ckey):
+        if  ckey in self:
             doc = self[ckey]
         else:
             doc = [o for o in self.get_values(ckey)]
@@ -213,7 +213,7 @@ class DotDict(dict):
         obj = default
         keys = ckey.split('.')
         first = keys[0]
-        if  self.has_key(first):
+        if  first in self:
             obj = super(DotDict, self).__getitem__(first)
             if  first == ckey:
                 if  isinstance(obj, dict):
@@ -240,14 +240,14 @@ class DotDict(dict):
         for next_key, item in yield_obj(self, ckey):
             if  isdictinstance(item):
                 for final, elem in yield_obj(item, next_key):
-                    if  isdictinstance(elem) and elem.has_key(final):
+                    if  isdictinstance(elem) and final in elem:
                         yield elem[final]
                     else:
                         yield elem
             elif isinstance(item, list) or isinstance(item, GeneratorType):
                 for final, elem in item:
                     for last, att in yield_obj(elem, final):
-                        if  isdictinstance(att) and att.has_key(last):
+                        if  isdictinstance(att) and last in att:
                             yield att[last]
                         else:
                             yield att
@@ -262,14 +262,14 @@ class DotDict(dict):
         for next_key, item in yield_obj(self, ckey):
             if  isdictinstance(item):
                 for final, elem in yield_obj(item, next_key):
-                    if  isdictinstance(elem) and elem.has_key(final):
+                    if  isdictinstance(elem) and final in elem:
                         callback(elem, final)
                     else:
                         callback(item, next_key)
             elif isinstance(item, list) or isinstance(item, GeneratorType):
                 for final, elem in item:
                     for last, att in yield_obj(elem, final):
-                        if  isdictinstance(att) and att.has_key(last):
+                        if  isdictinstance(att) and last in att:
                             callback(att, last)
                         else:
                             callback(elem, final)

@@ -46,7 +46,7 @@ def minify(content):
 
 def update_map(emap, mapdir, entry):
     """Update entry map for given entry and mapdir"""
-    if  not emap.has_key():
+    if  entry not in emap:
         emap[entry] = mapdir + entry
 
 class DASWebManager(TemplatedPage):
@@ -65,7 +65,7 @@ class DASWebManager(TemplatedPage):
         self.jsdir  = '%s/%s' % (__file__.rsplit('/', 1)[0], 'js')
         if  not os.path.isdir(self.jsdir):
             self.jsdir = os.environ['DAS_JSPATH']
-        if  not os.environ.has_key('YUI_ROOT'):
+        if  'YUI_ROOT' not in os.environ:
             msg = 'YUI_ROOT is not set in environment'
             raise Exception(msg)
         self.yuidir = os.environ['YUI_ROOT']
@@ -125,7 +125,7 @@ class DASWebManager(TemplatedPage):
         accepts = cherrypy.request.headers.elements('Accept')
         for accept in accepts:
             if  accept.value in mime_types and len(args) == 1 \
-                and self.imgmap.has_key(args[0]):
+                and args[0] in self.imgmap:
                 image = self.imgmap[args[0]]
                 # use image extension to pass correct content type
                 ctype = 'image/%s' % image.split('.')[-1]

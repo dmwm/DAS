@@ -44,9 +44,9 @@ import DAS.utils.jsonwrapper as json
 def check_map_record(rec):
     "Check hash of given map record"
     # remove _id MongoDB Object
-    if  rec.has_key('_id'):
+    if  '_id' in rec:
         del rec['_id']
-    if  rec.has_key('hash'):
+    if  'hash' in rec:
         md5 = rec.pop('hash')
         rec_md5 = md5hash(rec)
         if  rec_md5 != md5:
@@ -144,7 +144,7 @@ class DASMapping(object):
         if  not records:
             records = self.col.find()
         for row in records:
-            if  row.has_key('urn'):
+            if  'urn' in row:
                 for dmap in row['das_map']:
                     for key, val in dmap.iteritems():
                         if  key == 'pattern':
@@ -160,7 +160,7 @@ class DASMapping(object):
         for system, notations in self.notations().iteritems():
             for row in notations:
                 key = system, row['api_output']
-                if  self.notationcache.has_key(key):
+                if  key in self.notationcache:
                     self.notationcache[key] += [ (row['api'], row['rec_key']) ]
                 else:
                     self.notationcache[key] = [ (row['api'], row['rec_key']) ]
@@ -176,12 +176,12 @@ class DASMapping(object):
             for daskey, uilist in self.presentationcache.iteritems():
                 for row in uilist:
                     link = None
-                    if  row.has_key('link'):
+                    if  'link' in row:
                         link = row['link']
-                    if  row.has_key('diff'):
+                    if  'diff' in row:
                         self.diffkeycache[daskey] = row['diff']
                     tdict = {daskey : {'mapkey': row['das'], 'link': link}}
-                    if  self.reverse_presentation.has_key(row['ui']):
+                    if  row['ui'] in self.reverse_presentation:
                         self.reverse_presentation[row['ui']].update(tdict)
                     else:
                         self.reverse_presentation[row['ui']] = \
@@ -194,7 +194,7 @@ class DASMapping(object):
         if  data:
             for daskey, uilist in data.get('presentation', {}).iteritems():
                 for row in uilist:
-                    if  row.has_key('link'):
+                    if  'link' in row:
                         yield row
 
     def init(self):
@@ -244,17 +244,17 @@ class DASMapping(object):
         adict = {}
         for row in self.col.find():
             check_map_record(row)
-            if  row.has_key('urn'):
+            if  'urn' in row:
                 udict[row['system']] += 1
-            elif row.has_key('notations'):
+            elif 'notations' in row:
                 ndict[row['system']] += 1
-            elif row.has_key('presentation'):
+            elif 'presentation' in row:
                 pdict['presentation'] += 1
-            elif row.has_key('arecord'):
+            elif 'arecord' in row:
                 arec = row['arecord']
                 system = arec['system']
                 rec = {arec['type']:arec['count']}
-                if  adict.has_key(system):
+                if  system in adict:
                     adict[system].update(rec)
                 else:
                     adict[system] = rec
@@ -264,7 +264,7 @@ class DASMapping(object):
         ulist = []
         nlist = []
         for system in adict.keys():
-            if  adict[system].has_key('uri'):
+            if  'uri' in adict[system]:
                 ulist.append(adict[system]['uri'] == udict[system])
                 nlist.append(adict[system]['notations'] == ndict[system])
         status_umap = sum(ulist) == len(ulist)
@@ -313,18 +313,18 @@ class DASMapping(object):
         self.col.insert(record)
         self.init_dasmapscache([record])
         index = None
-        if  record.has_key('urn'):
+        if  'urn' in record:
             index = [('system', DESCENDING),
                      ('das_map.das_key', DESCENDING),
                      ('das_map.rec_key', DESCENDING),
                      ('das_map.api_arg', DESCENDING),
                      ('urn', DESCENDING) ]
-        elif record.has_key('notations'):
+        elif 'notations' in record:
             index = [('system', DESCENDING), 
                      ('notations.api_output', DESCENDING)]
-        elif record.has_key('presentation'):
+        elif 'presentation' in record:
             index = []
-        elif record.has_key('arecord'):
+        elif 'arecord' in record:
             pass
         else:
             msg = 'Invalid record %s' % record
@@ -389,7 +389,7 @@ class DASMapping(object):
         """
         List all APIs.
         """
-        if  self.apicache and self.apicache.has_key(system):
+        if  self.apicache and system in self.apicache:
             return self.apicache[system]
         cond = { 'urn' : { '$ne' : None } }
         if  system:
@@ -537,7 +537,7 @@ class DASMapping(object):
         """
         Find all lookup keys (primary keys) for a given daskey
         """
-        if  self.keymap.has_key(daskey):
+        if  daskey in self.keymap:
             return self.keymap[daskey]
         spec = {'das_map.das_key' : daskey}
         mapkeys = []
@@ -557,7 +557,7 @@ class DASMapping(object):
         cond  = { 'system' : das_system, 'das_map.rec_key': map_key }
         apilist = []
         for row in self.col.find(cond, ['urn']):
-            if  row.has_key('urn') and row['urn'] not in apilist:
+            if  'urn' in row and row['urn'] not in apilist:
                 apilist.append(row['urn'])
         return apilist
 
@@ -610,7 +610,7 @@ class DASMapping(object):
         for adas in self.col.find(query, ['das_map']):
             for row in adas['das_map']:
                 try:
-                    if  row.has_key('api_arg'):
+                    if  'api_arg' in row:
                         aparam = row['api_arg']
                         daskey = row['das_key']
                         if  aparam == api_input_name and daskey not in names:
@@ -681,7 +681,7 @@ class DASMapping(object):
         if  not self.notationcache:
             self.init_notationcache()
         name = api_param
-        if  self.notationcache.has_key((system, api_param)):
+        if  (system, api_param) in self.notationcache:
             for item in self.notationcache[(system, api_param)]:
                 _api, das_name = item
                 if  _api:
@@ -738,7 +738,7 @@ class DASMapping(object):
         Return web UI presentation keys for provided DAS keyword.
         For example once asked for block we present block.name, block.size, etc.
         """
-        if  self.presentationcache.has_key(daskey):
+        if  daskey in self.presentationcache:
             return self.presentationcache[daskey]
         return [daskey]
 
@@ -747,13 +747,13 @@ class DASMapping(object):
         Return triplet (DAS key, DAS access key, link)
         associated with provided UI key.
         """
-        if  self.reverse_presentation.has_key(uikey):
+        if  uikey in self.reverse_presentation:
             return self.reverse_presentation[uikey]
 
     def diff_keys(self, daskey):
         """
         Return diff keys for provided DAS key.
         """
-        if  self.diffkeycache.has_key(daskey):
+        if  daskey in self.diffkeycache:
             return self.diffkeycache[daskey]
         return []

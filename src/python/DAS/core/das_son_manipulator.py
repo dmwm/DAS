@@ -30,22 +30,22 @@ class DAS_SONManipulator(SONManipulator):
         """
         if  self.will_copy():
             return SON(son)
-        if  isinstance(son, dict) and son.has_key('_id'):
+        if  isinstance(son, dict) and '_id' in son:
             obj_id = son['_id']
             son['_id'] = str(obj_id)
-        if  isinstance(son, dict) and son.has_key('cache_id'):
+        if  isinstance(son, dict) and 'cache_id' in son:
             objcache_id = son['cache_id']
             if  isinstance(objcache_id, list):
                 son['cache_id'] = [str(r) for r in objcache_id]
             else:
                 son['cache_id'] = objcache_id
-        if  isinstance(son, dict) and son.has_key('das_id'):
+        if  isinstance(son, dict) and 'das_id' in son:
             objdas_id = son['das_id']
             if  isinstance(objdas_id, list):
                 son['das_id'] = [str(r) for r in objdas_id]
             else:
                 son['das_id'] = objdas_id
-        if  isinstance(son, dict) and son.has_key('gridfs_id'):
+        if  isinstance(son, dict) and 'gridfs_id' in son:
             objdas_id = son['gridfs_id']
             son['gridfs_id'] = objdas_id
         return son

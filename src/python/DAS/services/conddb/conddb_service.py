@@ -36,7 +36,7 @@ class CondDBService(DASAbstractService):
         """
         day = 24*60*60
         if  api == 'get_run_info':
-            if  kwds.has_key('date') and kwds['date'] != 'optional':
+            if  'date' in kwds and kwds['date'] != 'optional':
                 value = kwds['date']
                 if  isinstance(value, str) or isinstance(value, unicode):
                     value = convert2date(value)
@@ -50,7 +50,7 @@ class CondDBService(DASAbstractService):
                 kwds['startTime'] = convert_datetime(value[0])
                 kwds['endTime'] = convert_datetime(value[1])
                 del kwds['date']
-        if  kwds.has_key('Runs') and isinstance(kwds['Runs'], dict):
+        if  'Runs' in kwds and isinstance(kwds['Runs'], dict):
             minrun = 0
             maxrun = 0
             for kkk, vvv in kwds['Runs'].iteritems():
@@ -62,7 +62,7 @@ class CondDBService(DASAbstractService):
                     minrun = vvv
             if  minrun and maxrun:
                 kwds['Runs'] = '%s-%s' % (minrun, maxrun)
-        if  kwds.has_key('Runs'):
+        if  'Runs' in kwds:
             if  not kwds['Runs']:
                 del kwds['Runs']
 

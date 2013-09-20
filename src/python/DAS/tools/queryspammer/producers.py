@@ -164,7 +164,7 @@ class MappingProducer(Producer):
                                                                primary_key)
         #print 'primary map', primary_mapping_key
         
-        if self.data.has_key(primary_key)\
+        if primary_key in self.data \
             and random.random() < self.value_chance:
             primary_value = self.data.get_random(primary_key)
             #print 'primary_value', primary_value

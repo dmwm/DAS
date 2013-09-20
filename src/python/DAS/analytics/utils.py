@@ -22,7 +22,7 @@ from DAS.core.das_mongocache import decode_mongo_query
 def get_mongo_query(query):
     "Get DAS query in MongoDB format and remove DAS look-up keys from it"
     mongoquery = decode_mongo_query(deepcopy(query))
-    if  isinstance(mongoquery, dict) and mongoquery.has_key('spec'):
+    if  isinstance(mongoquery, dict) and 'spec' in mongoquery:
         for key in mongoquery['spec'].keys():
             if  key.find('das') != -1:
                 # remove DAS keys, e.g. das.primary_key

@@ -81,7 +81,7 @@ def adjust_id(query):
     used in MongoDB.
     """
     spec = query['spec']
-    if  spec.has_key('_id'):
+    if  '_id' in spec:
         val = spec['_id']
         if  isinstance(val, str):
             newval = ObjectId(val)
@@ -273,7 +273,7 @@ class DASMongocache(object):
                 else:
                     cond = {'dataset': dataset}
                 for row in self.conn['dbs'][inst].find(cond):
-                    if  row.has_key('qhash'):
+                    if  'qhash' in row:
                         yield row['qhash']
 
     def check_datasets(self, dasquery):
@@ -295,7 +295,7 @@ class DASMongocache(object):
         spec = dasquery.mongo_query.get('spec', {})
         # look-up DBS datasets in DAS cache, if found consistent set
         # it will assign dasquery.hashes to appropriate values
-        if  spec.has_key('dataset.name'):
+        if  'dataset.name' in spec:
             self.check_datasets(dasquery)
             if  dasquery.hashes:
                 return True
@@ -477,7 +477,7 @@ class DASMongocache(object):
             spec   = {'qhash': dasquery.qhash, 'das.system': system}
             new_expire = None
             for rec in self.col.find(spec):
-                if  rec.has_key('das') and rec['das'].has_key('expire'):
+                if  'das' in rec and 'expire' in rec['das']:
                     if  rec['das']['expire'] > expire:
                         new_expire = expire
                         ndict = {'das.expire':expire, 'das.status':status}
@@ -639,14 +639,14 @@ class DASMongocache(object):
                 break
             for key in fltr.split('.'):
                 if  isinstance(row, dict):
-                    if  row.has_key(key):
+                    if  key in row:
                         row = row[key]
                         found = True
                     else:
                         found = False
                 elif isinstance(row, list):
                     for row in list(row):
-                        if  row.has_key(key):
+                        if  key in row:
                             row = row[key]
                             found = True
                             break
@@ -991,7 +991,7 @@ class DASMongocache(object):
             if  isinstance(results, list) or isinstance(results, GeneratorType):
                 for item in results:
                     counter += 1
-                    if  item.has_key('das'):
+                    if  'das' in item:
                         expire = item.get('das').get('expire', expire)
                         dasheader['expire'] = expire
                     item['das'] = dict(expire=expire, primary_key=prim_key,

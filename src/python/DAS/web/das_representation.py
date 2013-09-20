@@ -69,7 +69,7 @@ class DASRepresentation(DASWebManager):
                     pass
             page += '<div class="%s"><hr class="line" />' % style
             jsonhtml = das_json_full(row, pad)
-            if  row.has_key('das') and row['das'].has_key('conflict'):
+            if  'das' in row and 'conflict' in row['das']:
                 conflict = ', '.join(row['das']['conflict'])
             else:
                 conflict = ''
@@ -116,8 +116,7 @@ class DASRepresentation(DASWebManager):
                 page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             rec  = []
-            if  not pkey and row.has_key('das') and \
-                row['das'].has_key('primary_key'):
+            if  not pkey and 'das' in row and 'primary_key' in row['das']:
                 pkey = row['das']['primary_key'].split('.')[0]
             if  dasquery.filters:
                 for flt in dasquery.filters:
@@ -162,7 +161,7 @@ class DASRepresentation(DASWebManager):
         total   = head.get('nresults')
         apilist = head.get('apilist')
         kwargs  = deepcopy(kwds)
-        if  kwargs.has_key('dasquery'):
+        if  'dasquery' in kwargs:
             del kwargs['dasquery'] # we don't need it
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
@@ -218,7 +217,7 @@ class DASRepresentation(DASWebManager):
                     try:
                         mapkey = '%s.name' % item
                         key, att = mapkey.split('.')
-                        if  row.has_key(key):
+                        if  key in row:
                             val = row[key]
                             if  isinstance(val, dict):
                                 results += val.get(att, '')
@@ -238,7 +237,7 @@ class DASRepresentation(DASWebManager):
             del head['dasquery']
         except:
             pass
-        if  head.has_key('args') and head['args'].has_key('dasquery'):
+        if  'args' in head and 'dasquery' in head['args']:
             del head['args']['dasquery']
         result = dict(head)
         result['data'] = [r for r in data]
@@ -251,7 +250,7 @@ class DASRepresentation(DASWebManager):
             del head['dasquery']
         except:
             pass
-        if  head.has_key('args') and head['args'].has_key('dasquery'):
+        if  'args' in head and 'dasquery' in head['args']:
             del head['args']['dasquery']
         result = dict(head)
         result['data'] = [r for r in data]

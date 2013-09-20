@@ -108,9 +108,9 @@ class MonitorService(DASAbstractService):
                     args['end']   = value[1]
             else: # we got some operator, e.g. key :{'$in' : [1,2,3]}
                 if  key == 'date':
-                    if  value.has_key('$in'):
+                    if  '$in' in value:
                         vallist = value['$in']
-                    elif value.has_key('$lte') and value.has_key('$gte'):
+                    elif '$lte' in value and '$gte' in value:
                         vallist = (value['$gte'], value['$lte'])
                     else:
                         err = 'Unsupported date value'
