@@ -269,6 +269,10 @@ class DASCore(object):
             if  record and record.has_key('das') and \
                 record['das'].has_key('status'):
                 status = record['das']['status']
+                if  not error:
+                    error = record['das'].get('error', error)
+                if  not reason:
+                    reason = record['das'].get('reason', reason)
                 return status, error, reason
         except:
             pass
@@ -342,6 +346,12 @@ class DASCore(object):
         kwds is provided for compatibility with web layer, e.g. it
         may invoke this method with additional pid parameter.
         """
+        def update_das_query(dasquery, status, reason=None):
+            "Update DAS query record with given status and reason"
+            self.rawcache.update_query_record(dasquery, status, reason=reason)
+            self.rawcache.add_to_record(\
+                    dasquery, {'das.timer': get_das_timer()}, system='das')
+
         self.logger.info('input query=%s' % query)
         das_timer('DASCore::call', self.verbose)
         if  isinstance(query, object) and hasattr(query, '__class__')\
@@ -379,10 +389,9 @@ class DASCore(object):
             else:
                 msg = 'unable to locate data-services to fulfill this request'
             print dastimestamp('DAS ERROR '), dasquery, msg
-            self.rawcache.update_query_record(dasquery, 'fail', reason=msg)
-            self.rawcache.add_to_record(\
-                    dasquery, {'das.timer': get_das_timer()}, system='das')
-            return 'fail'
+            status = 'fail'
+            update_das_query(dasquery, status, reason=msg)
+            return status
         self.logger.info('Acknowledged services = %s' % services)
         try:
             if  self.multitask:
@@ -396,16 +405,23 @@ class DASCore(object):
         except Exception as exc:
             print_exc(exc)
             return 'fail'
+        self.logger.info('\n##### check services ######\n')
+        das_services = self.rawcache.check_services(dasquery)
+        if  not das_services:
+            reason = 'no service records'
+            status = 'fail'
+            print dastimestamp('DAS ERROR '), dasquery, reason
+            update_das_query(dasquery, status, reason)
+            return status
         self.logger.info('\n##### merging ######\n')
         self.rawcache.update_query_record(dasquery, 'merging')
         das_timer('merge', self.verbose)
         self.rawcache.merge_records(dasquery)
         das_timer('merge', self.verbose)
-        self.rawcache.update_query_record(dasquery, 'ok')
-        self.rawcache.add_to_record(\
-                dasquery, {'das.timer': get_das_timer()}, system='das')
+        status = 'ok'
+        update_das_query(dasquery, status)
         das_timer('DASCore::call', self.verbose)
-        return 'ok'
+        return status
 
     def processing_time(self, dasquery):
         "Look-up and return DAS query processing time"
