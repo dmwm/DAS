@@ -458,19 +458,23 @@ class DASQuery(object):
         This is perhaps not the same thing as "is subset of"
         """
         return compare_specs(self.mongo_query, other.mongo_query)
-    
+
     def __gt__(self, other):
         "Query comparision operator"
         return self.is_superset_of(other)
-    
+
     def __lt__(self, other):
         "Query comparision operator"
         return self.is_subset_of(other)
-    
+
     def __eq__(self, other):
         "Query comparision operator"
         return self.qhash == other.qhash
-    
+
+    def __hash__(self):
+        "Hash of the object"
+        return hash(self.qhash)
+
     def __str__(self):
         "Query string representation"
         if  self._str:
