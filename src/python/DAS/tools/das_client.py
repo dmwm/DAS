@@ -299,7 +299,7 @@ def prim_value(row):
 
 def print_summary(rec):
     "Print summary record information on stdout"
-    if  not 'summary' in rec:
+    if  'summary' not in rec:
         msg = 'Summary information is not found in record:\n', rec
         raise Exception(msg)
     for row in rec['summary']:
