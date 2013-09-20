@@ -60,21 +60,23 @@ function hideLowResults(){
 }
 
 var initialize_kws_results = function() {
-    // do not hide debug tooltip (TODO: it should be on click actually)
-    jQuery(".debug").each(function(){
-        jQuery(this).tooltip({
-            content: jQuery(this).attr('title'),
-            track: true,
-            //close: true,
-            hide: { effect: "fade", duration: 2000 }
-            //function( event, ui ) { jQuery(this).tooltip('open'); },
-        });
-    });
-    jQuery(".kws-link").each(function(){
-        jQuery(this).tooltip({
-            content: jQuery(this).attr('title')
-        });
-    });
-
     hideLowResults();
+
+    if (jQuery.tooltip !== undefined){
+        jQuery(".debug").each(function(){
+            jQuery(this).tooltip({
+                content: jQuery(this).attr('title'),
+                track: true,
+                //close: true,
+                hide: { effect: "fade", duration: 2000 }
+                //function( event, ui ) { jQuery(this).tooltip('open'); },
+            });
+        });
+        jQuery(".kws-link").each(function(){
+            jQuery(this).tooltip({
+                content: jQuery(this).attr('title')
+            });
+        });
+    }
+
 };
