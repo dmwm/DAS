@@ -513,9 +513,6 @@ class DASAbstractService(object):
             # once we now that API covers input set of parameters we check
             # every input parameter for pattern matching
             for key, val in cond.iteritems():
-                # check if key is a special one
-                if  key in das_special_keys():
-                    found += 1
                 # check if keys from conditions are accepted by API
                 # need to convert key (which is daskeys.map) into
                 # input api parameter
@@ -523,7 +520,8 @@ class DASAbstractService(object):
                     if  args.has_key(apiparam):
                         args[apiparam] = val
                         found += 1
-            if  len(cond.keys()) != found: # some keys may fail due to pattern
+            # check if number of keys on cond and args are the same
+            if  len(cond.keys()) != found:
                 msg = "--- reject API %s, not all condition keys are covered" \
                         % api
                 self.logger.info(msg)
