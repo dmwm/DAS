@@ -116,7 +116,7 @@ class KeywordSearchAbstractTester(unittest.TestCase):
         n_queries += 1
 
         with Timer() as t:
-            results = self.kws.search(query, dbsmngr=self.global_dbs_inst)
+            err, results = self.kws.search(query, dbsmngr=self.global_dbs_inst)
 
         times.append((t.interval, query))
 
