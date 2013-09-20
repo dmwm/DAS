@@ -34,37 +34,7 @@ class Root(object):
         self.config = config
         self.auth   = None
         self.pid    = None
-
-    def config_develop(self):
-        """Configure server, CherryPy and the rest."""
-        config = self.config['web_server']
-        cpconfig["engine.autoreload_on"] = True
-
-        cpconfig["server.environment"] = config.get("environment", "development")
-        cpconfig["server.thread_pool"] = int(config.get("thread_pool", 30))
-        cpconfig["server.socket_port"] = int(config.get("port", 8080))
-        self.pid = config.get('pid', '/tmp/das_web.pid')
-
-        cpconfig["server.socket_host"] = config.get("host", "0.0.0.0")
-        cpconfig["server.socket_queue_size"] = \
-            int(config.get("socket_queue_size", 100))
-        cpconfig["tools.expires.secs"] = 0 # int(config.get("expires", 300))
-        cpconfig["log.screen"] = bool(config.get("log_screen", True))
-        cpconfig["log.access_file"] = config.get("access_log_file", None)
-        cpconfig["log.error_file"] = config.get("error_log_file", None)
-        cpconfig['request.show_tracebacks'] = True
-        log.error_log.setLevel(config.get("error_log_level", logging.DEBUG))
-        log.access_log.setLevel(config.get("access_log_level", logging.DEBUG))
-
-        cpconfig.update ({
-            'tools.expires.on': True,
-            'tools.response_headers.on':True,
-            'tools.etags.on':True,
-            'tools.etags.autotags':True,
-            'tools.encode.on': True,
-            'tools.proxy.on': False,
-            'tools.gzip.on': False,
-            })
+        
     def configure(self):
         """Configure server, CherryPy and the rest."""
         config = self.config['web_server']
