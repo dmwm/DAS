@@ -695,6 +695,8 @@ class DASMongocache(object):
                 yield row
         else: # pure MongoDB query
             fields  = dasquery.mongo_query.get('fields', [])
+            if  fields == None:
+                fields = []
             spec    = dasquery.mongo_query.get('spec', {})
             if  dasquery.filters:
                 if  not fields:
@@ -702,6 +704,8 @@ class DASMongocache(object):
                 fields += dasquery.filters
                 pkeys   = [k.split('.')[0] for k in fields]
             fields += das_record_keys()
+            if  'records' in dasquery.query:
+                fields = None # special case for DAS 'records' keyword
             skeys   = self.mongo_sort_keys(collection, dasquery)
             result  = self.get_records(collection, spec, fields, skeys, \
                             idx, limit, dasquery.unique_filter)
