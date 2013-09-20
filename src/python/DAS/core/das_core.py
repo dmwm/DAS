@@ -76,7 +76,7 @@ class DASCore(object):
     """
     DAS core class.
     """
-    def __init__(self, config=None, debug=None, 
+    def __init__(self, config=None, debug=0,
                 nores=False, logger=None, engine=None, multitask=True):
         if  config:
             dasconfig = config
