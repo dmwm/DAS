@@ -25,7 +25,7 @@ def site_info(site_dict, block, replica):
     node  = replica['node']
     files = replica['files']
     totfiles = block['files']
-    if  site_dict.has_key(node):
+    if  node in site_dict:
         vdict = site_dict[node]
         vdict['files'] += files
         vdict['totfiles'] += totfiles
@@ -50,7 +50,7 @@ class PhedexService(DASAbstractService):
         if  api.find('blockReplicas') != -1 or \
             api.find('fileReplicas') != -1:
             delete_keys(kwds, '*')
-        if  kwds.has_key('node') and kwds['node'].find('*') == -1:
+        if  'node' in kwds and kwds['node'].find('*') == -1:
             if  not api == 'tfc' and kwds['node'] != 'required':
                 kwds['node'] = kwds['node'] + '*'
 
@@ -114,10 +114,10 @@ class PhedexService(DASAbstractService):
         site_info_dict = {}
         for row in gen:
             if  api == 'nodeusage':
-                if  row.has_key('node') and row['node'].has_key('name'):
+                if  'node' in row and 'name' in row['node']:
                     row['name'] = row['node']['name']
-            if  row.has_key('block') and row['block'].has_key('name'):
-                if  not row['block'].has_key('dataset'):
+            if  'block' in row and 'name' in row['block']:
+                if  'dataset' not in row['block']:
                     dataset = row['block']['name'].split('#')[0]
                     row['block']['dataset'] = dataset
             if  api == 'site4dataset' or api == 'site4block':
@@ -153,13 +153,13 @@ class PhedexService(DASAbstractService):
                         site_names.append(result)
             elif  api == 'dataset4site' or api == 'dataset4se' or \
                 api == 'dataset4site_group' or api == 'dataset4se_group':
-                if  row.has_key('block'):
+                if  'block' in row:
                     dataset = row['block']['name'].split('#')[0]
                     seen.add(dataset)
             elif  api == 'fileReplicas' or api == 'fileReplicas4file' or \
                 api == 'fileReplicas4dataset':
                 try:
-                    if  row.has_key('file') and isinstance(row['file'], dict):
+                    if  'file' in row and isinstance(row['file'], dict):
                         rec = row['file']
                         cksum = rec['checksum']
                         for item in cksum.split(','):
@@ -176,7 +176,7 @@ class PhedexService(DASAbstractService):
         if  api == 'site4dataset' or api == 'site4block':
             for row in site_names:
                 name = row['name']
-                if  site_info_dict.has_key(name):
+                if  name in site_info_dict:
                     sdict      = site_info_dict[name]
                     sfiles     = float(sdict['files'])
                     tot_files  = float(sdict['totfiles'])

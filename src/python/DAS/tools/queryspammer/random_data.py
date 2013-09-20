@@ -157,11 +157,8 @@ class RandomData(object):
                         'primary_ds': ('primary_ds',),       
                        } #direct references are unpickleable, apparently
 
-    def has_key(self, key):
-        return key in self.keygen
-    
     def get_random(self, key):
-        if self.has_key(key):
+        if  key in self.keygen:
             generator = random.choice(self.keygen[key])
             data = getattr(self, generator)() 
             if ' ' in data:

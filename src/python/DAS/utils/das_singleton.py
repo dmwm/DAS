@@ -20,7 +20,7 @@ class _DASMgrSingleton(object):
     def create(self, **kwargs):
         "Create DASCore object"
         dashash = genkey(str(kwargs))
-        if  self.params.has_key(dashash):
+        if  dashash in self.params:
             return self.params[dashash]
         else:
             das = DASCore(**kwargs)

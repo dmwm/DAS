@@ -124,10 +124,10 @@ def dbs_dataset4site_release(dbs_url, release):
                     system='dbs')
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
-            if  row.has_key('dataset'):
+            if  'dataset' in row:
                 dataset = row['dataset']['dataset']
                 yield dataset
-            elif row.has_key('error'):
+            elif 'error' in row:
                 err = row.get('reason', None)
                 err = err if err else row['error']
                 yield 'DBS error: %s' % err
@@ -162,11 +162,11 @@ def dataset_summary(dbs_url, dataset):
                     system='dbs')
         prim_key = 'dataset'
         for row in qlxml_parser(source, prim_key):
-            if  row.has_key('dataset'):
+            if  'dataset' in row:
                 totfiles  = row['dataset']['count_file.name']
                 totblocks = row['dataset']['count_block.name']
                 return totblocks, totfiles
-            elif row.has_key('error'):
+            elif 'error' in row:
                 raise Exception(row.get('reason', row['error']))
         # if we're here we didn't find a dataset, throw the error
         msg = 'empty set'
@@ -211,12 +211,12 @@ def site4dataset(dbs_url, phedex_api, args, expire):
         if  not isinstance(replicas, list):
             replicas = [replicas]
         for row in replicas:
-            if  not row or not row.has_key('node'):
+            if  not row or 'node' not in row:
                 continue
             node = row['node']
             files = int(row['files'])
             complete = 1 if row['complete'] == 'y' else 0
-            if  site_info.has_key(node):
+            if  node in site_info:
                 files = site_info[node]['files'] + files
                 nblks  = site_info[node]['blocks'] + 1
                 bc_val = site_info[node]['blocks_complete']
@@ -250,9 +250,9 @@ class CombinedService(DASAbstractService):
         DASAbstractService.__init__(self, 'combined', config)
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        if  SERVICES.has_key('dbs'):
+        if  'dbs' in SERVICES:
             dbs = 'dbs'
-        elif SERVICES.has_key('dbs3'):
+        elif 'dbs3' in SERVICES:
             dbs = 'dbs3'
         else:
             raise Exception('Unsupport DBS system')
@@ -298,7 +298,7 @@ class CombinedService(DASAbstractService):
                 bbytes = ddict.get('block.bytes')
                 files = ddict.get('block.files')
                 found_dataset = block.split('#')[0]
-                if  found.has_key(found_dataset):
+                if  found_dataset in found:
                     val = found[found_dataset]
                     found[found_dataset] = {'bytes': val['bytes'] + bbytes,
                         'files': val['files'] + files}
@@ -327,7 +327,7 @@ class CombinedService(DASAbstractService):
         if  api == 'files4dataset_runs_site' or \
             api == 'files4block_runs_site':
             run_value = args.get('run', [])
-            if  isinstance(run_value, dict) and run_value.has_key('$in'):
+            if  isinstance(run_value, dict) and '$in' in run_value:
                 runs = run_value['$in']
             elif isinstance(run_value, list):
                 runs = run_value

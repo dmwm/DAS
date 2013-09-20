@@ -44,21 +44,21 @@ def read_service_map(filename, field="uri"):
     instances = []
     with open(filename, 'r') as apimap:
         for metric in yaml.load_all(apimap.read()):
-            if  metric.has_key('system'):
+            if  'system' in metric:
                 system = metric['system']
-            if  metric.has_key('services'):
+            if  'services' in metric:
                 services = metric['services']
-            if  metric.has_key('instances'):
+            if  'instances' in metric:
                 instances = metric['instances']
-            if  metric.has_key('url'):
+            if  'url' in metric:
                 url = metric['url']
-            if  metric.has_key('wild_card'):
+            if  'wild_card' in metric:
                 wild   = metric['wild_card']
-            if  metric.has_key('format'):
+            if  'format' in metric:
                 frmt = metric['format']
-            if  metric.has_key('lookup'):
+            if  'lookup' in metric:
                 lookup = metric['lookup']
-            if  field == 'uri' and metric.has_key('urn'):
+            if  field == 'uri' and 'urn' in metric:
                 params = metric['params']
                 urn    = metric['urn']
                 expire = metric.get('expire', 600) # default 10 minutes
@@ -69,7 +69,7 @@ def read_service_map(filename, field="uri"):
                                 ts=tstamp)
                 if  instances:
                     record.update({'instances':instances})
-                if  metric.has_key('das_map'):
+                if  'das_map' in metric:
                     record['das_map'] = metric['das_map']
                 else:
                     msg = "map doesn't provide das_map"
@@ -77,13 +77,13 @@ def read_service_map(filename, field="uri"):
                     raise Exception(msg)
                 if  validator(record):
                     yield record
-            if  field == 'notations' and metric.has_key('notations'):
+            if  field == 'notations' and 'notations' in metric:
                 notations = metric['notations']
                 record = dict(notations=notations,
                                 system=system, ts=tstamp)
                 if  validator(record):
                     yield record
-            if  field == 'presentation' and metric.has_key('presentation'):
+            if  field == 'presentation' and 'presentation' in metric:
                 record = dict(presentation=metric['presentation'],
                                 ts=tstamp)
                 if  validator(record):
@@ -98,9 +98,9 @@ def validator(record):
     DAS map validator
     """
     add_hash(record)
-    if  record.has_key('notations'):
+    if  'notations' in record:
         must_have_keys = ['system', 'notations', 'ts', 'hash']
-    elif record.has_key('presentation'):
+    elif 'presentation' in record:
         must_have_keys = ['presentation', 'ts', 'hash']
     else:
         must_have_keys = ['system', 'format', 'urn', 'url', 'expire',

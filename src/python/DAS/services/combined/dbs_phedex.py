@@ -57,7 +57,7 @@ def datasets_dbs3(urls, verbose=0):
     data.close()
     dbsdata = {}
     for row in records:
-        if  not dbsdata.has_key(row['dataset']):
+        if  row['dataset'] not in dbsdata:
             dbsdata[row['dataset']] = \
                 dict(era=row['acquisition_era_name'],
                         tier=row['data_tier_name'], status='VALID')
@@ -79,7 +79,7 @@ def phedex_info(urls, dbsdata):
         rec = {}
         for blk in jsondict['phedex']['block']:
             dataset = blk['name'].split('#')[0]
-            if  not rec.has_key('nfiles'):
+            if  'nfiles' not in rec:
                 nfiles = blk['files']
                 size = blk['bytes']
             else:
@@ -87,7 +87,7 @@ def phedex_info(urls, dbsdata):
                 size = rec['size'] + blk['bytes']
             rec.update({'nfiles':nfiles, 'size':size})
             for rep in blk['replica']:
-                if  not rec.has_key('site'):
+                if  'site' not in rec:
                     rec = dict(dataset=dataset, nfiles=nfiles, size=size,
                                 site=[rep['node']], se=[rep['se']],
                                 custodial=[rep['custodial']])
@@ -129,7 +129,7 @@ def datasets_dbs2(urls, verbose=0):
     dbsdata = {}
     for row in records:
         dataset = row['dataset']
-        if  not dbsdata.has_key(dataset['dataset']):
+        if  dataset['dataset'] not in dbsdata:
             dbsdata[dataset['dataset']] = \
                 dict(era=dataset['dataset.era'],
                         tier=dataset['dataset.tier'], status='VALID')
@@ -383,7 +383,7 @@ class DBSPhedexService(object):
         operation = 'group'
         rkey = 'summary' # record key
         records = [r for r in self.find(site, operation, rkey)]
-        if  len(records) == 1 and records[0][rkey].has_key('reason'):
+        if  len(records) == 1 and 'reason' in records[0][rkey]:
             expires = 60 # in seconds
         else:
             expires = self.expire

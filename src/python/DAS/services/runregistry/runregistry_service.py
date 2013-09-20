@@ -73,12 +73,12 @@ def run_duration(records):
     """
     times = ['start_time', 'end_time', 'creation_time', 'modification_time']
     for row in records:
-        if  not row.has_key('run'):
+        if  'run' not in row:
             continue
         run = row['run']
         if  isinstance(run, dict):
             for key in times:
-                if  run.has_key(key):
+                if  key in run:
                     run[key] = convert_time(run[key])
             if  run['creation_time'] and run['end_time']:
                 tot = abs(run['creation_time']-run['end_time'])
@@ -122,13 +122,13 @@ def worker_helper(url, query, table='runsummary'):
             'modified': 'modify_time', 'runClassName': 'group_name'}
     for rec in record:
         for key, val in rec.items():
-            if  notations.has_key(key):
+            if  key in notations:
                 rec[notations[key]] = val
                 del rec[key]
         if  table == 'runsummary':
             yield dict(run=rec)
         elif table == 'runlumis':
-            if  rec.has_key('sectionTo') and rec.has_key('sectionFrom'):
+            if  'sectionTo' in rec and 'sectionFrom' in rec:
                 rec['number'] = [i for i in \
                         range(rec.pop('sectionFrom'), rec.pop('sectionTo')+1)]
             yield dict(lumi=rec)
@@ -183,9 +183,9 @@ class RunRegistryService(DASAbstractService):
                         _query = {'runNumber': '>= %s and < %s' % (minrun, maxrun)}
             elif key == 'date':
                 if  isinstance(val, dict):
-                    if  val.has_key('$in'):
+                    if  '$in' in val:
                         value = val['$in']
-                    elif val.has_key('$lte') and val.has_key('$gte'):
+                    elif '$lte' in val and '$gte' in val:
                         value = (val['$gte'], val['$lte'])
                     else:
                         msg = 'Unable to get the value from %s=%s' \
@@ -216,7 +216,7 @@ class RunRegistryService(DASAbstractService):
         if  not _query:
             msg = 'Unable to match input parameters with input query'
             raise Exception(msg)
-        if  args.has_key('run') and isinstance(args['run'], dict):
+        if  'run' in args and isinstance(args['run'], dict):
             args['run'] = str(args['run'])
         msg = "DASAbstractService:RunRegistry, query=%s" % _query
         self.logger.info(msg)
