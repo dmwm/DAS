@@ -5,24 +5,14 @@ import urllib
 import cgi
 import math
 
-from itertools import groupby, imap
-
-
 from DAS.keywordsearch.search import KeywordSearch
-    # import search as keyword_search, init as init_kws
-
-# from DAS.web.utils import HtmlString
-
 
 avg = lambda l: len(l) and float(sum(l))/len(l)
 
-#import dbs_daemon
-#dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART =1
-#dbs_daemon.SKIP_UPDATES =1
-
-
-
 class KeywordSearchHandler(object):
+    """
+    handles the keyword search and presentation of its results
+    """
 
     def _get_link_to_query(self, query, kw_query=''):
         params = cherrypy.request.params.copy()
@@ -41,13 +31,10 @@ class KeywordSearchHandler(object):
             raise  Exception("dascore needed")
         self.kws = KeywordSearch(dascore)
 
-
-
     def _prepare_score_bar(self, q):
         '''
         prepares the score bar for each query (max_w & w is in pixels)
         '''
-
         max_w = 50
         min_w = 3
         score = max(min(q['len_normalized_score'], 1.0), 0.0)
@@ -55,9 +42,9 @@ class KeywordSearchHandler(object):
         color_class = (score < 0.35) and 'low' or \
                       (score < 0.60) and 'avg' or 'high'
         return {'max_w': max_w,
-                    'w': w,
-                    'style': color_class,
-                    'score': q['len_normalized_score']}
+                'w': w,
+                'style': color_class,
+                'score': q['len_normalized_score']}
 
     def _prepare_trace(self, q):
         '''
@@ -78,14 +65,6 @@ class KeywordSearchHandler(object):
 
     def _get_top_entities(self, proposed_queries, top_k =5):
         ''' returns k top-scoring  entities '''
-
-        #keyfunc =lambda x: x['entity']
-        # = groupby(sorted(proposed_queries, key=keyfunc), key=keyfunc)
-        #get_max_score = lambda x: max(x, key=lambda x: x['score'])
-
-        #best_scores = ( (g, imap(get_max_score, vals))
-        #                for (g, vals) in groups)
-
         best_scores = {}
         for r in proposed_queries:
             best_scores[r['entity']] = max(r['score'],
@@ -103,13 +82,12 @@ class KeywordSearchHandler(object):
 
     def handle_search(self, webm, query, inst,  initial_exc_message = '',
                       dbsmngr=None, is_ajax=False, timeout=5):
-        '''
+        """
         performs the search, and renders the search results
-        '''
+        """
+
         err, proposed_queries = self.kws.search(query, inst, dbsmngr= dbsmngr,
                                                 timeout=timeout)
-
-        # no need for result type filter if # of results is low
 
         # get top 5 entity types
         hi_score_result_types = self._get_top_entities(proposed_queries) \
@@ -121,15 +99,12 @@ class KeywordSearchHandler(object):
             q['trace'] = self._prepare_trace(q)
             q['bar'] = self._prepare_score_bar(q)
 
-
         # TODO: add user info to logs if available
         # (e.g. certificate auth, to filter out queries submitted by developers)
-        initial_err_message ='Initial error message: ' + initial_exc_message
 
         return webm.templatepage('kwdsearch_results',
                                     msg='',
                                     is_ajax=is_ajax,
-                                    initial_err_message =initial_err_message,
                                     proposed_queries = proposed_queries,
                                     hi_score_result_types = hi_score_result_types,
                                     err=err

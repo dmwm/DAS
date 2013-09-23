@@ -31,18 +31,6 @@ from   DAS.web.das_codes import web_code
 from DAS.utils.regex import PAT_BLOCK, PAT_RUN, PAT_FILE, PAT_RELEASE
 from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
 
-class HtmlString(object):
-    """
-    a class which embeds a string to be displayed in html mode (quote() will not modify it).
-    Precaution: all escaping has to be done before hand.
-    """
-    def __init__(self, str):
-        self.str = str
-    def __unicode__(self):
-        return self.str
-    __str__ = __unicode__
-
-
 def set_no_cache_flags():
     "Set cherrypy flags to prevent caching"
     cherrypy.response.headers['Cache-Control'] = 'no-cache'

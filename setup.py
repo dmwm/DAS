@@ -252,9 +252,6 @@ def main():
     for scheme in INSTALL_SCHEMES.values():
         scheme['data'] = scheme['purelib']
 
-
-
-
     dist = setup(
         name                 = name,
         version              = version,

@@ -415,7 +415,6 @@ class DASWebService(DASWebManager):
 
         return self.kws.handle_search(self,
                               query=uinput, inst=inst,
-                              initial_exc_message = '',
                               dbsmngr = self._get_dbsmgr(inst),
                               is_ajax=True,
                               timeout=timeout)
