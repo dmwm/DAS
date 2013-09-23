@@ -50,7 +50,7 @@ def decode_mongo_query(query):
     spec = {}
     for item in query.pop('spec'):
         val = json.loads(item['value'])
-        if  item.has_key('pattern'):
+        if  'pattern' in item:
             val = re.compile(val)
         spec.update({item['key'] : val})
     query['spec'] = spec
@@ -128,7 +128,7 @@ def compare_dicts(input_dict, exist_dict):
     for key, val in input_dict.iteritems():
         signal = False
         vvv = None
-        if  exist_dict.has_key(key):
+        if  key in exist_dict:
             vvv = exist_dict[key]
         cond = (isinstance(val, int) or isinstance(val, float)) and \
                (isinstance(vvv, int) or isinstance(vvv, float))
@@ -269,11 +269,11 @@ def compare_specs(input_query, exist_query):
 
     # delete aggregators during comparision
     for query in [query1, query2]:
-        if  query.has_key('aggregators'):
+        if  'aggregators' in query:
             del query['aggregators']
-        if  query.has_key('filters'):
+        if  'filters' in query:
             del query['filters']
-        if  query.has_key('instance'):
+        if  'instance' in query:
             del query['instance']
 
     if  query1 == query2:
@@ -308,7 +308,7 @@ def compare_specs(input_query, exist_query):
         return False
 
     for key, val1 in spec1.iteritems():
-        if  spec2.has_key(key):
+        if  key in spec2:
             val2 = spec2[key]
             if  (isinstance(val1, str) or isinstance(val1, unicode)) and \
                 (isinstance(val2, str) or isinstance(val2, unicode)):

@@ -127,7 +127,7 @@ def delete_keys(rec, value):
     if  value in rec.values():
         to_delete = [k for k, v in rec.iteritems() if v == value]
         for key in to_delete:
-            if  rec.has_key(key):
+            if  key in rec:
                 del rec[key]
 
 def deepcopy(obj):
@@ -194,7 +194,7 @@ def parse_filters(query):
     existance = {'$exists': True}
     for flt in filters:
         for key, val in parse_filter(spec, flt).iteritems():
-            if  mdict.has_key(key):
+            if  key in mdict:
                 value = mdict[key]
                 if  isinstance(value, dict) and isinstance(val, dict):
                     mdict[key].update(val)
@@ -208,8 +208,7 @@ def parse_filters(query):
                 mdict.update({key:val})
     # clean-up exists conditions
     for key, val in mdict.items():
-        if  isinstance(val, dict) and len(val.keys()) > 1 and \
-            val.has_key('$exists'):
+        if  isinstance(val, dict) and len(val.keys()) > 1 and '$exists' in val:
             del val['$exists']
     return mdict
 
@@ -596,7 +595,7 @@ def merge_dict(dict1, dict2):
     value into the list based on value type.
     """
     for key, value in dict2.iteritems():
-        if  dict1.has_key(key):
+        if  key in dict1:
             val = dict1[key]
             if  val == value:
                 dict1[key] = [value]
@@ -718,7 +717,7 @@ def cartesian_product(ilist1, ilist2):
                 if  not jdx:
                     for k in ins_keys:
                         idict[k] = jdict[k]
-                    if  idict.has_key('system') and \
+                    if  'system' in idict and \
                         idict['system'].find(jdict['system']) == -1:
                         idict['system'] = '%s+%s' % \
                             (idict['system'], jdict['system'])
@@ -727,7 +726,7 @@ def cartesian_product(ilist1, ilist2):
                     row = dict(idict)
                     for k in ins_keys:
                         row[k] = jdict[k]
-                    if  row.has_key('system') and \
+                    if  'system' in row and \
                         row['system'].find(jdict['system']) == -1:
                         row['system'] = '%s+%s' % \
                             (row['system'], jdict['system'])
@@ -790,7 +789,7 @@ def genresults_gen(system, results, collect_list):
         rowdict = dict(rdict)
         for idx in xrange(0, len(collect_list)):
             key = collect_list[idx]
-            if  res.has_key(key):
+            if  key in res:
                 rowdict[key] = res[key]
         yield rowdict
 
@@ -812,7 +811,7 @@ def genresults(system, results, collect_list):
         rowdict = dict(rdict)
         for idx in xrange(0, len(collect_list)):
             key = collect_list[idx]
-            if  res.has_key(key):
+            if  key in res:
                 rowdict[key] = res[key]
         olist.append(rowdict)
     return olist
@@ -851,7 +850,7 @@ def getarg(kwargs, key, default):
     retrieve value from input dict for given key and default
     """
     arg = default
-    if  kwargs.has_key(key):
+    if  key in kwargs:
         arg = kwargs[key]
         if  isinstance(default, int):
             arg = int(arg)
@@ -876,7 +875,7 @@ def add2dict(idict, key, value):
     """
     Add value as a list to the dictionary for given key.
     """
-    if  idict.has_key(key):
+    if  key in idict:
         val = idict[key]
         if  not isinstance(val, list):
             val = [val]
@@ -988,17 +987,17 @@ def get_key_cert():
         cert  = globus_cert
 
     # First presendence to HOST Certificate, RARE
-    if  os.environ.has_key('X509_HOST_CERT'):
+    if  'X509_HOST_CERT' in os.environ:
         cert = os.environ['X509_HOST_CERT']
         key  = os.environ['X509_HOST_KEY']
 
     # Second preference to User Proxy, very common
-    elif os.environ.has_key('X509_USER_PROXY'):
+    elif 'X509_USER_PROXY' in os.environ:
         cert = os.environ['X509_USER_PROXY']
         key  = cert
 
     # Third preference to User Cert/Proxy combinition
-    elif os.environ.has_key('X509_USER_CERT'):
+    elif 'X509_USER_CERT' in os.environ:
         cert = os.environ['X509_USER_CERT']
         key  = os.environ['X509_USER_KEY']
 
@@ -1062,17 +1061,17 @@ def access(data, elem):
     if  elem.find('.') == -1:
         key = elem
         if  isinstance(data, dict):
-            if  data.has_key(key):
+            if  key in data:
                 yield data[key]
         elif isinstance(data, list) or isinstance(data, GeneratorType):
             for item in data:
-                if  item.has_key(key):
+                if  key in item:
                     yield item[key]
     else:
         keylist = elem.split('.')
         key  = keylist[0]
         rkey = '.'.join(keylist[1:])
-        if  data.has_key(key):
+        if  key in data:
             res = data[key]
             if  isinstance(res, dict):
                 result = access(res, rkey)
@@ -1096,7 +1095,7 @@ def delete_elem(data, elem):
     try:
         for key in keys[:-1]:
             val = val[key]
-        if  val.has_key(keys[-1]):
+        if  keys[-1] in val:
             del val[keys[-1]]
     except:
         pass
@@ -1236,7 +1235,7 @@ def xml_parser(source, prim_key, tags=None):
             for tag in tags:
                 if  tag.find(".") != -1:
                     atag, attr = tag.split(".")
-                    if  elem.tag == atag and elem.attrib.has_key(attr):
+                    if  elem.tag == atag and attr in elem.attrib:
                         att_value = elem.attrib[attr]
                         if  isinstance(att_value, dict):
                             att_value = \
@@ -1276,7 +1275,7 @@ def get_children(elem, event, row, key, notations):
         else:
             child_dict = dict_helper(child_data, notations)
 
-        if  isinstance(row[key], dict) and row[key].has_key(child_key):
+        if  isinstance(row[key], dict) and child_key in row[key]:
             val = row[key][child_key]
             if  isinstance(val, list):
                 val.append(child_dict)
@@ -1522,7 +1521,7 @@ def das_diff(rows, compare_keys):
             if  len(set(values)) > 1:
                 diff_keys.append(key)
         if  diff_keys:
-            if  row.has_key('das'):
+            if  'das' in row:
                 row['das'].update({'conflict':diff_keys})
             else:
                 row.update({'das':{'conflict':diff_keys}})
@@ -1568,7 +1567,7 @@ def extract_http_error(err):
     msg  = str(err)
     try:
         err = json.loads(err)
-        if  err.has_key('message'):
+        if  'message' in err:
             value = err['message']
             if  isinstance(value, dict):
                 msg = ''

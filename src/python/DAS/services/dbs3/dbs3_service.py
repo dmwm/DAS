@@ -65,6 +65,9 @@ def process_lumis_with(ikey, gen):
     "Helper function to process lumis with given key from provided generator"
     odict = {}
     for row in gen:
+        if  'error' in row:
+            yield row
+            continue
         lfn, run, lumi = row
         if  ikey == 'file':
             key = lfn
@@ -93,7 +96,7 @@ def process_lumis_with(ikey, gen):
             yield {'run':{'run_number':run}, 'lumi':{'number':lumis},
                    'block':{'name': blk}}
 
-def dbs_find(entity, url, kwds):
+def dbs_find(entity, url, kwds, verbose=0):
     "Find DBS3 entity for given set of parameters"
     if  entity not in ['run', 'file', 'block']:
         msg = 'Unsupported entity key=%s' % entity
@@ -101,6 +104,9 @@ def dbs_find(entity, url, kwds):
     expire  = 600
     dataset = kwds.get('dataset', None)
     block   = kwds.get('block_name', None)
+    if  not block:
+        # TODO: this should go away when DBS will be retired (user in combined srv)
+        block = kwds.get('block', None)
     lfn     = kwds.get('file', None)
     runs    = kwds.get('runs', [])
     if  not (dataset or block or lfn):
@@ -113,13 +119,11 @@ def dbs_find(entity, url, kwds):
     elif lfn:
         params = {'logical_file_name': lfn}
     if  runs:
-        if  entity == 'file':
-            params.update({'run_num': runrange(runs[0], runs[-1], False)})
-        else:
-            params.update({'run_num': runs[0]})
+        params.update({'run_num': runrange(runs[0], runs[-1], False)})
     headers = {'Accept': 'application/json;text/json'}
     source, expire = \
-        getdata(url, params, headers, expire, ckey=CKEY, cert=CERT)
+        getdata(url, params, headers, expire, ckey=CKEY, cert=CERT,
+                verbose=verbose)
     for row in json_parser(source, None):
         for rec in row:
             try:
@@ -135,7 +139,7 @@ def dbs_find(entity, url, kwds):
                 msg = 'Fail to parse "%s", exception="%s"' % (rec, exp)
                 print_exc(msg)
 
-def block_run_lumis(url, blocks, runs=None):
+def block_run_lumis(url, blocks, runs=None, verbose=0):
     """
     Find block, run, lumi tuple for given set of files and (optional) runs.
     """
@@ -147,17 +151,21 @@ def block_run_lumis(url, blocks, runs=None):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            params.update({'run_num': runrange(runs[0], runs[0], True)})
+            params.update({'run_num': runrange(runs[0], runs[-1], False)})
         urls.append(dbs_url)
     if  not urls:
         return
+    if  verbose > 1:
+        print "\nDEBUG: block_run_lumis"
+        print urls
     gen = urlfetch_getdata(urls, CKEY, CERT, headers)
     odict = {} # output dict
     for rec in gen:
         blk = urllib.unquote(url_args(rec['url'])['block_name'])
-        if  'error' in rec.keys():
-            err = 'N/A: %s' % rec
-            yield blk, err, err
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            yield {'error':error, 'reason':reason}
         else:
             for row in json.loads(rec['data']):
                 run = row['run_num']
@@ -169,7 +177,7 @@ def block_run_lumis(url, blocks, runs=None):
         blk, run = key
         yield blk, run, lumis
 
-def file_run_lumis(url, blocks, runs=None):
+def file_run_lumis(url, blocks, runs=None, verbose=0):
     """
     Find file, run, lumi tuple for given set of files and (optional) runs.
     """
@@ -180,16 +188,20 @@ def file_run_lumis(url, blocks, runs=None):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            dbs_url += "&run_num=%s" % runrange(runs[0], runs[-1], True)
+            dbs_url += "&run_num=%s" % runrange(runs[0], runs[-1], False)
         urls.append(dbs_url)
     if  not urls:
         return
+    if  verbose > 1:
+        print "\nDEBUG: file_run_lumis"
+        print urls
     gen = urlfetch_getdata(urls, CKEY, CERT, headers)
     odict = {} # output dict
     for rec in gen:
-        if  'error' in rec.keys():
-            err = 'N/A: %s' % rec
-            yield err, err, err
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            yield {'error':error, 'reason':reason}
         else:
             for row in json.loads(rec['data']):
                 run = row['run_num']
@@ -227,7 +239,7 @@ def old_timestamp(tstamp, threshold=2592000):
         return True
     return False
 
-def get_block_run_lumis(url, api, args):
+def get_block_run_lumis(url, api, args, verbose=0):
     "Helper function to deal with block,run,lumi requests"
     run_value = args.get('run_num', [])
     if  isinstance(run_value, dict) and '$in' in run_value:
@@ -240,13 +252,13 @@ def get_block_run_lumis(url, api, args):
         else:
             runs = []
     args.update({'runs': runs})
-    blocks = dbs_find('block', url, args)
-    gen = block_run_lumis(url, blocks, runs)
+    blocks = dbs_find('block', url, args, verbose)
+    gen = block_run_lumis(url, blocks, runs, verbose)
     key = 'block_run'
     for row in process_lumis_with(key, gen):
         yield row
 
-def get_file_run_lumis(url, api, args):
+def get_file_run_lumis(url, api, args, verbose=0):
     "Helper function to deal with file,run,lumi requests"
     run_value = args.get('run_num', [])
     if  isinstance(run_value, dict) and '$in' in run_value:
@@ -256,11 +268,13 @@ def get_file_run_lumis(url, api, args):
     else:
         if  int_number_pattern.match(str(run_value)):
             runs = [run_value]
+        elif run_value[0]=='[' and run_value[-1]==']':
+            runs = json.loads(run_value)
         else:
             runs = []
     args.update({'runs': runs})
-    blocks = dbs_find('block', url, args)
-    gen = file_run_lumis(url, blocks, runs)
+    blocks = dbs_find('block', url, args, verbose)
+    gen = file_run_lumis(url, blocks, runs, verbose)
     key = 'file_run'
     if  api.startswith('run_lumi'):
         key = 'run'
@@ -271,7 +285,7 @@ def get_file_run_lumis(url, api, args):
     for row in process_lumis_with(key, gen):
         yield row
 
-def get_file4dataset_run_lumi(url, api, args):
+def get_file4dataset_run_lumi(url, api, args, verbose=0):
     "Helper function to deal with file dataset=/a/b/c run=123 lumi=1 requests"
     run_value = args.get('run_num', [])
     if  isinstance(run_value, dict) and '$in' in run_value:
@@ -282,15 +296,15 @@ def get_file4dataset_run_lumi(url, api, args):
         runs = [run_value]
     ilumi = args.get('lumi')
     args.update({'runs': runs})
-    blocks = dbs_find('block', url, args)
-    gen = file_run_lumis(url, blocks, runs)
+    blocks = dbs_find('block', url, args, verbose)
+    gen = file_run_lumis(url, blocks, runs, verbose)
     for lfn, _run, lumi in gen:
         if  lumi == ilumi:
             yield lfn
 
-def get_lumis4block_run(url, api, args):
+def get_lumis4block_run(url, api, args, verbose=0):
     "Get lumi numbers for given block/run parameters"
-    for row in get_file_run_lumis(url, api, args):
+    for row in get_file_run_lumis(url, api, args, verbose):
         yield dict(lumi=row['lumi'])
 
 ### helper functions for get_blocks4tier_dates
@@ -298,11 +312,15 @@ def process(gen):
     "Process generator from getdata"
     for row in gen:
         if  'error' in row:
-            raise Exception(row['error'])
+            error = row.get('error')
+            reason = row.get('reason', '')
+            print dastimestamp('DAS ERROR'), error, reason
+            yield row
+            continue
         if  'data' in row:
             yield json.loads(row['data'])
 
-def blocks4tier_date(dbs, tier, min_cdate, max_cdate):
+def blocks4tier_date(dbs, tier, min_cdate, max_cdate, verbose=0):
     "Get list of blocks for given parameters"
     headers = {'Accept':'text/json;application/json'}
     url     = dbs + "/blocks"
@@ -310,10 +328,16 @@ def blocks4tier_date(dbs, tier, min_cdate, max_cdate):
                'min_cdate':min_cdate,
                'max_cdate':max_cdate}
     urls    = ['%s?%s' % (url, urllib.urlencode(params))]
+    if  verbose > 1:
+        print "\nblocks4tier_date"
+        print urls
     res     = process(urlfetch_getdata(urls, CKEY, CERT, headers))
     err     = 'Unable to get blocks for tier=%s, mindate=%s, maxdate=%s' \
                 % (tier, min_cdate, max_cdate)
     for blist in res:
+        if 'error' in blist:
+            yield blist
+            continue
         if  isinstance(blist, dict):
             if  'block_name' not in blist:
                 msg = err + ', reason=%s' % json.dumps(blist)
@@ -329,7 +353,10 @@ def block_summary(dbs, blocks):
     res     = urlfetch_getdata(urls, CKEY, CERT, headers)
     for row in res:
         if  'error' in row:
-            raise Exception(row['error'])
+            error  = row.get('error')
+            reason = row.get('reason', '')
+            yield {'error':error, 'reason':reason}
+            continue
         url = row['url']
         blk = urllib.unquote(url.split('=')[-1])
         for rec in json.loads(row['data']):
@@ -342,7 +369,7 @@ def block_summary(dbs, blocks):
 ### https://svnweb.cern.ch/trac/CMSDMWM/ticket/4148
 ### currently the result of get_blocks4tier_dates is not precise since
 ### blocks creation dates are not the same as dataset ones
-def get_blocks4tier_dates(dbs_url, api, args):
+def get_blocks4tier_dates(dbs_url, api, args, verbose=0):
     "Helper function to get blocks for given tier and date range"
     fullday = 24*60*60
     tier    = args.get('tier')
@@ -363,7 +390,8 @@ def get_blocks4tier_dates(dbs_url, api, args):
 
     try:
         # get block list
-        blist   = (r for r in blocks4tier_date(dbs_url, tier, date1, date2))
+        blist   = (r for r in \
+                blocks4tier_date(dbs_url, tier, date1, date2, verbose))
 
         # get summaries
         for row in block_summary(dbs_url, blist):
@@ -374,7 +402,7 @@ def get_blocks4tier_dates(dbs_url, api, args):
                 'ts': time.time()}
         yield dict(block=data)
 
-def get_dataset4block(args):
+def get_dataset4block(args, verbose=0):
     "Get dataset name for given block"
     block = args.get('block_name')
     yield {'dataset':{'name':block.split('#')[0]}}
@@ -405,17 +433,19 @@ class DBS3Service(DASAbstractService):
             time0 = time.time()
             dbs_url = '/'.join(url.split('/')[:-1])
             if  api == 'block_run_lumi4dataset':
-                dasrows = get_block_run_lumis(dbs_url, api, args)
+                dasrows = get_block_run_lumis(dbs_url, api, args, self.verbose)
             elif api == 'blocks4tier_dates':
-                dasrows = get_blocks4tier_dates(dbs_url, api, args)
+                dasrows = get_blocks4tier_dates(dbs_url, api, args,
+                        self.verbose)
             elif api == 'file4dataset_run_lumi':
-                dasrows = get_file4dataset_run_lumi(dbs_url, api, args)
+                dasrows = get_file4dataset_run_lumi(dbs_url, api, args,
+                        self.verbose)
             elif api == 'lumi4block_run':
-                dasrows = get_lumis4block_run(dbs_url, api, args)
+                dasrows = get_lumis4block_run(dbs_url, api, args, self.verbose)
             elif api == 'dataset4block':
-                dasrows = get_dataset4block(args)
+                dasrows = get_dataset4block(args, self.verbose)
             else:
-                dasrows = get_file_run_lumis(dbs_url, api, args)
+                dasrows = get_file_run_lumis(dbs_url, api, args, self.verbose)
             ctime = time.time()-time0
             self.write_to_cache(dasquery, expire, url, api, args,
                     dasrows, ctime)
@@ -503,6 +533,9 @@ class DBS3Service(DASAbstractService):
             # it does not accepted, instead it will be used for filtering
             # end-results
             del kwds['status']
+        if  api == 'filesummaries' or api == 'dataset_info':
+            if  kwds['dataset'].find('*') != -1:
+                kwds['dataset'] = 'required'
 
     def parser(self, query, dformat, source, api):
         """
@@ -553,7 +586,7 @@ class DBS3Service(DASAbstractService):
                         sites.add(orig_site)
             for site in sites:
                 yield {'site': {'name': site}}
-        elif api == 'datasets':
+        elif api == 'datasets' or api == 'dataset_info':
             for row in gen:
                 row['name'] = row['dataset']
                 del row['dataset']

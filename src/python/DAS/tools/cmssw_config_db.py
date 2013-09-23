@@ -121,7 +121,7 @@ def inject(path, release, debug=0):
                                 [chr(i) for i in xrange(32, 128)]+\
                                 ['?']*128)
     
-    if  not os.environ.has_key('SCRAM_ARCH'):
+    if  'SCRAM_ARCH' not in os.environ:
         msg = 'SCRAM_ARCH environment is not set'
         raise Exception(msg)
 

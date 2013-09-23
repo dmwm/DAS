@@ -475,12 +475,12 @@ def ply2mongo(query):
     """
     mongodict = {}
     filters = {}
-    if  query.has_key('pipe'):
+    if  'pipe' in query:
         for item in query['pipe']:
             if  item[0] == 'filter':
                 dasfilter, name, args = item
                 if  dasfilter == 'filter' and name in ['grep', 'sort']:
-                    if  filters.has_key(name):
+                    if  name in filters:
                         filters[name] += args
                     else:
                         filters[name]  = args
@@ -533,7 +533,7 @@ def ply2mongo(query):
                 msg = 'Unsupported data type, %s, type=%s' % (name, type(name))
                 raise Exception(msg)
             value = '*'
-        if  spec.has_key(dasname):
+        if  dasname in spec:
             exist_value = spec[dasname]
             if  isinstance(exist_value, list) or isinstance(exist_value, tuple):
                 array = [r for r in exist_value] + [value]
@@ -555,7 +555,7 @@ def ply2mongo(query):
     if  fields:
         mongodict['fields'] = fields
         for key in fields:
-            if  len(spec.keys()) != 1 and spec.has_key(key):
+            if  len(spec.keys()) != 1 and key in spec:
                 if spec[key] == '*' :
                     del spec[key]
     else:

@@ -115,7 +115,7 @@ class DASQuery(object):
                 for key, val in flags.iteritems():
                     if  key in self.NON_CACHEABLE_FLAGS:
                         continue
-                    if  not self._mongo_query.has_key(key):
+                    if  key not in self._mongo_query:
                         self._mongo_query[key] = val
             except Exception as exp:
                 msg = "Fail to parse DAS query='%s', %s" % (query, str(exp))
@@ -252,8 +252,8 @@ class DASQuery(object):
                     entity_names[entity_long]  = das_key
             get_short_daskey = lambda ldaskey: entity_names.get(ldaskey, ldaskey)
 
-            lookups = [f for f in fields
-                       if f not in ['das_id', 'das', 'cache_id', 'qhash']]
+            special_fields = ['das_id', 'das', 'cache_id', 'qhash', 'error','reason']
+            lookups = filter(lambda f: f not in special_fields, fields)
             lookup = ','.join(lookups)
             query  = lookup #' '.join(fields)
             query += ' ' # space between fields and spec values
@@ -307,7 +307,7 @@ class DASQuery(object):
             spec = {}
             for item in self._mongo_query.pop('spec'):
                 val = json.loads(item['value'])
-                if  item.has_key('pattern'):
+                if  'pattern' in item:
                     val = re.compile(val)
                 spec.update({item['key'] : val})
             self._mongo_query['spec'] = spec
@@ -336,7 +336,7 @@ class DASQuery(object):
         if  not self._qhash:
             sdict = deepcopy(self.storage_query)
             for key in ['filters', 'aggregators', 'mapreduce']:
-                if  sdict.has_key(key):
+                if  key in sdict:
                     del sdict[key]
             self._qhash = genkey(sdict)
         return self._qhash
@@ -498,19 +498,23 @@ class DASQuery(object):
         This is perhaps not the same thing as "is subset of"
         """
         return compare_specs(self.mongo_query, other.mongo_query)
-    
+
     def __gt__(self, other):
         "Query comparision operator"
         return self.is_superset_of(other)
-    
+
     def __lt__(self, other):
         "Query comparision operator"
         return self.is_subset_of(other)
-    
+
     def __eq__(self, other):
         "Query comparision operator"
         return self.qhash == other.qhash
-    
+
+    def __hash__(self):
+        "Hash of the object"
+        return hash(self.qhash)
+
     def __str__(self):
         "Query string representation"
         if  self._str:

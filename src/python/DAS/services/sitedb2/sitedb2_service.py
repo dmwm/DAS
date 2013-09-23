@@ -41,7 +41,7 @@ def sitedb_parser(source):
         data = source
     if  not isinstance(data, dict):
         raise Exception('Wrong data type, %s' % type(data))
-    if  data.has_key('desc'):
+    if  'desc' in data:
         columns = data['desc']['columns']
         for row in data['result']:
             yield rowdict(columns, row)
@@ -127,7 +127,7 @@ class SiteDBService(DASAbstractService):
             msg = 'SiteDBService reads from %s.%s' % (self.name, cname)
             self.logger.info(msg)
             try: # get data from local cache
-                data = [r for r in col.find() if not r.has_key('expire')][0]
+                data = [r for r in col.find() if 'expire' not in r][0]
                 del data['_id']
             except Exception as exc:
                 print_exc(exc)
@@ -230,7 +230,7 @@ class SiteDBService(DASAbstractService):
         SiteDB data-service parser.
         """
         spec = dasquery.mongo_query.get('spec')
-        if  spec.has_key('site.name'):
+        if  'site.name' in spec:
             spec_name = spec['site.name'].replace('*', '')
             for row in sitedb_parser(source):
                 name  = row.get('name', None)
@@ -239,15 +239,15 @@ class SiteDBService(DASAbstractService):
                     yield dict(site=row)
                 elif alias and alias.find(spec_name) != -1:
                     yield dict(site=row)
-        elif spec.has_key('site.se'):
+        elif 'site.se' in spec:
             site_se = spec['site.se'].replace('*', '')
             for row in sitedb_parser(source):
-                if  row.has_key('resources'):
+                if  'resources' in row:
                     for rec in row['resources']:
                         if  rec.get('fqdn', '').find(site_se) != -1:
-                            if  row.has_key('name'):
+                            if  'name' in row:
                                 yield dict(site=row)
-        elif spec.has_key('group.name'):
+        elif 'group.name' in spec:
             for row in sitedb_parser(source):
                 group = spec['group.name'].lower()
                 name = row.get('name', None)
@@ -262,17 +262,17 @@ class SiteDBService(DASAbstractService):
                     else:
                         cond = name.lower().find(group.replace('*', '')) != -1
                 if  cond:
-                    if  row.has_key('user_group'):
+                    if  'user_group' in row:
                         row['name'] = row['user_group']
                         del row['user_group']
                     yield row
-        elif spec.has_key('user.email'):
+        elif 'user.email' in spec:
             for row in sitedb_parser(source):
                 uemail = spec['user.email'].lower()
                 email = row.get('email', None)
                 if  email and uemail.find(email.lower()) != -1:
                     yield row
-        elif spec.has_key('user.name'):
+        elif 'user.name' in spec:
             qname = spec['user.name'].lower()
             for row in sitedb_parser(source):
                 username = row.get('username', None)

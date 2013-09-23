@@ -18,7 +18,7 @@ except:
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
-from DAS.utils.utils import dbsql_opt_map, convert_datetime
+from DAS.utils.utils import dbsql_opt_map, convert_datetime, dastimestamp
 from DAS.utils.utils import expire_timestamp, get_key_cert, convert2ranges
 from DAS.utils.global_scope import SERVICES
 from DAS.utils.url_utils import getdata
@@ -31,6 +31,9 @@ def process_lumis_with(ikey, gen):
     "Helper function to process lumis with given key from provided generator"
     odict = {}
     for row in gen:
+        if  'error' in row:
+            yield row
+            continue
         lfn, run, lumi = row
         if  ikey == 'file':
             key = lfn
@@ -113,9 +116,11 @@ def block_run_lumis(url, blocks, runs=None):
     prim_key = 'row'
     odict = {} # output dict
     for rec in gen:
-        if  'error' in rec.keys():
-            # TODO: should handle error somehow
-            pass
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            print dastimestamp('DAS ERROR'), error, reason
+            yield {'error': error, 'reason': reason}
         else:
             source   = StringIO.StringIO(rec['data'])
             lumis    = []
@@ -152,9 +157,11 @@ def file_run_lumis(url, blocks, runs=None):
     prim_key = 'row'
     odict = {} # output dict
     for rec in gen:
-        if  'error' in rec.keys():
-            # TODO: should handle error somehow
-            pass
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            print dastimestamp('DAS ERROR'), error, reason
+            yield {'error': error, 'reason': reason}
         else:
             source   = StringIO.StringIO(rec['data'])
             lumis    = []
@@ -170,12 +177,12 @@ def file_run_lumis(url, blocks, runs=None):
 
 def get_modification_time(record):
     "Get modification timestamp from DBS record"
-    if  record.has_key('dataset'):
-        if  record['dataset'].has_key('procds.moddate'):
+    if  'dataset' in record:
+        if  'procds.moddate' in record['dataset']:
             return record['dataset']['procds.moddate']
     for key in ['block', 'file_lfn']:
-        if  record.has_key(key):
-            if  record[key].has_key('last_modification_date'):
+        if  key in record:
+            if  'last_modification_date' in record[key]:
                 return record[key]['last_modification_date']
     return None
 
@@ -190,7 +197,7 @@ def old_timestamp(tstamp, threshold=2592000):
 def convert_dot(row, key, attrs):
     """Convert dot notation key.attr into storage one"""
     for attr in attrs:
-        if  row.has_key(key) and row[key].has_key(attr):
+        if  key in row and attr in row[key]:
             name = attr.split('.')[-1]
             row[key][name] = row[key][attr]
             del row[key][attr]
@@ -198,7 +205,7 @@ def convert_dot(row, key, attrs):
 def get_block_run_lumis(url, args):
     "Helper function to deal with block,run,lumi requests"
     run_value = args.get('run', [])
-    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+    if  isinstance(run_value, dict) and '$in' in run_value:
         runs = run_value['$in']
     elif isinstance(run_value, list):
         runs = run_value
@@ -217,7 +224,7 @@ def get_block_run_lumis(url, args):
 def get_file_run_lumis(url, api, args):
     "Helper function to deal with file,run,lumi requests"
     run_value = args.get('run', [])
-    if  isinstance(run_value, dict) and run_value.has_key('$in'):
+    if  isinstance(run_value, dict) and '$in' in run_value:
         runs = run_value['$in']
     elif isinstance(run_value, list):
         runs = run_value
@@ -247,13 +254,13 @@ def summary4dataset_run(url, kwds):
         if  isinstance(val, dict):
             min_run = 0
             max_run = 0
-            if  val.has_key('$lte'):
+            if  '$lte' in val:
                 max_run = val['$lte']
-            if  val.has_key('$gte'):
+            if  '$gte' in val:
                 min_run = val['$gte']
             if  min_run and max_run:
                 val = "run >=%s and run <= %s" % (min_run, max_run)
-            elif val.has_key('$in'):
+            elif '$in' in val:
                 val = ' or '.join(['run=%s' % r for r in val['$in']])
                 val = '(%s)' % val
         elif isinstance(val, int):
@@ -280,6 +287,11 @@ def summary4dataset_run(url, kwds):
     tot_lumis = 0
     tot_files = 0
     for rec in gen:
+        if  'error' in rec:
+            error  = rec.get('error')
+            reason = rec.get('reason', '')
+            srec = {'summary':'', 'error':error, 'reason':reason}
+            yield srec
         url = rec['url']
         data = rec['data']
         stream = StringIO.StringIO(data)
@@ -425,9 +437,9 @@ class DBSService(DASAbstractService):
             val = kwds['site']
             if  val != 'required':
                 sinfo = sitedb.site_info(val)
-                if  sinfo and sinfo.has_key('resources'):
+                if  sinfo and 'resources' in sinfo:
                     for row in sinfo['resources']:
-                        if  row['type'] == 'SE' and row.has_key('fqdn'):
+                        if  row['type'] == 'SE' and 'fqdn' in row:
                             sename = row['fqdn']
                             kwds['query'] = \
                                     "find dataset,site where site=%s" % sename
@@ -458,13 +470,13 @@ class DBSService(DASAbstractService):
                 if  isinstance(val, dict):
                     min_run = 0
                     max_run = 0
-                    if  val.has_key('$lte'):
+                    if  '$lte' in val:
                         max_run = val['$lte']
-                    if  val.has_key('$gte'):
+                    if  '$gte' in val:
                         min_run = val['$gte']
                     if  min_run and max_run:
                         val = "run >=%s and run <= %s" % (min_run, max_run)
-                    elif val.has_key('$in'):
+                    elif '$in' in val:
                         val = ' or '.join(['run=%s' % r for r in val['$in']])
                         val = '(%s)' % val
                 elif isinstance(val, int):
@@ -511,18 +523,20 @@ class DBSService(DASAbstractService):
                 if  isinstance(val, dict):
                     min_run = 0
                     max_run = 0
-                    if  val.has_key('$lte'):
+                    if  '$lte' in val:
                         max_run = val['$lte']
-                    if  val.has_key('$gte'):
+                    if  '$gte' in val:
                         min_run = val['$gte']
                     if  min_run and max_run:
                         val = "run >=%s and run <= %s" % (min_run, max_run)
-                    elif val.has_key('$in'):
+                    elif '$in' in val:
                         val = ' or '.join(['run=%s' % r for r in val['$in']])
                         val = '(%s)' % val
                 elif isinstance(val, int):
                     val = "run = %d" % val
                 kwds['query'] += ' and ' + val
+                kwds.pop('dataset')
+                kwds.pop('run')
             else:
                 kwds['query'] = 'required'
         if  api == 'fakeGroup4Dataset':
@@ -556,18 +570,18 @@ class DBSService(DASAbstractService):
                 if  isinstance(val, dict):
                     min_run = 0
                     max_run = 0
-                    if  val.has_key('$lte'):
+                    if  '$lte' in val:
                         max_run = val['$lte']
-                    if  val.has_key('$gte'):
+                    if  '$gte' in val:
                         min_run = val['$gte']
                     if  min_run and max_run:
                         val = "run >=%s and run <= %s" % (min_run, max_run)
-                    elif val.has_key('$in'):
+                    elif '$in' in val:
                         val = ' or '.join(['run=%s' % r for r in val['$in']])
                         val = '(%s)' % val
                 elif isinstance(val, int):
                     val = "run = %d" % val
-                if  kwds.has_key('dataset') and kwds['dataset']:
+                if  'dataset' in kwds and kwds['dataset']:
                     val += ' and dataset=%s' % kwds['dataset']
                 kwds['query'] = \
                 "find dataset where %s and dataset.status like VALID*" % val
@@ -586,7 +600,7 @@ class DBSService(DASAbstractService):
                     val = val.replace('=', '*').replace(' ', '*')
                     kwds['query'] = "find dataset, dataset.createby " + \
                             "where dataset.createby=%s" % val
-                    if  kwds.has_key('dataset') and kwds['dataset']:
+                    if  'dataset' in kwds and kwds['dataset']:
                         kwds['query'] += ' and dataset=%s' % kwds['dataset']
                 else:
                     kwds['query'] = 'required'
@@ -702,11 +716,11 @@ class DBSService(DASAbstractService):
                 kwds['query'] = 'required'
             kwds.pop('date')
         if  api == 'listFiles':
-            val = kwds.get('run', None)
+            val = kwds.get('run_number', None)
             if  isinstance(val, dict):
                 # listFiles does not support run range, see
                 # fakeFiles4DatasetRun API
-                kwds.pop('run')
+                kwds['run_number'] = 'required'
             if  not kwds['path'] and not kwds['block_name'] and \
                 not kwds['pattern_lfn']:
                 kwds['path'] = 'required'
@@ -724,13 +738,13 @@ class DBSService(DASAbstractService):
                 if  isinstance(val, dict):
                     min_run = 0
                     max_run = 0
-                    if  val.has_key('$lte'):
+                    if  '$lte' in val:
                         max_run = val['$lte']
-                    if  val.has_key('$gte'):
+                    if  '$gte' in val:
                         min_run = val['$gte']
                     if  min_run and max_run:
                         val = "run >=%s and run <= %s" % (min_run, max_run)
-                    elif val.has_key('$in'):
+                    elif '$in' in val:
                         val = ' or '.join(['run=%s' % r for r in val['$in']])
                         val = '(%s)' % val
                 elif isinstance(val, int):
@@ -857,51 +871,50 @@ class DBSService(DASAbstractService):
         for row in gen:
             if  not row:
                 continue
-            if  row.has_key('status') and \
-                row['status'].has_key('dataset.status'):
+            if  'status' in row and 'dataset.status' in row['status']:
                 row['status']['name'] = row['status']['dataset.status']
                 del row['status']['dataset.status']
-            if  row.has_key('file_lumi_section'):
+            if  'file_lumi_section' in row:
                 row['lumi'] = row['file_lumi_section']
                 del row['file_lumi_section']
-            if  row.has_key('algorithm'):
+            if  'algorithm' in row:
                 del row['algorithm']['ps_content']
-            if  row.has_key('processed_dataset') and \
-                row['processed_dataset'].has_key('path'):
+            if  'processed_dataset' in row and \
+                'path' in row['processed_dataset']:
                 if  isinstance(row['processed_dataset']['path'], dict) \
-                and row['processed_dataset']['path'].has_key('dataset_path'):
+                and 'dataset_path' in row['processed_dataset']['path']:
                     path = row['processed_dataset']['path']['dataset_path']
                     del row['processed_dataset']['path']
                     row['processed_dataset']['name'] = path
             # case for fake apis
             # remove useless attribute from results
-            if  row.has_key('dataset'):
-                if  row['dataset'].has_key('count_file.size'):
+            if  'dataset' in row:
+                if  'count_file.size' in row['dataset']:
                     del row['dataset']['count_file.size']
-                if  row['dataset'].has_key('dataset'):
+                if  'dataset' in row['dataset']:
                     name = row['dataset']['dataset']
                     del row['dataset']['dataset']
                     row['dataset']['name'] = name
-            if  row.has_key('child') and row['child'].has_key('dataset.child'):
+            if  'child' in row and 'dataset.child' in row['child']:
                 row['child']['name'] = row['child']['dataset.child']
                 del row['child']['dataset.child']
-            if  row.has_key('child') and row['child'].has_key('file.child'):
+            if  'child' in row and 'file.child' in row['child']:
                 row['child']['name'] = row['child']['file.child']
                 del row['child']['file.child']
-            if  row.has_key('block') and query.get('fields') == ['parent']:
+            if  'block' in row and query.get('fields') == ['parent']:
                 row['parent'] = row['block']
                 del row['block']
-            if  row.has_key('block') and query.get('fields') == ['child']:
+            if  'block' in row and query.get('fields') == ['child']:
                 row['child'] = row['block']
                 del row['block']
-            if  row.has_key('run') and row['run'].has_key('run'):
+            if  'run' in row and 'run' in row['run']:
                 row['run']['run_number'] = row['run']['run']
                 del row['run']['run']
-            if  row.has_key('release') and row['release'].has_key('release'):
+            if  'release' in row and 'release' in row['release']:
                 row['release']['name'] = row['release']['release']
                 del row['release']['release']
-            if  row.has_key('site'):
-                if  row['site'].has_key('site'):
+            if  'site' in row:
+                if  'site' in row['site']:
                     row['site']['se'] = row['site']['site']
                     del row['site']['site']
             convert_dot(row, 'config', config_attrs)
@@ -910,21 +923,21 @@ class DBSService(DASAbstractService):
             convert_dot(row, 'dataset', ['dataset.tag', 'dataset.status'])
             # remove DBS2 run attributes (to be consistent with DBS3 output)
             # and let people extract this info from CondDB/LumiDB.
-            if  row.has_key('run'):
+            if  'run' in row:
                 for att in useless_run_atts:
                     try:
                         del row['run'][att]
                     except:
                         pass
             if  api == 'fakeLumis4FileRun':
-                if  row.has_key('lumi'):
+                if  'lumi' in row:
                     row = row['lumi']
                     row['lumi'] = {'number': row['lumi.number'],
                                    'run_number': row['run.number']}
                     del row['lumi.number']
                     del row['run.number']
             if  api == 'fakeLumis4block':
-                if  row.has_key('lumi'):
+                if  'lumi' in row:
                     row = row['lumi']
                     row['lumi'] = {'number': row['lumi.number'],
                                    'run_number': row['run.number'],
@@ -944,10 +957,10 @@ class DBSService(DASAbstractService):
                 row.update({'site':{'se':sename}})
                 del row['dataset']['site']
             if  api == 'listFiles':
-                if  query.has_key('spec'):
-                    if  query['spec'].has_key('status.name'):
+                if  'spec' in query:
+                    if  'status.name' in query['spec']:
                         spec_status = query['spec']['status.name']
-                        if  row.has_key('file'):
+                        if  'file' in row:
                             file_status = row['file'].get('status', '')
                             if  file_status.lower() != spec_status.lower():
                                 row = None

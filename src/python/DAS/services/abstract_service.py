@@ -85,7 +85,7 @@ class DASAbstractService(object):
 
         self.logger.info('initialized')
         # define internal cache manager to put 'raw' results into cache
-        if  config.has_key('rawcache') and config['rawcache']:
+        if  'rawcache' in config and config['rawcache']:
             self.localcache   = config['rawcache']
         else:
             msg = 'Undefined rawcache, please check your configuration'
@@ -145,7 +145,7 @@ class DASAbstractService(object):
                 api  = row['api']
                 nmap = row['rec_key']
                 notation = row['api_output']
-                if  self._notations.has_key(api):
+                if  api in self._notations:
                     self._notations[api].update({notation:nmap})
                 else:
                     self._notations[api] = {notation:nmap}
@@ -185,6 +185,10 @@ class DASAbstractService(object):
         """
         if  not self.write2cache:
             return
+
+        # before going to cache we should check/set possible misses, e.g.
+        # primary key when error is thrown
+        result = self.set_misses(dasquery, api, result)
 
         # update the cache
         header = dasheader(self.name, dasquery, expire, api, url,
@@ -251,9 +255,9 @@ class DASAbstractService(object):
         if  not notationmap:
             return {}
         notations = {}
-        if  notationmap.has_key(''):
+        if  '' in notationmap:
             notations = dict(notationmap['']) # notations applied to all APIs
-            if  notationmap.has_key(api): # overwrite the one for provided API
+            if  api in notationmap: # overwrite the one for provided API
                 notations.update(notationmap[api])
         return notations
 
@@ -286,14 +290,14 @@ class DASAbstractService(object):
                     row = row['results']
                 if  isinstance(row, list):
                     for item in row:
-                        if  item.has_key(prim_key):
+                        if  prim_key in item:
                             counter += 1
                             yield item
                         else:
                             counter += 1
                             yield {prim_key:item}
                 else:
-                    if  row.has_key(prim_key):
+                    if  prim_key in row:
                         counter += 1
                         yield row
                     else:
@@ -320,8 +324,8 @@ class DASAbstractService(object):
             # override dataset=>name, while dataset still is a primary key
             if  isinstance(row, list):
                 yield {prim_key:row}
-            elif  row.has_key(prim_key):
-                if  row[prim_key].has_key(prim_key):
+            elif  prim_key in row:
+                if  prim_key in row[prim_key]:
                     yield row[prim_key] # remapping may create nested dict
                 else:
                     yield row
@@ -359,7 +363,7 @@ class DASAbstractService(object):
             for row in yield_rows(row, genrows):
                 ddict = DotDict(row)
                 pval  = ddict.get(map_key)
-                if  isinstance(pval, dict) and pval.has_key('error'):
+                if  isinstance(pval, dict) and 'error' in pval:
                     ddict[map_key] = ''
                     ddict.update({prim_key: pval})
                 for key in keys2adjust:
@@ -375,17 +379,17 @@ class DASAbstractService(object):
                         if  existing_value:
                             value = existing_value
                         elif isinstance(value, dict) and \
-                        value.has_key('$in'): # we got a range {'$in': []}
+                        '$in' in value: # we got a range {'$in': []}
                             value = value['$in']
                         elif isinstance(value, dict) and \
-                        value.has_key('$lte') and value.has_key('$gte'):
+                        '$lte' in value and '$gte' in value:
                             # we got a between range
                             value = [value['$gte'], value['$lte']]
                         else: 
                             value = json.dumps(value) 
                     elif existing_value and value != existing_value:
                         # we got proximity results
-                        if  ddict.has_key('proximity'):
+                        if  'proximity' in ddict:
                             proximity = DotDict({key:existing_value})
                             ddict['proximity'].update(proximity)
                         else:
@@ -451,7 +455,6 @@ class DASAbstractService(object):
             self.logger.info("%s expire %s" % (api, expire))
             rawrows = self.parser(dasquery, dformat, datastream, api)
             dasrows = self.translator(api, rawrows)
-            dasrows = self.set_misses(dasquery, api, dasrows)
             ctime   = time.time() - time0
             self.write_to_cache(dasquery, expire, url, api, args,
                     dasrows, ctime)
@@ -510,23 +513,28 @@ class DASAbstractService(object):
             # once we now that API covers input set of parameters we check
             # every input parameter for pattern matching
             for key, val in cond.iteritems():
-                # check if key is a special one
-                if  key in das_special_keys():
-                    found += 1
                 # check if keys from conditions are accepted by API
                 # need to convert key (which is daskeys.map) into
                 # input api parameter
                 for apiparam in self.dasmapping.das2api(srv, api, key, val):
-                    if  args.has_key(apiparam):
+                    if  apiparam in args:
                         args[apiparam] = val
                         found += 1
-            self.adjust_params(api, args, instance)
+            # check if number of keys on cond and args are the same
+            if  len(cond.keys()) != found:
+                msg = "--- reject API %s, not all condition keys are covered" \
+                        % api
+                self.logger.info(msg)
+                msg = 'args=%s' % args
+                self.logger.debug(msg)
+                continue
             if  not found:
                 msg = "--- rejects API %s, parameters don't match" % api
                 self.logger.info(msg)
                 msg = 'args=%s' % args
                 self.logger.debug(msg)
                 continue
+            self.adjust_params(api, args, instance)
             # delete args keys whose value is optional
             delete_keys(args, 'optional')
             # check that there is no "required" parameter left in args,

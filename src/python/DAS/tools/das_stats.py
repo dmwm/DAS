@@ -78,7 +78,7 @@ class LogdbManager(object):
             addrs   = set()
             for row in self.coll.find(spec):
                 path = row['path']
-                if  path_info.has_key(path):
+                if  path in path_info:
                     pdict = path_info[path]
                     addrs = pdict['ip']
                     queries = pdict['queries']

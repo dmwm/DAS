@@ -37,7 +37,7 @@ class key_learning(object):
         
     def __call__(self):
         "__call__ implementation"
-        self.das.rawcache.remove_expired("cache")
+        self.das.rawcache.clean_cache("cache")
         
         autodeque = lambda: collections.deque(maxlen=self.redundancy)
         found_ids = collections.defaultdict(autodeque)

@@ -42,7 +42,7 @@ def make_links(links, value, inst):
         values = [value]
     for link in links:
         for val in values:
-            if  link.has_key('query'):
+            if  'query' in link:
                 dasquery = link['query'] % val
                 uinput = urllib.quote(dasquery)
                 url = '/das/request?input=%s&instance=%s&idx=0&limit=10' \
@@ -53,7 +53,7 @@ def make_links(links, value, inst):
                     key = val
                 url = """<a href="%s">%s</a>""" % (quote(url), key)
                 yield url
-            elif link.has_key('link'):
+            elif 'link' in link:
                 if  link['name']:
                     key = link['name']
                 else:
@@ -135,7 +135,7 @@ def adjust_values(func, gen, links, pkey):
     uidict = {}
     for uikey, value, uilink, uidesc, uiexamples in [k for k, _g in groupby(gen)]:
         val = quote(value)
-        if  rdict.has_key(uikey):
+        if  uikey in rdict:
             existing_val = rdict[uikey]
             if  not isinstance(existing_val, list):
                 existing_val = [existing_val]
@@ -167,8 +167,7 @@ def adjust_values(func, gen, links, pkey):
             continue
         if  key.lower() == 'error':
             key = '<span %s>WARNING</span>' % red
-            if  val and isinstance(val, basestring):
-                val += '<br/>'
+            val = json.dumps(val) + '<br/>'
         if  lookup:
             if  key.find('Member') != -1 and val:
                 link = '/das/request?input=user%3D'
@@ -235,9 +234,8 @@ def adjust_values(func, gen, links, pkey):
             to_show.append((key, value))
         else:
             if  key == 'result' and isinstance(val, dict) and \
-                val.has_key('value'): # result of aggregation function
-                if  rdict.has_key('key') and \
-                    rdict['key'].find('.size') != -1:
+                'value' in val: # result of aggregation function
+                if  'key' in rdict and rdict['key'].find('.size') != -1:
                     val = size_format(val['value'])
                 elif isinstance(val['value'], float):
                     val = '%.2f' % val['value']
@@ -271,7 +269,7 @@ class CMSRepresentation(DASRepresentation):
         DASRepresentation.__init__(self, config)
         self.dasmgr     = dasmgr
         self.dasmapping = self.dasmgr.mapping
-        if  config.has_key('dbs'):
+        if  'dbs' in config:
             self.dbs_global = self.dasmapping.dbs_global_instance()
         else:
             self.dbs_global = None
@@ -284,42 +282,18 @@ class CMSRepresentation(DASRepresentation):
         tdict = {}
         for uikey in titles:
             pdict = self.dasmapping.daskey_from_presentation(uikey)
-            if  pdict and pdict.has_key(pkey):
+            if  pdict and pkey in pdict:
                 mapkey = pdict[pkey]['mapkey']
             else:
                 mapkey = uikey
             tdict[uikey] = mapkey
         return tdict
 
-
-    def get_result_fieldlist(self, row):
-        rowkeys = []
-        if  row and 'das' in row  and 'primary_key' in row['das']:
-            pkey = row['das']['primary_key']
-            if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
-                try:
-                    mkey = pkey.split('.')[0]
-                    if  isinstance(row[mkey], list):
-                        # take first five or less entries from the list to cover
-                        # possible aggregated records and extract row keys
-                        ndict   = DotDict({mkey: row[mkey][:10]})
-                        rowkeys = list(ndict.get_keys(mkey))
-                    else:
-                        rowkeys = list(DotDict(row).get_keys(mkey))
-                    rowkeys.sort()
-                    rowkeys += ['das.conflict']
-                except Exception as exc:
-                    # TODO: pkey.split fail only if called on non-string
-                    msg = "Fail to pkey.split('.') for pkey=%s" % pkey
-                    print msg
-                    print_exc(exc)
-        return rowkeys
-
     def get_one_row(self, dasquery):
         """
         Invoke DAS workflow and get one rowID from the cache.
         """
-        # TODO: this seem to return ONLY rowID, is this intended use?
+        # TODO: sometimes this seem to return ONLY rowID, is this intended use?
         q = DASQuery({'spec':{'qhash':dasquery.qhash}})
         data = list(self.dasmgr.get_from_cache(q, idx=0, limit=1))
         if  len(data):
@@ -336,6 +310,31 @@ class CMSRepresentation(DASRepresentation):
             page = self.templatepage('das_filters',
                                      filters=dflt, das_keys=fields)
         return page
+
+    def get_result_fieldlist(self, row):
+        rowkeys = []
+        if  row and 'das' in row  and 'primary_key' in row['das']:
+            pkey = row['das']['primary_key']
+            if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
+                try:
+                    mkey = pkey.split('.')[0]
+                    if  mkey not in row:
+                        return []
+                    if  isinstance(row[mkey], list):
+                        # take first five or less entries from the list to cover
+                        # possible aggregated records and extract row keys
+                        ndict   = DotDict({mkey: row[mkey][:10]})
+                        rowkeys = list(ndict.get_keys(mkey))
+                    else:
+                        rowkeys = list(DotDict(row).get_keys(mkey))
+                    rowkeys.sort()
+                    rowkeys += ['das.conflict']
+                except Exception as exc:
+                    # TODO: pkey.split fail only if called on non-string
+                    msg = "Fail to pkey.split('.') for pkey=%s" % pkey
+                    print msg
+                    print_exc(exc)
+        return rowkeys
 
     def convert2ui(self, idict, not2show=None):
         """
@@ -438,8 +437,9 @@ class CMSRepresentation(DASRepresentation):
             page += '<div class="%s"><hr class="line" />' % style
             links = []
             pkey  = None
+            pval  = None
             lkey  = None
-            if  row.has_key('das') and row['das'].has_key('primary_key'):
+            if  'das' in row and 'primary_key' in row['das']:
                 pkey = row['das']['primary_key']
                 if  pkey and not rowkeys and not fltpage:
                     fltpage = self.fltpage(row)
@@ -493,7 +493,7 @@ class CMSRepresentation(DASRepresentation):
                     plist = self.dasmgr.mapping.presentation(lkey)
                     linkrec = None
                     for item in plist:
-                        if  item.has_key('link'):
+                        if  'link' in item:
                             linkrec = item['link']
                             break
                     if  linkrec and pval and pval != 'N/A' and \
@@ -551,7 +551,7 @@ class CMSRepresentation(DASRepresentation):
                     page += adjust_values(func, gen, links, pkey)
             pad   = ""
             try:
-                if  row.has_key('das'):
+                if  'das' in row:
                     systems = self.systems(row['das']['system'])
                 else:
                     systems = "" # no das record
@@ -568,7 +568,7 @@ class CMSRepresentation(DASRepresentation):
                 'request?', 'request?instance=%s&' % inst)
             if  not links:
                 page += '<br />'
-            if  row.has_key('das') and row['das'].has_key('conflict'):
+            if  'das' in row and 'conflict' in row['das']:
                 conflict = ', '.join(row['das']['conflict'])
             else:
                 conflict = ''
@@ -626,8 +626,7 @@ class CMSRepresentation(DASRepresentation):
             except:
                 pass
             rec  = []
-            if  not pkey and row.has_key('das') and \
-                row['das'].has_key('primary_key'):
+            if  not pkey and 'das' in row and 'primary_key' in row['das']:
                 pkey = row['das']['primary_key'].split('.')[0]
             if  filters:
                 for flt in filters:
@@ -705,7 +704,7 @@ class CMSRepresentation(DASRepresentation):
                         if  not mapkey:
                             mapkey = '%s.name' % item
                         key, att = mapkey.split('.')
-                        if  row.has_key(key):
+                        if  key in row:
                             val = row[key]
                             if  isinstance(val, dict):
                                 results += val.get(att, '') + '\n'

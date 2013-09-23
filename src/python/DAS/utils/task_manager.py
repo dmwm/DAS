@@ -33,14 +33,14 @@ class UidSet():
 
     def discard(self, uid):
         "Either discard or downgrade uid occurence in a set"
-        if  self._set.has_key(uid):
+        if  uid in self._set:
             self._set[uid] -= 1
-        if  self._set.has_key(uid) and not self._set[uid]:
+        if  uid in self._set and not self._set[uid]:
             del self._set[uid]
 
     def __contains__(self, uid):
         "Check if uid present in a set"
-        if  self._set.has_key(uid):
+        if  uid in self._set:
             return True
         return False
 
