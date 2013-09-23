@@ -5,6 +5,19 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 2.1.X
+
+  - Replaced all has_key dict calls with key in dict statement (work towards
+    python3 standard)
+  - Add check_services call to DAS core to check status of services
+  - Pass write_concern flag to MongoClient, by default it is off
+  - Fixed #4032
+  - Re-factor core/web code to propagate error record back to end-user and
+    setup error status code in this case
+  - Throw error records when urlfetch_getdata fails
+  - Move set_misses into write_to_cache
+  - Made adjustments to DBS3 data-service based on recent changes of DBS3 APIs
+
 - 2.0.X
 
   - Add services attribute to das part of data record, it shows which DAS

@@ -56,9 +56,9 @@ class QLManager(object):
     def __init__(self, config=None):
         if  not config:
             config = das_readconfig()
-        if  not config.has_key('dasmapping'):
+        if  'dasmapping' not in config:
             config['dasmapping'] = DASMapping(config)
-        if  not config.has_key('dasanalytics'):
+        if  'dasanalytics' not in config:
             config['dasanalytics'] = DASAnalytics(config)
         if  not config['dasmapping'].check_maps():
             msg = "No DAS maps found in MappingDB"
@@ -181,11 +181,11 @@ class QLManager(object):
             for system in self.map.list_systems():
                 mapkey = self.map.find_mapkey(system, key, val)
                 if  mapkey and mapkey != key and \
-                    mongo_query['spec'].has_key(key):
+                    key in mongo_query['spec']:
                     to_replace.append((key, mapkey))
                     continue
         for key, mapkey in to_replace:
-            if  mongo_query['spec'].has_key(key):
+            if  key in mongo_query['spec']:
                 mongo_query['spec'][mapkey] = mongo_query['spec'][key]
                 del mongo_query['spec'][key]
         
@@ -233,7 +233,7 @@ class QLManager(object):
                 daskeys = self.map.api_info(api)['das_map']
                 maps = [r['rec_key'] for r in daskeys]
                 if  set(mapkeys) & set(maps) == set(mapkeys): 
-                    if  adict.has_key(srv):
+                    if  srv in adict:
                         new_list = adict[srv] + [api]
                         adict[srv] = list( set(new_list) )
                     else:
@@ -258,7 +258,7 @@ QL_MANAGER_OBJECTS = {}
 def ql_manager(config=None):
     "Return QLManager instance"
     key = genkey(str(config))
-    if  QL_MANAGER_OBJECTS.has_key(key):
+    if  key in QL_MANAGER_OBJECTS:
         obj = QL_MANAGER_OBJECTS[key]
     else:
         obj = QLManager(config)

@@ -23,7 +23,7 @@ class ReqMgrService(DASAbstractService):
         """
         Adjust parameters for specific query requests
         """
-        if  api == 'inputdataset':
+        if  api == 'inputdataset' or api == 'configIDs':
             if  kwds.get('dataset', 'required').find('*') != -1:
                 kwds['dataset'] = 'required' # we skip patterns
 
@@ -48,11 +48,11 @@ class ReqMgrService(DASAbstractService):
                 key = 'WMCore.RequestManager.DataStructs.Request.Request'
                 try:
                     data = row['dataset']
-                    if  isinstance(data, dict) and data.has_key('error'):
+                    if  isinstance(data, dict) and 'error' in data:
                         yield row
                     else:
                         data = data[key]
-                        if  data.has_key('InputDatasetTypes'):
+                        if  'InputDatasetTypes' in data:
                             arr = []
                             for key, val in \
                                     data['InputDatasetTypes'].iteritems():
@@ -66,7 +66,7 @@ class ReqMgrService(DASAbstractService):
             for row in gen:
                 try:
                     data = row['dataset']
-                    if  isinstance(data, dict) and data.has_key('error'):
+                    if  isinstance(data, dict) and 'error' in data:
                         yield row
                     else:
                         for key, val in data.iteritems():

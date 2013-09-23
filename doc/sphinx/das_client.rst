@@ -8,74 +8,103 @@ Its usage is very simple
 .. doctest::
 
     Usage: das_client.py [options]
+    For more help please visit https://cmsweb.cern.ch/das/faq
 
     Options:
       -h, --help            show this help message and exit
       -v VERBOSE, --verbose=VERBOSE
                             verbose output
       --query=QUERY         specify query for your request
-      --host=HOST           specify host name of DAS cache server, default
+      --host=HOST           host name of DAS cache server, default is
                             https://cmsweb.cern.ch
       --idx=IDX             start index for returned result set, aka pagination,
-                            use w/ limit
-      --limit=LIMIT         number of returned results (results per page)
-      --format=format       specify return data format (json or plain), default
-                            json
+                            use w/ limit (default is 0)
+      --limit=LIMIT         number of returned results (default is 10), use
+                            --limit=0 to show all results
+      --format=FORMAT       specify return data format (json or plain), default
+                            plain.
+      --threshold=THRESHOLD
+                            query waiting threshold in sec, default is 5 minutes
+      --key=CKEY            specify private key file name
+      --cert=CERT           specify private certificate file name
+      --retry=RETRY         specify number of retries upon busy DAS server message
+      --das-headers         show DAS headers in JSON format
+      --base=BASE           specify power base for size_format, default is 10 (can
+                            be 2)
 
 The query parameter specifies an input `DAS query <das_queries>`, while the format parameter
 can be used to get results either in JSON or plain (suitable for cut and paste)
-data format. Here is an example of using das_client tool to retrieve details of
-specific dataset
+data format. Here is an example of using das_client tool to retrieve information about
+dataset pattern
 
 .. doctest::
 
-    python das_client.py --query="ip=137.138.141.145 | grep ip.City, ip.CountryCode" --format=plain
-    Geneva CH
+    python das_client.py --query="dataset=/ZMM*/*/*"
 
-And here is a sample of data output in json data format
+    Showing 1-10 out of 2 results, for more results use --idx/--limit options
+
+    /ZMM_14TeV/Summer12-DESIGN42_V17_SLHCTk-v1/GEN-SIM
+    /ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM
+
+And here is the same output using JSON data format, the auxilary DAS headers are
+also requested:
 
 .. doctest::
 
-    {'args': {'idx': '0',
-              'input': 'ip=137.138.141.145',
-              'limit': '10',
-              'pid': '53071'},
-     'data': [{'_id': '4d6a6e98f823c6cf49000005',
-               'cache_id': ['4d6a6e98f823c6cf49000004'],
-               'das': {'empty_record': 0,
-                       'expire': 1298820790.1766081,
-                       'primary_key': 'ip.address',
-                       'system': ['ip_service']},
-               'das_id': ['4d6a6e97f823c6cf49000001'],
-               'ip': {'City': 'Geneva',
-                      'CountryCode': 'CH',
-                      'CountryName': 'Switzerland',
-                      'Dstoffset': '0',
-                      'Gmtoffset': '3600',
-                      'Isdst': '0',
-                      'Latitude': '46.2',
-                      'Longitude': '6.1667',
-                      'RegionCode': '07',
-                      'RegionName': 'Geneve',
-                      'Status': 'OK',
-                      'TimezoneName': 'Europe/Zurich',
-                      'ZipPostalCode': '',
-                      'address': '137.138.141.145'}}],
-     'headers': {'Accept': 'application/json',
-                 'Accept-Encoding': 'identity',
-                 'Connection': 'close',
-                 'Host': 'localhost:8212',
-                 'Remote-Addr': '127.0.0.1',
-                 'User-Agent': 'Python-urllib/2.6'},
-     'hostname': '',
-     'ip': '127.0.0.1',
-     'method': 'GET',
-     'mongo_query': {'fields': ['ip'], 'spec': {'ip.address': '137.138.141.145'}},
-     'nresults': 1,
-     'path': '/cache',
-     'port': 50475,
+    python das_client.py --query="dataset=/ZMM*/*/*" --format=JSON --das-headers
+
+
+    {'apilist': ['das_core', 'fakeDatasetPattern'],
+     'ctime': 0.0015709400177,
+     'data': [{'_id': '523dcd7f0ec3dc12198a44c5',
+               'cache_id': ['523dcd7f0ec3dc12198a44c3'],
+               'das': {'api': ['fakeDatasetPattern'],
+                       'condition_keys': ['dataset.name'],
+                       'expire': 1379782315.848377,
+                       'instance': 'cms_dbs_prod_global',
+                       'primary_key': 'dataset.name',
+                       'record': 1,
+                       'services': [{'dbs': ['dbs']}],
+                       'system': ['dbs'],
+                       'ts': 1379782015.863179},
+               'das_id': ['523dcd7d0ec3dc12198a4498'],
+               'dataset': [{'created_by': '/DC=ch/DC=cern/OU=computers/CN=wmagent/vocms216.cern.ch',
+                            'creation_time': '2012-02-24 01:40:40',
+                            'datatype': 'mc',
+                            'modification_time': '2012-02-29 21:25:52',
+                            'modified_by': '/DC=org/DC=doegrids/OU=People/CN=Alan Malta Rodrigues 4861',
+                            'name': '/ZMM_14TeV/Summer12-DESIGN42_V17_SLHCTk-v1/GEN-SIM',
+                            'status': 'VALID',
+                            'tag': 'DESIGN42_V17::All'}],
+               'qhash': 'e5ced95dd57a5cfe1a3126a22a85a301'},
+              {'_id': '523dcd7f0ec3dc12198a44c6',
+               'cache_id': ['523dcd7f0ec3dc12198a44c4'],
+               'das': {'api': ['fakeDatasetPattern'],
+                       'condition_keys': ['dataset.name'],
+                       'expire': 1379782315.848377,
+                       'instance': 'cms_dbs_prod_global',
+                       'primary_key': 'dataset.name',
+                       'record': 1,
+                       'services': [{'dbs': ['dbs']}],
+                       'system': ['dbs'],
+                       'ts': 1379782015.863179},
+               'das_id': ['523dcd7d0ec3dc12198a4498'],
+               'dataset': [{'created_by': 'cmsprod@cmsprod01.hep.wisc.edu',
+                            'creation_time': '2011-12-29 17:47:25',
+                            'datatype': 'mc',
+                            'modification_time': '2012-01-05 17:40:17',
+                            'modified_by': '/DC=org/DC=doegrids/OU=People/CN=Ajit Kumar Mohapatra 867118',
+                            'name': '/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM',
+                            'status': 'VALID',
+                            'tag': 'DESIGN42_V11::All'}],
+               'qhash': 'e5ced95dd57a5cfe1a3126a22a85a301'}],
+     'incache': True,
+     'mongo_query': {'fields': ['dataset'],
+                     'instance': 'cms_dbs_prod_global',
+                     'spec': {'dataset.name': '/ZMM*/*/*'}},
+     'nresults': 2,
      'status': 'ok',
-     'timestamp': 1298820779.4300001}
+     'timestamp': 1379782017.68}
 
 Using DAS CLI tool in other applications
 ++++++++++++++++++++++++++++++++++++++++
@@ -93,11 +122,16 @@ done as following
    # idx: start index for pagination, e.g. 0
    # limit: end index for pagination, e.g. 10, put 0 to get all results
    # debug: True/False flag to get more debugging information
-   # das_headers: True/False flag to get DAS headers, default is False
+   # threshold: 300 sec, is a default threshold to wait for DAS response
+   # ckey=None, cert=None are parameters which you can used to pass around
+   # your GRID credentials
+   # das_headers: True/False flag to get DAS headers, default is True
 
    # please note that prior 1.9.X release the return type is str
    # while from 1.9.X and on the return type is JSON
-   data = get_data(host, query, idx, limit, debug, das_headers)
+
+   data = get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
+   cert=None, das_headers=True)
 
 Please note, that aforementioned code snippet requires to load `das_client.py`
 which is distributed within CMSSW. Due to CMSSW install policies the version of
@@ -221,8 +255,7 @@ summary information.
         idx     = 0
         limit   = 0
         debug   = False
-        dasheaders = True
-        data    = get_data(host, query, idx, limit, debug, dasheaders)
+        data    = get_data(host, query, idx, limit, debug)
         if  isinstance(data, basestring):
             dasjson = json.loads(data)
         else:

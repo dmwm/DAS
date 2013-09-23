@@ -107,14 +107,14 @@ def selector(key, target):
     """A coroutine that selector the recived dict for given key"""
     row, _id = (yield)
     if  dict_type(row):
-        if  row.has_key(key):
+        if  key in row:
             try:
                 target.send((row[key], _id))
             except StopIteration:
                 pass
     elif isinstance(row, list):
         for item in row:
-            if  dict_type(item) and item.has_key(key):
+            if  dict_type(item) and key in item:
                 try:
                     target.send((item[key], _id))
                 except:

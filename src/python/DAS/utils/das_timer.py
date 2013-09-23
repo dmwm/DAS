@@ -21,7 +21,7 @@ class _DASTimerSingleton(object):
     def record(self, tag):
         """Record time for given tag"""
         thash = genkey(tag)
-        if  self.timer.has_key(thash):
+        if  thash in self.timer:
             time0 = self.timer[thash]['time']
             self.timer[thash]['time'] = time.time() - time0
         else:

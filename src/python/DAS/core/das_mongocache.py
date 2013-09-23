@@ -24,6 +24,7 @@ import fnmatch
 import threading
 
 # DAS modules
+from DAS.core.das_ql import das_record_keys
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.core.das_query import DASQuery
 from DAS.utils.query_utils import decode_mongo_query
@@ -41,9 +42,8 @@ from DAS.utils.thread import start_new_thread
 from bson.objectid import ObjectId
 from bson.code import Code
 from pymongo import DESCENDING, ASCENDING
-from pymongo.errors import InvalidOperation
 from bson.errors import InvalidDocument
-from pymongo.errors import ConnectionFailure
+from pymongo.errors import ConnectionFailure, InvalidOperation
 
 def update_query_spec(spec, fdict):
     """
@@ -81,7 +81,7 @@ def adjust_id(query):
     used in MongoDB.
     """
     spec = query['spec']
-    if  spec.has_key('_id'):
+    if  '_id' in spec:
         val = spec['_id']
         if  isinstance(val, str):
             newval = ObjectId(val)
@@ -192,10 +192,7 @@ class DASMongocache(object):
             self.mrcol   = self.mdb[config['dasdb']['mrcollection']]
             self.merge   = self.mdb[config['dasdb']['mergecollection']]
             self.gfs     = db_gridfs(self.dburi)
-
             self.logdb   = DASLogdb(config)
-
-            self.das_internal_keys = ['das_id', 'das', 'cache_id', 'qhash']
 
             msg = "%s@%s" % (self.dburi, self.dbname)
             self.logger.info(msg)
@@ -276,7 +273,7 @@ class DASMongocache(object):
                 else:
                     cond = {'dataset': dataset}
                 for row in self.conn['dbs'][inst].find(cond):
-                    if  row.has_key('qhash'):
+                    if  'qhash' in row:
                         yield row['qhash']
 
     def check_datasets(self, dasquery):
@@ -298,7 +295,7 @@ class DASMongocache(object):
         spec = dasquery.mongo_query.get('spec', {})
         # look-up DBS datasets in DAS cache, if found consistent set
         # it will assign dasquery.hashes to appropriate values
-        if  spec.has_key('dataset.name'):
+        if  'dataset.name' in spec:
             self.check_datasets(dasquery)
             if  dasquery.hashes:
                 return True
@@ -331,8 +328,8 @@ class DASMongocache(object):
 
     def get_fields(self, dasquery):
         "Prepare fields to extract from MongoDB"
-        fields     = dasquery.mongo_query.get('fields', None)
-        if  fields == ['records']:
+        fields     = dasquery.mongo_query.get('fields', [])
+        if  'records' in fields:
             fields = None # look-up all records
         filters    = dasquery.filters
         cond       = {}
@@ -377,6 +374,25 @@ class DASMongocache(object):
             if  self.logging:
                 self.logdb.insert(collection, {'delete': col.find(spec).count()})
             col.remove(spec)
+
+    def check_services(self, dasquery):
+        """
+        Check if DAS cache contains DAS records with service response for
+        given query.
+        """
+        das_rec  = self.find(dasquery)
+        services = []
+        for srv in das_rec['das']['services']:
+            if  'das' in srv:
+                services = srv['das']
+                break
+        if  services:
+            cond = [{'das.system':r} for r in services]
+            spec = {'qhash': dasquery.qhash, '$or': cond}
+            nres = self.col.find(spec).count()
+            if  nres:
+                return True
+        return False
 
     def find(self, dasquery):
         """
@@ -425,6 +441,21 @@ class DASMongocache(object):
         " Return all the records matching a given das_id"
         return self.col.find({'das_id': das_id})
 
+    def is_error_in_records(self, dasquery, collection='cache'):
+        "Scan DAS cache for error records and return true or not"
+        if  collection == 'cache':
+            results = self.col.find({'qhash':dasquery.qhash})
+        else:
+            results = self.merge.find({'qhash':dasquery.qhash})
+        error  = None
+        reason = None
+        for row in results:
+            if 'error' in row:
+                error  = row.get('error')
+                reason = row.get('reason', '')
+                break
+        return error, reason
+
     def add_to_record(self, dasquery, info, system=None):
         "Add to existing DAS record provided info"
         if  system:
@@ -446,7 +477,7 @@ class DASMongocache(object):
             spec   = {'qhash': dasquery.qhash, 'das.system': system}
             new_expire = None
             for rec in self.col.find(spec):
-                if  rec.has_key('das') and rec['das'].has_key('expire'):
+                if  'das' in rec and 'expire' in rec['das']:
                     if  rec['das']['expire'] > expire:
                         new_expire = expire
                         ndict = {'das.expire':expire, 'das.status':status}
@@ -603,16 +634,19 @@ class DASMongocache(object):
         found = False
         for fltr in fields:
             row = dict(data)
+            if  fltr in row or 'error' in row:
+                found = True
+                break
             for key in fltr.split('.'):
                 if  isinstance(row, dict):
-                    if  row.has_key(key):
+                    if  key in row:
                         row = row[key]
                         found = True
                     else:
                         found = False
                 elif isinstance(row, list):
                     for row in list(row):
-                        if  row.has_key(key):
+                        if  key in row:
                             row = row[key]
                             found = True
                             break
@@ -660,15 +694,18 @@ class DASMongocache(object):
             for row in result:
                 yield row
         else: # pure MongoDB query
-            das_fields = ['das_id', 'cache_id', 'das', 'qhash']
             fields  = dasquery.mongo_query.get('fields', [])
+            if  fields == None:
+                fields = []
             spec    = dasquery.mongo_query.get('spec', {})
             if  dasquery.filters:
                 if  not fields:
                     fields = []
                 fields += dasquery.filters
                 pkeys   = [k.split('.')[0] for k in fields]
-                fields += das_fields
+            fields += das_record_keys()
+            if  'records' in dasquery.query:
+                fields = None # special case for DAS 'records' keyword
             skeys   = self.mongo_sort_keys(collection, dasquery)
             result  = self.get_records(collection, spec, fields, skeys, \
                             idx, limit, dasquery.unique_filter)
@@ -686,6 +723,8 @@ class DASMongocache(object):
 
         idx = int(idx)
         fields, filter_cond = self.get_fields(dasquery)
+        if  fields == None:
+            fields = []
         if  not fields:
             spec = dasquery.mongo_query.get('spec', {})
         elif dasquery.hashes:
@@ -696,8 +735,8 @@ class DASMongocache(object):
                     'das.record': record_codes('data_record')}
         if  filter_cond:
             spec.update(filter_cond)
-        if  fields: # be sure to extract das internal keys
-            fields += self.das_internal_keys
+        # be sure to extract das internal keys
+        fields += das_record_keys()
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
         skeys   = self.mongo_sort_keys(collection, dasquery)
@@ -952,7 +991,7 @@ class DASMongocache(object):
             if  isinstance(results, list) or isinstance(results, GeneratorType):
                 for item in results:
                     counter += 1
-                    if  item.has_key('das'):
+                    if  'das' in item:
                         expire = item.get('das').get('expire', expire)
                         dasheader['expire'] = expire
                     item['das'] = dict(expire=expire, primary_key=prim_key,
@@ -995,7 +1034,7 @@ class DASMongocache(object):
         self.col.remove(spec)
         self.col.remove({'qhash':dasquery.qhash})
 
-    def clean_cache(self):
+    def clean_cache(self, collection=None):
         """
         Clean expired docs in das.cache and das.merge.
         """
@@ -1004,11 +1043,13 @@ class DASMongocache(object):
         if  self.logging:
             idict = {'delete': self.merge.find(query).count()}
             self.logdb.insert('merge', idict)
-        self.merge.remove(query)
+        if  not collection or collection == 'merge':
+            self.merge.remove(query)
         if  self.logging:
             idict = {'delete': self.col.find(query).count()}
             self.logdb.insert('cache', idict)
-        self.col.remove(query)
+        if  not collection or collection == 'cache':
+            self.col.remove(query)
 
     def delete_cache(self):
         """
