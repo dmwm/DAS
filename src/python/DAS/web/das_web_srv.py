@@ -442,61 +442,6 @@ class DASWebService(DASWebManager):
                               is_ajax=True,
                               timeout=timeout)
 
-
-    def _get_fields_by_entity(self):
-        """
-        gets list of all the fields available (static)
-        """
-        fields_by_ent = getSchema().list_result_fields()
-
-        fields_by_entity = defaultdict(list)
-        for ent in fields_by_ent.keys():
-            for field in fields_by_ent[ent].values():
-                fn = field['field'].replace(ent + '.', '', 1)
-                descr = {'name': fn,
-                         'title': field['title'],
-                         # TODO: example usage!!!
-                }
-                fields_by_entity[ent].append(descr)
-                # TODO: add description!!!
-        for ent in fields_by_entity.values():
-            ent.sort(key=lambda x: x['name'])
-        return fields_by_entity
-
-    def _get_known_values(self):
-        """
-        list of values for fields in service results (static)
-        """
-        ent_values = {}
-        for field in input_values_tracker.get_fields_tracked():
-            values = input_values_tracker.get_tracker(field).find('*', limit=-1)
-            n = field.replace('.name', '')
-            ent_values[n] = [v for v in values]
-        return ent_values
-
-    def _get_daskeys_list(self):
-        # get list of all daskeys (static)
-        # TODO: move to some more generic place?
-        dasdict = {}
-        daskeys = []
-        for system, keys in self.dasmgr.mapping.daskeys().iteritems():
-            if system not in self.dasmgr.systems:
-                continue
-            tmpdict = {}
-            for key in keys:
-                tmpdict[key] = self.dasmgr.mapping.lookup_keys(system, key)
-                if key not in daskeys:
-                    daskeys.append(key)
-            dasdict[system] = dict(keys=dict(tmpdict),
-                                   apis=self.dasmgr.mapping.list_apis(system))
-
-        return daskeys
-
-    def _list_lookup_keys(self):
-        return getSchema().lookup_keys
-
-
-
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def api(self, name):
@@ -684,31 +629,9 @@ class DASWebService(DASWebManager):
         cards = self.templatepage('das_cards', base=self.base, show=cards, \
                 width=900, height=220, cards=help_cards(self.base))
         daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
-
-        # new autocompletion
-        daskeys_json = tojson(self._get_daskeys_list()) # still daskeys could be both inputs or outputs
-        known_values_json = tojson(self._get_known_values())
-        fields_by_entity_json = tojson(self._get_fields_by_entity())
-        lookup_keys_json = tojson(self._list_lookup_keys())
-
-        descriptions = defaultdict(str)
-
-        # DAS key descriptions
-        for item in self.daskeyslist:
-            daskey = item['das'].split('.')[0]
-            descr = self.templatepage('das_keys_desc_row', row=item)
-            descriptions[daskey] += descr
-
-        autocompletion_host = self.dasconfig.get('autocompl')
-
         page  = self.templatepage('das_searchform', input=uinput, \
                 init_dbses=list(self.dbs_instances), daskeys=daskeys, \
                 base=self.base, instance=instance, view=view, cards=cards,
-                known_values=known_values_json,
-                daskeys_json=daskeys_json,
-                fields_by_entity_json=fields_by_entity_json,
-                lookup_keys_json=lookup_keys_json,
-                daskeys_descr=tojson(descriptions),
                 autocompl_host=tojson(self._get_autocompl_host())
                 )
         return page

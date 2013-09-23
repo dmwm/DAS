@@ -4,7 +4,6 @@
 #set view = $quote($view)
 <!-- das_searchform.tmpl -->
 
-
 <form action="$base/request" method="get" name="das_search" id="das_search" class="das_form">
 <table>
 <tr>
@@ -21,8 +20,7 @@ results format:
 #for v in $views
 <option class="sand" value="$v">$v</option>
 #end for
-</select>
-    ,
+</select>,
 </td>
 <td class="left">
 &nbsp;
@@ -67,29 +65,12 @@ autocompletion
 </table>
 <div class="autocomplete">
 <input type="text" name="input" id="input" style="width:100%;" />
-
-<span id="ac_hint"></span>
-
-<script type="text/javascript">
-    // TODO: list of primary datasets is fairly long, but this is maybe ok
-    CodeMirror.hint_values = ${known_values};
-    CodeMirror.daskeys = ${daskeys_json};
-    CodeMirror.hint_daskeys = ${daskeys_json};
-    CodeMirror.hint_fields = ${fields_by_entity_json};
-    CodeMirror.hint_lookup_keys = ${lookup_keys_json};
-    CodeMirror.hint_daskey_descr = ${daskeys_descr};
-
-    // TODO: make it available from settings
-    CodeMirror.AUTOCOMPLETION_HOST = $autocompl_host;
-</script>
-
 <div id="ac_container"></div>
 </div>
 <span>
 <a href="javascript:FlipTag('das_keys_desc');"><b>Show DAS keys description</b></a>
 </span>
 </form>
-
 
 <script type="text/javascript">
 //<![CDATA[
@@ -102,7 +83,9 @@ function dbs_inst() {
 ac = null;
 ac_datasrc = null;
 
-function old_autocomplete_enable(){
+function set_autocomplete(enable) {
+	if (enable) {
+                YAHOO.util.Cookie.set("autocomplete", "true");
 		ac_datasrc = new YAHOO.util.XHRDataSource("$base/autocomplete");
 		ac_datasrc.responseType = YAHOO.util.XHRDataSource.TYPE_JSARRAY;
 		ac_datasrc.responseSchema = { fields: ["value", "css", "info"]};
@@ -119,9 +102,9 @@ function old_autocomplete_enable(){
 		ac.resultTypeList = false;
 		ac.formatResult = function(oResultData, sQuery, sResultMatch) {
 			var markup = ["<div style='position:relative;padding:0'>",
-						  "<div class='", oResultData.css,
+						  "<div class='", oResultData.css, 
 						  "'></div><div><span class='ac-suggest'>",
-						  sResultMatch, "</span><span class='ac-extra'>",
+						  sResultMatch, "</span><span class='ac-extra'>", 
 						  oResultData.info, "</span></div></div>"];
 			return (markup.join(" "));
 		};
@@ -130,32 +113,13 @@ function old_autocomplete_enable(){
                 ac.generateRequest = function(sQuery) {
                     return '?dbs_instance='+dbs_inst()+'&query='+sQuery;
                 };
-}
-
-function old_autocomplete_disable(){
+	} else {
+                YAHOO.util.Cookie.set("autocomplete", "false");
 		if (! (ac === undefined || ac === null)) {
 			ac.destroy();
 			ac = null;
 			ac_datasrc = null;
 		}
-}
-
-var fn_ac_enable, fn_ac_disable;
-fn_ac_enable = old_autocomplete_enable;
-fn_ac_disable = old_autocomplete_disable;
-
-//fn_ac_enable = CM_enableAutocompletion;
-//fn_ac_disable = CM_disableAutocompletion;
-
-function set_autocomplete(enable) {
-	if (enable) {
-        YAHOO.util.Cookie.set("autocomplete", "true");
-        fn_ac_enable();
-
-	} else {
-        YAHOO.util.Cookie.set("autocomplete", "false");
-        //TODO: do we need disabling on demand?
-        fn_ac_disable();
 	}
 };
 
