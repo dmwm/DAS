@@ -3,7 +3,7 @@
 
 
 """
-DAS modules
+DAS Keyword Search modules
 
 .. moduleauthor:: Vidmantas Zemleris <vidmantas.zemleris@gmail.com>
 """

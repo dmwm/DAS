@@ -73,21 +73,12 @@ class CMSQueryRewrite(object):
         q1_mongo['filters'] = {
             'grep': list(set(filters_first) | set([pk, ])),
         }
-        # TODO: add unique
         q1 = DASQuery(q1_mongo)
-        # TODO: we should actually leave any filters which are still available!!!
-        print 'first query', q1.convert2dasql(self.dasmgr), q1.mongo_query
         q2 = q.mongo_query.copy()
-        # das_conditions: pk returned by first query
         q2['spec'] = {pk: '<PK>'}
-
-        # TODO: add other operands (?dont remember what?), not only grep, min, max, unique...
-        # (these would have to be post-processed again....)
-        q2['filters'] = {u'grep': list(filters_nested)}
+        q2['filters'] = {'grep': list(filters_nested)}
         q2 = DASQuery(q2)
-        print 'Nested query:', q2.convert2dasql(self.dasmgr), q2.mongo_query
 
-        # TODO: use a better template for this?
         msg = '''
                 DAS (and it's underlying services) do not support this query directly yet,
                  however, you could use the instructions bellow to fetch the results yourself.
@@ -103,7 +94,7 @@ class CMSQueryRewrite(object):
                 ''' % {'q1_str': q1.convert2dasql(self.dasmgr),
                        'q2_str': q2.convert2dasql(self.dasmgr),
                        'pk': pk}
-        print msg
+        #print msg
         return msg
 
     def check_filter_existence(self, dasquery):
@@ -115,7 +106,7 @@ class CMSQueryRewrite(object):
         DEBUG = True
 
         if not dasquery.filters:
-            return False
+            return
 
         fields_available = set(self.get_fields_in_query_result(dasquery))
 
@@ -127,6 +118,10 @@ class CMSQueryRewrite(object):
 
         q_fields_available = q_fieldset & fields_available
         q_fields_missing = q_fieldset - fields_available
+
+        if not q_fields_missing:
+            # no rewrite needed
+            return
 
         if DEBUG:
             pprint(['DASQUERY:', dasquery.mongo_query])
