@@ -14,6 +14,8 @@ def getSchema(*args, **kwargs):
     """
     returns a concrete schema implementation, so keyword search can be
     more or less DAS independent
+
+    args: dascore
     """
     global __schema
     return __schema(*args, **kwargs)

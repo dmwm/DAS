@@ -233,7 +233,7 @@ class DASQuery(object):
         return self._query
 
 
-    def convert_query_to_das_ql(self, dascore):
+    def convert2dasql(self, dascore):
         "query property of the DAS query (human readble form)"
         if  not self._query_full:
             fields = self.mongo_query.get('fields', [])
@@ -252,8 +252,10 @@ class DASQuery(object):
                     entity_names[entity_long]  = das_key
             get_short_daskey = lambda ldaskey: entity_names.get(ldaskey, ldaskey)
 
-
-            query  = ' '.join(fields)
+            lookups = [f for f in fields
+                       if f not in ['das_id', 'das', 'cache_id', 'qhash']]
+            lookup = ','.join(lookups)
+            query  = lookup #' '.join(fields)
             query += ' ' # space between fields and spec values
             query += ' '.join(['%s=%s' % (get_short_daskey(k), v) for k, v \
                                in self.mongo_query.get('spec', {}).iteritems()])

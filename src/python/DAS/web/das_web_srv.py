@@ -71,8 +71,9 @@ from DAS.keywordsearch.metadata import input_values_tracker
 # TODO: move this to an appropriate place
 from DAS.web.utils import HtmlString
 
-# TODO: move this to an appropriate place
-from DAS.web.utils import HtmlString
+# nested query generation by PK
+from DAS.web.cms_query_rewrite import CMSQueryRewrite
+
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next', 'kwquery']
@@ -207,6 +208,7 @@ class DASWebService(DASWebManager):
             self.reqmgr     = RequestManager(self.dburi, lifetime=self.lifetime)
             self.dasmgr     = DASCore(engine=self.engine)
             self.repmgr     = CMSRepresentation(self.dasconfig, self.dasmgr)
+            self.q_rewriter = CMSQueryRewrite(self.repmgr)
             self.daskeys    = self.dasmgr.das_keys()
             self.gfs        = db_gridfs(self.dburi)
             self.daskeys.sort()
@@ -236,6 +238,7 @@ class DASWebService(DASWebManager):
             print_exc(exc)
             self.dasmgr  = None
             self.reqmgr  = None
+            self.q_rewriter = None
             self.dbs_url = None
             self.dbs_global = None
             self.dbs_instances = []
@@ -1137,9 +1140,9 @@ class DASWebService(DASWebManager):
         elif status == 'ok' or status == 'fail':
             self.reqmgr.remove(pid)
             print 'status=', status
-            generated_query_msg = self.repmgr.check_filter_existence(dasquery)
-            if generated_query_msg:
-                content =  self.templatepage('das_error', msg=generated_query_msg)
+            nested_query_msg = self.q_rewriter.check_filter_existence(dasquery)
+            if nested_query_msg:
+                content =  self.templatepage('das_error', msg=nested_query_msg)
                 return self.page(form + content, ctime=time.time()-time0)
 
             kwargs['dasquery'] = dasquery
