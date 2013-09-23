@@ -8,15 +8,3 @@ CMS experiment (http://cms.cern.ch)
 
 For more information please consult doc section.
 
-Installation
-------------
-
-*x64 machine with Scientific Linux CERN 5*
-
-For easy instalation on Scientific Linux CERN 5 x64 machines (e.g. for Virtual machine service) see deployment.sh  (currently needs to be run manually with logout in middle)
-
-
-*Other Linux (e.g. Debian, Ubuntu)*
-
-See deploy_debian.sh
-
