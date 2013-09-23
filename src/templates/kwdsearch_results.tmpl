@@ -34,17 +34,11 @@
 
 #if not $is_ajax
     <link rel="stylesheet" href="/das/css/?f=kwsearch.css" />
-    <script src="/das/js/?f=jquery.min.js" type="text/javascript"></script>
-    <script type="text/javascript">jQuery.noConflict()</script>
     <script src="/das/js/?f=kwdsearch.js" type="text/javascript"></script>
 #end if
 
 
 <div id="kws-results-container" style="margin-bottom: 50px">
-
-
-
-
     <div id="kws-entry-points">
 
         <h4>Color-coding:</h4>
@@ -66,17 +60,12 @@
 
 
     <div id="kws-results-listing"> <!-- main div -->
-
-
-
-
         $msg
 
         <!-- list proposed queries along with their scores -->
         #for $item in $proposed_queries:
             #set query_escaped = $quote($item.result)
             #set nl_query_escaped = $quote($item.query_in_words)
-
 
             <div class="kws-result result-with-entity-${item.entity}">
 
@@ -88,14 +77,16 @@
                </div>
 
                <a class="kws-link" href="$item.link" target="_blank"
-                                    title="Explanation: &lt;br/&gt; $nl_query_escaped">$item.query_html</a>
-                <a class="debug" title="$item.trace">debug</a>
+                  data-ot="Explanation: &lt;br/&gt; $nl_query_escaped"
+                  data-ot-style="drop">$item.query_html</a>
+               #if 0:
+                <a class="debug" data-ot="$item.trace">debug</a>
+               #end if
             </div>
 
         #end for
 
     </div> <!-- end of main div -->
-
 </div>
 
 
