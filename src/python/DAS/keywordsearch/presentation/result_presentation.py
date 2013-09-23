@@ -105,7 +105,7 @@ def result_to_DASQL(result, frmt='text', shorten_html = True,
         if frmt == 'html':
 
                     # shorten value if it's longer than
-                    if isinstance(params, dict) and params.has_key('value') and shorten_html:
+                    if isinstance(params, dict) and 'value' in params and shorten_html:
                         val = params['value']
                         if len(val) > max_value_len:
                             params['value'] = shorten_value(val)

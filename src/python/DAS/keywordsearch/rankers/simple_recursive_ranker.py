@@ -513,7 +513,7 @@ def generate_value_mappings(result_type, fields_included, schema_ws,
             keyword_adjusted = keyword
             if isinstance(possible_mapping, dict):
                 #print possible_mapping
-                if possible_mapping.has_key('adjusted_keyword'):
+                if 'adjusted_keyword' in possible_mapping:
                     keyword_adjusted = possible_mapping['adjusted_keyword']
                 elif '=' in keyword:
                     keyword_adjusted = keyword.split('=')[-1]

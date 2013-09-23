@@ -456,7 +456,7 @@ def init_result_fields_list(dascore, _DEBUG=False):
         pprint.pprint([item for item in dascore.keylearning.list_members()])
         print 'result attributes (all):'
 
-    fields_by_entity = {}
+    fields_by_entity = defaultdict(set)
     for r in dascore.keylearning.list_members():
         result_type = dascore.mapping.primary_key(r['system'], r['urn'])
 
@@ -480,9 +480,6 @@ def init_result_fields_list(dascore, _DEBUG=False):
         if _DEBUG:
             print result_type, '(' + ', '.join(r.get('keys', [])) + ')', ':', \
                 ', '.join(fields)
-
-        if not fields_by_entity.has_key(result_type):
-            fields_by_entity[result_type] = set()
 
         fields_by_entity[result_type] |= set(fields)
 
@@ -509,10 +506,8 @@ def init_result_fields_list(dascore, _DEBUG=False):
         pprint.pprint(fields_by_entity)
 
     # build the result (fields, their titles)
-    results_by_entity = {}
+    results_by_entity = defaultdict(dict)
     for entity, fields in fields_by_entity.iteritems():
-        if not results_by_entity.has_key(entity):
-            results_by_entity[entity] = {}
         for field in fields:
             results_by_entity[entity][field] = {
                 'field': field,
