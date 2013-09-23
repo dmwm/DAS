@@ -13,7 +13,8 @@ stemLength: 12,
 stemBase: 16,
 borderRadius: 5,
 borderColor: "#c3e0e6",
-background: [ [ 0, "#f1f7f0" ], [ 1, "#d3f0f6" ] ]
+background: [ [ 0, "#f1f7f0" ], [ 1, "#d3f0f6" ] ],
+target: true // improves stability in old IE
 };
 
 var initialize_kws_results = function() {
