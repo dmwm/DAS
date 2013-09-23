@@ -227,6 +227,10 @@ def enable_cross_origin(func):
     """
 
     def enable_cross_orign_requests():
+        """
+        on each request, add additional headers that will allow browser
+        to use the result (loaded from other origin/domain)
+        """
         # TODO: check if the current server is back-end based?
         # TODO: set exact names of main das server(s)
         valid_origins = ['http://localhost:8212',

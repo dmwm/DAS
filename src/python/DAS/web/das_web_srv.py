@@ -15,16 +15,11 @@ import time
 import cherrypy
 import threading
 
-
 from datetime import date
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
 from pymongo.errors import AutoReconnect, ConnectionFailure
-from collections import defaultdict
-
-import urllib
-import copy
 
 # DAS modules
 import DAS
@@ -61,15 +56,9 @@ from DAS.core.das_exceptions import WildcardMultipleMatchesException
 import DAS.utils.jsonwrapper as json
 
 from DAS.core.das_query import WildcardMatchingException
-import urllib
 
 # keyword search
 from DAS.web.das_kwd_search import KeywordSearchHandler
-from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
-from DAS.keywordsearch.metadata import input_values_tracker
-
-# TODO: move this to an appropriate place
-from DAS.web.utils import HtmlString
 
 # nested query generation by PK
 from DAS.web.cms_query_rewrite import CMSQueryRewrite
@@ -402,20 +391,6 @@ class DASWebService(DASWebManager):
                         daskeys=list(daskeys), mapreduce=mapreduce)
         return self.page(page, response_div=False)
 
-
-    def kws_async_init(self, kwargs):
-        # TODO: decide if caching OK for KWS results?
-        set_no_cache_flags()
-
-        uinput = kwargs.get('input', '').strip()
-        time0 = time.time()
-        self.adjust_input(kwargs)
-        view = kwargs.get('view', 'list')
-        inst = kwargs.get('instance', self.dbs_global)
-        uinput = kwargs.get('input', '')
-        self.logdb(uinput)
-        return inst, uinput
-
     @expose
     @enable_cross_origin
     @checkargs(DAS_WEB_INPUTS)
@@ -423,7 +398,10 @@ class DASWebService(DASWebManager):
         """
         Returns KeywordSearch results for AJAX call (for now as html snippet)
         """
-        inst, uinput = self.kws_async_init(kwargs)
+        set_no_cache_flags()
+
+        uinput = kwargs.get('input', '').strip()
+        inst = kwargs.get('instance', self.dbs_global)
 
         if self.busy():
             return self.busy_page(uinput)
@@ -501,10 +479,16 @@ class DASWebService(DASWebManager):
 
 
     def _get_kws_host(self):
+        """
+        gets the host for keyword search from config. default is same server
+        """
         conf = self.dasconfig.get('load_balance', {})
         return conf.get('kws_host', '')
 
     def _get_autocompl_host(self):
+        """
+        gets the host for autocompletion from config. default is same server
+        """
         conf = self.dasconfig.get('load_balance', {})
         return conf.get('autocompletion_host', '')
 
@@ -1076,7 +1060,7 @@ class DASWebService(DASWebManager):
             page = self.get_page_content(kwargs, complete_msg=False)
             ctime = (time.time()-time0)
             if  view == 'list' or view == 'table':
-                    return self.page(form + page, ctime=ctime)
+                return self.page(form + page, ctime=ctime)
 
             return page
         if  self.taskmgr.is_alive(pid):

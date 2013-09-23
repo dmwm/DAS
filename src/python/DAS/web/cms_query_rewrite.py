@@ -1,47 +1,42 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=C0301,C0103
 
 from pprint import pprint
-from copy import deepcopy
 
 from DAS.core.das_query import DASQuery
-
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
-from DAS.keywordsearch.tokenizer import get_keyword_without_operator as get_filter_name
-#get_filter_name = lambda x: x
-
+from DAS.keywordsearch.tokenizer import get_keyword_without_operator as \
+    get_filter_name
 
 class CMSQueryRewrite(object):
+    """
+    Handles the simple case of query rewriting which can be accomplished
+    through one nested query which retrieves entity by it's PK.
+    """
     def __init__(self, cms_rep):
-        #self.dasmgr = dasmgr
         self.cms_rep = cms_rep
+        self.dasmgr = self.cms_rep.dasmgr
         # schema adapter from kws
-        # TODO: get_field_list_for_entity_by_pk could be moved to DAS Core or somewhere...
+        # TODO: get_field_list_for_entity_by_pk could be moved to DAS Core or...
         self.schema_adapter = getSchema(dascore=self.cms_rep.dasmgr)
 
-
-    @property
-    def dasmgr(self):
-        return self.cms_rep.dasmgr
 
     def _get_one_row_with_all_fields(self, dasquery):
         """
         returns a query result ignoring the grep filter(s)
         """
-        #from copy import deepcopy
-        #mongo_query = deepcopy(dasquery.mongo_query)
         mongo_query = dasquery.mongo_query.copy()
         mongo_query['filters'] = {}
         dasquery = DASQuery(mongo_query)
 
         data = list(self.dasmgr.get_from_cache(dasquery, idx=0, limit=1))
-        # print 'get_one_row_all_fields: data=', data
         if len(data):
             return data[0]
 
-    def get_fields_in_query_result(self, dasquery, remove_grep=True):
+    def get_fields_in_query_result(self, dasquery):
         '''
-        returns a list of available fields in the results of dasquery (must be in cache)
+        returns a list of fields in the results of dasquery (must be in cache)
         '''
 
         # if we have filter/aggregator get one row from the given query
@@ -80,20 +75,21 @@ class CMSQueryRewrite(object):
         q2 = DASQuery(q2)
 
         msg = '''
-                DAS (and it's underlying services) do not support this query directly yet,
-                 however, you could use the instructions bellow to fetch the results yourself.
-
-                you need to:
+                DAS (or underlying services) do not support this query yet.
+                Still you can run multiple queries and combine their results:
 
                     query: %(q1_str)s
                     for each result:
                         query: %(q2_str)s   (replacing <PK> with value of %(pk)s returned)
 
-                    (the combination (join) of results from the two queries will give you the results expected,
-                     except the aggregations which you will have to combine yourself).
+                Combination of results from the two queries will give you the results expected,
+                     except for aggregations which have to be implemented manually.
+                See documentation on <a href="%(cli)s">Command Line Interface</a>
                 ''' % {'q1_str': q1.convert2dasql(self.dasmgr),
                        'q2_str': q2.convert2dasql(self.dasmgr),
-                       'pk': pk}
+                       'pk': pk,
+                       'cli': 'https://cms-http-group.web.cern.ch/cms-http-group/apidoc/das/current/das_client.html'
+                }
         #print msg
         return msg
 
@@ -115,8 +111,6 @@ class CMSQueryRewrite(object):
 
         q_filters = dasquery.filters
         q_fieldset = set(get_filter_name(field) for field in q_filters)
-
-        q_fields_available = q_fieldset & fields_available
         q_fields_missing = q_fieldset - fields_available
 
         if not q_fields_missing:
@@ -126,8 +120,8 @@ class CMSQueryRewrite(object):
         if DEBUG:
             pprint(['DASQUERY:', dasquery.mongo_query])
             pprint(['RESULT ENTITY:', entity])
-            pprint(['TODO: FILTERS FOR DAS QUERY:', dasquery.filters])
-            pprint(['TODO: PARAMS FOR DAS QUERY:', dasquery.params()])
+            pprint(['FILTERS FOR DAS QUERY:', dasquery.filters])
+            pprint(['PARAMS FOR DAS QUERY:', dasquery.params()])
             pprint(['Feilds available in Current Query:', fields_available])
 
         # TODO: here I may need to privide a particular PK
