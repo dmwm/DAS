@@ -4,6 +4,7 @@
 """
 DAS web interface, based on WMCore/WebTools
 """
+#from DAS.keywordsearch.metadata import das_schema_adapter
 
 __author__ = "Valentin Kuznetsov"
 
@@ -41,6 +42,8 @@ from DAS.web.utils import checkargs, das_json, das_json_full, gen_error_msg
 from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson
 from DAS.web.tools import jsonstreamer
+from DAS.web.tools import enable_cross_origin
+from DAS.web.tools import tojson
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 from DAS.web.autocomplete import autocomplete_helper
@@ -52,8 +55,17 @@ from DAS.utils.global_scope import SERVICES
 from DAS.core.das_exceptions import WildcardMultipleMatchesException
 import DAS.utils.jsonwrapper as json
 
+from DAS.core.das_query import WildcardMatchingException
+
+# keyword search
+from DAS.web.das_kwd_search import KeywordSearchHandler
+
+# nested query generation by PK
+from DAS.web.cms_query_rewrite import CMSQueryRewrite
+
+
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
-            'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
+            'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next', 'kwquery']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
 # disable default urllib2 proxy
@@ -126,6 +138,8 @@ class DASWebService(DASWebManager):
         self.colors      = {}   # defined at run-time via self.init()
         self.dbs_url     = None # defined at run-time via self.init()
         self.dbs_global  = None # defined at run-time via self.init()
+        self.kws         = None # defined at run-time via self.init()
+        self.q_rewriter  = None # defined at run-time via self.init()
         self.dataset_daemon = config.get('dbs_daemon', False)
         self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
         self.daskeyslist = [] # list of DAS keys
@@ -205,6 +219,13 @@ class DASWebService(DASWebManager):
                 keylist = [r for r in self.dasmapping.das_presentation_map()]
                 keylist.sort(key=lambda r: r['das'])
                 self.daskeyslist = keylist
+            # init query rewriter, if needed
+            if self.dasconfig['query_rewrite']['pk_rewrite_on']:
+                self.q_rewriter = CMSQueryRewrite(self.repmgr)
+            # init the Keyword Search
+            if self.is_kws_service_enabled():
+                self.kws = KeywordSearchHandler(self.dasmgr)
+
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             mythr  = threading.current_thread()
@@ -219,7 +240,10 @@ class DASWebService(DASWebManager):
             self.dbs_instances = []
             self.daskeys = []
             self.colors  = {}
+            self.q_rewriter = None
+            self.kws = None
             return
+
         # Start Onhold_request daemon
         if  self.dasconfig['web_server'].get('onhold_daemon', False):
             self.process_requests_onhold()
@@ -267,7 +291,7 @@ class DASWebService(DASWebManager):
         """
         Define footer for all DAS web pages
         """
-        return self.templatepage('das_bottom', div=response_div,
+        return self.templatepage('das_bottom', div=response_div, base=self.base,
                 version=DAS.version)
 
     def page(self, content, ctime=None, response_div=True):
@@ -276,7 +300,7 @@ class DASWebService(DASWebManager):
         """
         page  = self.top()
         page += content
-        page += self.templatepage('das_bottom', ctime=ctime, 
+        page += self.templatepage('das_bottom', ctime=ctime,  base=self.base,
                                   version=DAS.version, div=response_div)
         return page
 
@@ -373,6 +397,36 @@ class DASWebService(DASWebManager):
         return self.page(page, response_div=False)
 
     @expose
+    @enable_cross_origin
+    @checkargs(DAS_WEB_INPUTS)
+    def kws_async(self, **kwargs):
+        """
+        Returns KeywordSearch results for AJAX call (for now as html snippet)
+        """
+        set_no_cache_flags()
+
+        uinput = kwargs.get('input', '').strip()
+        inst = kwargs.get('instance', self.dbs_global)
+
+        if self.busy():
+            return self.busy_page(uinput)
+
+        if not uinput:
+            kwargs['reason'] = 'No input found'
+            return self.redirect(**kwargs)
+
+        if not self.kws:
+            return "keyword search is currently disabled..."
+
+        timeout = self.dasconfig['keyword_search']['timeout']
+
+        return self.kws.handle_search(self,
+                              query=uinput, inst=inst,
+                              dbsmngr = self._get_dbsmgr(inst),
+                              is_ajax=True,
+                              timeout=timeout)
+
+    @expose
     @checkargs(DAS_WEB_INPUTS)
     def api(self, name):
         """
@@ -396,7 +450,7 @@ class DASWebService(DASWebManager):
         Adjust user input wrt common DAS keyword patterns, e.g.
         Zee -> dataset=*Zee*, T1_US -> site=T1_US*. This method
         only works if self.adjust is set in configuration of DAS server.
-        This method can be customization for concrete DAS applications via
+        This method can be customized for concrete DAS applications via
         external free_text_parser function (part of DAS.web.utils module)
         """
         if  not self.adjust:
@@ -430,20 +484,58 @@ class DASWebService(DASWebManager):
         return mgr
 
 
+    def _get_kws_host(self):
+        """
+        gets the host for keyword search from config. default is same server
+        """
+        return self.dasconfig['load_balance']['kws_host']
+
+    def _get_autocompl_host(self):
+        """
+        gets the host for autocompletion from config. default is same server
+        """
+        conf = self.dasconfig.get('load_balance', {})
+        return conf.get('autocompletion_host', '')
+
+    def is_kws_enabled(self):
+        """
+        is keyword search client (ajax request) enabled
+        """
+        return self.dasconfig['keyword_search']['kws_on']
+
+    def is_kws_service_enabled(self):
+        """
+        is keyword search service (response to ajax call) enabled
+        """
+        return self.dasconfig['keyword_search']['kws_service_on']
+
     def generate_dasquery(self, uinput, inst, html_error=True):
         """
         Check provided input as valid DAS input query.
         Returns status and content (either error message or valid DASQuery)
+        :param uinput: user's input
+        :param inst: DBS instance
+        :param html_error: whether errors shall be output in html
         """
-        def helper(msg, html_error=None):
+        def helper(msg, html_error=None, show_kws=False):
             """Helper function which provide error template"""
             if  not html_error:
                 return msg
             guide = self.templatepage('dbsql_vs_dasql', 
                         operators=', '.join(das_operators()))
+
+            # render keyword search loader
+            kws = ''
+            if show_kws:
+                kws = self.templatepage('kwdsearch_via_ajax',
+                                         uinput_json=tojson(uinput),
+                                         inst_json=tojson(inst),
+                                         kws_host=tojson(self._get_kws_host()))
+
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
-                        guide=guide)
+                        guide=guide, kws_enabled=show_kws, kws=kws)
             return page
+
         if  not uinput:
             return 1, helper('No input query')
         # Generate DASQuery object, if it fails we catch the exception and
@@ -471,9 +563,12 @@ class DASWebService(DASWebManager):
                     page = self.templatepage('das_wildcard_err_txt',
                                 base=self.base, error=str(err), suggest=suggest)
 
-            else:
-                das_parser_error(uinput, str(type(err)))
-                page = helper(str(err), html_error)
+            # whether to show Keyword Search now
+            show_kws = self.is_kws_enabled() and \
+                       not isinstance(err, WildcardMatchingException)
+
+            das_parser_error(uinput, str(type(err)))
+            page = helper(str(err), html_error, show_kws=show_kws)
             return 1, page
 
         fields = dasquery.mongo_query.get('fields', [])
@@ -521,10 +616,13 @@ class DASWebService(DASWebManager):
         uinput = getarg(kwargs, 'input', '') 
         return self.page(self.form(uinput=uinput, cards=True))
 
+
     def form(self, uinput='', instance=None, view='list', cards=False):
         """
         provide input DAS search form
         """
+        # TODO: rename into search_form()? (template is also called like this
+
         if  "'" in uinput: # e.g. file.creation_date>'20120101 12:01:01'
             uinput = uinput.replace("'", '"')
         if  not instance:
@@ -534,7 +632,9 @@ class DASWebService(DASWebManager):
         daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
         page  = self.templatepage('das_searchform', input=uinput, \
                 init_dbses=list(self.dbs_instances), daskeys=daskeys, \
-                base=self.base, instance=instance, view=view, cards=cards)
+                base=self.base, instance=instance, view=view, cards=cards,
+                autocompl_host=tojson(self._get_autocompl_host())
+                )
         return page
 
     @expose
@@ -567,7 +667,7 @@ class DASWebService(DASWebManager):
             code = web_code('Exception')
             raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
-        return json.dumps(data)
+        return tojson(data)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -783,6 +883,8 @@ class DASWebService(DASWebManager):
                 % (self.reqmgr.size(), self.taskmgr.nworkds(), self.queue_limit)
             head = dict(timestamp=time.time())
             head.update({'status': 'busy', 'reason': reason, 'ctime':0})
+            #TODO: data was undefined
+            data = []
             return self.datastream(dict(head=head, data=data))
 
         uinput = kwargs.get('input', '').strip()
@@ -929,14 +1031,14 @@ class DASWebService(DASWebManager):
         # do not allow caching
         set_no_cache_flags()
 
-        # if busy return right away
-        if  self.busy():
-            return self.busy_page(uinput)
-
         uinput  = kwargs.get('input', '').strip()
         if  not uinput:
             kwargs['reason'] = 'No input found'
             return self.redirect(**kwargs)
+
+        # if busy return right away
+        if  self.busy():
+            return self.busy_page(uinput)
 
         time0   = time.time()
         self.adjust_input(kwargs)
@@ -965,11 +1067,19 @@ class DASWebService(DASWebManager):
             self.reqmgr.add(pid, kwargs)
         elif status == 'ok' or status == 'fail':
             self.reqmgr.remove(pid)
+
+            # check if query can be rewritten via nested PK query
+            rew_msg = self.q_rewriter and self.q_rewriter.check_fields(dasquery)
+            if rew_msg:
+                content =  self.templatepage('das_error', msg=rew_msg)
+                return self.page(form + content, ctime=time.time()-time0)
+
             kwargs['dasquery'] = dasquery
             page = self.get_page_content(kwargs, complete_msg=False)
             ctime = (time.time()-time0)
             if  view == 'list' or view == 'table':
                 return self.page(form + page, ctime=ctime)
+
             return page
         if  self.taskmgr.is_alive(pid):
             page = self.templatepage('das_check_pid', method='check_pid',
@@ -1037,6 +1147,7 @@ class DASWebService(DASWebManager):
         return self.repmgr.jsonview(head, data)
 
     @exposedasjson
+    @enable_cross_origin
     @checkargs(['query', 'dbs_instance'])
     def autocomplete(self, **kwargs):
         """

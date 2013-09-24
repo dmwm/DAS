@@ -28,6 +28,11 @@ from DAS.utils.utils import get_key_cert, genkey
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 
+
+# Shall we keep existing Datasets on server restart (very useful for debuging)
+KEEP_EXISTING_RECORDS_ON_RESTART = 1
+SKIP_UPDATES = 0
+
 def dbs_instance(dbsurl):
     """Parse dbs instance from provided DBS url"""
     if  dbsurl[-1] == '/':
@@ -74,6 +79,9 @@ class DBSDaemon(object):
             self.col = conn[self.dbname][self.dbcoll]
             indexes = [('dataset', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
+
+            if not KEEP_EXISTING_RECORDS_ON_RESTART:
+                self.col.remove()
         except Exception as _exp:
             self.col = None
         if  not is_db_alive(self.dburi):
@@ -85,11 +93,15 @@ class DBSDaemon(object):
         of datasets we add dataset:__POPULATED__ record to be used as a flag
         that cache was populated in this cache.
         """
+        if SKIP_UPDATES:
+            return None
+
         if  self.col:
             time0 = round(time.time())
             udict = {'$set':{'ts':time0}}
             cdict = {'dataset':'__POPULATED__'}
             gen = self.datasets()
+            #TODO: make sure the generator is not empty (service or connection failure), as this may cause the dataset cache to be dumped out
             if  not self.col.count():
                 try: # perform bulk insert operation
                     while True:
@@ -108,6 +120,12 @@ class DBSDaemon(object):
                 for row in gen:
                     spec = dict(dataset=row['dataset'])
                     self.col.update(spec, udict, upsert=True)
+
+                # if no rows were returned, do not delete old cache
+                else:
+                    msg = 'Service %s returned no results' % self.dbs_url
+                    raise Exception(msg)
+
             # remove records with old ts
             self.col.remove({'ts':{'$lt':time0-self.expire}})
             if  self.col.find_one(cdict):

@@ -82,6 +82,7 @@ class DASQuery(object):
         self._service_apis_map = {}
         self._str           = ''
         self._query         = ''
+        self._query_full    = ''
         self._storage_query = {}
         self._mongo_query   = {}
         self._qhash         = None
@@ -230,6 +231,45 @@ class DASQuery(object):
                         in self.mongo_query.get('spec', {}).iteritems()])
             self._query = query.strip()
         return self._query
+
+
+    def convert2dasql(self, dascore):
+        "query property of the DAS query (human readble form)"
+        if  not self._query_full:
+            fields = self.mongo_query.get('fields', [])
+            if  not fields:
+                fields = [] # will use empty list for conversion
+
+            # we need to convert into short das keys
+            #  (e.g. run.run_number->run)
+
+            # init field mappings
+            entity_names = {}
+            for das_key in dascore.das_keys(): # the short daskeys
+                long_daskeys = dascore.mapping.mapkeys(das_key)
+
+                for entity_long in long_daskeys:
+                    entity_names[entity_long]  = das_key
+            get_short_daskey = lambda ldaskey: entity_names.get(ldaskey, ldaskey)
+
+            special_fields = ['das_id', 'das', 'cache_id', 'qhash', 'error','reason']
+            lookups = filter(lambda f: f not in special_fields, fields)
+            lookup = ','.join(lookups)
+            query  = lookup #' '.join(fields)
+            query += ' ' # space between fields and spec values
+            query += ' '.join(['%s=%s' % (get_short_daskey(k), v) for k, v \
+                               in self.mongo_query.get('spec', {}).iteritems()])
+
+            # add post_filters
+            if self.filters:
+                query += ' | grep ' +', '.join(self.filters)
+
+            # TODO: add aggregators (including unique)
+
+            self._query_full = query.strip()
+        return self._query_full
+
+
 
     @property
     def storage_query(self):

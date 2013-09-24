@@ -145,6 +145,7 @@ div#banner
     border-bottom: 1px solid #263750;
     margin-left:-20px;
     margin-right:-20px;
+    margin-bottom: 10px;
     padding-left: 20px;
     padding-right: 20px;
 } 
@@ -257,7 +258,8 @@ div#banner h3
 }
 .das_form {
         padding:1em;
-        border:1px solid #ccc;
+        border:1px solid #ddd;
+        border-radius: 4px;
         background:#f8f8f8;
 }
 .label {
@@ -492,4 +494,27 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
     -webkit-border-radius:20px;
     -khtml-border-radius:20px;
     z-index:101;
+}
+
+/* When query is ambigous (keyword search will be shown) */
+.das-ambigous {
+  border: 1px solid #ddd; padding: 5px;  border-radius: 4px;
+  background-color: #fee;
+  margin: 20px 0;
+
+}
+.das-ambigous pre {
+    font-size: 10px;
+    width: auto;
+    display: inline-block;
+    margin:0; padding: 0;
+}
+.das-ambigous h4 {
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.kws-timeout {
+    color: #fff; background-color: #992222; padding: 5px; margin-top: 20px;
 }
