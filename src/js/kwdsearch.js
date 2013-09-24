@@ -22,7 +22,7 @@ var initialize_kws_results = function() {
     Opentip.findElements();
 
     // by default select the "any"
-    $$('.rt-'+RTYPE_ANY)[0].addClassName('rtype-selected');
+    $$('.rt-'+RTYPE_ANY).invoke('addClassName', 'rtype-selected');
 };
 
 
