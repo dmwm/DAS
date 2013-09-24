@@ -278,8 +278,8 @@ def main():
                                # is distributed as .c source
                                # .pyx->.c to be compiled separately
                                #  so cython is not required for installation
-                               Extension('DAS.keywordsearch.rankers.fast_recursive_ranker',
-                                   sources=['src/python/DAS/keywordsearch/rankers/fast_recursive_ranker.c'])],
+                               Extension('DAS.extensions.fast_recursive_ranker',
+                                   sources=['src/python/DAS/extensions/fast_recursive_ranker.c'])],
         classifiers          = classifiers,
         cmdclass             = {'build_ext': BuildExtCommand,
                                 'test': TestCommand,
