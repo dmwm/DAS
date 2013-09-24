@@ -93,11 +93,9 @@ class CMSQueryRewrite(object):
         #print msg
         return msg
 
-    def check_filter_existence(self, dasquery):
+    def check_fields(self, dasquery):
         '''
         run dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM | grep  run.bfield
-
-        >>> False
         '''
         DEBUG = True
 

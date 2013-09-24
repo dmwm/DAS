@@ -138,6 +138,8 @@ class DASWebService(DASWebManager):
         self.colors      = {}   # defined at run-time via self.init()
         self.dbs_url     = None # defined at run-time via self.init()
         self.dbs_global  = None # defined at run-time via self.init()
+        self.kws         = None # defined at run-time via self.init()
+        self.q_rewriter  = None # defined at run-time via self.init()
         self.dataset_daemon = config.get('dbs_daemon', False)
         self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
         self.daskeyslist = [] # list of DAS keys
@@ -197,7 +199,6 @@ class DASWebService(DASWebManager):
             self.reqmgr     = RequestManager(self.dburi, lifetime=self.lifetime)
             self.dasmgr     = DASCore(engine=self.engine)
             self.repmgr     = CMSRepresentation(self.dasconfig, self.dasmgr)
-            self.q_rewriter = CMSQueryRewrite(self.repmgr)
             self.daskeys    = self.dasmgr.das_keys()
             self.gfs        = db_gridfs(self.dburi)
             self.daskeys.sort()
@@ -218,6 +219,13 @@ class DASWebService(DASWebManager):
                 keylist = [r for r in self.dasmapping.das_presentation_map()]
                 keylist.sort(key=lambda r: r['das'])
                 self.daskeyslist = keylist
+            # init query rewriter, if needed
+            if self.dasconfig['query_rewrite']['pk_rewrite_on']:
+                self.q_rewriter = CMSQueryRewrite(self.repmgr)
+            # init the Keyword Search
+            if self.is_kws_service_enabled():
+                self.kws = KeywordSearchHandler(self.dasmgr)
+
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             mythr  = threading.current_thread()
@@ -238,10 +246,6 @@ class DASWebService(DASWebManager):
         # Start Onhold_request daemon
         if  self.dasconfig['web_server'].get('onhold_daemon', False):
             self.process_requests_onhold()
-
-        # initialize the Keyword Search
-        self.kws = KeywordSearchHandler(self.dasmgr)
-
 
     def logdb(self, query):
         """
@@ -410,8 +414,10 @@ class DASWebService(DASWebManager):
             kwargs['reason'] = 'No input found'
             return self.redirect(**kwargs)
 
-        conf = self.dasconfig.get('keyword_search', {})
-        timeout = conf.get('timeout', 5)
+        if not self.kws:
+            return "keyword search is currently disabled..."
+
+        timeout = self.dasconfig['keyword_search']['timeout']
 
         return self.kws.handle_search(self,
                               query=uinput, inst=inst,
@@ -458,7 +464,7 @@ class DASWebService(DASWebManager):
             if  selkey and len(new_input) > len(selkey) and \
                 new_input[:len(selkey)] != selkey:
                 new_input = selkey + ' ' + new_input
-        # TODO: kwargs['input'] = new_input
+        kwargs['input'] = new_input
 
 
 
@@ -481,8 +487,7 @@ class DASWebService(DASWebManager):
         """
         gets the host for keyword search from config. default is same server
         """
-        conf = self.dasconfig.get('load_balance', {})
-        return conf.get('kws_host', '')
+        return self.dasconfig['load_balance']['kws_host']
 
     def _get_autocompl_host(self):
         """
@@ -490,6 +495,18 @@ class DASWebService(DASWebManager):
         """
         conf = self.dasconfig.get('load_balance', {})
         return conf.get('autocompletion_host', '')
+
+    def is_kws_enabled(self):
+        """
+        is keyword search client (ajax request) enabled
+        """
+        return self.dasconfig['keyword_search']['kws_on']
+
+    def is_kws_service_enabled(self):
+        """
+        is keyword search service (response to ajax call) enabled
+        """
+        return self.dasconfig['keyword_search']['kws_service_on']
 
     def generate_dasquery(self, uinput, inst, html_error=True):
         """
@@ -499,7 +516,7 @@ class DASWebService(DASWebManager):
         :param inst: DBS instance
         :param html_error: whether errors shall be output in html
         """
-        def helper(msg, html_error=None, kws_enabled=False):
+        def helper(msg, html_error=None, show_kws=False):
             """Helper function which provide error template"""
             if  not html_error:
                 return msg
@@ -508,14 +525,14 @@ class DASWebService(DASWebManager):
 
             # render keyword search loader
             kws = ''
-            if kws_enabled:
+            if show_kws:
                 kws = self.templatepage('kwdsearch_via_ajax',
                                          uinput_json=tojson(uinput),
                                          inst_json=tojson(inst),
                                          kws_host=tojson(self._get_kws_host()))
 
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
-                        guide=guide, kws_enabled=kws_enabled, kws=kws)
+                        guide=guide, kws_enabled=show_kws, kws=kws)
             return page
 
         if  not uinput:
@@ -545,12 +562,12 @@ class DASWebService(DASWebManager):
                     page = self.templatepage('das_wildcard_err_txt',
                                 base=self.base, error=str(err), suggest=suggest)
 
-
-            # Keyword Search
-            kws_enabled = not isinstance(err, WildcardMatchingException)
+            # whether to show Keyword Search now
+            show_kws = self.is_kws_enabled() and \
+                       not isinstance(err, WildcardMatchingException)
 
             das_parser_error(uinput, str(type(err)))
-            page = helper(str(err), html_error, kws_enabled=kws_enabled)
+            page = helper(str(err), html_error, show_kws=show_kws)
             return 1, page
 
         fields = dasquery.mongo_query.get('fields', [])
@@ -1049,10 +1066,11 @@ class DASWebService(DASWebManager):
             self.reqmgr.add(pid, kwargs)
         elif status == 'ok' or status == 'fail':
             self.reqmgr.remove(pid)
-            print 'status=', status
-            nested_query_msg = self.q_rewriter.check_filter_existence(dasquery)
-            if nested_query_msg:
-                content =  self.templatepage('das_error', msg=nested_query_msg)
+
+            # check if query can be rewritten via nested PK query
+            rew_msg = self.q_rewriter and self.q_rewriter.check_fields(dasquery)
+            if rew_msg:
+                content =  self.templatepage('das_error', msg=rew_msg)
                 return self.page(form + content, ctime=time.time()-time0)
 
             kwargs['dasquery'] = dasquery
