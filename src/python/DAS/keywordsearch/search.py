@@ -41,7 +41,7 @@ class KeywordSearch:
 
         ranker = 'fast'
         if ranker == 'fast':
-            from DAS.keywordsearch.rankers import fast_recursive_ranker
+            from DAS.extensions import fast_recursive_ranker
             self.ranker = fast_recursive_ranker
         else:
             from DAS.keywordsearch.rankers import simple_recursive_ranker

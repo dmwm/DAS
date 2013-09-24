@@ -187,8 +187,8 @@ DASOption('das', 'thread_weights', 'list', ['dbs:5', 'phedex:5', 'dbs3:5']),
 #
 # Keyword Search options
 #
-DASOption('keyword_search', 'kws_on', 'bool', True),
-DASOption('keyword_search', 'kws_service_on', 'bool', True),
+DASOption('keyword_search', 'kws_on', 'bool', False),
+DASOption('keyword_search', 'kws_service_on', 'bool', False),
 # max time for exhaustive search ranker, default 5 seconds
 DASOption('keyword_search', 'timeout', 'int', 5),
 
@@ -197,7 +197,7 @@ DASOption('keyword_search', 'timeout', 'int', 5),
 DASOption('load_balance', 'kws_host', 'string', ''),
 
 # Query rewrite
-DASOption('query_rewrite', 'pk_rewrite_on', 'bool', True),
+DASOption('query_rewrite', 'pk_rewrite_on', 'bool', False),
 ] # end of DAS_OPTIONS list
 
 def read_configparser(dasconfig):

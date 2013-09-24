@@ -57,12 +57,14 @@ import DAS.utils.jsonwrapper as json
 
 from DAS.core.das_query import WildcardMatchingException
 
-# keyword search
-from DAS.web.das_kwd_search import KeywordSearchHandler
-
-# nested query generation by PK
-from DAS.web.cms_query_rewrite import CMSQueryRewrite
-
+# do not require any of KWS prerequisities (e.g. nltk), in case it's disabled
+try:
+    # nested query generation by PK
+    from DAS.web.cms_query_rewrite import CMSQueryRewrite
+    # keyword search
+    from DAS.web.das_kwd_search import KeywordSearchHandler
+except Exception as exc:
+    print_exc(exc)
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next', 'kwquery']
@@ -219,12 +221,6 @@ class DASWebService(DASWebManager):
                 keylist = [r for r in self.dasmapping.das_presentation_map()]
                 keylist.sort(key=lambda r: r['das'])
                 self.daskeyslist = keylist
-            # init query rewriter, if needed
-            if self.dasconfig['query_rewrite']['pk_rewrite_on']:
-                self.q_rewriter = CMSQueryRewrite(self.repmgr)
-            # init the Keyword Search
-            if self.is_kws_service_enabled():
-                self.kws = KeywordSearchHandler(self.dasmgr)
 
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
@@ -243,6 +239,19 @@ class DASWebService(DASWebManager):
             self.q_rewriter = None
             self.kws = None
             return
+
+        # KWS and Query Rewriting failures are not fatal
+        try:
+            # init query rewriter, if needed
+            if self.dasconfig['query_rewrite']['pk_rewrite_on']:
+                self.q_rewriter = CMSQueryRewrite(self.repmgr)
+            # init the Keyword Search
+            if self.is_kws_service_enabled():
+                self.kws = KeywordSearchHandler(self.dasmgr)
+        except Exception as exc:
+            print_exc(exc)
+            self.kws = None
+            self.q_rewriter = None
 
         # Start Onhold_request daemon
         if  self.dasconfig['web_server'].get('onhold_daemon', False):

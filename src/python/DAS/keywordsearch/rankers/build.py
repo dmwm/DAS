@@ -8,13 +8,13 @@ ext = Extension("fast_recursive_ranker",
                 ["fast_recursive_ranker.pyx"],
                 language='c'
                 # no c++ needed yet
-                # language='c'
 )
 
 fast_ranker = cythonize(
         ext
       )
 
-#,      cmdclass = {'build_ext': build_ext}
-# TODO: how to build both cython and simple libs?
 setup(ext_modules=fast_ranker)
+
+# NOTE: after running build.py one has to manually copy over .c to
+# /src/extensions directory
