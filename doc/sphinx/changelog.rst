@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.1.X
 
+  - Make das-headers mandatory in das_client.py and keep --das-headers option
+    and das_headers input parameter in get_data API for backward compatibility
   - Replaced all has_key dict calls with key in dict statement (work towards
     python3 standard)
   - Add check_services call to DAS core to check status of services
