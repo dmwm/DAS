@@ -45,8 +45,7 @@ def on_db_available():
     print 'DB is available'
 
     if check_mappings_readiness():
-        print('Mappings seem to be fine...\n'
-              'just in case, wait 10s until the mappings are fully loaded...')
+        print('Mappings seem to be fine...')
         #time.sleep(10)
         sys.exit(0)
 
@@ -102,10 +101,7 @@ def is_bootstrap_needed():
 
         def need_res_fields_bootsrap():
             schema_adapter = schema_adapter_factory.getSchema()
-
             try:
-                schema_adapter.list_result_fields()
-
                 ir_entity_attributes.load_index()
             except Exception, e:
                 print e
