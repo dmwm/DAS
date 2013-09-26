@@ -224,6 +224,9 @@ data_files   = [
                 ('DAS/services/bootstrap_queries', 
                                  datafiles('src/python/DAS/services/bootstrap_queries')),
 
+                ('DAS/kws_data/db_dumps', datafiles('src/kws_data/db_dumps')),
+                ('DAS/kws_data/kws_index', datafiles('src/kws_data/kws_index')),
+
                 ('DAS/web/js', datafiles('src/js')),
                 ('DAS/web/css', datafiles('src/css')),
                 ('DAS/web/images', datafiles('src/images')),

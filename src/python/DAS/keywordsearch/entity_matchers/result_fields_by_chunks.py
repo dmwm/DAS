@@ -8,7 +8,7 @@ import pprint
 from DAS.keywordsearch.config import *
 #from DAS.keywordsearch.metadata.das_schema_adapter import list_result_fields
 from DAS.keywordsearch.config import mod_enabled
-from DAS.keywordsearch.whoosh.ir_entity_attributes import load_index, search_index
+from DAS.keywordsearch.whoosh.ir_entity_attributes import search_index
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator,\
     get_operator_and_param, test_operator_containment
 from DAS.keywordsearch.nlp import filter_stopwords
@@ -38,21 +38,14 @@ def generate_chunks_no_ent_filter(keywords):
     # (e.g. number of events --> "number of events")
     MAX_TOKEN_COMBINATION_LEN =  4
 
-
     fields_by_entity = getSchema().list_result_fields()
-
-
-    load_index()
-
     # first filter out the phrases (we wont combine them with anything)
     phrase_kwds = filter(lambda kw: ' ' in kw, keywords)
-
-
-    # we may also need to remove operators, e.g. "number of events">10, 'block.nevents>10'
 
     matches = defaultdict(list)
 
     for kwd in phrase_kwds:
+        # remove operators, e.g. "number of events">10 => number of events
         phrase = get_keyword_without_operator(kwd)
 
         res = search_index(
