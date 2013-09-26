@@ -34,7 +34,7 @@ def disable_urllib2Proxy():
 
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     """
-    Simple HTTPS client authentication class based on provided 
+    Simple HTTPS client authentication class based on provided
     key/ca information
     """
     def __init__(self, key=None, cert=None, level=0):
@@ -235,16 +235,16 @@ def httplib_request(host, path, params, request='POST', debug=0):
         return res
     conn.close()
 
-class UrlProxy(object): 
+class UrlProxy(object):
     """Proxy class to handle URLs"""
-    def __init__(self, location): 
-        self._url = urllib2.urlopen(location) 
+    def __init__(self, location):
+        self._url = urllib2.urlopen(location)
 
     def headers(self):
-        """Get URL headers""" 
+        """Get URL headers"""
         return dict(self._url.headers.iteritems())
 
-    def get(self): 
+    def get(self):
         """Get URL data"""
         return self._url.read()
 

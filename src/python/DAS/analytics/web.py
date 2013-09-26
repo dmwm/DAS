@@ -61,7 +61,7 @@ class AnalyticsWeb(DASWebManager):
         DASWebManager.__init__(self, config)
         self.base = config.web_base
         self.plotfairy = config.plotfairy_base
-    
+
     def templatepage(self, tmpl, **kwargs):
         """
         Intercept template requests, and return a raw dictionary if json.
@@ -73,7 +73,7 @@ class AnalyticsWeb(DASWebManager):
             return json.dumps(kwargs, default=str)
         else:
             return super(AnalyticsWeb, self).templatepage(tmpl, **kwargs)
-        
+
     def page(self, content, _ctime=None, _response=False):
         """
         Intercept page requests, and return no headers if json.
@@ -82,7 +82,7 @@ class AnalyticsWeb(DASWebManager):
             return content
         else:
             return super(AnalyticsWeb, self).page(content)
-    
+
     @cherrypy.expose
     def index(self, *args, **kwargs):
         """
@@ -91,7 +91,7 @@ class AnalyticsWeb(DASWebManager):
         recently finished tasks and errors.
         """
         return self.page(self.templatepage("analytics_main"))
-    
+
     def error(self, error, **kwargs):
         "Error page"
         page = self.templatepage("analytics_error",
@@ -101,7 +101,7 @@ class AnalyticsWeb(DASWebManager):
                                  headers=cherrypy.request.headers,
                                  extra=kwargs)
         return self.page(page)
-    
+
     def top(self):
         """
         Provide masthead for all web pages
@@ -118,8 +118,8 @@ class AnalyticsWeb(DASWebManager):
         Provide footer for all web pages
         """
         return self.templatepage('analytics_bottom', version=DAS.version)
-    
-    @cherrypy.expose    
+
+    @cherrypy.expose
     def schedule(self, *path, **attrs):
         """
         Show the currently scheduled and running tasks.
@@ -136,17 +136,17 @@ class AnalyticsWeb(DASWebManager):
         if 'next' in attrs:
             next_attr = int(attrs['next'])
             before = now + next_attr
-            task_schedule = filter(lambda x: x['at'] < before, 
+            task_schedule = filter(lambda x: x['at'] < before,
                                    task_schedule)
-        
+
         task_running = self._scheduler.get_running()
-        
+
         task_running = sorted(task_running, key=lambda x: x['started'])
         page = self.templatepage("analytics_schedule",
                                  schedule=task_schedule,
                                  running=task_running)
         return self.page(page)
-    
+
     @cherrypy.expose
     def logger(self, *path, **attrs):
         """
@@ -156,15 +156,15 @@ class AnalyticsWeb(DASWebManager):
         TODO: Highlight by log level.
         TODO: Select by log level.
         """
-        
+
         last = int(attrs.get('last', 0))
         level = int(attrs.get('level', 0))
         offset = int(attrs.get('offset', 0))
         limit = int(attrs.get('limit', 100))
-        
+
         match = '.'.join(path)
         children = json.loads(attrs.get('children', 'true'))
-        
+
         kwargs = {'log': match, 'children': children}
         if last:
             kwargs['after'] = time.time() - last
@@ -175,11 +175,11 @@ class AnalyticsWeb(DASWebManager):
         if limit:
             kwargs['limit'] = limit
         log_entries = self._results.get_logs(**kwargs)
-        
+
         filters = [n.replace(match+'.', '') \
                 for n in self._results.get_log_names(match+'.')]
         total = len(log_entries)
-        
+
         page = self.templatepage('analytics_log',
                                  entries=log_entries,
                                  filters=filters,
@@ -191,7 +191,7 @@ class AnalyticsWeb(DASWebManager):
                                  total=total,
                                  level=level)
         return self.page(page)
-    
+
     @cherrypy.expose
     @require("id")
     def task(self, *path, **attrs):
@@ -201,31 +201,31 @@ class AnalyticsWeb(DASWebManager):
         """
         master_id = attrs['id']
         task = self._scheduler.get_task(master_id)
-                
+
         if task:
             recent_results = self._results.get_results(master_id=master_id,
                                                        only='result',
                                                        limit=5)
             childen = self._scheduler.get_children(task)
-            
+
             page = self.templatepage('analytics_task',
                                      id=master_id,#
                                      results=recent_results,
                                      children=childen,
                                      task=task)
         else:
-            return self.error("Requested ID does not exist", 
+            return self.error("Requested ID does not exist",
                               id=master_id)
         return self.page(page)
-        
-    
+
+
     @cherrypy.expose
     def control(self, *path, **attrs):
         """
         Show a page with some control options.
         TODO: Config subscription so changes take effect.
         """
-        
+
         if 'key' in attrs and 'value' in attrs:
             try:
                 value = json.loads(attrs['value'])
@@ -236,14 +236,14 @@ class AnalyticsWeb(DASWebManager):
             if not result == True:
                 return self.error("Setting of option failed",
                                   response=result)
-                
-        
+
+
         page = self.templatepage('analytics_control',
                                  config=self.config.get_dict(),
                                  tasks=TASK_INFO)
         return self.page(page)
-        
-    
+
+
     @cherrypy.expose
     def results(self, *path, **attrs):
         """
@@ -260,7 +260,7 @@ class AnalyticsWeb(DASWebManager):
         limit = int(attrs.get('limit', 100))
         classname = attrs.get('classname', None)
         name = attrs.get('name', None)
-        
+
         query = {'only': 'result'}
         if master:
             query['master_id'] = master
@@ -280,10 +280,10 @@ class AnalyticsWeb(DASWebManager):
             query['classname'] = classname
         if name:
             query['name'] = name
-        
+
         results = self._results.get_results(**query)
         total = len(results)
-        
+
         page = self.templatepage('analytics_results',
                                  results=results,
                                  total=total,
@@ -295,13 +295,13 @@ class AnalyticsWeb(DASWebManager):
                                  success=success,
                                  last=last)
         return self.page(page)
-        
-    
+
+
     @cherrypy.expose
     @require("id", "index")
     def result(self, *path, **attrs):
         """
-        Show in detail a single result. 
+        Show in detail a single result.
         """
         master_id = attrs['id']
         index = int(attrs['index'])
@@ -311,10 +311,10 @@ class AnalyticsWeb(DASWebManager):
         if result:
             result = result[0]
         else:
-            return self.error("Requested ID:index does not exist", 
+            return self.error("Requested ID:index does not exist",
                               master_id=master_id,
                               index=index)
-            
+
         logs = self._results.get_results(master_id=master_id,
                                          index=index,
                                          only='reslog')
@@ -322,8 +322,8 @@ class AnalyticsWeb(DASWebManager):
                                  logs=logs,
                                  result=result)
         return self.page(page)
-        
-    
+
+
     @cherrypy.expose
     @require("id")
     def remove_task(self, *path, **attrs):
@@ -338,7 +338,7 @@ class AnalyticsWeb(DASWebManager):
             return self.error(\
                 "Unable to remove task. It probably didn't exist.",
                               id=master_id)
-    
+
     @cherrypy.expose
     @require("id", "at")
     def reschedule_task(self, *path, **attrs):
@@ -366,7 +366,7 @@ class AnalyticsWeb(DASWebManager):
             return self.error("Could not parse time format.",
                               id=master_id,
                               at=when)
-        
+
     @cherrypy.expose
     @require("name", "classname", "interval")
     def add_task(self, *path, **attrs):
@@ -384,14 +384,14 @@ class AnalyticsWeb(DASWebManager):
             for key, val in attrs.items():
                 if key.startswith('kwarg_'):
                     #if loading the string evaluates to JSON != string,
-                    #use that type otherwise, treat it as a string 
+                    #use that type otherwise, treat it as a string
                     #(avoiding the need to explicitly quote strings)
                     try:
                         if not isinstance(json.loads(val), basestring):
                             kwargs[key[6:].encode('ascii')] = json.loads(val)
                         else:
                             kwargs[key[6:].encode('ascii')] = val
-                    except:    
+                    except:
                         kwargs[key[6:].encode('ascii')] = val
             task = Task(name=attrs['name'],
                     classname=attrs['classname'],
@@ -403,15 +403,15 @@ class AnalyticsWeb(DASWebManager):
             return self.error(\
                 "There was an error decoding the arguments.", details=exp[0])
         try:
-            self._scheduler.add_task(task, 
+            self._scheduler.add_task(task,
                      when=json.loads(attrs.get('when', 'null')),
                      offset=json.loads(attrs.get('offset', 'null')))
-            
+
             return self.task(id=task.master_id)
         except Exception as exp:
             return self.error(\
                 "There was an error adding the task.", details=exp[0])
-        
+
     @cherrypy.expose
     def reports(self, *path, **attrs):
         """
@@ -421,14 +421,14 @@ class AnalyticsWeb(DASWebManager):
         page = self.templatepage("analytics_reports",
                                  groups=REPORT_GROUPS)
         return self.page(page)
-        
+
     @cherrypy.expose
     @require("report")
     def report(self, *path, **attrs):
         """
         Access an individual report, handing off rendering to
         the implementation class.
-        
+
         It is intended that this is entirely stateless, but I suppose
         some state/ajax could be hacked in if really necessary.
         """

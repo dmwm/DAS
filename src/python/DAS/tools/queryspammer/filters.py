@@ -5,7 +5,7 @@ import multiprocessing
 import random
 import string
 LOG = multiprocessing.get_logger()
-            
+
 class Filter(object):
     "Base class for text mutators"
     def __init__(self, probability):
@@ -32,7 +32,7 @@ class WordRearrangeFilter(Filter):
         words[index+1] = words[index][0]
         words[index] = words[index][1]
         return ' '.join(words)
-    
+
 class RandomSpacesFilter(Filter):
     "Either doubles or removes a space"
     def filter(self, arg):
@@ -80,8 +80,8 @@ class BadSpellingFilter(Filter):
 
 def list_filters():
     "List all filter classes"
-    return [k 
-            for k, v in globals().items() 
-            if type(v)==type(type) 
-            and issubclass(v, Filter) 
+    return [k
+            for k, v in globals().items()
+            if type(v)==type(type)
+            and issubclass(v, Filter)
             and not v==Filter]

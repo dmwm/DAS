@@ -17,20 +17,20 @@ class APIReport(Report):
     report_title = "APIs"
     report_info = "Information about DAS API calls"
     report_group = "General"
-    
+
     def __call__(self, **kwargs):
         analytics = get_analytics_interface()
-        
+
         counter = collections.defaultdict(lambda: collections.defaultdict(int))
         records = list(analytics.col.find({"api.name": {"$exists": True}}))
-        
+
         for record in records:
             counter[record['system']][record['api']['name']] \
                 += record['counter']
-        
+
         api_plot = dict(central_label=False,
                         data=nested_to_baobab(counter),
                         external=False,
                         title="API Calls")
-        
+
         return ("analytics_report_api", {"api_plot": api_plot})

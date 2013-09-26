@@ -17,7 +17,7 @@ from Queue import Queue, PriorityQueue
 # DAS modules
 from DAS.utils.utils import genkey, print_exc
 
-class UidSet():
+class UidSet(object):
     "UID holder keeps track of uid frequency"
     def __init__(self):
         self._set = {}
@@ -69,7 +69,7 @@ class Worker(Thread):
             if  self.exit:
                 return
             if  isinstance(self._tasks, PriorityQueue):
-                _priority, uid, task = self._tasks.get()
+                _, uid, task = self._tasks.get()
             else:
                 task = self._tasks.get()
             if  task == None:
@@ -86,7 +86,7 @@ class Worker(Thread):
                 print "\n### args", func, args, kwargs
             evt.set()
 
-class TaskManager:
+class TaskManager(object):
     """
     Task manager class based on thread module which
     executes assigned tasks concurently. It uses a

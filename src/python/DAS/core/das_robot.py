@@ -14,7 +14,7 @@ import os
 import sys
 import time
 import atexit
-from signal import SIGTERM 
+from signal import SIGTERM
 
 # DAS modules
 from DAS.utils.utils import genkey, getarg, print_exc
@@ -43,35 +43,35 @@ class Robot(object):
 
     def daemonize(self):
         """
-        do the UNIX double-fork magic, see Stevens' "Advanced 
+        do the UNIX double-fork magic, see Stevens' "Advanced
         Programming in the UNIX Environment" for details (ISBN 0201563177)
         http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
         """
-        try: 
-            pid = os.fork() 
+        try:
+            pid = os.fork()
             if  pid > 0:
                 # exit first parent
-                sys.exit(0) 
-        except OSError as err: 
+                sys.exit(0)
+        except OSError as err:
             sys.stderr.write("fork #1 failed: %d (%s)\n" \
                 % (err.errno, err.strerror))
             sys.exit(1)
 
         # decouple from parent environment
-        os.chdir("/") 
-        os.umask(0) 
-        os.setsid() 
+        os.chdir("/")
+        os.umask(0)
+        os.setsid()
 
         # do second fork
-        try: 
-            pid = os.fork() 
+        try:
+            pid = os.fork()
             if  pid > 0:
                 # exit from second parent
-                sys.exit(0) 
+                sys.exit(0)
         except OSError as err:
             sys.stderr.write("fork #2 failed: %d (%s)\n" \
                 % (err.errno, err.strerror))
-            sys.exit(1) 
+            sys.exit(1)
 
         # redirect standard file descriptors
         sys.stdout.flush()
@@ -87,7 +87,7 @@ class Robot(object):
         atexit.register(self.delpid)
         pid = str(os.getpid())
         file(self.pidfile, 'w+').write("%s\n" % pid)
-    
+
     def delpid(self):
         """Delete PID file"""
         os.remove(self.pidfile)
@@ -108,7 +108,7 @@ class Robot(object):
             message = "pidfile %s already exist. Daemon already running?\n"
             sys.stderr.write(message % self.pidfile)
             sys.exit(1)
-        
+
         # Start the daemon
         self.daemonize()
         self.run()
@@ -130,7 +130,7 @@ class Robot(object):
             sys.stderr.write(message % self.pidfile)
             return # not an error in a restart
 
-        # Try killing the daemon process	
+        # Try killing the daemon process
         try:
             while 1:
                 os.kill(pid, SIGTERM)
@@ -175,7 +175,7 @@ class Robot(object):
         print "stderr :", self.stderr
         print "sleep  :", self.sleep
         print "query  :", self.query
-    
+
 
     def run(self):
         """

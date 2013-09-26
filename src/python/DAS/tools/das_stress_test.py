@@ -27,7 +27,7 @@ from   multiprocessing import Process
 # DAS modules
 from DAS.tools.das_client import get_data
 
-class TestOptionParser: 
+class TestOptionParser(object):
     "Test option parser"
     def __init__(self):
         cmd = 'das_stress_test'
@@ -45,20 +45,20 @@ class TestOptionParser:
         usage += '\n    # run 10 tests using given select keys at random'
         usage += '\n    %s --ntest=10 --keys="file,block"' % cmd
         self.parser = OptionParser(usage=usage)
-        self.parser.add_option("-v", "--verbose", action="store", 
+        self.parser.add_option("-v", "--verbose", action="store",
             type="int", default=0, dest="debug",
             help="verbose output")
-        self.parser.add_option("--host", action="store", type="string", 
+        self.parser.add_option("--host", action="store", type="string",
             default="http://localhost:8212", dest="host",
             help="specify DAS URL to test, e.g. https://dastest.cern.ch")
-        self.parser.add_option("--ntests", action="store", type="int", 
+        self.parser.add_option("--ntests", action="store", type="int",
             default=10, dest="ntests",
             help="specify max number of clients")
-        self.parser.add_option("--seed", action="store", type="string", 
+        self.parser.add_option("--seed", action="store", type="string",
             default="dataset=/A*/*/*", dest="query",
             help="seed query, e.g. dataset=/A*/*/*")
         msg = "list of look-up keys to be used in tests for seed query values"
-        self.parser.add_option("--keys", action="store", type="string", 
+        self.parser.add_option("--keys", action="store", type="string",
             default="dataset,block,file,summary,file_lumi,file_run_lumi",
             dest="lkeys", help=msg)
         msg  = 'specify X509 key file name'

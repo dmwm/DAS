@@ -22,27 +22,27 @@ class ValueHotspot(HotspotBase):
     can use mode "fixed", in which case the _fraction_ kwarg should
     be a number >= 1 and that many keys are selected (provided they
     exist).
-    
+
     The calls to be considered are defined by _period_ (default 1month).
-    
+
     The optional argument 'allowed_gap' is the maximum gap in
     the summary record we are happy to ignore (default 1h).
-    
+
     The summary identifier is "valuehotspot-key"
     It spawns querymaintainer jobs of name "valuehotspot-foundkey" which
     try and sensibly maintain the given query in cache.
-    
+
     If the option "allow_wildcarding" is given, queries containing
     a wildcard will be considered. Otherwise, these will be ignored.
-    
+
     If the option "find_supersets" is given, it will try and find
     superset queries (already in the cache) answering multiple hot keys
     and have them maintained instead of the specific one.
-    
-    The option "preempt" controls how long before data expiry the 
-    re-fetch is scheduled. By default this is 1 minute (which may 
+
+    The option "preempt" controls how long before data expiry the
+    re-fetch is scheduled. By default this is 1 minute (which may
     be inappropriate for some fast-flux data).
-    
+
     """
     task_options = [{'name':'key', 'type':'string', 'default':None,
                    'help':'DAS primary key to work with'},
@@ -64,7 +64,7 @@ class ValueHotspot(HotspotBase):
                    'help':'Fields that should be queried, each resulting in "field key=<value>". An attempt will be made to determine them from the mapping if unspecified.'},
                   {'name':'instance', 'type':'string', 'default':'cms_dbs_prod_global',
                    'help':'DBS instance to include in queries'}]
-    
+
     def __init__(self, **kwargs):
         self.key = kwargs['key']
         self.logger = PrintManager('ValueHotspot', kwargs.get('verbose', 0))
@@ -73,12 +73,12 @@ class ValueHotspot(HotspotBase):
         self.preempt = int(kwargs.get('preempt', 60))
         self.fields = kwargs.get('fields', None)
         self.instance = kwargs.get('instance', 'cms_dbs_prod_global')
-        
+
         HotspotBase.__init__(self,
                              identifier="valuehotspot-%s" % \
                              (self.key.replace('.','-')),
                              **kwargs)
-        
+
         # set fields if look-up key is present
         if  not self.fields and self.key:
             self.fields = [self.key.split('.')[0]]
@@ -99,8 +99,8 @@ class ValueHotspot(HotspotBase):
                 self.fields = list(self.fields)
             except:
                 self.fields = []
-                    
-    
+
+
     def generate_task(self, item, count, epoch_start, epoch_end):
         """
         Generate task callback function. It loop over internal fields, e.g.
@@ -110,7 +110,7 @@ class ValueHotspot(HotspotBase):
         only_before = epoch_end + self.interval
         for field in self.fields:
             query = {'fields': [field],
-                     'spec':[{'key':self.key, 'value': item}], 
+                     'spec':[{'key':self.key, 'value': item}],
                      'instance':self.instance}
             dasquery = DASQuery(query)
             expiry = self.get_query_expiry(dasquery)
@@ -126,7 +126,7 @@ class ValueHotspot(HotspotBase):
                         'interval': interval,
                         'kwargs':{'dasquery':dasquery.storage_query,
                                   'preempt':self.preempt}}
-    
+
     def preselect_items(self, items):
         """
         Select items for task generation.
@@ -139,7 +139,7 @@ class ValueHotspot(HotspotBase):
                 if '*' in key:
                     del items[key]
         return items
-    
+
     def mutate_items(self, items):
         """
         Mutate items for task generation. This is a last call in
@@ -150,7 +150,7 @@ class ValueHotspot(HotspotBase):
             return dict([(k, items.get(k, 0)) for k in new_keys])
         else:
             return items
-    
+
     def get_superset_keys(self, keys):
         """
         For multiple keys, try and identify an existing queries for
@@ -159,7 +159,7 @@ class ValueHotspot(HotspotBase):
         and make new ones).
         """
         superset_cache = {}
-        
+
         keys = set(keys)
         change_made = True
         while change_made:
@@ -185,7 +185,7 @@ class ValueHotspot(HotspotBase):
                     if change_made:
                         break
         return keys
-    
+
     def get_query_expiry(self, dasquery):
         """
         Extract analytics apicall the expire timestamp for given query.
@@ -207,7 +207,7 @@ class ValueHotspot(HotspotBase):
             return min(expiries)
         except:
             return err_return
-              
+
     def make_one_summary(self, start, finish):
         "Actually make the summary"
         keys = collections.defaultdict(int)
@@ -218,7 +218,7 @@ class ValueHotspot(HotspotBase):
         except:
             queries = []
         for query in queries:
-            count = len(filter(lambda t: t>=start and t<=finish, 
+            count = len(filter(lambda t: t>=start and t<=finish,
                                query['times']))
             for spec in query['mongoquery']['spec']:
                 if spec['key'] == self.key:

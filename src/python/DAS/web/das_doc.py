@@ -51,7 +51,7 @@ class DASDocService(object):
         input = construct_filename(args)
         filename = os.path.join(self.dir, input)
         if  not os.path.isfile(filename):
-            return error('No such file %s' % input) 
+            return error('No such file %s' % input)
         return serve_file(filename)
 
     @expose
@@ -60,7 +60,7 @@ class DASDocService(object):
         input = construct_filename(args)
         filename = os.path.join(self.dir, '_static/%s' % input)
         if  not os.path.isfile(filename):
-            return error('No such file %s' % input) 
+            return error('No such file %s' % input)
         return serve_file(filename)
 
     @expose
@@ -69,5 +69,5 @@ class DASDocService(object):
         input = construct_filename(args)
         filename = os.path.join(self.dir, '_images/%s' % input)
         if  not os.path.isfile(filename):
-            return error('No such file %s' % input) 
+            return error('No such file %s' % input)
         return serve_file(filename)

@@ -43,7 +43,7 @@ class MultiprocessingLoggerClient(object):
         self.name = name
         self.queue = queue
         self.extra = deepcopy(kwargs)
-        
+
     def dispatch(self, lvl, msg, *args):
         """
         Create the record (just a dictionary, will
@@ -57,23 +57,23 @@ class MultiprocessingLoggerClient(object):
             self.queue.put_nowait(attrs)
         except:
             pass
-        
+
     def info(self, msg, *args):
         "info logger"
         self.dispatch(logging.INFO, msg, *args)
-    
+
     def debug(self, msg, *args):
         "debug logger"
         self.dispatch(logging.DEBUG, msg, *args)
-        
+
     def warning(self, msg, *args):
         "warning logger"
         self.dispatch(logging.WARNING, msg, *args)
-        
+
     def error(self, msg, *args):
         "error logger"
         self.dispatch(logging.ERROR, msg, *args)
-        
+
     def critical(self, msg, *args):
         "critical logger"
         self.dispatch(logging.CRITICAL, msg, *args)
@@ -86,11 +86,11 @@ class MultiprocessingLoggerListener(object):
     """
     def __init__(self):
         self.queue = multiprocessing.Queue(-1)
-        
+
         thread = threading.Thread(target=self.receive)
         thread.daemon = True
         thread.start()
-        
+
     def receive(self):
         """
         Run by a dedicated thread, to receive log messages and inject
@@ -100,19 +100,19 @@ class MultiprocessingLoggerListener(object):
             try:
                 attrs = self.queue.get()
                 logger = logging.getLogger(attrs['name'])
-                logger.log(attrs['lvl'], attrs['msg'], 
+                logger.log(attrs['lvl'], attrs['msg'],
                            *attrs['args'], extra=attrs['extra'])
             except EOFError:
                 break
             except:
                 pass
-    
+
     def getLogger(self, name, **kwargs):
         """
         Return a new client logger, with given name.
         """
         return MultiprocessingLoggerClient(name, self.queue, **kwargs)
-            
+
 MULTILOGGING_LISTENER = None
 def multilogging():
     """
@@ -127,7 +127,7 @@ def multilogging():
         MULTILOGGING_LISTENER = MultiprocessingLoggerListener()
     return MULTILOGGING_LISTENER
 
-    
+
 def parse_time(raw):
     """
     Consider time formats:
@@ -142,9 +142,9 @@ def parse_time(raw):
     match_unix = re.match(r'(\d+(?:\.\d*)?)', raw)
     match_offset = re.match(r'\+(\d+(?:\.\d*)?)([smhd]?)', raw)
     match_local = re.match(r'(\d{2}:\d{2}(?::\d{2})?)([utcgmz]*)', raw)
-    
+
     if match_local:
-        split = match_local.group(1).split(':') 
+        split = match_local.group(1).split(':')
         if len(split) == 3:
             hours, mins, secs = map(float, split)
         else:
@@ -205,7 +205,7 @@ def get_analytics_interface():
 
 def nested_to_baobab(nested):
     """
-    Convert a once-nested int dictionary into 
+    Convert a once-nested int dictionary into
     a baobab data structure for plotfairy
     """
     total = 0
@@ -253,21 +253,21 @@ def get_classes_by_path(path):
         directory = os.path.dirname(sys.modules[path].__file__)
     except ImportError as err:
         print "Error trying to import package %s: %s" % (path, err[0])
-    
+
     if directory:
         try:
             python_files = glob.glob(os.path.join(directory, "*.py"))
         except Exception as exp:
             print "Error trying to list package directory %s (%s): %s" \
                 % (directory, path, exp[0])
-        
+
     for pyfile in python_files:
         try:
             if os.path.isfile(pyfile):
                 #get the python import name for this file
                 pypath = path + '.' + \
                         os.path.splitext(os.path.basename(pyfile))[0]
-                __import__(pypath)  
+                __import__(pypath)
                 module = sys.modules[pypath]
                 for name, obj in module.__dict__.items():
                     if not name.startswith('_'): #not hidden
@@ -275,9 +275,9 @@ def get_classes_by_path(path):
                             if not \
                             (hasattr(obj, "hide") and getattr(obj, "hide")):
                                 if obj.__module__ == pypath:
-                                    result[name] = obj 
-                        
-                     
+                                    result[name] = obj
+
+
         except Exception as exp:
             msg = "Error trying to import file %s (%s): %s" \
                 % (pypath, pyfile, exp[0])
@@ -310,6 +310,6 @@ def get_globals():
                     if hasattr(obj, "task_options") else None
         task_info[name] = (title, info, options)
     return task_classes, report_classes, report_groups, task_info
-    
+
 TASK_CLASSES, REPORT_CLASSES, REPORT_GROUPS, TASK_INFO = get_globals()
 DAS_CONFIG = das_readconfig()

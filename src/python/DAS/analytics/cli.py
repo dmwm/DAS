@@ -55,14 +55,14 @@ def main():
     group_info.add_option("--task", metavar="tID",
                           help="Print the details of task ID")
     parser.add_option_group(group_info)
-    
+
     group_mod = optparse.OptionGroup(parser, "Modification")
     group_mod.add_option("--remove", action="store_true",
                          help="With --task, request descheduling")
     group_mod.add_option("--reschedule", metavar="TIMEISH",
                          help="With --task, request rescheduling")
     parser.add_option_group(group_mod)
-    
+
     group_time = optparse.OptionGroup(parser, "Time",
                               "TIMEISH accepts the following\n"+\
                               "number - GMT UNIX timestamp\n"+\
@@ -72,13 +72,13 @@ def main():
                               "    if this is in the past)\n"+\
                               "HH:MM[:SS]gmt|utc|z - as above but GMT")
     parser.add_option_group(group_time)
-    
+
     opts, _ = parser.parse_args()
-    
+
     host = opts.host
     if not host[-1] == '/':
         host += '/'
-    
+
     def get_json(path, opts=None):
         "Helper function to send request and parse output to JSON"
         url = host + path

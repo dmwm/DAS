@@ -22,27 +22,27 @@ class QueryReport(Report):
         analytics = get_analytics_interface()
         analyzer_exists = any([task['classname']=="QueryAnalyzer" \
                 for task in self.scheduler.get_registry().values()])
-        
+
         summaries = analytics.get_summary(\
                 identifier="query_analyzer", after=now-period)
         # [ (query_structure, count) ]
-            
-        
+
+
         count_by_key = collections.defaultdict(int)
         field_count_by_key = collections.defaultdict(\
                         lambda: collections.defaultdict(int))
         instance_count = collections.defaultdict(int)
         constraint_by_key = collections.defaultdict(\
                         lambda: collections.defaultdict(int))
-        
+
         seen_keys = set()
 
         time_bins = period / 3600
         if time_bins > self.max_series_length:
             time_bins = self.max_series_length
-        time_interval = float(period) / time_bins       
+        time_interval = float(period) / time_bins
         time_series = collections.defaultdict(lambda: [0]*(time_bins+1))
-        
+
         total_queries = 0
         for summary in summaries:
             midtime = 0.5*(summary['start']+summary['finish'])
@@ -60,7 +60,7 @@ class QueryReport(Report):
                         field_count_by_key[key][field] += count
                     time_series[key][time_bin] += count
                 instance_count[query[0]['instance']] += count
-            
+
         time_plot = dict(legend="topleft",
                          series=[dict(label=key, values=time_series[key]) \
                                 for key in time_series],
@@ -71,8 +71,8 @@ class QueryReport(Report):
                                     label="Time",
                                     format="time"),
                          yaxis=dict(label="Queries"))
-                    
-            
+
+
         constraint_plot = dict(central_label=False,
                                data=nested_to_baobab(constraint_by_key),
                                external=False,
@@ -92,10 +92,10 @@ class QueryReport(Report):
                         series=[{'label':key, 'value': count_by_key[key]} \
                                 for key in count_by_key],
                         title="Key(s) used")
-        
+
         popular_key = sorted(count_by_key, \
                 key=lambda x: count_by_key[x])[-1] if count_by_key else None
-        
+
         return ("analytics_report_query", {"nsummaries": len(summaries),
                                            "nqueries": total_queries,
                                            "view_key": view_key,

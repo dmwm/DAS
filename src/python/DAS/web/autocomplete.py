@@ -26,14 +26,14 @@ FLT_PAT = re.compile(''.join([word_chars(a) for a in das_filters()]))
 
 def autocomplete_helper(query, dasmgr, daskeys):
     """
-    Interface to the DAS keylearning system, for a 
+    Interface to the DAS keylearning system, for a
     as-you-type suggestion system. This is a call for AJAX
     in the page rather than a user-visible one.
-    
+
     This returns a list of JS objects, formatted like::
 
     {'css': '<ul> css class', 'value': 'autocompleted text', 'info': '<html> text'}
-     
+
     Some of the work done here could be moved client side, and
     only calls that actually require keylearning look-ups
     forwarded. Given the number of REs used, this may be necessary
@@ -51,7 +51,7 @@ def autocomplete_helper(query, dasmgr, daskeys):
     query = last_word
     if RE_DBSQL_0.match(query):
         #find...
-        match1 = RE_DBSQL_1.match(query) 
+        match1 = RE_DBSQL_1.match(query)
         match2 = RE_DBSQL_2.match(query)
         if match1:
             daskey = match1.group(1)
@@ -71,7 +71,7 @@ def autocomplete_helper(query, dasmgr, daskeys):
             else:
                 result.append({'css': 'ac-error sign', 'value': '',
                                'info': "This appears to be a DBS-QL query, and the key (<b>%s</b>) isn't known to DAS." % daskey})
-                
+
                 key_search = dasmgr.keylearning.key_search(daskey)
                 #do a key search, and add info elements for them here
                 for keys, members in key_search.iteritems():
@@ -80,8 +80,8 @@ def autocomplete_helper(query, dasmgr, daskeys):
                 if not key_search:
                     result.append({'css': 'ac-error sign', 'value': '',
                                    'info': 'No matches found for <b>%s</b>.' % daskey})
-                    
-                
+
+
         else:
             result.append({'css': 'ac-error sign', 'value': '',
                            'info': 'This appears to be a DBS-QL query. DAS queries are of the form <b>key</b><span class="faint">[ operator value]</span>'})
@@ -113,7 +113,7 @@ def autocomplete_helper(query, dasmgr, daskeys):
         if not keys:
             result.append({'css':'ac-error sign', 'value': '',
                            'info': "You seem to be trying to write a pipe command without any keys."})
-        
+
         agg_pat = AGG_PAT.match(query)
         flt_pat = FLT_PAT.match(query)
         daskey  = query.split('.')[0]
@@ -231,13 +231,13 @@ def autocomplete_helper(query, dasmgr, daskeys):
     elif RE_SITE.match(query):
         #T{0123}_...
         result.append({'css': 'ac-warning sign', 'value':'site=%s' % query,
-                       'info':'''Seems like site query. The correct syntax is <b>site=TX_YY_ZZZ</b>'''})    
+                       'info':'''Seems like site query. The correct syntax is <b>site=TX_YY_ZZZ</b>'''})
         result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query, 'info': 'Seems like dataset pattern'})
     else:
         #we've no idea what you're trying to accomplish, do a search
         result.append({'css': 'ac-info', 'value': 'dataset=*%s*' % query,
                        'info': 'Seems like dataset pattern'})
-        
+
     if  prev:
         new_result = []
         for idict in result:

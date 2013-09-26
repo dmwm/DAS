@@ -7,9 +7,10 @@ __version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 from DAS.services.abstract_service import DASAbstractService
-from DAS.utils.utils import map_validator 
+from DAS.utils.utils import map_validator
 
 class LumiDBService(DASAbstractService):
+    "Class LumiDBService handles lumidb data-services access"
     def __init__(self, config):
         DASAbstractService.__init__(self, 'lumidb', config)
         self.map = self.dasmapping.servicemap(self.name, 'javaservlet')

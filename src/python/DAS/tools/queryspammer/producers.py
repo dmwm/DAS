@@ -26,32 +26,32 @@ class WeightedKeyProducer(Producer):
     """
     Produces simple queries of the form "key=value" where value
     is has a weighted distribution. The weighting for key x is:
-    
+
     normal_scale * gauss(0, normal_sigma*len(items) + 1/len(items)
-    
+
     ie, a normal distribution with a long flat tail. This seems
     to vaguely match the distribution observed in practice.
-    
+
     The item array is randomly sorted and truncated to maxitems.
     """
-    
-    # this configuration gives 50% of results in the first 15% of items 
+
+    # this configuration gives 50% of results in the first 15% of items
     maxitems = 100
     normal_sigma = 0.15
     normal_scale = 3
-    
+
     def __init__(self, data, key):
         self.key = key
-        
+
         #get random keys repeatedly to try and get the complete set
         items = [data.get_random(key) for i in xrange(10000)]
         #find the unique items
         items = list(set(items))
-        
+
         items = items[0:self.maxitems]
-        
+
         random.shuffle(items)
-        
+
         count = len(items)
         #make a weighted distribution
         sigma = self.normal_sigma * count
@@ -62,31 +62,31 @@ class WeightedKeyProducer(Producer):
         weights = [weight(i) for i in xrange(count)]
         weightdict = dict([(i, w) for i, w in zip(items, weights)])
         self.dist = WeightedDistribution(weightdict)
-        
+
         LOG.info("Weighted producer (%s) initialised", key)
         Producer.__init__(self, data)
-        
+
     def __call__(self):
         """
         Return an appropriate, weighted query.
         """
-            
+
         return "%s=%s" % (self.key, self.dist())
-    
+
 class WeightedDatasetProducer(WeightedKeyProducer):
     "Weighted dataset=value producer"
     def __init__(self, data):
         WeightedKeyProducer.__init__(self, data, 'dataset')
-        
+
 class WeightedSiteProducer(WeightedKeyProducer):
     "Weighted site=value producer"
     def __init__(self, data):
         WeightedKeyProducer.__init__(self, data, 'site')
-        
+
 class WeightedCityProducer(WeightedKeyProducer):
     def __init__(self, data):
         WeightedKeyProducer.__init__(self, data, 'city')
-                
+
 class MappingProducer(Producer):
     "Tries to produce random queries using DAS mapping DB directly"
     def __init__(self, data, **kwargs):
@@ -99,19 +99,19 @@ class MappingProducer(Producer):
         self.keys = list(set(self.keys))
         self.systems = self.dascore.mapping.list_systems()
         self.syskey = self.dascore.mapping.daskeys()
-        
+
         self.value_chance = kwargs.get('value_chance', 0.6)
         self.multiple_chance = kwargs.get('multiple_chance', 0.4)
         self.unique_chance = kwargs.get('unique_chance', 0.2)
         self.grep_chance = kwargs.get('grep_chance', 0.2)
         self.aggregate_chance = kwargs.get('aggregate_chance', 0.2)
-        
-        
+
+
         LOG.info("MappingProducer has %s primary keys", len(self.keys))
-        LOG.info("MappingProducer has %s primary keys with generators", 
+        LOG.info("MappingProducer has %s primary keys with generators",
                  len(set(self.keys) & set(self.data.get_keys())))
         Producer.__init__(self, data)
-        
+
     def find_secondary_keys(self, map_keys):
         #print 'find_secondary',map_keys
         apis = set(self.dascore.mapping.list_apis())
@@ -128,34 +128,34 @@ class MappingProducer(Producer):
                         [k['key'] for k in api_info['daskeys'] \
                                 if not k['map'] in map_keys]
             #print 'possible_das_keys',possible_das_keys
-        
+
         return possible_das_keys
-                
+
     def __call__(self):
         """
-        
+
         Actually produce a query.
-        
-        We start by picking a primary key, from all keys. If we have a 
+
+        We start by picking a primary key, from all keys. If we have a
         generator for this key type and a random chance, we give it a
         value.
-        
+
         We then decide whether to produce one or more secondary keys. To
         find these, we find the mapping key for the primary DAS key,
         then lookup all APIs looking for one that supports all the
         mapping keys we've found so far (ie, there will be a service that
         can be queried).
-        
+
         Secondary keys must always have a value (ie, be in the set of
         keys we have a generator for).
-        
+
         Finally, we look at the presentation keys for the DAS keys requested
         and randomly decide whether to add any aggregation or filter functions.
-        
+
         We assume any presentation key can be aggregated. This will not
         always be true, but we have no good way of determining this (unless
         we store types along with presentation keys when we examine output).
-        
+
         """
         primary_key = random.choice(self.keys)
         #print 'primary key', primary_key
@@ -163,13 +163,13 @@ class MappingProducer(Producer):
         primary_mapping_key = self.dascore.mapping.find_mapkey({'$ne':None},
                                                                primary_key)
         #print 'primary map', primary_mapping_key
-        
+
         if primary_key in self.data \
             and random.random() < self.value_chance:
             primary_value = self.data.get_random(primary_key)
             #print 'primary_value', primary_value
             query += ' = %s' % primary_value
-        
+
         das_keys = [primary_key]
         map_keys = [primary_mapping_key]
         while random.random() < self.multiple_chance:
@@ -191,15 +191,15 @@ class MappingProducer(Producer):
                 map_keys += [secondary_mapping_key]
             else:
                 break
-        
+
         presentation_keys = []
         for key in das_keys:
             for pkey in self.dascore.mapping.presentation(key):
                 if isinstance(pkey, dict):
                     presentation_keys += [pkey['das']]
                 else:
-                    presentation_keys += [pkey] 
-        
+                    presentation_keys += [pkey]
+
         if random.random() < self.unique_chance:
             query += ' | unique'
         if random.random() < self.grep_chance:
@@ -218,7 +218,7 @@ class MappingProducer(Producer):
                     query += ', %s(%s)' \
                         % (random.choice(('sum', 'min', 'max', 'avg')),
                                        random.choice(presentation_keys))
-        
+
         return query
 
 class YAMLProducer(Producer):
@@ -243,19 +243,19 @@ class YAMLProducer(Producer):
                     self.keys[key].append(das_key)
         all_subkeys = list(set(reduce(lambda x, y:x+y, self.keys.values())+\
                                self.keymap.values()))
-        self.generator = dict([(sk, None) 
+        self.generator = dict([(sk, None)
                                for sk in all_subkeys]) #subkey->function()
-        self.valid_operators = dict([(sk, {'=':1}) 
+        self.valid_operators = dict([(sk, {'=':1})
                  for sk in all_subkeys]) #subkey->operator->probability
-        self.grep_target = dict([(k, [sk 
-                      for sk in all_subkeys 
-                      if '.' in sk and sk.split('.')[0]==k]) 
+        self.grep_target = dict([(k, [sk
+                      for sk in all_subkeys
+                      if '.' in sk and sk.split('.')[0]==k])
                  for k in self.keys]) #key->[grep targets]
-        self.aggregator_target = dict([(k, []) 
+        self.aggregator_target = dict([(k, [])
                            for k in self.keys]) #key->[valid_operators]
-        self.p_key = dict([(k, 1) for k in self.keys]) #key->probability 
-        self.p_subkey = dict([(k, dict([(sk, 1./len(self.keys[k])) 
-                for sk in self.keys[k]])) 
+        self.p_key = dict([(k, 1) for k in self.keys]) #key->probability
+        self.p_subkey = dict([(k, dict([(sk, 1./len(self.keys[k]))
+                for sk in self.keys[k]]))
                 for k in self.keys]) #key->subkey->ind probability
         self.p_grep_op = 0.2
         self.p_aggr_op = 0.2
@@ -264,7 +264,7 @@ class YAMLProducer(Producer):
     def __call__(self):
         #select a random primary key
         key = WeightedDistribution(self.p_key)()
-        #either give it an argument (using keymap) 
+        #either give it an argument (using keymap)
         #or select one or more secondary keys (providing they have generators)
         if random.random() < self.p_set_primary \
                 and self.generator[self.keymap[key]] != None:
@@ -275,16 +275,16 @@ class YAMLProducer(Producer):
                                   operator,
                                   self.generator[effective_subkey]())
         else:
-            subkeys = [sk 
-                       for sk in self.keys[key] 
-                       if self.p_subkey[key][sk] > random.random() 
-                       and self.generator[sk] != None 
-                       and len(self.valid_operators[sk]) > 0 
+            subkeys = [sk
+                       for sk in self.keys[key]
+                       if self.p_subkey[key][sk] > random.random()
+                       and self.generator[sk] != None
+                       and len(self.valid_operators[sk]) > 0
                        and sk != self.keymap[key]]
-            operators = [WeightedDistribution(self.valid_operators[sk])() 
+            operators = [WeightedDistribution(self.valid_operators[sk])()
                          for sk in subkeys]
-        
-            subkey_strings = ['%s %s %s' % (sk, op, self.generator[sk]()) 
+
+            subkey_strings = ['%s %s %s' % (sk, op, self.generator[sk]())
                               for sk, op in zip(subkeys, operators)]
             query = key + ' ' + ' '.join(subkey_strings)
         #select whether to apply a filter operation (using grep_target(s))
@@ -301,14 +301,14 @@ class YAMLProducer(Producer):
                     g_targets.append(available_grep_targets.pop())
                     r_grep = random.random()
                 query += ','.join(g_targets)
-        #select whether to apply an aggregate operation 
+        #select whether to apply an aggregate operation
         # (using aggregator_target(s))
         elif r_suffix < self.p_grep_op + self.p_aggr_op:
             if len(self.aggregator_target[key])>0:
                 query += ' | %s(%s)' % (
                               random.choice(('sum','min','max','count','avg')),
                               random.choice(self.aggregator_target[key]))
-        return query  
+        return query
 
 class GoogleMapsProducer(YAMLProducer):
     def __init__(self, data):
@@ -334,7 +334,7 @@ class PhedexProducer(YAMLProducer):
         self.generator['file.name'] = self.data.file
         self.generator['group.name'] = self.data.group
         self.generator['group'] = self.data.group
-       
+
 class DBS3Producer(YAMLProducer):
     def __init__(self, data):
         YAMLProducer.__init__(self, data, 'dbs3.yml')
@@ -347,7 +347,7 @@ class DBS3Producer(YAMLProducer):
         #self.generator['config'] = self.data.config #not yet implemented
         self.generator['block.name'] = self.data.block
         self.generator['file.name'] = self.data.file
-        
+
 class CMSSWConfigProducer(YAMLProducer):
     def __init__(self, data):
         YAMLProducer.__init__(self, data, 'cmsswconfigs.yml')
@@ -362,7 +362,7 @@ class DashboardProducer(YAMLProducer):
         self.generator['site'] = self.data.node
         self.generator['site.ce'] = self.data.ce
         self.generator['site.name'] = self.data.node
-        
+
 class IpProducer(YAMLProducer):
     def __init__(self, data):
         YAMLProducer.__init__(self, data, 'ip.yml')
@@ -370,11 +370,11 @@ class IpProducer(YAMLProducer):
 
 def list_producers():
     "List all producer classes"
-    return [k 
-            for k, v in globals().items() 
-            if type(v)==type(type) 
-            and issubclass(v,Producer) 
-            and not v==Producer 
+    return [k
+            for k, v in globals().items()
+            if type(v)==type(type)
+            and issubclass(v,Producer)
+            and not v==Producer
             and not v==YAMLProducer]
-        
-    
+
+

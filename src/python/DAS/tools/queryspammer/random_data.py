@@ -28,7 +28,7 @@ class WeightedDistribution:
         values = dict([(i, (j+1)**power) \
                 for i,  j in zip(items, xrange(len(items)))])
         return WeightedDistribution(values)
-    
+
     def __init__(self, values):
         if isinstance(values, dict):
             total = float(sum(values.values()))
@@ -47,7 +47,7 @@ class WeightedDistribution:
 
         else:
             raise Exception("Supply a dict or a list of pairs")
-        
+
     def random(self):
         value = random.random()
         for (v, k) in self.weights:
@@ -55,7 +55,7 @@ class WeightedDistribution:
                 if callable(k):
                     return k()
                 else:
-                    return k      
+                    return k
     __call__ = random
     def prob(self, item):
         for (v, k) in self.weights:
@@ -71,13 +71,13 @@ class WeightedDistribution:
 
 class RandomData(object):
     def __init__(self):
-        
-        self._city_name = ['Shanghai', 'Mumbai', 'Karachi', 
-                'Delhi', 'Istanbul', 'Sao Paulo', 'Moscow', 
-                'Seoul', 'Beijing', 'Mexico City', 'Tokyo', 
-                'Kinshasa', 'Jakarta', 'New York', 'Lagos', 
+
+        self._city_name = ['Shanghai', 'Mumbai', 'Karachi',
+                'Delhi', 'Istanbul', 'Sao Paulo', 'Moscow',
+                'Seoul', 'Beijing', 'Mexico City', 'Tokyo',
+                'Kinshasa', 'Jakarta', 'New York', 'Lagos',
                 'Lima', 'London', 'Bogota', 'Tehran', 'Ho Chi Minh City']
-    
+
         LOG.info('Fetching nodes')
         url = 'http://cmsweb.cern.ch/phedex/datasvc/json/prod/nodes'
         self._node = sorted([n['name'] for n in \
@@ -97,7 +97,7 @@ class RandomData(object):
                            json.load(urllib.urlopen(url))['phedex']['block']]
         self._block = list(set(blocks))
         self._dataset = list(set([b.split('#')[0] for b in self._block]))
-        self._primary_ds = list(set([d[1:].split('/')[0] 
+        self._primary_ds = list(set([d[1:].split('/')[0]
                                      for d in self._dataset]))
         LOG.info('Fetching files')
         files = []
@@ -127,21 +127,21 @@ class RandomData(object):
                 urllib.urlopen(url).read().replace("'", '"')).values()]
         self._ce = list(set(ces))
 
-        self._release = ['CMSSW_3_4_0', 'CMSSW_3_4_1', 'CMSSW_3_4_2', 
-                'CMSSW_3_4_2_patch1', 'CMSSW_3_5_0', 'CMSSW_3_5_0_patch1', 
-                'CMSSW_3_5_1', 'CMSSW_3_5_1_patch1', 'CMSSW_3_5_2', 
-                'CMSSW_3_5_2_patch1', 'CMSSW_3_5_2_patch2', 'CMSSW_3_5_3', 
-                'CMSSW_3_5_4', 'CMSSW_3_5_4_patch1', 'CMSSW_3_5_4_patch2', 
-                'CMSSW_3_5_6', 'CMSSW_3_5_6_patch1', 'CMSSW_3_5_7', 
-                'CMSSW_3_5_8', 'CMSSW_3_5_8_patch1', 'CMSSW_3_5_8_patch2', 
-                'CMSSW_3_6_0', 'CMSSW_3_5_8_patch3', 'CMSSW_3_6_0_patch2', 
-                'CMSSW_3_6_1', 'CMSSW_3_5_8_patch4', 'CMSSW_3_6_1_patch1', 
-                'CMSSW_3_6_1_patch2', 'CMSSW_3_5_7_hltpatch4', 
-                'CMSSW_3_6_1_patch3', 'CMSSW_3_7_0', 'CMSSW_3_6_1_patch4', 
-                'CMSSW_3_7_0_patch1', 'CMSSW_3_6_2', 'CMSSW_3_7_0_patch2', 
-                'CMSSW_3_6_3', 'CMSSW_3_6_1_patch5', 'CMSSW_3_7_0_patch3', 
+        self._release = ['CMSSW_3_4_0', 'CMSSW_3_4_1', 'CMSSW_3_4_2',
+                'CMSSW_3_4_2_patch1', 'CMSSW_3_5_0', 'CMSSW_3_5_0_patch1',
+                'CMSSW_3_5_1', 'CMSSW_3_5_1_patch1', 'CMSSW_3_5_2',
+                'CMSSW_3_5_2_patch1', 'CMSSW_3_5_2_patch2', 'CMSSW_3_5_3',
+                'CMSSW_3_5_4', 'CMSSW_3_5_4_patch1', 'CMSSW_3_5_4_patch2',
+                'CMSSW_3_5_6', 'CMSSW_3_5_6_patch1', 'CMSSW_3_5_7',
+                'CMSSW_3_5_8', 'CMSSW_3_5_8_patch1', 'CMSSW_3_5_8_patch2',
+                'CMSSW_3_6_0', 'CMSSW_3_5_8_patch3', 'CMSSW_3_6_0_patch2',
+                'CMSSW_3_6_1', 'CMSSW_3_5_8_patch4', 'CMSSW_3_6_1_patch1',
+                'CMSSW_3_6_1_patch2', 'CMSSW_3_5_7_hltpatch4',
+                'CMSSW_3_6_1_patch3', 'CMSSW_3_7_0', 'CMSSW_3_6_1_patch4',
+                'CMSSW_3_7_0_patch1', 'CMSSW_3_6_2', 'CMSSW_3_7_0_patch2',
+                'CMSSW_3_6_3', 'CMSSW_3_6_1_patch5', 'CMSSW_3_7_0_patch3',
                 'CMSSW_3_7_0_patch4', 'CMSSW_3_6_3_patch1']
-        
+
         self.keygen = {
                         'block': ('block',),
                         'run': ('run_number',),
@@ -154,21 +154,21 @@ class RandomData(object):
                         'ip': ('ip',),
                         'parent': ('dataset',),
                         'group': ('group',),
-                        'primary_ds': ('primary_ds',),       
+                        'primary_ds': ('primary_ds',),
                        } #direct references are unpickleable, apparently
 
     def get_random(self, key):
         if  key in self.keygen:
             generator = random.choice(self.keygen[key])
-            data = getattr(self, generator)() 
+            data = getattr(self, generator)()
             if ' ' in data:
                 data = '"%s"' % data
             return data
         return None
-    
+
     def get_keys(self):
         return self.keygen.keys()
-    
+
     def node(self):
         """Return a node"""
         return random.choice(self._node)
@@ -196,7 +196,7 @@ class RandomData(object):
     def city_name(self):
         """Return a city name"""
         return random.choice(self._city_name)
-    
+
     def zip_code(self):
         """Return an zip code"""
         return str(random.randint(10000, 99999))
@@ -212,17 +212,17 @@ class RandomData(object):
 
     def ip(self):
         """Return an IP address"""
-        return '%s.%s.%s.%s' % (random.randint(0, 255), 
-                                random.randint(0, 255), 
-                                random.randint(0, 255), 
+        return '%s.%s.%s.%s' % (random.randint(0, 255),
+                                random.randint(0, 255),
+                                random.randint(0, 255),
                                 random.randint(0, 255))
-     
+
     def primary_ds(self):
-        """Return a primary dataset name""" 
+        """Return a primary dataset name"""
         return random.choice(self._primary_ds)
 
 def get_random_data():
-    
+
     LOG.info("Looking for random data")
     if os.path.exists('random_data.pkl'):
         picklefile = open('random_data.pkl', 'rb')
@@ -233,7 +233,7 @@ def get_random_data():
             return data
         else:
             LOG.info("Generating fresh random data - file old")
-            data = RandomData() 
+            data = RandomData()
             picklefile = open('random_data.pkl', 'wb')
             pickle.dump((time.time(), data), picklefile, 2)
             picklefile.close()
@@ -245,5 +245,5 @@ def get_random_data():
         pickle.dump((time.time(), data), picklefile, 2)
         picklefile.close()
         return data
-    
-       
+
+

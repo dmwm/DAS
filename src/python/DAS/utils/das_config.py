@@ -51,7 +51,7 @@ DASOption('analyticsdb', 'dbname', 'string', 'analytics'),
 DASOption('analyticsdb', 'collname', 'string', 'db'),
 # controls how long records in analytics live, default 2 months
 DASOption('analyticsdb', 'history', 'int', 60*24*60*60),
-               
+
 #
 # ParserDB optins
 #
@@ -171,12 +171,12 @@ DASOption('das', 'error_expire', 'int', 300),
 # emptyset_expire controls how long to keep DAS record for empty result set
 DASOption('das', 'emptyset_expire', 'int', 5),
 # list of data services participated in DAS
-DASOption('das', 'services', 'list', 
+DASOption('das', 'services', 'list',
                 ['google_maps', 'ip', 'postalcode'], destination='services'),
 # number of DASCore workers
 # defines how many data-service calls will run at onces
 DASOption('das', 'core_workers', 'int', 50),
-# number of API workers 
+# number of API workers
 # defines how many data-service API calls will run at onces
 DASOption('das', 'api_workers', 'int', 2),
 # weights for API worker threads (some srvs need more threads then others)
@@ -190,9 +190,9 @@ def read_configparser(dasconfig):
     """Read DAS configuration"""
     config = ConfigParser.ConfigParser()
     config.read(dasconfig)
-    
+
     configdict = {}
-    
+
     for option in DAS_OPTIONS:
         value = option.get_from_configparser(config)
         if option.destination:
@@ -202,17 +202,17 @@ def read_configparser(dasconfig):
                 configdict[option.section][option.name] = value
             else:
                 configdict[option.section] = {}
-                configdict[option.section][option.name] = value    
-            
+                configdict[option.section][option.name] = value
+
     return configdict
 
 def write_configparser(dasconfig, use_default):
-    """Write DAS configuration file""" 
+    """Write DAS configuration file"""
     config = ConfigParser.ConfigParser()
-    
+
     for option in DAS_OPTIONS:
         option.write_to_configparser(config, use_default)
-        
+
     config.write(open(dasconfig, 'wb'))
 
 def das_configfile():

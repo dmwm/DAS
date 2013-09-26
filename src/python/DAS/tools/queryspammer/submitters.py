@@ -29,7 +29,7 @@ class Submitter(multiprocessing.Process):
         calls = 0
         start_time = time.time()
         while True:
-                          
+
             query = self.producer()
             query_start = time.time()
             try:
@@ -59,14 +59,14 @@ class Submitter(multiprocessing.Process):
     def submit(self, query):
         """submit query"""
         return None
-            
+
 class StdOutSubmitter(Submitter):
     "Submitter that prints the query to stdout"
     def submit(self, query):
         """submit query"""
         print query
         return True
-            
+
 class FileSubmitter(Submitter):
     "Submitter that writes the query to a file"
     def __init__(self, producer, **kwargs):
@@ -102,7 +102,7 @@ class HTTPSubmitter(Submitter):
                 req = urllib2.Request(url=url, headers=self.headers)
                 result = urllib2.urlopen(req, timeout=self.timeout)
                 data = result.read()
-                 
+
             elif self.getmode == 'positional':
                 url = self.baseurl + urllib.quote_plus(query)
                 req = urllib2.Request(url=url, headers=self.headers)
@@ -110,8 +110,8 @@ class HTTPSubmitter(Submitter):
                 data = result.read()
         elif self.method == 'POST':
             self.args[self.queryarg] = query
-            req = urllib2.Request(url=url, 
-                                  data=urllib.urlencode(self.args), 
+            req = urllib2.Request(url=url,
+                                  data=urllib.urlencode(self.args),
                                   headers=self.headers)
             result = urllib2.urlopen(req, timeout=self.timeout)
             data = result.read()
@@ -121,7 +121,7 @@ class HTTPSubmitter(Submitter):
 class DASWebSubmitter(HTTPSubmitter):
     "DAS Web submitter class"
     def __init__(self, producer, **kwargs):
-        HTTPSubmitter.__init__(self, producer, 
+        HTTPSubmitter.__init__(self, producer,
                                baseurl='http://localhost:8212/das/request',
                                queryarg='input', **kwargs)
 
@@ -156,7 +156,7 @@ class PLYSubmitter(Submitter):
         for val in core.mapping.daskeys().values():
             for item in val:
                 daskeys.append(item)
-        
+
         self.dasply = DASPLY(parserdir, daskeys, dasservices)
         self.dasply.build()
         Submitter.__init__(self, producer, **kwargs)
@@ -168,13 +168,13 @@ class PLYSubmitter(Submitter):
         mongo = ply2mongo(ply)
         print "MONGO: ", mongo
         return True
-        
-    
+
+
 
 def list_submitters():
     "List all available submitter classes"
-    return [k 
-            for k,v in globals().items() 
-            if type(v)==type(type) 
-            and issubclass(v,Submitter) 
+    return [k
+            for k,v in globals().items()
+            if type(v)==type(type)
+            and issubclass(v,Submitter)
             and not v==Submitter]

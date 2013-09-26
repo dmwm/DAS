@@ -7,9 +7,10 @@ about datasets.
 
 # DAS modules
 from   DAS.utils.url_utils import getdata_urllib as getdata
-from   DAS.utils.utils import qlxml_parser, convert2ranges
+from   DAS.utils.utils import qlxml_parser
 from   DAS.utils.utils import get_key_cert
-from   DAS.services.runregistry.runregistry_service import collect_lumis, rr_worker
+from   DAS.services.runregistry.runregistry_service \
+        import collect_lumis, rr_worker
 import DAS.utils.jsonwrapper as json
 
 def rr_query(rlist):
@@ -36,10 +37,10 @@ def lumis4dataset(kwds):
     dataset = kwds.get('dataset', None)
     if  dbs_url.find('servlet') != -1: # DBS2 url
         gen = runs_dbs2(dbs_url, dataset, ckey, cert)
-    elif url.find('cmsweb') != -1 and url.find('DBSReader') != -1:
+    elif dbs_url.find('cmsweb') != -1 and dbs_url.find('DBSReader') != -1:
         gen = runs_dbs3(dbs_url, dataset, ckey, cert)
     else:
-        raise Exception('Unsupport DBS URL, url=%s' % url)
+        raise Exception('Unsupport DBS URL, url=%s' % dbs_url)
     rlist = [r for r in gen]
     if  not rlist:
         return
@@ -54,14 +55,12 @@ def runs_dbs2(url, dataset, ckey, cert):
     params   = dict(api='executeQuery', apiversion='DBS_2_0_9', query=query)
     data, _  = getdata(url, params, ckey=ckey, cert=cert, system='combined')
     prim_key = 'run'
-    res = {} # output result
     for row in qlxml_parser(data, prim_key):
         run  = row['run']['run']
         yield run
 
 def runs_dbs3(url, dataset, ckey, cert):
     "Retrive list of run/lumis from DBS2 for a given dataset"
-    res      = {} # output result
     api_url  = url + '/runs'
     params   = {'dataset': dataset}
     data, _  = getdata(api_url, params, ckey=ckey, cert=cert, system='combined')

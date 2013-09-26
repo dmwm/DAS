@@ -42,7 +42,7 @@ def poolsafe(func):
 
 #monkey-patch multiprocessing worker function
 from multiprocessing.pool import worker
-multiprocessing.pool.worker = poolsafe(worker) 
+multiprocessing.pool.worker = poolsafe(worker)
 
 DASAnalyticsConfig.add_option("max_retries", type=int, default=1,
     help="Number of times the task scheduler will \
@@ -58,41 +58,41 @@ class TaskScheduler(plugins.SimplePlugin):
     This is a cron-like thread which keeps track of all the tasks to
     be run, and dispatches them to the worker pool at the appropriate
     time.
-    
+
     A completed job calls back to this thread to request that it be
     re-scheduled at some point in the future.
-    
+
     A job that fails will be retried a specified number of times before
     being prevented from being resubmitted.
-    
+
     This attaches to the cherrypy bus to receive start and stop signals.
     """
     def __init__(self, config, engine):
         plugins.SimplePlugin.__init__(self, engine)
         self.logger = logging.getLogger("DASAnalytics.TaskScheduler")
-                
+
         self.scheduled = [] # -> (time, task)
         self.wakeup_at = None
-        
+
         self.max_retries = config.max_retries
         self.retry_delay = config.retry_delay
         self.minimum_interval = config.minimum_interval
         self.workers = config.workers
-        
+
         self.pool = None
-        
+
         self.registry = {}
         self.callbacks = []
         self.running = {}
-        
+
         #since this handles requests from the web threads,
         #pool monitor thread and main thread, we need
         #to lock access
         self.lock = multiprocessing.Lock()
-        
+
         #whether we should kill the main loop
         self.terminate = False
-    
+
     def start(self):
         "Receive the start signal from cherrypy bus and run the main loop."
         self.pool = multiprocessing.Pool(processes=self.workers)
@@ -102,19 +102,19 @@ class TaskScheduler(plugins.SimplePlugin):
         #gets the lock and this should be occurring once before anything else
         thread = threading.Thread(target=self.run)
         thread.start()
-    
+
     def stop(self):
         "Set the termination signal and request the pool terminate gracefully."
-        #unclear what the correct locking should be here since holding the 
+        #unclear what the correct locking should be here since holding the
         #lock for join() would prevent any callbacks running
         self.terminate = True
         if self.pool:
             self.pool.terminate() #sod it, kill it anyway
             self.pool.join()
             self.pool = None
-    
+
     exit = stop
- 
+
     def run(self):
         """
         Called by the controller main loop. Checks if there is
@@ -124,23 +124,23 @@ class TaskScheduler(plugins.SimplePlugin):
             with self.lock:
                 if self.terminate:
                     return
-                
+
                 now = time.time()
                 if self.wakeup_at and now > self.wakeup_at:
                     while self.scheduled and self.scheduled[0]['at'] < now:
                         self._submit_task()
                         self._set_next_task()
             time.sleep(1)
-        
+
     def add_callback(self, callback):
         "Add a callback to be dispatched when a job result returns."
         self.callbacks.append(callback)
-    
+
     def get_scheduled(self):
         "Get a de-classed list of current tasks for web interface."
         with self.lock:
             return deepcopy(self.scheduled)
-    
+
     def get_task(self, master_id):
         "Get a dict describing a single task from the registry"
         with self.lock:
@@ -149,13 +149,13 @@ class TaskScheduler(plugins.SimplePlugin):
                 return task.get_dict()
             else:
                 return None
-            
+
     def get_children(self, master_id):
         "Get task children"
         with self.lock:
-            return [m_id for m_id, task in self.registry.items() 
+            return [m_id for m_id, task in self.registry.items()
                     if master_id in task.parent]
-    
+
     def add_task(self, task, when=None, offset=None):
         """
         Wrapper around _add_task (which can be called from an
@@ -164,7 +164,7 @@ class TaskScheduler(plugins.SimplePlugin):
         with self.lock:
             self._add_task(task, when, offset)
             return True
-    
+
     def _add_task(self, task, when=None, offset=None):
         """
         Add a new task, specifying either an absolute time
@@ -174,15 +174,15 @@ class TaskScheduler(plugins.SimplePlugin):
             when = time.time() + self.minimum_interval
         if offset:
             when = time.time() + offset
-            
+
         self.logger.info('Adding Task "%s" to TaskScheduler, scheduled in %d',
                          task.name, int(when - time.time()))
-        
+
         self.registry[task.master_id] = task
         self.scheduled.append({'at':when, 'master_id':task.master_id,
                                'name': task.name, 'classname': task.classname})
         self._set_next_task()
-        
+
     def remove_task(self, master_id):
         """
         Request the task with given ID be removed from the schedule
@@ -196,7 +196,7 @@ class TaskScheduler(plugins.SimplePlugin):
                 return True
             else:
                 return False
-            
+
     def reschedule_task(self, masterid, when):
         """
         Request the task be moved to a different scheduled time.
@@ -208,7 +208,7 @@ class TaskScheduler(plugins.SimplePlugin):
                     self._set_next_task()
                     return True
             return False
-    
+
     def _set_next_task(self):
         """
         Internal, re-sort the queue and record the next submission time
@@ -217,8 +217,8 @@ class TaskScheduler(plugins.SimplePlugin):
             self.scheduled = sorted(self.scheduled, key=lambda x: x['at'])
             self.wakeup_at = self.scheduled[0]['at']
         else:
-            self.wakeup_at = None        
-    
+            self.wakeup_at = None
+
     def _submit_task(self):
         "Do job submission."
         now = time.time()
@@ -239,14 +239,14 @@ class TaskScheduler(plugins.SimplePlugin):
             self.pool.apply_async(runnable,
                                   callback=self.task_finished_callback)
             task.last_run_at = now
-    
+
     def get_running(self):
         """
         Get a list of the currently running tasks.
         """
         with self.lock:
             return self.running.values()
-        
+
     def get_registry(self):
         """
         Get all known tasks (which may not necessarily be scheduled
@@ -255,7 +255,7 @@ class TaskScheduler(plugins.SimplePlugin):
         with self.lock:
             return dict([(mid, self.registry[mid].get_dict()) \
                         for mid in self.registry])
-            
+
     def task_finished_callback(self, result):
         "Callback each finished job hits."
         with self.lock:
@@ -268,17 +268,17 @@ class TaskScheduler(plugins.SimplePlugin):
             del self.running[task_id]
             master_id = item['master_id']
             task = self.registry[master_id]
-        
+
             self.logger.info('Finished Task "%s" (%s) success=%s.',
                              task.name, task_id, success)
-            
+
             if 'next' in result:
                 self.logger.info('Task "%s" (%s) requesting resubmission at %s',
                                  task.name, task_id, result['next'])
                 interval = max(self.minimum_interval, result['next'] - now)
             else:
                 interval = task.interval
-        
+
             if resubmit:
                 if success:
                     task.retries = 0
@@ -302,7 +302,7 @@ class TaskScheduler(plugins.SimplePlugin):
                         self.logger.info(msg)
             else:
                 self.logger.info('...rescheduling disabled by task.')
-        
+
             self.logger.info('...scheduling %s new task(s).', len(new_tasks))
             for new in new_tasks:
                 if 'name' in new and 'classname' in new and 'interval' in new:
@@ -317,7 +317,7 @@ class TaskScheduler(plugins.SimplePlugin):
                 else:
                     self.logger.error('New task contained insufficient \
 arguments to be created: %s', new)
-                
+
             for callback in self.callbacks:
                 try:
                     callback(result)

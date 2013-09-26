@@ -25,13 +25,13 @@ class HotspotReport(Report):
             return self.hotspot_report(**kwargs)
         else:
             return self.list_hotspots()
-        
+
     def hotspot_report(self, **kwargs):
         "Hotspot report"
         analytics = get_analytics_interface()
         identifier = kwargs['identifier']
-        
-        
+
+
         taskdicts = [task for task in \
                 self.scheduler.get_registry().values() \
                         if 'Hotspot' in task['classname'] and \
@@ -48,34 +48,34 @@ class HotspotReport(Report):
             period = taskobj['kwargs'].get('period', 86400*30)
             interval = taskobj['interval']
             fraction = taskobj['kwargs'].get('fraction', 0.15)
-        
+
         period = int(kwargs.get('period', period))
         fraction = float(kwargs.get('fraction', fraction))
-        
+
         epoch_end = time.time()
         epoch_start = time.time() - period
-        
-        summaries = analytics.get_summary(identifier, 
+
+        summaries = analytics.get_summary(identifier,
                                           after=epoch_start,
-                                          before=epoch_end) 
-         
+                                          before=epoch_end)
+
         counter = collections.defaultdict(int)
         map(lambda x: counter.update(x['keys']), summaries)
-        
+
         sorted_keys = sorted(counter, key=lambda x: counter[x])
         total_calls = float(sum(counter.values()))
-        
+
         key_series = []
         call_count = 0
         for key in sorted_keys:
             call_count += counter[key]
             key_series += [call_count]
-        
+
         binning = 1
         if len(key_series) > self.max_series_length:
             binning = len(key_series)/self.max_series_length
             key_series = key_series[len(key_series)%binning-1::binning]
-            
+
         key_plot = dict(legend="null",
                         series=[dict(colour="#ff0000",
                                      label="Calls",
@@ -86,10 +86,10 @@ class HotspotReport(Report):
                                    width=binning,
                                    min=0),
                         yaxis=dict(label="Cumulative calls"))
-        
+
         summary_durations = [s['finish'] - s['start'] for s in summaries]
-        summary_density = [len(s['keys']) for s in summaries] 
-        
+        summary_density = [len(s['keys']) for s in summaries]
+
         summary_plot = dict(legend="null",
                             series=[dict(colour="#ff0000",
                                          label="Summaries",
@@ -99,20 +99,20 @@ class HotspotReport(Report):
                             title="Summary length and call count",
                             xaxis=dict(label="Summary length"),
                             yaxis=dict(label="Number of calls"))
-        
-        
+
+
         time_bins = int((epoch_end - epoch_start) / interval)
         time_interval = interval
         if time_bins > self.max_series_length:
             time_bins = self.max_series_length
             time_interval = (epoch_end - epoch_start) / time_bins
         time_series = [0]*(time_bins+1)
-        
+
         for sss in summaries:
             bin = int(((0.5*(sss['finish']+s['start'])) - epoch_start)\
                       / time_interval)
             time_series[bin] += len(s['keys'])
-        
+
         time_plot = dict(legend="null",
                          series=[dict(colour="#ff0000",
                                       label="Query density over time",
@@ -124,15 +124,15 @@ class HotspotReport(Report):
                                     min=epoch_start,
                                     width=time_interval),
                          yaxis=dict(label="Calls"))
-        
+
         selected = []
         cumulative = 0
         while sorted_keys and cumulative < fraction * total_calls:
             key = sorted_keys.pop()
             cumulative += counter[key]
             selected += [key]
-        
-        
+
+
         return ("analytics_report_hotspot", {"list":False,
                                              "identifier":identifier,
                                              "task":taskobj,
@@ -143,7 +143,7 @@ class HotspotReport(Report):
                                              "summary_plot":summary_plot,
                                              "time_plot":time_plot,
                                              "selected":selected})
-        
+
     def list_hotspots(self):
         "List hotstpots"
         identifiers = set([task['kwargs'].get('identifier') \
@@ -151,8 +151,8 @@ class HotspotReport(Report):
                         if 'Hotspot' in task['classname']])
         return ("analytics_report_hotspot", {"list":True,
                                              "identifiers":list(identifiers)})
-        
-        
-        
-        
-        
+
+
+
+
+

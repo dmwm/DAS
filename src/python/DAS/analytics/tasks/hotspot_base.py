@@ -24,14 +24,14 @@ class HotspotBase(object):
     """
     def __init__(self, **kwargs):
         self.logger = PrintManager('HotspotBase', kwargs.get('verbose', 0))
-        self.das = kwargs['DAS']        
+        self.das = kwargs['DAS']
         self.fraction = float(kwargs.get('fraction', 0.15))
         self.mode = kwargs.get('mode','calls').lower()
         self.period = int(kwargs.get('period', 86400*30))
         self.interval = kwargs['interval']
         self.allowed_gap = int(kwargs.get('allowed_gap', 3600))
         self.identifier = kwargs['identifier']
-        
+
     def __call__(self):
         """
         Perform a hotspot-like analysis. Subclasses shouldn't
@@ -43,33 +43,33 @@ class HotspotBase(object):
         task generation step (implemented in subclasses).
         The final report is generated and returned back.
         """
-        
+
         epoch_end = time.time()
         epoch_start = epoch_end - self.period
-        
+
         summaries = self.get_summaries(epoch_start, epoch_end)
         self.logger.info("Got %s summaries" % len(summaries))
-        
+
         items = self.get_all_items(summaries)
         self.logger.info("Got %s items" % len(items))
-        
+
         items = self.preselect_items(items)
         self.logger.info("Preselected to %s items" % len(items))
-        
+
         items = self.select_items(items)
         self.logger.info("Selected %s items (%s:%s)" \
                          % (len(items), self.mode, self.fraction))
-        
+
         items = self.mutate_items(items)
         self.logger.info("Mutated to %s items" % len(items))
-        
+
         retval = {'mode': self.mode,
                   'fraction': self.fraction,
                   'epoch_start': epoch_start,
                   'epoch_end': epoch_end,
                   'summaries': len(summaries),
                   'selected': dict(items).items()}
-        
+
         new_tasks = []
         failed_items = []
         for item, count in items.items():
@@ -82,26 +82,26 @@ class HotspotBase(object):
                 failed_items.append((item, count, str(exc)))
         retval['new_tasks'] = new_tasks
         retval['failed_items'] = failed_items
-        
+
         retval.update(self.report())
-        
+
         return retval
-    
+
     def generate_task(self, item, count, epoch_start, epoch_end):
         """
         For the given selected key, generate an appropriate task
         dictionary as understood by taskscheduler.
-        
+
         Should be a generator or return an iterable
         """
         raise NotImplementedError
-    
+
     def report(self):
         """
         Generate some extra keys to go in the job report, if desired.
         """
         return {}
-    
+
     def preselect_items(self, items):
         """
         This is a part of selection chain.
@@ -116,7 +116,7 @@ class HotspotBase(object):
         pass those for task generation step.
         """
         return items
-    
+
     def mutate_items(self, items):
         """
         This is a last part of selection chain.
@@ -126,7 +126,7 @@ class HotspotBase(object):
         do so here.
         """
         return items
-    
+
     def get_all_items(self, summaries):
         """
         Merge the summary dictionaries.
@@ -136,7 +136,7 @@ class HotspotBase(object):
             for key, val in summary.items():
                 items[key] += val
         return items
-    
+
     def select_items(self, items):
         """
         Take a mapping of item->count pairs and determine
@@ -153,15 +153,15 @@ class HotspotBase(object):
                 if running_total > total_calls * self.fraction:
                     break
         elif self.mode == 'keys':
-            selected_items = dict([(k, items[k]) 
+            selected_items = dict([(k, items[k])
                for k in sorted_keys[0:int(len(sorted_keys)*self.fraction)]])
         elif self.mode == 'fixed':
-            selected_items = dict([(k, items[k]) 
+            selected_items = dict([(k, items[k])
                for k in sorted_keys[0:int(self.fraction)]])
         else:
             raise NotImplementedError
         return selected_items
-    
+
     def get_summaries(self, epoch_start, epoch_end):
         """
         Fetch all the available pre-computed summaries
@@ -169,10 +169,10 @@ class HotspotBase(object):
         """
         #get all the summaries we can from this time
         try:
-            summaries = self.das.analytics.get_summary(self.identifier, 
+            summaries = self.das.analytics.get_summary(self.identifier,
                                                        after=epoch_start,
                                                        before=epoch_end)
-            self.logger.info("Found %s summary documents." % len(summaries)) 
+            self.logger.info("Found %s summary documents." % len(summaries))
         except:
             summaries = []
         #see how much coverage of the requested period we have
@@ -188,9 +188,9 @@ class HotspotBase(object):
         extra_summaries.extend(result)
         summaries = [dict(s['keys']) for s in summaries]
         summaries += extra_summaries
-        
+
         return summaries
-    
+
     def make_summary(self, start, finish):
         """
         Split the summarise requests into interval-sized chunks and decide
@@ -208,7 +208,7 @@ class HotspotBase(object):
                                  "creating %s summaries." % blocks)
                 for i in xrange(blocks):
                     try:
-                        summary = self.make_one_summary(start+span*i, 
+                        summary = self.make_one_summary(start+span*i,
                                                         start+span*(i+1))
                         self.das.analytics.add_summary(self.identifier,
                                                start+span*i,
@@ -217,7 +217,7 @@ class HotspotBase(object):
                         result.append(summary)
                     except:
                         pass
-                    
+
             else:
                 try:
                     summary = self.make_one_summary(start, finish)
@@ -230,9 +230,9 @@ class HotspotBase(object):
                     pass
         else:
             self.logger.info("...short enough to ignore.")
-            
+
         return result
-    
+
     def make_one_summary(self, start, finish):
         """
         Actually make a summary of item->count pairs

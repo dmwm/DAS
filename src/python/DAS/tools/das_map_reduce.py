@@ -10,11 +10,7 @@ __author__ = "Valentin Kuznetsov"
 
 import os
 import sys
-import time
-import types
-import traceback
 from optparse import OptionParser
-from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import create_indexes
 
 # monogo db modules
@@ -24,16 +20,16 @@ from pymongo import DESCENDING
 # Cheetah template module
 from Cheetah.Template import Template
 
-class DASOptionParser: 
+class DASOptionParser(object):
     """
      DAS cli option parser
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("--host", action="store", type="string", 
+        self.parser.add_option("--host", action="store", type="string",
              default="localhost", dest="host",
              help="specify MongoDB hostname")
-        self.parser.add_option("--port", action="store", type="int", 
+        self.parser.add_option("--port", action="store", type="int",
              default="27017", dest="port",
              help="specify MongoDB port")
         self.parser.add_option("--list", action="store", dest="list",
@@ -164,7 +160,7 @@ function() {
      */
     if (this.block) {
         if (this.block.replica) {
-            if (this.block.replica.size) 
+            if (this.block.replica.size)
                 emit(null, this.block.replica.size);
         }
         for (var i = 0; i < this.block.length; i++) {
@@ -191,5 +187,5 @@ function (key, values) {
     }
     return total;
 }
-"""   
+"""
     MGR.add_mapreduce('sum_block.replica.size', MAP, REDUCE)

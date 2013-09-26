@@ -3,7 +3,7 @@
 #pylint: disable-msg=C0103
 
 """
-DAS query spammer toolkit 
+DAS query spammer toolkit
 
 .. moduleauthor:: Gordon Ball <gordon.ball@cern.ch>
 """

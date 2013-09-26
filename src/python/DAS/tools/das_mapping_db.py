@@ -14,14 +14,14 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
 from DAS.services.map_reader import read_service_map
 
-class DASOptionParser: 
+class DASOptionParser:
     """
     DAS cli option parser
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("-v", "--verbose", action="store", 
-                                          type="int", default=0, 
+        self.parser.add_option("-v", "--verbose", action="store",
+                                          type="int", default=0,
                                           dest="debug",
              help="verbose output")
         self.parser.add_option("--host", action="store", type="string",
@@ -38,14 +38,14 @@ class DASOptionParser:
              default=None , dest="nmap", help="specify notation map file")
         self.parser.add_option("--presentation-map", action="store", type="string",
              default=None , dest="pmap", help="specify presentation map file")
-        self.parser.add_option("--list-apis", action="store_true", 
+        self.parser.add_option("--list-apis", action="store_true",
              dest="listapis", help="return a list of APIs")
-        self.parser.add_option("--list-daskeys", action="store_true", 
+        self.parser.add_option("--list-daskeys", action="store_true",
              dest="listkeys", help="return a list of DAS keys")
         self.parser.add_option("--remove", action="store", type="string",
-             default=None , dest="remove", 
+             default=None , dest="remove",
              help="remove DAS Mapping DB record, provide the spec")
-        self.parser.add_option("--clean", action="store_true", 
+        self.parser.add_option("--clean", action="store_true",
              dest="clean", help="clean DAS mapping DB")
     def getOpt(self):
         """

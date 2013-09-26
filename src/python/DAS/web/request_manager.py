@@ -44,7 +44,7 @@ class RequestManager(object):
         doc = self.col.find_one(dict(_id=pid))
         if  doc:
             return json.loads(doc['kwds'])
-        
+
     def add(self, pid, kwds):
         """Add new pid/kwds"""
         self.clean()
@@ -68,12 +68,12 @@ class RequestManager(object):
                 msg = '%s unable to add pid=%s' % (self.col, pid)
                 print dastimestamp('DAS ERROR '), msg
                 break
-        
+
     def remove(self, pid):
         """Remove given pid"""
         self.clean()
         self.col.remove(dict(_id=pid))
-        
+
     def items(self):
         """Return list of current requests"""
         self.clean()

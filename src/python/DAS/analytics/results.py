@@ -31,19 +31,19 @@ class ResultManager(logging.Handler):
     """
     Class that receives and provides access to task results and
     logging information, and sorts these for web access.
-    
-    These are stored in a mongodb capped collection. 
+
+    These are stored in a mongodb capped collection.
     """
-    
+
     def __init__(self, config):
         logging.Handler.__init__(self, logging.NOTSET)
         #flag to terminate the clean-up thread
         self.logger = logging.getLogger("DASAnalytics.ResultManager")
         self.dburi  = config.db_uri
-        self.dbname = config.db_name        
+        self.dbname = config.db_name
         self.dbcoll = config.db_coll
         self.dbsize = config.db_size
-        
+
         self.col = None #collection
 
         # Monitoring thread which performs MongoDB connection
@@ -59,11 +59,11 @@ class ResultManager(logging.Handler):
             if  self.dbcoll not in database.collection_names():
                 database.create_collection(self.dbcoll, \
                             capped=True, size=self.dbsize)
-            self.col = database[self.dbcoll]                
+            self.col = database[self.dbcoll]
         if  not is_db_alive(self.dburi):
             self.col = None
             return
-        
+
     def emit(self, record):
         "Logging Handler method to receive messages"
         if not hasattr(record, 'message'):
@@ -72,10 +72,10 @@ class ResultManager(logging.Handler):
             self.receive_task_log(record)
         else:
             self.receive_log(record)
-     
+
     def receive_task_result(self, result):
         """
-        Receive a result dictionary from a finished task, 
+        Receive a result dictionary from a finished task,
         and store it in the DB.
         """
         result['type'] = 'result'
@@ -83,7 +83,7 @@ class ResultManager(logging.Handler):
             if  self.col:
                 self.col.insert(result, check_keys=True)
         except (InvalidName, InvalidDocument, InvalidStringData):
-            print "\n### Fail to insert", result 
+            print "\n### Fail to insert", result
             #we tried to insert a dict with dotted names (or similar),
             #insert a minimal dict and an explanatory note
             result = {'master_id': result['master_id'],
@@ -95,7 +95,7 @@ class ResultManager(logging.Handler):
                       'index': result['index'],
                       'parent': result['parent'],
                       'type': 'result',
-                      'mongo_error': 
+                      'mongo_error':
                         'Result contained invalid Mongo names, dropped.'}
             if  self.col:
                 self.col.insert(result)
@@ -125,7 +125,7 @@ class ResultManager(logging.Handler):
         if  self.col:
             self.col.insert(result)
 
-    def get_logs(self, log=None, lvl=None, before=None, after=None, 
+    def get_logs(self, log=None, lvl=None, before=None, after=None,
                  children=False, limit=0, skip=0):
         "Get some general logs from the DB"
         query = {'type': 'log'}
@@ -151,7 +151,7 @@ class ResultManager(logging.Handler):
         else:
             result = []
         return result
-        
+
     def get_log_names(self, match=None):
         "Get the set of logger names known"
         query = {'type':'log'}
@@ -160,7 +160,7 @@ class ResultManager(logging.Handler):
         if  self.col:
             result = self.col.find(query, ['log'])
         return list(set(item['log'] for item in result))
-    
+
     def get_results(self, master_id=None, index=None, name=None, success=None,
                     classname=None, before=None, after=None, parent=None,
                     limit=0, skip=0, only=None):

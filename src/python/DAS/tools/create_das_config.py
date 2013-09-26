@@ -14,7 +14,7 @@ from optparse import OptionParser
 # DAS modules
 from DAS.utils.das_config import DAS_OPTIONS, das_configfile
 
-class ConfigOptionParser:
+class ConfigOptionParser(object):
     "option parser"
     def __init__(self):
         self.parser = OptionParser()
@@ -30,8 +30,8 @@ class ConfigOptionParser:
 def main():
     "Main function"
     optmgr = ConfigOptionParser()
-    opts, _args = optmgr.get_opt()
-    _dasconfig = opts.uinput if opts.uinput else das_configfile()
+    opts, _ = optmgr.get_opt()
+    _ = opts.uinput if opts.uinput else das_configfile()
     outconfig = opts.output if opts.output else \
                 os.path.join(os.getcwd(), 'das_cms.cfg')
     config = ConfigParser.ConfigParser()
