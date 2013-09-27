@@ -52,7 +52,7 @@ from DAS.utils.global_scope import SERVICES
 from DAS.core.das_exceptions import WildcardMultipleMatchesException
 import DAS.utils.jsonwrapper as json
 
-DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
+DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'identity',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
@@ -105,6 +105,7 @@ class DASWebService(DASWebManager):
         self.dasconfig   = dasconfig
         self.dburi       = self.dasconfig['mongodb']['dburi']
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
+        self.identity    = os.environ.get('DAS_IDENTITY', 'das0')
         self.queue_limit = config.get('queue_limit', 50)
         qtype            = config.get('qtype', 'Queue')
         if  qtype not in ['Queue', 'PriorityQueue']:
@@ -135,6 +136,8 @@ class DASWebService(DASWebManager):
         thname = 'dbscore_monitor'
         start_new_thread(thname, dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
+
+        print "Started DAS server: %s" % self.identity
 
     def process_requests_onhold(self):
         "Process requests which are on hold"
@@ -534,6 +537,7 @@ class DASWebService(DASWebManager):
         daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
         page  = self.templatepage('das_searchform', input=uinput, \
                 init_dbses=list(self.dbs_instances), daskeys=daskeys, \
+                identity=self.identity,
                 base=self.base, instance=instance, view=view, cards=cards)
         return page
 
@@ -771,6 +775,12 @@ class DASWebService(DASWebManager):
         Since query are cached the repeated call with the same query
         has no cost to DAS core.
         """
+        # check server identity
+        if  kwargs.get('identity', self.identity) != self.identity:
+            msg = "wrong server"
+            print dastimestamp('DAS WEB ERROR '), msg
+            return self.error(msg)
+
         # do not allow caching
         set_no_cache_flags()
 
@@ -926,6 +936,12 @@ class DASWebService(DASWebManager):
         """
         Request data from DAS cache.
         """
+        # check server identity
+        if  kwargs.get('identity', self.identity) != self.identity:
+            msg = "wrong server"
+            print dastimestamp('DAS WEB ERROR '), msg
+            return self.error(msg)
+
         # do not allow caching
         set_no_cache_flags()
 
@@ -973,7 +989,7 @@ class DASWebService(DASWebManager):
             return page
         if  self.taskmgr.is_alive(pid):
             page = self.templatepage('das_check_pid', method='check_pid',
-                    uinput=uinput, view=view,
+                    uinput=uinput, view=view, identity=self.identity,
                     base=self.base, pid=pid, interval=self.interval)
         else:
             self.reqmgr.remove(pid)
@@ -989,8 +1005,8 @@ class DASWebService(DASWebManager):
         return self.page(page)
 
     @expose
-    @checkargs(['pid'])
-    def check_pid(self, pid):
+    @checkargs(['pid', 'identity'])
+    def check_pid(self, pid, identity):
         """
         Check status of given pid. This is a server callback
         function for ajaxCheckPid, see js/ajax_utils.js
@@ -1002,7 +1018,7 @@ class DASWebService(DASWebManager):
         page = ''
         try:
             if  self.taskmgr.is_alive(pid):
-                page = img + " processing PID=%s" % pid
+                page = img + " server: %s, processing PID=%s" % (identity, pid)
             else:
                 self.reqmgr.remove(pid)
                 page  = 'Request PID=%s is completed' % pid

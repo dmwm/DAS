@@ -2,6 +2,7 @@
 #set base = $quote($base)
 #set inst = $quote($instance)
 #set view = $quote($view)
+#set identity = $quote($identity)
 <!-- das_searchform.tmpl -->
 
 <form action="$base/request" method="get" name="das_search" id="das_search" class="das_form">
@@ -71,6 +72,7 @@ autocompletion
 <span>
 <a href="javascript:FlipTag('das_keys_desc');"><b>Show DAS keys description</b></a>
 </span>
+<input type="hidden" name="identity" id="identity" value="$identity" />
 </form>
 <div class="right">
 <img src="$base/images/mongodb_logo.png" alt="Powered by MongoDB" width="5%" />

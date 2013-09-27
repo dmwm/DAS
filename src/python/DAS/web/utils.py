@@ -24,6 +24,7 @@ from   bson.objectid import ObjectId
 import DAS.utils.jsonwrapper as json
 from   DAS.utils.utils import print_exc, presentation_datetime
 from   DAS.utils.regex import number_pattern, web_arg_pattern, http_pattern
+from   DAS.utils.regex import das_identity
 from   DAS.utils.das_db import db_connection
 from   DAS.web.das_codes import web_code
 
@@ -332,6 +333,10 @@ def checkargs(supported):
             if  checkarg(kwds, 'ahash') and len(str(kwds['ahash'])) != 32:
                 code  = web_code('Unsupported ahash value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'identity'):
+                if  not das_identity.match(kwds['identity']):
+                    code  = web_code('Unsupported identity value')
+                    raise HTTPError(500, 'DAS error, code=%s' % code)
             data = func (self, *args, **kwds)
             return data
         wrapped_f.__doc__  = func.__doc__

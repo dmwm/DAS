@@ -30,6 +30,9 @@ pattern = r'(%s), \d\d (%s) 20\d\d \d\d:\d\d:\d\d GMT' \
         % ('|'.join(days), '|'.join(months))
 http_ts_pattern = re.compile(pattern)
 
+# DAS server identity pattern
+das_identity = re.compile(r'^das[0-9]$')
+
 # HTTP header message
 pat_http_msg = re.compile(r'HTTP\/\S*\s*\d+\s*(.*?)\s*$')
 # HTTP header Expires message
