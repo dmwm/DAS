@@ -28,8 +28,13 @@ class DasSchemaAdapter(object):
 
     def __new__(cls, dascore=None):
         """
-        this will allow accessing schema even without holding reference to it,
+        aka. parametrized mutable singleton.
+
+        this will allow accessing adapter even without holding reference to it,
         still allowing to pass parameters to it (e.g. DASCore)
+
+        when dascore is given the cached metadata is reinitialized (useful if
+         some of data has to be reloaded)
         """
         if DasSchemaAdapter.__instance is None:
             DasSchemaAdapter.__instance = object.__new__(cls)
@@ -37,7 +42,7 @@ class DasSchemaAdapter(object):
             if not dascore:
                 DasSchemaAdapter.__instance.init(DASCore())
 
-        # allow overriding DASCore
+        # allow overriding DASCore or reinitializing what is cached
         if dascore:
             DasSchemaAdapter.__instance.init(dascore)
 

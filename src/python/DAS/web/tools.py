@@ -251,8 +251,3 @@ def enable_cross_origin(func):
         return data
 
     return wrapper
-
-
-tojson = lambda var: json.dumps(var)
-tojson.__doc__ = "returns a json representation of a variable " \
-                 "that can be used safely in javascript"
