@@ -36,7 +36,6 @@ class KeywordSearch:
 
 
     def __init__(self, dascore):
-        #das_schema_adapter.init(dascore)
         self.schema = getSchema(dascore)
 
         ranker = 'fast'

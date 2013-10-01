@@ -13,8 +13,7 @@ import unittest
 
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
 from DAS.keywordsearch.search import KeywordSearch
-from DAS.core.das_core import DASCore
-
+from DAS.utils.das_config import das_readconfig
 
 #globals
 n_queries = 0
@@ -65,10 +64,12 @@ class KwsTesterMetaClass(type):
 
         print 'setUp in metaclass: getting dbs manager '\
               '(and fetching datasets if needed)'
-        cls.dascore = DASCore()
-        cls.global_dbs_inst = get_global_dbs_mngr(update_required=False,
-                                                  dascore=cls.dascore)
-        cls.kws = KeywordSearch(dascore=cls.dascore)
+        cls.global_dbs_inst = get_global_dbs_mngr(update_required=False)
+        cls.kws = KeywordSearch(dascore=None)
+        dasconfig = das_readconfig()
+        cls.timeout = dasconfig['keyword_search']['timeout']
+
+
 
 class KeywordSearchAbstractTester(unittest.TestCase):
     global_dbs_inst = False
@@ -82,9 +83,8 @@ class KeywordSearchAbstractTester(unittest.TestCase):
         #print "setUp: quick, reusing from metaclass"
         cls = KeywordSearchAbstractTester
         self.kws = cls.kws
-        self.dascore = cls.dascore
         self.global_dbs_inst = cls.global_dbs_inst
-        self.timeout = self.dascore.dasconfig['keyword_search']['timeout']
+        self.timeout = cls.timeout
 
     def result_is_correct(self, result, expected_results):
         if isinstance(expected_results, str) or isinstance(expected_results, unicode):

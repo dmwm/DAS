@@ -52,20 +52,21 @@ def substitute_multiple(target, replacements, to_replace ='*',):
 
 
 
-def get_global_dbs_mngr(update_required=False, dascore=None):
+def get_global_dbs_mngr(update_required=False):
     """
     Gets a new instance of DBSDaemon for global DBS for testing purposes.
 
     """
     # TODO: DAS.web.dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART = 1
-    if not dascore:
-        # P.S. this module is imported from dascore thru dasquery
-        from DAS.core.das_core import DASCore
-        dascore = DASCore()
 
-    dburi = dascore.dasconfig['mongodb']['dburi']
-    dbsexpire = dascore.dasconfig.get('dbs_daemon_expire', 3600)
-    main_dbs_url = dascore.mapping.dbs_url()
+    from DAS.utils.das_config import das_readconfig
+    from DAS.core.das_mapping_db import DASMapping
+    dasconfig = das_readconfig()
+    dasmapping = DASMapping(dasconfig)
+
+    dburi = dasconfig['mongodb']['dburi']
+    dbsexpire = dasconfig.get('dbs_daemon_expire', 3600)
+    main_dbs_url = dasmapping.dbs_url()
     dbsmgr = DBSDaemon(main_dbs_url, dburi, {'expire': dbsexpire})
 
     # if we have no datasets (fresh DB, fetch them)
