@@ -29,8 +29,6 @@ from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 
 
-# Shall we keep existing Datasets on server restart (very useful for debuging)
-KEEP_EXISTING_RECORDS_ON_RESTART = 1
 SKIP_UPDATES = 0
 
 def dbs_instance(dbsurl):
@@ -64,6 +62,8 @@ class DBSDaemon(object):
         self.cache_size = config.get('cache_size', 1000)
         self.expire     = config.get('expire', 3600)
         self.write_hash = config.get('write_hash', False)
+        # Shall we keep existing Datasets on server restart
+        self.preserve_on_restart = config.get('preserve_on_restart', False)
         self.col = None # to be defined in self.init
         self.init()
         # Monitoring thread which performs auto-reconnection to MongoDB
@@ -80,7 +80,7 @@ class DBSDaemon(object):
             indexes = [('dataset', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
 
-            if not KEEP_EXISTING_RECORDS_ON_RESTART:
+            if not self.preserve_on_restart:
                 self.col.remove()
         except Exception as _exp:
             self.col = None
