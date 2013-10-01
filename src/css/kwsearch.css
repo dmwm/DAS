@@ -109,3 +109,7 @@ div.score-bar span {
 #kws-entry-points {
     float: right;
 }
+
+#kws-results-container {
+    margin-bottom: 50px;
+}
