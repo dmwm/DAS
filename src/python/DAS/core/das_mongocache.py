@@ -329,7 +329,7 @@ class DASMongocache(object):
     def get_fields(self, dasquery):
         "Prepare fields to extract from MongoDB"
         fields     = dasquery.mongo_query.get('fields', [])
-        if  'records' in fields:
+        if  fields and 'records' in fields:
             fields = None # look-up all records
         filters    = dasquery.filters
         cond       = {}
@@ -735,8 +735,11 @@ class DASMongocache(object):
                     'das.record': record_codes('data_record')}
         if  filter_cond:
             spec.update(filter_cond)
-        # be sure to extract das internal keys
-        fields += das_record_keys()
+        if  'records' in dasquery.query:
+            fields  = None # retrieve all fields for records DAS query
+        else:
+            # be sure to extract das internal keys
+            fields += das_record_keys()
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
         skeys   = self.mongo_sort_keys(collection, dasquery)
