@@ -67,7 +67,8 @@ def get_global_dbs_mngr(update_required=False):
     dburi = dasconfig['mongodb']['dburi']
     dbsexpire = dasconfig.get('dbs_daemon_expire', 3600)
     main_dbs_url = dasmapping.dbs_url()
-    dbsmgr = DBSDaemon(main_dbs_url, dburi, {'expire': dbsexpire})
+    dbsmgr = DBSDaemon(main_dbs_url, dburi, {'expire': dbsexpire,
+                                             'preserve_on_restart': True})
 
     # if we have no datasets (fresh DB, fetch them)
     if update_required or not next(dbsmgr.find('*Zmm*'), False):

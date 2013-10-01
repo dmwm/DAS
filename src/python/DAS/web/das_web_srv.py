@@ -174,7 +174,9 @@ class DASWebService(DASWebManager):
                         (main_dbs_url.replace(self.dbs_global, inst), inst))
             interval  = config.get('dbs_daemon_interval', 3600)
             dbsexpire = config.get('dbs_daemon_expire', 3600)
-            dbs_config  = {'expire': dbsexpire}
+            preserve_dbs_col = config.get('preserve_on_restart', False)
+            dbs_config  = {'expire': dbsexpire,
+                           'preserve_on_restart': preserve_dbs_col}
             if  self.dataset_daemon:
                 for dbs_url, inst in dbs_urls:
                     dbsmgr = DBSDaemon(dbs_url, self.dburi, dbs_config)

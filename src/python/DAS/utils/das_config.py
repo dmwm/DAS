@@ -129,6 +129,9 @@ DASOption('web_server', 'onhold_daemon', 'bool', False),
 DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
 # DBS dataset daemon expire timestamp (in seconds)
 DASOption('web_server', 'dbs_daemon_expire', 'int', 3600),
+# if true, will keep existing Datasets on server restart
+# (i.e. it will not delete dbs collection; Record expiration still applies)
+DASOption('web_server', 'preserve_on_restart', 'bool', False),
 # local DAS services
 DASOption('web_server', 'services', 'list', []),
 
