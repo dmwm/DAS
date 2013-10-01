@@ -160,8 +160,6 @@ def load_index():
 
 def search_index(keywords, result_type=False, full_matches_only=False, limit=10,
                  use_bm25f=True,):
-    global _ix
-
     if _DEBUG:
         print 'Evaluating query: ', keywords
 

@@ -39,10 +39,9 @@ def keyword_value_weights(keyword):
 
     # check for matching of existing datasets, and override regexp based score
     # TODO: use instance from elsewhere (from web server if available)
-    field, dataset_score, adj_kwd = match_value_dataset(keyword)
+    dataset_score, data = match_value_dataset(keyword)
     if dataset_score:
-        scores_dict[field] = (dataset_score,  {'map_to': 'dataset.name',
-                                          'adjusted_keyword': adj_kwd})
+        scores_dict['dataset.name'] = (dataset_score,  data)
 
     # check for matching fields those values are fairly static (site, release, ...)
     scores_dict.update(input_values_tracker.input_value_matches(keyword))

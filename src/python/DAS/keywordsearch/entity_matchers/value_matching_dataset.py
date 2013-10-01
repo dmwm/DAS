@@ -10,16 +10,15 @@ __author__ = 'vidma'
 from cherrypy import request
 
 from DAS.utils.regex import RE_3SLAHES
-from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
 from DAS.keywordsearch.config import DEBUG
 
 def match_value_dataset(keyword):
+    dbsmgr = None
     if hasattr(request, 'dbsmngr'):
         dbsmgr = request.dbsmngr
-    else:
-        dbsmgr = request.dbsmngr = get_global_dbs_mngr()
 
-    #print 'DBS mngr:', dbsmgr
+    if not dbsmgr:
+        return None, None
 
     dataset_score = None
     upd_kwd = keyword
@@ -58,6 +57,5 @@ def match_value_dataset(keyword):
             upd_kwd += '*'
 
 
-    return 'dataset.name', dataset_score, upd_kwd
-
-
+    return dataset_score, {'map_to': 'dataset.name',
+                           'adjusted_keyword': upd_kwd}

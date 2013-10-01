@@ -43,7 +43,6 @@ from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson
 from DAS.web.tools import jsonstreamer
 from DAS.web.tools import enable_cross_origin
-from DAS.web.tools import tojson
 from DAS.web.das_webmanager import DASWebManager
 from DAS.web.das_codes import web_code
 from DAS.web.autocomplete import autocomplete_helper
@@ -415,7 +414,7 @@ class DASWebService(DASWebManager):
         set_no_cache_flags()
 
         uinput = kwargs.get('input', '').strip()
-        inst = kwargs.get('instance', self.dbs_global)
+        inst = kwargs.get('instance', '').strip() or self.dbs_global
 
         if self.busy():
             return self.busy_page(uinput)
@@ -428,10 +427,11 @@ class DASWebService(DASWebManager):
             return "keyword search is currently disabled..."
 
         timeout = self.dasconfig['keyword_search']['timeout']
+        dbsmngr = self._get_dbsmgr(inst)
 
         return self.kws.handle_search(self,
-                              query=uinput, inst=inst,
-                              dbsmngr = self._get_dbsmgr(inst),
+                              query=uinput,
+                              dbsmngr=dbsmngr,
                               is_ajax=True,
                               timeout=timeout)
 
@@ -485,11 +485,11 @@ class DASWebService(DASWebManager):
         """
         mgr = None
         # instance selection shall be more clean
-        if  self.dataset_daemon:
-            for dbs_url, dbs_inst in self.dbsmgr.keys():
-                if  dbs_inst == inst:
-                    mgr = self.dbsmgr[(dbs_url, dbs_inst)]
-                    return mgr
+        if not self.dataset_daemon:
+            return mgr
+        for dbs_url, dbs_inst in self.dbsmgr.keys():
+            if  dbs_inst == inst:
+                return self.dbsmgr[(dbs_url, dbs_inst)]
         return mgr
 
 
@@ -537,9 +537,9 @@ class DASWebService(DASWebManager):
             kws = ''
             if show_kws:
                 kws = self.templatepage('kwdsearch_via_ajax',
-                                         uinput_json=tojson(uinput),
-                                         inst_json=tojson(inst),
-                                         kws_host=tojson(self._get_kws_host()))
+                                         uinput_json=json.dumps(uinput),
+                                         inst_json=json.dumps(inst),
+                                         kws_host=json.dumps(self._get_kws_host()))
 
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
                         guide=guide, kws_enabled=show_kws, kws=kws)
@@ -642,7 +642,7 @@ class DASWebService(DASWebManager):
         page  = self.templatepage('das_searchform', input=uinput, \
                 init_dbses=list(self.dbs_instances), daskeys=daskeys, \
                 base=self.base, instance=instance, view=view, cards=cards,
-                autocompl_host=tojson(self._get_autocompl_host())
+                autocompl_host=json.dumps(self._get_autocompl_host())
                 )
         return page
 
@@ -676,7 +676,7 @@ class DASWebService(DASWebManager):
             code = web_code('Exception')
             raise HTTPError(500, 'DAS error, code=%s' % code)
         data['ctime'] = time.time() - time0
-        return tojson(data)
+        return json.dumps(data)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)

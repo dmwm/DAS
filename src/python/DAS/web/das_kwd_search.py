@@ -18,13 +18,12 @@ class KeywordSearchHandler(object):
         params = cherrypy.request.params.copy()
         params['input'] = query
 
-        # preserve keyword query which led to certain structured query
+        # will see in logs which suggestion was selected by user for kw_query
         if kw_query:
             params['kwquery'] = kw_query
 
         das_url = '/das/request?' + urllib.urlencode(params)
         return das_url
-
 
     def __init__(self, dascore):
         if not dascore:
@@ -62,7 +61,6 @@ class KeywordSearchHandler(object):
 
         return cgi.escape(thtml,  quote=True)
 
-
     def _get_top_entities(self, proposed_queries, top_k =5):
         ''' returns k top-scoring  entities '''
         best_scores = {}
@@ -80,13 +78,11 @@ class KeywordSearchHandler(object):
         hi_score_result_types.append('any')
         return hi_score_result_types
 
-    def handle_search(self, webm, query, inst,  initial_exc_message = '',
-                      dbsmngr=None, is_ajax=False, timeout=5):
+    def handle_search(self, webm, query, dbsmngr, is_ajax=False, timeout=5):
         """
         performs the search, and renders the search results
         """
-
-        err, proposed_queries = self.kws.search(query, inst, dbsmngr= dbsmngr,
+        err, proposed_queries = self.kws.search(query, dbsmngr= dbsmngr,
                                                 timeout=timeout)
 
         # get top 5 entity types
@@ -103,10 +99,7 @@ class KeywordSearchHandler(object):
         # (e.g. certificate auth, to filter out queries submitted by developers)
 
         return webm.templatepage('kwdsearch_results',
-                                    msg='',
-                                    is_ajax=is_ajax,
-                                    proposed_queries = proposed_queries,
-                                    hi_score_result_types = hi_score_result_types,
-                                    err=err
-        )
-        #return html
+                                 is_ajax=is_ajax,
+                                 proposed_queries = proposed_queries,
+                                 hi_score_result_types = hi_score_result_types,
+                                 err=err)
