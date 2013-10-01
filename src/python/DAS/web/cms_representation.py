@@ -547,7 +547,7 @@ class CMSRepresentation(DASRepresentation):
                 else:
                     systems = "" # no das record
                     print dastimestamp('DAS ERROR '), \
-                            'record withou DAS key', row
+                            'record without DAS key', row
             except KeyError as exc:
                 print_exc(exc)
                 systems = "" # we don't store systems for aggregated records
