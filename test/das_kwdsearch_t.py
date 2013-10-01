@@ -8,17 +8,11 @@ tests for keyword search
 # system modules
 
 import unittest
-import doctest
 
 # DAS modules
 
 from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
-#from DAS.keywordsearch import search as kwdsearch_module
-
 from DAS.keywordsearch.search import KeywordSearch
-    #search, init as init_kws
-#keyword_schema_weights, keyword_value_weights
-
 from DAS.core.das_core import DASCore
 
 
@@ -56,46 +50,41 @@ class Timer:
 
 
 class KwsTesterMetaClass(type):
-  def __init__(cls, name, bases, d):
-    type.__init__(cls, name, bases, d)
+    """
+    a metaclass to avoid expensive setUp for each test.
 
-    # set up only once
-    #if not cls.global_dbs_inst:
-    print 'setUp in metaclass: getting dbs manager to access current datasets ' \
-          '(and fetching them if needed)'
-    cls.global_dbs_inst = get_global_dbs_mngr(update_required=False)
-    cls.dascore = DASCore()
-    cls.kws = KeywordSearch(dascore=cls.dascore)
-    #cls.foo = 42
+    TODO: in py2.7 however it can be more clean:
+    http://stackoverflow.com/questions/423483/python-unittest-with-expensive-setup
+    """
+    def __init__(cls, name, bases, d):
+        type.__init__(cls, name, bases, d)
+
+        # set up only once
+        if hasattr(cls, 'global_dbs_inst') and cls.global_dbs_inst:
+            return
+
+        print 'setUp in metaclass: getting dbs manager '\
+              '(and fetching datasets if needed)'
+        cls.dascore = DASCore()
+        cls.global_dbs_inst = get_global_dbs_mngr(update_required=False,
+                                                  dascore=cls.dascore)
+        cls.kws = KeywordSearch(dascore=cls.dascore)
 
 class KeywordSearchAbstractTester(unittest.TestCase):
     global_dbs_inst = False
 
     __metaclass__ = KwsTesterMetaClass
 
-
     def setUp(self):
         """
-        sets up dbs manager instance
+        sets up dbs manager instance reusing it from metaclass
         """
-        # set up only once
-        if not self.global_dbs_inst:
-            if True:
-                print "setUp: quick"
-                cls = KeywordSearchAbstractTester
-                self.kws = cls.kws
-                self.dascore = cls.dascore
-                self.global_dbs_inst = cls.global_dbs_inst
-                print "setUp: done"
-
-            else:
-                print 'setUp: getting dbs manager to access current datasets ' \
-                      '(and fetching them if needed)'
-                self.global_dbs_inst = get_global_dbs_mngr(update_required=False)
-                self.dascore = DASCore()
-                self.kws = KeywordSearch(dascore=self.dascore)
-
-
+        #print "setUp: quick, reusing from metaclass"
+        cls = KeywordSearchAbstractTester
+        self.kws = cls.kws
+        self.dascore = cls.dascore
+        self.global_dbs_inst = cls.global_dbs_inst
+        self.timeout = self.dascore.dasconfig['keyword_search']['timeout']
 
     def result_is_correct(self, result, expected_results):
         if isinstance(expected_results, str) or isinstance(expected_results, unicode):
@@ -111,12 +100,14 @@ class KeywordSearchAbstractTester(unittest.TestCase):
         '''
         run a test query, and gather statistics
         '''
-        global n_queries, n_queries_passed_at_1,\
-            n_queries_passed_at, times, qstatus, queries_passed_at, queries_not_passed_at
+        global n_queries, n_queries_passed_at_1, n_queries_passed_at, times,\
+            qstatus, queries_passed_at, queries_not_passed_at
+
         n_queries += 1
 
         with Timer() as t:
-            err, results = self.kws.search(query, dbsmngr=self.global_dbs_inst)
+            err, results = self.kws.search(query, dbsmngr=self.global_dbs_inst,
+                                           timeout=self.timeout)
 
         times.append((t.interval, query))
 
@@ -186,64 +177,6 @@ class KeywordSearchAbstractTester(unittest.TestCase):
 
 
 class TestDASKeywordSearch(KeywordSearchAbstractTester):
-
-    #def test_doctests(self):
-    #    """
-    #    runs doctests defined in DAS.core.das_process_dataset_wildcards
-    #    """
-    #    # pass dbs manager
-
-    #    glob = kwdsearch_module.__dict__.copy()
-    #    glob['dbsmgr'] = self.global_dbs_inst
-
-    #    # run the tests
-    #    (n_failures, n_tests) = \
-    #        doctest.testmod(globs = glob, verbose=True, m=kwdsearch_module)
-
-    #    self.assertEquals(n_failures, 0)
-
-
-    """
-    this was a manual test
-    if False:
-        # we can see difflib by itself is quite bad. we must penalize mutations, insertions, etc. containment is the best
-        print keyword_schema_weights('configuration') # shall be close to config
-        print '! time:'
-        print keyword_schema_weights('time')
-        print '! location:'
-        print keyword_schema_weights('location')
-        # e.g. 'location of /Smf/smf/smf (dataset)
-        print keyword_schema_weights('email')
-
-        # TODO: use either presentation map, or entity.attribute
-        print 'file name:', keyword_schema_weights('file name')
-
-
-        #print search('vidmasze@cern.ch')
-        print 'expect email:', keyword_value_weights('vidmasze@cern.ch')
-        print 'expect dataset:', keyword_value_weights('/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO')
-        print 'expect file:', keyword_value_weights('/store/backfill/1/T0TEST_532p1Run2012C_BUNNIES/DoubleMu/RAW-RECO/Zmmg-PromptSkim-v1/000/196/363/00000/DEBD64D4-A4C0-E111-A042-002618943826.root')
-    """
-
-
-
-    def _test_operators(self):
-        if False:
-            self.assertQueryResult('unique lumi flags in run 176304',
-                'lumi  run=176304 | grep lumi.flag | unique')
-
-            # TODO: Pattern: op, op, op entity(PK)|entity.field
-            self.assertQueryResult('min, max, avg lumis in run 176304',
-                'lumi  run=176304 | min(lumi.number), max(lumi.number), avg(lumi.number)')
-            # TODO: even I made a mistake, by adding grep to min,max...
-
-            'file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80'
-            #fails:
-            'lumi dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80'
-
-            'lumi  run=176304 lumi=80'
-
-
     def _test_numeric_params_1(self):
         # TODO: lumis can not be quiries by run anymore...
         # values closer to the field name shall be preferred
