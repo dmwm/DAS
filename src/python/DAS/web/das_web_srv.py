@@ -414,7 +414,7 @@ class DASWebService(DASWebManager):
         set_no_cache_flags()
 
         uinput = kwargs.get('input', '').strip()
-        inst = kwargs.get('instance', self.dbs_global)
+        inst = kwargs.get('instance', '').strip() or self.dbs_global
 
         if self.busy():
             return self.busy_page(uinput)
@@ -427,10 +427,11 @@ class DASWebService(DASWebManager):
             return "keyword search is currently disabled..."
 
         timeout = self.dasconfig['keyword_search']['timeout']
+        dbsmngr = self._get_dbsmgr(inst)
 
         return self.kws.handle_search(self,
-                              query=uinput, inst=inst,
-                              dbsmngr = self._get_dbsmgr(inst),
+                              query=uinput,
+                              dbsmngr=dbsmngr,
                               is_ajax=True,
                               timeout=timeout)
 
@@ -484,11 +485,11 @@ class DASWebService(DASWebManager):
         """
         mgr = None
         # instance selection shall be more clean
-        if  self.dataset_daemon:
-            for dbs_url, dbs_inst in self.dbsmgr.keys():
-                if  dbs_inst == inst:
-                    mgr = self.dbsmgr[(dbs_url, dbs_inst)]
-                    return mgr
+        if not self.dataset_daemon:
+            return mgr
+        for dbs_url, dbs_inst in self.dbsmgr.keys():
+            if  dbs_inst == inst:
+                return self.dbsmgr[(dbs_url, dbs_inst)]
         return mgr
 
 

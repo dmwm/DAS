@@ -1,8 +1,5 @@
 #from DAS.web.utils import quote
 
-#set msg = $quote($msg)
-#assert (isinstance($msg, str) or isinstance($msg, unicode))
-
 <b>Did you mean any of the queries below?</b><br />
 
 #if $err:
@@ -60,8 +57,6 @@
 
 
     <div id="kws-results-listing"> <!-- main div -->
-        $msg
-
         <!-- list proposed queries along with their scores -->
         #for $item in $proposed_queries:
             #set query_escaped = $quote($item.result)
