@@ -51,7 +51,11 @@ def get_outputs_field_list(dascore):
 
     fields_by_entity = defaultdict(set)
     for r in dascore.keylearning.list_members():
+        # TODO: this may fail
         result_type = dascore.mapping.primary_key(r['system'], r['urn'])
+        # if  keylearning is outdated and urn don't exist, skip such records
+        if not result_type:
+            continue
 
         result_members = r.get('members', [])
         fields = [m for m in result_members

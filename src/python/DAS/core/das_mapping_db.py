@@ -453,6 +453,8 @@ class DASMapping(object):
         """
         cond = {'system':das_system, 'urn':urn}
         record = self.col.find_one(cond)
+        if  not record:
+            return None
         pkey = record['lookup']
         if  pkey.find(',') != -1:
             pkey = pkey.split(',')[0]
