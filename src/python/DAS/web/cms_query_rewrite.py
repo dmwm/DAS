@@ -1,26 +1,51 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0301,C0103
+#pylint: disable-msg=C0103,W0511
+"""
+Handles the simple case of query rewriting which can be accomplished
+through one nested query which retrieves entity by it's PK.
+"""
 
 from pprint import pprint
 
 from DAS.core.das_query import DASQuery
+from DAS.core.das_ql import das_record_keys
+
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator as \
     get_filter_name
+
 
 class CMSQueryRewrite(object):
     """
     Handles the simple case of query rewriting which can be accomplished
     through one nested query which retrieves entity by it's PK.
     """
+
+    _MSG_TMPL = \
+        '''
+        DAS (or underlying services) do not support this query yet.
+        Still you can run multiple queries and combine their results:
+
+        %(q1_str)s
+        for each result:
+            %(q2_str)s  (replace <PK> with value of %(pk)s from first query)
+
+        Combination of the two queries will give the results expected,
+        except for aggregations which have to be implemented manually.
+
+        See documentation on Command Line Interface:
+        %(cli)s
+        '''
+    CLI_LINK = 'https://cms-http-group.web.cern.ch/cms-http-group/apidoc/das/current/das_client.html'
+
     def __init__(self, cms_rep):
         self.cms_rep = cms_rep
         self.dasmgr = self.cms_rep.dasmgr
+        self.entity_names = self._build_short_daskeys(self.dasmgr)
         # schema adapter from kws
         # TODO: get_field_list_for_entity_by_pk could be moved to DAS Core or...
-        self.schema_adapter = getSchema(dascore=self.cms_rep.dasmgr)
-
+        self.schema_adapter = getSchema(dascore=self.dasmgr)
 
     def _get_one_row_with_all_fields(self, dasquery):
         """
@@ -35,9 +60,9 @@ class CMSQueryRewrite(object):
             return data[0]
 
     def get_fields_in_query_result(self, dasquery):
-        '''
+        """
         returns a list of fields in the results of dasquery (must be in cache)
-        '''
+        """
 
         # if we have filter/aggregator get one row from the given query
         # this requires qhash to be in cache
@@ -46,7 +71,6 @@ class CMSQueryRewrite(object):
             return self.cms_rep.get_result_fieldlist(row)
 
         return []
-
 
     def _do_query_rewrite(self, q, fields_avail, pk):
         """
@@ -58,7 +82,6 @@ class CMSQueryRewrite(object):
 
         # find all lookup (primary keys) for given das entity
         # It is safe to combine the queries
-        # TODO: add actual PK
         filters_first = [f for f in q_filters
                          if get_filter_name(f) in fields_avail]
         filters_nested = [f for f in q_filters
@@ -74,30 +97,25 @@ class CMSQueryRewrite(object):
         q2['filters'] = {'grep': list(filters_nested)}
         q2 = DASQuery(q2)
 
-        msg = '''
-                DAS (or underlying services) do not support this query yet.
-                Still you can run multiple queries and combine their results:
-
-                    query: %(q1_str)s
-                    for each result:
-                        query: %(q2_str)s   (replacing <PK> with value of %(pk)s returned)
-
-                Combination of results from the two queries will give you the results expected,
-                     except for aggregations which have to be implemented manually.
-                See documentation on <a href="%(cli)s">Command Line Interface</a>
-                ''' % {'q1_str': q1.convert2dasql(self.dasmgr),
-                       'q2_str': q2.convert2dasql(self.dasmgr),
-                       'pk': pk,
-                       'cli': 'https://cms-http-group.web.cern.ch/cms-http-group/apidoc/das/current/das_client.html'
-                }
-        #print msg
+        msg = self._MSG_TMPL % {'q1_str': self.convert2dasql(q1),
+                                'q2_str': self.convert2dasql(q2),
+                                'pk': pk,
+                                'cli': self.CLI_LINK}
         return msg
 
     def check_fields(self, dasquery):
-        '''
-        run dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM | grep  run.bfield
-        '''
-        DEBUG = True
+        """
+        if not all of required fields are available, check if they could be
+        obtained trough a nested query on PK. if so return a message to user.
+
+        e.g. transforms:
+            dataset dataset=/*/*reco*/* | grep dataset.name, dataset.nevents>3
+
+        into:
+            dataset dataset=/*/*reco*/* | grep dataset.name
+            and:   dataset dataset=<PK> | grep dataset.nevents>3
+        """
+        DEBUG = False
 
         if not dasquery.filters:
             return
@@ -116,29 +134,76 @@ class CMSQueryRewrite(object):
             return
 
         if DEBUG:
-            pprint(['DASQUERY:', dasquery.mongo_query])
+            pprint(['DASQUERY:', dasquery.query])
             pprint(['RESULT ENTITY:', entity])
             pprint(['FILTERS FOR DAS QUERY:', dasquery.filters])
             pprint(['PARAMS FOR DAS QUERY:', dasquery.params()])
             pprint(['Feilds available in Current Query:', fields_available])
 
-        # TODO: here I may need to privide a particular PK
-        pks_of_entity = list(set(self.cms_rep.dasmapping.mapkeys(entity)) \
-                             & fields_available)
+        pks_of_entity = list(set(self.cms_rep.dasmapping.mapkeys(entity)) &
+                             fields_available)
 
         # try any of PKs available
         for pk in pks_of_entity:
             # list of fields for given entity retrieved by PK
-            # TODO: I think this is not differentiated by PK yet...
+            # TODO: this is not differentiated by PK yet in schema adapter...
             fields_in_nested_by_pk = \
                 self.schema_adapter.get_field_list_for_entity_by_pk(entity, pk)
 
             query_rewritable = q_fields_missing.issubset(
                 set(fields_in_nested_by_pk))
 
-            # if all fields that are still missing, are available in query='entity PK=pk'
+            # if all fields that are still missing,
+            #  are available in query='entity PK=pk'
             if query_rewritable and q_fields_missing:
                 print 'Rewrite OK'
                 return self._do_query_rewrite(dasquery, fields_available, pk)
 
         return False
+
+    @classmethod
+    def _build_short_daskeys(cls, dascore):
+        """
+        prepares data need for converting back into short das keys
+        (e.g. run.run_number->run).
+
+        P.S. Even if in most cases removing everything after '.' shall work,
+        I think there was some usecase where it didn't...
+        """
+
+        # init field mappings
+        entity_names = {}
+        for das_key in dascore.das_keys():  # the short daskeys
+            long_daskeys = dascore.mapping.mapkeys(das_key)
+
+            for entity_long in long_daskeys:
+                entity_names[entity_long] = das_key
+        return entity_names
+
+    def convert2dasql(self, q):
+        """
+        transform DASQuery object back into DASQL (human readable form)
+        """
+        fields = q.mongo_query.get('fields', []) or []
+        exclude = das_record_keys()
+        lookups = (f for f in fields
+                   if f not in exclude)
+
+        das_conditions = q.mongo_query.get('spec', {}).iteritems()
+
+        short_daskey = lambda ldaskey: \
+            self.entity_names.get(ldaskey, ldaskey)
+
+        dasql = ','.join(lookups)
+        dasql += ' '  # space between lookup and conditions
+        dasql += ' '.join('%s=%s' % (short_daskey(k), v)
+                          for k, v in das_conditions)
+
+        # add post_filters
+        if q.filters:
+            dasql += ' | grep ' + ', '.join(q.filters)
+
+        # not implemented:  language specials - between, date
+        #  (however these are not supported by keyword search neither)
+        # also aggregators (including unique) - left for user to implement
+        return dasql.strip()
