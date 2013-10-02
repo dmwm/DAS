@@ -1,5 +1,10 @@
-__author__ = 'vidma'
+#!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=C0103
 
+"""
+handles the keyword search and presentation of its results in Web UI
+"""
 import cherrypy
 import urllib
 import cgi
@@ -9,12 +14,22 @@ from DAS.keywordsearch.search import KeywordSearch
 
 avg = lambda l: len(l) and float(sum(l))/len(l)
 
+
 class KeywordSearchHandler(object):
     """
     handles the keyword search and presentation of its results
     """
+    def __init__(self, dascore):
+        if not dascore:
+            raise Exception("dascore needed")
+        self.kws = KeywordSearch(dascore)
 
-    def _get_link_to_query(self, query, kw_query=''):
+    @classmethod
+    def _get_link_to_query(cls, query, kw_query=''):
+        """
+        returns a link to given query taking into account other parameters
+        already present in cherry.request (e.g. instance, page size, etc)
+        """
         params = cherrypy.request.params.copy()
         params['input'] = query
 
@@ -25,15 +40,11 @@ class KeywordSearchHandler(object):
         das_url = '/das/request?' + urllib.urlencode(params)
         return das_url
 
-    def __init__(self, dascore):
-        if not dascore:
-            raise  Exception("dascore needed")
-        self.kws = KeywordSearch(dascore)
-
-    def _prepare_score_bar(self, q):
-        '''
+    @classmethod
+    def _prepare_score_bar(cls, q):
+        """
         prepares the score bar for each query (max_w & w is in pixels)
-        '''
+        """
         max_w = 50
         min_w = 3
         score = max(min(q['len_normalized_score'], 1.0), 0.0)
@@ -45,11 +56,12 @@ class KeywordSearchHandler(object):
                 'style': color_class,
                 'score': q['len_normalized_score']}
 
-    def _prepare_trace(self, q):
-        '''
-        used for debugging, is passed as escaped html string to be later used by javascript
-         (implementation doesn't matter much)
-        '''
+    @classmethod
+    def _prepare_trace(cls, q):
+        """
+        used for debugging, is passed as escaped html string
+        to be later used by javascript (implementation doesn't matter much)
+        """
         t = list(q['trace'])
         #t.sort()
         thtml = \
@@ -61,12 +73,14 @@ class KeywordSearchHandler(object):
 
         return cgi.escape(thtml,  quote=True)
 
-    def _get_top_entities(self, proposed_queries, top_k =5):
-        ''' returns k top-scoring  entities '''
+    @classmethod
+    def _get_top_entities(cls, proposed_queries, top_k=5):
+        """ returns k top-scoring  entities """
+
         best_scores = {}
         for r in proposed_queries:
             best_scores[r['entity']] = max(r['score'],
-                                             best_scores.get(r['entity']))
+                                           best_scores.get(r['entity']))
 
         best_scores = sorted(best_scores.items(),
                              key=lambda (g, score): score, reverse=True)
@@ -87,7 +101,7 @@ class KeywordSearchHandler(object):
 
         # get top 5 entity types
         hi_score_result_types = self._get_top_entities(proposed_queries) \
-                                if len(proposed_queries) > 6 else False
+            if len(proposed_queries) > 6 else False
 
         # process the results
         for q in proposed_queries:
