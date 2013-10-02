@@ -32,6 +32,8 @@ primary_dataset : [
         ],
 summary : [
         {"das":"summary", "ui":"Summary",
+         "diff":["summary.nlumis", "summary.file_size",
+                 "summary.nevents", "summary.nblocks", "summary.nfiles"],
          "link":[],
          "description":"is a DAS keyword to get summary information for certain queries, \
 right now it is only used for summary information about dataset/run pairs and include \
