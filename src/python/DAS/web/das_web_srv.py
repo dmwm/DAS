@@ -426,16 +426,16 @@ class DASWebService(DASWebManager):
             return self.redirect(**kwargs)
 
         if not self.kws:
-            return "keyword search is currently disabled..."
+            return 'Query suggestions are unavailable right now...'
 
         timeout = self.dasconfig['keyword_search']['timeout']
         dbsmngr = self._get_dbsmgr(inst)
 
         return self.kws.handle_search(self,
-                              query=uinput,
-                              dbsmngr=dbsmngr,
-                              is_ajax=True,
-                              timeout=timeout)
+                                      query=uinput,
+                                      dbsmngr=dbsmngr,
+                                      is_ajax=True,
+                                      timeout=timeout)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -530,7 +530,7 @@ class DASWebService(DASWebManager):
         """
         def helper(msg, html_error=None, show_kws=False):
             """Helper function which provide error template"""
-            if  not html_error:
+            if not html_error:
                 return msg
             guide = self.templatepage('dbsql_vs_dasql', 
                         operators=', '.join(das_operators()))
@@ -539,11 +539,11 @@ class DASWebService(DASWebManager):
             kws = ''
             if show_kws:
                 kws = self.templatepage('kwdsearch_via_ajax',
-                                         uinput=uinput, inst=inst,
-                                         kws_host=self._get_kws_host())
+                                        uinput=uinput, inst=inst,
+                                        kws_host=self._get_kws_host())
 
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
-                        guide=guide, kws_enabled=show_kws, kws=kws)
+                                     guide=guide, kws_enabled=show_kws, kws=kws)
             return page
 
         if  not uinput:
