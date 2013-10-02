@@ -16,6 +16,17 @@ from DAS.keywordsearch.nlp import filter_stopwords
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 
 
+def check_validity(r, fields_by_entity):
+    """
+    fields in whoosh index may be outdated...
+    """
+    entity = r['result_type']
+    field = r['field']
+    if not entity in fields_by_entity or not field in fields_by_entity[entity]:
+        return False
+    return True
+
+
 def generate_chunks_no_ent_filter(keywords):
     """
     params: keywords - a tokenized list of keywords (e.g. ["a b c", 'a', 'b'])
@@ -57,8 +68,9 @@ def generate_chunks_no_ent_filter(keywords):
             #r['len'] =  1
             r['len'] = len(r['keywords_matched'])
 
-
             entity = r['result_type']
+            if not check_validity(r, fields_by_entity):
+                continue
             r['field'] = fields_by_entity[entity][r['field']]
             r['tokens_required'] = [kwd]
             # TODO: check if a full match and award these, howerver some may be misleading,e.g. block.replica.site is called just 'site'!!!
@@ -119,6 +131,8 @@ def generate_chunks_no_ent_filter(keywords):
                 #r['len'] = len(filter_stopwords(chunk))
                 r['len'] = len(r['keywords_matched'])
                 entity = r['result_type']
+                if not check_validity(r, fields_by_entity):
+                    continue
                 r['field'] = fields_by_entity[entity][r['field']]
                 r['tokens_required'] = chunk
 
