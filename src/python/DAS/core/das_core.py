@@ -407,9 +407,13 @@ class DASCore(object):
         self.logger.info('\n##### check services ######\n')
         das_services = self.rawcache.check_services(dasquery)
         if  not das_services:
-            reason = 'no service records'
-            status = 'fail'
-            print dastimestamp('DAS ERROR '), dasquery, reason
+            if  'records' in dasquery.query:
+                reason = ''
+                status = 'ok'
+            else:
+                reason = 'no service records'
+                status = 'fail'
+                print dastimestamp('DAS ERROR '), dasquery, reason
             update_das_query(dasquery, status, reason)
             return status
         self.logger.info('\n##### merging ######\n')

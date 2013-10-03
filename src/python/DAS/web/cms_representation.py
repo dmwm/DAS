@@ -216,11 +216,6 @@ def adjust_values(func, gen, links, pkey):
                     value = '<span %s>%s</span>' % (green, value)
                 else:
                     value = '<span %s>%s</span>' % (red, value)
-            if  key.find('Status') != -1:
-                if  value == 'VALID':
-                    value = '<span %s>%s</span>' % (green, value)
-                else:
-                    value = '<span %s>%s</span>' % (red, value)
             if  key.lower().find('presence') != -1 or \
                 key.lower().find('completion') != -1:
                 if  not value:
@@ -552,7 +547,7 @@ class CMSRepresentation(DASRepresentation):
                 else:
                     systems = "" # no das record
                     print dastimestamp('DAS ERROR '), \
-                            'record withou DAS key', row
+                            'record without DAS key', row
             except KeyError as exc:
                 print_exc(exc)
                 systems = "" # we don't store systems for aggregated records

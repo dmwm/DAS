@@ -70,6 +70,8 @@ information about number of files/lumis/blocks/events and file size",
         ],
 dataset : [
         {"das":"dataset.name", "ui":"Dataset",
+         "diff":["dataset.datatype", "dataset.status", "dataset.size",
+                 "dataset.nevents", "dataset.nblocks", "dataset.nfiles"],
          "link":[
                  {"name":"Release", "query":"release dataset=%s"},
                  {"name":"Blocks", "query":"block dataset=%s"},
