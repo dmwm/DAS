@@ -5,6 +5,10 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 2.2.X
+
+  - Merge and integrated KWS search
+
 - 2.1.X
 
   - Make das-headers mandatory in das_client.py and keep --das-headers option
