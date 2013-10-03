@@ -121,6 +121,9 @@ class DashboardService(DASAbstractService):
                 args['date1'] = convert_datetime(time.time()-24*60*60)
             if  not args['date2']:
                 args['date2'] = convert_datetime(time.time())
+        # drop date argument, since it's used by DAS not by dashboard data srv
+        if  'date' in args:
+            args.pop('date')
 
         time0 = time.time()
         res, expire = self.getdata(url, args, expire, headers=self.headers)
