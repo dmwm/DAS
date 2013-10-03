@@ -27,8 +27,19 @@ files=`find $dasroot -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_c
 fail_files=0
 for f in $files
 do
+    # TMP,
+    # https://bitbucket.org/logilab/pylint/issue/84/pyreverse-typeerror-unbound-method-infer
+    fname=`echo $f | awk '{z=split($1,a,"/"); print a[z]}'`
+    if [ $fname == "das_stress_test.py" ]; then
+        continue
+    fi
     echo
     echo $f
+    has_key=`grep has_key $f`
+    if [ "$has_key" != "" ]; then
+        echo "File $f has has_key dict method (obsolete in python3), please fix this issue"
+        exit 1
+    fi
     out=`pylint $f | grep "Your code"`
     msg=`echo $out | grep -v "No config" | awk '{split($0,a,"at "); split(a[2],b,"/"); split(b[1],c,".");if(c[1]<THR) print "FAIL, score "b[1]"/10"; else print "PASS"}' THR=$thr`
     if  [ "$msg" != "PASS" ] && [ "$immediate" == "true" ]; then

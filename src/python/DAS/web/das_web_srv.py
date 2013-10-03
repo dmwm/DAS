@@ -322,12 +322,12 @@ class DASWebService(DASWebManager):
         """
         section = kwargs.get('section', None)
         highlight = kwargs.get('highlight', None)
-        guide = self.templatepage('dbsql_vs_dasql', 
+        guide = self.templatepage('dbsql_vs_dasql',
                     operators=', '.join(das_operators()))
         daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
         page = self.templatepage('das_faq', guide=guide, daskeys=daskeys,
                 section=section, highlight=highlight,
-                operators=', '.join(das_operators()), 
+                operators=', '.join(das_operators()),
                 aggregators=', '.join(das_aggregators()))
         return self.page(page, response_div=False)
 
@@ -402,7 +402,7 @@ class DASWebService(DASWebManager):
             vdict = dict(keys=dict(tmpdict), apis=apis)
             dasdict[srv] = vdict
         mapreduce = [r for r in self.dasmgr.rawcache.get_map_reduce()]
-        page = self.templatepage('das_services', dasdict=dasdict, 
+        page = self.templatepage('das_services', dasdict=dasdict,
                         daskeys=list(daskeys), mapreduce=mapreduce)
         return self.page(page, response_div=False)
 
@@ -532,7 +532,7 @@ class DASWebService(DASWebManager):
             """Helper function which provide error template"""
             if not html_error:
                 return msg
-            guide = self.templatepage('dbsql_vs_dasql', 
+            guide = self.templatepage('dbsql_vs_dasql',
                         operators=', '.join(das_operators()))
 
             # render keyword search loader
@@ -619,11 +619,11 @@ class DASWebService(DASWebManager):
     @checkargs(DAS_WEB_INPUTS)
     def index(self, *args, **kwargs):
         """
-        represents DAS web interface. 
+        represents DAS web interface.
         It uses das_searchform template for
         input form and yui_table for output Table widget.
         """
-        uinput = getarg(kwargs, 'input', '') 
+        uinput = getarg(kwargs, 'input', '')
         return self.page(self.form(uinput=uinput, cards=True))
 
 
@@ -992,7 +992,7 @@ class DASWebService(DASWebManager):
                 func = getattr(self, view + "view")
                 page = func(head, data)
         except HTTPError as _err:
-            raise 
+            raise
         except Exception as exc:
             print_exc(exc)
             msg  = gen_error_msg(kwargs)

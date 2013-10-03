@@ -8,6 +8,7 @@ Description: Abstract interface to represent DAS records
 """
 
 # system modules
+import time
 import urllib
 import pprint
 

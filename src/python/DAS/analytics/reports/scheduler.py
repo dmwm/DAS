@@ -10,11 +10,11 @@ class SchedulerReport(Report):
     report_title = "Scheduler"
     report_info = "Load averages and success rates of the scheduler"
     summary_intervals = (600, 3600, 6*3600, 24*3600)
-        
+
     def __call__(self, **kwargs):
         """
         No caching is done here, but these are potentially quite expensive.
-        """        
+        """
         result = {}
         for interval in self.summary_intervals:
             result[interval] = {}

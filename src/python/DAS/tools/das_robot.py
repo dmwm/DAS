@@ -16,19 +16,19 @@ from optparse import OptionParser
 from DAS.core.das_robot import Robot
 from DAS.utils.das_config import das_readconfig
 
-class DASOptionParser: 
+class DASOptionParser:
     """
     DAS cli option parser
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("-q", "--query", action="store", type="string", 
+        self.parser.add_option("-q", "--query", action="store", type="string",
                                           default=False, dest="query",
              help="specify query for your request")
-        self.parser.add_option("-s", "--sleep", action="store", type="int", 
+        self.parser.add_option("-s", "--sleep", action="store", type="int",
                                           default=600, dest="sleep",
              help="specify sleep time for DAS populator")
-        self.parser.add_option("-c", "--config", action="store", type="string", 
+        self.parser.add_option("-c", "--config", action="store", type="string",
                                           default=None, dest="config",
              help="specify DAS configuration file to use for initialization")
         self.parser.add_option("--start", action="store_true", dest="start",

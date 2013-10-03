@@ -11,53 +11,53 @@ from pprint import pformat
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
 from DAS.core.das_query import DASQuery
-from DAS.utils.utils import dump, genkey
+from DAS.utils.utils import dump
 from DAS.utils.das_timer import get_das_timer
 
 import sys
 if sys.version_info < (2, 6):
     raise Exception("DAS requires python 2.6 or greater")
 
-class DASOptionParser: 
+class DASOptionParser(object):
     """
     DAS cli option parser
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("-v", "--verbose", action="store", 
-                                          type="int", default=0, 
+        self.parser.add_option("-v", "--verbose", action="store",
+                                          type="int", default=0,
                                           dest="verbose",
              help="verbose output")
-        self.parser.add_option("--profile", action="store_true", 
+        self.parser.add_option("--profile", action="store_true",
                                           dest="profile",
              help="profile output")
-        self.parser.add_option("-q", "--query", action="store", type="string", 
+        self.parser.add_option("-q", "--query", action="store", type="string",
                                           default="", dest="query",
              help="specify query for your request.")
         self.parser.add_option("--hash", action="store_true", dest="hash",
              help="look-up MongoDB-QL query and its hash")
-        self.parser.add_option("--services", action="store_true", 
+        self.parser.add_option("--services", action="store_true",
                                           dest="services",
              help="return a list of supported data services")
-        self.parser.add_option("--keys", action="store", 
+        self.parser.add_option("--keys", action="store",
                                           dest="service",
              help="return set of keys for given data service")
-        self.parser.add_option("--print-config", action="store_true", 
+        self.parser.add_option("--print-config", action="store_true",
                                           dest="dasconfig",
              help="print current DAS configuration")
-        self.parser.add_option("--no-format", action="store_true", 
+        self.parser.add_option("--no-format", action="store_true",
                                           dest="plain",
              help="return unformatted output, useful for scripting")
-        self.parser.add_option("--idx", action="store", type="int", 
+        self.parser.add_option("--idx", action="store", type="int",
                                           default=0, dest="idx",
              help="start index for returned result set, aka pagination, use w/ limit")
-        self.parser.add_option("--limit", action="store", type="int", 
+        self.parser.add_option("--limit", action="store", type="int",
                                           default=0, dest="limit",
              help="limit number of returned results")
-        self.parser.add_option("--no-output", action="store_true", 
+        self.parser.add_option("--no-output", action="store_true",
                                           dest="nooutput",
              help="run DAS workflow but don't print results")
-        self.parser.add_option("--no-results", action="store_true", 
+        self.parser.add_option("--no-results", action="store_true",
                                           dest="noresults",
              help="run DAS workflow but don't write results into the cache")
     def getOpt(self):
@@ -90,7 +90,7 @@ def run(dascore, query, idx, limit, nooutput, plain):
 def main():
     "Main function"
     optmgr = DASOptionParser()
-    (opts, _args) = optmgr.getOpt()
+    opts, _ = optmgr.getOpt()
 
     t0 = time.time()
     query = opts.query
@@ -112,7 +112,7 @@ def main():
         sys.exit(0)
     sdict = dascore.keys()
     if  opts.services:
-        msg = "DAS services:" 
+        msg = "DAS services:"
         print msg
         print "-"*len(msg)
         keys = sdict.keys()
@@ -155,7 +155,7 @@ def main():
     print "\nDAS execution time:\n"
     if  debug:
         timelist = []
-        for _hash, timerdict in timer.items():
+        for _, timerdict in timer.items():
             counter = timerdict['counter']
             tag = timerdict['tag']
             exetime = timerdict['time']

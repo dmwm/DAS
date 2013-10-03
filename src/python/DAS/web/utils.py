@@ -136,7 +136,7 @@ def choose_select_key(dasinput, daskeys, default='dataset'):
     if  first_word in daskeys:
         return first_word
     return None
-        
+
 def gen_color(system):
     """
     Generate color for a system, use hash function for that
@@ -189,7 +189,7 @@ def yui2das(name):
 def dascore_monitor(cdict, func, sleep=5):
     """
     Check status of DASCore and MongoDB connection for provided
-    in cdict das/uri parameters. Invoke provided function upon 
+    in cdict das/uri parameters. Invoke provided function upon
     successfull connection.
     """
     uri  = cdict['uri']
@@ -392,7 +392,7 @@ def json2html(idict, pad="", ref=None):
                         % (quote_plus(val), quote(val))
                 if  len(str(val)) < 3: # aggregator's ids
                     value = val
-            # we don't need to quote value here since 
+            # we don't need to quote value here since
             # it constructs sanitized URLs, see block above
             sss += pad + """ <code class="key">"%s": </code>%s""" \
                 % (quote(key), value)
@@ -636,7 +636,7 @@ def wrap2dasjson(data):
 
 def wrap2dasxml(data):
     """DAS XML wrapper.
-    Return data in XML plist format, 
+    Return data in XML plist format,
     see http://docs.python.org/library/plistlib.html#module-plistlib
     """
     plist_str = plistlib.writePlistToString(data)

@@ -22,7 +22,7 @@ class Worker(Thread):
         self.tasks = tasks
         self.daemon = True
         self.start()
-    
+
     def run(self):
         """Run thread loop."""
         while True:
@@ -33,7 +33,7 @@ class Worker(Thread):
                 print_exc(exp)
             self.tasks.task_done()
 
-class ThreadPool:
+class ThreadPool(object):
     """Pool of threads consuming tasks from a queue"""
     def __init__(self, num_threads):
         self.tasks = Queue(num_threads)

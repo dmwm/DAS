@@ -13,7 +13,6 @@ __email__ = "vkuznet@gmail.com"
 
 # system modules
 import os
-import time
 import types
 import logging
 import plistlib

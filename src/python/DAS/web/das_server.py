@@ -10,7 +10,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import yaml
-import logging 
+import logging
 import threading
 from pprint import pformat
 from optparse import OptionParser
@@ -34,7 +34,7 @@ class Root(object):
         self.config = config
         self.auth   = None
         self.pid    = None
-        
+
     def configure(self):
         """Configure server, CherryPy and the rest."""
         config = self.config['web_server']
@@ -66,9 +66,9 @@ class Root(object):
                           'tools.gzip.on': True,
                           })
 
-        log("loading config: %s" % cpconfig, 
-                                   context='web', 
-                                   severity=logging.DEBUG, 
+        log("loading config: %s" % cpconfig,
+                                   context='web',
+                                   severity=logging.DEBUG,
                                    traceback=False)
 
     def start(self, blocking=True):
@@ -94,7 +94,7 @@ class Root(object):
             print thr
         if  blocking:
             engine.block()
-        
+
 def main():
     """
     Start-up web server.

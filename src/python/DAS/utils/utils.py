@@ -305,7 +305,7 @@ def size_format(uinput):
     elif base == 1024.: # power of 2
         xlist = ['', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
     for xxx in xlist:
-        if  num < base: 
+        if  num < base:
             return "%3.1f%s" % (num, xxx)
         num /= base
 
@@ -436,7 +436,7 @@ def dbsql_opt_map(operator):
         return '<='
     elif operator == '$in':
         return 'in'
-    
+
 
 def get_http_expires(data):
     """
@@ -460,12 +460,12 @@ def datestamp(das_date):
     return datetime.date(int(year), int(month), int(day))
 
 def next_day(das_date):
-    """Return next date provided DAS date""" 
+    """Return next date provided DAS date"""
     nextd = datestamp(das_date) + datetime.timedelta(days=1)
     return int(time.strftime("%Y%m%d", nextd.timetuple()))
-    
+
 def prev_day(das_date):
-    """Return previous date provided DAS date""" 
+    """Return previous date provided DAS date"""
     prev  = datestamp(das_date) - datetime.timedelta(days=1)
     return int(time.strftime("%Y%m%d", prev.timetuple()))
 
@@ -588,7 +588,7 @@ def merge_dict(dict1, dict2):
         merged_dict = {}
         for dictionary in [dict1, dict2]:
             for key, value in dictionary.iteritems():
-                merged_dict.setdefault(key,[]).append(value) 
+                merged_dict.setdefault(key,[]).append(value)
         return merged_dict
 
     where I changed append(value) on merging lists or adding new
@@ -622,7 +622,7 @@ def splitlist(ilist, nentries):
         jdx = idx+nentries
         if  jdx > len(ilist):
             jdx = len(ilist)
-        yield ilist[idx:jdx] 
+        yield ilist[idx:jdx]
 
 def genkey(query):
     """
@@ -702,7 +702,7 @@ def cartesian_product(ilist1, ilist2):
     keys2 = [k for k, v in row2.iteritems() if v and k != 'system']
     rel_keys = list( set(keys1) & set(keys2) )
     ins_keys = set(keys2) - set(rel_keys)
-    
+
     # loop over largest list and insert
     master_len = len(master_list)
     for idx in xrange(0, master_len):
@@ -766,7 +766,7 @@ def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
 def timestamp():
     """Generate timestamp"""
     return int(str(time.time()).split('.')[0])
-        
+
 # NOTE: I can use genresults generator implementation only if
 # I'll solve the problem with das_core.py:find_cond_dict since it's used
 # to read results from first data-service and pass found relative keys
@@ -774,7 +774,7 @@ def timestamp():
 # cause empty generator at cartesian_product later on.
 def genresults_gen(system, results, collect_list):
     """
-    Generator of results for given system based on provided dict 
+    Generator of results for given system based on provided dict
     of 'results' and final set 'collect_list'.
     The output rowdict in a form::
 
@@ -795,7 +795,7 @@ def genresults_gen(system, results, collect_list):
 
 def genresults(system, results, collect_list):
     """
-    Generator of results for given system based on provided dict 
+    Generator of results for given system based on provided dict
     of 'results' and final set 'collect_list'.
     The output rowdict in a form::
 
@@ -858,7 +858,7 @@ def getarg(kwargs, key, default):
 
 def sitename(site):
     """
-    Based on pattern determine what site name is provided, e.g. 
+    Based on pattern determine what site name is provided, e.g.
     CMS name or SAM name, etc.
     """
     patlist = [
@@ -910,7 +910,7 @@ def map_validator(smap):
     msg = 'Fail to validate data-service map %s' % smap
     if  not isinstance(smap.keys(), list):
         raise Exception(msg)
-    possible_keys = ['api', 'keys', 'params', 'url', 'expire', 
+    possible_keys = ['api', 'keys', 'params', 'url', 'expire',
         'lookup', 'format', 'wild_card', 'ckey', 'cert', 'services']
     for item in smap.values():
         if  not isinstance(item, dict):
@@ -1124,7 +1124,7 @@ def translate(notations, api, rec):
                 recval = record[item]
                 if  isinstance(recval, dict):
                     recval.update(newval)
-                else: 
+                else:
                     record[item] = newval
                 count += 1
                 delete_elem(record, notation)
@@ -1149,17 +1149,17 @@ def dict_helper(idict, notations):
 
 def qlxml_parser(source, prim_key):
     """
-    It's a temperary XML parser for DBS2 QL results. The same module as 
-    xml_parser below, but only cover the DBS2 QL results, which is storing 
+    It's a temperary XML parser for DBS2 QL results. The same module as
+    xml_parser below, but only cover the DBS2 QL results, which is storing
     value in emlement.text other that element.attrib.
 
     Iterparse method is using to walk through provide source descriptor(
     as xml_parser method)
-    
-    tag 'row' will be captured, then we construct a result dict base on 
-    it's chilren.  
+
+    tag 'row' will be captured, then we construct a result dict base on
+    it's chilren.
     The input prim_key defines the name of dict.
-    
+
     """
     notations = {}
     try:
@@ -1201,7 +1201,7 @@ def xml_parser(source, prim_key, tags=None):
     """
     XML parser based on ElementTree module. To reduce memory footprint for
     large XML documents we use iterparse method to walk through provided
-    source descriptor (a .read()/close()-supporting file-like object 
+    source descriptor (a .read()/close()-supporting file-like object
     containig XML source).
 
     The provided prim_key defines a tag to capture, while supplementary
@@ -1292,7 +1292,7 @@ def get_children(elem, event, row, key, notations):
                     newdict = {child_key: child_dict}
                 else:
                     newdict = {child_key: {}}
-                get_children(child, event, newdict, child_key, notations) 
+                get_children(child, event, newdict, child_key, notations)
                 row[key][child_key] = newdict[child_key]
             else:
                 if  not isinstance(row[key], dict):

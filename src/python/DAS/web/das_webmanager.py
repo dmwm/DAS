@@ -33,7 +33,7 @@ def set_headers(itype, size=0):
         response.headers['Content-Length'] = size
     response.headers['Content-Type'] = itype
     response.headers['Expires'] = 'Sat, 14 Oct 2017 00:59:30 GMT'
-    
+
 def minify(content):
     """
     Remove whitespace in provided content.
@@ -80,7 +80,7 @@ class DASWebManager(TemplatedPage):
         mime_types  = ['text/css']
         mime_types += ['application/javascript', 'text/javascript',
                        'application/x-javascript', 'text/x-javascript']
-        cherryconf.update({'tools.encode.on': True, 
+        cherryconf.update({'tools.encode.on': True,
                            'tools.gzip.on': True,
                            'tools.gzip.mime_types': mime_types,
                           })
@@ -120,7 +120,7 @@ class DASWebManager(TemplatedPage):
         """
         args = list(args)
         self.check_scripts(args, self.imgmap, self.imgdir)
-        mime_types = ['*/*', 'image/gif', 'image/png', 
+        mime_types = ['*/*', 'image/gif', 'image/png',
                       'image/jpg', 'image/jpeg']
         accepts = cherrypy.request.headers.elements('Accept')
         for accept in accepts:
@@ -157,7 +157,7 @@ class DASWebManager(TemplatedPage):
             return self.serve(kwargs, self.cssmap, self.cssdir, 'css', True)
         elif resource == 'yui':
             return self.serve(kwargs, self.yuimap, self.yuidir)
-        
+
     @exposejs
     @tools.gzip()
     @checkargs(['f', 'resource'])
@@ -195,13 +195,13 @@ class DASWebManager(TemplatedPage):
                 self._cache[idx] = minify(data)
             else:
                 self._cache[idx] = data
-        return self._cache[idx] 
-    
+        return self._cache[idx]
+
     def check_scripts(self, scripts, resource, path):
         """
-        Check a script is known to the resource map 
-        and that the script actually exists   
-        """           
+        Check a script is known to the resource map
+        and that the script actually exists
+        """
         for script in scripts:
             if  script not in resource.keys():
                 spath = os.path.normpath(os.path.join(path, script))

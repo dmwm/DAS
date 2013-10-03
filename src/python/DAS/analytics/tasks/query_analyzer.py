@@ -31,10 +31,10 @@ class QueryAnalyzer(object):
         start = now-self.interval
         finish = now
         queries = self.das.analytics.list_queries(after=start, before=finish)
-        
+
         query_map = {}
         counter = collections.defaultdict(int)
-        
+
         for query in queries:
             mongoquery = query['mongoquery']
             result = {'fields': mongoquery.get('fields', []),
@@ -62,7 +62,7 @@ class QueryAnalyzer(object):
             query_map[qhashish] = result
             counter[qhashish] += \
                 len([1 for t in query['times'] if t > start and t < finish])
-        
+
         summary = [(query_map[qh], counter[qh]) for qh in query_map]
         self.das.analytics.add_summary(\
                 "query_analyzer", start=start, finish=finish, queries=summary)

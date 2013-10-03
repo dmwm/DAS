@@ -81,7 +81,7 @@ class ResultObject(object):
         if  value != None:
             self.result.append(value)
             self.rec_count += 1
-    
+
 def coroutine(func):
     """Coroutine helper, to be used as decorator"""
     def start(*args, **kwargs):
@@ -143,8 +143,8 @@ def cochain(ckey, data_name, sink_name):
     .. doctest:
 
         decomposer(data,
-            filter('block', 
-                filter('replica', 
+            filter('block',
+                filter('replica',
                     filter('size', sink
                     )
                 )
@@ -152,7 +152,7 @@ def cochain(ckey, data_name, sink_name):
         )
 
     """
-    code  = "decomposer(%s," % data_name 
+    code  = "decomposer(%s," % data_name
     count_bracket = 1 # bracket is open
     for key in ckey.split('.'):
         code  += "selector('%s'," % key

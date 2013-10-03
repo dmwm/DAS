@@ -6,12 +6,11 @@ dump them on stdout
 """
 __author__ = "Valentin Kuznetsov"
 
-import os
 import json
 from optparse import OptionParser
 from DAS.services.map_reader import read_service_map
 
-class DASOptionParser: 
+class DASOptionParser(object):
     """
     DAS cli option parser
     """
@@ -32,13 +31,13 @@ class DASOptionParser:
 
 def nooutput(results):
     """Just iterate over generator, but don't print it out"""
-    for _row in results:
+    for _ in results:
         pass
 
 def main():
     """Main function"""
     opt_mgr = DASOptionParser()
-    (opts, _args) = opt_mgr.get_opt()
+    opts, _ = opt_mgr.get_opt()
 
     if  opts.umap:
         count = 0

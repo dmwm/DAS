@@ -31,7 +31,7 @@ class DASAnalytics(object):
         self.verbose = config['verbose']
         self.logger  = PrintManager('DASAnalytics', self.verbose)
         self.dburi   = config['mongodb']['dburi']
-        self.dbname  = config['analyticsdb']['dbname']        
+        self.dbname  = config['analyticsdb']['dbname']
         self.colname = config['analyticsdb']['collname']
         self.history = config['analyticsdb']['history']
         msg = "%s@%s" % (self.dburi, self.dbname)
@@ -53,7 +53,7 @@ class DASAnalytics(object):
 #            database  = self.conn[self.dbname]
 #            database.create_collection('self.colname', **options)
 #            print "####CREATE CAPPED ANALYTICS"
-#        self.col  = self.conn[self.dbname][self.colname] 
+#        self.col  = self.conn[self.dbname][self.colname]
 
     def delete_db(self):
         """
@@ -70,7 +70,7 @@ class DASAnalytics(object):
     def add_query(self, query, mongoquery):
         """
         Add DAS-QL/MongoDB-QL queries into analytics.
-        
+
         A unique record is contained for each (qhash, dhash) pair.
         For each an array of call-times is contained.
         """
@@ -86,7 +86,7 @@ class DASAnalytics(object):
         existing = self.col.find_one({'qhash': qhash, 'dhash': dhash})
         if existing:
             # check if times contains very old timestamps
-            rec = self.col.find({'_id': ObjectId(existing['_id']), 
+            rec = self.col.find({'_id': ObjectId(existing['_id']),
                                  'times':{'$lt' : now - self.history}})
             if  rec:
                 self.col.update({'_id': ObjectId(existing['_id'])},
@@ -102,22 +102,22 @@ class DASAnalytics(object):
         index = [('qhash', DESCENDING),
                  ('dhash', DESCENDING)]
         create_indexes(self.col, index)
-        
+
     def clean_queries(self):
         """
         Standalone method to clean up expired call-times from query records,
         since otherwise only the active record is cleaned.
-        
+
         This is too expensive to do with every operation, and mongodb
         does not allow multiple modifications to a single field in a single
         update operation (ie, we can't do $push and $pull in one update),
         so it should probably be done asynchronously at fixed intervals.
         """
-        
+
         self.logger.debug('')
-        
+
         now = time.time()
-        
+
         #clean out the times array
         self.col.update({'times': {'$exists': True}},
                         {'$pull': {'times': {'$lt': now - self.history}}})
@@ -134,14 +134,14 @@ class DASAnalytics(object):
         """
         Add an analyzer summary, with given analyzer identifier,
         start and finish times and payload.
-        
+
         It is intended that a summary document is deposited on
         each run of an analyzer (if desirable) and is thereafter
         immutable.
         """
         msg = '(%s, %s->%s, %s)' % (identifier, start, finish, payload)
         self.logger.debug(msg)
-        
+
         # clean-up analyzer records whose start timestamp is too old
         spec = {'start':{'$lt':time.time()-self.history},
                 'analyzer': {'$exists': True}}
@@ -154,7 +154,8 @@ class DASAnalytics(object):
         payload.update(record) #ensure key fields are set correctly
         self.col.insert(payload)
         # ensure summary items are indexed for quick extract
-        create_indexes(self.col, [('analyzer', DESCENDING), ('start', ASCENDING)])
+        create_indexes(self.col, [('analyzer', DESCENDING),
+                                  ('start', ASCENDING)])
 
     def get_summary(self, identifier, after=None, before=None, **query):
         """
@@ -172,7 +173,7 @@ class DASAnalytics(object):
 
     def add_api(self, system, query, api, args):
         """
-        Add API info to analytics DB. 
+        Add API info to analytics DB.
         Here args is a dict of API parameters.
         """
         orig_query = query
@@ -187,23 +188,24 @@ class DASAnalytics(object):
             self.add_query("", orig_query)
         # find api record
         record = self.col.find_one({'qhash':qhash, 'system':system,
-                        'api.name':api, 'api.params':args}) 
+                        'api.name':api, 'api.params':args})
         apidict = dict(name=api, params=args)
         if  record:
-            self.col.update({'_id':ObjectId(record['_id'])}, {'$inc':{'counter':1}})
+            self.col.update({'_id':ObjectId(record['_id'])},
+                            {'$inc':{'counter':1}})
         else:
             record = dict(system=system, api=apidict, qhash=qhash, counter=1)
             self.col.insert(record)
         index = [('system', DESCENDING), ('dasquery', DESCENDING),
                  ('api.name', DESCENDING), ('qhash', DESCENDING) ]
         create_indexes(self.col, index)
-        
+
     def insert_apicall(self, system, query, url, api, api_params, expire):
         """
         Remove obsolete apicall records and
         insert into Analytics DB provided information about API call.
         Moved from AbstractService.
-        
+
         Updated so that we do not have multiple records when performing
         forced updates (ie, the old record is not yet expired) - now
         look for an existing record with the same parameters (I'm hoping
@@ -238,7 +240,7 @@ class DASAnalytics(object):
                       ('apicall.api', DESCENDING),
                       ('qhash', DESCENDING)]
         create_indexes(self.col, index_list)
-        
+
     def update_apicall(self, query, das_dict):
         """
         Update apicall record with provided DAS dict.
@@ -247,7 +249,7 @@ class DASAnalytics(object):
         msg = 'DBSAnalytics::update_apicall, query=%s, das_dict=%s'\
                 % (query, das_dict)
         self.logger.debug(msg)
-        spec = {'apicall.qhash':genkey(encode_mongo_query(query))} 
+        spec = {'apicall.qhash':genkey(encode_mongo_query(query))}
         record = self.col.find_one(spec)
         self.col.update({'_id':ObjectId(record['_id'])},
             {'$set':{'dasapi':das_dict,
@@ -299,9 +301,9 @@ class DASAnalytics(object):
             cond['times'] = {'$gt': after}
         elif before:
             cond['times'] = {'$lt': before}
-        
+
         return self.col.find(cond)
-            
+
     def get_popular_queries(self, spec):
         """
         Get popular queries based on provided spec, which can be
@@ -324,7 +326,7 @@ class DASAnalytics(object):
         gen = (row['api']['name'] for row in \
                 self.col.find(cond, ['api.name']))
         return gen2list(gen)
-    
+
     def list_apicalls(self, qhash=None, api=None, url=None):
         "Replace ad-hoc calls in AbstractService"
         cond = {}
@@ -334,7 +336,7 @@ class DASAnalytics(object):
             cond['apicall.api'] = api
         if url:
             cond['apicall.url'] = url
-        
+
         return list(self.col.find(cond))
 
     def api_params(self, api):

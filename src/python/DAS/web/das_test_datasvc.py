@@ -73,14 +73,14 @@ class DASTestDataService(DASWebManager):
     @expose
     def index(self, **_kwargs):
         """
-        represents DAS web interface. 
+        represents DAS web interface.
         It uses das_searchform template for
         input form and yui_table for output Table widget.
         """
         page = "<h1>Welcome to DAS CMS Test server</h1>"
         page = "<p>Available systems:</p><ul>"
         for system in self.systems:
-            aref  = "<a href=\"/%s\">%s</a>" % (system, system) 
+            aref  = "<a href=\"/%s\">%s</a>" % (system, system)
             page += "<li>%s</li>" % aref
         page += "</ul>"
         return page
@@ -148,7 +148,7 @@ class DASTestDataService(DASWebManager):
         """
         try:
             code = int(kwargs.get('q'))
-            data = {'zip': {'code': code, 
+            data = {'zip': {'code': code,
                             'place' :[{'city': 'test1'}, {'city':'test2'}]}}
         except:
             data = {}

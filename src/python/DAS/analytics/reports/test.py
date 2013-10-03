@@ -13,12 +13,12 @@ class TestReport(Report):
     report_title = "Test"
     report_group = "Test Reports"
     report_info = "Does very little."
-        
+
     def __call__(self, **kwargs):
         period = float(kwargs.get('period', 3600))
-        results = self.results.get_results(only="result", 
+        results = self.results.get_results(only="result",
                                            after=time.time()-period)
         return ("analytics_report_test", {"results": results})
-        
-        
-    
+
+
+

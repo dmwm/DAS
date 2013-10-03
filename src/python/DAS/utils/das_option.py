@@ -11,16 +11,16 @@ class DASOption(object):
     """
     Class representing a single DAS option, independent of storage
     mechanism. Must define at least a section and name.
-    
+
     In configparser
-    
+
     [section]
     name = value
-    
+
     In WMCORE config
-    
+
     config.section.name = value
-    
+
     The type parameter forces conversion as appropriate.
     The default parameter allows the option to not be specified
     in the config file. If default is not set then not providing
@@ -33,8 +33,8 @@ class DASOption(object):
     Description is provided as a future option for some sort of
     automatic documentation.
     """
-    def __init__(self, section, name, itype='string', 
-                 default=None, validator=None, 
+    def __init__(self, section, name, itype='string',
+                 default=None, validator=None,
                  destination=None, description=''):
         self.section = section
         self.name = name
@@ -44,9 +44,9 @@ class DASOption(object):
         self.destination = destination
         self.description = description
         self.value = None
-        
+
         assert self.type in ('string', 'int', 'float', 'bool', 'list')
-    
+
     def get_from_configparser(self, config):
         """
         Extract a value from a configparser object.
@@ -64,15 +64,15 @@ class DASOption(object):
                 value = config.getboolean(self.section, self.name)
             elif self.type == 'list':
                 value = config.get(self.section, self.name, True).split(',')
-            
+
             if self.validator and not self.validator(value):
                 msg = "Validation failed for option: %s.%s=%s" % \
                       (self.section, self.name, value)
                 raise Exception(msg)
-            
+
             self.value = value
             return value
-            
+
         else:
             if not self.default == None:
                 self.value = self.default
@@ -81,7 +81,7 @@ class DASOption(object):
                 msg = "Required option not found: %s.%s" % \
                       (self.section, self.name)
                 raise Exception(msg)
-            
+
     def write_to_configparser(self, config, use_default=False):
         """
         Write the current value to a configparser option. This
@@ -95,7 +95,7 @@ class DASOption(object):
                 value = self.default
             else:
                 return
-        
+
         if not config.has_section(self.section):
             config.add_section(self.section)
         if self.type == 'list':
@@ -104,7 +104,7 @@ class DASOption(object):
             config.set(self.section, self.name, 'true' if value else 'false')
         else:
             config.set(self.section, self.name, str(value))
-            
+
     def get_from_wmcore(self, config):
         "As per get_from_configparser."
         if  self.section in config.listSections_() and \
@@ -123,15 +123,15 @@ class DASOption(object):
                     msg = 'Option %s.%s=%s: Not a list.' % \
                           (self.section, self.name, value)
                     raise Exception(msg)
-            
+
             if self.validator and not self.validator(value):
                 msg = "Validation failed for option: %s.%s=%s" % \
                       (self.section, self.name, value)
                 raise Exception(msg)
-            
+
             self.value = value
             return value
-            
+
         else:
             if not self.default == None:
                 self.value = self.default
@@ -140,7 +140,7 @@ class DASOption(object):
                 msg = "Required option not found: %s.%s" % \
                       (self.section, self.name)
                 raise Exception(msg)
-            
+
     def write_to_wmcore(self, config, use_default=False):
         "As per write_to_configparser."
         value = self.value
@@ -149,6 +149,6 @@ class DASOption(object):
                 value = self.default
             else:
                 return
-         
+
         section = config.section_(self.section)
         setattr(section, self.name, value)

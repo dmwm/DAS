@@ -23,32 +23,32 @@ from DAS.services.cmsswconfigs.base import CMSSWConfig
 from DAS.utils import mongosearch
 import mongoengine
 
-class RelOptionParser: 
+class RelOptionParser:
     """
     Option parser
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("-v", "--verbose", action="store", 
+        self.parser.add_option("-v", "--verbose", action="store",
                     type="int", default=0, dest="verbose",
              help="verbose output")
-        self.parser.add_option("--release", action="store", type="string", 
+        self.parser.add_option("--release", action="store", type="string",
                                           default=False, dest="release",
              help="specify CMSSW release name")
-        self.parser.add_option("--host", action="store", type="string", 
+        self.parser.add_option("--host", action="store", type="string",
              default="localhost", dest="host",
              help="specify MongoDB hostname")
-        self.parser.add_option("--port", action="store", type="string", 
+        self.parser.add_option("--port", action="store", type="string",
              default=27017, dest="port",
              help="specify MongoDB port number")
-        self.parser.add_option("--path", action="store", type="string", 
+        self.parser.add_option("--path", action="store", type="string",
              default=os.environ.get('VO_CMS_SW_DIR',None), dest="path",
              help="specify path to CMS software area")
-        self.parser.add_option("--delete", action="store_true",  
+        self.parser.add_option("--delete", action="store_true",
              default=False, dest="delete",
              help="delete entry about release in MongoDB")
         self.parser.add_option("--check", action="store_true",
-             default=False, dest="check", 
+             default=False, dest="check",
              help="check if release exists in DB")
         self.parser.add_option("--list", action="store_true",
              default=False, dest="list",
@@ -106,7 +106,7 @@ def check(host, port, release):
 def releases(host, port):
     "List CMSSW releases"
     db = connect(host, port)
-    names = db.collection_names() 
+    names = db.collection_names()
     return filter(lambda x: x.startswith('CMSSW') and not x.endswith('index'),
                   names)
 
@@ -115,12 +115,12 @@ def inject(path, release, debug=0):
     Function to inject CMSSW configuration files into MongoDB located
     at provided host/port.
     """
-    
+
     content_translate = '?????????\t\n??\r??'+\
                         ''.join(['?']*16+\
                                 [chr(i) for i in xrange(32, 128)]+\
                                 ['?']*128)
-    
+
     if  'SCRAM_ARCH' not in os.environ:
         msg = 'SCRAM_ARCH environment is not set'
         raise Exception(msg)
@@ -156,23 +156,23 @@ def inject(path, release, debug=0):
             _, system, subsystem, config = name.split('/')
         except:
             continue
-        
+
         filecount += 1
-        
+
         fdsc = open(name, 'r')
         content = fdsc.read()
         fdsc.close()
-        
+
         #content = content.encode("utf_8") #ensure the encoding is utf8
         content = content.translate(content_translate)
 
         content = content.replace('\0', '')
-        obj = CMSSWConfig(name=config, content=content, 
+        obj = CMSSWConfig(name=config, content=content,
                 system=system, subsystem=subsystem, hash=genkey(content))
         obj.save()
 
     # Index the collection
-    print 'Search and insert %s files took %s seconds' % (filecount, 
+    print 'Search and insert %s files took %s seconds' % (filecount,
                                                           time.time() - time0)
     print "Generating index ..."
     time0 = time.time()

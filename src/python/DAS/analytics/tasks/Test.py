@@ -14,20 +14,20 @@ class Test(object):
     disable resubmission of itself (1%).
     """
     task_title = "Test task"
-    task_options = [{"name":"message", "type":"string", 
+    task_options = [{"name":"message", "type":"string",
                      "default":"hello world", "help":"Message to print"}]
-    
+
     def __init__(self, **kwargs):
         self.logger = PrintManager('Test', kwargs.get('verbose', 0))
         self.name = kwargs['name']
         self.message = kwargs['message']
         self.index = kwargs['index']
-    
+
     def __call__(self):
         self.logger.info('%s from index=%s' % (self.message, self.index))
-        
+
         result = {}
-        
+
         effect = random.random()
         if effect > 0.99:
             self.logger.info('..disabling resubmission')
@@ -53,5 +53,5 @@ class Test(object):
         elif effect > 0.90:
             self.logger.error('..raising an exception')
             raise
-        
+
         return result

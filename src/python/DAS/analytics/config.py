@@ -18,9 +18,9 @@ class Option(object):
     and file based config.
 
     Names should be valid python identifiers.
-    """ 
-    def __init__(self, name, group='General', 
-                 short=None, default=None, type=None, 
+    """
+    def __init__(self, name, group='General',
+                 short=None, default=None, type=None,
                  choices=None, help=None, confonly=False):
         "Create a new Option"
         assert re.match(r'^[A-Za-z0-9_]+$', name)
@@ -90,9 +90,9 @@ class DASAnalyticsConfig(object):
             option = args[0]
         else:
             option = Option(*args, **kwargs)
-            
+
         if not option.name in cls.options:
-            cls.options[option.name] = option 
+            cls.options[option.name] = option
 
     def __init__(self):
         self._options = {}
@@ -102,13 +102,13 @@ class DASAnalyticsConfig(object):
         if what in self._options:
             return self._options[what]
         else:
-            raise AttributeError 
+            raise AttributeError
 
     def get(self, name, default=None):
         "Get the value of a config option."
         return self._options.get(name, default)
 
-    def add_task(self, name, classname, interval, 
+    def add_task(self, name, classname, interval,
                  only_once=False, max_runs=None, only_before=None,
                  **kwargs):
         "Add a task to be performed. Provided as Task() to execfile."
@@ -179,8 +179,8 @@ class DASAnalyticsConfig(object):
         """
         parser = optparse.OptionParser(
                     usage="%prog [options] conf_file0 conf_file1...")
-        groups = list(set([opt.group 
-                           for opt in self.options.values() 
+        groups = list(set([opt.group
+                           for opt in self.options.values()
                            if not opt.confonly]))
         names = []
         for grp in groups:
@@ -210,12 +210,12 @@ class DASAnalyticsConfig(object):
         for name, option in self.options.items():
             defaults[name] = option.default
 
-        cmdresult = {} 
+        cmdresult = {}
         for name in names:
             if hasattr(opts, name) and not getattr(opts, name) == None:
                 cmdresult[name] = getattr(opts, name)
 
-        fileresult = {}    
+        fileresult = {}
         for arg in args:
             fileresult.update(self.readfile(arg))
 

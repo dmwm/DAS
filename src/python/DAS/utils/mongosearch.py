@@ -2,7 +2,7 @@
 Mongo key based search, see http://github.com/hmarr/mongosearch
 
 Copyright (c) 2010 Harry Marr
- 
+
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without
@@ -11,10 +11,10 @@ copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the
 Software is furnished to do so, subject to the following
 conditions:
- 
+
 The above copyright notice and this permission notice shall be
 included in all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -50,7 +50,7 @@ STOP_WORDS = (
 
 class SearchTerm(EmbeddedDocument):
     """A term linked to its weight - one of these is stored for each term in
-    each document. The weight 
+    each document. The weight
     """
     term = fields.StringField(db_field='t')
     weight = fields.FloatField(db_field='w')
@@ -65,7 +65,7 @@ class SearchIndex(object):
         // Iterate over each document to calculate the document's score
         db[collection].find(query).forEach(function(doc) {
             var score = 0;
-            // Iterate over each term in the document, calculating the 
+            // Iterate over each term in the document, calculating the
             // score for the term, which will be added to the doc's score
             doc[~terms].forEach(function(term) {
                 // Only look at the term if it is part of the query
@@ -73,7 +73,7 @@ class SearchIndex(object):
                     // The meat of the BM25 ranking function
                     // (See http://en.wikipedia.org/wiki/Okapi_BM25)
                     //
-                    // term.w (weight) is equivalent to the term's 
+                    // term.w (weight) is equivalent to the term's
                     // frequency in the document
                     //
                     // f(qi, D) * (k1 + 1)
@@ -97,7 +97,7 @@ class SearchIndex(object):
         return results;
     }
     """
-    
+
     def __init__(self, document, use_term_index=True):
         self.document = document
         # Make index document for the document provided
@@ -159,7 +159,7 @@ class SearchIndex(object):
             weight = sum(itemgetter(1)(t) for t in like_terms)
             unique_terms.append(SearchTerm(term=term, weight=weight))
 
-        doc_index = self.document_index(doc_id=unicode(doc.id), 
+        doc_index = self.document_index(doc_id=unicode(doc.id),
                                         terms=unique_terms, length=doc_len)
         doc_index.save()
 
@@ -188,7 +188,7 @@ class SearchIndex(object):
             query_terms = self._prepare_html(query)
         else:
             query_terms = self._prepare_text(query)
-        
+
         # Calculate the inverse document frequency for each term
         idfs = {}
         num_docs = self.document_index.objects.count()
@@ -203,7 +203,7 @@ class SearchIndex(object):
         query = self.document_index.objects(terms__term__in=query_terms)
         options = {
             'idfs': idfs,
-            'avgDocLength': avg_doc_length, 
+            'avgDocLength': avg_doc_length,
             'queryTerms': query_terms,
             # BM25 variables
             'k': 2.0,

@@ -24,33 +24,33 @@ try:
 except:
     pass
 
-class NClientsOptionParser: 
+class NClientsOptionParser:
     """client option parser"""
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("-v", "--verbose", action="store", 
+        self.parser.add_option("-v", "--verbose", action="store",
                                type="int", default=0, dest="debug",
              help="verbose output")
-        self.parser.add_option("--url", action="store", type="string", 
+        self.parser.add_option("--url", action="store", type="string",
                                default="", dest="url",
              help="specify URL to test, e.g. http://localhost:8211/rest/test")
-        self.parser.add_option("--accept", action="store", type="string", 
+        self.parser.add_option("--accept", action="store", type="string",
                                default="application/json", dest="accept",
              help="specify URL Accept header, default application/json")
-        self.parser.add_option("--idx-bound", action="store", type="long", 
+        self.parser.add_option("--idx-bound", action="store", type="long",
                                default=0, dest="idx",
              help="specify index bound, by default it is 0")
-        self.parser.add_option("--logname", action="store", type="string", 
+        self.parser.add_option("--logname", action="store", type="string",
                                default='spammer', dest="logname",
         help="specify log name prefix where results of N client \
                 test will be stored")
-        self.parser.add_option("--nclients", action="store", type="int", 
+        self.parser.add_option("--nclients", action="store", type="int",
                                default=10, dest="nclients",
              help="specify max number of clients")
-        self.parser.add_option("--dasquery", action="store", type="string", 
+        self.parser.add_option("--dasquery", action="store", type="string",
                                default="dataset", dest="dasquery",
              help="specify DAS query to test, e.g. dataset")
-        self.parser.add_option("--pdf", action="store", type="string", 
+        self.parser.add_option("--pdf", action="store", type="string",
                                default="results.pdf", dest="pdf",
         help="specify name of PDF file for matplotlib output, \
                 default is results.pdf")
@@ -78,14 +78,14 @@ def natcasecmp(aaa, bbb):
     "Natural string comparison, ignores case."
     return natcmp(aaa.lower(), bbb.lower())
 
-def natsort(seq, cmp=natcmp):
+def natsort(seq, icmp=natcmp):
     "In-place natural string sort."
-    seq.sort(cmp)
-    
-def natsorted(seq, cmp=natcmp):
+    seq.sort(icmp)
+
+def natsorted(seq, icmp=natcmp):
     "Returns a copy of seq, sorted by natural string sort."
     temp = copy.copy(seq)
-    natsort(temp, cmp)
+    natsort(temp, icmp)
     return temp
 
 def gen_passwd(length=8, chars=string.letters + string.digits):
@@ -164,7 +164,7 @@ def runjob(nclients, host, method, params, headers, idx, limit,
                 query  = '%s=/%s*' % (dasquery, gen_passwd(1, string.letters))
             else:
                 query  = dasquery
-            params = {'query':query, 'idx':random_index(idx), 'limit':limit} 
+            params = {'query':query, 'idx':random_index(idx), 'limit':limit}
             if  method == '/rest/testmongo':
                 params['collection'] = 'das.merge'
             ###
@@ -182,7 +182,7 @@ def runjob(nclients, host, method, params, headers, idx, limit,
 def avg_std(input_file):
     """Calculate average and standard deviation"""
     count = 0
-    sum   = 0
+    total = 0
     arr   = []
     with open(input_file) as input_data:
         for line in input_data.readlines():
@@ -198,11 +198,11 @@ def avg_std(input_file):
                 continue
             if  'ctime' in data:
                 res    = float(data['ctime'])
-                sum   += res
+                total += res
                 count += 1
                 arr.append(res)
     if  count:
-        mean = sum/count
+        mean = total/count
         std2 = 0
         for item in arr:
             std2 += (mean - item)**2
@@ -211,7 +211,7 @@ def avg_std(input_file):
         msg = 'Unable to count results'
         raise Exception(msg)
 
-def make_plot(xxx, yyy, std=None, name='das_cache.pdf', 
+def make_plot(xxx, yyy, std=None, name='das_cache.pdf',
               xlabel='Number of clients', ylabel='Time/request (sec)',
               yscale=None):
     """Make standard plot time vs nclients using matplotlib"""
@@ -272,7 +272,7 @@ def main():
 
     for nclients in array:
         print "Run job with %s clients" % nclients
-        runjob(nclients, host, method, params, headers, idx, limit, 
+        runjob(nclients, host, method, params, headers, idx, limit,
                debug, logname, dasquery)
 
     # analyze results
@@ -283,10 +283,10 @@ def main():
     xxx = []
     yyy = []
     std = []
-    for file in natsorted(file_list):
-        name, _ = file.split('.')
+    for ifile in natsorted(file_list):
+        name, _ = ifile.split('.')
         xxx.append(int(name.split(logname)[-1]))
-        mean, std2 = avg_std(file)
+        mean, std2 = avg_std(ifile)
         yyy.append(mean)
         std.append(std2)
     try:
