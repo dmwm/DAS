@@ -103,10 +103,11 @@ class DASOptionParser:
         msg  = 'specify private certificate file name'
         self.parser.add_option("--cert", action="store", type="string",
                                default="", dest="cert", help=msg)
-        msg = 'specify number of retries upon busy DAS server message'
+        msg  = 'specify number of retries upon busy DAS server message'
         self.parser.add_option("--retry", action="store", type="string",
                                default=0, dest="retry", help=msg)
-        msg = 'show DAS headers in JSON format'
+        msg  = 'show DAS headers in JSON format'
+        msg += ' (obsolete, keep for backward compatibility)'
         self.parser.add_option("--das-headers", action="store_true",
                                default=False, dest="das_headers", help=msg)
         msg = 'specify power base for size_format, default is 10 (can be 2)'
@@ -272,17 +273,7 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
             reason = "client timeout after %s sec" % int(time.time()-time0)
             return {"status":"fail", "reason":reason}
     jsondict = json.loads(data)
-    if  das_headers:
-        return jsondict
-    # drop DAS headers, users usually don't need them
-    status = jsondict.get('status')
-    if  status != 'ok':
-        return jsondict
-    drop_keys = ['das_id', 'cache_id', 'qhash', '_id', 'das']
-    for row in jsondict['data']:
-        for key in drop_keys:
-            del row[key]
-    return jsondict['data']
+    return jsondict
 
 def prim_value(row):
     """Extract primary key value from DAS record"""
@@ -322,7 +313,6 @@ def main():
     thr     = opts.threshold
     ckey    = opts.ckey
     cert    = opts.cert
-    das_h   = opts.das_headers
     base    = opts.base
     if  not query:
         print 'Input query is missing'
@@ -416,7 +406,7 @@ def main():
                 print data
     else:
         jsondict = get_data(\
-                host, query, idx, limit, debug, thr, ckey, cert, das_h)
+                host, query, idx, limit, debug, thr, ckey, cert)
         print(json.dumps(jsondict))
 
 #

@@ -195,9 +195,14 @@ DASOption('keyword_search', 'kws_service_on', 'bool', False),
 # max time for exhaustive search ranker, default 5 seconds
 DASOption('keyword_search', 'timeout', 'int', 5),
 
+#
 # Load balancing
+#
 # host where keyword search is run, by default it's same as DAS
 DASOption('load_balance', 'kws_host', 'string', ''),
+# hosts from where keyword search (or autocompletion) could be initialized
+# need to be set on KWS backend only and if no proxy is used
+DASOption('load_balance', 'valid_origins', 'list', []),
 
 # Query rewrite
 DASOption('query_rewrite', 'pk_rewrite_on', 'bool', False),

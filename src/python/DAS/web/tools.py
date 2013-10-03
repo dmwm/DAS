@@ -225,17 +225,17 @@ def enable_cross_origin(func):
     Enables Cross Origin Requests (from a predefined list of DAS origins)
     to be run on each given back-end server (keyword search, autocompletion)
     """
+    from DAS.utils.das_config import das_readconfig
+    dasconfig = das_readconfig()
+
+    # load list of hosts from where keyword search could be initialized
+    valid_origins = dasconfig['load_balance'].get('valid_origins', [])
 
     def enable_cross_orign_requests():
         """
         on each request, add additional headers that will allow browser
-        to use the result (loaded from other origin/domain)
+        to use the KWS  result (loaded from other origin/domain)
         """
-        # TODO: check if the current server is back-end based?
-        # TODO: set exact names of main das server(s)
-        valid_origins = ['http://localhost:8212',
-                         'https://cmsweb.cern.ch',
-                         'https://das-kws-test.cern.ch']
 
         # output the requests origin if it's allowed
         origin = cherrypy.request.headers.get('Origin', '')
