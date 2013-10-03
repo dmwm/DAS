@@ -34,3 +34,23 @@ function ajaxCheckPid(base, method, pid, interval) {
       }
     });
 }
+
+// workaround/bug-fix in prototype to make same-origin ajax easily
+Ajax.Responders.register({
+  onCreate: function(response) {
+    // TODO: isSameOrigin() seem to fail at least for localhost in Chrome
+    if (false && response.request.isSameOrigin())
+      return;
+
+    var t = response.transport;
+    t.setRequestHeader = t.setRequestHeader.wrap(function(original, k, v) {
+
+      if (/^(accept|accept-language|content-language)$/i.test(k))
+        return original(k, v);
+      if (/^content-type$/i.test(k) &&
+          /^(application\/x-www-form-urlencoded|multipart\/form-data|text\/plain)(;.+)?$/i.test(v))
+        return original(k, v);
+      //return;
+    });
+  }
+});

@@ -24,6 +24,9 @@ from distutils.errors import DistutilsPlatformError, DistutilsExecError
 from distutils.core import Extension
 from distutils.command.install import INSTALL_SCHEMES
 
+import fnmatch
+
+
 sys.path.append(os.path.join(os.getcwd(), 'src/python'))
 from DAS import version as das_version
 
@@ -183,7 +186,7 @@ def find_packages(relativedir):
         packages.append(package)
     return packages
 
-def datafiles(dir):
+def datafiles(dir, pattern=None):
     """Return list of data files in provided relative dir"""
     files = []
     for dirname, dirnames, filenames in os.walk(dir):
@@ -191,6 +194,9 @@ def datafiles(dir):
             files.append(os.path.join(dirname, subdirname))
         for filename in filenames:
             if  filename[-1] == '~':
+                continue
+            # match file name pattern (e.g. *.css) if one given
+            if pattern and not fnmatch.fnmatch(filename, pattern):
                 continue
             files.append(os.path.join(dirname, filename))
     return files
@@ -215,6 +221,12 @@ data_files   = [
                 ('DAS/test', datafiles('test')),
                 ('DAS/services/maps', datafiles('src/python/DAS/services/maps')),
                 ('DAS/services/cms_maps', datafiles('src/python/DAS/services/cms_maps')),
+                ('DAS/services/bootstrap_queries', 
+                                 datafiles('src/python/DAS/services/bootstrap_queries')),
+
+                ('DAS/kws_data/db_dumps', datafiles('src/kws_data/db_dumps')),
+                ('DAS/kws_data/kws_index', datafiles('src/kws_data/kws_index')),
+
                 ('DAS/web/js', datafiles('src/js')),
                 ('DAS/web/css', datafiles('src/css')),
                 ('DAS/web/images', datafiles('src/images')),
@@ -255,13 +267,22 @@ def main():
         scripts              = datafiles('bin'),
         requires             = ['python (>=2.6)', 'pymongo (>=1.6)', 'ply (>=3.3)',
                                 'sphinx (>=1.0.4)', 'cherrypy (>=3.1.2)',
-                                'Cheetah (>=2.4)', 'yaml (>=3.09)'],
+                                'Cheetah (>=2.4)', 'yaml (>=3.09)',
+                                # keyword search
+                                'nltk', 'jsonpath_rw'],
         ext_modules          = [Extension('DAS.extensions.das_speed_utils',
                                    include_dirs=['extensions'],
                                    sources=['src/python/DAS/extensions/dict_handler.c']),
                                Extension('DAS.extensions.das_hash',
                                    include_dirs=['extensions'],
-                                   sources=['src/python/DAS/extensions/das_hash.c'])],
+                                   sources=['src/python/DAS/extensions/das_hash.c']),
+
+                               # fast_recursive_ranker is based on cython, but
+                               # is distributed as .c source
+                               # .pyx->.c to be compiled separately
+                               #  so cython is not required for installation
+                               Extension('DAS.extensions.fast_recursive_ranker',
+                                   sources=['src/python/DAS/extensions/fast_recursive_ranker.c'])],
         classifiers          = classifiers,
         cmdclass             = {'build_ext': BuildExtCommand,
                                 'test': TestCommand,

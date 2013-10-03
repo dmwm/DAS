@@ -219,3 +219,35 @@ def exposedasplist (func):
         return plist_str
     return wrapper
 
+
+def enable_cross_origin(func):
+    """
+    Enables Cross Origin Requests (from a predefined list of DAS origins)
+    to be run on each given back-end server (keyword search, autocompletion)
+    """
+    from DAS.utils.das_config import das_readconfig
+    dasconfig = das_readconfig()
+
+    # load list of hosts from where keyword search could be initialized
+    valid_origins = dasconfig['load_balance'].get('valid_origins', [])
+
+    def enable_cross_orign_requests():
+        """
+        on each request, add additional headers that will allow browser
+        to use the KWS  result (loaded from other origin/domain)
+        """
+
+        # output the requests origin if it's allowed
+        origin = cherrypy.request.headers.get('Origin', '')
+        if origin in valid_origins:
+            cherrypy.response.headers['Access-Control-Allow-Origin'] = origin
+
+        cherrypy.response.headers['Access-Control-Allow-Headers'] = 'X-JSON'
+        cherrypy.response.headers['Access-Control-Expose-Headers'] = 'X-JSON'
+
+    def wrapper(self, *args, **kwds):
+        data = func(self, *args, **kwds)
+        enable_cross_orign_requests()
+        return data
+
+    return wrapper

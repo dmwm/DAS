@@ -82,6 +82,7 @@ class DASQuery(object):
         self._service_apis_map = {}
         self._str           = ''
         self._query         = ''
+        self._query_full    = ''
         self._storage_query = {}
         self._mongo_query   = {}
         self._qhash         = None

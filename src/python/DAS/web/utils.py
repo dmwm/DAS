@@ -263,6 +263,12 @@ def checkargs(supported):
     """
     def wrap(func):
         """Wrap input function"""
+
+        def require_string(val):
+            if not (isinstance(val, str) or isinstance(val, unicode)):
+                code = web_code('Invalid input')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
+
         def wrapped_f(self, *args, **kwds):
             """Wrap function arguments"""
             # check request headers. For methods POST/PUT
@@ -300,10 +306,9 @@ def checkargs(supported):
                 code  = web_code('Invalid query')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
             if  'input' in kwds:
-                if  not (isinstance(kwds['input'], str) or \
-                    isinstance(kwds['input'], unicode)):
-                    code  = web_code('Invalid input')
-                    raise HTTPError(500, 'DAS error, code=%s' % code)
+                require_string(kwds['input'])
+            if  'kwquery' in kwds:
+                require_string(kwds['kwquery'])
             if  checkarg(kwds, 'idx') and not pat.match(str(kwds['idx'])):
                 code  = web_code('Unsupported idx value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)

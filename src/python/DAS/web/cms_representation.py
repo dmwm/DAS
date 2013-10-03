@@ -286,46 +286,50 @@ class CMSRepresentation(DASRepresentation):
 
     def get_one_row(self, dasquery):
         """
-        Invoke DAS workflow and get one row from the cache.
+        Invoke DAS workflow and get one rowID from the cache.
         """
-        mongo_query = {'spec':{'qhash':dasquery.qhash}}
-        data = [r for r in self.dasmgr.get_from_cache(\
-                DASQuery(mongo_query), idx=0, limit=1)]
+        # TODO: sometimes this seem to return ONLY rowID, is this intended use?
+        q = DASQuery({'spec':{'qhash':dasquery.qhash}})
+        data = list(self.dasmgr.get_from_cache(q, idx=0, limit=1))
         if  len(data):
             return data[0]
 
     def fltpage(self, row):
         """Prepare filter snippet for a given query"""
-        rowkeys = []
         page = ''
-        if  row and 'das' in row and 'primary_key' in row['das']:
+        fields = self.get_result_fieldlist(row)
+        if fields:
+            #fields += ['das.conflict']
+            dflt = das_filters() + das_aggregators()
+            dflt.remove('unique')
+            page = self.templatepage('das_filters',
+                                     filters=dflt, das_keys=fields)
+        return page
+
+    def get_result_fieldlist(self, row):
+        rowkeys = []
+        if  row and 'das' in row  and 'primary_key' in row['das']:
             pkey = row['das']['primary_key']
             if  pkey and (isinstance(pkey, str) or isinstance(pkey, unicode)):
                 try:
                     mkey = pkey.split('.')[0]
                     if  mkey not in row:
-                        return page
+                        return []
                     if  isinstance(row[mkey], list):
                         # take first five or less entries from the list to cover
                         # possible aggregated records and extract row keys
-                        lmax    = len(row[mkey]) if len(row[mkey]) < 5 else 5
-                        sublist = [row[mkey][i] for i in xrange(0, lmax)]
-                        ndict   = DotDict({mkey:sublist})
-                        rowkeys = [k for k in ndict.get_keys(mkey)]
+                        ndict   = DotDict({mkey: row[mkey][:10]})
+                        rowkeys = list(ndict.get_keys(mkey))
                     else:
-                        rowkeys = [k for k in DotDict(row).get_keys(mkey)]
+                        rowkeys = list(DotDict(row).get_keys(mkey))
                     rowkeys.sort()
                     rowkeys += ['das.conflict']
-                    dflt = das_filters() + das_aggregators()
-                    dflt.remove('unique')
-                    page = self.templatepage('das_filters', \
-                            filters=dflt, das_keys=rowkeys)
                 except Exception as exc:
+                    # TODO: pkey.split fail only if called on non-string
                     msg = "Fail to pkey.split('.') for pkey=%s" % pkey
                     print msg
                     print_exc(exc)
-                    pass
-        return page
+        return rowkeys
 
     def convert2ui(self, idict, not2show=None):
         """

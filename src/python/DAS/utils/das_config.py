@@ -129,6 +129,9 @@ DASOption('web_server', 'onhold_daemon', 'bool', False),
 DASOption('web_server', 'dbs_daemon_interval', 'int', 3600),
 # DBS dataset daemon expire timestamp (in seconds)
 DASOption('web_server', 'dbs_daemon_expire', 'int', 3600),
+# if true, will keep existing Datasets on server restart
+# (i.e. it will not delete dbs collection; Record expiration still applies)
+DASOption('web_server', 'preserve_on_restart', 'bool', False),
 # local DAS services
 DASOption('web_server', 'services', 'list', []),
 
@@ -184,6 +187,25 @@ DASOption('das', 'api_workers', 'int', 2),
 # we use this format due to option parser constains
 DASOption('das', 'thread_weights', 'list', ['dbs:5', 'phedex:5', 'dbs3:5']),
 
+#
+# Keyword Search options
+#
+DASOption('keyword_search', 'kws_on', 'bool', False),
+DASOption('keyword_search', 'kws_service_on', 'bool', False),
+# max time for exhaustive search ranker, default 5 seconds
+DASOption('keyword_search', 'timeout', 'int', 5),
+
+#
+# Load balancing
+#
+# host where keyword search is run, by default it's same as DAS
+DASOption('load_balance', 'kws_host', 'string', ''),
+# hosts from where keyword search (or autocompletion) could be initialized
+# need to be set on KWS backend only and if no proxy is used
+DASOption('load_balance', 'valid_origins', 'list', []),
+
+# Query rewrite
+DASOption('query_rewrite', 'pk_rewrite_on', 'bool', False),
 ] # end of DAS_OPTIONS list
 
 def read_configparser(dasconfig):

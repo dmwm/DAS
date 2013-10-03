@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+DAS_PYTHONPATH=`python -c "import os, DAS; print os.path.dirname(DAS.__file__)"`
+
+# check number of input arguments
+usage="Usage: `basename $0` out_dir"
+helpmsg="  This script exports the external data needed for keyword search"
+E_BADARGS=65
+if [ $# -eq 1 ]; then
+    if  [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+        echo $usage
+        echo $helpmsg
+        exit
+    fi
+fi
+
+OUT_DIR=$1
+
+mkdir -p $OUT_DIR/kws_index/
+mkdir -p $OUT_DIR/db_dumps/
+cp $DAS_KWS_IR_INDEX/* $OUT_DIR/kws_index/
+
+mongoexport --port 8230 --db keylearning --collection db --out $OUT_DIR/db_dumps/update_keylearning_db.js
+
+# dump keylearning col and cols for input values (release, datatype, etc)
+for col in  datatype_name group_name primary_dataset_name release_name site_name status_name tier_name
+do
+    mongoexport --port 8230 --db inputvals --collection $col --out $OUT_DIR/db_dumps/update_inputvals_$col.js
+done
