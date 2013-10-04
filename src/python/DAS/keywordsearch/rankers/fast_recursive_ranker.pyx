@@ -24,6 +24,7 @@ from DAS.keywordsearch.rankers.exceptions import TimeLimitExceeded
 # Heuristics
 # /DoubleMu/Run2012A-Zmmg-13Jul2012-v1xx/RAW-RECO --> dataset
 cdef double p_value_as_lookup = 0.80
+cdef bint TRACE = DEBUG
 
 
 # TOOD: this is mainly for backward compatibility
@@ -179,13 +180,17 @@ cdef class PartialSearchResult:
                 self.wildcards_set.add(field)
             upd = '%s=%s' % (field, new_value)
 
-        if _DEBUG_DETAIL:
-            upd += "; kw_used: %s, no rt: %s, sc: %.2f" % \
-                   (str(self.kw_used), str(self.result_type_enumerated),
-                    self.score
-                    )
-        t = (new_kw, act, upd, '%.2f' % exp(delta_score))
-        self.trace.append(t)
+        # disable extensive trace in production as it's not shown to users...
+        if TRACE:
+            if _DEBUG_DETAIL:
+                upd += "; params: %s;       kw_used: %s, no rt: %s, sc: %.2f" % \
+                       (str(self.params_set),
+                        str(self.kw_used),
+                        str(self.result_type_enumerated),
+                        self.score
+                        )
+            t = (new_kw, act, upd, '%.2f' % exp(delta_score))
+            self.trace.append(t)
 
         return self
 
@@ -308,8 +313,8 @@ cdef bint validate_input_params_das_cpy(set params, str entity, bint final_step,
 
     cdef ApiParamDefinition api_item
     for api_item in api_definitions:
-        # TODO: check if cset. <= >= is same as (super/sub)set
-        if params.issubset(api_item.api_params_set) and (not lookup or lookup == lookup):
+        if params.issubset(api_item.api_params_set) and \
+                (not lookup or lookup == api_item.lookup):
             if not final_step:
                 return True
             if params.issuperset(api_item.req_params):
