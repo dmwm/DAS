@@ -221,6 +221,8 @@ class DASQuery(object):
     @property
     def query(self):
         "query property of the DAS query (human readble form)"
+        if  'uinput' in self._storage_query:
+            return self._storage_query['uinput']
         if  not self._query:
             fields = self.mongo_query.get('fields', [])
             if  not fields:
@@ -250,6 +252,7 @@ class DASQuery(object):
                     val = json.dumps(val)
                     speclist.append({"key":key, "value":val})
             self._storage_query['spec'] = speclist
+            self._storage_query['uinput'] = self._query
         return self._storage_query
         
     @property
@@ -296,7 +299,7 @@ class DASQuery(object):
         """
         if  not self._qhash:
             sdict = deepcopy(self.storage_query)
-            for key in ['filters', 'aggregators', 'mapreduce']:
+            for key in ['filters', 'aggregators', 'mapreduce', 'uinput']:
                 if  key in sdict:
                     del sdict[key]
             self._qhash = genkey(sdict)
