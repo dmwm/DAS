@@ -162,12 +162,13 @@ class KeywordSearchAbstractTester(unittest.TestCase):
         # require pass up to K-th result
         if not test_passed  and  \
                 not (DO_NOT_FAIL_ON_NON_IMPLEMENTED and non_implemented):
-            if isinstance(expected_results, list):
+            if not expected_results:
+                pass
+            elif isinstance(expected_results, list):
                 # TODO: in py2.7 will be able to use assertIn
                 self.assertTrue(first_result in expected_results, msg=msg)
             else:
                 self.assertEquals(first_result, expected_results,  msg=msg)
-
 
         # TODO: exclusion ( is that needed?)
         if exclude_for_all_results:
@@ -208,19 +209,16 @@ class TestDASKeywordSearch(KeywordSearchAbstractTester):
 
         #assert search('files in /DoubleMuParked25ns/*/* | count(das.conflict')[0] == 'file dataset=/DoubleMuParked25ns/*/* | count(das.conflict)'
 
-    def test_das_key_synonyms(self):
-        self.assertQueryResult('location of *Run2012*PromptReco*/AOD',
-                               'site dataset=*Run2012*PromptReco*/AOD*',
-                               query_type='nl',
-                               non_implemented=SYNONYMS_NOT_IMPLEMENTED)
+    # this result is not supported
+    #def test_das_key_synonyms(self):
+    #    self.assertQueryResult('location of *Run2012*PromptReco*/AOD',
+    #                           'site dataset=*Run2012*PromptReco*/AOD*',
+    #                           query_type='nl',
+    #                           non_implemented=SYNONYMS_NOT_IMPLEMENTED)
 
 
 
     def test_dataset_synonyms(self):
-        # automatically adding wildcards and synonyms
-        self.assertQueryResult('location of Zmm',
-            'site primary_dataset=ZMM', query_type='synonym')
-
         self.assertQueryResult('where is /ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM',
             'site dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM', query_type='synonym')
 
@@ -355,8 +353,11 @@ class TestDASKeywordSearch(KeywordSearchAbstractTester):
     def test_wh_words_2(self):
         self.assertQueryResult(
             'where is Zmm',
-            'site primary_dataset=ZMM',
-            query_type='nl_wh'
+            [ ],
+            exclude_for_all_results=[
+                 'site primary_dataset=ZMM',
+            ],
+            query_type='non-supported-by-services'
         )
 
 
