@@ -290,6 +290,8 @@ class DASQuery(object):
             self._mongo_query.update({'aggregators':aggregators})
         if  system:
             self._mongo_query.update({'system':system})
+        if  self._query:
+            self._mongo_query['uinput'] = self._query
         return self._mongo_query
     
     @property
