@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.2.X
 
+  - Fixed MCM prepid issue, switch to produces rest API
   - Merge and integrated KWS search
 
 - 2.1.X
