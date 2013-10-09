@@ -91,5 +91,4 @@ class MCMService(DASAbstractService):
         result = getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert,
                 doseq=False, system=self.name)
-        print "result", result, type(result)
         return result
