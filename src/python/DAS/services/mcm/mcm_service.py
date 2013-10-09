@@ -62,25 +62,34 @@ class MCMService(DASAbstractService):
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
         "McM implementation of AbstractService:apicall method"
-        if  api == 'mcm4dataset':
-            time0   = time.time()
-            reqmgr  = SERVICES.get('reqmgr', None) # reqmgr from global scope
-            rawrows = mcm4dataset(url, reqmgr, args['dataset'], expire)
-            dasrows = self.translator(api, rawrows)
-            ctime   = time.time()-time0
-            self.write_to_cache(dasquery, expire, url, api, args,
-                    dasrows, ctime)
-        else:
-            super(MCMService, self).apicall(\
-                    dasquery, url, api, args, dformat, expire)
+#        if  api == 'mcm4dataset':
+#            time0   = time.time()
+#            reqmgr  = SERVICES.get('reqmgr', None) # reqmgr from global scope
+#            rawrows = mcm4dataset(url, reqmgr, args['dataset'], expire)
+#            dasrows = self.translator(api, rawrows)
+#            ctime   = time.time()-time0
+#            self.write_to_cache(dasquery, expire, url, api, args,
+#                    dasrows, ctime)
+#        else:
+#            super(MCMService, self).apicall(\
+#                    dasquery, url, api, args, dformat, expire)
+        super(MCMService, self).apicall(\
+                dasquery, url, api, args, dformat, expire)
 
     def getdata(self, url, params, expire, headers=None, post=None):
         """URL call wrapper"""
         if  not headers:
-            headers =  {'Accept': 'application/json' } # DBS3 always needs that
+            headers =  {'Accept': 'application/json' }
         # MCM uses rest API
-        url = '%s/%s' % (url, params.get('mcm'))
+        if  'dataset' in params:
+            url  = '%s%s' % (url, params.get('dataset'))
+        elif 'mcm' in params:
+            url = '%s/%s' % (url, params.get('mcm'))
+        else:
+            return {}
         params = {}
-        return getdata(url, params, headers, expire, post,
+        result = getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert,
                 doseq=False, system=self.name)
+        print "result", result, type(result)
+        return result

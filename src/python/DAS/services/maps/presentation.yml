@@ -91,7 +91,7 @@ dataset : [
          "dataset=/ZMM*/*/*",
          ]
         },
-        {"das":"dataset.PrepID", "ui":"McM info",
+        {"das":"dataset.mcm.prepid", "ui":"McM info",
          "link":[{"name":"McM", "query":"mcm prepid=%s"}],
          "description": "PrepID info provided by McM data-service",
          "examples":["mcm prepid=HIG-Summer12-01312"]
