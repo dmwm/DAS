@@ -764,10 +764,6 @@ class DASMongocache(object):
                 prf = 'DAS WARNING, monogocache:get_from_cache '
                 print dastimestamp(prf), msg
             self.update_das_expire(dasquery, etstamp())
-            status = 'no results'
-            reason = 'no raw records'
-            header = None
-            self.update_query_record(dasquery, status, header, reason)
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
         """
