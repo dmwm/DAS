@@ -421,8 +421,18 @@ class DASCore(object):
         das_timer('merge', self.verbose)
         self.rawcache.merge_records(dasquery)
         das_timer('merge', self.verbose)
+        # check again if we have service records
+        das_services = self.rawcache.check_services(dasquery)
+        reason = ''
         status = 'ok'
-        update_das_query(dasquery, status)
+        if  not das_services:
+            if  'records' in dasquery.query:
+                status = 'ok' # keep status ok for 'records' queries
+            else:
+                reason = 'no service records'
+                status = 'fail'
+                print dastimestamp('DAS ERROR '), dasquery, reason
+        update_das_query(dasquery, status, reason)
         das_timer('DASCore::call', self.verbose)
         return status
 
