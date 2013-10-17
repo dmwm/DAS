@@ -39,11 +39,11 @@ class TestOptionParser(object):
         usage += '\nvalues will be used in tests with random select keys'
         usage += '\n\nExamples:\n'
         usage += '\n    # run 10 tests and monitor system usage'
-        usage += '\n    %s --ntest=10 --monitor' % cmd
+        usage += '\n    %s --ntests=10 --monitor' % cmd
         usage += '\n    # run 10 tests using different seed query'
-        usage += '\n    %s --ntest=10 --seed="dataset=/ZMM*/*/*"' % cmd
+        usage += '\n    %s --ntests=10 --seed="dataset=/ZMM*/*/*"' % cmd
         usage += '\n    # run 10 tests using given select keys at random'
-        usage += '\n    %s --ntest=10 --keys="file,block"' % cmd
+        usage += '\n    %s --ntests=10 --keys="file,block"' % cmd
         self.parser = OptionParser(usage=usage)
         self.parser.add_option("-v", "--verbose", action="store",
             type="int", default=0, dest="debug",
@@ -52,7 +52,7 @@ class TestOptionParser(object):
             default="http://localhost:8212", dest="host",
             help="specify DAS URL to test, e.g. https://dastest.cern.ch")
         self.parser.add_option("--ntests", action="store", type="int",
-            default=10, dest="ntests",
+            default=0, dest="ntests",
             help="specify max number of clients")
         self.parser.add_option("--seed", action="store", type="string",
             default="dataset=/A*/*/*", dest="query",
@@ -121,6 +121,10 @@ def main():
     mgr      = TestOptionParser()
     opts, _  = mgr.get_opt()
 
+    ntests   = opts.ntests
+    if  not ntests:
+        print "Please specify number of tests to run, see options via --help"
+        sys.exit(0)
     host     = opts.host
     ckey     = opts.ckey
     cert     = opts.cert
@@ -163,7 +167,7 @@ def main():
             limit = 10
             datasets = [r['dataset'][0]['name'] for r in jsondict['data'] \
                     if  r['dataset'][0]['name'] != uinput]
-            if  opts.ntests > len(datasets):
+            if  ntests > len(datasets):
                 msg  = 'Number of tests exceed number of found datasets. '
                 msg += 'Please use another value for ntests'
                 msg += 'ndatasets=%s, ntests=%s' % (len(datasets), opts.ntests)
