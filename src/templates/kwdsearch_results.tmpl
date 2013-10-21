@@ -55,9 +55,11 @@
 
                <div class="score-bar" style="width: ${item.bar.max_w}px;">
                          <div class="score-bar-inner score-bar-inner-${item.bar.style}" style="width: ${item.bar.w}px;"></div>
+                         #if $show_score:
                          <span class="score-num">
                                 #echo "%.2f" % $item.bar.score
                          </span>
+                         #end if
                </div>
 
                <a class="kws-link" href="$item.link" target="_blank"
