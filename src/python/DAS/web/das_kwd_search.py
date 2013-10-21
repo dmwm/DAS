@@ -92,7 +92,8 @@ class KeywordSearchHandler(object):
         hi_score_result_types.append('any')
         return hi_score_result_types
 
-    def handle_search(self, webm, query, dbsmngr, is_ajax=False, timeout=5):
+    def handle_search(self, webm, query, dbsmngr, is_ajax=False, timeout=5,
+                      show_score=False):
         """
         performs the search, and renders the search results
         """
@@ -116,4 +117,5 @@ class KeywordSearchHandler(object):
                                  is_ajax=is_ajax,
                                  proposed_queries = proposed_queries,
                                  hi_score_result_types = hi_score_result_types,
-                                 err=err)
+                                 err=err,
+                                 show_score=show_score)

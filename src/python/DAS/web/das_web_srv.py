@@ -429,13 +429,15 @@ class DASWebService(DASWebManager):
             return 'Query suggestions are unavailable right now...'
 
         timeout = self.dasconfig['keyword_search']['timeout']
+        show_scores = self.dasconfig['keyword_search'].get('show_scores', False)
         dbsmngr = self._get_dbsmgr(inst)
 
         return self.kws.handle_search(self,
                                       query=uinput,
                                       dbsmngr=dbsmngr,
                                       is_ajax=True,
-                                      timeout=timeout)
+                                      timeout=timeout,
+                                      show_score=show_scores)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
