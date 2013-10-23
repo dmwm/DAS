@@ -404,24 +404,13 @@ class DASCore(object):
         except Exception as exc:
             print_exc(exc)
             return 'fail'
-        self.logger.info('\n##### check services ######\n')
-        das_services = self.rawcache.check_services(dasquery)
-        if  not das_services:
-            if  'records' in dasquery.query:
-                reason = ''
-                status = 'ok'
-            else:
-                reason = 'no service records'
-                status = 'fail'
-                print dastimestamp('DAS ERROR '), dasquery, reason
-            update_das_query(dasquery, status, reason)
-            return status
         self.logger.info('\n##### merging ######\n')
         self.rawcache.update_query_record(dasquery, 'merging')
         das_timer('merge', self.verbose)
         self.rawcache.merge_records(dasquery)
         das_timer('merge', self.verbose)
-        # check again if we have service records
+        # check if we have service records and properly setup status
+        self.logger.info('\n##### check services ######\n')
         das_services = self.rawcache.check_services(dasquery)
         reason = ''
         status = 'ok'
@@ -429,7 +418,7 @@ class DASCore(object):
             if  'records' in dasquery.query:
                 status = 'ok' # keep status ok for 'records' queries
             else:
-                reason = 'no service records'
+                reason = 'no data records found in DAS cache'
                 status = 'fail'
                 print dastimestamp('DAS ERROR '), dasquery, reason
         update_das_query(dasquery, status, reason)
