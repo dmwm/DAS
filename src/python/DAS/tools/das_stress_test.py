@@ -115,6 +115,13 @@ def run(host, query, idx, limit, debug, thr, ckey, cert):
     if  reason:
         msg += ' reason: %s' % reason
     print msg
+    if  debug:
+        data = jsondict.get('data')
+        if  nres > 0:
+            if  len(data):
+                print data[0]
+            else:
+                print "### NO DATA:", jsondict
 
 def main():
     "Main function"
@@ -125,7 +132,7 @@ def main():
     ckey     = opts.ckey
     cert     = opts.cert
     thr      = 600
-    debug    = False
+    debug    = opts.debug
     query    = opts.query
     lkeys    = [k.strip().replace('_', ',') for k in opts.lkeys.split(',')]
     uinput   = query.replace('dataset=', '')
@@ -170,20 +177,19 @@ def main():
                 print '\nERROR:', msg
                 sys.exit(1)
             datasets.sort()
-            if  opts.debug:
+            if  debug:
                 print "Found %s datasets" % len(datasets)
                 print "First %s datasets:" % opts.ntests
                 for dataset in datasets[:opts.ntests]:
                     print dataset
-            else:
-                for dataset in datasets[:opts.ntests]:
-                    idx   = random.randint(0, len(lkeys)-1)
-                    skey  = lkeys[idx] # get random select key
-                    query = '%s dataset=%s' % (skey, dataset)
-                    args  = (host, query, idx, limit, debug, thr, ckey, cert)
-                    proc  = Process(target=run, args=args)
-                    proc.start()
-                    pool[proc.name] = proc
+            for dataset in datasets[:opts.ntests]:
+                idx   = random.randint(0, len(lkeys)-1)
+                skey  = lkeys[idx] # get random select key
+                query = '%s dataset=%s' % (skey, dataset)
+                args  = (host, query, idx, limit, debug, thr, ckey, cert)
+                proc  = Process(target=run, args=args)
+                proc.start()
+                pool[proc.name] = proc
     else:
         print 'DAS cli fails status=%s, query=%s' % (status, query)
         print jsondict
