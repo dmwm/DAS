@@ -72,6 +72,10 @@ The DAS provides a benchmarking tool, das_bench
 
     Usage: das_bench.py [options]
 
+    Examples:
+      Benchmark Keyword Search:
+      das_bench.py --url=https://cmsweb-testbed.cern.ch/das/kws_async --nclients=20 --dasquery="/DoubleMu/A/RAW-RECO magnetic field and run number" --accept=text/html
+
     Options:
       -h, --help            show this help message and exit
       -v DEBUG, --verbose=DEBUG
