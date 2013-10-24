@@ -13,15 +13,18 @@ import random
 import urllib
 import urllib2
 import traceback
+import time
 
 from json import JSONDecoder
 from random import Random
 from optparse import OptionParser
 from multiprocessing import Process
+from itertools import chain
 
 try:
     import matplotlib.pyplot as plt
-except:
+except Exception as e:
+    print e
     pass
 
 
@@ -29,7 +32,15 @@ class NClientsOptionParser:
     """client option parser"""
 
     def __init__(self):
-        self.parser = OptionParser()
+        self.parser = OptionParser(
+            usage="./das_bench.py [options]\n\n"
+                  "To benchmark keyword search use:\n"
+                        "python ./das_bench.py "
+                        "--url=https://cmsweb-testbed.cern.ch/das/kws_async "
+                        "--nclients=5 "
+                        "--dasquery=\"/DoubleMu/A/RAW-RECO magnetic field and run number\""
+                        " --accept=text/html"
+        )
         self.parser.add_option("-v", "--verbose", action="store",
                                type="int", default=0, dest="debug",
                                help="verbose output")
@@ -69,7 +80,7 @@ def try_int(sss):
     """Convert to integer if possible."""
     try:
         return int(sss)
-    except:
+    except ValueError:
         return sss
 
 
@@ -143,20 +154,29 @@ def urlrequest(stream, url, headers, debug=0):
         opener = urllib2.build_opener(hdlr)
     else:
         opener = urllib2.build_opener()
+
+    time0 = time.time()
     fdesc = opener.open(req)
     data = fdesc.read()
+    ctime = time.time() - time0
+
     fdesc.close()
-    decoder = JSONDecoder()
-    response = decoder.decode(data)
-    if isinstance(response, dict):
-        stream.write(str(response) + '\n')
+    # no need to decode json if it's html
+    if headers['Accept'] == 'text/html':
+            stream.write(str({'ctime': str(ctime)}) + '\n')
+            #stream.write(data + '\n')
+    else:
+        decoder = JSONDecoder()
+        response = decoder.decode(data)
+        if isinstance(response, dict):
+            stream.write(str(response) + '\n')
     stream.flush()
 
 
 def spammer(stream, host, method, params, headers, debug=0):
     """Spammer function"""
     path = method
-    if host.find('http://') == -1:
+    if host.find('http://') == -1 and host.find('https://') == -1:
         host = 'http://' + host
     encoded_data = urllib.urlencode(params, doseq=True)
     if encoded_data:
@@ -187,7 +207,14 @@ def runjob(nclients, host, method, params, headers, idx, limit,
             params = {'query': query, 'idx': random_index(idx), 'limit': limit}
             if method == '/rest/testmongo':
                 params['collection'] = 'das.merge'
-                ###
+
+        # keyword search
+        if method == '/das/kws_async':
+            params = {'input': dasquery or 'Zmm number of events',
+                      'instance': 'cms_dbs_prod_global'}
+            headers = {'Accept': 'text/html'}
+
+        ###
         proc = spammer(stream, host, method, params, headers, debug)
         processes.append(proc)
     while True:
@@ -235,7 +262,7 @@ def avg_std(input_file):
 
 def make_plot(xxx, yyy, std=None, name='das_cache.pdf',
               xlabel='Number of clients', ylabel='Time/request (sec)',
-              yscale=None):
+              yscale=None, title=''):
     """Make standard plot time vs nclients using matplotlib"""
     plt.plot(xxx, yyy, 'ro-')
     plt.grid(True)
@@ -246,6 +273,7 @@ def make_plot(xxx, yyy, std=None, name='das_cache.pdf',
         plt.errorbar(xxx, yyy, yerr=std)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+    plt.title(title)
     plt.savefig(name, format='pdf', transparent=True)
     plt.close()
 
@@ -286,12 +314,12 @@ def main():
     if nclients <= 10:
         array += xrange(1, nclients + 1)
     if 10 < nclients <= 100:
-        array = xrange(1, 10)
-        array += xrange(10, nclients + 1, 10)
+        array = chain(xrange(1, 10),
+                      xrange(10, nclients + 1, 10))
     if 100 < nclients <= 1000:
-        array = xrange(1, 10)
-        array += xrange(10, 100, 10)
-        array += xrange(100, nclients + 1, 100)
+        array = chain(xrange(1, 10),
+                      xrange(10, 100, 10),
+                      xrange(100, nclients + 1, 100))
 
     for nclients in array:
         print "Run job with %s clients" % nclients
@@ -306,15 +334,20 @@ def main():
     xxx = []
     yyy = []
     std = []
+
     for ifile in natsorted(file_list):
         name, _ = ifile.split('.')
+        # ignore non related .log files and .smf
+        if not logname in name or not name:
+            continue
         xxx.append(int(name.split(logname)[-1]))
         mean, std2 = avg_std(ifile)
         yyy.append(mean)
         std.append(std2)
     try:
-        make_plot(xxx, yyy, std, opts.pdf)
-    except:
+        make_plot(xxx, yyy, std, opts.pdf, title=dasquery)
+    except Exception as e:
+        print e
         print "xxx =", xxx
         print "yyy =", yyy
         print "std =", std
