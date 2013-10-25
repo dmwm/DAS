@@ -167,10 +167,13 @@ class DASRepresentation(DASWebManager):
         idx     = getarg(kwargs, 'idx', 0)
         limit   = getarg(kwargs, 'limit', 10)
         uinput  = getarg(kwargs, 'input', '')
+        skip_args = ['status', 'error', 'reason']
         page    = ''
         if  total > 0:
             params = {} # will keep everything except idx/limit
             for key, val in kwargs.iteritems():
+                if  key in skip_args:
+                    continue
                 if  key != 'idx' and key != 'limit' and key != 'query':
                     params[key] = val
             url   = "%s/request?%s" \
