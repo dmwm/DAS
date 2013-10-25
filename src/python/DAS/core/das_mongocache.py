@@ -692,7 +692,7 @@ class DASMongocache(object):
 #                            idx, limit, dasquery.unique_filter)
             col = self.mdb[collection]
             result = col.find(spec=spec, fields=fields, sort=skeys,
-                                idx=idx, limit=limit)
+                                skip=idx, limit=limit)
             for row in result:
                 if  dasquery.filters:
                     if  pkeys and set(pkeys) & set(row.keys()):
@@ -731,7 +731,7 @@ class DASMongocache(object):
 #                        idx, limit, dasquery.unique_filter)
         col = self.mdb[collection]
         res = col.find(spec=spec, fields=fields, sort=skeys,
-                            idx=idx, limit=limit)
+                            skip=idx, limit=limit)
         counter = 0
         for row in res:
             counter += 1
