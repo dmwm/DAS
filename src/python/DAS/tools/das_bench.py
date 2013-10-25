@@ -14,92 +14,108 @@ import urllib
 import urllib2
 import traceback
 
-from   json import JSONDecoder
-from   random import Random
-from   optparse import OptionParser
-from   multiprocessing import Process
+from json import JSONDecoder
+from random import Random
+from optparse import OptionParser
+from multiprocessing import Process
 
 try:
     import matplotlib.pyplot as plt
 except:
     pass
 
+
 class NClientsOptionParser:
     """client option parser"""
+
     def __init__(self):
         self.parser = OptionParser()
         self.parser.add_option("-v", "--verbose", action="store",
                                type="int", default=0, dest="debug",
-             help="verbose output")
+                               help="verbose output")
         self.parser.add_option("--url", action="store", type="string",
                                default="", dest="url",
-             help="specify URL to test, e.g. http://localhost:8211/rest/test")
+                               help="specify URL to test, e.g. http://localhost:8211/rest/test")
         self.parser.add_option("--accept", action="store", type="string",
                                default="application/json", dest="accept",
-             help="specify URL Accept header, default application/json")
+                               help="specify URL Accept header, default application/json")
         self.parser.add_option("--idx-bound", action="store", type="long",
                                default=0, dest="idx",
-             help="specify index bound, by default it is 0")
+                               help="specify index bound, by default it is 0")
         self.parser.add_option("--logname", action="store", type="string",
                                default='spammer', dest="logname",
-        help="specify log name prefix where results of N client \
+                               help="specify log name prefix where results of N client \
                 test will be stored")
         self.parser.add_option("--nclients", action="store", type="int",
                                default=10, dest="nclients",
-             help="specify max number of clients")
+                               help="specify max number of clients")
         self.parser.add_option("--dasquery", action="store", type="string",
                                default="dataset", dest="dasquery",
-             help="specify DAS query to test, e.g. dataset")
+                               help="specify DAS query to test, e.g. dataset")
         self.parser.add_option("--pdf", action="store", type="string",
                                default="results.pdf", dest="pdf",
-        help="specify name of PDF file for matplotlib output, \
+                               help="specify name of PDF file for matplotlib output, \
                 default is results.pdf")
+
     def get_opt(self):
         """Returns parse list of options"""
         return self.parser.parse_args()
 
+
 ### Natural sorting utilities
+
+
 def try_int(sss):
-    "Convert to integer if possible."
+    """Convert to integer if possible."""
     try:
         return int(sss)
     except:
         return sss
 
+
 def natsort_key(sss):
-    "Used internally to get a tuple by which s is sorted."
+    """Used internally to get a tuple by which s is sorted."""
     return map(try_int, re.findall(r'(\d+|\D+)', sss))
 
+
 def natcmp(aaa, bbb):
-    "Natural string comparison, case sensitive."
+    """Natural string comparison, case sensitive."""
     return cmp(natsort_key(aaa), natsort_key(bbb))
 
+
 def natcasecmp(aaa, bbb):
-    "Natural string comparison, ignores case."
+    """Natural string comparison, ignores case."""
     return natcmp(aaa.lower(), bbb.lower())
 
+
 def natsort(seq, icmp=natcmp):
-    "In-place natural string sort."
+    """In-place natural string sort."""
     seq.sort(icmp)
 
+
 def natsorted(seq, icmp=natcmp):
-    "Returns a copy of seq, sorted by natural string sort."
+    """Returns a copy of seq, sorted by natural string sort."""
     temp = copy.copy(seq)
     natsort(temp, icmp)
     return temp
+
 
 def gen_passwd(length=8, chars=string.letters + string.digits):
     """
     Random string generator, code based on
     http://code.activestate.com/recipes/59873-random-password-generation/
     """
-    return ''.join( Random().sample(chars, length) )
+    return ''.join(Random().sample(chars, length))
+
 
 def random_index(bound):
     """Generate random number for given upper bound"""
-    return long(random.random()*bound)
+    return long(random.random() * bound)
+
 
 ### URL utilities
+
+
 class UrlRequest(urllib2.Request):
     """
     URL requestor class which supports all RESTful request methods.
@@ -107,6 +123,7 @@ class UrlRequest(urllib2.Request):
     Usage: UrlRequest(method, url=url, data=data), where method is
     GET, POST, PUT, DELETE.
     """
+
     def __init__(self, method, *args, **kwargs):
         self._method = method
         urllib2.Request.__init__(self, *args, **kwargs)
@@ -115,38 +132,41 @@ class UrlRequest(urllib2.Request):
         """Return request method"""
         return self._method
 
+
 def urlrequest(stream, url, headers, debug=0):
     """URL request function"""
-    if  debug:
+    if debug:
         print "Input for urlrequest", url, headers, debug
-    req      = UrlRequest('GET', url=url, headers=headers)
-    if  debug:
-        hdlr     = urllib2.HTTPHandler(debuglevel=1)
-        opener   = urllib2.build_opener(hdlr)
+    req = UrlRequest('GET', url=url, headers=headers)
+    if debug:
+        hdlr = urllib2.HTTPHandler(debuglevel=1)
+        opener = urllib2.build_opener(hdlr)
     else:
-        opener   = urllib2.build_opener()
-    fdesc    = opener.open(req)
-    data     = fdesc.read()
+        opener = urllib2.build_opener()
+    fdesc = opener.open(req)
+    data = fdesc.read()
     fdesc.close()
-    decoder  = JSONDecoder()
+    decoder = JSONDecoder()
     response = decoder.decode(data)
-    if  isinstance(response, dict):
+    if isinstance(response, dict):
         stream.write(str(response) + '\n')
     stream.flush()
 
+
 def spammer(stream, host, method, params, headers, debug=0):
     """Spammer function"""
-    path     = method
-    if  host.find('http://') == -1:
+    path = method
+    if host.find('http://') == -1:
         host = 'http://' + host
     encoded_data = urllib.urlencode(params, doseq=True)
-    if  encoded_data:
-        url  = host + path + '?%s' % encoded_data
+    if encoded_data:
+        url = host + path + '?%s' % encoded_data
     else:
-        url  = host + path
+        url = host + path
     proc = Process(target=urlrequest, args=(stream, url, headers, debug))
     proc.start()
     return proc
+
 
 def runjob(nclients, host, method, params, headers, idx, limit,
            debug=0, logname='spammer', dasquery=None):
@@ -155,61 +175,63 @@ def runjob(nclients, host, method, params, headers, idx, limit,
     and method (API). The output data are stored into lognameN.log,
     where logname is an optional parameter with default as spammer.
     """
-    stream     = open('%s%s.log' % (logname, nclients), 'w')
-    processes  = []
+    stream = open('%s%s.log' % (logname, nclients), 'w')
+    processes = []
     for _ in xrange(0, nclients):
-        if  dasquery:
+        if dasquery:
             ### REPLACE THIS PART with your set of parameter
-            if  dasquery.find('=') == -1:
-                query  = '%s=/%s*' % (dasquery, gen_passwd(1, string.letters))
+            if dasquery.find('=') == -1:
+                query = '%s=/%s*' % (dasquery, gen_passwd(1, string.letters))
             else:
-                query  = dasquery
-            params = {'query':query, 'idx':random_index(idx), 'limit':limit}
-            if  method == '/rest/testmongo':
+                query = dasquery
+            params = {'query': query, 'idx': random_index(idx), 'limit': limit}
+            if method == '/rest/testmongo':
                 params['collection'] = 'das.merge'
-            ###
-        proc   = spammer(stream, host, method, params, headers, debug)
+                ###
+        proc = spammer(stream, host, method, params, headers, debug)
         processes.append(proc)
     while True:
-        if  not processes:
+        if not processes:
             break
         for proc in processes:
-            if  proc.exitcode != None:
+            if proc.exitcode is not None:
                 processes.remove(proc)
                 break
     stream.close()
+
 
 def avg_std(input_file):
     """Calculate average and standard deviation"""
     count = 0
     total = 0
-    arr   = []
+    arr = []
     with open(input_file) as input_data:
         for line in input_data.readlines():
-            if  not line:
+            if not line:
                 continue
             data = {}
             try:
                 data = eval(line.replace('\n', ''))
             except:
                 print "In file '%s' fail to process line='%s'" \
-                        % (input_file, line)
+                      % (input_file, line)
                 traceback.print_exc()
                 continue
-            if  'ctime' in data:
-                res    = float(data['ctime'])
+            if 'ctime' in data:
+                res = float(data['ctime'])
                 total += res
                 count += 1
                 arr.append(res)
-    if  count:
-        mean = total/count
+    if count:
+        mean = total / count
         std2 = 0
         for item in arr:
-            std2 += (mean - item)**2
-        return (mean, math.sqrt(std2/count))
+            std2 += (mean - item) ** 2
+        return mean, math.sqrt(std2 / count)
     else:
         msg = 'Unable to count results'
         raise Exception(msg)
+
 
 def make_plot(xxx, yyy, std=None, name='das_cache.pdf',
               xlabel='Number of clients', ylabel='Time/request (sec)',
@@ -217,15 +239,16 @@ def make_plot(xxx, yyy, std=None, name='das_cache.pdf',
     """Make standard plot time vs nclients using matplotlib"""
     plt.plot(xxx, yyy, 'ro-')
     plt.grid(True)
-    if  yscale:
+    if yscale:
         plt.yscale('log')
-    plt.axis([min(xxx)-1, max(xxx)+5, min(yyy)-5, max(yyy)+5])
-    if  std:
+    plt.axis([min(xxx) - 1, max(xxx) + 5, min(yyy) - 5, max(yyy) + 5])
+    if std:
         plt.errorbar(xxx, yyy, yerr=std)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.savefig(name, format='pdf', transparent=True)
     plt.close()
+
 
 def main():
     """Main routine"""
@@ -233,42 +256,42 @@ def main():
     (opts, args) = mgr.get_opt()
 
     url = opts.url.replace('?', ';').replace('&amp;', ';').replace('&', ';')
-    logname  = opts.logname
+    logname = opts.logname
     dasquery = opts.dasquery
-    idx      = opts.idx
-    limit    = 1
+    idx = opts.idx
+    limit = 1
     nclients = opts.nclients
-    debug    = opts.debug
-    headers  = {'Accept': opts.accept}
+    debug = opts.debug
+    headers = {'Accept': opts.accept}
     urlpath, args = urllib.splitattr(url)
-    arr      = urlpath.split('/')
-    if  arr[0] == 'http:' or arr[0] == 'https:':
+    arr = urlpath.split('/')
+    if arr[0] == 'http:' or arr[0] == 'https:':
         host = arr[0] + '//' + arr[2]
     else:
-        msg  = 'Provided URL="%s" does not contain http:// part' % opts.url
+        msg = 'Provided URL="%s" does not contain http:// part' % opts.url
         raise Exception(msg)
-    method   = '/' + '/'.join(arr[3:])
-    params   = {}
+    method = '/' + '/'.join(arr[3:])
+    params = {}
     for item in args:
         key, val = item.split('=')
         params[key] = val
 
     # do clean-up
     for filename in os.listdir('.'):
-        if  filename.find('.log') != -1 and filename.find(logname) != -1:
+        if filename.find('.log') != -1 and filename.find(logname) != -1:
             os.remove(filename)
 
     # perform action
     array = []
-    if  nclients <= 10:
-        array += xrange(1, nclients+1)
-    if  nclients <= 100 and nclients > 10:
-        array  = xrange(1, 10)
-        array += xrange(10, nclients+1, 10)
-    if  nclients <= 1000 and nclients > 100:
-        array  = xrange(1, 10)
+    if nclients <= 10:
+        array += xrange(1, nclients + 1)
+    if 100 >= nclients > 10:
+        array = xrange(1, 10)
+        array += xrange(10, nclients + 1, 10)
+    if 1000 >= nclients > 100:
+        array = xrange(1, 10)
         array += xrange(10, 100, 10)
-        array += xrange(100, nclients+1, 100)
+        array += xrange(100, nclients + 1, 100)
 
     for nclients in array:
         print "Run job with %s clients" % nclients
@@ -278,7 +301,7 @@ def main():
     # analyze results
     file_list = []
     for filename in os.listdir('.'):
-        if  filename.find('.log') != -1:
+        if filename.find('.log') != -1:
             file_list.append(filename)
     xxx = []
     yyy = []
@@ -295,6 +318,7 @@ def main():
         print "xxx =", xxx
         print "yyy =", yyy
         print "std =", std
+
 
 if __name__ == '__main__':
     main()
