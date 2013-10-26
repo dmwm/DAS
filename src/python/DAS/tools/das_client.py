@@ -45,7 +45,7 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     key/ca information
     """
     def __init__(self, key=None, cert=None, level=0):
-        if  level:
+        if  level > 1:
             urllib2.HTTPSHandler.__init__(self, debuglevel=1)
         else:
             urllib2.HTTPSHandler.__init__(self)
