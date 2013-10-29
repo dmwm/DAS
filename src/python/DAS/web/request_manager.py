@@ -77,7 +77,7 @@ class RequestManager(object):
     def items(self):
         """Return list of current requests"""
         self.clean()
-        for row in self.col.find():
+        for row in self.col.find(exhaust=True):
             row['_id'] = str(row['_id'])
             row['kwds'] = json.loads(row['kwds'])
             yield row
@@ -115,6 +115,9 @@ class RequestManager(object):
 
     def status(self):
         "Return status of RequestManager"
-        requests = [json.loads(i['kwds'])['input'] for i in self.items()]
+        try:
+            requests = [json.loads(i['kwds'])['input'] for i in self.items()]
+        except:
+            requests = [i for i in self.items()]
         info = {'nrequest': self.size(), 'requests': requests}
         return {'reqmgr': info}
