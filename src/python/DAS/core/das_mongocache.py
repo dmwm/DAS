@@ -640,28 +640,23 @@ class DASMongocache(object):
 
     def get_records(self, collection, spec, fields, skeys, idx, limit,
             unique=False):
-        "Generator to get records from MongoDB. It correctly applies"
+        "Generator to get records from MongoDB."
         try:
             with self.conn.start_request():
                 col = self.mdb[collection]
-                res = col.find(spec=spec, fields=fields)
-                if  skeys:
-                    res = res.sort(skeys)
-                if  not unique:
-                    if  idx:
-                        res = res.skip(idx)
-                    if  limit:
-                        res = res.limit(limit)
-                if  unique:
-                    if  limit:
-                        gen = itertools.islice(unique_filter(res), idx, idx+limit)
-                    else:
-                        gen = unique_filter(res)
-                    for row in gen:
-                        yield row
+                nres = col.find(spec).count()
+                if  nres <= limit:
+                    limit = 0
+                if  limit:
+                    res = col.find(spec=spec, fields=fields,
+                            sort=skeys, skip=idx, limit=limit)
                 else:
-                    for row in res:
-                        yield row
+                    res = col.find(spec=spec, fields=fields,
+                            sort=skeys, exhaust=True)
+                if  unique:
+                    res = unique_filter(res)
+                for row in res:
+                    yield row
         except Exception as exp:
             print_exc(exp)
             row = {'exception': str(exp)}
@@ -688,11 +683,8 @@ class DASMongocache(object):
             if  'records' in dasquery.query:
                 fields = None # special case for DAS 'records' keyword
             skeys   = self.mongo_sort_keys(collection, dasquery)
-#            result  = self.get_records(collection, spec, fields, skeys, \
-#                            idx, limit, dasquery.unique_filter)
-            col = self.mdb[collection]
-            result = col.find(spec=spec, fields=fields, sort=skeys,
-                                skip=idx, limit=limit)
+            result  = self.get_records(collection, spec, fields, skeys, \
+                            idx, limit, dasquery.unique_filter)
             for row in result:
                 if  dasquery.filters:
                     if  pkeys and set(pkeys) & set(row.keys()):
@@ -727,15 +719,14 @@ class DASMongocache(object):
         # try to get sort keys all the time to get ordered list of
         # docs which allow unique_filter to apply afterwards
         skeys   = self.mongo_sort_keys(collection, dasquery)
-#        res     = self.get_records(collection, spec, fields, skeys, \
-#                        idx, limit, dasquery.unique_filter)
-        col = self.mdb[collection]
-        res = col.find(spec=spec, fields=fields, sort=skeys,
-                            skip=idx, limit=limit)
+        res     = self.get_records(collection, spec, fields, skeys, \
+                        idx, limit, dasquery.unique_filter)
         counter = 0
         for row in res:
             counter += 1
             yield row
+        nrecords = '%s records' % counter
+        print dastimestamp('DAS INFO'), dasquery, nrecords
 
         if  counter:
             msg = "yield %s record(s)" % counter
@@ -749,11 +740,7 @@ class DASMongocache(object):
                 msg = "for query %s, found %s non-result record(s)" \
                         % (dasquery, nrec)
                 prf = 'DAS WARNING, monogocache:get_from_cache '
-# Uncomment for debugging purposes (dump DB content for given DAS query)
-#                print dastimestamp(prf), msg, time.time()
-#                print "original spec", spec, fields, skeys, counter
-#                for row in self.col.find({'qhash':dasquery.qhash, 'das.record':1}):
-#                    print "row", row, time.time()
+                print dastimestamp(prf), msg, time.time()
             self.update_das_expire(dasquery, etstamp())
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
