@@ -23,7 +23,8 @@ class ReqMgrService(DASAbstractService):
         """
         Adjust parameters for specific query requests
         """
-        if  api == 'inputdataset' or api == 'configIDs':
+        if  api == 'inputdataset' or api == 'configIDs' or \
+                api == 'outputdataset':
             if  kwds.get('dataset', 'required').find('*') != -1:
                 kwds['dataset'] = 'required' # we skip patterns
 
@@ -42,7 +43,7 @@ class ReqMgrService(DASAbstractService):
         """
         ReqMgr data-service parser.
         """
-        if  api == 'inputdataset':
+        if  api == 'inputdataset' or api == 'outputdataset':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
                 key = 'WMCore.RequestManager.DataStructs.Request.Request'
@@ -73,3 +74,7 @@ class ReqMgrService(DASAbstractService):
                             yield dict(request_name=key, config_files=val)
                 except:
                     pass
+        else:
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                yield row
