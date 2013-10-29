@@ -726,7 +726,7 @@ class DASMongocache(object):
             counter += 1
             yield row
         nrecords = '%s records' % counter
-        print dastimestamp('DAS INFO'), dasquery, nrecords
+        print dastimestamp('DAS INFO '), dasquery, nrecords
 
         if  counter:
             msg = "yield %s record(s)" % counter
