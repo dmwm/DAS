@@ -12,6 +12,16 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
+urn: outputdataset
+url : "https://cmsweb.cern.ch/reqmgr/rest/outputdataset"
+expire : 900
+params : {"dataset": "required"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
 urn: configIDs
 url : "https://cmsweb.cern.ch/reqmgr/rest/configIDs"
 expire : 900
