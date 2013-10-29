@@ -54,6 +54,9 @@ class TestOptionParser(object):
         self.parser.add_option("--ntests", action="store", type="int",
             default=0, dest="ntests",
             help="specify max number of clients")
+        self.parser.add_option("--limit", action="store", type="int",
+            default=0, dest="limit",
+            help="specify number of rows to retrieve within a test, default all")
         self.parser.add_option("--seed", action="store", type="string",
             default="dataset=/A*/*/*", dest="query",
             help="seed query, e.g. dataset=/A*/*/*")
@@ -110,13 +113,17 @@ def run(host, query, idx, limit, debug, thr, ckey, cert):
     reason = jsondict.get('reason', None)
     nres   = jsondict.get('nresults', None)
     tstm   = jsondict.get('timestamp', 0)
-    msg    = 'status: %s client: %s server: %s nresults: %s query: %s' \
-            % (status, etime(time0), etime(tstm), nres, query)
+    data   = jsondict.get('data')
+    if  data and isinstance(data, list) and len(data):
+        qhash  = data[0].get('qhash')
+    else:
+        qhash = "N/A"
+    msg    = 'status: %s client: %s server: %s nresults: %s query: %s qhash: %s' \
+            % (status, etime(time0), etime(tstm), nres, query, qhash)
     if  reason:
         msg += ' reason: %s' % reason
     print msg
     if  debug:
-        data = jsondict.get('data')
         if  nres > 0:
             if  len(data):
                 print data[0]
@@ -171,7 +178,7 @@ def main():
         if  nres:
             pool  = {}
             idx   = 0
-            limit = 10
+            limit = opts.limit # control how many records to get
             datasets = [r['dataset'][0]['name'] for r in jsondict['data'] \
                     if  r['dataset'][0]['name'] != uinput]
             if  ntests > len(datasets):
