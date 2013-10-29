@@ -795,6 +795,25 @@ class DASWebService(DASWebManager):
             nres = self.dasmgr.nresults(dasquery, coll)
             data = \
                 self.dasmgr.get_from_cache(dasquery, idx, limit)
+            # check that we got what we expected
+            data = [r for r in data]
+            if  nres and not len(data):
+                for retry in xrange(1, 3, 5):
+                    msg = 'retry in %s sec' % retry
+                    print dastimestamp('DAS WARNING '), msg, dasquery
+                    time.sleep(retry) # retry one more time
+                    data = \
+                        self.dasmgr.get_from_cache(dasquery, idx, limit)
+                    data = [r for r in data]
+                    if  len(data):
+                        break
+            if  nres and not len(data):
+                msg = 'fail to get all data for %s, nres=%s, len(data)=%s' \
+                        % (dasquery, nres, len(data))
+                print dastimestamp('DAS WARNING '), msg
+                status = 'fail'
+                reason = 'Fail to retrieve data from DAS cache, please retry'
+
             if  dasquery.aggregators:
                 # aggregators split DAS record into sub-system and then
                 # apply aggregator functions, therefore we need to correctly
