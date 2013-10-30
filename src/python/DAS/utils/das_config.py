@@ -98,6 +98,8 @@ DASOption('dasdb', 'record_ttl', 'int', 24*60*60),
 DASOption('web_server', 'host', 'string', '0.0.0.0'),
 # default port number
 DASOption('web_server', 'port', 'int', 8212),
+# KWS port number
+DASOption('web_server', 'kws_port', 'int', 8214),
 # number of threads in cherrypy server
 DASOption('web_server', 'thread_pool', 'int', 30),
 # cherrypy log_screen option
