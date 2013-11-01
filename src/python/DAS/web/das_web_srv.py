@@ -245,7 +245,8 @@ class DASWebService(DASWebManager):
         try:
             # init query rewriter, if needed
             if self.dasconfig['query_rewrite']['pk_rewrite_on']:
-                self.q_rewriter = CMSQueryRewrite(self.repmgr)
+                self.q_rewriter = CMSQueryRewrite(self.repmgr,
+                                                  self.templatepage)
             # init the Keyword Search
             if self.is_kws_service_enabled():
                 self.kws = KeywordSearchHandler(self.dasmgr)

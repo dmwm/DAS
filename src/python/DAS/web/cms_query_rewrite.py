@@ -38,21 +38,15 @@ class CMSQueryRewrite(object):
     # get the link to CLI documentation
     _cfg = das_readconfig()
     CLI_LINK = _cfg.get('query_rewrite', {}).get('dasclient_doc_url', '')
-    if CLI_LINK:
-        _MSG_TMPL += \
-            '''
 
-            See documentation on Command Line Interface:
-            %(cli)s
-            '''
-
-    def __init__(self, cms_rep):
+    def __init__(self, cms_rep, render_template):
         self.cms_rep = cms_rep
         self.dasmgr = self.cms_rep.dasmgr
         self.entity_names = self._build_short_daskeys(self.dasmgr)
         # schema adapter from kws
         # TODO: get_field_list_for_entity_by_pk could be moved to DAS Core or...
         self.schema_adapter = getSchema(dascore=self.dasmgr)
+        self.render_template = render_template
 
     def _get_one_row_with_all_fields(self, dasquery):
         """
@@ -104,10 +98,11 @@ class CMSQueryRewrite(object):
         q2['filters'] = {'grep': list(filters_nested)}
         q2 = DASQuery(q2)
 
-        msg = self._MSG_TMPL % {'q1_str': self.convert2dasql(q1),
-                                'q2_str': self.convert2dasql(q2),
-                                'pk': pk,
-                                'cli': self.CLI_LINK}
+        msg = self.render_template('cms_query_rewrite',
+                                   q1_str=self.convert2dasql(q1),
+                                   q2_str=self.convert2dasql(q2),
+                                   pk=pk,
+                                   cli_docs=self.CLI_LINK)
         return msg
 
     def check_fields(self, dasquery):
