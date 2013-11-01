@@ -207,6 +207,8 @@ DASOption('load_balance', 'valid_origins', 'list', []),
 
 # Query rewrite
 DASOption('query_rewrite', 'pk_rewrite_on', 'bool', False),
+DASOption('query_rewrite', 'dasclient_doc_url', 'string',
+    'https://cms-http-group.web.cern.ch/cms-http-group/apidoc/das/current/das_client.html'),
 ] # end of DAS_OPTIONS list
 
 def read_configparser(dasconfig):

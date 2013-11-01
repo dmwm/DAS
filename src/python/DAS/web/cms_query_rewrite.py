@@ -10,6 +10,7 @@ from pprint import pprint
 
 from DAS.core.das_query import DASQuery
 from DAS.core.das_ql import das_record_keys
+from DAS.utils.das_config import das_readconfig
 
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator as \
@@ -33,11 +34,17 @@ class CMSQueryRewrite(object):
 
         Combination of the two queries will give the results expected,
         except for aggregations which have to be implemented manually.
-
-        See documentation on Command Line Interface:
-        %(cli)s
         '''
-    CLI_LINK = 'https://cms-http-group.web.cern.ch/cms-http-group/apidoc/das/current/das_client.html'
+    # get the link to CLI documentation
+    _cfg = das_readconfig()
+    CLI_LINK = _cfg.get('query_rewrite', {}).get('dasclient_doc_url', '')
+    if CLI_LINK:
+        _MSG_TMPL += \
+            '''
+
+            See documentation on Command Line Interface:
+            %(cli)s
+            '''
 
     def __init__(self, cms_rep):
         self.cms_rep = cms_rep
