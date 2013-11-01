@@ -15,7 +15,6 @@ from pymongo.errors import ConnectionFailure
 
 # DAS modules
 from DAS.core.das_core import DASCore
-from DAS.core.das_ql import das_aggregators, das_filters
 from DAS.utils.url_utils import disable_urllib2Proxy
 from DAS.utils.utils import print_exc, dastimestamp
 from DAS.utils.thread import start_new_thread
@@ -78,10 +77,6 @@ class KWSWebService(DASWebManager):
             self.kws = None
             return
 
-        # TODO: do we need smf like onhold request worker?
-        #if self.dasconfig['web_server'].get('onhold_daemon', False):
-        #    self.process_requests_onhold()
-
     def _get_dbsmgr(self, inst):
         # TODO: do we want to run DBSMngr separately?
         return self.main_das_app._get_dbsmgr(inst)
@@ -98,24 +93,20 @@ class KWSWebService(DASWebManager):
         uinput = kwargs.get('input', '').strip()
         inst = kwargs.get('instance', '').strip()
         if not inst:
-            # TODO: error msg?
             return 'you must provide DBS instance name'
 
-        #TODO: do we need: if self.busy():
-        #    return self.busy_page(uinput)
+        # it is simplest to run KWS on cherrypy web threads, if more requests
+        # come than size of thread pool; they'll have to wait. that looks OK...
 
         if not uinput:
-            kwargs['reason'] = 'No input found'
-            return 'no input found'
+            return 'the query must be not empty'
 
         if not self.kws:
             return 'Query suggestions are unavailable right now...'
 
         timeout = self.dasconfig['keyword_search']['timeout']
         show_scores = self.dasconfig['keyword_search'].get('show_scores', False)
-        print 'before get dbsmngr'
         dbsmngr = self._get_dbsmgr(inst)
-        print 'dbsmngr', dbsmngr
 
         return self.kws.handle_search(self,
                                       query=uinput,
