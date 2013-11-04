@@ -105,8 +105,8 @@ class Root(object):
             # timeout=10,
             # shutdown_timeout=5
         )
-        s = ServerAdapter(engine, kws_server)
-        s.subscribe()
+        srv_adapter = ServerAdapter(engine, kws_server)
+        srv_adapter.subscribe()
 
     def start(self, blocking=True):
         """Configure and start the server."""

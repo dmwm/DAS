@@ -97,7 +97,7 @@ class KeywordSearchHandler(object):
         """
         performs the search, and renders the search results
         """
-        err, proposed_queries = self.kws.search(query, dbsmngr= dbsmngr,
+        err, proposed_queries = self.kws.search(query, dbsmngr=dbsmngr,
                                                 timeout=timeout)
 
         # get top 5 entity types

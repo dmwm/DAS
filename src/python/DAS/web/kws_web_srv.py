@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0201,W0703,R0914,R0902,W0702,R0201,R0904,R0912,R0911
+#pylint: disable-msg=W0511
+# i.e. allow TODOs
 """
 KWS web interface, based on WMCore/WebTools
 """
 __author__ = "Vidmantas Zemleris"
 
 # system modules
-import re
 import threading
 
 from pymongo.errors import ConnectionFailure
@@ -21,12 +21,12 @@ from DAS.utils.thread import start_new_thread
 from DAS.web.utils import dascore_monitor
 from DAS.web.das_webmanager import DASWebManager
 
-# do not require any of KWS prerequisities (e.g. nltk), in case it's disabled
+# do not require any of KWS prerequisites (e.g. nltk), in case it's disabled
 try:
     # keyword search
     from DAS.web.das_kwd_search import KeywordSearchHandler
-except Exception as exc:
-    print_exc(exc)
+except Exception as _exc:
+    print_exc(_exc)
 
 #TODO: do we preserve all of these inputs once contacting KWS?
 # disable default urllib2 proxy
@@ -47,12 +47,10 @@ class KWSWebService(DASWebManager):
         DASWebManager.__init__(self, dasconfig)
         self.main_das_app = main_das_app
 
-        config = dasconfig['web_server']
         self.dasconfig = dasconfig
         self.dburi = self.dasconfig['mongodb']['dburi']
-        self.lifetime = self.dasconfig['mongodb']['lifetime']
-        self.dasmgr = None # defined at run-time via self.init()
-        self.kws = None # defined at run-time via self.init()
+        self.dasmgr = None  # defined at run-time via self.init()
+        self.kws = None  # defined at run-time via self.init()
         self.init()
 
         # Monitoring thread which performs auto-reconnection
@@ -64,9 +62,9 @@ class KWSWebService(DASWebManager):
     def init(self):
         """Init DAS web server, connect to DAS Core"""
         try:
-            self.dasmgr = DASCore(multitask=False) # engine=self.engine,
+            self.dasmgr = DASCore(multitask=False)  # TODO? engine=self.engine
             self.kws = KeywordSearchHandler(self.dasmgr)
-        except ConnectionFailure as _err:
+        except ConnectionFailure:
             tstamp = dastimestamp('')
             mythr = threading.current_thread()
             print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
@@ -78,6 +76,9 @@ class KWSWebService(DASWebManager):
             return
 
     def _get_dbsmgr(self, inst):
+        """
+        returns dbsmngr for given instance
+        """
         # TODO: do we want to run DBSMngr separately?
         return self.main_das_app._get_dbsmgr(inst)
 
@@ -93,13 +94,13 @@ class KWSWebService(DASWebManager):
         uinput = kwargs.get('input', '').strip()
         inst = kwargs.get('instance', '').strip()
         if not inst:
-            return 'you must provide DBS instance name'
+            return 'You must provide DBS instance name'
 
         # it is simplest to run KWS on cherrypy web threads, if more requests
         # come than size of thread pool; they'll have to wait. that looks OK...
 
         if not uinput:
-            return 'the query must be not empty'
+            return 'The query must be not empty'
 
         if not self.kws:
             return 'Query suggestions are unavailable right now...'
