@@ -207,7 +207,8 @@ DASOption('load_balance', 'valid_origins', 'list', []),
 
 # Query rewrite
 DASOption('query_rewrite', 'pk_rewrite_on', 'bool', False),
-] # end of DAS_OPTIONS list
+DASOption('query_rewrite', 'dasclient_doc_url', 'string', ''),
+]  # end of DAS_OPTIONS list
 
 def read_configparser(dasconfig):
     """Read DAS configuration"""

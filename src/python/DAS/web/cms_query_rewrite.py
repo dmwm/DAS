@@ -10,6 +10,7 @@ from pprint import pprint
 
 from DAS.core.das_query import DASQuery
 from DAS.core.das_ql import das_record_keys
+from DAS.utils.das_config import das_readconfig
 
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator as \
@@ -33,19 +34,19 @@ class CMSQueryRewrite(object):
 
         Combination of the two queries will give the results expected,
         except for aggregations which have to be implemented manually.
-
-        See documentation on Command Line Interface:
-        %(cli)s
         '''
-    CLI_LINK = 'https://cms-http-group.web.cern.ch/cms-http-group/apidoc/das/current/das_client.html'
+    # get the link to CLI documentation
+    _cfg = das_readconfig()
+    CLI_LINK = _cfg.get('query_rewrite', {}).get('dasclient_doc_url', '')
 
-    def __init__(self, cms_rep):
+    def __init__(self, cms_rep, render_template):
         self.cms_rep = cms_rep
         self.dasmgr = self.cms_rep.dasmgr
         self.entity_names = self._build_short_daskeys(self.dasmgr)
         # schema adapter from kws
         # TODO: get_field_list_for_entity_by_pk could be moved to DAS Core or...
         self.schema_adapter = getSchema(dascore=self.dasmgr)
+        self.render_template = render_template
 
     def _get_one_row_with_all_fields(self, dasquery):
         """
@@ -97,10 +98,11 @@ class CMSQueryRewrite(object):
         q2['filters'] = {'grep': list(filters_nested)}
         q2 = DASQuery(q2)
 
-        msg = self._MSG_TMPL % {'q1_str': self.convert2dasql(q1),
-                                'q2_str': self.convert2dasql(q2),
-                                'pk': pk,
-                                'cli': self.CLI_LINK}
+        msg = self.render_template('cms_query_rewrite',
+                                   q1_str=self.convert2dasql(q1),
+                                   q2_str=self.convert2dasql(q2),
+                                   pk=pk,
+                                   cli_docs=self.CLI_LINK)
         return msg
 
     def check_fields(self, dasquery):
