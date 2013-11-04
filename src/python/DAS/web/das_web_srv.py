@@ -503,7 +503,8 @@ class DASWebService(DASWebManager):
             kws = ''
             if show_kws:
                 kws = self.templatepage('kwdsearch_via_ajax',
-                                        uinput=uinput, inst=inst,
+                                        uinput=uinput,
+                                        inst=inst or self.dbs_global,
                                         kws_host=self._get_kws_host())
 
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
