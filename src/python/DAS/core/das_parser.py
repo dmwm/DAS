@@ -63,10 +63,10 @@ class QLManager(object):
         if  not config['dasmapping'].check_maps():
             msg = "No DAS maps found in MappingDB"
             raise Exception(msg)
-        self.map         = config['dasmapping']
+        self.dasmapping  = config['dasmapping']
         self.analytics   = config['dasanalytics']
         self.dasservices = config['services']
-        self.daskeysmap  = self.map.daskeys()
+        self.daskeysmap  = self.dasmapping.daskeys()
         self.operators   = list(das_operators())
         self.daskeys     = list(das_special_keys())
         self.verbose     = config['verbose']
@@ -170,16 +170,16 @@ class QLManager(object):
         """
         if  not mongo_query['spec']:
             for key in mongo_query['fields']:
-                for system in self.map.list_systems():
-                    mapkey = self.map.find_mapkey(system, key)
+                for system in self.dasmapping.list_systems():
+                    mapkey = self.dasmapping.find_mapkey(system, key)
                     if  mapkey:
                         mongo_query['spec'][mapkey] = '*'
             return
         spec = mongo_query['spec']
         to_replace = []
         for key, val in spec.iteritems():
-            for system in self.map.list_systems():
-                mapkey = self.map.find_mapkey(system, key, val)
+            for system in self.dasmapping.list_systems():
+                mapkey = self.dasmapping.find_mapkey(system, key, val)
                 if  mapkey and mapkey != key and \
                     key in mongo_query['spec']:
                     to_replace.append((key, mapkey))
@@ -203,7 +203,7 @@ class QLManager(object):
                 if  service not in self.dasservices:
                     continue
                 value = cond.get(key, None)
-                daskeys = self.map.find_daskey(service, key, value)
+                daskeys = self.dasmapping.find_daskey(service, key, value)
                 if  set(keys) & set(daskeys) and service not in slist:
                     slist.append(service)
         # look-up special key condition
@@ -228,9 +228,9 @@ class QLManager(object):
         mapkeys = [key for key in cond.keys() if key not in das_special_keys()]
         services = self.services(query)
         for srv in services:
-            alist = self.map.list_apis(srv)
+            alist = self.dasmapping.list_apis(srv)
             for api in alist:
-                daskeys = self.map.api_info(api)['das_map']
+                daskeys = self.dasmapping.api_info(srv, api)['das_map']
                 maps = [r['rec_key'] for r in daskeys]
                 if  set(mapkeys) & set(maps) == set(mapkeys): 
                     if  srv in adict:
