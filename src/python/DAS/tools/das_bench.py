@@ -3,8 +3,10 @@
 """
 DAS benchmark tool
 """
+import multiprocessing
 
 import os
+import sys
 import re
 import copy
 import math
@@ -19,7 +21,7 @@ from json import JSONDecoder
 from random import Random
 from optparse import OptionParser
 from multiprocessing import Process
-from itertools import chain
+from itertools import chain, ifilter
 
 try:
     import matplotlib.pyplot as plt
@@ -60,13 +62,19 @@ class NClientsOptionParser:
         self.parser.add_option("--nclients", action="store", type="int",
                                default=10, dest="nclients",
                                help="specify max number of clients")
+        self.parser.add_option("--minclients", action="store", type="int",
+                               default=1, dest="minclients",
+                               help="specify min number of clients, default 1")
+        self.parser.add_option("--repeat", action="store", type="int",
+                               default=1, dest="repeat",
+                               help="repeat each benchmark multiple times")
         self.parser.add_option("--dasquery", action="store", type="string",
                                default="dataset", dest="dasquery",
                                help="specify DAS query to test, e.g. dataset")
-        self.parser.add_option("--pdf", action="store", type="string",
-                               default="results.pdf", dest="pdf",
-                               help="specify name of PDF file for matplotlib output, \
-                default is results.pdf")
+        self.parser.add_option("--output", action="store", type="string",
+                               default="results.pdf", dest="filename",
+                               help="specify name of output file for matplotlib output, \
+                default is results.pdf, can also be file.png etc")
 
     def get_opt(self):
         """Returns parse list of options"""
@@ -144,7 +152,7 @@ class UrlRequest(urllib2.Request):
         return self._method
 
 
-def urlrequest(stream, url, headers, debug=0):
+def urlrequest(stream, url, headers, write_lock, debug=0):
     """URL request function"""
     if debug:
         print "Input for urlrequest", url, headers, debug
@@ -161,20 +169,23 @@ def urlrequest(stream, url, headers, debug=0):
     ctime = time.time() - time0
 
     fdesc.close()
-    # no need to decode json if it's html
+
+    # just use elapsed time if we use html format
     if headers['Accept'] == 'text/html':
-            stream.write(str({'ctime': str(ctime)}) + '\n')
-            #stream.write(data + '\n')
+        response = {'ctime': str(ctime)}
     else:
         decoder = JSONDecoder()
         response = decoder.decode(data)
-        if isinstance(response, dict):
-            stream.write(str(response) + '\n')
-    stream.flush()
+
+    if isinstance(response, dict):
+        write_lock.acquire()
+        stream.write(str(response) + '\n')
+        stream.flush()
+        write_lock.release()
 
 
-def spammer(stream, host, method, params, headers, debug=0):
-    """Spammer function"""
+def spammer(stream, host, method, params, headers, write_lock, debug=0):
+    """start new process for each request"""
     path = method
     if host.find('http://') == -1 and host.find('https://') == -1:
         host = 'http://' + host
@@ -183,7 +194,8 @@ def spammer(stream, host, method, params, headers, debug=0):
         url = host + path + '?%s' % encoded_data
     else:
         url = host + path
-    proc = Process(target=urlrequest, args=(stream, url, headers, debug))
+    proc = Process(target=urlrequest,
+                   args=(stream, url, headers, write_lock, debug))
     proc.start()
     return proc
 
@@ -195,7 +207,11 @@ def runjob(nclients, host, method, params, headers, idx, limit,
     and method (API). The output data are stored into lognameN.log,
     where logname is an optional parameter with default as spammer.
     """
-    stream = open('%s%s.log' % (logname, nclients), 'w')
+    stream = open('%s%s.log' % (logname, nclients), 'a')
+
+    # write-lock needed as times are written to files within multiprocessing
+    w_lock = multiprocessing.Lock()
+
     processes = []
     for _ in xrange(0, nclients):
         if dasquery:
@@ -215,7 +231,7 @@ def runjob(nclients, host, method, params, headers, idx, limit,
             headers = {'Accept': 'text/html'}
 
         ###
-        proc = spammer(stream, host, method, params, headers, debug)
+        proc = spammer(stream, host, method, params, headers, w_lock, debug)
         processes.append(proc)
     while True:
         if not processes:
@@ -224,6 +240,7 @@ def runjob(nclients, host, method, params, headers, idx, limit,
             if proc.exitcode is not None:
                 processes.remove(proc)
                 break
+    # an iteration is done
     stream.close()
 
 
@@ -274,7 +291,8 @@ def make_plot(xxx, yyy, std=None, name='das_cache.pdf',
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
-    plt.savefig(name, format='pdf', transparent=True)
+    frmt = name.split('.')[-1] or 'pdf'
+    plt.savefig(name, format=frmt, transparent=True)
     plt.close()
 
 
@@ -289,9 +307,11 @@ def main():
     idx = opts.idx
     limit = 1
     nclients = opts.nclients
+    minclients = opts.minclients
     debug = opts.debug
     headers = {'Accept': opts.accept}
     urlpath, args = urllib.splitattr(url)
+    repeat = opts.repeat
     arr = urlpath.split('/')
     if arr[0] == 'http:' or arr[0] == 'https:':
         host = arr[0] + '//' + arr[2]
@@ -321,10 +341,16 @@ def main():
                       xrange(10, 100, 10),
                       xrange(100, nclients + 1, 100))
 
+    # allow to specify the starting nclients
+    array = ifilter(lambda x: x >= minclients, array)
+
     for nclients in array:
-        print "Run job with %s clients" % nclients
-        runjob(nclients, host, method, params, headers, idx, limit,
-               debug, logname, dasquery)
+        sys.stdout.write("Run job with %s clients" % nclients)
+        for _ in xrange(repeat):
+            runjob(nclients, host, method, params, headers, idx, limit,
+                   debug, logname, dasquery)
+            sys.stdout.write('.')
+        print ''
 
     # analyze results
     file_list = []
@@ -345,7 +371,7 @@ def main():
         yyy.append(mean)
         std.append(std2)
     try:
-        make_plot(xxx, yyy, std, opts.pdf, title=dasquery)
+        make_plot(xxx, yyy, std, opts.filename, title=dasquery)
     except Exception as e:
         print e
         print "xxx =", xxx
