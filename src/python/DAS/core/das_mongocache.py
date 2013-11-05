@@ -160,6 +160,16 @@ class DASLogdb(object):
             return self.logcol.find(spec, exhaust=True)
         return False
 
+def cleanup_worker(dburi, dbname, collections, sleep):
+    """DAS cache cleanup worker"""
+    while True:
+        conn = db_connection(dburi)
+        spec = {'das.expire': { '$lt':time.time()}}
+        with conn.start_request():
+            for col in collections:
+                conn[dbname][col].remove(spec=spec, fsync=True)
+        time.sleep(sleep)
+
 class DASMongocache(object):
     """
     DAS cache based MongoDB.
@@ -182,6 +192,15 @@ class DASMongocache(object):
         # Monitoring thread which performs auto-reconnection to MongoDB
         thname = 'mongocache_monitor'
         start_new_thread(thname, db_monitor, (self.dburi, self.init))
+        # thread which clean-up DAS collections
+        thname = 'mongocache_cleanup'
+        cols   = [config['dasdb']['cachecollection'],
+                  config['dasdb']['mrcollection'],
+                  config['dasdb']['mergecollection']]
+        sleep  = config['dasdb'].get('cleanup_interval', 600)
+        if  config['dasdb'].get('cleanup_worker', True):
+            args = (self.dburi, self.dbname, cols, sleep)
+            start_new_thread(thname, cleanup_worker, args)
 
     def init(self):
         "Initialize MongoDB connection"

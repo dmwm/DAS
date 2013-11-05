@@ -90,6 +90,10 @@ DASOption('dasdb', 'logging', 'bool', False),
 # DAS cache record TTL (time-to-live) parameter, i.e. how long to keep
 # records in DAS cache, default is 1 day.
 DASOption('dasdb', 'record_ttl', 'int', 24*60*60),
+# clean-up worker
+DASOption('dasdb', 'cleanup_worker', 'bool', True),
+# Inerval for clean-up worker
+DASOption('dasdb', 'cleanup_interval', 'int', 600),
 
 #
 # DAS web server options
