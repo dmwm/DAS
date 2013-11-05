@@ -112,7 +112,7 @@ class DasSchemaAdapter(object):
         """
         entity_long = mappings.primary_mapkey(sys, api)
         entity_short = mappings.primary_key(sys, api)
-        api_info = mappings.api_info(api)
+        api_info = mappings.api_info(sys, api)
         lookup_key = api_info['lookup']
         if ',' in lookup_key:
             self._lookup_keys |= set([lookup_key, ])
