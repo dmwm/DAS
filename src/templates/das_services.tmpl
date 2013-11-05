@@ -70,9 +70,9 @@ used with any DAS condition to look-up all records in DAS cache for that conditi
 #silent $apilist.sort()
 <td>
 #for api in $apilist[:-1]
-<a href="/das/api?name=$urllib.quote_plus($api)">$quote($api)</a>, <br /> 
+<a href="/das/api?system=$urllib.quote_plus($system)&name=$urllib.quote_plus($api)">$quote($api)</a>, <br />
 #end for
-<a href="/das/api?name=$urllib.quote_plus($apilist[-1])">$quote($apilist[-1])</a>
+<a href="/das/api?system=$urllib.quote_plus($system)&name=$urllib.quote_plus($apilist[-1])">$quote($apilist[-1])</a>
 </td>
 #end for
 </tr>
