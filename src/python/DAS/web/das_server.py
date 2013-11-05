@@ -19,10 +19,17 @@ from optparse import OptionParser
 from cherrypy import log, tree, engine
 from cherrypy import config as cpconfig
 
+from cherrypy.wsgiserver import CherryPyWSGIServer
+from cherrypy.process.servers import ServerAdapter
+from cherrypy import _cptree
+
 # DAS modules
 from DAS.utils.das_config import das_readconfig
 from DAS.web.das_web_srv import DASWebService
 from cherrypy.process.plugins import PIDFile
+
+from DAS.web.kws_web_srv import KWSWebService
+
 
 class Root(object):
     """
@@ -71,6 +78,36 @@ class Root(object):
                                    severity=logging.DEBUG,
                                    traceback=False)
 
+    def setup_kws_server(self, main_das_srv):
+        """
+        sets up the KWS server to run on a separate port
+        """
+        # based on http://docs.cherrypy.org/stable/refman/process/servers.html
+
+        if not self.config['keyword_search']['kws_service_on']:
+            return
+
+        kws_service = KWSWebService(self.config, main_das_srv)
+        kws_wsgi_app = _cptree.Tree()
+        kws_wsgi_app.mount(kws_service, '/das')
+
+        config = self.config['web_server']
+        port = int(config.get("kws_port", 8214))
+        host = config.get("kws_host", '0.0.0.0')
+
+        kws_server = CherryPyWSGIServer(
+            bind_addr=(host, port),
+            wsgi_app=kws_wsgi_app,
+            numthreads=int(config.get("thread_pool_kws", 10)),
+            request_queue_size=cpconfig["server.socket_queue_size"],
+            # below are cherrypy default settings...
+            # max=-1,
+            # timeout=10,
+            # shutdown_timeout=5
+        )
+        srv_adapter = ServerAdapter(engine, kws_server)
+        srv_adapter.subscribe()
+
     def start(self, blocking=True):
         """Configure and start the server."""
         self.configure()
@@ -79,6 +116,8 @@ class Root(object):
         config['engine'] = engine
         obj = DASWebService(self.config)
         tree.mount(obj, url_base) # mount web server
+
+        self.setup_kws_server(obj)
 
         print "### DAS web server, PID=%s" % self.pid
         print pformat(tree.apps)

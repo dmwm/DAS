@@ -60,8 +60,6 @@ from DAS.core.das_query import WildcardMatchingException
 try:
     # nested query generation by PK
     from DAS.web.cms_query_rewrite import CMSQueryRewrite
-    # keyword search
-    from DAS.web.das_kwd_search import KeywordSearchHandler
 except Exception as exc:
     print_exc(exc)
 
@@ -238,7 +236,6 @@ class DASWebService(DASWebManager):
             self.daskeys = []
             self.colors  = {}
             self.q_rewriter = None
-            self.kws = None
             return
 
         # KWS and Query Rewriting failures are not fatal
@@ -247,12 +244,8 @@ class DASWebService(DASWebManager):
             if self.dasconfig['query_rewrite']['pk_rewrite_on']:
                 self.q_rewriter = CMSQueryRewrite(self.repmgr,
                                                   self.templatepage)
-            # init the Keyword Search
-            if self.is_kws_service_enabled():
-                self.kws = KeywordSearchHandler(self.dasmgr)
         except Exception as exc:
             print_exc(exc)
-            self.kws = None
             self.q_rewriter = None
 
         # Start Onhold_request daemon
@@ -407,38 +400,6 @@ class DASWebService(DASWebManager):
                         daskeys=list(daskeys), mapreduce=mapreduce)
         return self.page(page, response_div=False)
 
-    @expose
-    @enable_cross_origin
-    @checkargs(DAS_WEB_INPUTS)
-    def kws_async(self, **kwargs):
-        """
-        Returns KeywordSearch results for AJAX call (for now as html snippet)
-        """
-        set_no_cache_flags()
-
-        uinput = kwargs.get('input', '').strip()
-        inst = kwargs.get('instance', '').strip() or self.dbs_global
-
-        if self.busy():
-            return self.busy_page(uinput)
-
-        if not uinput:
-            kwargs['reason'] = 'No input found'
-            return self.redirect(**kwargs)
-
-        if not self.kws:
-            return 'Query suggestions are unavailable right now...'
-
-        timeout = self.dasconfig['keyword_search']['timeout']
-        show_scores = self.dasconfig['keyword_search'].get('show_scores', False)
-        dbsmngr = self._get_dbsmgr(inst)
-
-        return self.kws.handle_search(self,
-                                      query=uinput,
-                                      dbsmngr=dbsmngr,
-                                      is_ajax=True,
-                                      timeout=timeout,
-                                      show_score=show_scores)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -542,7 +503,8 @@ class DASWebService(DASWebManager):
             kws = ''
             if show_kws:
                 kws = self.templatepage('kwdsearch_via_ajax',
-                                        uinput=uinput, inst=inst,
+                                        uinput=uinput,
+                                        inst=inst or self.dbs_global,
                                         kws_host=self._get_kws_host())
 
             page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
