@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#pylint: disable-msg=C0301
 
 """
 DAS benchmark tool
@@ -27,7 +28,6 @@ try:
     import matplotlib.pyplot as plt
 except Exception as e:
     print e
-    pass
 
 
 class NClientsOptionParser:
