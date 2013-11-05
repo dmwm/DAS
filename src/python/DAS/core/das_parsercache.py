@@ -8,9 +8,11 @@ DAS Parser DB manager
 __author__ = "Gordon Ball"
 
 from DAS.utils.utils import genkey
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, create_indexes
 from DAS.utils.query_utils import encode_mongo_query, decode_mongo_query
 from DAS.utils.logger import PrintManager
+
+from pymongo import DESCENDING
 
 PARSERCACHE_NOTFOUND = 5
 PARSERCACHE_INVALID = 17
@@ -43,18 +45,20 @@ class DASParserDB(object):
         if  self.colname not in dbn.collection_names():
             dbn.create_collection(self.colname, capped=True, size=self.sizecap)
         self.col = dbn[self.colname]
+        index_list = [('qhash', DESCENDING)]
+        create_indexes(self.col, index_list)
 
     def lookup_query(self, rawtext):
         """
         Check the parser cache for a given rawtext query.
-        Search is done with the hash of this string.
+        Search is done with the qhash of this string.
         
         Returns a tuple (status, value) for the cases
         (PARSERCACHE_VALID, mongo_query) - valid query found
         (PARSERCACHE_INVALID, error) - error message for invalid query
         (PARSERCACHE_NOTFOUND, None) - not in the cache
         """
-        result = self.col.find_one({'hash':genkey(rawtext)},
+        result = self.col.find_one({'qhash':genkey(rawtext)},
                         fields=['query', 'error'])
 
         if result and result['query']:
@@ -94,5 +98,5 @@ class DASParserDB(object):
             encquery = encode_mongo_query(query)
         else:
             encquery = ""
-        self.col.insert({'raw':rawtext, 'hash':genkey(rawtext),
+        self.col.insert({'raw':rawtext, 'qhash':genkey(rawtext),
                          'query':encquery, 'error':str(error)})
