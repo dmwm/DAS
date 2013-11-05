@@ -42,10 +42,9 @@ def make_uri(pairs):
             uris.append('%s:%s' % (dbhost, dbport))
     return 'mongodb://%s' % ','.join(uris)
 
-class _DBConnectionSingleton(object):
+class DBConnection(object):
     """
-    DAS Connection Singleton class whose purpose is to get MongoDB
-    connection once and forever.
+    DB Connection class whose purpose is to get MongoDB connection
     """
     def __init__(self):
         # just for the sake of information
@@ -87,13 +86,14 @@ class _DBConnectionSingleton(object):
             return False
         return True
 
-DB_CONN_SINGLETON = _DBConnectionSingleton()
+DB_CONN_SINGLETON = DBConnection()
 
 def db_connection(uri):
     """Return DB connection instance"""
     dbinst = None
     try:
-        dbinst, _ = DB_CONN_SINGLETON.connection(uri)
+#        dbinst, _ = DB_CONN_SINGLETON.connection(uri)
+        dbinst, _ = DBConnection().connection(uri)
     except:
         pass
     return dbinst
