@@ -65,7 +65,7 @@ try:
 except Exception as exc:
     print_exc(exc)
 
-DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name',
+DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'system',
             'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next', 'kwquery']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
@@ -442,11 +442,11 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def api(self, name):
+    def api(self, system, name):
         """
         Return DAS mapping record about provided API.
         """
-        record = self.dasmgr.mapping.api_info(name)
+        record = self.dasmgr.mapping.api_info(system, name)
         page   = "<b>DAS mapping record</b>"
         page  += das_json_full(record)
         return self.page(page, response_div=False)
