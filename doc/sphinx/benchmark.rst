@@ -70,7 +70,15 @@ The DAS provides a benchmarking tool, das_bench
 
     das_bench --help
 
-    Usage: das_bench.py [options]
+    Usage: das_bench [options]
+
+    Examples:
+      Benchmark Keyword Search:
+      das_bench --url=https://cmsweb-testbed.cern.ch/das/kws_async --nclients=20 --dasquery="/DoubleMu/A/RAW-RECO magnetic field and run number" --output=results.png
+
+      Benchmark DAS Homepage (repeating each request 10 times):
+      src/python/DAS/tools/das_bench.py --url=https://das-test-dbs2.cern.ch/das --nclients=30 --dasquery="whatever" --accept=text/html --logname=DAS --output=DAS_home_no_kws_.png --repeat=10
+
 
     Options:
       -h, --help            show this help message and exit
@@ -83,9 +91,11 @@ The DAS provides a benchmarking tool, das_bench
       --logname=LOGNAME     specify log name prefix where results of N client
                             test will be stored
       --nclients=NCLIENTS   specify max number of clients
+      --minclients=NCLIENTS specify min number of clients, default 1
+      --repeat=REPEAT       repeat each benchmark multiple times
       --dasquery=DASQUERY   specify DAS query to test, e.g. dataset
-      --pdf=PDF             specify name of PDF file for matplotlib output,
-                            default is results.pdf
+      --output=FILENAME     specify name of output file for matplotlib output,
+                            default is results.pdf, can also be file.png etc
 
 which can be used to benchmark DAS.
 
