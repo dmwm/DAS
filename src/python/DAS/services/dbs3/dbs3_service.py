@@ -273,7 +273,13 @@ def get_file_run_lumis(url, api, args, verbose=0):
         else:
             runs = []
     args.update({'runs': runs})
-    blocks = dbs_find('block', url, args, verbose)
+    blk = args.get('block_name', None)
+    if  blk: # we don't need to look-up blocks
+        blocks = [blk]
+    else:
+        blocks = dbs_find('block', url, args, verbose)
+    if  not blocks:
+        return
     gen = file_run_lumis(url, blocks, runs, verbose)
     key = 'file_run'
     if  api.startswith('run_lumi'):
