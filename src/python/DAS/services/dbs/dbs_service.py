@@ -868,6 +868,11 @@ class DBSService(DASAbstractService):
         config_attrs = ['config.name', 'config.content', 'config.version', \
                  'config.type', 'config.annotation', 'config.createdate', \
                  'config.createby', 'config.moddate', 'config.modby']
+        dataset_attrs = ['dataset.tag', 'dataset.status',
+                'procds.createdate', 'procds.createby', 'procds.createby',
+                'procds.moddate', 'procds.modby']
+        file_attrs = ['file.name']
+        block_attrs = ['block.name']
         for row in gen:
             if  not row:
                 continue
@@ -918,9 +923,9 @@ class DBSService(DASAbstractService):
                     row['site']['se'] = row['site']['site']
                     del row['site']['site']
             convert_dot(row, 'config', config_attrs)
-            convert_dot(row, 'file', ['file.name'])
-            convert_dot(row, 'block', ['block.name'])
-            convert_dot(row, 'dataset', ['dataset.tag', 'dataset.status'])
+            convert_dot(row, 'file', file_attrs)
+            convert_dot(row, 'block', block_attrs)
+            convert_dot(row, 'dataset', dataset_attrs)
             # remove DBS2 run attributes (to be consistent with DBS3 output)
             # and let people extract this info from CondDB/LumiDB.
             if  'run' in row:
