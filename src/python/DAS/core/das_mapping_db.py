@@ -142,7 +142,8 @@ class DASMapping(object):
     def init_dasmapscache(self, records=[]):
         "Read DAS maps and initialize DAS API maps"
         if  not records:
-            records = self.col.find(exhaust=True)
+            spec = {'type':'service'}
+            records = self.col.find(spec, exhaust=True)
         for row in records:
             if  'urn' in row:
                 api = row['urn']
@@ -176,8 +177,8 @@ class DASMapping(object):
         """
         Initialize presentation cache by reading presentation map.
         """
-        query = {'presentation':{'$ne':None}}
-        data  = self.col.find_one(query)
+        spec  = {'type':'presentation'}
+        data  = self.col.find_one(spec)
         if  data:
             self.presentationcache = data['presentation']
             for daskey, uilist in self.presentationcache.iteritems():
@@ -196,8 +197,8 @@ class DASMapping(object):
 
     def das_presentation_map(self):
         "Read DAS presentation map"
-        query = {'presentation':{'$ne':None}}
-        data  = self.col.find_one(query)
+        spec  = {'type':'presentation'}
+        data  = self.col.find_one(spec)
         if  data:
             for daskey, uilist in data.get('presentation', {}).iteritems():
                 for row in uilist:
@@ -225,15 +226,12 @@ class DASMapping(object):
             self.dbc  = None
             self.col  = None
         if  self.col:
-            index = [('system', DESCENDING),
+            index = [('type', DESCENDING),
+                     ('system', DESCENDING),
+                     ('urn', DESCENDING),
                      ('das_map.das_key', DESCENDING),
                      ('das_map.rec_key', DESCENDING),
                      ('das_map.api_arg', DESCENDING),
-                     ('urn', DESCENDING),
-                     ('system', DESCENDING),
-                     ('notations', DESCENDING),
-                     ('notations.api_output', DESCENDING),
-                     ('presentation', DESCENDING),
                      ]
             create_indexes(self.col, index)
 
@@ -380,9 +378,9 @@ class DASMapping(object):
         List all DAS systems.
         """
         if  not self.systems:
-            cond = { 'system' : { '$ne' : None } }
+            spec = { 'type': 'service', 'system' : { '$ne' : None } }
             gen  = (row['system'] \
-                    for row in self.col.find(cond, ['system'], exhaust=True))
+                    for row in self.col.find(spec, ['system'], exhaust=True))
             self.systems = list( set(gen2list(gen)) & set(self.services) )
         return self.systems
 
@@ -392,11 +390,11 @@ class DASMapping(object):
         """
         if  self.apicache and system in self.apicache:
             return self.apicache[system]
-        cond = { 'urn' : { '$ne' : None } }
+        spec = { 'type': 'service', 'urn' : { '$ne' : None } }
         if  system:
-            cond['system'] = system
+            spec['system'] = system
         gen  = (row['urn'] \
-                for row in self.col.find(cond, ['urn'], exhaust=True))
+                for row in self.col.find(spec, ['urn'], exhaust=True))
         self.apicache[system] = gen2list(gen)
         return self.apicache[system]
 
@@ -423,17 +421,17 @@ class DASMapping(object):
         """
         Return a dict with all known DAS keys.
         """
-        cond  = { 'system' : { '$ne' : None } }
+        spec  = { 'type': 'service', 'system' : { '$ne' : None } }
         if  das_system:
-            cond  = { 'system' : das_system }
+            spec  = { 'system' : das_system }
         gen   = (row['system'] \
-                for row in self.col.find(cond, ['system'], exhaust=True))
+                for row in self.col.find(spec, ['system'], exhaust=True))
         gen   = [r for r in gen]
         kdict = {}
         for system in gen:
-            query = {'system':system, 'urn':{'$ne':None}}
-            keys  = []
-            for row in self.col.find(query, exhaust=True):
+            spec = {'system':system, 'urn':{'$ne':None}}
+            keys = []
+            for row in self.col.find(spec, exhaust=True):
                 for entry in row['das_map']:
                     if  entry['das_key'] not in keys:
                         keys.append(entry['das_key'])
@@ -456,8 +454,8 @@ class DASMapping(object):
         Return DAS primary key for provided system and urn. The DAS primary key
         is a first entry in *lookup* attribute of DAS API record.
         """
-        cond = {'system':das_system, 'urn':urn}
-        record = self.col.find_one(cond)
+        spec = {'system':das_system, 'urn':urn}
+        record = self.col.find_one(spec)
         if  not record:
             return None
         pkey = record['lookup']
@@ -471,8 +469,8 @@ class DASMapping(object):
         the file DAS key is mapped to file.name, so this API will return
         file.name
         """
-        cond = {'system':das_system, 'urn':urn}
-        record = self.col.find_one(cond)
+        spec = {'system':das_system, 'urn':urn}
+        record = self.col.find_one(spec)
         mapkey = []
         for row in record['das_map']:
             lkey = record['lookup']
@@ -561,9 +559,9 @@ class DASMapping(object):
         Find list of apis which correspond to provided
         system and das map key.
         """
-        cond  = { 'system' : das_system, 'das_map.rec_key': map_key }
+        spec  = { 'system' : das_system, 'das_map.rec_key': map_key }
         apilist = []
-        for row in self.col.find(cond, ['urn'], exhaust=True):
+        for row in self.col.find(spec, ['urn'], exhaust=True):
             if  'urn' in row and row['urn'] not in apilist:
                 apilist.append(row['urn'])
         return apilist
@@ -572,9 +570,9 @@ class DASMapping(object):
         """
         Return system name for provided DAS key.
         """
-        cond = { 'das_map.das_key' : key }
+        spec = { 'das_map.das_key' : key }
         gen  = (row['system'] \
-                for row in self.col.find(cond, ['system'], exhaust=True))
+                for row in self.col.find(spec, ['system'], exhaust=True))
         systems = []
         for system in gen:
             if  system not in systems:
@@ -673,7 +671,7 @@ class DASMapping(object):
         Return DAS notation map.
         """
         notationmap = {}
-        spec = {'notations':{'$ne':None}}
+        spec = {'type':'notations'}
         if  system:
             spec['system'] = system
         for item in self.col.find(spec, exhaust=True):
@@ -704,9 +702,9 @@ class DASMapping(object):
         """
         Returns list of DAS keys which cover provided data-service API
         """
-        query = {'system':system, 'urn':api}
+        spec = {'system':system, 'urn':api}
         keys = []
-        for row in self.col.find(query, exhaust=True):
+        for row in self.col.find(spec, exhaust=True):
             for entry in row['das_map']:
                 keys.append(entry['das_key'])
         return keys
@@ -720,9 +718,9 @@ class DASMapping(object):
             {api: {keys:[list of DAS keys], params: args, 
              url:url, format:ext, expire:exp} }
         """
-        query = {'system':system, 'urn':{'$ne':None}}
+        spec = {'system':system, 'urn':{'$ne':None}}
         smap = {}
-        for row in self.col.find(query, exhaust=True):
+        for row in self.col.find(spec, exhaust=True):
             url  = row['url']
             exp  = row['expire']
             ext  = row['format']
