@@ -8,78 +8,66 @@ import pprint
 
 from cherrypy import thread_data, request
 
-from DAS.keywordsearch.config import *
+from DAS.keywordsearch.config import USE_LOG_PROBABILITIES, DEBUG, \
+    MINIMAL_DEBUG
 from DAS.keywordsearch.tokenizer import tokenize, cleanup_query
-from DAS.keywordsearch.presentation.result_presentation import result_to_DASQL, DASQL_2_NL
+from DAS.keywordsearch.presentation.result_presentation import \
+    result_to_dasql, dasql_to_nl
 from DAS.keywordsearch.entry_points import get_entry_points
-from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+from DAS.keywordsearch.metadata.schema_adapter_factory import get_schema
 from DAS.keywordsearch.config import K_RESULTS_TO_STORE
 from DAS.keywordsearch.rankers.exceptions import TimeLimitExceeded
-from DAS.keywordsearch.whoosh.ir_entity_attributes import load_index, build_index
+from DAS.keywordsearch.whoosh.ir_entity_attributes import \
+    load_index, build_index
 
 
-class KeywordSearch:
-    def get_missing_required_inputs(self):
-        """
-        APIs have their input constraints, and in some cases
-        only specific combinations of intpus are accepted, for example:
-
-        file run=148126 [requires dataset or block]
-
-        more complex cases:
-        file dataset=/Zmm/*/* site=T1_CH_CERN [requires exact dataset name!]
-        """
-        pass
-
-
+class KeywordSearch(object):
+    """ Keyword Search """
     schema = None
 
-
     def __init__(self, dascore):
-        self.schema = getSchema(dascore)
+        self.schema = get_schema(dascore)
 
-        ranker = 'fast'
-        if ranker == 'fast':
-            from DAS.extensions import fast_recursive_ranker
-            self.ranker = fast_recursive_ranker
-            self.ranker.initialize_ranker()
-        else:
-            from DAS.keywordsearch.rankers import simple_recursive_ranker
-            self.ranker = simple_recursive_ranker
+        # import and initialize the ranker
+        from DAS.extensions import fast_recursive_ranker
+        self.ranker = fast_recursive_ranker
+        self.ranker.initialize_ranker(self.schema)
 
-        # build and load the whoosh
+        # build and load the whoosh index (listing fields in service outputs)
         build_index(self.schema.list_result_fields())
         load_index()
 
-    def set_dbs_inst(self, dbs_inst):
-        # store dbs_inst in request
+    @classmethod
+    def set_dbs_inst(cls, dbs_inst):
+        """ store dbs_inst in request """
         request.dbs_inst = dbs_inst
 
-    def tokenize_query(self, query, DEBUG=False):
+    @classmethod
+    def tokenize_query(cls, query):
+        """ CLean up and Tokenize the query """
         if not isinstance(query, unicode) and isinstance(query, str):
             query = unicode(query)
-        if DEBUG: print 'Query:', query
+
         clean_query = cleanup_query(query)
-        if DEBUG: print 'CLEAN Query:', clean_query
         tokens = tokenize(query)
-        if DEBUG: print 'TOKENS:', tokens
-        if DEBUG: print 'Query after cleanup:', query
-        # TODO: some of EN 'stopwords' may be quite important e.g.  'at', 'between', 'where'
+        if DEBUG:
+            print 'Query:', query
+            print 'CLEAN Query:', clean_query
+            print 'TOKENS:', tokens
         return query, tokens
 
-
-    #@profile
     def process_results(self, keywords, query):
+        """
+        prepare the results to be shown
+        """
         results = thread_data.results[:]
         if DEBUG:
             print "============= Results for: %s ===" % query
 
-
         # did we store all results?
         if K_RESULTS_TO_STORE:
             # if not, we used heap, where items are tuples: (score, result)
-            #results.sort(key=lambda item: item[0], reverse=True)
-            results = map(lambda item: item[1], results)
+            results = [item[1] for item in results]
         results.sort(key=lambda item: item['score'], reverse=True)
         #print 'len(results)', len(results)
         #print '------'
@@ -87,11 +75,10 @@ class KeywordSearch:
         get_best_score = lambda scores, q: \
             scores.get(q, {'score': -float("inf")})['score']
 
-        for r in results:
-            result = result_to_DASQL(r)
-            result[
-                'query_in_words'] = DASQL_2_NL(result['das_ql_tuple'])
-            result['query_html'] = result_to_DASQL(r, frmt='html')['query']
+        for res in results:
+            result = result_to_dasql(res)
+            result['query_in_words'] = dasql_to_nl(result['das_ql_tuple'])
+            result['query_html'] = result_to_dasql(res, frmt='html')['query']
             query = result['query']
 
             if USE_LOG_PROBABILITIES:
@@ -105,27 +92,15 @@ class KeywordSearch:
         best_scores.sort(key=lambda item: item['score'], reverse=True)
         # normalize scores, if results are non empty
         if best_scores:
-            query_len_norm_fact = self.ranker.normalization_factor_by_query_len(keywords)
-
             _get_score = lambda item: item['score']
             max_score = _get_score(max(best_scores, key=_get_score))
 
-
             # for displaying the score bar, we want to obtain scores <= 1.0
-            visual_norm_fact = query_len_norm_fact
-            max_score_normalized = max_score / query_len_norm_fact
-            if max_score_normalized > 1.0:
-                visual_norm_fact = max_score_normalized * query_len_norm_fact
-
-            # SCORE is normalized by query length.
-            # close to 1 is good, as all keywords are mapped,
-            # negative or close to 0 is bad as either no keywords were mapped,
-            # or possibly false query interpretation received many penalties
-
-            for r in best_scores:
-                r['len_normalized_score'] = _get_score(r) / query_len_norm_fact
-                r['scorebar_normalized_score'] = _get_score(
-                    r) / visual_norm_fact
+            score_norm = max(1.0, max_score)
+            for res in best_scores:
+                # TODO: len_normalized_.. is not used. only needed in old ranker
+                res['len_normalized_score'] = _get_score(res)
+                res['scorebar_normalized_score'] = _get_score(res) / score_norm
         if DEBUG:
             print '\n'.join(
                 '%.2f: %s' % (r['score'], r['result']) for r in best_scores)
@@ -133,27 +108,24 @@ class KeywordSearch:
 
     def search(self, query, dbs_inst, timeout=5):
         """
-        Performs the keyword search
+        Performs the keyword search.
+        Once timeout is passed, partial results are returned.
         returns: (error or None, result_list)
         """
         self.set_dbs_inst(dbs_inst)
-
-        query, tokens = self.tokenize_query(query, DEBUG=DEBUG)
-
+        query, tokens = self.tokenize_query(query)
         keywords = [kw.strip() for kw in tokens
                     if kw.strip()]
-        chunks, schema_ws, values_ws = get_entry_points(keywords, DEBUG)
-
+        chunks, schema_ws, values_ws = get_entry_points(keywords)
 
         if MINIMAL_DEBUG:
             print '============= Q: %s, tokens: %s ' % (query, str(tokens))
-            print '============= Schema mappings (TODO) =========='
+            print '============= Schema mappings =========='
             pprint.pprint(schema_ws)
-            print '=============== Values mappings (TODO) ============'
+            print '=============== Values mappings ============'
             pprint.pprint(values_ws)
 
         thread_data.results = []
-
         # static per request
         thread_data.keywords_list = keywords
 
@@ -161,9 +133,9 @@ class KeywordSearch:
         try:
             self.ranker.perform_search(schema_ws, values_ws, kw_list=keywords,
                                        chunks=chunks, time_limit=timeout)
-        except TimeLimitExceeded as e:
+        except TimeLimitExceeded as exc:
             print 'time limit exceeded, still returning some results...'
-            print e
-            err = e
+            print exc
+            err = exc
 
         return err, self.process_results(keywords, query)

@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+"""
+A tiny module allowing to block limited amount of time until DB is ready.
+This moght be useful in scripting environment, e.g. to run tasks
+just after installation.
+"""
 import contextlib
 import sys
 import cStringIO
@@ -6,6 +12,7 @@ import time
 
 @contextlib.contextmanager
 def nostdout():
+    """ prevent from outputing anything to stdout """
     save_stdout = sys.stdout
     sys.stdout = cStringIO.StringIO()
     yield
@@ -21,22 +28,26 @@ with nostdout():
 
 
 def check_mappings_readiness():
-    config = das_readconfig()
+    """
+    return whether DASMaps are initialized
+    """
     print('db alive. checking it\'s state...')
     try:
-        dasmapping = DASMapping(config)
+        dasmapping = DASMapping(das_readconfig())
         if dasmapping.check_maps():
-            dascore = DASCore(config, multitask=False)
+            DASCore(multitask=False)
             return True
-    except Exception, e:
-        print e
+    except Exception as exc:
+        print exc
     print 'no DAS mappings present...'
     return False
 
 
 def on_db_available():
+    """
+    this callback waits for correct DASMaps
+    """
     print 'DB is available'
-
     if check_mappings_readiness():
         print('Mappings seem to be fine...')
         #time.sleep(10)
@@ -55,8 +66,8 @@ def db_monitor(uri, func, sleep=5, max_retries=None):
         if not (conn and is_db_alive(uri)):
             try:
                 conn = db_connection(uri)
-            except Exception, e:
-                print e
+            except Exception as exc:
+                print exc
 
         if conn and is_db_alive(uri):
             print "### established connection %s" % conn
@@ -76,7 +87,7 @@ def waitfordb(max_time, callback=on_db_available):
     """
     config = das_readconfig()
     dburi = config['mongodb']['dburi']
-    sleep_time=5
+    sleep_time = 5
     db_monitor(dburi, callback,
                sleep=sleep_time, max_retries=max_time // sleep_time)
 
@@ -85,6 +96,11 @@ def waitfordb(max_time, callback=on_db_available):
 
 
 def is_bootstrap_needed():
+    """
+    whether bootstrap is mandatory:
+    - not initialized output fields (keylearning db)
+    - no values known
+    """
     with nostdout():
 
         from DAS.keywordsearch.metadata.input_values_tracker \
@@ -93,18 +109,21 @@ def is_bootstrap_needed():
         from DAS.keywordsearch.whoosh import ir_entity_attributes
 
         def need_res_fields_bootsrap():
-            config = das_readconfig()
-            dascore = DASCore(config, multitask=False)
-            schema_adapter = schema_adapter_factory.getSchema(dascore)
+            """ return whether the list of of entity attributes is available
+            if not these are needed to be bootstrapped
+            """
+            dascore = DASCore(multitask=False)
+            schema_adapter = schema_adapter_factory.get_schema(dascore)
             try:
-                if not schema_adapter.list_result_fields():
+                outputs_fields = schema_adapter.list_result_fields()
+                if not outputs_fields:
                     return True
-                ir_entity_attributes.build_index()
+                ir_entity_attributes.build_index(outputs_fields)
                 ir_entity_attributes.load_index()
-            except Exception, e:
-                print e
+            except Exception as exc:
+                print exc
                 return True
-            return  False
+            return False
 
         needed = (need_value_bootstrap() or need_res_fields_bootsrap())
         return 1 if needed else 0

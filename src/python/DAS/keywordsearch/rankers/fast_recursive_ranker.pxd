@@ -1,3 +1,4 @@
+# coding=utf-8
 # time declarations based on
 #  https://groups.google.com/forum/#!topic/sage-devel/kSL7mRKM5HU
 

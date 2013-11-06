@@ -1,31 +1,22 @@
-__author__ = 'vidma'
+# coding=utf-8
+"""
+An abstraction layer to retrieve the schema adapter
+"""
+__all__ = ['get_schema']
 
+SCHEMA_ADAPTER = None
 try:
     from DAS.keywordsearch.metadata.schema_adapter2 import DasSchemaAdapter
-    __schema = DasSchemaAdapter
-
+    SCHEMA_ADAPTER = DasSchemaAdapter
 except ImportError:
-    __schema = None
+    pass
 
 
-
-
-def getSchema(*args, **kwargs):
+def get_schema(*args, **kwargs):
     """
     returns a concrete schema implementation, so keyword search can be
     more or less DAS independent
 
-    args: dascore
+    args: dascore (optional)
     """
-    global __schema
-    return __schema(*args, **kwargs)
-
-#getSchema = lambda *args, **kwargs: __schema(*args, **kwargs)
-
-
-def setSchemaAdapter(schemaAdapter):
-    """
-    set a concrete schema adapter
-    """
-    global __schema
-    __schema = schemaAdapter
+    return SCHEMA_ADAPTER(*args, **kwargs)

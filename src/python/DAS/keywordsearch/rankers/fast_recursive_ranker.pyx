@@ -4,24 +4,22 @@
 
 # http://docs.cython.org/src/reference/compilation.html#compiler-directives
 
-
+# cython - libc
 from libc.math cimport log, exp
 
-
+# python standard libs
 from collections import defaultdict
-
 from heapq import heappush, heappushpop
 from cherrypy import thread_data
 
-from DAS.keywordsearch.config import *
+# keyword search
+from DAS.keywordsearch.config import get_setting, DEBUG, K_RESULTS_TO_STORE, \
+    P_NOT_SPECIFIED_RES_TYPE, P_NOT_TAKEN, P_NOT_TAKEN_STOPWORD
 from DAS.keywordsearch.metadata import das_ql
 from DAS.keywordsearch.nlp import getstem, filter_stopwords
-from DAS.keywordsearch.tokenizer import get_keyword_without_operator, \
-    test_operator_containment
+from DAS.keywordsearch.tokenizer import get_keyword_without_operator
 from DAS.keywordsearch.tokenizer import get_operator_and_param
 from DAS.keywordsearch.rankers.exceptions import TimeLimitExceeded
-from DAS.keywordsearch.metadata.schema_adapter2 import  DasSchemaAdapter
-
 
 # Heuristics
 # /DoubleMu/Run2012A-Zmmg-13Jul2012-v1xx/RAW-RECO --> dataset
@@ -30,7 +28,7 @@ cdef bint TRACE = DEBUG
 
 
 # TOOD: this is mainly for backward compatibility
-cdef double logP(double score):
+cdef inline double logprob(double score):
    return log(score) if (score > 0.0) else score
 
 
@@ -61,8 +59,8 @@ cdef class QueryContext:
     #cdef cmap[string, vector[pair[double, string]]] schema_ws
     cdef dict schema_ws, values_ws, chunks
     cdef list kw_list
-    cdef int N_kw
-    cdef int N_kw_uniq_no_stopw
+    cdef int n_kw
+    cdef int n_kw_uniq_no_stopw
     cdef clock_t time_limit
     cdef bint time_limit_exceeded
     #cdef int N_kw_non_stopword
@@ -73,8 +71,8 @@ cdef class QueryContext:
         self.schema_ws = dict(schema_ws)
         self.values_ws = dict(values_ws)
         self.kw_list = kw_list
-        self.N_kw = len(kw_list)
-        self.N_kw_uniq_no_stopw = len(filter_stopwords(set(kw_list)))
+        self.n_kw = len(kw_list)
+        self.n_kw_uniq_no_stopw = len(filter_stopwords(set(kw_list)))
         self.chunks = dict(chunks)
 
         # calculate max cpu-time after which execution is not allowed
@@ -212,7 +210,7 @@ cdef class ApiParamDefinition:
     cdef readonly frozenset api_params_set, req_params
     cdef readonly str lookup
 
-cpdef ApiParamDefinition ApiParamDefinitionFactory(frozenset api_params_set, frozenset req_params, str lookup):
+cpdef ApiParamDefinition create_api_param_definition(frozenset api_params_set, frozenset req_params, str lookup):
         cdef ApiParamDefinition inst = ApiParamDefinition.__new__(ApiParamDefinition)
         inst.api_params_set = api_params_set
         inst.req_params = req_params
@@ -226,21 +224,20 @@ cdef list api_definitions = list()
 cdef list lookup_keys = list()
 
 
-def initialize_ranker():
+def initialize_ranker(schema):
     """ initialize the ranker: update cached data (cython) """
     global lookup_keys, api_definitions
-    schema = DasSchemaAdapter()
     lookup_keys = schema.lookup_keys
     api_definitions = list()
-    for api_params_set, req_params, lookup in schema.get_api_param_definitions():
-        api_definitions.append(
-                        ApiParamDefinitionFactory(
-                           api_params_set=frozenset(api_params_set),
-                           req_params=frozenset(req_params),
-                           lookup=str(lookup)))
+    for api_params, req_params, lookup in schema.get_api_param_definitions():
+        api_definitions.append(create_api_param_definition(
+                                   api_params_set=frozenset(api_params),
+                                   req_params=frozenset(req_params),
+                                   lookup=str(lookup)))
+
 
 #inline
-cdef  bint areWildcardsAllowed(str entity,  set wildcards, set params):
+cdef  bint are_wildcards_allowed(str entity,  set wildcards, set params):
         """
         Whether wildcards are allowed for given inputs
 
@@ -307,7 +304,7 @@ cdef bint validate_input_params_das_cpy(set params, str entity, bint final_step,
     #cdef char*
     long_entity = lookup and lookup.split(',')[0] + '.name'
     if final_step and wildcards and \
-            not areWildcardsAllowed(long_entity, wildcards, params):
+            not are_wildcards_allowed(long_entity, wildcards, params):
         return False
 
     # given input parameters mapping (from keywords to input parameters)
@@ -404,7 +401,7 @@ cdef void seach_for_filters(QueryContext c, PartialSearchResult _r, int i):
             #_r_filters.append(target)
 
             # we count each token separately in scoring
-            delta_score = len(tokens) * logP(delta_score)
+            delta_score = len(tokens) * logprob(delta_score)
             r.reset('grep', new_kw=None, delta_score=delta_score, field=target_fieldname,
                     new_value=None, add_grep=target, grep_req_kwds=req_kwds)
             store_result(c, r)
@@ -455,7 +452,7 @@ cdef void run_search(QueryContext c, PartialSearchResult _r,
     cdef PartialSearchResult r = PartialSearchResult(_r)
 
     # check if this could be a valid final result
-    if i >= c.N_kw:
+    if i >= c.n_kw:
         #if not _r.result_type:
         #    print 'lookup:', _r.result_type
 
@@ -616,14 +613,14 @@ cdef inline double penalize_non_mapped_keywords_(QueryContext c, PartialSearchRe
 
     keywords_list= c.kw_list,
 
-    N_total_kw = c.N_kw
-    N_kw_without_stopw = c.N_kw_uniq_no_stopw
+    n_total_kw = c.n_kw
+    n_kw_without_stopw = c.n_kw_uniq_no_stopw
 
     # TODO: is keywords_used only non-stopword?!
     # no,but sometimes a semi-stopword can be useful: where, when, .. in beginning of Q
 
-    N_kw_not_used = max(N_kw_without_stopw - len(keywords_used_no_stopw), 0)
-    cdef double dscore = logP(P_NOT_TAKEN) * N_kw_not_used
+    n_kw_not_used = max(n_kw_without_stopw - len(keywords_used_no_stopw), 0)
+    cdef double dscore = logprob(P_NOT_TAKEN) * n_kw_not_used
 
     score += dscore
 
@@ -631,11 +628,11 @@ cdef inline double penalize_non_mapped_keywords_(QueryContext c, PartialSearchRe
     # we add the score twice anyways...!!!
     # TODO: how about multi-keyword "qouted string"
 
-    N_not_mapped_all = max(N_total_kw - len(keywords_used) - N_kw_not_used,0)
+    n_not_mapped_all = max(n_total_kw - len(keywords_used) - n_kw_not_used,0)
     r.trace += [
         str(locals()),
     ]
-    score += logP(P_NOT_TAKEN_STOPWORD) * N_not_mapped_all
+    score += logprob(P_NOT_TAKEN_STOPWORD) * n_not_mapped_all
 
 
     cdef bint r_type_specified = r.result_type and not r.result_type_enumerated
@@ -645,18 +642,11 @@ cdef inline double penalize_non_mapped_keywords_(QueryContext c, PartialSearchRe
         # grep (filter) is also sort of defining the result type, but not allways...
         # this has already +/- accounted for result_type (probability was multiplied)
         # we could add a high probability, so slightly favour explicit result types
-        score += logP(0.8)
+        score += logprob(0.8)
     else:
-        score += logP(P_NOT_SPECIFIED_RES_TYPE)
+        score += logprob(P_NOT_SPECIFIED_RES_TYPE)
 
     return score
-
-
-
-
-
-
-
 
 
 def normalization_factor_by_query_len(keywords_list):
@@ -674,7 +664,9 @@ def normalization_factor_by_query_len(keywords_list):
 
 # TODO: this has to be implemented in a better way
 # TODO: shall this go into entity_matcher directly?
-cdef bint _penalize_highly_possible_schema_terms_as_values_enabled = mod_enabled('DOWNRANK_TERMS_REFERRING_TO_SCHEMA')
+cdef bint _penalize_highly_possible_schema_terms_as_values_enabled = \
+    get_setting('DOWNRANK_TERMS_REFERRING_TO_SCHEMA')
+
 
 def _penalise_subroutine_schematerms(keyword, schema_ws):
     _DEBUG = 0
@@ -733,13 +725,13 @@ cdef double penalize_highly_possible_schema_terms_as_values(keyword, schema_ws):
     # TODO: this is just a quick workaround
     if keyword in _reserved_terms: #['dataset', 'run', 'block', 'file', 'site']:
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
-        return logP(-5.0)
+        return logprob(-5.0)
 
     if DEBUG: print '_get_reserved_terms(stem=True):', _reserved_terms_stemed
 
     if not ' ' in keyword and getstem(keyword) in _reserved_terms_stemed: #['dataset', 'run', 'block', 'file', 'site']:
         # TODO: each reserved term shall have a different weight, e.g. operators lower than entity?
-        return logP(-3.0)
+        return logprob(-3.0)
 
     if schema_ws:
         return _penalise_subroutine_schematerms(keyword, schema_ws)

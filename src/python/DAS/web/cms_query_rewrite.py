@@ -12,7 +12,7 @@ from DAS.core.das_query import DASQuery
 from DAS.core.das_ql import das_record_keys
 from DAS.utils.das_config import das_readconfig
 
-from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
+from DAS.keywordsearch.metadata.schema_adapter_factory import get_schema
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator as \
     get_filter_name
 
@@ -45,7 +45,7 @@ class CMSQueryRewrite(object):
         self.entity_names = self._build_short_daskeys(self.dasmgr)
         # schema adapter from kws
         # TODO: get_field_list_for_entity_by_pk could be moved to DAS Core or...
-        self.schema_adapter = getSchema(dascore=self.dasmgr)
+        self.schema_adapter = get_schema(dascore=self.dasmgr)
         self.render_template = render_template
 
     def _get_one_row_with_all_fields(self, dasquery):

@@ -202,12 +202,18 @@ def db_monitor(uri, func, sleep=5):
         time.sleep(sleep)
 
 
+def get_db_uri():
+    """ returns default dburi from config """
+    config = das_readconfig()
+    return config['mongodb']['dburi']
+
+
 def query_db(dbname, dbcol, query,  idx=0, limit=10):
     """
     query a given db collection
     """
-    config = das_readconfig()
-    conn = db_connection(config['mongodb']['dburi'])
+
+    conn = db_connection(get_db_uri())
     col = conn[dbname][dbcol]
 
     if col:

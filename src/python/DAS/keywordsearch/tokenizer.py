@@ -2,41 +2,36 @@
 #-*- coding: ISO-8859-1 -*-
 """
 Module description:
- - first cleans up input keyword query (remove extra spaces, standardize notation)
+ - first clean up input keyword query (rm extra spaces, standardize notation)
  - then it tokenizes the query into:
     * individual query terms
     * compound query terms in brackets (e.g. "number of events")
-    * strings of "terms operator value" (e.g. nevent > 1, "number of events"=100)
+    * phrases: "terms operator value" (e.g. nevent > 1, "number of events"=100)
 """
 
-AGGREGATORS_ENABLED = False
-
 import re
-from nltk.internals import  convert_regexp_to_nongrouping
-
+from nltk.internals import convert_regexp_to_nongrouping
 from DAS.keywordsearch.metadata import das_ql
 
-kws_operators = das_ql.kws_operators
-aggr_operators = das_ql.aggr_operators
-word = das_ql.word
 
-
-cleanup_subs = [
+AGGREGATORS_ENABLED = False
+KWS_OPERATORS = das_ql.KWS_OPERATORS
+AGGR_OPERATORS = das_ql.AGGR_OPERATORS
+WORD = das_ql.WORD
+CLEANUP_SUBS = [
     # get rid of multiple spaces
     (r'\s+', ' '),
 
-    # TODO: this is temporary until supporting of specific patterns
     (r'^(find|show|tell|display|retrieve|select)( me)?\s?', ''),
-    # simplest way to process 'when' questions (attributes *_time; date is almost useless as result type currently (?), could could be input)
+    # simplest way to process 'when' questions (attributes *_time;
+    # date is almost useless as result type currently (?), could could be input)
     (r'^when\s', 'time '),
 
     # transform word-based operators
     (r'\s?more than (?=\d+)', '>'),
     (r'\s?more or equal( than| to)? (?=\d+)', '>'),
-
     (r'\s?less than (?=\d+)', '<'),
     (r'\s?less or equal( to| than)? (?=\d+)', '<'),
-
     (r'\s?equals?( to)? (?=\d+)', '='),
 
     # remove extra spaces
@@ -49,32 +44,25 @@ cleanup_subs = [
     # process dates into DAS format (must be preceded by operator, as
     # dataset may also contain dates)
     # e.g. = 2012-02-01 --> 20120201
-    (kws_operators + r'\s?([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])', r'\1 \2\3\4')
-]
-compile_repl_pattern = lambda (regexp, repl): (re.compile(regexp), repl)
-cleanup_subs = map(compile_repl_pattern, cleanup_subs)
+    (KWS_OPERATORS + r'\s?([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])',
+     r'\1 \2\3\4')]
+CLEANUP_SUBS = list((re.compile(regexp), repl)
+                    for regexp, repl in CLEANUP_SUBS)
 
-
-#word =
-tokenizer_patterns = \
+TOKENIZER_PATTERNS = \
     r'''
-    "[^"]+" %(kws_operators)s %(word)s | # word in brackets plus operators
+    "[^"]+" %(KWS_OPERATORS)s %(WORD)s | # word in brackets plus operators
     "[^"]+"  |  # word in brackets
 
-    '[^']+' %(kws_operators)s %(word)s | # word in brackets plus operators
+    '[^']+' %(KWS_OPERATORS)s %(WORD)s | # word in brackets plus operators
     '[^']+'  |  # word in brackets
 
-    %(word)s %(kws_operators)s %(word)s | # word op word
-    %(word)s | # word
+    %(WORD)s %(KWS_OPERATORS)s %(WORD)s | # word op word
+    %(WORD)s | # word
     \S+" # any other non-whitespace sequence
     ''' % locals()
-
-tokenizer_patterns = convert_regexp_to_nongrouping(tokenizer_patterns)
-tokenizer_patterns = re.compile(tokenizer_patterns, re.VERBOSE)
-
-
-
-
+TOKENIZER_PATTERNS = convert_regexp_to_nongrouping(TOKENIZER_PATTERNS)
+TOKENIZER_PATTERNS = re.compile(TOKENIZER_PATTERNS, re.VERBOSE)
 
 
 def cleanup_query(query):
@@ -88,15 +76,8 @@ def cleanup_query(query):
     >>> cleanup_query('number of events >    33')
     'number of events>33'
 
-    # TODO: new trouble
-    number of events more than 33
-    with more events than 33
-    with more than 33 events
-    with 100 or more events
-
     >>> cleanup_query('more than 33 events')
     '>33 events'
-
 
     >>> cleanup_query('X more than 33 events')
     'X>33 events'
@@ -109,13 +90,11 @@ def cleanup_query(query):
 
     >>> cleanup_query('>= 2012-02-01')
     '>= 20120201'
-
     """
 
-    for regexp, repl in cleanup_subs:
+    for regexp, repl in CLEANUP_SUBS:
         query = re.sub(regexp, repl, query)
     return query
-
 
 
 def get_keyword_without_operator(keyword):
@@ -130,32 +109,20 @@ def get_keyword_without_operator(keyword):
 
     >>> get_keyword_without_operator('dataset=Zmm')
     'dataset'
-
-    # TODO: aggregators
-    #TODO: >>> get_keyword_without_operator('average number of events')
-    'number of events'
-
-    # TODO: >>> get_keyword_without_operator('avg dataset size')
-    'dataset size'
-
-    # TODO: >>> get_keyword_without_operator('order by number of events')
-    'number of events'
     """
     #global kws_operators
-    res = re.split(kws_operators, keyword)[0].strip()
+    res = re.split(KWS_OPERATORS, keyword)[0].strip()
 
     # check for containment of aggregators
-    # TODO: this could yield multiple interpretations, so far we ignore that!!!
-
     if AGGREGATORS_ENABLED:
-        for op in aggr_operators:
-            synonyms = op['synonyms_all']
+        for operator in AGGR_OPERATORS:
+            synonyms = operator['synonyms_all']
             for syn in synonyms:
                 if res.startswith(syn):
                     return res.replace(syn, '').strip()
 
-
     return res
+
 
 def test_operator_containment(keyword):
     """
@@ -170,8 +137,7 @@ def test_operator_containment(keyword):
     False
 
     """
-    return bool(re.findall(kws_operators, keyword))
-
+    return bool(re.findall(KWS_OPERATORS, keyword))
 
 
 def get_operator_and_param(keyword):
@@ -186,21 +152,9 @@ def get_operator_and_param(keyword):
 
     >>> get_operator_and_param('dataset=Zmm')
     {'type': 'filter', 'param': 'Zmm', 'op': '='}
-
-
-    # TODO: >>> get_operator_and_param('average file size')
-    {'type': 'aggregator', 'op_pattern': 'avg(%(field)s)', 'op': 'avg'}
-
-    # TODO: >>> get_operator_and_param('avg file size')
-    {'type': 'aggregator', 'op_pattern': 'avg(%(field)s)', 'op': 'avg'}
-
-
-    # TODO: >>> get_operator_and_param('min file size')
-    {'type': 'aggregator', 'op_pattern': 'min(%(field)s)', 'op': 'min'}
-
     """
 
-    parts = re.split(kws_operators, keyword)
+    parts = re.split(KWS_OPERATORS, keyword)
     # e.g. parts = ['number of events ', '>=', ' 10']
     if len(parts) == 3:
         return {'op': parts[1].strip(),
@@ -208,19 +162,17 @@ def get_operator_and_param(keyword):
                 'type': 'filter'}
 
     # aggregator
-    if len(parts) ==1 and AGGREGATORS_ENABLED:
-        for op in aggr_operators:
-            synonyms = op['synonyms_all']
+    if len(parts) == 1 and AGGREGATORS_ENABLED:
+        for operator in AGGR_OPERATORS:
+            synonyms = operator['synonyms_all']
             for syn in synonyms:
                 if keyword.startswith(syn):
                     return {
-                        'op': op['name'],
-                        'op_pattern': op['op'],
-                        'type': op['type'],
+                        'op': operator['name'],
+                        'op_pattern': operator['op'],
+                        'type': operator['type'],
                     }
-                    # keyword.replace(syn, '').strip()
 
-    #print parts
     return None
 
 
@@ -237,39 +189,40 @@ def tokenize(query):
 
     For example:
 
-    >>> tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10 "number of events">10 /Zmm*/*/raw-reco')
-    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'nevents>10', 'number of events>10', '/Zmm*/*/raw-reco']
+    >>> tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10'\
+                 '"number of events">10 /Zmm*/*/raw-reco')
+    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'nevents>10', \
+'number of events>10', '/Zmm*/*/raw-reco']
 
-    >>> tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10 "number of events">10 /Zmm*/*/raw-reco')
-    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'dataset.nevents>10', 'number of events>10', '/Zmm*/*/raw-reco']
+    >>> tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10'\
+                 '"number of events">10 /Zmm*/*/raw-reco')
+    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'dataset.nevents>10', \
+'number of events>10', '/Zmm*/*/raw-reco']
 
-    >>> tokenize("file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10 'number of events'>10 /Zmm*/*/raw-reco")
-    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'dataset.nevents>10', 'number of events>10', '/Zmm*/*/raw-reco']
+    >>> tokenize("file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10" \
+                 "'number of events'>10 /Zmm*/*/raw-reco")
+    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'dataset.nevents>10', \
+'number of events>10', '/Zmm*/*/raw-reco']
 
 
     >>> tokenize('user=vidmasze@cern.ch')
     ['user=vidmasze@cern.ch']
 
-    # TODO: this is not currently implemented in DASQL: >>> tokenize('field="long value"')
-    ['field=long value']
     """
-    #TODO: if needed we may add support for parentesis e.g. sum(number of events)
-
-    #global kws_operators
-    #operators = kws_operators
-
     query = cleanup_query(query)
-    # first remove extra spaces
-    #operators = r'[=><]{1,2}'
-
-    # TODO: remove brackets?
-
-    return [m.replace('"', '').replace("'", '') for m in re.findall(tokenizer_patterns,  query)]
+    # obtain bare tokens which include quotes
+    token_matches = re.findall(TOKENIZER_PATTERNS,  query)
+    # remove unneeded quotes
+    tokens = [m.replace('"', '').replace("'", '')
+              for m in token_matches]
+    return tokens
 
 if __name__ == '__main__':
-    print tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10 "number of events">10 /Zmm*/*/raw-reco')
-    print tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10 "number of events">10 /Zmm*/*/raw-reco')
-    print tokenize("file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10 'number of events'>10 /Zmm*/*/raw-reco")
+    print tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10 '
+                   '"number of events">10 /Zmm*/*/raw-reco')
+    print tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10'
+                   ' "number of events">10 /Zmm*/*/raw-reco')
+    print tokenize("file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10"
+                   " 'number of events'>10 /Zmm*/*/raw-reco")
     import doctest
     doctest.testmod()
-
