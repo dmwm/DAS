@@ -93,17 +93,28 @@ def read_service_map(filename, field="uri"):
             if  validator(record):
                 yield record
 
+def add_record_type(record):
+    """Add record type to DAS record"""
+    if  'presentation' in record:
+        record.update({'type':'presentation'})
+    elif 'notations' in record:
+        record.update({'type':'notation'})
+    else:
+        record.update({'type':'service'})
+
 def validator(record):
     """
     DAS map validator
     """
+    add_record_type(record)
     add_hash(record)
+    must_have_keys = ['type']
     if  'notations' in record:
-        must_have_keys = ['system', 'notations', 'ts', 'hash']
+        must_have_keys += ['system', 'notations', 'ts', 'hash']
     elif 'presentation' in record:
-        must_have_keys = ['presentation', 'ts', 'hash']
+        must_have_keys += ['presentation', 'ts', 'hash']
     else:
-        must_have_keys = ['system', 'format', 'urn', 'url', 'expire',
+        must_have_keys += ['system', 'format', 'urn', 'url', 'expire',
                             'params', 'das_map', 'ts', 'hash']
     if  set(record.keys()) & set(must_have_keys) != set(must_have_keys):
         return False
