@@ -436,7 +436,8 @@ class DASWebService(DASWebManager):
             return
         new_input = free_text_parser(uinput, self.daskeys)
         if  uinput and new_input == uinput:
-            selkey = choose_select_key(uinput, self.daskeys, 'dataset')
+            default = 'dataset' if '=' not in uinput else None
+            selkey = choose_select_key(uinput, self.daskeys, default)
             if  selkey and len(new_input) > len(selkey) and \
                 new_input[:len(selkey)] != selkey:
                 new_input = selkey + ' ' + new_input
