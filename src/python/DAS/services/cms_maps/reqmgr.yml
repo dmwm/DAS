@@ -2,6 +2,17 @@
 system : reqmgr
 format : JSON
 ---
+urn: configs
+url : "https://cmsweb.cern.ch/couchdb/reqmgr_config_cache"
+expire : 900
+params : {"dataset": "required"}
+lookup : config
+das_map : [
+    {"das_key":"config", "rec_key":"config.name"},
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
 urn: inputdataset
 url : "https://cmsweb.cern.ch/reqmgr/rest/inputdataset"
 expire : 900
