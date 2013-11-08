@@ -5,6 +5,35 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 2.3.X
+
+  - Work on DAS deployment procedure
+
+    - two set of DAS maps (one for production URLs and another for testbed)
+
+  - Separate DAS web server with KWS one
+
+    - run KWS on dedicated port (8214) with single-threaded DASCore
+
+  - Assign type for records in mapping db; DASMapping code re-factoring to
+    reduce latency of the queries
+  - Fix query default assignment (issue #4055)
+  - Provide ability to look-up config files used by ReqMgr for dataset
+    creation (issue #4045)
+  - Add clean-up worker for DAS caches; fixed #4050
+  - Additional work on stability of DAS server under high-load (issue #4024)
+
+    - add exhaust option to all MongoDB find calls
+    - add index for mapping db
+    - add DAS clean-up daemon, issue #4050
+    - reduce pagination usage
+    - increase MongoDB pool size, turn on auto_start_request and safe option
+      for MongoClient
+    - step away from db connection singleton
+
+  - Add outputdataset API for ReqMgr data-service (issue #4043)
+  - Fix python3 warnings
+
 - 2.2.X
 
   - Fixed MCM prepid issue, switch to produces rest API
