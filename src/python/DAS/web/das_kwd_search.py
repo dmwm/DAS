@@ -11,6 +11,7 @@ import cgi
 import math
 
 from DAS.keywordsearch.search import KeywordSearch
+from DAS.utils.das_config import das_readconfig
 
 avg = lambda l: len(l) and float(sum(l))/len(l)
 
@@ -23,6 +24,9 @@ class KeywordSearchHandler(object):
         if not dascore:
             raise Exception("dascore needed")
         self.kws = KeywordSearch(dascore)
+        config = das_readconfig()
+        self.colored_scorebar = \
+            config['keyword_search'].get('colored_scorebar', False)
 
     @classmethod
     def _get_link_to_query(cls, query, kw_query=''):
@@ -40,8 +44,7 @@ class KeywordSearchHandler(object):
         das_url = '/das/request?' + urllib.urlencode(params)
         return das_url
 
-    @classmethod
-    def _prepare_score_bar(cls, q):
+    def _prepare_score_bar(self, q):
         """
         prepares the score bar for each query (max_w & w is in pixels)
         """
@@ -53,7 +56,7 @@ class KeywordSearchHandler(object):
                       (score < 0.60) and 'avg' or 'high'
         return {'max_w': max_w,
                 'w': w,
-                'style': color_class,
+                'style': self.colored_scorebar and color_class or 'no-color',
                 'score': q['len_normalized_score']}
 
     @classmethod

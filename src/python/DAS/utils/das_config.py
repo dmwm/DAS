@@ -201,6 +201,8 @@ DASOption('keyword_search', 'kws_service_on', 'bool', False),
 # max time for exhaustive search ranker, default 5 seconds
 DASOption('keyword_search', 'timeout', 'int', 5),
 DASOption('keyword_search', 'show_scores', 'bool', False),
+DASOption('keyword_search', 'colored_scorebar', 'bool', False),
+
 
 #
 # Load balancing
