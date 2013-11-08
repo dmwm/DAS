@@ -671,7 +671,7 @@ class DASMapping(object):
         Return DAS notation map.
         """
         notationmap = {}
-        spec = {'type':'notations'}
+        spec = {'type':'notation'}
         if  system:
             spec['system'] = system
         for item in self.col.find(spec, exhaust=True):
