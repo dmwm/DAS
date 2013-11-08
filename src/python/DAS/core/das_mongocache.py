@@ -26,7 +26,6 @@ import threading
 # DAS modules
 from DAS.core.das_ql import das_record_keys
 from DAS.core.das_son_manipulator import DAS_SONManipulator
-from DAS.core.das_query import DASQuery
 from DAS.utils.query_utils import decode_mongo_query
 from DAS.utils.ddict import convert_dot_notation
 from DAS.utils.utils import aggregator, unique_filter
@@ -252,7 +251,7 @@ class DASMongocache(object):
             # On another hand, the most common use case where sort fails is
             # getting file records, and I can add one compound key to ease sort
             # but I can't add another compound key on array field, e.g. run
-            common_idx = [[('qhash',DESCENDING), ('file.name', DESCENDING)]]
+            common_idx = [[('qhash', DESCENDING), ('file.name', DESCENDING)]]
             create_indexes(self.merge, index_list + common_idx)
 #            print "### DASMongocache:init started successfully"
         except ConnectionFailure as _err:
@@ -491,7 +490,8 @@ class DASMongocache(object):
                          '$push': {'das.ctime':ctime}}
                 self.col.update(das_spec, udict)
         else:
-            udict = {'$set': {'das.status':status}, '$push': {'das.ctime':ctime}}
+            udict = {'$set': {'das.status':status},
+                     '$push': {'das.ctime':ctime}}
             self.col.update(das_spec, udict)
         if  reason:
             udict = {'$set': {'das.reason':reason}}
@@ -611,8 +611,8 @@ class DASMongocache(object):
 
     def existing_indexes(self, collection='merge'):
         """
-        Get list of existing indexes in DB. They are returned by index_information
-        API in the following for:
+        Get list of existing indexes in DB. They are returned by
+        index_information API in the following for:
 
         .. doctest::
 
