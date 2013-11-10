@@ -119,7 +119,6 @@ class DASMapping(object):
         self.notationcache = {}        # to be filled at run time
         self.diffkeycache = {}         # to be filled at run time
         self.apicache = {}             # to be filled at run time
-        self.apiinfocache = {}         # to be filled at run time
         self.dbs_global_url = None     # to be determined at run time
         self.dbs_inst_names = None     # to be determined at run time
         self.load_maps()
@@ -148,11 +147,6 @@ class DASMapping(object):
             if  'urn' in row:
                 api = row['urn']
                 srv = row['system']
-                if  (srv, api) in self.apiinfocache:
-                    msg = 'Duplicate API name in DAS cache: %s system %s api' \
-                            % (srv, api)
-                    raise Exception(msg)
-                self.apiinfocache[(srv, api)] = row
                 for dmap in row['das_map']:
                     for key, val in dmap.iteritems():
                         if  key == 'pattern':
@@ -402,9 +396,7 @@ class DASMapping(object):
         """
         Return full API info record.
         """
-        if  (srv, api_name) not in self.apiinfocache:
-            self.apiinfocache[(srv, api_name)] = self.col.find_one({'urn':api_name})
-        return self.apiinfocache[(srv, api_name)]
+        return self.dasmapscache[(srv, api_name)]
 
     def relational_keys(self, system1, system2):
         """
