@@ -94,7 +94,7 @@ def main():
             mgr.add(rec)
             count += 1
         if  system: # uri map must have sytsem
-            arecord = {'type':'uri', 'count':count, 'system': system}
+            arecord = {'type':'service', 'count':count, 'system': system}
             mgr.add(dict(arecord=arecord))
 
     if  opts.nmap:
@@ -109,7 +109,7 @@ def main():
             mgr.add(rec)
             count += 1
         if  system: # notations map must have system
-            arecord = {'type':'notations', 'count':count, 'system': system}
+            arecord = {'type':'notation', 'count':count, 'system': system}
             mgr.add(dict(arecord=arecord))
 
     if  opts.pmap:

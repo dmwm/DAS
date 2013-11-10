@@ -47,7 +47,7 @@ def main():
             count += 1
             system = rec['system']
         if  system: # notations map must have system
-            arecord = {'type': 'uri', 'count': count, 'system': system}
+            arecord = {'type': 'service', 'count': count, 'system': system}
             print json.dumps(dict(arecord=arecord))
 
     if  opts.nmap:
@@ -58,7 +58,7 @@ def main():
             count += 1
             system = rec['system']
         if  system: # notations map must have system
-            arecord = {'type': 'notations', 'count': count, 'system': system}
+            arecord = {'type': 'notation', 'count': count, 'system': system}
             print json.dumps(dict(arecord=arecord))
 
     if  opts.pmap:
