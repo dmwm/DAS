@@ -16,7 +16,7 @@ import urllib2
 import itertools
 
 # MongoDB modules
-from pymongo.errors import InvalidOperation
+from pymongo.errors import InvalidOperation, PyMongoError
 from pymongo import ASCENDING
 
 # DAS modules
@@ -189,7 +189,7 @@ class DBSDaemon(object):
                 else:
                     for row in col.find(spec).skip(idx).limit(limit):
                         yield row['dataset']
-            except BaseException as exc:
+            except Exception as exc:  # we shall not catch GeneratorExit
                 print_exc(exc)
 
     def datasets(self):
@@ -300,8 +300,8 @@ def initialize_global_dbs_mngr(update_required=False):
     Gets a DBSDaemon for global DBS and fetches the data if needed.
     *Used for testing purposes only*.
     """
-    from DAS.utils.das_config import das_readconfig
     from DAS.core.das_mapping_db import DASMapping
+
     dasconfig = das_readconfig()
     dasmapping = DASMapping(dasconfig)
 
@@ -316,3 +316,13 @@ def initialize_global_dbs_mngr(update_required=False):
         print 'fetching datasets from global DBS...'
         dbsmgr.update()
     return dbsmgr
+
+
+def get_global_dbs_inst():
+    """
+    gets the name of global dbs instance
+    """
+    from DAS.core.das_mapping_db import DASMapping
+    dasconfig = das_readconfig()
+    dasmapping = DASMapping(dasconfig)
+    return dasmapping.dbs_global_instance()

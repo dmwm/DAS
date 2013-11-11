@@ -95,12 +95,12 @@ class KeywordSearchHandler(object):
         hi_score_result_types.append('any')
         return hi_score_result_types
 
-    def handle_search(self, webm, query, dbsmngr, is_ajax=False, timeout=5,
+    def handle_search(self, webm, query, dbs_inst, is_ajax=False, timeout=5,
                       show_score=False):
         """
         performs the search, and renders the search results
         """
-        err, proposed_queries = self.kws.search(query, dbsmngr=dbsmngr,
+        err, proposed_queries = self.kws.search(query, dbs_inst=dbs_inst,
                                                 timeout=timeout)
 
         # get top 5 entity types
