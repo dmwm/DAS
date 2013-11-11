@@ -14,7 +14,7 @@ import doctest
 
 from   DAS.core.das_query import DASQuery
 import DAS.core.das_process_dataset_wildcards as dataset_wildcards
-
+from DAS.web.dbs_daemon import initialize_global_dbs_mngr
 
 
 class TestDASDatasetWildcards(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestDASDatasetWildcards(unittest.TestCase):
         # set up only once
         if not self.global_dbs_inst:
             self.global_dbs_inst = \
-                dataset_wildcards.get_global_dbs_mngr()
+                initialize_global_dbs_mngr()
 
     def test_doctests(self):
         """

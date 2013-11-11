@@ -27,6 +27,7 @@ from DAS.utils.das_db import db_monitor
 from DAS.utils.utils import get_key_cert, genkey
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
+from DAS.utils.das_config import das_readconfig
 
 
 SKIP_UPDATES = 0
@@ -156,6 +157,41 @@ class DBSDaemon(object):
             except:
                 pass
 
+    @staticmethod
+    def find_static(pattern, dbs_instance, dbname= 'dbs', idx=0, limit=10):
+        """
+        Find datasets for a given pattern. The idx/limit parameters
+        control number of retrieved records (aka pagination). The
+        limit=-1 means no pagination (get all records).
+        """
+
+        config = das_readconfig()
+        dburi = config['mongodb']['dburi']
+        conn = db_connection(dburi)
+        # TODO: dbname is not passed so taken default, and not set in any config
+        #dbname = config.get('dbname', 'dbs')
+        dbcol = dbs_instance
+        # TODO: validate DBS instance name, but it's dasmapping.dbs_instances()
+        # so probably it must be validated from outside
+        col = conn[dbname][dbcol]
+
+        if col:
+            try:
+                if len(pattern) > 0 and pattern[0] == '/':
+                    pattern = '^%s' % pattern
+                if pattern.find('*') != -1:
+                    pattern = pattern.replace('*', '.*')
+                pat = re.compile('%s' % pattern, re.I)
+                spec = {'dataset': pat}
+                if limit == -1:
+                    for row in col.find(spec):
+                        yield row['dataset']
+                else:
+                    for row in col.find(spec).skip(idx).limit(limit):
+                        yield row['dataset']
+            except BaseException as exc:
+                print_exc(exc)
+
     def datasets(self):
         """
         Retrieve a list of DBS datasets (DBS2)
@@ -236,10 +272,18 @@ def test(dbs_url):
     for row in mgr.find('zee*summer', idx, limit):
         print row
 
+
 def test_dbs2():
     "Test dbs2 service"
     url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
     test(url)
+
+
+def test_find_static():
+    """ Test the standalone find() """
+    for row in DBSDaemon.find_static('*Zmm*', dbs_instance='cms_dbs_prod_global'):
+        print row
+
 
 def test_dbs3():
     "Test dbs3 service"
@@ -248,3 +292,27 @@ def test_dbs3():
 
 if __name__ == '__main__':
     test_dbs2()
+    test_find_static()
+
+
+def initialize_global_dbs_mngr(update_required=False):
+    """
+    Gets a DBSDaemon for global DBS and fetches the data if needed.
+    *Used for testing purposes only*.
+    """
+    from DAS.utils.das_config import das_readconfig
+    from DAS.core.das_mapping_db import DASMapping
+    dasconfig = das_readconfig()
+    dasmapping = DASMapping(dasconfig)
+
+    dburi = dasconfig['mongodb']['dburi']
+    dbsexpire = dasconfig.get('dbs_daemon_expire', 3600)
+    main_dbs_url = dasmapping.dbs_url()
+    dbsmgr = DBSDaemon(main_dbs_url, dburi, {'expire': dbsexpire,
+                                             'preserve_on_restart': True})
+
+    # if we have no datasets (fresh DB, fetch them)
+    if update_required or not next(dbsmgr.find('*Zmm*'), False):
+        print 'fetching datasets from global DBS...'
+        dbsmgr.update()
+    return dbsmgr
