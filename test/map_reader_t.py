@@ -27,16 +27,17 @@ class testDBS(unittest.TestCase):
             "wild_card": "*",
             "lookup": "site",
             "das_map": [{"rec_key": "site.name", "das_key": "site", "api_arg": "name"}],
-            "ts": 123
+            "ts": 123,
+            "type":"service"
         }
         self.presentation = {"presentation": 
                 {"city": [{"ui": "City", "das": "city.name"}, 
                           {"ui": "Address", "das": "city.Placemark.address"}]},
-                "ts":123}
+                "ts":123, "type": "presentation"}
         self.notations = {"notations": 
                 [{"rec_key": "name", "api": "", "api_output": "cmsname"}, 
                  {"rec_key": "name", "api": "", "api_output": "cms_name"}], 
-                "system": "sitedb", "ts": 123}
+                "system": "sitedb", "ts": 123, "type": "notation"}
 
     def testReader(self): 
         """test read_service_map function"""

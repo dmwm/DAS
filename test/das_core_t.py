@@ -25,7 +25,7 @@ class testDASCore(unittest.TestCase):
         set up DAS core module
         """
         debug = 0
-        self.das = DASCore(debug=debug)
+        self.das = DASCore(debug=debug, multitask=False)
         config = deepcopy(das_readconfig())
         dburi = config['mongodb']['dburi']
         connection = Connection(dburi)
@@ -55,12 +55,13 @@ class testDASCore(unittest.TestCase):
         self.assertEqual(expect, result)
 
         # test results
-        query  = "ip=137.138.141.145 | grep ip.City"
+        ipaddr = '137.138.141.145'
+        query  = "ip=%s | grep ip.address" % ipaddr
         dquery = DASQuery(query)
         result = self.das.get_from_cache(dquery)
         result = [r for r in result][0]
-        result = DotDict(result).get('ip.City')
-        expect = 'Geneva'
+        result = DotDict(result).get('ip.address')
+        expect = ipaddr
         self.assertEqual(expect, result)
 
 #

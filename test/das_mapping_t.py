@@ -13,7 +13,7 @@ from DAS.utils.logger import PrintManager
 from DAS.utils.utils import deepcopy
 from DAS.core.das_mapping_db import DASMapping
 
-from pymongo.connection import Connection
+from pymongo import MongoClient
 
 class testDASMapping(unittest.TestCase):
     """
@@ -34,11 +34,11 @@ class testDASMapping(unittest.TestCase):
         collname = 'db'
         config['mappingdb'] = dict(dburi=dburi, dbname=dbname, collname=collname)
         # add some maps to mapping db
-        conn = Connection(dburi)
+        conn = MongoClient(dburi)
         conn.drop_database(dbname)
         self.coll = conn[dbname][collname]
         self.pmap = {"presentation": {"block":[{"ui": "Block name", "das": "block.name"},
-        {"ui": "Block size", "das": "block.size"}]}}
+            {"ui": "Block size", "das": "block.size"}]}, "type": "presentation"}
         self.coll.insert(self.pmap)
 
         self.mgr = DASMapping(config)
@@ -62,6 +62,7 @@ class testDASMapping(unittest.TestCase):
         rec = {'system':'dbs', 'urn':api, 'format':dformat, 'url':url,
             'params': params, 'expire':expire, 'lookup': 'run', 'wild_card':'*',
             'das_map' : [dict(das_key='run', rec_key='run.run_number', api_arg='path')],
+            'type': 'service'
         }
         self.mgr.add(rec)
         smap = {api: {'url':url, 'expire':expire, 'keys': ['run'],
@@ -82,6 +83,7 @@ class testDASMapping(unittest.TestCase):
                  {'das_key':'site', 'rec_key':'site.se', 'api_arg':'storage_element_name',
                   'pattern':"re.compile('([a-zA-Z0-9]+\.){2}')"},
                  ],
+             'type': 'service'
         }
         self.mgr.add(rec)
 
@@ -115,7 +117,7 @@ class testDASMapping(unittest.TestCase):
         self.assertEqual([daskey], res)
 
         # adding notations
-        notations = {'system':system,
+        notations = {'system':system, 'type': 'notation',
             'notations':[
                     {'api_output':'storage_element_name', 'rec_key':'se', 'api':''},
                     {'api_output':'number_of_events', 'rec_key':'nevents', 'api':''},
@@ -145,7 +147,6 @@ class testDASMapping(unittest.TestCase):
     def test_presentation(self):
         """test presentation method"""
         self.mgr.init()
-        self.coll.insert(self.pmap)
         expect = self.pmap['presentation']['block']
         result = self.mgr.presentation('block')
         self.assertEqual(expect, result)
@@ -158,7 +159,7 @@ class testDASMapping(unittest.TestCase):
         {"api_output": "site.resource_element.cms_name", "rec_key": "site.name", "api": ""},
         {"api_output": "site.resource_pledge.cms_name", "rec_key": "site.name", "api": ""},
         {"api_output": "admin.contacts.cms_name", "rec_key":"site.name", "api":""}
-        ], "system": system}
+        ], "system": system, "type": "notation"}
         self.mgr.add(rec)
         expect = rec['notations']
         result = self.mgr.notations(system)[system]
