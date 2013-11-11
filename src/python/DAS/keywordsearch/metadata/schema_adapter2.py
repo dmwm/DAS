@@ -162,14 +162,19 @@ class DasSchemaAdapter(object):
 
         params_list = []
         for p in api_inputs:
-            param_constr = p.get('pattern', '')
             param_def = {
                 'api': api,
                 'system': sys,
                 'key': p['das_key'],
                 'entity_long': p['rec_key'],
-                'constr': param_constr,
+                'constr': '',
+                'regex_compiled': None,
                 'lookup': lookup_key}
+            # the patterns defining the inputs accepted are compiled-regexps
+            if 'pattern' in p:
+                regex = p['pattern']
+                param_def['regex_compiled'] = regex
+                param_def['constr'] = regex.pattern
             params_list.append(param_def)
 
         return api_def, params_list
