@@ -12,7 +12,7 @@ Description: The class handles the wildcard search for dataset,
 import re
 import string
 
-from DAS.web.dbs_daemon import DBSDaemon, initialize_global_dbs_mngr
+from DAS.web.dbs_daemon import initialize_global_dbs_mngr, find_datasets
 from DAS.utils.regex import DATASET_FORBIDDEN_SYMBOLS
 # should we simplify the wildcard replacement, if all its matches are similar
 # in some way (equality, same beginning or end)
@@ -62,7 +62,7 @@ def extract_wildcard_patterns(dbs_inst, pattern):
     """
     # get matching datasets from out cache (through dbs manager instance)
     dbs_mngr_query = pattern
-    dataset_matches = DBSDaemon.find_static(dbs_mngr_query, dbs_inst, limit=-1)
+    dataset_matches = find_datasets(dbs_mngr_query, dbs_inst, limit=-1)
 
     # we will use these regexps  to extract different dataset patterns
     pat_re = '^' + pattern.replace('*', '(.*)') + '$'
@@ -140,25 +140,26 @@ def process_dataset_wildcards(pattern, dbs_inst):
         while '*Zmm*' would still give: ['/*/*Zmm*/*', '/*Zmm*/*/*']
 
     Tests:
+    >>> dbs_inst='cms_dbs_prod_global'
 
-    >>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbsmgr)
+    >>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbs_inst)
     [u'/RelValZmm*/CMSSW*/*RECO']
 
-    >>> process_dataset_wildcards('*Zmm*', dbsmgr)
+    >>> process_dataset_wildcards('*Zmm*', dbs_inst)
     ['/*/*Zmm*/*', '/*Zmm*/*/*']
 
-    >>> process_dataset_wildcards('*herwig*/AODSIM', dbsmgr)
+    >>> process_dataset_wildcards('*herwig*/AODSIM', dbs_inst)
     ['/*herwig*/*/AODSIM']
 
-    >>> process_dataset_wildcards('*Zjkjmm*', dbsmgr)
+    >>> process_dataset_wildcards('*Zjkjmm*', dbs_inst)
     []
 
-    >>> process_dataset_wildcards('*RelValPyquen_ZeemumuJets_pt10_2760GeV*', dbsmgr)
+    >>> process_dataset_wildcards('*RelValPyquen_ZeemumuJets_pt10_2760GeV*', dbs_inst)
     [u'/RelValPyquen_ZeemumuJets_pt10_2760GeV/*/*']
 
     An example of input which is NOT currently converted into a wildcard one
     (but may be done later)
-    >>> process_dataset_wildcards('RelValPyquen_ZeemumuJets_pt10_2760GeV', dbsmgr)
+    >>> process_dataset_wildcards('RelValPyquen_ZeemumuJets_pt10_2760GeV', dbs_inst)
     []
 
     (giving [], instead of: [u'/RelValPyquen_ZeemumuJets_pt10_2760GeV/*/*'])
@@ -225,9 +226,7 @@ def test():
     # make sure DBS dataset cache is initialized
     initialize_global_dbs_mngr(update_required=False)
     import doctest
-    myglobals = globals()
-    myglobals['dbsmgr'] = 'cms_dbs_prod_global'
-    doctest.testmod(globs=myglobals, verbose=True)
+    doctest.testmod(verbose=True)
 
 if __name__ == "__main__":
     test()

@@ -12,13 +12,14 @@ import doctest
 
 # DAS modules
 
-from   DAS.core.das_query import DASQuery
+from DAS.core.das_query import DASQuery
 import DAS.core.das_process_dataset_wildcards as dataset_wildcards
 from DAS.web.dbs_daemon import initialize_global_dbs_mngr
+from DAS.web.dbs_daemon import get_global_dbs_inst
 
 
 class TestDASDatasetWildcards(unittest.TestCase):
-    global_dbs_inst = False
+    global_dbs_mngr = False
 
     def setUp(self):
         """
@@ -28,24 +29,19 @@ class TestDASDatasetWildcards(unittest.TestCase):
         print '\nsetUp: getting dbs manager to access current datasets '\
               '(and fetching them if needed)'
         # set up only once
-        if not self.global_dbs_inst:
-            self.global_dbs_inst = \
-                initialize_global_dbs_mngr()
+        if not self.global_dbs_mngr:
+            self.global_dbs_mngr = initialize_global_dbs_mngr()
+        self.dbs_inst = get_global_dbs_inst()
 
     def test_doctests(self):
         """
         runs doctests defined in DAS.core.das_process_dataset_wildcards
         """
-        # pass dbs manager
-
-        glob = dataset_wildcards.__dict__.copy()
-        glob['dbsmgr'] = self.global_dbs_inst
 
         # run the tests
-        (n_failures, n_tests) = \
-            doctest.testmod(globs = glob, verbose=True, m=dataset_wildcards)
+        (n_fails, n_tests) = doctest.testmod(verbose=True, m=dataset_wildcards)
 
-        self.assertEquals(n_failures, 0)
+        self.assertEquals(n_fails, 0)
 
     def test_dasquery(self):
         """
@@ -59,8 +55,7 @@ class TestDASDatasetWildcards(unittest.TestCase):
         # multiple interpretations
         msg = ''
         try:
-            DASQuery('dataset dataset=*Zmm*', \
-                active_dbsmgr=self.global_dbs_inst)
+            DASQuery('dataset dataset=*Zmm*', dbs_inst=self.dbs_inst)
         except Exception, exc:
             msg = str(exc)
 
@@ -69,8 +64,8 @@ class TestDASDatasetWildcards(unittest.TestCase):
         # none (no such dataset)
         msg = ''
         try:
-            DASQuery('dataset dataset=*Zmmdsjfdsjguuds*', \
-                active_dbsmgr=self.global_dbs_inst)
+            DASQuery('dataset dataset=*Zmmdsjfdsjguuds*',
+                     dbs_inst=self.dbs_inst)
         except Exception, exc:
             msg = str(exc)
 
@@ -80,10 +75,9 @@ class TestDASDatasetWildcards(unittest.TestCase):
         # one
         results = False
         try:
-            results = DASQuery('dataset dataset=/*Zmm*/*/*', \
-                active_dbsmgr=self.global_dbs_inst)
-
-        except Exception, exc:
+            results = DASQuery('dataset dataset=/*Zmm*/*/*',
+                               dbs_inst=self.dbs_inst)
+        except Exception as exc:
             results = False
 
         self.assertTrue([results])
@@ -93,7 +87,6 @@ class TestDASDatasetWildcards(unittest.TestCase):
     # no dataset matching
     # more than more interpretation available
     # only one interpretation (standard query execution)
-
 
 
 if __name__ == '__main__':

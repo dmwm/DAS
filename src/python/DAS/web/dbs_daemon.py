@@ -157,41 +157,6 @@ class DBSDaemon(object):
             except:
                 pass
 
-    @staticmethod
-    def find_static(pattern, dbs_instance, dbname= 'dbs', idx=0, limit=10):
-        """
-        Find datasets for a given pattern. The idx/limit parameters
-        control number of retrieved records (aka pagination). The
-        limit=-1 means no pagination (get all records).
-        """
-
-        config = das_readconfig()
-        dburi = config['mongodb']['dburi']
-        conn = db_connection(dburi)
-        # TODO: dbname is not passed so taken default, and not set in any config
-        #dbname = config.get('dbname', 'dbs')
-        dbcol = dbs_instance
-        # TODO: validate DBS instance name, but it's dasmapping.dbs_instances()
-        # so probably it must be validated from outside
-        col = conn[dbname][dbcol]
-
-        if col:
-            try:
-                if len(pattern) > 0 and pattern[0] == '/':
-                    pattern = '^%s' % pattern
-                if pattern.find('*') != -1:
-                    pattern = pattern.replace('*', '.*')
-                pat = re.compile('%s' % pattern, re.I)
-                spec = {'dataset': pat}
-                if limit == -1:
-                    for row in col.find(spec):
-                        yield row['dataset']
-                else:
-                    for row in col.find(spec).skip(idx).limit(limit):
-                        yield row['dataset']
-            except Exception as exc:  # we shall not catch GeneratorExit
-                print_exc(exc)
-
     def datasets(self):
         """
         Retrieve a list of DBS datasets (DBS2)
@@ -262,6 +227,42 @@ class DBSDaemon(object):
             yield rec
         stream.close()
 
+
+def find_datasets(pattern, dbs_instance, dbname= 'dbs', idx=0, limit=10):
+    """
+    Find datasets for a given pattern. The idx/limit parameters
+    control number of retrieved records (aka pagination). The
+    limit=-1 means no pagination (get all records).
+    """
+
+    config = das_readconfig()
+    dburi = config['mongodb']['dburi']
+    conn = db_connection(dburi)
+    # TODO: dbname is not passed so taken default, and not set in any config
+    #dbname = config.get('dbname', 'dbs')
+    dbcol = dbs_instance
+    # TODO: validate DBS instance name, but it's dasmapping.dbs_instances()
+    # so probably it must be validated from outside
+    col = conn[dbname][dbcol]
+
+    if col:
+        try:
+            if len(pattern) > 0 and pattern[0] == '/':
+                pattern = '^%s' % pattern
+            if pattern.find('*') != -1:
+                pattern = pattern.replace('*', '.*')
+            pat = re.compile('%s' % pattern, re.I)
+            spec = {'dataset': pat}
+            if limit == -1:
+                for row in col.find(spec, exhaust=True):
+                    yield row['dataset']
+            else:
+                for row in col.find(spec, exhaust=True).skip(idx).limit(limit):
+                    yield row['dataset']
+        except Exception as exc:  # we shall not catch GeneratorExit
+            print_exc(exc)
+
+
 def test(dbs_url):
     "Test function"
     uri = 'mongodb://localhost:8230'
@@ -281,7 +282,7 @@ def test_dbs2():
 
 def test_find_static():
     """ Test the standalone find() """
-    for row in DBSDaemon.find_static('*Zmm*', dbs_instance='cms_dbs_prod_global'):
+    for row in find_datasets('*Zmm*', dbs_instance='cms_dbs_prod_global'):
         print row
 
 
@@ -289,10 +290,6 @@ def test_dbs3():
     "Test dbs3 service"
     url = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/'
     test(url)
-
-if __name__ == '__main__':
-    test_dbs2()
-    test_find_static()
 
 
 def initialize_global_dbs_mngr(update_required=False):
@@ -326,3 +323,8 @@ def get_global_dbs_inst():
     dasconfig = das_readconfig()
     dasmapping = DASMapping(dasconfig)
     return dasmapping.dbs_global_instance()
+
+
+if __name__ == '__main__':
+    test_dbs2()
+    test_find_static()
