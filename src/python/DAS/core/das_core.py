@@ -22,7 +22,6 @@ import itertools
 # DAS modules
 from DAS.core.das_ql import das_operators, das_special_keys
 from DAS.core.das_query import DASQuery
-from DAS.core.das_parser import ql_manager
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_keylearning import DASKeyLearning
@@ -133,9 +132,6 @@ class DASCore(object):
         self.analytics = DASAnalytics(dasconfig)
         dasconfig['dasanalytics'] = self.analytics
 
-        self.mongoparser = ql_manager(dasconfig)
-        dasconfig['mongoparser'] = self.mongoparser
-
         self.keylearning = DASKeyLearning(dasconfig)
         dasconfig['keylearning'] = self.keylearning
 
@@ -219,7 +215,7 @@ class DASCore(object):
         """
         self.logger.info('input query=%s' % query)
         results = []
-        dasquery = DASQuery(query, mongoparser=self.mongoparser)
+        dasquery = DASQuery(query)
         dasquery.add_to_analytics()
         query    = dasquery.mongo_query
         # check if we have any service which cover the query
@@ -232,8 +228,7 @@ class DASCore(object):
             if  not skeys:
                 skeys = []
             for key in skeys:
-                newquery = DASQuery(dict(fields=[key], spec=query['spec']),
-                                        mongoparser=self.mongoparser)
+                newquery = DASQuery(dict(fields=[key], spec=query['spec']))
                 self.call(newquery) # process query
         else:
             self.call(dasquery) # process query
@@ -357,7 +352,7 @@ class DASCore(object):
             and query.__class__.__name__ == 'DASQuery':
             dasquery = query
         else:
-            dasquery = DASQuery(query, mongoparser=self.mongoparser)
+            dasquery = DASQuery(query)
         for col in ['merge', 'cache']:
             self.rawcache.remove_expired(dasquery, col)
         if  add_to_analytics:
