@@ -20,6 +20,9 @@ This release series is targeted to DAS production stability and quality.
   - Fix query default assignment (issue #4055)
   - Provide ability to look-up config files used by ReqMgr for dataset
     creation (issue #4045)
+
+    - Add config look-up for given dataset which bypass MCM data-service
+
   - Add clean-up worker for DAS caches; fixed #4050
   - Additional work on stability of DAS server under high-load (issue #4024)
 
