@@ -79,7 +79,7 @@ class ReqMgrService(DASAbstractService):
                 kwds['dataset'] = 'required' # we skip patterns
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
-        "DBS3 implementation of AbstractService:apicall method"
+        "ReqMgr implementation of AbstractService:apicall method"
         if  api == 'configs':
             time0 = time.time()
             dasrows = configs(url, args)
@@ -87,7 +87,7 @@ class ReqMgrService(DASAbstractService):
             self.write_to_cache(dasquery, expire, url, api, args,
                     dasrows, ctime)
         else:
-            super(DBS3Service, self).apicall(\
+            super(ReqMgrService, self).apicall(\
                     dasquery, url, api, args, dformat, expire)
 
     def getdata(self, url, params, expire, headers=None, post=None):
