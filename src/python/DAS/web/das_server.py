@@ -78,7 +78,7 @@ class Root(object):
                                    severity=logging.DEBUG,
                                    traceback=False)
 
-    def setup_kws_server(self, main_das_srv):
+    def setup_kws_server(self):
         """
         sets up the KWS server to run on a separate port
         """
@@ -87,7 +87,7 @@ class Root(object):
         if not self.config['keyword_search']['kws_service_on']:
             return
 
-        kws_service = KWSWebService(self.config, main_das_srv)
+        kws_service = KWSWebService(self.config)
         kws_wsgi_app = _cptree.Tree()
         kws_wsgi_app.mount(kws_service, '/das')
 
@@ -117,7 +117,7 @@ class Root(object):
         obj = DASWebService(self.config)
         tree.mount(obj, url_base) # mount web server
 
-        self.setup_kws_server(obj)
+        self.setup_kws_server()
 
         print "### DAS web server, PID=%s" % self.pid
         print pformat(tree.apps)

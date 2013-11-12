@@ -11,11 +11,14 @@ import unittest
 
 # DAS modules
 
-from DAS.core.das_process_dataset_wildcards import get_global_dbs_mngr
 from DAS.keywordsearch.search import KeywordSearch
 from DAS.utils.das_config import das_readconfig
 
 #globals
+from DAS.web.dbs_daemon import initialize_global_dbs_mngr
+from DAS.web.dbs_daemon import get_global_dbs_inst
+
+
 n_queries = 0
 n_queries_passed_at_1 = 0
 n_queries_passed_at = {}
@@ -64,7 +67,8 @@ class KwsTesterMetaClass(type):
 
         print 'setUp in metaclass: getting dbs manager '\
               '(and fetching datasets if needed)'
-        cls.global_dbs_inst = get_global_dbs_mngr(update_required=False)
+        cls.global_dbs_mngr = initialize_global_dbs_mngr(update_required=False)
+        cls.global_dbs_inst = get_global_dbs_inst()
         cls.kws = KeywordSearch(dascore=None)
         dasconfig = das_readconfig()
         cls.timeout = dasconfig['keyword_search']['timeout']
@@ -106,7 +110,7 @@ class KeywordSearchAbstractTester(unittest.TestCase):
         n_queries += 1
 
         with Timer() as t:
-            err, results = self.kws.search(query, dbsmngr=self.global_dbs_inst,
+            err, results = self.kws.search(query, dbs_inst=self.global_dbs_inst,
                                            timeout=self.timeout)
 
         times.append((t.interval, query))

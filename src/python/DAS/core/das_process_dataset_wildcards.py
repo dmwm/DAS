@@ -12,17 +12,14 @@ Description: The class handles the wildcard search for dataset,
 import re
 import string
 
-from DAS.web.dbs_daemon import DBSDaemon
-from DAS.utils.regex import  DATASET_FORBIDDEN_SYMBOLS
-
+from DAS.web.dbs_daemon import initialize_global_dbs_mngr, find_datasets
+from DAS.utils.regex import DATASET_FORBIDDEN_SYMBOLS
 # should we simplify the wildcard replacement, if all its matches are similar
 # in some way (equality, same beginning or end)
 REPLACE_IF_STRINGS_SAME = True
 
 # nasty debugging
 DEBUG = False
-
-
 
 
 def substitute_multiple(target, replacements, to_replace ='*',):
@@ -45,39 +42,11 @@ def substitute_multiple(target, replacements, to_replace ='*',):
     for index, value in enumerate(replacements):
         template = template.replace(to_replace, '${v%d}' % index, 1)
 
-        
     result = string.Template(template).substitute(subs)
-
     return result
 
 
-
-def get_global_dbs_mngr(update_required=False):
-    """
-    Gets a new instance of DBSDaemon for global DBS for testing purposes.
-
-    """
-    # TODO: DAS.web.dbs_daemon.KEEP_EXISTING_RECORDS_ON_RESTART = 1
-
-    from DAS.utils.das_config import das_readconfig
-    from DAS.core.das_mapping_db import DASMapping
-    dasconfig = das_readconfig()
-    dasmapping = DASMapping(dasconfig)
-
-    dburi = dasconfig['mongodb']['dburi']
-    dbsexpire = dasconfig.get('dbs_daemon_expire', 3600)
-    main_dbs_url = dasmapping.dbs_url()
-    dbsmgr = DBSDaemon(main_dbs_url, dburi, {'expire': dbsexpire,
-                                             'preserve_on_restart': True})
-
-    # if we have no datasets (fresh DB, fetch them)
-    if update_required or not next(dbsmgr.find('*Zmm*'), False):
-        print 'fetching datasets from global DBS...'
-        dbsmgr.update()
-    return dbsmgr
-
-
-def extract_wildcard_patterns(dbs_mngr, pattern):
+def extract_wildcard_patterns(dbs_inst, pattern):
     """
     Given a wildcard query and a list of datasets, we interested in
     how many slashes are matched by each of wildcard (because the slashes has to
@@ -93,7 +62,7 @@ def extract_wildcard_patterns(dbs_mngr, pattern):
     """
     # get matching datasets from out cache (through dbs manager instance)
     dbs_mngr_query = pattern
-    dataset_matches = dbs_mngr.find(dbs_mngr_query, limit=-1)
+    dataset_matches = find_datasets(dbs_mngr_query, dbs_inst, limit=-1)
 
     # we will use these regexps  to extract different dataset patterns
     pat_re = '^' + pattern.replace('*', '(.*)') + '$'
@@ -153,7 +122,7 @@ def simplify_wildcard_matches(group, index, the_matches):
     return group
 
 
-def process_dataset_wildcards(pattern, dbs_mngr):
+def process_dataset_wildcards(pattern, dbs_inst):
     """
     The current algorithm is simple
     1) Fetch all the matching data-sets (regexp from MongoDB)
@@ -171,25 +140,26 @@ def process_dataset_wildcards(pattern, dbs_mngr):
         while '*Zmm*' would still give: ['/*/*Zmm*/*', '/*Zmm*/*/*']
 
     Tests:
+    >>> dbs_inst='cms_dbs_prod_global'
 
-    >>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbsmgr)
+    >>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbs_inst)
     [u'/RelValZmm*/CMSSW*/*RECO']
 
-    >>> process_dataset_wildcards('*Zmm*', dbsmgr)
+    >>> process_dataset_wildcards('*Zmm*', dbs_inst)
     ['/*/*Zmm*/*', '/*Zmm*/*/*']
 
-    >>> process_dataset_wildcards('*herwig*/AODSIM', dbsmgr)
+    >>> process_dataset_wildcards('*herwig*/AODSIM', dbs_inst)
     ['/*herwig*/*/AODSIM']
 
-    >>> process_dataset_wildcards('*Zjkjmm*', dbsmgr)
+    >>> process_dataset_wildcards('*Zjkjmm*', dbs_inst)
     []
 
-    >>> process_dataset_wildcards('*RelValPyquen_ZeemumuJets_pt10_2760GeV*', dbsmgr)
+    >>> process_dataset_wildcards('*RelValPyquen_ZeemumuJets_pt10_2760GeV*', dbs_inst)
     [u'/RelValPyquen_ZeemumuJets_pt10_2760GeV/*/*']
 
     An example of input which is NOT currently converted into a wildcard one
     (but may be done later)
-    >>> process_dataset_wildcards('RelValPyquen_ZeemumuJets_pt10_2760GeV', dbsmgr)
+    >>> process_dataset_wildcards('RelValPyquen_ZeemumuJets_pt10_2760GeV', dbs_inst)
     []
 
     (giving [], instead of: [u'/RelValPyquen_ZeemumuJets_pt10_2760GeV/*/*'])
@@ -214,7 +184,7 @@ def process_dataset_wildcards(pattern, dbs_mngr):
 
     # first load matching data-sets from cache
     # when group then by different cases (by how many '/' is a '*' matched)
-    options, dataset_matches = extract_wildcard_patterns(dbs_mngr,  pattern)
+    options, dataset_matches = extract_wildcard_patterns(dbs_inst,  pattern)
 
     # process each different pattern
     results = []
@@ -232,7 +202,6 @@ def process_dataset_wildcards(pattern, dbs_mngr):
             if REPLACE_IF_STRINGS_SAME:
                 group = simplify_wildcard_matches(group, index, the_matches)
             subs.append(group)
-
 
         result = substitute_multiple(pattern, to_replace='*', replacements=subs)
 
@@ -254,11 +223,10 @@ def test():
     print 'setUp: getting dbs manager to access current datasets ' \
           '(and fetching them if needed)'
 
-    dbsmgr = get_global_dbs_mngr(update_required=False)
+    # make sure DBS dataset cache is initialized
+    initialize_global_dbs_mngr(update_required=False)
     import doctest
-    myglobals = globals()
-    myglobals['dbsmgr'] = dbsmgr
-    doctest.testmod(globs = myglobals, verbose=True)
+    doctest.testmod(verbose=True)
 
 if __name__ == "__main__":
     test()

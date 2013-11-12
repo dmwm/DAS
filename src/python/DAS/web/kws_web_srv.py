@@ -43,9 +43,8 @@ class KWSWebService(DASWebManager):
     DAS web service interface.
     """
 
-    def __init__(self, dasconfig, main_das_app):
+    def __init__(self, dasconfig):
         DASWebManager.__init__(self, dasconfig)
-        self.main_das_app = main_das_app
 
         self.dasconfig = dasconfig
         self.dburi = self.dasconfig['mongodb']['dburi']
@@ -63,6 +62,8 @@ class KWSWebService(DASWebManager):
         """Init DAS web server, connect to DAS Core"""
         try:
             self.dasmgr = DASCore(multitask=False)  # TODO? engine=self.engine
+            self.dbs_instances = self.dasmgr.mapping.dbs_instances()
+            self.dbs_global = self.dasmgr.mapping.dbs_global_instance()
             self.kws = KeywordSearchHandler(self.dasmgr)
         except ConnectionFailure:
             tstamp = dastimestamp('')
@@ -75,12 +76,14 @@ class KWSWebService(DASWebManager):
             self.kws = None
             return
 
-    def _get_dbsmgr(self, inst):
+    def _get_dbs_inst(self, inst):
         """
         returns dbsmngr for given instance
         """
-        # TODO: do we want to run DBSMngr separately?
-        return self.main_das_app._get_dbsmgr(inst)
+        if inst in self.dbs_instances:
+            return inst
+        else:
+            return self.dbs_global
 
     @expose
     @enable_cross_origin
@@ -107,11 +110,11 @@ class KWSWebService(DASWebManager):
 
         timeout = self.dasconfig['keyword_search']['timeout']
         show_scores = self.dasconfig['keyword_search'].get('show_scores', False)
-        dbsmngr = self._get_dbsmgr(inst)
+        inst = self._get_dbs_inst(inst)  # validate dbs inst name or use default
 
         return self.kws.handle_search(self,
                                       query=uinput,
-                                      dbsmngr=dbsmngr,
+                                      dbs_inst=inst,
                                       is_ajax=True,
                                       timeout=timeout,
                                       show_score=show_scores)

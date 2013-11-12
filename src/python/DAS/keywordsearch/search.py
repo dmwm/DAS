@@ -49,10 +49,9 @@ class KeywordSearch:
         # load the whoosh index
         load_index()
 
-    def init_dbs_mngr(self, dbsmngr):
-        # retrieve DBS instance, and store it in request
-        request.dbsmngr = dbsmngr
-        return dbsmngr
+    def set_dbs_inst(self, dbs_inst):
+        # store dbs_inst in request
+        request.dbs_inst = dbs_inst
 
     def tokenize_query(self, query, DEBUG=False):
         if not isinstance(query, unicode) and isinstance(query, str):
@@ -130,12 +129,12 @@ class KeywordSearch:
                 '%.2f: %s' % (r['score'], r['result']) for r in best_scores)
         return best_scores
 
-    def search(self, query, dbsmngr, timeout=5):
+    def search(self, query, dbs_inst, timeout=5):
         """
         Performs the keyword search
         returns: (error or None, result_list)
         """
-        self.init_dbs_mngr(dbsmngr)
+        self.set_dbs_inst(dbs_inst)
 
         query, tokens = self.tokenize_query(query, DEBUG=DEBUG)
 

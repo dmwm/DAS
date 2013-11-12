@@ -11,14 +11,14 @@ from cherrypy import request
 
 from DAS.utils.regex import RE_3SLAHES
 from DAS.keywordsearch.config import DEBUG
+from DAS.web.dbs_daemon import find_datasets
+
 
 def match_value_dataset(keyword):
-    dbsmgr = None
-    if hasattr(request, 'dbsmngr'):
-        dbsmgr = request.dbsmngr
-
-    if not dbsmgr:
+    if not hasattr(request, 'dbs_inst'):
         return None, None
+
+    dbs_inst = request.dbs_inst
 
     dataset_score = None
     upd_kwd = keyword
@@ -26,7 +26,8 @@ def match_value_dataset(keyword):
     # dbsmgr.find returns a generator, to check if it's non empty we have to access it's entities
     # TODO: a dataset pattern could be even *Zm* -- we need minimum length!!
 
-    if next(dbsmgr.find(pattern=keyword, limit=1), False):
+    match = find_datasets(keyword, dbs_inst, limit=1)
+    if next(match, False):
         if DEBUG: print 'Dataset matched by keyword %s' % keyword
         # TODO: if contains wildcards score shall be a bit lower
         if '*' in keyword and not '/' in keyword:
@@ -34,7 +35,7 @@ def match_value_dataset(keyword):
         elif '*' in keyword and '/' in keyword:
             dataset_score = 0.9
         elif not '*' in keyword and not '/' in keyword:
-            if next(dbsmgr.find(pattern='*%s*' % keyword, limit=1), False):
+            if next(find_datasets('*%s*' % keyword, dbs_inst, limit=1), False):
                 dataset_score = 0.7
                 upd_kwd = '*%s*' % keyword
         else:

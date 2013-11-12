@@ -517,8 +517,7 @@ class DASWebService(DASWebManager):
         # Generate DASQuery object, if it fails we catch the exception and
         # wrap it for upper layer (web interface)
         try:
-            dasquery = DASQuery(uinput, instance=inst,
-                    active_dbsmgr = self._get_dbsmgr(inst))
+            dasquery = DASQuery(uinput, instance=inst, dbs_inst=inst)
         except Exception as err:
             # process Wildcard exception separately
             if  isinstance(err, WildcardMultipleMatchesException):
