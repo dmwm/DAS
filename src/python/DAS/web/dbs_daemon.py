@@ -16,7 +16,7 @@ import urllib2
 import itertools
 
 # MongoDB modules
-from pymongo.errors import InvalidOperation, PyMongoError
+from pymongo.errors import InvalidOperation
 from pymongo import ASCENDING
 
 # DAS modules
@@ -28,6 +28,7 @@ from DAS.utils.utils import get_key_cert, genkey
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 from DAS.utils.das_config import das_readconfig
+from DAS.utils.das_db import query_db
 
 
 SKIP_UPDATES = 0
@@ -228,39 +229,28 @@ class DBSDaemon(object):
         stream.close()
 
 
-def find_datasets(pattern, dbs_instance, dbname= 'dbs', idx=0, limit=10):
+def find_datasets(pattern, dbs_instance, dbname='dbs', idx=0, limit=10):
     """
     Find datasets for a given pattern. The idx/limit parameters
     control number of retrieved records (aka pagination). The
     limit=-1 means no pagination (get all records).
     """
+    if len(pattern) > 0 and pattern[0] == '/':
+        pattern = '^%s' % pattern
+    if pattern.find('*') != -1:
+        pattern = pattern.replace('*', '.*')
+    try:
+        pat = re.compile('%s' % pattern, re.I)
+    except re.error:
+        return
 
-    config = das_readconfig()
-    dburi = config['mongodb']['dburi']
-    conn = db_connection(dburi)
-    # TODO: dbname is not passed so taken default, and not set in any config
-    #dbname = config.get('dbname', 'dbs')
-    dbcol = dbs_instance
-    # TODO: validate DBS instance name, but it's dasmapping.dbs_instances()
+    # TODO: dbname is not set in any config...
+    # TODO: validate DBS instance name, but it's in dasmapping.dbs_instances()
     # so probably it must be validated from outside
-    col = conn[dbname][dbcol]
-
-    if col:
-        try:
-            if len(pattern) > 0 and pattern[0] == '/':
-                pattern = '^%s' % pattern
-            if pattern.find('*') != -1:
-                pattern = pattern.replace('*', '.*')
-            pat = re.compile('%s' % pattern, re.I)
-            spec = {'dataset': pat}
-            if limit == -1:
-                for row in col.find(spec, exhaust=True):
-                    yield row['dataset']
-            else:
-                for row in col.find(spec, exhaust=True).skip(idx).limit(limit):
-                    yield row['dataset']
-        except Exception as exc:  # we shall not catch GeneratorExit
-            print_exc(exc)
+    dbcol = dbs_instance
+    query = {'dataset': pat}
+    for row in query_db(dbname, dbcol, query, idx, limit):
+        yield row['dataset']
 
 
 def test(dbs_url):

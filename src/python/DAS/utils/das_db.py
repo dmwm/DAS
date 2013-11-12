@@ -20,6 +20,7 @@ import gridfs
 
 # DAS modules
 from DAS.utils.utils import genkey, print_exc, dastimestamp
+from DAS.utils.das_config import das_readconfig
 from DAS.utils.ddict import DotDict
 
 # MongoDB does not allow to store documents whose size more then 4MB
@@ -182,3 +183,22 @@ def db_monitor(uri, func, sleep=5):
                 pass
         time.sleep(sleep)
 
+
+def query_db(dbname, dbcol, query,  idx=0, limit=10):
+    """
+    query a given db collection
+    """
+    config = das_readconfig()
+    conn = db_connection(config['mongodb']['dburi'])
+    col = conn[dbname][dbcol]
+
+    if col:
+        try:
+            if limit == -1:
+                for row in col.find(query, exhaust=True):
+                    yield row
+            else:
+                for row in col.find(query).skip(idx).limit(limit):
+                    yield row
+        except Exception as exc:  # we shall not catch GeneratorExit
+            print_exc(exc)
