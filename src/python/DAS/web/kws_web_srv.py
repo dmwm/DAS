@@ -53,7 +53,7 @@ class KWSWebService(DASWebManager):
         self.init()
 
         # Monitoring thread which performs auto-reconnection
-        thname = 'dbscore_monitor'
+        thname = 'dascore_monitor_kws'
         start_new_thread(thname, dascore_monitor, ({'das': self.dasmgr,
                                                     'uri': self.dburi},
                                                    self.init, 5))
