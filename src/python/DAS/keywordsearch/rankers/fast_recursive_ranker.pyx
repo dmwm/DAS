@@ -18,8 +18,10 @@ from DAS.keywordsearch.metadata import das_ql
 from DAS.keywordsearch.nlp import getstem, filter_stopwords
 from DAS.keywordsearch.tokenizer import get_keyword_without_operator, \
     test_operator_containment
-
+from DAS.keywordsearch.tokenizer import get_operator_and_param
 from DAS.keywordsearch.rankers.exceptions import TimeLimitExceeded
+from DAS.keywordsearch.metadata.schema_adapter2 import  DasSchemaAdapter
+
 
 # Heuristics
 # /DoubleMu/Run2012A-Zmmg-13Jul2012-v1xx/RAW-RECO --> dataset
@@ -33,8 +35,6 @@ cdef double logP(double score):
 
 
 # TODO: disabling debug ("trace" variable) would further improve performance
-
-
 
 
 def cleanup_values_weights(values_ws):
@@ -198,9 +198,7 @@ cdef class PartialSearchResult:
 
     #object *aggregations
 
-# init
-from DAS.keywordsearch.metadata.schema_adapter2 import  DasSchemaAdapter
-schema = DasSchemaAdapter()
+# INITIALIZATION
 
 
 #ctypedef cset[string] ApiParamSet
@@ -221,21 +219,25 @@ cpdef ApiParamDefinition ApiParamDefinitionFactory(frozenset api_params_set, fro
         inst.lookup = lookup
         return inst
 
+# GLOBALS
+#cdef clist[char*] lookup_keys = schema.lookup_keys
 #cdef vector[ApiParamDefinition] api_definitions = vector[ApiParamDefinition]()
 cdef list api_definitions = list()
+cdef list lookup_keys = list()
 
 
-def init():
-    #global api_definitions
+def initialize_ranker():
+    """ initialize the ranker: update cached data (cython) """
+    global lookup_keys, api_definitions
+    schema = DasSchemaAdapter()
+    lookup_keys = schema.lookup_keys
+    api_definitions = list()
     for api_params_set, req_params, lookup in schema.get_api_param_definitions():
         api_definitions.append(
                         ApiParamDefinitionFactory(
                            api_params_set=frozenset(api_params_set),
                            req_params=frozenset(req_params),
                            lookup=str(lookup)))
-
-init()
-
 
 #inline
 cdef  bint areWildcardsAllowed(str entity,  set wildcards, set params):
@@ -409,13 +411,6 @@ cdef void seach_for_filters(QueryContext c, PartialSearchResult _r, int i):
             seach_for_filters(c, r, i+1)
 
 
-
-
-
-#cdef clist[char*] lookup_keys = schema.lookup_keys
-cdef list lookup_keys = schema.lookup_keys
-
-
 cdef inline bint check_time_limit(QueryContext c):
     """
     check time limit
@@ -501,7 +496,6 @@ cdef void run_search(QueryContext c, PartialSearchResult _r,
     values_ws = c.values_ws.get(kw, [])
 
 
-    from DAS.keywordsearch.tokenizer import get_keyword_without_operator, get_operator_and_param
     kw_val = kw.split('=')[-1] # without "=", if any...
     kw_field = get_keyword_without_operator(kw)
 
