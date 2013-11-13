@@ -807,8 +807,9 @@ class DASWebService(DASWebManager):
         "Return status of DAS server"
         info = {'nrequests': self.reqmgr.size(),
                 'nworkers': self.taskmgr.nworkers(),
-                'dascore': self.dasmgr.taskmgr.status(),
                 'dasweb': self.reqmgr.status()}
+        if  self.dasmgr and self.dasmgr.taskmgr:
+            info.update({'dascore': self.dasmgr.taskmgr.status()})
         return dict(das_server=info)
 
     def busy(self):
