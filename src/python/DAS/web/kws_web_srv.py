@@ -76,6 +76,24 @@ class KWSWebService(DASWebManager):
             self.kws = None
             return
 
+    @expose
+    def index(self, *args, **kwargs):
+        """Main page"""
+        page = "DAS KWS Server"
+        return self.page(page)
+
+    def top(self):
+        """
+        Provide masthead for all web pages
+        """
+        return ''
+
+    def bottom(self, div=""):
+        """
+        Provide footer for all web pages
+        """
+        return ''
+
     def _get_dbs_inst(self, inst):
         """
         returns dbsmngr for given instance
