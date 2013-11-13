@@ -145,7 +145,7 @@ class DASWebService(DASWebManager):
         self.init()
 
         # Monitoring thread which performs auto-reconnection
-        thname = 'dbscore_monitor'
+        thname = 'dascore_monitor'
         start_new_thread(thname, dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
 

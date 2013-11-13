@@ -1652,3 +1652,45 @@ def sort_rows(rows):
             yield old
             old = row
     yield old
+
+
+class Event(list):
+    """Provides simple Event subscription (Publish-Subscribe).
+
+    Stores a list of callable objects. Calling an instance of this will cause a
+    call to each item in the list in ascending order by index.
+
+    Example Usage:
+
+    .. doctest::
+
+        >>> def f(x):
+        ...     print 'f(%s)' % x
+        >>> def g(x):
+        ...     print 'g(%s)' % x
+        >>> e = Event()
+        >>> e()
+        >>> e.append(f)
+        >>> e(123)
+        f(123)
+        >>> e.remove(f)
+        >>> e()
+        >>> e += (f, g)
+        >>> e(10)
+        f(10)
+        g(10)
+        >>> del e[0]
+        >>> e(2)
+        g(2)
+
+    based on: http://stackoverflow.com/a/2022629/1276782
+    """
+    def __call__(self, *args, **kwargs):
+        for f in self:
+            try:
+                f(*args, **kwargs)
+            except Exception as err:
+                print dastimestamp('DAS ERROR IN EVENT NOTIFY'), str(err)
+
+    def __repr__(self):
+        return "Event(%s)" % list.__repr__(self)

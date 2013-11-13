@@ -53,15 +53,35 @@ class KWSWebService(DASWebManager):
         self.init()
 
         # Monitoring thread which performs auto-reconnection
-        thname = 'dbscore_monitor'
+        thname = 'dascore_monitor_kws'
         start_new_thread(thname, dascore_monitor, ({'das': self.dasmgr,
                                                     'uri': self.dburi},
                                                    self.init, 5))
 
+    def dasmap_reload_handler(self):
+        """ reload KWS after DASMaps reloaded """
+        print dastimestamp('KWS reloading on DASMaps reload')
+
+        try:
+            self.dbs_instances = self.dasmgr.mapping.dbs_instances()
+            self.dbs_global = self.dasmgr.mapping.dbs_global_instance()
+            self.kws = KeywordSearchHandler(self.dasmgr)
+        except ConnectionFailure:
+            tstamp = dastimestamp('')
+            mythr = threading.current_thread()
+            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                  % (mythr.name, mythr.ident, tstamp)
+        except Exception as exc:
+            print_exc(exc)
+            self.kws = None
+
     def init(self):
         """Init DAS web server, connect to DAS Core"""
         try:
-            self.dasmgr = DASCore(multitask=False)  # TODO? engine=self.engine
+            self.dasmgr = DASCore(multitask=False)
+            # be notified on DASMaps reload
+            self.dasmgr.mapping.on_reload += [self.dasmap_reload_handler]
+
             self.dbs_instances = self.dasmgr.mapping.dbs_instances()
             self.dbs_global = self.dasmgr.mapping.dbs_global_instance()
             self.kws = KeywordSearchHandler(self.dasmgr)
@@ -74,7 +94,6 @@ class KWSWebService(DASWebManager):
             print_exc(exc)
             self.dasmgr = None
             self.kws = None
-            return
 
     @expose
     def index(self, *args, **kwargs):
