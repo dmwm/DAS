@@ -33,8 +33,7 @@ class key_learning(object):
         self.logger = PrintManager('KeyLearning', kwargs.get('verbose', 0))
         self.das = kwargs['DAS']
         self.redundancy = kwargs.get('redundancy', 10)
-        
-        
+
     def __call__(self):
         "__call__ implementation"
         self.das.rawcache.clean_cache("cache")
@@ -50,7 +49,7 @@ class key_learning(object):
 
             for das_id in doc['das_id']:
                 found_ids[doc['das']['primary_key']].append(das_id)
-        
+
         hit_ids = set()
 
         self.logger.info("found %s primary_keys" % len(found_ids))
@@ -80,11 +79,11 @@ class key_learning(object):
             #from pprint import pprint
             print 'keylearning collection:', self.das.keylearning.col
             print 'result attributes (all):'
-            for r  in self.das.keylearning.list_members():
-                pprint(r)
-                res_t = self.das.mapping.primary_key(r['system'], r['urn'])
-                print r.get('keys', ''), '-->', res_t, ':', \
-                    ', '.join([m for m in r.get('members', [])])
+            for row in self.das.keylearning.list_members():
+                pprint(row)
+                res_t = self.das.mapping.primary_key(row['system'], row['urn'])
+                print row.get('keys', ''), '-->', res_t, ':', \
+                    ', '.join([m for m in row.get('members', [])])
 
         return {}
 
@@ -96,7 +95,7 @@ class key_learning(object):
         das_id = str(doc['_id'])
         systems = doc['das']['system']
         urns = doc['das']['urn']
-        
+
         result = self.das.rawcache.find_records(das_id)
 
         if _DEBUG:
@@ -110,15 +109,15 @@ class key_learning(object):
         if _DEBUG:
             print 'doc:'
             pprint(doc)
-            result_count = result.count()
+#            result_count = result.count()
             result = [r for r in result]
             print 'results in doc:'
             pprint(result)
             print '-----------------------------------'
-            
+
         # TODO: it seems these conditions are non-sense!!!
         if len(systems)==len(urns) and len(systems)==1:
-            for i, record in enumerate(result):
+            for _, record in enumerate(result):
                 self.process_document(systems[0], urns[0], record)
 
         else:
@@ -138,7 +137,7 @@ class key_learning(object):
                 members |= self._process_document_recursor(doc[key], key)
 
         if _DEBUG:
-            print 'process_document(): das.keylearning.add_members(system=',\
+            print 'process_document(): das.keylearning.add_members(system=', \
             system, ', urn=', urn , 'members:', list(members)
         self.das.keylearning.add_members(system, urn, list(members))
 

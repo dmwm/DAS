@@ -2,13 +2,7 @@
 Keylearning task manager
 """
 
-import collections
-from bson.objectid import ObjectId
 from DAS.utils.logger import PrintManager
-
-from pprint import pprint
-
-
 
 class update_result_field_index(object):
     """
@@ -17,11 +11,11 @@ class update_result_field_index(object):
     task_options = [{'name':'redundancy', 'type':'int', 'default':2,
                      'help':'Number of records to examine per DAS primary key'}]
     def __init__(self, **kwargs):
-        self.logger = PrintManager('UpdateResultFieldIndex_whoosh', kwargs.get('verbose', 0))
+        self.logger = PrintManager('UpdateResultFieldIndex_whoosh', \
+                kwargs.get('verbose', 0))
         self.das = kwargs['DAS']
         self.redundancy = kwargs.get('redundancy', 10)
-        
-        
+
     def __call__(self):
         "__call__ implementation"
 
