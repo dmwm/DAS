@@ -541,7 +541,10 @@ def das_json(dasquery, record, pad='', full=False):
     prim_key = das.get('primary_key', '').split('.')[0]
     if  not srvs or not prim_key or len(apis) != len(srvs):
         return das_json_full(record, pad)
-    pval = record[prim_key]
+    try:
+        pval = record[prim_key]
+    except Exception as exc:
+        return das_json_full(record, pad)
     if  isinstance(pval, list) and len(pval) != len(srvs):
         return das_json_full(record, pad)
     try:
