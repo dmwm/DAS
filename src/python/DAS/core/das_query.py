@@ -55,7 +55,7 @@ class DASQuery(object):
                     'it exists, provide it ' +
                     'with three slashes: \n ' +
                     '/primary_dataset/processed_daset/data_tier')
-        if len(dataset_matches) > 1:
+        elif len(dataset_matches) > 1:
             options = {}
             for match in dataset_matches:
                 options[match] = self.query.replace(val, match)
@@ -63,12 +63,13 @@ class DASQuery(object):
                     'The query is matching more than one ' +
                     'such dataset pattern.\n' +
                     'Please choose one from these:\n', options)
-
-        # If there's only one match, continue with query execution
-        msg = 'Input query=%s has unique match "%s", proceed' \
-                % (self.query, dataset_matches[0])
-        print dastimestamp('DAS WARNING ') + ' ' + msg
-        self._mongo_query['spec'][key] = dataset_matches[0]
+        else:
+            # If there's only one match, still ask for user's confirmation
+            match = dataset_matches[0]
+            options = {match: self.query.replace(val, match)}
+            raise WildcardMultipleMatchesException(msg + ' ' +
+                    'The query is matching only one dataset in our cache, but '
+                    'please check if this is what you intended:\n', options)
 
     def __init__(self, query, **flags):
         """
