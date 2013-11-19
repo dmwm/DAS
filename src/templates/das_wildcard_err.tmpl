@@ -5,10 +5,12 @@
 #assert (isinstance($error, str) or isinstance($error, unicode))
 <!-- das_wildcard_err.tmpl -->
 <div> <!-- main div -->
-Input query contains a wild-card statement which is ambiguous:
+    <div class="das-ambigous">
+    Input query contains a wildcard statement which is ambiguous:<br />
 <pre>
 $error
 </pre>
+    </div>
 #if $suggest
 Suggested queries:
 <ul>

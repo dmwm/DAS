@@ -60,15 +60,13 @@ class DASQuery(object):
             for match in dataset_matches:
                 options[match] = self.query.replace(val, match)
             raise WildcardMultipleMatchesException(msg + ' ' +
-                    'The query is matching more than one ' +
-                    'such dataset pattern.\n' +
-                    'Please choose one from these:\n', options)
+                    'The query matches these dataset patterns:\n', options)
         else:
             # If there's only one match, still ask for user's confirmation
             match = dataset_matches[0]
             options = {match: self.query.replace(val, match)}
             raise WildcardMultipleMatchesException(msg + ' ' +
-                    'The query is matching only one dataset in our cache, but '
+                    'The query matches one dataset pattern in our cache, but '
                     'please check if this is what you intended:\n', options)
 
     def __init__(self, query, **flags):

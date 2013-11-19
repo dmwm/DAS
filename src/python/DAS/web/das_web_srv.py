@@ -530,20 +530,17 @@ class DASWebService(DASWebManager):
                     # standard html mode
                     guide = self.templatepage('dbsql_vs_dasql',
                                 operators=', '.join(das_operators()))
-
                     page = self.templatepage('das_wildcard_err', error=str(err),
                             base=self.base, guide=guide, suggest=suggest)
                 else:
                     # text mode
                     page = self.templatepage('das_wildcard_err_txt',
                                 base=self.base, error=str(err), suggest=suggest)
-
-            # whether to show Keyword Search now
-            show_kws = self.is_kws_enabled() and \
-                       not isinstance(err, WildcardMatchingException)
-
-            das_parser_error(uinput, str(type(err)))
-            page = helper(str(err), html_error, show_kws=show_kws)
+            else:
+                # whether to show Keyword Search now
+                show_kws = self.is_kws_enabled()
+                das_parser_error(uinput, str(type(err)))
+                page = helper(str(err), html_error, show_kws=show_kws)
             return 1, page
 
         fields = dasquery.mongo_query.get('fields', [])
