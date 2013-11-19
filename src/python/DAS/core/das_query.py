@@ -42,7 +42,7 @@ class DASQuery(object):
         Fixes: ticket #3071
         """
         msg  = 'Dataset value requires 3 slashes.'
-        dataset_matches = process_dataset_wildcards(val, self._dbs_inst)
+        dataset_matches = process_dataset_wildcards(val, self._instance)
 #        print "Matching wildcard query=%s into dataset patterns=%s" % (
 #            val, dataset_matches)
         if not len(dataset_matches):
@@ -98,9 +98,6 @@ class DASQuery(object):
         self._aggregators   = []
         self._flags         = flags
 
-        # Wildcard processing needs to know current DBS instance name
-        self._dbs_inst = None
-
         # loop over flags and set available attributes
         for key, val in flags.iteritems():
             setattr(self, '_%s' % key, val)
@@ -145,7 +142,7 @@ class DASQuery(object):
 
                     # TODO: we currently do not support wildcard matching
                     #       from command line interface
-                    if not self._dbs_inst:
+                    if not self._instance:
                         continue
 
                     # apply 3 slash pattern look-up, continuing only if one
