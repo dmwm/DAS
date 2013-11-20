@@ -16,6 +16,7 @@ import cherrypy
 import threading
 
 from datetime import date
+from urlparse import urlparse, parse_qsl
 from cherrypy import expose, HTTPError
 from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
@@ -1106,9 +1107,24 @@ class DASWebService(DASWebManager):
             if  self.taskmgr.is_alive(pid):
                 page = img + " processing PID=%s" % pid
             else:
-                self.reqmgr.remove(pid)
-                page  = 'Request PID=%s is completed' % pid
-                page += ', please wait for results to load'
+                # at this point we don't know if request arrived to this host
+                # or it was processed. To distinguish the case we'll ask
+                # request manager for that pid
+                if  self.reqmgr.has_pid(pid):
+                    self.reqmgr.remove(pid)
+                    page  = 'Request PID=%s is completed' % pid
+                    page += ', please wait for results to load'
+                else:
+                    # there're no request on this server, re-initiate it
+                    ref = cherrypy.request.headers.get('Referer', None)
+                    if  ref:
+                        url = urlparse(ref)
+                        params = dict(parse_qsl(url.query))
+                        return self.request(**params)
+                    else:
+                        msg  = 'No referer in cherrypy.request.headers'
+                        msg += '\nHeaders: %s' % cherrypy.request.headers
+                        print dastimestamp('DAS WEB ERROR '), msg
         except Exception as err:
             msg = 'check_pid fails for pid=%s' % pid
             print dastimestamp('DAS WEB ERROR '), msg
