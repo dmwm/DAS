@@ -5,6 +5,10 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 2.4.X
+
+  - Add code to re-initiate DAS request in check_pid, issue #4060
+
 - 2.3.X
 
   - Work on DAS deployment procedure
