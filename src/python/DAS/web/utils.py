@@ -26,10 +26,30 @@ from   DAS.utils.utils import print_exc, presentation_datetime
 from   DAS.utils.regex import number_pattern, web_arg_pattern, http_pattern
 from   DAS.utils.das_db import db_connection
 from   DAS.web.das_codes import web_code
+from   DAS.tools.das_client import DAS_CLIENT
 
 # regex patterns used in free_text_parser
 from DAS.utils.regex import PAT_BLOCK, PAT_RUN, PAT_FILE, PAT_RELEASE
 from DAS.utils.regex import PAT_SITE, PAT_SE, PAT_DATATYPE, PAT_TIERS
+
+def check_client_version():
+    """Check DAS_CLIENT version and return its version and instructions"""
+    ver = cherrypy.request.headers.get('User-Agent', None)
+    url = 'https://cmsweb.cern.ch/das/cli'
+    msg = ''
+    if  not ver:
+        msg  = 'DAS_CLIENT version is not set.\n'
+    elif ver != DAS_CLIENT:
+        msg  = 'DAS client version mismatch.\n'
+        msg += 'Your client version  : %s\n' % ver
+        msg += 'Supported DAS version: %s\n' % DAS_CLIENT
+    else:
+        return ver, msg
+    msg += 'Please upgrade your client to new version.\n'
+    msg += 'It can be downloaded from %s\n' % url
+    msg += 'This client can still retrieve data in JSON data-format, '
+    msg += 'to do so please use --format=JSON option'
+    return ver, msg
 
 def set_no_cache_flags():
     "Set cherrypy flags to prevent caching"
@@ -265,6 +285,7 @@ def checkargs(supported):
         """Wrap input function"""
 
         def require_string(val):
+            """Check that provided input is a string"""
             if not (isinstance(val, str) or isinstance(val, unicode)):
                 code = web_code('Invalid input')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
