@@ -6,6 +6,8 @@ DAS command line tool
 """
 __author__ = "Valentin Kuznetsov"
 
+DAS_CLIENT = 'das-client-1.0'
+
 import sys
 if  sys.version_info < (2, 6):
     raise Exception("DAS requires python 2.6 or greater")
@@ -17,6 +19,7 @@ import json
 import urllib
 import urllib2
 import httplib
+import cookielib
 from   optparse import OptionParser
 from   math import log
 
@@ -222,18 +225,20 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
         msg = 'Invalid hostname: %s' % host
         raise Exception(msg)
     url = host + path
-    headers = {"Accept": "application/json"}
+    headers = {"Accept": "application/json", "User-Agent": DAS_CLIENT}
     encoded_data = urllib.urlencode(params, doseq=True)
     url += '?%s' % encoded_data
     req  = urllib2.Request(url=url, headers=headers)
     if  ckey and cert:
         ckey = fullpath(ckey)
         cert = fullpath(cert)
-        hdlr = HTTPSClientAuthHandler(ckey, cert, debug)
+        http_hdlr  = HTTPSClientAuthHandler(ckey, cert, debug)
     else:
-        hdlr = urllib2.HTTPHandler(debuglevel=debug)
-    proxy_support = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(hdlr, proxy_support)
+        http_hdlr  = urllib2.HTTPHandler(debuglevel=debug)
+    proxy_handler  = urllib2.ProxyHandler({})
+    cookie_jar     = cookielib.CookieJar()
+    cookie_handler = urllib2.HTTPCookieProcessor(cookie_jar)
+    opener = urllib2.build_opener(http_hdlr, proxy_handler, cookie_handler)
     fdesc = opener.open(req)
     data = fdesc.read()
     fdesc.close()
@@ -319,6 +324,9 @@ def main():
         sys.exit(EX_USAGE)
     if  opts.format == 'plain':
         jsondict = get_data(host, query, idx, limit, debug, thr, ckey, cert)
+        cli_msg  = jsondict.get('client_message', None)
+        if  cli_msg:
+            print "DAS CLIENT WARNING: %s" % cli_msg
         if  'status' not in jsondict:
             print 'DAS record without status field:\n%s' % jsondict
             sys.exit(EX_PROTOCOL)
