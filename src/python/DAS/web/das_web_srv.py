@@ -38,7 +38,7 @@ from DAS.utils.thread import start_new_thread
 from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import free_text_parser, threshold
-from DAS.web.utils import set_no_cache_flags
+from DAS.web.utils import set_no_cache_flags, check_client_version
 from DAS.web.utils import checkargs, das_json, das_json_full, gen_error_msg
 from DAS.web.utils import dascore_monitor, gen_color, choose_select_key
 from DAS.web.tools import exposedasjson
@@ -723,6 +723,12 @@ class DASWebService(DASWebManager):
         if  'args' in head:
             del head['args']
         data = kwargs.get('data', [])
+        # update client version
+        cli, cli_msg = check_client_version()
+        head.update({'client': cli, 'client_message': cli_msg})
+        # for old clients setup appropriate status/reason
+        if  cli_msg:
+            head.update({'status': 'warning', 'reason': cli_msg})
         return head, data
 
     def get_data(self, kwargs):
@@ -876,7 +882,6 @@ class DASWebService(DASWebManager):
                 % (self.reqmgr.size(), self.taskmgr.nworkds(), self.queue_limit)
             head = dict(timestamp=time.time())
             head.update({'status': 'busy', 'reason': reason, 'ctime':0})
-            #TODO: data was undefined
             data = []
             return self.datastream(dict(head=head, data=data))
 
