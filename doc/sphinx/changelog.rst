@@ -7,6 +7,13 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.4.X
 
+  - Add cookie support in DAS client
+  - Add support of DAS client version
+
+    - check DAS client version in DAS server
+    - issue warning status and associative message for the client about version
+      mismatch
+
   - Add code to re-initiate DAS request in check_pid, issue #4060
 
 - 2.3.X
