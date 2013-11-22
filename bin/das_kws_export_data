@@ -16,9 +16,7 @@ fi
 
 OUT_DIR=$1
 
-mkdir -p $OUT_DIR/kws_index/
 mkdir -p $OUT_DIR/db_dumps/
-cp $DAS_KWS_IR_INDEX/* $OUT_DIR/kws_index/
 
 mongoexport --port 8230 --db keylearning --collection db --out $OUT_DIR/db_dumps/update_keylearning_db.js
 

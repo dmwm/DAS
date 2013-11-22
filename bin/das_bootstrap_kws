@@ -67,13 +67,6 @@ while read query; do
 
 done < $QUERIES_FILE
 
-# it's OK for KWS to be unavailable for a short period...
-
-# remove result_field_index
-rm -Rf $DAS_KWS_IR_INDEX/*
-# reload the fields index
-python -u  $DAS_PYTHONPATH/analytics/standalone_task.py -c update_result_field_index
-
 # Bootstrap values (release, datatype, etc)
 # TODO: shall this be part of (KWS) webserver?
 python $DAS_PYTHONPATH/keywordsearch/metadata/input_values_tracker.py
