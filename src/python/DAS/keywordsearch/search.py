@@ -15,7 +15,7 @@ from DAS.keywordsearch.entry_points import get_entry_points
 from DAS.keywordsearch.metadata.schema_adapter_factory import getSchema
 from DAS.keywordsearch.config import K_RESULTS_TO_STORE
 from DAS.keywordsearch.rankers.exceptions import TimeLimitExceeded
-from DAS.keywordsearch.whoosh.ir_entity_attributes import load_index
+from DAS.keywordsearch.whoosh.ir_entity_attributes import load_index, build_index
 
 
 class KeywordSearch:
@@ -47,7 +47,8 @@ class KeywordSearch:
             from DAS.keywordsearch.rankers import simple_recursive_ranker
             self.ranker = simple_recursive_ranker
 
-        # load the whoosh index
+        # build and load the whoosh
+        build_index(self.schema.list_result_fields())
         load_index()
 
     def set_dbs_inst(self, dbs_inst):

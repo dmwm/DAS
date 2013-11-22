@@ -4,6 +4,7 @@ __author__ = 'vidma'
 
 import pprint
 import os
+import shutil
 
 from whoosh import analysis
 from whoosh.index import create_in
@@ -21,30 +22,16 @@ _DEBUG= False
 _USE_FAKE_FIELDS = False # this also impact IDFs!!!
 # if not, include only processed data!
 
-def build_index(fields_by_entity, remove_old = False):
+
+def build_index(fields_by_entity):
     """
-    Schema:
-
-    entity_results:
-        entity
-        field name ?
-        field title (optional)
-
-    values:
-        entity
-
-        [optionally it could be dependent on specific api?]
+    build the index from given field list and remove the old index if any
     """
-
-    # _result_fields_by_entity[result_entity].get(field, {'title': ''})['title']
 
     print 'starting to build the index...'
-    # TODO: entity names are not so much informative here?
 
-    # remove old index. TODO: is there a better way?
-    if remove_old:
-        import shutil, os
-        shutil.rmtree(os.path.join(INDEX_DIR, '*'))
+    # remove the old index, if any
+    shutil.rmtree(os.path.join(INDEX_DIR, '*'), ignore_errors=True)
 
     # replica_fraction -> replica fraction
     # TODO: store entity as we are filtering by it?

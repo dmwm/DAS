@@ -1,7 +1,7 @@
 import contextlib
 import sys
 import cStringIO
-
+import time
 
 
 @contextlib.contextmanager
@@ -12,8 +12,6 @@ def nostdout():
     sys.stdout = save_stdout
 
 
-import sys, time
-
 # silence the DAS messages
 with nostdout():
     from DAS.utils.das_config import das_readconfig
@@ -22,21 +20,16 @@ with nostdout():
     from DAS.core.das_mapping_db import DASMapping
 
 
-
-
 def check_mappings_readiness():
     config = das_readconfig()
-    # TODO: check if the mappings in DB are consistent
-
     print('db alive. checking it\'s state...')
     try:
         dasmapping = DASMapping(config)
         if dasmapping.check_maps():
-            dascore = DASCore(config)
+            dascore = DASCore(config, multitask=False)
             return True
     except Exception, e:
         print e
-
     print 'no DAS mappings present...'
     return False
 
@@ -48,6 +41,7 @@ def on_db_available():
         print('Mappings seem to be fine...')
         #time.sleep(10)
         sys.exit(0)
+
 
 def db_monitor(uri, func, sleep=5, max_retries=None):
     """
@@ -90,7 +84,6 @@ def waitfordb(max_time, callback=on_db_available):
     sys.exit(-1)
 
 
-
 def is_bootstrap_needed():
     with nostdout():
 
@@ -100,8 +93,13 @@ def is_bootstrap_needed():
         from DAS.keywordsearch.whoosh import ir_entity_attributes
 
         def need_res_fields_bootsrap():
-            schema_adapter = schema_adapter_factory.getSchema()
+            config = das_readconfig()
+            dascore = DASCore(config, multitask=False)
+            schema_adapter = schema_adapter_factory.getSchema(dascore)
             try:
+                if not schema_adapter.list_result_fields():
+                    return True
+                ir_entity_attributes.build_index()
                 ir_entity_attributes.load_index()
             except Exception, e:
                 print e
@@ -110,18 +108,6 @@ def is_bootstrap_needed():
 
         needed = (need_value_bootstrap() or need_res_fields_bootsrap())
         return 1 if needed else 0
-
-
-
-
-
-def test():
-    # remove mappings
-    # shall fail
-
-    # stop db
-    # restart it - shall work
-    pass
 
 
 if __name__ == '__main__':
