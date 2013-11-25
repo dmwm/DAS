@@ -93,8 +93,11 @@ class CMSQueryRewrite(object):
             'grep': list(set(filters_first) | set([pk, ])),
         }
         q1 = DASQuery(q1_mongo)
+        
         q2 = q.mongo_query.copy()
-        q2['spec'] = {pk: '<PK>'}
+        # make DASQuery pass dataset wildcard check
+        pk_to_replace = '/a/b/c' if pk == 'dataset.name' else '<PK>'
+        q2['spec'] = {pk: pk_to_replace}
         q2['filters'] = {'grep': list(filters_nested)}
         q2 = DASQuery(q2)
 
@@ -102,6 +105,8 @@ class CMSQueryRewrite(object):
                                    q1_str=self.convert2dasql(q1),
                                    q2_str=self.convert2dasql(q2),
                                    pk=pk,
+                                   # user replaces this with PK from 1st query
+                                   pk_to_replace=pk_to_replace,
                                    cli_docs=self.CLI_LINK)
         return msg
 
