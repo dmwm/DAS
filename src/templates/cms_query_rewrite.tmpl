@@ -7,7 +7,7 @@ Still you can run multiple queries and combine their results:
 
 $q1_str
 for each result:
-    $q2_str  (replace <PK> with value of $pk from first query)
+    $q2_str  (replace ${pk_to_replace} with value of $pk from first query)
 
 Combination of the two queries will give the results expected,
 except for aggregations which have to be implemented manually.
