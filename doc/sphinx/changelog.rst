@@ -18,6 +18,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.3.X
 
+  - Fix issue 4077 (don't yield record from empty MCM response)
   - Work on DAS deployment procedure
 
     - two set of DAS maps (one for production URLs and another for testbed)
