@@ -48,7 +48,8 @@ class MCMService(DASAbstractService):
             for key in ['_id', '_rev']:
                 if  key in row:
                     del row[key]
-            yield {'mcm':row}
+            if  row:
+                yield {'mcm':row}
             counter += 1
         msg  = "api=%s, format=%s " % (api, dformat)
         msg += "prim_key=%s yield %s rows" % (prim_key, counter)
