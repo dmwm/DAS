@@ -295,11 +295,11 @@ def das_readconfig_helper():
     # if not fall back to standard python cfg file
     try:
         configdict = read_wmcore(dasconfig)
-        print "Reading DAS configuration from %s" % dasconfig
+        print "### Reading DAS configuration from %s" % dasconfig
     except Exception as err:
         try:
             configdict = read_configparser(dasconfig)
-            print "Reading DAS configuration from %s" % dasconfig
+            print "### Reading DAS configuration from %s" % dasconfig
         except Exception as exp:
             print 'Unable to read DAS cfg configuration,', str(exp)
             print 'Unable to read DAS CMS configuration,', str(err)
