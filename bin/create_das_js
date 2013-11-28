@@ -13,3 +13,4 @@ do
     $cmd --presentation-map=$amap | grep -v "###" >> $map_file
 done
 
+$cmd --get-verification-token-for=$map_file | grep -v "###" >> $map_file

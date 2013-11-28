@@ -9,6 +9,7 @@ __author__ = "Valentin Kuznetsov"
 import json
 from optparse import OptionParser
 from DAS.services.map_reader import read_service_map
+from DAS.core.das_mapping_db import verification_token
 
 class DASOptionParser(object):
     """
@@ -23,6 +24,9 @@ class DASOptionParser(object):
         self.parser.add_option("--presentation-map", action="store",
              type="string",
              default=None , dest="pmap", help="specify presentation map file")
+        self.parser.add_option("--get-verification-token-for", action="store",
+             type="string", default=None , dest="get_verification_token_for",
+             help="generate a verification token for given dasmaps file")
     def get_opt(self):
         """
         Returns parse list of options
@@ -70,6 +74,14 @@ def main():
         if  count == 1: # we should have one presentation map
             arecord = {'type': 'presentation', 'count': count, 'system': system}
             print json.dumps(dict(arecord=arecord))
+
+    # generate a verification token composed of all record hashes
+    if opts.get_verification_token_for:
+        with open(opts.get_verification_token_for) as file_:
+            token = verification_token(json.loads(line)
+                                       for line in file_ if line)
+            print {'verification_token': token, 'type': 'verification_token'}
+
 
 #
 # main

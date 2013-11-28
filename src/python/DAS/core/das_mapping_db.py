@@ -28,6 +28,8 @@ import re
 import time
 import threading
 from collections import defaultdict
+import hashlib
+
 
 # monogo db modules
 from pymongo import DESCENDING
@@ -57,32 +59,57 @@ def check_map_record(rec):
             err += '\nobtained hash: %s\n' % md5hash(rec)
             raise Exception(err)
 
-def db_monitor(uri, func, sleep, reload_map, reload_time):
+
+def verification_token(iterator):
+    """
+    given an iterator for all dasmap records,
+    returns a verification token, that defines the state of the dasmpas
+    """
+    all_hashes = hashlib.md5()
+    hashes = sorted(row['hash'] for row in iterator if 'hash' in row)
+    for hash_ in hashes:
+        all_hashes.update(hash_)
+    return all_hashes.hexdigest()
+
+
+def db_monitor(uri, func, sleep, reload_map, reload_time,
+               check_maps, reload_time_bad_maps):
     """
     Check status of MongoDB connection and reload DAS maps once in a while.
     """
     time0 = time.time()
+    valid_maps = False
+    try:
+        valid_maps = check_maps()
+    except Exception as err:
+        print "### db_monitor, Err: %s" % str(err)
     while True:
         conn = db_connection(uri)
-        if  not conn or not is_db_alive(uri):
+        if not conn or not is_db_alive(uri):
             try:
                 conn = db_connection(uri)
                 func()
                 if  conn:
                     print "### db_monitor re-established connection %s" % conn
+                    valid_maps = check_maps()
                 else:
                     print "### db_monitor, lost connection"
-            except:
-                pass
+            except Exception as err:
+                print "### db_monitor, Err: %s" % str(err)
         if  conn:
-            if  time.time()-time0 > reload_time:
-                msg = "reload DAS maps %s" % reload_map
+            # reload invalid more quickly
+            reload_intervl = reload_time if valid_maps else reload_time_bad_maps
+            if  time.time()-time0 > reload_intervl:
+                map_state = 'INVALID' if not valid_maps else ''
+                msg = "reload %s DAS maps %s" % map_state, reload_map
                 print dastimestamp(), msg
                 try:
                     reload_map()
+                    valid_maps = check_maps()
                 except Exception as err:
                     print dastimestamp('DAS ERROR '), str(err)
                 time0 = time.time()
+
         time.sleep(sleep)
 
 class DASMapping(object):
@@ -111,8 +138,10 @@ class DASMapping(object):
         thname = 'mappingdb_monitor'
         sleep  = 5
         reload_time = config['mappingdb'].get('reload_time', 86400)
+        reload_time_bad_maps = \
+            config['mappingdb'].get('reload_time_bad_maps', 120)
         start_new_thread(thname, db_monitor, (self.dburi, self.init, sleep,
-            self.load_maps, reload_time))
+            self.load_maps, reload_time, self.check_maps, reload_time_bad_maps))
 
         self.systems = []              # to be filled at run time
         self.dasmapscache = {}         # to be filled at run time
@@ -259,6 +288,7 @@ class DASMapping(object):
         ndict = defaultdict(int)
         pdict = defaultdict(int)
         adict = {}
+        maps_hash = False
         for row in self.col.find(exhaust=True):
             check_map_record(row)
             if  'urn' in row:
@@ -275,9 +305,10 @@ class DASMapping(object):
                     adict[system].update(rec)
                 else:
                     adict[system] = rec
+            elif 'verification_token' in row:
+                maps_hash = row['verification_token']
 
         # retrieve uri/notation/presentation maps
-        status_umap = status_nmap = status_pmap = False
         ulist = []
         nlist = []
         for system in adict.keys():
@@ -287,11 +318,18 @@ class DASMapping(object):
         status_umap = sum(ulist) == len(ulist)
         status_nmap = sum(nlist) == len(nlist)
         status_pmap = adict['presentation']['presentation'] == 1
-        if  self.verbose:
-            print "### DAS map status, umap=%s, nmap=%s, pmap=%s" \
-                    % (status_umap, status_nmap, status_pmap)
+        # verify completeness of maps
+        # TODO: order matters
+        calc_token = verification_token(self.col.find(exhaust=True))
+        status_complete = maps_hash and maps_hash == calc_token
+        if  self.verbose or True:
+            print "### DAS map status, umap=%s, nmap=%s, pmap=%s, complete=%s" \
+                    % (status_umap, status_nmap, status_pmap, status_complete)
+        if not status_complete:
+                print "### DAS map hash do not match, got=%s calculated=%s" \
+                    % (maps_hash, calc_token)
         # multiply statuses as a result of this map check
-        return status_umap*status_nmap*status_pmap
+        return status_umap*status_nmap*status_pmap*status_complete
 
     def remove(self, spec):
         """

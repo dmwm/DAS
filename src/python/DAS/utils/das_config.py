@@ -33,9 +33,11 @@ DASOption('mappingdb', 'dbname', 'string', 'mapping'),
 DASOption('mappingdb', 'collname', 'string', 'db'),
 # default reload_time for MappingDB maps monitor daemon, default is 1h
 DASOption('mappingdb', 'reload_time', 'int', 60*60),
+# default reload_time when mappings are in inconsistent state
+DASOption('mappingdb', 'reload_time_bad_maps', 'int', 2*60),
 
 #
-# Keyleardnign DB options
+# Keylearning DB options
 #
 # default DB name
 DASOption('keylearningdb', 'dbname', 'string', 'keylearning'),
