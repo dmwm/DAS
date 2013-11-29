@@ -377,6 +377,12 @@ class DASMongocache(object):
         given query.
         """
         das_rec  = self.find(dasquery)
+        if  not das_rec:
+            return False
+        if  'das' not in das_rec:
+            return False
+        if  'services' not in das_rec['das']:
+            return False
         services = []
         for srv in das_rec['das']['services']:
             if  'das' in srv:
