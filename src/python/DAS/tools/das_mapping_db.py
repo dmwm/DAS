@@ -9,7 +9,7 @@ __author__ = "Valentin Kuznetsov"
 import os
 import sys
 from optparse import OptionParser
-from DAS.core.das_mapping_db import DASMapping
+from DAS.core.das_mapping_db import DASMapping, verification_token
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.das_db import db_connection
 from DAS.services.map_reader import read_service_map
@@ -42,6 +42,8 @@ class DASOptionParser:
              dest="listapis", help="return a list of APIs")
         self.parser.add_option("--list-daskeys", action="store_true",
              dest="listkeys", help="return a list of DAS keys")
+        self.parser.add_option("--update-verification-token", action="store_true",
+             dest="verification_token", help="return a verification token")
         self.parser.add_option("--remove", action="store", type="string",
              default=None , dest="remove",
              help="remove DAS Mapping DB record, provide the spec")
@@ -67,8 +69,12 @@ def main():
     dbname, colname = opts.db.split('.')
     mongodb   = dict(dburi=dburi)
     mappingdb = dict(dbname=dbname, collname=colname)
-    config    = dict(verbose=opts.debug, mappingdb=mappingdb,
-                mongodb=mongodb, services=dasconfig['das'].get('services', []))
+    config    = dict(verbose=opts.debug,
+                     mappingdb=mappingdb,
+                     mongodb=mongodb,
+                     services=dasconfig['das'].get('services', []),
+                     # DASMaps shall not be validated while being rebuilt
+                     map_test=False)
 
     mgr = DASMapping(config)
 
@@ -81,6 +87,14 @@ def main():
         keys = mgr.daskeys(opts.system)
         print keys
         sys.exit(0)
+
+    if opts.verification_token:
+        token = verification_token(mgr.col.find(exhaust=True))
+        spec = {'type': 'verification_token'}
+        mgr.remove(spec)  # remove previous record
+        mgr.add({'verification_token': token,
+                 'type': 'verification_token'})
+        print token
 
     if  opts.umap:
         count = 0
