@@ -29,3 +29,6 @@ do
     echo "Read presentation map from $amap"
     $cmd --presentation-map=$amap
 done
+
+echo "Creating Verification token"
+$cmd --update-verification-token
