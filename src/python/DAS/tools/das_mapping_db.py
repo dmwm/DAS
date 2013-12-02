@@ -90,7 +90,7 @@ def main():
 
     if opts.verification_token:
         token = verification_token(mgr.col.find(exhaust=True))
-        spec = {'verification_token': {'$exists': True}}
+        spec = {'type': 'verification_token'}
         mgr.remove(spec)  # remove previous record
         mgr.add({'verification_token': token,
                  'type': 'verification_token'})

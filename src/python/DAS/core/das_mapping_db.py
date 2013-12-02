@@ -319,10 +319,9 @@ class DASMapping(object):
         status_nmap = sum(nlist) == len(nlist)
         status_pmap = adict['presentation']['presentation'] == 1
         # verify completeness of maps
-        # TODO: order matters
         calc_token = verification_token(self.col.find(exhaust=True))
         status_complete = maps_hash and maps_hash == calc_token
-        if  self.verbose or True:
+        if  self.verbose:
             print "### DAS map status, umap=%s, nmap=%s, pmap=%s, complete=%s" \
                     % (status_umap, status_nmap, status_pmap, status_complete)
         if not status_complete:
