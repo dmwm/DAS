@@ -6,8 +6,9 @@ Unit test for jsonwrapper
 """
 
 
-
+import sys
 import unittest
+import traceback
 import urllib2, urllib
 import DAS.utils.jsonwrapper as myjson
 
@@ -22,7 +23,35 @@ class testUtils(unittest.TestCase):
         self.data = {'a':1, 'b':[{'c':1, 'd':['1','2']}]}
         self.module = myjson.MODULE
 
-    def test_json(self):
+    @classmethod
+    def run_allowing_importerror(cls, test_func):
+        """
+        return True if there was no exceptions,
+        allows import error to happen
+        """
+        try:
+            test_func()
+        except ImportError:
+            print '\n' + '-' * 70
+            print 'A test failed, but this might be recoverable:'
+            traceback.print_exc(file=sys.stdout)
+        else:
+            return True
+
+    def test_main(self):
+        """ require tests to pass at least with one json module
+         i.e. allow to pass if yajl or cjson raise ImportError """
+        try:
+            outcomes = [self.run_allowing_importerror(self._test_json),
+                        self.run_allowing_importerror(self._test_cjson),
+                        self.run_allowing_importerror(self._test_yajl)]
+            if not any(outcomes):
+                self.fail('The tests failed for all json modules...')
+        finally:
+            # revert any monkey-patching changes to jsonwrapper module
+            myjson.MODULE = self.module
+
+    def _test_json(self):
         """Test json wrapper"""
         myjson.MODULE = 'json'
         expect  = self.data
@@ -42,7 +71,7 @@ class testUtils(unittest.TestCase):
 
         myjson.MODULE = self.module
 
-    def test_cjson(self):
+    def _test_cjson(self):
         """Test cjson wrapper"""
         import cjson
         myjson.MODULE = 'cjson'
@@ -57,10 +86,11 @@ class testUtils(unittest.TestCase):
 
         myjson.MODULE = self.module
 
-    def test_yajl(self):
+    def _test_yajl(self):
         """Test yajl wrapper"""
         import yajl
         myjson.MODULE = 'yajl'
+        myjson.yajl = yajl  # so not to depend on import sequence
         expect  = self.data
         result  = myjson.loads(myjson.dumps(self.data))
         self.assertEqual(expect, result)
