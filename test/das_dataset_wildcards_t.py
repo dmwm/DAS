@@ -13,9 +13,11 @@ import doctest
 # DAS modules
 
 from DAS.core.das_query import DASQuery
-import DAS.core.das_process_dataset_wildcards as dataset_wildcards
+from DAS.core import das_process_dataset_wildcards as dataset_wildcards
 from DAS.web.dbs_daemon import initialize_global_dbs_mngr
 from DAS.web.dbs_daemon import get_global_dbs_inst
+from DAS.core.das_exceptions import WildcardMatchingException,\
+    WildcardMultipleMatchesException
 
 
 class TestDASDatasetWildcards(unittest.TestCase):
@@ -31,7 +33,7 @@ class TestDASDatasetWildcards(unittest.TestCase):
         # set up only once
         if not self.global_dbs_mngr:
             self.global_dbs_mngr = initialize_global_dbs_mngr()
-        self.dbs_inst = get_global_dbs_inst()
+        self.inst = get_global_dbs_inst()
 
     def test_doctests(self):
         """
@@ -45,48 +47,36 @@ class TestDASDatasetWildcards(unittest.TestCase):
 
     def test_dasquery(self):
         """
-        checks integration with DASQuery
+        checks integration with DASQuery on the following cases:
+        - no dataset matching
+        - more than more interpretation available
+        - only one interpretation (standard query execution)
         """
 
-        # no dataset matching
-        # more than more interpretation available
-        # only one interpretation (standard query execution)
-
         # multiple interpretations
-        msg = ''
         try:
-            DASQuery('dataset dataset=*Zmm*', dbs_inst=self.dbs_inst)
-        except Exception, exc:
-            msg = str(exc)
-
-        self.assertTrue('query is matching more than one' in msg)
+            DASQuery('dataset dataset=*Zmm*', instance=self.inst)
+        except WildcardMultipleMatchesException:
+            pass
+        else:
+            self.fail('expected WildcardMultipleMatchesException')
 
         # none (no such dataset)
         msg = ''
         try:
-            DASQuery('dataset dataset=*Zmmdsjfdsjguuds*',
-                     dbs_inst=self.dbs_inst)
-        except Exception, exc:
+            DASQuery('dataset dataset=*Zmmdsjfdsjguuds*', instance=self.inst)
+        except WildcardMatchingException as exc:
             msg = str(exc)
-
         self.assertTrue('pattern you specified did not match '
                         'any datasets in DAS cache' in msg)
 
-        # one
+        # DASQuery shall be parsed correctly
         results = False
         try:
-            results = DASQuery('dataset dataset=/*Zmm*/*/*',
-                               dbs_inst=self.dbs_inst)
-        except Exception as exc:
+            results = DASQuery('dataset dataset=/*Zmm*/*/*', instance=self.inst)
+        except WildcardMatchingException:
             results = False
-
         self.assertTrue([results])
-
-    #def test_web(self):
-    # TODO: write unit tests for web integration
-    # no dataset matching
-    # more than more interpretation available
-    # only one interpretation (standard query execution)
 
 
 if __name__ == '__main__':
