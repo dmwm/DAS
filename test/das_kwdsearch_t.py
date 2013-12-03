@@ -13,6 +13,7 @@ import unittest
 
 from DAS.keywordsearch.search import KeywordSearch
 from DAS.utils.das_config import das_readconfig
+from DAS.core.das_core import DASCore
 
 #globals
 from DAS.web.dbs_daemon import initialize_global_dbs_mngr
@@ -69,7 +70,7 @@ class KwsTesterMetaClass(type):
               '(and fetching datasets if needed)'
         cls.global_dbs_mngr = initialize_global_dbs_mngr(update_required=False)
         cls.global_dbs_inst = get_global_dbs_inst()
-        cls.kws = KeywordSearch(dascore=None)
+        cls.kws = KeywordSearch(dascore=DASCore(multitask=False))
         dasconfig = das_readconfig()
         cls.timeout = dasconfig['keyword_search']['timeout']
 
