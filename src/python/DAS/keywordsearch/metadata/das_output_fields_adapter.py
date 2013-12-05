@@ -6,9 +6,10 @@ Gathers the list of fields available in service outputs
 import pprint
 from collections import defaultdict
 from itertools import chain
-from DAS.keywordsearch.config import EXCLUDE_RECORDS_WITH_ERRORS
+from DAS.keywordsearch.config import EXCLUDE_RECORDS_WITH_ERRORS, DEBUG, \
+    MINIMAL_DEBUG
 
-FULL_DEBUG = False
+FULL_DEBUG = DEBUG
 DAS_RESERVED_FIELDS = ['*.error', '*.reason', 'qhash']
 
 
@@ -33,28 +34,8 @@ def result_contained_errors(rec):
     return errors
 
 
-def get_outputs_field_list(dascore):
-    """
-    makes a list of output fields available in each DAS entity
-    this is taken from keylearning collection.
-    """
-    fields_by_entity = defaultdict(set)
-    for rec in dascore.keylearning.list_members():
-        result_type = dascore.mapping.primary_key(rec['system'], rec['urn'])
-        # if keylearning is outdated and urn don't exist, skip such records
-        if not result_type:
-            continue
-        if result_contained_errors(rec) and EXCLUDE_RECORDS_WITH_ERRORS:
-            continue
-
-        # build list of fields
-        fields = [field for field in rec.get('members', [])
-                  if not is_reserved_field(field, result_type)]
-        fields_by_entity[result_type] |= set(fields)
-        if FULL_DEBUG:
-            print result_type, rec.get('keys', []), ':', fields
-
-    # assign the titles from presentation cache
+def get_titles_by_field(dascore):
+    """ returns a dict of titles taken from presentation cache """
     titles_by_field = {}
     for titles in dascore.mapping.presentationcache.itervalues():
         for entry in titles:
@@ -62,19 +43,46 @@ def get_outputs_field_list(dascore):
             field_title = entry['ui']
             titles_by_field[field_name] = field_title
 
+    return titles_by_field
+
+
+def get_outputs_field_list(dascore):
+    """
+    makes a list of output fields available in each DAS entity
+    this is taken from keylearning collection.
+    """
+    # build field list for each lookup (entity or their combination)
+    fields_by_lookup = defaultdict(set)
+    for rec in dascore.keylearning.list_members():
+        #result_type = dascore.mapping.primary_key(rec['system'], rec['urn'])
+        sys, urn = rec['system'], rec['urn']
+        try:
+            lookup = ','.join(sorted(dascore.mapping.api_lkeys(sys, urn)))
+        except KeyError:
+            # if keylearning is outdated and urn don't exist, skip such records
+            continue
+
+        if result_contained_errors(rec) and EXCLUDE_RECORDS_WITH_ERRORS:
+            continue
+
+        fields_by_lookup[lookup] |= set(field
+                                        for field in rec.get('members', [])
+                                        if not is_reserved_field(field, lookup))
     # build the result made of fields and their titles
-    results_by_entity = defaultdict(dict)
-    for entity, fields in fields_by_entity.iteritems():
+    titles_by_field = get_titles_by_field(dascore)
+    field_data_by_lookup = defaultdict(dict)
+    for lookup, fields in fields_by_lookup.iteritems():
         for field in fields:
-            results_by_entity[entity][field] = {
+            field_data_by_lookup[lookup][field] = {
                 'name': field,
                 'title': titles_by_field.get(field, ''),
                 #  if there's no title defined  it's probably less important
                 'importance': bool(titles_by_field.get(field)),
-                'lookup': entity  # use lookups
+                'lookup': lookup  # use lookups
             }
 
-    return results_by_entity
+    print_debug(dascore, fields_by_lookup, field_data_by_lookup)
+    return field_data_by_lookup
 
 
 def print_debug(dascore, fields_by_entity, results_by_entity):
@@ -89,3 +97,6 @@ def print_debug(dascore, fields_by_entity, results_by_entity):
         pprint.pprint(fields_by_entity)
         print 'results by entity'
         pprint.pprint(results_by_entity)
+    elif MINIMAL_DEBUG:
+        print 'fields by entity'
+        pprint.pprint(fields_by_entity)

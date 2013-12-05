@@ -1,3 +1,7 @@
+block,run,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM
+file,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM
+file,run,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM
+run,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM
 run=20853
 run=193557
 dataset dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO

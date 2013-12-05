@@ -74,10 +74,7 @@ class key_learning(object):
                         self.logger.warning(\
                         "no record found for das_id=%s" % das_id)
 
-
         if _DEBUG:
-            #from pprint import pprint
-            print 'keylearning collection:', self.das.keylearning.col
             print 'result attributes (all):'
             for row in self.das.keylearning.list_members():
                 pprint(row)
@@ -123,11 +120,10 @@ class key_learning(object):
         else:
             self.logger.warning("got inconsistent system/urn/das_id length")
 
-
     def process_document(self, system, urn, doc):
         """
-        Process a rawcache document record, finding all the unique
-        data members and inserting them into the cache.
+        Process a rawcache document record coming from one API of a service.
+        Find all the unique output fields and insert them into the cache.
         """
 
         self.logger.info("%s::%s" % (system, urn))
