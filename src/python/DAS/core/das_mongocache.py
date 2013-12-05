@@ -166,7 +166,7 @@ def cleanup_worker(dburi, dbname, collections, sleep):
         spec = {'das.expire': { '$lt':time.time()}}
         with conn.start_request():
             for col in collections:
-                conn[dbname][col].remove(spec=spec, fsync=True)
+                conn[dbname][col].remove(spec, fsync=True)
         time.sleep(sleep)
 
 class DASMongocache(object):
