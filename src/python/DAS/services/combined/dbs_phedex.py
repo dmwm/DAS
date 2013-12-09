@@ -17,6 +17,7 @@ from   bson.code import Code
 
 # DAS modules
 from   DAS.utils.das_db import db_connection, create_indexes, db_monitor
+from   DAS.utils import find_one
 from   DAS.utils.url_utils import getdata
 from   DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
 from   DAS.web.tools import exposejson
@@ -352,7 +353,7 @@ class DBSPhedexService(object):
         Check if data is expired in DB.
         """
         spec = {'ts': {'$lt': time.time() + self.expire}}
-        if  self.coll and self.coll.find_one(spec):
+        if  self.coll and find_one(self.coll, spec):
             return False
         return True
 
