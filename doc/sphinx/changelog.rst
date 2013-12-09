@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.4.X
 
+  - Fix 4085 issue
   - Add cookie support in DAS client
   - Add support of DAS client version
 
