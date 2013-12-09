@@ -13,7 +13,7 @@ from pymongo.errors import DuplicateKeyError, ConnectionFailure
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from DAS.utils.das_db import db_connection
+from DAS.utils.das_db import db_connection, find_one
 from DAS.utils.das_db import create_indexes
 from DAS.utils.utils import print_exc, dastimestamp
 
@@ -41,7 +41,7 @@ class RequestManager(object):
 
     def get(self, pid):
         """Get params for a given pid"""
-        doc = self.col.find_one(dict(_id=pid))
+        doc = find_one(self.col, dict(_id=pid))
         if  doc:
             return json.loads(doc['kwds'])
 
@@ -106,7 +106,7 @@ class RequestManager(object):
 
     def has_pid(self, pid):
         """Return true/false for requested pid"""
-        return self.col.find_one({'_id':pid})
+        return find_one(self.col, {'_id':pid})
 
     def size(self):
         """Return size of the request cache"""
