@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.4.X
 
+  - Re-factor code to use individual DB connections instead of sharing one in
+    various places. This work address DAS instability issue reported in #4024.
   - Fix 4085 issue
   - Add cookie support in DAS client
   - Add support of DAS client version
