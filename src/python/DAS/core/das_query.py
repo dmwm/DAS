@@ -16,7 +16,7 @@ import DAS.utils.jsonwrapper as json
 from   DAS.utils.regex import RE_3SLAHES
 from   DAS.utils.utils import genkey, deepcopy, print_exc, dastimestamp
 from   DAS.utils.query_utils import compare_specs
-from   DAS.core.das_parser import QLManager
+from   DAS.core.das_parser import ql_manager
 from   DAS.core.das_process_dataset_wildcards import process_dataset_wildcards
 from   DAS.core.das_exceptions import WildcardMultipleMatchesException
 from   DAS.core.das_exceptions import WildcardMatchingException
@@ -76,7 +76,7 @@ class DASQuery(object):
         supplied flags can carry any query attributes, e.g.
         filters, aggregators, system, instance, etc.
         """
-        self._mongoparser   = QLManager()
+        self._mongoparser   = None
         self._params        = {}
         self._service_apis_map = {}
         self._str           = ''
@@ -170,7 +170,7 @@ class DASQuery(object):
     def mongoparser(self):
         "mongoparser property of the DAS query"
         if  not self._mongoparser:
-            self._mongoparser = QLManager()
+            self._mongoparser = ql_manager()
         return self._mongoparser
 
     @property
