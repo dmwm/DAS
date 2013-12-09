@@ -16,6 +16,7 @@ from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, print_exc, expire_timestamp
 from   DAS.utils.url_utils import getdata
 from   DAS.utils.regex import se_pattern, phedex_node_pattern
+from   DAS.utils.das_db import find_one
 
 def rowdict(columns, row):
     """Convert given row list into dict with column keys"""
@@ -121,7 +122,7 @@ class SiteDBService(DASAbstractService):
         "Helper function to get data from SiteDB or local cache"
         cname = url.split('/')[-1].replace('-', '_')
         col   = self.localcache.conn[self.name][cname]
-        local = col.find_one({'expire':{'$gt':expire_timestamp(time.time())}})
+        local = find_one(col, {'expire':{'$gt':expire_timestamp(time.time())}})
         data  = None
         if  local:
             msg = 'SiteDBService reads from %s.%s' % (self.name, cname)
