@@ -11,7 +11,7 @@ __author__ = "Valentin Kuznetsov"
 import os
 import sys
 from optparse import OptionParser
-from DAS.utils.das_db import create_indexes
+from DAS.utils.das_db import create_indexes, find_one
 
 # monogo db modules
 from pymongo import MongoClient
@@ -61,7 +61,7 @@ class MapReduceMgr(object):
         Add mapreduce record and assign it to given name.
         """
         print "Add %s map/reduce function" % name
-        exists = self.mapreduce.find_one({'name':name})
+        exists = find_one(self.mapreduce, {'name':name})
         if  exists:
             raise Exception('Map/reduce functions for %s already exists' % name)
         self.mapreduce.insert(dict(name=name, map=fmap, reduce=freduce))
