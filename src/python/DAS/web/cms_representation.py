@@ -546,7 +546,7 @@ class CMSRepresentation(DASRepresentation):
                     page += adjust_values(func, gen, links, pkey)
             pad   = ""
             try:
-                if  'das' in row:
+                if  'das' in row and 'system' in row['das']:
                     systems = self.systems(row['das']['system'])
                 else:
                     systems = "" # no das record

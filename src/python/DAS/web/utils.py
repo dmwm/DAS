@@ -397,8 +397,10 @@ def json2html(idict, pad="", ref=None):
             sss += pad + """ <code class="key">"%s": </code>%s""" \
                 % (quote(key), value)
         elif key == 'das':
-            val['ts'] = presentation_datetime(val['ts'])
-            val['expire'] = presentation_datetime(val['expire'])
+            if  'ts' in val:
+                val['ts'] = presentation_datetime(val['ts'])
+            if  'expire' in val:
+                val['expire'] = presentation_datetime(val['expire'])
             sss += ' "<b>das</b>": ' + json2html(val, pad=" "*3, ref=key)
         elif key == 'gridfs_id':
             value = "<a href=\"/das/gridfs?fid=%s\">%s</a>" \
