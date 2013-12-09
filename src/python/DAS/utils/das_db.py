@@ -26,6 +26,17 @@ from DAS.utils.ddict import DotDict
 # MongoDB does not allow to store documents whose size more then 4MB
 MONGODB_LIMIT = 4*1024*1024
 
+def find_one(col, spec, fields=None):
+    "Custom implementation of find_one function for given MongoDB parameters"
+    res = None
+    try:
+        res = [r for r in col.find(spec, fields, exhaust=True)]
+    except StopIteration:
+        return None
+    if  res:
+        return res[0]
+    return None
+
 def make_uri(pairs):
     """Return MongoDB URI for provided set of dbhost,dbport pairs"""
     uris = []
@@ -57,7 +68,7 @@ class DBConnection(object):
         key = genkey(str(uri))
         if  key not in self.conndict:
             try:
-                dbinst = MongoClient(host=uri, max_pool_size=300, w=1,
+                dbinst = MongoClient(host=uri, w=1,
                         auto_start_request=True, safe=True)
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
@@ -92,11 +103,18 @@ DB_CONN_SINGLETON = DBConnection()
 def db_connection(uri):
     """Return DB connection instance"""
     dbinst = None
-    try:
-#        dbinst, _ = DB_CONN_SINGLETON.connection(uri)
-        dbinst, _ = DBConnection().connection(uri)
-    except:
-        pass
+    # loop several times to acquire DB connection
+    for idx in xrange(1, 5):
+        try:
+            #dbinst, _ = DB_CONN_SINGLETON.connection(uri)
+            dbinst, _ = DBConnection().connection(uri)
+        except Exception as exc:
+            msg = 'Fail to get connection to MongoDB: %s' % str(exc)
+            print msg
+            pass
+        if  dbinst:
+            break
+        time.sleep(0.1*idx)
     return dbinst
 
 def is_db_alive(uri):
