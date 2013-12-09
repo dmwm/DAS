@@ -199,6 +199,9 @@ def get_value(data, filters, base=10):
                         else:
                             row = item[key]
                         values.add(row)
+                    else:
+                        if  isinstance(item, basestring):
+                            values.add(item)
         if  len(values) == 1:
             yield str(values.pop())
         else:
