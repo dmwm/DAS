@@ -40,6 +40,7 @@ from DAS.utils.utils import dastimestamp, print_exc, md5hash
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
 from DAS.utils.utils import Event
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
+from DAS.utils.das_db import find_one
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
 
@@ -128,9 +129,6 @@ class DASMapping(object):
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         
-        self.conn = None # MongoDB connection, defined at run-time
-        self.dbc  = None # MongoDB database, defined at run-time
-        self.col  = None # MongoDB collection, defined at run-time
         self.init()
         self.on_reload = Event()
 
@@ -143,6 +141,7 @@ class DASMapping(object):
         start_new_thread(thname, db_monitor, (self.dburi, self.init, sleep,
             self.load_maps, reload_time, self.check_maps, reload_time_bad_maps))
 
+        self.daskeyscache = {}         # to be filled at run time
         self.systems = []              # to be filled at run time
         self.dasmapscache = {}         # to be filled at run time
         self.keymap = {}               # to be filled at run time
@@ -154,6 +153,14 @@ class DASMapping(object):
         self.dbs_global_url = None     # to be determined at run time
         self.dbs_inst_names = None     # to be determined at run time
         self.load_maps(notify=False)
+
+    @property
+    def col(self):
+        "Return MongoDB collection object"
+        conn = db_connection(self.dburi)
+        dbc  = conn[self.dbname]
+        col  = dbc[self.colname]
+        return col
 
     # ===============
     # Management APIs
@@ -207,7 +214,7 @@ class DASMapping(object):
         Initialize presentation cache by reading presentation map.
         """
         spec  = {'type':'presentation'}
-        data  = self.col.find_one(spec)
+        data  = find_one(self.col, spec)
         if  data:
             self.presentationcache = data['presentation']
             for daskey, uilist in self.presentationcache.iteritems():
@@ -227,7 +234,7 @@ class DASMapping(object):
     def das_presentation_map(self):
         "Read DAS presentation map"
         spec  = {'type':'presentation'}
-        data  = self.col.find_one(spec)
+        data  = find_one(self.col, spec)
         if  data:
             for daskey, uilist in data.get('presentation', {}).iteritems():
                 for row in uilist:
@@ -238,11 +245,12 @@ class DASMapping(object):
         """
         Establish connection to MongoDB back-end and create DB.
         """
+        col = None
         try:
-            self.conn = db_connection(self.dburi)
-            if  self.conn:
-                self.dbc  = self.conn[self.dbname]
-                self.col  = self.dbc[self.colname]
+            conn = db_connection(self.dburi)
+            if  conn:
+                dbc  = conn[self.dbname]
+                col  = dbc[self.colname]
 #            print "### DASMapping:init started successfully"
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
@@ -251,10 +259,7 @@ class DASMapping(object):
                     % (thread.name, thread.ident, tstamp)
         except Exception as exc:
             print_exc(exc)
-            self.conn = None
-            self.dbc  = None
-            self.col  = None
-        if  self.col:
+        if  col:
             index = [('type', DESCENDING),
                      ('system', DESCENDING),
                      ('urn', DESCENDING),
@@ -262,21 +267,24 @@ class DASMapping(object):
                      ('das_map.rec_key', DESCENDING),
                      ('das_map.api_arg', DESCENDING),
                      ]
-            create_indexes(self.col, index)
+            create_indexes(col, index)
 
     def delete_db(self):
         """
         Delete mapping DB in MongoDB back-end.
         """
-        if  self.conn:
-            self.conn.drop_database(self.dbname)
+        conn = db_connection(self.dburi)
+        if  conn:
+            conn.drop_database(self.dbname)
 
     def delete_db_collection(self):
         """
         Delete mapping DB collection in MongoDB.
         """
-        if  self.dbc:
-            self.dbc.drop_collection(self.colname)
+        conn = db_connection(self.dburi)
+        if  conn:
+            dbc  = conn[self.dbname]
+            dbc.drop_collection(self.colname)
 
     def check_maps(self):
         """
@@ -456,6 +464,9 @@ class DASMapping(object):
         """
         Return a dict with all known DAS keys.
         """
+        if  das_system in self.daskeyscache:
+            return self.daskeyscache[das_system]
+
         spec  = { 'type': 'service', 'system' : { '$ne' : None } }
         if  das_system:
             spec  = { 'system' : das_system }
@@ -471,6 +482,8 @@ class DASMapping(object):
                     if  entry['das_key'] not in keys:
                         keys.append(entry['das_key'])
             kdict[system] = keys
+        # cache it
+        self.daskeyscache[das_system] = kdict
         return kdict
 
     # ============
@@ -490,7 +503,7 @@ class DASMapping(object):
         is a first entry in *lookup* attribute of DAS API record.
         """
         spec = {'system':das_system, 'urn':urn}
-        record = self.col.find_one(spec)
+        record = find_one(self.col, spec)
         if  not record:
             return None
         pkey = record['lookup']
@@ -505,7 +518,7 @@ class DASMapping(object):
         file.name
         """
         spec = {'system':das_system, 'urn':urn}
-        record = self.col.find_one(spec)
+        record = find_one(self.col, spec)
         mapkey = []
         for row in record['das_map']:
             lkey = record['lookup']
