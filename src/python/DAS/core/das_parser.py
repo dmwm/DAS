@@ -56,15 +56,11 @@ class QLManager(object):
     def __init__(self, config=None):
         if  not config:
             config = das_readconfig()
-        if  'dasmapping' not in config:
-            config['dasmapping'] = DASMapping(config)
-        if  'dasanalytics' not in config:
-            config['dasanalytics'] = DASAnalytics(config)
-        if  not config['dasmapping'].check_maps():
+        self.dasmapping  = DASMapping(config)
+        if  not self.dasmapping.check_maps():
             msg = "No DAS maps found in MappingDB"
             raise Exception(msg)
-        self.dasmapping  = config['dasmapping']
-        self.analytics   = config['dasanalytics']
+        self.analytics   = DASAnalytics(config)
         self.dasservices = config['services']
         self.daskeysmap  = self.dasmapping.daskeys()
         self.operators   = list(das_operators())
