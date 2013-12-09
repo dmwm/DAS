@@ -8,7 +8,7 @@ DAS Parser DB manager
 __author__ = "Gordon Ball"
 
 from DAS.utils.utils import genkey
-from DAS.utils.das_db import db_connection, create_indexes
+from DAS.utils.das_db import db_connection, create_indexes, find_one
 from DAS.utils.query_utils import encode_mongo_query, decode_mongo_query
 from DAS.utils.logger import PrintManager
 
@@ -33,7 +33,6 @@ class DASParserDB(object):
         msg = "DASParserCache::__init__ %s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
         
-        self.col = None
         self.create_db()
 
     def create_db(self):
@@ -44,9 +43,17 @@ class DASParserDB(object):
         dbn  = conn[self.dbname]
         if  self.colname not in dbn.collection_names():
             dbn.create_collection(self.colname, capped=True, size=self.sizecap)
-        self.col = dbn[self.colname]
+        col = dbn[self.colname]
         index_list = [('qhash', DESCENDING)]
-        create_indexes(self.col, index_list)
+        create_indexes(col, index_list)
+
+    @property
+    def col(self):
+        "Collection object to MongoDB"
+        conn = db_connection(self.dburi)
+        dbn  = conn[self.dbname]
+        col  = dbn[self.colname]
+        return col
 
     def lookup_query(self, rawtext):
         """
@@ -58,7 +65,7 @@ class DASParserDB(object):
         (PARSERCACHE_INVALID, error) - error message for invalid query
         (PARSERCACHE_NOTFOUND, None) - not in the cache
         """
-        result = self.col.find_one({'qhash':genkey(rawtext)},
+        result = find_one(self.col, {'qhash':genkey(rawtext)},
                         fields=['query', 'error'])
 
         if result and result['query']:
