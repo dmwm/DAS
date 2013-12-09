@@ -32,7 +32,7 @@ from DAS.utils.utils import aggregator, unique_filter
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.utils.utils import parse_filters, expire_timestamp
 from DAS.utils.utils import dastimestamp, record_codes
-from DAS.utils.das_db import db_connection, db_monitor
+from DAS.utils.das_db import db_connection, db_monitor, find_one
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
@@ -186,11 +186,54 @@ class DASMongocache(object):
         self.logging = config['dasdb'].get('logging', False)
         self.rec_ttl = config['dasdb'].get('record_ttl', 24*60*60)
         self.retry   = config['dasdb'].get('retry', 3)
+        self.das_son_manipulator = DAS_SONManipulator()
 
-        self.init()
-        # Monitoring thread which performs auto-reconnection to MongoDB
-        thname = 'mongocache_monitor'
-        start_new_thread(thname, db_monitor, (self.dburi, self.init))
+        # Initialize MongoDB connection
+        self.col_    = self.config['dasdb']['cachecollection']
+        self.mrcol_  = self.config['dasdb']['mrcollection']
+        self.merge_  = self.config['dasdb']['mergecollection']
+        self.gfs     = db_gridfs(self.dburi)
+        self.logdb   = DASLogdb(self.config)
+
+        msg = "%s@%s" % (self.dburi, self.dbname)
+        self.logger.info(msg)
+
+        # ensure that we have the following indexes
+        common_idx = [
+                      ('file.name', DESCENDING),
+                      ('dataset.name', DESCENDING),
+                      ('block.name', DESCENDING),
+                      ('run.run_number', DESCENDING),
+                      ]
+        index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
+                      ('das.system', ASCENDING),
+                      ('qhash', DESCENDING),
+                      ('das.record', ASCENDING)]
+        create_indexes(self.col, index_list + common_idx)
+        index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
+                      ('qhash', DESCENDING),
+                      ('das.record', ASCENDING),
+                      ('das.ts', ASCENDING)]
+        create_indexes(self.merge, index_list)
+        # NOTE: I found that creating index in merge collection leads to
+        # MongoDB error when records contains multiple arrays on indexed
+        # keys. For example, when we query file,run,lumi both file and run
+        # are arrays in MongoDB. In this case the final sort in MongoDB
+        # bark with the following message:
+        # cannot sort with keys that are parallel arrays
+        # it looks like that there is no fix for that yet
+        # see
+        # http://stackoverflow.com/questions/6516725/how-do-i-index-two-arrays-in-mongodb
+        # therefore I temporary disabled create_indexes call on merge
+        # collection which was used to have index to ease final sort,
+        # especially in a case when a lot of records correspond to inital
+        # query, e.g. file records.
+        # On another hand, the most common use case where sort fails is
+        # getting file records, and I can add one compound key to ease sort
+        # but I can't add another compound key on array field, e.g. run
+        common_idx = [[('qhash', DESCENDING), ('file.name', DESCENDING)]]
+        create_indexes(self.merge, index_list + common_idx)
+
         # thread which clean-up DAS collections
         thname = 'mongocache_cleanup'
         cols   = [config['dasdb']['cachecollection'],
@@ -201,89 +244,35 @@ class DASMongocache(object):
             args = (self.dburi, self.dbname, cols, sleep)
             start_new_thread(thname, cleanup_worker, args)
 
-    def init(self):
-        "Initialize MongoDB connection"
-        try:
-            config       = self.config
-            self.conn    = db_connection(self.dburi)
-            self.mdb     = self.conn[self.dbname]
-            self.col     = self.mdb[config['dasdb']['cachecollection']]
-            self.mrcol   = self.mdb[config['dasdb']['mrcollection']]
-            self.merge   = self.mdb[config['dasdb']['mergecollection']]
-            self.gfs     = db_gridfs(self.dburi)
-            self.logdb   = DASLogdb(config)
+    @property
+    def col(self):
+        "col property provides access to DAS cache collection"
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        return mdb[self.col_]
 
-            msg = "%s@%s" % (self.dburi, self.dbname)
-            self.logger.info(msg)
+    @property
+    def merge(self):
+        "merge property provides access to DAS merge collection"
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        return mdb[self.merge_]
 
-            self.add_manipulator()
-
-            # ensure that we have the following indexes
-            common_idx = [
-                          ('file.name', DESCENDING),
-                          ('dataset.name', DESCENDING),
-                          ('block.name', DESCENDING),
-                          ('run.run_number', DESCENDING),
-                          ]
-            index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                          ('das.system', ASCENDING),
-                          ('qhash', DESCENDING),
-                          ('das.record', ASCENDING)]
-            create_indexes(self.col, index_list + common_idx)
-            index_list = [('das.expire', ASCENDING), ('das_id', ASCENDING),
-                          ('qhash', DESCENDING),
-                          ('das.record', ASCENDING),
-                          ('das.ts', ASCENDING)]
-            create_indexes(self.merge, index_list)
-            # NOTE: I found that creating index in merge collection leads to
-            # MongoDB error when records contains multiple arrays on indexed
-            # keys. For example, when we query file,run,lumi both file and run
-            # are arrays in MongoDB. In this case the final sort in MongoDB
-            # bark with the following message:
-            # cannot sort with keys that are parallel arrays
-            # it looks like that there is no fix for that yet
-            # see
-            # http://stackoverflow.com/questions/6516725/how-do-i-index-two-arrays-in-mongodb
-            # therefore I temporary disabled create_indexes call on merge
-            # collection which was used to have index to ease final sort,
-            # especially in a case when a lot of records correspond to inital
-            # query, e.g. file records.
-            # On another hand, the most common use case where sort fails is
-            # getting file records, and I can add one compound key to ease sort
-            # but I can't add another compound key on array field, e.g. run
-            common_idx = [[('qhash', DESCENDING), ('file.name', DESCENDING)]]
-            create_indexes(self.merge, index_list + common_idx)
-#            print "### DASMongocache:init started successfully"
-        except ConnectionFailure as _err:
-            tstamp = dastimestamp('')
-            thread = threading.current_thread()
-            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
-                    % (thread.name, thread.ident, tstamp)
-        except Exception as exc:
-            print_exc(exc)
-            self.conn  = None
-            self.mdb   = None
-            self.col   = None
-            self.mrcol = None
-            self.merge = None
-            self.gfs   = None
-            self.logdb = None
-
-    def add_manipulator(self):
-        """
-        Add DAS-specific MongoDB SON manipulator to perform
-        conversion of inserted data into DAS cache.
-        """
-        das_son_manipulator = DAS_SONManipulator()
-        self.mdb.add_son_manipulator(das_son_manipulator)
-        msg = "DAS_SONManipulator %s" \
-        % das_son_manipulator
-        self.logger.debug(msg)
+    @property
+    def mrcol(self):
+        "mrcol property provides access to DAS map-reduce collection"
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        return mdb[self.mrcol_]
 
     def get_dataset_hashes(self, dasquery):
         "Get dataset hashes from DBS database"
         spec = dasquery.mongo_query.get('spec', {})
         inst = dasquery.instance
+        conn = db_connection(self.dburi)
         if  spec and inst:
             dataset = spec.get('dataset.name', None)
             if  dataset:
@@ -291,7 +280,7 @@ class DASMongocache(object):
                     cond = {'dataset':re.compile(dataset.replace('*', '.*'))}
                 else:
                     cond = {'dataset': dataset}
-                for row in self.conn['dbs'][inst].find(cond):
+                for row in conn['dbs'][inst].find(cond):
                     if  'qhash' in row:
                         yield row['qhash']
 
@@ -356,8 +345,11 @@ class DASMongocache(object):
         growing.
         """
         timestamp = int(time.time())
-        with self.conn.start_request():
-            col   = self.mdb[collection]
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        with conn.start_request():
+            col   = mdb[collection]
             spec1 = {'qhash': dasquery.qhash, 'das.expire': {'$lt' : timestamp}}
             spec2 = {'das.expire': {'$lt':timestamp-self.rec_ttl}}
             spec  = {'$or':[spec1, spec2]}
@@ -403,7 +395,7 @@ class DASMongocache(object):
         """
         cond = {'qhash': dasquery.qhash, 'das.system':'das',
                 'das.expire': {'$gt':time.time()}}
-        return self.col.find_one(cond)
+        return find_one(self.col, cond)
 
     def find_specs(self, dasquery, system='das'):
         """
@@ -441,7 +433,7 @@ class DASMongocache(object):
     def das_record(self, dasquery):
         "Retrieve DAS record for given query"
         cond = {'qhash': dasquery.qhash, 'das.expire':{'$gt':time.time()}}
-        return self.col.find_one(cond)
+        return find_one(self.col, cond)
 
     def find_records(self, das_id):
         " Return all the records matching a given das_id"
@@ -482,6 +474,8 @@ class DASMongocache(object):
             expire = header['das']['expire']
             spec   = {'qhash': dasquery.qhash, 'das.system': system}
             new_expire = None
+            # use exhaust=True since since we use records for updates and
+            # exhaust requires to loop over all records
             for rec in self.col.find(spec, exhaust=True):
                 if  'das' in rec and 'expire' in rec['das']:
                     if  rec['das']['expire'] > expire:
@@ -533,8 +527,11 @@ class DASMongocache(object):
             spec.update({'das.system': system})
         if  api:
             spec.update({'das.api': api})
-        with self.conn.start_request():
-            col  = self.mdb[collection]
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        with conn.start_request():
+            col  = mdb[collection]
             res  = col.find(spec=spec, exhaust=True).count()
         msg  = "(%s, coll=%s) found %s results" % (dasquery, collection, res)
         self.logger.info(msg)
@@ -563,8 +560,11 @@ class DASMongocache(object):
         if  filter_cond:
             spec.update(filter_cond)
         self.check_filters(collection, spec, fields)
-        with self.conn.start_request():
-            col  = self.mdb[collection]
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        with conn.start_request():
+            col  = mdb[collection]
             if  dasquery.unique_filter:
                 skeys = self.mongo_sort_keys(collection, dasquery)
                 if  skeys:
@@ -627,8 +627,11 @@ class DASMongocache(object):
              ...
              u'tier.name_-1': {u'key': [(u'tier.name', -1)], u'v': 0}}
         """
-        with self.conn.start_request():
-            col = self.mdb[collection]
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        with conn.start_request():
+            col = mdb[collection]
             for val in col.index_information().values():
                 for idx in val['key']:
                     yield idx[0] # index name
@@ -637,9 +640,12 @@ class DASMongocache(object):
         "Check that given filters can be applied to records found with spec"
         if  not fields:
             return
-        with self.conn.start_request():
-            col  = self.mdb[collection]
-            data = col.find_one(spec)
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        with conn.start_request():
+            col  = mdb[collection]
+            data = find_one(col, spec)
         if  not data:
             return
         found = False
@@ -672,8 +678,11 @@ class DASMongocache(object):
             unique=False):
         "Generator to get records from MongoDB."
         try:
-            with self.conn.start_request():
-                col = self.mdb[collection]
+            conn = db_connection(self.dburi)
+            mdb  = conn[self.dbname]
+            mdb.add_son_manipulator(self.das_son_manipulator)
+            with conn.start_request():
+                col = mdb[collection]
                 nres = col.find(spec, exhaust=True).count()
                 if  nres <= limit:
                     limit = 0
@@ -790,7 +799,10 @@ class DASMongocache(object):
             mrlist = [mr_input]
         else:
             mrlist = mr_input
-        coll = self.mdb[collection]
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        coll = mdb[collection]
         for mapreduce in mrlist:
             if  mapreduce == mrlist[0]:
                 cond = spec
@@ -806,7 +818,7 @@ class DASMongocache(object):
         collection, mapreduce name and optional conditions.
         """
         self.logger.debug("(%s, %s)" % (mapreduce, spec))
-        record = self.mrcol.find_one({'name':mapreduce})
+        record = find_one(self.mrcol, {'name':mapreduce})
         if  not record:
             raise Exception("Map/reduce function '%s' not found" % mapreduce)
         fmap = record['map']
@@ -873,7 +885,9 @@ class DASMongocache(object):
             else:
                 msg  = "merging records, for %s key" % pkey
             self.logger.debug(msg)
-            records = self.col.find(spec, exhaust=True).sort(skey)
+            # use exhaust=False since we process all records in aggregator
+            # and it can be delay in processing
+            records = self.col.find(spec, exhaust=False).sort(skey)
             # aggregate all records
             agen = aggregator(dasquery, records, expire)
             # diff aggregated records
