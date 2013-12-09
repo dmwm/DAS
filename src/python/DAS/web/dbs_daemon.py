@@ -23,7 +23,7 @@ from pymongo import ASCENDING
 import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
-from DAS.utils.das_db import db_monitor
+from DAS.utils.das_db import db_monitor, find_one
 from DAS.utils.utils import get_key_cert, genkey
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
@@ -130,7 +130,7 @@ class DBSDaemon(object):
 
             # remove records with old ts
             self.col.remove({'ts':{'$lt':time0-self.expire}})
-            if  self.col.find_one(cdict):
+            if  find_one(self.col, cdict):
                 self.col.update(cdict, udict)
             print "%s DBSDaemon updated %s collection in %s sec, nrec=%s" \
             % (dastimestamp(), self.dbcoll, time.time()-time0, self.col.count())
