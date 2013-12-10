@@ -50,16 +50,12 @@ find dataset where dataset like /Cosmics*
 <br />
 find dataset where dataset like /Cosmics* and dataset.status = VALID*
 <br />
-dataset=/Cosmics*
+dataset=/Cosmics*/*/*
 <br />
-/Cosmics*
+/Cosmics*/*/*
 </td>
 <td>
-dataset=/Cosmics*
-<br />
-/Cosmics*
-<br />
-Cosmics
+dataset=/Cosmics*/*/*
 </td>
 </tr>
 
@@ -124,7 +120,7 @@ file dataset=/a/b/c | sum(file.size), count(file.name)
 It is generally bad idea in DBS since it leads to full table scan and slow response
 </em>
 <br/>
-find dataset,file,run where dataset like*Commissioning11*RAW
+find dataset,file,run where dataset like *Commissioning11*RAW
 </td>
 <td>
 To perform such query you need to break it apart:<br/>
@@ -132,7 +128,7 @@ To perform such query you need to break it apart:<br/>
 1. Find dataset for a given pattern
 </em>
 <br/>
-dataset=*Commissioning11*RAW
+dataset=/*/*Commissioning11*/*RAW
 <br/>
 <em style="color:blue">
 2. Find files for a given dataset
@@ -155,10 +151,10 @@ run file=/a/b/c.root
 </tr>
 <tr>
 <td>
-find dataset where dataset like*RelVal* and release=CMSSW_4_2_0
+find dataset where dataset like *RelVal* and release=CMSSW_4_2_0
 </td>
 <td>
-dataset dataset=*RelVal* release=CMSSW_4_2_0
+dataset dataset=/*/*RelVal*/* release=CMSSW_4_2_0
 </td>
 </tr>
 
@@ -182,7 +178,7 @@ To perform such query you need to break it apart:<br/>
 1. Find dataset for a given pattern
 </em>
 <br/>
-dataset dataset=/Cosmics/* run=149011
+dataset dataset=/Cosmics/*/* run=149011
 <br/>
 <em style="color:blue">
 2. Find site information

@@ -540,17 +540,18 @@ site=T1_* | grep site.name, site.se
 </div>
 
 <p>
-Dataset queries
+Dataset queries. <b>PLEASE NOTE:</b> The dataset queries allow usage of
+patterns via wild-card queries, but user must always provides three slashes in
+them, e.g. dataset=/a*/*b*/*c
 </p>
 <div class="example">
 <pre>
-Zee
-dataset=*Zee*
+dataset=/*/*Zee*/*
 dataset release=CMSSW_4*
 dataset release=CMSSW_4* datatype=mc
-dataset dataset=*Zee* datatype=mc
-dataset dataset=*Zee* datatype=mc release=CMSSW_4*
-dataset dataset=/Cosmics/Run2010B* site=T1_US_FNAL
+dataset dataset=/*/*Zee*/* datatype=mc
+dataset dataset=/*/*Zee*/* datatype=mc release=CMSSW_4*
+dataset dataset=/Cosmics/Run2010B*/* site=T1_US_FNAL
 dataset primary_dataset=ZJetToEE_Pt*
 dataset primary_dataset=ZJetToEE_Pt* tier=*GEN*
 dataset tier=*GEN*
@@ -563,14 +564,14 @@ Please note, DAS supports <em>status</em> keyword which allows to
 specify dataset status field, e.g. VALID. Here is a few examples:
 <div class="example">
 <pre>
-dataset dataset=*Zee* status=VALID*
+dataset dataset=/*/*Zee*/* status=VALID*
 dataset status=INVALID
 </pre>
 </div>
 DAS also supports <em>instance</em> keyword to specify DBS instance, e.g.
 <div class="example">
 <pre>
-dataset=/QCD_Pt_*/*_pythia_fall10* instance=cms_dbs_ph_analysis_02
+dataset=/QCD_Pt_*/*_pythia_fall10*/* instance=cms_dbs_ph_analysis_02
 </pre>
 </div>
 
