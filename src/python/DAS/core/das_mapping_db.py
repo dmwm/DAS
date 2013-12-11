@@ -102,7 +102,7 @@ def db_monitor(uri, func, sleep, reload_map, reload_time,
             reload_intervl = reload_time if valid_maps else reload_time_bad_maps
             if  time.time()-time0 > reload_intervl:
                 map_state = 'INVALID' if not valid_maps else ''
-                msg = "reload %s DAS maps %s" % map_state, reload_map
+                msg = "reload %s DAS maps %s" % (map_state, reload_map)
                 print dastimestamp(), msg
                 try:
                     reload_map()
