@@ -142,6 +142,9 @@ DASOption('web_server', 'dbs_daemon_expire', 'int', 3600),
 DASOption('web_server', 'preserve_on_restart', 'bool', False),
 # local DAS services
 DASOption('web_server', 'services', 'list', []),
+# option to check DAS clients
+DASOption('web_server', 'check_clients', 'bool', False),
+
 
 # cacherequests section of DAS config
 DASOption('cacherequests', 'Admin', 'int', 5000),

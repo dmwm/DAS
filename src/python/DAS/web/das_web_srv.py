@@ -112,6 +112,7 @@ class DASWebService(DASWebManager):
         self.base        = config['url_base']
         self.interval    = config.get('status_update', 2500)
         self.engine      = config.get('engine', None)
+        self.check_clients = config.get('check_clients', False)
         nworkers         = config['web_workers']
         self.hot_thr     = config.get('hot_threshold', 3000)
         self.dasconfig   = dasconfig
@@ -723,12 +724,13 @@ class DASWebService(DASWebManager):
         if  'args' in head:
             del head['args']
         data = kwargs.get('data', [])
-        # update client version
-        cli, cli_msg = check_client_version()
-        head.update({'client': cli, 'client_message': cli_msg})
-        # for old clients setup appropriate status/reason
-        if  cli_msg:
-            head.update({'status': 'warning', 'reason': cli_msg})
+        if  self.check_clients:
+            # update client version
+            cli, cli_msg = check_client_version()
+            head.update({'client': cli, 'client_message': cli_msg})
+            # for old clients setup appropriate status/reason
+            if  cli_msg:
+                head.update({'status': 'warning', 'reason': cli_msg})
         return head, data
 
     def get_data(self, kwargs):
