@@ -1,14 +1,14 @@
 #from DAS.web.utils import quote
 #set base = $quote($base)
-#set error = $quote($error)
+#set msg = $quote($msg)
 #assert isinstance($base, str)
-#assert (isinstance($error, str) or isinstance($error, unicode))
+#assert (isinstance($msg, str) or isinstance($msg, unicode))
 <!-- das_wildcard_err.tmpl -->
 <div> <!-- main div -->
     <div class="das-ambigous">
     Input query contains a wildcard statement which is ambiguous:<br />
 <pre>
-$error
+$msg
 </pre>
     </div>
 #if $suggest
