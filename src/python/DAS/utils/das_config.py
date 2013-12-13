@@ -316,13 +316,17 @@ class _DASConfigSingleton(object):
     DAS configuration singleton class. It reads DAS configuration using
     das_readconfig_helper function which itself reads it from either
     CMS python configuration file or cfg.
-    Code based on suggestion found here:
-    http://code.activestate.com/recipes/52558-the-singleton-pattern-implemented-with-python/
+
+    the configuration file is read once is lazy way, in config().
     """
     def __init__(self):
-        self.das_config  = das_readconfig_helper()
+        self.das_config = None
+
     def config(self):
         """Return DAS config"""
+        if not self.das_config:
+            self.das_config = das_readconfig_helper()
+
         return self.das_config
 
 # ensure unique name for singleton object
