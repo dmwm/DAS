@@ -51,6 +51,7 @@ from DAS.web.help_cards import help_cards
 from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
+from DAS.web.cms_adjust_input import identify_apparent_query_patterns
 from DAS.utils.global_scope import SERVICES
 from DAS.core.das_exceptions import WildcardMultipleMatchesException
 import DAS.utils.jsonwrapper as json
@@ -424,27 +425,17 @@ class DASWebService(DASWebManager):
     def adjust_input(self, kwargs):
         """
         Adjust user input wrt common DAS keyword patterns, e.g.
-        Zee -> dataset=*Zee*, T1_US -> site=T1_US*. This method
-        only works if self.adjust is set in configuration of DAS server.
-        This method can be customized for concrete DAS applications via
-        external free_text_parser function (part of DAS.web.utils module)
+        /Zee/*/* -> dataset=*Zee*, T1_US -> site=T1_US.
+
+        More ambiguous input (such as Zee -> dataset=*Zee*) is however left
+        to be handled by the keyword search.
+
+        This is active only if adjust_input is set in DAS server configuration.
         """
-        if  not self.adjust:
+        if not self.adjust:
             return
         uinput = kwargs.get('input', '')
-        query_part = uinput.split('|')[0]
-        if  query_part == 'queries' or query_part == 'records':
-            return
-        new_input = free_text_parser(uinput, self.daskeys)
-        if  uinput and new_input == uinput:
-            default = 'dataset' if '=' not in uinput else None
-            selkey = choose_select_key(uinput, self.daskeys, default)
-            if  selkey and len(new_input) > len(selkey) and \
-                new_input[:len(selkey)] != selkey:
-                new_input = selkey + ' ' + new_input
-        kwargs['input'] = new_input
-
-
+        kwargs['input'] = identify_apparent_query_patterns(uinput)
 
     def _get_dbsmgr(self, inst):
         """
