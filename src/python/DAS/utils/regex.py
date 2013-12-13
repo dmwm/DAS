@@ -119,9 +119,18 @@ PAT_DATATYPE = re.compile(r'^mc$|^calib$|^data$|^raw$|^cosmic$', re.I)
 PAT_TIERS = \
     re.compile(r'gen|sim|raw|digi|reco|alcoreco|hlt|fevt|alcaprompt|dqm', re.I)
 
-
-
 # slashes handling in dataset Wildcard queries
-
 # allowed characters: letters, numbers, dashes and obviously  *
 DATASET_FORBIDDEN_SYMBOLS = re.compile(r'[^a-zA-Z0-9_\-*]*')
+
+
+# rules for rewriting little ambiguous input into DASQL
+DATASET_SYMBOLS = r'[a-zA-Z0-9_\-*]'
+NON_AMBIGUOUS_INPUT_PATTERNS = [
+    (name, re.compile(rule)) for name, rule in [
+        ('dataset', '^(/%s+){3}$' % DATASET_SYMBOLS),  # no #
+        ('block', r'^/.+/.+/.+#.+'),
+        ('file', r'^/.*\.root$'),
+        ('release', r'^CMSSW_'),
+        ('site', r'^T[0-3]_')]
+]

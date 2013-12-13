@@ -5,20 +5,7 @@ a common use-case is retrieving an entity by it's primary key. this module
 checks if the input can be unambiguously matched as a single value token and
 if so returns a valid DAS Query
 """
-
-import re
-
-# rules for rewriting little ambiguous input into DASQL
-DATASET_SYMBOLS = r'[a-zA-Z0-9_\-*]'
-_RULES = [
-    ('dataset', '^(/%s+){3}$' % DATASET_SYMBOLS),  # no #
-    ('block', r'^/.+/.+/.+#.+'),
-    ('file', r'^/.*\.root$'),
-    ('release', r'^CMSSW_'),
-    ('site', r'^T[0-3]_')
-]
-RULES = [(name, re.compile(rule))
-         for name, rule in _RULES]
+from DAS.utils.regex import NON_AMBIGUOUS_INPUT_PATTERNS
 
 
 def identify_apparent_query_patterns(uinput):
@@ -46,7 +33,7 @@ def identify_apparent_query_patterns(uinput):
     # only rewrite the value expressions of 1 token
     if len(uinput.split(' ')) > 1 or '=' in uinput:
         return uinput
-    matches = [daskey for daskey, pattern in RULES
+    matches = [daskey for daskey, pattern in NON_AMBIGUOUS_INPUT_PATTERNS
                if pattern.match(uinput)]
     if len(matches) == 1:
         return '{}={}'.format(matches[0], uinput)
