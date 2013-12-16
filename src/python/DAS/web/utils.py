@@ -40,6 +40,12 @@ def check_client_version():
     if  not ver:
         msg  = 'DAS_CLIENT version is not set.\n'
     elif ver != DAS_CLIENT:
+        # decode DAS_CLIENT version, format
+        # das-client/major.minor::python/major.minor
+        das_str, py_str = ver.split('::')
+        das_ver = das_str.split('/')[-1].split('.')
+        py_ver = py_str.split('/')[-1].split('.')
+        # TODO: handle supported clients
         msg  = 'DAS client version mismatch.\n'
         msg += 'Your client version  : %s\n' % ver
         msg += 'Supported DAS version: %s\n' % DAS_CLIENT
