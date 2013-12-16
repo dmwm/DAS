@@ -478,96 +478,74 @@ class DASWebService(DASWebManager):
         """
         return self.dasconfig['keyword_search']['kws_service_on']
 
-    def generate_dasquery(self, uinput, inst, html_error=True):
+    def generate_dasquery(self, uinput, inst, html_mode=True):
         """
         Check provided input as valid DAS input query.
         Returns status and content (either error message or valid DASQuery)
         :param uinput: user's input
         :param inst: DBS instance
-        :param html_error: whether errors shall be output in html
+        :param html_mode: whether errors shall be output in html
         """
-        def helper(msg, html_error=None, show_kws=False):
-            """Helper function which provide error template"""
-            if not html_error:
-                return msg
-            guide = self.templatepage('dbsql_vs_dasql',
-                        operators=', '.join(das_operators()))
 
-            # render keyword search loader
+        def error_msg(msg, show_kws=False, tmpl='das_ambiguous', **kwargs):
+            """
+            Helper function which renders an error template, default is
+            das_ambiguous, but can be overriden via tmpl param.
+            Template has two versions: html and text for CLI.
+
+            The template is passed with msg, base, guide, and **kwargs. """
+            guide = self.templatepage('dbsql_vs_dasql',
+                                      operators=', '.join(das_operators()))
+            # render keyword search loader, if needed
             kws = ''
             if show_kws:
                 kws = self.templatepage('kwdsearch_via_ajax',
                                         uinput=uinput,
                                         inst=inst or self.dbs_global,
                                         kws_host=self._get_kws_host())
-
-            page = self.templatepage('das_ambiguous', msg=msg, base=self.base,
-                                     guide=guide, kws_enabled=show_kws, kws=kws)
+            # render the appropriate template (html vs text mode)
+            page = self.templatepage(tmpl + ('_txt' if not html_mode else ''),
+                                     msg=msg, base=self.base, guide=guide,
+                                     kws_enabled=show_kws, kws=kws, **kwargs)
             return page
 
-        if  not uinput:
-            return 1, helper('No input query')
-        # Generate DASQuery object, if it fails we catch the exception and
+        if not uinput:
+            return 1, error_msg('No input query')
+
+        # Generate a DASQuery object, if it fails we catch the exception and
         # wrap it for upper layer (web interface)
         try:
             dasquery = DASQuery(uinput, instance=inst)
+        except WildcardMultipleMatchesException as err:
+            das_parser_error(uinput, str(err).replace('\n', ''))
+            return 1, error_msg(str(err), tmpl='das_wildcard_err',
+                                suggest=err.options.values)
+        except WildcardMatchingException as err:
+            das_parser_error(uinput, str(type(err)))
+            return 1, error_msg(str(err))
         except Exception as err:
-            # process Wildcard exception separately
-            if  isinstance(err, WildcardMultipleMatchesException):
-                emsg  = 'WildcardMultipleMatchesException, uinput=%s. ' % uinput
-                emsg += str(err).replace('\n', '')
-                das_parser_error(uinput, emsg)
-                suggest = err.options.values
+            # for non Wildcard parsing errors, show the Keyword Search
+            das_parser_error(uinput, str(type(err)))
+            return 1, error_msg(str(err), show_kws=self.is_kws_enabled())
 
-                if html_error:
-                    # standard html mode
-                    guide = self.templatepage('dbsql_vs_dasql',
-                                operators=', '.join(das_operators()))
-                    page = self.templatepage('das_wildcard_err', error=str(err),
-                            base=self.base, guide=guide, suggest=suggest)
-                else:
-                    # text mode
-                    page = self.templatepage('das_wildcard_err_txt',
-                                base=self.base, error=str(err), suggest=suggest)
-            else:
-                # whether to show Keyword Search now
-                show_kws = self.is_kws_enabled()
-                das_parser_error(uinput, str(type(err)))
-                page = helper(str(err), html_error, show_kws=show_kws)
-            return 1, page
-
-        fields = dasquery.mongo_query.get('fields', [])
-        if  not fields:
-            fields = []
-        spec   = dasquery.mongo_query.get('spec', {})
-        for word in fields+spec.keys():
-            found = 0
-            if  word in DAS_DB_KEYWORDS:
-                found = 1
-            for key in self.daskeys:
-                if  word.find(key) != -1:
-                    found = 1
-            if  not found:
-                msg = 'Provided input does not contain a valid DAS key'
-                return 1, helper(msg, html_error)
-        if  isinstance(uinput, dict): # DASQuery w/ {'spec':{'_id:id}}
+        # DAS query validation
+        if isinstance(uinput, dict):  # DASQuery w/ {'spec':{'_id:id}}
             pass
         elif uinput.find('queries') != -1:
             pass
         elif uinput.find('records') != -1:
             pass
-        else: # normal user DAS query
+        else:  # normal user DAS query
             try:
                 service_map = dasquery.service_apis_map()
             except Exception as exc:
-                msg = 'Fail to lookup DASQuery service API map'
+                msg = 'Fail to obtain service API map for this DASQuery'
                 print msg
                 print_exc(exc)
-                return 1, helper(msg, html_error)
-            if  not service_map:
-                msg  = "Unable to resolve service_map for given DAS query %s" \
-                        % dasquery
-                return 1, helper(msg, html_error)
+                return 1, error_msg(msg)
+            if not service_map:
+                return 1, error_msg('Unable to resolve the query over the '
+                                    'available services: %s' % dasquery)
         return 0, dasquery
 
     @expose
@@ -744,7 +722,7 @@ class DASWebService(DASWebManager):
             dasquery = DASQuery(dasquery, instance=inst)
         else:
             check, content = \
-                    self.generate_dasquery(uinput, inst, html_error=False)
+                    self.generate_dasquery(uinput, inst, html_mode=False)
             if  check:
                 head.update({'status': 'fail', 'reason': content,
                              'ctime': time.time()-time0, 'input': uinput})
@@ -893,7 +871,7 @@ class DASWebService(DASWebManager):
 
         # textual views need text only error messages...
         check, content = self.generate_dasquery(uinput, inst,
-                              html_error=self._is_web_request(view))
+                              html_mode=self._is_web_request(view))
         if  check:
             head = dict(timestamp=time.time())
             head.update({'status': 'fail',
