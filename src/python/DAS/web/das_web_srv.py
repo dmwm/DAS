@@ -517,24 +517,6 @@ class DASWebService(DASWebManager):
                                      kws_enabled=show_kws, kws=kws, **kwargs)
             return page
 
-        def check_daskey(dasquery):
-            """ checks if given dasquery contain a valid daskey """
-            # TODO: is this OK in web interface? move to DASQuery?
-            fields = dasquery.mongo_query.get('fields', [])
-            if not fields:
-                fields = []
-            spec = dasquery.mongo_query.get('spec', {})
-            for word in fields+spec.keys():
-                found = 0
-                if word in DAS_DB_KEYWORDS:
-                    found = 1
-                for key in self.daskeys:
-                    if word.find(key) != -1:
-                        found = 1
-                if not found:
-                    return False
-            return True
-
         if not uinput:
             return 1, error_msg('No input query')
 
@@ -555,8 +537,6 @@ class DASWebService(DASWebManager):
             return 1, error_msg(str(err), show_kws=self.is_kws_enabled())
 
         # DAS query validation
-        if not check_daskey(dasquery):
-            return 1, error_msg('The query does not contain a valid DAS key')
         if isinstance(uinput, dict):  # DASQuery w/ {'spec':{'_id:id}}
             pass
         elif uinput.find('queries') != -1:
@@ -567,13 +547,13 @@ class DASWebService(DASWebManager):
             try:
                 service_map = dasquery.service_apis_map()
             except Exception as exc:
-                msg = 'Fail to lookup DASQuery service API map'
+                msg = 'Fail to obtain service API map for this DASQuery'
                 print msg
                 print_exc(exc)
                 return 1, error_msg(msg)
             if not service_map:
-                return 1, error_msg('Unable to resolve service_map for '
-                                    'given DAS query %s' % dasquery)
+                return 1, error_msg('Unable to resolve the query over the '
+                                    'available services: %s' % dasquery)
         return 0, dasquery
 
     @expose
