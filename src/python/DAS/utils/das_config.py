@@ -289,7 +289,7 @@ def read_wmcore(filename):
                 configdict[option.section][option.name] = value
     return configdict
 
-def das_readconfig_helper():
+def das_readconfig_helper(debug=False):
     """
     Read DAS configuration file and store DAS parameters into returning
     dictionary.
@@ -300,11 +300,13 @@ def das_readconfig_helper():
     # if not fall back to standard python cfg file
     try:
         configdict = read_wmcore(dasconfig)
-        print "### Reading DAS configuration from %s" % dasconfig
+        if  debug:
+            print "### Reading DAS configuration from %s" % dasconfig
     except Exception as err:
         try:
             configdict = read_configparser(dasconfig)
-            print "### Reading DAS configuration from %s" % dasconfig
+            if  debug:
+                print "### Reading DAS configuration from %s" % dasconfig
         except Exception as exp:
             print 'Unable to read DAS cfg configuration,', str(exp)
             print 'Unable to read DAS CMS configuration,', str(err)
@@ -324,19 +326,24 @@ class _DASConfigSingleton(object):
     """
     def __init__(self):
         self.das_config = None
+        self.das_config_debug = None
 
-    def config(self):
+    def config(self, debug=False):
         """Return DAS config"""
-        if not self.das_config:
-            self.das_config = das_readconfig_helper()
-
-        return self.das_config
+        if  debug:
+            if not self.das_config_debug:
+                self.das_config_debug = das_readconfig_helper(debug)
+            return self.das_config_debug
+        else:
+            if not self.das_config:
+                self.das_config = das_readconfig_helper()
+            return self.das_config
 
 # ensure unique name for singleton object
 DAS_CONFIG_SINGLETON = _DASConfigSingleton()
 
-def das_readconfig():
+def das_readconfig(debug=False):
     """
     Return DAS configuration
     """
-    return DAS_CONFIG_SINGLETON.config()
+    return DAS_CONFIG_SINGLETON.config(debug)

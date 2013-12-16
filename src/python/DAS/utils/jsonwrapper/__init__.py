@@ -45,7 +45,7 @@ import json
 if  not MODULE: # use default JSON module
     MODULE = "json"
 
-print "### DAS uses %s JSON module" % MODULE
+#print "### DAS uses %s JSON module" % MODULE
 
 def loads(idict, **kwargs):
     """

@@ -143,7 +143,7 @@ def main():
         help="provide cherrypy configuration file")
     opts, _ = parser.parse_args()
 
-    config  = das_readconfig()
+    config  = das_readconfig(debug=True)
     if  opts.config: # read provided configuration
         fdesc  = open(opts.config, 'r')
         config = yaml.load(fdesc.read())
